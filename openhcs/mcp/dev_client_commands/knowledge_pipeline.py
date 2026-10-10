@@ -30,7 +30,6 @@ from openhcs.mcp.dev_client_commanding import (
 )
 from openhcs.mcp.dev_client_core import (
     DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS,
-    McpDevCliUsageError,
     McpDevStdioSession,
     McpDevToolBatchResponse,
     McpDevToolCall,
@@ -38,16 +37,13 @@ from openhcs.mcp.dev_client_core import (
     add_pipeline_source_options,
     add_request_factory_option,
     call_mcp_tool,
-    execute_source_session_tool_arguments,
-    execute_source_submit_timeout_seconds,
-    execute_source_submit_tool_arguments,
     parse_optional_json_object,
     parse_required_axis_labels,
     pipeline_source_from_args,
     resolve_positional_option_alias,
 )
 from openhcs.mcp.dev_client_rendering import CodeDocumentRenderOptions
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.mcp.dev_client_session import SessionJourney
 
 
 class FunctionsCommandSpec(SingleToolCommandSpec):
@@ -380,7 +376,10 @@ class ArtifactPlanCommandSpec(StdinSourceCommandSpec, SingleToolCommandSpec):
 
 class ExecuteSourceCommandSpec(StdinSourceCommandSpec):
     command = "execute-source"
-    help = "Create and submit a source-backed headless execution session."
+    help = (
+        "Add a dataset to the headless session, set its pipeline source, then "
+        "initialize, compile and run it."
+    )
     default_timeout_seconds: ClassVar[float] = 120.0
 
     def calls_from_args(
@@ -393,7 +392,6 @@ class ExecuteSourceCommandSpec(StdinSourceCommandSpec):
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument("plate_path")
         add_pipeline_source_options(parser)
-        parser.add_argument("--global-config-id")
         parser.add_argument("--host", default=ExecutionConnectionSpec().host)
         parser.add_argument("--port", type=int)
         parser.add_argument("--transport-mode")
@@ -415,20 +413,20 @@ class ExecuteSourceCommandSpec(StdinSourceCommandSpec):
             dest="wait",
             action="store_true",
             default=True,
-            help="Wait for execution completion before returning.",
+            help="Follow the run to its terminal status before returning.",
         )
         wait_group.add_argument(
             "--no-wait",
             dest="wait",
             action="store_false",
-            help="Return after submit and leave polling to runtime-status.",
+            help="Return once the run is accepted; follow it with session-events.",
         )
         parser.add_argument(
-            "--submit-timeout-ms",
+            "--stage-timeout-ms",
             type=int,
-            default=OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
+            default=600_000,
+            help="Bound for each of initialize, compile and run.",
         )
-        parser.add_argument("--wait-timeout-ms", type=int, default=60_000)
 
     async def run_session(
         self,
@@ -438,36 +436,22 @@ class ExecuteSourceCommandSpec(StdinSourceCommandSpec):
         prepared_calls: tuple[McpDevToolCall, ...] | None = None,
     ) -> McpDevToolBatchResponse:
         del prepared_calls
-        timeout_seconds = self.timeout_seconds(args)
-        create_result = await call_mcp_tool(
-            session,
-            McpDevToolCall(
-                agent_capabilities.create_orchestrator_session_from_pipeline_source.name,
-                execute_source_session_tool_arguments(args),
+        journey = SessionJourney(session, self.timeout_seconds(args), [])
+        await journey.run_source(
+            root=args.plate_path,
+            pipeline_source=pipeline_source_from_args(args),
+            connection=ExecutionConnectionSpec.from_fields(
+                host=args.host,
+                port=args.port,
+                transport_mode=args.transport_mode,
+                persistent=args.persistent,
             ),
-            timeout_seconds,
+            wait_for_run=args.wait,
+            stage_timeout_seconds=args.stage_timeout_ms / 1000,
         )
-        results = [create_result]
-        create_payload = create_result.first_decoded_payload()
-        session_id = create_payload.session_id if create_payload is not None else None
-        if session_id is not None:
-            results.append(
-                await call_mcp_tool(
-                    session,
-                    McpDevToolCall(
-                        agent_capabilities.submit_pipeline_execution.name,
-                        execute_source_submit_tool_arguments(
-                            args,
-                            session_id=session_id,
-                        ),
-                    ),
-                    execute_source_submit_timeout_seconds(
-                        args,
-                        timeout_seconds=timeout_seconds,
-                    ),
-                )
-            )
-        return McpDevToolBatchResponse.from_results(session.server_spec, tuple(results))
+        return McpDevToolBatchResponse.from_results(
+            session.server_spec, tuple(journey.results)
+        )
 
     def render_compact(self, response, args: argparse.Namespace) -> str:
         from openhcs.mcp.dev_client_renderers.pipeline import ExecuteSourceRenderer

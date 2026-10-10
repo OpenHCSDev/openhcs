@@ -15,6 +15,7 @@ import inspect
 import logging
 import time
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
@@ -25,6 +26,7 @@ from polystore.base import _create_storage_registry
 from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
 from pyqt_reactive.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.services.zmq_server_scan_service import EndpointObservationSnapshot
+from zmqruntime.messages import ExecutionRecord
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.authoring.session.compile_batch import CompileBatch
@@ -76,7 +78,10 @@ from openhcs.authoring.session.progress_notifications import (
     DebugSnapshotAvailableNotification,
 )
 from openhcs.authoring.session.run_requests import dataset_pipeline_request
-from openhcs.authoring.session.submission import ExecutionSubmission
+from openhcs.authoring.session.submission import (
+    ExecutionSubmission,
+    SubmittedExecution,
+)
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.dataset_sources.dataset_roots import (
     DatasetRootRule,
@@ -131,7 +136,12 @@ if TYPE_CHECKING:
     from openhcs.agent.dto.common import AgentError
     from openhcs.authoring.session.operations import SessionOperation
     from openhcs.authoring.session.views import SessionView
-    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+    from zmqruntime.messages import PongResponse
+
+    from openhcs.runtime.zmq_execution_client import (
+        ZMQExecutionClient,
+        ZMQExecutionRequestBuilder,
+    )
 
 logger = logging.getLogger(__name__)
 ResultT = TypeVar("ResultT")
@@ -245,6 +255,16 @@ class NoRenderer(Renderer):
 # ---------------------------------------------------------------------------
 
 
+@dataclass(frozen=True, slots=True)
+class FinishedExecution:
+    """One ordinary execution: what was submitted and the server's record of it."""
+
+    scope_id: str
+    request: "ZMQExecutionRequestBuilder"
+    record: ExecutionRecord
+    endpoint: "PongResponse | None"
+
+
 class Session:
     """Datasets, their pipelines and executions, and the events they emit."""
 
@@ -291,6 +311,8 @@ class Session:
             self.runtime_projection
         )
         self.live_measurements = LiveMeasurementTable()
+        self.submitted_executions: dict[str, SubmittedExecution] = {}
+        self.finished_executions: dict[str, FinishedExecution] = {}
 
         self.compile_batch = CompileBatch(self)
         self.submission = ExecutionSubmission(self)
@@ -1056,21 +1078,11 @@ class Session:
                     "for execution..."
                 )
             )
-            client = self.client.require_client()
             for request in requests:
-                artifact_id = artifacts[request.scope_id]
-                await self.submission.submit(
+                await self.submission.submit_execution(
                     request,
-                    compile_artifact_id=artifact_id,
-                    submit=lambda request=request, artifact_id=artifact_id: (
-                        client.submit_pipeline(
-                            request.submission(
-                                compile_artifact_id=artifact_id,
-                                auxiliary_params=auxiliary_params,
-                            )
-                        )
-                    ),
-                    label="execution",
+                    compile_artifact_id=artifacts[request.scope_id],
+                    auxiliary_params=auxiliary_params,
                 )
         except Exception as error:
             logger.error("Failed to execute datasets: %s", error, exc_info=True)
@@ -1104,6 +1116,19 @@ class Session:
     def dataset_running(self, scope_id: str) -> None:
         self.publish(DatasetRunning(scope_id))
         self.publish(DatasetsChanged())
+
+    def record_finished_execution(self, execution_id: str, payload: dict) -> None:
+        """Keep an ordinary execution's submission and server record together."""
+
+        submitted = self.submitted_executions.pop(execution_id, None)
+        if submitted is None:
+            return
+        self.finished_executions[execution_id] = FinishedExecution(
+            scope_id=submitted.scope_id,
+            request=submitted.request,
+            record=ExecutionRecord.from_dict(payload),
+            endpoint=submitted.endpoint,
+        )
 
     def finish_dataset_execution(
         self,

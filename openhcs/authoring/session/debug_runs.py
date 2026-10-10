@@ -100,15 +100,10 @@ class DebugRuns:
         compile_artifact_id: str,
         debug_request: DebugRunRequest,
     ) -> None:
-        client = self._session.client.require_client()
-        await self._session.submission.submit(
+        await self._session.submission.submit_debug(
             request,
             compile_artifact_id=compile_artifact_id,
-            submit=lambda: client.submit_debug_pipeline(
-                request.submission(compile_artifact_id=compile_artifact_id),
-                debug_config=debug_request.execution_config,
-            ),
-            label="debug run",
+            debug_config=debug_request.execution_config,
         )
 
     async def send_worker_command(

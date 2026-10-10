@@ -8,7 +8,6 @@ import inspect
 import json
 import os
 import subprocess
-import sys
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
@@ -32,6 +31,7 @@ from python_introspect import (
 from zmqruntime.config import TransportMode
 
 from openhcs import __version__ as OPENHCS_VERSION
+from openhcs.agent.dto.session import DatasetRowState
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
     FullLocalCapabilitySurfaceProfile,
@@ -39,7 +39,6 @@ from openhcs.agent.capabilities import (
     get_agent_capability,
 )
 from openhcs.agent.dto.common import AgentCliRequest, AgentError, AgentResultEnvelope
-from openhcs.agent.dto.execution import PipelineExecutionSubmissionRequest
 from openhcs.agent.dto.mcp import McpBoundaryFailure, McpToolErrorResult
 from openhcs.agent.dto.ui_bridge import (
     UiActionInvocationStatus,
@@ -47,7 +46,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiBridgeOperationStatus,
     UiBridgeOperationWaitRequest,
     UiObjectStateFieldFilter,
-    UiPlateManagerRowState,
     UiPlateManagerState,
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowRequest,
@@ -549,10 +547,10 @@ class WorkflowTerminalStateCriterion(ABC, metaclass=AutoRegisterMeta):
         return cls.__registry__[workflow]()
 
     @abstractmethod
-    def terminal_for_row(self, row: UiPlateManagerRowState) -> bool:
+    def terminal_for_row(self, row: DatasetRowState) -> bool:
         """Return whether this workflow has reached its terminal row state."""
 
-    def failed_for_row(self, row: UiPlateManagerRowState) -> bool:
+    def failed_for_row(self, row: DatasetRowState) -> bool:
         """Return whether this workflow reached a failed terminal row state."""
         terminal_status = terminal_execution_status(row.terminal_status)
         if terminal_status is not None and terminal_status.counts_as_failed:
@@ -570,7 +568,7 @@ class InitWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
     failed_orchestrator_states = (OrchestratorState.INIT_FAILED,)
     terminal_state_is_idempotent = True
 
-    def terminal_for_row(self, row: UiPlateManagerRowState) -> bool:
+    def terminal_for_row(self, row: DatasetRowState) -> bool:
         return row.init_pending is False and row.initialized is True
 
 
@@ -578,7 +576,7 @@ class CompileWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
     workflow = UiSelectedPlateWorkflowKind.COMPILE
     failed_orchestrator_states = (OrchestratorState.COMPILE_FAILED,)
 
-    def terminal_for_row(self, row: UiPlateManagerRowState) -> bool:
+    def terminal_for_row(self, row: DatasetRowState) -> bool:
         return row.compile_pending is False and row.compiled is True
 
 
@@ -586,7 +584,7 @@ class RunWorkflowTerminalStateCriterion(WorkflowTerminalStateCriterion):
     workflow = UiSelectedPlateWorkflowKind.RUN
     failed_orchestrator_states = (OrchestratorState.EXEC_FAILED,)
 
-    def terminal_for_row(self, row: UiPlateManagerRowState) -> bool:
+    def terminal_for_row(self, row: DatasetRowState) -> bool:
         return (
             row.execution_active is False
             and row.queue_position is None
@@ -608,10 +606,10 @@ class WorkflowStatePollPolicy:
             )
         )
 
-    def terminal_for_row(self, row: UiPlateManagerRowState) -> bool:
+    def terminal_for_row(self, row: DatasetRowState) -> bool:
         return self.criterion.terminal_for_row(row)
 
-    def failed_for_row(self, row: UiPlateManagerRowState) -> bool:
+    def failed_for_row(self, row: DatasetRowState) -> bool:
         return self.criterion.failed_for_row(row)
 
     def can_evaluate(
@@ -1824,52 +1822,6 @@ async def call_mcp_session(
     )
 
 
-def execute_source_session_tool_arguments(
-    args: argparse.Namespace,
-) -> dict[str, JsonValue]:
-    return McpToolArguments.from_payload(
-        {
-            "plate_path": args.plate_path,
-            "pipeline_source": pipeline_source_from_args(args),
-            "global_config_id": args.global_config_id,
-            "host": args.host,
-            "port": args.port,
-            "transport_mode": args.transport_mode,
-            "persistent": args.persistent,
-        }
-    )
-
-
-def execute_source_submit_tool_arguments(
-    args: argparse.Namespace,
-    *,
-    session_id: str,
-) -> dict[str, JsonValue]:
-    return McpToolArguments.from_payload(
-        to_jsonable(
-            PipelineExecutionSubmissionRequest(
-                session_id=session_id,
-                wait=args.wait,
-                submit_timeout_ms=args.submit_timeout_ms,
-                wait_timeout_ms=args.wait_timeout_ms,
-            )
-        )
-    )
-
-
-def execute_source_submit_timeout_seconds(
-    args: argparse.Namespace,
-    *,
-    timeout_seconds: float,
-) -> float:
-    if not args.wait:
-        return timeout_seconds
-    return mcp_tool_timeout_seconds(
-        args.submit_timeout_ms + args.wait_timeout_ms,
-        timeout_seconds=timeout_seconds,
-    )
-
-
 def mcp_tool_timeout_seconds(
     request_timeout_ms: int,
     *,
@@ -2483,13 +2435,13 @@ def workflow_poll_target_rows(
     result: McpDevToolResult,
     *,
     target_scope_ids: tuple[str, ...],
-) -> tuple[UiPlateManagerRowState, ...]:
+) -> tuple[DatasetRowState, ...]:
     state = plate_manager_state(result)
     if state is None:
         return ()
     if not target_scope_ids:
         return state.rows
-    return tuple(row for row in state.rows if row.plate_scope_id in target_scope_ids)
+    return tuple(row for row in state.rows if row.scope_id in target_scope_ids)
 
 
 def terminal_execution_status(

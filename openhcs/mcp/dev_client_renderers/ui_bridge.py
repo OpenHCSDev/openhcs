@@ -7,6 +7,7 @@ from typing import ClassVar
 
 from python_introspect import dataclass_from_mapping
 
+from openhcs.agent.dto.session import DatasetRowState, PipelineStepState
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.common import AgentWarning
 from openhcs.agent.dto.mcp import McpServerHealthResult
@@ -28,8 +29,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiLiveOverviewState,
     UiPipelineDebugSessionState,
     UiPipelineEditorState,
-    UiPipelineEditorStepState,
-    UiPlateManagerRowState,
     UiPlateManagerState,
     UiSelectedPlateWorkflowResult,
     UiSnapshotRef,
@@ -336,7 +335,7 @@ class PlateManagerStateSurfaceRenderer(UiStateSurfaceStateRenderer):
         return "\n".join(lines)
 
     @classmethod
-    def row_lines(cls, rows: tuple[UiPlateManagerRowState, ...]) -> list[str]:
+    def row_lines(cls, rows: tuple[DatasetRowState, ...]) -> list[str]:
         """The one presentation of a plate-manager row, shared by workflow waits."""
         lines: list[str] = []
         for row in rows:
@@ -350,9 +349,9 @@ class PlateManagerStateSurfaceRenderer(UiStateSurfaceStateRenderer):
                 f"selected={row.selected}",
             ]
             for label, value in (
-                ("root", row.plate_root),
-                ("output", row.output_plate_root),
-                ("source", row.source_plate_root),
+                ("root", row.root),
+                ("output", row.output_root),
+                ("source", row.source_root),
             ):
                 parts.extend(cls.optional_lines(value, lambda text: (f"{label}={text}",)))
             lines.append(f"- {row.name}: " + ", ".join(parts))
@@ -387,7 +386,7 @@ class PipelineEditorStateSurfaceRenderer(UiStateSurfaceStateRenderer):
         return "\n".join(lines)
 
     @classmethod
-    def _step_line(cls, step: UiPipelineEditorStepState) -> str:
+    def _step_line(cls, step: PipelineStepState) -> str:
         parts = [
             f"enabled={step.enabled}",
             f"selected={step.selected}",

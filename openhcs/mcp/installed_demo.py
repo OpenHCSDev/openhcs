@@ -23,15 +23,10 @@ from typing import TYPE_CHECKING, TypeVar
 
 from zmqruntime import TcpDataControlPortPairAuthority
 from zmqruntime.config import TransportMode
-from zmqruntime.execution import ExecutionProgressObservation
-from zmqruntime.messages import ControlMessageType, TaskProgress
+from zmqruntime.messages import ControlMessageType
 
 from openhcs.agent.capabilities import AgentCapabilityDeclaration, agent_capabilities
-from openhcs.agent.dto.execution import (
-    ExecutionJobIdentity,
-    ExecutionJobStatus,
-    ExecutionStatusRequest,
-)
+from openhcs.agent.dto.session import DatasetListState, DatasetRowState
 from openhcs.agent.dto.plate import (
     PlateFileQueryRecordSummary,
     PlateFileQueryResult,
@@ -56,9 +51,7 @@ from openhcs.mcp.dev_client_commands.plate import (
 )
 from openhcs.mcp.dev_client_commands.viewer import ValidateViewerCommandSpec
 from openhcs.mcp.dev_client_core import (
-    DEFAULT_CALL_TIMEOUT_SECONDS,
     McpDevToolBatchResponse,
-    mcp_tool_timeout_seconds,
 )
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageRequest,
@@ -80,9 +73,7 @@ class InstalledDemoFailure(RuntimeError):
     """A portable installed-demo acceptance condition was not met."""
 
 
-_EXECUTION_STALL_TIMEOUT_SECONDS = 180.0
 _EXECUTION_MAXIMUM_DURATION_SECONDS = 900.0
-_EXECUTION_POLL_INTERVAL_SECONDS = 0.5
 _VIEWER_SETTLE_TIMEOUT_SECONDS = 120.0
 
 
@@ -108,60 +99,6 @@ class InstalledDemoResult:
 
     def as_dict(self) -> dict[str, object]:
         return asdict(self)
-
-
-@dataclass(frozen=True, slots=True)
-class ExecutionPollDeadline:
-    """Execution polling budget refreshed only by authoritative activity."""
-
-    stall_timeout_seconds: float
-    maximum_duration_seconds: float
-    maximum_deadline: float
-    inactivity_deadline: float
-
-    @classmethod
-    def start(
-        cls,
-        *,
-        now: float,
-        stall_timeout_seconds: float,
-        maximum_duration_seconds: float,
-    ) -> ExecutionPollDeadline:
-        if stall_timeout_seconds <= 0 or maximum_duration_seconds <= 0:
-            raise ValueError("Execution polling timeouts must be positive")
-        return cls(
-            stall_timeout_seconds=stall_timeout_seconds,
-            maximum_duration_seconds=maximum_duration_seconds,
-            maximum_deadline=now + maximum_duration_seconds,
-            inactivity_deadline=now + stall_timeout_seconds,
-        )
-
-    def observe_activity(self, *, now: float) -> ExecutionPollDeadline:
-        """Refresh only the inactivity budget, preserving the total ceiling."""
-
-        return replace(
-            self,
-            inactivity_deadline=now + self.stall_timeout_seconds,
-        )
-
-    def failure(self, *, now: float) -> str | None:
-        if now >= self.maximum_deadline:
-            return (
-                "exceeded the maximum duration of "
-                f"{self.maximum_duration_seconds:.1f}s"
-            )
-        if now >= self.inactivity_deadline:
-            return (
-                "reported no lifecycle or progress activity for "
-                f"{self.stall_timeout_seconds:.1f}s"
-            )
-        return None
-
-    def remaining_seconds(self, *, now: float) -> float:
-        return max(
-            0.0,
-            min(self.maximum_deadline, self.inactivity_deadline) - now,
-        )
 
 
 def _report_phase(message: str) -> None:
@@ -432,8 +369,10 @@ def _execute_pipeline(
     plate_path: Path,
     source_path: Path,
     runtime_port: int,
-) -> ExecutionJobStatus:
-    submission = _run_mcp(
+) -> DatasetRowState:
+    """Run the pipeline through the headless session; return the dataset's row."""
+
+    datasets = _run_mcp(
         client,
         (
             ExecuteSourceCommandSpec.command,
@@ -447,148 +386,21 @@ def _execute_pipeline(
             "--transport-mode",
             "tcp",
             "--non-persistent",
-            "--no-wait",
+            "--wait",
+            "--stage-timeout-ms",
+            str(int(_EXECUTION_MAXIMUM_DURATION_SECONDS * 1000)),
             "--json",
         ),
-        capability=agent_capabilities.submit_pipeline_execution,
-        payload_type=ExecutionJobIdentity,
+        capability=agent_capabilities.session_datasets,
+        payload_type=DatasetListState,
         timeout_seconds=None,
     )
-    return _poll_execution_job(client, job_id=submission.job_id)
-
-
-def _execution_status_payload(
-    client: McpDevClient,
-    *,
-    request: ExecutionStatusRequest,
-) -> ExecutionJobStatus:
-    """Return one independently bounded submitted-job status."""
-
-    capability = agent_capabilities.get_execution_status
-    timeout_seconds = mcp_tool_timeout_seconds(
-        request.timeout_ms,
-        timeout_seconds=DEFAULT_CALL_TIMEOUT_SECONDS,
-    )
-    argv = (
-        "--timeout-seconds",
-        str(timeout_seconds),
-        "--allow-error-payloads",
-        "call",
-        capability.name,
-        "--arguments",
-        json.dumps(asdict(request), sort_keys=True),
-        "--json",
-    )
-    execution = client.execute(argv, timeout_seconds=None)
-    status = McpDevToolBatchResponse.for_rendering(execution.payload).payload_for(
-        capability
-    )
-    if not isinstance(status, ExecutionJobStatus):
+    (row,) = (row for row in datasets.rows if row.root == str(plate_path))
+    if row.terminal_status != TerminalExecutionStatus.COMPLETE.value:
         raise InstalledDemoFailure(
-            f"MCP status command {execution.argv!r} returned no status for "
-            f"{capability.name}: payload={execution.payload!r}; "
-            f"server_stderr={execution.server_stderr_tail!r}"
+            f"Portable neurite execution ended with {row.terminal_status}: {row}"
         )
-    return status
-
-
-def _report_execution_progress(
-    job_id: str,
-    observation: ExecutionProgressObservation,
-) -> None:
-    try:
-        progress = TaskProgress.from_dict(dict(observation.event))
-    except (KeyError, TypeError, ValueError) as exc:
-        raise InstalledDemoFailure(
-            f"Execution progress event is invalid: {dict(observation.event)!r}"
-        ) from exc
-    print(
-        f"Installed demo execution job {job_id} progress "
-        f"#{observation.sequence}: "
-        f"{progress.phase}/{progress.status} {progress.percent:.1f}% "
-        f"({progress.completed}/{progress.total})",
-        file=sys.stderr,
-        flush=True,
-    )
-
-
-def _poll_execution_job(
-    client: McpDevClient,
-    *,
-    job_id: str,
-    stall_timeout_seconds: float = _EXECUTION_STALL_TIMEOUT_SECONDS,
-    maximum_duration_seconds: float = _EXECUTION_MAXIMUM_DURATION_SECONDS,
-) -> ExecutionJobStatus:
-    """Poll until terminal while exact progress proves slow work remains live."""
-
-    deadline = ExecutionPollDeadline.start(
-        now=time.monotonic(),
-        stall_timeout_seconds=stall_timeout_seconds,
-        maximum_duration_seconds=maximum_duration_seconds,
-    )
-    request = ExecutionStatusRequest(job_id=job_id)
-    last_payload: ExecutionJobStatus | None = None
-    last_error: InstalledDemoFailure | None = None
-    last_reported_status: str | None = None
-    last_progress_sequence: int | None = None
-    terminal_failures = {
-        TerminalExecutionStatus.FAILED.value,
-        TerminalExecutionStatus.CANCELLED.value,
-    }
-    while True:
-        try:
-            payload = _execution_status_payload(client, request=request)
-        except InstalledDemoFailure as exc:
-            last_error = exc
-        else:
-            last_payload = payload
-            status = payload.status
-            activity_observed = status != last_reported_status
-            if status != last_reported_status:
-                print(
-                    f"Installed demo execution job {job_id}: {status}",
-                    file=sys.stderr,
-                    flush=True,
-                )
-                last_reported_status = status
-            progress_observation = payload.progress
-            if (
-                progress_observation is not None
-                and progress_observation.sequence != last_progress_sequence
-            ):
-                _report_execution_progress(job_id, progress_observation)
-                last_progress_sequence = progress_observation.sequence
-                activity_observed = True
-            if activity_observed:
-                deadline = deadline.observe_activity(now=time.monotonic())
-            if status == TerminalExecutionStatus.COMPLETE.value:
-                return payload
-            if status in terminal_failures:
-                raise InstalledDemoFailure(
-                    f"Portable neurite execution ended with {status}: {payload}"
-                )
-            last_error = (
-                InstalledDemoFailure(
-                    f"Portable neurite execution status failed: {payload}"
-                )
-                if payload.errors
-                else None
-            )
-
-        now = time.monotonic()
-        timeout_failure = deadline.failure(now=now)
-        if timeout_failure is not None:
-            raise InstalledDemoFailure(
-                f"Portable neurite execution {timeout_failure}: "
-                f"last_payload={last_payload!r}; "
-                f"last_error={last_error!r}"
-            )
-        time.sleep(
-            min(
-                _EXECUTION_POLL_INTERVAL_SECONDS,
-                deadline.remaining_seconds(now=now),
-            )
-        )
+    return row
 
 
 _VIEWER_SETTLE_DEADLINE_SECONDS = 60.0
@@ -810,7 +622,7 @@ def run_installed_demo(
         viewer_port=viewer_port if viewer else None,
         generated_image_count=generated.image_count,
         source_file_count=len(records),
-        execution_status=execution.status,
+        execution_status=execution.terminal_status,
         viewer_observed=viewer_payload is not None and viewer_payload.observed,
         viewer_type=viewer_type,
         viewer_layer_count=(

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
 from zmqruntime.startup import EndpointStartupPresentationTarget
 
 from openhcs.agent.dto.common import AgentError
+from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.session import (
     DatasetPipelineSourceRequest,
     DatasetRootsRequest,
@@ -249,11 +251,27 @@ class ConnectServer(HeadlessOperation):
     operation_id = "connect_server"
     label = "Connect"
     tooltip = "Connect to the execution server, starting it if needed"
-    description = "Connects the session to its execution server, starting one if needed."
+    description = (
+        "Connects the session to an execution server, starting one if needed. "
+        "A port (with host and transport mode) selects the server; without one "
+        "the session's configured server is used."
+    )
+    request = ExecutionConnectionSpec
     side_effects = ("connects_or_starts_execution_server",)
 
     @classmethod
     def run(cls, session, request) -> SessionOperationResult:
+        if request.port is not None:
+            config = session.client.config
+            session.set_transport_config(
+                replace(
+                    config,
+                    default_port=request.port,
+                    client_host=request.host,
+                    transport_mode=request.transport_endpoint(config).transport_mode,
+                    persistent=request.persistent,
+                )
+            )
         session.start(session.ensure_server)
         return cls.accepted(session)
 

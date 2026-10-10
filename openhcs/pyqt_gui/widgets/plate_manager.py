@@ -301,8 +301,7 @@ class PlateManagerWidget(
 
     @on_session_event.register
     def _(self, event: CompiledStateChanged) -> None:
-        inspection = None if event.compiled is None else event.compiled.inspection
-        self.compiled_artifact_inspection_changed.emit(event.scope_id, inspection)
+        self.compiled_artifact_inspection_changed.emit(event.scope_id, event.compiled)
 
     @on_session_event.register
     def _(self, event: RuntimeProjectionChanged) -> None:

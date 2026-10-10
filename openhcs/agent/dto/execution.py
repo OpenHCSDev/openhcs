@@ -10,13 +10,10 @@ from typing import Self
 
 from python_introspect import JsonObject, JsonValue, validate_annotated_dataclass
 from zmqruntime.config import (
-    NonBlankString,
     PositiveInteger,
     TransportMode,
 )
-from zmqruntime.execution import ExecutionProgressObservation
 from zmqruntime.messages import (
-    ExecutionStatus,
     PongResponse,
     QueuedExecutionInfo,
     RunningExecutionInfo,
@@ -33,19 +30,14 @@ from openhcs.agent.dto.common import (
     AgentCliRequest,
     AgentError,
     AgentResultEnvelope,
-    AgentWarning,
 )
 from openhcs.agent.dto.execution_connection import (
     ExecutionConnectionFields,
     ExecutionConnectionSpec,
 )
-from openhcs.agent.ui_bridge_identities import (
-    PlateManagerOrchestratorCodeDocumentIdentity,
-)
 from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 from openhcs.runtime.zmq_execution_client import ExecutionRuntimeLaunchPlan
 
 MAX_EXECUTION_STATUS_TRACEBACK_CHARS = 3000
@@ -89,97 +81,6 @@ class RuntimeServerConnectionToolRequest(AgentCliRequest):
         return {**self.connection.tool_arguments(), "timeout_ms": self.timeout_ms}
 
 
-@dataclass(frozen=True, kw_only=True)
-class OrchestratorSessionIdentity:
-    session_id: str
-
-
-@dataclass(frozen=True, slots=True)
-class OrchestratorSessionRequest(OrchestratorSessionIdentity):
-    """Request one stored execution session by opaque session id."""
-
-
-@dataclass(frozen=True, slots=True)
-class OrchestratorSessionRef(OrchestratorSessionIdentity):
-    schema_version: str
-    uri: str
-
-
-@dataclass(frozen=True, slots=True)
-class OrchestratorSessionCreationRequest(ExecutionConnectionFields):
-    """Create an execution session from an in-memory pipeline draft."""
-
-    plate_path: str
-    pipeline_id: str
-    execution_plate_path: str | None = None
-    selected_pipeline_path: str | None = None
-    global_config_id: str | None = None
-
-    @classmethod
-    def from_fields(
-        cls,
-        *,
-        plate_path: str,
-        pipeline_id: str,
-        execution_plate_path: str | None = None,
-        selected_pipeline_path: str | None = None,
-        global_config_id: str | None = None,
-        host: str = "localhost",
-        port: int | None = None,
-        transport_mode: TransportMode | None = None,
-        persistent: bool = True,
-    ) -> "OrchestratorSessionCreationRequest":
-        return cls(
-            plate_path=plate_path,
-            pipeline_id=pipeline_id,
-            execution_plate_path=execution_plate_path,
-            selected_pipeline_path=selected_pipeline_path,
-            global_config_id=global_config_id,
-            connection=ExecutionConnectionSpec(
-                host=host,
-                port=port,
-                transport_mode=transport_mode,
-                persistent=persistent,
-            ),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class PipelineSourceOrchestratorSessionRequest(ExecutionConnectionFields):
-    """Create an execution session from pycodified pipeline source."""
-
-    plate_path: str
-    pipeline_source: str
-    execution_plate_path: str | None = None
-    global_config_id: str | None = None
-
-    @classmethod
-    def from_fields(
-        cls,
-        *,
-        plate_path: str,
-        pipeline_source: str,
-        execution_plate_path: str | None = None,
-        global_config_id: str | None = None,
-        host: str = "localhost",
-        port: int | None = None,
-        transport_mode: TransportMode | None = None,
-        persistent: bool = True,
-    ) -> "PipelineSourceOrchestratorSessionRequest":
-        return cls(
-            plate_path=plate_path,
-            pipeline_source=pipeline_source,
-            execution_plate_path=execution_plate_path,
-            global_config_id=global_config_id,
-            connection=ExecutionConnectionSpec(
-                host=host,
-                port=port,
-                transport_mode=transport_mode,
-                persistent=persistent,
-            ),
-        )
-
-
 @dataclass(frozen=True, slots=True)
 class PipelineSourceArtifactPlanInspectionRequest:
     """Compile pycodified pipeline source and inspect bounded artifact planning."""
@@ -204,90 +105,6 @@ class PipelineSourceArtifactPlanInspectionRequest:
             axis_filter=tuple(axis_filter or ()),
             global_config_id=global_config_id,
         )
-
-
-@dataclass(frozen=True, slots=True)
-class OrchestratorSession(OrchestratorSessionIdentity):
-    schema_version: str
-    uri: str
-    plate_path: str
-    execution_plate_path: str
-    pipeline_id: str
-    selected_pipeline_path: str | None = None
-    global_config_id: str | None = None
-    pipeline_config_id: str | None = None
-    connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
-    status: str = "ready"
-
-
-@dataclass(frozen=True, slots=True)
-class ExecutionJobIdentity(OrchestratorSessionIdentity):
-    job_id: str
-    kind: str
-    uri: str
-    server_execution_id: str | None
-
-
-@dataclass(frozen=True, slots=True)
-class ExecutionJobRef(ExecutionJobIdentity):
-    schema_version: str
-    status: str
-
-
-@dataclass(frozen=True, slots=True)
-class CompileSubmissionRequest(OrchestratorSessionIdentity):
-    wait: bool = False
-    submit_timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms
-    wait_timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms
-
-
-@dataclass(frozen=True, slots=True)
-class PipelineExecutionSubmissionRequest(OrchestratorSessionIdentity):
-    compile_artifact_id: str | None = None
-    runtime_observation_export_path: str | None = None
-    runtime_observation_export_scope: ZMQRuntimeObservationExportScope = (
-        ZMQRuntimeObservationExportScope.VALUES
-    )
-    wait: bool = False
-    submit_timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms
-    wait_timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms
-
-
-@dataclass(frozen=True, slots=True)
-class ExecutionStatusRequest:
-    job_id: str
-    timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms
-
-
-@dataclass(frozen=True, slots=True)
-class ExecutionCancellationRequest:
-    job_id: NonBlankString
-    timeout_ms: PositiveInteger = OPENHCS_ZMQ_CONFIG.control_timeout_ms
-
-    def __post_init__(self) -> None:
-        validate_annotated_dataclass(self)
-
-
-@dataclass(frozen=True, slots=True)
-class ExecutionJobStatus(ExecutionJobIdentity, AgentResultEnvelope):
-    status: str
-    response: JsonObject = field(default_factory=dict)
-    progress: ExecutionProgressObservation | None = None
-
-    @property
-    def is_terminal(self) -> bool:
-        """Delegate execution terminality to the generic lifecycle declaration."""
-
-        lifecycle_status = ExecutionStatus.from_wire(self.status)
-        return lifecycle_status is not None and lifecycle_status.is_terminal
-
-
-@dataclass(frozen=True, slots=True)
-class ExecutionJobCancellationResult(AgentResultEnvelope):
-    """One cancellation attempt and the ordinary job status observed afterward."""
-
-    applied: bool
-    job_status: ExecutionJobStatus
 
 
 @dataclass(frozen=True, slots=True)
@@ -1094,53 +911,6 @@ def _execution_failure_text(response: JsonObject) -> str:
         execution.get("traceback"),
     )
     return "\n".join(str(value) for value in values if value is not None)
-
-
-def execution_status_warnings(response: JsonObject) -> tuple[AgentWarning, ...]:
-    orchestrator_code_document_id = (
-        PlateManagerOrchestratorCodeDocumentIdentity.require_value()
-    )
-    warnings: list[AgentWarning] = []
-    if response.get("wait_timed_out") is True:
-        timeout_ms = response.get("wait_timeout_ms")
-        timeout_label = f" within {timeout_ms}ms" if isinstance(timeout_ms, int) else ""
-        warnings.append(
-            AgentWarning(
-                code="execution_wait_timeout",
-                message=(
-                    "Execution wait timed out before a terminal status was reached"
-                    f"{timeout_label}."
-                ),
-                hint=(
-                    "The job is still tracked. Poll openhcs_get_execution_status "
-                    "with the returned job_id instead of blocking the submit tool."
-                ),
-            )
-        )
-
-    execution = response.get("execution")
-    if isinstance(execution, Mapping):
-        results_summary = execution.get("results_summary")
-        if (
-            isinstance(results_summary, Mapping)
-            and results_summary.get("auto_add_output_plate_to_plate_manager") is False
-        ):
-            warnings.append(
-                AgentWarning(
-                    code="headless_execution_did_not_update_plate_manager",
-                    message=(
-                        "This direct execution session completed without adding "
-                        "the output plate to the running UI PlateManager."
-                    ),
-                    hint=(
-                        "For user-visible work in an open UI, load plate_paths "
-                        f"and pipeline_data through the {orchestrator_code_document_id} "
-                        "code document, then run init/compile/run with "
-                        "openhcs_ui_selected_plate_workflow."
-                    ),
-                )
-            )
-    return tuple(warnings)
 
 
 def _execution_failure_message(response: JsonObject) -> str:

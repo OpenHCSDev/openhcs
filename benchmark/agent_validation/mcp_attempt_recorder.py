@@ -14,7 +14,7 @@ import hashlib
 import json
 import time
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from pathlib import Path
 
 from python_introspect import JsonObject, dataclass_from_mapping, to_jsonable
@@ -38,19 +38,18 @@ from benchmark.metrics.memory import MemoryMetric
 from openhcs.agent.capabilities import (
     AddFunctionStepCapability,
     DescribeFunctionCapability,
-    GetExecutionStatusCapability,
     InspectPipelineSourceArtifactPlanCapability,
     RegisterCustomFunctionCapability,
     RenderPipelineSourceCapability,
-    SubmitCompileCapability,
-    SubmitPipelineExecutionCapability,
+    SessionDatasetsCapability,
     UiApplyCodeDocumentCapability,
     UiGetCodeDocumentCapability,
     ValidatePipelineCapability,
     get_agent_capability,
 )
 from openhcs.agent.dto.common import RenderedSource
-from openhcs.agent.dto.execution import ArtifactPlanInspection, ExecutionJobIdentity
+from openhcs.agent.dto.execution import ArtifactPlanInspection
+from openhcs.agent.dto.session import DatasetListState
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
     FunctionDetail,
@@ -314,7 +313,7 @@ def _derive_evidence(
     if {"compile", "execute"}.issubset(completed_job_kinds):
         requirements.add(DslRequirement.COMPILE_RUN_BOUNDARY)
         explanations[DslRequirement.COMPILE_RUN_BOUNDARY] = (
-            "Distinct typed compile and execution jobs both reached a successful "
+            "A session dataset was compiled and then executed to a successful "
             "terminal status, preserving the compiler/runtime boundary."
         )
 
@@ -446,21 +445,20 @@ def _pipeline_function_paths(documents: tuple[PipelineDocument, ...]) -> set[str
 
 
 def _completed_job_kinds(results: list[McpDevToolResult]) -> set[str]:
+    """Which session stages a dataset reached, read from the dataset list."""
+
     completed: set[str] = set()
     for result in results:
-        declaration = get_agent_capability(result.tool)
-        if not issubclass(
-            declaration,
-            (
-                SubmitCompileCapability,
-                SubmitPipelineExecutionCapability,
-                GetExecutionStatusCapability,
-            ),
-        ):
+        if not issubclass(get_agent_capability(result.tool), SessionDatasetsCapability):
             continue
-        status = result.decoded_payload_as(ExecutionJobIdentity)
-        if status is not None and status.status in {"complete", "completed"}:
-            completed.add(status.kind)
+        state = result.decoded_payload_as(DatasetListState)
+        if state is None:
+            continue
+        for row in state.rows:
+            if row.compiled:
+                completed.add("compile")
+            if row.terminal_status == "complete":
+                completed.add("execute")
     return completed
 
 

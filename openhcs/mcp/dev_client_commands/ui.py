@@ -12,6 +12,7 @@ from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotFrameCondition,
 )
 
+from openhcs.agent.dto.session import DatasetRowState
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.ui_bridge import (
     UiActionInvokeRequest,
@@ -23,7 +24,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateFieldListQuery,
     UiObjectStateFieldMutationRequest,
     UiObjectStateScopeListRequest,
-    UiPlateManagerRowState,
     UiSelectedPlateWorkflowKind,
     UiWidgetActionInvokeRequest,
     UiWidgetTreeRequest,
@@ -435,7 +435,7 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
     @staticmethod
     def _final_state_rows(
         response: McpDevToolBatchResponse,
-    ) -> tuple[UiPlateManagerRowState, ...]:
+    ) -> tuple[DatasetRowState, ...]:
         result = next(
             (
                 result

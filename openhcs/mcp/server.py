@@ -666,6 +666,9 @@ def build_server(
         if main_thread_dispatcher is not None
         else McpMainThreadDispatcher()
     )
+    from openhcs.authoring.session.session import DispatcherThread
+
+    ctx.bind_main_thread(DispatcherThread(dispatcher))
     capability_surface_selection = AgentCapabilitySurfaceSelection(
         transport=capability_transport,
         local_profile=(

@@ -47,7 +47,7 @@ from openhcs.core.plate_image_inventory import (
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
-from openhcs.ui.shared.plate_scope_identity import SCOPE_SEGMENT_SEPARATOR
+from openhcs.core.dataset_sources.dataset_scopes import SCOPE_SEGMENT_SEPARATOR
 from openhcs.core.axes import AxisFamily
 from openhcs.pyqt_gui.widgets.shared.plate_view_widget import (
     PlateViewWidget,

@@ -160,7 +160,7 @@ class InspectMeasuredPipelineCommand(BenchmarkCliCommand):
 
 
 class RunMeasuredPipelineCommand(BenchmarkCliCommand):
-    """Measure one source-backed pipeline through ordinary job control."""
+    """Measure one source-backed pipeline on the ordinary execution runtime."""
 
     command_name = "run-measured"
     help_text = "Run an ordinary Python pipeline and retain measured evidence."
@@ -195,35 +195,24 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             default=True,
             help="Reuse an existing execution endpoint or close an ephemeral one.",
         )
-        parser.add_argument("--submit-timeout-ms", type=int)
-        parser.add_argument(
-            "--wait-timeout-ms",
-            type=int,
-            required=True,
-            help="Explicit bound for the ordinary pipeline job's completion wait.",
-        )
         return parser
 
     def run(self, args: argparse.Namespace) -> int:
-        if args.wait_timeout_ms <= 0:
-            raise ValueError("--wait-timeout-ms must be positive.")
-        if args.submit_timeout_ms is not None and args.submit_timeout_ms <= 0:
-            raise ValueError("--submit-timeout-ms must be positive.")
-
-        from zmqruntime.messages import ExecutionStatus
-
-        from benchmark.contracts.control import MeasuredPipelineRunFinalizationRequest
         from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
-        from benchmark.control_service import BenchmarkControlService
-        from openhcs.agent.dto.execution import (
-            ExecutionJobRef,
-            ExecutionJobStatus,
-            PipelineSourceOrchestratorSessionRequest,
+        from benchmark.openhcs_measured_run import (
+            _ZMQProgressTimingObserver,
+            execute_measured_openhcs_pipeline_on_client,
         )
+        from benchmark.timing import PhaseTimingTrace
         from openhcs.agent.path_policy import AgentPathPolicy
-        from openhcs.mcp.context import OpenHCSAgentContext
-        from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+        from openhcs.core.config import GlobalPipelineConfig
+        from openhcs.core.pipeline_document import PipelineDocumentCodec
+        from openhcs.runtime.zmq_execution_client import (
+            OpenHCSExecutionSubmission,
+            ZMQExecutionClient,
+        )
         from openhcs.runtime.zmq_execution_signature import (
+            ZMQAuxiliaryExecutionParams,
             ZMQRuntimeObservationExportScope,
         )
         from python_introspect import to_jsonable
@@ -248,71 +237,44 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         policy.assert_writable(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        context = OpenHCSAgentContext(path_policy=policy)
-        session = context.execution_service.create_session_from_pipeline_source_request(
-            PipelineSourceOrchestratorSessionRequest.from_fields(
-                plate_path=str(plate),
-                execution_plate_path=str(execution_plate),
-                pipeline_source=source_file.read_text(encoding="utf-8"),
-                host=args.host,
-                port=args.port,
-                persistent=args.persistent,
-            )
-        )
-        observation_path = MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(
-            output_dir
-        )
-        submitted = context.execution_service.submit_execution(
-            session.session_id,
-            runtime_observation_export_path=str(observation_path),
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope(
-                args.observation_scope
+        submission = OpenHCSExecutionSubmission(
+            plate_id=str(plate),
+            execution_plate_id=str(execution_plate),
+            pipeline_document=PipelineDocumentCodec.from_source(
+                source_file.read_text(encoding="utf-8")
             ),
-            wait=False,
-            submit_timeout_ms=(
-                args.submit_timeout_ms
-                or OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms
-            ),
-        )
-        if isinstance(submitted, ExecutionJobStatus):
-            raise RuntimeError(f"Ordinary pipeline job was not accepted: {submitted}")
-        if not isinstance(submitted, ExecutionJobRef):
-            raise TypeError(
-                f"Ordinary pipeline submission returned {type(submitted).__name__}."
-            )
-        print(f"Ordinary pipeline job submitted: {submitted.job_id}", file=sys.stderr)
-        try:
-            status = context.execution_service.wait_job(
-                submitted.job_id,
-                timeout_ms=args.wait_timeout_ms,
-            )
-        except KeyboardInterrupt:
-            cancellation = context.execution_service.cancel_job(submitted.job_id)
-            print(
-                json.dumps(to_jsonable(cancellation), sort_keys=True), file=sys.stderr
-            )
-            return 130
-        if not isinstance(status, ExecutionJobStatus):
-            raise TypeError(f"Ordinary pipeline wait returned {type(status).__name__}.")
-        if status.status != ExecutionStatus.COMPLETE.value:
-            if not status.is_terminal:
-                cancellation = context.execution_service.cancel_job(submitted.job_id)
-                print(
-                    json.dumps(to_jsonable(cancellation), sort_keys=True),
-                    file=sys.stderr,
-                )
-            raise RuntimeError(f"Ordinary pipeline job did not complete: {status}")
-        receipt = BenchmarkControlService(
-            policy, context.execution_service
-        ).finalize_measured_run(
-            MeasuredPipelineRunFinalizationRequest(
-                job_id=status.job_id,
-                run_id=args.run_id,
-                pipeline_name=args.pipeline_name or source_file.stem,
+            global_config=GlobalPipelineConfig(),
+        ).with_auxiliary_params(
+            ZMQAuxiliaryExecutionParams(
+                runtime_observation_export_path=(
+                    MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(output_dir)
+                ),
+                runtime_observation_export_scope=ZMQRuntimeObservationExportScope(
+                    args.observation_scope
+                ),
             )
         )
-        print(json.dumps(to_jsonable(receipt), indent=2, sort_keys=True))
+        timing_observer = _ZMQProgressTimingObserver()
+        client = ZMQExecutionClient(
+            port=args.port,
+            host=args.host,
+            persistent=args.persistent,
+            progress_callback=timing_observer,
+        )
+        with client:
+            execution, _source = execute_measured_openhcs_pipeline_on_client(
+                client=client,
+                submission=submission,
+                phase_timing=PhaseTimingTrace(
+                    run_id=args.run_id,
+                    pipeline_name=args.pipeline_name or source_file.stem,
+                    tool="OpenHCS",
+                ),
+                timing_observer=timing_observer,
+            )
+        print(json.dumps(to_jsonable(execution.receipt), indent=2, sort_keys=True))
         return 0
+
 
 
 class ListBenchmarkCasesCommand(BenchmarkCliCommand):

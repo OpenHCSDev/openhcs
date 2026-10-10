@@ -45,7 +45,7 @@ class SelectedPlateStateResolution:
     def plate_root(self) -> str | None:
         if self.selected_plate is None:
             return None
-        plate_root = self.selected_plate.get("plate_root")
+        plate_root = self.selected_plate.get("root")
         if not isinstance(plate_root, str):
             return None
         return plate_root
@@ -326,13 +326,13 @@ class SelectedPlateService:
             raise RuntimeError("Selected row plate_root was validated as a string.")
         selected_row = selected_plate.selected_plate or {}
         if target is SelectedPlateFileQueryTarget.OUTPUT:
-            output_root = selected_row.get("output_plate_root")
+            output_root = selected_row.get("output_root")
             if not isinstance(output_root, str) or not output_root:
                 return None, AgentError(
                     code="ui_selected_plate_output_root_unavailable",
                     message=(
                         "The selected PlateManager row does not expose an "
-                        "output_plate_root."
+                        "output_root."
                     ),
                     hint=(
                         "Call openhcs_ui_get_state_surface(surface_id="
@@ -342,7 +342,7 @@ class SelectedPlateService:
                 )
             plate_root = output_root
         elif target is SelectedPlateFileQueryTarget.SOURCE:
-            source_root = selected_row.get("source_plate_root")
+            source_root = selected_row.get("source_root")
             if isinstance(source_root, str) and source_root:
                 plate_root = source_root
         return (
@@ -389,7 +389,7 @@ class SelectedPlateService:
             row
             for row in rows_value
             if isinstance(row, Mapping)
-            and row.get("plate_scope_id") == selected_scope_id
+            and row.get("scope_id") == selected_scope_id
         )
         if len(matched_rows) != 1:
             return None, AgentError(
@@ -417,8 +417,8 @@ class SelectedPlateService:
                     "plate images."
                 ),
             )
-        if not isinstance(selected_row.get("plate_root"), str) or not selected_row.get(
-            "plate_root"
+        if not isinstance(selected_row.get("root"), str) or not selected_row.get(
+            "root"
         ):
             return None, AgentError(
                 code="ui_selected_plate_root_unavailable",
@@ -492,7 +492,7 @@ class SelectedPlateService:
         ):
             return None
         selected_row = selected_plate.selected_plate or {}
-        source_root = selected_row.get("source_plate_root")
+        source_root = selected_row.get("source_root")
         if isinstance(source_root, str) and source_root:
             return source_root
         return selected_plate.plate_root

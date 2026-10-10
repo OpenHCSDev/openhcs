@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from openhcs.agent.path_policy import AgentPathPolicy
 
 if TYPE_CHECKING:
+    from openhcs.runtime.zmq_config import OpenHCSZMQConfig
     from openhcs.agent.services.architecture_projection_service import (
         ArchitectureProjectionService,
     )
@@ -14,7 +15,10 @@ if TYPE_CHECKING:
     from openhcs.agent.services.endpoint_function_catalog_service import (
         EndpointFunctionCatalogServiceABC,
     )
-    from openhcs.agent.services.execution_session_service import ExecutionSessionService
+    from openhcs.agent.services.artifact_plan_inspection_service import (
+        ArtifactPlanInspectionService,
+    )
+    from openhcs.authoring.session.session import MainThread, Session
     from openhcs.agent.services.function_catalog_service import (
         FunctionCatalogServiceABC,
     )
@@ -48,7 +52,10 @@ class OpenHCSAgentContext:
         "_architecture_service",
         "_authoring_context_service",
         "_config_service",
-        "_execution_service",
+        "_artifact_plan_service",
+        "_session",
+        "_main_thread",
+        "_session_transport_config",
         "_endpoint_function_catalog",
         "_function_catalog",
         "_knowledge_base_service",
@@ -71,7 +78,9 @@ class OpenHCSAgentContext:
         architecture_service: "ArchitectureProjectionService | None" = None,
         authoring_context_service: "AgentAuthoringContextService | None" = None,
         config_service: "ConfigService | None" = None,
-        execution_service: "ExecutionSessionService | None" = None,
+        artifact_plan_service: "ArtifactPlanInspectionService | None" = None,
+        session: "Session | None" = None,
+        session_transport_config: "OpenHCSZMQConfig | None" = None,
         function_catalog: "FunctionCatalogServiceABC | None" = None,
         endpoint_function_catalog: "EndpointFunctionCatalogServiceABC | None" = None,
         knowledge_base_service: "KnowledgeBaseService | None" = None,
@@ -90,7 +99,10 @@ class OpenHCSAgentContext:
         self._architecture_service = architecture_service
         self._authoring_context_service = authoring_context_service
         self._config_service = config_service
-        self._execution_service = execution_service
+        self._artifact_plan_service = artifact_plan_service
+        self._session = session
+        self._main_thread: "MainThread | None" = None
+        self._session_transport_config = session_transport_config
         self._function_catalog = function_catalog
         self._endpoint_function_catalog = endpoint_function_catalog
         self._knowledge_base_service = knowledge_base_service
@@ -227,18 +239,40 @@ class OpenHCSAgentContext:
         return self._synthetic_plate_service
 
     @property
-    def execution_service(self) -> "ExecutionSessionService":
-        if self._execution_service is None:
-            from openhcs.agent.services.execution_session_service import (
-                ExecutionSessionService,
+    def artifact_plan_service(self) -> "ArtifactPlanInspectionService":
+        if self._artifact_plan_service is None:
+            from openhcs.agent.services.artifact_plan_inspection_service import (
+                ArtifactPlanInspectionService,
             )
 
-            self._execution_service = ExecutionSessionService(
+            self._artifact_plan_service = ArtifactPlanInspectionService(
                 path_policy=self.path_policy,
-                pipeline_service=self.pipeline_service,
                 config_service=self.config_service,
             )
-        return self._execution_service
+        return self._artifact_plan_service
+
+    def bind_main_thread(self, main_thread: "MainThread") -> None:
+        """Where the session runs work that touches ObjectState (the MCP main thread)."""
+
+        self._main_thread = main_thread
+
+    @property
+    def session(self) -> "Session":
+        """The headless OpenHCS session every session tool acts on."""
+
+        if self._session is None:
+            from openhcs.agent.session_access import AgentPathDatasetAccess
+            from openhcs.authoring.session.session import CallerThread, Session
+            from openhcs.core.config import GlobalPipelineConfig
+            from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+
+            self._session = Session(
+                transport_config=self._session_transport_config or OpenHCSZMQConfig(),
+                global_config=GlobalPipelineConfig(),
+                main_thread=self._main_thread or CallerThread(),
+                dataset_access=AgentPathDatasetAccess(self.path_policy),
+            )
+        return self._session
 
     @property
     def runtime_server_service(self) -> "RuntimeServerService":
@@ -311,6 +345,7 @@ def create_agent_context() -> OpenHCSAgentContext:
         path_policy=path_policy,
         function_catalog=catalog,
         endpoint_function_catalog=catalog,
+        session_transport_config=endpoint_config,
     )
 
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from dataclasses import dataclass
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -24,10 +25,24 @@ from openhcs.core.execution_state import (
     TerminalExecutionStatus,
     parse_terminal_status,
 )
+from openhcs.core.debug import DebugExecutionConfig
 from openhcs.core.orchestrator.orchestrator import OrchestratorState
+from openhcs.runtime.zmq_execution_client import ZMQExecutionRequestBuilder
+from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 if TYPE_CHECKING:
+    from zmqruntime.messages import PongResponse
+
     from openhcs.authoring.session.session import Session
+
+
+@dataclass(frozen=True, slots=True)
+class SubmittedExecution:
+    """What the session submitted for one ordinary execution."""
+
+    scope_id: str
+    request: ZMQExecutionRequestBuilder
+    endpoint: "PongResponse | None"
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +54,61 @@ class ExecutionSubmission:
         self._session = session
         self._poller = ExecutionStatusPoller()
 
-    async def submit(
+    async def submit_execution(
         self,
         request: DatasetPipelineRequest,
         *,
         compile_artifact_id: str,
-        submit: Callable[[], dict],
-        label: str,
+        auxiliary_params: ZMQAuxiliaryExecutionParams | None,
     ) -> None:
-        """Submit through ``submit`` (an ordinary or debug submission)."""
+        """Submit an ordinary execution and keep what was submitted, for evidence."""
 
+        client = self._session.client.require_client()
+        prepared = ZMQExecutionRequestBuilder.from_task(
+            request.submission(
+                compile_artifact_id=compile_artifact_id,
+                auxiliary_params=auxiliary_params,
+            )
+        )
+        execution_id = await self._submit(
+            request,
+            compile_artifact_id=compile_artifact_id,
+            send=lambda: client.submit_prepared_pipeline(prepared),
+            label="execution",
+        )
+        if execution_id is not None:
+            self._session.submitted_executions[execution_id] = SubmittedExecution(
+                scope_id=request.scope_id,
+                request=prepared,
+                endpoint=client.connected_endpoint,
+            )
+
+    async def submit_debug(
+        self,
+        request: DatasetPipelineRequest,
+        *,
+        compile_artifact_id: str,
+        debug_config: DebugExecutionConfig,
+    ) -> None:
+        client = self._session.client.require_client()
+        await self._submit(
+            request,
+            compile_artifact_id=compile_artifact_id,
+            send=lambda: client.submit_debug_pipeline(
+                request.submission(compile_artifact_id=compile_artifact_id),
+                debug_config=debug_config,
+            ),
+            label="debug run",
+        )
+
+    async def _submit(
+        self,
+        request: DatasetPipelineRequest,
+        *,
+        compile_artifact_id: str,
+        send: Callable[[], dict],
+        label: str,
+    ) -> str | None:
         session = self._session
         scope_id = request.scope_id
         logger.info(
@@ -61,19 +121,20 @@ class ExecutionSubmission:
             len(request.steps),
             pipeline_fingerprint(request.steps),
         )
-        response = ExecutionSubmissionResponse.from_wire(await run_blocking(submit))
+        response = ExecutionSubmissionResponse.from_wire(await run_blocking(send))
         if response.accepted:
             execution_id = response.require_execution_id(f"{label} submission")
             session.batch.record_execution(scope_id, execution_id)
-            session.publish(StatusReported(f"Submitted {scope_id} ({label})"))
+            session.publish(StatusReported(f"Submitted {label} for {scope_id}"))
             self.follow(execution_id, scope_id)
-            return
+            return execution_id
 
         error_text = response.require_failure_text(f"{label} submission")
         logger.error("%s submission failed for %s: %s", label, scope_id, error_text)
         session.publish(ErrorReported(f"Submission failed for {scope_id}: {error_text}"))
         session.batch.mark_terminal(scope_id, TerminalExecutionStatus.FAILED)
         session.set_dataset_state(scope_id, OrchestratorState.EXEC_FAILED)
+        return None
 
     def follow(self, execution_id: str, scope_id: str) -> None:
         """Follow one execution on a background thread until it is terminal."""
@@ -102,6 +163,7 @@ class ExecutionSubmission:
             return True
 
         def on_terminal(terminal_id: str, status: str, payload: dict) -> None:
+            session.record_finished_execution(terminal_id, payload)
             if current(terminal_id):
                 session.finish_dataset_execution(
                     parse_terminal_status(status).completion_payload(
