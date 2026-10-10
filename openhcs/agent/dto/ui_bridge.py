@@ -50,8 +50,8 @@ from openhcs.agent.dto.common import (
     AgentTimedStatusEnvelope,
     AgentWarning,
 )
-from openhcs.agent.dto.execution import (
-    ExecutionConnectionProjection,
+from openhcs.agent.dto.execution_connection import (
+    ExecutionConnectionFields,
     ExecutionConnectionSpec,
 )
 from openhcs.agent.path_policy import DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR
@@ -453,7 +453,7 @@ class UiBridgeConnectionSpec(
 
 @dataclass(frozen=True, slots=True)
 class UiBridgeEndpointIdentity(
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
     UiBridgeInstanceIdentity,
     UiBridgeDescriptorFileRef,
 ):
@@ -462,7 +462,7 @@ class UiBridgeEndpointIdentity(
     @classmethod
     def from_value(
         cls,
-        value: ExecutionConnectionProjection,
+        value: ExecutionConnectionFields,
     ) -> UiBridgeEndpointIdentity:
         """Project identity from any declared UI bridge endpoint carrier."""
 
@@ -489,7 +489,7 @@ class UiBridgeDescriptorEnvelope(
 
 @dataclass(frozen=True, slots=True)
 class UiBridgeDescriptorFile(
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
     UiBridgeDescriptorEnvelope,
     UiBridgeDescriptorFileRef,
 ):
@@ -514,7 +514,7 @@ class UiBridgeDescriptorFile(
 
 @dataclass(frozen=True, slots=True)
 class UiBridgeDescriptorWirePayload(
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
     UiBridgeDescriptorEnvelope,
 ):
     """JSON descriptor file payload written by a running UI bridge."""
@@ -523,7 +523,7 @@ class UiBridgeDescriptorWirePayload(
 @dataclass(frozen=True, slots=True)
 class UiBridgeDescriptorSummary(
     AgentTimedStatusEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
     UiBridgeApplicationIdentity,
     UiBridgeInstanceIdentity,
     UiBridgeDescriptorFileRef,
@@ -541,7 +541,7 @@ class UiBridgeCatalog:
 
 @dataclass(frozen=True, slots=True)
 class UiBridgeStatus(
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
     UiBridgeInstanceIdentity,
     UiBridgeDescriptorFileRef,
 ):

@@ -13,7 +13,7 @@
 - **Labels by role table.** `ViewerAxisLabelStrategy` and its four leaves (`viewer_component_system.py:97-160`) hardcode `Ch`/`Z`/`T` per role instead of reading a declared label.
 - **Two control families restate the lifecycle.** `NapariControlMessageAction` (`napari_viewer_server.py:3036-3296`) and `FijiControlMessagePlan` (`fiji_viewer_server.py:1229-1495`) each declare shutdown, force-shutdown, clear-state, process-launch and settle; Fiji spells the first three as string literals. **Bug:** `FijiControlMessageAuthority.response_for` answers an unregistered message with SUCCESS (`fiji_viewer_server.py:1490`), so MCP navigate/viewport/measure requests to Fiji silently do nothing. Fiji carries three `FijiUnsupported*Plan` placeholders that restate the unknown-message error, and its pong advertises no control capabilities.
 - **Identity and forwarding.** `ViewerType` (enum, `streaming_config_declarations.py:66`) points at `*ViewerDeclaration` leaves; `StreamingConfigBehaviorMixin` forwards six properties to it (`streaming_config_factory.py:185-209`), and `config_key`/`from_config_key` spell and reverse-search an f-string. `start_viewer`/`stop_viewer` are written twice (`napari_stream_visualizer.py:95-170`, `fiji_stream_visualizer.py:69-112`); `from_display_payload` is written twice (`config.py:412-435, 548-570`).
-- **Import reach.** `agent/dto/viewer.py:44` imports `agent/dto/execution.py` for `ExecutionConnectionProjection`; through `zmq_execution_client` that loads 203 openhcs modules, 16 of them `openhcs.microscopes`, plus `core.orchestrator`, into the napari server process.
+- **Import reach.** `agent/dto/viewer.py:44` imports `agent/dto/execution.py` for `ExecutionConnectionFields`; through `zmq_execution_client` that loads 203 openhcs modules, 16 of them `openhcs.microscopes`, plus `core.orchestrator`, into the napari server process.
 
 ## Target
 
@@ -42,7 +42,7 @@ class FijiSlots(ViewerSlotFamily):   Channel(ColourAxis), Slice(StackAxis), Fram
 - zmqruntime: `ViewerComponentMode`, `ViewerComponentModeGroups`, `viewer_component_mode_value` and the mode-grouping helpers are deleted (lockstep PR, version bump). PolyStore: the Fiji window grouping and napari route key move to the OpenHCS viewer modules that call them (lockstep PR, version bump).
 - **One control family** (`openhcs/runtime/viewer_control_actions.py`): `ViewerControlAction` keyed by the control message-type wire value, per-viewer registries (`NapariControlAction`, `FijiControlAction`), lifecycle mixins (shutdown, force-shutdown, clear-state, process-launch, settle) written once over a `ViewerServerPort`, one shared `UnknownControlAction` that answers ERROR, and pong capabilities derived from each registry for both viewers. The `FijiUnsupported*` plans are deleted (the shared ERROR answers them).
 - **One `ViewerFamily` class per viewer** (`NapariViewer`, `FijiViewer`) owns backend, config key, title, visualizer, slot family and entrypoint; `ViewerType` becomes the boundary view derived from the registry; `ViewerDeclarationABC` and its two leaves are deleted; `StreamingConfigBehaviorMixin` reads the family directly. `start_viewer`/`stop_viewer` move into `ManagedViewerLifecycleMixin` once.
-- `ExecutionConnectionProjection` moves to `agent/dto/execution_connection.py`; `agent/dto/viewer.py` no longer imports `agent/dto/execution.py`.
+- `ExecutionConnectionFields` moves to `agent/dto/execution_connection.py`; `agent/dto/viewer.py` no longer imports `agent/dto/execution.py`.
 
 ## Guards
 
