@@ -2,29 +2,31 @@
 
 from __future__ import annotations
 
+import inspect
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 
-import numpy as np
-
-from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
-    ImagePayloadExecutionMode,
-    aligned_image_stack_kwargs,
-)
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.measurement_lookup_dialect import runtime_measurement_lookup_dialect
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.measurement_dialect import executing_measurement_dialect
 from openhcs.core.memory import detect_memory_type, stack_slices
+from openhcs.core.processing_contracts import (
+    ContractCall,
+    PlaneSplit,
+    ProcessingContract,
+    Pure2DAuxiliaryOutputAggregator,
+    Pure2DInputSlicer,
+    Pure2DSliceResultBatch,
+    RuntimeCallablePolicy,
+    SignatureFilteredKwargs,
+)
+from openhcs.core.runtime_array_values import array_geometry
 from openhcs.core.runtime_batch_contracts import (
-    Pure2DSliceBatchExecutor,
     RuntimeBatchInvocationRequest,
-    RuntimePure2DSliceBatchRequest,
     SliceIndexRuntimeParameter,
 )
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
-    RuntimePlaneAxisValueProjection,
-)
+from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_slice_projection import (
     RuntimeSliceProjection,
@@ -36,40 +38,211 @@ from openhcs.core.steps.function_runtime import (
     RuntimeFunctionOutput,
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    ProcessingContract,
-    Pure2DAuxiliaryOutputAggregator,
-    Pure2DInputSlicer,
-    Pure2DSliceResultBatch,
-    RuntimeCallablePolicy,
-    RuntimeCallableView,
-    RuntimeInvocationKwargPolicy,
-    contextualize_main_image_output,
-)
-from openhcs.core.runtime_array_values import array_geometry
-from openhcs.core.runtime_image_values import ImagePayload
-from openhcs.core.runtime_image_values import owned_runtime_value
 
+# The compiled raw target is resolved before contract execution.
 _CELLPROFILER_RUNTIME_CALLABLE_POLICY = RuntimeCallablePolicy(
-    # execute() resolves the compiled raw target before processing dispatch.
-    callable_view=RuntimeCallableView.DECORATED,
-    kwarg_policy=RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED,
+    kwarg_policy=SignatureFilteredKwargs,
 )
 
 
-class CellProfilerFunctionContractExecutor:
-    """Apply OpenHCS processing contracts after CellProfiler input resolution."""
+class CellProfilerContractCall(ContractCall):
+    """CellProfiler modules: compiled ABI, compiled plane projection, profiling."""
 
     def __init__(
         self,
-        plane_projection: RuntimePlaneAxisValueProjection | None = None,
+        callable_contract: CallableContract,
+        func: Callable[..., RuntimeFunctionOutput],
+        plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> None:
+        self.func = func
         self.plane_projection = plane_projection
+        self._callable_contract = callable_contract
+
+    @property
+    def callable_contract(self) -> CallableContract:
+        return self._callable_contract
+
+    @property
+    def parameters(self) -> Mapping[str, inspect.Parameter]:
+        return self.callable_contract.canonical_signature.parameters
+
+    @property
+    def signature(self) -> inspect.Signature | None:
+        return self.callable_contract.raw_runtime_signature
+
+    @property
+    def _owner(self) -> str:
+        return (
+            f"CellProfiler module {self.callable_contract.module_name!r} callable "
+            f"{self.callable_contract.function_name!r}"
+        )
+
+    def invoke(self, value, kwargs, *, func=None):
+        return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
+            self.callable_contract,
+            self.func if func is None else func,
+            value,
+            kwargs,
+        ).call()
+
+    def invoke_unbound(self, value, kwargs):
+        return self.invoke(value, kwargs)
+
+    def full_stack_inputs(self, image, kwargs):
+        projection_started_at = time.perf_counter()
+        projected_image = RuntimeSliceProjection.full_stack_value(image)
+        projected_kwargs = RuntimeSliceProjection.full_stack_kwargs(kwargs)
+        label_value = projected_kwargs.get("labels")
+        CellProfilerRuntimeProfileLogger.log_module_profile(
+            "cp_full_stack_project_domains",
+            time.perf_counter() - projection_started_at,
+            function=self.callable_contract.function_name,
+            image_shape=array_geometry(projected_image).shape,
+            labels_shape=(
+                array_geometry(label_value).shape if label_value is not None else None
+            ),
+        )
+        return projected_image, projected_kwargs
+
+    def validate_full_stack_kwargs(self, contract, kwargs):
+        if not contract.whole_stack_only:
+            return
+        aligned_names = tuple(
+            name
+            for name, value in kwargs.items()
+            if isinstance(value, RuntimeSliceAlignedValues)
+        )
+        if aligned_names:
+            raise ValueError(
+                f"{self._owner} has whole-stack contract {contract.key!r} but "
+                f"received runtime-slice-aligned kwargs {list(aligned_names)}. "
+                "Whole-stack callables consume whole-stack values; bind "
+                "object-label special inputs as dense stack arrays or use a "
+                "plane-local processing contract."
+            )
+
+    def stack_reduction_output(self, result):
+        result_2d = ImagePayload.of(result)
+        stacked = stack_slices(
+            [result_2d.data], detect_memory_type(result_2d.data), 0,
+        )
+        return result_2d.metadata.payload_with(stacked, mask=result_2d.mask)
+
+    def plane_split(self, image, kwargs):
+        memory_type = owned_runtime_value(image).memory_type
+        if memory_type != "numpy":
+            return None
+        projection = self.plane_projection
+        if projection is None:
+            declared_kwarg_slice_count = RuntimeSliceProjection.slice_count_from_values(
+                kwargs.values()
+            )
+            if declared_kwarg_slice_count is not None:
+                declared_kwarg_names = tuple(
+                    name
+                    for name, value in kwargs.items()
+                    if RuntimeSliceProjection.slice_count_from_values((value,))
+                    is not None
+                )
+                raise RuntimeSliceProjectionDeclarationError(
+                    f"{self._owner} with a per-plane contract has kwargs declaring "
+                    "a runtime-slice axis of size "
+                    f"{declared_kwarg_slice_count} through {declared_kwarg_names!r}, "
+                    "but the image invocation has no declared plane projection. "
+                    "Kwargs cannot create image-axis execution semantics."
+                )
+            return None
+        declared_plane_axis = image.metadata.plane_axis
+        if declared_plane_axis is not projection.axis:
+            raise RuntimeSliceProjectionDeclarationError(
+                f"{self._owner} with a per-plane contract has an image payload "
+                "plane axis that conflicts with the compiled projection: "
+                f"{declared_plane_axis!r} != {projection.axis.value!r}."
+            )
+        prepare_started_at = time.perf_counter()
+        slices = tuple(
+            Pure2DInputSlicer.strategy_for_value(image).slice_value(image, memory_type)
+        )
+        if len(slices) != projection.axis_size:
+            raise RuntimeSliceProjectionDeclarationError(
+                f"{self._owner} with a per-plane contract has an image payload "
+                "slice count that conflicts with the compiled projection: "
+                f"{len(slices)} != {projection.axis_size}."
+            )
+        CellProfilerRuntimeProfileLogger.log_module_profile(
+            "cp_pure_2d_prepare_slices",
+            time.perf_counter() - prepare_started_at,
+            function=self.callable_contract.function_name,
+            slices=len(slices),
+        )
+        return PlaneSplit(
+            slices=slices,
+            plane_axis=projection.axis,
+            memory_type=memory_type,
+            kwargs=dict(kwargs),
+        )
+
+    def slice_kwargs(self, split, kwargs, slice_index, slice_count):
+        if self.plane_projection.axis_size != slice_count:
+            raise ValueError(
+                f"{self._owner} per-plane slice batch cardinality conflicts with "
+                "its declared plane axis: "
+                f"{slice_count} != {self.plane_projection.axis_size}."
+            )
+        sliced_kwargs = RuntimeSliceProjection.kwargs_for_slice(
+            kwargs,
+            self.plane_projection.selected_plane(slice_index),
+        )
+        if (
+            SliceIndexRuntimeParameter
+            in self.callable_contract.runtime_bound_parameter_types
+        ):
+            sliced_kwargs = dict(sliced_kwargs)
+            sliced_kwargs[SliceIndexRuntimeParameter.require_parameter_name()] = (
+                slice_index
+            )
+        return sliced_kwargs
+
+    def aggregate_slices(self, split: PlaneSplit, batch: Pure2DSliceResultBatch):
+        canonical_specs = self.callable_contract.canonical_return_output_specs.specs
+        trailing_specs = self.callable_contract.trailing_return_output_specs.specs
+        if len(batch.auxiliary_groups) != len(trailing_specs):
+            raise ValueError(
+                f"{self.callable_contract.function_name} returned "
+                f"{len(batch.auxiliary_groups)} trailing output position(s); "
+                f"the compiled CallableContract declares {len(trailing_specs)}."
+            )
+        stacked_main_output = (
+            Pure2DAuxiliaryOutputAggregator.aggregate(
+                batch.main_outputs,
+                split.memory_type,
+                plane_axis=split.plane_axis,
+            )
+            if canonical_specs
+            else RuntimeSliceAlignedValues(slices=tuple(batch.main_outputs))
+        )
+        if not batch.auxiliary_groups:
+            return stacked_main_output
+        return (
+            stacked_main_output,
+            *(
+                Pure2DAuxiliaryOutputAggregator.aggregate(
+                    values,
+                    split.memory_type,
+                    plane_axis=split.plane_axis,
+                )
+                for values in batch.auxiliary_groups
+            ),
+        )
+
+
+class CellProfilerFunctionContractExecutor:
+    """Run a resolved CellProfiler callable under its contract and mode."""
 
     def execute(
         self,
@@ -78,7 +251,7 @@ class CellProfilerFunctionContractExecutor:
         image: RuntimeCallableArgument,
         kwargs: RuntimeCallableKwargs,
         *,
-        execution_mode: ImagePayloadExecutionMode,
+        execution_mode: type[ImagePayloadExecutionMode],
         plane_projection: RuntimePlaneAxisValueProjection | None = None,
     ) -> RuntimeCallableArgument:
         if not isinstance(callable_contract, CallableContract):
@@ -99,556 +272,40 @@ class CellProfilerFunctionContractExecutor:
                 f"{callable_contract.module_name!r}/"
                 f"{callable_contract.function_name!r}."
             )
-        if not isinstance(execution_mode, ImagePayloadExecutionMode):
+        if not (
+            isinstance(execution_mode, type)
+            and issubclass(execution_mode, ImagePayloadExecutionMode)
+        ):
             raise TypeError(
-                "CellProfilerFunctionContractExecutor.execute requires an exact "
-                f"ImagePayloadExecutionMode, got {type(execution_mode).__name__}."
+                "CellProfilerFunctionContractExecutor.execute requires an "
+                "ImagePayloadExecutionMode family member, got "
+                f"{execution_mode!r}."
             )
-        executor = type(self)(plane_projection=plane_projection)
-        function_name = callable_contract.function_name
-        processing_contract = callable_contract.require_processing_contract()
-        runtime_func = callable_contract.resolve_raw_runtime_callable()
-        mode = execution_mode
-        CellProfilerRuntimeProfileLogger.log_module_profile(
-            "cp_executor_mode_resolution",
-            0.0,
-            function=function_name,
-            mode=mode.value,
+        processing_contract: type[ProcessingContract] = (
+            callable_contract.require_processing_contract()
+        )
+        call = CellProfilerContractCall(
+            callable_contract,
+            callable_contract.resolve_raw_runtime_callable(),
+            plane_projection,
         )
         execute_started_at = time.perf_counter()
-        with runtime_measurement_lookup_dialect(
-            CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT
+        with executing_measurement_dialect(
+            CELLPROFILER_MEASUREMENT_DIALECT
         ):
-            match mode, processing_contract:
-                case (
-                    ImagePayloadExecutionMode.NATURAL,
-                    ProcessingContract.PURE_2D
-                    | ProcessingContract.PURE_3D
-                    | ProcessingContract.FLEXIBLE
-                    | ProcessingContract.VOLUMETRIC_TO_SLICE,
-                ):
-                    runtime_kwargs = dict(kwargs)
-                    runtime_kwargs.update(
-                        processing_contract.declaration.consume_semantic_controls(
-                            runtime_kwargs,
-                            parameters=callable_contract.canonical_signature.parameters,
-                        )
-                    )
-                    result = processing_contract.execute(
-                        executor,
-                        runtime_func,
-                        image,
-                        callable_contract=callable_contract,
-                        **runtime_kwargs,
-                    )
-                case (
-                    ImagePayloadExecutionMode.FULL_STACK,
-                    ProcessingContract.PURE_2D
-                    | ProcessingContract.PURE_3D
-                    | ProcessingContract.FLEXIBLE
-                    | ProcessingContract.VOLUMETRIC_TO_SLICE,
-                ):
-                    result = executor.execute_pure_3d(
-                        runtime_func,
-                        image,
-                        callable_contract=callable_contract,
-                        **dict(kwargs),
-                    )
-                case (
-                    ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
-                    ProcessingContract.PURE_2D
-                    | ProcessingContract.PURE_3D
-                    | ProcessingContract.FLEXIBLE
-                    | ProcessingContract.VOLUMETRIC_TO_SLICE,
-                ):
-                    result = executor._execute_aligned_multi_image_stack(
-                        callable_contract,
-                        runtime_func,
-                        image,
-                        **dict(kwargs),
-                    )
-                case _:
-                    raise ValueError(
-                        f"CellProfiler module {callable_contract.module_name!r} "
-                        f"callable {function_name!r} has unsupported execution "
-                        f"combination {mode!r} and {processing_contract!r}."
-                    )
+            result = execution_mode.execute(
+                processing_contract, call, image, dict(kwargs)
+            )
         CellProfilerRuntimeProfileLogger.log_module_profile(
             "cp_executor_execute",
             time.perf_counter() - execute_started_at,
-            function=function_name,
-            mode=mode.value,
+            function=callable_contract.function_name,
+            mode=execution_mode.key,
         )
         return callable_contract.contextualize_returned_canonical_output(
             result,
-            plane_projection=executor.plane_projection,
+            plane_projection=call.plane_projection,
         )
-
-    def execute_pure_2d_slice_batch(
-        self,
-        callable_contract: CallableContract,
-        func: Callable[..., RuntimeFunctionOutput],
-        slices_2d: tuple[RuntimeCallableArgument, ...],
-        kwargs: RuntimeCallableKwargs,
-        execute_slice: Callable[
-            [
-                Callable[..., RuntimeFunctionOutput],
-                RuntimeCallableArgument,
-                RuntimeCallableKwargs,
-                int,
-                int,
-            ],
-            RuntimeCallableArgument,
-        ],
-    ) -> tuple[list[RuntimeCallableArgument], float]:
-        """Execute a pure-2D slice batch through the callable-owned batch contract."""
-        slice_request = RuntimePure2DSliceBatchRequest(
-            func=func,
-            slices_2d=slices_2d,
-            kwargs=kwargs,
-            execute_slice=execute_slice,
-            signature=callable_contract.raw_runtime_signature,
-        )
-        if slice_request.slice_count <= 0:
-            return [], 0.0
-
-        batch_executor = Pure2DSliceBatchExecutor.from_executors(callable_contract.runtime_batch_executors)
-        slice_started_at = time.perf_counter()
-        if batch_executor is not None and slice_request.slice_count > 1:
-            slice_results = list(batch_executor(slice_request))
-        else:
-            slice_results = slice_request.execute_each()
-        return slice_results, time.perf_counter() - slice_started_at
-
-    def execute_pure_3d(
-        self,
-        func: Callable[..., RuntimeFunctionOutput],
-        image: RuntimeCallableArgument,
-        *,
-        callable_contract: CallableContract,
-        **kwargs: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument:
-        function_name = callable_contract.function_name
-        projection_started_at = time.perf_counter()
-        projected_image = RuntimeSliceProjection.full_stack_value(image)
-        projected_kwargs = RuntimeSliceProjection.full_stack_kwargs(kwargs)
-        if callable_contract.processing_contract is ProcessingContract.PURE_3D:
-            _validate_pure_3d_kwargs_do_not_carry_runtime_slice_alignment(
-                callable_contract,
-                projected_kwargs,
-            )
-        label_value = projected_kwargs.get("labels")
-        CellProfilerRuntimeProfileLogger.log_module_profile(
-            "cp_full_stack_project_domains",
-            time.perf_counter() - projection_started_at,
-            function=function_name,
-            image_shape=array_geometry(projected_image).shape,
-            labels_shape=(
-                array_geometry(label_value).shape if label_value is not None else None
-            ),
-        )
-        call_started_at = time.perf_counter()
-        result = _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
-            callable_contract,
-            func,
-            projected_image,
-            projected_kwargs,
-        ).call()
-        CellProfilerRuntimeProfileLogger.log_module_profile(
-            "cp_full_stack_raw_call",
-            time.perf_counter() - call_started_at,
-            function=function_name,
-        )
-        return result
-
-    def _execute_aligned_multi_image_stack(
-        self,
-        callable_contract: CallableContract,
-        func: Callable[..., RuntimeFunctionOutput],
-        image: RuntimeCallableArgument,
-        **kwargs: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument:
-        if not isinstance(image, AlignedImageStack):
-            raise TypeError(
-                f"CellProfiler module {callable_contract.module_name!r} callable "
-                f"{callable_contract.function_name!r} requires AlignedImageStack "
-                "for ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK, got "
-                f"{type(image).__name__}."
-            )
-        projection = self.plane_projection
-        if projection is None:
-            raise RuntimeSliceProjectionDeclarationError(
-                f"CellProfiler module {callable_contract.module_name!r} callable "
-                f"{callable_contract.function_name!r} requires a compiled "
-                "runtime-slice projection for ALIGNED_MULTI_IMAGE_STACK execution."
-            )
-        if projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            raise RuntimeSliceProjectionDeclarationError(
-                f"CellProfiler module {callable_contract.module_name!r} callable "
-                f"{callable_contract.function_name!r} aligned image execution "
-                "requires RuntimePlaneAxis.RUNTIME_SLICE, got "
-                f"{projection.axis!r}."
-            )
-        if projection.plane_index is not None:
-            raise RuntimeSliceProjectionDeclarationError(
-                f"CellProfiler module {callable_contract.module_name!r} callable "
-                f"{callable_contract.function_name!r} received an AlignedImageStack "
-                "after the compiled runtime-slice projection already selected "
-                f"plane {projection.plane_index}."
-            )
-        if projection.axis_size != len(image.slices):
-            raise RuntimeSliceProjectionDeclarationError(
-                f"CellProfiler module {callable_contract.module_name!r} callable "
-                f"{callable_contract.function_name!r} aligned image cardinality "
-                "conflicts with its compiled runtime-slice projection: "
-                f"{len(image.slices)} != {projection.axis_size}."
-            )
-        if callable_contract.processing_contract is ProcessingContract.PURE_3D:
-            slice_plane_axes = tuple(
-                slice_payload.metadata.plane_axis
-                for slice_payload in image.slices
-            )
-            if any(
-                plane_axis is not RuntimePlaneAxis.SOURCE_BINDING
-                for plane_axis in slice_plane_axes
-            ):
-                raise ValueError(
-                    f"CellProfiler module {callable_contract.module_name!r} "
-                    f"callable {callable_contract.function_name!r} with "
-                    "ProcessingContract.PURE_3D requires every aligned image "
-                    "slice to declare RuntimePlaneAxis.SOURCE_BINDING; got "
-                    f"{slice_plane_axes!r}."
-                )
-
-        def execute_aligned_stack_slice(
-            slice_func: Callable[..., RuntimeFunctionOutput],
-            slice_payload: RuntimeCallableArgument,
-            slice_kwargs: RuntimeCallableKwargs,
-            slice_index: int,
-            slice_count: int,
-        ) -> RuntimeCallableArgument:
-            return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
-                callable_contract,
-                slice_func,
-                slice_payload,
-                aligned_image_stack_kwargs(
-                    slice_kwargs,
-                    slice_index,
-                    slice_count,
-                    reference_payload=slice_payload,
-                ),
-            ).call()
-
-        slice_results, _slice_execute_seconds = self.execute_pure_2d_slice_batch(
-            callable_contract,
-            func,
-            tuple(
-                RuntimeSliceProjection.value_for_slice(
-                    image,
-                    projection.selected_plane(slice_index),
-                )
-                for slice_index in range(projection.axis_size)
-            ),
-            kwargs,
-            execute_aligned_stack_slice,
-        )
-        result_batch = Pure2DSliceResultBatch.from_results(slice_results)
-        canonical_specs = callable_contract.canonical_return_output_specs.specs
-        trailing_specs = callable_contract.trailing_return_output_specs.specs
-        if len(result_batch.auxiliary_groups) != len(trailing_specs):
-            raise ValueError(
-                f"{callable_contract.function_name} returned "
-                f"{len(result_batch.auxiliary_groups)} trailing output position(s); "
-                f"the compiled CallableContract declares {len(trailing_specs)}."
-            )
-        memory_type = detect_memory_type(image.slices[0].data)
-        if canonical_specs:
-            if all(
-                isinstance(output, AlignedImageStack)
-                for output in result_batch.main_outputs
-            ):
-                aligned_main_output = Pure2DAuxiliaryOutputAggregator.aggregate(
-                    result_batch.main_outputs,
-                    memory_type,
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-                )
-                if not isinstance(aligned_main_output, AlignedImageStack):
-                    raise TypeError(
-                        f"{callable_contract.function_name} must preserve aligned "
-                        "canonical image outputs as AlignedImageStack, got "
-                        f"{type(aligned_main_output).__name__}."
-                    )
-                if len(aligned_main_output.slices) != len(canonical_specs):
-                    raise ValueError(
-                        f"{callable_contract.function_name} produced "
-                        f"{len(aligned_main_output.slices)} aligned main-flow "
-                        f"value(s) for {len(canonical_specs)} declared output "
-                        "spec(s)."
-                    )
-                stacked_main_output = (
-                    aligned_main_output.slices[0]
-                    if len(canonical_specs) == 1
-                    else aligned_main_output
-                )
-            elif len(canonical_specs) == 1:
-                stacked_main_output = Pure2DAuxiliaryOutputAggregator.aggregate(
-                    result_batch.main_outputs,
-                    memory_type,
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-                )
-            elif len(canonical_specs) == len(result_batch.main_outputs):
-                stacked_main_output = AlignedImageStack(
-                    tuple(result_batch.main_outputs)
-                )
-            else:
-                raise ValueError(
-                    f"{callable_contract.function_name} produced "
-                    f"{len(result_batch.main_outputs)} aligned main-flow value(s) "
-                    f"for {len(canonical_specs)} declared output spec(s)."
-                )
-            if len(canonical_specs) > 1:
-                if not isinstance(stacked_main_output, AlignedImageStack):
-                    raise TypeError(
-                        f"{callable_contract.function_name} must aggregate multiple "
-                        "declared canonical image outputs into AlignedImageStack, got "
-                        f"{type(stacked_main_output).__name__}."
-                    )
-        else:
-            stacked_main_output = RuntimeSliceAlignedValues(
-                slices=tuple(result_batch.main_outputs)
-            )
-        if not result_batch.auxiliary_groups:
-            return stacked_main_output
-        return (
-            stacked_main_output,
-            *(
-                Pure2DAuxiliaryOutputAggregator.aggregate(
-                    values,
-                    memory_type,
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-                )
-                for values in result_batch.auxiliary_groups
-            ),
-        )
-
-    def execute_pure_2d(
-        self,
-        func: Callable[..., RuntimeFunctionOutput],
-        image: RuntimeCallableArgument,
-        *,
-        callable_contract: CallableContract,
-        **kwargs: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument:
-        function_name = callable_contract.function_name
-        invocation_context = (
-            f"CellProfiler module {callable_contract.module_name!r} callable "
-            f"{function_name!r}"
-        )
-        memory_type = owned_runtime_value(image).memory_type
-        if memory_type != "numpy":
-            return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
-                callable_contract,
-                func,
-                image,
-                kwargs,
-            ).call()
-
-        prepare_started_at = time.perf_counter()
-        if self.plane_projection is None:
-            declared_kwarg_slice_count = RuntimeSliceProjection.slice_count_from_values(
-                kwargs.values()
-            )
-            if declared_kwarg_slice_count is not None:
-                declared_kwarg_names = tuple(
-                    name
-                    for name, value in kwargs.items()
-                    if RuntimeSliceProjection.slice_count_from_values((value,))
-                    is not None
-                )
-                raise RuntimeSliceProjectionDeclarationError(
-                    f"{invocation_context} with ProcessingContract.PURE_2D has "
-                    "kwargs declaring a runtime-slice axis of size "
-                    f"{declared_kwarg_slice_count} through {declared_kwarg_names!r}, "
-                    "but the image invocation has no "
-                    "declared plane projection. Kwargs cannot create image-axis "
-                    "execution semantics."
-                )
-            return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
-                callable_contract,
-                func,
-                image,
-                kwargs,
-            ).call()
-        declared_plane_axis = image.metadata.plane_axis
-        if declared_plane_axis is not self.plane_projection.axis:
-            raise RuntimeSliceProjectionDeclarationError(
-                f"{invocation_context} with ProcessingContract.PURE_2D has an image "
-                "payload plane axis that conflicts with the compiled "
-                f"projection: {declared_plane_axis!r} != "
-                f"{self.plane_projection.axis.value!r}."
-            )
-        slices_2d = Pure2DInputSlicer.strategy_for_value(image).slice_value(
-            image,
-            memory_type,
-        )
-        if len(slices_2d) != self.plane_projection.axis_size:
-            raise RuntimeSliceProjectionDeclarationError(
-                f"{invocation_context} with ProcessingContract.PURE_2D has an image "
-                "payload slice count that conflicts with the compiled "
-                f"projection: {len(slices_2d)} != "
-                f"{self.plane_projection.axis_size}."
-            )
-        aggregation_plane_axis = self.plane_projection.axis
-        CellProfilerRuntimeProfileLogger.log_module_profile(
-            "cp_pure_2d_prepare_slices",
-            time.perf_counter() - prepare_started_at,
-            function=function_name,
-            slices=len(slices_2d),
-        )
-
-        slice_count = len(slices_2d)
-        slice_results, slice_execute_seconds = self.execute_pure_2d_slice_batch(
-            callable_contract,
-            func,
-            tuple(slices_2d),
-            kwargs,
-            lambda slice_func, slice_payload, slice_kwargs, slice_index, slice_count: (
-                self.execute_pure_2d_slice(
-                    callable_contract,
-                    slice_func,
-                    slice_payload,
-                    slice_kwargs,
-                    slice_index,
-                    slice_count,
-                )
-            ),
-        )
-        CellProfilerRuntimeProfileLogger.log_module_profile(
-            "cp_pure_2d_slice_execute",
-            slice_execute_seconds,
-            function=function_name,
-            slices=slice_count,
-        )
-        aggregate_started_at = time.perf_counter()
-        result_batch = Pure2DSliceResultBatch.from_results(slice_results)
-        canonical_specs = callable_contract.canonical_return_output_specs.specs
-        trailing_specs = callable_contract.trailing_return_output_specs.specs
-        if len(result_batch.auxiliary_groups) != len(trailing_specs):
-            raise ValueError(
-                f"{callable_contract.function_name} returned "
-                f"{len(result_batch.auxiliary_groups)} trailing output position(s); "
-                f"the compiled CallableContract declares {len(trailing_specs)}."
-            )
-        stacked_main_output = (
-            Pure2DAuxiliaryOutputAggregator.aggregate(
-                result_batch.main_outputs,
-                memory_type,
-                plane_axis=aggregation_plane_axis,
-            )
-            if canonical_specs
-            else RuntimeSliceAlignedValues(slices=tuple(result_batch.main_outputs))
-        )
-        if not result_batch.auxiliary_groups:
-            result = stacked_main_output
-        else:
-            result = (
-                stacked_main_output,
-                *(
-                    Pure2DAuxiliaryOutputAggregator.aggregate(
-                        values,
-                        memory_type,
-                        plane_axis=aggregation_plane_axis,
-                    )
-                    for values in result_batch.auxiliary_groups
-                ),
-            )
-        CellProfilerRuntimeProfileLogger.log_module_profile(
-            "cp_pure_2d_aggregate_outputs",
-            time.perf_counter() - aggregate_started_at,
-            function=function_name,
-            auxiliary_groups=len(result_batch.auxiliary_groups),
-        )
-        return result
-
-    def execute_volumetric_to_slice(
-        self,
-        func: Callable[..., RuntimeFunctionOutput],
-        image: RuntimeCallableArgument,
-        *,
-        callable_contract: CallableContract,
-        **kwargs: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument:
-        result_2d = ImagePayload.of(_CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
-            callable_contract,
-            func,
-            image,
-            kwargs,
-        ).call())
-        result_data = result_2d.data
-        result_mask = result_2d.mask
-        result_metadata = result_2d.metadata
-        memory_type = detect_memory_type(result_data)
-        stacked = stack_slices([result_data], memory_type, 0)
-        return result_metadata.payload_with(stacked, mask=result_mask)
-
-    def execute_pure_2d_slice(
-        self,
-        callable_contract: CallableContract,
-        func: Callable[..., RuntimeFunctionOutput],
-        slice_2d: RuntimeCallableArgument,
-        kwargs: RuntimeCallableKwargs,
-        slice_index: int,
-        slice_count: int,
-    ) -> RuntimeCallableArgument:
-        """Execute one projected pure-2D slice."""
-        sliced_kwargs = self.slice_pure_2d_kwargs(
-            callable_contract,
-            kwargs,
-            slice_index,
-            slice_count,
-        )
-        if _callable_declares_slice_index(callable_contract):
-            sliced_kwargs = dict(sliced_kwargs)
-            slice_index_name = SliceIndexRuntimeParameter.require_parameter_name()
-            sliced_kwargs[slice_index_name] = slice_index
-        result = _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
-            callable_contract,
-            func,
-            slice_2d,
-            sliced_kwargs,
-        ).call()
-        return contextualize_main_image_output(slice_2d, result)
-
-    def slice_pure_2d_kwargs(
-        self,
-        callable_contract: CallableContract,
-        kwargs: RuntimeCallableKwargs,
-        slice_index: int,
-        slice_count: int,
-    ) -> dict[str, RuntimeCallableArgument]:
-        """Project runtime kwargs to one PURE_2D slice invocation."""
-        if self.plane_projection is None:
-            raise AssertionError(
-                f"CellProfiler module {callable_contract.module_name!r} callable "
-                f"{callable_contract.function_name!r} PURE_2D stack execution has "
-                "no plane projection."
-            )
-        if self.plane_projection.axis_size != slice_count:
-            raise ValueError(
-                f"CellProfiler module {callable_contract.module_name!r} callable "
-                f"{callable_contract.function_name!r} PURE_2D slice batch "
-                "cardinality conflicts with its declared "
-                f"plane axis: {slice_count} != {self.plane_projection.axis_size}."
-            )
-        return RuntimeSliceProjection.kwargs_for_slice(
-            kwargs,
-            self.plane_projection.selected_plane(slice_index),
-        )
-
-
-def _callable_declares_slice_index(callable_contract: CallableContract) -> bool:
-    """Return whether this callable declares runtime-supplied slice_index."""
-    return SliceIndexRuntimeParameter in callable_contract.runtime_bound_parameter_types
 
 
 def _execute_runtime_batch_invocation(
@@ -664,27 +321,6 @@ def _execute_runtime_batch_invocation(
         request.kwargs,
         execution_mode=request.execution_mode,
         plane_projection=request.plane_projection,
-    )
-
-
-def _validate_pure_3d_kwargs_do_not_carry_runtime_slice_alignment(
-    callable_contract: CallableContract,
-    kwargs: RuntimeCallableKwargs,
-) -> None:
-    aligned_names = tuple(
-        name
-        for name, value in kwargs.items()
-        if isinstance(value, RuntimeSliceAlignedValues)
-    )
-    if not aligned_names:
-        return
-    raise ValueError(
-        f"CellProfiler module {callable_contract.module_name!r} callable "
-        f"{callable_contract.function_name!r} has ProcessingContract.PURE_3D but "
-        "received "
-        f"runtime-slice-aligned kwargs {list(aligned_names)}. PURE_3D callables "
-        "consume whole-stack values; bind object-label special inputs as dense "
-        "stack arrays or use a plane-local processing contract."
     )
 
 

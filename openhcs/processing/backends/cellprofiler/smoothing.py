@@ -3,7 +3,6 @@
 from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.interop.cellprofiler.settings_binder import (
@@ -15,6 +14,9 @@ from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
 from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
 
 
 class ReducenoiseModule(CellProfilerModule):
@@ -82,7 +84,10 @@ from openhcs.processing.backends.cellprofiler._backend import (
     NumbaBackendProvider,
     OpencvBackendProvider,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+)
 from openhcs.core.runtime_image_values import ImagePayload
 
 
@@ -873,7 +878,7 @@ def smooth_image(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def smooth(
     image: ImagePayload,
     smoothing_method: SmoothingMethod = SmoothingMethod.GAUSSIAN_FILTER,
@@ -895,8 +900,8 @@ def smooth(
     )
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy_decorator(contract=ProcessingContract.FLEXIBLE)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy_decorator(contract=FlexibleContract)
 def reducenoise(
     image: ImagePayload,
     patch_size: int = 5,

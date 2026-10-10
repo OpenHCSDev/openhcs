@@ -14,7 +14,9 @@ from openhcs.processing.backends.lib_registry.registry_service import RegistrySe
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
     LibraryRegistryBase,
-    ProcessingContract,
+)
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
 )
 from openhcs.processing.custom_functions.manager import CustomFunctionManager
 from openhcs.processing.custom_functions.runtime_registry import (
@@ -150,7 +152,7 @@ def test_catalog_key_cannot_contradict_original_metadata_identity(source_owner, 
 
     metadata = FunctionMetadata(
         name="actual_declared_name", func=independent_identity,
-        contract=ProcessingContract.FLEXIBLE, registry=OpenHCSRegistry(),
+        contract=FlexibleContract, registry=OpenHCSRegistry(),
     )
     monkeypatch.setattr(RegistryService, "_metadata_cache", {"openhcs:wrong_name": metadata})
     with pytest.raises(ValueError, match="contradicts declaration"):
@@ -167,7 +169,7 @@ def test_cached_native_collision_rejects_ambiguous_current_custom_owner(source_o
         raise AssertionError("lookup must not execute processing")
 
     native = FunctionMetadata(
-        name=name, func=independent_native, contract=ProcessingContract.FLEXIBLE,
+        name=name, func=independent_native, contract=FlexibleContract,
         registry=OpenHCSRegistry(), original_name="independent_native", module=__name__,
     )
     monkeypatch.setattr(RegistryService, "_metadata_cache", {custom.composite_key: native})
@@ -208,7 +210,7 @@ def test_new_nominal_registry_and_independent_capabilities_use_real_cooperative_
         registry_type = type(registry)
         registry_type.probe = FunctionMetadata(
             name="independently_declared", func=independently_declared,
-            contract=ProcessingContract.FLEXIBLE, registry=registry,
+            contract=FlexibleContract, registry=registry,
             original_name="independently_declared", module=__name__,
         )
         assert get_function(registry_type.probe.composite_key) is independently_declared

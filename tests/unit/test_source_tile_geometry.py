@@ -38,7 +38,9 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.assemblers.blending import TileBlendMethod
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from openhcs.processing.backends.pos_gen.acquisition_positions import (
     _source_metadata,
     acquisition_tile_positions,
@@ -338,7 +340,7 @@ def test_position_artifact_preserves_shuffled_paired_order_and_exact_shared_canv
     metadata = OpenHCSRegistry.metadata_for_declared_callable(
         acquisition_tile_positions
     )
-    assert metadata.contract is ProcessingContract.PURE_3D
+    assert metadata.contract is Pure3DContract
     assert tuple(
         spec.name
         for spec in CallableContract.from_callable(metadata.func).artifact_outputs
@@ -388,7 +390,7 @@ def test_positions_reject_unknown_duplicate_or_resized_geometry():
 
 
 @runtime_adapter("source_metadata", _source_metadata)
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def _verify_paired_stitched_mosaics(
     image: np.ndarray, *, source_metadata: ImagePayloadMetadata
 ) -> np.ndarray:

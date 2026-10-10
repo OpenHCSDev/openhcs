@@ -36,7 +36,7 @@ nested step configuration.
        ProcessingContract,
    )
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    def rescale(image, *, gain=1.0):
        return image * gain
 

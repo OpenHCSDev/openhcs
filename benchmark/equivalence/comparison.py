@@ -11,9 +11,7 @@ from openhcs.core.equivalence.cells import (
     runtime_cell_signature_counters_equivalent,
 )
 from benchmark.equivalence.images import RuntimeImageSnapshot
-from openhcs.core.equivalence.policy import (
-    RuntimeEquivalencePolicy,
-)
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from benchmark.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceDifferenceKind,

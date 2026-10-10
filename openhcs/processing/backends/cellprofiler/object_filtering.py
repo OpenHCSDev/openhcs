@@ -59,13 +59,16 @@ from openhcs.core.runtime_relationships import (
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.processing.backends.analysis.region_properties import (
     LabelRegionPropertiesBackendStrategy,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+)
 from openhcs.processing.backends.cellprofiler.relationships import (
     ObjectRelationshipBackendStrategy,
 )
@@ -1432,7 +1435,7 @@ class FilterObjectsSelectionRequest:
             feature_name,
             object_count=self.num_objects_pre,
             object_ids=self.object_ids,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         )
         return ObjectLabelMeasurementValues(self.object_ids, values)
 
@@ -2061,7 +2064,7 @@ def object_transform_relationships(
     )
 
 
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@numpy(contract=FlexibleContract)
 @special_inputs(
     ObjectLabelsRuntimeParameter.require_parameter_name(),
     _FilterEnclosingLabelsRuntimeParameter.require_parameter_name(),
@@ -2299,7 +2302,7 @@ def filter_objects(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
 def filter_objects_by_size(
     image: np.ndarray,
@@ -2347,7 +2350,7 @@ def filter_objects_by_size(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
 def filter_border_objects(
     image: np.ndarray, labels: ObjectLabelValue

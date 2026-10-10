@@ -17,7 +17,7 @@ from openhcs.core.artifacts import (
     InputStackBroadcastSourceRelation,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import preserves_primary_image_carrier
+from openhcs.core.callable_contract import preserves_payload_axes
 from openhcs.core.memory.decorators import numpy as numpy_decorator
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
@@ -48,13 +48,21 @@ from openhcs.interop.cellprofiler.settings_binder import (
     cellprofiler_enum_setting_parser,
     parse_cellprofiler_float,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.interop.cellprofiler.parser import ModuleBlock
+
+
+class CropMask(ArtifactSidecarRole):
+    """The cropping mask CellProfiler's Crop module publishes beside a cropped image."""
+
+    name = "crop_mask"
 
 
 class CropModule(
@@ -114,7 +122,7 @@ class CropModule(
         previous_image_setting,
         ImageArtifactType,
         runtime_parameter_name="topology_inputs",
-        sidecar_role=ArtifactSidecarRole.CROP_MASK,
+        sidecar_role=CropMask,
     )
     output_image_binding = SettingToKeywordBinding.output(
         output_image_setting, ImageArtifactType
@@ -369,7 +377,7 @@ class CropModule(
         (topology_input,) = topology_inputs
         if (
             shape is cls.Shape.CROPPING
-            and topology_input.sidecar_role is not ArtifactSidecarRole.CROP_MASK
+            and topology_input.sidecar_role is not CropMask
         ):
             raise ValueError(
                 f"Crop({module.module_num}) requires one exact crop-mask sidecar, "
@@ -406,13 +414,13 @@ class CropModule(
             outputs
         ).require_by_name_and_artifact_type(output_name, ImageArtifactType)
         sidecar = ArtifactSpec.output(
-            ArtifactSidecarRole.CROP_MASK.name_for(output_name),
+            CropMask.name_for(output_name),
             ImageArtifactType,
             relations=(
                 *primary_output.relations,
                 ArtifactSidecarSourceRelation(source=primary_output.ref()),
             ),
-            sidecar_role=ArtifactSidecarRole.CROP_MASK,
+            sidecar_role=CropMask,
         )
         declared: list[ArtifactSpec] = []
         for output in outputs:
@@ -850,8 +858,8 @@ def crop_output_metadata(
     )
 
 
-@preserves_primary_image_carrier
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@preserves_payload_axes
+@numpy_decorator(contract=Pure2DContract)
 @special_inputs("topology_inputs")
 def crop(
     image: ImagePayload,
@@ -888,7 +896,7 @@ def crop(
     ).execute()
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def crop_simple(
     image: np.ndarray,
     crop_top: int = 0,

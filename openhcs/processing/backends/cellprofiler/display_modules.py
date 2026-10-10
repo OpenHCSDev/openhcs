@@ -44,7 +44,7 @@ from openhcs.core.runtime_tabular_values import (
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.module_settings import (
     BoundModuleSettings,
@@ -84,7 +84,10 @@ from openhcs.interop.cellprofiler_setting_normalization import (
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+)
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
@@ -193,7 +196,7 @@ def _measurement_vector(
     values_by_label, positional_values = MeasurementFeatureQuery(
         feature_name,
         object_name=object_name,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     ).value_index(measurement_tables)
     values = (
         tuple(values_by_label[label] for label in sorted(values_by_label))
@@ -214,7 +217,7 @@ def _measurement_values_by_slice(
     query = MeasurementFeatureQuery(
         feature_name,
         object_name=object_name,
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
     values_by_slice: dict[int, list[object]] = {}
     axis = MeasurementRowAxisField.SLICE_INDEX
@@ -489,7 +492,7 @@ class DisplayDataOnImageRenderer:
         return background
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @special_inputs("labels")
 @runtime_bound_parameters(_DisplayMeasurementsRuntimeParameter)
 def display_data_on_image(
@@ -587,7 +590,7 @@ class DensityPlotData:
     histogram_counts: str
 
 
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@numpy(contract=FlexibleContract)
 @runtime_bound_parameters(_DisplayMeasurementTablesRuntimeParameter)
 def display_density_plot(
     image: np.ndarray,
@@ -771,7 +774,7 @@ class HistogramResult:
     bin_counts: str
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @runtime_bound_parameters(_DisplayMeasurementTablesRuntimeParameter)
 def display_histogram(
     image: np.ndarray,
@@ -997,7 +1000,7 @@ def _aggregate_values(values: np.ndarray, method: AggregationMethod) -> float:
     return method.aggregate(values)
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @runtime_bound_parameters(_DisplayMeasurementTablesRuntimeParameter)
 def display_platemap(
     image: np.ndarray,
@@ -1204,7 +1207,7 @@ class ScatterPlotData:
     point_count: int
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @runtime_bound_parameters(_DisplayMeasurementTablesRuntimeParameter)
 def display_scatter_plot(
     image: np.ndarray,

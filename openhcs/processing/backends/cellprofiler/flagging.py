@@ -27,7 +27,7 @@ from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.runtime_tabular_values import ColumnarRows, FieldSpec
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
@@ -52,7 +52,9 @@ from openhcs.interop.cellprofiler.settings_binder import (
     coerce_cellprofiler_enum,
     parse_cellprofiler_bool,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
@@ -338,7 +340,7 @@ class FlagCriterion(FlagImageSettingRow):
         indexed = MeasurementFeatureQuery(
             self.feature_name,
             object_name=object_name,
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         ).optional_value_index(measurement_tables)
         if indexed is None:
             return np.asarray((), dtype=float)
@@ -575,7 +577,7 @@ class FlagImagePlan:
         )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 @runtime_bound_parameters(_FlagImageMeasurementTablesRuntimeParameter)
 def flag_image(
     image: np.ndarray,
@@ -602,7 +604,7 @@ def flag_image(
     return image, plan.rows(measurement_tables)
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def flag_image_intensity(
     image: np.ndarray,
     flag_name: str = "IntensityQC",

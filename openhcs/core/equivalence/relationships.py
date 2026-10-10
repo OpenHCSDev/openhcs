@@ -18,13 +18,11 @@ from openhcs.core.equivalence.keys import (
     RuntimeMeasurementFeatureKey,
 )
 from openhcs.core.equivalence.measurement_rows import (
-    RuntimeImageNumberOffset,
+    RuntimeSampleNumberOffset,
     RuntimeMeasurementRowMapping,
 )
-from openhcs.core.equivalence.policy import (
-    RuntimeMeasurementDialect,
-    normalize_runtime_identifier,
-)
+from openhcs.core.measurement_dialect import MeasurementDialect
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.core.runtime_measurements import (
     MeasurementStatistic,
@@ -64,16 +62,16 @@ class RuntimeScopedMeasurementTable:
         row: RuntimeMeasurementRowMapping,
         object_id: int,
         *,
-        image_number_offset: RuntimeImageNumberOffset,
+        sample_number_offset: RuntimeSampleNumberOffset,
     ) -> ObjectInstanceKey:
-        return image_number_offset.object_instance_key(
+        return sample_number_offset.object_instance_key(
             row.row,
             object_id,
         )
 
     def object_row_occurrence_scope(
         self,
-        image_number_offset: RuntimeImageNumberOffset,
+        sample_number_offset: RuntimeSampleNumberOffset,
     ) -> ComponentGroupScope | None:
         """Return group identity only when this carrier owns one local row domain."""
         if self.execution_scope is None or not self.execution_scope.has_value:
@@ -94,7 +92,7 @@ class RuntimeScopedMeasurementTable:
                 self.object_instance_key(
                     row,
                     object_id,
-                    image_number_offset=image_number_offset,
+                    sample_number_offset=sample_number_offset,
                 ).slice_index
             )
             if len(slice_indices) > 1:
@@ -104,21 +102,21 @@ class RuntimeScopedMeasurementTable:
     def image_row_occurrence_identity(
         self,
         axis_key: str | None,
-        dialect: RuntimeMeasurementDialect,
+        dialect: MeasurementDialect,
     ) -> tuple[str | None, SourceImageProvenanceIdentity | None]:
         """Return carrier identity only when rows do not identify a complete domain."""
 
-        image_identities: set[tuple[tuple[str, object], ...]] = set()
+        sample_identities: set[tuple[tuple[str, object], ...]] = set()
         for raw_row in self.table.rows.iter_row_mappings():
             row = RuntimeMeasurementRowMapping(
                 measurement_row_mapping(raw_row),
                 object_row_identity=self.table.rows.object_row_identity,
             )
-            image_identity = row.image_identity_key(dialect)
-            if not image_identity:
+            sample_identity = row.sample_identity_key(dialect)
+            if not sample_identity:
                 continue
-            image_identities.add(image_identity)
-            if len(image_identities) > 1:
+            sample_identities.add(sample_identity)
+            if len(sample_identities) > 1:
                 return None, None
         return axis_key, self.table.source_provenance.equality_identity
 
@@ -318,7 +316,7 @@ class RelationshipAggregateFeatureContext:
     source_name: str
     target_name: str
     feature_name: str
-    dialect: RuntimeMeasurementDialect
+    dialect: MeasurementDialect
 
 
 @dataclass(frozen=True, slots=True)
@@ -326,7 +324,7 @@ class RelationshipAggregateFeatureKeyProjection:
     """Parsed relationship aggregate measurement key."""
 
     feature: RuntimeMeasurementFeatureKey
-    dialect: RuntimeMeasurementDialect
+    dialect: MeasurementDialect
 
     def resolution(self) -> "RelationshipAggregateFeatureResolution":
         aggregate_identity = RuntimeAggregateFeatureIdentity.from_parts(
@@ -427,7 +425,7 @@ class RelationshipAggregateFeatureSemantics(
     def aggregate_child_feature_name_from_key(
         cls,
         feature: RuntimeMeasurementFeatureKey,
-        dialect: RuntimeMeasurementDialect,
+        dialect: MeasurementDialect,
     ) -> str | None:
         """Return child feature represented by a relationship aggregate key."""
         del cls

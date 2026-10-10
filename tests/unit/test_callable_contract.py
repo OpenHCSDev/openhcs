@@ -10,7 +10,6 @@ from arraybridge import MemoryContractAttribute, SliceBySliceRuntimeParameter
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import parameter_exclusions
 
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
 from openhcs.core.callable_contract import (
     CallableContract,
@@ -18,13 +17,14 @@ from openhcs.core.callable_contract import (
     CallableMetadata,
     CallableMetadataReader,
     CompilerPreparedAutoRegisterFamily,
-    PrimaryImageCarrierRequirement,
-    PrimaryImageCarrierTransition,
+    PayloadAxisRequirement,
+    PayloadAxisTransition,
+    PreservedPayloadAxes,
     attach_callable_contract_metadata,
     prepare_module_autoregister_families,
     prepare_processing_callable,
-    preserves_primary_image_carrier,
-    requires_primary_image_carrier,
+    preserves_payload_axes,
+    requires_payload_axis,
     reset_processing_callable_preparation_cache,
     runtime_image_execution_mode,
 )
@@ -53,9 +53,16 @@ from openhcs.core.runtime_batch_contracts import (
     pure_2d_batch_executor,
 )
 from openhcs.processing.backends.lib_registry.cupy_registry import CupyRegistry
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
-from openhcs.core.axes import TimeAxis
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+    Pure3DContract,
+)
+from openhcs.core.axes import ColourAxis, TimeAxis
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
 
 _AUTOREGISTER_PREPARED_TEST_FAMILY_CALLS = 0
 
@@ -69,7 +76,7 @@ def test_external_registry_adapter_declares_execution_memory() -> None:
     registry = object.__new__(CupyRegistry)
     adapter = registry.create_library_adapter(
         external_filter,
-        ProcessingContract.FLEXIBLE,
+        FlexibleContract,
     )
 
     contract = CallableContract.from_callable(adapter)
@@ -124,99 +131,93 @@ def _function_with_batch_override(image):
 
 
 def test_callable_contract_reads_runtime_image_execution_mode() -> None:
-    @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
+    @runtime_image_execution_mode(FullStackExecution)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
 
-    assert contract.runtime_image_execution_mode is ImagePayloadExecutionMode.FULL_STACK
+    assert contract.runtime_image_execution_mode is FullStackExecution
 
 
-def test_callable_contract_preserves_primary_image_carrier_requirement() -> None:
-    @requires_primary_image_carrier(
-        PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS,
-    )
+def test_callable_contract_preserves_payload_axis_requirement() -> None:
+    @requires_payload_axis(ColourAxis)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
 
     assert (
-        contract.primary_image_carrier_requirement
-        is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
+        contract.payload_axis_requirement
+        == PayloadAxisRequirement(ColourAxis)
     )
     assert (
         contract.metadata.as_namespace()[
-            FunctionContractAttribute.primary_image_carrier_requirement
+            FunctionContractAttribute.payload_axis_requirement
         ]
-        is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
+        == PayloadAxisRequirement(ColourAxis)
     )
 
 
-def test_callable_metadata_rejects_string_carrier_requirement() -> None:
-    with pytest.raises(TypeError, match="PrimaryImageCarrierRequirement"):
-        CallableMetadata(primary_image_carrier_requirement="source_channel_axis")
+def test_callable_metadata_rejects_string_payload_axis_requirement() -> None:
+    with pytest.raises(TypeError, match="PayloadAxisRequirement"):
+        CallableMetadata(payload_axis_requirement="source_channel_axis")
 
 
-def test_callable_metadata_reader_rejects_wrong_carrier_enum_family() -> None:
+def test_callable_metadata_reader_rejects_wrong_requirement_kind() -> None:
     def process(image):
         return image
 
-    process.__dict__[FunctionContractAttribute.primary_image_carrier_requirement] = (
-        PrimaryImageCarrierTransition.PRESERVE
+    process.__dict__[FunctionContractAttribute.payload_axis_requirement] = (
+        PreservedPayloadAxes()
     )
 
-    with pytest.raises(TypeError, match="PrimaryImageCarrierRequirement"):
+    with pytest.raises(TypeError, match="PayloadAxisRequirement"):
         CallableContract.from_callable(process)
 
 
-def test_callable_metadata_reader_preserves_requested_enum_family() -> None:
+def test_callable_metadata_reader_returns_declared_requirement_kinds() -> None:
     reader = CallableMetadataReader(
         {
-            FunctionContractAttribute.primary_image_carrier_requirement: (
-                PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
+            FunctionContractAttribute.payload_axis_requirement: (
+                PayloadAxisRequirement(ColourAxis)
             ),
-            FunctionContractAttribute.primary_image_carrier_transition: (
-                PrimaryImageCarrierTransition.PRESERVE
+            FunctionContractAttribute.payload_axis_transition: (
+                PreservedPayloadAxes()
             ),
         },
         "process",
     )
 
-    requirement = reader.optional_enum(
-        FunctionContractAttribute.primary_image_carrier_requirement,
-        PrimaryImageCarrierRequirement,
+    requirement = reader.optional_instance(
+        FunctionContractAttribute.payload_axis_requirement,
+        PayloadAxisRequirement,
     )
-    transition = reader.optional_enum(
-        FunctionContractAttribute.primary_image_carrier_transition,
-        PrimaryImageCarrierTransition,
-    )
-    legacy = reader.optional_enum(
-        FunctionContractAttribute.primary_image_carrier_requirement,
+    transition = reader.optional_instance(
+        FunctionContractAttribute.payload_axis_transition,
+        PayloadAxisTransition,
     )
 
-    assert requirement is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
-    assert transition is PrimaryImageCarrierTransition.PRESERVE
-    assert legacy is requirement
+    assert requirement == PayloadAxisRequirement(ColourAxis)
+    assert transition == PreservedPayloadAxes()
 
 
-def test_callable_contract_preserves_declared_carrier_transition() -> None:
-    @preserves_primary_image_carrier
+def test_callable_contract_preserves_declared_payload_axis_transition() -> None:
+    @preserves_payload_axes
     def crop_like(image):
         return image
 
     contract = CallableContract.from_callable(crop_like)
 
     assert (
-        contract.primary_image_carrier_transition
-        is PrimaryImageCarrierTransition.PRESERVE
+        contract.payload_axis_transition
+        == PreservedPayloadAxes()
     )
     assert (
         contract.metadata.as_namespace()[
-            FunctionContractAttribute.primary_image_carrier_transition
+            FunctionContractAttribute.payload_axis_transition
         ]
-        is PrimaryImageCarrierTransition.PRESERVE
+        == PreservedPayloadAxes()
     )
 
 
@@ -298,7 +299,7 @@ def test_callable_contract_still_rejects_injected_runtime_values() -> None:
 
 
 def test_callable_contract_reads_wrapper_declared_config_parameters(monkeypatch) -> None:
-    @numpy(contract=ProcessingContract.PURE_3D)
+    @numpy(contract=Pure3DContract)
     def process(image):
         return image
 
@@ -356,7 +357,7 @@ def test_config_parameter_schema_refreshes_from_replaced_pipeline_declaration(mo
 
 
 def test_callable_contract_preserves_arraybridge_execution_declaration() -> None:
-    @numpy(contract=ProcessingContract.PURE_2D)
+    @numpy(contract=Pure2DContract)
     def process(image):
         return image
 
@@ -370,7 +371,7 @@ def test_callable_contract_preserves_arraybridge_execution_declaration() -> None
 
 
 def test_memory_wrapper_preserves_declared_parameter_exclusions() -> None:
-    @numpy(contract=ProcessingContract.PURE_2D)
+    @numpy(contract=Pure2DContract)
     @special_inputs("mask")
     def process(image, *, mask):
         return image
@@ -381,7 +382,7 @@ def test_memory_wrapper_preserves_declared_parameter_exclusions() -> None:
 def test_callable_contract_projects_runtime_context_exclusion() -> None:
     """Generic forms derive hidden runtime context from the callable contract."""
 
-    @numpy(contract=ProcessingContract.PURE_2D)
+    @numpy(contract=Pure2DContract)
     def process(image, *, context: ProcessingContext):
         del context
         return image
@@ -415,13 +416,13 @@ def test_callable_contract_reads_runtime_image_execution_mode_from_function_refe
         ),
         composite_key=f"{__name__}:_function_with_runtime_batch_executor",
         metadata=CallableMetadata(
-            runtime_image_execution_mode=ImagePayloadExecutionMode.FULL_STACK,
+            runtime_image_execution_mode=FullStackExecution,
         ),
     )
 
     contract = CallableContract.from_callable(reference)
 
-    assert contract.runtime_image_execution_mode is ImagePayloadExecutionMode.FULL_STACK
+    assert contract.runtime_image_execution_mode is FullStackExecution
 
 
 def test_callable_contract_metadata_preserves_explicit_nominal_processing_contract() -> (
@@ -432,20 +433,16 @@ def test_callable_contract_metadata_preserves_explicit_nominal_processing_contra
 
     vars(process)[
         FunctionContractAttribute.processing_contract
-    ] = ProcessingContract.FLEXIBLE
+    ] = FlexibleContract
 
-    attach_callable_contract_metadata(
-        process,
-        declared_processing_contract=ProcessingContract.PURE_2D.name,
-    )
+    attach_callable_contract_metadata(process, processing_contract=Pure2DContract)
 
     contract = CallableContract.from_callable(process)
     assert (
         vars(process)[FunctionContractAttribute.processing_contract]
-        is ProcessingContract.FLEXIBLE
+        is FlexibleContract
     )
-    assert contract.processing_contract is ProcessingContract.FLEXIBLE
-    assert contract.declared_processing_contract == ProcessingContract.PURE_2D.name
+    assert contract.processing_contract is FlexibleContract
 
 
 def test_prepare_processing_callable_warms_imported_registered_families() -> None:

@@ -184,7 +184,7 @@ The dataclass owns the row schema, including the empty-row case.
        materialization=MaterializationSpec(CsvOptions()),
    )
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    @artifact_outputs(FIXTURE_IMAGE, FIXTURE_LABELS, FIXTURE_ROWS)
    def inspect_label_fixture(
        image: np.ndarray,
@@ -387,7 +387,7 @@ keep its labels/rows declarations and replace its image declarations/decorator:
        "fixture_diagnostic", ImageArtifactType,
    )
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    @artifact_outputs(
        FIXTURE_IMAGE, FIXTURE_DIAGNOSTIC, FIXTURE_LABELS, FIXTURE_ROWS,
    )
@@ -445,7 +445,7 @@ as its own custom-function source:
        "fixture_labels", ObjectLabelsArtifactType, parameter_name="objects",
    )
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    @artifact_inputs(STORED_LABELS)
    def mask_declared_objects(
        image: np.ndarray, *, objects: ObjectLabelValue,

@@ -39,7 +39,9 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,
     register_custom_function,
@@ -50,7 +52,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
-@numpy_function(contract=ProcessingContract.PURE_3D)
+@numpy_function(contract=Pure3DContract)
 @artifact_outputs(
     MainFlowStackOutputSpec.output("PassThrough", ImageArtifactType),
     MainFlowStackOutputSpec.output(

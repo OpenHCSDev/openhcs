@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.interop.cellprofiler.measurement_scope import CELLPROFILER_SCOPE_NAMES
+
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -511,7 +513,7 @@ class CellProfilerDatabaseColumnDialect:
     ) -> MeasurementSubject:
         """Invert an exact CPA image-table declaration into its subject."""
 
-        subject = MeasurementSubject(MeasurementScope.IMAGE, "Image")
+        subject = MeasurementSubject(MeasurementScope.SAMPLE, CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE])
         expected_table = self.image_table_name()
         expected_image_id = self.image_id_field().name
         if (
@@ -610,11 +612,11 @@ class CellProfilerDatabaseColumnDialect:
         subject: MeasurementSubject,
         field_spec: FieldSpec,
     ) -> FieldSpec:
-        if subject.scope is MeasurementScope.IMAGE:
+        if subject.scope is MeasurementScope.SAMPLE:
             raw_name = f"Image_{field_spec.name}"
         elif subject.scope is MeasurementScope.OBJECT:
             raw_name = f"{self._required_object_name(subject)}_{field_spec.name}"
-        elif subject.scope is MeasurementScope.EXPERIMENT:
+        elif subject.scope is MeasurementScope.RUN:
             raw_name = field_spec.name
         else:
             raise ValueError(
@@ -641,7 +643,7 @@ class CellProfilerDatabaseColumnDialect:
                 external_field,
                 name=CellProfilerObjectCoreMeasurementFeature.OBJECT_NUMBER.value,
             )
-        if subject.scope is MeasurementScope.IMAGE:
+        if subject.scope is MeasurementScope.SAMPLE:
             aggregate_statistic = CellProfilerImageAggregateStatistic.for_field_name(
                 raw_name
             )
@@ -668,11 +670,11 @@ class CellProfilerDatabaseColumnDialect:
                     )
                 return replace(external_field, name=raw_name)
 
-        if subject.scope is MeasurementScope.IMAGE:
+        if subject.scope is MeasurementScope.SAMPLE:
             prefix = "Image_"
         elif subject.scope is MeasurementScope.OBJECT:
             prefix = f"{self._required_object_name(subject)}_"
-        elif subject.scope is MeasurementScope.EXPERIMENT:
+        elif subject.scope is MeasurementScope.RUN:
             prefix = ""
         else:
             raise ValueError(

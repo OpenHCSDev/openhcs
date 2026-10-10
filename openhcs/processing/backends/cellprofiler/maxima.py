@@ -1,7 +1,10 @@
 """CellProfiler-compatible local maxima detection backend."""
 
 from __future__ import annotations
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+    Pure3DContract,
+)
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
@@ -147,7 +150,7 @@ class ObjectMaximaInputStrategy(MaskMaximaInputStrategy):
     exclude_mode = ExcludeMode.OBJECTS
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def find_maxima(
     image: np.ndarray,
     min_distance: int = 5,
@@ -178,7 +181,7 @@ def find_maxima(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def find_maxima_with_mask(
     image: np.ndarray,
     min_distance: int = 5,

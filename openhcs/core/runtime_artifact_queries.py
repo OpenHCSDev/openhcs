@@ -193,13 +193,13 @@ def runtime_measurement_tables(
     cached = store_cache.cached_value(cache_key) if stored_tables_only else None
     if cached is not None:
         return cached
-    from openhcs.core.equivalence.policy import DEFAULT_RUNTIME_MEASUREMENT_DIALECT
+    from openhcs.core.measurement_dialect import MeasurementDialect
 
     tables = tuple(
         table
         for record in records
         for table in record.key.artifact_type.measurement_tables(
-            record, DEFAULT_RUNTIME_MEASUREMENT_DIALECT
+            record, MeasurementDialect.for_active_family()
         )
     )
     return store_cache.store_value(cache_key, tables) if stored_tables_only else tables

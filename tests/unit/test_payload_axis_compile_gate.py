@@ -10,8 +10,8 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.core.callable_contract import (
     CallableContract,
-    PrimaryImageCarrierTransition,
-    preserves_primary_image_carrier,
+    PreservedPayloadAxes,
+    preserves_payload_axes,
 )
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -85,10 +85,10 @@ def _compiled_pattern(
     )
 
 
-def test_crop_declares_primary_image_carrier_preservation() -> None:
+def test_crop_declares_payload_axis_preservation() -> None:
     assert (
-        CallableContract.from_callable(crop).primary_image_carrier_transition
-        is PrimaryImageCarrierTransition.PRESERVE
+        CallableContract.from_callable(crop).payload_axis_transition
+        == PreservedPayloadAxes()
     )
 
 
@@ -182,16 +182,16 @@ def test_mixed_grayscale_and_rgb_sources_fail_compile_before_execution(
     )
 
     with pytest.raises(ValueError, match="failed before execution") as error:
-        PipelineCompiler.validate_primary_image_carrier_requirements(
+        PipelineCompiler.validate_payload_axis_requirements(
             _session(tmp_path, (grayscale_path, rgb_path))
         )
 
     assert set(inspected) == {grayscale_path, rgb_path}
     assert str(grayscale_path) in str(error.value)
-    assert "source_channel_axis" in str(error.value)
+    assert "ColourAxis" in str(error.value)
 
 
-def test_all_rgb_sources_prove_color_to_gray_carrier_requirement(
+def test_all_rgb_sources_prove_color_to_gray_payload_axis_requirement(
     tmp_path: Path,
 ) -> None:
     paths = (tmp_path / "rgb-1.tif", tmp_path / "rgb-2.tif")
@@ -202,7 +202,7 @@ def test_all_rgb_sources_prove_color_to_gray_carrier_requirement(
             photometric="rgb",
         )
 
-    PipelineCompiler.validate_primary_image_carrier_requirements(
+    PipelineCompiler.validate_payload_axis_requirements(
         _session(tmp_path, paths)
     )
 
@@ -309,12 +309,12 @@ def test_grouped_color_requirement_inspects_only_compatible_binding(
         record_strict_metadata,
     )
 
-    PipelineCompiler.validate_primary_image_carrier_requirements(session)
+    PipelineCompiler.validate_payload_axis_requirements(session)
 
     assert inspected == [rgb_path]
 
 
-def test_monochrome_source_binding_removes_required_color_carrier(
+def test_monochrome_source_binding_removes_required_color_payload_axis(
     tmp_path: Path,
 ) -> None:
     rgb_path = tmp_path / "rgb.tif"
@@ -325,12 +325,12 @@ def test_monochrome_source_binding_removes_required_color_carrier(
     )
 
     with pytest.raises(ValueError, match="after source-binding transformations"):
-        PipelineCompiler.validate_primary_image_carrier_requirements(
+        PipelineCompiler.validate_payload_axis_requirements(
             _session(tmp_path, (rgb_path,), load_as_monochrome=True)
         )
 
 
-@pytest.mark.parametrize("filename", ("unreadable.tif", "unknown.carrier"))
+@pytest.mark.parametrize("filename", ("unreadable.tif", "unknown.payload axis"))
 def test_unknown_or_unreadable_exact_source_fails_compile_closed(
     tmp_path: Path,
     filename: str,
@@ -339,12 +339,12 @@ def test_unknown_or_unreadable_exact_source_fails_compile_closed(
     path.write_bytes(b"not an image header")
 
     with pytest.raises(ValueError, match="failed before execution") as error:
-        PipelineCompiler.validate_primary_image_carrier_requirements(
+        PipelineCompiler.validate_payload_axis_requirements(
             _session(tmp_path, (path,))
         )
 
     assert str(path) in str(error.value) or str(path.name) in str(error.value)
-    assert "source_channel_axis" in str(error.value)
+    assert "ColourAxis" in str(error.value)
 
 
 def test_declared_preserving_producer_carries_source_proof_between_steps(
@@ -359,7 +359,7 @@ def test_declared_preserving_producer_carries_source_proof_between_steps(
     session = _session(tmp_path, (rgb_path,))
     binding_plan = session.plans[0].source_binding_plan
 
-    @preserves_primary_image_carrier
+    @preserves_payload_axes
     def crop_like(image):
         return image
 
@@ -385,7 +385,7 @@ def test_declared_preserving_producer_carries_source_proof_between_steps(
     session.plans = {0: producer, 1: consumer}
     session.context.step_plans = session.plans
 
-    PipelineCompiler.validate_primary_image_carrier_requirements(session)
+    PipelineCompiler.validate_payload_axis_requirements(session)
 
 
 def test_each_preserving_producer_in_a_chain_carries_source_proof(
@@ -400,7 +400,7 @@ def test_each_preserving_producer_in_a_chain_carries_source_proof(
     session = _session(tmp_path, (rgb_path,))
     binding_plan = session.plans[0].source_binding_plan
 
-    @preserves_primary_image_carrier
+    @preserves_payload_axes
     def crop_like(image):
         return image
 
@@ -437,7 +437,7 @@ def test_each_preserving_producer_in_a_chain_carries_source_proof(
     session.plans = {0: first_producer, 1: second_producer, 2: consumer}
     session.context.step_plans = session.plans
 
-    PipelineCompiler.validate_primary_image_carrier_requirements(session)
+    PipelineCompiler.validate_payload_axis_requirements(session)
 
 
 def test_unproved_producer_transition_fails_compile_closed(tmp_path: Path) -> None:
@@ -476,11 +476,11 @@ def test_unproved_producer_transition_fails_compile_closed(tmp_path: Path) -> No
     session.context.step_plans = session.plans
 
     with pytest.raises(ValueError, match="not preserved.*unknown_transform"):
-        PipelineCompiler.validate_primary_image_carrier_requirements(session)
+        PipelineCompiler.validate_payload_axis_requirements(session)
 
 
 @pytest.mark.parametrize("source_kind", ("rgb", "gray", "missing-anchor"))
-def test_inherited_bindings_trace_exact_named_carrier_edges(
+def test_inherited_bindings_trace_exact_named_payload_axis_edges(
     tmp_path: Path, source_kind: str
 ) -> None:
     path = tmp_path / "source.tif"
@@ -491,7 +491,7 @@ def test_inherited_bindings_trace_exact_named_carrier_edges(
     session = _session(tmp_path, (path,))
     bindings = session.plans[0].source_binding_plan
 
-    @preserves_primary_image_carrier
+    @preserves_payload_axes
     def crop_like(image):
         return image
 
@@ -524,21 +524,21 @@ def test_inherited_bindings_trace_exact_named_carrier_edges(
     session.plans = plans
     session.context.step_plans = plans
     if source_kind == "rgb":
-        PipelineCompiler.validate_primary_image_carrier_requirements(session)
+        PipelineCompiler.validate_payload_axis_requirements(session)
     else:
         expected = (
-            "source_channel_axis"
+            "ColourAxis"
             if source_kind == "gray"
             else "exact primary source-binding projection"
         )
         with pytest.raises(ValueError, match=expected):
-            PipelineCompiler.validate_primary_image_carrier_requirements(session)
+            PipelineCompiler.validate_payload_axis_requirements(session)
 
 
-def test_generic_main_flow_preservation_does_not_prove_carrier(
+def test_generic_main_flow_preservation_does_not_prove_payload_axis(
     tmp_path: Path,
 ) -> None:
-    """Artifact-flow preservation is not a carrier transition declaration."""
+    """Artifact-flow preservation is not a payload axis transition declaration."""
 
     rgb_path = tmp_path / "rgb.tif"
     tifffile.imwrite(
@@ -555,7 +555,7 @@ def test_generic_main_flow_preservation_does_not_prove_carrier(
 
     generic_contract = CallableContract.from_callable(generic_flow_preserver)
     assert generic_contract.preserves_input_main_flow()
-    assert generic_contract.primary_image_carrier_transition is None
+    assert generic_contract.payload_axis_transition is None
     producer = CompiledStepPlan(
         step_index=0,
         step_name="Generic flow producer",
@@ -579,7 +579,7 @@ def test_generic_main_flow_preservation_does_not_prove_carrier(
     session.context.step_plans = session.plans
 
     with pytest.raises(ValueError, match="not preserved.*generic_flow_preserver"):
-        PipelineCompiler.validate_primary_image_carrier_requirements(session)
+        PipelineCompiler.validate_payload_axis_requirements(session)
 
 
 def test_unknown_routed_group_cannot_fall_back_to_all_primary_sources(
@@ -658,4 +658,4 @@ def test_unknown_routed_group_cannot_fall_back_to_all_primary_sources(
     )
 
     with pytest.raises(ValueError, match="cannot project source bindings"):
-        PipelineCompiler.validate_primary_image_carrier_requirements(session)
+        PipelineCompiler.validate_payload_axis_requirements(session)

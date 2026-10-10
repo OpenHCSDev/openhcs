@@ -1,6 +1,8 @@
 """Generic CellProfiler measurement-table declarations."""
 
 from __future__ import annotations
+
+from openhcs.interop.cellprofiler.measurement_scope import CELLPROFILER_SCOPE_NAMES
 from abc import ABC
 from collections.abc import Mapping
 from dataclasses import (
@@ -146,8 +148,8 @@ class CellProfilerMeasurementTableModule(ABC):
             MeasurementSubject(MeasurementScope.OBJECT, object_name)
             if object_name is not None
             else MeasurementSubject(
-                MeasurementScope.IMAGE,
-                source_image_name or MeasurementScope.IMAGE.value,
+                MeasurementScope.SAMPLE,
+                source_image_name or CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE].casefold(),
             )
         )
         return MeasurementTable(

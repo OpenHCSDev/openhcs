@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from openhcs.core.measurement_dialect import PlainMeasurementDialect
+
 from pathlib import Path
 
 import numpy as np
 
-from openhcs.core.runtime_relationships import (
+from openhcs.interop.cellprofiler.measurement_lookup import (
     DirectParentReferenceFeatureDeclaration,
     DirectParentReferenceMeasurementFeature,
 )
@@ -26,7 +28,6 @@ from openhcs.core.function_patterns import (
     FunctionInvocationKey,
     normalize_function_pattern,
 )
-from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
 from openhcs.core.equivalence.relationships import (
     GenericRelationshipAggregateFeatureSemantics,
     RelationshipAggregateFeatureContext,
@@ -171,7 +172,7 @@ def test_relate_objects_distance_aggregation_is_dialect_owned() -> None:
         source_name="Nuclei",
         target_name="Nucleoli",
         feature_name="Distance_Centroid_Nuclei",
-        dialect=RuntimeMeasurementDialect(),
+        dialect=PlainMeasurementDialect.shared(),
     )
     cellprofiler_context = RelationshipAggregateFeatureContext(
         source_name="Nuclei",

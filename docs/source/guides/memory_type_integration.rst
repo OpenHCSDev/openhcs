@@ -31,7 +31,7 @@ must not be copied into an OpenHCS registry.
        ProcessingContract,
    )
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    def normalize(image):
        return image
 

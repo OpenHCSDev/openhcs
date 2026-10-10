@@ -25,7 +25,10 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     SourceFileSettingBinding,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+    Pure3DContract,
+)
 from openhcs.processing.backends.cellprofiler._backend import (
     OpencvBackendProvider,
 )
@@ -62,7 +65,7 @@ class NeuriteMethod(Enum):
 STRATEGY_REGISTRY_KEY = "method_label"
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def enhance_or_suppress_features(
     image: ImagePayload,
     method: OperationMethod = OperationMethod.ENHANCE,
@@ -157,7 +160,7 @@ class EnhanceOrSuppressFeaturesModule(CellProfilerModule):
         )
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def match_template(
     image: np.ndarray,
     template_path: PlateInputFile,

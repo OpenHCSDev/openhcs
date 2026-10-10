@@ -11,12 +11,8 @@ from dataclasses import (
 )
 from typing import cast
 
-from openhcs.core.aligned_image_payload import (
-    AlignedImageSliceContext,
-    AlignedImageStack,
-    ImageOutputBundle,
-    ImagePayloadExecutionMode,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle)
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
@@ -112,8 +108,11 @@ from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileEvent,
     CellProfilerRuntimeProfileLogger,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import (
+from openhcs.core.processing_contracts import (
     ProcessingContract,
+)
+from openhcs.core.image_payload_execution_mode import (
+    NaturalExecution,
 )
 
 logger = logging.getLogger(__name__)
@@ -1311,7 +1310,7 @@ class CellProfilerModuleExecutor:
                 ),
                 source_aliases=(),
                 image_count=1,
-                execution_mode=ImagePayloadExecutionMode.NATURAL,
+                execution_mode=NaturalExecution,
                 plane_projection=preserved_image_plane_projection(
                     current_image_payload,
                     adapter,
@@ -1540,13 +1539,11 @@ class CellProfilerModuleExecutor:
 
 
 def _execution_mode_semantic_control_kwargs(
-    processing_contract: ProcessingContract,
-    execution_mode: ImagePayloadExecutionMode,
+    processing_contract: type[ProcessingContract],
+    execution_mode: type[ImagePayloadExecutionMode],
 ) -> dict[str, RuntimeCallableArgument]:
     """Return semantic controls required by a resolved image execution mode."""
     return {
-        name: execution_mode is ImagePayloadExecutionMode.NATURAL
-        for name in (
-            processing_contract.declaration.injected_semantic_control_parameter_names()
-        )
+        name: execution_mode.per_plane
+        for name in processing_contract.injected_semantic_control_parameter_names()
     }

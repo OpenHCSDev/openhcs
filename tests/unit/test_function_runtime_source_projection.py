@@ -1,4 +1,5 @@
 from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionRequest,
     PatternGroupExecutionScope,
@@ -26,7 +27,6 @@ from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactMeasurementSubjectRelation,
     ArtifactOutputPlan,
-    ArtifactSidecarRole,
     ArtifactSpec,
     GroupLineageSourceRelation,
     ImageArtifactType,
@@ -1360,7 +1360,7 @@ def test_step_output_manifest_ignores_sidecar_artifact_for_anchor_filtering() ->
                     name="CropBlue__crop_mask",
                     path="CropBlue__crop_mask",
                     artifact_type=ImageArtifactType,
-                    sidecar_role=ArtifactSidecarRole.CROP_MASK,
+                    sidecar_role=CropMask,
                     source_step_id=0,
                     source_step_scope_id="crop_mask",
                 ),

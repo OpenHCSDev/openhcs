@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+
 import csv
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -14,12 +15,11 @@ from openhcs.core.equivalence.cells import (
     runtime_cell_signature,
     runtime_measurement_value_is_present,
 )
-from openhcs.core.equivalence.policy import (
-    DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
-    RuntimeEquivalencePolicy,
-    RuntimeMeasurementDialect,
-    normalize_runtime_identifier,
+from openhcs.core.measurement_dialect import (
+    MeasurementDialect,
 )
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurement_row_materialization import (
     MEASUREMENT_SPARSE_CELL,
     MeasurementSparseColumnarRows,
@@ -38,11 +38,11 @@ from openhcs.core.runtime_tabular_values import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.equivalence.measurement_rows import RuntimeImageNumberOffset
+    from openhcs.core.equivalence.measurement_rows import RuntimeSampleNumberOffset
 from collections import Counter
 from collections.abc import Iterable
 
-from openhcs.core.equivalence.measurement_rows import MEASUREMENT_IDENTITY_FIELDS
+from openhcs.core.equivalence.measurement_rows import measurement_identity_fields
 
 CSV_HEADER_CONTEXT_STOPWORDS = frozenset(
     {
@@ -82,10 +82,10 @@ class RuntimeTableSnapshot:
         self,
         image_numbers: tuple[int, ...],
         *,
-        dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        dialect: MeasurementDialect,
         image_identity_fields: tuple[str, ...] | None = None,
         image_number_domain: tuple[int, ...] | None = None,
-        image_number_offset: RuntimeImageNumberOffset | None = None,
+        sample_number_offset: RuntimeSampleNumberOffset | None = None,
     ) -> "RuntimeTableSnapshot":
         """Derive a local comparison domain without modifying saved table IDs."""
         allowed = frozenset(image_numbers)
@@ -101,7 +101,7 @@ class RuntimeTableSnapshot:
                 "Export image numbers must have one declared execution owner."
             )
         declared = (
-            dialect.row_identity_contract.selected_image_identity_fields(
+            dialect.row_identity_contract.selected_sample_identity_fields(
                 frozenset(normalize_runtime_identifier(name) for name in self.header)
             )
             if image_identity_fields is None
@@ -144,10 +144,10 @@ class RuntimeTableSnapshot:
             if all(selected):
                 rows.append(
                     row
-                    if image_number_offset is None
+                    if sample_number_offset is None
                     else tuple(
                         (
-                            str(image_number_offset.normalized_image_number(value))
+                            str(sample_number_offset.normalized_sample_number(value))
                             if index in indexes
                             else value
                         )
@@ -161,20 +161,21 @@ class RuntimeTableSnapshot:
             self.column_context,
         )
 
-    def measurement_image_number_values(self, dialect: RuntimeMeasurementDialect):
+    def measurement_image_number_values(self, dialect: MeasurementDialect):
         """Derive admitted row identity scalars without decoding wide columns."""
         indexes = frozenset(
             index
             for _, _, subject_indexes in self.measurement_subject_columns(dialect)
             for index in subject_indexes
-            if normalize_runtime_identifier(self.header[index]) == "image_number"
+            if normalize_runtime_identifier(self.header[index])
+            == dialect.row_identity_contract.sample_number_field
         )
         return (row[index] for row in self.rows for index in indexes)
 
     def measurement_input_key(
         self,
         policy: RuntimeEquivalencePolicy,
-        image_number_offset: RuntimeImageNumberOffset,
+        sample_number_offset: RuntimeSampleNumberOffset,
     ) -> tuple[object, ...]:
         """Return exact joint projection input, preserving every saved column.
 
@@ -183,7 +184,6 @@ class RuntimeTableSnapshot:
         Long-form values can name references dynamically, so retain their offset.
         """
         from openhcs.core.equivalence.measurement_rows import (
-            image_number_reference_measurement_field,
             runtime_measurement_row_schema_for_header,
         )
 
@@ -200,13 +200,13 @@ class RuntimeTableSnapshot:
             if normalize_runtime_identifier(name) == "image_number"
             or (
                 index in schema.feature_indexes
-                and image_number_reference_measurement_field(name)
+                and dialect.row_identity_contract.is_sample_number_reference(name)
             )
         )
         rows = tuple(
             tuple(
                 (
-                    str(image_number_offset.normalized_image_number(value))
+                    str(sample_number_offset.normalized_sample_number(value))
                     if index in indexes
                     else value
                 )
@@ -219,7 +219,7 @@ class RuntimeTableSnapshot:
             self.header,
             self.column_context,
             rows,
-            image_number_offset.value if schema.long_form_value_indexes else None,
+            sample_number_offset.value if schema.long_form_value_indexes else None,
         )
 
     def required_rows(self) -> tuple[tuple[str, ...], ...]:
@@ -364,7 +364,7 @@ class RuntimeTableSnapshot:
 
     def measurement_tables(
         self,
-        dialect=DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        dialect: MeasurementDialect,
     ) -> tuple[MeasurementTable, ...]:
         """Expose exported columns as ordinary subject-owned measurement tables."""
         identity_contract = dialect.row_identity_contract
@@ -384,17 +384,17 @@ class RuntimeTableSnapshot:
 
     def measurement_subject_columns(
         self,
-        dialect=DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        dialect: MeasurementDialect,
     ) -> tuple[tuple[str, MeasurementSubject, tuple[int, ...]], ...]:
         """Derive subject ownership from the declared schema without reading cells."""
         if not self.column_context:
-            subject = self._subject_for_columns(self.header)
+            subject = self._subject_for_columns(self.header, dialect)
             subjects = ((self.path.stem, subject, tuple(range(len(self.header)))),)
             self._validate_subject_columns(subjects)
             return subjects
 
         image_identity_fields = (
-            dialect.row_identity_contract.selected_image_identity_fields(
+            dialect.row_identity_contract.selected_sample_identity_fields(
                 frozenset(normalize_runtime_identifier(field) for field in self.header)
             )
         )
@@ -416,12 +416,15 @@ class RuntimeTableSnapshot:
                 if column_context == context
             )
             normalized_context = normalize_runtime_identifier(context)
-            if normalized_context == MeasurementScope.IMAGE.value:
+            if normalized_context == _scope_token(dialect, MeasurementScope.SAMPLE):
                 indexes = context_indexes
-                subject = MeasurementSubject(MeasurementScope.IMAGE, "Image")
-            elif normalized_context == MeasurementScope.EXPERIMENT.value:
+                subject = MeasurementSubject(
+                    MeasurementScope.SAMPLE,
+                    dialect.scope_name(MeasurementScope.SAMPLE),
+                )
+            elif normalized_context == _scope_token(dialect, MeasurementScope.RUN):
                 indexes = context_indexes
-                subject = MeasurementSubject(MeasurementScope.EXPERIMENT)
+                subject = MeasurementSubject(MeasurementScope.RUN)
             elif normalized_context in CSV_HEADER_CONTEXT_STOPWORDS:
                 continue
             else:
@@ -449,29 +452,34 @@ class RuntimeTableSnapshot:
     def _subject_for_columns(
         self,
         header: tuple[str, ...],
+        dialect: MeasurementDialect,
     ) -> MeasurementSubject:
         normalized_header = frozenset(
             normalize_runtime_identifier(field_name) for field_name in header
         )
         normalized_name = normalize_runtime_identifier(self.path.stem)
-        if normalized_name == MeasurementScope.EXPERIMENT.value:
-            return MeasurementSubject(MeasurementScope.EXPERIMENT)
+        if normalized_name == _scope_token(dialect, MeasurementScope.RUN):
+            return MeasurementSubject(MeasurementScope.RUN)
         if (
-            normalized_name != MeasurementScope.IMAGE.value
+            normalized_name != _scope_token(dialect, MeasurementScope.SAMPLE)
             and normalized_header
             & frozenset(MeasurementRowAxisField.object_id_field_names())
         ):
             return self._object_subject(
                 self.path.stem,
                 tuple(range(len(header))),
+                dialect,
             )
-        return MeasurementSubject(MeasurementScope.IMAGE, "Image")
+        return MeasurementSubject(
+            MeasurementScope.SAMPLE,
+            dialect.scope_name(MeasurementScope.SAMPLE),
+        )
 
     def _object_subject(
         self,
         name: str,
         indexes: tuple[int, ...],
-        dialect=DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        dialect: MeasurementDialect,
     ) -> MeasurementSubject:
         normalized_fields = {
             normalize_runtime_identifier(self.header[index]): self.header[index]
@@ -496,7 +504,7 @@ class RuntimeTableSnapshot:
         self,
         indexes: tuple[int, ...],
         subject: MeasurementSubject,
-        dialect=DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        dialect: MeasurementDialect,
     ) -> MeasurementSparseColumnarRows:
         selected_header = tuple(self.header[index] for index in indexes)
         normalized_fields = {
@@ -504,7 +512,7 @@ class RuntimeTableSnapshot:
             for field_name in selected_header
         }
         image_identity_fields = (
-            dialect.row_identity_contract.selected_image_identity_fields(
+            dialect.row_identity_contract.selected_sample_identity_fields(
                 frozenset(normalized_fields)
             )
         )
@@ -649,7 +657,7 @@ def _is_contextual_semantic_csv_table_header(
     normalized_header = tuple(normalize_runtime_identifier(column) for column in header)
     if normalized_context == normalized_header:
         return False
-    if not (frozenset(normalized_header) & MEASUREMENT_IDENTITY_FIELDS):
+    if not (frozenset(normalized_header) & _registered_measurement_identity_fields()):
         return False
     if duplicate_values(normalized_context):
         return True
@@ -672,7 +680,20 @@ def _is_contextual_semantic_csv_header(header: tuple[str, ...]) -> bool:
     if not duplicate_values(header):
         return False
     normalized_fields = {normalize_runtime_identifier(column) for column in header}
-    return bool(normalized_fields & MEASUREMENT_IDENTITY_FIELDS)
+    return bool(normalized_fields & _registered_measurement_identity_fields())
+
+
+def _scope_token(dialect: MeasurementDialect, scope: MeasurementScope) -> str:
+    return normalize_runtime_identifier(dialect.scope_name(scope))
+
+
+def _registered_measurement_identity_fields() -> frozenset[str]:
+    """Identity fields of every registered dialect, for recognizing saved headers."""
+    return frozenset(
+        field_name
+        for dialect in MeasurementDialect.registered_dialects()
+        for field_name in measurement_identity_fields(dialect.row_identity_contract)
+    )
 
 
 def duplicate_values(values: tuple[str, ...]) -> tuple[str, ...]:

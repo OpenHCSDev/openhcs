@@ -763,8 +763,8 @@ from openhcs.core.source_plane_alignment import (
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_DIALECT,
-    cellprofiler_lookup_dialect_for_measurement_owner,
+    CellProfilerMeasurementDialect,
+    cellprofiler_dialect_for_measurement_owner,
 )
 
 
@@ -779,7 +779,7 @@ class RelateObjectsDistanceAggregateFeatureSemantics(
     def _matching_feature(
         context: RelationshipAggregateFeatureContext,
     ) -> RelateObjectsModule.DistanceMeasurementFeature | None:
-        if context.dialect is not CELLPROFILER_MEASUREMENT_DIALECT:
+        if not isinstance(context.dialect, CellProfilerMeasurementDialect):
             return None
         return RelateObjectsModule.DistanceMeasurementFeature.matching_feature(
             context.feature_name,
@@ -859,7 +859,9 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 
 ParentObjectLabelsInput = Annotated[
     ObjectLabelValue,
@@ -1703,7 +1705,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
                     for local_slice_index in local_slice_indexes
                 )
 
-            table_dialect = cellprofiler_lookup_dialect_for_measurement_owner(
+            table_dialect = cellprofiler_dialect_for_measurement_owner(
                 table.measurement_feature_owner
             )
             queries = {
@@ -1993,7 +1995,7 @@ def _relate_objects_result(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
 @special_inputs("parent_labels", "child_labels")
 def relate_objects(
@@ -2033,7 +2035,7 @@ def relate_objects(
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
 @special_inputs("parent_labels", "child_labels")
 def relate_objects_with_saved_children(

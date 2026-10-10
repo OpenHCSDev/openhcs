@@ -13,7 +13,9 @@ from openhcs.processing.backends.assemblers.assemble_stack_cupy import (
 from openhcs.processing.backends.assemblers.blending import TileBlendMethod
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 from openhcs.utils.environment import OpenHCSProcessEnvironment
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    VolumetricToSliceContract,
+)
 
 
 @pytest.fixture(params=("cpu", "gpu"))
@@ -127,7 +129,7 @@ def test_cpu_and_gpu_share_the_same_site_contraction_contract():
         functions.append(assemble_stack_cupy)
     for function in functions:
         metadata = OpenHCSRegistry.metadata_for_declared_callable(function)
-        assert metadata.contract is ProcessingContract.VOLUMETRIC_TO_SLICE
+        assert metadata.contract is VolumetricToSliceContract
 
 
 def test_positions_reject_nonfinite_before_canvas_allocation(assemble):

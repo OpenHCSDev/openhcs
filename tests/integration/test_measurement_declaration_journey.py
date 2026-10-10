@@ -63,7 +63,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.measurement_dialect import (
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from openhcs.processing.backends.cellprofiler.intensity import (
     MeasureObjectIntensityModule,
@@ -83,7 +83,9 @@ from openhcs.processing.backends.cellprofiler.secondary import (
 from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdMethod,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,
     register_custom_function,
@@ -131,13 +133,13 @@ IMAGE_SUBJECT_ROWS = replace(
 )
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 @artifact_outputs(COUNT_IMAGE, MISSING_SUBJECT_ROWS)
 def count_without_subject(image):
     raise AssertionError("A missing subject must fail before callable execution")
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 @artifact_outputs(COUNT_IMAGE, IMAGE_SUBJECT_ROWS)
 def count_with_image_subject(image):
     return image, DataclassMeasurementColumnarRows(
@@ -145,7 +147,7 @@ def count_with_image_subject(image):
     )
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 def half_current_pixels(image):
     """Transform main flow without declaring a separately named image artifact."""
     return image / 2
@@ -352,7 +354,7 @@ def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(
                                   ("MaxIntensity", values.max()), ("StdIntensity", values.std())):
             actual = measurement_values_for_feature(
                 (measurement.data,), f"Intensity_{feature}_{image_name}",
-                object_count=1, object_name="Cells", dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+                object_count=1, object_name="Cells", dialect=CELLPROFILER_MEASUREMENT_DIALECT,
             )
             assert tuple(actual) == pytest.approx((expected,), abs=1e-7)
 
@@ -385,7 +387,7 @@ def test_label_only_measurement_keeps_stored_cohort(tmp_path):
     )
     actual = measurement_values_for_feature(
         (measurement.data,), "AreaShape_Area", object_count=1, object_name="Cells",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
     assert tuple(actual) == (np.count_nonzero(object_label_dense_array(labels.data)),)
 
@@ -456,7 +458,7 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
         f"Intensity_IntegratedIntensity_{image_name}",
         object_count=1,
         object_name="Cells",
-        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+        dialect=CELLPROFILER_MEASUREMENT_DIALECT,
     )
     # The DNA seed is four bright pixels; the grown cell adds dim background.
     # Measuring primary labels instead would return exactly 4.0.
@@ -541,7 +543,7 @@ def test_explicit_measurement_rosters_preserve_compiled_source_groups(
                     f"Intensity_{feature}_{image_name}",
                     object_count=1,
                     object_name=object_name,
-                    dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+                    dialect=CELLPROFILER_MEASUREMENT_DIALECT,
                 )
                 assert tuple(values) == pytest.approx((expected,))
 

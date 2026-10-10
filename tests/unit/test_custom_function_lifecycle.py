@@ -472,9 +472,9 @@ def test_register_rejects_multi_declaration_source_without_partial_publication(
     "decorator",
     [
         "numpy",
-        "numpy(contract=ProcessingContract.PURE_2D)",
-        "cpu(contract=ProcessingContract.PURE_2D)",
-        "decorators.numpy(contract=ProcessingContract.PURE_2D)",
+        "numpy(contract=Pure2DContract)",
+        "cpu(contract=Pure2DContract)",
+        "decorators.numpy(contract=Pure2DContract)",
     ],
 )
 def test_custom_registration_uses_callable_contract_not_decorator_spelling(
@@ -482,14 +482,12 @@ def test_custom_registration_uses_callable_contract_not_decorator_spelling(
     decorator,
 ) -> None:
     from openhcs.core.callable_contract import CallableContract
-    from openhcs.processing.backends.lib_registry.unified_registry import (
-        ProcessingContract,
-    )
+    from openhcs.core.processing_contracts import Pure2DContract
 
     source = (
         "from openhcs.core.memory.decorators import numpy as cpu\n"
         "from openhcs.core.memory import decorators\n"
-        "from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract\n"
+        "from openhcs.core.processing_contracts import Pure2DContract\n"
         f"@{decorator}\ndef contract_probe(image):\n    return image + 1\n"
     )
     [function] = CustomFunctionManager().register_from_code(source)
@@ -497,7 +495,7 @@ def test_custom_registration_uses_callable_contract_not_decorator_spelling(
     assert contract.input_memory_type == MemoryType.NUMPY.value
     assert contract.output_memory_type == MemoryType.NUMPY.value
     if "contract=" in decorator:
-        assert contract.declared_processing_contract == ProcessingContract.PURE_2D.name
+        assert contract.processing_contract is Pure2DContract
     assert np.array_equal(function(np.asarray([[3]])), [[4]])
     assert (isolated_custom_runtime / "contract_probe.py").read_text() == source
 

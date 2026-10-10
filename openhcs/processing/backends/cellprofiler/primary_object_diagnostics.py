@@ -12,7 +12,7 @@ from typing import NamedTuple, Tuple, get_type_hints
 import numpy as np
 
 from openhcs.core.artifacts import (
-    ArtifactSidecarRole,
+    QaCheckpoint,
     ArtifactSidecarSourceRelation,
     ArtifactSpec,
     ArtifactViewerStreaming,
@@ -25,7 +25,11 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
 )
-from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariant
+from openhcs.core.runtime_object_labels import ObjectLabelPayload
+from openhcs.interop.cellprofiler.object_label_variants import (
+    SmallRemovedLabels,
+    UneditedLabels,
+)
 from openhcs.processing.materialization import (
     ImageFileOptions,
     TerminalMaterializationSpec,
@@ -176,10 +180,10 @@ class PrimaryObjectDiagnosticPlanes(NamedTuple):
             maxima,
             markers,
             source.plane(
-                objects.variant_data.labels_for_variant(ObjectLabelVariant.UNEDITED),
+                objects.variant_data.labels_for_variant(UneditedLabels),
             ),
             source.plane(
-                objects.variant_data.labels_for_variant(ObjectLabelVariant.SMALL_REMOVED),
+                objects.variant_data.labels_for_variant(SmallRemovedLabels),
             ),
         )
 
@@ -189,12 +193,12 @@ class PrimaryObjectDiagnosticPlanes(NamedTuple):
     ) -> tuple[ArtifactSpec, ...]:
         """Project stage declarations into the ordinary image-sidecar contract."""
 
-        prefix = ArtifactSidecarRole.QA_CHECKPOINT.name_for(objects.name)
+        prefix = QaCheckpoint.name_for(objects.name)
         return tuple(
             ArtifactSpec.output(
                 f"{prefix}__{stage}",
                 ImageArtifactType,
-                sidecar_role=ArtifactSidecarRole.QA_CHECKPOINT,
+                sidecar_role=QaCheckpoint,
                 viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
                 materialization=TerminalMaterializationSpec(
                     ImageFileOptions(

@@ -6,13 +6,13 @@ from types import SimpleNamespace
 import pytest
 import numpy as np
 
+from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.artifacts import (
     ArtifactType,
     ArtifactMeasurementSubjectRelation,
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSidecarRole,
     ArtifactSpec,
     ArtifactSpecRef,
     GroupLineageSourceRelation,
@@ -104,7 +104,11 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenancePlanes,
 )
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    ProcessingContract,
+    Pure3DContract,
+    VolumetricToSliceContract,
+)
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.processing.backends.analysis.multi_template_matching import (
     TemplateMatchResult,
@@ -177,7 +181,7 @@ class CoreExecutionRequest:
     artifact_outputs: Mapping[ArtifactSpecRef, ArtifactOutputPlan]
     group_key: str = "default"
     execution_group_scope: ComponentGroupScope = ComponentGroupScope.ungrouped()
-    processing_contract: ProcessingContract = ProcessingContract.PURE_3D
+    processing_contract: ProcessingContract = Pure3DContract
     runtime_plane_count: int = 1
 
 
@@ -289,7 +293,7 @@ def test_function_core_passes_payload_data_to_array_callable_and_restores_contex
             context=ContextStub(),
             artifact_inputs={},
             artifact_outputs={},
-            processing_contract=ProcessingContract.VOLUMETRIC_TO_SLICE,
+            processing_contract=VolumetricToSliceContract,
         )
     )
 
@@ -669,7 +673,7 @@ def test_composed_function_output_owns_collapsed_source_identity():
 
 
 def test_crop_mask_sidecar_names_derive_from_core_artifact_role():
-    assert ArtifactSidecarRole.CROP_MASK.name_for("CroppedImage") == (
+    assert CropMask.name_for("CroppedImage") == (
         "CroppedImage__crop_mask"
     )
 
@@ -1291,7 +1295,7 @@ def test_execute_function_core_keeps_image_sidecar_out_of_main_flow():
         ArtifactSpec.output(
             "CropGreen__crop_mask",
             ImageArtifactType,
-            sidecar_role=ArtifactSidecarRole.CROP_MASK,
+            sidecar_role=CropMask,
         ),
     )
     def crop_outputs(source):
@@ -1317,7 +1321,7 @@ def test_execute_function_core_keeps_image_sidecar_out_of_main_flow():
                         name="CropGreen__crop_mask",
                         path="/memory/crop-green-mask.pkl",
                         artifact_type=ImageArtifactType,
-                        sidecar_role=ArtifactSidecarRole.CROP_MASK,
+                        sidecar_role=CropMask,
                     ),
                 )
             },
@@ -2384,7 +2388,7 @@ def test_corrected_image_measurement_subject_compiles_and_executes_columnar_rows
     [stored] = context.runtime_value_store.find(name=rows.name, axis_id=context.axis_id)
     assert isinstance(stored.data, MeasurementTable)
     assert stored.data.subject == MeasurementSubject(
-        MeasurementScope.IMAGE, image.name
+        MeasurementScope.SAMPLE, image.name
     )
     assert tuple(stored.data.rows.column_values("cell_count")) == (2,)
 
@@ -2587,7 +2591,7 @@ def test_execute_function_core_rejects_nominal_measurement_subject_mismatch():
         return image, MeasurementTable(
             name=measurement_spec.name,
             rows=DataclassMeasurementColumnarRows((_NativeCountRow(0, 2),)),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "input"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "input"),
         )
 
     with pytest.raises(ValueError, match="declares subject"):

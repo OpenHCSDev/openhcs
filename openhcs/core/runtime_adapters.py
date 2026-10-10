@@ -14,9 +14,7 @@ from openhcs.core.artifact_key_selection import (
     ArtifactOutputPolicy,
     NativeReturnArtifactOutputPolicy,
 )
-from openhcs.core.aligned_image_payload import (
-    ImagePayloadExecutionMode,
-)
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -41,6 +39,9 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneProjection,
 )
 from openhcs.core.axes import Axis
+from openhcs.core.image_payload_execution_mode import (
+    NaturalExecution,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
@@ -57,7 +58,7 @@ class RuntimeImageExecutionContext:
     """Source provenance and execution mode for an image-like invocation."""
 
     source_image_name: str | None
-    execution_mode: ImagePayloadExecutionMode = ImagePayloadExecutionMode.NATURAL
+    execution_mode: type[ImagePayloadExecutionMode] = NaturalExecution
     plane_projection: RuntimePlaneAxisValueProjection | None = None
 
 

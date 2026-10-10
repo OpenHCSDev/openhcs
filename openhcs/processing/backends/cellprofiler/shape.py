@@ -16,7 +16,9 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementFeatureSemanticMarker,
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+)
 from openhcs.interop.cellprofiler.module_measurement_features import (
     MeasuredObjectAnchorFeature,
     ObjectLocationFeature,
@@ -51,6 +53,9 @@ from openhcs.processing.backends.cellprofiler.zernike import (
     ShapeObjectZernikeDescriptorDeclaration,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelVariantData
+from openhcs.core.pipeline.function_contracts import (
+    FullStackLabels,
+)
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.module_settings import BoundModuleSettings
@@ -452,11 +457,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
 from openhcs.core.memory import numpy as numpy_decorator
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     dense_object_label_measurement_row_domain,
@@ -1010,8 +1011,8 @@ class ObjectSizeShapeMeasurementRowsRequest(
         )
 
 
-@numpy_decorator(contract=ProcessingContract.FLEXIBLE)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
+@numpy_decorator(contract=FlexibleContract)
+@object_label_input_execution_mode(FullStackLabels)
 @special_inputs(MeasureObjectSizeShapeModule.label_kwarg)
 def measure_object_size_shape(
     image: np.ndarray,

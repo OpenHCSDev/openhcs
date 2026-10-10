@@ -25,7 +25,11 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     export_to_spreadsheet,
 )
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+    Pure3DContract,
+)
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.memory.decorators import image_payload_boundary
 from openhcs.core.runtime_image_values import PlainImagePayload
@@ -79,7 +83,7 @@ def test_cellprofiler_processing_backend_exports_declared_function() -> None:
     assert function.__module__ == module_type.__module__
     assert function.input_memory_type == MemoryType.NUMPY.value
     assert function.output_memory_type == MemoryType.NUMPY.value
-    assert _processing_contract(function) is ProcessingContract.PURE_2D
+    assert _processing_contract(function) is Pure2DContract
     assert function is module_type.require_callable("identify_primary_objects")
 
 
@@ -241,7 +245,7 @@ def test_cellprofiler_processing_backend_exports_canonical_grid_callable() -> No
     assert function is cellprofiler.identify_objects_in_grid
     assert function.input_memory_type == MemoryType.NUMPY.value
     assert function.output_memory_type == MemoryType.NUMPY.value
-    assert _processing_contract(function) is ProcessingContract.PURE_2D
+    assert _processing_contract(function) is Pure2DContract
 
 
 def test_cellprofiler_processing_backend_exports_resize_volumetric_variant() -> None:
@@ -254,7 +258,7 @@ def test_cellprofiler_processing_backend_exports_resize_volumetric_variant() -> 
     assert function is cellprofiler.resize_volumetric
     assert function.input_memory_type == MemoryType.NUMPY.value
     assert function.output_memory_type == MemoryType.NUMPY.value
-    assert _processing_contract(function) is ProcessingContract.PURE_3D
+    assert _processing_contract(function) is Pure3DContract
 
 
 def test_cellprofiler_processing_backend_exports_resize_objects_volumetric_variant() -> (
@@ -269,7 +273,7 @@ def test_cellprofiler_processing_backend_exports_resize_objects_volumetric_varia
     assert function is cellprofiler.resize_objects_3d
     assert function.input_memory_type == MemoryType.NUMPY.value
     assert function.output_memory_type == MemoryType.NUMPY.value
-    assert _processing_contract(function) is ProcessingContract.PURE_3D
+    assert _processing_contract(function) is Pure3DContract
 
 
 @pytest.mark.parametrize(
@@ -399,7 +403,7 @@ def test_openhcs_registry_discovers_cellprofiler_backend_contracts() -> None:
     functions = registry.discover_functions()
 
     metadata = functions["cellprofiler_identify_primary_objects"]
-    assert metadata.contract is ProcessingContract.PURE_2D
+    assert metadata.contract is Pure2DContract
     assert metadata.func.input_memory_type == MemoryType.NUMPY.value
     assert "cellprofiler" in metadata.tags
     assert "cellprofiler_identify_objects_in_grid" in functions
@@ -566,7 +570,7 @@ def test_shared_registry_wrapper_preserves_plate_call_semantics() -> None:
 
     wrapped = OpenHCSRegistry().apply_contract_wrapper(
         plate_probe,
-        ProcessingContract.FLEXIBLE,
+        FlexibleContract,
     )
 
     assert wrapped is not plate_probe

@@ -11,7 +11,9 @@ import numpy as np
 
 from openhcs.core.callable_contract import CallableContract
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    VolumetricToSliceContract,
+)
 from openhcs.processing.backends.processors import method_axes, numpy_processor
 from openhcs.processing.backends.processors.numpy_processor import (
     NumpyStackProjectionMethod,
@@ -99,7 +101,7 @@ def test_numpy_processor_method_strategies_dispatch_behavior() -> None:
         CallableContract.from_callable(
             numpy_processor.create_projection
         ).require_processing_contract()
-        is ProcessingContract.VOLUMETRIC_TO_SLICE
+        is VolumetricToSliceContract
     )
 
 

@@ -31,8 +31,10 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
 from openhcs.interop.cellprofiler.runtime.output_record_request import (
     CellProfilerOutputRecordRequest,
 )
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
+from openhcs.core.image_payload_execution_mode import (
+    NaturalExecution,
+)
 
 
 def _output_record_request(
@@ -443,7 +445,7 @@ def test_record_input_selection_effects_remain_at_each_read_epoch(monkeypatch) -
         source_image_name=spec.name,
         image_count=1,
         payload=request.current_image,
-        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        execution_mode=NaturalExecution,
         kwargs=request.kwargs,
         input_binding_request=request.adapter.request,
         input_edges=request.active_input_edges,

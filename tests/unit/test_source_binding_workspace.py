@@ -11,6 +11,7 @@ import tifffile
 
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.processing.backends.cellprofiler.infrastructure import relative_voxel_spacing
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
@@ -253,7 +254,7 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         (SourceVoxelSpacing((1.3556, 1.3556)), 1.3556, True),
         (SourceVoxelSpacing((4.2, 1.3556, 1.3556)), 1.3556, True),
         (SourceVoxelSpacing((1.2, 1.3556)), 1.0, False),
-        (SourceVoxelSpacing.from_cellprofiler_xyz(x=3.0, y=3.0, z=12.0), 1.0, False),
+        (relative_voxel_spacing(x=3.0, y=3.0, z=12.0), 1.0, False),
     ),
 )
 def test_materialized_calibration_reaches_physical_artifact_without_relabeling_coordinates(
@@ -323,7 +324,7 @@ def test_scalar_projection_requires_uniform_physical_xy_not_z(spacings, expected
 
 
 def test_cellprofiler_relative_and_legacy_spacing_never_gain_micrometer_units():
-    spacing = SourceVoxelSpacing.from_cellprofiler_xyz(x=1, y=2, z=6)
+    spacing = relative_voxel_spacing(x=1, y=2, z=6)
     assert spacing.values_zyx == (3, 1, 0.5)
     assert spacing.unit is SourceVoxelSpacingUnit.RELATIVE
     source = {}
@@ -349,7 +350,7 @@ def test_voxel_spacing_rejects_nonfinite_and_nonpositive_coordinates(value):
         (SourceVoxelSpacing((0.65, 0.65)), SourceVoxelSpacing()),
         (
             SourceVoxelSpacing((1.0, 1.0)),
-            SourceVoxelSpacing.from_cellprofiler_xyz(x=1, y=1, z=1),
+            relative_voxel_spacing(x=1, y=1, z=1),
         ),
     ),
 )

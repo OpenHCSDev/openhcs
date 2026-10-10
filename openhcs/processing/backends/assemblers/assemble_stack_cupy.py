@@ -16,7 +16,9 @@ from openhcs.processing.backends.assemblers.blending import (
     TileBlendMethod,
     SubpixelTilePlacement,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    VolumetricToSliceContract,
+)
 from openhcs.utils.import_utils import optional_import_placeholder
 
 # For type checking only
@@ -316,7 +318,7 @@ def _create_dynamic_blend_mask_gpu(
 
 
 @artifact_inputs("positions")  # The input name is "positions"
-@cupy_func(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+@cupy_func(contract=VolumetricToSliceContract)
 def assemble_stack_cupy(
     image_tiles: "cp.ndarray",  # type: ignore
     positions: Union[List[Tuple[float, float]], "cp.ndarray"],  # type: ignore

@@ -10,7 +10,6 @@ from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy
@@ -36,10 +35,13 @@ from openhcs.processing.backends.cellprofiler.perf_fixtures import (
     capture_array_fixture,
 )
 from openhcs.processing.backends.processors.method_axes import ScipyBoundaryMode
-from openhcs.processing.backends.lib_registry.unified_registry import (
-    ProcessingContract,
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
 )
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+)
 
 
 class MedianFilterModule(CellProfilerModule):
@@ -391,8 +393,8 @@ def median_filter_backend(
     )
 
 
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy(contract=ProcessingContract.FLEXIBLE)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy(contract=FlexibleContract)
 def medianfilter(
     image: ImagePayload,
     window_size: int = 3,

@@ -22,10 +22,8 @@ from typing import (
     ClassVar,
     Mapping,
     TypeVar,
-    cast,
     get_args,
     get_type_hints,
-    overload,
 )
 
 from arraybridge import MemoryContractAttribute, MemoryType
@@ -76,13 +74,14 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
     from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
     from openhcs.core.vfs_protocol import PlatePathDeclaration
-    from openhcs.processing.backends.lib_registry.unified_registry import (
+    from openhcs.core.processing_contracts import (
         ProcessingContract,
     )
 
 
 CallableNamespace = Mapping[str, Any]
 _EnumT = TypeVar("_EnumT", bound=Enum)
+_ValueT = TypeVar("_ValueT")
 
 
 class CallableContractRuntimeCache(IdentityBoundProcessCache):
@@ -250,10 +249,21 @@ class ImagePayloadConsumption(str, Enum):
         )
 
 
-class PrimaryImageCarrierRequirement(str, Enum):
-    """Compile-time carrier evidence required by a callable's primary image."""
+@dataclass(frozen=True, slots=True)
+class PayloadAxisRequirement:
+    """A callable's primary image must declare a payload axis with ``role``."""
 
-    SOURCE_CHANNEL_AXIS = "source_channel_axis"
+    role: type[AxisRole]
+
+    def __post_init__(self) -> None:
+        if not (isinstance(self.role, type) and issubclass(self.role, AxisRole)):
+            raise TypeError(
+                f"PayloadAxisRequirement.role must be an AxisRole, got {self.role!r}."
+            )
+
+    @property
+    def label(self) -> str:
+        return f"payload axis {self.role.__name__}"
 
     def validate_source_metadata(
         self,
@@ -264,64 +274,67 @@ class PrimaryImageCarrierRequirement(str, Enum):
     ) -> None:
         """Validate one exact source after source-binding transformations."""
 
-        source_channel_axis = (
-            None if load_as_monochrome else metadata.pixel_semantics.channel_axis
-        )
-        if self is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS:
-            if source_channel_axis is None:
-                raise ValueError(
-                    "Primary image carrier requires a declared source channel "
-                    f"axis, but {source_path} has none after source-binding "
-                    "transformations."
-                )
+        if not load_as_monochrome and metadata.pixel_semantics.axes.with_role(self.role):
             return
-        raise AssertionError(f"Unhandled primary image carrier requirement {self!r}.")
+        raise ValueError(
+            f"Primary image requires a declared {self.role.__name__} payload axis, "
+            f"but {source_path} has none after source-binding transformations."
+        )
 
 
-class PrimaryImageCarrierTransition(str, Enum):
-    """Declared effect of a callable on its primary-image carrier semantics."""
+class PayloadAxisTransition(ABC):
+    """Declared effect of a callable on its primary image's payload axes."""
 
-    def __new__(
-        cls,
-        value: str,
-        preserves: bool,
-        creates: tuple[PrimaryImageCarrierRequirement, ...],
-    ):
-        member = str.__new__(cls, value)
-        member._value_ = value
-        member._preserves = preserves
-        member._creates = creates
-        return member
+    @abstractmethod
+    def preserves(self, requirement: PayloadAxisRequirement) -> bool:
+        """Return whether input evidence for ``requirement`` survives the call."""
 
-    PRESERVE = ("preserve", True, ())
-    CREATE_SOURCE_CHANNEL_AXIS = (
-        "create_source_channel_axis",
-        False,
-        (PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS,),
-    )
+    @abstractmethod
+    def creates(self, requirement: PayloadAxisRequirement) -> bool:
+        """Return whether the call supplies the axis without source inheritance."""
 
-    def creates(self, requirement: PrimaryImageCarrierRequirement) -> bool:
-        """Return whether this member supplies evidence without source inheritance."""
-
-        return requirement in self._creates
-
-    def proves(self, requirement: PrimaryImageCarrierRequirement) -> bool:
-        """Return whether this member preserves or creates the requested evidence."""
-
-        return self._preserves or self.creates(requirement)
+    def proves(self, requirement: PayloadAxisRequirement) -> bool:
+        return self.preserves(requirement) or self.creates(requirement)
 
 
-def _validate_optional_enum(
+@dataclass(frozen=True, slots=True)
+class PreservedPayloadAxes(PayloadAxisTransition):
+    """The output declares the same payload axes as the input."""
+
+    def preserves(self, requirement: PayloadAxisRequirement) -> bool:
+        del requirement
+        return True
+
+    def creates(self, requirement: PayloadAxisRequirement) -> bool:
+        del requirement
+        return False
+
+
+@dataclass(frozen=True, slots=True)
+class CreatedPayloadAxis(PayloadAxisTransition):
+    """The output declares a new payload axis with ``role``."""
+
+    role: type[AxisRole]
+
+    def preserves(self, requirement: PayloadAxisRequirement) -> bool:
+        del requirement
+        return False
+
+    def creates(self, requirement: PayloadAxisRequirement) -> bool:
+        return issubclass(self.role, requirement.role)
+
+
+def _validate_optional_instance(
     value: object,
-    enum_type: type[Enum],
+    kind: type,
     *,
     owner: str,
 ) -> None:
-    """Validate one optional enum at a declaration boundary."""
+    """Validate one optional declaration value at a declaration boundary."""
 
-    if value is not None and not isinstance(value, enum_type):
+    if value is not None and not isinstance(value, kind):
         raise TypeError(
-            f"{owner} must be {enum_type.__name__} or None, got "
+            f"{owner} must be {kind.__name__} or None, got "
             f"{type(value).__name__}."
         )
 
@@ -392,17 +405,16 @@ class CallableMetadata:
     runtime_adapter: RuntimeAdapterSpec | None = None
     runtime_context_parameter: str | None = None
     execution_scope: FunctionStepExecutionScope = FunctionStepExecutionScope.AXIS
-    processing_contract: Enum | None = None
-    declared_processing_contract: str | None = None
+    processing_contract: "type[ProcessingContract] | None" = None
     raw_processing_function: Callable[..., object] | "FunctionReference" | None = None
-    runtime_image_execution_mode: ImagePayloadExecutionMode | None = None
+    runtime_image_execution_mode: type[ImagePayloadExecutionMode] | None = None
     image_payload_consumption: ImagePayloadConsumption = ImagePayloadConsumption.NATURAL
     request_binding: "CallableRequestBinding | None" = None
     prepare: Callable[..., object] | None = None
     canonical_signature: inspect.Signature | None = None
     raw_runtime_signature: inspect.Signature | None = None
-    primary_image_carrier_requirement: PrimaryImageCarrierRequirement | None = None
-    primary_image_carrier_transition: PrimaryImageCarrierTransition | None = None
+    payload_axis_requirement: PayloadAxisRequirement | None = None
+    payload_axis_transition: PayloadAxisTransition | None = None
 
     @staticmethod
     def prepared_callable_signature(func: Callable[..., object]) -> inspect.Signature | None:
@@ -609,15 +621,15 @@ class CallableMetadata:
             "artifact_input_parameter_names",
             normalized,
         )
-        _validate_optional_enum(
-            self.primary_image_carrier_requirement,
-            PrimaryImageCarrierRequirement,
-            owner="CallableMetadata.primary_image_carrier_requirement",
+        _validate_optional_instance(
+            self.payload_axis_requirement,
+            PayloadAxisRequirement,
+            owner="CallableMetadata.payload_axis_requirement",
         )
-        _validate_optional_enum(
-            self.primary_image_carrier_transition,
-            PrimaryImageCarrierTransition,
-            owner="CallableMetadata.primary_image_carrier_transition",
+        _validate_optional_instance(
+            self.payload_axis_transition,
+            PayloadAxisTransition,
+            owner="CallableMetadata.payload_axis_transition",
         )
 
     @property
@@ -702,30 +714,25 @@ class CallableMetadata:
             execution_scope=reader.optional_execution_scope(
                 FunctionContractAttribute.execution_scope,
             ),
-            processing_contract=reader.optional_enum(
-                FunctionContractAttribute.processing_contract
-            ),
-            declared_processing_contract=reader.optional_string(
-                FunctionContractAttribute.declared_processing_contract,
+            processing_contract=reader.optional_subclass(
+                FunctionContractAttribute.processing_contract,
+                _processing_contract_family(),
             ),
             raw_processing_function=reader.optional_raw_processing_function(
                 FunctionContractAttribute.raw_processing_function,
             ),
-            runtime_image_execution_mode=reader.optional_execution_mode(
+            runtime_image_execution_mode=reader.optional_subclass(
                 FunctionContractAttribute.runtime_image_execution_mode,
+                ImagePayloadExecutionMode,
             ),
             image_payload_consumption=reader.image_payload_consumption(),
-            primary_image_carrier_requirement=(
-                reader.optional_enum(
-                    FunctionContractAttribute.primary_image_carrier_requirement,
-                    PrimaryImageCarrierRequirement,
-                )
+            payload_axis_requirement=reader.optional_instance(
+                FunctionContractAttribute.payload_axis_requirement,
+                PayloadAxisRequirement,
             ),
-            primary_image_carrier_transition=(
-                reader.optional_enum(
-                    FunctionContractAttribute.primary_image_carrier_transition,
-                    PrimaryImageCarrierTransition,
-                )
+            payload_axis_transition=reader.optional_instance(
+                FunctionContractAttribute.payload_axis_transition,
+                PayloadAxisTransition,
             ),
             request_binding=reader.optional_request_binding(
                 FunctionContractAttribute.callable_request_binding,
@@ -807,10 +814,6 @@ class CallableMetadata:
             namespace[FunctionContractAttribute.processing_contract] = (
                 self.processing_contract
             )
-        if self.declared_processing_contract is not None:
-            namespace[FunctionContractAttribute.declared_processing_contract] = (
-                self.declared_processing_contract
-            )
         if self.raw_processing_function is not None:
             namespace[FunctionContractAttribute.raw_processing_function] = (
                 self.raw_processing_function
@@ -823,13 +826,13 @@ class CallableMetadata:
             namespace[FunctionContractAttribute.image_payload_consumption] = (
                 self.image_payload_consumption
             )
-        if self.primary_image_carrier_requirement is not None:
-            namespace[FunctionContractAttribute.primary_image_carrier_requirement] = (
-                self.primary_image_carrier_requirement
+        if self.payload_axis_requirement is not None:
+            namespace[FunctionContractAttribute.payload_axis_requirement] = (
+                self.payload_axis_requirement
             )
-        if self.primary_image_carrier_transition is not None:
-            namespace[FunctionContractAttribute.primary_image_carrier_transition] = (
-                self.primary_image_carrier_transition
+        if self.payload_axis_transition is not None:
+            namespace[FunctionContractAttribute.payload_axis_transition] = (
+                self.payload_axis_transition
             )
         if self.request_binding is not None:
             namespace[FunctionContractAttribute.callable_request_binding] = (
@@ -970,10 +973,8 @@ class CallableContract(ArtifactPlanKeySelector):
         metadata = CallableMetadata.from_projection(projection)
         stack_requirement = metadata.variable_component_stack_requirement
         if stack_requirement is None and metadata.processing_contract is not None:
-            stack_requirement = getattr(
-                metadata.processing_contract,
-                "variable_component_stack_requirement",
-                None,
+            stack_requirement = (
+                metadata.processing_contract.variable_component_stack_requirement()
             )
         if stack_requirement is not None and callable(projection.func):
             metadata = dataclasses.replace(
@@ -1400,15 +1401,10 @@ class CallableContract(ArtifactPlanKeySelector):
         """Declared requirement for a non-empty variable-component stack axis."""
         if self.metadata.variable_component_stack_requirement is not None:
             return self.metadata.variable_component_stack_requirement
-
-        from openhcs.processing.backends.lib_registry.unified_registry import (
-            ProcessingContract,
-        )
-
         processing_contract = self.processing_contract
-        if not isinstance(processing_contract, ProcessingContract):
+        if processing_contract is None:
             return None
-        return processing_contract.variable_component_stack_requirement
+        return processing_contract.variable_component_stack_requirement()
 
     @property
     def allowed_group_by_roles(self) -> tuple[type[AxisRole], ...]:
@@ -1416,21 +1412,16 @@ class CallableContract(ArtifactPlanKeySelector):
         return self.metadata.allowed_group_by_roles
 
     @property
-    def processing_contract(self) -> Enum | None:
-        """Declared nominal processing contract."""
+    def processing_contract(self) -> "type[ProcessingContract] | None":
+        """Declared processing contract."""
         return self.metadata.processing_contract
 
-    def require_processing_contract(self) -> "ProcessingContract":
+    def require_processing_contract(self) -> "type[ProcessingContract]":
         """Return the declared processing contract or fail at the contract boundary."""
-        from openhcs.processing.backends.lib_registry.unified_registry import (
-            ProcessingContract,
-        )
-
         processing_contract = self.processing_contract
-        if not isinstance(processing_contract, ProcessingContract):
+        if processing_contract is None:
             raise TypeError(
-                f"Callable {self.function_name!r} must declare a ProcessingContract; "
-                f"got {type(processing_contract).__name__}."
+                f"Callable {self.function_name!r} must declare a ProcessingContract."
             )
         return processing_contract
 
@@ -1446,7 +1437,7 @@ class CallableContract(ArtifactPlanKeySelector):
 
     def main_flow_call_argument(self, source_payload: Any) -> Any:
         """Let the processing declaration retain context needed before raw calls."""
-        return self.require_processing_contract().declaration.main_flow_call_argument(
+        return self.require_processing_contract().main_flow_call_argument(
             self, source_payload,
         )
 
@@ -1454,13 +1445,8 @@ class CallableContract(ArtifactPlanKeySelector):
     def collapses_input_plane_axis(self) -> bool:
         """Whether the nominal processing declaration reduces the stack axis."""
         return self.processing_contract is not None and (
-            self.require_processing_contract().declaration.collapses_input_plane_axis
+            self.require_processing_contract().collapses_input_plane_axis
         )
-
-    @property
-    def declared_processing_contract(self) -> str | None:
-        """Declared processing contract name."""
-        return self.metadata.declared_processing_contract
 
     @property
     def raw_processing_function(
@@ -1470,7 +1456,7 @@ class CallableContract(ArtifactPlanKeySelector):
         return self.metadata.raw_processing_function
 
     @property
-    def runtime_image_execution_mode(self) -> ImagePayloadExecutionMode | None:
+    def runtime_image_execution_mode(self) -> type[ImagePayloadExecutionMode] | None:
         """Declared runtime image execution mode."""
         return self.metadata.runtime_image_execution_mode
 
@@ -1480,20 +1466,20 @@ class CallableContract(ArtifactPlanKeySelector):
         return self.metadata.image_payload_consumption
 
     @property
-    def primary_image_carrier_requirement(
+    def payload_axis_requirement(
         self,
-    ) -> PrimaryImageCarrierRequirement | None:
+    ) -> PayloadAxisRequirement | None:
         """Declared compile-time requirement for the primary image carrier."""
 
-        return self.metadata.primary_image_carrier_requirement
+        return self.metadata.payload_axis_requirement
 
     @property
-    def primary_image_carrier_transition(
+    def payload_axis_transition(
         self,
-    ) -> PrimaryImageCarrierTransition | None:
+    ) -> PayloadAxisTransition | None:
         """Declared effect on primary-image carrier semantics."""
 
-        return self.metadata.primary_image_carrier_transition
+        return self.metadata.payload_axis_transition
 
     @property
     def request_binding(self) -> "CallableRequestBinding | None":
@@ -1995,20 +1981,20 @@ def _public_defaults_mapping(
     )
 
 
-def _attach_optional_enum_metadata(
+def _attach_optional_metadata(
     func: Any,
     *,
     field_name: str,
     value: object,
-    enum_type: type[Enum],
+    kind: type,
 ) -> None:
-    """Validate and attach one optional enum declaration."""
+    """Validate and attach one optional declaration."""
 
     if value is None:
         return
-    _validate_optional_enum(
+    _validate_optional_instance(
         value,
-        enum_type,
+        kind,
         owner=field_name,
     )
     _mutable_callable_namespace(func)[field_name] = value
@@ -2017,30 +2003,29 @@ def _attach_optional_enum_metadata(
 def attach_callable_contract_metadata(
     func: Any,
     *,
-    declared_processing_contract: str | None = None,
+    processing_contract: "type[ProcessingContract] | None" = None,
     raw_processing_function: Any | None = None,
     prepare: Any | None = None,
-    runtime_image_execution_mode: ImagePayloadExecutionMode | None = None,
+    runtime_image_execution_mode: type[ImagePayloadExecutionMode] | None = None,
     runtime_bound_parameters: tuple[type[RuntimeParameterDeclarationABC], ...] = (),
-    primary_image_carrier_requirement: PrimaryImageCarrierRequirement | None = None,
-    primary_image_carrier_transition: PrimaryImageCarrierTransition | None = None,
+    payload_axis_requirement: PayloadAxisRequirement | None = None,
+    payload_axis_transition: PayloadAxisTransition | None = None,
 ) -> None:
     """Attach OpenHCS callable metadata used by compiler/runtime phases."""
     _mutable_callable_namespace(func).pop(FunctionContractAttribute.canonical_signature, None)
     _mutable_callable_namespace(func).pop(FunctionContractAttribute.raw_runtime_signature, None)
-    if declared_processing_contract is not None:
-        if (
-            not isinstance(declared_processing_contract, str)
-            or not declared_processing_contract.strip()
+    if processing_contract is not None:
+        if not (
+            isinstance(processing_contract, type)
+            and issubclass(processing_contract, _processing_contract_family())
         ):
-            raise ValueError("declared_processing_contract must be a non-empty string.")
-        namespace = _mutable_callable_namespace(func)
-        namespace[FunctionContractAttribute.declared_processing_contract] = (
-            declared_processing_contract
-        )
-        _attach_nominal_processing_contract_if_supported(
-            func,
-            declared_processing_contract,
+            raise TypeError(
+                "processing_contract must be a ProcessingContract class, "
+                f"got {processing_contract!r}."
+            )
+        # A contract already on the callable (an inner declaration) is kept.
+        _mutable_callable_namespace(func).setdefault(
+            FunctionContractAttribute.processing_contract, processing_contract
         )
     if raw_processing_function is not None:
         if not callable(raw_processing_function):
@@ -2075,25 +2060,28 @@ def attach_callable_contract_metadata(
             FunctionContractAttribute.processing_prepare
         ] = prepare
     if runtime_image_execution_mode is not None:
-        if not isinstance(runtime_image_execution_mode, ImagePayloadExecutionMode):
+        if not (
+            isinstance(runtime_image_execution_mode, type)
+            and issubclass(runtime_image_execution_mode, ImagePayloadExecutionMode)
+        ):
             raise TypeError(
-                "runtime_image_execution_mode must be ImagePayloadExecutionMode, "
-                f"got {type(runtime_image_execution_mode).__name__}."
+                "runtime_image_execution_mode must be an ImagePayloadExecutionMode "
+                f"class, got {runtime_image_execution_mode!r}."
             )
         _mutable_callable_namespace(func)[
             FunctionContractAttribute.runtime_image_execution_mode
         ] = runtime_image_execution_mode
-    _attach_optional_enum_metadata(
+    _attach_optional_metadata(
         func,
-        field_name=FunctionContractAttribute.primary_image_carrier_requirement,
-        value=primary_image_carrier_requirement,
-        enum_type=PrimaryImageCarrierRequirement,
+        field_name=FunctionContractAttribute.payload_axis_requirement,
+        value=payload_axis_requirement,
+        kind=PayloadAxisRequirement,
     )
-    _attach_optional_enum_metadata(
+    _attach_optional_metadata(
         func,
-        field_name=FunctionContractAttribute.primary_image_carrier_transition,
-        value=primary_image_carrier_transition,
-        enum_type=PrimaryImageCarrierTransition,
+        field_name=FunctionContractAttribute.payload_axis_transition,
+        value=payload_axis_transition,
+        kind=PayloadAxisTransition,
     )
 
     _project_runtime_owned_parameter_exclusions(func)
@@ -2108,22 +2096,10 @@ def _project_runtime_owned_parameter_exclusions(func: Any) -> None:
     )
 
 
-def _attach_nominal_processing_contract_if_supported(
-    func: Any,
-    declared_processing_contract: str,
-) -> None:
-    """Coerce declared contract names to nominal metadata at the declaration boundary."""
-    namespace = _mutable_callable_namespace(func)
-    if FunctionContractAttribute.processing_contract in namespace:
-        return
+def _processing_contract_family() -> type["ProcessingContract"]:
+    from openhcs.core.processing_contracts import ProcessingContract
 
-    from openhcs.processing.backends.lib_registry.unified_registry import (
-        ProcessingContract,
-    )
-
-    contract = ProcessingContract.from_declared_name(declared_processing_contract)
-    if contract is not None:
-        namespace[FunctionContractAttribute.processing_contract] = contract
+    return ProcessingContract
 
 
 def _attach_runtime_bound_parameter_metadata(
@@ -2211,13 +2187,13 @@ def attach_processing_prepare(func: Any, prepare: Any) -> None:
 
 
 def runtime_image_execution_mode(
-    mode: ImagePayloadExecutionMode,
+    mode: type[ImagePayloadExecutionMode],
 ) -> Any:
     """Declare the image execution mode the compiler should preserve."""
-    if not isinstance(mode, ImagePayloadExecutionMode):
+    if not (isinstance(mode, type) and issubclass(mode, ImagePayloadExecutionMode)):
         raise TypeError(
-            "runtime_image_execution_mode mode must be ImagePayloadExecutionMode, "
-            f"got {type(mode).__name__}."
+            "runtime_image_execution_mode mode must be an ImagePayloadExecutionMode "
+            f"class, got {mode!r}."
         )
 
     def decorator(func: Any) -> Any:
@@ -2229,48 +2205,35 @@ def runtime_image_execution_mode(
     return decorator
 
 
-def requires_primary_image_carrier(
-    requirement: PrimaryImageCarrierRequirement,
-) -> Any:
-    """Declare carrier evidence that must be proved before callable execution."""
+def requires_payload_axis(role: type[AxisRole]) -> Any:
+    """Declare that the primary image must carry a payload axis with ``role``."""
 
-    if not isinstance(requirement, PrimaryImageCarrierRequirement):
-        raise TypeError(
-            "requires_primary_image_carrier requirement must be "
-            "PrimaryImageCarrierRequirement, got "
-            f"{type(requirement).__name__}."
-        )
+    requirement = PayloadAxisRequirement(role)
 
     def decorator(func: Any) -> Any:
-        attach_callable_contract_metadata(
-            func,
-            primary_image_carrier_requirement=requirement,
-        )
+        attach_callable_contract_metadata(func, payload_axis_requirement=requirement)
         return func
 
     return decorator
 
 
-def preserves_primary_image_carrier(func: Any) -> Any:
-    """Declare that a callable preserves its primary-image carrier semantics."""
+def preserves_payload_axes(func: Any) -> Any:
+    """Declare that a callable's output keeps its input's payload axes."""
 
     attach_callable_contract_metadata(
         func,
-        primary_image_carrier_transition=PrimaryImageCarrierTransition.PRESERVE,
+        payload_axis_transition=PreservedPayloadAxes(),
     )
     return func
 
 
-def declares_primary_image_carrier_transition(
-    transition: PrimaryImageCarrierTransition,
-) -> Any:
-    """Attach a member-owned carrier effect through the original metadata boundary."""
+def creates_payload_axis(role: type[AxisRole]) -> Any:
+    """Declare that a callable's output carries a new payload axis with ``role``."""
+
+    transition = CreatedPayloadAxis(role)
 
     def decorator(func: Any) -> Any:
-        attach_callable_contract_metadata(
-            func,
-            primary_image_carrier_transition=transition,
-        )
+        attach_callable_contract_metadata(func, payload_axis_transition=transition)
         return func
 
     return decorator
@@ -2518,19 +2481,15 @@ class CallableMetadataReader:
         return value
 
 
-    def optional_execution_mode(
-        self,
-        field_name: str,
-    ) -> ImagePayloadExecutionMode | None:
-        """Return an optional image execution-mode metadata field."""
+    def optional_subclass(self, field_name: str, family: type[_ValueT]) -> type[_ValueT] | None:
+        """Return an optional declared class from one nominal family."""
         value = self.namespace.get(field_name)
         if value is None:
             return None
-        if not isinstance(value, ImagePayloadExecutionMode):
+        if not (isinstance(value, type) and issubclass(value, family)):
             raise TypeError(
-                f"{self.function_name!r}.{field_name} must be "
-                "ImagePayloadExecutionMode, "
-                f"got {type(value).__name__}."
+                f"{self.function_name!r}.{field_name} must be a "
+                f"{family.__name__} class, got {value!r}."
             )
         return value
 
@@ -2565,38 +2524,17 @@ class CallableMetadataReader:
             )
         return value
 
-    @overload
-    def optional_enum(self, field_name: str, enum_type: None = None) -> Enum | None: ...
-
-    @overload
-    def optional_enum(
-        self,
-        field_name: str,
-        enum_type: type[_EnumT],
-    ) -> _EnumT | None: ...
-
-    def optional_enum(
-        self,
-        field_name: str,
-        enum_type: type[_EnumT] | None = None,
-    ) -> Enum | _EnumT | None:
-        """Return an optional enum, optionally constrained to one enum family."""
+    def optional_instance(self, field_name: str, kind: type[_ValueT]) -> _ValueT | None:
+        """Return an optional declaration value of exactly one declared kind."""
         value = self.namespace.get(field_name)
         if value is None:
             return None
-        if not isinstance(value, Enum):
-            raise TypeError(
-                f"{self.function_name!r}.{field_name} must be Enum, "
-                f"got {type(value).__name__}."
-            )
-        if enum_type is not None and not isinstance(value, enum_type):
+        if not isinstance(value, kind):
             raise TypeError(
                 f"{self.function_name!r}.{field_name} must be "
-                f"{enum_type.__name__}, got {type(value).__name__}."
+                f"{kind.__name__}, got {type(value).__name__}."
             )
-        if enum_type is None:
-            return value
-        return cast(_EnumT, value)
+        return value
 
     def optional_callable(
         self,

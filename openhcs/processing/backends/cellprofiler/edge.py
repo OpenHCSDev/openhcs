@@ -68,7 +68,9 @@ from openhcs.processing.backends.cellprofiler.image_geometry import (
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.core.runtime_image_values import ImagePayload
 
 
@@ -502,7 +504,7 @@ def _native_kirsch(image: np.ndarray) -> np.ndarray:
     return result
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_2D)
+@numpy_decorator(contract=Pure2DContract)
 def enhance_edges(
     image: ImagePayload,
     method: EdgeMethod = EdgeMethod.SOBEL,

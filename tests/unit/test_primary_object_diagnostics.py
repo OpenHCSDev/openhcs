@@ -1,6 +1,10 @@
 """Lightweight ownership/payload checks; these do not execute segmentation."""
 
 import ast
+from openhcs.interop.cellprofiler.object_label_variants import (
+    SmallRemovedLabels,
+    UneditedLabels,
+)
 from pathlib import Path
 import subprocess
 from typing import NamedTuple, get_args
@@ -9,7 +13,7 @@ import numpy as np
 import pytest
 
 from openhcs.core.artifacts import (
-    ArtifactSidecarRole,
+    QaCheckpoint,
     ArtifactSidecarSourceRelation,
     ArtifactSpec,
     ArtifactViewerStreaming,
@@ -60,8 +64,7 @@ def _objects(source):
     return SourceImageObjectLabelBuildRequest(
         image=source,
         labels=labels,
-        unedited_labels=unedited,
-        small_removed_labels=small_removed,
+        variants={UneditedLabels: unedited, SmallRemovedLabels: small_removed},
         declared_object_count=1,
     ).payload()
 
@@ -125,8 +128,8 @@ def test_planes_preserve_exact_source_coordinates_and_owned_variants(executed):
     assert source.metadata.intensity_scale == 65535
     assert diagnostics.threshold_support.data is threshold_support
     assert diagnostics.initial_components.data is initial_components
-    assert diagnostics.unedited_objects.data is objects.unedited_labels
-    assert diagnostics.small_removed_objects.data is objects.small_removed_labels
+    assert diagnostics.unedited_objects.data is objects.variant_labels(UneditedLabels)
+    assert diagnostics.small_removed_objects.data is objects.variant_labels(SmallRemovedLabels)
     assert objects.domain.declared_object_count == 1
     assert diagnostics.threshold_support.mask is diagnostics.initial_components.mask
     assert diagnostics.unedited_objects.mask is diagnostics.small_removed_objects.mask
@@ -155,7 +158,7 @@ def test_diagnostic_contract_has_source_producer_stage_identity_not_new_objects(
     for field, spec in zip(PrimaryObjectDiagnosticPlanes._fields, specs, strict=True):
         assert spec.name.endswith(f"__{field}")
         assert spec.artifact_type is ImageArtifactType
-        assert spec.sidecar_role is ArtifactSidecarRole.QA_CHECKPOINT
+        assert spec.sidecar_role is QaCheckpoint
         assert not spec.participates_in_main_flow
         assert spec.viewer_streaming is ArtifactViewerStreaming.ON_DEMAND
         assert spec.materialization.participates_in_persistent_materialization()
@@ -204,7 +207,9 @@ def test_ordinary_image_contextualization_preserves_unexecuted_masks():
 
 def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identity():
     from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-    from openhcs.processing.backends.lib_registry.unified_registry import Pure2DAuxiliaryOutputAggregator
+    from openhcs.core.processing_contracts import (
+        Pure2DAuxiliaryOutputAggregator,
+    )
     from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import DiagnosticPlaneSource
 
     first = _source()
@@ -392,7 +397,27 @@ def test_processing_body_is_unchanged_except_same_run_evidence_capture():
                 )
             return node
 
-    before = PayloadAttributes().visit(before)
+    class DeclaredLabelVariants(ast.NodeTransformer):
+        """The label-variant keywords became one variants mapping (G5)."""
+
+        VARIANTS = {"unedited_labels": "UneditedLabels", "small_removed_labels": "SmallRemovedLabels"}
+
+        def visit_Call(self, node):
+            self.generic_visit(node)
+            variant_keywords = [k for k in node.keywords if k.arg in self.VARIANTS]
+            if not variant_keywords:
+                return node
+            mapping = ast.Dict(
+                keys=[ast.Name(self.VARIANTS[k.arg], ast.Load()) for k in variant_keywords],
+                values=[k.value for k in variant_keywords],
+            )
+            first = node.keywords.index(variant_keywords[0])
+            kept = [k for k in node.keywords if k.arg not in self.VARIANTS]
+            kept.insert(first, ast.keyword(arg="variants", value=mapping))
+            node.keywords = kept
+            return node
+
+    before = DeclaredLabelVariants().visit(PayloadAttributes().visit(before))
     # Compare the original algorithm, not docstring, signature or output ABI.
     assert ast.dump(ast.Module(body=before.body[1:-1], type_ignores=[])) == ast.dump(
         ast.Module(body=after.body[1:-1], type_ignores=[]))

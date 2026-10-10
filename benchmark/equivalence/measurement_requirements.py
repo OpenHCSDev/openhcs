@@ -63,7 +63,7 @@ class RequiredRuntimeMeasurementProjection:
         for key in input_keys:
             subjects.add(key.subject)
             if (
-                key.subject.scope is MeasurementScope.IMAGE
+                key.subject.scope is MeasurementScope.SAMPLE
                 and key.subject.name is not None
             ):
                 source_pair = RuntimeMeasurementSourcePair.from_source_name(
@@ -72,7 +72,7 @@ class RequiredRuntimeMeasurementProjection:
                 if source_pair is not None:
                     subjects.add(
                         RuntimeMeasurementSubjectKey(
-                            MeasurementScope.IMAGE,
+                            MeasurementScope.SAMPLE,
                             source_pair.reversed_source_name,
                         )
                     )

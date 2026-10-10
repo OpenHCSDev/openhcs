@@ -19,11 +19,9 @@ from openhcs.core.equivalence.keys import (
     RuntimeMeasurementSourcePair,
     RuntimeMeasurementSubjectKey,
 )
-from openhcs.core.equivalence.policy import (
-    RuntimeEquivalencePolicy,
-    RuntimeMeasurementDialect,
-    normalize_runtime_identifier,
-)
+from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
+from openhcs.core.measurement_dialect import MeasurementDialect
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 
 RuntimeMeasurementFact = tuple[
     RuntimeMeasurementFeatureKey,
@@ -83,13 +81,13 @@ class RuntimeDirectionalPairMeasurementDerivationContract:
     def regression_slope_feature(self) -> str | None:
         """Return the dialect-declared pair regression-slope family."""
         return (
-            self.policy.measurement_dialect.resolved_pair_regression_slope_feature_name()
+            self.policy.measurement_dialect.pair_regression_slope_feature_name()
         )
 
     @property
     def correlation_feature(self) -> str | None:
         """Return the dialect-declared pair correlation family."""
-        return self.policy.measurement_dialect.resolved_pair_correlation_feature_name()
+        return self.policy.measurement_dialect.pair_correlation_feature_name()
 
     @property
     def regression_slope_family(self) -> tuple[str, ...]:
@@ -334,7 +332,7 @@ class RuntimeMeasurementFactProjectionContract:
         table_group: str,
         field_name: str,
         key: RuntimeMeasurementFeatureKey,
-        dialect: RuntimeMeasurementDialect,
+        dialect: MeasurementDialect,
     ) -> RuntimeMeasurementPaddingGroup:
         """Return the row-padding family for a measurement field."""
         normalized_field = normalize_runtime_identifier(field_name)

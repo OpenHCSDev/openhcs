@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from openhcs.interop.cellprofiler.measurement_dialect import (
+    CellProfilerMeasurementDialect,
+)
+
 from collections import OrderedDict
 from collections.abc import Sequence
 from pathlib import Path
@@ -22,8 +26,6 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementRowValueField,
-    aggregate_image_number_reference_measurement_field,
-    image_number_reference_measurement_field,
     measurement_axis_integer_value,
 )
 from openhcs.core.runtime_measurements import MeasurementTable
@@ -67,7 +69,7 @@ class CellProfilerImageSetNumbering:
         context.record_runtime_step_outputs(
             StepExecutionObservation(
                 MappingProxyType({}),
-                image_numbers_by_export_path=MappingProxyType(
+                sample_numbers_by_export_path=MappingProxyType(
                     {Path(path): by_axis for path in paths}
                 ),
             )
@@ -258,9 +260,9 @@ class CellProfilerImageSetNumbering:
                     feature = str(feature)
                     is_reference = reference_features.get(feature)
                     if is_reference is None:
-                        is_reference = image_number_reference_measurement_field(
+                        is_reference = CellProfilerMeasurementDialect.row_identity_contract.is_sample_number_reference(
                             feature
-                        ) and not aggregate_image_number_reference_measurement_field(
+                        ) and not CellProfilerMeasurementDialect.row_identity_contract.is_aggregate_sample_number_reference(
                             feature
                         )
                         reference_features[feature] = is_reference
@@ -268,8 +270,8 @@ class CellProfilerImageSetNumbering:
                         reference_indices.append(index)
         reference_numbers: dict[int, int] = {}
         for name in table.rows.columns:
-            wide_reference = image_number_reference_measurement_field(name)
-            if aggregate_image_number_reference_measurement_field(name):
+            wide_reference = CellProfilerMeasurementDialect.row_identity_contract.is_sample_number_reference(name)
+            if CellProfilerMeasurementDialect.row_identity_contract.is_aggregate_sample_number_reference(name):
                 continue
             if not wide_reference and (
                 name not in value_fields or not reference_indices

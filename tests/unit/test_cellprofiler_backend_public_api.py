@@ -138,7 +138,7 @@ def test_experiment_measurements_use_recorded_owner_without_catalog_discovery() 
                 {feature: (0.2, 0.4)},
                 fields=(FieldSpec(feature, float, required=False),),
             ),
-            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
             measurement_feature_owner=MeasureImageQualityModule,
         )
         prefix = "openhcs.processing.backends.cellprofiler."
@@ -166,28 +166,28 @@ def test_recorded_measurement_owner_lookup_keeps_other_modules_lazy() -> None:
         import sys
 
         from openhcs.interop.cellprofiler.measurement_dialect import (
-            CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
-            cellprofiler_lookup_dialect_for_measurement_owner,
+            CELLPROFILER_MEASUREMENT_DIALECT,
+            cellprofiler_dialect_for_measurement_owner,
         )
         from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
         from openhcs.processing.backends.cellprofiler.intensity import MeasureObjectIntensityModule
 
         prefix = "openhcs.processing.backends.cellprofiler."
         before = {name for name in sys.modules if name.startswith(prefix)}
-        scoped = cellprofiler_lookup_dialect_for_measurement_owner(
+        scoped = cellprofiler_dialect_for_measurement_owner(
             MeasureObjectIntensityModule
         )
         lookup = scoped.feature_lookup("Intensity_MeanIntensity_DNA")
         assert "mean_intensity_dna" in lookup.field_aliases
         assert lookup.source_aliases == ("dna",)
-        assert cellprofiler_lookup_dialect_for_measurement_owner(None) is (
-            CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT
+        assert cellprofiler_dialect_for_measurement_owner(None) is (
+            CELLPROFILER_MEASUREMENT_DIALECT
         )
         after = {name for name in sys.modules if name.startswith(prefix)}
         assert after == before, sorted(after - before)
         assert not CellProfilerModule.__registry__._discovered
 
-        global_lookup = CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT.feature_lookup(
+        global_lookup = CELLPROFILER_MEASUREMENT_DIALECT.feature_lookup(
             "Intensity_MeanIntensity_DNA"
         )
         assert lookup.field_aliases == global_lookup.field_aliases

@@ -59,7 +59,7 @@ class StepExecutionObservation:
     runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
     hook_observations: "HookObservations" = field(default_factory=dict)
     """What each post-execute hook observed, keyed by hook name."""
-    image_numbers_by_export_path: Mapping[Path, Mapping[str, tuple[int, ...]]] = field(
+    sample_numbers_by_export_path: Mapping[Path, Mapping[str, tuple[int, ...]]] = field(
         default_factory=dict
     )
 
@@ -99,7 +99,7 @@ class StepExecutionObservation:
             self.materialized_locations_by_address
             or self.runtime_export_paths
             or self.hook_observations
-            or self.image_numbers_by_export_path
+            or self.sample_numbers_by_export_path
             or self.source_projection_entries_by_target
         )
 
@@ -124,7 +124,7 @@ class StepExecutionObservation:
         locations = {}
         paths = []
         hook_observations = []
-        image_numbers = {}
+        sample_numbers = {}
         source_projections = {}
         for observation in observations:
             for (
@@ -139,12 +139,12 @@ class StepExecutionObservation:
                 )
             paths.extend(observation.runtime_export_paths)
             hook_observations.append(observation.hook_observations)
-            for path, numbers in observation.image_numbers_by_export_path.items():
-                if path in image_numbers and image_numbers[path] != numbers:
+            for path, numbers in observation.sample_numbers_by_export_path.items():
+                if path in sample_numbers and sample_numbers[path] != numbers:
                     raise ValueError(
                         f"Export {path} has conflicting execution image-number owners."
                     )
-                image_numbers[path] = numbers
+                sample_numbers[path] = numbers
             for (
                 target,
                 entries,
@@ -158,7 +158,7 @@ class StepExecutionObservation:
             MappingProxyType(locations),
             tuple(dict.fromkeys(paths)),
             PostExecuteHook.combine_all(hook_observations),
-            MappingProxyType(image_numbers),
+            MappingProxyType(sample_numbers),
             MappingProxyType(
                 {
                     target: VirtualWorkspaceSourceProjectionEntries.combine(entries)

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from openhcs.interop.cellprofiler.measurement_dialect import (
+    CellProfilerMeasurementDialect,
+)
+
 import csv
 import io
 
@@ -47,7 +51,6 @@ from openhcs.core.runtime_tabular_values import (
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
-    aggregate_image_number_reference_measurement_field,
     MeasurementScope,
     MeasurementSubject,
     measurement_axis_integer_value,
@@ -223,7 +226,7 @@ class SpreadsheetFileSelection:
     file_name: str
 
     relationship_subject_name: ClassVar[str] = "Object relationships"
-    experiment_subject_name: ClassVar[str] = MeasurementScope.EXPERIMENT.value.title()
+    experiment_subject_name: ClassVar[str] = CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.RUN)
 
     @classmethod
     def for_subject(
@@ -282,7 +285,7 @@ class SpreadsheetFileSelection:
         references = tuple(
             name
             for name in (() if image_rows is None else image_rows.columns)
-            if aggregate_image_number_reference_measurement_field(name)
+            if CellProfilerMeasurementDialect.row_identity_contract.is_aggregate_sample_number_reference(name)
         )
         return frozenset(
             subject
@@ -854,7 +857,7 @@ def _measurement_tables(
                         ),
                         CELLPROFILER_MEASUREMENT_DIALECT,
                         default_subject="Image",
-                        default_scope=MeasurementScope.IMAGE,
+                        default_scope=MeasurementScope.SAMPLE,
                     )
     if experiment_tables is None:
         experiment_tables = CellProfilerModule.derive_experiment_measurement_tables(
@@ -905,7 +908,7 @@ def _measurement_tables(
             ),
             CELLPROFILER_MEASUREMENT_DIALECT,
             default_subject="Image",
-            default_scope=MeasurementScope.IMAGE,
+            default_scope=MeasurementScope.SAMPLE,
         )
     tables = OrderedDict(
         (subject, _cellprofiler_rows(rows))
@@ -983,7 +986,9 @@ def _source_metadata_measurement_rows(
         tuple[int, Mapping[str, object], Mapping[str, object], Mapping[str, str]]
     ] = []
     dialect = CellProfilerDatabaseColumnDialect()
-    image_subject = MeasurementSubject(MeasurementScope.IMAGE, "Image")
+    image_subject = MeasurementSubject(
+        MeasurementScope.SAMPLE, CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.SAMPLE)
+    )
     for slice_index in image_numbers_by_slice:
         provenance = table.source_provenance.for_source_plane(slice_index)
         metadata = dialect.source_metadata_values(
@@ -1114,9 +1119,9 @@ def _measurement_subject_name(table: MeasurementTable) -> str:
     subject = table.subject
     if subject is None:
         return table.name
-    if subject.scope is MeasurementScope.IMAGE:
-        return "Image"
-    if subject.scope is MeasurementScope.EXPERIMENT:
+    if subject.scope is MeasurementScope.SAMPLE:
+        return CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.SAMPLE)
+    if subject.scope is MeasurementScope.RUN:
         return SpreadsheetFileSelection.experiment_subject_name
     if subject.scope is MeasurementScope.OBJECT:
         if subject.name is None:
@@ -1170,7 +1175,7 @@ def _with_requested_aggregates(
     reference_means = frozenset(
         name
         for name in (() if source_image is None else source_image.columns)
-        if aggregate_image_number_reference_measurement_field(name)
+        if CellProfilerMeasurementDialect.row_identity_contract.is_aggregate_sample_number_reference(name)
     )
     if not (mean or median or standard_deviation or reference_means):
         return tables

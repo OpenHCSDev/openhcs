@@ -9,10 +9,7 @@ from openhcs.core.measurement_feature_queries import (
     MeasurementFeatureQuery,
     MeasurementFeatureValueIndex,
 )
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode_from_callable,
-)
+from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
 from openhcs.core.measurement_row_materialization import columnar_row_values
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import (
@@ -33,7 +30,6 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
-    CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
@@ -58,6 +54,9 @@ from openhcs.processing.backends.cellprofiler.zernike import (
     ObjectIntensityZernikeMeasurementColumnarRows,
     ObjectZernikeDescriptorFeature,
     indexed_object_intensity_zernike_feature_name,
+)
+from openhcs.core.pipeline.function_contracts import (
+    SliceAlignedLabels,
 )
 
 SOURCE_IMAGE_NAME = "BF_image"
@@ -333,7 +332,7 @@ def test_wide_intensity_distribution_features_remain_queryable(
         MeasurementFeatureQuery(
             feature_name,
             object_name="Cells",
-            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            dialect=CELLPROFILER_MEASUREMENT_DIALECT,
         ),
         {"Cells": "Cells"},
     )
@@ -353,7 +352,7 @@ def test_wide_intensity_distribution_features_remain_queryable(
 def test_unindexed_intensity_lookup_preserves_bin_like_source_names(
     source_name, aliases
 ):
-    lookup = CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT.feature_lookup(
+    lookup = CELLPROFILER_MEASUREMENT_DIALECT.feature_lookup(
         f"Intensity_MeanIntensity_{source_name}"
     )
     assert lookup.source_aliases == aliases
@@ -480,7 +479,7 @@ def test_measure_object_intensity_distribution_declares_slice_aligned_labels():
         object_label_input_execution_mode_from_callable(
             measure_object_intensity_distribution
         )
-        is ObjectLabelInputExecutionMode.SLICE_ALIGNED
+        is SliceAlignedLabels
     )
 
 

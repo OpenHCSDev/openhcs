@@ -21,7 +21,9 @@ from openhcs.agent.services.function_catalog_service import FunctionCatalogServi
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
-    ProcessingContract,
+)
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
 )
 from openhcs.processing.custom_functions.manager import CustomFunctionManager
 from openhcs.processing.custom_functions.runtime_registry import CustomFunctionRuntimeRegistry
@@ -39,7 +41,7 @@ def catalog(monkeypatch, tmp_path):
     manager = CustomFunctionManager()
     metadata = FunctionMetadata(
         name="declaration", func=declaration,
-        contract=ProcessingContract.FLEXIBLE,
+        contract=FlexibleContract,
         registry=SimpleNamespace(library_name="probe"),
         module=__name__, doc=declaration.__doc__,
     )

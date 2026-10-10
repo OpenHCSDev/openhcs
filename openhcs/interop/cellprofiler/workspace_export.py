@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.interop.cellprofiler.measurement_scope import CELLPROFILER_SCOPE_NAMES
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import ClassVar, TYPE_CHECKING
@@ -68,7 +70,7 @@ class CPAImageWorkspaceAxis(CPAWorkspaceAxis):
 
     def field_name(self, dialect):
         return dialect.measurement_field(
-            MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            MeasurementSubject(MeasurementScope.SAMPLE, CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE]),
             FieldSpec(self.measurement, None),
         ).name
 

@@ -7,11 +7,13 @@ from collections.abc import (
     Callable,
     Hashable,
     Iterable,
+    Mapping,
     MutableMapping,
     Sequence,
 )
 from dataclasses import dataclass, field
 from threading import Lock
+from types import MappingProxyType
 from typing import Any, ClassVar, Self, cast
 
 import numpy as np
@@ -100,21 +102,53 @@ class ObjectLabelRepresentation(str, Enum):
     payload_shape = AliasProperty[ArtifactPayloadShape]("_payload_shape")
 
 
-class ObjectLabelVariant(str, Enum):
-    """Named semantic variants carried by an object-label artifact."""
+class ObjectLabelVariant(ABC, metaclass=AutoRegisterMeta):
+    """A named label array carried beside an object set's final labels.
 
-    FINAL = "final"
-    UNEDITED = "unedited"
-    SMALL_REMOVED = "small_removed"
+    The kernel declares only the final labels; a domain declares further
+    variants (for example labels before editing) as subclasses.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str]
+
+
+class FinalLabels(ObjectLabelVariant):
+    """The object set's labels after every edit its producer made."""
+
+    name = "final"
+
+
+ObjectLabelVariants = Mapping[type[ObjectLabelVariant], "ObjectLabelData"]
+
+
+def ordered_label_variants(
+    variants: ObjectLabelVariants,
+) -> MappingProxyType:
+    """Freeze declared variants in name order, rejecting the final labels."""
+    for variant in variants:
+        if not (isinstance(variant, type) and issubclass(variant, ObjectLabelVariant)):
+            raise TypeError(
+                f"Object-label variants are keyed by ObjectLabelVariant classes, got {variant!r}."
+            )
+        if variant is FinalLabels:
+            raise ValueError("Final labels are carried as labels, not as a variant.")
+    return MappingProxyType(
+        {variant: variants[variant] for variant in sorted(variants, key=lambda v: v.name)}
+    )
 
 
 @dataclass(frozen=True, slots=True)
 class ObjectLabelVariantData:
-    """Final and optional CellProfiler object-label variant arrays."""
+    """Final object labels and the variants a domain declared beside them."""
 
     labels: ObjectLabelData
-    unedited_labels: ObjectLabelData | None = None
-    small_removed_labels: ObjectLabelData | None = None
+    variants: ObjectLabelVariants = field(default_factory=lambda: MappingProxyType({}))
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "variants", ordered_label_variants(self.variants))
 
     @property
     def shape(self) -> tuple[int, ...] | None:
@@ -138,87 +172,67 @@ class ObjectLabelVariantData:
         """Return replacement labels with source variants that still match."""
         source_variants = source.variant_data
         storage_authority = ObjectLabelStorageStrategy.for_value(source)
+        matching = {
+            variant: storage_authority.matching_variant(
+                source,
+                source_variants.variant_labels(variant),
+                labels,
+            )
+            for variant in source_variants.present_variants[1:]
+        }
         return cls(
             labels=labels,
-            unedited_labels=storage_authority.matching_variant(
-                source,
-                source_variants.unedited_labels,
-                labels,
-            ),
-            small_removed_labels=storage_authority.matching_variant(
-                source,
-                source_variants.small_removed_labels,
-                labels,
-            ),
+            variants={
+                variant: data for variant, data in matching.items() if data is not None
+            },
         )
 
     @property
-    def present_variants(self) -> tuple[ObjectLabelVariant, ...]:
-        variants = [ObjectLabelVariant.FINAL]
-        if self.unedited_labels is not None:
-            variants.append(ObjectLabelVariant.UNEDITED)
-        if self.small_removed_labels is not None:
-            variants.append(ObjectLabelVariant.SMALL_REMOVED)
-        return tuple(variants)
+    def present_variants(self) -> tuple[type[ObjectLabelVariant], ...]:
+        """Final labels first, then each declared variant in name order."""
+        return (FinalLabels, *self.variants)
+
+    def variant_labels(
+        self,
+        variant: type[ObjectLabelVariant],
+    ) -> ObjectLabelData | None:
+        """Return one variant's labels, or None when this object set lacks it."""
+        if variant is FinalLabels:
+            return self.labels
+        return self.variants.get(variant)
 
     def labels_for_variant(
         self,
-        variant: ObjectLabelVariant | str,
+        variant: type[ObjectLabelVariant],
     ) -> ObjectLabelData:
-        normalized = ObjectLabelVariant(
-            variant,
+        """Return one variant's labels, standing in the final labels when absent."""
+        labels = self.variant_labels(variant)
+        return self.labels if labels is None else labels
+
+    def same_arrays_as(self, other: "ObjectLabelVariantData") -> bool:
+        """Return whether both carry the identical array for every variant."""
+        return self.present_variants == other.present_variants and all(
+            self.variant_labels(variant) is other.variant_labels(variant)
+            for variant in self.present_variants
         )
-        match normalized:
-            case ObjectLabelVariant.FINAL:
-                return self.labels
-            case ObjectLabelVariant.UNEDITED:
-                return (
-                    self.unedited_labels
-                    if self.unedited_labels is not None
-                    else self.labels
-                )
-            case ObjectLabelVariant.SMALL_REMOVED:
-                return (
-                    self.small_removed_labels
-                    if self.small_removed_labels is not None
-                    else self.labels
-                )
 
     @classmethod
     def variant_is_present(
         cls,
-        variant: ObjectLabelVariant,
+        variant: type[ObjectLabelVariant],
         payloads: Sequence["ObjectLabelVariantData"],
     ) -> bool:
-        """Return whether a semantic variant has material data."""
-
-        match variant:
-            case ObjectLabelVariant.FINAL:
-                return True
-            case ObjectLabelVariant.UNEDITED:
-                return any(payload.unedited_labels is not None for payload in payloads)
-            case ObjectLabelVariant.SMALL_REMOVED:
-                return any(
-                    payload.small_removed_labels is not None for payload in payloads
-                )
+        """Return whether a variant has material data in any payload."""
+        return any(variant in payload.present_variants for payload in payloads)
 
     def with_labels(self, labels: ObjectLabelData) -> "ObjectLabelVariantData":
         """Return these variants with replacement final labels."""
-        return self.replacement_data(
+        return ObjectLabelVariantData(
             labels=labels,
-            unedited_labels=self.unedited_labels,
-            small_removed_labels=self.small_removed_labels,
-        )
-
-    def replacement_data(
-        self, *, labels: ObjectLabelData,
-        unedited_labels: ObjectLabelData | None,
-        small_removed_labels: ObjectLabelData | None,
-    ) -> "ObjectLabelVariantData":
-        """Construct replacement storage in this variant family's scalar law."""
-        return type(self)(
-            labels=labels, unedited_labels=unedited_labels,
-            small_removed_labels=small_removed_labels,
+            variants={
+                variant: self.variant_labels(variant)
+                for variant in self.present_variants[1:]
+            },
         )
 
     def project(
@@ -228,16 +242,10 @@ class ObjectLabelVariantData:
         """Project every present variant through the same label operation."""
         return ObjectLabelVariantData(
             labels=projector(self.labels),
-            unedited_labels=(
-                None
-                if self.unedited_labels is None
-                else projector(self.unedited_labels)
-            ),
-            small_removed_labels=(
-                None
-                if self.small_removed_labels is None
-                else projector(self.small_removed_labels)
-            ),
+            variants={
+                variant: projector(self.variant_labels(variant))
+                for variant in self.present_variants[1:]
+            },
         )
 
     def validate_representation(
@@ -259,12 +267,9 @@ class ObjectLabelVariantData:
             representation=representation,
             value_label=value_label,
         )
-        for variant_name, variant in (
-            ("unedited_labels", self.unedited_labels),
-            ("small_removed_labels", self.small_removed_labels),
-        ):
-            if variant is None:
-                continue
+        for variant_type in self.present_variants[1:]:
+            variant = self.variant_labels(variant_type)
+            variant_name = f"{variant_type.name} labels"
             variant_authority = ObjectLabelStorageStrategy.for_value(variant)
             variant_authority.validate_representation(
                 variant,
@@ -361,12 +366,18 @@ class PlaneStackObjectLabelVariantData(ObjectLabelVariantData):
         values = tuple(variants)
         if not values:
             raise ValueError("Object-label slice aggregation requires values.")
+        present = (
+            FinalLabels,
+            *sorted(
+                {variant for value in values for variant in value.present_variants[1:]},
+                key=lambda variant: variant.name,
+            ),
+        )
         planes = {
             variant: tuple(value.labels_for_variant(variant) for value in values)
-            for variant in ObjectLabelVariant
-            if ObjectLabelVariantData.variant_is_present(variant, values)
+            for variant in present
         }
-        geometry = runtime_slice_stack_geometry(planes[ObjectLabelVariant.FINAL])
+        geometry = runtime_slice_stack_geometry(planes[FinalLabels])
         for variant_planes in planes.values():
             ObjectLabelStorageStrategy.for_planes(variant_planes)
             if runtime_slice_stack_geometry(variant_planes).shape != geometry.shape:
@@ -377,22 +388,12 @@ class PlaneStackObjectLabelVariantData(ObjectLabelVariantData):
         object.__setattr__(self, "_shape", geometry.shape)
         object.__setattr__(self, "_lock", Lock())
 
-    def replacement_data(
-        self, *, labels: ObjectLabelData,
-        unedited_labels: ObjectLabelData | None,
-        small_removed_labels: ObjectLabelData | None,
-    ) -> ObjectLabelVariantData:
-        return ObjectLabelVariantData(
-            labels=labels, unedited_labels=unedited_labels,
-            small_removed_labels=small_removed_labels,
-        )
-
     def __repr__(self) -> str:
         return f"{type(self).__name__}(shape={self.shape!r}, variants={self.present_variants!r})"
 
     __hash__ = None
 
-    def _dense_variant(self, variant: ObjectLabelVariant) -> ObjectLabelData:
+    def _dense_variant(self, variant: type[ObjectLabelVariant]) -> ObjectLabelData:
         with self._lock:
             if variant not in self._dense_variants:
                 dense = object_label_stack_planes(self._planes[variant], self._memory_type)
@@ -402,19 +403,20 @@ class PlaneStackObjectLabelVariantData(ObjectLabelVariantData):
 
     @property
     def labels(self) -> ObjectLabelData:
-        return self._dense_variant(ObjectLabelVariant.FINAL)
+        return self._dense_variant(FinalLabels)
 
     @property
-    def unedited_labels(self) -> ObjectLabelData | None:
-        if ObjectLabelVariant.UNEDITED not in self._planes:
-            return None
-        return self._dense_variant(ObjectLabelVariant.UNEDITED)
+    def variants(self) -> ObjectLabelVariants:
+        return MappingProxyType(
+            {variant: self._dense_variant(variant) for variant in self.present_variants[1:]}
+        )
 
-    @property
-    def small_removed_labels(self) -> ObjectLabelData | None:
-        if ObjectLabelVariant.SMALL_REMOVED not in self._planes:
+    def variant_labels(
+        self, variant: type[ObjectLabelVariant],
+    ) -> ObjectLabelData | None:
+        if variant not in self.present_variants:
             return None
-        return self._dense_variant(ObjectLabelVariant.SMALL_REMOVED)
+        return self._dense_variant(variant)
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -422,10 +424,10 @@ class PlaneStackObjectLabelVariantData(ObjectLabelVariantData):
 
     @property
     def dtype(self) -> Any:
-        return np.result_type(*(plane.dtype for plane in self._planes[ObjectLabelVariant.FINAL]))
+        return np.result_type(*(plane.dtype for plane in self._planes[FinalLabels]))
 
     @property
-    def present_variants(self) -> tuple[ObjectLabelVariant, ...]:
+    def present_variants(self) -> tuple[type[ObjectLabelVariant], ...]:
         return tuple(self._planes)
 
     def validate_plane_count(self, plane_count: int, context: str) -> None:
@@ -508,26 +510,14 @@ class ProjectedObjectLabelVariantData(PlaneStackObjectLabelVariantData):
         object.__setattr__(self, "_shape", (len(indices), *source.shape[1:]))
 
     @property
-    def present_variants(self) -> tuple[ObjectLabelVariant, ...]:
+    def present_variants(self) -> tuple[type[ObjectLabelVariant], ...]:
         return self._source.present_variants
 
     @property
     def dtype(self) -> Any:
         return self._source.dtype
 
-    @property
-    def unedited_labels(self) -> ObjectLabelData | None:
-        if ObjectLabelVariant.UNEDITED not in self.present_variants:
-            return None
-        return self._dense_variant(ObjectLabelVariant.UNEDITED)
-
-    @property
-    def small_removed_labels(self) -> ObjectLabelData | None:
-        if ObjectLabelVariant.SMALL_REMOVED not in self.present_variants:
-            return None
-        return self._dense_variant(ObjectLabelVariant.SMALL_REMOVED)
-
-    def _dense_variant(self, variant: ObjectLabelVariant) -> ObjectLabelData:
+    def _dense_variant(self, variant: type[ObjectLabelVariant]) -> ObjectLabelData:
         with self._lock:
             if variant not in self._dense_variants:
                 source = self._source._dense_variant(variant)
@@ -548,9 +538,7 @@ class ProjectedObjectLabelVariantData(PlaneStackObjectLabelVariantData):
 
     def __reduce__(self):
         # A transported scalar/subset owns only its selected canonical buffers.
-        return (ObjectLabelVariantData, (
-            self.labels, self.unedited_labels, self.small_removed_labels,
-        ))
+        return (ObjectLabelVariantData, (self.labels, dict(self.variants)))
 
 
 class ObjectLabelPlaneVariantData(ProjectedObjectLabelVariantData):
@@ -639,13 +627,11 @@ class ObjectLabelValue(
     def __len__(self) -> int:
         return len(self.labels)
 
-    @property
-    def unedited_labels(self) -> ObjectLabelData | None:
-        return self.variant_data.unedited_labels
-
-    @property
-    def small_removed_labels(self) -> ObjectLabelData | None:
-        return self.variant_data.small_removed_labels
+    def variant_labels(
+        self, variant: type[ObjectLabelVariant],
+    ) -> ObjectLabelData | None:
+        """Return one declared label variant, or None when absent."""
+        return self.variant_data.variant_labels(variant)
 
     @property
     def metadata(self) -> runtime_image_values.ImagePayloadMetadata:
@@ -976,25 +962,21 @@ class ObjectLabelValue(
         self,
         labels: ObjectLabelData,
         *,
-        unedited_labels: ObjectLabelData | None = None,
-        small_removed_labels: ObjectLabelData | None = None,
+        variants: ObjectLabelVariants = MappingProxyType({}),
     ) -> "ObjectLabelValue":
         """Return this carrier's metadata with replacement labels."""
-        return self.with_variants(
-            ObjectLabelVariantData(labels, unedited_labels, small_removed_labels),
-        )
+        return self.with_variants(ObjectLabelVariantData(labels, variants))
 
     def with_projected_plane(
         self,
         labels: ObjectLabelData,
         plane_index: int,
         *,
-        unedited_labels: ObjectLabelData | None = None,
-        small_removed_labels: ObjectLabelData | None = None,
+        variants: ObjectLabelVariants = MappingProxyType({}),
     ) -> "ObjectLabelValue":
         """Return one selected label plane with projected domain metadata."""
         return self.with_variants(
-            ObjectLabelVariantData(labels, unedited_labels, small_removed_labels),
+            ObjectLabelVariantData(labels, variants),
             domain=object_label_domain_for_projected_label_plane(self, plane_index),
             source_provenance=self.source_provenance.for_source_plane(plane_index),
             plane_axis=None,
@@ -1015,9 +997,7 @@ class ObjectLabelValue(
                 context="Object-label measurement replacement",
             )
         if (
-            variants.labels is self.variant_data.labels
-            and variants.unedited_labels is self.variant_data.unedited_labels
-            and variants.small_removed_labels is self.variant_data.small_removed_labels
+            variants.same_arrays_as(self.variant_data)
         ):
             return self
         return self.with_variants(variants)

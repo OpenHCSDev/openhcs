@@ -27,7 +27,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ImageArtifactType,
@@ -138,9 +138,15 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu 
     _weighted_otsu_threshold_numba_compatible,
     _yen_threshold_numba,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 from openhcs.core.axes import Axis, StackAxis
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.image_payload_execution_mode import (
+    FullStackExecution,
+    NaturalExecution,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts import ArtifactSpecCollection, ArtifactSpecRelation
@@ -2550,8 +2556,8 @@ class _ThresholdEmbeddedMaskRuntimeParameter(KeywordRuntimeParameter):
 
 
 @runtime_bound_parameters(_ThresholdEmbeddedMaskRuntimeParameter)
-@runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
-@numpy(contract=ProcessingContract.PURE_2D)
+@runtime_image_execution_mode(FullStackExecution)
+@numpy(contract=Pure2DContract)
 def threshold(
     image: ImagePayload,
     mask: np.ndarray | None = None,
@@ -3290,19 +3296,19 @@ class ThresholdModule(
     @classmethod
     def execution_mode(
         cls,
-        default: ImagePayloadExecutionMode,
+        default: type[ImagePayloadExecutionMode],
         *,
         image,
         kwargs: RuntimeCallableKwargs,
         variable_components: tuple[type[Axis], ...],
-    ) -> ImagePayloadExecutionMode:
+    ) -> type[ImagePayloadExecutionMode]:
         """Execute CP volumetric thresholding only over a declared Z stack."""
 
         del cls, image, kwargs
         if any(issubclass(axis, StackAxis) for axis in variable_components):
             return default
 
-        return ImagePayloadExecutionMode.NATURAL
+        return NaturalExecution
 
     @classmethod
     def postprocess_bound_settings(

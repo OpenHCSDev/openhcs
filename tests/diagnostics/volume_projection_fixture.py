@@ -23,7 +23,9 @@ from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.projected_image_output import SelectedPlaneImageOutput
 from openhcs.core.runtime_measurements import RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec, ROIOptions
 
 
@@ -64,7 +66,7 @@ VOLUME_ROWS = MainFlowStackOutputSpec.output(
 )
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 @artifact_outputs(SELECTED_VOLUME)
 def select_volume_fixture_planes_v2(
     image: ArrayPayload,
@@ -78,7 +80,7 @@ def select_volume_fixture_planes_v2(
     return SelectedPlaneImageOutput(np.take(pixels, indices, axis=0), indices)
 
 
-@numpy(contract=ProcessingContract.PURE_3D)
+@numpy(contract=Pure3DContract)
 @artifact_outputs(VOLUME_IMAGE, VOLUME_LABELS, VOLUME_ROWS)
 def inspect_volume_fixture_v2(
     image: ArrayPayload,

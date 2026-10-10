@@ -30,7 +30,6 @@ from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     ObjectReferenceFeatureMarker,
-    RuntimeMeasurementFeatureDeclaration,
     MeasurementScalarLiteral,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomainAdapter
@@ -48,72 +47,6 @@ if TYPE_CHECKING:
 
 class DirectParentReferenceFeatureMarker(ObjectReferenceFeatureMarker):
     """Semantic marker for a child's direct parent-object reference."""
-
-
-@dataclass(frozen=True, slots=True)
-class DirectParentReferenceMeasurementFeature:
-    """Nominal identity encoded by a ``Parent_<object>`` measurement name."""
-
-    parent_object_name: str
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.parent_object_name, str) or not self.parent_object_name:
-            raise ValueError("Direct parent-reference object name cannot be empty.")
-
-
-class DirectParentReferenceFeatureDeclaration(RuntimeMeasurementFeatureDeclaration):
-    """Parse and render direct parent references at their row-production owner."""
-
-    declaration_key = "direct_parent_reference"
-    semantic_marker_types = (DirectParentReferenceFeatureMarker,)
-    prefix = "Parent_"
-
-    @classmethod
-    def from_feature_name(
-        cls,
-        feature_name: str,
-    ) -> DirectParentReferenceMeasurementFeature | None:
-        if not feature_name.startswith(cls.prefix):
-            return None
-        parent_object_name = feature_name[len(cls.prefix) :]
-        if not parent_object_name:
-            return None
-        return DirectParentReferenceMeasurementFeature(parent_object_name)
-
-    @classmethod
-    def feature_name(cls, identity: object) -> str:
-        if not isinstance(identity, DirectParentReferenceMeasurementFeature):
-            raise TypeError(
-                f"{cls.__name__}.feature_name requires "
-                "DirectParentReferenceMeasurementFeature."
-            )
-        return f"{cls.prefix}{identity.parent_object_name}"
-
-
-class ChildCountFeatureDeclaration(RuntimeMeasurementFeatureDeclaration):
-    """Own the child-name grammar shared by export readers and CP producers."""
-
-    declaration_key = "child_count_reference"
-    prefix = "Children_"
-    suffix = "_Count"
-
-    @classmethod
-    def from_feature_name(cls, feature_name: str) -> str | None:
-        if not feature_name.startswith(cls.prefix) or not feature_name.endswith(
-            cls.suffix
-        ):
-            return None
-        name = feature_name[len(cls.prefix) : -len(cls.suffix)].strip()
-        return name or None
-
-    @classmethod
-    def feature_name(cls, identity: str) -> str:
-        name = identity.strip()
-        if not name:
-            raise ValueError(
-                "Child-count feature requires a non-empty child object name."
-            )
-        return f"{cls.prefix}{name}{cls.suffix}"
 
 
 @dataclass(frozen=True)

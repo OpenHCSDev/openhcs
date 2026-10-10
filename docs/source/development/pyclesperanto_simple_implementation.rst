@@ -24,7 +24,7 @@ For example:
        ProcessingContract,
    )
 
-   @pyclesperanto(contract=ProcessingContract.PURE_3D)
+   @pyclesperanto(contract=Pure3DContract)
    def gaussian_volume(image, sigma: float = 1.0):
        import pyclesperanto as cle
 

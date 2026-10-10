@@ -67,7 +67,7 @@ A minimal declaration uses an ordinary registered callable:
        ProcessingContract,
    )
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    def rescale(image, *, gain: float = 1.0):
        return image * gain
 

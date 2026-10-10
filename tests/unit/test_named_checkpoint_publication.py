@@ -13,7 +13,7 @@ import tifffile
 
 from test_artifact_publication_journey import _plate, progress_events
 from openhcs.core.artifacts import (
-    ArtifactSidecarRole, ImageArtifactType, MainFlowPlaneProjectionOutputSpec,
+    QaCheckpoint, ImageArtifactType, MainFlowPlaneProjectionOutputSpec,
     MainFlowStackOutputSpec,
 )
 from openhcs.core.config import (
@@ -34,7 +34,9 @@ from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProje
 from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.virtual_workspace_metadata import MetadataWriteError
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure3DContract,
+)
 from openhcs.processing.materialization import (
     ImageFileOptions, MaterializationSpec, MaterializedFilenameIdentity,
 )
@@ -58,14 +60,14 @@ class SyntheticAggregateField(SourceProjectedImageOutput):
 
 def _field(name):
     return MainFlowPlaneProjectionOutputSpec.output(
-        name, ImageArtifactType, sidecar_role=ArtifactSidecarRole.QA_CHECKPOINT,
+        name, ImageArtifactType, sidecar_role=QaCheckpoint,
         materialization=MaterializationSpec(ImageFileOptions(
             filename_suffix=".tif", filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
         )),
     )
 
 
-@numpy_decorator(contract=ProcessingContract.PURE_3D)
+@numpy_decorator(contract=Pure3DContract)
 @required_axis_roles(TileAxis)
 @artifact_outputs(
     MainFlowStackOutputSpec.output("corrected", ImageArtifactType),

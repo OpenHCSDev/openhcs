@@ -58,7 +58,7 @@ def test_public_preparation_covers_canonical_metric_states_and_scopes(tmp_path):
                             image, labels, measurement_scope=scope, **options
                         )
                         selection = scope.measurement_scope_selection
-                        expected_rows = int(selection.includes(module.MeasurementScope.IMAGE)) + 4 * int(selection.includes(module.MeasurementScope.OBJECT))
+                        expected_rows = int(selection.includes(module.MeasurementScope.SAMPLE)) + 4 * int(selection.includes(module.MeasurementScope.OBJECT))
                         assert rows.row_count() == expected_rows
                         np.testing.assert_array_equal(output.data, original_image[0:1])
                     output, rows = image_call(image, **options)

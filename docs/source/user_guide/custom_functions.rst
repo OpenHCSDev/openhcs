@@ -16,7 +16,7 @@ function in the OpenHCS function catalog.
        ProcessingContract,
    )
 
-   @numpy(contract=ProcessingContract.PURE_2D)
+   @numpy(contract=Pure2DContract)
    def subtract_background(image, *, offset=100):
        return image - offset
 

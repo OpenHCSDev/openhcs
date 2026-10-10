@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from types import MappingProxyType
 
 import numpy as np
 
@@ -17,6 +18,7 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelRepresentation,
     ObjectLabelSet,
     ObjectLabelVariantData,
+    ObjectLabelVariants,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.source_metadata import SourceVoxelSpacing
@@ -34,8 +36,7 @@ class SourceImageObjectLabelBuildRequest:
     plane_projection: RuntimePlaneAxisValueProjection | None = None
     declared_object_count: int | None = None
     declared_object_ids: tuple[int, ...] = ()
-    unedited_labels: object | None = None
-    small_removed_labels: object | None = None
+    variants: ObjectLabelVariants = field(default_factory=lambda: MappingProxyType({}))
     parent_image_source_voxel_spacing: SourceVoxelSpacing | None = None
 
     def __post_init__(self) -> None:
@@ -90,8 +91,7 @@ class SourceImageObjectLabelBuildRequest:
         return ObjectLabelPayload(
             variant_data=ObjectLabelVariantData(
                 labels=self.labels,
-                unedited_labels=self.unedited_labels,
-                small_removed_labels=self.small_removed_labels,
+                variants=self.variants,
             ).in_representation(representation),
             representation=representation,
             domain=label_domain,

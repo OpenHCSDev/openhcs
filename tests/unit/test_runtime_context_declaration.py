@@ -31,7 +31,9 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     save_images,
     save_images_with_measurements,
 )
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    Pure2DContract,
+)
 
 
 def _inferred_context(image, *, context=None):
@@ -102,7 +104,7 @@ def test_reference_and_pickle_reconstruction_retain_selection(func):
 
 
 def test_wrapper_preparation_does_not_resurrect_context_inference():
-    @numpy(contract=ProcessingContract.PURE_2D)
+    @numpy(contract=Pure2DContract)
     @runtime_context_parameter(None)
     def process(image, *, context=None):
         del context

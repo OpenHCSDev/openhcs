@@ -1,3 +1,5 @@
+
+from tests.unit.saved_output_dialect import SAVED_OUTPUT_DIALECT
 from dataclasses import replace
 from pathlib import Path
 
@@ -153,7 +155,7 @@ def test_workspace_comparison_covers_order_values_and_missing_files(tmp_path):
     candidate.mkdir()
     (reference / "QC.workspace").write_text(native)
     (candidate / "QC.workspace").write_text(native)
-    policy = RuntimeEquivalencePolicy()
+    policy = RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
     compare = lambda: cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_roots((candidate,)),
@@ -252,7 +254,7 @@ def test_workspace_comparison_coverage_is_physical_and_separate_from_science(tmp
         for root in (reference, candidate)
     )
     report = cellprofiler_database_export_equivalence(
-        reference, exports[1], policy=RuntimeEquivalencePolicy()
+        reference, exports[1], policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
     )
     assert report.is_equivalent
     assert report.compared_output_files == frozenset(paths)
@@ -269,7 +271,7 @@ def test_workspace_comparison_coverage_is_physical_and_separate_from_science(tmp
     _require_compared_output_inventory(**kwargs, compared_file_report=report)
     paths[1].write_text(paths[1].read_text().replace("Image_", "Changed_", 1))
     changed = cellprofiler_database_export_equivalence(
-        reference, exports[1], policy=RuntimeEquivalencePolicy()
+        reference, exports[1], policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
     )
     assert not changed.is_equivalent
     assert changed.compared_output_files == frozenset(paths)
@@ -298,7 +300,7 @@ def test_unmatched_workspace_and_reader_failures_never_claim_coverage(
     extra.write_bytes(fixture.read_bytes())
     exports = RuntimeExportObservation.from_output_root(candidate)
     report = cellprofiler_database_export_equivalence(
-        reference, exports, policy=RuntimeEquivalencePolicy()
+        reference, exports, policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
     )
     assert not report.is_equivalent
     assert not report.compared_output_files
@@ -308,7 +310,7 @@ def test_unmatched_workspace_and_reader_failures_never_claim_coverage(
     extra.write_text("not a CPA workspace")
     with pytest.raises(ValueError):
         cellprofiler_database_export_equivalence(
-            reference, exports, policy=RuntimeEquivalencePolicy()
+            reference, exports, policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
         )
     extra.write_bytes(fixture.read_bytes())
     original_read = Path.read_text
@@ -322,7 +324,7 @@ def test_unmatched_workspace_and_reader_failures_never_claim_coverage(
     monkeypatch.setattr(Path, "read_text", fail_read)
     with pytest.raises(OSError) as raised:
         cellprofiler_database_export_equivalence(
-            reference, exports, policy=RuntimeEquivalencePolicy()
+            reference, exports, policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
         )
     assert raised.value is failure
 
@@ -342,7 +344,7 @@ def test_workspace_aliases_are_compared_by_each_actual_path(tmp_path):
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
     assert report.is_equivalent
     assert report.compared_output_files == frozenset((first, second))
@@ -352,5 +354,5 @@ def test_workspace_aliases_are_compared_by_each_actual_path(tmp_path):
         cellprofiler_database_export_equivalence(
             reference,
             RuntimeExportObservation.from_output_root(candidate),
-            policy=RuntimeEquivalencePolicy(),
+            policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
         )

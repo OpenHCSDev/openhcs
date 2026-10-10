@@ -1,3 +1,5 @@
+
+from tests.unit.saved_output_dialect import SAVED_OUTPUT_DIALECT
 """Typed image sets retain physical coverage across volume/plane exports."""
 
 from dataclasses import replace
@@ -36,7 +38,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.payload_axes import PayloadAxes
 
 Z_STACK = SourceImageSetIdentityPolicy(frozenset({Microscopy.ZIndex}))
-EXACT = RuntimeEquivalencePolicy(image_abs_tolerance=0, image_rel_tolerance=0)
+EXACT = RuntimeEquivalencePolicy(image_abs_tolerance=0, image_rel_tolerance=0, measurement_dialect=SAVED_OUTPUT_DIALECT)
 
 
 def _write_metadata(root, projections):

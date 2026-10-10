@@ -100,14 +100,11 @@ from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
-from openhcs.core.pipeline.function_contracts import (
-    ObjectLabelInputExecutionMode,
-    object_label_input_execution_mode,
-    required_axis_roles,
-    runtime_bound_parameters,
-    special_inputs,
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
 )
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, required_axis_roles, runtime_bound_parameters, special_inputs)
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.interop.cellprofiler.module_settings import (
@@ -153,6 +150,9 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 )
 from openhcs.core.payload_axes import ColourSampleAxisSpec
 from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.pipeline.function_contracts import (
+    SliceAlignedLabels,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import (
@@ -1934,7 +1934,7 @@ def _untangle_worms_output(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def untangle_worms(
     image: ImagePayload,
     overlap_style: OverlapStyle = OverlapStyle.WITHOUT_OVERLAP,
@@ -1987,7 +1987,7 @@ def untangle_worms(
     return (output[0], output[1], output[2])
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def untangle_worms_with_overlap(
     image: ImagePayload,
     overlap_style: OverlapStyle = OverlapStyle.WITH_OVERLAP,
@@ -2040,7 +2040,7 @@ def untangle_worms_with_overlap(
     return (output[0], output[1], output[2])
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def untangle_worms_both(
     image: ImagePayload,
     overlap_style: OverlapStyle = OverlapStyle.BOTH,
@@ -2103,8 +2103,8 @@ del _function_name
 
 
 @required_axis_roles(ColourAxis)
-@numpy(contract=ProcessingContract.FLEXIBLE)
-@object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
+@numpy(contract=FlexibleContract)
+@object_label_input_execution_mode(SliceAlignedLabels)
 @special_inputs("worm_labels")
 @runtime_bound_parameters(_StraightenWormControlPointsRuntimeParameter)
 def straighten_worms(
@@ -2220,7 +2220,7 @@ def straighten_worms(
     )
 
 
-@numpy(contract=ProcessingContract.PURE_2D)
+@numpy(contract=Pure2DContract)
 def identify_dead_worms(
     image: ImagePayload,
     worm_width: int = 10,

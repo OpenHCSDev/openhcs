@@ -3,6 +3,9 @@
 import numpy as np
 import pytest
 
+from openhcs.interop.cellprofiler.object_label_variants import (
+    UneditedLabels,
+)
 from openhcs.core.config import DtypeConfig
 from openhcs.processing.backends.cellprofiler import morphology as morphology_backend
 from openhcs.processing.backends.cellprofiler import (
@@ -233,8 +236,8 @@ def test_primary_object_border_filter_preserves_unedited_variant() -> None:
     )
 
     assert labels.labels[0, 0] == 0
-    assert labels.unedited_labels is not None
-    assert labels.unedited_labels[0, 0] > int(labels.labels.max())
+    assert labels.variant_labels(UneditedLabels) is not None
+    assert labels.variant_labels(UneditedLabels)[0, 0] > int(labels.labels.max())
 
 
 def test_primary_object_relabel_preserves_integer_input_dtype(

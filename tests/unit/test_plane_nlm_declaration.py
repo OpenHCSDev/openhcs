@@ -27,7 +27,10 @@ from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 from openhcs.processing.backends.lib_registry.scikit_image_registry import SkimageRegistry
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.processing_contracts import (
+    FlexibleContract,
+    Pure2DContract,
+)
 from openhcs.processing.backends.processors.numpy_processor import (
     non_local_means_denoise_planes,
 )
@@ -68,7 +71,7 @@ def _source(plane_count):
 def _registered(func=non_local_means_denoise_planes):
     metadata = OpenHCSRegistry.metadata_for_declared_callable(func)
     assert metadata is not None
-    assert metadata.contract is ProcessingContract.PURE_2D
+    assert metadata.contract is Pure2DContract
     return metadata
 
 
@@ -125,8 +128,8 @@ def test_original_volumetric_nlm_still_receives_the_whole_volume(monkeypatch):
 
     monkeypatch.setattr(module, "_fast_nl_means_denoising_3d", observed_volume)
     registry = SkimageRegistry()
-    adapter = registry.create_library_adapter(original, ProcessingContract.FLEXIBLE)
-    volume = registry.apply_contract_wrapper(adapter, ProcessingContract.FLEXIBLE)
+    adapter = registry.create_library_adapter(original, FlexibleContract)
+    volume = registry.apply_contract_wrapper(adapter, FlexibleContract)
     result = volume(source, channel_axis=None, **NLM_KWARGS)
     # scikit-image appends its channel singleton; all three spatial axes remain.
     assert seen == [(3, 16, 20, 1)]
@@ -153,7 +156,7 @@ def test_nominal_transport_resolves_original_declaration_without_global_catalog(
     assert isinstance(reference, RegistryFunctionReference)
     assert reference.composite_key == "openhcs:processors_numpy_processor_non_local_means_denoise_planes"
     resolved = reference.resolve()
-    assert CallableContract.from_callable(resolved).processing_contract is ProcessingContract.PURE_2D
+    assert CallableContract.from_callable(resolved).processing_contract is Pure2DContract
     result = resolved(_source(1), **NLM_KWARGS)
     assert result.data.shape == (1, 16, 20)
 
@@ -161,7 +164,7 @@ def test_nominal_transport_resolves_original_declaration_without_global_catalog(
 def test_new_independent_declaration_executes_same_consumer_without_edits():
     seen = []
 
-    @numpy_contract(contract=ProcessingContract.PURE_2D)
+    @numpy_contract(contract=Pure2DContract)
     def independent_plane_offset(image: np.ndarray, *, offset: float = 0.25) -> np.ndarray:
         seen.append(image.shape)
         return image + offset
