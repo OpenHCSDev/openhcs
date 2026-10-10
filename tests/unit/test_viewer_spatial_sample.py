@@ -16,13 +16,14 @@ from openhcs.runtime.viewer_controls import (
     ViewerPayloadControlOptions,
     ViewerPayloadProjectionOptions,
 )
+from openhcs.core.payload_axes import PayloadAxes
 
 
 def _native_sample(*, rgb, y, x, height, width, limit=4096):
     server, layer, gray = native_route()
     server.napari_window_title = "Native spatial sample fixture"
     data = np.stack((gray, gray + 1000, gray + 2000), axis=-1) if rgb else gray
-    metadata = ImagePayloadMetadata(source_channel_axis=2 if rgb else None)
+    metadata = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(2 if rgb else None))
     if rgb:
         server.viewer.layers.remove(layer)
         layer = server.viewer.add_image(
@@ -96,7 +97,7 @@ def test_raw_array_slices_keep_trailing_dimension_contract_in_same_native_projec
     rgb = np.stack((gray, gray + 1000, gray + 2000), axis=-1)
     items = server.component_groups.items_for("source")
     items[0] = replace(
-        items[0], data=rgb, image_metadata=ImagePayloadMetadata(source_channel_axis=2)
+        items[0], data=rgb, image_metadata=ImagePayloadMetadata(axes=PayloadAxes.colour_samples(2))
     )
     projection = NapariViewerPayloadProjection(
         server=server,
@@ -142,7 +143,7 @@ def test_spatial_axes_project_through_original_leading_aggregate_selection():
     sample, summary = _sample(
         controls,
         source[1],
-        image_metadata=ImagePayloadMetadata(source_channel_axis=3),
+        image_metadata=ImagePayloadMetadata(axes=PayloadAxes.colour_samples(3)),
         source_data=source,
         removed_leading_axes=1,
     )

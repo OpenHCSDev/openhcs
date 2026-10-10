@@ -28,7 +28,7 @@ from zmqruntime.viewer_protocol import (
     ViewerWireValue,
 )
 
-from openhcs.core.config import FijiDimensionMode, NapariDimensionMode
+from openhcs.runtime.viewer_display import DeclaredAxes, ViewerSlotFamily
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
@@ -36,7 +36,7 @@ from openhcs.core.runtime_slice_projection import (
     RuntimeProjectionData,
     RuntimeProjectedPayloadItem,
     RuntimeProjectionSourceIdentityRequest,
-    RuntimeProjectionSourceIdentityRequirement,
+    RequiredSourceComponentMetadata,
 )
 
 from openhcs.core.source_image_provenance import (
@@ -56,12 +56,13 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentMetadataNormalizer,
     ViewerComponentValueParser,
     ViewerComponentAxisSemantics,
-    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
     ViewerObjectDisplayConfigInput,
 )
 from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.axes import ColourAxis
 
 StreamComponentMetadata = SourceComponentMetadata | None
 ComponentDisplayName: TypeAlias = str | int | float | bool | None
@@ -86,10 +87,7 @@ class StreamImagePayloadMetadataProjector:
         component_values = item_fields.get(
             ViewerWireField.PLANE_COMPONENT_VALUES.value, {}
         )
-        scalar_modes = (
-            NapariDimensionMode.LAYER.value,
-            FijiDimensionMode.WINDOW.value,
-        )
+        scalar_modes = ViewerSlotFamily.separating_wire_values()
         if not any(
             mode in scalar_modes
             for component, mode in component_modes.items()
@@ -101,7 +99,7 @@ class StreamImagePayloadMetadataProjector:
             axis_size=metadata.source_provenance.source_plane_count,
         )
         source_identity = (
-            RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA
+            RequiredSourceComponentMetadata
         )
         return source_identity.project_payload_items(
             RuntimeProjectionSourceIdentityRequest(
@@ -184,10 +182,9 @@ class StreamImagePayloadMetadataProjector:
         item_fields[ViewerWireField.IMAGE_METADATA.value] = (
             metadata.to_viewer_image_metadata()
         )
-        if metadata.source_channel_axis is not None:
-            item_fields[ViewerWireField.SOURCE_CHANNEL_AXIS.value] = (
-                metadata.source_channel_axis
-            )
+        colour_axis_position = metadata.axis_position(ColourAxis)
+        if colour_axis_position is not None:
+            item_fields[ViewerWireField.SOURCE_CHANNEL_AXIS.value] = colour_axis_position
         if metadata.plane_axis is None:
             return item_fields
 
@@ -368,7 +365,9 @@ class StreamViewerComponentMetadataProjector:
             value = self.component_value(metadata, component)
             if value is not None:
                 projected[component] = value
-        return ViewerComponentMetadataNormalizer().normalize(projected)
+        return ViewerComponentMetadataNormalizer(
+            DeclaredAxes.of(AxisFamily.active().axes)
+        ).normalize(projected)
 
     def component_value(
         self,
@@ -887,7 +886,7 @@ class StreamComponentMessageExtraAuthority:
 
     @property
     def component_axis_semantics(self) -> ViewerComponentAxisSemantics:
-        return ViewerComponentAxisSemanticsAuthority.from_display_config(
+        return ViewerComponentAxisSemanticsFactory.from_display_config(
             display_config=self.display_input,
             value_domain=ViewerComponentValueDomainPayload.from_component_metadata(
                 component_layout=self.layout,

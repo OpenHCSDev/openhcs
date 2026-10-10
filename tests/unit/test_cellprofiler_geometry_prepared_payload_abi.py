@@ -9,12 +9,7 @@ import pytest
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
@@ -51,7 +46,7 @@ def test_prepared_resize_preserves_typed_primary_and_bare_array(func):
     contract = _prepared_contract(func)
 
     assert contract.raw_main_flow_call_argument(source) is source
-    assert contract.raw_main_flow_call_argument(pixels) is pixels
+    assert contract.raw_main_flow_call_argument(pixels).data is pixels
 
 
 @pytest.mark.parametrize("axis", (None, RuntimePlaneAxis.RUNTIME_SLICE))
@@ -80,12 +75,12 @@ def test_prepared_full_stack_resize_preserves_existing_metadata_and_mask(
         metadata = metadata.replace_fields(
             source_spatial_domain=VolumeSourceSpatialDomain(
                 source_depth=3
-            ).admit_source_cohort(
+            ).with_source_cohort(
                 metadata.source_spatial_domain,
                 depth=3,
             )
         )
-    pixels = np.stack(tuple(image_payload_data(plane) for plane in planes))
+    pixels = np.stack(tuple(plane.data for plane in planes))
     mask = np.ones(pixels.shape, dtype=bool)
     mask[:, 0, 0] = False
     source = metadata.payload_with(pixels, mask)
@@ -102,23 +97,23 @@ def test_prepared_full_stack_resize_preserves_existing_metadata_and_mask(
     )
 
     np.testing.assert_array_equal(
-        image_payload_data(result), image_payload_data(expected)
+        result.data, expected.data
     )
     np.testing.assert_array_equal(
-        image_payload_mask(result), image_payload_mask(expected)
+        result.mask, expected.mask
     )
-    assert image_payload_metadata(result) == image_payload_metadata(expected)
-    assert image_payload_metadata(result).plane_axis is axis
-    assert image_payload_metadata(result).source_image_paths == metadata.source_image_paths
-    assert image_payload_metadata(result).source_provenance == metadata.source_provenance
-    assert image_payload_metadata(result).source_spatial_domain.source_shape_yx == (2, 3)
-    assert isinstance(image_payload_metadata(result).source_spatial_domain, domain_type)
+    assert result.metadata == expected.metadata
+    assert result.metadata.plane_axis is axis
+    assert result.metadata.source_image_paths == metadata.source_image_paths
+    assert result.metadata.source_provenance == metadata.source_provenance
+    assert result.metadata.source_spatial_domain.source_shape_yx == (2, 3)
+    assert isinstance(result.metadata.source_spatial_domain, domain_type)
     if domain_type is VolumeSourceSpatialDomain:
-        assert image_payload_metadata(result).source_spatial_domain.source_depth == 3
-        assert image_payload_data(result).shape[0] == int(3 * z_factor)
-    assert image_payload_metadata(source) is metadata
-    np.testing.assert_array_equal(image_payload_data(source), pixels)
-    np.testing.assert_array_equal(image_payload_mask(source), mask)
+        assert result.metadata.source_spatial_domain.source_depth == 3
+        assert result.data.shape[0] == int(3 * z_factor)
+    assert source.metadata is metadata
+    np.testing.assert_array_equal(source.data, pixels)
+    np.testing.assert_array_equal(source.mask, mask)
 
 
 @pytest.mark.parametrize("func", (resize, resize_volumetric))
@@ -138,9 +133,9 @@ def test_prepared_resize_bare_pixels_preserve_canonical_return_contract(func):
 
     assert isinstance(result, RuntimeArrayData)
     assert type(result) is type(expected)
-    np.testing.assert_array_equal(image_payload_data(result), image_payload_data(expected))
-    np.testing.assert_array_equal(image_payload_mask(result), image_payload_mask(expected))
-    assert image_payload_metadata(result) == image_payload_metadata(expected)
+    np.testing.assert_array_equal(result.data, expected.data)
+    np.testing.assert_array_equal(result.mask, expected.mask)
+    assert result.metadata == expected.metadata
 
 
 def test_mask_image_declares_its_actual_nominal_return_family():
@@ -151,4 +146,4 @@ def test_mask_image_declares_its_actual_nominal_return_family():
     source = ImagePayloadMetadata(source_path="/images/input.tif").payload_with(pixels)
     result = canonical(source, pixels > 3)
     assert isinstance(result, RuntimeArrayData)
-    assert image_payload_metadata(result).source_image_paths == ("/images/input.tif",)
+    assert result.metadata.source_image_paths == ("/images/input.tif",)

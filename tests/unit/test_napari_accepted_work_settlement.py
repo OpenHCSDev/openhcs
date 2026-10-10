@@ -26,7 +26,7 @@ from zmqruntime.viewer_protocol import ViewerBatchDisplayPayload
 
 from openhcs.core.config import NapariDimensionMode, NapariDisplayConfig
 from openhcs.runtime.napari_viewer_server import (
-    NapariSettleControlMessageAction,
+    NapariControlAction,
     NapariViewerServer,
 )
 from openhcs.runtime.viewer_protocol import (
@@ -36,6 +36,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerSettlePhase,
     ViewerSettleProgress,
 )
+from openhcs.core.streaming_config_declarations import NapariViewer
 
 
 @pytest.fixture
@@ -137,7 +138,7 @@ def image_item():
 
 
 def settle(receiver):
-    response = NapariSettleControlMessageAction().handle(receiver, {})
+    response = NapariControlAction.for_message_type("settle").handle(receiver, {})
     return response, ViewerSettleProgress.from_response(ViewerControlResponse(response))
 
 
@@ -180,7 +181,7 @@ def test_saved_roi_reopen_reports_pre_route_failure_and_recovers(
     # previous failed cycle must not become a permanent unrelated failure.
     assert wire_receiver(image_item())["status"] == "success"
     admitted = ViewerSettleProgress.from_response(ViewerControlResponse(
-        NapariSettleControlMessageAction().transport_thread_response(receiver, {})
+        NapariControlAction.for_message_type("settle").transport_thread_response(receiver, {})
     ))
     assert admitted.phase is ViewerSettlePhase.RUNNING
     assert admitted.total_update_count == 0
@@ -203,7 +204,7 @@ def test_previous_complete_cannot_settle_new_accepted_work(receiver):
     )
     assert not receiver.accepted_stream_batches.empty()
     admitted = ViewerSettleProgress.from_response(ViewerControlResponse(
-        NapariSettleControlMessageAction().transport_thread_response(receiver, {})
+        NapariControlAction.for_message_type("settle").transport_thread_response(receiver, {})
     ))
     assert admitted.phase is ViewerSettlePhase.RUNNING
     assert admitted.total_update_count == 0
@@ -217,7 +218,6 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
     from zmqruntime.transport import get_control_port
     from polystore.filemanager import FileManager
     from polystore.streaming.viewer_transport import ViewerTransportEndpoint
-    from openhcs.core.streaming_config_declarations import ViewerType
     from openhcs.core.streaming_config_factory import StreamingViewerRuntimeConfig
     from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
 
@@ -266,7 +266,7 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
         runtime_config=StreamingViewerRuntimeConfig(
             transport_endpoint=ViewerTransportEndpoint(
                 port=receiver.port, host="localhost", transport_mode=receiver.transport_mode,
-            ), persistent=False, viewer_type=ViewerType.NAPARI,
+            ), persistent=False, viewer_family=NapariViewer,
         ),
     )
     client.lifecycle_state.mark_connected_external()
@@ -445,7 +445,7 @@ def test_clear_state_discards_pre_route_failure(receiver, tmp_path):
         == "success"
     )
     receiver.process_accepted_stream_messages()
-    receiver.clear_accumulated_stream_state()
+    receiver.clear_stream_state()
     assert settle(receiver)[1].phase is ViewerSettlePhase.COMPLETE
     assert receiver.layer_route_state.update_failure_message() is None
 

@@ -400,9 +400,6 @@ from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_object_label_domains import (
     DenseObjectLabelConsecutiveRelabelingStrategy,
 )
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-)
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
@@ -750,7 +747,7 @@ class WatershedInvocationRequest:
 
 def watershed_image_array(value: object, *, parameter_name: str) -> np.ndarray:
     """Return concrete NumPy image data for Watershed computation."""
-    array = np.asarray(image_payload_data(value))
+    array = np.asarray(value)
     if array.ndim == 0:
         raise TypeError(
             f"Watershed {parameter_name} requires array-like image data, got {type(value).__name__}."

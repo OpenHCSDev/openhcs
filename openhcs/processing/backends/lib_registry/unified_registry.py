@@ -82,16 +82,11 @@ from openhcs.core.runtime_batch_contracts import (
     runtime_batch_executors_from_callable,
 )
 from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadataCarrier,
+    ImagePayload,
     ImageMetadataPayload,
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     MaskedImagePayload,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-    image_payload_slice_context,
-    with_image_payload_data,
 )
 from openhcs.core.runtime_object_label_aggregation import (
     ObjectLabelPure2DSliceAggregator,
@@ -120,6 +115,9 @@ from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirement,
 )
 from openhcs.core.xdg_paths import get_cache_file_path
+from openhcs.core.runtime_image_values import owned_runtime_value
+from openhcs.core.runtime_image_values import PlainImagePayload
+from openhcs.core.runtime_image_values import image_metadata_of
 
 logger = logging.getLogger(__name__)
 
@@ -398,12 +396,13 @@ def contextualize_main_image_output(source_image: Any, result: Any) -> Any:
         return result
     if not isinstance(result, np.ndarray):
         return result
-    if (
-        image_payload_mask(source_image) is None
-        and not image_payload_metadata(source_image).has_values
+    source_image = owned_runtime_value(source_image)
+    if not isinstance(source_image, ImagePayload) or (
+        source_image.mask is None
+        and not source_image.metadata.has_values
     ):
         return result
-    return with_image_payload_data(source_image, result)
+    return source_image.with_pixels(result)
 
 
 class Pure2DRegisteredStrategyFamily(ABC):
@@ -541,13 +540,13 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
     value_type = None
 
     def is_single_plane_value(self, value: Any) -> bool:
-        return image_payload_metadata(value).plane_axis is None
+        return value.metadata.plane_axis is None
 
     def slice_value(self, value: Any, memory_type: str) -> tuple[Any, ...]:
-        data = image_payload_data(value)
+        data = value.data
         if self.is_single_plane_value(value):
             return (value,)
-        metadata = image_payload_metadata(value)
+        metadata = value.metadata
         slices = unstack_runtime_slices(
             data,
             memory_type,
@@ -555,7 +554,7 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
             expected_count=metadata.source_provenance.source_plane_count or None,
         )
         return tuple(
-            image_payload_slice_context(value, slice_data, slice_index)
+            value.slice_payload(slice_data, slice_index)
             for slice_index, slice_data in enumerate(slices)
         )
 
@@ -585,6 +584,12 @@ class MaskedImagePayloadPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
     """Register masked image payloads for PURE_2D input slicing."""
 
     value_type = MaskedImagePayload
+
+
+class PlainImagePayloadPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
+    """Slice bare pixels wrapped at the boundary like any image payload."""
+
+    value_type = PlainImagePayload
 
 
 class ImageMetadataPayloadPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
@@ -795,7 +800,7 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
 ):
     """Stack image payload slices and reattach composed runtime image context."""
 
-    value_type = ImagePayloadMetadataCarrier
+    value_type = ImagePayload
     include_in_family = True
 
     def _accepts_mixed_value(self, value: Any) -> bool:
@@ -1201,7 +1206,7 @@ class VolumetricToSliceProcessingContract(VariableComponentStackProcessingContra
     def main_flow_output_source_payload(self, source_payload: Any) -> Any:
         """Consume the declared leading plane axis while preserving provenance."""
 
-        metadata = image_payload_metadata(source_payload)
+        metadata = image_metadata_of(source_payload)
         if not metadata.has_values:
             return source_payload
         if metadata.plane_axis is None:
@@ -1502,6 +1507,15 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         if metadata is not None:
             yield metadata
 
+    def owns_module(self, module_name: str) -> bool:
+        """Whether ``module_name`` lies inside this registry's declared modules."""
+
+        return any(
+            module_name == module_pattern
+            or module_name.startswith(f"{module_pattern}.")
+            for module_pattern in self.get_module_patterns()
+        )
+
     def composite_keys_for_declared_callable(
         self,
         func: Callable,
@@ -1513,11 +1527,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
             return (metadata.composite_key,)
 
         declared = inspect.unwrap(func)
-        if not any(
-            declared.__module__ == module_pattern
-            or declared.__module__.startswith(f"{module_pattern}.")
-            for module_pattern in self.get_module_patterns()
-        ):
+        if not self.owns_module(declared.__module__):
             return ()
 
         module_names = (
@@ -1832,7 +1842,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 ).call()
             )
             return contextualize_main_image_output(image, result)
-        input_metadata = image_payload_metadata(image)
+        input_metadata = image.metadata
         plane_axis = input_metadata.plane_axis
         if plane_axis is None:
             raise ValueError(

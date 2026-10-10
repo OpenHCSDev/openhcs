@@ -19,7 +19,6 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.runtime_image_values import image_payload_metadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
@@ -34,7 +33,7 @@ from openhcs.core.viewer_streaming_service import (
 from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.napari_streaming_handlers import (
-    NapariAggregateAxisBindingAuthority,
+    NapariAggregateAxisBindingBuilder,
     NapariImagePayloadAxisLabelPolicy,
     NapariStreamLayerItem,
 )
@@ -54,7 +53,7 @@ def receiver_transport(monkeypatch, viewer_ack_return_route):
 
     def observe_projection(request, image):
         projected = original_project(request, image)
-        projected_metadata.append(image_payload_metadata(projected))
+        projected_metadata.append(projected.metadata)
         return projected
 
     def receive(_manager, data, paths, backend, **fields):
@@ -92,7 +91,7 @@ def receiver_transport(monkeypatch, viewer_ack_return_route):
                 image_metadata=payload.image_metadata,
                 plane_component_domain=payload.plane_component_domain,
             )
-            bindings = NapariAggregateAxisBindingAuthority.bindings((item,), semantics)
+            bindings = NapariAggregateAxisBindingBuilder.bindings((item,), semantics)
             NapariImagePayloadAxisLabelPolicy.axis_labels(
                 pixels, item.image_metadata, bindings.payload_axes
             )

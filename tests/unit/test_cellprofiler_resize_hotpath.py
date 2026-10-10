@@ -5,12 +5,7 @@ import pytest
 import scipy.ndimage as ndi
 import skimage.transform
 
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.processing.backends.cellprofiler.image_geometry import (
     InterpolationMethod,
     ResizeGeometry,
@@ -106,12 +101,12 @@ def test_resize_preserves_ordinary_image_payload_semantics() -> None:
         np.ones(pixels.shape, dtype=bool), output_shape
     )
     np.testing.assert_allclose(
-        image_payload_data(result), expected_pixels, rtol=0.0, atol=1e-6
+        result.data, expected_pixels, rtol=0.0, atol=1e-6
     )
-    np.testing.assert_array_equal(image_payload_mask(result), expected_mask)
-    assert image_payload_data(result).dtype == pixels.dtype
-    assert image_payload_data(result).shape == output_shape
-    assert image_payload_metadata(result) == (
+    np.testing.assert_array_equal(result.mask, expected_mask)
+    assert result.data.dtype == pixels.dtype
+    assert result.data.shape == output_shape
+    assert result.metadata == (
         metadata.with_spatial_resize(
             output_shape
         ).without_unit_interval_intensity_scale()
@@ -143,13 +138,13 @@ def test_resize_volumetric_preserves_masked_payload_semantics() -> None:
         preserve_range=True,
     ).astype(pixels.dtype, copy=False)
     np.testing.assert_allclose(
-        image_payload_data(result), expected_pixels, rtol=0.0, atol=1e-6
+        result.data, expected_pixels, rtol=0.0, atol=1e-6
     )
     np.testing.assert_array_equal(
-        image_payload_mask(result), _reference_mask_resize(mask, output_shape)
+        result.mask, _reference_mask_resize(mask, output_shape)
     )
-    assert image_payload_data(result).dtype == pixels.dtype
-    assert image_payload_data(result).shape == output_shape
-    assert image_payload_metadata(result) == metadata.with_spatial_resize(
+    assert result.data.dtype == pixels.dtype
+    assert result.data.shape == output_shape
+    assert result.metadata == metadata.with_spatial_resize(
         output_shape[-2:]
     )

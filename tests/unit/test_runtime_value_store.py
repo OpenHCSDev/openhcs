@@ -40,11 +40,7 @@ from benchmark.equivalence.runtime import (
     RuntimeMeasurementObservationAxis,
 )
 from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     MeasurementSparseColumnarRows,
@@ -977,7 +973,7 @@ def test_runtime_artifact_input_projection_transposes_producer_stack_axis() -> N
     payload = runtime_input.composed_value(runtime_input.records(store))
 
     np.testing.assert_array_equal(
-        image_payload_data(payload),
+        payload.data,
         np.stack(
             tuple(
                 np.full((2, 2), channel * 10 + 2, dtype=np.float32)
@@ -1037,7 +1033,7 @@ def test_artifact_candidate_scopes_preserve_projected_site_time_correlation() ->
     assert coordinates.fixed_component_values == ((Microscopy.Timepoint, "3"),)
     assert candidates[coordinates] == path
     selected = replace(runtime_input, axis_scope=coordinates).resolve_value(store)
-    np.testing.assert_array_equal(image_payload_data(selected), np.full((2, 2), 17.0))
+    np.testing.assert_array_equal(selected.data, np.full((2, 2), 17.0))
     np.testing.assert_array_equal(selected.mask, payload.mask[0])
 
 
@@ -1164,12 +1160,10 @@ def test_runtime_artifact_input_projection_ignores_scalar_pixel_contributors() -
     resolved_scalar = runtime_input.resolve_value(scalar_store)
 
     np.testing.assert_array_equal(
-        image_payload_data(resolved_scalar),
+        resolved_scalar.data,
         np.full((2, 2), 20, dtype=np.float32),
     )
-    scalar_planes = image_payload_metadata(
-        resolved_scalar
-    ).source_image_provenance_planes
+    scalar_planes = resolved_scalar.metadata.source_image_provenance_planes
     assert scalar_planes.runtime_component_metadata == ()
     assert scalar_planes.contributor_count == 2
 
@@ -1195,7 +1189,7 @@ def test_runtime_artifact_input_projection_ignores_scalar_pixel_contributors() -
     resolved_runtime_plane = runtime_input.resolve_value(stacked_store)
 
     np.testing.assert_array_equal(
-        image_payload_data(resolved_runtime_plane),
+        resolved_runtime_plane.data,
         np.full((2, 2), 20, dtype=np.float32),
     )
     assert (
@@ -1264,13 +1258,13 @@ def test_runtime_artifact_input_projection_collapses_excluded_singleton_axis() -
 
     projected_values = runtime_input.projected_values(store)
     assert all(type(value) is RuntimeValue for value in projected_values)
-    assert all(image_payload_data(value.data).shape == (2, 2) for value in projected_values)
-    assert all(image_payload_data(record.data).shape == (1, 2, 2) for record in store.values())
+    assert all(value.data.data.shape == (2, 2) for value in projected_values)
+    assert all(record.data.data.shape == (1, 2, 2) for record in store.values())
     payload = runtime_input.resolve_value(store)
 
-    assert image_payload_data(payload).shape == (2, 2, 2)
+    assert payload.data.shape == (2, 2, 2)
     np.testing.assert_array_equal(
-        image_payload_data(payload),
+        payload.data,
         np.stack(
             (
                 np.full((2, 2), 1, dtype=np.float32),
@@ -1278,7 +1272,7 @@ def test_runtime_artifact_input_projection_collapses_excluded_singleton_axis() -
             )
         ),
     )
-    assert image_payload_metadata(payload).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert payload.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_runtime_artifact_input_reconstructs_singleton_producer_group_axis() -> None:
@@ -1327,12 +1321,12 @@ def test_runtime_artifact_input_reconstructs_singleton_producer_group_axis() -> 
 
     payload = runtime_input.resolve_value(store)
 
-    assert image_payload_data(payload).shape == (1, 2, 2)
+    assert payload.data.shape == (1, 2, 2)
     np.testing.assert_array_equal(
-        image_payload_data(payload),
+        payload.data,
         np.full((1, 2, 2), 1, dtype=np.float32),
     )
-    assert image_payload_metadata(payload).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert payload.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_runtime_artifact_input_keeps_singleton_scalar_selection_unstacked() -> None:
@@ -1383,8 +1377,8 @@ def test_runtime_artifact_input_keeps_singleton_scalar_selection_unstacked() -> 
 
     payload = runtime_input.resolve_value(store)
 
-    assert image_payload_data(payload).shape == (2, 2)
-    assert image_payload_metadata(payload).plane_axis is None
+    assert payload.data.shape == (2, 2)
+    assert payload.metadata.plane_axis is None
 
 
 def test_runtime_artifact_input_projection_selects_compiler_owned_group_for_ungrouped_invocation():
@@ -1542,7 +1536,7 @@ def test_runtime_artifact_input_projection_uses_compiled_group_for_plane_scope()
     resolved = runtime_input.resolve_value(store)
 
     np.testing.assert_array_equal(
-        image_payload_data(resolved), image_payload_data(payload)
+        resolved.data, payload.data
     )
 
 

@@ -17,7 +17,6 @@ from openhcs.core.function_patterns import (
     UnprovedPrimaryImageCarrierProof,
 )
 from openhcs.core.pipeline.compiler import PipelineCompiler
-from openhcs.core.runtime_image_values import image_payload_data, image_payload_mask, image_payload_metadata
 from openhcs.core.aligned_image_payload import ImagePayloadBundleContext, ImagePayloadExecutionMode
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
@@ -27,6 +26,8 @@ from openhcs.processing.backends.cellprofiler.color import (
 )
 from test_gray_to_color_binding_axis_432 import _execute_bound_stack, _source_plane
 from test_primary_image_carrier_compile_gate import _compiled_pattern, _session
+from openhcs.core.payload_axes import ColourSampleAxisSpec
+from openhcs.core.axes import ColourAxis
 
 
 def _gray_creator_session(tmp_path):
@@ -93,8 +94,8 @@ def _runtime_scalar_role_split():
         for pixels, name in ((raw, "RawBody"), (capped, "CappedOutgrowth"))
     )).compose()
     composite = _execute_bound_stack(bundle)
-    assert image_payload_data(composite).shape == (4, 5, 2)
-    assert image_payload_metadata(composite).source_channel_axis == -1
+    assert composite.data.shape == (4, 5, 2)
+    assert composite.metadata.axis_position(ColourAxis) == -1
     contract = CallableContract.from_callable(color_to_gray)
     result = CellProfilerFunctionContractExecutor().execute(
         contract, contract.resolve_canonical_raw_callable(), composite,
@@ -109,17 +110,17 @@ def test_original_runtime_split_preserves_both_role_values_and_physical_channel(
     result, expected_roles = _runtime_scalar_role_split()
     assert len(result.slices) == 2
     for output, expected in zip(result.slices, expected_roles, strict=True):
-        assert image_payload_data(output).shape == (4, 5)
-        np.testing.assert_array_equal(image_payload_data(output), expected)
-        assert image_payload_metadata(output).source_component_metadata["channel"] == "2"
-        assert set(image_payload_metadata(output).source_image_paths) == {"/synthetic/A01_s1_w2_z1_t1.tif"}
+        assert output.data.shape == (4, 5)
+        np.testing.assert_array_equal(output.data, expected)
+        assert output.metadata.source_component_metadata["channel"] == "2"
+        assert set(output.metadata.source_image_paths) == {"/synthetic/A01_s1_w2_z1_t1.tif"}
 
 
 def test_scalar_role_outputs_consume_the_color_carrier():
     result, _expected_roles = _runtime_scalar_role_split()
     for output in result.slices:
-        assert image_payload_data(output).shape == (4, 5)
-        assert image_payload_metadata(output).source_channel_axis is None
+        assert output.data.shape == (4, 5)
+        assert output.metadata.axis_position(ColourAxis) is None
 
 
 @pytest.mark.parametrize("same_group", [False, True])
@@ -278,7 +279,7 @@ def test_scalar_projection_modes_keep_pixels_mask_and_original_source(image_type
     pixels = np.arange(60, dtype=np.float32).reshape(4, 5, 3) / 60
     mask = np.arange(20).reshape(4, 5) % 3 != 0
     source = _source_plane(pixels, "OriginalColor")
-    metadata = image_payload_metadata(source).replace_fields(source_channel_axis=-1)
+    metadata = source.metadata.with_axis(ColourSampleAxisSpec(), -1)
     source = metadata.payload_with(pixels, mask)
     expected = split_color_to_gray(source, image_type, (0, 1))
     contract = CallableContract.from_callable(color_to_gray)
@@ -289,14 +290,14 @@ def test_scalar_projection_modes_keep_pixels_mask_and_original_source(image_type
         execution_mode=ImagePayloadExecutionMode.NATURAL,
     )
     for output, expected_pixels in zip(result.slices, expected, strict=True):
-        np.testing.assert_array_equal(image_payload_data(output), expected_pixels)
-        np.testing.assert_array_equal(image_payload_mask(output), mask)
-        output_metadata = image_payload_metadata(output)
-        assert output_metadata.source_channel_axis is None
+        np.testing.assert_array_equal(output.data, expected_pixels)
+        np.testing.assert_array_equal(output.mask, mask)
+        output_metadata = output.metadata
+        assert output_metadata.axis_position(ColourAxis) is None
         assert output_metadata.source_path == metadata.source_path
         assert output_metadata.source_component_metadata == metadata.source_component_metadata
         assert output_metadata.source_image_names == metadata.source_image_names
         assert output_metadata.source_voxel_spacing == metadata.source_voxel_spacing
         assert output_metadata.source_spatial_domain == metadata.source_spatial_domain
-    np.testing.assert_array_equal(image_payload_data(source), pixels)
-    assert image_payload_metadata(source).source_channel_axis == -1
+    np.testing.assert_array_equal(source.data, pixels)
+    assert source.metadata.axis_position(ColourAxis) == -1

@@ -75,6 +75,7 @@ from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
     cellprofiler_runtime_input_edge_for_test,
 )
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 
 def _straighten_worms_binding_request(
@@ -403,7 +404,7 @@ def test_overlapping_worm_outline_crops_without_changing_pixels() -> None:
         "skimage.segmentation.find_boundaries",
         wraps=find_boundaries,
     ) as cropped_find_boundaries:
-        actual = _overlapping_worm_outline(image, labels, "viridis")
+        actual = _overlapping_worm_outline(PlainImagePayload(image), labels, "viridis")
 
     np.testing.assert_array_equal(np.asarray(actual), expected)
     assert cropped_find_boundaries.call_count == 3

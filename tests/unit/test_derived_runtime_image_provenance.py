@@ -5,12 +5,7 @@ import pytest
 
 from openhcs.core.artifacts import ArtifactOutputPlan, ImageArtifactType
 from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.source_image_provenance import (
@@ -55,11 +50,11 @@ def test_image_artifact_normalization_applies_declared_scalar_identity() -> None
         axis_id="A01",
     )
     normalized = runtime_value.data
-    metadata = image_payload_metadata(normalized)
+    metadata = normalized.metadata
 
     assert runtime_value.key.name == output_plan.name
-    assert image_payload_data(normalized) is data
-    assert image_payload_mask(normalized) is mask
+    assert normalized.data is data
+    assert normalized.mask is mask
     assert metadata.source_path == "/input/A01_s1_w1.tif"
     assert dict(metadata.source_component_metadata or {}) == {
         "well": "A01",
@@ -125,9 +120,9 @@ def test_image_artifact_normalization_names_each_aligned_image_payload() -> None
             strict=True,
         )
     ):
-        value = normalized.value_for_slice(index)
-        metadata = image_payload_metadata(value)
-        assert image_payload_data(value) is array
+        value = normalized.value_at(index)
+        metadata = value.metadata
+        assert value.data is array
         assert metadata.source_path == source_path
         assert metadata.source_dtype == "float32"
         assert metadata.source_image_names == ("UntangledWorms",)
@@ -154,13 +149,13 @@ def test_derived_singleton_runtime_plane_projects_by_output_name() -> None:
         payload,
         "OrigGreenOverlay",
     )
-    projected = image_payload_metadata(projected_payload)
+    projected = projected_payload.metadata
 
     assert derived.source_image_provenance_planes.runtime_source_image_names == (
         "OrigGreenOverlay",
     )
     assert projected.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert image_payload_data(projected_payload).shape == (1, 4, 5)
+    assert projected_payload.data.shape == (1, 4, 5)
     assert projected.source_image_names == ("OrigGreenOverlay",)
     assert projected.source_provenance.represented_source_image_names == (
         "OrigGreenOverlay",
@@ -181,10 +176,10 @@ def test_declared_singleton_name_owns_projection_over_nested_source_name() -> No
         payload,
         "OrigGreenOverlay",
     )
-    projected = image_payload_metadata(projected_payload)
+    projected = projected_payload.metadata
 
     assert projected.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert image_payload_data(projected_payload).shape == (1, 4, 5)
+    assert projected_payload.data.shape == (1, 4, 5)
     assert projected.source_image_names == ("OrigGreenOverlay",)
     assert projected.source_provenance.represented_source_image_names == (
         "OrigGreenOverlay",
@@ -268,9 +263,9 @@ def test_source_name_projects_one_exact_named_runtime_slice() -> None:
     payload = metadata.payload_with(np.zeros((2, 4, 5), dtype=np.float32))
 
     projected_payload = metadata.project_declared_source_image(payload, "Second")
-    projected = image_payload_metadata(projected_payload)
+    projected = projected_payload.metadata
 
-    assert image_payload_data(projected_payload).shape == (4, 5)
+    assert projected_payload.data.shape == (4, 5)
     assert projected.plane_axis is None
     assert projected.source_path == "/input/A01_s2_w1.tif"
     assert projected.source_image_names == ("OrigGreen",)
@@ -335,4 +330,4 @@ def test_scalar_contributors_survive_runtime_plane_projection() -> None:
     )
     payload = projected.payload_with(np.zeros((4, 5), dtype=np.float32))
     projected_payload = projected.project_declared_source_image(payload, "DNA")
-    assert image_payload_metadata(projected_payload) == projected
+    assert projected_payload.metadata == projected

@@ -274,8 +274,11 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
         """Resolve plane projection only after the artifact strategy is selected."""
 
         from openhcs.core.runtime_image_values import (
+            owned_runtime_value,
             preserve_declared_image_payload_axis,
         )
+
+        output_value = owned_runtime_value(output_value)
         from openhcs.core.runtime_plane_projection import (
             RuntimePlaneAxis,
             RuntimePlaneAxisValueProjection,
@@ -393,9 +396,7 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
         if isinstance(data, RuntimeSliceAlignedValueSet):
             invalid = tuple(
                 type(value).__name__
-                for value in (
-                    data.value_for_slice(index) for index in range(data.slice_count)
-                )
+                for value in data.values
                 if not cls.accepts_runtime_payload(value)
             )
             if not invalid:
@@ -417,6 +418,16 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
     def materialization_payload(cls, value: "RuntimeValue") -> object:
         """Return the payload exposed to materializers for this artifact type."""
         return value.data
+
+    @classmethod
+    def materialization_image_metadata(
+        cls, value: "RuntimeValue"
+    ) -> "ImagePayloadMetadata":
+        """Return the image metadata this kind's payload carries for naming."""
+        from openhcs.core.runtime_image_values import ImagePayloadMetadata
+
+        del value
+        return ImagePayloadMetadata()
 
     @classmethod
     def runtime_semantic_id(cls, data: object) -> str | None:
@@ -549,7 +560,19 @@ class SpecialArtifactType(ArtifactType):
     value = "special"
 
 
-class ImageArtifactType(ArtifactType):
+class ImagePayloadArtifactKind(ArtifactType):
+    """Capability of kinds whose payloads are image payloads (images, labels)."""
+
+    @classmethod
+    def materialization_image_metadata(
+        cls, value: "RuntimeValue"
+    ) -> "ImagePayloadMetadata":
+        from openhcs.core.runtime_image_values import image_metadata_of
+
+        return image_metadata_of(cls.materialization_payload(value))
+
+
+class ImageArtifactType(ImagePayloadArtifactKind):
     """Image array artifact type."""
 
     value = "image"
@@ -567,37 +590,27 @@ class ImageArtifactType(ArtifactType):
     ) -> bool:
         """Return whether an image result already carries complete source identity."""
 
-        from openhcs.core.aligned_image_payload import (
-            AlignedImageStack,
-            flatten_aligned_image_payload_slices,
-        )
-        from openhcs.core.runtime_image_values import image_payload_metadata
+        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
-        if not isinstance(output_value, AlignedImageStack) and not (
-            image_payload_metadata(output_value).has_complete_source_identity(
+        if not output_value.keeps_own_source_context and not (
+            output_value.metadata.has_complete_source_identity(
                 output_value,
                 plane_projection,
             )
         ):
             return False
-        output_surfaces = flatten_aligned_image_payload_slices(output_value)
+        output_surfaces = RuntimeSliceProjection.output_slices(output_value)
         if not all(
-            image_payload_metadata(output_surface).has_complete_source_identity(
-                output_surface
-            )
+            output_surface.metadata.has_complete_source_identity(output_surface)
             for output_surface in output_surfaces
         ):
             return False
         if output_plan is None:
             return True
-        source_surfaces = flatten_aligned_image_payload_slices(source_payload)
+        source_surfaces = RuntimeSliceProjection.output_slices(source_payload)
         return len(output_surfaces) == len(source_surfaces) and all(
-            image_payload_metadata(
-                output_surface
-            ).source_provenance.represented_source_identities
-            == image_payload_metadata(
-                source_surface
-            ).source_provenance.represented_source_identities
+            output_surface.metadata.source_provenance.represented_source_identities
+            == source_surface.metadata.source_provenance.represented_source_identities
             for source_surface, output_surface in zip(
                 source_surfaces,
                 output_surfaces,
@@ -613,27 +626,17 @@ class ImageArtifactType(ArtifactType):
         output_plan: ArtifactOutputPlan | None,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> object:
-        import numpy as np
-        from openhcs.core.aligned_image_payload import AlignedImageStack
-        from openhcs.core.projected_image_output import (
-            SourceProjectedImageOutput,
-            ImageOutputSourceContextStrategy,
-        )
+        from openhcs.core.projected_image_output import SourceProjectedImageOutput
         from openhcs.core.runtime_artifact_values import RuntimeValue
-        from openhcs.core.runtime_image_values import (
-            image_payload_metadata,
-            image_payload_data,
-        )
-        from openhcs.core.runtime_plane_projection import (
-            RuntimePlaneAxis,
-            RuntimePlaneAxisValueProjection,
-        )
+        from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
+        from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
         from openhcs.core.runtime_slice_alignment import (
             RuntimeSliceAlignedValueSet,
             RuntimeSliceAlignedValues,
         )
         from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
+        output_value = owned_runtime_value(output_value)
         if isinstance(output_value, SourceProjectedImageOutput):
             return output_value.resolve_source_context(source_payload, plane_projection)
         if isinstance(output_value, RuntimeSliceAlignedValueSet):
@@ -651,25 +654,22 @@ class ImageArtifactType(ArtifactType):
                     "the declared runtime plane axis: "
                     f"{output_value.slice_count} != {plane_projection.axis_size}."
                 )
-            contextualized_slices = []
-            for slice_index in range(output_value.slice_count):
-                item = output_value.value_for_slice(slice_index)
-                contextualized_slices.append(
+            return RuntimeSliceAlignedValues(
+                tuple(
                     cls.contextualize_output(
                         RuntimeSliceProjection.value_for_slice(
-                            source_payload,
-                            RuntimePlaneAxisValueProjection.from_selected_plane(
-                                axis=plane_projection.axis,
-                                plane_index=slice_index,
-                                axis_size=plane_projection.axis_size,
-                            ),
+                            source_payload, plane_projection.selected_plane(slice_index),
                         ),
                         item.data if isinstance(item, RuntimeValue) else item,
                         output_plan,
                         None,
                     )
+                    for slice_index, item in enumerate(output_value.values)
                 )
-            return RuntimeSliceAlignedValues(tuple(contextualized_slices))
+            )
+        if not isinstance(output_value, ImagePayload):
+            # A value without pixels has no image source context to receive.
+            return output_value
         source_ref = (
             None if output_plan is None else output_plan.source_context_source()
         )
@@ -679,27 +679,27 @@ class ImageArtifactType(ArtifactType):
             and plane_projection is not None
             and plane_projection.plane_index is None
         ):
-            output_metadata = image_payload_metadata(output_value)
+            output_metadata = output_value.metadata
             if (
                 output_metadata.plane_axis is None
                 and output_metadata.source_provenance.source_plane_count
                 == plane_projection.axis_size
-                and plane_projection.dense_shape_carries_axis(
-                    np.shape(image_payload_data(output_value))
-                )
+                and plane_projection.dense_shape_carries_axis(output_value.geometry.shape)
             ):
                 output_value = output_metadata.replace_fields(
                     plane_axis=plane_projection.axis,
                 ).attach_to(output_value)
         if output_plan is not None and not output_plan.variable_components:
-            output_metadata = image_payload_metadata(output_value)
-            if output_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
+            if output_value.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
                 output_value = RuntimeSliceProjection.value_for_singleton_slice(
                     output_value,
                     source_description=f"Image output {output_plan.ref()!r}",
                 )
-            source_metadata = image_payload_metadata(source_payload)
-            if source_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
+            if (
+                RuntimeSliceProjection.declared_plane_axis(source_payload)
+                is RuntimePlaneAxis.RUNTIME_SLICE
+            ):
+                source_metadata = source_payload.metadata
                 if source_ref is None:
                     raise ValueError(
                         f"Image output {output_plan.ref()!r} consumes a runtime "
@@ -712,36 +712,19 @@ class ImageArtifactType(ArtifactType):
                     )
                 ).attach_source_context_to(output_value)
             plane_projection = None
-        source_context_strategy = ImageOutputSourceContextStrategy.for_source_payload(
-            source_payload,
-        )
         if cls.output_owns_source_context(
             source_payload,
             output_value,
             output_plan,
             plane_projection,
-        ) and not source_context_strategy.requires_plane_contextualization(
-            source_payload,
+        ) and not source_payload.requires_output_plane_contextualization(
             output_value,
             plane_projection,
         ):
-            if isinstance(output_value, AlignedImageStack):
+            if output_value.keeps_own_source_context:
                 return output_value
-            output_metadata = image_payload_metadata(output_value)
-            source_metadata = image_payload_metadata(source_payload)
-            contextualized_output = output_metadata.with_source_context_from(
-                source_metadata
-            ).attach_source_context_to(
-                output_value,
-            )
-            if image_payload_metadata(contextualized_output) == output_metadata:
-                return output_value
-            return contextualized_output
-        return source_context_strategy.contextualize(
-            source_payload,
-            output_value,
-            plane_projection,
-        )
+            return source_payload.fill_output_source_context(output_value)
+        return source_payload.contextualize_image_output(output_value, plane_projection)
 
     @classmethod
     def contextualize_output_from_projector(
@@ -819,38 +802,15 @@ class ImageArtifactType(ArtifactType):
     ) -> object:
         """Apply the declared image identity without discarding payload context."""
 
-        from openhcs.core.aligned_image_payload import ImagePayloadSliceStack
-        from openhcs.core.runtime_image_values import (
-            image_payload_data,
-            image_payload_mask,
-            image_payload_metadata,
-        )
-        from openhcs.core.runtime_slice_alignment import (
-            RuntimeSliceAlignedValues,
-            RuntimeSliceAlignedValueSet,
-        )
+        from openhcs.core.runtime_image_values import owned_runtime_value
 
         def named_payload(payload: object) -> object:
-            metadata = image_payload_metadata(payload)
+            metadata = payload.metadata
             return metadata.with_source_provenance(
                 metadata.source_provenance.with_derived_source_image_names((name,))
-            ).payload_with(
-                image_payload_data(payload),
-                image_payload_mask(payload),
-            )
+            ).payload_with(payload.data, payload.mask)
 
-        if isinstance(value, ImagePayloadSliceStack):
-            return value.with_slices(
-                tuple(named_payload(payload) for payload in value.slices)
-            )
-        if isinstance(value, RuntimeSliceAlignedValueSet):
-            return RuntimeSliceAlignedValues(
-                tuple(
-                    named_payload(value.value_for_slice(index))
-                    for index in range(value.slice_count)
-                )
-            )
-        return named_payload(value)
+        return owned_runtime_value(value).map_slices(named_payload)
 
     @classmethod
     def materialization_payload(cls, value: "RuntimeValue") -> object:
@@ -871,10 +831,7 @@ class ImageArtifactType(ArtifactType):
 
         from openhcs.core.aligned_image_payload import stack_image_payloads
         from openhcs.core.memory import detect_memory_type
-        from openhcs.core.runtime_image_values import (
-            ImagePayloadMetadataCompositionMode,
-            image_payload_data,
-        )
+        from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
         from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 
         components = {value.key.scope.component for value in values}
@@ -885,7 +842,7 @@ class ImageArtifactType(ArtifactType):
             )
         if producer_group_scope is not None:
             payloads = tuple(value.data for value in values)
-            arrays = tuple(image_payload_data(payload) for payload in payloads)
+            arrays = tuple(payload.data for payload in payloads)
             return stack_image_payloads(
                 payloads,
                 memory_type=detect_memory_type(arrays[0]),
@@ -932,7 +889,6 @@ class ImageArtifactType(ArtifactType):
         records: tuple[StoredRuntimeValue, ...],
         output_plan: ArtifactOutputPlan,
     ) -> tuple[StoredRuntimeValue, ...]:
-        from openhcs.core.runtime_image_values import image_payload_metadata
         from openhcs.core.source_projection import OpenHCSPlaneAddress
 
         if not output_plan.materialization_uses_source_identity_filename():
@@ -947,7 +903,7 @@ class ImageArtifactType(ArtifactType):
         ] = {}
         for record in records:
             payload = record.materialization_payload()
-            metadata = image_payload_metadata(payload)
+            metadata = payload.metadata
             address = OpenHCSPlaneAddress.from_complete_source_metadata(
                 metadata.source_component_metadata
             )
@@ -1014,23 +970,19 @@ class ImageArtifactType(ArtifactType):
     @staticmethod
     def _materialization_payloads_are_equivalent(left: object, right: object) -> bool:
         import numpy as np
-        from openhcs.core.runtime_image_values import (
-            image_payload_data,
-            image_payload_metadata,
-        )
 
-        left_metadata = image_payload_metadata(left)
-        right_metadata = image_payload_metadata(right)
+        left_metadata = left.metadata
+        right_metadata = right.metadata
         if left_metadata != right_metadata:
             return False
-        left_data = np.asarray(image_payload_data(left))
-        right_data = np.asarray(image_payload_data(right))
+        left_data = np.asarray(left.data)
+        right_data = np.asarray(right.data)
         return left_data.dtype == right_data.dtype and np.array_equal(
             left_data, right_data, equal_nan=True
         )
 
 
-class ObjectLabelsArtifactType(ArtifactType):
+class ObjectLabelsArtifactType(ImagePayloadArtifactKind):
     """Object-label array artifact type."""
 
     value = "object_labels"
@@ -1047,13 +999,17 @@ class ObjectLabelsArtifactType(ArtifactType):
         output_plan: ArtifactOutputPlan | None,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> object:
-        from openhcs.core.projected_image_output import (
-            ObjectLabelOutputValueContextStrategy,
-        )
+        from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
+        from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
 
-        return ObjectLabelOutputValueContextStrategy.for_output_value(
-            output_value,
-        ).contextualize(source_payload, output_value, plane_projection)
+        output_value = owned_runtime_value(output_value)
+        if not isinstance(output_value, (ImagePayload, RuntimeSliceAlignedValueSet)):
+            raise TypeError(
+                f"Object-label output {type(output_value).__name__} has no "
+                "registered nominal strategy; return an ObjectLabelValue or an "
+                "image payload."
+            )
+        return output_value.object_label_output(source_payload, plane_projection)
 
     @classmethod
     def contextualize_output_from_projector(
@@ -1164,9 +1120,7 @@ class ObjectLabelsArtifactType(ArtifactType):
         from openhcs.core.runtime_object_labels import ObjectLabelValue
         from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 
-        slices = tuple(
-            value.value_for_slice(index) for index in range(value.slice_count)
-        )
+        slices = value.values
         if not slices or not all(isinstance(item, ObjectLabelValue) for item in slices):
             return None
         aggregated = ObjectLabelPure2DSliceAggregator.aggregate(
@@ -1290,12 +1244,13 @@ class MeasurementsArtifactType(MeasurementBearingArtifactType):
     ) -> object:
         from openhcs.core.runtime_measurements import MeasurementTable
         from openhcs.core.runtime_tabular_values import ColumnarRows
-        from openhcs.core.runtime_image_values import image_payload_metadata
 
         del plane_projection
         subject = cls._declared_subject(output_plan)
         assert output_plan is not None
-        source_provenance = image_payload_metadata(source_payload).source_provenance
+        from openhcs.core.runtime_image_values import image_metadata_of
+
+        source_provenance = image_metadata_of(source_payload).source_provenance
         if isinstance(output_value, MeasurementTable):
             cls._validate_nominal_table(output_value, output_plan, subject)
             contextualized_provenance = (
@@ -1552,10 +1507,8 @@ class SpatialGridArtifactType(MeasurementBearingArtifactType):
 
         if isinstance(value.data, RuntimeSliceAlignedValueSet):
             return tuple(
-                cast(SpatialGrid, value.data.value_for_slice(index)).measurement_table(
-                    dialect, (index,)
-                )
-                for index in range(value.data.slice_count)
+                cast(SpatialGrid, grid).measurement_table(dialect, (index,))
+                for index, grid in enumerate(value.data.values)
             )
         return (cast(SpatialGrid, value.data).measurement_table(dialect),)
 
@@ -1567,7 +1520,6 @@ class SpatialGridArtifactType(MeasurementBearingArtifactType):
         output_plan: "ArtifactOutputPlan | None",
         plane_projection: "RuntimePlaneAxisValueProjection | None",
     ) -> object:
-        from openhcs.core.runtime_image_values import image_payload_metadata
         from openhcs.core.runtime_slice_alignment import (
             RuntimeSliceAlignedValueSet,
             RuntimeSliceAlignedValues,
@@ -1586,17 +1538,17 @@ class SpatialGridArtifactType(MeasurementBearingArtifactType):
                 tuple(
                     cls.contextualize_output(
                         source_payload,
-                        output_value.value_for_slice(index),
+                        grid,
                         output_plan,
                         None,
                     ).replace_fields(slice_index=index)
-                    for index in range(output_value.slice_count)
+                    for index, grid in enumerate(output_value.values)
                 )
             )
         grid = cast(SpatialGrid, output_value)
         return grid.replace_fields(
             source_provenance=grid.source_provenance.with_missing_from(
-                image_payload_metadata(source_payload).source_provenance
+                source_payload.metadata.source_provenance
             )
         )
 
@@ -1633,14 +1585,8 @@ class SpatialGridArtifactType(MeasurementBearingArtifactType):
         from openhcs.core.runtime_spatial_grid import SpatialGrid
 
         if isinstance(value, RuntimeSliceAlignedValueSet):
-            return RuntimeSliceAlignedValues(
-                tuple(
-                    SpatialGrid.from_runtime_value(
-                        name,
-                        value.value_for_slice(slice_index),
-                    )
-                    for slice_index in range(value.slice_count)
-                )
+            return value.map_slices(
+                lambda item: SpatialGrid.from_runtime_value(name, item)
             )
         if isinstance(value, (list, tuple)):
             return RuntimeSliceAlignedValues(
@@ -1684,13 +1630,11 @@ class SpatialGridArtifactType(MeasurementBearingArtifactType):
                     "Grouped spatial-grid composition requires identical runtime "
                     f"slice counts, got {tuple(sorted(slice_counts))!r}."
                 )
-            slice_count = aligned_grids[0].slice_count
             composed_slices = []
-            for slice_index in range(slice_count):
-                candidates = tuple(
-                    cast(SpatialGrid, grid.value_for_slice(slice_index))
-                    for grid in aligned_grids
-                )
+            for slice_index, slice_grids in enumerate(
+                zip(*(grid.values for grid in aligned_grids), strict=True)
+            ):
+                candidates = tuple(cast(SpatialGrid, grid) for grid in slice_grids)
                 if any(
                     candidate.as_mapping() != candidates[0].as_mapping()
                     for candidate in candidates[1:]
@@ -1714,17 +1658,11 @@ class SpatialGridArtifactType(MeasurementBearingArtifactType):
     @classmethod
     def materialization_payload(cls, value: "RuntimeValue") -> object:
         from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
+        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
         from openhcs.core.runtime_spatial_grid import SpatialGrid
         from python_introspect import to_jsonable
 
-        grids = (
-            tuple(
-                value.data.value_for_slice(index)
-                for index in range(value.data.slice_count)
-            )
-            if isinstance(value.data, RuntimeSliceAlignedValueSet)
-            else (value.data,)
-        )
+        grids = RuntimeSliceProjection.alignment_slices(value.data)
         mappings = tuple(
             {
                 **cast(SpatialGrid, grid).as_mapping(),
@@ -1757,7 +1695,6 @@ class SpatialGraphArtifactType(ArtifactType):
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> object:
         from openhcs.core.runtime_spatial_graph import SpatialGraph
-        from openhcs.core.runtime_image_values import image_payload_metadata
 
         del plane_projection
         if not isinstance(output_value, SpatialGraph):
@@ -1767,7 +1704,7 @@ class SpatialGraphArtifactType(ArtifactType):
             )
         if output_plan is not None:
             output_value.validate_artifact_name(output_plan.name)
-        return output_value.contextualized_source_metadata(image_payload_metadata(source_payload))
+        return output_value.contextualized_source_metadata(source_payload.metadata)
 
     @classmethod
     def contextualize_output_from_projector(
@@ -3648,19 +3585,12 @@ class ArtifactOutputPlan(ArtifactPlan):
 
         from openhcs.core.runtime_artifact_values import RuntimeValue
         from openhcs.core.runtime_slice_alignment import (
-            RuntimeSliceAlignedValues,
             RuntimeSliceAlignedValueSet,
         )
 
         if isinstance(value, RuntimeSliceAlignedValueSet):
-            value = RuntimeSliceAlignedValues(
-                tuple(
-                    item.data if isinstance(item, RuntimeValue) else item
-                    for item in (
-                        value.value_for_slice(index)
-                        for index in range(value.slice_count)
-                    )
-                )
+            value = value.map_slices(
+                lambda item: item.data if isinstance(item, RuntimeValue) else item
             )
         normalized = self.artifact_type.normalize_runtime_payload(self.name, value)
         if isinstance(normalized, RuntimeSliceAlignedValueSet):
@@ -3672,14 +3602,8 @@ class ArtifactOutputPlan(ArtifactPlan):
             normalized = (
                 owned
                 if owned is not None
-                else RuntimeSliceAlignedValues(
-                    tuple(
-                        item.data if isinstance(item, RuntimeValue) else item
-                        for item in (
-                            normalized.value_for_slice(index)
-                            for index in range(normalized.slice_count)
-                        )
-                    )
+                else normalized.map_slices(
+                    lambda item: item.data if isinstance(item, RuntimeValue) else item
                 )
             )
         if self.group_component is not None and not self.variable_components:
@@ -3701,9 +3625,8 @@ class ArtifactOutputPlan(ArtifactPlan):
     ) -> "ImagePayloadMetadata":
         """Derive filename metadata from the declared naming source."""
 
-        from openhcs.core.runtime_image_values import image_payload_metadata
 
-        payload_metadata = image_payload_metadata(value.materialization_payload())
+        payload_metadata = self.artifact_type.materialization_image_metadata(value)
         materialization_source = self.materialization_source()
         if (
             materialization_source is not None

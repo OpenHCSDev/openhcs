@@ -10,7 +10,7 @@ from openhcs.core.projected_image_output import (
     SourceProjectedImageOutput,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_metadata
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -28,7 +28,7 @@ class AggregateField(SourceProjectedImageOutput):
     def resolve_source_context(self, source, projection):
         assert projection is not None and projection.plane_index is None
         assert projection.axis_size == source.shape[0]
-        return image_payload_metadata(source).collapse_leading_plane_axis().payload_with(
+        return source.metadata.collapse_leading_plane_axis().payload_with(
             self.data, None
         )
 
@@ -64,11 +64,11 @@ def test_aggregate_context_retains_all_contributors_without_a_pixel_axis():
             axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=3
         ),
     )
-    metadata = image_payload_metadata(result)
+    metadata = result.metadata
     assert result.shape == (3, 4)
     assert metadata.plane_axis is None
     assert metadata.source_image_provenance_planes.contributor_count == 3
-    assert metadata.source_image_paths == image_payload_metadata(source).source_image_paths
+    assert metadata.source_image_paths == source.metadata.source_image_paths
     np.testing.assert_array_equal(np.asarray(result), np.asarray(field))
 
 
@@ -104,8 +104,8 @@ def test_independent_selection_member_composes_the_shared_projection(indices):
             axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=3
         ),
     )
-    metadata = image_payload_metadata(result)
-    paths = image_payload_metadata(source).source_image_paths
+    metadata = result.metadata
+    paths = source.metadata.source_image_paths
     assert metadata.source_image_paths == tuple(paths[i] for i in indices)
     assert output.calls == ["before", "after"]
     if len(indices) == 1:

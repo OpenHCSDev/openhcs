@@ -11,19 +11,21 @@ from openhcs.core.aligned_image_payload import (
 )
 from openhcs.core.image_file_serialization import ImageFileFormat, ImageFileSourceMetadata
 from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata, ImagePayloadMetadataCompositionMode,
-    ImageUnitIntervalIntensityMetadata, image_payload_data, image_payload_mask,
-    image_payload_metadata, normalize_image_payload_intensity,
+    ImagePayloadMetadata,
+    ImagePayloadMetadataCompositionMode,
+    ImageUnitIntervalIntensityMetadata,
 )
 from openhcs.core.source_bindings import NamedSourceBinding
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 
 def source(data, *, scale=255, channel_axis=None):
     return ImagePayloadMetadata(
         source_path='/declared/source.tif', source_dtype=str(data.dtype),
-        intensity_scale=scale, source_channel_axis=channel_axis,
+        intensity_scale=scale, axes=PayloadAxes.colour_samples(channel_axis),
         source_spatial_domain=SourceSpatialDomain((3, 5), (2, 3), 0, 'Source'),
         source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
     ).payload_with(data, np.array([[True, False, True], [True, True, False]]))
@@ -47,18 +49,18 @@ def test_original_source_binding_composition_and_selected_cp_units(reverse, colo
         inputs.reverse()
     stacked = stack_image_payloads(inputs, metadata_mode=mode)
     for index, original in enumerate(inputs):
-        selected = image_payload_metadata(stacked).for_leading_source_plane(index).payload_with(
-            image_payload_data(stacked)[index], image_payload_mask(stacked)[index],
+        selected = stacked.metadata.for_leading_source_plane(index).payload_with(
+            stacked.data[index], stacked.mask[index],
         )
         expected = normalize_cellprofiler_image_payload(original)
         actual = normalize_cellprofiler_image_payload(selected)
-        np.testing.assert_allclose(image_payload_data(actual), image_payload_data(expected))
-        np.testing.assert_array_equal(image_payload_mask(actual), image_payload_mask(original))
-        assert image_payload_metadata(actual).source_image_names == ('Source',)
-        assert image_payload_metadata(actual).intensity_scale == 255
-        assert image_payload_metadata(actual).source_voxel_spacing == image_payload_metadata(original).source_voxel_spacing
-        actual_domain = image_payload_metadata(actual).source_spatial_domain
-        original_domain = image_payload_metadata(original).source_spatial_domain
+        np.testing.assert_allclose(actual.data, expected.data)
+        np.testing.assert_array_equal(actual.mask, original.mask)
+        assert actual.metadata.source_image_names == ('Source',)
+        assert actual.metadata.intensity_scale == 255
+        assert actual.metadata.source_voxel_spacing == original.metadata.source_voxel_spacing
+        actual_domain = actual.metadata.source_spatial_domain
+        original_domain = original.metadata.source_spatial_domain
         assert actual_domain.origin_yx == original_domain.origin_yx
         assert actual_domain.source_shape_yx == original_domain.source_shape_yx
         assert actual_domain.fill_value == original_domain.fill_value
@@ -71,52 +73,50 @@ def test_raw_heterogeneous_declared_scales_survive_integer_float_promotion(rever
     if reverse:
         inputs.reverse()
     stack = stack_image_payloads(inputs, metadata_mode=ImagePayloadMetadataCompositionMode.STACK)
-    assert image_payload_metadata(stack).unit_interval_intensity is None
-    np.testing.assert_allclose(normalize_image_payload_intensity(stack), 0.5)
+    assert stack.metadata.unit_interval_intensity is None
+    np.testing.assert_allclose(stack.normalize_intensity_payload(), 0.5)
     for index, original in enumerate(inputs):
-        projected = image_payload_metadata(stack).for_leading_source_plane(index).payload_with(
-            image_payload_data(stack)[index])
-        np.testing.assert_array_equal(normalize_image_payload_intensity(projected),
-                                      normalize_image_payload_intensity(original))
+        projected = stack.metadata.for_leading_source_plane(index).payload_with(
+            stack.data[index])
+        np.testing.assert_array_equal(projected.normalize_intensity_payload(),
+                                      original.normalize_intensity_payload())
 
 
 def test_normalized_and_remapped_float_pixels_do_not_reenter_source_codes():
-    normalized = normalize_image_payload_intensity(source(np.full((2, 3), 128, dtype=np.uint8)))
-    remapped = image_payload_metadata(normalized).without_unit_interval_intensity_scale().payload_with(
-        image_payload_data(normalized) * 4 - 1, image_payload_mask(normalized),
+    normalized = (source(np.full((2, 3), 128, dtype=np.uint8))).normalize_intensity_payload()
+    remapped = normalized.metadata.without_unit_interval_intensity_scale().payload_with(
+        normalized.data * 4 - 1, normalized.mask,
     )
     for payload in (normalized, remapped):
-        np.testing.assert_array_equal(normalize_image_payload_intensity(payload), payload)
-        assert image_payload_metadata(normalize_image_payload_intensity(payload)) == image_payload_metadata(payload)
+        np.testing.assert_array_equal(payload.normalize_intensity_payload(), payload)
+        assert payload.normalize_intensity_payload().metadata == payload.metadata
 
 
 def test_unscaled_analytical_float_uses_no_observed_range_or_guessed_factor():
     pixels = np.array([[-3.5, 800.0], [0.25, 2.0]], dtype=np.float32)
-    np.testing.assert_array_equal(normalize_image_payload_intensity(pixels), pixels)
+    np.testing.assert_array_equal(PlainImagePayload(pixels).normalize_intensity_payload(), pixels)
 
 
 @pytest.mark.parametrize('scale', (0, -1, float('nan'), float('inf')))
 def test_invalid_declared_scale_is_rejected(scale):
     with pytest.raises(ValueError, match='finite and positive'):
-        normalize_image_payload_intensity(source(np.ones((2, 3), dtype=np.float32), scale=scale))
+        (source(np.ones((2, 3), dtype=np.float32), scale=scale)).normalize_intensity_payload()
 
 
 def test_native_pixel_conversion_resets_current_domain_and_float_roundtrip_preserves_it(tmp_path):
-    normalized = normalize_image_payload_intensity(source(np.full((2, 3), 128, dtype=np.uint8)))
-    metadata = image_payload_metadata(normalized)
+    normalized = (source(np.full((2, 3), 128, dtype=np.uint8))).normalize_intensity_payload()
+    metadata = normalized.metadata
     native = ImageFileSourceMetadata(np.dtype('uint8'), 255).project_image_metadata(
         metadata, values_preserved=False,
     )
     assert native.unit_interval_intensity is None
-    np.testing.assert_allclose(normalize_image_payload_intensity(
-        native.payload_with(np.full((2, 3), 128, dtype=np.uint8))), normalized)
+    np.testing.assert_allclose((native.payload_with(np.full((2, 3), 128, dtype=np.uint8))).normalize_intensity_payload(), normalized)
     path = tmp_path / 'analytical.npy'
     image_format = ImageFileFormat.require_path(path)
     image_format.write(path, normalized)
     restored = image_format.persisted_metadata(path, normalized)
     assert restored.unit_interval_intensity == metadata.unit_interval_intensity
-    np.testing.assert_array_equal(normalize_image_payload_intensity(
-        restored.payload_with(image_format.read(path))), normalized)
+    np.testing.assert_array_equal((restored.payload_with(image_format.read(path))).normalize_intensity_payload(), normalized)
     assert restored.source_spatial_domain == metadata.source_spatial_domain
     assert restored.source_voxel_spacing == metadata.source_voxel_spacing
 
@@ -154,44 +154,44 @@ def test_independent_normalization_and_composition_capabilities_use_cooperative_
     processed = ImagePayloadMetadata(unit_interval_intensity=ImageUnitIntervalIntensityMetadata()).payload_with(
         np.full((2, 3), 0.5, dtype=np.float32))
     result = DeclaredComposition((raw, processed), ImagePayloadMetadataCompositionMode.STACK).compose()
-    np.testing.assert_array_equal(image_payload_data(result), 0.5)
+    np.testing.assert_array_equal(result.data, 0.5)
     assert calls == ['normalization', 'pixels', 'mask']
     assert DeclaredMetadata.__mro__[:3] == (DeclaredMetadata, NormalizationAudit, ImagePayloadMetadata)
 
 
 def test_bundle_leaf_cooperates_with_shared_intensity_and_pixel_owners():
     raw = source(np.full((2, 3), 128, dtype=np.uint8))
-    normalized = normalize_image_payload_intensity(raw)
+    normalized = raw.normalize_intensity_payload()
     result = ImagePayloadBundleContext.from_payloads((raw, normalized)).compose()
-    np.testing.assert_array_equal(image_payload_data(result)[0], image_payload_data(normalized))
-    np.testing.assert_array_equal(image_payload_mask(result), image_payload_mask(raw))
+    np.testing.assert_array_equal(result.data[0], normalized.data)
+    np.testing.assert_array_equal(result.mask, raw.mask)
 
 
 def test_saved_output_context_retains_the_independent_composed_buffer_domain():
     raw = source(np.full((2, 3), 128, dtype=np.uint8))
-    normalized = normalize_image_payload_intensity(raw)
+    normalized = raw.normalize_intensity_payload()
     inputs = (raw, normalized)
     copied = stack_image_payloads(inputs, metadata_mode=ImagePayloadMetadataCompositionMode.STACK)
     restored = ImagePayloadStackComposition.with_saved_output_context(
-        copied, inputs, tuple(image_payload_metadata(value) for value in inputs),
+        copied, inputs, tuple(value.metadata for value in inputs),
         single_output_plane_axis=None,
     )
-    assert image_payload_data(restored) is image_payload_data(copied)
+    assert restored.data is copied.data
     for index in (0, 1):
-        selected = image_payload_metadata(restored).for_leading_source_plane(index).payload_with(
-            image_payload_data(restored)[index])
-        np.testing.assert_array_equal(normalize_image_payload_intensity(selected), normalized)
-        assert image_payload_metadata(selected).has_normalized_intensity
+        selected = restored.metadata.for_leading_source_plane(index).payload_with(
+            restored.data[index])
+        np.testing.assert_array_equal(selected.normalize_intensity_payload(), normalized)
+        assert selected.metadata.has_normalized_intensity
 
 
 def test_common_quantization_requires_every_current_plane_not_only_known_members():
     raw = source(np.full((2, 3), 128, dtype=np.uint8))
-    normalized = normalize_image_payload_intensity(raw)
-    remapped = image_payload_metadata(normalized).without_unit_interval_intensity_scale().payload_with(
+    normalized = raw.normalize_intensity_payload()
+    remapped = normalized.metadata.without_unit_interval_intensity_scale().payload_with(
         np.full((2, 3), 0.123456, dtype=np.float32))
     mixed = stack_image_payloads((raw, remapped), metadata_mode=ImagePayloadMetadataCompositionMode.STACK)
-    assert image_payload_metadata(mixed).common_unit_interval_intensity_scale() is None
-    assert image_payload_metadata(mixed).for_leading_source_plane(0).unit_interval_intensity_scale == 255
+    assert mixed.metadata.common_unit_interval_intensity_scale() is None
+    assert mixed.metadata.for_leading_source_plane(0).unit_interval_intensity_scale == 255
 
 
 @pytest.mark.parametrize('normalized', (False, True))
@@ -201,17 +201,17 @@ def test_proof_invalidation_preserves_the_current_numerical_domain(normalized):
     )
 
     raw = source(np.full((2, 3), 128, dtype=np.uint8))
-    payload = normalize_image_payload_intensity(raw) if normalized else raw
+    payload = raw.normalize_intensity_payload() if normalized else raw
     # Use the original arithmetic output metadata owner, not a test-side marker.
     metadata = color_to_gray_combine_output_metadata(payload)
     transformed = metadata.payload_with(
-        image_payload_data(payload).astype(np.float32) * 0.5,
-        image_payload_mask(payload),
+        payload.data.astype(np.float32) * 0.5,
+        payload.mask,
     )
     assert metadata.has_normalized_intensity is normalized
     assert metadata.unit_interval_intensity_scale is None
-    expected = image_payload_data(payload) * (0.5 if normalized else 0.5 / 255)
-    np.testing.assert_allclose(normalize_image_payload_intensity(transformed), expected)
+    expected = payload.data * (0.5 if normalized else 0.5 / 255)
+    np.testing.assert_allclose(transformed.normalize_intensity_payload(), expected)
     assert metadata.intensity_scale == 255
 
 
@@ -221,12 +221,12 @@ def test_cellprofiler_registered_image_input_owner_enters_normalized_domain(norm
     from openhcs.interop.cellprofiler.runtime.output_recording import CellProfilerOutputRecorder
 
     raw = source(np.full((2, 3), 128, dtype=np.uint8))
-    payload = normalize_image_payload_intensity(raw) if normalized else raw
+    payload = raw.normalize_intensity_payload() if normalized else raw
     owner = CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
     result = owner.runtime_input_value(ArtifactSpec.input('Input', ImageArtifactType), payload)
-    np.testing.assert_allclose(image_payload_data(result), 128 / 255)
-    np.testing.assert_array_equal(image_payload_mask(result), image_payload_mask(raw))
-    metadata = image_payload_metadata(result)
+    np.testing.assert_allclose(result.data, 128 / 255)
+    np.testing.assert_array_equal(result.mask, raw.mask)
+    metadata = result.metadata
     assert metadata.has_normalized_intensity
     assert metadata.unit_interval_intensity_scale == 255
     assert metadata.source_image_names == ('Input',)

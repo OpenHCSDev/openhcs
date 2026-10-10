@@ -10,11 +10,12 @@ from openhcs.core.aligned_image_payload import (
     ImagePayloadBundleContext, ImagePayloadStackContext,
 )
 from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata, ImagePayloadMetadataCompositionMode,
-    ImageUnitIntervalIntensityMetadata, image_payload_data, image_payload_mask,
-    image_payload_metadata,
+    ImagePayloadMetadata,
+    ImagePayloadMetadataCompositionMode,
+    ImageUnitIntervalIntensityMetadata,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.payload_axes import PayloadAxes
 
 
 @pytest.fixture
@@ -129,13 +130,13 @@ def test_mixed_intensity_composition_uses_declared_memory_conversion(
     }
     result = context.compose(**kwargs)
     assert bool(state['downloads']) == (destination == 'numpy')
-    output = image_payload_data(result)
+    output = result.data
     requested = 'cupy' if destination == 'implicit' else destination
     owner = MemoryType(requested)
     np.testing.assert_array_equal(owner.to_numpy(output), 0.5)
     assert owner.device_id_of(output) == (1 if requested == 'cupy' else None)
-    assert image_payload_metadata(result).has_normalized_intensity
-    mask = image_payload_mask(result)
+    assert result.metadata.has_normalized_intensity
+    mask = result.mask
     mask_owner = MemoryType(aligned_image_payload.detect_memory_type(mask))
     masks = mask_owner.to_numpy(mask)
     expected = raw.mask.values
@@ -199,7 +200,7 @@ def test_mixed_channel_bundle_promotes_masks_in_the_output_domain(
         )
     )
     inputs = (
-        ImagePayloadMetadata(source_channel_axis=2).payload_with(
+        ImagePayloadMetadata(axes=PayloadAxes.colour_samples(2)).payload_with(
             DeviceArray(color), color_mask,
         ),
         ImagePayloadMetadata().payload_with(DeviceArray(gray), DeviceArray(spatial)),
@@ -210,7 +211,7 @@ def test_mixed_channel_bundle_promotes_masks_in_the_output_domain(
     if destination == 'cupy':
         assert not state['downloads']
     owner = MemoryType(destination)
-    data, mask = image_payload_data(result), image_payload_mask(result)
+    data, mask = result.data, result.mask
     assert owner.device_id_of(mask) == owner.device_id_of(data)
     np.testing.assert_array_equal(owner.to_numpy(data), np.stack((color, color)))
     expected = np.stack((np.ones_like(spatial) if mask_kind == 'absent' else spatial, spatial))
@@ -224,9 +225,7 @@ def test_independent_cohort_copy_retains_nested_named_bundle_domains():
         AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle,
         ImagePayloadStackComposition,
     )
-    from openhcs.core.runtime_image_values import (
-        ImagePayloadMetadata, image_payload_data, image_payload_mask,
-    )
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
 
     pixels = np.arange(12, dtype=np.float32).reshape(3, 4)
     mask = np.ones((3, 4), dtype=bool)
@@ -234,16 +233,14 @@ def test_independent_cohort_copy_retains_nested_named_bundle_domains():
     context = AlignedImageSliceContext.main_flow("Canonical")
     named = ImageOutputBundle((payload,), (context,))
     nested = AlignedImageStack((named,))
-    copied = ImagePayloadStackComposition.copy_whole_image(
-        nested, memory_type="numpy", device_id=None,
-    )
+    copied = (nested).copied(memory_type="numpy", device_id=None,)
     assert type(copied) is AlignedImageStack
     assert type(copied.slices[0]) is ImageOutputBundle
     assert copied.slices[0].slice_contexts == (context,)
     member = copied.slices[0].slices[0]
-    assert not np.shares_memory(image_payload_data(member), pixels)
-    assert not np.shares_memory(image_payload_mask(member), mask)
-    image_payload_data(member)[:] = -1
-    image_payload_mask(member)[:] = False
+    assert not np.shares_memory(member.data, pixels)
+    assert not np.shares_memory(member.mask, mask)
+    member.data[:] = -1
+    member.mask[:] = False
     np.testing.assert_array_equal(pixels, np.arange(12).reshape(3, 4))
     assert mask.all()

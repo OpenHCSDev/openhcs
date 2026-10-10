@@ -37,10 +37,10 @@ def fixture_registration_sources():
     dependencies = (
         (fixture.select_volume_fixture_planes_v2,
          'ArrayPayload, numpy, ProcessingContract, artifact_outputs, SELECTED_VOLUME, '
-         'SelectedPlaneImageOutput, np, image_payload_data'),
+         'SelectedPlaneImageOutput, np'),
         (fixture.inspect_volume_fixture_v2,
          'ArrayPayload, numpy, ProcessingContract, artifact_outputs, VOLUME_IMAGE, '
-         'VOLUME_LABELS, VOLUME_ROWS, np, image_payload_data, image_payload_metadata, '
+         'VOLUME_LABELS, VOLUME_ROWS, np, '
          'DataclassMeasurementColumnarRows, VolumeProjectionFixtureRow'),
     )
     return tuple(

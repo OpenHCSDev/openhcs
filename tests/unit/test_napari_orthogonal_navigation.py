@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 from napari.components import ViewerModel
 from qtpy.QtCore import Qt
-from zmqruntime.viewer_protocol import ViewerComponentMode
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowNavigationRequest
@@ -17,19 +16,21 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariLayerRouteStateStore,
 )
 from openhcs.runtime.napari_viewer_server import (
-    NapariNavigationControlMessageAction,
+    NapariNavigationControlAction,
     NapariResultSelectionController,
     NapariViewerStateProjection,
 )
 from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerLayerAxisProjection,
 )
 from openhcs.runtime.viewer_controls import (
     ViewerNavigationControlOptions,
-    ViewerResultElementCoordinateAuthority,
+    ViewerResultElementCoordinates,
 )
+from openhcs.runtime.viewer_display import NapariSlots
+from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
 class NativeHarness(SimpleNamespace):
@@ -38,7 +39,7 @@ class NativeHarness(SimpleNamespace):
 
 def mount(server, route, layer, components, offsets=None, payload_axes=()):
     offsets = offsets or (0,) * len(components)
-    semantics = ViewerComponentAxisSemanticsAuthority.empty()
+    semantics = ViewerComponentAxisSemanticsFactory.empty()
     values = {
         axis: list(range(layer.data.shape[index]))
         for index, axis in enumerate(components)
@@ -46,8 +47,9 @@ def mount(server, route, layer, components, offsets=None, payload_axes=()):
     presentation = NapariAxisPresentation(
         entries=semantics.entries,
         layout=ViewerComponentLayout.from_parts(
-            component_modes={axis: ViewerComponentMode.STACK for axis in components},
+            component_modes={axis: NapariSlots.Stack.wire_value for axis in components},
             component_order=components,
+            declared_axes=STREAM_AXES,
         ),
         route_key=route,
         projection=ViewerLayerAxisProjection(
@@ -115,7 +117,7 @@ def test_native_planes_preserve_extra_axes_world_identity_and_alignment(leading,
     viewer.dims.axis_labels = axes
     viewer.dims.point = image.data_to_world(anchor)
     previous_point = tuple(viewer.dims.point)
-    response = NapariNavigationControlMessageAction().handle(
+    response = NapariNavigationControlAction().handle(
         server,
         {"payload": ViewerNavigationControlOptions(route_key="raw", display_axes=pair)},
     )
@@ -157,7 +159,7 @@ def test_nonspatial_or_missing_axes_reject_before_any_mutation(pair):
         tuple(viewer.dims.current_step),
         viewer.layers.selection.active,
     )
-    reply = NapariNavigationControlMessageAction().handle(
+    reply = NapariNavigationControlAction().handle(
         server,
         {
             "payload": ViewerNavigationControlOptions(
@@ -187,7 +189,7 @@ def test_visible_planar_shapes_reject_cross_section_but_hidden_shapes_allow_raw(
     server = harness(viewer)
     mount(server, "raw", image, ("z_index",))
     before = tuple(viewer.dims.order)
-    action = NapariNavigationControlMessageAction()
+    action = NapariNavigationControlAction()
     request = ViewerNavigationControlOptions(
         route_key="raw", display_axes=("z_index", "x")
     )
@@ -208,7 +210,7 @@ def test_visible_planar_shapes_reject_cross_section_but_hidden_shapes_allow_raw(
 )
 def test_hidden_indices_use_actual_displayed_dimensions(displayed, expected):
     assert (
-        ViewerResultElementCoordinateAuthority.axis_indices(
+        ViewerResultElementCoordinates.axis_indices(
             coordinates=(1, 2, 4, 7),
             axis_labels=("channel", "z_index", "y", "x"),
             displayed_axis_indices=displayed,
@@ -219,14 +221,14 @@ def test_hidden_indices_use_actual_displayed_dimensions(displayed, expected):
 
 
 def test_displayed_z_may_be_fractional_and_span_slices_but_hidden_y_must_not():
-    assert ViewerResultElementCoordinateAuthority.axis_indices(
+    assert ViewerResultElementCoordinates.axis_indices(
         coordinates=((1, 2.25, 4, 7), (1, 3.5, 4, 8)),
         axis_labels=("channel", "z_index", "y", "x"),
         displayed_axis_indices=(1, 3),
         spatial_axis_labels=("z_index", "y", "x"),
     ) == {"channel": 1, "y": 4}
     with pytest.raises(ValueError, match="spans multiple 'y'"):
-        ViewerResultElementCoordinateAuthority.axis_indices(
+        ViewerResultElementCoordinates.axis_indices(
             coordinates=((1, 2.25, 4, 7), (1, 3.5, 5, 8)),
             axis_labels=("channel", "z_index", "y", "x"),
             displayed_axis_indices=(1, 3),
@@ -262,7 +264,7 @@ def test_shared_route_offsets_survive_orientation_and_local_navigation():
     server = harness(viewer)
     mount(server, "raw", image, ("channel", "z_index"), (4, 16))
     mount(server, "other", other, ("channel", "z_index"))
-    action = NapariNavigationControlMessageAction()
+    action = NapariNavigationControlAction()
     reply = action.handle(
         server,
         {
@@ -301,7 +303,7 @@ def test_lower_rank_presentation_maps_to_right_aligned_viewer_dimensions():
     assert presentation.viewer_dimension_indices(4) == (1, 2, 3)
     order = presentation.display_order(("z_index", "x"), tuple(viewer.dims.order))
     assert order[-2:] == (1, 3)
-    step = NapariNavigationControlMessageAction().axis_step(
+    step = NapariNavigationControlAction().axis_step(
         server,
         image,
         ViewerNavigationControlOptions(route_key="raw", axis_indices={"z_index": 2}),
@@ -324,14 +326,14 @@ def test_plugin_choices_and_button_use_same_native_navigation_owner(qtbot, monke
     )
     assert pairs == (("z_index", "y"), ("z_index", "x"), ("y", "x"))
     assert all(set(pair).issubset(presentation.spatial_axis_labels) for pair in pairs)
-    original = NapariNavigationControlMessageAction.handle
+    original = NapariNavigationControlAction.handle
     submitted = []
 
     def record(action, owner, message):
         submitted.append(message["payload"])
         return original(action, owner, message)
 
-    monkeypatch.setattr(NapariNavigationControlMessageAction, "handle", record)
+    monkeypatch.setattr(NapariNavigationControlAction, "handle", record)
     widget.planes.setCurrentIndex(pairs.index(("z_index", "x")))
     qtbot.mouseClick(widget.apply_button, Qt.LeftButton)
     assert submitted == [

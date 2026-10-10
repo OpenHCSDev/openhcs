@@ -41,12 +41,12 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariStreamLayerItem,
 )
 from openhcs.runtime.napari_viewer_server import (
-    NapariControlMessageAction,
+    NapariControlAction,
     NapariStreamLayerContext,
     PayloadMap,
 )
 from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentAxisSemanticsFactory,
     ViewerComponentNameMetadata,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
@@ -57,13 +57,16 @@ from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponseField,
 )
+from openhcs.runtime.viewer_display import NapariSlots
+from tests.unit.viewer_axes_fixture import STREAM_AXES
+from openhcs.core.axes import ColourAxis
 
 
 def presentation():
-    semantics = ViewerComponentAxisSemanticsAuthority.empty()
+    semantics = ViewerComponentAxisSemanticsFactory.empty()
     return NapariAxisPresentation(
         entries=semantics.entries,
-        layout=ViewerComponentLayout.from_parts(component_modes={}, component_order=()),
+        layout=ViewerComponentLayout.from_parts(component_modes={}, component_order=(), declared_axes=STREAM_AXES),
         route_key="paired",
         projection=ViewerLayerAxisProjection(
             projected_axis_components=(),
@@ -119,7 +122,7 @@ def test_selected_metadata_wire_derives_declarations_and_preserves_batch_compati
             },
             "test",
         ),
-        ViewerComponentAxisSemanticsAuthority.empty(),
+        ViewerComponentAxisSemanticsFactory.empty(),
         NapariDisplayConfig(),
     )
     assert context.image_metadata.source_voxel_spacing == metadata.source_voxel_spacing
@@ -135,7 +138,7 @@ def test_selected_metadata_wire_derives_declarations_and_preserves_batch_compati
             },
             "test",
         ),
-        ViewerComponentAxisSemanticsAuthority.empty(),
+        ViewerComponentAxisSemanticsFactory.empty(),
         NapariDisplayConfig(),
     )
     assert not context.image_metadata.source_voxel_spacing.has_values
@@ -165,7 +168,7 @@ def test_malformed_new_metadata_never_falls_back_to_legacy(value):
                 },
                 "test",
             ),
-            ViewerComponentAxisSemanticsAuthority.empty(),
+            ViewerComponentAxisSemanticsFactory.empty(),
             NapariDisplayConfig(),
         )
 
@@ -303,13 +306,13 @@ def test_native_display_handlers_apply_shared_calibration_after_wire_roundtrip()
 
 
 def test_two_dimensional_calibration_does_not_calibrate_component_z_axis():
-    from zmqruntime.viewer_protocol import ViewerComponentMode
-
+    
     axis = replace(
         presentation(),
         layout=ViewerComponentLayout.from_parts(
-            component_modes={"z_index": ViewerComponentMode.STACK},
+            component_modes={"z_index": NapariSlots.Stack.wire_value},
             component_order=("z_index",),
+            declared_axes=STREAM_AXES,
         ),
     )
     kwargs = axis.spatial_layer_kwargs(
@@ -354,7 +357,7 @@ def test_native_camera_registered_action_readback_preserves_other_state():
         ViewerNativeViewportPresentation.from_wire_mapping(desired.to_wire_mapping())
         == desired
     )
-    action = NapariControlMessageAction.for_message_type(
+    action = NapariControlAction.for_message_type(
         ViewerControlMessageType.VIEWPORT.value
     )
     assert action.transport_thread_response(SimpleNamespace(viewer=viewer), {}) is None
@@ -660,7 +663,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     )
     np.testing.assert_array_equal(artifact.data, label_pixels)
     assert artifact.metadata.source_dtype == "int64"
-    assert artifact.metadata.source_channel_axis is None
+    assert artifact.metadata.axis_position(ColourAxis) is None
     assert artifact.metadata.plane_axis is None
     assert artifact.metadata.source_spatial_domain.source_shape_yx == (8, 9)
     assert (

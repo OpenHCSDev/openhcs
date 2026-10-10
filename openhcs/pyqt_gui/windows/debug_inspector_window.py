@@ -227,7 +227,7 @@ class DebugInspectorWindow(QDialog):
             )
             row.addWidget(export_button)
             for viewer_type in actions_model.viewer_types:
-                button = QPushButton(viewer_type.display_name)
+                button = QPushButton(viewer_type.family.display_name)
                 button.clicked.connect(
                     lambda _=False, ref=artifact_ref, target=viewer_type: (
                         self.request_open_artifact(ref, target)

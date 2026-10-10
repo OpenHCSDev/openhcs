@@ -19,7 +19,7 @@ from python_introspect import to_jsonable
 
 @dataclass(frozen=True, kw_only=True)
 class ViewerWindowSnapshotFailureReply(ControlErrorResponse):
-    """Native observation evidence on the existing canonical control error."""
+    """Native observation evidence on the existing control error."""
 
     observation: WindowVisualObservation
 
@@ -54,7 +54,7 @@ class ViewerWindowSnapshotService(QtWindowSnapshotService):
             "type": "screenshot_ack",
             "status": "success",
             "viewer": {
-                "type": descriptor.viewer_type.wire_value,
+                "type": descriptor.viewer_type.value,
                 "title": descriptor.title,
             },
             "resource": to_jsonable(

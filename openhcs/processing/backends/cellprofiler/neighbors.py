@@ -37,10 +37,6 @@ from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
 )
-from openhcs.core.runtime_image_values import (
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
@@ -101,6 +97,8 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
+from openhcs.core.payload_axes import ColourSampleAxisSpec
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -315,28 +313,23 @@ class NeighborRetainedImageRequest:
         percent_touching_image: np.ndarray,
     ) -> tuple[RuntimeArrayData, ...]:
         retained: list[RuntimeArrayData] = []
-        output_metadata = image_payload_metadata(image).replace_fields(
-            source_channel_axis=-1
-        )
+        # The neighbor callable receives bare pixels; its retained images
+        # declare only their RGB colour samples.
+        bare_image = PlainImagePayload(image)
+        output_metadata = bare_image.metadata.with_axis(ColourSampleAxisSpec(), -1)
         if self.retain_neighbor_count_image:
             retained.append(
-                with_image_payload_data(
-                    image,
-                    self.colored_metric_image(
+                bare_image.with_pixels(self.colored_metric_image(
                         neighbor_count_image, self.neighbor_count_colormap
                     ),
-                    metadata=output_metadata,
-                )
+                    metadata=output_metadata,)
             )
         if self.retain_percent_touching_image:
             retained.append(
-                with_image_payload_data(
-                    image,
-                    self.colored_metric_image(
+                bare_image.with_pixels(self.colored_metric_image(
                         percent_touching_image, self.percent_touching_colormap
                     ),
-                    metadata=output_metadata,
-                )
+                    metadata=output_metadata,)
             )
         return tuple(retained)
 

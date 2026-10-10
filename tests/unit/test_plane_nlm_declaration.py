@@ -20,11 +20,7 @@ from openhcs.core.function_reference import (
     RegistryFunctionReference,
 )
 from openhcs.core.memory import numpy as numpy_contract
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
@@ -82,7 +78,7 @@ def test_real_nlm_kernel_receives_only_planes_and_restores_context(
     monkeypatch, plane_count, fast_mode,
 ):
     source = _source(plane_count)
-    before = image_payload_data(source).copy()
+    before = source.data.copy()
     original = restoration.denoise_nl_means
     kwargs = dict(NLM_KWARGS, fast_mode=fast_mode)
     expected = np.stack([original(plane, channel_axis=None, **kwargs) for plane in before])
@@ -95,12 +91,12 @@ def test_real_nlm_kernel_receives_only_planes_and_restores_context(
     monkeypatch.setattr(restoration, "denoise_nl_means", observed_kernel)
     result = _registered().func(source, **kwargs)
     assert seen == [((16, 20), np.dtype("float32"), 1280, dict(kwargs, channel_axis=None))] * plane_count
-    np.testing.assert_array_equal(image_payload_data(result), expected)
-    np.testing.assert_array_equal(image_payload_data(source), before)
-    assert image_payload_data(result).dtype == expected.dtype == np.dtype("float32")
-    assert image_payload_data(result).shape == (plane_count, 16, 20)
-    current = image_payload_metadata(result)
-    prior = image_payload_metadata(source)
+    np.testing.assert_array_equal(result.data, expected)
+    np.testing.assert_array_equal(source.data, before)
+    assert result.data.dtype == expected.dtype == np.dtype("float32")
+    assert result.data.shape == (plane_count, 16, 20)
+    current = result.metadata
+    prior = source.metadata
     assert current.plane_axis is prior.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert current.source_voxel_spacing == prior.source_voxel_spacing
     assert current.source_spatial_domain == prior.source_spatial_domain
@@ -116,7 +112,7 @@ def test_bare_volume_or_color_array_is_not_guessed_or_squeezed(shape):
 
 def test_original_volumetric_nlm_still_receives_the_whole_volume(monkeypatch):
     source = _source(3)
-    before = image_payload_data(source).copy()
+    before = source.data.copy()
     original = restoration.denoise_nl_means
     expected = original(before, channel_axis=None, **NLM_KWARGS)
     module = import_module("skimage.restoration.non_local_means")
@@ -134,8 +130,8 @@ def test_original_volumetric_nlm_still_receives_the_whole_volume(monkeypatch):
     result = volume(source, channel_axis=None, **NLM_KWARGS)
     # scikit-image appends its channel singleton; all three spatial axes remain.
     assert seen == [(3, 16, 20, 1)]
-    np.testing.assert_array_equal(image_payload_data(result), expected)
-    np.testing.assert_array_equal(image_payload_data(source), before)
+    np.testing.assert_array_equal(result.data, expected)
+    np.testing.assert_array_equal(source.data, before)
 
 
 def test_declared_catalog_identity_and_public_kwargs_are_original_projections():
@@ -159,7 +155,7 @@ def test_nominal_transport_resolves_original_declaration_without_global_catalog(
     resolved = reference.resolve()
     assert CallableContract.from_callable(resolved).processing_contract is ProcessingContract.PURE_2D
     result = resolved(_source(1), **NLM_KWARGS)
-    assert image_payload_data(result).shape == (1, 16, 20)
+    assert result.data.shape == (1, 16, 20)
 
 
 def test_new_independent_declaration_executes_same_consumer_without_edits():
@@ -173,9 +169,9 @@ def test_new_independent_declaration_executes_same_consumer_without_edits():
     source = _source(3)
     result = _registered(independent_plane_offset).func(source, offset=0.5)
     assert seen == [(16, 20)] * 3
-    np.testing.assert_array_equal(image_payload_data(result), image_payload_data(source) + 0.5)
-    assert image_payload_metadata(result).source_image_provenance_planes.identity == (
-        image_payload_metadata(source).source_image_provenance_planes.identity
+    np.testing.assert_array_equal(result.data, source.data + 0.5)
+    assert result.metadata.source_image_provenance_planes.identity == (
+        source.metadata.source_image_provenance_planes.identity
     )
 
 
@@ -191,8 +187,8 @@ def test_flexible_existing_mro_selects_original_per_plane_behavior():
     wrapped = OpenHCSRegistry.metadata_for_declared_callable(independent_flexible_offset).func
     result = wrapped(source, slice_by_slice=True)
     assert seen == [(16, 20)] * 3
-    np.testing.assert_array_equal(image_payload_data(result), image_payload_data(source) + 0.5)
+    np.testing.assert_array_equal(result.data, source.data + 0.5)
     seen.clear()
     result = wrapped(source, slice_by_slice=False)
     assert seen == [(3, 16, 20)]
-    np.testing.assert_array_equal(image_payload_data(result), image_payload_data(source) + 0.5)
+    np.testing.assert_array_equal(result.data, source.data + 0.5)

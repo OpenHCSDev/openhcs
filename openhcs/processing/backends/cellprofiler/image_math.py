@@ -24,10 +24,6 @@ from metaclass_registry.strategies import (
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_geometry,
-    image_payload_mask,
-    image_payload_metadata,
     project_image_mask_to_data_domain,
 )
 from openhcs.core.runtime_plane_projection import (
@@ -54,6 +50,8 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )
+from openhcs.core.runtime_array_values import array_geometry
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -747,7 +745,7 @@ class ImageMathMaskPolicy:
     def operand_masks(
         self, operands: tuple[RuntimeArrayData, ...]
     ) -> tuple[ImageMathMask, ...]:
-        return tuple((image_payload_mask(operand) for operand in operands))
+        return tuple((operand.mask for operand in operands))
 
     def output_mask(self, operand_masks: tuple[ImageMathMask, ...]) -> ImageMathMask:
         if self.ignore_masks:
@@ -816,7 +814,7 @@ class ImageMathPreparedOperands:
                 f"one declared image operand, got {len(source_payloads)}."
             )
         operand_pixels = tuple(
-            np.asarray(image_payload_data(payload)) for payload in source_payloads
+            np.asarray(payload.data) for payload in source_payloads
         )
         return cls(
             source_image=image,
@@ -830,7 +828,7 @@ class ImageMathPreparedOperands:
     def _source_payloads(
         image: RuntimeArrayData,
     ) -> tuple[RuntimeArrayData, ...]:
-        metadata = image_payload_metadata(image)
+        metadata = image.metadata
         if metadata.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING:
             return (image,)
         axis_size = metadata.source_provenance.source_plane_count
@@ -845,7 +843,7 @@ class ImageMathPreparedOperands:
             source_aliases=metadata.source_image_names,
         )
         projection.validate_shape(
-            image_payload_geometry(image).shape,
+            array_geometry(image).shape,
             value_name="ImageMath operand payload",
         )
         return tuple(
@@ -878,7 +876,7 @@ class ImageMathPreparedOperands:
         return len(self.operand_pixels)
 
     def output_metadata(self) -> ImagePayloadMetadata:
-        metadata = image_payload_metadata(self.source_image)
+        metadata = self.source_image.metadata
         if metadata.unit_interval_intensity is not None:
             metadata = metadata.without_unit_interval_intensity_scale()
         if metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING:
@@ -895,7 +893,7 @@ class ImageMathPreparedOperands:
 
 @numpy_decorator(contract=ProcessingContract.FLEXIBLE)
 def image_math(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     operation: MathOperation = MathOperation.ADD,
     factors: tuple[float, ...] = (1.0, 1.0),
     exponent: float = 1.0,

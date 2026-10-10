@@ -276,7 +276,7 @@ class PipelineOrchestrator:
 
         # Streaming configs should be managed by the centralized ViewerStateManager
         if isinstance(config, StreamingConfig):
-            key = (config.viewer_type, config.port)
+            key = (config.viewer_family, config.port)
             persistence_mode = ViewerPersistenceMode.from_flag(config.persistent)
 
             viewer = StreamingViewerLifecycle.get_or_create_visualizer(
@@ -301,7 +301,7 @@ class PipelineOrchestrator:
         vis.start_viewer()
 
         # Store for compatibility
-        backend_name = config.backend.name
+        backend_name = config.viewer_family.backend.name
         self._visualizers[(backend_name,)] = vis
         return vis
 

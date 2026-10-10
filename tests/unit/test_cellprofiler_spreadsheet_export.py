@@ -2036,7 +2036,7 @@ def test_spatial_grid_geometry_is_exported_for_exact_source_cycles(
     )
     materialized = SpatialGridArtifactType.materialization_payload(value)
     restored = SpatialGridArtifactType.normalize_runtime_payload("Grid", materialized)
-    restored_grid = restored.value_for_slice(0) if cycle_aligned else restored
+    restored_grid = restored.value_at(0) if cycle_aligned else restored
     assert (
         restored_grid.source_provenance.equality_identity
         == grid.source_provenance.equality_identity

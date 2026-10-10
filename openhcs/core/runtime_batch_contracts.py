@@ -284,6 +284,10 @@ class RuntimePure2DSliceBatchRequest(
         """Execute one slice through the runtime-owned invocation path."""
         return self.execute_one_with_kwargs(slice_index, self.kwargs)
 
+    def execute_each(self) -> list[RuntimeSliceResultT]:
+        """Execute every slice of this batch, one invocation per slice."""
+        return [self.execute_one(slice_index) for slice_index in range(self.slice_count)]
+
     def execute_one_with_kwargs(
         self,
         slice_index: int,
@@ -409,10 +413,7 @@ class SerialPure2DSliceBatchExecutor(Pure2DSliceBatchExecutor):
             RuntimeKwargValueT,
         ],
     ) -> list[RuntimeSliceResultT]:
-        return [
-            request.execute_one(slice_index)
-            for slice_index in range(request.slice_count)
-        ]
+        return request.execute_each()
 
 
 def runtime_batch_executors_from_callable(

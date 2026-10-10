@@ -32,7 +32,6 @@ from openhcs.agent.dto.viewer import (
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.core.runtime_image_values import image_payload_metadata, image_payload_data
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -43,6 +42,8 @@ from python_introspect import to_jsonable
 from openhcs.runtime.viewer_protocol import ViewerPayloadSummary
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.unit.viewer_axes_fixture import STREAM_AXES
+from openhcs.core.axes import ColourAxis
 
 
 def receipt_state(path, *, summary=None):
@@ -160,16 +161,19 @@ def test_observed_and_declared_wire_domains_have_distinct_order_contracts():
     )
 
     observed = ViewerComponentValueDomainPayload.from_wire_mapping(
-        {"channel": ["2", 1, 2]}, context="observed"
+        {"channel": ["2", 1, 2]}, context="observed",
+        declared_axes=STREAM_AXES,
     )
     assert observed.to_wire_mapping() == {"channel": [1, 2]}
     declared = ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-        {"channel": ["2", 1]}, context="declared"
+        {"channel": ["2", 1]}, context="declared",
+        declared_axes=STREAM_AXES,
     )
     assert declared.to_wire_mapping() == {"channel": [2, 1]}
     with pytest.raises(ValueError, match="unique after normalization"):
         ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-            {"channel": ["01", 1]}, context="malformed declared"
+            {"channel": ["01", 1]}, context="malformed declared",
+            declared_axes=STREAM_AXES,
         )
 
 
@@ -189,11 +193,11 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.source_spatial_domain import SourceSpatialDomain
     from openhcs.runtime.napari_streaming_handlers import (
-        NapariAggregateAxisBindingAuthority, NapariStreamLayerAddress, NapariStreamLayerItem,
+        NapariAggregateAxisBindingBuilder, NapariStreamLayerAddress, NapariStreamLayerItem,
     )
     from openhcs.runtime.napari_viewer_server import NapariViewerStateProjection
     from openhcs.runtime.viewer_component_system import (
-        ViewerComponentAxisSemanticsAuthority, ViewerComponentValueDomainPayload,
+        ViewerComponentAxisSemanticsFactory, ViewerComponentValueDomainPayload,
         ViewerMappingDisplayConfigInput,
     )
 
@@ -213,19 +217,21 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
         ),
         plane_component_domain=ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
             {"channel": [2, 1]}, context="synthetic native receipt",
+            declared_axes=STREAM_AXES,
         ),
     )
-    native_semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+    native_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerMappingDisplayConfigInput(
-            {"component_modes": {"channel": "stack"}, "component_order": ["channel"]}
+            {"component_modes": {"channel": "stack"}, "component_order": ["channel"], "declared_axes": STREAM_AXES.to_wire()}
         ),
         ViewerComponentValueDomainPayload.from_wire_mapping(
             {"channel": [1, 2]}, context="synthetic observed receipt domain",
+            declared_axes=STREAM_AXES,
         ),
     )
     summary = NapariViewerStateProjection.payload_summary(
         native_item, native_item.address.components, expected,
-        aggregate_axis_bindings=NapariAggregateAxisBindingAuthority.bindings(
+        aggregate_axis_bindings=NapariAggregateAxisBindingBuilder.bindings(
             [native_item], native_semantics,
         ),
     )
@@ -311,8 +317,8 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
         component_metadata=components[str(path)],
     )
     source.require_projected_image_window(str(path), image, projection)
-    np.testing.assert_array_equal(image_payload_data(image), expected)
-    metadata = image_payload_metadata(image)
+    np.testing.assert_array_equal(image.data, expected)
+    metadata = image.metadata
     assert metadata.source_dtype == "int64"
     from openhcs.agent.capabilities import GetViewerWindowStateCapability
     from openhcs.mcp.dev_client_core import (
@@ -337,7 +343,8 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     )
 
     domain = ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-        metadata.retained_plane_component_values(), context="native receipt domain"
+        metadata.retained_plane_component_values(), context="native receipt domain",
+        declared_axes=STREAM_AXES,
     )
     assert domain.to_wire_mapping() == {"channel": [2, 1]}
     source_items = source.image_source_metadata_items(
@@ -352,7 +359,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
         StreamImagePayloadMetadataProjector,
     )
     from openhcs.runtime.napari_streaming_handlers import (
-        NapariAggregateAxisBindingAuthority,
+        NapariAggregateAxisBindingBuilder,
         NapariStreamLayerItem,
     )
     from openhcs.runtime.napari_viewer_server import (
@@ -361,18 +368,19 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
         _build_nd_image_array,
     )
     from openhcs.runtime.viewer_component_system import (
-        ViewerComponentAxisSemanticsAuthority,
+        ViewerComponentAxisSemanticsFactory,
         ViewerLayerAxisProjection,
         ViewerMappingDisplayConfigInput,
     )
     from zmqruntime.viewer_protocol import ViewerWirePayload
 
     observed = ViewerComponentValueDomainPayload.from_wire_mapping(
-        {"channel": [1, 2]}, context="observed stack domain"
+        {"channel": [1, 2]}, context="observed stack domain",
+        declared_axes=STREAM_AXES,
     )
-    semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+    semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerMappingDisplayConfigInput(
-            {"component_modes": {"channel": "stack"}, "component_order": ["channel"]}
+            {"component_modes": {"channel": "stack"}, "component_order": ["channel"], "declared_axes": STREAM_AXES.to_wire()}
         ),
         observed,
     )
@@ -406,9 +414,9 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
             for member in fields(NapariStreamLayerItem)
             if member.name != "data"
         },
-        data=image_payload_data(image),
+        data=image.data,
     )
-    bindings = NapariAggregateAxisBindingAuthority.bindings([item], semantics)
+    bindings = NapariAggregateAxisBindingBuilder.bindings([item], semantics)
     assert bindings.component_values == {"channel": [2, 1]}
     display_projection = ViewerLayerAxisProjection(
         projected_axis_components=("channel",),
@@ -421,7 +429,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     np.testing.assert_array_equal(displayed[0], expected[1])
     np.testing.assert_array_equal(displayed[1], expected[0])
     assert metadata.source_voxel_spacing == spacing
-    assert metadata.source_channel_axis is None
+    assert metadata.axis_position(ColourAxis) is None
     with pytest.raises(ValueError, match="window conflicts"):
         source.require_projected_image_window(
             str(path), metadata.payload_with(expected[:, :-1]), projection

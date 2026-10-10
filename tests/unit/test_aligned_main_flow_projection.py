@@ -34,6 +34,7 @@ from openhcs.interop.cellprofiler.runtime.module_execution import (
 )
 from openhcs.processing.backends.cellprofiler.color import color_to_gray
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.runtime_image_values import PlainImagePayload
 
 
 class _CompiledInputRequest:
@@ -61,15 +62,16 @@ def test_aligned_stack_binds_complete_declared_output_roster(
     first_context, second_context = AlignedImageSliceContext.main_flow_for_artifact_specs(
         (first, second)
     )
-    first_value = object()
+    first_value = PlainImagePayload(np.ones((2, 2)))
+    second_value = PlainImagePayload(np.zeros((2, 2)))
     carrier = carrier_type(
-        (None, first_value),
+        (second_value, first_value),
         (second_context, first_context),
     )
 
     assert carrier.output_values_for_artifact_specs((first, second)) == {
         first.ref(): first_value,
-        second.ref(): None,
+        second.ref(): second_value,
     }
     with pytest.raises(ValueError, match="duplicate named contexts"):
         carrier.output_values_for_artifact_specs((first, first))
@@ -100,7 +102,9 @@ def test_aligned_stack_rejects_incomplete_or_conflicting_output_rosters(
         "non-main": replace(second_context, output_kind="artifact"),
     }
     carrier = AlignedImageStack(
-        tuple(object() for _ in contexts) if contexts else (object(), object()),
+        tuple(PlainImagePayload(np.zeros((2, 2))) for _ in contexts)
+        if contexts
+        else (PlainImagePayload(np.zeros((2, 2))), PlainImagePayload(np.zeros((2, 2)))),
         tuple(selected[name] for name in contexts),
     )
 
@@ -109,7 +113,7 @@ def test_aligned_stack_rejects_incomplete_or_conflicting_output_rosters(
 
 
 def _named_carrier() -> tuple[AlignedImageStack, np.ndarray, np.ndarray]:
-    mcherry = np.full((3, 4), 3.0, dtype=np.float32)
+    mcherry = PlainImagePayload(np.full((3, 4), 3.0, dtype=np.float32))
     gfp = np.full((3, 4), 2.0, dtype=np.float32)
     return (
         AlignedImageStack(
@@ -403,7 +407,7 @@ def test_generic_aligned_composition_rejects_conflicting_exact_contexts() -> Non
 def test_named_output_transformation_preserves_base_carrier_for_later_exact_input() -> (
     None
 ):
-    mcherry = np.full((3, 4), 3.0, dtype=np.float32)
+    mcherry = PlainImagePayload(np.full((3, 4), 3.0, dtype=np.float32))
     current = AlignedImageStack(
         (mcherry,),
         (
@@ -413,7 +417,7 @@ def test_named_output_transformation_preserves_base_carrier_for_later_exact_inpu
             ),
         ),
     )
-    first_output = np.full((3, 4, 3), 1.0, dtype=np.float32)
+    first_output = PlainImagePayload(np.full((3, 4, 3), 1.0, dtype=np.float32))
     first_plan = _related_image_output(
         "GrayToColor_10_image_1",
         "Straightened_mCherry",
@@ -431,7 +435,7 @@ def test_named_output_transformation_preserves_base_carrier_for_later_exact_inpu
         after_first.output_payload(_input_ref("GrayToColor_10_image_1")) is first_output
     )
 
-    second_output = np.full((3, 4, 3), 2.0, dtype=np.float32)
+    second_output = PlainImagePayload(np.full((3, 4, 3), 2.0, dtype=np.float32))
     second_plan = _related_image_output("OrigRG", "mCherry")
     after_second = CellProfilerModuleExecutor._merge_named_image_outputs(
         after_first,
@@ -477,7 +481,7 @@ def test_active_publisher_uses_exact_canonical_artifact_kind() -> None:
         path=f"/memory/{labels.name}.pkl",
         artifact_type=labels.artifact_type,
     )
-    image_value = np.ones((3, 4), dtype=np.float32)
+    image_value = PlainImagePayload(np.ones((3, 4), dtype=np.float32))
     measurement_value = object()
     labels_value = object()
     values = {

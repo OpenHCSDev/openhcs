@@ -22,7 +22,6 @@ from openhcs.core.measurement_row_materialization import DataclassMeasurementCol
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.projected_image_output import SelectedPlaneImageOutput
-from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
 from openhcs.core.runtime_measurements import RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec, ROIOptions
@@ -72,7 +71,7 @@ def select_volume_fixture_planes_v2(
     plane_indices: tuple[int, ...] = (),
 ) -> SelectedPlaneImageOutput:
     """Select ordered planes through the existing source-projection owner."""
-    pixels = image_payload_data(image)
+    pixels = image.data
     if pixels.ndim != 3:
         raise ValueError("Expected a scalar ZYX fixture")
     indices = plane_indices or tuple(range(pixels.shape[0]))
@@ -85,12 +84,12 @@ def inspect_volume_fixture_v2(
     image: ArrayPayload,
 ) -> tuple[ArrayPayload, ArrayPayload, DataclassMeasurementColumnarRows]:
     """Preserve the entire actual input stack when publishing labels and rows."""
-    pixels = image_payload_data(image)
+    pixels = image.data
     if pixels.ndim != 3 or not np.issubdtype(pixels.dtype, np.integer):
         raise ValueError("Expected an integer scalar ZYX fixture")
     if np.any(pixels < 0):
         raise ValueError("Fixture object IDs must be non-negative")
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
     labels = pixels.astype(np.int32, copy=True)
     rows = tuple(
         VolumeProjectionFixtureRow(index, int(label), int(np.count_nonzero(plane == label)))

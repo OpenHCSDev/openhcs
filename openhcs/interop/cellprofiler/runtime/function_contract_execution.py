@@ -13,7 +13,6 @@ from openhcs.core.aligned_image_payload import (
     aligned_image_stack_kwargs,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.image_shapes import ArrayShape
 from openhcs.core.measurement_lookup_dialect import runtime_measurement_lookup_dialect
 from openhcs.core.memory import detect_memory_type, stack_slices
 from openhcs.core.runtime_batch_contracts import (
@@ -21,12 +20,6 @@ from openhcs.core.runtime_batch_contracts import (
     RuntimeBatchInvocationRequest,
     RuntimePure2DSliceBatchRequest,
     SliceIndexRuntimeParameter,
-)
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadataCarrier,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -58,6 +51,9 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     RuntimeInvocationKwargPolicy,
     contextualize_main_image_output,
 )
+from openhcs.core.runtime_array_values import array_geometry
+from openhcs.core.runtime_image_values import ImagePayload
+from openhcs.core.runtime_image_values import owned_runtime_value
 
 _CELLPROFILER_RUNTIME_CALLABLE_POLICY = RuntimeCallablePolicy(
     # execute() resolves the compiled raw target before processing dispatch.
@@ -221,10 +217,7 @@ class CellProfilerFunctionContractExecutor:
         if batch_executor is not None and slice_request.slice_count > 1:
             slice_results = list(batch_executor(slice_request))
         else:
-            slice_results = [
-                slice_request.execute_one(slice_index)
-                for slice_index in range(slice_request.slice_count)
-            ]
+            slice_results = slice_request.execute_each()
         return slice_results, time.perf_counter() - slice_started_at
 
     def execute_pure_3d(
@@ -249,9 +242,9 @@ class CellProfilerFunctionContractExecutor:
             "cp_full_stack_project_domains",
             time.perf_counter() - projection_started_at,
             function=function_name,
-            image_shape=ArrayShape.shape_for(image_payload_data(projected_image)),
+            image_shape=array_geometry(projected_image).shape,
             labels_shape=(
-                ArrayShape.shape_for(label_value) if label_value is not None else None
+                array_geometry(label_value).shape if label_value is not None else None
             ),
         )
         call_started_at = time.perf_counter()
@@ -312,7 +305,7 @@ class CellProfilerFunctionContractExecutor:
             )
         if callable_contract.processing_contract is ProcessingContract.PURE_3D:
             slice_plane_axes = tuple(
-                image_payload_metadata(slice_payload).plane_axis
+                slice_payload.metadata.plane_axis
                 for slice_payload in image.slices
             )
             if any(
@@ -368,7 +361,7 @@ class CellProfilerFunctionContractExecutor:
                 f"{len(result_batch.auxiliary_groups)} trailing output position(s); "
                 f"the compiled CallableContract declares {len(trailing_specs)}."
             )
-        memory_type = detect_memory_type(image_payload_data(image.slices[0]))
+        memory_type = detect_memory_type(image.slices[0].data)
         if canonical_specs:
             if all(
                 isinstance(output, AlignedImageStack)
@@ -451,13 +444,7 @@ class CellProfilerFunctionContractExecutor:
             f"CellProfiler module {callable_contract.module_name!r} callable "
             f"{function_name!r}"
         )
-        memory_type = (
-            image.image_memory_type()
-            if isinstance(image, ImagePayloadMetadataCarrier)
-            else (
-                "numpy" if isinstance(image_payload_data(image), np.ndarray) else None
-            )
-        )
+        memory_type = owned_runtime_value(image).memory_type
         if memory_type != "numpy":
             return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
                 callable_contract,
@@ -492,7 +479,7 @@ class CellProfilerFunctionContractExecutor:
                 image,
                 kwargs,
             ).call()
-        declared_plane_axis = image_payload_metadata(image).plane_axis
+        declared_plane_axis = image.metadata.plane_axis
         if declared_plane_axis is not self.plane_projection.axis:
             raise RuntimeSliceProjectionDeclarationError(
                 f"{invocation_context} with ProcessingContract.PURE_2D has an image "
@@ -591,15 +578,15 @@ class CellProfilerFunctionContractExecutor:
         callable_contract: CallableContract,
         **kwargs: RuntimeCallableArgument,
     ) -> RuntimeCallableArgument:
-        result_2d = _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
+        result_2d = ImagePayload.of(_CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
             callable_contract,
             func,
             image,
             kwargs,
-        ).call()
-        result_data = image_payload_data(result_2d)
-        result_mask = image_payload_mask(result_2d)
-        result_metadata = image_payload_metadata(result_2d)
+        ).call())
+        result_data = result_2d.data
+        result_mask = result_2d.mask
+        result_metadata = result_2d.metadata
         memory_type = detect_memory_type(result_data)
         stacked = stack_slices([result_data], memory_type, 0)
         return result_metadata.payload_with(stacked, mask=result_mask)

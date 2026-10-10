@@ -39,9 +39,9 @@ from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.memory import numpy
+from openhcs.core.memory.decorators import image_payload_boundary
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.projected_image_output import SelectedPlaneImageOutput
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -806,10 +806,9 @@ class MetaXpressCellBodySettings:
         """
         body = np.asarray(body, dtype=bool)
         radius = ndi.distance_transform_edt(np.pad(body, 1))[1:-1, 1:-1]
-        skeleton_payload = _raw_processing_leaf(medialaxis)(
+        skeleton = _raw_processing_leaf(medialaxis)(
             np.pad(body, 1).astype(np.float32, copy=False)
-        )
-        skeleton = np.asarray(image_payload_data(skeleton_payload))[1:-1, 1:-1] > 0
+        )[1:-1, 1:-1] > 0
         distance_to_nucleus = ndi.distance_transform_edt(~nuclear_seed)
         broad_medial = skeleton & (
             (2.0 * radius - 1.0 > maximum_shaft_width_px)
@@ -1310,10 +1309,10 @@ class NeuriteAdmissionResult:
         bodies = np.asarray(cell_body_labels)
         if bodies.shape != self.mask.shape:
             raise ValueError("cell bodies and neurite admission must share a shape")
-        payload = _raw_processing_leaf(medialaxis)(
+        skeleton = _raw_processing_leaf(medialaxis)(
             (self.mask | (bodies > 0)).astype(np.float32, copy=False)
         )
-        return np.asarray(image_payload_data(payload)) > 0
+        return np.asarray(skeleton) > 0
 
 
 # Both callable ABIs derive diagnostic slots from the same stage declaration.
@@ -1645,9 +1644,14 @@ class _TopologyResult:
 
 
 def _raw_processing_leaf(func):
-    """Resolve a composed leaf's runtime body through its callable contract."""
+    """Resolve a composed leaf's runtime body through its callable contract.
 
-    return CallableContract.from_callable(func).resolve_raw_runtime_callable()
+    The bare arrays this module builds become payloads where they enter the leaf.
+    """
+
+    return image_payload_boundary(
+        CallableContract.from_callable(func).resolve_raw_runtime_callable()
+    )
 
 
 @numpy
@@ -2135,7 +2139,7 @@ def _identify_neurites_cellprofiler(
             correction_factor=settings.candidate_threshold_correction_factor,
         ),
     )
-    cp_mask = np.asarray(image_payload_data(cp_mask_payload)) > 0
+    cp_mask = np.asarray(cp_mask_payload.data) > 0
     threshold_support = cp_mask
     if settings.candidate_hysteresis_seed_correction_factor is not None:
         seed_mask_payload, _ = _raw_processing_leaf(threshold)(
@@ -2151,7 +2155,7 @@ def _identify_neurites_cellprofiler(
                 ),
             ),
         )
-        seed_mask = np.asarray(image_payload_data(seed_mask_payload)) > 0
+        seed_mask = np.asarray(seed_mask_payload.data) > 0
         cp_mask = _seeded_candidate_components(cp_mask, seed_mask)
     response = local_background_response(
         image,
@@ -2166,7 +2170,7 @@ def _identify_neurites_cellprofiler(
     return NeuriteAdmissionResult(
         outgrowth_mask,
         NeuriteAdmissionPlanes(
-            np.asarray(image_payload_data(enhanced)), threshold_support, cp_mask,
+            np.asarray(enhanced), threshold_support, cp_mask,
             response, local_support, soma_attachment_response,
         ),
         outgrowth_width_px,

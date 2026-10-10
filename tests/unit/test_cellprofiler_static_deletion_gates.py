@@ -1049,40 +1049,6 @@ def test_source_component_tuple_state_is_not_mirrored() -> None:
     assert not violations, "\n" + "\n".join(violations)
 
 
-def test_runtime_slice_projection_keeps_nominal_strategy_ownership() -> None:
-    path = PROJECT_ROOT / "openhcs/core/runtime_slice_projection.py"
-    strategy = _top_level_class(path, "RuntimeSliceProjectionStrategy")
-    assert "NominalTypeKeyedStrategyMixin" in {
-        _dotted_name(base) for base in strategy.bases
-    }
-    selector = _method(strategy, "strategy_for_value")
-    assert any(
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "for_nominal_value"
-        for node in ast.walk(selector)
-    )
-
-
-def test_source_spatial_alignment_keeps_nominal_adapter_registry_ownership() -> None:
-    path = PROJECT_ROOT / "openhcs/core/source_spatial_domain.py"
-    strategy = _top_level_class(path, "SourceSpatialDomainAdapter")
-    assert "NominalTypeKeyedStrategyMixin" in {
-        _dotted_name(base) for base in strategy.bases
-    }
-    assert any(
-        keyword.arg == "metaclass" and _dotted_name(keyword.value) == "AutoRegisterMeta"
-        for keyword in strategy.keywords
-    )
-    selector = _method(strategy, "for_value")
-    assert any(
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "strategy_types_for_nominal_value"
-        for node in ast.walk(selector)
-    )
-
-
 def test_cellprofiler_payload_alias_namespace_stays_deleted() -> None:
     retired_names = frozenset(
         {
@@ -1261,7 +1227,6 @@ def test_nominal_payloads_are_not_erased_before_semantic_projection() -> None:
         {
             "np.array",
             "np.asarray",
-            "image_payload_data",
             "object_label_dense_array",
             "runtime_array_operand",
         }

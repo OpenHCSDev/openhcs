@@ -22,9 +22,11 @@ from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_intensity_scale_for_dtype,
-    image_payload_data,
-    image_payload_metadata,
 )
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.runtime_array_values import array_geometry
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.processing_preparation import PreparationOperation
@@ -54,8 +56,9 @@ class SourceImagePixelSemantics:
         axis = self.channel_axis
         if axis is None:
             return None
-        shape = tuple(int(value) for value in np.shape(image_payload_data(payload)))
-        return self._validated_channel_axis_for_shape(axis, shape)
+        return self._validated_channel_axis_for_shape(
+            axis, array_geometry(payload).shape
+        )
 
     def image_shape_yx_for_shape(
         self,
@@ -184,10 +187,10 @@ class ImageFileSourceMetadata:
                 if native_scale_governs
                 else metadata.source_plane_intensity_scales
             ),
-            source_channel_axis=(
-                metadata.source_channel_axis
+            axes=(
+                metadata.axes
                 if values_preserved and self.pixel_semantics.channel_axis is None
-                else self.pixel_semantics.channel_axis
+                else PayloadAxes.colour_samples(self.pixel_semantics.channel_axis)
             ),
         )
 
@@ -288,9 +291,10 @@ class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegister
 
     def prepare(self, payload: Any) -> Any:
         """Project runtime pixels onto the host before format-specific encoding."""
-        pixels = image_payload_data(payload)
+        payload = ImagePayload.of(payload)
+        pixels = payload.data
         host_pixels = MemoryType(detect_memory_type(pixels)).to_numpy(pixels)
-        host_payload = image_payload_metadata(payload).payload_with(host_pixels)
+        host_payload = payload.metadata.payload_with(host_pixels)
         return self.prepare_host_payload(host_payload)
 
     @abstractmethod
@@ -403,10 +407,11 @@ class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegister
         header = self.source_metadata(path)
         if header.source_dtype is None:
             raise ValueError(f"Cannot establish saved image metadata for {path}.")
+        payload = ImagePayload.of(payload)
         return header.project_image_metadata(
-            image_payload_metadata(payload),
+            payload.metadata,
             values_preserved=self.preserves_pixel_values(
-                image_payload_data(payload).dtype
+                payload.data.dtype
             ),
         )
 
@@ -458,7 +463,7 @@ class NumpyImageFileFormat(ImageFileFormat):
         return True
 
     def prepare_host_payload(self, payload: Any) -> Any:
-        return image_payload_data(payload)
+        return payload.data
 
     def read(self, path: str | Path) -> np.ndarray:
         return np.asarray(np.load(path, allow_pickle=False))
@@ -493,12 +498,13 @@ class TiffImageFileFormat(ImageFileFormat):
         return True
 
     def prepare_host_payload(self, payload: Any) -> Any:
-        return image_payload_data(payload)
+        return payload.data
 
     def storage_config(
         self, payload: Any, configured: TiffConfig | None
     ) -> TiffConfig | None:
-        metadata = image_payload_metadata(payload)
+        payload = ImagePayload.of(payload)
+        metadata = payload.metadata
         if metadata.persists_whole_image():
             axes = list("ZYX")
         elif metadata.plane_axis is not None:
@@ -507,8 +513,8 @@ class TiffImageFileFormat(ImageFileFormat):
             axes = list("QYX")
         else:
             return configured
-        data = image_payload_data(payload)
-        channel_axis = metadata.normalized_source_channel_axis(data)
+        data = payload.data
+        channel_axis = metadata.axis_index(ColourAxis, data)
         planarconfig = None
         photometric = TiffPhotometric.MINISBLACK
         if channel_axis is not None:
@@ -800,19 +806,19 @@ def prepare_disk_image_payloads(
 
 def image_payload_as_uint8(payload: Any) -> np.ndarray:
     """Convert numeric image payloads to uint8 using explicit file semantics."""
-    array = np.asarray(image_payload_data(payload))
+    array = np.asarray(ImagePayload.of(payload).data)
     return ImagePayloadUint8Strategy.for_dtype(array.dtype).prepare(array)
 
 
 def require_single_image_payload(payload: Any) -> np.ndarray:
     """Return pixels only when no runtime plane axis remains to project."""
-    plane_axis = image_payload_metadata(payload).plane_axis
+    plane_axis = payload.metadata.plane_axis
     if plane_axis is not None:
         raise ValueError(
             "Single-image raster serialization requires a payload projected off "
             f"its declared {plane_axis.value!r} plane axis."
         )
-    return np.asarray(image_payload_data(payload))
+    return np.asarray(payload.data)
 
 
 def _is_unit_interval(values: np.ndarray) -> bool:

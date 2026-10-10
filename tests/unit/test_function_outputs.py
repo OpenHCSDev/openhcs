@@ -45,7 +45,6 @@ from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
@@ -87,7 +86,6 @@ from openhcs.core.steps.function_outputs import (
     StreamOutputBatch,
     finalize_function_step_outputs,
 )
-from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     StreamingViewerSurface,
@@ -111,6 +109,9 @@ from openhcs.processing.materialization import (
 )
 from openhcs.core.axes import Axis, AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.unit.viewer_axes_fixture import STREAM_AXES
+from openhcs.core.streaming_config_declarations import NapariViewer
+from openhcs.core.payload_axes import PayloadAxes
 
 
 def _publish_saved_step(context, plan, *, artifact_materializations=()):
@@ -254,7 +255,7 @@ class FileManagerStub:
 
 
 class StreamingConfigStub(ViewerDisplayConfigABC):
-    backend = SimpleNamespace(value="napari_stream")
+    viewer_family = NapariViewer
     COMPONENT_ORDER = ("well", "site", "channel", "z_index", "timepoint")
     host = "127.0.0.1"
     port = 5555
@@ -264,7 +265,7 @@ class StreamingConfigStub(ViewerDisplayConfigABC):
         return {component: "stack" for component in self.COMPONENT_ORDER}
 
     def display_payload_extra(self):
-        return {}
+        return {"declared_axes": STREAM_AXES.to_wire()}
 
     def streaming_viewer_surface(self, context):
         return StreamingViewerSurface(
@@ -275,7 +276,7 @@ class StreamingConfigStub(ViewerDisplayConfigABC):
                     transport_mode=self.transport_mode,
                 ),
                 persistent=False,
-                viewer_type=ViewerType.NAPARI,
+                viewer_family=NapariViewer,
             ),
             display_config=self,
             source=ViewerStreamSourceIdentity(
@@ -1184,7 +1185,7 @@ def test_stream_outputs_projects_semantic_image_stack_before_viewer_backend():
         {"well": "A01", "site": "1", "channel": "2"}
     )
     payload = ImagePayloadMetadata(
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         source_image_provenance_planes=(
             SourceImageProvenancePlanes.from_components(
@@ -1207,7 +1208,7 @@ def test_stream_outputs_projects_semantic_image_stack_before_viewer_backend():
     assert stream_request.source.item_fields == {
         "source_channel_axis": -1,
         "image_metadata": ImagePayloadMetadata(
-            source_channel_axis=-1
+            axes=PayloadAxes.colour_samples(-1)
         ).to_viewer_image_metadata(),
     }
     assert stream_request.source.metadata.metadata_by_index == (
@@ -1301,7 +1302,7 @@ def test_stream_outputs_partitions_one_producer_by_image_axis_fields():
                 ),
             ).payload_with(np.ones((2, 3), dtype=np.uint16), None),
             color_path: ImagePayloadMetadata(
-                source_channel_axis=-1,
+                axes=PayloadAxes.colour_samples(-1),
                 source_component_metadata=color_metadata,
                 source_image_provenance_planes=(
                     SourceImageProvenancePlanes.from_components(
@@ -1340,7 +1341,7 @@ def test_stream_outputs_partitions_one_producer_by_image_axis_fields():
     ].source.item_fields == {
         "source_channel_axis": -1,
         "image_metadata": ImagePayloadMetadata(
-            source_channel_axis=-1
+            axes=PayloadAxes.colour_samples(-1)
         ).to_viewer_image_metadata(),
     }
 
@@ -2377,7 +2378,7 @@ def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, conte
                         Output.from_metadata(
                             path=str(directory / "A01_s001_w2_z001_t001.tif"),
                             content=record.data,
-                            metadata=image_payload_metadata(record.data),
+                            metadata=record.data.metadata,
                         ),
                     )
                 },

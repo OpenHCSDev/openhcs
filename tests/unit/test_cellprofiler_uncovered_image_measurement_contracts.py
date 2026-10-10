@@ -19,10 +19,7 @@ from openhcs.core.function_patterns import FunctionInvocationKey
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.source_bindings import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
@@ -134,7 +131,7 @@ def test_uncovered_image_callables_return_schema_bearing_measurement_rows() -> N
         min_intensity=0.5,
     )
 
-    np.testing.assert_array_equal(image_payload_data(rotated), image)
+    np.testing.assert_array_equal(rotated.data, image)
     assert isinstance(rotation_rows, ColumnarRows)
     assert rotation_rows.row_type is RotationResult
     assert tuple(rotation_rows.iter_row_mappings()) == (

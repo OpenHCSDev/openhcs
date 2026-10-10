@@ -9,12 +9,7 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.config import NapariStreamingConfig
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-    ImagePayloadMetadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
@@ -30,6 +25,8 @@ from openhcs.core.viewer_streaming_service import (
     ViewerStreamingSource,
 )
 from python_introspect import to_jsonable
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 def image_with_declaration(axis, count=1, *, color=False, masked=False):
@@ -50,7 +47,7 @@ def image_with_declaration(axis, count=1, *, color=False, masked=False):
     )
     metadata = ImagePayloadMetadata(
         plane_axis=axis,
-        source_channel_axis=-1 if color else None,
+        axes=PayloadAxes.colour_samples(-1 if color else None),
         source_image_names=("FITC",) if count == 1 else ("FITC", "TRITC"),
         source_image_provenance_planes=planes,
         source_voxel_spacing=SourceVoxelSpacing((1.3556, 1.3556)),
@@ -79,21 +76,21 @@ def test_declared_singleton_projection_retains_color_mask_and_source_context(
     original = image_with_declaration(axis, color=color, masked=masked)
     projected = request().project_image(original)
     np.testing.assert_array_equal(
-        image_payload_data(projected), image_payload_data(original)[0]
+        projected.data, original.data[0]
     )
-    metadata = image_payload_metadata(projected)
+    metadata = projected.metadata
     assert metadata.plane_axis is None
-    assert metadata.source_channel_axis == (-1 if color else None)
+    assert metadata.axis_position(ColourAxis) == (-1 if color else None)
     assert metadata.source_component_metadata["channel"] == 2
     assert metadata.source_image_names == ("FITC",)
     assert metadata.source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
     assert (
         metadata.source_spatial_domain
-        == image_payload_metadata(original).source_spatial_domain
+        == original.metadata.source_spatial_domain
     )
     if masked:
         np.testing.assert_array_equal(
-            image_payload_mask(projected), image_payload_mask(original)[0]
+            projected.mask, original.mask[0]
         )
 
 
@@ -102,7 +99,7 @@ def test_multi_plane_stack_is_not_collapsed(axis):
     original = image_with_declaration(axis, count=2)
     assert request().project_image(original) is original
     fields = StreamImagePayloadMetadataProjector.item_fields(
-        image_payload_metadata(original), ("channel",)
+        original.metadata, ("channel",)
     )
     assert fields["plane_component_values"] == {"channel": ("2", "3")}
 
@@ -118,7 +115,7 @@ def test_unbound_arrays_are_never_reinterpreted_as_source_planes(shape):
 @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
 def test_singleton_declaration_rejects_mismatched_native_shape(axis):
     original = image_with_declaration(axis)
-    metadata = image_payload_metadata(original)
+    metadata = original.metadata
     conflicting = metadata.payload_with(np.zeros((2, 5, 6)))
     with pytest.raises(ValueError, match="axis of size 1"):
         request().project_image(conflicting)
@@ -150,21 +147,21 @@ def test_independent_metadata_capabilities_execute_original_owner_hook():
 
     original = image_with_declaration(RuntimePlaneAxis.SOURCE_BINDING, masked=True)
     metadata = CalibratedMetadata.from_mapping(
-        to_jsonable(image_payload_metadata(original))
+        to_jsonable(original.metadata)
     )
     declared = metadata.payload_with(
-        image_payload_data(original), image_payload_mask(original)
+        original.data, original.mask
     )
     projected = request().project_image(declared)
     assert calls == ["observe", "physical"]
     np.testing.assert_array_equal(
-        image_payload_data(projected), image_payload_data(original)[0]
+        projected.data, original.data[0]
     )
     np.testing.assert_array_equal(
-        image_payload_mask(projected), image_payload_mask(original)[0]
+        projected.mask, original.mask[0]
     )
-    assert image_payload_metadata(projected).source_image_names == ("FITC",)
-    assert image_payload_metadata(projected).source_voxel_spacing == SourceVoxelSpacing(
+    assert projected.metadata.source_image_names == ("FITC",)
+    assert projected.metadata.source_voxel_spacing == SourceVoxelSpacing(
         (1.3556, 1.3556)
     )
 
@@ -175,7 +172,7 @@ def test_independent_capabilities_cooperate_with_full_native_window_admission(tm
     class PhysicalCalibration:
         def require_image_window(self, source, filename, image, projection):
             super().require_image_window(source, filename, image, projection)
-            spacing = image_payload_metadata(image).source_voxel_spacing
+            spacing = image.metadata.source_voxel_spacing
             events.append(
                 ("physical", SourceVoxelSpacing.require_physical_pixel_size((spacing,)))
             )
@@ -192,7 +189,7 @@ def test_independent_capabilities_cooperate_with_full_native_window_admission(tm
         pass
 
     image = image_with_declaration(RuntimePlaneAxis.SOURCE_BINDING, masked=True)
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
     filename = "image.tif"
     declaration = SourcePlaneProjection(
         address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
@@ -213,20 +210,20 @@ def test_independent_capabilities_cooperate_with_full_native_window_admission(tm
     projected = instance.project_image(image)
     assert events == [("physical", 1.3556), ("projection", 0)]
     np.testing.assert_array_equal(
-        image_payload_data(projected), image_payload_data(image)[0]
+        projected.data, image.data[0]
     )
     np.testing.assert_array_equal(
-        image_payload_mask(projected), image_payload_mask(image)[0]
+        projected.mask, image.mask[0]
     )
     # The original full-window leaf still rejects a crop before any projection.
     cropped = metadata.replace_fields(
         source_spatial_domain=SourceSpatialDomain((1, 1), (10, 10))
-    ).payload_with(image_payload_data(image))
+    ).payload_with(image.data)
     cropped_projection = replace(
         projection,
         source_projections_by_virtual_path={
             filename: replace(
-                declaration, image_metadata=image_payload_metadata(cropped)
+                declaration, image_metadata=cropped.metadata
             )
         },
     )

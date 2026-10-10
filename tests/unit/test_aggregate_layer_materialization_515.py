@@ -20,19 +20,20 @@ from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVa
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import (
     RuntimeProjectionSourceIdentityRequest,
-    RuntimeProjectionSourceIdentityRequirement,
+    RequiredSourceComponentMetadata,
     RuntimeSliceProjectionDeclarationError,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.runtime.napari_streaming_handlers import (
-    NapariAggregateAxisBindingAuthority,
+    NapariAggregateAxisBindingBuilder,
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
+from openhcs.runtime.viewer_display import NapariSlots
 from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentAxisSemanticsFactory,
     ViewerComponentValueDomainPayload,
     ViewerMappingDisplayConfigInput,
 )
@@ -43,7 +44,7 @@ from polystore.napari_stream import NapariStreamingBackend
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from polystore.streaming import StreamingBatchMessageBuilder, StreamingBatchMessageRequest
-from polystore.streaming.receivers.napari.layer_key import build_route_key, normalize_component_layout
+from polystore.streaming.receivers.napari.layer_key import build_route_key
 from polystore.streaming.viewer_transport import ViewerStreamKwarg
 from polystore.streaming.viewer_transport import ViewerStreamBackendKwargs
 from polystore.streaming_constants import StreamingDataType
@@ -60,6 +61,7 @@ from tests.unit.test_function_artifact_materialization import (
     _plan,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
 class ComponentDisplayConfig(StreamingConfigStub):
@@ -187,7 +189,9 @@ def _route_keys(batches):
     return [
         build_route_key(
             item["producer_identity"], item["metadata"],
-            normalize_component_layout(batch.message["display_config"]),
+            ViewerMappingDisplayConfigInput(batch.message["display_config"])
+            .layout()
+            .components_in(NapariSlots.Layer),
             StreamingDataType(item["data_type"]),
         )
         for batch in batches for item in batch.batch_images
@@ -206,12 +210,14 @@ def _received_item(batch, pixels):
         image_metadata=ImagePayloadMetadata.from_viewer_image_metadata(wire["image_metadata"]),
         plane_component_domain=ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
             wire["plane_component_values"], context="actual automatic TIFF wire domain",
+            declared_axes=STREAM_AXES,
         ),
     )
-    semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+    semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerMappingDisplayConfigInput(batch.message["display_config"]),
         ViewerComponentValueDomainPayload.from_wire_mapping(
             batch.message["component_value_domain"], context="actual automatic TIFF viewer domain",
+            declared_axes=STREAM_AXES,
         ),
     )
     return item, semantics
@@ -247,7 +253,7 @@ def test_automatic_aggregate_label_tiff_preserves_stack(component, viewer_ack_re
     assert component.name not in item["metadata"]
     assert len(_route_keys(batches)) == 1
     received, semantics = _received_item(batches[0], saves[0][0])
-    bindings = NapariAggregateAxisBindingAuthority.bindings((received,), semantics)
+    bindings = NapariAggregateAxisBindingBuilder.bindings((received,), semantics)
     assert len(bindings.bindings) == 1
     assert bindings.bindings[0].component == component.name
     assert bindings.bindings[0].values == (1, 2)
@@ -259,11 +265,16 @@ def test_strict_receiver_still_rejects_aggregate_without_scalar_layer(viewer_ack
         Microscopy.Channel, "stack", viewer_ack_return_route, monkeypatch, tmp_path,
     )
     batch = batches[0]
-    layout = normalize_component_layout(batch.message["display_config"])
-    layout = replace(layout, component_modes={**layout.component_modes, "channel": "layer"})
+    layout = ViewerMappingDisplayConfigInput(batch.message["display_config"]).layout()
+    layout = layout.with_modes({**layout.component_modes, "channel": "layer"})
     item = batch.batch_images[0]
-    with pytest.raises(ValueError, match="missing layer component 'channel'"):
-        build_route_key(item["producer_identity"], item["metadata"], layout, StreamingDataType.IMAGE)
+    with pytest.raises(ValueError, match="missing layer component .channel."):
+        build_route_key(
+            item["producer_identity"],
+            item["metadata"],
+            layout.components_in(NapariSlots.Layer),
+            StreamingDataType.IMAGE,
+        )
 
 
 @pytest.mark.parametrize("plane_count", (1, 2))
@@ -317,9 +328,10 @@ def test_strict_aggregate_receiver_rejects_malformed_tiff_domains(
     received, semantics = _received_item(batches[0], saves[0][0])
     received = replace(received, plane_component_domain=ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
         domain, context="deliberately malformed incoming TIFF domain",
+        declared_axes=STREAM_AXES,
     ))
     with pytest.raises(ValueError, match=error):
-        NapariAggregateAxisBindingAuthority.bindings((received,), semantics)
+        NapariAggregateAxisBindingBuilder.bindings((received,), semantics)
 
 
 def test_strict_receiver_rejects_duplicate_plane_coordinates(viewer_ack_return_route, monkeypatch, tmp_path):
@@ -331,6 +343,7 @@ def test_strict_receiver_rejects_duplicate_plane_coordinates(viewer_ack_return_r
     with pytest.raises(ValueError, match="coordinates must be unique"):
         ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
             domain, context="duplicate incoming pixel-plane coordinate",
+            declared_axes=STREAM_AXES,
         )
 
 
@@ -342,17 +355,18 @@ def test_strict_receiver_rejects_inconsistent_item_plane_domains(viewer_ack_retu
     reversed_item = replace(
         received, plane_component_domain=ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
             {"channel": [2, 1]}, context="contradictory second item pixel-plane order",
+            declared_axes=STREAM_AXES,
         ),
     )
     with pytest.raises(ValueError, match="inconsistent plane component domains"):
-        NapariAggregateAxisBindingAuthority.bindings((received, reversed_item), semantics)
+        NapariAggregateAxisBindingBuilder.bindings((received, reversed_item), semantics)
 
 
 @pytest.mark.parametrize("component", (Microscopy.Channel, Microscopy.Site))
 def test_existing_projection_owns_source_binding_label_planes(component):
     labels, pixels = _source_bound_labels(component)
-    payload = labels.metadata.attach_to(labels.image_data())
-    items = RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA.project_payload_items(
+    payload = labels.metadata.attach_to(labels.data)
+    items = RequiredSourceComponentMetadata.project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload, source_description="automatic label TIFF",
             variable_components=(component,),
@@ -367,15 +381,15 @@ def test_existing_projection_owns_source_binding_label_planes(component):
         assert item.metadata.plane_axis is None
         assert item.require_source_component_metadata()[component.name] == index + 1
         assert item.metadata.source_voxel_spacing.values_zyx == (0.75, 0.75)
-        assert np.shares_memory(item.data, labels.image_data())
+        assert np.shares_memory(item.data, labels.data)
 
 
 def test_existing_projection_does_not_infer_runtime_axis_from_label_array():
     labels, _pixels = _source_bound_labels(Microscopy.Channel)
     with pytest.raises(RuntimeSliceProjectionDeclarationError, match="requires a nominal payload"):
-        RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA.project_payload_items(
+        RequiredSourceComponentMetadata.project_payload_items(
             RuntimeProjectionSourceIdentityRequest(
-                value=labels.metadata.attach_to(labels.image_data()),
+                value=labels.metadata.attach_to(labels.data),
                 source_description="automatic label TIFF",
                 variable_components=(Microscopy.Channel,),
             )
@@ -385,9 +399,9 @@ def test_existing_projection_does_not_infer_runtime_axis_from_label_array():
 def test_existing_projection_rejects_label_source_cardinality_mismatch():
     labels, _pixels = _source_bound_labels(Microscopy.Channel)
     with pytest.raises(ValueError, match="metadata cardinality mismatch"):
-        RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA.project_payload_items(
+        RequiredSourceComponentMetadata.project_payload_items(
             RuntimeProjectionSourceIdentityRequest(
-                value=labels.metadata.attach_to(labels.image_data()),
+                value=labels.metadata.attach_to(labels.data),
                 source_description="automatic label TIFF",
                 variable_components=(Microscopy.Channel,),
                 plane_projection=RuntimePlaneAxisValueProjection.preserve(

@@ -11,13 +11,12 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import PayloadAxes
 
 _SPATIAL_DOMAIN = SourceSpatialDomain(source_shape_yx=(4, 5))
 _SINGLETON_MASK = np.array(
@@ -70,15 +69,15 @@ def test_scalar_image_aligns_with_nominal_singleton_owner(
     assert isinstance(composition.payload, AlignedImageStack)
     assert len(composition.payload.slices) == 1
     bundle = composition.payload.slices[0]
-    assert image_payload_metadata(bundle).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-    assert image_payload_data(bundle).shape == (2, 4, 5)
+    assert bundle.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert bundle.data.shape == (2, 4, 5)
     expected_values = (11, 7) if singleton_first else (7, 11)
     for index, expected_value in enumerate(expected_values):
         np.testing.assert_array_equal(
-            image_payload_data(bundle)[index],
+            bundle.data[index],
             np.full((4, 5), expected_value, dtype=np.float32),
         )
-    np.testing.assert_array_equal(image_payload_mask(bundle), _SINGLETON_MASK)
+    np.testing.assert_array_equal(bundle.mask, _SINGLETON_MASK)
 
 
 @pytest.mark.parametrize("owner_kind", ("aligned_stack", "runtime_payload"))
@@ -116,7 +115,7 @@ def test_same_shaped_scalar_images_do_not_invent_runtime_alignment() -> None:
 
     assert composition.execution_mode is ImagePayloadExecutionMode.FULL_STACK
     assert not isinstance(composition.payload, AlignedImageStack)
-    assert image_payload_metadata(composition.payload).plane_axis is (
+    assert composition.payload.metadata.plane_axis is (
         RuntimePlaneAxis.SOURCE_BINDING
     )
 
@@ -126,7 +125,7 @@ def test_singleton_runtime_projection_consumes_rgb_image_and_mask_axis_together(
 ):
     payload = ImagePayloadMetadata(
         source_spatial_domain=_SPATIAL_DOMAIN,
-        source_channel_axis=3,
+        axes=PayloadAxes.colour_samples(3),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(
         np.zeros((1, 4, 5, 3), dtype=np.float32),
@@ -139,11 +138,11 @@ def test_singleton_runtime_projection_consumes_rgb_image_and_mask_axis_together(
     )
 
     assert isinstance(projected, MaskedImagePayload)
-    assert image_payload_data(projected).shape == (4, 5, 3)
-    np.testing.assert_array_equal(image_payload_mask(projected), _SINGLETON_MASK)
-    projected_metadata = image_payload_metadata(projected)
+    assert projected.data.shape == (4, 5, 3)
+    np.testing.assert_array_equal(projected.mask, _SINGLETON_MASK)
+    projected_metadata = projected.metadata
     assert projected_metadata.plane_axis is None
-    assert projected_metadata.normalized_source_channel_axis(projected) == 2
+    assert projected_metadata.axis_index(ColourAxis, projected) == 2
 
 
 def test_singleton_runtime_projection_rejects_multi_slice_payload() -> None:

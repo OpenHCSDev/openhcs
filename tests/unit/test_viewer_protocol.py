@@ -16,7 +16,7 @@ from zmqruntime.transport import TransportEndpoint
 
 import openhcs.runtime.viewer_protocol as viewer_protocol
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_declarations import ViewerFamily
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     ViewerProcessLaunchConfig,
@@ -48,6 +48,7 @@ from openhcs.runtime.viewer_protocol import (
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
+from openhcs.core.streaming_config_declarations import NapariViewer
 
 
 @pytest.fixture(autouse=True)
@@ -288,7 +289,7 @@ def test_managed_viewer_readiness_uses_endpoint_binding_authority(monkeypatch):
     class ProbeViewer(ManagedViewerLifecycleMixin):
         viewer_process_label = "Probe"
         detached_server_entrypoint = DetachedViewerServerEntrypointSpec(
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
             module_name="tests.fake_viewer",
             function_name="run",
         )
@@ -302,7 +303,7 @@ def test_managed_viewer_readiness_uses_endpoint_binding_authority(monkeypatch):
                         transport_mode=TransportMode.IPC,
                     ),
                     persistent=False,
-                    viewer_type=ViewerType.NAPARI,
+                    viewer_family=NapariViewer,
                 )
             )
 
@@ -339,7 +340,7 @@ def test_managed_viewer_reuses_only_matching_application(monkeypatch):
     class ProbeViewer(ManagedViewerLifecycleMixin):
         viewer_process_label = "Probe"
         detached_server_entrypoint = DetachedViewerServerEntrypointSpec(
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
             module_name="tests.fake_viewer",
             function_name="run",
         )
@@ -362,7 +363,7 @@ def test_managed_viewer_reuses_only_matching_application(monkeypatch):
                 transport_mode=TransportMode.IPC,
             ),
             persistent=True,
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
         )
     )
     monkeypatch.setattr(viewer, "active_process_launch", lambda: viewer.process_launch)
@@ -413,7 +414,7 @@ def test_managed_viewer_lifecycle_reads_state_through_typed_control_request(
     class StateViewer(ManagedViewerLifecycleMixin):
         viewer_process_label = "State"
         detached_server_entrypoint = DetachedViewerServerEntrypointSpec(
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
             module_name="tests.fake_viewer",
             function_name="run",
         )
@@ -427,7 +428,7 @@ def test_managed_viewer_lifecycle_reads_state_through_typed_control_request(
                         transport_mode=TransportMode.IPC,
                     ),
                     persistent=False,
-                    viewer_type=ViewerType.NAPARI,
+                    viewer_family=NapariViewer,
                 )
             )
 
@@ -485,7 +486,7 @@ def test_managed_viewer_settlement_tracks_progress_without_total_timeout(
     class ProgressViewer(ManagedViewerLifecycleMixin):
         viewer_process_label = "Progress"
         detached_server_entrypoint = DetachedViewerServerEntrypointSpec(
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
             module_name="tests.fake_viewer",
             function_name="run",
         )
@@ -499,7 +500,7 @@ def test_managed_viewer_settlement_tracks_progress_without_total_timeout(
                         transport_mode=TransportMode.IPC,
                     ),
                     persistent=False,
-                    viewer_type=ViewerType.NAPARI,
+                    viewer_family=NapariViewer,
                 )
             )
 
@@ -569,7 +570,7 @@ def test_managed_viewer_settlement_rejects_no_progress(monkeypatch):
         {
             "viewer_process_label": "Stalled",
             "detached_server_entrypoint": DetachedViewerServerEntrypointSpec(
-                viewer_type=ViewerType.NAPARI,
+                viewer_family=NapariViewer,
                 module_name="tests.fake_viewer",
                 function_name="run",
             ),
@@ -586,7 +587,7 @@ def test_managed_viewer_settlement_rejects_no_progress(monkeypatch):
                 transport_mode=TransportMode.IPC,
             ),
             persistent=False,
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
         )
     )
     viewer.lifecycle_state.mark_connected_external()
@@ -721,7 +722,7 @@ def test_projected_graphical_viewer_replaces_noninteractive_qt_platform():
 def test_detached_viewer_entrypoint_generates_public_process_call(tmp_path):
     import_authority = OpenHCSRuntimeImportAuthority.current()
     python_code = DetachedViewerServerEntrypointSpec(
-        viewer_type=ViewerType.NAPARI,
+        viewer_family=NapariViewer,
         module_name="openhcs.runtime.napari_viewer_server",
         function_name="run_napari_viewer_process",
     ).python_code(
@@ -746,12 +747,12 @@ def test_detached_viewer_entrypoint_generates_public_process_call(tmp_path):
 
 def test_detached_viewer_launch_request_owns_log_and_python_command(tmp_path):
     spec = DetachedViewerServerEntrypointSpec(
-        viewer_type=ViewerType.NAPARI,
+        viewer_family=NapariViewer,
         module_name="openhcs.runtime.napari_viewer_server",
         function_name="run_napari_viewer_process",
     )
     log_file = DetachedViewerLaunchRequest.log_file_for(
-        viewer_type=spec.viewer_type,
+        viewer_family=spec.viewer_family,
         port=4321,
         log_dir=tmp_path / "logs",
     )
@@ -800,7 +801,7 @@ def test_detached_viewer_import_root_is_independent_of_runtime_cwd(tmp_path):
         encoding="utf-8",
     )
     spec = DetachedViewerServerEntrypointSpec(
-        viewer_type=ViewerType.NAPARI,
+        viewer_family=NapariViewer,
         module_name="openhcs.viewer_probe",
         function_name="run_probe",
     )
@@ -832,7 +833,7 @@ def test_process_resource_cleanup_stops_only_execution_owned_viewer(
     class CleanupViewer(ManagedViewerLifecycleMixin):
         viewer_process_label = "Cleanup"
         detached_server_entrypoint = DetachedViewerServerEntrypointSpec(
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
             module_name="tests.fake_viewer",
             function_name="run",
         )
@@ -846,7 +847,7 @@ def test_process_resource_cleanup_stops_only_execution_owned_viewer(
                         transport_mode=TransportMode.IPC,
                     ),
                     persistent=persistent,
-                    viewer_type=ViewerType.NAPARI,
+                    viewer_family=NapariViewer,
                 )
             )
 
@@ -906,11 +907,11 @@ def test_process_resource_cleanup_stops_only_execution_owned_viewer(
                 process.wait(timeout=1)
 
 
-@pytest.mark.parametrize("viewer_type", (ViewerType.NAPARI, ViewerType.FIJI))
+@pytest.mark.parametrize("viewer_family", ViewerFamily.families())
 def test_detached_viewer_launch_uses_console_free_gui_process_policy(
     monkeypatch,
     tmp_path,
-    viewer_type,
+    viewer_family,
 ):
     captured: dict[str, object] = {}
 
@@ -938,10 +939,10 @@ def test_detached_viewer_launch_uses_console_free_gui_process_policy(
     )
     monkeypatch.setattr(viewer_protocol.subprocess, "Popen", _popen)
     request = DetachedViewerLaunchRequest(
-        viewer_type=viewer_type,
+        viewer_family=viewer_family,
         port=5555,
         python_code="pass",
-        log_file=tmp_path / f"{viewer_type.wire_value}.log",
+        log_file=tmp_path / f"{viewer_family.wire_value}.log",
         process_launch=ViewerProcessLaunchConfig(qt_font_dpi=96),
     )
 
@@ -977,7 +978,7 @@ def test_managed_viewer_lifecycle_inherits_projected_launch_context():
     class EnvironmentViewer(ManagedViewerLifecycleMixin):
         viewer_process_label = "Environment"
         detached_server_entrypoint = DetachedViewerServerEntrypointSpec(
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
             module_name="tests.fake_viewer",
             function_name="run",
         )
@@ -991,7 +992,7 @@ def test_managed_viewer_lifecycle_inherits_projected_launch_context():
                         transport_mode=TransportMode.IPC,
                     ),
                     persistent=True,
-                    viewer_type=ViewerType.NAPARI,
+                    viewer_family=NapariViewer,
                 ),
             )
 
@@ -1041,7 +1042,7 @@ def test_detached_viewer_launch_rejects_headless_context_before_spawn(
         ),
     )
     request = DetachedViewerLaunchRequest(
-        viewer_type=ViewerType.NAPARI,
+        viewer_family=NapariViewer,
         port=5555,
         python_code="raise AssertionError",
         log_file=log_file,
@@ -1061,7 +1062,7 @@ def test_managed_viewer_lifecycle_uses_nominal_state_for_external_viewer():
     class ExternalViewer(ManagedViewerLifecycleMixin):
         viewer_process_label = "External"
         detached_server_entrypoint = DetachedViewerServerEntrypointSpec(
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
             module_name="tests.fake_viewer",
             function_name="run",
         )
@@ -1075,7 +1076,7 @@ def test_managed_viewer_lifecycle_uses_nominal_state_for_external_viewer():
                         transport_mode=TransportMode.IPC,
                     ),
                     persistent=True,
-                    viewer_type=ViewerType.NAPARI,
+                    viewer_family=NapariViewer,
                 ),
             )
             self.connected = True
@@ -1125,7 +1126,7 @@ def test_prepare_fresh_viewer_start_releases_endpoint_after_shutdown_ack():
     class FreshViewer(ManagedViewerLifecycleMixin):
         viewer_process_label = "Fresh"
         detached_server_entrypoint = DetachedViewerServerEntrypointSpec(
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
             module_name="tests.fake_viewer",
             function_name="run",
         )
@@ -1139,7 +1140,7 @@ def test_prepare_fresh_viewer_start_releases_endpoint_after_shutdown_ack():
                         transport_mode=TransportMode.IPC,
                     ),
                     persistent=True,
-                    viewer_type=ViewerType.NAPARI,
+                    viewer_family=NapariViewer,
                 ),
             )
             self.runtime_endpoint = endpoint
@@ -1190,7 +1191,7 @@ def test_prepare_fresh_viewer_start_reports_still_bound_after_forced_release():
     class StuckViewer(ManagedViewerLifecycleMixin):
         viewer_process_label = "Stuck"
         detached_server_entrypoint = DetachedViewerServerEntrypointSpec(
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
             module_name="tests.fake_viewer",
             function_name="run",
         )
@@ -1204,7 +1205,7 @@ def test_prepare_fresh_viewer_start_reports_still_bound_after_forced_release():
                         transport_mode=TransportMode.IPC,
                     ),
                     persistent=True,
-                    viewer_type=ViewerType.NAPARI,
+                    viewer_family=NapariViewer,
                 ),
             )
             self.runtime_endpoint = endpoint

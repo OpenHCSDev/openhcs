@@ -11,9 +11,7 @@ from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata, image_payload_data, image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
@@ -35,6 +33,7 @@ from openhcs.processing.backends.cellprofiler.color import GrayToColorModule, gr
 from test_cellprofiler_generic_special_input_binding import _compile_public_step
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.axes import ColourAxis
 
 
 @pytest.mark.parametrize("explicit_selector", [False, True])
@@ -92,8 +91,8 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
     assert request.plane_projection.axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert request.plane_projection.axis_size == 1
     assert request.plane_projection.plane_index is None
-    assert image_payload_metadata(request.payload.slices[0]).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-    assert image_payload_metadata(request.payload.slices[0]).source_image_names == ("FITC",)
+    assert request.payload.slices[0].metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert request.payload.slices[0].metadata.source_image_names == ("FITC",)
     execution = executor._invocation_request(
         image_request=request, adapter=runtime, current_image=source,
         module_type=GrayToColorModule,
@@ -104,14 +103,14 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
         execution_mode=execution.execution_mode, plane_projection=execution.plane_projection,
     )
     # Float32 is the original Stack runner's output contract, not unit normalization.
-    assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     plane = RuntimeSliceProjection.value_for_slice(result, RuntimePlaneAxisValueProjection.from_selected_plane(
         axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1,
     ))
-    assert image_payload_data(plane).shape == (4, 5, 1)
-    np.testing.assert_array_equal(image_payload_data(plane)[..., 0], pixels)
-    np.testing.assert_array_equal(image_payload_data(source)[0], pixels)
-    output = image_payload_metadata(result)
+    assert plane.data.shape == (4, 5, 1)
+    np.testing.assert_array_equal(plane.data[..., 0], pixels)
+    np.testing.assert_array_equal(source.data[0], pixels)
+    output = result.metadata
     assert output.source_image_paths == metadata.source_image_paths
     assert output.source_component_metadata["channel"] == "2"
     assert output.source_voxel_spacing == metadata.source_voxel_spacing
@@ -136,8 +135,8 @@ def _execute_bound_stack(bundle):
         execution_mode=ImagePayloadExecutionMode.FULL_STACK,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.SOURCE_BINDING,
-            axis_size=image_payload_data(bundle).shape[0],
-            source_aliases=image_payload_metadata(bundle).source_image_names,
+            axis_size=bundle.data.shape[0],
+            source_aliases=bundle.metadata.source_image_names,
         ),
     )
 
@@ -148,35 +147,35 @@ def test_two_processing_roles_share_physical_channel_without_fabrication(aliases
     capped = np.clip(raw / 6000, 0, 1)
     inputs = tuple(_source_plane(pixels, alias) for pixels, alias in zip((raw, capped), aliases, strict=True))
     bundle = ImagePayloadBundleContext.from_payloads(inputs).compose()
-    assert image_payload_metadata(bundle).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert bundle.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
     result = _execute_bound_stack(bundle)
-    np.testing.assert_array_equal(image_payload_data(result)[..., 0], raw)
-    np.testing.assert_array_equal(image_payload_data(result)[..., 1], capped)
-    np.testing.assert_array_equal(image_payload_data(inputs[0]), raw)
-    metadata = image_payload_metadata(result)
+    np.testing.assert_array_equal(result.data[..., 0], raw)
+    np.testing.assert_array_equal(result.data[..., 1], capped)
+    np.testing.assert_array_equal(inputs[0].data, raw)
+    metadata = result.metadata
     assert metadata.plane_axis is None
-    assert metadata.source_channel_axis == -1
+    assert metadata.axis_position(ColourAxis) == -1
     assert metadata.source_component_metadata["channel"] == "2"
     assert set(metadata.source_image_paths) == {"/synthetic/A01_s1_w2_z1_t1.tif"}
-    assert metadata.source_voxel_spacing == image_payload_metadata(inputs[0]).source_voxel_spacing
-    assert metadata.source_spatial_domain == image_payload_metadata(inputs[0]).source_spatial_domain
+    assert metadata.source_voxel_spacing == inputs[0].metadata.source_voxel_spacing
+    assert metadata.source_spatial_domain == inputs[0].metadata.source_spatial_domain
 
 
 def test_projected_runtime_plane_needs_a_separate_named_binding_axis():
     pixels = np.arange(20, dtype=np.float32).reshape(4, 5) * 1000
     scalar = _source_plane(pixels, "FITC")
-    metadata = image_payload_metadata(scalar)
+    metadata = scalar.metadata
     retained = replace(metadata, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(pixels[None], None)
     projected = RuntimeSliceProjection.value_for_slice(retained, RuntimePlaneAxisValueProjection.from_selected_plane(
         axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1,
     ))
-    assert image_payload_metadata(projected).plane_axis is None
+    assert projected.metadata.plane_axis is None
     bundle = ImagePayloadBundleContext.from_payloads((projected,)).compose()
-    assert image_payload_metadata(bundle).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert bundle.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
     result = _execute_bound_stack(bundle)
-    assert image_payload_data(result).shape == (4, 5, 1)
-    np.testing.assert_array_equal(image_payload_data(result)[..., 0], pixels)
-    assert image_payload_metadata(result).source_channel_axis == -1
+    assert result.data.shape == (4, 5, 1)
+    np.testing.assert_array_equal(result.data[..., 0], pixels)
+    assert result.metadata.axis_position(ColourAxis) == -1
 
 
 def test_stack_color_output_is_not_a_second_scalar_gray_binding():
@@ -185,7 +184,7 @@ def test_stack_color_output_is_not_a_second_scalar_gray_binding():
     color = _execute_bound_stack(named)
     # The existing STACK contract emits YXC even for one role. A second grayscale
     # binding introduces C,Y,X,source-color rather than the required C,Y,X.
-    assert image_payload_metadata(color).source_channel_axis == -1
+    assert color.metadata.axis_position(ColourAxis) == -1
     second_named = ImagePayloadBundleContext.from_payloads((color,)).compose()
     with pytest.raises(ValueError, match="axes don't match array"):
         _execute_bound_stack(second_named)
@@ -200,7 +199,7 @@ def test_integer_primary_binding_units_are_owned_before_stack_rescale_flag():
     # This conversion happens in the original input owner, before GrayToColor's
     # rescale_intensity argument. Do not claim a raw-unit-preserving four-step fix
     # from a passing floating-point Stack kernel test.
-    np.testing.assert_array_equal(image_payload_data(bound), pixels.astype(np.float32) / 65535)
-    np.testing.assert_array_equal(image_payload_data(source), pixels)
-    assert image_payload_metadata(bound).source_image_paths == image_payload_metadata(source).source_image_paths
-    assert image_payload_metadata(bound).source_component_metadata["channel"] == "2"
+    np.testing.assert_array_equal(bound.data, pixels.astype(np.float32) / 65535)
+    np.testing.assert_array_equal(source.data, pixels)
+    assert bound.metadata.source_image_paths == source.metadata.source_image_paths
+    assert bound.metadata.source_component_metadata["channel"] == "2"

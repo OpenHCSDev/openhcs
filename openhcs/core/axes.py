@@ -279,6 +279,8 @@ class Axis(GroupingDeclaration):
     """Token before this axis's value in plane filenames (variable axes)."""
     filename_padding: ClassVar[int] = 0
     """Zero padding for ordinal values in plane filenames."""
+    label: ClassVar[str]
+    """Short human-facing name, for example a viewer axis label (default: title-cased name)."""
     metadata_aliases: ClassVar[tuple[str, ...]]
     """Source-metadata field spellings that carry this axis (default: its name)."""
     metadata_collection_field: ClassVar[str]
@@ -295,6 +297,8 @@ class Axis(GroupingDeclaration):
             return  # the declaring base itself
         if "name" not in cls.__dict__:
             raise TypeError(f"Axis {cls.__qualname__} must declare its boundary name.")
+        if "label" not in cls.__dict__:
+            cls.label = cls.name.replace("_", " ").title()
         kinds = [base for base in cls.__mro__ if AxisValueKind in base.__bases__]
         if len(kinds) != 1:
             raise TypeError(
@@ -402,6 +406,13 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
     post-execute hooks, dataset root rules) import these on first registry
     access, so activation itself stays free of domain imports.
     """
+    payload_spatial_rank: ClassVar[int]
+    """Spatial rank of a payload that declares no spatial domain of its own.
+
+    Each family declares it: an undeclared array of rank r has r - k leading
+    undeclared axes and k trailing spatial axes, named by the spatial domain
+    of rank k.
+    """
 
     _active: ClassVar[type[AxisFamily] | None] = None
 
@@ -435,6 +446,12 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
         if not PartitionAxis.cardinality.admits(partition_count):
             raise TypeError(
                 f"Axis family {cls.__qualname__} must declare exactly one PartitionAxis."
+            )
+        spatial_rank = cls.__dict__.get("payload_spatial_rank")
+        if not isinstance(spatial_rank, int) or isinstance(spatial_rank, bool) or spatial_rank < 0:
+            raise TypeError(
+                f"Axis family {cls.__qualname__} must declare payload_spatial_rank "
+                "as a nonnegative int."
             )
         for axis in declared:
             if "family" in axis.__dict__:

@@ -90,13 +90,13 @@ class OpenHCSOrthogonalWidget(QWidget):
 
     def apply_plane(self) -> None:
         from openhcs.runtime.napari_viewer_server import (
-            NapariNavigationControlMessageAction,
+            NapariNavigationControlAction,
         )
 
         route, pair = self.routes.currentData(), self.planes.currentData()
         if route is None or pair is None:
             return
-        reply = NapariNavigationControlMessageAction().handle(
+        reply = NapariNavigationControlAction().handle(
             self.server,
             {
                 "payload": ViewerNavigationControlOptions(

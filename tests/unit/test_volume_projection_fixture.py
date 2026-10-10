@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ArtifactSpecCollection, ImageArtifactType
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data, image_payload_metadata
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -62,7 +62,7 @@ def output_plan(declaration):
 
 @pytest.mark.parametrize("indices", [(), (2, 0, 1), (2, 0), (1,)])
 def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volume, indices):
-    original_pixels = image_payload_data(source_volume)
+    original_pixels = source_volume.data
     selected_indices = indices or (0, 1, 2)
     selection = fixture.select_volume_fixture_planes_v2(source_volume, indices)
     projected = ImageArtifactType.contextualize_output(
@@ -70,15 +70,15 @@ def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volum
         RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, 3),
     )
     expected = original_pixels[list(selected_indices)]
-    source_metadata = image_payload_metadata(source_volume)
+    source_metadata = source_volume.metadata
     # for_source_planes intentionally consumes a singleton plane axis. This
     # declaration instead returns a 3-D stack, including for one selected plane.
     expected_provenance = source_metadata.for_source_planes(selected_indices).source_provenance.with_source_image_provenance_planes(
         source_metadata.source_image_provenance_planes.select(selected_indices),
     )
-    np.testing.assert_array_equal(image_payload_data(projected), expected)
-    assert image_payload_metadata(projected).source_provenance == expected_provenance
-    assert image_payload_metadata(projected).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    np.testing.assert_array_equal(projected.data, expected)
+    assert projected.metadata.source_provenance == expected_provenance
+    assert projected.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     projection = RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, len(selected_indices))
     for _ in range(2):
         image, labels, rows = fixture.inspect_volume_fixture_v2(projected)
@@ -91,9 +91,9 @@ def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volum
         contextual_rows = MeasurementsArtifactType.contextualize_output(
             projected, rows, output_plan(fixture.VOLUME_ROWS), projection,
         )
-        np.testing.assert_array_equal(image_payload_data(contextual_image), expected)
+        np.testing.assert_array_equal(contextual_image.data, expected)
         np.testing.assert_array_equal(object_label_dense_array(contextual_labels), expected.astype(np.int32))
-        assert image_payload_metadata(contextual_image).source_provenance == expected_provenance
+        assert contextual_image.metadata.source_provenance == expected_provenance
         assert contextual_labels.source_provenance == expected_provenance
         assert contextual_labels.declared_plane_count() == len(selected_indices)
         contextual_labels.validate_source_alignment(fixture.VOLUME_LABELS.name)
@@ -121,7 +121,7 @@ def test_projection_owner_rejects_invalid_selection(source_volume, indices):
 
 
 def test_empty_label_stack_keeps_schema_and_exact_plane_context(source_volume):
-    empty = image_payload_metadata(source_volume).payload_with(np.zeros((3, 8, 9), dtype=np.uint16))
+    empty = source_volume.metadata.payload_with(np.zeros((3, 8, 9), dtype=np.uint16))
     image, labels, rows = fixture.inspect_volume_fixture_v2(empty)
     projection = RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, 3)
     contextual = ObjectLabelsArtifactType.contextualize_output(
@@ -137,4 +137,4 @@ def test_empty_label_stack_keeps_schema_and_exact_plane_context(source_volume):
     )
     assert len(table.rows) == 0
     assert table.subject.object_name == fixture.VOLUME_LABELS.name
-    assert table.source_provenance == image_payload_metadata(image).source_provenance
+    assert table.source_provenance == image.metadata.source_provenance

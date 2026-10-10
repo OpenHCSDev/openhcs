@@ -27,7 +27,7 @@ from openhcs.core.pipeline.function_contracts import (
     artifact_outputs, required_axis_roles,
 )
 from openhcs.core.projected_image_output import SourceProjectedImageOutput
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_metadata
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -53,7 +53,7 @@ class SyntheticAggregateField(SourceProjectedImageOutput):
     def resolve_source_context(self, source, projection):
         assert projection is not None and projection.plane_index is None
         assert projection.axis_size == 24
-        return image_payload_metadata(source).collapse_leading_plane_axis().payload_with(self.data, None)
+        return source.metadata.collapse_leading_plane_axis().payload_with(self.data, None)
 
 
 def _field(name):

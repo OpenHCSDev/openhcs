@@ -7,12 +7,7 @@ from skimage import morphology
 
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.config import DtypeConfig
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.processing.backends.cellprofiler.feature_enhancement import (
     EnhanceOrSuppressFeaturesModule,
     SpeckleAccuracy,
@@ -21,6 +16,7 @@ from openhcs.processing.backends.cellprofiler.feature_enhancement import (
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.interop.cellprofiler.module_settings import BoundModuleSettings
 from openhcs.interop.cellprofiler.parser import ModuleBlock
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 def reflected_opening_reference(image, footprint):
@@ -51,8 +47,8 @@ def test_declared_fast_speckles_matches_original_disk_opening(shape, dtype, radi
         image, radius=radius, speckle_accuracy=SpeckleAccuracy.FAST,
         dtype_config=DtypeConfig(),
     )
-    np.testing.assert_array_equal(image_payload_data(actual), expected.astype(np.float32))
-    assert image_payload_data(actual).dtype == np.float32
+    np.testing.assert_array_equal(ImagePayload.of(actual).data, expected.astype(np.float32))
+    assert ImagePayload.of(actual).data.dtype == np.float32
 
 
 @pytest.mark.parametrize("accuracy", [SpeckleAccuracy.FAST, SpeckleAccuracy.SLOW])
@@ -74,10 +70,10 @@ def test_speckle_mask_background_and_metadata_remain_owned(accuracy, masked):
     actual = enhance_or_suppress_features(
         original, radius=5, speckle_accuracy=accuracy, dtype_config=DtypeConfig(),
     )
-    np.testing.assert_array_equal(image_payload_data(actual), expected)
-    np.testing.assert_array_equal(image_payload_mask(actual), mask)
-    assert image_payload_metadata(actual).intensity_scale == 65535
-    assert image_payload_metadata(actual) == image_payload_metadata(original).without_unit_interval_intensity_scale()
+    np.testing.assert_array_equal(ImagePayload.of(actual).data, expected)
+    np.testing.assert_array_equal(actual.mask, mask)
+    assert actual.metadata.intensity_scale == 65535
+    assert actual.metadata == original.metadata.without_unit_interval_intensity_scale()
 
 
 def test_fast_speckles_registered_callable_keeps_independent_planes():
@@ -89,7 +85,7 @@ def test_fast_speckles_registered_callable_keeps_independent_planes():
         ) for plane in image
     ])
     actual = enhance_or_suppress_features(image, radius=5, dtype_config=DtypeConfig())
-    np.testing.assert_array_equal(image_payload_data(actual), expected)
+    np.testing.assert_array_equal(ImagePayload.of(actual).data, expected)
     assert CallableContract.from_callable(enhance_or_suppress_features).processing_contract is ProcessingContract.PURE_2D
 
 
@@ -102,7 +98,7 @@ def test_fast_speckles_matches_reflected_opening_math(shape, radius, dtype):
     before = image.copy()
     expected = image - reflected_opening_reference(image, morphology.disk(radius))
     actual = enhance_or_suppress_features(image, radius=radius, dtype_config=DtypeConfig())
-    np.testing.assert_array_equal(image_payload_data(actual), expected.astype(np.float32))
+    np.testing.assert_array_equal(ImagePayload.of(actual).data, expected.astype(np.float32))
     np.testing.assert_array_equal(image, before)
 
 
@@ -110,7 +106,7 @@ def test_fast_oversized_opening_preserves_constant_negative_plane():
     image = np.full((1, 9), -5, dtype=np.float32)
     expected = np.zeros_like(image)
     actual = enhance_or_suppress_features(image, radius=150, dtype_config=DtypeConfig())
-    np.testing.assert_array_equal(image_payload_data(actual), expected)
+    np.testing.assert_array_equal(ImagePayload.of(actual).data, expected)
 
 
 def test_speckle_module_keeps_original_feature_size_binding():

@@ -18,7 +18,7 @@ from openhcs.agent.dto.viewer import (
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.mcp.server import build_server
-from openhcs.runtime.napari_viewer_server import NapariControlMessageAction
+from openhcs.runtime.napari_viewer_server import NapariControlAction
 from openhcs.runtime.viewer_protocol import (
     ViewerNativeWindowControlOptions,
     ViewerNativeWindowGeometry,
@@ -44,7 +44,7 @@ class NativePresentationGateway(CameraGateway):
 
     def presentation_control(self, request):
         self.calls.append(request)
-        return NapariControlMessageAction.for_message_type(request.message_type).handle(
+        return NapariControlAction.for_message_type(request.message_type).handle(
             self.server,
             {"payload": request.control_payload},
         )

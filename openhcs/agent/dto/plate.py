@@ -21,7 +21,7 @@ from openhcs.core.plate_file_inventory import (
     PlateFileKind,
     PlateFileKindSelection,
 )
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_declarations import NapariViewer, ViewerType
 from openhcs.core.synthetic_plate_generation import (
     SYNTHETIC_PLATE_GENERATION_PROFILE,
     SyntheticPlateFormat,
@@ -390,7 +390,7 @@ class PlateFileStreamRequest:
     path_contains: str | None = None
     well: str | None = None
     limit: int = 1
-    viewer_config_key: str = ViewerType.NAPARI.config_key
+    viewer_config_key: str = NapariViewer.config_key
     display_config: NapariDisplayConfig | None = None
     connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
     fresh_viewer: bool = False
@@ -409,7 +409,7 @@ class PlateFileStreamRequest:
         path_contains: str | None = None,
         well: str | None = None,
         limit: int = 1,
-        viewer_config_key: str = ViewerType.NAPARI.config_key,
+        viewer_config_key: str = NapariViewer.config_key,
         display_config: NapariDisplayConfig | None = None,
         host: str = "localhost",
         port: int | None = None,
@@ -696,7 +696,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
     """Stream files from the plate currently selected in the UI."""
 
     file_paths: tuple[str, ...] = ()
-    viewer_config_key: str = ViewerType.NAPARI.config_key
+    viewer_config_key: str = NapariViewer.config_key
     connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
     fresh_viewer: bool = False
 
@@ -712,7 +712,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
         path_contains: str | None = None,
         well: str | None = None,
         limit: int = 1,
-        viewer_config_key: str = ViewerType.NAPARI.config_key,
+        viewer_config_key: str = NapariViewer.config_key,
         host: str = "localhost",
         port: int | None = None,
         transport_mode: TransportMode | None = None,

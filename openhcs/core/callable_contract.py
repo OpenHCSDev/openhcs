@@ -496,8 +496,13 @@ class CallableMetadata:
         )
 
     def raw_main_flow_call_argument(self, source_payload: Any, signature: inspect.Signature) -> Any:
-        """Admit a declared nominal carrier at the canonical image boundary."""
-        from openhcs.core.runtime_image_values import image_payload_data
+        """Pass the main-flow value as the primary parameter declares it.
+
+        A bare array enters the payload family here; a parameter that does not
+        declare the payload's type receives the payload's array.
+        """
+
+        from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
 
         primary_name = self.primary_input_name(signature.parameters)
         annotation = None if primary_name is None else signature.parameters[primary_name].annotation
@@ -506,10 +511,11 @@ class CallableMetadata:
             and self.image_payload_consumption is ImagePayloadConsumption.COMPOSED
         ):
             return source_payload
+        source_payload = owned_runtime_value(source_payload)
         return source_payload if any(
             isinstance(source_payload, argument_type)
             for argument_type in self._nominal_argument_types(annotation)
-        ) else image_payload_data(source_payload)
+        ) or not isinstance(source_payload, ImagePayload) else source_payload.data
 
     def canonical_signature_for(self, func: Any) -> inspect.Signature:
         """Use the prepared semantic ABI; unprepared authoring remains live."""
@@ -1040,7 +1046,7 @@ class CallableContract(ArtifactPlanKeySelector):
             AlignedImageStack,
             pack_aligned_image_outputs,
         )
-        from openhcs.core.runtime_image_values import image_payload_metadata
+        from openhcs.core.runtime_image_values import owned_runtime_value
         from openhcs.core.runtime_output_matching import split_runtime_output
         from openhcs.core.runtime_slice_projection import (
             RuntimeSliceProjection,
@@ -1051,6 +1057,7 @@ class CallableContract(ArtifactPlanKeySelector):
         if len(canonical_specs) <= 1:
             return returned_output
         canonical_output, trailing_outputs = split_runtime_output(returned_output)
+        canonical_output = owned_runtime_value(canonical_output)
         if isinstance(canonical_output, AlignedImageStack):
             if canonical_output.slice_contexts:
                 return returned_output
@@ -1076,7 +1083,7 @@ class CallableContract(ArtifactPlanKeySelector):
                     "outputs but its compiled plane projection declares "
                     f"{projection.axis_size} value(s)."
                 )
-            output_axis = image_payload_metadata(canonical_output).plane_axis
+            output_axis = canonical_output.metadata.plane_axis
             if output_axis is not projection.axis:
                 raise RuntimeSliceProjectionDeclarationError(
                     f"{function_name} declares {len(canonical_specs)} canonical "
@@ -1200,8 +1207,6 @@ class CallableContract(ArtifactPlanKeySelector):
         input_specs = self.artifact_inputs
         source_refs = self.output_group_scope_sources
         if not source_refs:
-            if self.main_flow_supplies_primary_image:
-                return ArtifactSpecCollection(())
             return input_specs
         sources = ArtifactSpecCollection(
             source_spec
@@ -1222,11 +1227,22 @@ class CallableContract(ArtifactPlanKeySelector):
         return sources
 
     @property
+    def lifecycle_anchor_owner_inputs(self) -> ArtifactSpecCollection:
+        """Inputs whose stored values, not main-flow anchors, drive invocation.
+
+        A callable fed main-flow pixels runs once per main-flow anchor; its
+        undeclared artifact inputs are context for that anchor. A declared
+        group-lineage relation still names its owning inputs.
+        """
+        if self.main_flow_supplies_primary_image and not self.output_group_scope_sources:
+            return ArtifactSpecCollection(())
+        return self.group_scope_inputs
+
+    @property
     def main_flow_supplies_primary_image(self) -> bool:
         """Whether the runtime passes main-flow pixels as the primary argument.
 
-        Such a callable runs once per main-flow cohort; its artifact inputs are
-        context for that cohort, not the owner of its group scope.
+        Such a callable runs once per main-flow cohort.
         """
         adapter = self.runtime_adapter
         return self.accepts_implicit_main_flow_input and not (

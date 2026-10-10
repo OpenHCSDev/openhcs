@@ -8,9 +8,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerWireField
 
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata, image_payload_data, image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_slice_projection import RuntimeProjectionSourceIdentityRequest
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
@@ -34,10 +32,10 @@ from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdap
 from openhcs.interop.cellprofiler.runtime.module_execution import CellProfilerModuleExecutor
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.runtime.napari_streaming_handlers import (
-    NapariAggregateAxisBindingAuthority, NapariStreamLayerAddress, NapariStreamLayerItem,
+    NapariAggregateAxisBindingBuilder, NapariStreamLayerAddress, NapariStreamLayerItem,
 )
 from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority, ViewerComponentValueDomainPayload,
+    ViewerComponentAxisSemanticsFactory, ViewerComponentValueDomainPayload,
 )
 
 # Reuse the original provider-free compiler and runtime fixtures, not a second ABI.
@@ -45,6 +43,7 @@ from test_cellprofiler_generic_special_input_binding import _compile_public_step
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )
+from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
 @pytest.mark.parametrize("method", [RescaleMethod.DIVIDE_BY_VALUE, RescaleMethod.MANUAL_INPUT_RANGE])
@@ -126,17 +125,18 @@ def test_public_rescale_preserves_one_source_plane_through_stream_binding(method
         image_metadata=item.metadata,
         plane_component_domain=ViewerComponentValueDomainPayload.from_wire_mapping(
             fields.get(ViewerWireField.PLANE_COMPONENT_VALUES.value, {}), context="synthetic producer fields",
+            declared_axes=STREAM_AXES,
         ),
     )
     # The exact original strict receiver is reached, not replaced by a mock.
-    NapariAggregateAxisBindingAuthority.bindings((native_item,), ViewerComponentAxisSemanticsAuthority.empty())
+    NapariAggregateAxisBindingBuilder.bindings((native_item,), ViewerComponentAxisSemanticsFactory.empty())
     assert contract.artifact_inputs.names() == ("Bright",)
     assert request.image_count == 1
-    assert image_payload_data(result).shape == (4, 5)
-    assert image_payload_metadata(result).source_spatial_domain == metadata.source_spatial_domain
-    assert image_payload_metadata(result).source_image_paths == metadata.source_image_paths
-    assert image_payload_metadata(result).source_voxel_spacing == metadata.source_voxel_spacing
-    assert SourceVoxelSpacing.common_physical_pixel_size((image_payload_metadata(result).source_voxel_spacing,)) is None
+    assert result.data.shape == (4, 5)
+    assert result.metadata.source_spatial_domain == metadata.source_spatial_domain
+    assert result.metadata.source_image_paths == metadata.source_image_paths
+    assert result.metadata.source_voxel_spacing == metadata.source_voxel_spacing
+    assert SourceVoxelSpacing.common_physical_pixel_size((result.metadata.source_voxel_spacing,)) is None
     assert item.require_source_component_metadata() == metadata.source_component_metadata
     expected = pixels / (2.0 if method is RescaleMethod.DIVIDE_BY_VALUE else 20.0)
     np.testing.assert_array_equal(item.data, expected)

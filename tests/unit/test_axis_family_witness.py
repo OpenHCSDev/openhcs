@@ -37,6 +37,8 @@ from openhcs.domains.microscopy.axes import Microscopy
 
 
 class RemoteSensing(AxisFamily):
+    payload_spatial_rank = 2
+
     class Tile(Axis, TileAxis, DefaultVariable, OrdinalValued):
         name = "tile"
         filename_prefix = "f"
@@ -105,8 +107,73 @@ def test_configuration_derives_from_the_active_family(remote_sensing) -> None:
         "scene": "frame",
     }
     assert set(NapariDisplayConfig().component_modes()) == set(RemoteSensing.names())
-    payload = {"component_modes": fiji.component_modes(), "lut": "Grays", "auto_contrast": True}
-    assert FijiDisplayConfig.from_display_payload(payload) == fiji
+
+
+def _streamed_display_config(config) -> dict:
+    """The display-config wire section a producer under ``RemoteSensing`` sends."""
+
+    return {
+        "component_modes": config.component_modes(),
+        "component_order": list(config.COMPONENT_ORDER),
+        **config.display_payload_extra(),
+    }
+
+
+def test_viewer_decodes_a_stream_by_its_own_declared_axes(remote_sensing) -> None:
+    from openhcs.core.config import FijiDisplayConfig, NapariDisplayConfig
+    from openhcs.runtime.viewer_component_system import (
+        ViewerComponentNameMetadata,
+        ViewerMappingDisplayConfigInput,
+    )
+    from openhcs.runtime.viewer_display import (
+        FijiDisplaySettings,
+        FijiSlots,
+        NapariSlots,
+    )
+
+    fiji_payload = _streamed_display_config(FijiDisplayConfig(lut="Fire"))
+    napari_payload = _streamed_display_config(NapariDisplayConfig())
+
+    # The viewer process runs with its own (microscopy) family active.
+    Microscopy.activate()
+    fiji = ViewerMappingDisplayConfigInput(fiji_payload).layout()
+    assert fiji.declared_axes.names() == ("tile", "band", "date", "scene")
+    assert fiji.components_in(FijiSlots.HyperstackChannel) == ("band",)
+    assert fiji.components_in(FijiSlots.HyperstackSlice) == ()
+    assert fiji.components_in(FijiSlots.HyperstackFrame) == ("tile", "date", "scene")
+    assert FijiDisplaySettings.from_display_payload(fiji_payload) == FijiDisplaySettings(
+        lut="Fire"
+    )
+
+    napari = ViewerMappingDisplayConfigInput(napari_payload).layout()
+    assert napari.components_in(NapariSlots.Stack) == ("tile", "band", "date", "scene")
+    assert napari.names_with_role(PartitionAxis) == ("scene",)
+    assert napari.names_with_role(StackAxis) == ()
+
+    names = ViewerComponentNameMetadata.from_wire_mapping(
+        {"band": {"3": "NIR"}, "scene": {"S07": "Lake"}},
+        declared_axes=fiji.declared_axes,
+        context="remote sensing names",
+    )
+    assert names.axis_label("band", 3) == "Band 3: NIR"
+    assert names.axis_label("date", 14) == "Date 14"
+    assert names.axis_label("scene", "S07") == "Lake"
+
+
+def test_an_axis_without_a_viewer_role_takes_each_viewer_default_slot() -> None:
+    from openhcs.core.config import FijiDisplayConfig, NapariDisplayConfig
+
+    class Survey(AxisFamily):
+        payload_spatial_rank = 2
+
+        class Replicate(Axis, DefaultVariable, OrdinalValued):
+            name = "replicate"
+
+        class Site(Axis, PartitionAxis, LabelValued):
+            name = "site"
+
+    assert FijiDisplayConfig().slot_for_axis(Survey.Replicate) == "frame"
+    assert NapariDisplayConfig().slot_for_axis(Survey.Replicate) == "stack"
 
 
 def test_plane_addresses_spell_the_declared_tokens(remote_sensing) -> None:
@@ -206,3 +273,129 @@ def test_pipeline_runs_end_to_end_through_the_kernel_dataset_source(tmp_path) ->
         report["config_fields"]
     )
     assert report["loaded_domain_modules"] == []
+
+
+# ---------------------------------------------------------------------------
+# A non-image family flows through the tensor payload layer
+# ---------------------------------------------------------------------------
+
+
+class Telemetry(AxisFamily):
+    """Sensor stations recording 1-D time series; values have no spatial axes."""
+
+    payload_spatial_rank = 0
+
+    class Window(Axis, TileAxis, DefaultVariable, OrdinalValued):
+        name = "window"
+
+    class Sensor(Axis, ColourAxis, DefaultGroupBy, OrdinalValued):
+        name = "sensor"
+
+    class Time(Axis, TimeAxis, OrdinalValued):
+        name = "time"
+
+    class Station(Axis, PartitionAxis, LabelValued):
+        name = "station"
+
+
+@pytest.fixture
+def telemetry() -> Iterator[type[Telemetry]]:
+    Telemetry.activate()
+    try:
+        yield Telemetry
+    finally:
+        Microscopy.activate()
+
+
+def _signal(offset: float):
+    import numpy as np
+
+    from openhcs.core.payload_axes import FamilyAxisSpec, PayloadAxes
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+
+    metadata = ImagePayloadMetadata(
+        source_dtype="float32",
+        axes=PayloadAxes.of(
+            (FamilyAxisSpec(Telemetry.Sensor), 0),
+            (FamilyAxisSpec(Telemetry.Time), -1),
+        ),
+    )
+    samples = np.arange(12, dtype=np.float32).reshape(3, 4) + offset
+    return metadata.payload_with(samples)
+
+
+def test_time_series_payloads_declare_their_axes(telemetry) -> None:
+    import numpy as np
+
+    from openhcs.core.payload_axes import (
+        FamilyAxisSpec,
+        SpatialAxis,
+        UndeclaredAxisSpec,
+    )
+    from openhcs.core.runtime_image_values import ImagePayload
+    from openhcs.core.source_spatial_domain import PointSourceSpatialDomain
+
+    signal = _signal(0.0)
+    assert signal.axes == (
+        FamilyAxisSpec(Telemetry.Sensor),
+        FamilyAxisSpec(Telemetry.Time),
+    )
+    assert signal.metadata.axis_index(TimeAxis, signal) == 1
+    assert signal.metadata.axis_index(ColourAxis, signal) == 0
+    assert type(signal.metadata.source_spatial_domain) is PointSourceSpatialDomain
+    assert signal.metadata.spatial_axes(signal) == ()
+    assert signal.metadata.spatial_axes_yx(signal) is None
+    assert not any(spec.has_role(SpatialAxis) for spec in signal.axes)
+
+    # The family declares no spatial axes, so nothing in a bare array is spatial.
+    bare = ImagePayload.of(np.zeros(5, dtype=np.float32))
+    assert bare.axes == (UndeclaredAxisSpec(),)
+
+
+def test_time_series_stack_slices_and_projects_without_kernel_edits(telemetry) -> None:
+    import numpy as np
+
+    from openhcs.core.aligned_image_payload import stack_image_payloads
+    from openhcs.core.payload_axes import FamilyAxisSpec, RuntimePlaneAxisSpec
+    from openhcs.core.runtime_image_values import (
+        ImagePayloadMetadata,
+        ImagePayloadMetadataCompositionMode,
+        MaskedImagePayload,
+    )
+    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+    signals = (_signal(0.0), _signal(100.0))
+    stack = stack_image_payloads(
+        signals, metadata_mode=ImagePayloadMetadataCompositionMode.STACK
+    )
+    assert stack.geometry.shape == (2, 3, 4)
+    assert stack.axes == (
+        RuntimePlaneAxisSpec(RuntimePlaneAxis.RUNTIME_SLICE.value),
+        FamilyAxisSpec(Telemetry.Sensor),
+        FamilyAxisSpec(Telemetry.Time),
+    )
+    assert RuntimeSliceProjection.slice_count_from_values((stack,)) == 2
+
+    slices = stack.alignment_slices()
+    assert len(slices) == 2
+    for original, projected in zip(signals, slices, strict=True):
+        np.testing.assert_array_equal(np.asarray(projected.data), original.data)
+        assert projected.axes == original.axes
+        assert projected.metadata.plane_axis is None
+
+    restored = ImagePayloadMetadata.from_mapping(
+        {"axes": stack.metadata.axes.to_mapping(), "source_dtype": "float32"}
+    )
+    assert restored.axes == stack.metadata.axes
+
+    # A mask may omit the declared non-spatial axes and broadcasts over them.
+    masked = MaskedImagePayload(
+        data=signals[0].data,
+        mask=np.ones((3, 4), dtype=bool),
+        metadata=signals[0].metadata,
+    )
+    assert masked.metadata.mask_domain(masked).accepts((3, 4))
+    without_time = masked.metadata.without_axis(TimeAxis)
+    assert without_time.axis_index(TimeAxis, masked) is None
+    assert without_time.axis_index(ColourAxis, masked) == 0

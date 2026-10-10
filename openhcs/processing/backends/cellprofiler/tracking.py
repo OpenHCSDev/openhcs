@@ -44,11 +44,7 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_image_values import (
-    RuntimeArrayData,
-    image_payload_data,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import RuntimeArrayData
 from openhcs.interop.cellprofiler.image_normalization import (
     normalize_cellprofiler_image_payload,
 )
@@ -116,6 +112,8 @@ from openhcs.processing.backends.cellprofiler._backend import (
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     NumbaBackendProvider,
 )
+from openhcs.core.payload_axes import ColourSampleAxisSpec
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
@@ -914,10 +912,8 @@ class TrackObjectsResult(RuntimeOutputBundle):
                 )
             )
             normalized = normalize_cellprofiler_image_payload(rendered)
-            metadata = image_payload_metadata(normalized).replace_fields(
-                source_channel_axis=-1
-            ).with_source_context_from(image_payload_metadata(labels))
-            output_image = metadata.payload_with(image_payload_data(normalized), None)
+            metadata = normalized.metadata.with_axis(ColourSampleAxisSpec(), -1).with_source_context_from(labels.metadata)
+            output_image = metadata.payload_with(normalized.data, None)
         return cls(
             output_image=output_image,
             parent_relationship=parent_relationship,
@@ -1325,7 +1321,7 @@ class DistanceTrackObjectsMethodStrategy(TrackObjectsMethodStrategy):
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
 @special_inputs("labels")
 def track_objects(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     labels: ObjectLabelValue,
     tracking_method: TrackingMethod = TrackingMethod.OVERLAP,
     pixel_radius: int = 50,

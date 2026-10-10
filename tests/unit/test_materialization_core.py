@@ -128,6 +128,8 @@ from openhcs.processing.materialization.core import (
 )
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.unit.viewer_axes_fixture import STREAM_AXES
+from openhcs.core.payload_axes import PayloadAxes
 
 
 def _memory_materialize(spec, data, path, filemanager):
@@ -347,7 +349,7 @@ class _TestViewerDisplayConfig(ViewerDisplayConfigABC):
         return {}
 
     def display_payload_extra(self):
-        return {}
+        return {"declared_axes": STREAM_AXES.to_wire()}
 
 
 class _TestViewerFilenameParser(ViewerFilenameParserABC):
@@ -553,7 +555,7 @@ def test_indexed_image_materialization_streams_each_declared_component_plane(
         data=data,
         metadata=ImagePayloadMetadata(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-            source_channel_axis=-1,
+            axes=PayloadAxes.colour_samples(-1),
             source_image_provenance_planes=(
                 SourceImageProvenancePlanes.from_components(
                     component_metadata=tuple(
@@ -856,9 +858,10 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
         image_metadata=metadata,
         plane_component_domain=ViewerComponentValueDomainPayload.from_wire_mapping(
             {"z_index": z_values}, context="materialized point source domain",
+            declared_axes=STREAM_AXES,
         ),
     )
-    points, properties = viewer_server._build_nd_points([item], projection)
+    points, properties = viewer_server._build_nd_points([item], projection, ("z_index",))
     assert points.tolist() == [[2.375, 1.25, 3.5]]
     assert properties["label"] == [7]
     assert properties["object_label"] == [7]
@@ -926,6 +929,7 @@ def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
     from polystore.streaming_constants import StreamingDataType
     plane_domain = ViewerComponentValueDomainPayload.from_wire_mapping(
         fields[ViewerWireField.PLANE_COMPONENT_VALUES.value], context="saved label ROI",
+        declared_axes=STREAM_AXES,
     )
     assert plane_domain.to_wire_mapping() == {"z_index": list(z_values)}
 
@@ -2558,9 +2562,6 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
     from openhcs.processing.materialization.options import MaterializedFilenameIdentity
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
     from openhcs.core.image_file_serialization import TiffImageFileFormat
-    from openhcs.core.runtime_image_values import (
-        image_payload_data, image_payload_mask, image_payload_metadata,
-    )
     from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
     from openhcs.core.source_projection import SourceArtifactProjection, SourcePixelRef
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
@@ -2631,7 +2632,7 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
 
     (output,) = batch.outputs
     assert Path(output.path).name == "A01_s001_w2_z001_t001.tif"
-    assert image_payload_metadata(payload).source_component_metadata.get("z_index") is None
+    assert payload.metadata.source_component_metadata.get("z_index") is None
     assert output.metadata.source_component_metadata.get("z_index") is None
     assert output.metadata.source_provenance.source_plane_count == 3
     np.testing.assert_array_equal(tifffile.imread(output.path), pixels)
@@ -2688,8 +2689,8 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
                 axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=3
             ).selected_plane(index),
         )
-        np.testing.assert_array_equal(image_payload_data(plane), pixels[index])
-        np.testing.assert_array_equal(image_payload_mask(plane), mask[index])
+        np.testing.assert_array_equal(plane.data, pixels[index])
+        np.testing.assert_array_equal(plane.mask, mask[index])
         assert plane.metadata.source_path == paths[index]
         assert plane.metadata.source_component_metadata["z_index"] == index + 1
         assert type(plane.metadata.source_spatial_domain) is SourceSpatialDomain

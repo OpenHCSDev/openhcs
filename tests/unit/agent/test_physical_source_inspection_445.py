@@ -184,7 +184,6 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
         # Exercise the existing stream's source preparation, not a viewer/mock
         # or a new decoder. The actual native launch remains parent-owned.
         from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-        from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
         from openhcs.core.viewer_streaming_service import ViewerStreamingSource
 
         context, errors, _ = service.open_context(
@@ -209,8 +208,8 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
             source_projection=stream_projection,
             component_metadata=stream_record.metadata,
         )
-        np.testing.assert_array_equal(image_payload_data(image), stack[0, 0, 2])
-        metadata = image_payload_metadata(image)
+        np.testing.assert_array_equal(image.data, stack[0, 0, 2])
+        metadata = image.metadata
         assert metadata.source_voxel_spacing == SourceVoxelSpacing((0.5, 0.5))
 
         ambiguous = service.sample_image(

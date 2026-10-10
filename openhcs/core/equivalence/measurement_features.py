@@ -43,7 +43,7 @@ from openhcs.core.runtime_measurements import (
     ObjectCountFeatureMarker,
     ObjectIdentifierFeatureMarker,
     ObjectIntensityFeatureMarker,
-    ObjectLocationCoordinateProjectionStrategy,
+    object_location_features,
     ObjectLocationFeatureMarker,
     ObjectShapeDescriptorFeatureMarker,
     RuntimeMeasurementFeatureRelation,
@@ -381,13 +381,9 @@ class ObjectLocationFeatureSemanticProfile(
     def matches_feature(
         self, context: RuntimeMeasurementFeatureSemanticContext
     ) -> bool:
-        key = context.key
-        return any(
-            key.feature_name == strategy_type.axis_feature.value
-            for strategy_type in (
-                ObjectLocationCoordinateProjectionStrategy.registered_strategy_types()
-            )
-        )
+        return context.key.feature_name in {
+            feature.value for feature in object_location_features()
+        }
 
 
 class ObjectCalculatedFeatureSemanticProfile(

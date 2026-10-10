@@ -77,7 +77,6 @@ from openhcs.core.runtime_artifact_values import (
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
@@ -137,7 +136,6 @@ from openhcs.core.steps.function_output_identity import (
     IncompleteFunctionOutputFilenameIdentityError,
 )
 
-from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     StreamingViewerSurface,
@@ -161,8 +159,6 @@ from openhcs.processing.materialization import (
 )
 from openhcs.processing.materialization.core import (
     MaterializationSpec,
-    Output,
-    SavedMaterializationOutputs,
     materialization_outputs,
 )
 from openhcs.processing.materialization.options import (
@@ -171,10 +167,14 @@ from openhcs.processing.materialization.options import (
 )
 from openhcs.core.axes import AxisFamily, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.unit.viewer_axes_fixture import STREAM_AXES
+from openhcs.core.streaming_config_declarations import NapariViewer
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 class StreamingConfigStub(ViewerDisplayConfigABC):
-    backend = SimpleNamespace(value="napari_stream")
+    viewer_family = NapariViewer
     COMPONENT_ORDER = AxisFamily.active().names()
     host = "127.0.0.1"
     transport_mode = "tcp"
@@ -189,6 +189,7 @@ class StreamingConfigStub(ViewerDisplayConfigABC):
 
     def display_payload_extra(self):
         return {
+            "declared_axes": STREAM_AXES.to_wire(),
             "colormap": self.colormap.value,
             "variable_size_handling": self.variable_size_handling.value,
         }
@@ -202,7 +203,7 @@ class StreamingConfigStub(ViewerDisplayConfigABC):
                     transport_mode=self.transport_mode,
                 ),
                 persistent=False,
-                viewer_type=ViewerType.NAPARI,
+                viewer_family=NapariViewer,
             ),
             display_config=self,
             source=self.viewer_source(_context),
@@ -668,7 +669,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     np.testing.assert_array_equal(runtime_value.data.labels, expected_labels)
     assert runtime_value.data.dtype == np.dtype(np.int32)
     assert runtime_value.data.representation is (
-        contextualized.value_for_slice(0).representation
+        contextualized.value_at(0).representation
     )
     assert runtime_value.data.domain == ObjectLabelDomain(
         declared_object_id_domains=((1,), (2,)),
@@ -686,7 +687,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     }
     assert runtime_value.data.source_image_names == ()
     assert runtime_value.data.source_image_provenance_planes == (
-        image_payload_metadata(source).source_image_provenance_planes
+        source.metadata.source_image_provenance_planes
     )
     assert runtime_value.data.dimensions == ()
     assert runtime_value.data.source_image_name is None
@@ -737,7 +738,7 @@ def test_image_outputs_merge_source_provenance_when_output_already_has_metadata(
         ),
     )
 
-    metadata = image_payload_metadata(contextualized)
+    metadata = contextualized.metadata
     assert metadata.source_dtype == "float32"
     assert metadata.source_image_provenance_planes.paths == (
         "/input/A02_s001_w1_z001_t001.tif",
@@ -809,7 +810,7 @@ def test_object_label_payload_stack_preserves_source_slice_metadata():
         value_name="Object-label"
     )
     assert runtime_value.data.source_provenance == (
-        image_payload_metadata(source).source_provenance
+        source.metadata.source_provenance
     )
     assert runtime_value.data.dimensions == ()
     assert runtime_value.data.source_image_name is None
@@ -903,7 +904,7 @@ def test_materialize_artifact_outputs_attaches_image_schema_provenance(monkeypat
     data, path = materialized[0]
     assert path == "/images/A01_s001_w3_z001_t001.tif"
     assert isinstance(data, ImageMetadataPayload)
-    assert dict(image_payload_metadata(data).source_component_metadata) == {
+    assert dict(data.metadata.source_component_metadata) == {
         "well": "A01",
         "site": "1",
         "channel": "3",
@@ -2929,6 +2930,7 @@ def test_materialize_artifact_outputs_streams_aggregate_artifact_with_incomplete
         streaming_config.component_modes()
     )
     assert stream_request.display_config.display_payload_extra() == {
+        "declared_axes": STREAM_AXES.to_wire(),
         "colormap": "gray",
         "variable_size_handling": "pad_to_max",
     }
@@ -3522,7 +3524,7 @@ def test_materialize_artifact_outputs_uses_runtime_plane_group_identity(
         )
     ]
     assert materialized[0][0] is runtime_value.data
-    assert image_payload_metadata(materialized[0][0]).source_image_names == (
+    assert materialized[0][0].metadata.source_image_names == (
         "AdjacentImage",
     )
 
@@ -4031,7 +4033,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
             "timepoint": "1",
         },
         source_image_names=("OrigDNA",),
-        source_channel_axis=0,
+        axes=PayloadAxes.colour_samples(0),
         plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
     )
     value = RuntimeValue.normalize(
@@ -4039,7 +4041,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
         ImagePayloadMetadata(
             source_path="/derived/nuclei-rgb.tif",
             source_image_names=("NucleiImage",),
-            source_channel_axis=3,
+            axes=PayloadAxes.colour_samples(3),
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         ).payload_with(
             np.ones((2, 5, 7, 3), dtype=np.uint16),
@@ -4051,12 +4053,12 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
 
     metadata = output_plan.materialization_metadata(value)
 
-    pixel_metadata = image_payload_metadata(value.materialization_payload())
+    pixel_metadata = value.materialization_payload().metadata
     assert pixel_metadata.source_path == "/derived/nuclei-rgb.tif"
     assert pixel_metadata.source_image_names == ("SavedNuclei",)
     assert metadata.source_path == "/input/A01_s001_w2_z001_t001.tif"
     assert metadata.source_image_names == ("OrigDNA",)
-    assert metadata.source_channel_axis == 3
+    assert metadata.axis_position(ColourAxis) == 3
     assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
@@ -4157,7 +4159,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
         persistent_backend="disk",
     )
 
-    assert image_payload_metadata(saved_payload).plane_axis is (
+    assert saved_payload.metadata.plane_axis is (
         RuntimePlaneAxis.RUNTIME_SLICE
     )
     assert tuple(

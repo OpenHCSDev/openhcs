@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any, Self
 
 import numpy as np
-from arraybridge import ArrayPayload
+from arraybridge import ArrayGeometry, ArrayPayload
 
 
 def runtime_array_ufunc_result(
@@ -47,6 +47,11 @@ class RuntimeArrayPayload(ArrayPayload, ABC):
     def dtype(self) -> Any:
         """Return the array dtype; structured owners may derive it before realization."""
         return self.array_payload_data().dtype
+
+    @property
+    def geometry(self) -> ArrayGeometry:
+        """Return the array geometry; structured owners derive it without realizing."""
+        return ArrayGeometry(tuple(int(size) for size in self.shape))
 
     @abstractmethod
     def array_payload_data(self) -> Any: ...
@@ -137,6 +142,19 @@ def runtime_array_operand(value: Any) -> Any:
     if isinstance(value, RuntimeArrayPayload):
         return value.array_payload_data()
     return value
+
+
+def array_geometry(value: Any) -> ArrayGeometry:
+    """Return the geometry of an array or runtime payload without realizing it."""
+    if isinstance(value, RuntimeArrayPayload):
+        return value.geometry
+    return ArrayGeometry.require_from_value(value)
+
+
+def mask_array(mask: Any) -> Any:
+    """Return the concrete array of a mask given as an array or array payload."""
+    operand = runtime_array_operand(mask)
+    return operand if is_array_payload(operand) else np.asarray(operand)
 
 
 def is_array_payload(data: Any) -> bool:

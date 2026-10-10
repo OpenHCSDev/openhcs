@@ -1,40 +1,44 @@
-"""Declaration-ownership tests for managed streaming viewer resolution."""
+"""Each streaming viewer is one ViewerFamily class; everything else is derived."""
 
 import pytest
 
 from openhcs.core.config import StreamingConfig
 from openhcs.core.streaming_config_declarations import (
-    ViewerDeclarationABC,
+    NapariViewer,
+    ViewerFamily,
     ViewerType,
 )
 from openhcs.runtime.viewer_protocol import ManagedViewerLifecycleMixin
 
-
-@pytest.mark.parametrize("viewer_type", tuple(ViewerType), ids=lambda item: item.value)
-def test_viewer_member_owns_nominal_leaf_and_runtime_type(viewer_type) -> None:
-    declaration = viewer_type.declaration
-    visualizer_type = declaration.visualizer_type()
-
-    assert isinstance(declaration, ViewerDeclarationABC)
-    assert visualizer_type.detached_server_entrypoint.viewer_type is viewer_type
-    assert (
-        ManagedViewerLifecycleMixin.__registry__[viewer_type.wire_value]
-        is visualizer_type
-    )
+VIEWER_FAMILIES = ViewerFamily.families()
 
 
-def test_viewer_identity_projects_config_and_presentation_names() -> None:
-    assert ViewerType.NAPARI.config_key == "napari_streaming_config"
-    assert ViewerType.NAPARI.step_plan_output_key == "napari_streaming_paths"
-    assert ViewerType.NAPARI.display_name == "Napari"
-    assert ViewerType.NAPARI.title == "OpenHCS Napari Visualization"
-    assert set(StreamingConfig.__registry__) == set(ViewerType)
+@pytest.mark.parametrize("family", VIEWER_FAMILIES, ids=lambda item: item.wire_value)
+def test_viewer_family_owns_visualizer_config_and_boundary_name(family) -> None:
+    visualizer_type = family.visualizer_type()
+
+    assert visualizer_type.detached_server_entrypoint.viewer_family is family
+    assert ManagedViewerLifecycleMixin.__registry__[family.wire_value] is visualizer_type
+    assert StreamingConfig.config_type_for_key(family.config_key).viewer_family is family
+    assert ViewerFamily.named(family.viewer_type()) is family
+    assert family.viewer_type().family is family
 
 
-def test_viewer_identity_parses_only_at_the_wire_boundary() -> None:
-    assert ViewerType.from_wire_value("fiji") is ViewerType.FIJI
+def test_viewer_names_derive_from_the_family_declaration() -> None:
+    assert NapariViewer.config_key == "napari_streaming_config"
+    assert NapariViewer.step_plan_output_key == "napari_streaming_paths"
+    assert NapariViewer.display_name == "Napari"
+    assert NapariViewer.title == "OpenHCS Napari Visualization"
+    assert set(StreamingConfig.__registry__) == set(VIEWER_FAMILIES)
+    assert {member.value for member in ViewerType} == {
+        family.wire_value for family in VIEWER_FAMILIES
+    }
+
+
+def test_viewer_names_parse_only_at_the_wire_boundary() -> None:
+    assert ViewerFamily.named("fiji").viewer_type() is ViewerType.FIJI
     with pytest.raises(ValueError):
-        ViewerType.from_wire_value("FijiViewerDeclaration")
+        ViewerFamily.named("FijiViewer")
 
 
 @pytest.mark.parametrize("viewer_type", tuple(ViewerType), ids=lambda item: item.value)

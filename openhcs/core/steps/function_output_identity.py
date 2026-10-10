@@ -8,10 +8,7 @@ import re
 from typing import ClassVar, Mapping, Sequence, TypeAlias
 
 from openhcs.core.source_path_identity import source_path_identity
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.components.parser_metaprogramming import (
     FilenameParseResult,
@@ -387,7 +384,7 @@ class FunctionOutputIdentity:
 
     @classmethod
     def from_request(cls, request: FunctionOutputPathRequest) -> FunctionOutputIdentity:
-        metadata = image_payload_metadata(request.output_payload)
+        metadata = request.output_payload.metadata
         payload_identity = cls._identity_from_metadata_with_cache(
             request.parser,
             metadata,

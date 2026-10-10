@@ -14,11 +14,6 @@ from openhcs.core.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
 from openhcs.core.vfs_protocol import PlateInputFile
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
@@ -34,6 +29,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from openhcs.processing.backends.cellprofiler._backend import (
     OpencvBackendProvider,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -68,7 +64,7 @@ STRATEGY_REGISTRY_KEY = "method_label"
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def enhance_or_suppress_features(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     method: OperationMethod = OperationMethod.ENHANCE,
     enhance_method: EnhanceMethod = EnhanceMethod.SPECKLES,
     radius: float = 10.0,
@@ -91,7 +87,7 @@ def enhance_or_suppress_features(
         dark_hole_radius_min: Smallest dark-hole radius to enhance, in pixels.
         dark_hole_radius_max: Largest dark-hole radius to enhance, in pixels.
     """
-    image_data = np.asarray(image_payload_data(image))
+    image_data = np.asarray(image.data)
     if image_data.dtype != np.float32 and image_data.dtype != np.float64:
         image_data = image_data.astype(np.float32)
     mask_context = FeatureEnhancementMaskContext(
@@ -113,9 +109,9 @@ def enhance_or_suppress_features(
         )
     )
     return (
-        image_payload_metadata(image)
+        image.metadata
         .without_unit_interval_intensity_scale()
-        .payload_with(np.asarray(result, dtype=np.float32), image_payload_mask(image))
+        .payload_with(np.asarray(result, dtype=np.float32), image.mask)
     )
 
 
@@ -286,7 +282,7 @@ class FeatureEnhanceMethodStrategy(
 
 
 def _enhancement_mask(image: object, image_data: np.ndarray) -> np.ndarray:
-    mask = image_payload_mask(image)
+    mask = image.mask
     if mask is None:
         return np.ones(image_data.shape, dtype=bool)
     return np.asarray(mask, dtype=bool)
@@ -459,7 +455,7 @@ def _prepare_enhance_or_suppress_features() -> None:
     image = np.zeros((32, 32), dtype=np.float32)
     image[8:24, 16] = 1.0
     enhance_or_suppress_features.__wrapped__(
-        image,
+        ImagePayload.of(image),
         enhance_method=EnhanceMethod.NEURITES,
         neurite_method=NeuriteMethod.TUBENESS,
         smoothing_value=2.0,

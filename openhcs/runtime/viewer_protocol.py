@@ -8,6 +8,7 @@ import platform
 import re
 import subprocess
 import sys
+import threading
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, MutableMapping
@@ -75,7 +76,7 @@ from zmqruntime.viewer_protocol import (
 
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_declarations import ViewerFamily
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     ViewerProcessLaunchConfig,
@@ -114,6 +115,7 @@ ComponentTupleSortKey: TypeAlias = tuple[ComponentValueSortKey, ...]
 ViewerLaunchLiteral: TypeAlias = str | int | float | bool | None
 ViewerOptionalT = TypeVar("ViewerOptionalT")
 
+logger = logging.getLogger(__name__)
 _EXECUTION_OWNED_VIEWER_PROCESSES = EndpointProcessGroup()
 register_cleanup_callback(_EXECUTION_OWNED_VIEWER_PROCESSES.stop_all)
 
@@ -244,7 +246,7 @@ class ViewerImageColorControlOptions(ViewerProjectionRecord):
 
 @dataclass(frozen=True)
 class ViewerNativeWindowGeometry(ViewerProjectionRecord):
-    """Qt logical client geometry; actual screen admission belongs to native Qt."""
+    """Qt logical client geometry; actual screen acceptance belongs to native Qt."""
 
     x: StrictInt
     y: StrictInt
@@ -343,7 +345,7 @@ class ViewerSourceSpatialSummary(ViewerProjectionRecord):
 
     @property
     def voxel_spacing(self) -> SourceVoxelSpacing:
-        """Retain declared calibration, with unspecified spacing for legacy receipts."""
+        """Retain declared calibration, with unspecified spacing for legacy records."""
         return self.optional(self.source_voxel_spacing) or SourceVoxelSpacing()
 
     @property
@@ -356,8 +358,8 @@ class ViewerSourceSpatialSummary(ViewerProjectionRecord):
     def require_uncropped_source_shape(self) -> tuple[int, int]:
         domain = self.source_domain
         if domain.origin_yx != (0, 0):
-            raise ValueError("Image receipt requires explicit uncropped pixel placement.")
-        return domain.required_source_shape_yx(source_label="image receipt")
+            raise ValueError("Image record requires explicit uncropped pixel placement.")
+        return domain.required_source_shape_yx(source_label="image record")
 
 @dataclass(frozen=True, kw_only=True)
 class ViewerAggregateComponentSummary(ViewerProjectionRecord):
@@ -374,7 +376,7 @@ class ViewerAggregateComponentSummary(ViewerProjectionRecord):
 
     def require_plane_components(self) -> Mapping[str, tuple[ViewerComponentValue, ...]]:
         if self.aggregate_component_values is VIEWER_FIELD_ABSENT or self.aggregate_component_values is None:
-            raise ValueError("Image receipt requires its explicit plane component domain.")
+            raise ValueError("Image record requires its explicit plane component domain.")
         return self.aggregate_component_values
 
 
@@ -408,9 +410,9 @@ class ViewerPayloadSummary(
             shape = self.require_positive_shape(rank=3)
             source_shape = self.require_uncropped_source_shape()
         except ValueError as error:
-            raise ValueError("Image receipt requires an explicit full three-axis image window.") from error
+            raise ValueError("Image record requires an explicit full three-axis image window.") from error
         if source_shape != shape[-2:]:
-            raise ValueError("Image receipt requires an explicit full three-axis image window.")
+            raise ValueError("Image record requires an explicit full three-axis image window.")
 
     @property
     def full_image_plane_count(self) -> int:
@@ -534,7 +536,7 @@ class ViewerLayerIsolationField(str, Enum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ViewerLayerRetirementReceipt(ViewerProjectionRecord):
+class ViewerLayerRetirementResult(ViewerProjectionRecord):
     """One native retirement observation, projected into the agent envelope."""
 
     applied: bool = False
@@ -612,10 +614,10 @@ class ViewerDescriptorField(str, Enum):
 
 
 @dataclass(frozen=True, slots=True)
-class ViewerTypeIdentity:
+class ViewerFamilyIdentity:
     """Inherited viewer identity for runtime protocol records."""
 
-    viewer_type: ViewerType
+    viewer_family: type[ViewerFamily]
 
 
 class ViewerPersistenceMode(Enum):
@@ -802,7 +804,7 @@ class ViewerSettleProgress:
 
 
 class ViewerComponentValueOrdering:
-    """Canonical ordering for viewer component values and stack coordinates."""
+    """ordering for viewer component values and stack coordinates."""
 
     NATURAL_TOKEN_PATTERN = re.compile(r"(\d+)")
     INTEGER_PATTERN = re.compile(r"^[+-]?\d+$")
@@ -1018,12 +1020,12 @@ class ViewerLaunchContext:
 class ViewerGraphicalSessionUnavailableError(RuntimeError):
     """Raised before spawn when a detached interactive viewer has no GUI session."""
 
-    viewer_type: ViewerType
+    viewer_family: type[ViewerFamily]
     port: int
 
     def __str__(self) -> str:
         return (
-            f"Cannot launch detached {self.viewer_type.display_name} viewer on port "
+            f"Cannot launch detached {self.viewer_family.display_name} viewer on port "
             f"{self.port}: no authoritative graphical session is available."
         )
 
@@ -1080,7 +1082,7 @@ def viewer_lifecycle_registry_key(
             f"{cls.__name__} must declare detached_server_entrypoint to register "
             "as a managed viewer lifecycle."
         ) from exc
-    return entrypoint.viewer_type.wire_value
+    return entrypoint.viewer_family.wire_value
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1302,13 +1304,13 @@ class DetachedViewerLaunchFailure(RuntimeError):
     def __init__(
         self,
         *,
-        viewer_type: ViewerType,
+        viewer_family: type[ViewerFamily],
         port: int,
         cause: Exception,
         log_file: Path,
         log_tail: str,
     ) -> None:
-        self.viewer_type = viewer_type
+        self.viewer_family = viewer_family
         self.port = port
         self.cause = cause
         self.log_file = log_file
@@ -1322,7 +1324,7 @@ class DetachedViewerLaunchFailure(RuntimeError):
 
 
 @dataclass(frozen=True, slots=True)
-class DetachedViewerLaunchRequest(ViewerTypeIdentity):
+class DetachedViewerLaunchRequest(ViewerFamilyIdentity):
     """Authoritative detached launch request for a viewer process."""
 
     port: int
@@ -1343,12 +1345,12 @@ class DetachedViewerLaunchRequest(ViewerTypeIdentity):
     def log_file_for(
         cls,
         *,
-        viewer_type: ViewerType,
+        viewer_family: type[ViewerFamily],
         port: int,
         log_dir: Path | None = None,
     ) -> Path:
         launch_log_dir = get_openhcs_log_dir() if log_dir is None else log_dir
-        return launch_log_dir / (f"{viewer_type.wire_value}_detached_port_{port}.log")
+        return launch_log_dir / (f"{viewer_family.wire_value}_detached_port_{port}.log")
 
     def command(self) -> list[str]:
         launch_policy = BackgroundProcessLaunchPolicy.current(detached=True)
@@ -1361,7 +1363,7 @@ class DetachedViewerLaunchRequest(ViewerTypeIdentity):
     def failure(self, cause: Exception) -> DetachedViewerLaunchFailure:
         """Project one startup exception through this request's log authority."""
         return DetachedViewerLaunchFailure(
-            viewer_type=self.viewer_type,
+            viewer_family=self.viewer_family,
             port=self.port,
             cause=cause,
             log_file=self.log_file,
@@ -1371,7 +1373,7 @@ class DetachedViewerLaunchRequest(ViewerTypeIdentity):
     def launch(self) -> subprocess.Popen[bytes]:
         if not self.launch_context.graphical_session_available:
             raise ViewerGraphicalSessionUnavailableError(
-                viewer_type=self.viewer_type,
+                viewer_family=self.viewer_family,
                 port=self.port,
             )
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1393,7 +1395,7 @@ class DetachedViewerLaunchRequest(ViewerTypeIdentity):
 
 
 @dataclass(frozen=True, slots=True)
-class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
+class DetachedViewerServerEntrypointSpec(ViewerFamilyIdentity):
     """Declared server function used to launch one detached viewer family."""
 
     module_name: str
@@ -1402,7 +1404,7 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
 
     def log_file_for(self, port: int) -> Path:
         return DetachedViewerLaunchRequest.log_file_for(
-            viewer_type=self.viewer_type,
+            viewer_family=self.viewer_family,
             port=port,
         )
 
@@ -1475,7 +1477,7 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
         if process_launch is None:
             process_launch = ViewerProcessLaunchConfig()
         return DetachedViewerLaunchRequest(
-            viewer_type=self.viewer_type,
+            viewer_family=self.viewer_family,
             port=port,
             python_code=self.python_code(
                 import_authority,
@@ -1676,7 +1678,7 @@ class ViewerControlMessageRequest:
             from openhcs.agent.dto.viewer import ViewerWindowControlRequest
 
             # Full snapshot/retirement carriers contain a sender-local clock.
-            # Their enclosing budget is admitted once from the envelope below.
+            # Their enclosing budget is accepted once from the envelope below.
             payload = self.payload
             if isinstance(payload, ViewerWindowControlRequest):
                 payload = replace(payload, operation_deadline=None)
@@ -1720,7 +1722,7 @@ class ViewerControlMessageRequest:
 
 
 @dataclass(frozen=True, slots=True)
-class ViewerProcessLaunchAdmission(ViewerReuseAdmissionABC):
+class ViewerProcessLaunchReuseCheck(ViewerReuseAdmissionABC):
     """Admit a new OpenHCS launch request inside atomic managed acquisition."""
 
     requested: ViewerProcessLaunchConfig
@@ -1753,16 +1755,17 @@ class ManagedViewerLifecycleMixin(
     viewer_registry_key: ClassVar[str | None] = None
     viewer_process_label: ClassVar[str] = "viewer"
     detached_server_entrypoint: ClassVar[DetachedViewerServerEntrypointSpec]
+    starts_in_background: ClassVar[bool] = False
 
     def __init__(
         self,
         *,
         runtime_config: StreamingViewerRuntimeConfig,
     ) -> None:
-        if runtime_config.viewer_type is not self.viewer_type:
+        if runtime_config.viewer_family is not self.viewer_family:
             raise ValueError(
-                f"{type(self).__name__} owns {self.viewer_type.name}, but received "
-                f"runtime config for {runtime_config.viewer_type.name}."
+                f"{type(self).__name__} owns {self.viewer_family.__name__}, but "
+                f"received runtime config for {runtime_config.viewer_family.__name__}."
             )
         super().__init__(port=runtime_config.transport_endpoint.port)
         self.persistent: bool = runtime_config.persistent
@@ -1792,18 +1795,80 @@ class ManagedViewerLifecycleMixin(
         return self.persistence_mode.value
 
     @property
-    def viewer_type(self) -> ViewerType:
-        """Return the typed identity owned by the detached entrypoint."""
+    def viewer_family(self) -> type[ViewerFamily]:
+        """The viewer the detached entrypoint launches."""
 
-        return self.detached_server_entrypoint.viewer_type
+        return self.detached_server_entrypoint.viewer_family
 
     @property
     def viewer_title(self) -> str:
-        return self.viewer_type.title
+        return self.viewer_family.title
 
-    @abstractmethod
-    def start_viewer(self, async_mode: bool = False) -> None:
-        """Start the concrete viewer server process."""
+    def start_viewer(self) -> None:
+        """Start the viewer process, in the background if this viewer declares so."""
+
+        if self.starts_in_background:
+            threading.Thread(target=self.start_viewer_now, daemon=True).start()
+            logger.info(
+                "🔬 VISUALIZER: Starting %s viewer in the background on port %s",
+                self.viewer_process_label,
+                self.required_port,
+            )
+            return
+        self.start_viewer_now()
+
+    def start_viewer_now(self) -> None:
+        """Start the detached viewer process and wait for it to spawn."""
+
+        with self._lock:
+            port = self.required_port
+            self.prepare_fresh_viewer_start()
+            if self.lifecycle_state.is_active:
+                logger.warning("%s viewer is already running.", self.viewer_process_label)
+                return
+            logger.info(
+                "🔬 VISUALIZER: Starting %s %s viewer (detached) on port %s",
+                self.persistence_label,
+                self.viewer_process_label,
+                port,
+            )
+            self.process = self.launch_detached_viewer()
+            if self.owned_viewer_process_is_alive():
+                self.lifecycle_state.mark_owned_process()
+                logger.info(
+                    "🔬 VISUALIZER: %s viewer process started (PID: %s)",
+                    self.viewer_process_label,
+                    self.process_pid_label,
+                )
+            else:
+                logger.error(
+                    "🔬 VISUALIZER: Failed to start %s viewer process",
+                    self.viewer_process_label,
+                )
+
+    def stop_viewer(self) -> None:
+        """Stop the viewer process unless it is persistent."""
+
+        with self._lock:
+            if self.persistent:
+                logger.info(
+                    "🔬 VISUALIZER: Keeping persistent %s viewer alive",
+                    self.viewer_process_label,
+                )
+                return
+            logger.info(
+                "🔬 VISUALIZER: Stopping non-persistent %s viewer",
+                self.viewer_process_label,
+            )
+            if self.process and self.terminate_owned_viewer_process():
+                logger.warning(
+                    "🔬 VISUALIZER: Force killing %s viewer process",
+                    self.viewer_process_label,
+                )
+            self.lifecycle_state.mark_stopped()
+
+    def stop(self, timeout: float = 5.0) -> None:
+        self.stop_viewer()
 
     @abstractmethod
     def detached_server_arguments(
@@ -2020,12 +2085,12 @@ class ManagedViewerLifecycleMixin(
 
         manager = ViewerStateManager.get_instance()
         managed_viewer = manager.get_viewer(
-            self.viewer_type.wire_value,
+            self.viewer_family.wire_value,
             self.required_port,
         )
         if managed_viewer is self:
             manager.release_viewer(
-                self.viewer_type.wire_value,
+                self.viewer_family.wire_value,
                 self.required_port,
                 stop=True,
                 force=True,
@@ -2038,7 +2103,7 @@ class ManagedViewerLifecycleMixin(
         lifecycle_state.mark_stopped()
 
     def start(self, detached: bool = True) -> subprocess.Popen[bytes]:
-        self.start_viewer(async_mode=False)
+        self.start_viewer_now()
         if self.process is None:
             raise RuntimeError(
                 f"{self.viewer_process_label} viewer process failed to start."

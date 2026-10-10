@@ -42,6 +42,7 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
 from openhcs.interop.cellprofiler.setting_names import SettingNameFamily
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,7 +65,7 @@ class ManualObjectStats:
 )
 @numpy(contract=ProcessingContract.PURE_2D)
 def identify_objects_manually(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     labels_input: np.ndarray | None = None,
 ) -> tuple[
     np.ndarray,

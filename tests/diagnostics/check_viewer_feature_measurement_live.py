@@ -198,7 +198,7 @@ def main() -> None:
         ViewerTransportEndpoint,
     )
     from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-    from openhcs.core.streaming_config_declarations import ViewerType
+    from openhcs.core.streaming_config_declarations import NapariViewer
     from zmqruntime.config import TransportMode
     from python_introspect import to_jsonable
     from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
@@ -299,7 +299,7 @@ def main() -> None:
                         "plate_path": str(paths[0].parent),
                         "file_paths": [str(p) for p in paths],
                         "fresh_viewer": False,
-                        "viewer_config_key": ViewerType.NAPARI.config_key,
+                        "viewer_config_key": NapariViewer.config_key,
                         "limit": 2,
                     },
                 )

@@ -85,7 +85,7 @@ def test_detached_launch_projects_listener_from_process_declaration(viewer_type)
         listen_host="192.0.2.1",
         transport_mode=TransportMode.TCP,
     )
-    visualizer = viewer_type.declaration.visualizer_type()(
+    visualizer = viewer_type.family.visualizer_type()(
         filemanager=object(),
         runtime_config=config.viewer_runtime_config(),
     )

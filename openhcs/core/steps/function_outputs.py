@@ -36,14 +36,12 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_intensity_scale_for_dtype,
-    image_payload_data,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_slice_projection import (
     RuntimeProjectedPayloadItem,
     RuntimeProjectionSourceIdentityRequest,
-    RuntimeProjectionSourceIdentityRequirement,
+    RequiredSourceComponentMetadata,
 )
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
@@ -94,9 +92,8 @@ logger = logging.getLogger(__name__)
 StreamPayload = RuntimeArrayData
 
 
-def stream_payload_summary(payload: StreamPayload) -> str:
-    """Return bounded image payload facts for runtime streaming diagnostics."""
-    data = image_payload_data(payload)
+def stream_payload_summary(data: object) -> str:
+    """Return bounded facts about streamed item data for runtime diagnostics."""
     if not isinstance(data, np.ndarray):
         return f"type={type(data).__name__}"
 
@@ -517,7 +514,7 @@ class StreamOutputBatch:
         request: RuntimeProjectionSourceIdentityRequest,
     ) -> tuple[RuntimeProjectedPayloadItem, ...]:
         return (
-            RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA
+            RequiredSourceComponentMetadata
         ).project_payload_items(request)
 
     @staticmethod
@@ -638,7 +635,7 @@ class StreamOutputsAuthority:
                     context.filemanager.save_batch(
                         stream_batch.data_list,
                         stream_batch.paths,
-                        config_instance.backend.value,
+                        config_instance.viewer_family.backend.value,
                         **stream_backend_kwargs.to_kwargs(),
                     )
 
@@ -1024,10 +1021,10 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
             source_dtype=native_dtype,
             intensity_scale=image_intensity_scale_for_dtype(native_dtype),
         ).project_image_metadata(
-            image_payload_metadata(payload),
+            payload.metadata,
             values_preserved=context.filemanager.image_serialization_preserves_values(
                 self.backend,
-                image_payload_data(payload).dtype,
+                payload.data.dtype,
                 native_dtype,
             ),
         )
