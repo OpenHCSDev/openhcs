@@ -59,8 +59,6 @@ from openhcs.pyqt_gui.services.config_window_code_document import (
     ExternalCodeEditorPreference,
 )
 
-# REMOVED: LazyDataclassFactory import - no longer needed since step editor
-# uses existing lazy dataclass instances from the step
 from pyqt_reactive.forms.parameter_type_utils import ParameterTypeUtils
 from openhcs.ui.shared.code_editor_form_updater import CodeEditorFormUpdater
 from objectstate.object_state import ObjectState, ObjectStateRegistry
@@ -336,11 +334,6 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
             if str(field.type) == str(target_type):
                 return field.name
         return None
-
-    # REMOVED: _create_step_level_config method - dead code
-    # The step editor should use the existing lazy dataclass instances from the step,
-    # not create new "StepLevel" versions. The AbstractStep already has the correct
-    # lazy dataclass types (LazyNapariStreamingConfig, LazyStepMaterializationConfig, etc.)
 
     def _collect_dataclass_parameters(self, parameter_types):
         """Return dataclass-based parameters for building the hierarchy tree."""

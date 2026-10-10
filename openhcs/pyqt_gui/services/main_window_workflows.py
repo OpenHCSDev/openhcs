@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -37,8 +36,6 @@ from openhcs.agent.ui_bridge_identities import (
     ZmqServerManagerWindowIdentity,
 )
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.execution_state import ManagerExecutionState
-from openhcs.core.orchestrator.orchestrator import OrchestratorState
 from openhcs.core.progress.projection import ExecutionRuntimeProjection
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.pyqt_gui.services.window_config import (
@@ -50,113 +47,11 @@ if TYPE_CHECKING:
     from openhcs.pyqt_gui.config import AgentUiBridgeConfig, ShortcutConfig
     from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
     from openhcs.pyqt_gui.services.ui_bridge_server import UiBridgeControlServer
+    from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
+    from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
     from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 logger = logging.getLogger(__name__)
-
-
-class SignalConnectionSurface(ABC):
-    @abstractmethod
-    def connect(self, callback) -> None:
-        raise NotImplementedError
-
-
-class SignalEmissionSurface(ABC):
-    @abstractmethod
-    def emit(self, value) -> None:
-        raise NotImplementedError
-
-
-class ConfigChangeSurface(ABC):
-    @abstractmethod
-    def on_config_changed(self, new_config: GlobalPipelineConfig) -> None:
-        raise NotImplementedError
-
-
-class PipelineEditorWorkflowSurface(ConfigChangeSurface):
-    pipeline_steps: list
-    pipeline_changed: SignalEmissionSurface
-    plate_manager: "PlateManagerWorkflowSurface"
-
-    @abstractmethod
-    def require_pipeline_definition_mutation_allowed(
-        self, plate_path: str | None = None
-    ) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def set_current_plate(self, plate_path: str) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def update_item_list(self) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def update_button_states(self) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def on_orchestrator_state_changed(
-        self,
-        plate_path: str,
-        state: OrchestratorState,
-    ) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def on_manager_execution_state_changed(
-        self,
-        state: ManagerExecutionState,
-    ) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def on_cellprofiler_pipeline_imported(self, plate_path: str) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def on_pipeline_data_changed(self) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def show_debug_snapshot(self, notification) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def load_pipeline_from_file(self, file_path: Path) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def save_pipeline_to_file(self, file_path: Path) -> None:
-        raise NotImplementedError
-
-
-class PlateManagerWorkflowSurface(ConfigChangeSurface):
-    plate_selected: SignalConnectionSurface
-    orchestrator_config_changed: SignalConnectionSurface
-    orchestrator_state_changed: SignalConnectionSurface
-    manager_execution_state_changed: SignalConnectionSurface
-    action_availability_changed: SignalConnectionSurface
-    pipeline_data_changed: SignalConnectionSurface
-    cellprofiler_pipeline_imported: SignalConnectionSurface
-    debug_snapshot_available: SignalConnectionSurface
-    selected_plate_path: str | None
-
-    @abstractmethod
-    def require_pipeline_definition_mutation_allowed(
-        self,
-        plate_path: str | None = None,
-    ) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def notify_pipeline_definition_changed(self, plate_path: str) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def refresh_prepared_cellprofiler_pipelines(self) -> None:
-        raise NotImplementedError
 
 
 class QtShortcutSequenceAuthority:
@@ -721,8 +616,8 @@ class MainWindowWidgetConnector:
 
     def connect(
         self,
-        plate_manager: PlateManagerWorkflowSurface,
-        pipeline_editor: PipelineEditorWorkflowSurface,
+        plate_manager: PlateManagerWidget,
+        pipeline_editor: PipelineEditorWidget,
     ) -> None:
         plate_manager.plate_selected.connect(pipeline_editor.set_current_plate)
         plate_manager.orchestrator_config_changed.connect(
@@ -761,7 +656,7 @@ class MainWindowPipelineActions:
     """File-menu actions for the embedded pipeline editor."""
 
     main_window: QWidget
-    pipeline_editor: PipelineEditorWorkflowSurface
+    pipeline_editor: PipelineEditorWidget
 
     def new_pipeline(self) -> None:
         self.pipeline_editor.require_pipeline_definition_mutation_allowed()

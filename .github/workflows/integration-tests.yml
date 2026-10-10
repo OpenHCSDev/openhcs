@@ -1479,7 +1479,7 @@ jobs:
             if ($LASTEXITCODE -ne 0) {
               throw "Managed base Python could not create the updater progress window."
             }
-            $installedWorker = (& $environmentPython -c "from pathlib import Path; import openhcs.pyqt_gui.services.desktop_update_worker as worker; print(Path(worker.__file__).resolve())").Trim()
+            $installedWorker = (& $environmentPython -c "from pathlib import Path; import openhcs.desktop.update_worker as worker; print(Path(worker.__file__).resolve())").Trim()
             & $basePython -I $installedWorker --help | Out-Null
             if ($LASTEXITCODE -ne 0) {
               throw "Managed base Python could not load the copied updater worker."
@@ -1728,7 +1728,7 @@ jobs:
           export OPENHCS_DESKTOP_RESTART_EXECUTABLE="$HOME/Applications/$product_name.app/Contents/MacOS/launch-openhcs"
           managed_python=$("$environment_python" -c 'import sys; print(sys._base_executable)')
           "$managed_python" -c 'import tkinter as tk; root=tk.Tk(); root.withdraw(); root.update_idletasks(); root.destroy()'
-          installed_worker=$("$environment_python" -c 'from pathlib import Path; import openhcs.pyqt_gui.services.desktop_update_worker as worker; print(Path(worker.__file__).resolve())')
+          installed_worker=$("$environment_python" -c 'from pathlib import Path; import openhcs.desktop.update_worker as worker; print(Path(worker.__file__).resolve())')
           "$managed_python" -I "$installed_worker" --help >/dev/null
           "$environment_python" scripts/smoke_staged_desktop_update.py \
             --latest-version "$release_version"

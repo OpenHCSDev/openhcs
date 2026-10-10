@@ -606,7 +606,7 @@ def test_ui_config_save_commits_state_before_live_notifications(
 
     main_window = SimpleNamespace(
         runtime_context=PyQtGuiRuntimeContext(initial),
-        window_services=SimpleNamespace(
+        service_adapter=SimpleNamespace(
             widget_gui_config=initial,
             execute_async_operation=lambda _operation: None,
         ),
@@ -662,7 +662,7 @@ def test_ui_config_save_commits_state_before_live_notifications(
         assert committed.performance_monitor.update_fps == 2.0
         assert committed.zmq.default_port == 8124
         assert main_window.runtime_context.ui_config is committed
-        assert main_window.window_services.widget_gui_config is committed
+        assert main_window.service_adapter.widget_gui_config is committed
         assert main_window.system_monitor.config is committed.performance_monitor
         assert main_window.plate_manager_widget.config is committed
         assert (

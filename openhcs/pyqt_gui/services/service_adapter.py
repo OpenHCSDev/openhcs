@@ -1,16 +1,10 @@
-"""
-PyQt6 Service Adapter
-
-Bridges OpenHCS services to PyQt6 context, replacing prompt_toolkit dependencies
-with Qt equivalents while preserving all business logic.
-"""
+"""Qt dialogs, async execution, theme and config access for the desktop GUI."""
 
 import logging
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import QObject, QProcess, QThread, QUrl, pyqtSignal
-from PyQt6.QtGui import QDesktopServices
+from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
 from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
@@ -26,108 +20,20 @@ logger = logging.getLogger(__name__)
 
 
 class GlobalEventBus(QObject):
-    """
-    Centralized event bus for cross-window communication.
+    """Cross-window pipeline and configuration change signals."""
 
-    ARCHITECTURE: OpenHCS "Set and Forget" Pattern
-    ===============================================
-
-    Instead of manually connecting every window to every other window's signals,
-    all windows register with this global event bus once during initialization.
-
-    When ANY window modifies pipeline/config (via code editor, UI, etc.), it
-    broadcasts to the event bus, which automatically notifies ALL registered windows.
-
-    Benefits:
-    - No manual cross-connections between windows
-    - Adding a new window type automatically works with all existing windows
-    - Single source of truth for cross-window events
-    - Eliminates scattered signal connection code
-
-    Usage:
-    1. Windows inherit from BaseFormDialog (automatic registration)
-    2. Windows call _broadcast_pipeline_changed() or _broadcast_config_changed()
-    3. Windows implement _on_pipeline_changed() to receive updates
-
-    This is the OpenHCS "set and forget" pattern - add a new window type once,
-    and it automatically receives updates from all other windows.
-    """
-
-    # Global signals that all windows can emit/receive
-    pipeline_changed = pyqtSignal(
-        list
-    )  # List[FunctionStep] - emitted when pipeline changes
-    config_changed = pyqtSignal(
-        object
-    )  # Config object - emitted when any config changes
-    step_changed = pyqtSignal(object)  # FunctionStep - emitted when a step is modified
-
-    def __init__(self):
-        super().__init__()
-        self._registered_windows = []
-        logger.debug("Global event bus initialized")
-
-    def register_window(self, window):
-        """Register a window to receive global events.
-
-        Args:
-            window: Window instance to register
-        """
-        if window not in self._registered_windows:
-            self._registered_windows.append(window)
-            logger.debug(f"Registered window: {window.__class__.__name__}")
-
-    def unregister_window(self, window):
-        """Unregister a window from receiving global events.
-
-        Args:
-            window: Window instance to unregister
-        """
-        if window in self._registered_windows:
-            self._registered_windows.remove(window)
-            logger.debug(f"Unregistered window: {window.__class__.__name__}")
+    pipeline_changed = pyqtSignal(list)  # list[FunctionStep]
+    config_changed = pyqtSignal(object)  # config object
 
     def emit_pipeline_changed(self, pipeline_steps: list):
-        """Emit pipeline changed event to all registered windows.
-
-        Args:
-            pipeline_steps: Updated list of FunctionStep objects
-        """
-        logger.debug(
-            f"Broadcasting pipeline_changed to {len(self._registered_windows)} windows"
-        )
         self.pipeline_changed.emit(pipeline_steps)
 
     def emit_config_changed(self, config):
-        """Emit config changed event to all registered windows.
-
-        Args:
-            config: Updated config object
-        """
-        logger.debug(
-            f"Broadcasting config_changed to {len(self._registered_windows)} windows"
-        )
         self.config_changed.emit(config)
-
-    def emit_step_changed(self, step):
-        """Emit step changed event to all registered windows.
-
-        Args:
-            step: Updated FunctionStep object
-        """
-        logger.debug(
-            f"Broadcasting step_changed to {len(self._registered_windows)} windows"
-        )
-        self.step_changed.emit(step)
 
 
 class PyQtServiceAdapter:
-    """
-    Adapter to bridge OpenHCS services to PyQt6 context.
-
-    Replaces prompt_toolkit dependencies (dialogs, system commands, etc.)
-    with PyQt6 equivalents while maintaining the same interface for services.
-    """
+    """Qt dialogs, async execution, theme and config access for GUI widgets."""
 
     def __init__(self, main_window: QWidget):
         """
@@ -190,27 +96,6 @@ class PyQtServiceAdapter:
 
         self.ui_dispatcher.close()
         self._async_operations.close()
-
-    def show_dialog(self, content: str, title: str = "OpenHCS") -> bool:
-        """
-        Replace prompt_toolkit dialogs with QMessageBox.
-
-        Args:
-            content: Dialog content text
-            title: Dialog title
-
-        Returns:
-            True if user clicked OK, False otherwise
-        """
-        msg = self.create_message_box(
-            icon=QMessageBox.Icon.Question,
-            title=title,
-            text=content,
-            buttons=(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel),
-            default_button=QMessageBox.StandardButton.Ok,
-        )
-        result = QMessageBox.StandardButton(msg.exec())
-        return result == QMessageBox.StandardButton.Ok
 
     def create_message_box(
         self,
@@ -386,51 +271,6 @@ class PyQtServiceAdapter:
             logger.error(f"Directory dialog failed: {e}")
             raise
 
-    def run_system_command(self, command: str, wait_for_finish: bool = True) -> bool:
-        """
-        Replace prompt_toolkit system command with QProcess.
-
-        Args:
-            command: System command to execute
-            wait_for_finish: Whether to wait for command completion
-
-        Returns:
-            True if command executed successfully, False otherwise
-        """
-        try:
-            process = QProcess(self.main_window)
-
-            if wait_for_finish:
-                process.start(command)
-                success = process.waitForFinished(30000)  # 30 second timeout
-                return success and process.exitCode() == 0
-            else:
-                # Start detached process
-                return process.startDetached(command)
-
-        except Exception as e:
-            logger.error(f"System command failed: {command} - {e}")
-            self.show_error_dialog(f"Command failed: {e}")
-            return False
-
-    def open_external_editor(self, file_path: Path) -> bool:
-        """
-        Open file in external editor using system default.
-
-        Args:
-            file_path: Path to file to edit
-
-        Returns:
-            True if editor opened successfully, False otherwise
-        """
-        try:
-            url = QUrl.fromLocalFile(str(file_path))
-            return QDesktopServices.openUrl(url)
-        except Exception as e:
-            logger.error(f"Failed to open external editor: {e}")
-            self.show_error_dialog(f"Failed to open editor: {e}")
-            return False
-
     def get_global_config(self):
         """
         Get global configuration from application.
@@ -449,17 +289,6 @@ class PyQtServiceAdapter:
         """
         self.main_window.set_pipeline_runtime_config(config)
 
-    # ========== THEME MANAGEMENT METHODS ==========
-
-    def get_theme_manager(self) -> ThemeManager:
-        """
-        Get the theme manager for color scheme management.
-
-        Returns:
-            ThemeManager: Current theme manager instance
-        """
-        return self.theme_manager
-
     def get_current_color_scheme(self) -> ColorScheme:
         """
         Get the current color scheme.
@@ -468,65 +297,6 @@ class PyQtServiceAdapter:
             ColorScheme: Current color scheme
         """
         return self.theme_manager.color_scheme
-
-    def apply_color_scheme(self, color_scheme: ColorScheme):
-        """
-        Apply a new color scheme to the entire application.
-
-        Args:
-            color_scheme: New color scheme to apply
-        """
-        self.theme_manager.apply_color_scheme(color_scheme)
-
-    def switch_to_dark_theme(self):
-        """Switch to dark theme variant."""
-        self.theme_manager.switch_to_dark_theme()
-
-    def switch_to_light_theme(self):
-        """Switch to light theme variant."""
-        self.theme_manager.switch_to_light_theme()
-
-    def load_theme_from_config(self, config_path: str) -> bool:
-        """
-        Load and apply theme from configuration file.
-
-        Args:
-            config_path: Path to JSON configuration file
-
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        return self.theme_manager.load_theme_from_config(config_path)
-
-    def save_current_theme(self, config_path: str) -> bool:
-        """
-        Save current theme to configuration file.
-
-        Args:
-            config_path: Path to save JSON configuration file
-
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        return self.theme_manager.save_current_theme(config_path)
-
-    def get_current_style_sheet(self) -> str:
-        """
-        Get the current complete application style sheet.
-
-        Returns:
-            str: Complete QStyleSheet for current theme
-        """
-        return self.theme_manager.get_current_style_sheet()
-
-    def register_theme_change_callback(self, callback):
-        """
-        Register a callback to be called when theme changes.
-
-        Args:
-            callback: Function to call with new color scheme
-        """
-        self.theme_manager.register_theme_change_callback(callback)
 
     def get_file_manager(self):
         """
@@ -544,35 +314,3 @@ class PyQtServiceAdapter:
             GlobalEventBus instance
         """
         return self.event_bus
-
-
-class ExternalEditorProcess(QThread):
-    """
-    Thread for handling external editor processes.
-
-    Replaces prompt_toolkit's run_system_command for external editor integration.
-    """
-
-    finished = pyqtSignal(bool, str)  # success, error_message
-
-    def __init__(self, command: str, file_path: Path):
-        super().__init__()
-        self.command = command
-        self.file_path = file_path
-
-    def run(self):
-        """Execute external editor command in thread."""
-        try:
-            process = QProcess()
-            process.start(self.command)
-
-            success = process.waitForFinished(300000)  # 5 minute timeout
-
-            if success and process.exitCode() == 0:
-                self.finished.emit(True, "")
-            else:
-                error_msg = process.readAllStandardError().data().decode()
-                self.finished.emit(False, f"Editor failed: {error_msg}")
-
-        except Exception as e:
-            self.finished.emit(False, f"Editor process failed: {e}")

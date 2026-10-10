@@ -853,9 +853,6 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         editor.raise_()
         editor.activateWindow()
 
-    # action_delete_step() REMOVED - now uses ABC's action_delete() template with deletion_workflow
-    # action_edit_step() REMOVED - now uses ABC's action_edit() template with show_item_editor()
-
     def action_auto_load_pipeline(self):
         """Handle Auto button - load basic_pipeline.py automatically."""
         if not self.current_plate:
@@ -1195,8 +1192,6 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         self.update_item_list()
 
     # ========== UI Helper Methods ==========
-
-    # update_item_list() REMOVED - uses ABC template with list update hooks
 
     def update_button_states(self):
         """Update button enabled/disabled states based on mathematical constraints (mirrors Textual TUI)."""
@@ -1657,7 +1652,6 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
 
     # === CrossWindowPreviewMixin Hook ===
     # _get_current_orchestrator() is implemented above (line ~795) - does actual lookup from plate manager
-    # _configure_preview_fields() REMOVED - now uses declarative PREVIEW_FIELD_CONFIGS (line ~99)
 
     # ========== End Abstract Hook Implementations ==========
 

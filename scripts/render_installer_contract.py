@@ -13,7 +13,7 @@ from typing import ClassVar
 from packaging.utils import canonicalize_name
 from packaging.version import Version
 
-from openhcs.desktop_installation import (
+from openhcs.desktop.installation import (
     DESKTOP_INSTALL_PROFILE,
     DesktopInstallerContract,
     DesktopPackageExtra,

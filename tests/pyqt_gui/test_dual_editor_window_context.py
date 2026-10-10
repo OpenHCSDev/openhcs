@@ -34,10 +34,6 @@ class RecordingEventBus:
     def __init__(self) -> None:
         self.pipeline_changed = RecordingSignal()
         self.config_changed = RecordingSignal()
-        self.unregistered = []
-
-    def unregister_window(self, window) -> None:
-        self.unregistered.append(window)
 
 
 def test_dual_editor_window_cleans_cross_window_subscriptions() -> None:
@@ -56,7 +52,6 @@ def test_dual_editor_window_cleans_cross_window_subscriptions() -> None:
 
     assert event_bus.pipeline_changed.disconnected == [window._on_pipeline_changed]
     assert event_bus.config_changed.disconnected == [window._on_config_changed]
-    assert event_bus.unregistered == [window]
     assert orchestrator_signal.disconnected == [window.on_orchestrator_config_changed]
     assert window._event_bus is None
     assert window._orchestrator_config_signal is None

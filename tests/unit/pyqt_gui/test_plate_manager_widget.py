@@ -67,7 +67,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     percentile_normalize,
 )
 from openhcs.pyqt_gui.config import get_default_ui_config
-from openhcs.pyqt_gui.services.desktop_update import (
+from openhcs.desktop.update import (
     DesktopRestartSession,
     DesktopRestartSucceeded,
     DesktopRestartUiState,

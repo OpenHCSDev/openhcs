@@ -153,7 +153,7 @@ class DesktopDeploymentContext:
 
 @dataclass(frozen=True, slots=True)
 class DesktopDeploymentReport:
-    """Paths refreshed by one platform deployment authority."""
+    """Paths refreshed by one platform's desktop deployment."""
 
     platform: AgentRuntimePlatformKey
     launcher_path: str
@@ -243,7 +243,7 @@ def _discard_transaction_path(path: Path) -> None:
 
 
 class _AtomicPathPublication:
-    """Publish prepared filesystem projections as one rollback-safe unit."""
+    """Publish prepared launcher, shortcut and icon files as one rollback-safe unit."""
 
     def __init__(self, *pairs: tuple[Path, Path]) -> None:
         transaction_id = uuid4().hex
@@ -294,18 +294,18 @@ def _powershell_literal(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
-class DesktopDeploymentAuthority(
+class DesktopDeployment(
     EnumKeyedStrategyMixin[AgentRuntimePlatformKey],
     ABC,
     metaclass=AutoRegisterMeta,
 ):
-    """Registered owner of one platform's installed desktop projections."""
+    """Launcher, shortcut and icon files installed for one platform."""
 
     __enum_member_attr__ = "platform_key"
     platform_key: ClassVar[AgentRuntimePlatformKey]
 
     @classmethod
-    def current(cls) -> "DesktopDeploymentAuthority":
+    def current(cls) -> "DesktopDeployment":
         platform_key = AgentRuntimePlatformKey.current()
         try:
             return cls.for_enum_member(platform_key)
@@ -319,10 +319,10 @@ class DesktopDeploymentAuthority(
     def numba_cache_path(cls) -> Path:
         """Return this platform's user-local compiled-code cache."""
 
-        platform_authority = AgentRuntimePlatformAuthority.for_enum_member(
+        runtime_platform = AgentRuntimePlatformAuthority.for_enum_member(
             cls.platform_key
         )
-        return OpenHCSProcessEnvironment.numba_cache_path(platform_authority)
+        return OpenHCSProcessEnvironment.numba_cache_path(runtime_platform)
 
     @abstractmethod
     def refresh(
@@ -341,8 +341,8 @@ class DesktopDeploymentAuthority(
         """Declare an unpublished environment path for one update transaction."""
 
 
-class WindowsDesktopDeployment(DesktopDeploymentAuthority):
-    """Windows native GUI, stable MCP launcher, and Shell Link projection."""
+class WindowsDesktopDeployment(DesktopDeployment):
+    """Windows native GUI, stable MCP launcher, and Shell Link."""
 
     platform_key = AgentRuntimePlatformKey.WINDOWS
     _application_launcher_name = "OpenHCS.exe"
@@ -408,7 +408,7 @@ class WindowsDesktopDeployment(DesktopDeploymentAuthority):
         *,
         powershell_executable: Path,
     ) -> str:
-        """Render the stable MCP launcher from the current pointer authority."""
+        """Render the stable MCP launcher from the current installation pointer."""
 
         stable_command = cls._stable_mcp_command(
             context,
@@ -536,7 +536,7 @@ class WindowsDesktopDeployment(DesktopDeploymentAuthority):
         for placeholder, value in values.items():
             if source.count(placeholder) != 1:
                 raise DesktopDeploymentError(
-                    "The packaged Windows launcher has an invalid projection token: "
+                    "The packaged Windows launcher has an invalid placeholder: "
                     f"{placeholder}"
                 )
             source = source.replace(placeholder, json.dumps(value))
@@ -926,8 +926,8 @@ finally {
         )
 
 
-class MacOSDesktopDeployment(DesktopDeploymentAuthority):
-    """macOS environment launcher, app bundle, and Desktop link projection."""
+class MacOSDesktopDeployment(DesktopDeployment):
+    """macOS environment launcher, app bundle, and Desktop link."""
 
     platform_key = AgentRuntimePlatformKey.MACOS
 
@@ -1114,10 +1114,10 @@ def refresh_installer_managed_desktop(
     *,
     refresh_skills: bool = True,
 ) -> DesktopDeploymentReport:
-    """Refresh the current native installation through its platform authority."""
+    """Refresh the current native installation for this platform."""
 
     context = DesktopDeploymentContext.from_runtime(installation_pointer)
-    report = DesktopDeploymentAuthority.current().refresh(context)
+    report = DesktopDeployment.current().refresh(context)
     if refresh_skills:
         try:
             return replace(report, skill_sync=refresh_managed_client_skills())

@@ -27,10 +27,6 @@ class CodeEditorFormUpdater:
     "show placeholder", while concrete values override placeholders.
     """
 
-    # REMOVED: extract_explicitly_set_fields() method
-    # Raw None = inherited, raw concrete = user-set (same pattern as
-    # the pycodify serializer and the rest of the config IO stack).
-
     @staticmethod
     def update_form_from_instance(
         form_manager,

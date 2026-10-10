@@ -172,7 +172,7 @@ Examples:
         "--version", action="version", version=f"OpenHCS PyQt6 GUI {OPENHCS_VERSION}"
     )
 
-    from openhcs.pyqt_gui.services.desktop_update import UPDATE_SESSION_ARGUMENT
+    from openhcs.desktop.update import UPDATE_SESSION_ARGUMENT
 
     parser.add_argument(
         UPDATE_SESSION_ARGUMENT,
@@ -324,7 +324,7 @@ def main(
         install_global_window_bounds_filter(app)  # install once, early
 
         def _main_window_ready() -> None:
-            from openhcs.pyqt_gui.services.desktop_update import DesktopRestartSession
+            from openhcs.desktop.update import DesktopRestartSession
 
             session = (
                 DesktopRestartSession(args.restore_update_session)
@@ -332,7 +332,7 @@ def main(
                 else DesktopRestartSession.pending()
             )
             if session.directory.exists():
-                dialogs = app.main_window.window_services
+                dialogs = app.main_window.service_adapter
                 try:
                     consumed_session = session.consume()
                 except Exception as error:  # noqa: BLE001 - Qt presentation boundary

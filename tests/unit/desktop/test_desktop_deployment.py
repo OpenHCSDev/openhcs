@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from openhcs import desktop_deployment
+from openhcs.desktop import deployment as desktop_deployment
 from openhcs.agent.runtime_platform import AgentRuntimePlatformKey
-from openhcs.desktop_deployment import (
-    DesktopDeploymentAuthority,
+from openhcs.desktop.deployment import (
+    DesktopDeployment,
     DesktopDeploymentContext,
     DesktopDeploymentError,
     DesktopDeploymentReport,
@@ -94,7 +94,7 @@ def test_desktop_refresh_runs_skill_updates_only_after_successful_publication(
         DesktopDeploymentContext, "from_runtime", classmethod(lambda cls, _: context)
     )
     monkeypatch.setattr(
-        DesktopDeploymentAuthority, "current", classmethod(lambda cls: Deployment())
+        DesktopDeployment, "current", classmethod(lambda cls: Deployment())
     )
     monkeypatch.setattr(desktop_deployment, "refresh_managed_client_skills", refresh)
     result = desktop_deployment.refresh_installer_managed_desktop(
@@ -117,7 +117,7 @@ def test_failed_desktop_publication_never_refreshes_skills(tmp_path, monkeypatch
         DesktopDeploymentContext, "from_runtime", classmethod(lambda cls, _: context)
     )
     monkeypatch.setattr(
-        DesktopDeploymentAuthority, "current", classmethod(lambda cls: Deployment())
+        DesktopDeployment, "current", classmethod(lambda cls: Deployment())
     )
     monkeypatch.setattr(
         desktop_deployment,
@@ -185,7 +185,7 @@ def test_unexpected_optional_refresh_error_cannot_invalidate_publication(
         DesktopDeploymentContext, "from_runtime", classmethod(lambda cls, _: context)
     )
     monkeypatch.setattr(
-        DesktopDeploymentAuthority, "current", classmethod(lambda cls: Deployment())
+        DesktopDeployment, "current", classmethod(lambda cls: Deployment())
     )
     monkeypatch.setattr(desktop_deployment, "refresh_managed_client_skills", failure)
     result = desktop_deployment.refresh_installer_managed_desktop(
@@ -198,7 +198,7 @@ def test_unexpected_optional_refresh_error_cannot_invalidate_publication(
 def test_desktop_deployment_import_does_not_load_agent_dto_graph() -> None:
     """Keep post-install shortcut publication outside agent schema startup."""
 
-    checkout = Path(__file__).resolve().parents[2]
+    checkout = Path(__file__).resolve().parents[3]
     completed = subprocess.run(
         [
             sys.executable,
@@ -206,7 +206,7 @@ def test_desktop_deployment_import_does_not_load_agent_dto_graph() -> None:
             "-c",
             (
                 f"import sys; sys.path.insert(0, {str(checkout)!r}); "
-                "import openhcs.desktop_deployment; "
+                "import openhcs.desktop.deployment; "
                 "assert 'openhcs.agent.dto.common' not in sys.modules; "
                 "assert 'python_introspect' not in sys.modules"
             ),
@@ -237,13 +237,13 @@ def _context(tmp_path: Path, *, pointer_name: str) -> DesktopDeploymentContext:
 
 def test_desktop_deployment_platforms_use_the_registered_host_axis() -> None:
     assert (
-        DesktopDeploymentAuthority.strategy_type_for_enum_member(
+        DesktopDeployment.strategy_type_for_enum_member(
             AgentRuntimePlatformKey.WINDOWS
         )
         is WindowsDesktopDeployment
     )
     assert (
-        DesktopDeploymentAuthority.strategy_type_for_enum_member(
+        DesktopDeployment.strategy_type_for_enum_member(
             AgentRuntimePlatformKey.MACOS
         )
         is MacOSDesktopDeployment
