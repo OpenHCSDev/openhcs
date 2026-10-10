@@ -217,7 +217,7 @@ def main():
         print(f"Error: Directory not found: {directory}")
         sys.exit(1)
 
-    from openhcs.core.config import ExperimentalAnalysisConfig
+    from openhcs.domains.microscopy.config import ExperimentalAnalysisConfig
 
     analysis_config = ExperimentalAnalysisConfig()
     config_file = directory / analysis_config.config_file_name

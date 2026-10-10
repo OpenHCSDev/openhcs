@@ -48,7 +48,7 @@ from openhcs.core.source_metadata import (
     SourceMetadataFields,
     SourceMetadataScalar,
     SourceVoxelSpacing,
-    SourceComponentProjectionStrategy,
+    SourceAxisProjection,
 )
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
@@ -1065,10 +1065,7 @@ class SourceBindingWorkspaceProjector:
             for selector in binding.selector.components
         }
         for component, value in selector_assignments.items():
-            current = SourceComponentProjectionStrategy.metadata_component(
-                component,
-                metadata,
-            )
+            current = SourceMetadataFields.component_value(metadata, component)
             if current is not None and not source_metadata_values_equal(current, value):
                 raise ValueError(
                     f"Source candidate {candidate.relative_path!r} has conflicting "
@@ -1076,10 +1073,7 @@ class SourceBindingWorkspaceProjector:
                 )
             metadata = with_source_component_metadata(metadata, component, value)
         for identity in binding.component_identity:
-            current = SourceComponentProjectionStrategy.metadata_component(
-                identity.component,
-                metadata,
-            )
+            current = SourceMetadataFields.component_value(metadata, identity.component)
             if current is not None and not source_metadata_values_equal(
                 current,
                 identity.value,
@@ -1215,7 +1209,7 @@ class SourceBindingWorkspaceProjector:
                             axis,
                             well
                             if issubclass(axis, PartitionAxis)
-                            else SourceComponentProjectionStrategy.project_bound_component(
+                            else SourceAxisProjection.project_bound(
                                 axis,
                                 set_metadata=source_set.metadata,
                                 set_index=source_set.index,
@@ -1249,7 +1243,7 @@ class SourceBindingWorkspaceProjector:
     def _source_set_well(self, source_set: _SourceSet) -> str:
         fields = self.source_bindings.grouping_metadata_fields
         if not fields:
-            return SourceComponentProjectionStrategy.project_component(
+            return SourceAxisProjection.project(
                 AxisFamily.active().partition_axis(),
                 source_set.metadata,
                 source_set.index,
@@ -1267,15 +1261,12 @@ class SourceBindingWorkspaceProjector:
 
         partition_axis = AxisFamily.active().partition_axis()
         fields_are_partition_identity = all(
-            SourceComponentProjectionStrategy.component_for_metadata_field(field)
+            source_metadata_component(field)
             is partition_axis
             for field in fields
         )
         if fields_are_partition_identity:
-            partition_value = SourceComponentProjectionStrategy.metadata_component(
-                partition_axis,
-                group_metadata,
-            )
+            partition_value = SourceMetadataFields.component_value(group_metadata, partition_axis)
             if partition_value is None:
                 raise ValueError(
                     f"Source grouping fields declared {partition_axis.name} identity "
@@ -1321,7 +1312,7 @@ class SourceBindingWorkspaceProjector:
                 or OpenHCSPlaneAddress.from_component_values(
                     (
                         component,
-                        SourceComponentProjectionStrategy.project_component(
+                        SourceAxisProjection.project(
                             component,
                             candidate.metadata,
                             index,
@@ -1439,10 +1430,7 @@ def _projected_candidate_components(
             value
             for candidate in candidates
             if (
-                value := SourceComponentProjectionStrategy.metadata_component(
-                    component,
-                    candidate.metadata,
-                )
+                value := SourceMetadataFields.component_value(candidate.metadata, component)
             )
             is not None
         }
@@ -1472,7 +1460,7 @@ def _source_set_match_value(
     component = source_metadata_component(field)
     if component is None:
         return None
-    return SourceComponentProjectionStrategy.metadata_component(component, metadata)
+    return SourceMetadataFields.component_value(metadata, component)
 
 
 def _relative_source_path(source_root: Path, source_path: Path) -> str:

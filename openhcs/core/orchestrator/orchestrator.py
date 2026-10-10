@@ -53,6 +53,7 @@ from polystore.zarr import ZarrStorageBackend
 
 # PipelineConfig now imported directly above
 from openhcs.core.dataset_sources.source import DatasetSource
+from openhcs.core.post_execute import PostExecuteHook
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
 
@@ -643,14 +644,8 @@ class PipelineOrchestrator:
         context = ProcessingContext(
             axis_id=axis_id,
             filemanager=self.filemanager,
-            analysis_consolidation_config=(
-                effective_config.analysis_consolidation_config
-            ),
-            plate_metadata_config=effective_config.plate_metadata_config,
             tiff_config=effective_config.tiff_config,
-            auto_add_output_plate_to_plate_manager=(
-                effective_config.auto_add_output_plate_to_plate_manager
-            ),
+            post_execute_hooks=PostExecuteHook.bind_all(effective_config),
             transport_config=self.transport_config,
         )
         # Orchestrator reference removed - was orphaned and unpickleable

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -10,20 +10,11 @@ from functools import lru_cache
 from math import isfinite
 from pathlib import Path
 from types import MappingProxyType
-from typing import ClassVar, NoReturn, Self, TYPE_CHECKING, TypeAlias, TypeVar
+from typing import NoReturn, Self, TYPE_CHECKING, TypeAlias, TypeVar
 
 from zmqruntime.viewer_protocol import ViewerWireField
 
-from openhcs.core.axes import (
-    Axis,
-    AxisFamily,
-    AxisRoleKeyedStrategyMixin,
-    ColourAxis,
-    PartitionAxis,
-    StackAxis,
-    TileAxis,
-    TimeAxis,
-)
+from openhcs.core.axes import Axis, AxisFamily, ColourAxis, PartitionAxis, StackAxis
 
 if TYPE_CHECKING:
     from openhcs.core.source_bindings import MetadataExtractionRule
@@ -277,9 +268,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         return cls._view(
             metadata,
             component,
-            lambda: SourceComponentProjectionStrategy.for_axis(
-                component
-            ).metadata_value(metadata),
+            lambda: SourceAxisProjection.metadata_value(component, metadata),
         )
 
     @classmethod
@@ -1144,33 +1133,85 @@ def source_metadata_field_identity(field: str) -> str:
     )
 
 
-@lru_cache(maxsize=256)
 def source_metadata_component(field: str) -> type[Axis] | None:
-    """Return the nominal component owner of a metadata field."""
-    return SourceComponentProjectionStrategy.component_for_metadata_field(field)
+    """Return the declared axis that owns a source metadata field."""
+    return _axis_for_metadata_field(AxisFamily.active(), field)
 
 
-class SourceComponentProjectionStrategy(AxisRoleKeyedStrategyMixin, ABC):
-    """Project one axis through the leaf owning its role."""
+@lru_cache(maxsize=1024)
+def _axis_for_metadata_field(
+    family: type[AxisFamily], field: str
+) -> type[Axis] | None:
+    normalized = source_metadata_field_identity(field)
+    owners = tuple(
+        axis
+        for axis in family.axes
+        if any(
+            normalized == source_metadata_field_identity(alias)
+            for alias in axis.metadata_aliases
+        )
+    )
+    if len(owners) > 1:
+        raise RuntimeError(
+            f"Source metadata field {field!r} has multiple axis owners: {owners!r}."
+        )
+    return owners[0] if owners else None
 
-    metadata_collection_field: ClassVar[str]
-    metadata_field_groups: ClassVar[tuple[tuple[str, ...], ...]] = ()
-    bound_per_candidate: ClassVar[bool] = False
-    """Each bound source candidate carries its own value (one per binding)."""
+
+class SourceAxisProjection:
+    """Project source metadata onto declared axes through their declarations.
+
+    Each axis declares the metadata aliases that carry it, how it reads them
+    (:meth:`Axis.metadata_value`) and its fallback; this class only supplies
+    the metadata lookup.
+    """
+
+    @staticmethod
+    def lookup(metadata: SourceMetadataMapping) -> Callable[[str], str | None]:
+        """Alias lookup over one metadata record's scalar fields."""
+        scalar_items = SourceMetadataFields.scalar_items(metadata)
+
+        def find(alias: str) -> str | None:
+            alias_identity = source_metadata_field_identity(alias)
+            for field_name, value in scalar_items:
+                if (
+                    value is not None
+                    and source_metadata_field_identity(field_name) == alias_identity
+                ):
+                    return str(value)
+            return None
+
+        return find
 
     @classmethod
-    def project_component(
+    def metadata_value(
+        cls, axis: type[Axis], metadata: SourceMetadataMapping
+    ) -> str | None:
+        return axis.metadata_value(cls.lookup(metadata))
+
+    @classmethod
+    def project(
         cls,
-        component: type[Axis],
+        axis: type[Axis],
         metadata: SourceMetadataMapping,
         image_set_index: int,
     ) -> str:
-        return cls.for_axis(component).project(metadata, image_set_index)
+        """One value for ``axis``: from metadata, else from its fallback."""
+        value = cls.metadata_value(axis, metadata)
+        if value:
+            return value
+        return axis.metadata_fallback.value(
+            image_set_index=image_set_index,
+            has_value=lambda other: SourceMetadataFields.component_value(
+                metadata, other
+            )
+            is not None,
+        )
 
     @classmethod
-    def project_bound_component(
+    def project_bound(
         cls,
-        component: type[Axis],
+        axis: type[Axis],
         *,
         set_metadata: SourceMetadataMapping,
         set_index: int,
@@ -1179,177 +1220,10 @@ class SourceComponentProjectionStrategy(AxisRoleKeyedStrategyMixin, ABC):
     ) -> str:
         """Project one axis of a bound source set.
 
-        Axes whose role is bound per candidate read the candidate; every other
-        axis reads the shared source set.
+        Each bound candidate is one colour; colour axes read the candidate and
+        every other axis reads the shared source set.
         """
 
-        strategy = cls.for_axis(component)
-        if strategy.bound_per_candidate:
-            return strategy.project(candidate_metadata, candidate_index)
-        return strategy.project(set_metadata, set_index)
-
-    @classmethod
-    def metadata_component(
-        cls,
-        component: type[Axis],
-        metadata: SourceMetadataMapping,
-    ) -> str | None:
-        return SourceMetadataFields.component_value(metadata, component)
-
-    @classmethod
-    def component_for_metadata_field(
-        cls,
-        field: str,
-    ) -> type[Axis] | None:
-        family = AxisFamily.active()
-        owners = tuple(
-            axis
-            for strategy_type in cls.role_strategy_types()
-            if strategy_type.owns_metadata_field(field)
-            for axis in family.with_role(strategy_type.implements_role)
-        )
-        if len(owners) > 1:
-            raise RuntimeError(
-                f"Source metadata field {field!r} has multiple component owners: "
-                f"{owners!r}."
-            )
-        return owners[0] if owners else None
-
-    @classmethod
-    def owns_metadata_field(cls, field: str) -> bool:
-        normalized = source_metadata_field_identity(field)
-        return any(
-            normalized == source_metadata_field_identity(alias)
-            for group in cls.metadata_field_groups
-            for alias in group
-        )
-
-    @classmethod
-    def _metadata_group_value(
-        cls,
-        metadata: SourceMetadataMapping,
-        group: tuple[str, ...],
-    ) -> str | None:
-        scalar_items = SourceMetadataFields.scalar_items(metadata)
-        for alias in group:
-            alias_identity = source_metadata_field_identity(alias)
-            for field_name, value in scalar_items:
-                if (
-                    value is not None
-                    and source_metadata_field_identity(field_name) == alias_identity
-                ):
-                    return str(value)
-        return None
-
-    def metadata_value(self, metadata: SourceMetadataMapping) -> str | None:
-        if len(self.metadata_field_groups) != 1:
-            raise RuntimeError(
-                f"{type(self).__name__} must implement metadata_value() for "
-                f"{len(self.metadata_field_groups)} metadata field groups."
-            )
-        return self._metadata_group_value(metadata, self.metadata_field_groups[0])
-
-    @abstractmethod
-    def project(
-        self,
-        metadata: SourceMetadataMapping,
-        image_set_index: int,
-    ) -> str:
-        """Return one canonical component value."""
-
-
-class WellSourceComponentProjection(SourceComponentProjectionStrategy):
-    implements_role = PartitionAxis
-    metadata_collection_field = "wells"
-    metadata_field_groups = (
-        ("well",),
-        ("wellrow", "row"),
-        ("wellcolumn", "wellcol", "column", "col"),
-    )
-
-    def metadata_value(self, metadata: SourceMetadataMapping) -> str | None:
-        direct = self._metadata_group_value(metadata, self.metadata_field_groups[0])
-        if direct is not None:
-            return direct
-        row = self._metadata_group_value(metadata, self.metadata_field_groups[1])
-        column = self._metadata_group_value(metadata, self.metadata_field_groups[2])
-        if row is None or column is None:
-            return None
-        return f"{row.strip().upper()}{int(column):02d}"
-
-    def project(
-        self,
-        metadata: SourceMetadataMapping,
-        image_set_index: int,
-    ) -> str:
-        del image_set_index
-        return self.metadata_value(metadata) or "A01"
-
-
-class SiteSourceComponentProjection(SourceComponentProjectionStrategy):
-    implements_role = TileAxis
-    metadata_collection_field = "sites"
-    metadata_field_groups = (("site", "imagenumber"),)
-
-    def project(
-        self,
-        metadata: SourceMetadataMapping,
-        image_set_index: int,
-    ) -> str:
-        direct = self.metadata_value(metadata)
-        if direct is not None:
-            return direct
-        if any(
-            SourceComponentProjectionStrategy.metadata_component(component, metadata)
-            is not None
-            for component in (
-                *AxisFamily.active().with_role(StackAxis),
-                *AxisFamily.active().with_role(TimeAxis),
-            )
-        ):
-            return "1"
-        return str(image_set_index + 1)
-
-
-class ChannelSourceComponentProjection(SourceComponentProjectionStrategy):
-    implements_role = ColourAxis
-    metadata_collection_field = "channels"
-    bound_per_candidate = True
-
-    metadata_field_groups = (("channel", "channelnumber"),)
-
-    def project(
-        self,
-        metadata: SourceMetadataMapping,
-        image_set_index: int,
-    ) -> str:
-        return self.metadata_value(metadata) or str(image_set_index + 1)
-
-
-class ZIndexSourceComponentProjection(SourceComponentProjectionStrategy):
-    implements_role = StackAxis
-    metadata_collection_field = "z_indexes"
-    metadata_field_groups = (("zindex", "z", "zplane", "zslice", "plane", "slice"),)
-
-    def project(
-        self,
-        metadata: SourceMetadataMapping,
-        image_set_index: int,
-    ) -> str:
-        del image_set_index
-        return self.metadata_value(metadata) or "1"
-
-
-class TimepointSourceComponentProjection(SourceComponentProjectionStrategy):
-    implements_role = TimeAxis
-    metadata_collection_field = "timepoints"
-
-    metadata_field_groups = (("timepoint", "time", "framenumber", "frame"),)
-
-    def project(
-        self,
-        metadata: SourceMetadataMapping,
-        image_set_index: int,
-    ) -> str:
-        del image_set_index
-        return self.metadata_value(metadata) or "1"
+        if axis.has_role(ColourAxis):
+            return cls.project(axis, candidate_metadata, candidate_index)
+        return cls.project(axis, set_metadata, set_index)

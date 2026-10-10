@@ -25,7 +25,6 @@ from typing import (
 
 from openhcs.constants.constants import Backend
 from openhcs.core.source_metadata import (
-    SourceComponentProjectionStrategy,
     SourceVoxelSpacing,
 )
 from openhcs.core.source_workspace_projection import (
@@ -44,7 +43,6 @@ from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataSubdirectories,
     VirtualWorkspaceMapping,
     VirtualWorkspaceSourceProjectionEntries,
-    component_metadata_field,
     get_metadata_path,
 )
 from openhcs.core.dataset_sources.interfaces import (
@@ -55,7 +53,6 @@ from openhcs.core.dataset_sources.interfaces import (
     MetadataViewEntry,
 )
 from openhcs.core.axes import Axis, AxisFamily
-from openhcs.domains.microscopy.axes import Microscopy
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -535,22 +532,17 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 plate_path,
                 "source_filename_parser_name",
             ),
-            **OpenHCSMetadata.component_kwargs(
-                {
-                    component: self._merge_subdirectory_mapping(
-                        {
-                            subdirectory_name: getattr(
-                                metadata,
-                                OpenHCSMetadata.component_collection_field(component),
-                            )
-                            for subdirectory_name, metadata in metadata_by_subdirectory.items()
-                        },
-                        plate_path,
-                        OpenHCSMetadata.component_collection_field(component),
-                    )
-                    for component in AxisFamily.active().axes
-                }
-            ),
+            **{
+                field: self._merge_subdirectory_mapping(
+                    {
+                        subdirectory_name: metadata.axis_value_labels[field]
+                        for subdirectory_name, metadata in metadata_by_subdirectory.items()
+                    },
+                    plate_path,
+                    field,
+                )
+                for field in OpenHCSMetadata.collection_fields()
+            },
             FIELDS.AVAILABLE_BACKENDS: self._merge_subdirectory_mapping(
                 {
                     subdirectory_name: metadata.available_backends
@@ -738,7 +730,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                     component,
                     self._get_optional_metadata_dict(
                         plate_path,
-                        component_metadata_field(component),
+                        component.metadata_collection_field,
                     ),
                 )
                 for component in AxisFamily.active().axes
@@ -857,11 +849,8 @@ class OpenHCSMetadata:
     grid_dimensions: List[int]
     pixel_size: float
     image_files: List[str]
-    channels: Optional[Dict[str, Optional[str]]]
-    wells: Optional[Dict[str, Optional[str]]]
-    sites: Optional[Dict[str, Optional[str]]]
-    z_indexes: Optional[Dict[str, Optional[str]]]
-    timepoints: Optional[Dict[str, Optional[str]]]
+    axis_value_labels: Dict[str, Optional[Dict[str, Optional[str]]]]
+    """Value labels per declared axis, keyed by its ``metadata_collection_field``."""
     available_backends: Dict[str, bool]
     workspace_mapping: Optional[Dict[str, Any]] = (
         None  # Virtual path -> path string or structured backend ref
@@ -882,36 +871,32 @@ class OpenHCSMetadata:
         None  # Sibling directory containing analysis results for this subdirectory
     )
 
-    def __post_init__(self) -> None:
-        pass
+    @staticmethod
+    def collection_fields() -> tuple[str, ...]:
+        """Persisted value-label keys, one per declared axis."""
+
+        return tuple(axis.metadata_collection_field for axis in AxisFamily.active().axes)
 
     @staticmethod
-    def component_collection_field(component: type[Axis]) -> str:
-        """Project one nominal component to its persisted collection field."""
-
-        return SourceComponentProjectionStrategy.for_axis(
-            component
-        ).metadata_collection_field
-
-    @classmethod
-    def component_fields(cls) -> tuple[str, ...]:
-        """Derive the component collection fields from their nominal owners."""
-
-        return tuple(
-            cls.component_collection_field(component) for component in AxisFamily.active().axes
-        )
-
-    @classmethod
-    def component_kwargs(
-        cls,
-        values_by_component: Mapping[type[Axis], Any],
+    def labels_by_field(
+        values_by_axis: Mapping[type[Axis], Any],
     ) -> Dict[str, Any]:
-        """Build component collection kwargs from one component-keyed mapping."""
+        """Key one axis-keyed mapping by persisted collection field."""
 
         return {
-            cls.component_collection_field(component): values_by_component[component]
-            for component in AxisFamily.active().axes
+            axis.metadata_collection_field: values_by_axis[axis]
+            for axis in AxisFamily.active().axes
         }
+
+    def labels_for(self, axis: type[Axis]) -> Optional[Dict[str, Optional[str]]]:
+        return self.axis_value_labels[axis.metadata_collection_field]
+
+    def to_document(self) -> Dict[str, Any]:
+        """The persisted subdirectory record: value labels sit at top level."""
+
+        document = asdict(self)
+        document.update(document.pop("axis_value_labels"))
+        return document
 
     @classmethod
     def from_component_value_set(
@@ -941,7 +926,7 @@ class OpenHCSMetadata:
             grid_dimensions=grid_dimensions,
             pixel_size=pixel_size,
             image_files=image_files,
-            **cls.component_kwargs(
+            axis_value_labels=cls.labels_by_field(
                 {component: serialized_values(component) for component in AxisFamily.active().axes}
             ),
             available_backends=available_backends,
@@ -956,7 +941,6 @@ _OPENHCS_METADATA_REQUIRED_FIELDS = (
     FIELDS.GRID_DIMENSIONS,
     FIELDS.PIXEL_SIZE,
     FIELDS.IMAGE_FILES,
-    *OpenHCSMetadata.component_fields(),
     FIELDS.AVAILABLE_BACKENDS,
 )
 
@@ -967,7 +951,7 @@ def _openhcs_metadata_from_subdirectory(
 ) -> OpenHCSMetadata:
     missing_fields = tuple(
         field
-        for field in _OPENHCS_METADATA_REQUIRED_FIELDS
+        for field in (*_OPENHCS_METADATA_REQUIRED_FIELDS, *OpenHCSMetadata.collection_fields())
         if field not in subdirectory_data
     )
     if missing_fields:
@@ -984,14 +968,10 @@ def _openhcs_metadata_from_subdirectory(
         grid_dimensions=list(subdirectory_data[FIELDS.GRID_DIMENSIONS]),
         pixel_size=float(subdirectory_data[FIELDS.PIXEL_SIZE]),
         image_files=list(subdirectory_data[FIELDS.IMAGE_FILES]),
-        **OpenHCSMetadata.component_kwargs(
-            {
-                component: subdirectory_data[
-                    OpenHCSMetadata.component_collection_field(component)
-                ]
-                for component in AxisFamily.active().axes
-            }
-        ),
+        axis_value_labels={
+            field: subdirectory_data[field]
+            for field in OpenHCSMetadata.collection_fields()
+        },
         available_backends=dict(subdirectory_data[FIELDS.AVAILABLE_BACKENDS]),
         workspace_mapping=_optional_metadata_field(
             subdirectory_data, FIELDS.WORKSPACE_MAPPING
@@ -1161,7 +1141,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
                 pixel_size=pixel_size,
             )
         )
-        metadata_dict = asdict(current_metadata)
+        metadata_dict = current_metadata.to_document()
 
         # Filter None values unless override allowed
         if not allow_none_override:
@@ -1177,7 +1157,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
     ) -> OpenHCSMetadata:
         """Extract metadata reflecting current disk state after processing.
 
-        CRITICAL: Extracts component metadata (channels, wells, sites, z_indexes, timepoints)
+        CRITICAL: Extracts axis value labels
         by parsing actual filenames in output_dir, NOT from the original input metadata cache.
         This ensures metadata accurately reflects what was actually written, not what was in the input.
 
@@ -1235,11 +1215,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
             grid_dimensions=grid_dimensions,
             pixel_size=pixel_size,
             image_files=relative_files,
-            channels=merged_metadata.get(Microscopy.Channel),
-            wells=merged_metadata.get(Microscopy.Well),
-            sites=merged_metadata.get(Microscopy.Site),
-            z_indexes=merged_metadata.get(Microscopy.ZIndex),
-            timepoints=merged_metadata.get(Microscopy.Timepoint),
+            axis_value_labels=OpenHCSMetadata.labels_by_field(merged_metadata),
             available_backends={request.write_backend: True},
             workspace_mapping=None,  # Preserve existing - filtered out by create_metadata()
             main=request.is_main if request.is_main else None,

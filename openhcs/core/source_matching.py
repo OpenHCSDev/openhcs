@@ -32,7 +32,6 @@ from openhcs.core.source_metadata import (
     SourceMetadataFields,
     SourceMetadataScalar,
     SourceMetadataValue,
-    SourceComponentProjectionStrategy,
     path_metadata_values_equivalent,
     source_metadata_field_identity,
     source_metadata_component,
@@ -546,10 +545,7 @@ class SourceImageSetIdentity:
             (component.name, value)
             for component in policy.identity_components()
             if (
-                value := SourceComponentProjectionStrategy.metadata_component(
-                    component,
-                    metadata,
-                )
+                value := SourceMetadataFields.component_value(metadata, component)
             )
             is not None
         )
@@ -692,10 +688,7 @@ def overlay_source_metadata(
         component: value
         for component in AxisFamily.active().axes
         if (
-            value := SourceComponentProjectionStrategy.metadata_component(
-                component,
-                additions,
-            )
+            value := SourceMetadataFields.component_value(additions, component)
         )
         is not None
     }
@@ -707,10 +700,7 @@ def overlay_source_metadata(
             continue
         component = source_metadata_component(field)
         if component is None or (
-            SourceComponentProjectionStrategy.metadata_component(
-                component,
-                {field: value},
-            )
+            SourceMetadataFields.component_value({field: value}, component)
             is None
         ):
             overlaid[field] = source_metadata_scalar(value)
@@ -771,7 +761,7 @@ def source_component_metadata_value(
     component: type[Axis],
 ) -> str | None:
     """Return metadata for an OpenHCS component across canonical and alias fields."""
-    return SourceComponentProjectionStrategy.metadata_component(component, metadata)
+    return SourceMetadataFields.component_value(metadata, component)
 
 
 def source_component_metadata_items(
@@ -782,10 +772,7 @@ def source_component_metadata_items(
         (component, value)
         for component in AxisFamily.active().axes
         if (
-            value := SourceComponentProjectionStrategy.metadata_component(
-                component,
-                metadata,
-            )
+            value := SourceMetadataFields.component_value(metadata, component)
         )
         is not None
     )
@@ -796,7 +783,7 @@ def source_component_metadata_raw_value(
     component: type[Axis],
 ) -> SourceMetadataScalar:
     """Return metadata through the registered nominal component projection."""
-    return SourceComponentProjectionStrategy.metadata_component(component, metadata)
+    return SourceMetadataFields.component_value(metadata, component)
 
 
 def semantic_source_metadata_value(

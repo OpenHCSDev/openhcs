@@ -10,6 +10,8 @@ configuration can import it.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
+from inspect import isabstract
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
@@ -127,11 +129,32 @@ class AutoDetectedSource(DatasetSourceChoice):
         return DeclaredFileSource.require_registered_source()
 
 
+class _RegisteredChoices(Sequence):
+    """The choice set; membership is by inheritance, so testing it needs no discovery.
+
+    Configs are validated while modules are still importing, before the
+    registry may discover its members; listing the choices discovers them.
+    """
+
+    def __contains__(self, value: object) -> bool:
+        return (
+            isinstance(value, type)
+            and issubclass(value, DatasetSourceChoice)
+            and not isabstract(value)
+        )
+
+    def __getitem__(self, index):
+        return DatasetSourceChoice.choices()[index]
+
+    def __len__(self) -> int:
+        return len(DatasetSourceChoice.choices())
+
+
 class DatasetSourceChoices(AnnotationChoices):
     """A field holding a dataset source choice."""
 
-    def choices(self) -> tuple[object, ...]:
-        return DatasetSourceChoice.choices()
+    def choices(self) -> Sequence[object]:
+        return _RegisteredChoices()
 
     def label(self, choice: object) -> str:
         return choice.source_name  # type: ignore[attr-defined]

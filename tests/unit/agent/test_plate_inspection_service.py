@@ -33,7 +33,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionAuthority,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
-from openhcs.core.dataset_sources.source import SourceSelectionRole
+from openhcs.core.dataset_sources.source import BroadStoreSource, DeclaredFileSource
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from tests.unit.bioformats_fixture import (
     bioformats_filemanager,

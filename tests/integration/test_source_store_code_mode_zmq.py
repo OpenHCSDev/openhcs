@@ -20,7 +20,6 @@ from zmqruntime.messages import MessageFields
 from openhcs.constants.constants import Backend
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -28,6 +27,7 @@ from openhcs.core.config import (
     MaterializationBackend,
     PipelineConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator

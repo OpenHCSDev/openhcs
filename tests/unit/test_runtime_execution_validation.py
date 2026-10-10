@@ -114,7 +114,7 @@ def _streaming_context(
     )
     context.microscope_handler = SimpleNamespace(
         parser=SourceSchemaFilenameParser(),
-        microscope_type="runtime_validation",
+        source_name="runtime_validation",
     )
     context.plate_path = Path("/tmp/plate")
     return context

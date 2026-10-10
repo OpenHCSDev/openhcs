@@ -472,7 +472,6 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
     from objectstate.lazy_factory import ensure_global_config_context
 
     from openhcs.core.config import (
-        AnalysisConsolidationConfig,
         GlobalPipelineConfig,
         InputSource,
         LazyProcessingConfig,
@@ -482,6 +481,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
         MaterializationBackend,
         PipelineConfig,
     )
+    from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.steps import FunctionStep
 
@@ -631,7 +631,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                 assert json.loads(position_output.read_text()) == expected_positions
 
             from openhcs.core.dataset_sources.source import (
-                SourceSelectionRole,
+                PreparedWorkspaceSource,
             )
             from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 

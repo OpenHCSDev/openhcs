@@ -101,6 +101,7 @@ from openhcs.core.steps.function_step import FunctionStep  # Used for isinstance
 from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
 from dataclasses import dataclass, replace
 from openhcs.core.axes import AxisFamily
+from openhcs.core.post_execute import PostExecuteHook
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -167,10 +168,7 @@ class AxisCompilationRequest:
             SourceImageSetIdentityPolicy.from_pipeline_config(self.global_config)
         )
         context.step_axis_filters = self.global_step_axis_filters
-        context.analysis_consolidation_config = (
-            self.global_config.analysis_consolidation_config
-        )
-        context.plate_metadata_config = self.global_config.plate_metadata_config
+        context.post_execute_hooks = PostExecuteHook.bind_all(self.global_config)
         return context
 
 

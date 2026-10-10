@@ -62,7 +62,6 @@ from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.virtual_workspace_metadata import component_metadata_field
 
 
 def test_transient_axis_views_observe_each_new_projection_without_reusing_released_ids():
@@ -625,8 +624,8 @@ def test_source_binding_workspace_remaps_store_addresses_and_labels(tmp_path):
         )
         for projection in projection_set.projections
     } == {("B02", "3")}
-    assert metadata[component_metadata_field(Microscopy.Well)] == {"B02": None}
-    assert metadata[component_metadata_field(Microscopy.Channel)] == {"1": "DNA", "2": "RNA"}
+    assert metadata[Microscopy.Well.metadata_collection_field] == {"B02": None}
+    assert metadata[Microscopy.Channel.metadata_collection_field] == {"1": "DNA", "2": "RNA"}
 
 
 def test_source_binding_workspace_projects_declared_groups_to_wells(tmp_path):

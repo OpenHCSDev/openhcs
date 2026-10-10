@@ -707,6 +707,7 @@ def test_admitted_request_config_survives_next_live_global_context(
 ):
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.pipeline.compiler import AxisCompilationRequest
+    from openhcs.core.post_execute import PostExecuteHook
     from openhcs.core.pipeline.materialization_flag_planner import (
         MaterializationFlagPlanner,
     )
@@ -756,7 +757,7 @@ def test_admitted_request_config_survives_next_live_global_context(
         is_zmq_execution=True,
     )
     context = request.context_for("A01")
-    assert context.auto_add_output_plate_to_plate_manager is True
+    assert context.post_execute_hooks == PostExecuteHook.bind_all(admitted)
     assert context.tiff_config is admitted.tiff_config
 
     # The next authored request admits current global and local changes.

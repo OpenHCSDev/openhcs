@@ -40,7 +40,7 @@ from zmqruntime.viewer_protocol import ViewerTransportEndpoint, ViewerWireField
 
 import openhcs  # noqa: F401
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import AnalysisConsolidationConfig
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
 )

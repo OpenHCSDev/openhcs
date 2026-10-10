@@ -71,7 +71,7 @@ def publication_context(tmp_path):
     context = ProcessingContext(filemanager=filemanager)
     context.metadata_cache = {}
     context.microscope_handler = SimpleNamespace(
-        parser=SourceSchemaFilenameParser(), microscope_type="openhcsdata"
+        parser=SourceSchemaFilenameParser(), source_name="openhcsdata"
     )
     context.publication_audit = []
     return context

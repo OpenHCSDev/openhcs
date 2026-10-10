@@ -45,34 +45,11 @@ class ZMQOrchestratorEnvironmentRequest(ZMQExecutionIdentity):
         )
 
     def prepared_plate_path(self, storage_registry) -> str:
-        if self.execution_plate_id is not None:
-            plate_path_str = str(self.execution_plate_id)
-        else:
-            plate_path_str = str(self.plate_id)
-        is_omero_plate_id = False
-        try:
-            int(plate_path_str)
-            is_omero_plate_id = True
-        except ValueError:
-            is_omero_plate_id = plate_path_str.startswith("/omero/")
+        from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
 
-        if not is_omero_plate_id:
-            return plate_path_str
-
-        from polystore.backend_registry import register_cleanup_callback
-        from polystore.omero_local import OMEROLocalBackend
-
-        from openhcs.microscopes import omero  # noqa: F401
-        from openhcs.runtime.omero_instance_manager import OMEROInstanceManager
-
-        omero_manager = OMEROInstanceManager()
-        if not omero_manager.connect(timeout=60):
-            raise RuntimeError("OMERO server not available")
-        register_cleanup_callback(omero_manager.close)
-        storage_registry["omero_local"] = OMEROLocalBackend(
-            omero_conn=omero_manager.conn,
-            lock_dir_name=".openhcs",
+        plate_path_str = str(
+            self.plate_id if self.execution_plate_id is None else self.execution_plate_id
         )
-        if plate_path_str.startswith("/omero/"):
-            return plate_path_str
-        return f"/omero/plate_{plate_path_str}"
+        return DatasetRootRule.for_dataset(plate_path_str).prepare_storage(
+            plate_path_str, storage_registry
+        )

@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 
 from openhcs.core.axes import AxisFamily
-from openhcs.core.config import (
+from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
 )

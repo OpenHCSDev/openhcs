@@ -31,6 +31,8 @@ from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.post_execute import PostExecuteHook
 from openhcs.core.function_patterns import (
     compile_function_pattern,
     resolve_function_pattern_execution_scope,
@@ -432,6 +434,7 @@ def _plate_context(
         step_plans={plan.step_index: plan for plan in plans},
         axis_id=axis_id,
         filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
+        post_execute_hooks=PostExecuteHook.bind_all(GlobalPipelineConfig()),
     )
     context.microscope_handler = SimpleNamespace()
     return context
@@ -917,7 +920,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     context = _plate_context("A01", (plan,))
     context.metadata_cache = {}
     context.microscope_handler = SimpleNamespace(
-        parser=SourceSchemaFilenameParser(), microscope_type="test",
+        parser=SourceSchemaFilenameParser(), source_name="test",
     )
     _record_measurements(
         context,
@@ -940,7 +943,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     assert {record.key.name for record in observation.contexts[0].records} == {
         output_spec.name
     }
-    analysis_inputs = observation.contexts[0].outputs.analysis_inputs
+    analysis_inputs = observation.contexts[0].outputs.hook_observations.get("analysis_consolidation")
     assert analysis_inputs is not None
     assert analysis_inputs.destination.backend == Backend.MEMORY.value
     (table,) = tuple(

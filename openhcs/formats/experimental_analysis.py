@@ -21,7 +21,7 @@ import pandas as pd
 from dataclasses import dataclass
 from typing import Optional
 
-from openhcs.core.config import NormalizationMethod
+from openhcs.domains.microscopy.config import NormalizationMethod
 from openhcs.formats.experimental_layout_rows import (
     ExperimentalAnalysisScope,
     ExperimentalLayoutRowRole,

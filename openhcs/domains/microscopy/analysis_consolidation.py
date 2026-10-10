@@ -1,4 +1,4 @@
-"""Analysis result consolidation for completed compiled plate executions."""
+"""Analysis result consolidation after a plate execution (a post-execute hook)."""
 
 from __future__ import annotations
 
@@ -11,11 +11,11 @@ from typing import TYPE_CHECKING
 import pandas as pd
 
 from openhcs.core.axes import AxisFamily
-from openhcs.core.config import AnalysisConsolidationConfig, PlateMetadataConfig
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
-    RuntimeExecutionObservation,
+from openhcs.core.post_execute import PostExecuteHook
+from openhcs.domains.microscopy.config import (
+    AnalysisConsolidationConfig,
+    PlateMetadataConfig,
 )
 from openhcs.processing.backends.analysis.consolidate_analysis_results import (
     AnalysisSummaryWriter,
@@ -69,7 +69,7 @@ class RuntimeAnalysisConsolidationInputs:
     @classmethod
     def from_saved_outputs(
         cls,
-        context: ProcessingContext,
+        config: AnalysisConsolidationConfig,
         plan: CompiledStepPlan,
         saved: MaterializedRuntimeArtifact,
     ) -> RuntimeAnalysisConsolidationInputs | None:
@@ -78,13 +78,13 @@ class RuntimeAnalysisConsolidationInputs:
             return None
         backend = plan.runtime_artifact_materialization.require_persistent_backend()
         return cls._from_table_contents(
-            context, plan, saved.materialization,
+            config, plan, saved.materialization,
             (
                 (Path(output.path), output.require_text_content())
                 for output in saved.outputs_for_backend(backend)
                 if analysis_file_path_is_included(
                     Path(output.path),
-                    analysis_consolidation_config=context.analysis_consolidation_config,
+                    analysis_consolidation_config=config,
                 )
             ),
         )
@@ -92,6 +92,7 @@ class RuntimeAnalysisConsolidationInputs:
     @classmethod
     def from_reused_outputs(
         cls,
+        config: AnalysisConsolidationConfig,
         context: ProcessingContext,
         plan: CompiledStepPlan,
         materialization: RuntimeArtifactMaterialization,
@@ -102,13 +103,13 @@ class RuntimeAnalysisConsolidationInputs:
             return None
         backend = plan.runtime_artifact_materialization.require_persistent_backend()
         return cls._from_table_contents(
-            context, plan, materialization,
+            config, plan, materialization,
             (
                 (Path(output.path), context.filemanager.load_text(output.path, backend))
                 for output in outputs
                 if analysis_file_path_is_included(
                     Path(output.path),
-                    analysis_consolidation_config=context.analysis_consolidation_config,
+                    analysis_consolidation_config=config,
                 )
             ),
         )
@@ -116,7 +117,7 @@ class RuntimeAnalysisConsolidationInputs:
     @classmethod
     def _from_table_contents(
         cls,
-        context: ProcessingContext,
+        config: AnalysisConsolidationConfig,
         plan: CompiledStepPlan,
         materialization: RuntimeArtifactMaterialization,
         contents: Iterable[tuple[Path, str]],
@@ -124,7 +125,7 @@ class RuntimeAnalysisConsolidationInputs:
         """Bind table identity and destinations from this one materialization."""
         if (
             not materialization.spec.participates_in_runtime_export_observation()
-            or not context.analysis_consolidation_config.enabled
+            or not config.enabled
         ):
             return None
         backend = plan.runtime_artifact_materialization.require_persistent_backend()
@@ -172,23 +173,6 @@ class RuntimeAnalysisConsolidationInputs:
                     output_groups.setdefault((directory, group.destination), []).append(output)
         return cls._from_groups(output_groups, destinations)
 
-    @classmethod
-    def from_observations(
-        cls,
-        compiled_contexts: Mapping[str, ProcessingContext],
-        observations: tuple[RuntimeExecutionObservation, ...],
-    ) -> RuntimeAnalysisConsolidationInputs | None:
-        """Admit execution contexts and combine their actual rendered outputs."""
-        inputs = []
-        for observation in observations:
-            for context_observation in observation.contexts:
-                if context_observation.context_key not in compiled_contexts:
-                    raise KeyError(
-                        "Runtime observation references unknown compiled context "
-                        f"{context_observation.context_key!r}."
-                    )
-                inputs.append(context_observation.outputs.analysis_inputs)
-        return cls.combine(inputs)
 
     @classmethod
     def _from_groups(
@@ -256,63 +240,76 @@ class FileManagerAnalysisSummaryWriter(AnalysisSummaryWriter):
         )
 
 
-def consolidate_analysis_outputs(
-    compiled_contexts: Mapping[str, ProcessingContext],
-    execution_results: Mapping[str, ExecutionResult],
-    *,
-    plate_runtime_observation: RuntimeExecutionObservation,
-) -> None:
-    """Consolidate analysis tables materialized by this execution only."""
+@dataclass(frozen=True)
+class AnalysisConsolidationHook(PostExecuteHook):
+    """Consolidate the analysis tables this execution saved into plate summaries."""
 
-    first_context = next(iter(compiled_contexts.values()))
-    analysis_consolidation_config = first_context.analysis_consolidation_config
+    hook_name = "analysis_consolidation"
 
-    if not analysis_consolidation_config.enabled:
-        logger.info("⏭️ CONSOLIDATION: Disabled")
-        return
+    analysis_consolidation_config: AnalysisConsolidationConfig
+    plate_metadata_config: PlateMetadataConfig
 
-    runtime_observations = tuple(
-        result.runtime_observation for result in execution_results.values()
-    ) + (plate_runtime_observation,)
-    consolidation_inputs = RuntimeAnalysisConsolidationInputs.from_observations(
-        compiled_contexts,
-        runtime_observations,
-    )
-    if consolidation_inputs is None:
-        return
-
-    if first_context.output_plate_root is None:
-        raise ValueError(
-            "Analysis consolidation requires the compiled output plate root."
+    @classmethod
+    def bind(cls, global_config) -> "AnalysisConsolidationHook":
+        return cls(
+            analysis_consolidation_config=global_config.analysis_consolidation_config,
+            plate_metadata_config=global_config.plate_metadata_config,
         )
-    output_plate_root = Path(first_context.output_plate_root)
 
-    successful_dirs, failed_dirs = consolidate_runtime_analysis_table_output_groups(
-        analysis_outputs_by_directory=consolidation_inputs.outputs_by_directory,
-        plate_path=output_plate_root,
-        analysis_consolidation_config=analysis_consolidation_config,
-        plate_metadata_config=first_context.plate_metadata_config,
-        summary_writer=FileManagerAnalysisSummaryWriter(
-            filemanager=first_context.filemanager,
-            destinations={
-                **{
-                    directory: group.destination
-                    for directory, group in consolidation_inputs.groups.items()
+    def observe_saved_outputs(self, context, plan, saved):
+        del context
+        return RuntimeAnalysisConsolidationInputs.from_saved_outputs(
+            self.analysis_consolidation_config, plan, saved
+        )
+
+    def observe_reused_outputs(self, context, plan, materialization, outputs):
+        return RuntimeAnalysisConsolidationInputs.from_reused_outputs(
+            self.analysis_consolidation_config, context, plan, materialization, outputs
+        )
+
+    @classmethod
+    def combine(cls, observations):
+        return RuntimeAnalysisConsolidationInputs.combine(observations)
+
+    def run(
+        self,
+        compiled_contexts: Mapping[str, ProcessingContext],
+        observation: RuntimeAnalysisConsolidationInputs | None,
+    ) -> None:
+        if not self.analysis_consolidation_config.enabled:
+            logger.info("CONSOLIDATION: Disabled")
+            return
+        if observation is None:
+            return
+        first_context = next(iter(compiled_contexts.values()))
+        if first_context.output_plate_root is None:
+            raise ValueError(
+                "Analysis consolidation requires the compiled output plate root."
+            )
+        output_plate_root = Path(first_context.output_plate_root)
+
+        successful_dirs, failed_dirs = consolidate_runtime_analysis_table_output_groups(
+            analysis_outputs_by_directory=observation.outputs_by_directory,
+            plate_path=output_plate_root,
+            analysis_consolidation_config=self.analysis_consolidation_config,
+            plate_metadata_config=self.plate_metadata_config,
+            summary_writer=FileManagerAnalysisSummaryWriter(
+                filemanager=first_context.filemanager,
+                destinations={
+                    **{
+                        directory: group.destination
+                        for directory, group in observation.groups.items()
+                    },
+                    output_plate_root: observation.destination,
                 },
-                output_plate_root: consolidation_inputs.destination,
-            },
-        ),
-    )
-
-    if failed_dirs:
-        raise RuntimeError(
-            "Analysis consolidation failed for execution-owned outputs: "
-            f"{failed_dirs!r}."
+            ),
         )
-    logger.info(
-        "CONSOLIDATION: %d directories consolidated",
-        len(successful_dirs),
-    )
+        if failed_dirs:
+            raise RuntimeError(
+                "Analysis consolidation failed for execution-owned outputs: "
+                f"{failed_dirs!r}."
+            )
+        logger.info("CONSOLIDATION: %d directories consolidated", len(successful_dirs))
 
 
 def runtime_analysis_table_output(

@@ -1601,7 +1601,7 @@ class OpenHCSMainWindow(QMainWindow):
             return
 
         analysis_path = Path(analysis_dir)
-        from openhcs.core.config import ExperimentalAnalysisConfig
+        from openhcs.domains.microscopy.config import ExperimentalAnalysisConfig
         from openhcs.processing.backends.experimental_analysis import (
             ExperimentalAnalysisEngine,
         )

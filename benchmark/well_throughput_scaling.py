@@ -38,7 +38,6 @@ from benchmark.openhcs_measured_run import (
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyVFSConfig,
@@ -47,6 +46,7 @@ from openhcs.core.config import (
     MultiprocessingStartMethod,
     WellFilterConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentAuthority

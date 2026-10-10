@@ -62,7 +62,6 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.core.virtual_workspace_metadata import component_metadata_field
 
 
 def test_reused_server_suite_keeps_one_client_and_distinct_resume_identity(
@@ -616,7 +615,7 @@ def test_repeated_wells_keep_all_declared_projection_fields_coherent(
     main = {
         **serializer.projection_fields(((original, original_path),)),
         FIELDS.IMAGE_FILES: [original_path],
-        component_metadata_field(Microscopy.Well): {"A01": None},
+        Microscopy.Well.metadata_collection_field: {"A01": None},
     }
     metadata_path = tmp_path / "openhcs_metadata.json"
     metadata_path.write_text(
@@ -673,7 +672,7 @@ def test_repeated_wells_use_manifest_source_well_scope(
     main = {
         **serializer.projection_fields(entries),
         FIELDS.IMAGE_FILES: [path for _source, path in entries],
-        component_metadata_field(Microscopy.Well): {"A01": None, "B01": None},
+        Microscopy.Well.metadata_collection_field: {"A01": None, "B01": None},
     }
     metadata_path = tmp_path / "openhcs_metadata.json"
     metadata_path.write_text(

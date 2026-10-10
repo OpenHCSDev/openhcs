@@ -2489,7 +2489,7 @@ def test_new_produced_row_selects_prepared_replay_without_overwriting_saved_or_l
         ExecutionCompletionPayload,
         ExecutionOutputPlateSummary,
     )
-    from openhcs.core.dataset_sources.source import SourceSelectionRole
+    from openhcs.core.dataset_sources.source import PreparedWorkspaceSource
 
     ObjectStateRegistry.clear()
     widget = PlateManagerWidgetTestHarness.widget(monkeypatch)

@@ -51,7 +51,10 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
 )
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.dataset_sources.source import SourceSelectionRole
+from openhcs.core.dataset_sources.source import (
+    PreparedWorkspaceSource,
+    SourceSelectionRole,
+)
 from openhcs.core.input_workspace import (
     InputWorkspacePreparationRequest,
     InputWorkspacePreparationResult,
@@ -1217,7 +1220,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         *,
         plate_root: Path | str | None = None,
         cppipe_path: Path | str | None = None,
-        source_role: SourceSelectionRole | None = None,
+        source_role: type[SourceSelectionRole] | None = None,
     ) -> ObjectState:
         """
         Create an orchestrator for a plate (in CREATED state, not initialized).

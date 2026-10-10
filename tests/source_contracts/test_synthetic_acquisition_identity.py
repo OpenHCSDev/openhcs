@@ -19,14 +19,14 @@ from openhcs.core.source_projection import (
 from openhcs.core.components.parser_metaprogramming import GenericFilenameParser
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.virtual_workspace_metadata import (
-    FIELDS, VirtualWorkspaceSourceProjectionEntries, component_metadata_field,
+    FIELDS, VirtualWorkspaceSourceProjectionEntries,
     AtomicMetadataWriter, get_metadata_path,
 )
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser, ImageXpressHandler
-from openhcs.core.dataset_sources.source import MICROSCOPE_HANDLERS
+from openhcs.core.dataset_sources.source import DatasetSource
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
@@ -83,7 +83,7 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
                 address_sets[component].add(projection.address.value_for(component))
         self.assertEqual(len(physical_refs), count)
         for component in AxisFamily.active().axes:
-            self.assertEqual(set(metadata[component_metadata_field(component)]), address_sets[component])
+            self.assertEqual(set(metadata[component.metadata_collection_field]), address_sets[component])
         # A fresh real metadata handler reads the persisted component authority.
         reopened = OpenHCSMetadataHandler(
             FileManager({"disk": DiskStorageBackend()})
@@ -125,8 +125,8 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
         parser = FilenameParser.__registry__[metadata[FIELDS.SOURCE_FILENAME_PARSER_NAME]]()
         parsed_wells = {parser.parse_filename(path.name).value_for(Microscopy.Well)
                         for path in plate.rglob("*.tiff")}
-        self.assertEqual(set(metadata[component_metadata_field(Microscopy.Well)]), parsed_wells)
-        self.assertEqual(set(metadata[component_metadata_field(Microscopy.Well)]) | parsed_wells, {"R01C01"})
+        self.assertEqual(set(metadata[Microscopy.Well.metadata_collection_field]), parsed_wells)
+        self.assertEqual(set(metadata[Microscopy.Well.metadata_collection_field]) | parsed_wells, {"R01C01"})
         self.assert_coherent(plate, metadata, 2)
 
     def test_imagexpress_bioformats_stack_retains_folder_axis_and_refs(self):
@@ -301,7 +301,7 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
                 super().__init__(filemanager, pattern_format)
                 self.parser = RecordedScopedImageXpressParser(filemanager, pattern_format)
 
-        self.assertIs(MICROSCOPE_HANDLERS[RecordedScopedImageXpressHandler.source_name],
+        self.assertIs(DatasetSource.__registry__[RecordedScopedImageXpressHandler.source_name],
                       RecordedScopedImageXpressHandler)
         plate = self.root / "declared-producer-extension"
         with redirect_stdout(StringIO()):

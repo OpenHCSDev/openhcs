@@ -22,7 +22,6 @@ from openhcs.core.artifacts import (
     SpecialArtifactType,
 )
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -32,6 +31,7 @@ from openhcs.core.config import (
     PipelineConfig,
     VFSConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.steps import FunctionStep
 from openhcs.processing.backends.analysis.count_cells_simple import (

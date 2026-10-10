@@ -11,13 +11,13 @@ from objectstate.lazy_factory import ensure_global_config_context
 
 from openhcs.constants import InputSource
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazyStepMaterializationConfig,
     PipelineConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.steps.function_step import FunctionStep

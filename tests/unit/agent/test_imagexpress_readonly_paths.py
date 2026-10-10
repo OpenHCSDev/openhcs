@@ -20,7 +20,7 @@ from openhcs.agent.services.plate_inspection_service import (
 from openhcs.core.plate_image_inventory import PlateFileInventory
 from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.microscopes.imagexpress import ImageXpressHandler
-from openhcs.core.dataset_sources.source import MICROSCOPE_HANDLERS
+from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.dataset_sources.interfaces import MicroscopeImagePathParser
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
@@ -288,7 +288,7 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
             == subtype.__mro__.count(MicroscopeImagePathParser)
             == 1
         )
-        assert MICROSCOPE_HANDLERS[key] is subtype
+        assert DatasetSource.__registry__[key] is subtype
         assert not (plate / "openhcs_metadata.json").exists()
         filemanager = FileManager(dict(storage_registry))
         handler = DatasetSourceChoice.named(key).open(plate, filemanager=filemanager)
@@ -310,7 +310,7 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
         for path in {path for _, path in events}:
             assert events.count(("site", path)) == events.count(("ancestor", path))
     finally:
-        del MICROSCOPE_HANDLERS[key]
+        del DatasetSource.__registry__[key]
 
 
 def test_initializer_rejects_ambiguous_paths_instead_of_overwriting(tmp_path):

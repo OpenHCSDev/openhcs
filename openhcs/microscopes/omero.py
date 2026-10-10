@@ -20,6 +20,7 @@ from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
 
 from openhcs.constants.constants import Backend
+from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
 from openhcs.core.dataset_sources.source import (
     DatasetSource,
     RemoteServiceSource,
@@ -437,3 +438,38 @@ class OMEROHandler(RemoteServiceSource, DatasetSource):
         else:
             # Already a Path (shouldn't happen for OMERO, but handle it)
             return plate_path
+
+
+class OMEROPlateRoot(DatasetRootRule):
+    """An OMERO plate id, or its ``/omero/plate_<id>`` virtual path."""
+
+    rule_name = "omero_plate"
+
+    @classmethod
+    def claims(cls, dataset_id: str) -> bool:
+        return dataset_id.isdigit() or dataset_id.startswith("/omero/")
+
+    @classmethod
+    def prepare_storage(cls, dataset_id: str, storage_registry) -> str:
+        from polystore.backend_registry import register_cleanup_callback
+        from polystore.omero_local import OMEROLocalBackend
+
+        from openhcs.runtime.omero_instance_manager import OMEROInstanceManager
+
+        omero_manager = OMEROInstanceManager()
+        if not omero_manager.connect(timeout=60):
+            raise RuntimeError("OMERO server not available")
+        register_cleanup_callback(omero_manager.close)
+        storage_registry[Backend.OMERO_LOCAL.value] = OMEROLocalBackend(
+            omero_conn=omero_manager.conn,
+            lock_dir_name=".openhcs",
+        )
+        if dataset_id.startswith("/omero/"):
+            return dataset_id
+        return f"/omero/plate_{dataset_id}"
+
+    @classmethod
+    def output_base(cls, dataset_root: Path, global_output_folder: str | None) -> Path:
+        """OMERO outputs stay beside the virtual plate path."""
+        del global_output_folder
+        return dataset_root.parent

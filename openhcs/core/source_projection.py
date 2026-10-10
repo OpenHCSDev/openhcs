@@ -33,7 +33,6 @@ from openhcs.core.source_matching import (
     with_source_component_metadata,
 )
 from openhcs.core.source_metadata import (
-    SourceComponentProjectionStrategy,
     SourceMetadataFields,
     ResolvedSourceMetadataRecord,
     SourceMetadataMapping,
@@ -992,7 +991,7 @@ class SourceProjectionSet:
         tuple[SourceArtifactProjection, ...],
         tuple[tuple[SourceArtifactProjection, ...], ...],
     ]:
-        """Partition whole exports and ordered scalar Z cohorts from one set.
+        """Partition whole exports and ordered stack-plane cohorts from one set.
 
         Producer, execution scope and all other source coordinates remain
         distinct. Coordinates alone never declare a pixel axis.
@@ -1008,25 +1007,28 @@ class SourceProjectionSet:
         ordered_groups = []
         for group in groups.values():
             stack_axis = AxisFamily.active().one(StackAxis)
-            z_indexes = tuple(
+            stack_values = tuple(
                 projection.component_value(stack_axis) for projection in group
             )
-            if any(value is None or not value.isdecimal() for value in z_indexes):
+            if any(value is None or not value.isdecimal() for value in stack_values):
                 raise ValueError(
-                    "Exported Z planes require integral source coordinates."
+                    f"Exported {stack_axis.name} planes require integral source "
+                    "coordinates."
                 )
             ordered = tuple(
                 projection
                 for _, projection in sorted(
-                    zip((int(value) for value in z_indexes), group, strict=True),
+                    zip((int(value) for value in stack_values), group, strict=True),
                     key=lambda item: item[0],
                 )
             )
-            first_z_index = int(ordered[0].component_value(stack_axis))
+            first_value = int(ordered[0].component_value(stack_axis))
             if tuple(
                 int(projection.component_value(stack_axis)) for projection in ordered
-            ) != tuple(range(first_z_index, first_z_index + len(ordered))):
-                raise ValueError("Exported Z planes must be unique and contiguous.")
+            ) != tuple(range(first_value, first_value + len(ordered))):
+                raise ValueError(
+                    f"Exported {stack_axis.name} planes must be unique and contiguous."
+                )
             ordered_groups.append(ordered)
         return tuple(whole_images), tuple(ordered_groups)
 
@@ -1148,9 +1150,7 @@ class SourceProjectionMetadataSerializer:
             values = self._component_values(projection_set, component)
             component_labels = (labels or {}).get(component) or {}
             metadata[
-                SourceComponentProjectionStrategy.for_axis(
-                    component
-                ).metadata_collection_field
+                component.metadata_collection_field
             ] = {
                 value: label if label is not None else component_labels.get(value)
                 for value, label in values.items()

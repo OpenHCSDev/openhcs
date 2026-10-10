@@ -34,7 +34,7 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.source_tile_geometry import SourceTileLayout
-from openhcs.core.axes import Axis, AxisFamily, ColourAxis, is_axis
+from openhcs.core.axes import Axis, AxisFamily, ColourAxis
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -318,13 +318,6 @@ def get_metadata_path(plate_root: str | Path) -> Path:
     return METADATA_CONFIG.metadata_path(plate_root)
 
 
-def component_metadata_field(component: type[Axis]) -> str:
-    """Derive the persisted collection field for one declared component."""
-
-    if not is_axis(component):
-        raise TypeError(f"Metadata fields require a declared axis; got {component!r}")
-    suffix = "es" if component.name.endswith("x") else "s"
-    return f"{component.name}{suffix}"
 
 
 @dataclass(frozen=True)
@@ -355,7 +348,7 @@ class OpenHCSMetadataFields:
     MICROSCOPE_HANDLER_NAME: str = (
         SourceProjectionMetadataSerializer.MICROSCOPE_HANDLER_NAME_FIELD
     )
-    # Per-axis collection fields derive from component_metadata_field(axis).
+    # Per-axis collection fields derive from axis.metadata_collection_field.
     # Collection fields owned by no axis; readers consume them from persisted plates.
     OBJECTIVES: str = "objectives"
     ACQUISITION_DATETIME: str = "acquisition_datetime"
@@ -889,7 +882,7 @@ class VirtualWorkspaceChannelLabels:
     ) -> "VirtualWorkspaceChannelLabels":
         entries: dict[str, str] = {}
         for colour_axis in AxisFamily.active().with_role(ColourAxis):
-            labels = subdirectory.get(component_metadata_field(colour_axis))
+            labels = subdirectory.get(colour_axis.metadata_collection_field)
             if labels is None:
                 continue
             if not isinstance(labels, Mapping):

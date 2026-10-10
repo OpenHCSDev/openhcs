@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 
-from openhcs.core.config import ExperimentalAnalysisConfig
+from openhcs.domains.microscopy.config import ExperimentalAnalysisConfig
 from openhcs.formats.experimental_layout_rows import ExperimentalAnalysisScope
 from openhcs.formats.experimental_result_formats import (
     ExperimentalResultFormatStrategy,
