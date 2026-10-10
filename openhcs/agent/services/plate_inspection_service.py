@@ -62,6 +62,7 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFileInventory,
 )
 from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.dataset_sources.choice import AutoDetectedSource, DatasetSourceChoice
 if TYPE_CHECKING:
     from openhcs.core.components.parser_metaprogramming import (
         FilenameParseResult,
@@ -82,7 +83,7 @@ class PlateInspectionText:
 
     LOCAL_PATH_HINT = "Pass a plate folder under OPENHCS_AGENT_READ_ROOTS."
     DIRECTORY_HINT = "The inspection target must be a local directory."
-    HANDLER_HINT = "Check microscope_type or make sure microscope metadata is present."
+    HANDLER_HINT = "Check source_format or make sure microscope metadata is present."
     LISTING_HINT = "The selected handler could not list image files read-only."
     NO_IMAGES_HINT = (
         "Check that image files exist under the plate root or selected source layout."
@@ -99,8 +100,8 @@ class PlateInspectionText:
         "Increase max_files_to_parse if full filename coverage is needed."
     )
     LOW_PARSE_COVERAGE_HINT = (
-        "This may be the wrong folder, microscope_type, or pattern_format. "
-        "Inspect a more specific image folder or pass an explicit microscope_type."
+        "This may be the wrong folder, source_format, or pattern_format. "
+        "Inspect a more specific image folder or pass an explicit source_format."
     )
     RAW_WORKSPACE_PREPARATION_REASON = (
         "Raw microscope layouts usually need initialize_workspace before execution; "
@@ -134,7 +135,7 @@ class PlateInspectionContext:
     warnings: tuple[AgentWarning, ...] = ()
 
     @property
-    def microscope_type(self) -> str:
+    def source_format(self) -> str:
         return self.handler.source_name
 
 
@@ -153,7 +154,7 @@ class PlateInspectionHandlerCandidateProjection:
     def candidates(
         cls,
         *,
-        requested_microscope_type: str,
+        requested_source_format: str,
         selected_handler: "DatasetSource",
         plate_path: Path,
         filemanager: "FileManager",
@@ -165,7 +166,7 @@ class PlateInspectionHandlerCandidateProjection:
             FormatSpecificSource,
         )
 
-        if requested_microscope_type != PlateInspectionDefaults.MICROSCOPE_AUTO:
+        if DatasetSourceChoice.named(requested_source_format) is not AutoDetectedSource:
             return ()
         if (
             type(selected_handler).source_selection_role()
@@ -211,7 +212,7 @@ class PlateInspectionHandlerCandidateProjection:
         from openhcs.core.dataset_sources.source import DatasetSource
 
         return DatasetSource.__registry__[
-            candidate.microscope_type
+            candidate.source_format
         ].supports_explicit_incomplete_export()
 
     @staticmethod
@@ -262,7 +263,7 @@ class PlateInspectionHandlerCandidateProjection:
                 metadata_diagnostic = str(exc)
 
         return PlateInspectionHandlerCandidate(
-            microscope_type=handler.source_name,
+            source_format=handler.source_name,
             handler_class=type(handler).__name__,
             parser_class=type(parser).__name__,
             root_dir=root_dir,
@@ -710,9 +711,9 @@ class PlateInspectionStatusPolicy:
         errors: tuple[AgentError, ...],
         image_file_count: int,
         parse_coverage: PlateInspectionParseCoverage,
-        detected_microscope_type: str | None,
+        detected_source_format: str | None,
     ) -> PlateInspectionConfidence:
-        if errors or detected_microscope_type is None:
+        if errors or detected_source_format is None:
             return PlateInspectionConfidence.NONE
         if not image_file_count:
             return PlateInspectionConfidence.LOW
@@ -730,12 +731,12 @@ class PlateInspectionWorkspacePreparationPolicy:
 
     def for_microscope(
         self,
-        microscope_type: str | None,
+        source_format: str | None,
     ) -> PlateInspectionWorkspacePreparation:
         from openhcs.core.dataset_sources.source import PreparedWorkspaceSource
 
         if (
-            microscope_type
+            source_format
             == PreparedWorkspaceSource.require_registered_source().source_name
         ):
             return PlateInspectionWorkspacePreparation(
@@ -746,15 +747,15 @@ class PlateInspectionWorkspacePreparationPolicy:
             )
         return PlateInspectionWorkspacePreparation(
             read_only_inspection=True,
-            required_before_execution=microscope_type is not None,
+            required_before_execution=source_format is not None,
             operation=(
                 PlateWorkspacePreparationOperation.INITIALIZE_WORKSPACE
-                if microscope_type is not None
+                if source_format is not None
                 else PlateWorkspacePreparationOperation.NONE
             ),
             reason=(
                 PlateInspectionText.RAW_WORKSPACE_PREPARATION_REASON
-                if microscope_type is not None
+                if source_format is not None
                 else None
             ),
         )
@@ -771,7 +772,7 @@ class PlateInspectionWorkflowAdvicePolicy:
         handler: "DatasetSource",
         *,
         format_specific_candidates: tuple[PlateInspectionHandlerCandidate, ...] = (),
-        requested_microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
+        requested_source_format: str = AutoDetectedSource.source_name,
     ) -> PlateInspectionWorkflowAdvice:
         from openhcs.core.dataset_sources.source import DeclaredFileSource
 
@@ -791,7 +792,7 @@ class PlateInspectionWorkflowAdvicePolicy:
             if candidate not in supported_partial_candidates
         )
         probable_native_owners = tuple(
-            candidate.microscope_type for candidate in supported_partial_candidates
+            candidate.source_format for candidate in supported_partial_candidates
         )
         if unsupported_partial_candidates and not supported_partial_candidates:
             ingestion_route = PlateInspectionIngestionRoute.SOURCE_BINDINGS_HANDLER
@@ -843,7 +844,7 @@ class PlateInspectionWorkflowAdvicePolicy:
                 "complete vendor export so native auto-detection and full plate "
                 "metadata work. For a knowingly partial analysis, keep files under "
                 "the candidate's declared root_dir and explicitly select that "
-                "microscope_type; expect missing metadata-derived fields. Source "
+                "source_format; expect missing metadata-derived fields. Source "
                 "bindings may name/select planes only when the selected handler "
                 "projects them, and are not a replacement vendor decoder."
                 f"{unsupported_note}"
@@ -871,8 +872,8 @@ class PlateInspectionWorkflowAdvicePolicy:
             )
             selection_message = type(handler).source_selection_guidance()
             initialization_message = (
-                f"initialize with explicit microscope_type={ingestion_owner!r}"
-                if requested_microscope_type != PlateInspectionDefaults.MICROSCOPE_AUTO
+                f"initialize with explicit source_format={ingestion_owner!r}"
+                if DatasetSourceChoice.named(requested_source_format) is not AutoDetectedSource
                 else "initialize with auto-detection"
             )
             message = (
@@ -902,7 +903,7 @@ class PlateInspectionWorkflowAdvicePolicy:
             else f" ({candidate.metadata_diagnostic})"
         )
         return (
-            f"{candidate.microscope_type} parser {candidate.parser_class} recognized "
+            f"{candidate.source_format} parser {candidate.parser_class} recognized "
             f"{candidate.recognized_file_count}/{candidate.tested_file_count} source "
             f"filenames under root_dir={candidate.root_dir!r}; {detection}{diagnostic}"
         )
@@ -1142,9 +1143,9 @@ class PlateInspectionService:
         query_kind = request.kind
         if (
             query_kind is PlateFileKind.RESULT
-            and request.microscope_type == PlateInspectionDefaults.MICROSCOPE_AUTO
+            and request.detects_source_format
             and request.pattern_format is None
-            and request.well is None
+            and not request.component_filters
         ):
             result_only = self._result_only_query_files(
                 request=request,
@@ -1157,9 +1158,9 @@ class PlateInspectionService:
         filemanager = self._filemanager_factory.create()
         if (
             query_kind is PlateFileKind.IMAGE
-            and request.microscope_type == PlateInspectionDefaults.MICROSCOPE_AUTO
+            and request.detects_source_format
             and request.pattern_format is None
-            and request.well is None
+            and not request.component_filters
         ):
             result_only = self._result_only_query_files(
                 request=request,
@@ -1176,7 +1177,7 @@ class PlateInspectionService:
             handler = self._create_handler(
                 PlatePathInspectionRequest(
                     plate_path=str(plate_path),
-                    microscope_type=request.microscope_type,
+                    source_format=request.source_format,
                     pattern_format=request.pattern_format,
                 ),
                 plate_path,
@@ -1206,7 +1207,7 @@ class PlateInspectionService:
         parser = self._parser(
             handler,
             warnings,
-            warn=query_kind is not PlateFileKind.RESULT or request.well is not None,
+            warn=query_kind is not PlateFileKind.RESULT or bool(request.component_filters),
         )
         file_inventory = self._plate_file_inventory_for_query(
             handler,
@@ -1220,7 +1221,7 @@ class PlateInspectionService:
             request=request,
             plate_path=plate_path,
             file_inventory=file_inventory,
-            detected_microscope_type=handler.source_name,
+            detected_source_format=handler.source_name,
             handler_class=type(handler).__name__,
             parser_class=None if parser is None else type(parser).__name__,
             warnings=tuple(warnings),
@@ -1232,7 +1233,7 @@ class PlateInspectionService:
         plate_path: Path,
     ) -> PlateFileQueryResult:
         """Read persisted files without inventing a microscope/source identity."""
-        if request.kind is not PlateFileKind.RESULT or request.well is not None:
+        if request.kind is not PlateFileKind.RESULT or bool(request.component_filters):
             return self._query_files_error(
                 request,
                 AgentError(
@@ -1271,7 +1272,7 @@ class PlateInspectionService:
             request=request,
             plate_path=plate_path,
             file_inventory=file_inventory,
-            detected_microscope_type=None,
+            detected_source_format=None,
             handler_class=None,
             parser_class=None,
             warnings=(),
@@ -1302,7 +1303,7 @@ class PlateInspectionService:
         request: PlateFileQueryRequest,
         plate_path: Path,
         file_inventory: PlateFileInventory,
-        detected_microscope_type: str | None,
+        detected_source_format: str | None,
         handler_class: str | None,
         parser_class: str | None,
         warnings: tuple[AgentWarning, ...],
@@ -1311,7 +1312,7 @@ class PlateInspectionService:
             PlateFileInventoryQuery(
                 kinds=PlateFileInventoryQuery.kinds_for(request.kind),
                 path_contains=request.path_contains,
-                well=request.well,
+                component_filters=request.component_filters,
                 offset=request.offset,
                 limit=request.limit,
             )
@@ -1324,8 +1325,8 @@ class PlateInspectionService:
                 if request.result_directory is not None
                 else None
             ),
-            requested_microscope_type=request.microscope_type,
-            detected_microscope_type=detected_microscope_type,
+            requested_source_format=request.source_format,
+            detected_source_format=detected_source_format,
             handler_class=handler_class,
             parser_class=parser_class,
             total_count=query_result.total_count,
@@ -1378,7 +1379,7 @@ class PlateInspectionService:
             handler = self._create_handler(
                 PlatePathInspectionRequest(
                     plate_path=str(plate_path),
-                    microscope_type=request.microscope_type,
+                    source_format=request.source_format,
                     pattern_format=request.pattern_format,
                 ),
                 plate_path,
@@ -1502,7 +1503,7 @@ class PlateInspectionService:
             request=request,
             plate_path=plate_path,
             file_inventory=file_inventory,
-            detected_microscope_type=None,
+            detected_source_format=None,
             handler_class=None,
             parser_class=None,
             warnings=tuple(warnings),
@@ -1536,7 +1537,7 @@ class PlateInspectionService:
             plate_path=(
                 str(plate_path) if plate_path is not None else request.plate_path
             ),
-            requested_microscope_type=request.microscope_type,
+            requested_source_format=request.source_format,
             errors=(error,),
         )
 
@@ -1573,7 +1574,7 @@ class PlateInspectionService:
 
         filemanager = self._filemanager_factory.create()
         if (
-            request.microscope_type == PlateInspectionDefaults.MICROSCOPE_AUTO
+            request.detects_source_format
             and request.pattern_format is None
         ):
             result_only = self._result_only_inspection(
@@ -1713,7 +1714,7 @@ class PlateInspectionService:
         )
         format_specific_candidates = (
             PlateInspectionHandlerCandidateProjection.candidates(
-                requested_microscope_type=request.microscope_type,
+                requested_source_format=request.source_format,
                 selected_handler=handler,
                 plate_path=plate_path,
                 filemanager=filemanager,
@@ -1722,7 +1723,7 @@ class PlateInspectionService:
         )
         if format_specific_candidates:
             candidate_names = ", ".join(
-                candidate.microscope_type for candidate in format_specific_candidates
+                candidate.source_format for candidate in format_specific_candidates
             )
             supports_partial = all(
                 PlateInspectionHandlerCandidateProjection.supports_explicit_incomplete_export(
@@ -1742,7 +1743,7 @@ class PlateInspectionService:
                         (
                             "Inspect format_specific_handler_candidates and choose "
                             "between a complete vendor export or explicit partial "
-                            "analysis with the native microscope_type."
+                            "analysis with the native source_format."
                         )
                         if supports_partial
                         else (
@@ -1765,17 +1766,17 @@ class PlateInspectionService:
             errors=errors,
             image_file_count=len(image_files),
             parse_coverage=parse_coverage,
-            detected_microscope_type=detected_type,
+            detected_source_format=detected_type,
         )
 
         return PlatePathInspectionResult(
             schema_version=SCHEMA_VERSION,
             plate_path=str(plate_path),
-            requested_microscope_type=request.microscope_type,
+            requested_source_format=request.source_format,
             status=status,
             confidence=confidence,
-            available_microscope_types=available_types,
-            detected_microscope_type=detected_type,
+            available_source_formats=available_types,
+            detected_source_format=detected_type,
             handler_class=type(handler).__name__,
             parser_class=None if parser is None else type(parser).__name__,
             metadata_handler_class=type(handler.metadata_handler).__name__,
@@ -1799,7 +1800,7 @@ class PlateInspectionService:
             workflow_advice=self._workflow_advice_policy.for_handler(
                 handler,
                 format_specific_candidates=format_specific_candidates,
-                requested_microscope_type=request.microscope_type,
+                requested_source_format=request.source_format,
             ),
             errors=errors,
             warnings=warnings_tuple,
@@ -1846,10 +1847,10 @@ class PlateInspectionService:
         return PlatePathInspectionResult(
             schema_version=SCHEMA_VERSION,
             plate_path=str(plate_path),
-            requested_microscope_type=request.microscope_type,
+            requested_source_format=request.source_format,
             status=PlateInspectionStatus.PARTIAL,
             confidence=PlateInspectionConfidence.NONE,
-            available_microscope_types=available_types,
+            available_source_formats=available_types,
             result_files=PlateInspectionService._result_file_summary(
                 result_inventory,
                 bounds.max_sample_files,
@@ -1876,7 +1877,7 @@ class PlateInspectionService:
             EndpointStartupPhase.PREPARING_CAPABILITIES,
             "Preparing physical microscope handler and reader runtime",
         ).publish()
-        handler = DatasetSourceChoice.named(request.microscope_type).open(
+        handler = DatasetSourceChoice.named(request.source_format).open(
             plate_path,
             filemanager=filemanager,
             pattern_format=request.pattern_format,
@@ -2249,10 +2250,10 @@ class PlateInspectionService:
             plate_path=(
                 str(plate_path) if plate_path is not None else request.plate_path
             ),
-            requested_microscope_type=request.microscope_type,
+            requested_source_format=request.source_format,
             status=PlateInspectionStatus.ERROR,
             confidence=PlateInspectionConfidence.NONE,
-            available_microscope_types=available_types,
+            available_source_formats=available_types,
             workflow_advice=self._workflow_advice_policy.unresolved(),
             errors=(error,),
         )

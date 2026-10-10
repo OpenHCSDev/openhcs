@@ -263,7 +263,7 @@ class SourceBindingWorkflowSection(
         )
 
         handler_lines: list[str] = []
-        for microscope_type, handler_type in DatasetSource.__registry__.items():
+        for source_format, handler_type in DatasetSource.__registry__.items():
             role = handler_type.source_selection_role()
             if role is DeclaredFileSource:
                 binding_role = "bindings own ingestion and semantic naming"
@@ -272,7 +272,7 @@ class SourceBindingWorkflowSection(
             else:
                 binding_role = "handler does not project declared bindings"
             handler_lines.append(
-                f"- {microscope_type}: role={role.role_name}; {binding_role}. "
+                f"- {source_format}: role={role.role_name}; {binding_role}. "
                 f"{handler_type.source_selection_guidance()}"
             )
         registered_handlers = "\n".join(handler_lines)

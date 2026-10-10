@@ -1032,6 +1032,27 @@ def add_request_field_option(
     parser.add_argument(*flags, **kwargs)
 
 
+def add_component_filter_option(parser: argparse.ArgumentParser) -> None:
+    """Add the repeatable ``--filter axis=value`` option for component filters."""
+
+    parser.add_argument(
+        "--filter",
+        dest="component_filters",
+        action="append",
+        default=[],
+        metavar="AXIS=VALUE",
+        help="Keep files whose AXIS holds VALUE; repeat for more values or axes.",
+    )
+
+
+def component_filter_argument(args: argparse.Namespace) -> dict[str, list[str]]:
+    """Read ``--filter`` assignments into the request's component_filters."""
+
+    from openhcs.core.component_filters import ComponentFilters
+
+    return ComponentFilters.from_assignments(args.component_filters).as_mapping()
+
+
 def add_request_factory_option(
     parser: argparse.ArgumentParser,
     request_factory,

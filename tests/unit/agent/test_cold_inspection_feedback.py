@@ -167,7 +167,7 @@ def test_real_inventory_binding_relays_shared_reader_preparation(tmp_path):
 
     async def exercise():
         return await tool.fn(mcp_context=StageContext(), plate_path=str(plate),
-                             microscope_type="imagexpress", include_previews=False)
+                             source_format="imagexpress", include_previews=False)
 
     try:
         result = executor.run(exercise)

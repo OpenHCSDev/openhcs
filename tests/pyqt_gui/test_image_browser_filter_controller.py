@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from openhcs.constants.constants import FileFormat
+from openhcs.core.component_filters import ComponentFilters
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
@@ -436,7 +437,10 @@ def test_plate_file_inventory_query_returns_unified_browser_records(
     )
 
     query_result = inventory.query_files(
-        PlateFileInventoryQuery(kinds=(PlateFileKind.IMAGE,), well="A01")
+        PlateFileInventoryQuery(
+            kinds=(PlateFileKind.IMAGE,),
+            component_filters=ComponentFilters.from_mapping({"well": "A01"}),
+        )
     )
     image_items, result_items = ImageBrowserWidget._items_from_file_records(
         inventory.file_records()

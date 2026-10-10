@@ -179,13 +179,13 @@ def test_explicit_inspection_and_artifact_plan_reach_opera_axes(
     ).inspect(
         PlatePathInspectionRequest.from_fields(
             plate_path=str(tmp_path),
-            microscope_type="opera_phenix",
+            source_format="opera_phenix",
         )
     )
 
     assert inspection.errors == ()
-    assert inspection.detected_microscope_type == "opera_phenix"
-    assert inspection.available_microscope_types == tuple(
+    assert inspection.detected_source_format == "opera_phenix"
+    assert inspection.available_source_formats == tuple(
         sorted(DatasetSource.__registry__)
     )
     assert inspection.image_files.count == 3

@@ -1790,7 +1790,7 @@ def inspect_source_plate_and_sample(ctx: RunContext) -> dict[str, Any]:
     return {
         "inspection": {
             "plate_path": inspection.get("plate_path"),
-            "detected_microscope_type": inspection.get("detected_microscope_type"),
+            "detected_source_format": inspection.get("detected_source_format"),
             "handler_class": inspection.get("handler_class"),
             "image_count": image_files.get("count"),
             "sampled_image_count": len(records),
@@ -2657,13 +2657,13 @@ def canonical_component_metadata(
     components = inspection.get("components")
     if not isinstance(components, list) or not components:
         raise RehearsalFailure("Selected plate inspection has no component metadata.")
-    microscope = inspection.get("detected_microscope_type")
+    microscope = inspection.get("detected_source_format")
     if not isinstance(microscope, str) or not microscope:
         raise RehearsalFailure("Selected plate inspection has no microscope identity.")
     return {
         "phase": phase,
         "plate_state_revision": final_workflow_state_revision(workflow_payload),
-        "detected_microscope_type": microscope,
+        "detected_source_format": microscope,
         "handler_class": inspection.get("handler_class"),
         "metadata_handler_class": inspection.get("metadata_handler_class"),
         "components": components,
@@ -3291,7 +3291,7 @@ def metadata_semantic_projection(metadata: Mapping[str, Any]) -> dict[str, Any]:
     """Strip transition evidence while retaining the typed metadata payload."""
 
     return {
-        "detected_microscope_type": metadata.get("detected_microscope_type"),
+        "detected_source_format": metadata.get("detected_source_format"),
         "handler_class": metadata.get("handler_class"),
         "metadata_handler_class": metadata.get("metadata_handler_class"),
         "components": metadata.get("components"),

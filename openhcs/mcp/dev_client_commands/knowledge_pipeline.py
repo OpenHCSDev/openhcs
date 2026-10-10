@@ -356,13 +356,10 @@ class ArtifactPlanCommandSpec(StdinSourceCommandSpec, SingleToolCommandSpec):
             "--axis-filter",
             action="append",
             default=[],
-            help="Axis/well id to inspect; repeat or pass comma/slash-separated values.",
-        )
-        parser.add_argument(
-            "--well-filter",
-            action="append",
-            default=[],
-            help="Alias for --axis-filter when axes are wells.",
+            help=(
+                "Partition-axis value to inspect; repeat or pass comma/slash-separated "
+                "values."
+            ),
         )
         parser.add_argument("--global-config-id")
 
@@ -371,17 +368,11 @@ class ArtifactPlanCommandSpec(StdinSourceCommandSpec, SingleToolCommandSpec):
         args: argparse.Namespace,
     ) -> dict[str, JsonValue]:
         axis_filter = parse_required_axis_labels(args.axis_filter)
-        well_filter = parse_required_axis_labels(args.well_filter)
-        if axis_filter and well_filter and axis_filter != well_filter:
-            raise McpDevCliUsageError(
-                "Cannot pass both --axis-filter and --well-filter with different values."
-            )
-        selected_axis_filter = axis_filter or well_filter
         return McpToolArguments.from_payload(
             {
                 "plate_path": args.plate_path,
                 "pipeline_source": pipeline_source_from_args(args),
-                "axis_filter": selected_axis_filter or None,
+                "axis_filter": axis_filter or None,
                 "global_config_id": args.global_config_id,
             }
         )

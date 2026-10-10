@@ -196,14 +196,12 @@ class PipelineSourceArtifactPlanInspectionRequest:
         plate_path: str,
         pipeline_source: str,
         axis_filter: list[str] | None = None,
-        well_filter: list[str] | None = None,
         global_config_id: str | None = None,
     ) -> "PipelineSourceArtifactPlanInspectionRequest":
-        selected_axis_filter = axis_filter if axis_filter is not None else well_filter
         return cls(
             plate_path=plate_path,
             pipeline_source=pipeline_source,
-            axis_filter=tuple(selected_axis_filter or ()),
+            axis_filter=tuple(axis_filter or ()),
             global_config_id=global_config_id,
         )
 
