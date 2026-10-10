@@ -767,8 +767,13 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             return None
         if _catalog_memory_types(func) is None:
             return None
+        registry = cls()
+        # An ``openhcs:`` key must resolve back through the catalog, which
+        # only scans this registry's own modules.
+        if not registry.owns_module(declared.__module__):
+            return None
 
-        return cls()._metadata_for_function(
+        return registry._metadata_for_function(
             func.__name__,
             func,
             _registry_catalog_module_for_callable(func),

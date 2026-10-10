@@ -635,7 +635,7 @@ def test_stored_context_input_beside_main_flow_image_keeps_every_anchor():
     group = replace(compiled.default_group, invocations=(invocation,))
 
     assert invocation.contract.main_flow_supplies_primary_image
-    assert invocation.contract.group_scope_inputs == ArtifactSpecCollection(())
+    assert invocation.contract.lifecycle_anchor_owner_inputs == ArtifactSpecCollection(())
     assert group.runtime_domain is RuntimeInvocationDomain.SOURCE_ANCHORED
     anchors = ["z001", "z002", "z003"]
     assert group.runtime_domain.select_lifecycle_anchors(anchors) == anchors

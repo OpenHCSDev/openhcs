@@ -128,10 +128,10 @@ class RuntimeInvocationDomain(str, Enum):
             for edge in invocation.artifact_input_edges
             if edge.storage_plan is not None
         )
-        group_scope_refs = invocation.contract.group_scope_inputs.ref_set()
+        owner_refs = invocation.contract.lifecycle_anchor_owner_inputs.ref_set()
         return (
             cls.ARTIFACT_MANAGED
-            if group_scope_refs and group_scope_refs <= stored_input_refs
+            if owner_refs and owner_refs <= stored_input_refs
             else cls.SOURCE_ANCHORED
         )
 
