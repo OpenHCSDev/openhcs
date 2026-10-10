@@ -18,6 +18,10 @@ The standard is the owner's correct-maintenance model. A required answer (which 
 
 **An enum is a closed, behaviourless roster: its members carry no capabilities, other packages cannot add members, and every consumer re-decides each member's meaning at the call site (IMPL-2).** Declare a kind as an ABC family instead (`metaclass=AutoRegisterMeta`): each case is a subclass, identity is nominal, membership is by inheritance, behaviour lives on the subclass, and overlapping capabilities compose by mixins. A string or enum-like view exists only at an external boundary (a wire field, a file format, a form choice list) and is derived from the family's registry, never written by hand. Converting an existing enum means moving every `match`/`if`/side table on its members onto the subclasses and deleting the enum.
 
+## 1b. Plain names
+
+**Name things by what they do, in plain terms.** Do not extend the previous agents' vocabulary (`custody`, `admission`, `admitted`, `receipt`, `original`, `authority`, `owner` used as filler, `qualified`, `canonical`, `projection` where nothing is projected). When you touch code that uses such a name, rename it to a plain name in the same change, with every caller, and keep the meaning exact: a "receipt" that records checksums is a `checksums` record; an "admitted" value is a `validated` one; an "original" path is the `source` path. Names are identity (rule 1): a name that disagrees with what the thing does is IDEN-4.
+
 ## 2. Persisted state: hard cutover, no converters
 
 - *Runtime or derived state* (function registry caches, compiled plans, ZMQ sessions, viewer state, metadata caches) **is reset** when the new version is installed.
