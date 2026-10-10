@@ -310,7 +310,7 @@ def test_mcp_server_publishes_canonical_instructions():
         assert kind in built.instructions
     assert "PipelineDocument containing PipelineConfig" in built.instructions
     assert "SourceBindingsConfig" in built.instructions
-    assert "SourceBindingsHandler is the fallback ingestion owner" in built.instructions
+    assert "SourceBindingsSource is the fallback ingestion owner" in built.instructions
     assert "CZI, OME-TIFF" in built.instructions
     assert "bounded representative samples" in built.instructions
     assert "openhcs_search_capabilities" in built.instructions
@@ -5643,7 +5643,7 @@ def test_mcp_dev_client_inspect_plate_command_renders_compact_summary():
                         "status": "ok",
                         "confidence": "high",
                         "detected_microscope_type": "openhcsdata",
-                        "handler_class": "OpenHCSMicroscopeHandler",
+                        "handler_class": "OpenHCSDatasetSource",
                         "parser_class": "ImageXpressFilenameParser",
                         "image_files": {
                             "count": 2,
@@ -5854,7 +5854,7 @@ def test_mcp_dev_client_query_plate_files_command_renders_compact_summary():
                 "payloads": [
                     {
                         "plate_path": "/tmp/example-plate",
-                        "handler_class": "OpenHCSMicroscopeHandler",
+                        "handler_class": "OpenHCSDatasetSource",
                         "parser_class": "ImageXpressFilenameParser",
                         "total_count": 2,
                         "returned_count": 2,
@@ -5949,7 +5949,7 @@ def test_mcp_dev_client_query_plate_files_renders_csv_table_after_preamble_previ
                 "payloads": [
                     {
                         "plate_path": "/tmp/example-plate",
-                        "handler_class": "OpenHCSMicroscopeHandler",
+                        "handler_class": "OpenHCSDatasetSource",
                         "parser_class": None,
                         "total_count": 1,
                         "returned_count": 1,
@@ -6029,7 +6029,7 @@ def test_mcp_dev_client_query_plate_files_reports_hidden_csv_preview_rows():
                 "payloads": [
                     {
                         "plate_path": "/tmp/example-plate",
-                        "handler_class": "OpenHCSMicroscopeHandler",
+                        "handler_class": "OpenHCSDatasetSource",
                         "parser_class": "ImageXpressFilenameParser",
                         "total_count": 1,
                         "returned_count": 1,
@@ -6090,7 +6090,7 @@ def test_mcp_dev_client_query_plate_files_prioritizes_compact_csv_cells():
                 "payloads": [
                     {
                         "plate_path": "/tmp/example-plate",
-                        "handler_class": "OpenHCSMicroscopeHandler",
+                        "handler_class": "OpenHCSDatasetSource",
                         "parser_class": "ImageXpressFilenameParser",
                         "total_count": 1,
                         "returned_count": 1,
@@ -6161,7 +6161,7 @@ def test_mcp_dev_client_query_plate_files_omits_multiline_csv_cells():
                 "payloads": [
                     {
                         "plate_path": "/tmp/example-plate",
-                        "handler_class": "OpenHCSMicroscopeHandler",
+                        "handler_class": "OpenHCSDatasetSource",
                         "parser_class": "ImageXpressFilenameParser",
                         "total_count": 1,
                         "returned_count": 1,
@@ -6919,7 +6919,7 @@ def test_mcp_dev_client_selected_plate_files_command_renders_compact_summary():
                         "target": "selected",
                         "query": {
                             "plate_path": "/tmp/selected-plate",
-                            "handler_class": "OpenHCSMicroscopeHandler",
+                            "handler_class": "OpenHCSDatasetSource",
                             "parser_class": "ImageXpressFilenameParser",
                             "total_count": 1,
                             "returned_count": 1,
@@ -7126,7 +7126,7 @@ def test_mcp_dev_client_selected_plate_images_command_renders_compact_summary():
                             "status": "ok",
                             "confidence": "high",
                             "detected_microscope_type": "openhcsdata",
-                            "handler_class": "OpenHCSMicroscopeHandler",
+                            "handler_class": "OpenHCSDatasetSource",
                             "parser_class": "ImageXpressFilenameParser",
                             "image_files": {
                                 "count": 2,
@@ -7638,7 +7638,7 @@ def test_mcp_dev_client_call_renders_selected_plate_stream_compactly():
                             "streamed_roi_paths": [
                                 "/tmp/selected-plate_openhcs/results/A01_s001.roi.zip"
                             ],
-                            "handler_class": "OpenHCSMicroscopeHandler",
+                            "handler_class": "OpenHCSDatasetSource",
                             "parser_class": "ImageXpressFilenameParser",
                             "status_messages": ["streamed 2 files to napari"],
                             "errors": [],

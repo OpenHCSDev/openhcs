@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from openhcs.core.source_workspace_projection import (
         VirtualWorkspaceSourceProjection,
     )
-    from openhcs.microscopes.openhcs import OpenHCSMetadata
+    from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadata
 
 
 @dataclass(frozen=True, slots=True, init=False, eq=False)
@@ -696,7 +696,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         microscope_handler: ViewerMicroscopeHandlerABC,
     ) -> MetadataViewDocument:
         """Project this handler's metadata into the standard read-only UI document."""
-        from openhcs.microscopes.openhcs import OpenHCSMetadata
+        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadata
 
         component_values = self.component_value_set(plate_path)
         grid_dims = self.get_metadata_grid_dimensions(plate_path)
@@ -711,7 +711,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
 
         metadata = OpenHCSMetadata.from_component_value_set(
             component_values=component_values,
-            microscope_handler_name=microscope_handler.microscope_type,
+            microscope_handler_name=microscope_handler.source_name,
             source_filename_parser_name=parser.__class__.__name__,
             grid_dimensions=list(grid_dims),
             pixel_size=pixel_size,
@@ -723,12 +723,12 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
             or None,
             main=None,
         )
-        title = f"Metadata - {microscope_handler.microscope_type}"
+        title = f"Metadata - {microscope_handler.source_name}"
         return MetadataViewDocument(
             title=title,
             entries=(
                 MetadataViewEntry(
-                    name=microscope_handler.microscope_type,
+                    name=microscope_handler.source_name,
                     object_instance=metadata,
                     summary=f"Image files: {len(metadata.image_files)} (hidden)",
                 ),

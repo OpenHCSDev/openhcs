@@ -18,10 +18,10 @@ from openhcs.agent.services.plate_inspection_service import (
     PlateInspectionService,
 )
 from openhcs.core.plate_image_inventory import PlateFileInventory
-from openhcs.microscopes import create_microscope_handler
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.microscopes.imagexpress import ImageXpressHandler
-from openhcs.microscopes.microscope_base import MICROSCOPE_HANDLERS
-from openhcs.microscopes.microscope_interfaces import MicroscopeImagePathParser
+from openhcs.core.dataset_sources.source import MICROSCOPE_HANDLERS
+from openhcs.core.dataset_sources.interfaces import MicroscopeImagePathParser
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -67,9 +67,7 @@ def inspect_plate(plate: Path, microscope_type="imagexpress", **bounds):
 def inventory_for(plate: Path):
     ensure_storage_registry()
     filemanager = FileManager(dict(storage_registry))
-    handler = create_microscope_handler(
-        "imagexpress", plate_folder=plate, filemanager=filemanager
-    )
+    handler = DatasetSourceChoice.named("imagexpress").open(plate, filemanager=filemanager)
     return (
         handler,
         filemanager,
@@ -254,7 +252,7 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
         else (SiteFolders, ImageXpressHandler)
     )
     key = f"imagexpress_site_folders_{reverse}"
-    subtype = type("SiteAcquisitionHandler", parents, {"_microscope_type": key})
+    subtype = type("SiteAcquisitionHandler", parents, {"source_name": key})
     try:
         plate = write_plate(tmp_path)
         source = plate / "TimePoint_1"
@@ -293,9 +291,7 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
         assert MICROSCOPE_HANDLERS[key] is subtype
         assert not (plate / "openhcs_metadata.json").exists()
         filemanager = FileManager(dict(storage_registry))
-        handler = create_microscope_handler(
-            key, plate_folder=plate, filemanager=filemanager
-        )
+        handler = DatasetSourceChoice.named(key).open(plate, filemanager=filemanager)
         handler.initialize_workspace(plate, filemanager)
         prepared = PlateFileInventory.from_handler(
             plate_path=plate,

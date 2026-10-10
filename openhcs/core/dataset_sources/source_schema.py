@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 from openhcs.core.source_projection import OpenHCSPlaneAddress
-from openhcs.microscopes.microscope_interfaces import (
+from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
     FilenameParseResult,
 )

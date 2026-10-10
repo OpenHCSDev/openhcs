@@ -33,7 +33,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
 )
 from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
 

@@ -58,7 +58,7 @@ from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceMapping,
     VirtualWorkspaceSourceProjectionEntries,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 from openhcs.domains.microscopy.axes import Microscopy

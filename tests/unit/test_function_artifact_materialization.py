@@ -140,7 +140,7 @@ from openhcs.core.streaming_config_factory import (
     StreamingViewerSurface,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
     TILE_POSITIONS_OUTPUT,
 )

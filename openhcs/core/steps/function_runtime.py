@@ -608,7 +608,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         plan = self.execution_plan
         request = self
         if not context.microscope_handler:
-            raise RuntimeError("MicroscopeHandler not available in context.")
+            raise RuntimeError("DatasetSource not available in context.")
 
         output_manifest = step_output_manifest(context)
         producer_index = output_manifest.producer_record_index_for(

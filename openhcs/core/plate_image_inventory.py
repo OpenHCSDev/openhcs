@@ -29,8 +29,8 @@ from openhcs.core.virtual_workspace_metadata import (
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator import PipelineOrchestrator
-    from openhcs.microscopes.microscope_base import MicroscopeHandler
-    from openhcs.microscopes.microscope_interfaces import (
+    from openhcs.core.dataset_sources.source import DatasetSource
+    from openhcs.core.dataset_sources.interfaces import (
         AnalysisResultDirectory,
         FilenameParser,
         MetadataHandler,
@@ -100,7 +100,7 @@ class PlateImageInventory:
         cls,
         *,
         plate_path: Path,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         filemanager: "FileManager",
     ) -> "PlateImageInventory":
         """Inventory the selected metadata owner, not a different source domain.
@@ -168,7 +168,7 @@ class PlateImageInventory:
         cls,
         *,
         plate_path: Path,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         filemanager: "FileManager",
         backend: str,
         source_projection: VirtualWorkspaceSourceProjection | None,
@@ -213,7 +213,7 @@ class PlateImageInventory:
         cls,
         *,
         plate_path: Path,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         filemanager: "FileManager",
         source_dataset: "SourcePlaneDataset",
     ) -> "PlateImageInventory":
@@ -241,7 +241,7 @@ class PlateImageInventory:
         *,
         plate_path: Path,
         candidate: "SourceCandidate",
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         parser: "FilenameParser",
         filemanager: "FileManager",
     ) -> PlateImageRecord:
@@ -281,7 +281,7 @@ class PlateImageInventory:
         *,
         plate_path: Path,
         image_file: str,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         projection: VirtualWorkspaceSourceProjection | None,
         filemanager: "FileManager",
         backend: str,
@@ -824,7 +824,7 @@ class PlateResultFileInventory:
         )
         if not result_path.is_dir():
             return ()
-        from openhcs.microscopes.microscope_interfaces import AnalysisResultDirectory
+        from openhcs.core.dataset_sources.interfaces import AnalysisResultDirectory
 
         return (
             AnalysisResultDirectory(
@@ -1040,7 +1040,7 @@ class PlateFileInventory:
         cls,
         *,
         plate_path: Path,
-        handler: "MicroscopeHandler",
+        handler: "DatasetSource",
         filemanager: "FileManager",
         backend: str,
         path_config=None,

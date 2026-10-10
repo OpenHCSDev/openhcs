@@ -110,7 +110,7 @@ if TYPE_CHECKING:
 
     from openhcs.core.artifacts import ArtifactOutputPlan
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 logger = logging.getLogger(__name__)
 

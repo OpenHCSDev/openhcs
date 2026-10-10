@@ -120,7 +120,7 @@ from openhcs.core.source_bindings import (
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core import virtual_workspace_metadata as metadata_module
-from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
+from openhcs.core.dataset_sources.exceptions import MicroscopePixelSizeUnavailableError
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponseField,

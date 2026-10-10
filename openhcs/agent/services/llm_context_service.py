@@ -257,22 +257,22 @@ class SourceBindingWorkflowSection(
     @classmethod
     def render(cls, service: "AgentAuthoringContextService") -> str:
         del service
-        from openhcs.microscopes.microscope_base import (
-            MicroscopeHandler,
-            MicroscopeSourceSelectionRole,
+        from openhcs.core.dataset_sources.source import (
+            DatasetSource,
+            DeclaredFileSource,
         )
 
         handler_lines: list[str] = []
-        for microscope_type, handler_type in MicroscopeHandler.__registry__.items():
+        for microscope_type, handler_type in DatasetSource.__registry__.items():
             role = handler_type.source_selection_role()
-            if role is MicroscopeSourceSelectionRole.DECLARED_FILE_FALLBACK:
+            if role is DeclaredFileSource:
                 binding_role = "bindings own ingestion and semantic naming"
             elif handler_type.projects_declared_source_bindings():
                 binding_role = "bindings may select/name handler-emitted planes"
             else:
                 binding_role = "handler does not project declared bindings"
             handler_lines.append(
-                f"- {microscope_type}: role={role.value}; {binding_role}. "
+                f"- {microscope_type}: role={role.role_name}; {binding_role}. "
                 f"{handler_type.source_selection_guidance()}"
             )
         registered_handlers = "\n".join(handler_lines)
@@ -280,9 +280,9 @@ class SourceBindingWorkflowSection(
         return f"""=== SOURCE-BINDING WORKFLOW ===
 === REGISTERED INGESTION OWNERS (LIVE REGISTRY) ===
 {registered_handlers}
-- Selection rule: prefer a format-specific owner only when its declaration-owned detection/subset policy accepts the source. Auto-detection commonly requires complete vendor metadata. When plate inspection reports format_specific_handler_candidates, read the live handler guidance: some owners permit explicit partial exports, while owners that require their complete detection contract leave loose ordinary files to SourceBindingsHandler with explicitly declared semantics.
+- Selection rule: prefer a format-specific owner only when its declaration-owned detection/subset policy accepts the source. Auto-detection commonly requires complete vendor metadata. When plate inspection reports format_specific_handler_candidates, read the live handler guidance: some owners permit explicit partial exports, while owners that require their complete detection contract leave loose ordinary files to SourceBindingsSource with explicitly declared semantics.
 - Separate ingestion ownership from semantic source selection. A recognized HCS layout keeps its format-specific microscope handler; CZI, OME-TIFF, and other supported rich containers use the broad Bio-Formats/store handler only when no stronger registered format-specific owner matches. SourceBindingsConfig may then name or select exact planes only when that handler declares projection support; it does not open the container or replace the handler.
-- SourceBindingsHandler is the microscope-independent ingestion fallback for arbitrary image folders and unsupported layouts. If auto-detection does not recognize a folder but SourceBindingsConfig is non-empty, OpenHCS selects that nominal handler and projects the declared TIFF, PNG, JPEG, or other registered ordinary files; do not force structured CZI/OME data through this fallback.
+- SourceBindingsSource is the microscope-independent ingestion fallback for arbitrary image folders and unsupported layouts. If auto-detection does not recognize a folder but SourceBindingsConfig is non-empty, OpenHCS selects that nominal handler and projects the declared TIFF, PNG, JPEG, or other registered ordinary files; do not force structured CZI/OME data through this fallback.
 - Start by inventorying and sampling real files. Use typed SourceFilterClause values to bound the source universe, MetadataExtractionRule named regex captures to declare well/site/channel/Z/time metadata, and NamedSourceBinding selectors plus component_identity to give semantic aliases such as DNA or GFP.
 - The pipeline-level pipeline_config.source_bindings_config declares the full named physical source universe and the inputs consumed by the nominal handler projection: discovery filters, metadata, cross-alias matching, grouping metadata, stack components, explicit planes, and imported metadata tables. It may correctly contain Hoechst channel 1, MAP2 channel 2, and SMI312 channel 4. FunctionStep.source_bindings is the resolved step-local subset and order: at PIPELINE_START, an omitted value inherits that full pipeline order, while an explicit enabled step config selects and reorders a subset instead of consuming only the previous main-flow result.
 - source_stack_components describe axes physically contained inside each selected file/store payload. Do not declare SITE or another source-stack axis for separate ordinary 2-D files; give those files component identities and use processing_config.variable_components to assemble the selected files into a callable stack.
@@ -490,7 +490,7 @@ class FolderOnboardingStepsSection(
     content = f"""=== FOLDER ONBOARDING WORKFLOW ===
 - This is the headless/read-only data route. If the user expects the work to appear in the desktop, stop and request kind="ui_visible_workflow"; its PlateManager state and code document remain the owner throughout onboarding.
 - OpenHCS turns microscope files and metadata into a typed source model and storage-independent virtual workspace. Inspecting a path is decoder evidence only: it does not add a UI plate, choose persistent configuration, or author a pipeline.
-- Keep the authoritative HCS/Bio-Formats handler for a valid native layout or rich CZI/OME container. Parser recognition alone is insufficient when that format owner requires a complete metadata detection contract; intentionally loose ordinary files may instead use SourceBindingsHandler with explicit component identities. SourceBindingsConfig may name/select planes emitted by a recognized handler only when that handler declares projection support.
+- Keep the authoritative HCS/Bio-Formats handler for a valid native layout or rich CZI/OME container. Parser recognition alone is insufficient when that format owner requires a complete metadata detection contract; intentionally loose ordinary files may instead use SourceBindingsSource with explicit component identities. SourceBindingsConfig may name/select planes emitted by a recognized handler only when that handler declares projection support.
 - Inspect with {agent_capabilities.inspect_plate_path.name}, query a bounded representative inventory with {agent_capabilities.query_plate_files.name}, and sample a small region with {agent_capabilities.sample_plate_image.name}. Never infer dimensions from names or load a full rich container merely to identify it.
 - Confirm wells, sites, channels, Z planes, timepoints, source diagnostics, and selected resolution provenance before authoring. If one container has multiple ambiguous datasets or samples, resolve the typed inspection error rather than guessing an index.
 - Search/read the example corpus and architecture topics before inventing source bindings. Match the folder to existing examples when possible.
@@ -522,7 +522,7 @@ class UiVisibleWorkflowStepsSection(
 - Read the PlateManager state surface with {agent_capabilities.ui_list_state_surfaces.name} and {agent_capabilities.ui_get_state_surface.name}; the selected/source/output rows are the UI authority for visible workflows.
 - The declared {PlateManagerAction.VIEW_RESULTS.value!r} action relates the Plate Manager state to its widget-owned quantitative-results surface through `related_state_surface_ids`. Follow that declared relation after a quantitative run, then read the returned surface_id for bounded table rows, full row counts, artifact location, object/source identity, execution/axis provenance, and truncation flags. Do not select a surface by title matching. This is retained result data, not a mirror of dialog tabs or table cells.
 - Read, validate, and apply the PlateManager code document with {agent_capabilities.ui_list_code_documents.name}, {agent_capabilities.ui_get_code_document.name}, {agent_capabilities.ui_validate_code_document.name}, and {agent_capabilities.ui_apply_code_document.name}.
-- Add the containing plate directory and initialize with auto-detection. Recognized HCS layouts and CZI/OME stores keep their detected handler; use SourceBindingsConfig only for semantic selection/naming after discovery, or as the SourceBindingsHandler ingestion declaration for an otherwise unrecognized arbitrary-file folder.
+- Add the containing plate directory and initialize with auto-detection. Recognized HCS layouts and CZI/OME stores keep their detected handler; use SourceBindingsConfig only for semantic selection/naming after discovery, or as the SourceBindingsSource ingestion declaration for an otherwise unrecognized arbitrary-file folder.
 - For a write within existing task authorisation: read, explain, re-read, validate, then apply using the fresh document revision and declared confirmation policy; retain the mutation receipt and snapshot facts. Follow "Task authorization" in openhcs_architecture_quick_start for actions outside that authority.
 - Use kind="{PipelineAuthoringContext.require_kind()}" when revising functions or configuration, then return to this UI-owned route. Bound the pipeline's execution well filter for the first run; a viewer-only filter does not reduce processing. Dispatch init, compile, and run through {agent_capabilities.ui_selected_plate_workflow.name} with the current selection revision token, and follow the receipt/workflow distinction above.
 - After terminal execution, request kind="{ViewerReviewAuthoringContext.require_kind()}" for native-resolution source/result and ROI checks before accepting the analysis; successful execution alone does not establish scientific accuracy.

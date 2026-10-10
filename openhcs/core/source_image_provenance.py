@@ -61,7 +61,7 @@ SourceImageProvenanceAliasValueT = TypeVar("SourceImageProvenanceAliasValueT")
 SourceImageProvenancePlaneValueT = TypeVar("SourceImageProvenancePlaneValueT")
 
 if TYPE_CHECKING:
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 def normalize_source_path(source_path: str | None) -> str | None:

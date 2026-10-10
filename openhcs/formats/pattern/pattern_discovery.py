@@ -20,7 +20,7 @@ from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
 
 # Core OpenHCS Interfaces
-from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 # Note: Previously used GenericPatternEngine, but now we always use microscope-specific parsers
 

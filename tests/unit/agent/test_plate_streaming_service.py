@@ -73,7 +73,7 @@ def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp
     from openhcs.core.source_metadata import SourceVoxelSpacing
     from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionBuilder
     from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     filename = "A01_s001_w1_z001_t001.tif"
     pixels = np.concatenate((

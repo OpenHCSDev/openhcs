@@ -113,8 +113,8 @@ from openhcs.core.steps.function_runtime import (
     FunctionCoreExecutor,
     PatternGroupData,
 )
-from openhcs.microscopes.microscope_interfaces import MetadataArtifactProvider
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+from openhcs.core.dataset_sources.interfaces import MetadataArtifactProvider
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.processing.backends.analysis.metaxpress_utils import HiddenPixelSize
 from openhcs.core.axes import Axis, GroupingDeclaration, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy

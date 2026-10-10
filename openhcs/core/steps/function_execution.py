@@ -60,7 +60,7 @@ from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 from openhcs.core.axes import AxisFamily
 
 if TYPE_CHECKING:
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 logger = logging.getLogger(__name__)

@@ -26,7 +26,7 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_outputs import PrimaryImageMetadataTarget
 from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -61,7 +61,7 @@ def _context(plate_root: Path, count: int) -> ProcessingContext:
     context.microscope_handler = SimpleNamespace(
         parser=SourceSchemaFilenameParser(),
         metadata_handler=SimpleNamespace(source_workspace_metadata_document=lambda _p: None),
-        source_admission_config=lambda: None,
+        source_bindings_still_required=lambda: None,
     )
     context.freeze()
     return context

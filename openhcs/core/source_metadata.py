@@ -27,7 +27,7 @@ from openhcs.core.axes import (
 
 if TYPE_CHECKING:
     from openhcs.core.source_bindings import MetadataExtractionRule
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 ORIGINAL_SOURCE_METADATA_FIELD = "OpenHCSOriginalSourceMetadata"

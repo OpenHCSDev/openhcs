@@ -50,10 +50,10 @@ from openhcs.core.axes import AxisFamily
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.microscopes.microscope_interfaces import MetadataHandler
+    from openhcs.core.dataset_sources.interfaces import MetadataHandler
     from openhcs.core.vfs_protocol import FileManagerLike
     from polystore.filemanager import FileManager
-    from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+    from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
 
 LookupValueT = TypeVar("LookupValueT")
@@ -690,7 +690,7 @@ class VirtualWorkspaceImagePayloadProjection:
 def source_schema_filename_metadata(path: str) -> SourceMetadataMapping | None:
     """Return component metadata encoded in a normalized virtual source filename."""
 
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     parsed = SourceSchemaFilenameParser().parse_filename(path)
     if parsed is None:
@@ -857,7 +857,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
             filemanager=context.filemanager,
             cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
             context=context,
-            source_bindings=context.microscope_handler.source_admission_config(),
+            source_bindings=context.microscope_handler.source_bindings_still_required(),
         )
 
     @classmethod
@@ -888,11 +888,11 @@ class VirtualWorkspaceSourceProjectionAuthority:
             and self.filemanager is context.filemanager
         ):
             return False
-        return self.source_bindings == context.microscope_handler.source_admission_config()
+        return self.source_bindings == context.microscope_handler.source_bindings_still_required()
 
     def metadata_handlers(self) -> tuple["MetadataHandler", ...]:
         """Observe workspace eligibility live while retaining admitted providers."""
-        from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
         if isinstance(self.metadata_handler, OpenHCSMetadataHandler):
             return (self.metadata_handler,)

@@ -3,11 +3,11 @@ Shared helper for reading pixel size (and optional channel name) from TIFF tags.
 """
 
 from pathlib import Path
-from typing import Dict, Optional, Union, Tuple
+from typing import Dict, Optional
 import re
 import tifffile
 
-from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
+from openhcs.core.dataset_sources.exceptions import MicroscopePixelSizeUnavailableError
 
 
 class TiffPixelSizeMixin:

@@ -60,7 +60,7 @@ if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
     from openhcs.core.config import StreamingConfig
-    from openhcs.microscopes.microscope_base import MicroscopeHandler
+    from openhcs.core.dataset_sources.source import DatasetSource
     from openhcs.runtime.viewer_protocol import (
         ManagedViewerLifecycleMixin,
         ViewerLaunchContext,
@@ -348,7 +348,7 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
     """Source authority for viewer streaming from one initialized plate."""
 
     filemanager: FileManager
-    microscope_handler: MicroscopeHandler
+    microscope_handler: DatasetSource
 
     def source_workspace_projection(self) -> VirtualWorkspaceSourceProjection:
         return VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
@@ -554,7 +554,7 @@ class StreamingService:
     def __init__(
         self,
         filemanager: FileManager,
-        microscope_handler: MicroscopeHandler,
+        microscope_handler: DatasetSource,
         plate_path: Path,
         transport_config: ZMQConfig = OPENHCS_ZMQ_CONFIG,
     ):

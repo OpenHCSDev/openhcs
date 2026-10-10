@@ -19,7 +19,7 @@ from openhcs.core.source_projection import (
     SourcePlaneProjection,
     SourceProjectionSet,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 

@@ -18,7 +18,6 @@ from openhcs.agent.dto.plate import (
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.constants import Microscope
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
@@ -35,7 +34,7 @@ from openhcs.core.source_projection import (
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.viewer_streaming_service import StreamingService, ViewerStreamingSource
 from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.viewer_protocol import ViewerLaunchContext
 
 
@@ -79,7 +78,7 @@ def declared_output(root, aliases):
             SourceSchemaFilenameParser()
         ).metadata_dict(
             SourceProjectionSet((projection,)),
-            microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+            microscope_handler_name="source_bindings",
             source_filename_parser_name="SourceSchemaFilenameParser",
             grid_dimensions=[], pixel_size=1,
             projection_paths=((projection, virtual_path),),
@@ -209,7 +208,7 @@ def test_mixed_plane_and_artifact_projections_keep_scope_and_storage_independent
         ))
     declaration = SourceProjectionMetadataSerializer(SourceSchemaFilenameParser()).metadata_dict(
         SourceProjectionSet(tuple(planes)),
-        microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+        microscope_handler_name="source_bindings",
         source_filename_parser_name="SourceSchemaFilenameParser",
         grid_dimensions=[2, 2], pixel_size=1,
         projection_paths=tuple((plane, plane.ref.backend_address) for plane in planes),

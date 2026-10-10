@@ -40,7 +40,7 @@ def _anchor_executor(
         plate_path=Path("."),
         microscope_handler=SimpleNamespace(
             parser=parser,
-            source_admission_config=lambda: None,
+            source_bindings_still_required=lambda: None,
             metadata_handler=SimpleNamespace(
                 source_workspace_metadata_document=lambda _path: None
             ),

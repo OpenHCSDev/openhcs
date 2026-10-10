@@ -51,6 +51,7 @@ from openhcs.agent.dto.config import (
 )
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.core.artifacts import ArtifactType
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.config import (
     GlobalPipelineConfig,
     PipelineConfig,
@@ -517,7 +518,7 @@ def _coerce_patch_value(field_type, value: JsonValue) -> object:
     if path_type is not None and isinstance(value, str):
         return path_type(value)
 
-    registered_type = _unwrap_registered_nominal_type(unwrapped_type)
+    registered_type = _unwrap_registered_nominal_type(resolve_optional(unwrapped_type))
     if registered_type is not None:
         return registered_type.coerce(value)
 
@@ -607,7 +608,9 @@ def _unwrap_path_type(field_type) -> type[Path] | None:
     return None
 
 
-def _unwrap_registered_nominal_type(field_type) -> type[ArtifactType] | None:
+def _unwrap_registered_nominal_type(
+    field_type,
+) -> type[ArtifactType] | type[DatasetSourceChoice] | None:
     field_type = _unwrap_annotated(field_type)
     if get_origin(field_type) is not type:
         return None
@@ -615,7 +618,9 @@ def _unwrap_registered_nominal_type(field_type) -> type[ArtifactType] | None:
     if len(type_args) != 1:
         return None
     nominal_root = type_args[0]
-    if isinstance(nominal_root, type) and issubclass(nominal_root, ArtifactType):
+    if isinstance(nominal_root, type) and issubclass(
+        nominal_root, (ArtifactType, DatasetSourceChoice)
+    ):
         return nominal_root
     return None
 

@@ -91,7 +91,7 @@ def _visible_source_filemanager() -> FileManager:
 
 
 def _openhcs_metadata_filename() -> str:
-    from openhcs.microscopes.openhcs import METADATA_CONFIG
+    from openhcs.core.dataset_sources.openhcs_format import METADATA_CONFIG
 
     return METADATA_CONFIG.METADATA_FILENAME
 

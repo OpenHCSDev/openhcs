@@ -285,13 +285,13 @@ class PipelineCompiler:
         if vfs_config.materialization_backend != MaterializationBackend.ZARR:
             return
 
-        available_backends = context.microscope_handler.get_available_backends(
+        available_backends = context.microscope_handler.available_backends(
             plate_path
         )
         if Backend.ZARR in available_backends:
             return
 
-        from openhcs.microscopes.openhcs import (
+        from openhcs.core.dataset_sources.openhcs_format import (
             OpenHCSMetadataHandler,
             get_subdirectory_name,
         )
@@ -861,12 +861,12 @@ class PipelineCompiler:
                     f"Expected one of: {[b.value for b in Backend]}."
                 )
 
-        available_backends = microscope_handler.get_available_backends(
+        available_backends = microscope_handler.available_backends(
             orchestrator.input_dir or orchestrator.plate_path
         )
         if read_backend not in available_backends:
             raise ValueError(
-                f"{microscope_handler.microscope_type} does not support read_backend={read_backend.value}. "
+                f"{microscope_handler.source_name} does not support read_backend={read_backend.value}. "
                 f"Supported backends for this plate: {[b.value for b in available_backends]}. "
                 "Update vfs_config.read_backend (or set it to 'auto') and recompile."
             )

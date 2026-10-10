@@ -95,9 +95,9 @@ from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
-from openhcs.microscopes.microscope_interfaces import MetadataHandler
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.interfaces import MetadataHandler
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization.core import Output
 from openhcs.processing.materialization import (
     ImageFileOptions,

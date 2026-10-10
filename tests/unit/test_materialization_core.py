@@ -95,7 +95,7 @@ from openhcs.core.source_metadata import (
     SourceVoxelSpacing,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,

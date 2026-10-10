@@ -7,15 +7,16 @@ import pytest
 from polystore.base import _create_storage_registry
 from polystore.filemanager import FileManager
 
-from openhcs.constants import AllComponents, Backend, Microscope
+from openhcs.constants import AllComponents, Backend
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector, SourceSetAssembler
 from openhcs.core.source_bindings import (
     MetadataExtractionRule, MetadataSource, source_bindings_defaults_to_base,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceProjectionSet
-from openhcs.microscopes.microscope_base import create_microscope_handler
-from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
+from openhcs.core.dataset_sources.source import create_microscope_handler
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 EXAMPLE = (
@@ -31,18 +32,18 @@ PATHS = tuple(
 
 def _config():
     document = PipelineDocumentAuthority.from_source(EXAMPLE.read_text())
-    assert document.pipeline_config.microscope is Microscope.IMAGEXPRESS
+    assert document.pipeline_config.dataset_source is ImageXpressHandler
     return source_bindings_defaults_to_base(document.pipeline_config.source_bindings_config)
 
 
 def test_explicit_imagexpress_with_bindings_is_routed_to_generic_ingestion():
     # Factory construction only. No initialize_workspace, I/O or compile.
     handler = create_microscope_handler(
-        microscope_type=Microscope.IMAGEXPRESS.value,
+        microscope_type="imagexpress",
         filemanager=FileManager(_create_storage_registry()),
         source_bindings_config=_config(),
     )
-    assert isinstance(handler, SourceBindingsHandler)
+    assert isinstance(handler, SourceBindingsSource)
 
 
 def test_metadata_empty_candidates_reproduce_exact_order_guard():

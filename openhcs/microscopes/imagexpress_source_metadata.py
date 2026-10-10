@@ -13,11 +13,10 @@ from openhcs.core.source_metadata import (
     SourceMetadataMapping,
     SourceVoxelSpacing,
 )
-from openhcs.core.source_projection import SourcePlaneDataset
-from openhcs.microscopes.bioformats_adapter import SourcePlaneStoreAdapter
+from openhcs.core.dataset_sources.plane_stores import SourceMetadataEnricher
 
 
-class ImageXpressTiffSourceMetadataAdapter(SourcePlaneStoreAdapter):
+class ImageXpressTiffMetadataEnricher(SourceMetadataEnricher):
     """Interpret exact MetaMorph PlaneInfo properties on ordinary raw TIFFs.
 
     OffsetFromWellCenterUmX/Y are acquisition-relative stage positions. ImageXpress
@@ -28,12 +27,7 @@ class ImageXpressTiffSourceMetadataAdapter(SourcePlaneStoreAdapter):
 
     registry_key = "imagexpress_tiff_source_metadata"
 
-    def discover_stores(self, root: Path) -> tuple[SourcePlaneDataset, ...]:
-        # These ordinary files retain the declared filename binding identities.
-        del root
-        return ()
-
-    def source_metadata_for_path(self, path: Path) -> SourceMetadataMapping:
+    def metadata_for_path(self, path: Path) -> SourceMetadataMapping:
         header = TiffImageHeader.read(path)
         if header is None or not header.description:
             return {}

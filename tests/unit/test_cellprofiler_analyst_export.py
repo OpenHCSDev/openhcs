@@ -73,7 +73,7 @@ from openhcs.core.source_projection import (
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.interop.cellprofiler.analyst_export import (
     CPAImageChannelSpec,
@@ -357,7 +357,7 @@ def _export_context() -> ProcessingContext:
     context.plate_path = Path("/")
     context.microscope_handler = SimpleNamespace(
         metadata_handler=_MetadataHandlerStub(),
-        source_admission_config=lambda: None,
+        source_bindings_still_required=lambda: None,
     )
     return context
 
@@ -890,7 +890,7 @@ def _borrowed_source_export_fixture(
     context = _export_context()
     context.plate_path = tmp_path
     context.microscope_handler = SimpleNamespace(
-        source_admission_config=lambda: None,
+        source_bindings_still_required=lambda: None,
         metadata_handler=SimpleNamespace(
             source_workspace_root=lambda _plate_path: tmp_path,
             source_workspace_metadata_document=lambda _plate_path: document,

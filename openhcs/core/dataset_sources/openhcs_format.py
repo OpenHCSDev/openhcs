@@ -1,7 +1,7 @@
 """
 OpenHCS microscope handler implementation for openhcs.
 
-This module provides the OpenHCSMicroscopeHandler, which reads plates
+This module provides the OpenHCSDatasetSource, which reads plates
 that have been pre-processed and standardized into the OpenHCS format.
 The metadata for such plates is defined in an 'openhcs_metadata.json' file.
 """
@@ -20,11 +20,10 @@ from typing import (
     Optional,
     Tuple,
     Union,
-    Type,
     cast,
 )
 
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.source_metadata import (
     SourceComponentProjectionStrategy,
     SourceVoxelSpacing,
@@ -48,7 +47,7 @@ from openhcs.core.virtual_workspace_metadata import (
     component_metadata_field,
     get_metadata_path,
 )
-from openhcs.microscopes.microscope_interfaces import (
+from openhcs.core.dataset_sources.interfaces import (
     AnalysisResultDirectory,
     MetadataComponentValueSet,
     MetadataHandler,
@@ -81,7 +80,7 @@ def resolve_subdirectory_path(subdir_name: str, plate_path: Union[str, Path]) ->
 
 def _get_available_filename_parsers():
     """Return registered source filename parsers keyed by nominal class name."""
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
     return {
         parser_type.__name__: parser_type
@@ -769,7 +768,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         value = self._metadata_field(plate_path, field)
         return value if isinstance(value, str) and value else None
 
-    def get_available_backends(self, input_dir: Union[str, Path]) -> Dict[str, bool]:
+    def backend_availability(self, input_dir: Union[str, Path]) -> Dict[str, bool]:
         """
         Get available storage backends for the input directory.
 
@@ -1231,7 +1230,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
         )
 
         return OpenHCSMetadata(
-            microscope_handler_name=handler.microscope_type,
+            microscope_handler_name=handler.source_name,
             source_filename_parser_name=handler.parser.__class__.__name__,
             grid_dimensions=grid_dimensions,
             pixel_size=pixel_size,
@@ -1323,16 +1322,16 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
         return result
 
 
-from openhcs.microscopes.microscope_base import (
-    MicroscopeHandler,
-    MicroscopeSourceSelectionRole,
+from openhcs.core.dataset_sources.source import (
+    DatasetSource,
+    PreparedWorkspaceSource,
 )
-from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
-class OpenHCSMicroscopeHandler(MicroscopeHandler):
+class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
     """
-    MicroscopeHandler for OpenHCS pre-processed format.
+    DatasetSource for OpenHCS pre-processed format.
 
     This handler reads plates that have been standardized, with metadata
     provided in an 'openhcs_metadata.json' file. It dynamically loads the
@@ -1340,14 +1339,14 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
     """
 
     # Class attributes for automatic registration
-    _microscope_type = Microscope.OPENHCS.value
-    _metadata_handler_class = None  # Set explicitly after class definition
+    source_name = "openhcsdata"
+    metadata_handler_class = OpenHCSMetadataHandler
 
     @classmethod
     def create(
         cls, *, filemanager: FileManager, pattern_format: Optional[str] = None,
         source_bindings_config=None,
-    ) -> "OpenHCSMicroscopeHandler":
+    ) -> "OpenHCSDatasetSource":
         """Keep prepared source ownership while consuming declared admission."""
         from openhcs.core.source_bindings import source_bindings_defaults_to_base
 
@@ -1361,15 +1360,10 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         )
         return handler
 
-    def source_admission_config(self):
+    def source_bindings_still_required(self):
         """Expose the original prepared-workspace declaration to runtime readers."""
         return self._source_bindings_config
 
-    @classmethod
-    def source_selection_role(cls) -> MicroscopeSourceSelectionRole:
-        """Declare OpenHCS data as an already prepared workspace format."""
-
-        return MicroscopeSourceSelectionRole.PREPARED_WORKSPACE
 
     @classmethod
     def source_selection_guidance(cls) -> str:
@@ -1383,7 +1377,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
 
     def __init__(self, filemanager: FileManager, pattern_format: Optional[str] = None):
         """
-        Initialize the OpenHCSMicroscopeHandler.
+        Initialize the OpenHCSDatasetSource.
 
         Args:
             filemanager: FileManager instance for file operations.
@@ -1480,7 +1474,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         # If a specific parser is passed, it will be set.
         if value is not None:
             logger.debug(
-                "OpenHCSMicroscopeHandler.parser being explicitly set to: "
+                "OpenHCSDatasetSource.parser being explicitly set to: "
                 f"{type(value).__name__}"
             )
         self._parser = value
@@ -1498,15 +1492,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         # Return empty string as placeholder (not used for virtual workspace)
         return ""
 
-    @property
-    def microscope_type(self) -> str:
-        """Microscope type identifier (for interface enforcement only)."""
-        return self._microscope_type
 
-    @property
-    def metadata_handler_class(self) -> Type[MetadataHandler]:
-        """Metadata handler class (for interface enforcement only)."""
-        return OpenHCSMetadataHandler
 
     @property
     def compatible_backends(self) -> List[Backend]:
@@ -1518,7 +1504,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         """
         return [Backend.ZARR, Backend.DISK]
 
-    def get_available_backends(self, plate_path: Union[str, Path]) -> List[Backend]:
+    def available_backends(self, plate_path: Union[str, Path]) -> List[Backend]:
         """
         Get available storage backends for OpenHCS plates.
 
@@ -1527,7 +1513,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         """
         try:
             # Get available backends from metadata as Dict[str, bool]
-            available_backends_dict = self.metadata_handler.get_available_backends(
+            available_backends_dict = self.metadata_handler.backend_availability(
                 plate_path
             )
 
@@ -1576,7 +1562,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
                 "Call determine_input_dir() or post_workspace() first."
             )
 
-        available_backends_dict = self.metadata_handler.get_available_backends(
+        available_backends_dict = self.metadata_handler.backend_availability(
             self.plate_folder
         )
 
@@ -1687,7 +1673,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         filemanager: FileManager,
     ) -> None:
         source_handler_name = str(subdir_metadata[FIELDS.MICROSCOPE_HANDLER_NAME])
-        source_handler_type = MicroscopeHandler.__registry__.get(source_handler_name)
+        source_handler_type = DatasetSource.__registry__.get(source_handler_name)
         if source_handler_type is None:
             raise ValueError(
                 "OpenHCS metadata declares unknown workspace handler "
@@ -1742,7 +1728,7 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
         )
         return super().post_workspace(plate_path, filemanager, skip_preparation)
 
-    # The following methods from MicroscopeHandler delegate to `self.parser`.
+    # The following methods from DatasetSource delegate to `self.parser`.
     # The `parser` property will ensure the correct, dynamically loaded parser is used.
     # No explicit override is needed for them unless special behavior for OpenHCS is required
     # beyond what the dynamically loaded original parser provides.
@@ -1756,10 +1742,3 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
     # - get_grid_dimensions(self, plate_path: Union[str, Path])
     # - get_pixel_size(self, plate_path: Union[str, Path])
     # These will use our OpenHCSMetadataHandler correctly.
-
-
-# Set metadata handler class after class definition for automatic registration
-from openhcs.microscopes.microscope_base import register_metadata_handler
-
-OpenHCSMicroscopeHandler._metadata_handler_class = OpenHCSMetadataHandler
-register_metadata_handler(OpenHCSMicroscopeHandler, OpenHCSMetadataHandler)

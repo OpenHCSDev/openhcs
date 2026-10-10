@@ -16,7 +16,6 @@ from zmqruntime.execution.responses import (
 )
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants import Microscope
 from openhcs.core.artifacts import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -119,7 +118,7 @@ def test_dual_channel_count_runs_on_synthetic_plate_with_channel_stack(
     vfs_config = VFSConfig(materialization_backend=MaterializationBackend.DISK)
     global_config = GlobalPipelineConfig(
         num_workers=2,
-        microscope=Microscope.IMAGEXPRESS,
+        dataset_source=ImageXpressHandler,
         use_threading=False,
         path_planning_config=PathPlanningConfig(output_dir_suffix=suffix),
         vfs_config=vfs_config,
@@ -187,6 +186,7 @@ from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec, ROIOptions
 
 import numpy as np
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 @numpy

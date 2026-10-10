@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from openhcs.core.source_workspace_projection import (
         VirtualWorkspaceSourceProjection,
     )
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 @dataclass(frozen=True, slots=True)

@@ -22,7 +22,6 @@ from metaclass_registry import AutoRegisterMeta
 from python_introspect import Enableable
 from python_introspect.enableable import EnableableMeta
 
-from openhcs.constants.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -1876,7 +1875,6 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     """
 
     registry_key: ClassVar[str] = "source"
-    microscope_handler_name: ClassVar[str] = Microscope.SOURCE_BINDINGS.value
     source_filters: tuple[SourceFilterClause, ...] = ()
     """Filters limiting the source universe before named bindings are resolved."""
 

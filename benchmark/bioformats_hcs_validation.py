@@ -19,7 +19,7 @@ from benchmark.datasets.acquire import acquire_dataset
 from benchmark.datasets.registry import DATASET_REGISTRY
 from openhcs.core.components.component_values import AxisValues
 from openhcs.core.virtual_workspace_metadata import component_metadata_field
-from openhcs.microscopes import create_microscope_handler
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
@@ -121,11 +121,7 @@ def validate_acquired_bioformats_hcs_dataset(
 ) -> BioFormatsHcsValidationResult:
     """Project and sample-load one already acquired Bio-Formats HCS dataset."""
     filemanager = _bioformats_filemanager()
-    handler = create_microscope_handler(
-        "auto",
-        plate_folder=acquired.path,
-        filemanager=filemanager,
-    )
+    handler = DatasetSourceChoice.named("auto").open(acquired.path, filemanager=filemanager)
     if not isinstance(handler, BioFormatsHandler):
         raise ValueError(
             "Bio-Formats HCS validation expected auto-detection to select "

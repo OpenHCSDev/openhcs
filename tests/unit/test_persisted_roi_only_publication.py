@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 import json
 
 import pytest
@@ -338,7 +338,7 @@ def test_reconciliation_keeps_artifact_destination_without_results_field(
         SourceArtifactProjection,
         SourceProjectionMetadataSerializer,
     )
-    from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+    from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
     plate = tmp_path / "plate"
     plate.mkdir()

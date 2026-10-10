@@ -37,8 +37,8 @@ from openhcs.core.steps.function_io import (
 )
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
-from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -290,7 +290,7 @@ def test_bulk_preload_preserves_nested_virtual_workspace_paths(tmp_path: Path) -
         workspace_backend=Backend.DISK,
         source_files=source_paths,
     )
-    handler = SourceBindingsHandler(filemanager, source_bindings)
+    handler = SourceBindingsSource(filemanager, source_bindings)
     handler.initialize_workspace(workspace_root, filemanager)
 
     virtual_paths = get_all_image_paths(
@@ -363,7 +363,7 @@ def test_object_only_source_anchors_match_compiled_pattern_after_loading(
         workspace_backend=Backend.DISK,
         source_files=source_paths,
     )
-    handler = SourceBindingsHandler(filemanager, source_bindings)
+    handler = SourceBindingsSource(filemanager, source_bindings)
     handler.initialize_workspace(workspace_root, filemanager)
 
     assert tuple(materialization.artifact_mappings) == (
@@ -512,7 +512,7 @@ def test_bulk_preload_loads_matlab_pixels_through_declared_vfs_backend(
         workspace_backend=Backend.DISK,
         source_files=(raw_path, illumination_path),
     )
-    SourceBindingsHandler(filemanager, source_bindings).initialize_workspace(
+    SourceBindingsSource(filemanager, source_bindings).initialize_workspace(
         workspace_root,
         filemanager,
     )

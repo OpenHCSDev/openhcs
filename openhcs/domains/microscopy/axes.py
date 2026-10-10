@@ -16,7 +16,9 @@ from openhcs.core.axes import (
 
 
 class Microscopy(AxisFamily):
-    """Plate axes in canonical filename order; wells run in parallel."""
+    """Plate axes in filename order; wells run in parallel."""
+
+    extension_modules = ("openhcs.microscopes", "openhcs.domains.microscopy.hooks")
 
     class Site(Axis, TileAxis, DefaultVariable, OrdinalValued):
         name = "site"

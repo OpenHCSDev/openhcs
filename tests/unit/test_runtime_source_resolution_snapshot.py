@@ -25,8 +25,8 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.microscopes.microscope_interfaces import FilenameParseResult
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParseResult
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 
 PATH = "A01_s001_w1_z001_t001.tif"

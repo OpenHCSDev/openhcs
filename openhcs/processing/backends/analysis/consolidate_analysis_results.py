@@ -37,7 +37,7 @@ from openhcs.core.vfs_protocol import PlateInputDirectory
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 
 if TYPE_CHECKING:
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +181,7 @@ class AutoDetectFilenameParserWellResolver(AnalysisWellResolver):
 
     @classmethod
     def from_registered_parsers(cls) -> "AutoDetectFilenameParserWellResolver":
-        from openhcs.microscopes.microscope_interfaces import FilenameParser
+        from openhcs.core.dataset_sources.interfaces import FilenameParser
 
         return cls(tuple(FilenameParser.__registry__.values()))
 

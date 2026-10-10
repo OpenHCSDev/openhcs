@@ -8,7 +8,7 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import InputSource, Microscope
+from openhcs.constants import InputSource
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -32,6 +32,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     tophat,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 @pytest.mark.parametrize("channels", [(1, 2), (2, 3)])
@@ -117,7 +118,7 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
     ensure_global_config_context(
         GlobalPipelineConfig,
         GlobalPipelineConfig(
-            microscope=Microscope.IMAGEXPRESS, num_workers=1, use_threading=True
+            dataset_source=ImageXpressHandler, num_workers=1, use_threading=True
         ),
     )
     queue = SimpleQueue()

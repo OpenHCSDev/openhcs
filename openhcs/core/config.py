@@ -16,9 +16,13 @@ from enum import Enum
 from abc import ABC, abstractmethod
 from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
 from polystore import config as _polystore_config
-from openhcs.constants import Microscope
 from openhcs.constants.constants import Backend
 from openhcs.core.axis_boundaries import GroupingChoices, VariableAxisChoices
+from openhcs.core.dataset_sources.choice import (
+    AutoDetectedSource,
+    DatasetSourceChoice,
+    DatasetSourceChoices,
+)
 from openhcs.core.axes import (
     Axis,
     AxisFamily,
@@ -190,13 +194,13 @@ class GlobalPipelineConfig(AnnotatedDataclassValidationMixin):
     limit.
     """
 
-    microscope: Annotated[Microscope, abbreviation("scope")] = field(
-        default_factory=lambda: Microscope.AUTO,
-    )
-    """Microscope/source-layout handler used to ingest the plate.
+    dataset_source: Annotated[
+        type[DatasetSourceChoice], abbreviation("source"), DatasetSourceChoices()
+    ] = field(default_factory=lambda: AutoDetectedSource)
+    """Dataset source used to open the plate.
 
-    ``AUTO`` selects a registered handler from source evidence. Choose an exact
-    handler to override detection, or ``SOURCE_BINDINGS`` for a generic image
+    ``auto`` selects a registered source from source evidence. Choose an exact
+    source to override detection, or ``source_bindings`` for a generic image
     folder described by ``source_bindings_config``.
     """
 
@@ -1287,7 +1291,6 @@ LazyStepSourceBindingsConfig = source_binding_configs.LazyStepSourceBindingsConf
 # ============================================================================
 
 # Import streaming port utility from factory module
-from openhcs.core.streaming_config_factory import get_all_streaming_ports
 
 # ============================================================================
 # Configuration Framework Initialization

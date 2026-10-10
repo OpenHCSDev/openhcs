@@ -31,10 +31,10 @@ from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_tile_geometry import SourceTileLayout
 from openhcs.core.virtual_workspace_metadata import FIELDS
 from openhcs.microscopes.imagexpress_source_metadata import (
-    ImageXpressTiffSourceMetadataAdapter,
+    ImageXpressTiffMetadataEnricher,
 )
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.assemblers.blending import TileBlendMethod
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
@@ -45,6 +45,7 @@ from openhcs.processing.backends.pos_gen.acquisition_positions import (
 )
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 def _xml(
@@ -182,7 +183,7 @@ def test_tiff_header_and_anisotropic_calibration_are_header_only(tmp_path, monke
         tifffile.TiffPage, "asarray", lambda *a, **k: pytest.fail("pixel decoding")
     )
     assert TiffImageHeader.read(path).shape == (4, 6)
-    metadata = ImageXpressTiffSourceMetadataAdapter().source_metadata_for_path(path)
+    metadata = ImageXpressTiffMetadataEnricher().metadata_for_path(path)
     geometry = SourceTileGeometry.from_source_metadata(metadata)
     assert (geometry.x_pixels, geometry.y_pixels) == (-5.0, 5.0)
     assert (geometry.row, geometry.column) == (0, 0)
@@ -210,7 +211,7 @@ def test_declared_xml_geometry_fails_on_malformed_or_conflicting_properties(
 ):
     path = _write(tmp_path / "tile.tif", **kwargs)
     with pytest.raises(ValueError):
-        ImageXpressTiffSourceMetadataAdapter().source_metadata_for_path(path)
+        ImageXpressTiffMetadataEnricher().metadata_for_path(path)
 
 
 def test_ordinary_raw_files_without_embedded_layout_stay_unknown(tmp_path):
@@ -470,7 +471,6 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
     from objectstate import ObjectStateRegistry
     from objectstate.lazy_factory import ensure_global_config_context
 
-    from openhcs.constants.constants import Microscope
     from openhcs.core.config import (
         AnalysisConsolidationConfig,
         GlobalPipelineConfig,
@@ -533,7 +533,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
     try:
         global_config = GlobalPipelineConfig(
             num_workers=1,
-            microscope=Microscope.SOURCE_BINDINGS,
+            dataset_source=SourceBindingsSource,
             use_threading=True,
             analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
         )
@@ -630,10 +630,10 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
             for position_output in position_outputs:
                 assert json.loads(position_output.read_text()) == expected_positions
 
-            from openhcs.microscopes.microscope_base import (
-                MicroscopeSourceSelectionRole,
+            from openhcs.core.dataset_sources.source import (
+                SourceSelectionRole,
             )
-            from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
+            from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 
             output_plate = Path(context.output_plate_root)
             metadata_path = output_plate / OpenHCSMetadataHandler.METADATA_FILENAME
@@ -660,13 +660,13 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                         (0.25, 0.5)
                     )
                     assert metadata.plane_axis is None
-            replay_config = MicroscopeSourceSelectionRole.PREPARED_WORKSPACE.pipeline_config_for_source(
+            replay_config = PreparedWorkspaceSource.pipeline_config_for_source(
                 config
             )
             reopened = PipelineOrchestrator(
                 output_plate, pipeline_config=replay_config
             ).initialize()
-            assert isinstance(reopened.microscope_handler, OpenHCSMicroscopeHandler)
+            assert isinstance(reopened.microscope_handler, OpenHCSDatasetSource)
             input_dir = reopened.microscope_handler.initialize_workspace(
                 output_plate, reopened.filemanager
             )

@@ -43,9 +43,9 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )
-from openhcs.microscopes import create_microscope_handler
-from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -130,13 +130,8 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     )
     # This opens the persisted projection; it does not ingest workspace files
     # as a new raw source folder. Physical inputs remain in source_root.
-    microscope_handler = create_microscope_handler(
-        microscope_type="auto",
-        plate_folder=workspace_root,
-        filemanager=filemanager,
-        source_bindings_config=source_bindings,
-    )
-    assert isinstance(microscope_handler, OpenHCSMicroscopeHandler)
+    microscope_handler = DatasetSourceChoice.named("auto").open(workspace_root, filemanager=filemanager, source_bindings_config=source_bindings)
+    assert isinstance(microscope_handler, OpenHCSDatasetSource)
     microscope_handler.initialize_workspace(workspace_root, filemanager)
     projection_cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(
@@ -295,10 +290,7 @@ def test_workspace_materialization_preserves_declared_source_pixels(tmp_path, mo
         source_root, workspace_root, filemanager=filemanager,
         source_backend=Backend.DISK, workspace_backend=Backend.DISK, source_files=(path,),
     )
-    microscope = create_microscope_handler(
-        microscope_type="auto", plate_folder=workspace_root,
-        filemanager=filemanager, source_bindings_config=bindings,
-    )
+    microscope = DatasetSourceChoice.named("auto").open(workspace_root, filemanager=filemanager, source_bindings_config=bindings)
     microscope.initialize_workspace(workspace_root, filemanager)
     cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(

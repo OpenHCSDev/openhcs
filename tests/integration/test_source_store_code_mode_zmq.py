@@ -17,7 +17,6 @@ from zmqruntime.execution.responses import (
 )
 from zmqruntime.messages import MessageFields
 
-from openhcs.constants import Microscope
 from openhcs.constants.constants import Backend
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import (
@@ -44,8 +43,8 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.microscopes.bioformats_adapter import (
-    BioFormatsAdapterUnavailableError,
+from openhcs.core.dataset_sources.plane_stores import (
+    PlaneStoreUnavailableError,
     SourcePlaneStoreAdapter,
 )
 from openhcs.processing.backends.processors.numpy_processor import (
@@ -66,6 +65,7 @@ from openhcs.ui.shared.plate_manager_code_document import (
 from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.choice import AutoDetectedSource
 
 LIVE_ZMQ_ENV = "OPENHCS_RUN_SOURCE_STORE_ZMQ_ACCEPTANCE"
 REQUIRE_FORMAT_FIXTURES_ENV = "OPENHCS_REQUIRE_SOURCE_STORE_FORMAT_FIXTURES"
@@ -121,7 +121,7 @@ def _global_config() -> GlobalPipelineConfig:
     return GlobalPipelineConfig(
         num_workers=1,
         use_threading=False,
-        microscope=Microscope.AUTO,
+        dataset_source=AutoDetectedSource,
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
     )
 
@@ -359,7 +359,7 @@ def test_exact_coordinate_collision_fails_in_aggregate_store(
     write_ngff_plate(tmp_path / "second.zarr", pixels + 1)
 
     with pytest.raises(
-        BioFormatsAdapterUnavailableError,
+        PlaneStoreUnavailableError,
         match="Duplicate source plane address",
     ):
         SourcePlaneStoreAdapter.discover_dataset(tmp_path)

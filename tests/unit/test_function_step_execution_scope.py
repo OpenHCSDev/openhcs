@@ -84,7 +84,7 @@ from openhcs.core.step_dependencies import (
     StepInputDependencyKind,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import FileBundleOptions, MaterializationSpec
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy

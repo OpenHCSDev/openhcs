@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import tifffile
 
-from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
+from openhcs.core.dataset_sources.exceptions import MicroscopePixelSizeUnavailableError
 from openhcs.microscopes.tiff_metadata_mixin import TiffPixelSizeMixin
 
 

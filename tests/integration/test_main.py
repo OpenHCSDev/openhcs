@@ -77,6 +77,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.axes import AxisFamily, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 
 
 @dataclass(frozen=True)
@@ -432,14 +433,9 @@ def validate_separate_materialization(plate_dir: Path) -> None:
 
 def _create_pipeline_config(test_config: TestConfig) -> GlobalPipelineConfig:
     """Create pipeline configuration for test execution."""
-    from openhcs.constants import Microscope
 
     # Set microscope type from config
-    microscope = (
-        Microscope[test_config.microscope_type.upper()]
-        if test_config.microscope_type != "auto"
-        else Microscope.AUTO
-    )
+    dataset_source = DatasetSourceChoice.named(test_config.microscope_type)
 
     # For OMERO tests, use omero_local backend for materialization
     # For other tests, use the configured backend
@@ -450,7 +446,7 @@ def _create_pipeline_config(test_config: TestConfig) -> GlobalPipelineConfig:
 
     return GlobalPipelineConfig(
         num_workers=CONSTANTS.DEFAULT_WORKERS,
-        microscope=microscope,
+        dataset_source=dataset_source,
         path_planning_config=PathPlanningConfig(
             sub_dir=CONSTANTS.DEFAULT_SUB_DIR, output_dir_suffix=CONSTANTS.OUTPUT_SUFFIX
         ),

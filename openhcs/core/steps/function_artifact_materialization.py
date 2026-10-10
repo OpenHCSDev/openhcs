@@ -19,7 +19,7 @@ from openhcs.core.artifacts import (
     ArtifactOutputPlan,
 )
 from openhcs.core.axis_filter import step_axis_allows_config
-from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,

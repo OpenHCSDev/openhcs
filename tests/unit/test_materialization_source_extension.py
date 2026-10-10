@@ -27,7 +27,7 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import ImageFileOptions, MaterializationSpec
 from openhcs.processing.materialization.core import (
     ParserBackedSourceStemAuthority,

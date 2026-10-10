@@ -23,10 +23,10 @@ from openhcs.core.virtual_workspace_metadata import (
     AtomicMetadataWriter, get_metadata_path,
 )
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
-from openhcs.microscopes.microscope_interfaces import FilenameParser
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+from openhcs.core.dataset_sources.interfaces import FilenameParser
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser, ImageXpressHandler
-from openhcs.microscopes.microscope_base import MICROSCOPE_HANDLERS
+from openhcs.core.dataset_sources.source import MICROSCOPE_HANDLERS
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
@@ -295,13 +295,13 @@ class SyntheticAcquisitionIdentity(unittest.TestCase):
                 self.assertEqual(values[Microscopy.Timepoint], {"3"})
 
         class RecordedScopedImageXpressHandler(ImageXpressHandler):
-            _microscope_type = "recorded_scoped_imagexpress"
+            source_name = "recorded_scoped_imagexpress"
 
             def __init__(self, filemanager, pattern_format=None):
                 super().__init__(filemanager, pattern_format)
                 self.parser = RecordedScopedImageXpressParser(filemanager, pattern_format)
 
-        self.assertIs(MICROSCOPE_HANDLERS[RecordedScopedImageXpressHandler._microscope_type],
+        self.assertIs(MICROSCOPE_HANDLERS[RecordedScopedImageXpressHandler.source_name],
                       RecordedScopedImageXpressHandler)
         plate = self.root / "declared-producer-extension"
         with redirect_stdout(StringIO()):

@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import tifffile
 
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.runtime_tabular_values import FieldSpec
@@ -20,7 +20,7 @@ from openhcs.core.source_metadata import (
     SOURCE_VOXEL_SPACING_FIELD,
     SOURCE_VOXEL_SPACING_UNIT_FIELD,
 )
-from openhcs.microscopes.microscope_interfaces import PixelSizeMetadataArtifactProvider
+from openhcs.core.dataset_sources.interfaces import PixelSizeMetadataArtifactProvider
 from openhcs.core.source_bindings import (
     ComponentSelector,
     ImagePlaneSource,
@@ -41,9 +41,9 @@ from openhcs.core.source_bindings import (
     SourceSetRole,
     SourceSelector,
 )
-from openhcs.microscopes import create_microscope_handler
-from openhcs.microscopes.bioformats_adapter import SourcePlaneStoreAdapter
-from openhcs.microscopes.openhcs import (
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
+from openhcs.core.dataset_sources.plane_stores import SourcePlaneStoreAdapter
+from openhcs.core.dataset_sources.openhcs_format import (
     AtomicMetadataWriter,
     FIELDS,
     OpenHCSMetadataHandler,
@@ -56,8 +56,8 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
 )
 from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceMapping
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
-from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
@@ -138,10 +138,9 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
                           match_type=SourceFilterMatchType.CONTAINS,
                           value=f"_s{selection:03}_"),
     ))
-    handler = create_microscope_handler("auto", workspace, filemanager,
-                                        source_bindings_config=config)
-    from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
-    assert isinstance(handler, OpenHCSMicroscopeHandler)
+    handler = DatasetSourceChoice.named("auto").open(workspace, filemanager=filemanager, source_bindings_config=config)
+    from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
+    assert isinstance(handler, OpenHCSDatasetSource)
     handler.initialize_workspace(workspace, filemanager)
     cache = VirtualWorkspaceSourceProjectionCache()
     full = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
@@ -497,7 +496,7 @@ def test_source_binding_workspace_projector_assigns_selector_channels(tmp_path):
 
     metadata = projection_set.metadata_dict(
         parser=projector.parser,
-        microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+        microscope_handler_name="source_bindings",
         source_filename_parser_name=type(projector.parser).__name__,
         grid_dimensions=[1, 1],
         pixel_size=1.0,
@@ -613,7 +612,7 @@ def test_source_binding_workspace_remaps_store_addresses_and_labels(tmp_path):
     )
     metadata = projection_set.metadata_dict(
         parser=projector.parser,
-        microscope_handler_name=Microscope.BIOFORMATS.value,
+        microscope_handler_name="bioformats",
         source_filename_parser_name=type(projector.parser).__name__,
         grid_dimensions=[1, 1],
         pixel_size=1.0,
@@ -778,7 +777,7 @@ def test_group_address_preserves_distinct_source_well_as_literal_metadata(tmp_pa
     )
     metadata = projection_set.metadata_dict(
         parser=projector.parser,
-        microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+        microscope_handler_name="source_bindings",
         source_filename_parser_name=type(projector.parser).__name__,
         grid_dimensions=[1, 1],
         pixel_size=1.0,
@@ -796,31 +795,21 @@ def test_group_address_preserves_distinct_source_well_as_literal_metadata(tmp_pa
 def test_nonempty_source_bindings_select_their_declared_microscope_handler(
     tmp_path,
 ):
-    handler = create_microscope_handler(
-        microscope_type=Microscope.AUTO.value,
-        plate_folder=tmp_path,
-        filemanager=_filemanager(),
-        source_bindings_config=SourceBindingsConfig(
+    handler = DatasetSourceChoice.named("auto").open(tmp_path, filemanager=_filemanager(), source_bindings_config=SourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),)
-        ),
-    )
+        ))
 
-    assert isinstance(handler, SourceBindingsHandler)
+    assert isinstance(handler, SourceBindingsSource)
 
 
 def test_nonempty_source_bindings_override_format_specific_microscope(
     tmp_path,
 ):
-    handler = create_microscope_handler(
-        microscope_type=Microscope.IMAGEXPRESS.value,
-        plate_folder=tmp_path,
-        filemanager=_filemanager(),
-        source_bindings_config=SourceBindingsConfig(
+    handler = DatasetSourceChoice.named("imagexpress").open(tmp_path, filemanager=_filemanager(), source_bindings_config=SourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),)
-        ),
-    )
+        ))
 
-    assert isinstance(handler, SourceBindingsHandler)
+    assert isinstance(handler, SourceBindingsSource)
 
 
 def test_source_binding_workspace_projector_order_matches_aliases(tmp_path):
@@ -1243,7 +1232,7 @@ def test_imported_metadata_coerces_join_and_payload_values_through_declared_type
 
     metadata = projection_set.metadata_dict(
         parser=projector.parser,
-        microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+        microscope_handler_name="source_bindings",
         source_filename_parser_name=type(projector.parser).__name__,
         grid_dimensions=[1, 1],
         pixel_size=1.0,
@@ -1447,7 +1436,7 @@ def test_source_bindings_reinitialization_resolves_current_imported_metadata(tmp
         ),
     )
     filemanager = _filemanager()
-    handler = SourceBindingsHandler.create(
+    handler = SourceBindingsSource.create(
         filemanager=filemanager,
         source_bindings_config=config,
     )
@@ -1489,7 +1478,7 @@ def test_source_reinitialization_refreshes_calibration_and_registered_projection
     image = tmp_path / "A01_s001_w1.tif"
     _write_tiff_stack(image, (7,))
     filemanager = _filemanager()
-    initial = SourceBindingsHandler.create(
+    initial = SourceBindingsSource.create(
         filemanager=filemanager,
         source_bindings_config=SourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="Images"),),
@@ -1518,7 +1507,7 @@ def test_source_reinitialization_refreshes_calibration_and_registered_projection
             FIELDS.DEFAULT_SUBDIRECTORY,
             stale,
         )
-    current = SourceBindingsHandler.create(
+    current = SourceBindingsSource.create(
         filemanager=filemanager,
         source_bindings_config=SourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="Images"),),
@@ -1547,7 +1536,7 @@ def test_source_reinitialization_refreshes_calibration_and_registered_projection
 def test_source_reinitialization_sees_new_physical_files_not_virtual_aliases(tmp_path):
     _write_tiff_stack(tmp_path / "A01_s001_w1.tif", (7,))
     filemanager = _filemanager()
-    handler = SourceBindingsHandler.create(
+    handler = SourceBindingsSource.create(
         filemanager=filemanager,
         source_bindings_config=SourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="Images"),),
@@ -1588,7 +1577,7 @@ def test_source_scan_excludes_only_the_owned_metadata_transaction_files(tmp_path
     custom_json.write_text("{}")
     custom_lock.touch()
     filemanager = _filemanager()
-    handler = SourceBindingsHandler.create(
+    handler = SourceBindingsSource.create(
         filemanager=filemanager,
         source_bindings_config=SourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="Images"),)
@@ -2033,16 +2022,11 @@ def test_openhcs_metadata_handler_resolves_subdirectory_inputs(tmp_path):
 
 
 def test_source_bindings_handler_is_registry_constructed():
-    handler = create_microscope_handler(
-        microscope_type=Microscope.SOURCE_BINDINGS.value,
-        plate_folder=Path("."),
-        filemanager=object(),
-        source_bindings_config=SourceBindingsConfig(
+    handler = DatasetSourceChoice.named("source_bindings").open(Path("."), filemanager=object(), source_bindings_config=SourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),),
-        ),
-    )
+        ))
 
-    assert isinstance(handler, SourceBindingsHandler)
+    assert isinstance(handler, SourceBindingsSource)
 
 
 def test_source_bindings_handler_materializes_non_stack_source_artifacts(tmp_path):
@@ -2052,7 +2036,7 @@ def test_source_bindings_handler_materializes_non_stack_source_artifacts(tmp_pat
     np.save(illumination, np.ones((4, 4), dtype=np.float32))
     ensure_storage_registry()
     filemanager = FileManager(dict(storage_registry))
-    handler = SourceBindingsHandler(
+    handler = SourceBindingsSource(
         filemanager,
         source_bindings_config=SourceBindingsConfig(
             bindings=(

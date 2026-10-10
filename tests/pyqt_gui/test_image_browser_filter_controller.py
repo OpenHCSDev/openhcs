@@ -16,7 +16,7 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFileInventory,
     PlateResultFileRecord,
 )
-from openhcs.microscopes.microscope_interfaces import (
+from openhcs.core.dataset_sources.interfaces import (
     AnalysisResultDirectory,
     MicroscopeImagePathParser,
 )

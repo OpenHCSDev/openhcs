@@ -8,21 +8,20 @@ for ImageXpress microscopes.
 import logging
 import re
 from pathlib import Path
-from typing import List, Optional, Tuple, Union, Type
+from typing import List, Optional, Tuple, Union
 
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.components.parser_metaprogramming import (
     format_filename_component,
 )
 from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
-from openhcs.microscopes.microscope_base import MicroscopeHandler
-from openhcs.microscopes.microscope_interfaces import (
+from openhcs.microscopes.vendor_layout import VirtualMappingSource
+from openhcs.core.dataset_sources.interfaces import (
     DiskImageFileListingMetadataHandler,
     FilenameParseResult,
     FilenameParser,
     MetadataComponentValueSet,
-    MetadataHandler,
     MicroscopeImagePathParser,
 )
 from openhcs.core.axes import Axis
@@ -65,101 +64,6 @@ class ImageXpressZStepPaths(MicroscopeImagePathParser):
                 self._zstep_folder_pattern,
             ),
         )
-
-
-class ImageXpressHandler(
-    ImageXpressTimePointPaths, ImageXpressZStepPaths, MicroscopeHandler
-):
-    """
-    MicroscopeHandler implementation for Molecular Devices ImageXpress systems.
-
-    This handler binds the ImageXpress filename parser and metadata handler,
-    enforcing semantic alignment between file layout parsing and metadata resolution.
-    """
-
-    # Explicit microscope type for proper registration
-    _microscope_type = Microscope.IMAGEXPRESS.value
-
-    # Class attribute for automatic metadata handler registration (set after class definition)
-    _metadata_handler_class = None
-
-    @classmethod
-    def supports_explicit_incomplete_export(cls) -> bool:
-        """Native initialization requires the declared ImageXpress metadata file."""
-        return False
-
-    def __init__(self, filemanager: FileManager, pattern_format: Optional[str] = None):
-        # Initialize parser with filemanager, respecting its interface
-        self.parser = ImageXpressFilenameParser(filemanager, pattern_format)
-        self.metadata_handler = ImageXpressMetadataHandler(filemanager)
-        super().__init__(parser=self.parser, metadata_handler=self.metadata_handler)
-
-    @property
-    def root_dir(self) -> str:
-        """
-        Root directory for ImageXpress virtual workspace preparation.
-
-        Returns "." (plate root) because ImageXpress TimePoint/ZStep folders
-        are flattened starting from the plate root, and virtual paths have no prefix.
-        """
-        return "."
-
-    @property
-    def microscope_type(self) -> str:
-        """Microscope type identifier (for interface enforcement only)."""
-        return self._microscope_type
-
-    @property
-    def metadata_handler_class(self) -> Type[MetadataHandler]:
-        """Metadata handler class (for interface enforcement only)."""
-        return ImageXpressMetadataHandler
-
-    @property
-    def compatible_backends(self) -> List[Backend]:
-        """
-        ImageXpress is compatible with DISK backend only.
-
-        Legacy microscope format with standard file operations.
-        """
-        return [Backend.DISK]
-
-    # Uses default workspace initialization from base class
-
-    def _build_virtual_mapping(
-        self, plate_path: Path, filemanager: FileManager
-    ) -> Path:
-        """
-        Build ImageXpress virtual workspace mapping using plate-relative paths.
-
-        Flattens TimePoint and Z-step folder structures virtually by building a mapping dict.
-
-        Args:
-            plate_path: Path to plate directory
-            filemanager: FileManager instance for file operations
-
-        Returns:
-            Path to image directory
-        """
-        plate_path = Path(plate_path)  # Ensure Path object
-
-        logger.info(
-            f"🔄 BUILDING VIRTUAL MAPPING: ImageXpress folder flattening for {plate_path}"
-        )
-
-        workspace_mapping = self.acquisition_workspace_mapping(
-            self.metadata_handler.get_image_files(plate_path, all_subdirs=True),
-            backend=Backend.DISK.value,
-        )
-
-        logger.info(
-            f"Built {len(workspace_mapping)} virtual path mappings for ImageXpress"
-        )
-
-        # Save virtual workspace mapping and all available metadata
-        self.save_virtual_workspace_metadata(plate_path, workspace_mapping)
-
-        # Return the image directory
-        return plate_path
 
 
 class ImageXpressFilenameParser(FilenameParser):
@@ -521,8 +425,88 @@ class ImageXpressMetadataHandler(DiskImageFileListingMetadataHandler):
         )
 
 
-# Set metadata handler class after class definition for automatic registration
-from openhcs.microscopes.microscope_base import register_metadata_handler
+class ImageXpressHandler(
+    ImageXpressTimePointPaths, ImageXpressZStepPaths, VirtualMappingSource
+):
+    """
+    DatasetSource implementation for Molecular Devices ImageXpress systems.
 
-ImageXpressHandler._metadata_handler_class = ImageXpressMetadataHandler
-register_metadata_handler(ImageXpressHandler, ImageXpressMetadataHandler)
+    This handler binds the ImageXpress filename parser and metadata handler,
+    enforcing semantic alignment between file layout parsing and metadata resolution.
+    """
+
+    # Explicit microscope type for proper registration
+    source_name = "imagexpress"
+    metadata_handler_class = ImageXpressMetadataHandler
+
+    # Class attribute for automatic metadata handler registration (set after class definition)
+
+    @classmethod
+    def supports_explicit_incomplete_export(cls) -> bool:
+        """Native initialization requires the declared ImageXpress metadata file."""
+        return False
+
+    def __init__(self, filemanager: FileManager, pattern_format: Optional[str] = None):
+        # Initialize parser with filemanager, respecting its interface
+        self.parser = ImageXpressFilenameParser(filemanager, pattern_format)
+        self.metadata_handler = ImageXpressMetadataHandler(filemanager)
+        super().__init__(parser=self.parser, metadata_handler=self.metadata_handler)
+
+    @property
+    def root_dir(self) -> str:
+        """
+        Root directory for ImageXpress virtual workspace preparation.
+
+        Returns "." (plate root) because ImageXpress TimePoint/ZStep folders
+        are flattened starting from the plate root, and virtual paths have no prefix.
+        """
+        return "."
+
+
+
+    @property
+    def compatible_backends(self) -> List[Backend]:
+        """
+        ImageXpress is compatible with DISK backend only.
+
+        Legacy microscope format with standard file operations.
+        """
+        return [Backend.DISK]
+
+    # Uses default workspace initialization from base class
+
+    def _build_virtual_mapping(
+        self, plate_path: Path, filemanager: FileManager
+    ) -> Path:
+        """
+        Build ImageXpress virtual workspace mapping using plate-relative paths.
+
+        Flattens TimePoint and Z-step folder structures virtually by building a mapping dict.
+
+        Args:
+            plate_path: Path to plate directory
+            filemanager: FileManager instance for file operations
+
+        Returns:
+            Path to image directory
+        """
+        plate_path = Path(plate_path)  # Ensure Path object
+
+        logger.info(
+            f"🔄 BUILDING VIRTUAL MAPPING: ImageXpress folder flattening for {plate_path}"
+        )
+
+        workspace_mapping = self.acquisition_workspace_mapping(
+            self.metadata_handler.get_image_files(plate_path, all_subdirs=True),
+            backend=Backend.DISK.value,
+        )
+
+        logger.info(
+            f"Built {len(workspace_mapping)} virtual path mappings for ImageXpress"
+        )
+
+        # Save virtual workspace mapping and all available metadata
+        self.save_virtual_workspace_metadata(plate_path, workspace_mapping)
+
+        # Return the image directory
+        return plate_path

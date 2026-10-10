@@ -51,7 +51,7 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
 )
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.microscopes.microscope_base import MicroscopeSourceSelectionRole
+from openhcs.core.dataset_sources.source import SourceSelectionRole
 from openhcs.core.input_workspace import (
     InputWorkspacePreparationRequest,
     InputWorkspacePreparationResult,
@@ -1217,7 +1217,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         *,
         plate_root: Path | str | None = None,
         cppipe_path: Path | str | None = None,
-        source_role: MicroscopeSourceSelectionRole | None = None,
+        source_role: SourceSelectionRole | None = None,
     ) -> ObjectState:
         """
         Create an orchestrator for a plate (in CREATED state, not initialized).
@@ -1806,7 +1806,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         # Create orchestrator and add to root scope list (do not change selection)
         self._create_orchestrator_for_plate(
             output_plate_root,
-            source_role=MicroscopeSourceSelectionRole.PREPARED_WORKSPACE,
+            source_role=PreparedWorkspaceSource,
         )
         new_paths = list(current_paths)
         new_paths.append(output_plate_root)

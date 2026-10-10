@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, ClassVar, cast
 from metaclass_registry import AutoRegisterMeta
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.image_shapes import ArrayShape
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
@@ -704,10 +704,10 @@ class SourceBindingWorkspaceProjector:
     ) -> SourceProjectionSet:
         """Return projections for one already-resolved candidate universe."""
 
-        from openhcs.microscopes.bioformats_adapter import SourcePlaneStoreAdapter
+        from openhcs.core.dataset_sources.plane_stores import SourceMetadataEnricher
 
         candidates = tuple(
-            SourcePlaneStoreAdapter.enrich_source_candidate(
+            SourceMetadataEnricher.enrich_source_candidate(
                 candidate,
                 physical_path=(
                     Path(physical_path)
@@ -857,9 +857,13 @@ class SourceBindingWorkspaceProjector:
             candidates,
             filemanager=filemanager,
         )
+        from openhcs.core.dataset_sources.source import DeclaredFileSource
+
         primary_metadata = projection_set.metadata_dict(
             parser=self.parser,
-            microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+            microscope_handler_name=(
+                DeclaredFileSource.require_registered_source().source_name
+            ),
             source_filename_parser_name=type(self.parser).__name__,
             grid_dimensions=SourceTileLayout.metadata_grid_dimensions(projection_set),
             pixel_size=SourceVoxelSpacing.metadata_pixel_size(

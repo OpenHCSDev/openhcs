@@ -18,7 +18,6 @@ from openhcs.agent.services.execution_session_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ImageArtifactType, MainFlowStackOutputSpec, SpecialArtifactType
 from openhcs.core.config import (
@@ -48,6 +47,7 @@ from openhcs.processing.custom_functions.runtime_registry import (
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 @numpy_function(contract=ProcessingContract.PURE_3D)
@@ -78,7 +78,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
     try:
         document = PipelineDocumentAuthority.from_values(
             pipeline_config=PipelineConfig(
-                microscope=Microscope.SOURCE_BINDINGS,
+                dataset_source=SourceBindingsSource,
                 source_bindings_config=LazySourceBindingsConfig(
                     metadata_rules=(MetadataExtractionRule(
                         source=MetadataSource.FILE_NAME,

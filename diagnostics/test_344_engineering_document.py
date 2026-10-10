@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+from openhcs.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import ArtifactInputPlan, ArtifactOutputPlan, ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
@@ -13,6 +13,7 @@ from openhcs.processing.backends.cellprofiler.intensity import (
     rescale_intensity,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 def test_complete_engineering_document_uses_declared_primary_sources():
@@ -22,7 +23,7 @@ def test_complete_engineering_document_uses_declared_primary_sources():
     ).read_text()
     document = PipelineDocumentAuthority.from_source(source)
     assert document.original_source == source
-    assert document.pipeline_config.microscope is Microscope.IMAGEXPRESS
+    assert document.pipeline_config.dataset_source is ImageXpressHandler
     plan = document.pipeline_config.source_bindings_config
     # Each fixture file is 2-D. Z varies across files, not inside each TIFF.
     assert plan.source_stack_components == ()

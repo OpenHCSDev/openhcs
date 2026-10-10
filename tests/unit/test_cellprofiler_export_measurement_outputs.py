@@ -188,7 +188,7 @@ def _export_context() -> ProcessingContext:
     )
     context.plate_path = Path("/")
     context.microscope_handler = SimpleNamespace(
-        source_admission_config=lambda: None,
+        source_bindings_still_required=lambda: None,
         metadata_handler=SimpleNamespace(
             source_workspace_metadata_document=lambda _plate_path: None
         ),

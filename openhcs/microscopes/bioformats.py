@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Mapping, Optional, Type, Union
+from typing import Dict, List, Mapping, Optional, Union
 
 from polystore.bioformats_storage import BioFormatsStorageBackend
 from polystore.filemanager import FileManager
 from polystore.ome_zarr_storage import OmeZarrStorageBackend
 
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.source_bindings import (
     SourceBindingsConfig,
@@ -22,21 +22,20 @@ from openhcs.core.virtual_workspace_metadata import (
     FIELDS,
     get_metadata_path,
 )
-from openhcs.microscopes.bioformats_adapter import (
-    BioFormatsAdapterUnavailableError,
+from openhcs.core.dataset_sources.plane_stores import (
+    PlaneStoreUnavailableError,
     SourcePlaneStoreAdapter,
 )
-from openhcs.microscopes.microscope_base import (
-    BroadMicroscopeDetector,
-    MicroscopeHandler,
-    register_metadata_handler,
+from openhcs.core.dataset_sources.source import (
+    BroadStoreSource,
+    DatasetSource,
 )
-from openhcs.microscopes.microscope_interfaces import (
+from openhcs.core.dataset_sources.interfaces import (
     MetadataComponentValueSet,
     MetadataHandler,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.core.axes import Axis, AxisFamily
 
 
@@ -116,7 +115,7 @@ class BioFormatsMetadataHandler(MetadataHandler):
     def find_metadata_file(self, plate_path: Union[str, Path]) -> Path:
         try:
             self.source_dataset(plate_path)
-        except BioFormatsAdapterUnavailableError as exc:
+        except PlaneStoreUnavailableError as exc:
             raise FileNotFoundError(
                 f"No addressable Bio-Formats source dataset found for {plate_path}."
             ) from exc
@@ -177,11 +176,11 @@ class BioFormatsMetadataHandler(MetadataHandler):
         ]
 
 
-class BioFormatsHandler(BroadMicroscopeDetector, MicroscopeHandler):
+class BioFormatsHandler(BroadStoreSource, DatasetSource):
     """Project addressable store planes into one generic virtual workspace."""
 
-    _microscope_type = Microscope.BIOFORMATS.value
-    _metadata_handler_class = BioFormatsMetadataHandler
+    source_name = "bioformats"
+    metadata_handler_class = BioFormatsMetadataHandler
 
     @classmethod
     def detect(
@@ -237,13 +236,7 @@ class BioFormatsHandler(BroadMicroscopeDetector, MicroscopeHandler):
     def root_dir(self) -> str:
         return FIELDS.DEFAULT_SUBDIRECTORY
 
-    @property
-    def microscope_type(self) -> str:
-        return self._microscope_type
 
-    @property
-    def metadata_handler_class(self) -> Type[MetadataHandler]:
-        return self._metadata_handler_class
 
     @property
     def compatible_backends(self) -> List[Backend]:
@@ -260,7 +253,7 @@ class BioFormatsHandler(BroadMicroscopeDetector, MicroscopeHandler):
             refresh_dataset=True,
         )
 
-    def get_available_backends(
+    def available_backends(
         self,
         plate_path: Union[str, Path],
     ) -> List[Backend]:
@@ -317,7 +310,7 @@ class BioFormatsHandler(BroadMicroscopeDetector, MicroscopeHandler):
         )
         metadata = projection_set.metadata_dict(
             parser=self.parser,
-            microscope_handler_name=self._microscope_type,
+            microscope_handler_name=self.source_name,
             source_filename_parser_name=type(self.parser).__name__,
             grid_dimensions=[1, 1],
             pixel_size=dataset.pixel_size,
@@ -340,6 +333,3 @@ class BioFormatsHandler(BroadMicroscopeDetector, MicroscopeHandler):
             Backend.OME_ZARR,
             OmeZarrStorageBackend(),
         )
-
-
-register_metadata_handler(BioFormatsHandler, BioFormatsMetadataHandler)

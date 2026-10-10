@@ -85,7 +85,7 @@ from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataSubdirectories,
     VirtualWorkspaceSourceProjectionEntries,
 )
-from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
@@ -205,7 +205,7 @@ class MemoryOutputWriter:
         ]
         handler = context.microscope_handler
         parser = handler.parser
-        microscope_type = handler.microscope_type
+        microscope_type = handler.source_name
         row, col = parser.extract_component_coordinates(plan.axis_id)
         context.filemanager.ensure_directory(
             plan.output_dir,
@@ -779,7 +779,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         )
         handler = context.microscope_handler
         parser = handler.parser
-        microscope_type = handler.microscope_type
+        microscope_type = handler.source_name
         saved_image_paths = tuple(
             str(Path(path).relative_to(self.plate_root))
             for path in context.filemanager.list_image_files(
@@ -1199,7 +1199,7 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
         admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
     ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
         """Use durable typed projections, without reloading cleaned artifact values."""
-        from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
         if (document is None) != (admitted_entries is None):
             raise ValueError("Reconciliation requires one document and its admitted entries.")

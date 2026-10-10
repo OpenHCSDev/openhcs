@@ -13,7 +13,7 @@ from openhcs.core.source_bindings import source_bindings_defaults_to_base
 from openhcs.interop.cellprofiler.plate_workspace import (
     CellProfilerPlateWorkspacePreparer,
 )
-from openhcs.microscopes.openhcs import FIELDS
+from openhcs.core.dataset_sources.openhcs_format import FIELDS
 
 
 def test_prepare_cellprofiler_plate_workspace_materializes_metadata(

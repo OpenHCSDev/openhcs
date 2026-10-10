@@ -67,7 +67,7 @@ from openhcs.core.steps.function_artifact_materialization import (
     planned_materialization_preview,
 )
 from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
-from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
+from openhcs.core.dataset_sources.exceptions import MicroscopePixelSizeUnavailableError
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import (
     ZMQExecutionRequestBuilder,

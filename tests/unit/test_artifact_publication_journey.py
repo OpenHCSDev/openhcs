@@ -9,7 +9,6 @@ import pytest
 import tifffile
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import Microscope
 from openhcs.core.config import (
     LazyPathPlanningConfig,
     PipelineConfig,
@@ -45,7 +44,7 @@ from openhcs.core.source_projection import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.cellprofiler.object_images import (
     ImageMode,
     convert_objects_to_image,
@@ -113,7 +112,7 @@ def _plate(root: Path, site_count: int = 1) -> Path:
         projection_paths.append((projection, path.name))
     document = SourceProjectionMetadataSerializer(SourceSchemaFilenameParser()).metadata_dict(
         SourceProjectionSet(tuple(projections)),
-        microscope_handler_name=Microscope.OPENHCS.value,
+        microscope_handler_name="openhcsdata",
         source_filename_parser_name="SourceSchemaFilenameParser",
         grid_dimensions=[1, 1],
         pixel_size=0.65,

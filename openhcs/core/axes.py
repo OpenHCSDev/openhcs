@@ -294,6 +294,13 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
 
     family_name: ClassVar[str | None] = None
     axes: ClassVar[tuple[type[Axis], ...]] = ()
+    extension_modules: ClassVar[tuple[str, ...]] = ()
+    """Modules that register this domain's members of kernel families.
+
+    Kernel families that domains extend (dataset sources, filename parsers,
+    post-execute hooks, dataset root rules) import these on first registry
+    access, so activation itself stays free of domain imports.
+    """
 
     _active: ClassVar[type[AxisFamily] | None] = None
 
