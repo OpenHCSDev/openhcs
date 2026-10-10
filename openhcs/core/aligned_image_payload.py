@@ -400,14 +400,12 @@ class ImagePayloadStackComposition(ABC):
         workspace_source_lookups: Sequence[VirtualWorkspacePathLookup],
     ) -> RuntimeArrayData:
         """Compose a selected admissible input cohort in its declared image domain."""
-        if len(payloads) == 1 and (
-            payloads[0].metadata.persists_whole_image()
-            or (
-                producer_records
-                and len(producer_records) == 1
-                and producer_records[0].main_flow_plane_axis
-                is payloads[0].metadata.plane_axis
-            )
+        if len(payloads) == 1 and payloads[0].keeps_whole_as_single_member(
+            declared_plane_axis=(
+                producer_records[0].main_flow_plane_axis
+                if producer_records and len(producer_records) == 1
+                else None
+            ),
         ):
             main_data_stack = payloads[0].copied(
                 memory_type=execution_plan.input_memory_type,
@@ -461,8 +459,16 @@ class ImagePayloadStackComposition(ABC):
             and single_output_plane_axis is metadata[0].plane_axis
             and np.shape(data) == np.shape(payloads[0].data)
         ):
-            return metadata[0].with_current_intensity_from(current_intensity).payload_with(
+            member = metadata[0].with_current_intensity_from(current_intensity).payload_with(
                 data, stack_payload.mask,
+            )
+            if member.keeps_whole_as_single_member(
+                declared_plane_axis=single_output_plane_axis,
+            ):
+                return member
+            # Cache the cohort the next step composes from this one saved member.
+            return stack_image_payloads(
+                (member,), metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
             )
         if np.shape(data)[:1] != (len(payloads),):
             raise ValueError(

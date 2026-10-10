@@ -216,10 +216,14 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     )
     monkeypatch.setattr(PatternGroupExecutionRequest, "source_workspace_projection_authority", lambda self: SimpleNamespace(projection_if_available=lambda: None))
     loaded = consumer.load_input_stack()[1]
-    assert loaded.data.shape == pixels.shape
-    assert loaded.metadata.plane_axis is axis
-    np.testing.assert_array_equal(loaded.data, pixels)
-    np.testing.assert_array_equal(loaded.mask, mask)
+    # A member saved without a plane axis is a one-member runtime-slice cohort,
+    # exactly as it is when several members match.
+    expected_pixels = pixels if axis is not None else pixels[None]
+    expected_mask = mask if axis is not None or mask is None else mask[None]
+    assert loaded.data.shape == expected_pixels.shape
+    assert loaded.metadata.plane_axis is (axis or RuntimePlaneAxis.RUNTIME_SLICE)
+    np.testing.assert_array_equal(loaded.data, expected_pixels)
+    np.testing.assert_array_equal(loaded.mask, expected_mask)
     assert not np.shares_memory(loaded.data, pixels)
     if mask is not None:
         assert not np.shares_memory(loaded.mask, mask)
@@ -375,7 +379,7 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
 
     with pytest.raises(ValueError, match="different declared image axes"):
         consumer_for(pattern).load_input_stack()
-    for name, expected, axis in (("Planes", planes.data, RuntimePlaneAxis.RUNTIME_SLICE), ("Volume", opaque_pixels, None)):
+    for name, expected, axis in (("Planes", planes.data, RuntimePlaneAxis.RUNTIME_SLICE), ("Volume", opaque_pixels[None], RuntimePlaneAxis.RUNTIME_SLICE)):
         selected = consumer_for(_selected_pattern(name))
         actual = selected.load_input_stack()[1]
         np.testing.assert_array_equal(actual.data, expected)
@@ -416,7 +420,9 @@ def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
     np.testing.assert_array_equal(stack_payload.mask, expected.mask)
 
 
-def test_scalar_rgb_occurrences_reload_on_runtime_slice_axis(tmp_path):
+@pytest.mark.parametrize("sites", [(1,), (1, 2, 3)], ids=("one-member", "three-members"))
+def test_scalar_rgb_occurrences_reload_on_runtime_slice_axis(tmp_path, sites):
+    """A cohort's rank does not depend on how many members matched (B1)."""
     from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
     from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
     from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
@@ -430,10 +436,10 @@ def test_scalar_rgb_occurrences_reload_on_runtime_slice_axis(tmp_path):
             extension=".tif", source="test",
         ),
         output_context=context, main_flow_plane_axis=None,
-    ) for site in (1, 2, 3))
+    ) for site in sites)
     payloads = tuple(ImagePayloadMetadata(
         source_image_names=("RGBImage",), axes=PayloadAxes.colour_samples(-1),
-    ).payload_with(np.full((4, 5, 3), site, dtype=np.float32)) for site in (1, 2, 3))
+    ).payload_with(np.full((4, 5, 3), site, dtype=np.float32)) for site in sites)
     output = ImagePayloadStackComposition.from_loaded_images(
         payloads, producer_records=records, execution_plan=plan,
         source_projection=None, workspace_source_lookups=(),

@@ -1519,6 +1519,22 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         """Whether a main-flow output publishes this payload as one whole image."""
         return self.metadata.plane_axis is None or self.metadata.persists_whole_image()
 
+    def keeps_whole_as_single_member(
+        self, *, declared_plane_axis: RuntimePlaneAxis | None,
+    ) -> bool:
+        """Whether this payload, alone in a cohort, is passed on without a new leading axis.
+
+        Only a member that already spans the cohort axis stays whole: a
+        persisted whole image (volume), or a member saved with its declared
+        plane axis. A member that declares no plane axis is composed on the
+        runtime-slice axis exactly as it is in a cohort of several, so the
+        rank a callable receives never depends on how many files matched.
+        """
+        return self.metadata.persists_whole_image() or (
+            declared_plane_axis is not None
+            and declared_plane_axis is self.metadata.plane_axis
+        )
+
     @property
     def owns_output_surfaces(self) -> bool:
         """Whether this output names its own output surfaces (filename qualifiers)."""

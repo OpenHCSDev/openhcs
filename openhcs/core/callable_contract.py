@@ -1207,6 +1207,8 @@ class CallableContract(ArtifactPlanKeySelector):
         input_specs = self.artifact_inputs
         source_refs = self.output_group_scope_sources
         if not source_refs:
+            if self.main_flow_supplies_primary_image:
+                return ArtifactSpecCollection(())
             return input_specs
         sources = ArtifactSpecCollection(
             source_spec
@@ -1225,6 +1227,18 @@ class CallableContract(ArtifactPlanKeySelector):
                 f"reference undeclared inputs {missing!r}."
             )
         return sources
+
+    @property
+    def main_flow_supplies_primary_image(self) -> bool:
+        """Whether the runtime passes main-flow pixels as the primary argument.
+
+        Such a callable runs once per main-flow cohort; its artifact inputs are
+        context for that cohort, not the owner of its group scope.
+        """
+        adapter = self.runtime_adapter
+        return self.accepts_implicit_main_flow_input and not (
+            adapter is not None and adapter.manages_artifact_inputs
+        )
 
     def preserves_input_main_flow(self) -> bool:
         """Return whether declared artifact outputs leave main flow unchanged."""
