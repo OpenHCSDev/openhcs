@@ -2472,7 +2472,8 @@ class NapariLayerDisplayPipeline:
         viewer = self.server.require_viewer()
         return self._native_frame_mutation_depth == 0 and all(
             layer.loaded and (
-                not layer.visible or layer._slice_input == layer._make_slice_input(viewer.dims)
+                not layer.visible or layer._slice_input
+                == layer._slicing_state.make_slice_input(viewer.dims)
             )
             for layer in viewer.layers if layer.visible or include_hidden
         )
