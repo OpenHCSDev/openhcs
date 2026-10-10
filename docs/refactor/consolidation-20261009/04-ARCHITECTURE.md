@@ -176,3 +176,15 @@ The layout moves last (P2). Every earlier surface already writes its new modules
 ## Witness
 
 A second domain must be declarations only. The CI witness is a test that declares a non-microscopy family, compiles and runs a small pipeline over a synthetic dataset, and streams it to a headless viewer. For example, remote sensing: `Scene(PartitionAxis)`, `Band(ColourAxis)`, `Tile(TileAxis)`, `Date(TimeAxis)`, with no stack axis. It must pass with zero kernel edits. A ratchet counts domain member references in kernel modules, and the count only goes down.
+
+## End state: two distributions
+
+The owner's goal is to split the codebase into a domain-agnostic platform and OpenHCS as its microscopy instantiation. The layout step (P) is the last in-repo step. The split follows it mechanically once these hold:
+
+1. **Kernel guard:** no module under `openhcs/kernel/` imports `openhcs/domains/`, `openhcs/interop/` or `openhcs/microscopes/`. It is enforced in CI from P onward.
+2. **Witness (W):** a non-microscopy domain compiles, runs and streams to a viewer with zero kernel edits.
+3. **CellProfiler declarations in the domain:** P1 moves the 91 leaf declarations out of `processing/backends/cellprofiler` into `domains/cellprofiler`, removing the 368 processing→interop edges.
+4. **A layer for the processing function library:** the generic image-processing functions (backends per array library) become a layer that depends on the kernel and is usable by any image domain. Microscopy-only functions move to the domain.
+5. **Viewers extracted (L7):** `streamviewer` is a first-party library under both.
+
+Then the kernel moves to its own repository and distribution (name decided by the owner), and OpenHCS depends on it with a pinned version, in lockstep like the other first-party libraries.
