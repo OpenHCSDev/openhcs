@@ -26,13 +26,15 @@ from openhcs.agent.dto.execution import (
     ArtifactPlanInspection,
     ArtifactPlanSummary,
     CompiledStepPlanSummary,
-    ExecutionJobRef,
-    ExecutionJobStatus,
     MainFlowMaterializationPlanSummary,
-    OrchestratorSessionRef,
     SourceWorkspaceFileRecord,
     SourceWorkspaceSummary,
     ViewerStreamingPlanSummary,
+)
+from openhcs.agent.dto.session import (
+    DatasetListState,
+    DatasetRowState,
+    SessionOperationResult,
 )
 from openhcs.agent.dto.pipeline import (
     FunctionSpecRef,
@@ -331,71 +333,84 @@ def test_nested_artifact_contract_and_receipt_survive_compact_limits():
     assert to_jsonable(decoded) == to_jsonable(original)
 
 
+def _dataset_row(**changes) -> DatasetRowState:
+    values = dict(
+        scope_id="/plate", name="plate", root="/plate", pipeline_path=None,
+        selected=True, initialized=False, compiled=False, init_pending=False,
+        compile_pending=False, execution_active=False, status_prefix="",
+        orchestrator_state=None, execution_id=None, terminal_status=None,
+        runtime_state=None, runtime_percent=None, queue_position=None,
+    )
+    values.update(changes)
+    return DatasetRowState(**values)
+
+
+def _datasets(row: DatasetRowState) -> DatasetListState:
+    return DatasetListState(rows=(row,), selected_scope_ids=(row.scope_id,), execution_state="idle")
+
+
 @pytest.mark.parametrize("waited", [True, False])
-def test_execute_journey_preserves_native_variants_progress_and_errors(waited):
-    session = OrchestratorSessionRef(
-        session_id="session-1",
-        schema_version=SCHEMA_VERSION,
-        uri="openhcs://sessions/1",
+def test_execute_journey_follows_session_stages_and_renders_each_result(waited):
+    def result(operation_id, status, **changes):
+        return SessionOperationResult(operation_id=operation_id, status=status, **changes)
+
+    initialized = _dataset_row(initialized=True)
+    compiled = _dataset_row(initialized=True, compiled=True)
+    failed = _dataset_row(
+        initialized=True, compiled=True, terminal_status="failed",
+        orchestrator_state="exec_failed",
     )
-    identity = dict(
-        schema_version=SCHEMA_VERSION,
-        job_id="job-1",
-        session_id="session-1",
-        kind="execute",
-        status="failed" if waited else "queued",
-        uri="openhcs://jobs/1",
-        server_execution_id="execution-1",
-    )
-    job = (
-        ExecutionJobStatus(
-            **identity,
-            response={"native_extension": {"retain": [1, 2]}, "status": "failed"},
-            progress=ExecutionProgressObservation(
-                3, {"phase": "processing", "extension": {"done": 2}}
-            ),
-            errors=(
-                AgentError("execution_failed", "Failure retained", "Inspect receipt"),
-            ),
-            warnings=(AgentWarning("wait", "Deadline reached"),),
-        )
-        if waited
-        else ExecutionJobRef(**identity)
-    )
-    peer = ControlledWireSession((session, job))
+    receipts = [
+        result("connect_server", "accepted"),
+        result("add_datasets", "completed", target_scope_ids=("/plate",)),
+        result("set_dataset_pipeline", "completed", target_scope_ids=("/plate",)),
+        result("initialize_datasets", "accepted", event_sequence=4),
+        _datasets(initialized),
+        result("compile_datasets", "accepted", event_sequence=9),
+        _datasets(compiled),
+        result("run_datasets", "accepted", event_sequence=14),
+    ]
+    if waited:
+        receipts += [_datasets(failed), _datasets(failed)]
+    peer = ControlledWireSession(receipts)
     args = args_for(
         "execute-source",
-        "source-only-plate",
+        "/plate",
         "--source-text",
         "pipeline_steps = []",
+        "--port",
+        "15993",
         "--wait" if waited else "--no-wait",
     )
     command = dev_client.McpDevCommandSpec.for_name(args.command)
     response = asyncio.run(command.run_session(peer, args))
-    decoded = response.results[1].payloads[0]
-    assert type(decoded) is type(job)
-    assert to_jsonable(decoded) == to_jsonable(job)
-    assert peer.calls[1][1]["session_id"] == "session-1"
-    rendered = command.render_result(response, args)
-    assert (
-        "id=session-1" in rendered
-        and "id=job-1" in rendered
-        and "server_execution=execution-1" in rendered
+    called = [name for name, _arguments, _timeout in peer.calls]
+    assert called[:4] == [
+        agent_capabilities.connect_server.name,
+        agent_capabilities.add_datasets.name,
+        agent_capabilities.set_dataset_pipeline.name,
+        agent_capabilities.initialize_datasets.name,
+    ]
+    assert peer.calls[0][1]["port"] == 15993
+    assert peer.calls[2][1] == {"scope_id": "/plate", "pipeline_source": "pipeline_steps = []"}
+    assert all(
+        arguments == {"scope_ids": ["/plate"]}
+        for name, arguments, _timeout in peer.calls
+        if name in (
+            agent_capabilities.initialize_datasets.name,
+            agent_capabilities.compile_datasets.name,
+            agent_capabilities.run_datasets.name,
+        )
     )
+    decoded = [result.first_decoded_payload() for result in response.results]
+    assert [type(payload) for payload in decoded] == [SessionOperationResult] * 6 + (
+        [DatasetListState] if waited else []
+    )
+    rendered = command.render_result(response, args)
+    assert "run_datasets: accepted" in rendered
     if waited:
-        assert decoded.progress.sequence == 3
-        assert decoded.progress.event["extension"]["done"] == 2
-        for fact in (
-            "native_extension",
-            "processing",
-            "Failure retained",
-            "Inspect receipt",
-            "Deadline reached",
-        ):
-            assert fact in rendered
-        assert response.has_errors()
-    else:
-        assert not response.has_errors()
+        assert decoded[-1].rows[0].terminal_status == "failed"
+        assert "terminal=failed" in rendered
 
 
 @pytest.mark.parametrize(
@@ -576,34 +591,6 @@ def test_cooperative_diamond_renderer_identity_is_visited_once(reverse_order):
     assert McpDevOutputRenderer.__registry__[NewResult] is Diamond
 
 
-def test_submission_declaration_preserves_advertised_external_contract():
-    from typing import get_type_hints
-    from openhcs.agent.capabilities import require_agent_type_contract
-    from openhcs.agent.services.execution_session_service import ExecutionSessionService
-    from openhcs.mcp.server import _mcp_tool_meta
-
-    for capability in (
-        agent_capabilities.submit_compile,
-        agent_capabilities.submit_pipeline_execution,
-    ):
-        assert (
-            capability.output_contract.producer is ExecutionSessionService._submit_job
-        )
-        assert (
-            capability.output_contract.result_type
-            == get_type_hints(ExecutionSessionService._submit_job, include_extras=True)[
-                "return"
-            ]
-        )
-        assert capability.output_contract_types == (ExecutionJobRef, ExecutionJobStatus)
-        assert (
-            require_agent_type_contract(capability.output_contract) is ExecutionJobRef
-        )
-        assert _mcp_tool_meta(capability) == {
-            "openhcs/outputContract": "ExecutionJobRef"
-        }
-
-
 def test_typed_diagnostics_do_not_reserialize_or_rescan_error_records(monkeypatch):
     import openhcs.mcp.dev_client_core as core
 
@@ -695,10 +682,10 @@ def test_generic_call_preserves_pending_workflow_native_receipt(monkeypatch, cap
 
     native = UiSelectedPlateWorkflowResult(
         SCHEMA_VERSION,
-        UiSelectedPlateWorkflowKind("run_plate"),
+        UiSelectedPlateWorkflowKind("run_datasets"),
         UiActionInvokeResult(
             SCHEMA_VERSION,
-            UiActionIdentity(widget_id="plate_manager", action_id="run_plate"),
+            UiActionIdentity(widget_id="plate_manager", action_id="run_datasets"),
             "accepted",
             UiMutationReceipt(UiMutationRequestToken(), accepted=True),
             target_scope_ids=("scope-1",),
@@ -720,13 +707,13 @@ def test_generic_call_preserves_pending_workflow_native_receipt(monkeypatch, cap
                 agent_capabilities.ui_selected_plate_workflow.name,
                 "--json",
                 "--arguments",
-                '{"workflow":"run_plate"}',
+                '{"workflow":"run_datasets"}',
             ]
         )
         == 0
     )
     rendered = capsys.readouterr().out
-    assert "run_plate" in rendered and "accepted" in rendered and "scope-1" in rendered
+    assert "run_datasets" in rendered and "accepted" in rendered and "scope-1" in rendered
     assert json.loads(rendered) == to_jsonable(response)
 
 

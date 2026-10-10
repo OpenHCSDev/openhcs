@@ -136,6 +136,47 @@ class DefaultGroupBy(AxisRole):
     cardinality = AtMostOne
 
 
+class GridAddressed(AxisRole):
+    """Values sit on a two-dimensional grid of rows and columns.
+
+    The axis declares how one value spells its row and column and how row and
+    column labels map to one-based grid positions; views lay the axis out as a
+    grid only when the family has an axis with this role.
+    """
+
+    cardinality = AtMostOne
+
+    default_grid: ClassVar[tuple[int, int]]
+    """(rows, columns) shown when no value places the grid's extent."""
+
+    @classmethod
+    def grid_coordinates(cls, value: object) -> tuple[str, str]:
+        """(row label, column label) of one value."""
+
+        raise NotImplementedError(f"{cls.__qualname__} must declare grid_coordinates.")
+
+    @classmethod
+    def grid_position(cls, row_label: str, column_label: str) -> tuple[int, int]:
+        """One-based (row, column) position of a row and column label."""
+
+        raise NotImplementedError(f"{cls.__qualname__} must declare grid_position.")
+
+    @classmethod
+    def row_label(cls, row: int) -> str:
+        """Label of the one-based ``row``."""
+
+        raise NotImplementedError(f"{cls.__qualname__} must declare row_label.")
+
+    @classmethod
+    def grid_index(cls, value: object) -> tuple[int, int] | None:
+        """One-based (row, column) position of one value; None if it has none."""
+
+        try:
+            return cls.grid_position(*cls.grid_coordinates(value))
+        except ValueError:
+            return None
+
+
 class AxisValueKind(ABC):
     """How an axis spells its values. Every axis carries exactly one kind."""
 
@@ -305,6 +346,16 @@ class Axis(GroupingDeclaration):
                 f"Axis {cls.__qualname__} must carry exactly one AxisValueKind; "
                 f"found {[kind.__name__ for kind in kinds]}."
             )
+        if issubclass(cls, GridAddressed):
+            undeclared = [
+                member
+                for member in ("default_grid", "grid_coordinates", "grid_position", "row_label")
+                if not any(member in base.__dict__ for base in cls.__mro__ if base is not GridAddressed)
+            ]
+            if undeclared:
+                raise TypeError(
+                    f"Grid axis {cls.__qualname__} must declare {', '.join(undeclared)}."
+                )
         if "metadata_aliases" not in cls.__dict__:
             cls.metadata_aliases = (cls.name,)
         if "metadata_collection_field" not in cls.__dict__:
@@ -330,12 +381,6 @@ class Axis(GroupingDeclaration):
             if value is not None:
                 return value
         return None
-
-    @classmethod
-    def grid_coordinates(cls, value: object) -> tuple[str, str]:
-        """(row, column) of one value in a two-dimensional layout (default: one row)."""
-
-        return str(value), ""
 
     @classmethod
     def filename_token(cls, value: object) -> str:
@@ -670,6 +715,7 @@ __all__ = [
     "DefaultGroupBy",
     "DefaultVariable",
     "ExactlyOne",
+    "GridAddressed",
     "GroupingDeclaration",
     "LabelValued",
     "Many",

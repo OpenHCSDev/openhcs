@@ -47,8 +47,13 @@ from openhcs.core.plate_image_inventory import (
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
-from openhcs.ui.shared.plate_scope_identity import SCOPE_SEGMENT_SEPARATOR
+from openhcs.core.dataset_sources.dataset_scopes import SCOPE_SEGMENT_SEPARATOR
 from openhcs.core.axes import AxisFamily
+from openhcs.pyqt_gui.widgets.shared.plate_view_widget import (
+    PlateViewWidget,
+    active_grid_axis,
+    require_grid_axis,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -557,6 +562,8 @@ class ImageBrowserWidget(QWidget):
         # Plate view toggle button (moved from bottom)
         self.plate_view_toggle_btn = QPushButton("Show Plate View")
         self.plate_view_toggle_btn.setCheckable(True)
+        # A family without a grid-addressed axis has no plate grid to show.
+        self.plate_view_toggle_btn.setVisible(active_grid_axis() is not None)
         self.plate_view_toggle_btn.clicked.connect(self._toggle_plate_view)
         self.plate_view_toggle_btn.setStyleSheet(
             self.color_scheme.styles.generate_button_style()
@@ -590,16 +597,15 @@ class ImageBrowserWidget(QWidget):
         # Middle: Vertical splitter for plate view and tabs
         self.middle_splitter = QSplitter(Qt.Orientation.Vertical)
 
-        # Plate view (initially hidden)
-        from openhcs.pyqt_gui.widgets.shared.plate_view_widget import PlateViewWidget
-
-        self.plate_view_widget = PlateViewWidget(
-            color_scheme=self.color_scheme, parent=self
-        )
-        self.plate_view_widget.wells_selected.connect(self._on_wells_selected)
-        self.plate_view_widget.detach_requested.connect(self._detach_plate_view)
-        self.plate_view_widget.setVisible(False)
-        self.middle_splitter.addWidget(self.plate_view_widget)
+        # Plate view (initially hidden; built only for a family with a grid axis)
+        if active_grid_axis() is not None:
+            self.plate_view_widget = PlateViewWidget(
+                color_scheme=self.color_scheme, parent=self
+            )
+            self.plate_view_widget.wells_selected.connect(self._on_wells_selected)
+            self.plate_view_widget.detach_requested.connect(self._detach_plate_view)
+            self.plate_view_widget.setVisible(False)
+            self.middle_splitter.addWidget(self.plate_view_widget)
 
         # Single table for both images and results (no tabs needed)
         image_table_widget = self._create_table_widget()
@@ -1449,7 +1455,7 @@ class ImageBrowserWidget(QWidget):
     def _on_wells_selected(self, well_ids: Set[str]):
         """Handle well selection from plate view."""
         logger.info(f"[WELLS_SELECTED] Received {len(well_ids)} wells: {well_ids}")
-        well_key = AxisFamily.active().partition_axis().name
+        well_key = require_grid_axis().name
         self._syncing_plate_filter_selection = True
         try:
             synced = self.image_table_browser.set_column_filter_selection(
@@ -1471,7 +1477,7 @@ class ImageBrowserWidget(QWidget):
         selected_values: frozenset[str],
     ) -> None:
         """Compose the generic Well filter selection into the plate view."""
-        well_key = AxisFamily.active().partition_axis().name
+        well_key = require_grid_axis().name
 
         if (
             self._syncing_plate_filter_selection
@@ -1501,21 +1507,22 @@ class ImageBrowserWidget(QWidget):
                 # Skip files without well metadata (e.g., plate-level files)
                 pass
 
-        # Detect plate dimensions and build coordinate mapping
-        plate_dimensions = self._detect_plate_dimensions(well_ids) if well_ids else None
-
-        # Build mapping from (row_index, col_index) to actual well_id
-        # This handles different well ID formats (A01 vs R01C01)
-        coord_to_well = {}
+        # The microscope parser spells each value's row and column; the grid
+        # axis places those labels on the grid (A01 and R01C01 alike).
+        grid_axis = require_grid_axis()
         parser = self.orchestrator.microscope_handler.parser
-        for well_id in well_ids:
-            row, col = parser.extract_component_coordinates(well_id)
-            # Convert row letter to index (A=1, B=2, etc.)
-            row_idx = sum(
-                (ord(c.upper()) - ord("A") + 1) * (26**i)
-                for i, c in enumerate(reversed(row))
+        coord_to_well = {
+            grid_axis.grid_position(*parser.extract_component_coordinates(well_id)): well_id
+            for well_id in well_ids
+        }
+        plate_dimensions = (
+            (
+                max(row for row, _column in coord_to_well),
+                max(column for _row, column in coord_to_well),
             )
-            coord_to_well[(row_idx, int(col))] = well_id
+            if coord_to_well
+            else None
+        )
 
         # Update plate view with well IDs, dimensions, and coordinate mapping
         self.plate_view_widget.set_available_wells(
@@ -1600,40 +1607,7 @@ class ImageBrowserWidget(QWidget):
         Raises KeyError if metadata missing 'well' component.
         """
         # Well ID is a single component in metadata
-        return str(metadata[AxisFamily.active().partition_axis().name])
-
-    def _detect_plate_dimensions(self, well_ids: Set[str]) -> tuple[int, int]:
-        """
-        Auto-detect plate dimensions from well IDs.
-
-        Uses existing infrastructure:
-        - FilenameParser.extract_component_coordinates() to parse each well ID
-        - Determines max row/col from parsed coordinates
-
-        Returns (rows, cols) tuple.
-        Raises ValueError if well IDs are invalid format.
-        """
-        parser = self.orchestrator.microscope_handler.parser
-
-        rows = set()
-        cols = set()
-
-        for well_id in well_ids:
-            # REUSE: Parser's extract_component_coordinates (fail loud if invalid)
-            row, col = parser.extract_component_coordinates(well_id)
-            rows.add(row)
-            cols.add(int(col))
-
-        # Convert row letters to indices (A=1, B=2, AA=27, etc.)
-        row_indices = [
-            sum(
-                (ord(c.upper()) - ord("A") + 1) * (26**i)
-                for i, c in enumerate(reversed(row))
-            )
-            for row in rows
-        ]
-
-        return (max(row_indices), max(cols))
+        return str(metadata[require_grid_axis().name])
 
     def _update_status_threadsafe(self, message: str):
         """Update status label from any thread (thread-safe).

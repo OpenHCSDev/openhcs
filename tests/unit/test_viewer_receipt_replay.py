@@ -511,7 +511,7 @@ def test_standalone_mcp_streaming_uses_declared_receipt_and_explicit_bridge(tmp_
             return PlateFileStreamResult(
                 schema_version=SCHEMA_VERSION,
                 plate_path=request.plate_path,
-                requested_microscope_type=request.microscope_type,
+                requested_source_format=request.source_format,
                 viewer_config_key=request.viewer_config_key,
                 connection=request.connection,
             )

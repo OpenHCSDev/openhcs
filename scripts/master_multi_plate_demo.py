@@ -8,6 +8,7 @@ exact accent projected by the running OpenHCS UI for that plate scope.
 """
 
 from __future__ import annotations
+from openhcs.authoring.session.operations.datasets import ShowLiveResults
 
 import argparse
 import importlib
@@ -30,7 +31,6 @@ from polystore.streaming.identity import StreamProducerIdentity, StreamProducerO
 from zmqruntime import TransportMode
 
 from openhcs.agent.dto.ui_bridge import UiSelectedPlateWorkflowKind
-from openhcs.agent.ui_bridge_actions import PlateManagerAction
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerOrchestratorCodeDocumentIdentity,
     PlateManagerStateSurfaceIdentityDeclaration,
@@ -1425,7 +1425,7 @@ class McpMasterDemoOperations(MasterDemoOperations):
                 (
                     "invoke-action",
                     PLATE_MANAGER_WIDGET_ID,
-                    PlateManagerAction.VIEW_RESULTS.value,
+                    ShowLiveResults.operation_id,
                     "--json",
                     *self._ui_args(),
                 ),

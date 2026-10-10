@@ -27,19 +27,19 @@ from benchmark.control import (
 from openhcs.agent.path_policy import AgentPathPolicy
 
 if TYPE_CHECKING:
-    from openhcs.agent.services.execution_session_service import ExecutionSessionService
+    from openhcs.authoring.session.session import Session
 
 
 class BenchmarkControlService:
-    """Guard benchmark evidence while delegating job state to ordinary execution."""
+    """Guard benchmark evidence for executions the OpenHCS session ran."""
 
     def __init__(
         self,
         path_policy: AgentPathPolicy,
-        execution_service: ExecutionSessionService | None = None,
+        session: Session | None = None,
     ) -> None:
         self._path_policy = path_policy
-        self._execution_service = execution_service
+        self._session = session
 
     def finalize_measured_run(
         self,
@@ -47,8 +47,8 @@ class BenchmarkControlService:
     ) -> MeasuredPipelineRunReceipt:
         """Write benchmark evidence from the ordinary job's exact completion."""
 
-        if self._execution_service is None:
-            raise RuntimeError("Measured run finalization requires execution service.")
+        if self._session is None:
+            raise RuntimeError("Measured run finalization requires the OpenHCS session.")
         from benchmark.openhcs_measured_run import (
             measured_endpoint_provenance,
             retain_measured_openhcs_completion,
@@ -58,11 +58,20 @@ class BenchmarkControlService:
             PhaseTimingTrace,
             completed_server_execution_seconds,
         )
+        from zmqruntime.messages import ExecutionStatus
+
         from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
-        completed = self._execution_service.require_completed_pipeline_execution(
-            request.job_id
-        )
+        completed = self._session.finished_executions.get(request.execution_id)
+        if completed is None:
+            raise ValueError(
+                f"The session has no finished execution {request.execution_id!r}."
+            )
+        if completed.record.status != ExecutionStatus.COMPLETE.value:
+            raise RuntimeError(
+                f"Execution {request.execution_id} did not complete: "
+                f"{completed.record.status}."
+            )
         observation_path = ZMQAuxiliaryExecutionParams.from_transport(
             completed.request.config_params
         ).runtime_observation_export_path

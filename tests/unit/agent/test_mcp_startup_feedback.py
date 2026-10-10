@@ -14,8 +14,6 @@ from openhcs.agent.capabilities import (
     InspectPlatePathCapability,
     ProgressAcknowledgedCapability,
     SearchFunctionsCapability,
-    SubmitCompileCapability,
-    SubmitPipelineExecutionCapability,
 )
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.functions import (
@@ -53,8 +51,6 @@ class RecordingContext:
     (
         GenerateSyntheticPlateCapability,
         InspectPlatePathCapability,
-        SubmitCompileCapability,
-        SubmitPipelineExecutionCapability,
     ),
 )
 def test_submission_leaf_declares_existing_worker_progress(declaration):

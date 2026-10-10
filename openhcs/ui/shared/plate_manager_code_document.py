@@ -12,7 +12,7 @@ from typing import Any, Self, get_args, get_origin, get_type_hints
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
+from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
 
 
 class PlateManagerCodeNamespaceField(str, Enum):
@@ -217,7 +217,7 @@ class PlateManagerCodeDocumentAuthority:
             pipeline_data=payload.pipeline_data,
         )
         code_value_by_scope = {
-            scope_id: PlateScopeIdentity.from_scope_id(scope_id).code_value()
+            scope_id: DatasetScope.parse(scope_id).code_value()
             for scope_id in normalized.plate_paths
         }
         body = CodeBlock.from_items(
@@ -262,7 +262,7 @@ class PlateManagerCodeDocumentAuthority:
     def _scope_id(value: object, *, field_name: str) -> str:
         if not isinstance(value, (str, Path)):
             raise TypeError(f"{field_name} must be a plate path string or Path.")
-        return PlateScopeIdentity.from_scope_id(str(value)).scope_id
+        return DatasetScope.parse(str(value)).scope_id
 
 
 @cache

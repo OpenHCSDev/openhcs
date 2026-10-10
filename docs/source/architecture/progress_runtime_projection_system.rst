@@ -113,12 +113,12 @@ read-only inspection view while the worker is paused.
 Other typed-progress consumers
 ------------------------------
 
-Headless agent jobs retain the exact ``ZMQExecutionClient`` adapter that
-submitted them. ZMQRuntime owns that client's immutable latest-event observation
-and monotonic sequence for each execution. ``openhcs_get_execution_status``
-projects the generic observation beside the control-plane status response, so a
-caller can distinguish continuing execution activity from a stalled ``running``
-status without copying OpenHCS phase semantics into the agent service.
+The headless session registers progress exactly as the GUI does: one
+``ExecutionProgress`` owner per session rebuilds the runtime projection and
+publishes it as session events. ``openhcs_session_events`` returns those events
+past a sequence number, blocking until one arrives, and
+``openhcs_session_datasets`` reads each dataset's runtime state, so a caller can
+tell continuing activity from a stall without polling.
 
 Live measurement previews are a sibling consumer of the progress stream, not a
 debugger projection. ``LiveMeasurementProgressPayload`` places bounded typed

@@ -10,6 +10,7 @@ from typing import ClassVar
 
 from python_introspect import JsonObject, JsonValue, dataclass_from_mapping
 
+from openhcs.agent.dto.session import DatasetRowState
 from openhcs.agent.dto.plate import (
     PlateFileQueryRecordSummary,
     PlateFileQueryResult,
@@ -31,7 +32,6 @@ from openhcs.agent.dto.plate import (
     SyntheticPlateGenerationResult,
 )
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
-from openhcs.agent.dto.ui_bridge import UiPlateManagerRowState
 from openhcs.core.axes import AxisFamily
 from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.mcp.dev_client_rendering import (
@@ -366,7 +366,7 @@ class SyntheticPlateGenerationRenderer(McpDevOutputRenderer):
             (
                 "Metadata: "
                 f"file={cls.text(payload.metadata_file_path)} "
-                f"microscope={cls.text(payload.detected_microscope_type)} "
+                f"microscope={cls.text(payload.detected_source_format)} "
                 f"handler={cls.text(payload.handler_class)}"
             ),
         ]
@@ -415,7 +415,7 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
             (
                 f"Status: {payload.status.value} "
                 f"confidence={payload.confidence.value} "
-                f"microscope={cls.text(payload.detected_microscope_type)}"
+                f"microscope={cls.text(payload.detected_source_format)}"
             ),
             (
                 f"Handler: {cls.text(payload.handler_class)} "
@@ -510,7 +510,7 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
     @classmethod
     def _handler_candidate_line(cls, candidate: PlateInspectionHandlerCandidate) -> str:
         return (
-            f"  - {candidate.microscope_type} "
+            f"  - {candidate.source_format} "
             f"parser={candidate.parser_class} "
             f"recognized={candidate.recognized_file_count}/"
             f"{candidate.tested_file_count} "
@@ -699,8 +699,8 @@ class PlateFileQueryRenderer(McpDevOutputRenderer):
         ):
             return None
         microscope_option = (
-            f" --microscope-type {payload.detected_microscope_type}"
-            if payload.detected_microscope_type
+            f" --source-format {payload.detected_source_format}"
+            if payload.detected_source_format
             else ""
         )
         return (
@@ -842,15 +842,15 @@ class SelectedPlateRenderer(McpDevOutputRenderer):
         return (
             "Selected plate: "
             f"{cls.text(None if row is None else row.name)} "
-            f"root={cls.text(None if row is None else row.plate_root)} "
+            f"root={cls.text(None if row is None else row.root)} "
             f"target={payload.target.value}"
         )
 
     @classmethod
-    def selected_row(cls, payload) -> UiPlateManagerRowState | None:
+    def selected_row(cls, payload) -> DatasetRowState | None:
         """The selected PlateManager row, declared by its state DTO."""
         return (
-            dataclass_from_mapping(UiPlateManagerRowState, payload.selected_plate)
+            dataclass_from_mapping(DatasetRowState, payload.selected_plate)
             if payload.selected_plate
             else None
         )
@@ -913,10 +913,10 @@ class SelectedPlateFilesRenderer(SelectedPlateRenderer):
             payload.target is SelectedPlateFileQueryTarget.SELECTED
             and query.total_count == 0
             and row is not None
-            and row.output_plate_root
-            and query.plate_path == row.plate_root
+            and row.output_root
+            and query.plate_path == row.root
         ):
-            lines.append(f"Related output: {row.output_plate_root}")
+            lines.append(f"Related output: {row.output_root}")
             lines.append("Next: selected-plate-files --target output --kind result")
         return "\n".join(lines)
 

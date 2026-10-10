@@ -7,6 +7,7 @@ import asyncio
 import importlib.util
 import json
 import os
+import time
 import shutil
 import subprocess
 import sys
@@ -301,61 +302,69 @@ async def _run_measured_execution_protocol_smoke(
     pipeline_source = PipelineDocumentCodec.render(document)
     source_file = output_dir / "pipeline.py"
     source_file.write_text(pipeline_source, encoding="utf-8")
-    created = _tool_payload(
-        await asyncio.wait_for(
-            session.call_tool(
-                "openhcs_create_orchestrator_session_from_pipeline_source",
-                {
-                    "plate_path": str(plate),
-                    "pipeline_source": pipeline_source,
-                    "port": 26000 + os.getpid() % 20000,
-                    "persistent": False,
-                },
-            ),
-            timeout=90,
+    async def call(name: str, arguments: dict, timeout: float = 90) -> dict:
+        return _tool_payload(
+            await asyncio.wait_for(session.call_tool(name, arguments), timeout=timeout)
         )
+
+    connected = await call(
+        "openhcs_connect_server",
+        {"port": 26000 + os.getpid() % 20000, "persistent": False},
     )
-    session_id = created.get("session_id")
-    if not isinstance(session_id, str):
-        raise AssertionError(f"Installed MCP did not create a session: {created}")
+    added = await call("openhcs_add_datasets", {"roots": [str(plate)]})
+    if added.get("status") != "completed":
+        raise AssertionError(f"Installed MCP did not add the dataset: {added}")
+    (scope_id,) = added["target_scope_ids"]
+    await call(
+        "openhcs_set_dataset_pipeline",
+        {"scope_id": scope_id, "pipeline_source": pipeline_source},
+    )
 
     evidence_dir = output_dir / "measured"
     evidence_dir.mkdir()
-    status = _tool_payload(
-        await asyncio.wait_for(
-            session.call_tool(
-                "openhcs_submit_pipeline_execution",
-                {
-                    "session_id": session_id,
-                    "runtime_observation_export_path": str(
-                        MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(
-                            evidence_dir
-                        )
-                    ),
-                    "runtime_observation_export_scope": "outcomes",
-                    "wait": True,
-                    "submit_timeout_ms": 120_000,
-                    "wait_timeout_ms": 120_000,
-                },
-            ),
-            timeout=180,
-        )
-    )
-    if status.get("status") != "complete" or not isinstance(status.get("job_id"), str):
-        raise AssertionError(f"Installed MCP execution did not complete: {status}")
+    row: dict = {}
+    for tool, arguments, finished in (
+        ("openhcs_initialize_datasets", {}, lambda row: row["initialized"]),
+        ("openhcs_compile_datasets", {}, lambda row: row["compiled"]),
+        (
+            "openhcs_run_datasets",
+            {
+                "runtime_observation_export_path": str(
+                    MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(evidence_dir)
+                ),
+                "runtime_observation_export_scope": "outcomes",
+            },
+            lambda row: row["terminal_status"] is not None
+            and not row["execution_active"],
+        ),
+    ):
+        started = await call(tool, {"scope_ids": [scope_id], **arguments})
+        if started.get("status") != "accepted":
+            raise AssertionError(f"Installed MCP rejected {tool}: {started} {connected}")
+        sequence = started["event_sequence"]
+        deadline = time.monotonic() + 180
+        while True:
+            (row,) = (await call("openhcs_session_datasets", {}))["rows"]
+            if finished(row):
+                break
+            if time.monotonic() > deadline:
+                raise AssertionError(f"Installed MCP {tool} did not finish: {row}")
+            events = await call(
+                "openhcs_session_events",
+                {"after_sequence": sequence, "timeout_seconds": 5.0},
+                timeout=30,
+            )
+            sequence = events["last_sequence"]
+    if row["terminal_status"] != "complete" or row["finished_execution_id"] is None:
+        raise AssertionError(f"Installed MCP execution did not complete: {row}")
 
-    finalized = _tool_payload(
-        await asyncio.wait_for(
-            session.call_tool(
-                "openhcs_finalize_measured_pipeline_run",
-                {
-                    "job_id": status["job_id"],
-                    "run_id": "installed-protocol-smoke",
-                    "pipeline_name": "Blur",
-                },
-            ),
-            timeout=90,
-        )
+    finalized = await call(
+        "openhcs_finalize_measured_pipeline_run",
+        {
+            "execution_id": row["finished_execution_id"],
+            "run_id": "installed-protocol-smoke",
+            "pipeline_name": "Blur",
+        },
     )
     inspected = _tool_payload(
         await asyncio.wait_for(
@@ -366,7 +375,7 @@ async def _run_measured_execution_protocol_smoke(
             timeout=90,
         )
     )
-    if finalized.get("execution_id") != status.get("server_execution_id"):
+    if finalized.get("execution_id") != row["finished_execution_id"]:
         raise AssertionError(f"Installed MCP receipt changed job identity: {finalized}")
     if (
         inspected.get("retained_evidence_valid") is not True
@@ -611,10 +620,14 @@ async def _run_benchmark_protocol_smoke(
                 )
             )
             ordinary_controls = {
-                "openhcs_create_orchestrator_session_from_pipeline_source",
-                "openhcs_submit_pipeline_execution",
-                "openhcs_get_execution_status",
-                "openhcs_cancel_execution",
+                "openhcs_add_datasets",
+                "openhcs_set_dataset_pipeline",
+                "openhcs_initialize_datasets",
+                "openhcs_compile_datasets",
+                "openhcs_run_datasets",
+                "openhcs_stop_execution",
+                "openhcs_session_datasets",
+                "openhcs_session_events",
             }
             execution_matches = {
                 item["name"] for item in execution_search["capabilities"]

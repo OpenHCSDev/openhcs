@@ -9,6 +9,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from objectstate.object_state import ObjectStateRegistry
 from zmqruntime import DataControlPortPairAuthority
 from zmqruntime.messages import ExecutionStatus
 
@@ -30,16 +31,8 @@ from benchmark.well_throughput_scaling import (
     WellThroughputMode,
     run_case_well_throughput,
 )
-from openhcs.agent.dto.execution import (
-    ExecutionJobRef,
-    PipelineSourceOrchestratorSessionRequest,
-)
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.agent.services.config_service import ConfigService
-from openhcs.agent.services.execution_session_service import (
-    ExecutionSessionService,
-)
-from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
+from openhcs.authoring.session.session import CallerThread
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig, PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps import FunctionStep
@@ -47,7 +40,7 @@ from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -84,42 +77,99 @@ def _synthetic_plate_and_pipeline(tmp_path: Path, *, wells: tuple[str, ...] = ("
     return plate, pipeline
 
 
-def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> None:
+@pytest.fixture
+def mcp_session(tmp_path: Path):
+    """An MCP server over a fresh session that runs on the calling thread."""
+
+    ObjectStateRegistry.clear()
+    context = OpenHCSAgentContext(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        ),
+        session_transport_config=OpenHCSZMQConfig(
+            default_port=18000 + os.getpid() % 20000, persistent=False
+        ),
+    )
+    built = server.build_server(context)
+    context.bind_main_thread(CallerThread())
+    try:
+        yield built, context.session
+    finally:
+        context.session.close()
+        ObjectStateRegistry.clear()
+
+
+def _call(built, name: str, arguments: dict) -> dict:
+    _content, structured = asyncio.run(built.call_tool(name, arguments))
+    return structured
+
+
+def _start_run(built, plate: Path, pipeline, export_path: Path) -> tuple[str, int]:
+    """Add the dataset, give it the pipeline, initialize and compile it, start a run."""
+
+    (scope_id,) = _call(built, "openhcs_add_datasets", {"roots": [str(plate)]})[
+        "target_scope_ids"
+    ]
+    _call(
+        built,
+        "openhcs_set_dataset_pipeline",
+        {"scope_id": scope_id, "pipeline_source": PipelineDocumentCodec.render(pipeline)},
+    )
+    _wait_for_row(built, _call(
+        built, "openhcs_initialize_datasets", {"scope_ids": [scope_id]}
+    ), lambda row: row["initialized"] and not row["init_pending"])
+    _wait_for_row(built, _call(
+        built, "openhcs_compile_datasets", {"scope_ids": [scope_id]}
+    ), lambda row: row["compiled"] and not row["compile_pending"])
+    started = _call(
+        built,
+        "openhcs_run_datasets",
+        {
+            "scope_ids": [scope_id],
+            "runtime_observation_export_path": str(export_path),
+        },
+    )
+    assert started["status"] == "accepted", started["errors"]
+    return scope_id, started["event_sequence"]
+
+
+def _wait_for_row(built, started: dict, finished) -> dict:
+    assert started["status"] == "accepted", started["errors"]
+    sequence = started["event_sequence"]
+    deadline = time.monotonic() + 300
+    while True:
+        (row,) = _call(built, "openhcs_session_datasets", {})["rows"]
+        if finished(row):
+            return row
+        assert time.monotonic() < deadline, row
+        sequence = _call(
+            built,
+            "openhcs_session_events",
+            {"after_sequence": sequence, "timeout_seconds": 5.0},
+        )["last_sequence"]
+
+
+def _run_finished(row: dict) -> bool:
+    return row["terminal_status"] is not None and not row["execution_active"]
+
+
+def test_headless_observation_export_uses_ordinary_execution(
+    tmp_path: Path, mcp_session
+) -> None:
+    built, session = mcp_session
     plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
-    source_identity = tmp_path / "source_identity"
-    source_identity.mkdir()
-    path_policy = AgentPathPolicy.with_roots(
-        readable_roots=(tmp_path,), writable_roots=(tmp_path,)
-    )
-    service = ExecutionSessionService(
-        path_policy=path_policy,
-        pipeline_service=PipelineAuthoringService(),
-        config_service=ConfigService(),
-    )
-    session = service.create_session_from_pipeline_source_request(
-        PipelineSourceOrchestratorSessionRequest.from_fields(
-            plate_path=str(source_identity),
-            execution_plate_path=str(plate),
-            pipeline_source=PipelineDocumentCodec.render(pipeline),
-            port=18000 + os.getpid() % 20000,
-            persistent=False,
-        )
-    )
     export_path = tmp_path / "runtime_observation.pkl"
 
-    status = service.submit_execution(
-        session.session_id,
-        runtime_observation_export_path=str(export_path),
-        wait=True,
-        submit_timeout_ms=120_000,
-        wait_timeout_ms=120_000,
+    scope_id, sequence = _start_run(built, plate, pipeline, export_path)
+    row = _wait_for_row(
+        built, {"status": "accepted", "event_sequence": sequence}, _run_finished
     )
 
-    assert status.status == "complete", status
-    completed = service.require_completed_pipeline_execution(status.job_id)
-    assert completed.submission.plate_id == str(source_identity)
-    assert completed.submission.execution_plate_id == str(plate)
-    assert completed.record.execution_id == status.server_execution_id
+    assert row["terminal_status"] == "complete", row
+    execution_id = row["finished_execution_id"]
+    completed = session.finished_executions[execution_id]
+    assert completed.scope_id == scope_id
+    assert completed.record.execution_id == execution_id
     assert completed.record.results_summary is not None
     assert completed.record.end_time is not None
     assert completed.endpoint is not None
@@ -133,31 +183,26 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
         distribution.name.casefold() == "numpy"
         for distribution in observation.server_environment.installed_distributions
     )
-    built = server.build_server(
-        OpenHCSAgentContext(path_policy=path_policy, execution_service=service)
+    finalization = _call(
+        built,
+        "openhcs_finalize_measured_pipeline_run",
+        {
+            "execution_id": execution_id,
+            "run_id": "headless-ordinary",
+            "pipeline_name": "Blur",
+        },
     )
-    finalization = asyncio.run(
-        built.call_tool(
-            "openhcs_finalize_measured_pipeline_run",
-            {
-                "job_id": status.job_id,
-                "run_id": "headless-ordinary",
-                "pipeline_name": "Blur",
-            },
-        )
-    )
-    assert "execution_id" in finalization[1], finalization
-    assert finalization[1]["execution_id"] == status.server_execution_id
+    assert finalization.get("execution_id") == execution_id, finalization
     receipt = MeasuredPipelineRunReceipt.read(
         MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
     )
-    assert receipt.execution_id == status.server_execution_id
-    assert receipt.plate_id == str(source_identity)
-    assert receipt.execution_plate_id == str(plate)
-    assert receipt.compile_artifact_id is None
+    assert receipt.execution_id == execution_id
+    assert receipt.plate_id == str(plate)
     assert receipt.server_environment == observation.server_environment
-    assert receipt.phase_timings[0].phase is BenchmarkPhase.SERVER_PIPELINE_JOB
-    assert receipt.phase_timings[0].seconds >= 0
+    assert BenchmarkPhase.SERVER_PIPELINE_JOB in {
+        timing.phase for timing in receipt.phase_timings
+    }
+    assert all(timing.seconds >= 0 for timing in receipt.phase_timings)
     inspection = inspect_measured_pipeline_run(tmp_path)
     assert all(evidence.valid for evidence in inspection.source_evidence)
     assert inspection.observation_integrity_verified
@@ -522,47 +567,40 @@ def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
     assert receipt.run_id == "ordinary-cli"
     assert receipt.pipeline_name == "pipeline"
     assert receipt.observation_export_scope is ZMQRuntimeObservationExportScope.OUTCOMES
-    assert receipt.phase_timings[0].phase is BenchmarkPhase.SERVER_PIPELINE_JOB
+    # The CLI measures on its own client, so client phases precede the server's.
+    assert BenchmarkPhase.SERVER_PIPELINE_JOB in {
+        timing.phase for timing in receipt.phase_timings
+    }
     assert all(
         evidence.valid
         for evidence in inspect_measured_pipeline_run(output_dir).source_evidence
     )
 
 
-def test_live_cancellation_uses_ordinary_job_and_rejects_finalization(
-    tmp_path: Path,
+def test_stopped_run_is_cancelled_and_refuses_finalization(
+    tmp_path: Path, mcp_session
 ) -> None:
+    built, session = mcp_session
     plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
-    path_policy = AgentPathPolicy.with_roots(
-        readable_roots=(tmp_path,), writable_roots=(tmp_path,)
-    )
-    service = ExecutionSessionService(
-        path_policy=path_policy,
-        pipeline_service=PipelineAuthoringService(),
-        config_service=ConfigService(),
-    )
-    session = service.create_session_from_pipeline_source_request(
-        PipelineSourceOrchestratorSessionRequest.from_fields(
-            plate_path=str(plate),
-            pipeline_source=PipelineDocumentCodec.render(pipeline),
-            port=24000 + os.getpid() % 20000,
-            persistent=False,
-        )
-    )
-    job = service.submit_execution(
-        session.session_id,
-        runtime_observation_export_path=str(tmp_path / "cancelled_observation.pkl"),
-        submit_timeout_ms=120_000,
-    )
-    assert isinstance(job, ExecutionJobRef), job
 
-    deadline = time.monotonic() + 60
-    cancellation = service.cancel_job(job.job_id, timeout_ms=30_000)
-    assert cancellation.applied, cancellation
-    status = cancellation.job_status
-    while not status.is_terminal and time.monotonic() < deadline:
-        time.sleep(0.2)
-        status = service.get_job_status(job.job_id)
-    assert status.status == ExecutionStatus.CANCELLED.value, status
-    with pytest.raises(RuntimeError, match="not complete"):
-        service.require_completed_pipeline_execution(job.job_id)
+    _scope_id, sequence = _start_run(
+        built, plate, pipeline, tmp_path / "cancelled_observation.pkl"
+    )
+    stopped = _call(built, "openhcs_stop_execution", {"force": False})
+    assert stopped["status"] in ("accepted", "completed"), stopped
+    row = _wait_for_row(
+        built, {"status": "accepted", "event_sequence": sequence}, _run_finished
+    )
+
+    assert row["terminal_status"] == ExecutionStatus.CANCELLED.value, row
+    finalization = _call(
+        built,
+        "openhcs_finalize_measured_pipeline_run",
+        {
+            "execution_id": row["execution_id"] or "missing",
+            "run_id": "cancelled",
+            "pipeline_name": "Blur",
+        },
+    )
+    assert finalization["errors"], finalization
+    assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path).exists()

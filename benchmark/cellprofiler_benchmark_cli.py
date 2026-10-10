@@ -9,6 +9,7 @@ import os
 import sys
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import ClassVar
@@ -160,7 +161,7 @@ class InspectMeasuredPipelineCommand(BenchmarkCliCommand):
 
 
 class RunMeasuredPipelineCommand(BenchmarkCliCommand):
-    """Measure one source-backed pipeline through ordinary job control."""
+    """Measure one source-backed pipeline through the OpenHCS session."""
 
     command_name = "run-measured"
     help_text = "Run an ordinary Python pipeline and retain measured evidence."
@@ -176,7 +177,20 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         )
 
         parser.add_argument("--plate", type=Path, required=True)
-        parser.add_argument("--execution-plate", type=Path)
+        parser.add_argument(
+            "--execution-plate",
+            type=Path,
+            help="A separately prepared execution plate; the run initializes it.",
+        )
+        parser.add_argument(
+            "--workspace-root",
+            type=Path,
+            help=(
+                "Where the run's execution workspace is made when no "
+                "--execution-plate is given (default: OUTPUT_DIR/workspace). "
+                "The source --plate is never written."
+            ),
+        )
         parser.add_argument("--pipeline-source-file", type=Path, required=True)
         parser.add_argument("--output-dir", type=Path, required=True)
         parser.add_argument("--run-id", required=True)
@@ -195,122 +209,133 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             default=True,
             help="Reuse an existing execution endpoint or close an ephemeral one.",
         )
-        parser.add_argument("--submit-timeout-ms", type=int)
+        parser.add_argument(
+            "--submit-timeout-ms",
+            type=int,
+            help="Bound on the execution submission (transport default when unset).",
+        )
         parser.add_argument(
             "--wait-timeout-ms",
             type=int,
             required=True,
-            help="Explicit bound for the ordinary pipeline job's completion wait.",
+            help="Bound on the run after submission; the session then stops it.",
         )
         return parser
 
     def run(self, args: argparse.Namespace) -> int:
-        if args.wait_timeout_ms <= 0:
-            raise ValueError("--wait-timeout-ms must be positive.")
-        if args.submit_timeout_ms is not None and args.submit_timeout_ms <= 0:
-            raise ValueError("--submit-timeout-ms must be positive.")
-
-        from zmqruntime.messages import ExecutionStatus
-
         from benchmark.contracts.control import MeasuredPipelineRunFinalizationRequest
         from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
         from benchmark.control_service import BenchmarkControlService
-        from openhcs.agent.dto.execution import (
-            ExecutionJobRef,
-            ExecutionJobStatus,
-            PipelineSourceOrchestratorSessionRequest,
+        from benchmark.session_measured_run import (
+            MeasuredRunEnded,
+            SessionMeasuredRun,
         )
+        from openhcs.agent.dto.session import DatasetRunRequest
         from openhcs.agent.path_policy import AgentPathPolicy
-        from openhcs.mcp.context import OpenHCSAgentContext
-        from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+        from openhcs.agent.session_access import AgentPathDatasetAccess
+        from openhcs.authoring.session.session import CallerThread, Session
+        from openhcs.core.config import GlobalPipelineConfig
+        from openhcs.core.input_workspace import (
+            derived_workspace_root,
+            mirror_input_workspace,
+        )
+        from openhcs.runtime.zmq_config import OpenHCSZMQConfig
         from openhcs.runtime.zmq_execution_signature import (
             ZMQRuntimeObservationExportScope,
         )
         from python_introspect import to_jsonable
 
         output_dir = args.output_dir.expanduser().resolve()
+        workspace_parent = (
+            output_dir / "workspace"
+            if args.workspace_root is None
+            else args.workspace_root.expanduser().resolve()
+        )
+        # The source plate is readable only: a measured run never writes it.
+        prepared = () if args.execution_plate is None else (args.execution_plate,)
         policy = AgentPathPolicy.with_roots(
             readable_roots=(
                 args.plate,
-                args.execution_plate or args.plate,
+                *prepared,
                 args.pipeline_source_file,
                 output_dir,
+                workspace_parent,
             ),
-            writable_roots=(output_dir,),
+            writable_roots=(*prepared, output_dir, workspace_parent),
         )
         plate = policy.assert_readable(args.plate)
-        execution_plate = policy.assert_readable(args.execution_plate or args.plate)
+        execution_plate = (
+            None
+            if args.execution_plate is None
+            else policy.assert_readable(args.execution_plate)
+        )
         source_file = policy.assert_readable(args.pipeline_source_file)
         if output_dir.exists() and any(output_dir.iterdir()):
             raise FileExistsError(
                 f"Measured evidence directory must be empty: {output_dir}"
             )
         policy.assert_writable(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        context = OpenHCSAgentContext(path_policy=policy)
-        session = context.execution_service.create_session_from_pipeline_source_request(
-            PipelineSourceOrchestratorSessionRequest.from_fields(
-                plate_path=str(plate),
-                execution_plate_path=str(execution_plate),
-                pipeline_source=source_file.read_text(encoding="utf-8"),
-                host=args.host,
-                port=args.port,
-                persistent=args.persistent,
-            )
-        )
-        observation_path = MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(
-            output_dir
-        )
-        submitted = context.execution_service.submit_execution(
-            session.session_id,
-            runtime_observation_export_path=str(observation_path),
+        run_request = DatasetRunRequest(
+            scope_ids=(),
+            runtime_observation_export_path=str(
+                MeasuredPipelineRunArtifact.RUNTIME_OBSERVATION.path_in(output_dir)
+            ),
             runtime_observation_export_scope=ZMQRuntimeObservationExportScope(
                 args.observation_scope
             ),
-            wait=False,
-            submit_timeout_ms=(
-                args.submit_timeout_ms
-                or OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms
-            ),
+            submit_timeout_ms=args.submit_timeout_ms,
+            wait_timeout_ms=args.wait_timeout_ms,
         )
-        if isinstance(submitted, ExecutionJobStatus):
-            raise RuntimeError(f"Ordinary pipeline job was not accepted: {submitted}")
-        if not isinstance(submitted, ExecutionJobRef):
-            raise TypeError(
-                f"Ordinary pipeline submission returned {type(submitted).__name__}."
+        output_dir.mkdir(parents=True, exist_ok=True)
+        if execution_plate is None:
+            execution_plate = mirror_input_workspace(
+                plate, derived_workspace_root(plate, workspace_parent)
             )
-        print(f"Ordinary pipeline job submitted: {submitted.job_id}", file=sys.stderr)
+            print(f"Execution workspace: {execution_plate}", file=sys.stderr)
+
+        transport = OpenHCSZMQConfig(
+            client_host=args.host,
+            persistent=args.persistent,
+            **({} if args.port is None else {"default_port": args.port}),
+        )
+        session = Session(
+            transport_config=transport,
+            global_config=GlobalPipelineConfig(),
+            main_thread=CallerThread(),
+            dataset_access=AgentPathDatasetAccess(policy),
+            workspace_root=workspace_parent,
+        )
+        measured = SessionMeasuredRun(session)
         try:
-            status = context.execution_service.wait_job(
-                submitted.job_id,
-                timeout_ms=args.wait_timeout_ms,
-            )
-        except KeyboardInterrupt:
-            cancellation = context.execution_service.cancel_job(submitted.job_id)
-            print(
-                json.dumps(to_jsonable(cancellation), sort_keys=True), file=sys.stderr
-            )
-            return 130
-        if not isinstance(status, ExecutionJobStatus):
-            raise TypeError(f"Ordinary pipeline wait returned {type(status).__name__}.")
-        if status.status != ExecutionStatus.COMPLETE.value:
-            if not status.is_terminal:
-                cancellation = context.execution_service.cancel_job(submitted.job_id)
+            scope_id = measured.add(plate, execution_plate)
+            measured.set_pipeline_source(source_file.read_text(encoding="utf-8"))
+            measured.initialize()
+            measured.compile()
+            print(f"Ordinary pipeline run started: {scope_id}", file=sys.stderr)
+            try:
+                row = measured.run(replace(run_request, scope_ids=(scope_id,)))
+            except KeyboardInterrupt:
                 print(
-                    json.dumps(to_jsonable(cancellation), sort_keys=True),
+                    json.dumps(to_jsonable(measured.row()), sort_keys=True),
                     file=sys.stderr,
                 )
-            raise RuntimeError(f"Ordinary pipeline job did not complete: {status}")
-        receipt = BenchmarkControlService(
-            policy, context.execution_service
-        ).finalize_measured_run(
-            MeasuredPipelineRunFinalizationRequest(
-                job_id=status.job_id,
-                run_id=args.run_id,
-                pipeline_name=args.pipeline_name or source_file.stem,
+                return 130
+            except MeasuredRunEnded as ended:
+                print(json.dumps(to_jsonable(ended.row), sort_keys=True), file=sys.stderr)
+                raise RuntimeError(
+                    f"Ordinary pipeline run did not complete: {ended}"
+                ) from ended
+            receipt = BenchmarkControlService(policy, session).finalize_measured_run(
+                MeasuredPipelineRunFinalizationRequest(
+                    execution_id=row.finished_execution_id,
+                    run_id=args.run_id,
+                    pipeline_name=args.pipeline_name or source_file.stem,
+                )
             )
-        )
+        finally:
+            if session.execution_state.busy:
+                measured.stop()
+            session.close()
         print(json.dumps(to_jsonable(receipt), indent=2, sort_keys=True))
         return 0
 

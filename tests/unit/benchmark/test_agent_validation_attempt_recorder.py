@@ -19,13 +19,17 @@ from openhcs.agent.dto.common import RenderedSource
 from openhcs.agent.dto.execution import (
     ArtifactPlanInspection,
     CompiledStepPlanSummary,
-    ExecutionJobStatus,
     MainFlowMaterializationPlanSummary,
 )
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
     FunctionCatalogEntry,
     FunctionDetail,
+)
+from openhcs.agent.dto.session import (
+    DatasetListState,
+    DatasetRowState,
+    SessionOperationResult,
 )
 from openhcs.agent.dto.ui_bridge import (
     UiCodeDocument,
@@ -154,16 +158,22 @@ def _ui_pipeline_document(source: str) -> UiCodeDocument:
     )
 
 
-def _completed_job(kind: str, job_id: str) -> ExecutionJobStatus:
-    return ExecutionJobStatus(
-        schema_version="openhcs.agent.v1",
-        session_id="session-1",
-        job_id=job_id,
-        kind=kind,
-        uri=f"openhcs://execution/jobs/{job_id}",
-        server_execution_id=f"server-{job_id}",
-        status="complete",
+def _accepted(operation_id: str) -> SessionOperationResult:
+    return SessionOperationResult(
+        operation_id=operation_id, status="accepted", target_scope_ids=("/plate",),
     )
+
+
+def _finished_datasets() -> DatasetListState:
+    row = DatasetRowState(
+        scope_id="/plate", name="plate", root="/plate", pipeline_path=None,
+        selected=True, initialized=True, compiled=True, init_pending=False,
+        compile_pending=False, execution_active=False, status_prefix="",
+        orchestrator_state="completed", execution_id="execution-1",
+        terminal_status="complete", runtime_state=None, runtime_percent=None,
+        queue_position=None,
+    )
+    return DatasetListState(rows=(row,), selected_scope_ids=("/plate",), execution_state="idle")
 
 
 def test_attempt_recorder_derives_dsl_evidence_from_mcp_receipts(tmp_path: Path):
@@ -221,12 +231,9 @@ def test_attempt_recorder_derives_dsl_evidence_from_mcp_receipts(tmp_path: Path)
                 ),
             ),
         ),
-        _execution("openhcs_submit_compile", _completed_job("compile", "job-1")),
-        _execution(
-            "openhcs_submit_pipeline_execution",
-            _completed_job("execute", "job-2"),
-        ),
-        _execution("openhcs_get_execution_status", _completed_job("execute", "job-2")),
+        _execution("openhcs_compile_datasets", _accepted("compile_datasets")),
+        _execution("openhcs_run_datasets", _accepted("run_datasets")),
+        _execution("openhcs_session_datasets", _finished_datasets()),
     )
     recorder = McpAttemptRecorder(
         tmp_path / "evidence",
@@ -267,7 +274,7 @@ def test_attempt_recorder_derives_dsl_evidence_from_mcp_receipts(tmp_path: Path)
 
 
 def test_failed_mcp_commands_do_not_create_semantic_evidence(tmp_path: Path):
-    execution = _execution("openhcs_submit_compile", returncode=1)
+    execution = _execution("openhcs_run_datasets", returncode=1)
     recorder = McpAttemptRecorder(
         tmp_path / "evidence",
         _FakeMcpClient((execution,)),  # type: ignore[arg-type]
@@ -292,7 +299,7 @@ def test_failed_mcp_commands_do_not_create_semantic_evidence(tmp_path: Path):
 
 
 def test_structured_tool_failures_do_not_create_semantic_evidence(tmp_path: Path):
-    execution = _failed_payload_execution("openhcs_submit_compile")
+    execution = _failed_payload_execution("openhcs_run_datasets")
     recorder = McpAttemptRecorder(
         tmp_path / "evidence",
         _FakeMcpClient((execution,)),  # type: ignore[arg-type]

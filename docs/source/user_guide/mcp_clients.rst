@@ -54,23 +54,20 @@ declared surface when configuring the client:
 
 Changing the surface requires restarting the MCP client so it requests the new
 tool schemas.
-For a submitted headless compile or run, ``openhcs_cancel_execution`` accepts
-the job identifier and reports both whether cancellation was applied and the
-job status observed afterwards. A timed-out request is not proof that the job
-stopped.
+Headless runs go through the session tools: add the dataset with
+``openhcs_add_datasets``, give it Python source with
+``openhcs_set_dataset_pipeline``, then ``openhcs_initialize_datasets``,
+``openhcs_compile_datasets`` and ``openhcs_run_datasets``. Follow each with
+``openhcs_session_events`` and read ``openhcs_session_datasets``;
+``openhcs_stop_execution`` stops a running batch. A timed-out request is not
+proof that a run stopped.
 When you need a runtime observation file for later analysis, pass a new
 ``runtime_observation_export_path`` under an allowed writable root to
-``openhcs_submit_pipeline_execution``. The ordinary job still uses the same
-status and cancellation tools; requesting an export does not itself compare
-outputs or establish scientific validity.
-If an import or preprocessing step created a separate plate workspace, pass
-the original ``plate_path`` and the prepared ``execution_plate_path`` to
-``openhcs_create_orchestrator_session_from_pipeline_source`` together with the
-generated Python ``pipeline_source``. Submit and monitor that session through
-the same ordinary execution tools. Do not pass the original external pipeline
-file as a second pipeline authority for a source-backed session.
-On the expert ``full`` surface, once the ordinary job reports ``complete``, call
-``openhcs_finalize_measured_pipeline_run`` with its ``job_id`` and benchmark
+``openhcs_run_datasets``; requesting an export does not itself compare outputs
+or establish scientific validity.
+On the expert ``full`` surface, once the dataset row reports ``complete``, call
+``openhcs_finalize_measured_pipeline_run`` with the row's
+``finished_execution_id`` and benchmark
 ``run_id`` and ``pipeline_name``. The tool validates the selected value or
 outcome export and retains the exact submitted source, server
 result and measured-run receipt beside it. Use the measured-run inspection and
@@ -240,26 +237,18 @@ same completed ordinary job is still available, retry
 ``openhcs_finalize_measured_pipeline_run`` with its original job and run
 identities; only byte-identical partial evidence is reused. If it reports a
 conflict, retain the directory for diagnosis and use an empty evidence
-directory for a new run. These inspection routes do not submit a pipeline. Use
-the normal
-headless execution tools for submission, job status, and cancellation.
+directory for a new run. These inspection routes do not submit a pipeline; use
+the session tools above to run one.
 The ``openhcs-benchmark run-measured`` CLI command accepts a normal Python
-pipeline source file, plate and empty evidence directory, then uses the same
-ordinary source-session execution service and receipt finalizer. It requires an
-explicit ``--wait-timeout-ms``; ``--execution-plate`` can identify a prepared
-input while preserving the original plate identity. For large pipelines,
+pipeline source file, plate and empty evidence directory, runs it on the
+ordinary execution runtime and retains the measured receipt;
+``--execution-plate`` can identify a prepared input while preserving the
+original plate identity. For large pipelines,
 ``--observation-scope outcomes`` retains per-axis status, output roots, and
 server environment without transferring runtime array values to the parent.
 The default ``values`` scope retains the full runtime observation needed for
-value-equivalence checks. The CLI prints the accepted ordinary job ID to
-standard error before waiting. Ctrl-C requests cancellation through the
-ordinary job service and exits with status 130; a nonterminal wait timeout
-also requests cancellation. Neither path writes a success receipt. Inspect
-the reported cancellation result: a request that was not applied does not
-prove the server stopped. The normal
-``openhcs_submit_pipeline_execution`` tool exposes the same typed scope when
-an observation export path is requested; status and cancellation remain the
-ordinary job operations.
+value-equivalence checks. ``openhcs_run_datasets`` exposes the same typed
+scope when an observation export path is requested.
 
 Codex
 -----

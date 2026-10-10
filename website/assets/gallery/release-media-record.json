@@ -864,7 +864,7 @@
         "kind": "plate_manager_action_window",
         "human_review_required": false,
         "parameters": {
-          "action": "view_metadata",
+          "action": "show_dataset_images",
           "tab": "metadata"
         }
       },
@@ -895,7 +895,7 @@
         "kind": "plate_manager_action_window",
         "human_review_required": false,
         "parameters": {
-          "action": "view_results",
+          "action": "show_live_results",
           "tab": null
         }
       },

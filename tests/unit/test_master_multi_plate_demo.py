@@ -755,7 +755,7 @@ class _FakePublicMcpClient:
                     "payload": {
                         "rows": [
                             {
-                                "plate_scope_id": self.plate_scope_id,
+                                "scope_id": self.plate_scope_id,
                                 "scope_accent_color": "#0a64c8",
                             }
                         ],
@@ -771,7 +771,7 @@ class _FakePublicMcpClient:
                     "actions": [
                         {
                             "widget_id": master.PLATE_MANAGER_WIDGET_ID,
-                            "action_id": master.PlateManagerAction.VIEW_RESULTS.value,
+                            "action_id": master.ShowLiveResults.operation_id,
                             "related_state_surface_ids": [
                                 master.PLATE_MANAGER_STATE_SURFACE_ID,
                                 "live-results",
@@ -951,7 +951,7 @@ def test_mcp_operations_register_select_and_run_through_public_ui_contract(tmp_p
     )
     assert "--action-kind" in action_call
     assert action_call[action_call.index("--action-kind") + 1] == "item_select"
-    assert client.argv[-1][1] == "init_plate"
+    assert client.argv[-1][1] == "initialize_datasets"
 
 
 def test_mcp_operations_wait_for_long_ui_apply_through_operation_owner(tmp_path):
@@ -1077,7 +1077,7 @@ def test_plate_manager_state_retries_a_transient_busy_projection(tmp_path):
 
     state = operations._plate_manager_state("all")
 
-    assert state["rows"][0]["plate_scope_id"] == str(definition.contribution.plate_path)
+    assert state["rows"][0]["scope_id"] == str(definition.contribution.plate_path)
     assert client.state_calls == 2
 
 

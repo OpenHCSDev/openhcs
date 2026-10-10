@@ -5,14 +5,8 @@ from __future__ import annotations
 import hashlib
 from dataclasses import replace
 
-from openhcs.agent.dto.common import AgentError, AgentWarning, SCHEMA_VERSION
+from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
-    UiActionCatalog,
-    UiActionIdentity,
-    UiActionInvocationStatus,
-    UiActionInvokeRequest,
-    UiActionInvokeResult,
-    UiActionSummary,
     UiCodeDocument,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentApplyResult,
@@ -23,7 +17,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentValidationResult,
     UiLiveMeasurementEntryState,
     UiLiveMeasurementsState,
-    UiPlateManagerRowState,
     UiPlateManagerState,
     UiLiveOverviewItem,
     UiLiveOverviewMetric,
@@ -34,7 +27,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiStateSurfaceSummary,
     UiMutationReceipt,
 )
-from openhcs.agent.ui_bridge_actions import PlateManagerAction
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration,
     PlateManagerOrchestratorCodeDocumentIdentity,
@@ -44,12 +36,13 @@ from openhcs.agent.ui_bridge_identities import (
 from python_introspect import to_jsonable
 from objectstate.object_state import ObjectStateRegistry
 from openhcs.core.selection import SelectedAllSelectionMode
-from openhcs.pyqt_gui.widgets.shared.services.plate_manager_workflows import (
-    PlateManagerCodeMutationScope,
+from openhcs.agent.dto.session import DatasetRowState
+from openhcs.authoring.session.dataset_document import (
+    AllDatasetDocumentScope,
+    DatasetDocumentScope,
 )
-from openhcs.pyqt_gui.services.plate_manager_state_projection import (
-    PlateManagerStateProjectionService,
-)
+from openhcs.authoring.session.views import DatasetListView
+from pyqt_reactive.services.scope_color_service import ScopeColorService
 from openhcs.pyqt_gui.services.ui_agent_bridge import (
     UiCodeDocumentApplyLabel,
     UiCodeDocumentExecutionService,
@@ -61,7 +54,6 @@ from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     CONFIRMATION_REQUIRED_GUARD,
     STALE_CODE_DOCUMENT_REVISION_ERROR,
     UiBridgeGuardPolicy,
-    UiActionProviderABC,
     UiActionProviderIdentity,
     UiBridgeSnapshotProviderABC,
     UiCodeDocumentProviderIdentity,
@@ -76,19 +68,12 @@ from openhcs.pyqt_gui.services.ui_bridge_registry import (
     UiBridgeProviderSetABC,
     UiBridgeRegistrationContext,
 )
-from openhcs.pyqt_gui.widgets.plate_manager import (
-    EmptyPlateSelectionPolicy,
-    PlateManagerWidget,
-    PlateOperationValidator,
+from openhcs.pyqt_gui.services.ui_bridge_session_actions import (
+    SessionOperationActionProvider,
 )
+from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.core.execution_state import (
     TerminalExecutionStatus,
-)
-from openhcs.pyqt_gui.widgets.shared.services.widget_action_dispatch import (
-    dispatch_widget_action,
-)
-from openhcs.pyqt_gui.widgets.shared.services.qt_widget_edit_commit import (
-    commit_focused_widget_edits,
 )
 
 ORCHESTRATOR_DOCUMENT_TITLE = "Plate manager orchestrator config"
@@ -130,24 +115,6 @@ PLATE_MANAGER_ACTION_STATE_SURFACES = (PLATE_MANAGER_STATE_SURFACE_ID,)
 PLATE_MANAGER_CODE_DOCUMENT_ID = (
     PlateManagerOrchestratorCodeDocumentIdentity.require_value()
 )
-PLATE_PATH_CODE_DOCUMENT_HINT = (
-    "For autonomous path-based plate setup, read "
-    f"{PLATE_MANAGER_CODE_DOCUMENT_ID!r} with openhcs_ui_get_code_document"
-    "(selection_mode='all'), then apply source containing plate_paths and "
-    "pipeline_data via openhcs_ui_apply_code_document. The add_plate UI action "
-    "opens a GUI file dialog."
-)
-PLATE_SELECTION_REQUIRED_HINT = (
-    f"Use openhcs_ui_get_state_surface(surface_id={PLATE_MANAGER_STATE_SURFACE_ID!r}) "
-    "to inspect "
-    "available rows and selected_scope_ids. If no rows are listed, add a plate "
-    f"first. {PLATE_PATH_CODE_DOCUMENT_HINT}"
-)
-PLATE_ACTION_DISABLED_HINT = (
-    f"Inspect openhcs_ui_list_actions and {PLATE_MANAGER_STATE_SURFACE_ID} for the current "
-    "selection and workflow preconditions before invoking this action."
-)
-
 
 class PlateManagerBridgeProviderSet(UiBridgeProviderSetABC):
     """Register all PlateManager surfaces with a UI bridge registry."""
@@ -188,8 +155,15 @@ class PlateManagerBridgeProviderSet(UiBridgeProviderSetABC):
             )
         )
         context.registry.register_action_provider(
-            PlateManagerActionProvider(
-                self._manager,
+            SessionOperationActionProvider(
+                identity=PLATE_MANAGER_ACTION_PROVIDER_IDENTITY,
+                session=self._manager.session,
+                operations=DatasetListView.operations,
+                selection=self._manager.selection_scope_ids,
+                related_state_surface_ids=lambda action_id: state_surface_ids_for_action(
+                    PlateManagerWidget.UI_STATE_SURFACE_DECLARATIONS, action_id
+                ),
+                workflow_status_surface_ids=PLATE_MANAGER_ACTION_STATE_SURFACES,
             )
         )
 
@@ -263,9 +237,8 @@ class PlateManagerOrchestratorCodeDocumentProvider(
                 ),
             )
         try:
-            context = self._manager.orchestrator_code_document_context(
-                selection_mode=selection_mode,
-                empty_selection_policy=EmptyPlateSelectionPolicy.ERROR,
+            context = self._manager.dataset_document(
+                SelectedAllSelectionMode(selection_mode)
             )
         except Exception as exc:
             return self._document_error(
@@ -296,7 +269,7 @@ class PlateManagerOrchestratorCodeDocumentProvider(
         try:
             result = self._execution_service.validate_source(
                 request.source,
-                self._manager.code_document_execution_operations(),
+                self._manager.code_document_operations(AllDatasetDocumentScope()),
             )
         except UiCodeDocumentValidationError as exc:
             return UiCodeDocumentValidationResult(
@@ -339,8 +312,8 @@ class PlateManagerOrchestratorCodeDocumentProvider(
             )
 
         try:
-            operations = self._manager.code_document_execution_operations(
-                PlateManagerCodeMutationScope.from_carrier(
+            operations = self._manager.code_document_operations(
+                DatasetDocumentScope.from_carrier(
                     request,
                     default=SelectedAllSelectionMode.ALL,
                 )
@@ -448,15 +421,37 @@ class PlateManagerStateSurfaceProvider(
         manager,
         *,
         snapshot_provider: UiBridgeSnapshotProviderABC,
-        projection_service: PlateManagerStateProjectionService | None = None,
     ) -> None:
         bind_snapshot_backed_provider(
             self,
             manager,
             snapshot_provider=snapshot_provider,
         )
-        self._projection_service = (
-            projection_service or PlateManagerStateProjectionService()
+
+    def _project(self, selection_mode: str) -> UiPlateManagerState:
+        """The session's dataset list view, with the GUI's scope accents."""
+
+        view = DatasetListView.state_of(self._manager.session)
+        rows = tuple(
+            replace(
+                row,
+                scope_accent_color=ScopeColorService.instance()
+                .get_accent_color(row.scope_id)
+                .name()
+                .lower(),
+            )
+            for row in view.rows
+            if SelectedAllSelectionMode(selection_mode) is SelectedAllSelectionMode.ALL
+            or row.selected
+        )
+        return UiPlateManagerState(
+            schema_version=SCHEMA_VERSION,
+            summary=self.summary(),
+            selection_mode=selection_mode,
+            rows=rows,
+            selected_scope_ids=view.selected_scope_ids,
+            manager_execution_state=view.execution_state,
+            object_state_token=ObjectStateRegistry.get_token(),
         )
 
     def summary(self) -> UiStateSurfaceSummary:
@@ -476,12 +471,7 @@ class PlateManagerStateSurfaceProvider(
             UiCodeDocumentSelectionMode.ALL
         )
         try:
-            state = self._projection_service.project(
-                self._manager,
-                schema_version=SCHEMA_VERSION,
-                summary=self.summary(),
-                selection_mode=selection_mode,
-            )
+            state = self._project(selection_mode)
         except Exception as exc:
             return self._state_error(
                 request,
@@ -498,12 +488,7 @@ class PlateManagerStateSurfaceProvider(
         return self._document_from_state(state)
 
     def overview_sections(self) -> tuple[UiLiveOverviewSection, ...]:
-        state = self._projection_service.project(
-            self._manager,
-            schema_version=SCHEMA_VERSION,
-            summary=self.summary(),
-            selection_mode=UiCodeDocumentSelectionMode.ALL.value,
-        )
+        state = self._project(UiCodeDocumentSelectionMode.ALL.value)
         rows = state.rows
         return (
             UiLiveOverviewSection(
@@ -539,7 +524,7 @@ class PlateManagerStateSurfaceProvider(
         )
 
     @classmethod
-    def _overview_row_item(cls, row: UiPlateManagerRowState) -> UiLiveOverviewItem:
+    def _overview_row_item(cls, row: DatasetRowState) -> UiLiveOverviewItem:
         return UiLiveOverviewItem(
             label=row.name,
             status=row.status_prefix or row.orchestrator_state,
@@ -550,7 +535,7 @@ class PlateManagerStateSurfaceProvider(
         )
 
     @staticmethod
-    def _overview_row_detail(row: UiPlateManagerRowState) -> str:
+    def _overview_row_detail(row: DatasetRowState) -> str:
         parts = [
             f"initialized={row.initialized}",
             f"compiled={row.compiled}",
@@ -565,7 +550,7 @@ class PlateManagerStateSurfaceProvider(
         return " ".join(parts)
 
     @staticmethod
-    def _overview_row_severity(row: UiPlateManagerRowState) -> UiLiveOverviewSeverity:
+    def _overview_row_severity(row: DatasetRowState) -> UiLiveOverviewSeverity:
         if row.terminal_status == TerminalExecutionStatus.FAILED.value:
             return UiLiveOverviewSeverity.ERROR
         if row.execution_active or row.queue_position is not None:
@@ -632,9 +617,9 @@ class PlateManagerStateSurfaceProvider(
         return hashlib.sha256(repr(parts).encode("utf-8")).hexdigest()
 
     @staticmethod
-    def _row_revision_part(row: UiPlateManagerRowState) -> tuple:
+    def _row_revision_part(row: DatasetRowState) -> tuple:
         return (
-            row.plate_scope_id,
+            row.scope_id,
             row.selected,
             row.initialized,
             row.compiled,
@@ -666,7 +651,7 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
         self._snapshot_provider = snapshot_provider
 
     def summary(self) -> UiStateSurfaceSummary:
-        all_entries = self._manager.live_measurement_model.semantic_entries()
+        all_entries = self._manager.session.live_measurements.semantic_entries()
         selected_plate_ids = self._selected_plate_ids()
         return UiStateSurfaceSummary(
             schema_version=SCHEMA_VERSION,
@@ -706,7 +691,7 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
         return self._document_from_state(state)
 
     def overview_sections(self) -> tuple[UiLiveOverviewSection, ...]:
-        entries = self._manager.live_measurement_model.semantic_entries()
+        entries = self._manager.session.live_measurements.semantic_entries()
         return (
             UiLiveOverviewSection(
                 section_id=self.identity.surface_id,
@@ -745,7 +730,7 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
         )
 
     def _project_state(self, selection_mode: str) -> UiLiveMeasurementsState:
-        all_entries = self._manager.live_measurement_model.semantic_entries()
+        all_entries = self._manager.session.live_measurements.semantic_entries()
         selected_plate_ids = self._selected_plate_ids()
         mode = UiCodeDocumentSelectionMode(selection_mode)
         entries = (
@@ -760,9 +745,7 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
             schema_version=SCHEMA_VERSION,
             summary=self.summary(),
             selection_mode=mode.value,
-            selected_scope_ids=tuple(
-                row.scope_id for row in self._manager.get_selected_items()
-            ),
+            selected_scope_ids=self._manager.selection_scope_ids(),
             object_state_token=ObjectStateRegistry.get_token(),
             retained_entry_count=len(all_entries),
             visible_entry_count=len(entry_states),
@@ -787,7 +770,7 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
         )
 
     def _selected_plate_ids(self) -> frozenset[str]:
-        return frozenset(row.scope_id for row in self._manager.get_selected_items())
+        return frozenset(self._manager.selection_scope_ids())
 
     def _revision_token(self, state: UiLiveMeasurementsState) -> str:
         parts = (
@@ -866,244 +849,3 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
             source_surface_id=cls.identity.surface_id,
             source_widget_id=cls.identity.widget_id,
         )
-
-
-class PlateManagerActionProvider(
-    UiActionProviderABC,
-):
-    """PlateManager action provider backed by the widget's declared action routes."""
-
-    identity = PLATE_MANAGER_ACTION_PROVIDER_IDENTITY
-
-    def __init__(self, manager) -> None:
-        self._manager = manager
-
-    def catalog(self) -> UiActionCatalog:
-        return UiActionCatalog(
-            schema_version=SCHEMA_VERSION,
-            actions=tuple(
-                self.summary(action.value) for action in self._manager.ACTION_ROUTES
-            ),
-            warnings=(
-                AgentWarning(
-                    code="plate_path_setup_uses_code_document",
-                    message=PLATE_PATH_CODE_DOCUMENT_HINT,
-                ),
-            ),
-        )
-
-    def summary(self, action_id: str) -> UiActionSummary:
-        action = self._action(action_id)
-        resolved_action = action.resolved(self._manager)
-        selected_scope_ids = self._selected_scope_ids()
-        availability_error = self._action_availability_error(action)
-        return UiActionSummary(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=self.identity.widget_id,
-                action_id=action.value,
-            ),
-            title=self._action_title(action),
-            enabled=availability_error is None,
-            disabled_error=availability_error,
-            invocation_mode=self._invocation_mode(action),
-            side_effects=resolved_action.side_effects,
-            confirmation_required=resolved_action.confirmation_required,
-            selection_mode="selected",
-            current_selection_count=len(selected_scope_ids),
-            target_scope_ids=selected_scope_ids,
-            selection_revision_token=self._selection_revision_token(),
-            related_state_surface_ids=self._related_state_surface_ids(action),
-        )
-
-    @staticmethod
-    def _related_state_surface_ids(action: PlateManagerAction) -> tuple[str, ...]:
-        return state_surface_ids_for_action(
-            PlateManagerWidget.UI_STATE_SURFACE_DECLARATIONS,
-            action.value,
-        )
-
-    def invoke(self, request: UiActionInvokeRequest) -> UiActionInvokeResult:
-        try:
-            action = self._action(request.action_id)
-        except Exception as exc:
-            return self._invoke_error(
-                request,
-                AgentError.from_exception("unknown_ui_action", exc),
-            )
-        guard_error = self._guard_error(action, request)
-        if guard_error is not None:
-            return self._invoke_error(request, guard_error)
-
-        try:
-            dispatch_result = dispatch_widget_action(
-                widget=self._manager,
-                action_id=action.value,
-                action_enum=PlateManagerAction,
-                routes=self._manager.ACTION_ROUTES,
-                async_runner=self._manager.service_adapter.execute_async_operation,
-                before_dispatch=commit_focused_widget_edits,
-            )
-        except Exception as exc:
-            return self._invoke_error(
-                request,
-                AgentError.from_exception("ui_action_dispatch_failed", exc),
-            )
-
-        return UiActionInvokeResult(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=self.identity.widget_id,
-                action_id=action.value,
-            ),
-            status=UiActionInvocationStatus.ACCEPTED.value,
-            receipt=UiMutationReceipt.accepted_for(request.request_token),
-            target_scope_ids=self._selected_scope_ids(),
-            selection_revision_token=self._selection_revision_token(),
-            workflow_status_surface_ids=PLATE_MANAGER_ACTION_STATE_SURFACES,
-            recommended_poll_interval_ms=500,
-            warnings=(
-                AgentWarning(
-                    code="ui_action_dispatched",
-                    message=(
-                        f"PlateManager action {action.value!r} was dispatched "
-                        f"as {dispatch_result.invocation_mode} work; poll "
-                        f"{PLATE_MANAGER_STATE_SURFACE_ID} for workflow status."
-                    ),
-                ),
-            ),
-        )
-
-    def _guard_error(
-        self,
-        action: PlateManagerAction,
-        request: UiActionInvokeRequest,
-    ) -> AgentError | None:
-        selected_scope_ids = self._selected_scope_ids()
-        if (
-            request.selected_scope_ids
-            and request.selected_scope_ids != selected_scope_ids
-        ):
-            return AgentError(
-                code="stale_ui_action_selection",
-                message="Requested target scopes do not match current PlateManager selection.",
-            )
-        observed_revision = request.observed_selection_revision_token
-        current_revision = self._selection_revision_token()
-        if observed_revision is not None and observed_revision != current_revision:
-            return AgentError(
-                code="stale_ui_action_revision",
-                message="PlateManager selection changed after the action was planned.",
-            )
-        availability_error = self._action_availability_error(action)
-        if availability_error is not None:
-            return availability_error
-        if (
-            action.resolved(self._manager).confirmation_required
-            and request.confirmation_is_required()
-        ):
-            return AgentError(
-                code="confirmation_required",
-                message=(
-                    "This PlateManager action mutates UI state or starts a workflow; "
-                    "set require_confirmation=False to dispatch it."
-                ),
-            )
-        return None
-
-    def _action_availability_error(
-        self, action: PlateManagerAction
-    ) -> AgentError | None:
-        operation_error = self._operation_validation_error(action)
-        if operation_error is not None:
-            return operation_error
-        if not self._action_enabled(action):
-            return AgentError(
-                code="ui_action_disabled",
-                message=f"PlateManager action {action.value!r} is disabled.",
-                hint=PLATE_ACTION_DISABLED_HINT,
-            )
-        return None
-
-    def _operation_validation_error(
-        self, action: PlateManagerAction
-    ) -> AgentError | None:
-        action = action.resolved(self._manager)
-        selected_rows = tuple(self._manager.get_selected_items())
-        if action.plate_operation is not None:
-            if not selected_rows:
-                return AgentError(
-                    code="plate_selection_required",
-                    message=(
-                        f"PlateManager action {action.value!r} requires a selected plate."
-                    ),
-                    hint=PLATE_SELECTION_REQUIRED_HINT,
-                )
-
-            validator = PlateOperationValidator.for_operation(action.plate_operation)
-            invalid_results = []
-            for row in selected_rows:
-                result = validator.validate(self._manager, row)
-                if not result.valid:
-                    invalid_results.append(result)
-            if invalid_results:
-                result = invalid_results[0]
-                message = result.message
-                if result.recovery_action is not None:
-                    message = (
-                        f"{message} Next workflow: {result.recovery_action.value}."
-                    )
-                return AgentError(
-                    code=result.reason,
-                    message=message,
-                    hint=PLATE_ACTION_DISABLED_HINT,
-                )
-        return None
-
-    def _invoke_error(
-        self,
-        request: UiActionInvokeRequest,
-        error: AgentError,
-    ) -> UiActionInvokeResult:
-        return UiActionInvokeResult(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=request.widget_id,
-                action_id=request.action_id,
-            ),
-            status=UiActionInvocationStatus.REJECTED.value,
-            receipt=UiMutationReceipt.rejected_for(request.request_token),
-            target_scope_ids=self._selected_scope_ids(),
-            selection_revision_token=self._selection_revision_token(),
-            workflow_status_surface_ids=PLATE_MANAGER_ACTION_STATE_SURFACES,
-            errors=(error,),
-        )
-
-    def _action(self, action_id: str) -> PlateManagerAction:
-        action = PlateManagerAction(action_id)
-        if action not in self._manager.ACTION_ROUTES:
-            raise ValueError(f"PlateManager action has no route: {action_id!r}")
-        return action
-
-    def _action_enabled(self, action: PlateManagerAction) -> bool:
-        button = self._manager.buttons[action.value]
-        return button.isEnabled()
-
-    def _invocation_mode(self, action: PlateManagerAction) -> str:
-        if action not in self._manager.ACTION_ROUTES:
-            raise ValueError(f"PlateManager action has no route: {action.value!r}")
-        return "sync"
-
-    def _selected_scope_ids(self) -> tuple[str, ...]:
-        return tuple(row.scope_id for row in self._manager.get_selected_items())
-
-    def _selection_revision_token(self) -> str:
-        parts = (
-            self.identity.widget_id,
-            self._selected_scope_ids(),
-            ObjectStateRegistry.get_token(),
-        )
-        return hashlib.sha256(repr(parts).encode("utf-8")).hexdigest()
-
-    def _action_title(self, action: PlateManagerAction) -> str:
-        return action.resolved(self._manager).label

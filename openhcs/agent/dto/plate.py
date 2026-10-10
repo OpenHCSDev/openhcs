@@ -8,6 +8,7 @@ from enum import Enum
 from zmqruntime.config import TransportMode
 
 from openhcs.agent.dto.common import (
+    AGENT_PARAMETER_DESCRIPTION_METADATA_KEY,
     AgentError,
     AgentResultEnvelope,
     AgentResourceRef,
@@ -15,7 +16,9 @@ from openhcs.agent.dto.common import (
 )
 from python_introspect import JsonObject, JsonValue, to_jsonable
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
+from openhcs.core.component_filters import ComponentFilters
 from openhcs.core.config import NapariDisplayConfig
+from openhcs.core.dataset_sources.choice import AutoDetectedSource, DatasetSourceChoice
 from openhcs.core.plate_file_inventory import (
     PlateFileInventoryQuery,
     PlateFileKind,
@@ -25,6 +28,13 @@ from openhcs.core.streaming_config_declarations import NapariViewer, ViewerType
 from openhcs.core.synthetic_plate_generation import (
     SYNTHETIC_PLATE_GENERATION_PROFILE,
     SyntheticPlateFormat,
+)
+
+
+COMPONENT_FILTERS_DESCRIPTION = (
+    "Accepted values per axis name of the active axis family, for example "
+    '{"well": ["A01", "B02"]}; a file matches when every named axis holds one '
+    "of its values."
 )
 
 
@@ -117,7 +127,6 @@ class PlateInspectionSourceBindingRole(str, Enum):
 class PlateInspectionDefaults:
     """Default and bounded plate-inspection limits."""
 
-    MICROSCOPE_AUTO = "auto"
     DEFAULT_MAX_SAMPLE_FILES = 20
     DEFAULT_MAX_COMPONENT_VALUES = 25
     DEFAULT_MAX_PARSE_FAILURE_SAMPLES = 10
@@ -131,10 +140,28 @@ class PlateInspectionDefaults:
 
 
 @dataclass(frozen=True, slots=True)
-class SelectedPlateTargetOptions:
+class DatasetTarget:
+    """How a request opens its dataset: one registered source format, or detection.
+
+    ``source_format`` is the boundary spelling of a
+    :class:`~openhcs.core.dataset_sources.choice.DatasetSourceChoice`
+    (``"auto"`` detects the format).
+    """
+
+    source_format: str = field(default=AutoDetectedSource.source_name, kw_only=True)
+
+    def __post_init__(self) -> None:
+        DatasetSourceChoice.named(self.source_format)
+
+    @property
+    def detects_source_format(self) -> bool:
+        return DatasetSourceChoice.named(self.source_format) is AutoDetectedSource
+
+
+@dataclass(frozen=True, slots=True)
+class SelectedPlateTargetOptions(DatasetTarget):
     """Shared target controls for PlateManager-selected plate operations."""
 
-    microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO
     pattern_format: str | None = None
     target: SelectedPlateFileQueryTarget = SelectedPlateFileQueryTarget.SELECTED
 
@@ -149,7 +176,10 @@ class SelectedPlateFileFilterOptions(SelectedPlateTargetOptions):
 
     kind: PlateFileKind | None = PlateFileKind.IMAGE
     path_contains: str | None = None
-    partition: str | None = None
+    component_filters: ComponentFilters = field(
+        default=ComponentFilters(),
+        metadata={AGENT_PARAMETER_DESCRIPTION_METADATA_KEY: COMPONENT_FILTERS_DESCRIPTION},
+    )
     limit: int = 1
 
 
@@ -194,11 +224,10 @@ class PlateInspectionBounds:
 
 
 @dataclass(frozen=True, slots=True)
-class PlatePathInspectionRequest:
+class PlatePathInspectionRequest(DatasetTarget):
     """Read-only inspection request for a local plate folder."""
 
     plate_path: str
-    microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO
     pattern_format: str | None = None
     bounds: PlateInspectionBounds = field(default_factory=PlateInspectionBounds)
 
@@ -207,7 +236,7 @@ class PlatePathInspectionRequest:
         cls,
         *,
         plate_path: str,
-        microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
+        source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
         max_sample_files: int = PlateInspectionDefaults.DEFAULT_MAX_SAMPLE_FILES,
         max_component_values: int = PlateInspectionDefaults.DEFAULT_MAX_COMPONENT_VALUES,
@@ -218,7 +247,7 @@ class PlatePathInspectionRequest:
     ) -> "PlatePathInspectionRequest":
         return cls(
             plate_path=plate_path,
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=pattern_format,
             bounds=PlateInspectionBounds(
                 max_sample_files=max_sample_files,
@@ -231,7 +260,7 @@ class PlatePathInspectionRequest:
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
             "plate_path": self.plate_path,
-            "microscope_type": self.microscope_type,
+            "source_format": self.source_format,
             "pattern_format": self.pattern_format,
             "max_sample_files": self.bounds.max_sample_files,
             "max_component_values": self.bounds.max_component_values,
@@ -241,12 +270,11 @@ class PlatePathInspectionRequest:
 
 
 @dataclass(frozen=True, slots=True)
-class PlateImageSampleRequest:
+class PlateImageSampleRequest(DatasetTarget):
     """Request a bounded pixel sample from an image exposed by a plate."""
 
     plate_path: str
     image_path: str
-    microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO
     pattern_format: str | None = None
     y: int = 0
     x: int = 0
@@ -265,7 +293,7 @@ class PlateImageSampleRequest:
         *,
         plate_path: str,
         image_path: str,
-        microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
+        source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
         y: int = 0,
         x: int = 0,
@@ -281,7 +309,7 @@ class PlateImageSampleRequest:
         return cls(
             plate_path=plate_path,
             image_path=image_path,
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=pattern_format,
             y=y,
             x=x,
@@ -297,7 +325,7 @@ class PlateImageSampleRequest:
         return {
             "plate_path": self.plate_path,
             "image_path": self.image_path,
-            "microscope_type": self.microscope_type,
+            "source_format": self.source_format,
             "pattern_format": self.pattern_format,
             "y": self.y,
             "x": self.x,
@@ -311,16 +339,18 @@ class PlateImageSampleRequest:
 
 
 @dataclass(frozen=True, slots=True)
-class PlateFileQueryRequest:
+class PlateFileQueryRequest(DatasetTarget):
     """Query image/result files exposed by a local plate inventory."""
 
     plate_path: str
     result_directory: str | None = None
-    microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO
     pattern_format: str | None = None
     kind: PlateFileKind | None = PlateFileKind.IMAGE
     path_contains: str | None = None
-    partition: str | None = None
+    component_filters: ComponentFilters = field(
+        default=ComponentFilters(),
+        metadata={AGENT_PARAMETER_DESCRIPTION_METADATA_KEY: COMPONENT_FILTERS_DESCRIPTION},
+    )
     offset: int = 0
     limit: int = 50
     include_previews: bool = True
@@ -333,11 +363,11 @@ class PlateFileQueryRequest:
         *,
         plate_path: str,
         result_directory: str | None = None,
-        microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
+        source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
         path_contains: str | None = None,
-        partition: str | None = None,
+        component_filters: dict[str, list[str]] | None = None,
         offset: int = 0,
         limit: int = 50,
         include_previews: bool = True,
@@ -347,11 +377,11 @@ class PlateFileQueryRequest:
         return cls(
             plate_path=plate_path,
             result_directory=result_directory,
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=pattern_format,
             kind=PlateFileInventoryQuery.kind_from_value(kind),
             path_contains=path_contains,
-            partition=partition,
+            component_filters=ComponentFilters.from_mapping(component_filters),
             offset=offset,
             limit=limit,
             include_previews=include_previews,
@@ -363,11 +393,11 @@ class PlateFileQueryRequest:
         return {
             "plate_path": self.plate_path,
             "result_directory": self.result_directory,
-            "microscope_type": self.microscope_type,
+            "source_format": self.source_format,
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
             "path_contains": self.path_contains,
-            "partition": self.partition,
+            "component_filters": self.component_filters.as_mapping(),
             "offset": self.offset,
             "limit": self.limit,
             "include_previews": self.include_previews,
@@ -377,18 +407,20 @@ class PlateFileQueryRequest:
 
 
 @dataclass(frozen=True, slots=True)
-class PlateFileStreamRequest:
+class PlateFileStreamRequest(DatasetTarget):
     """Stream image or ROI files exposed by a local plate inventory to a viewer."""
 
     plate_path: str
     result_directory: str | None = None
     context_plate_path: str | None = None
     file_paths: tuple[str, ...] = ()
-    microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO
     pattern_format: str | None = None
     kind: PlateFileKind | None = PlateFileKind.IMAGE
     path_contains: str | None = None
-    partition: str | None = None
+    component_filters: ComponentFilters = field(
+        default=ComponentFilters(),
+        metadata={AGENT_PARAMETER_DESCRIPTION_METADATA_KEY: COMPONENT_FILTERS_DESCRIPTION},
+    )
     limit: int = 1
     viewer_config_key: str = NapariViewer.config_key
     display_config: NapariDisplayConfig | None = None
@@ -403,11 +435,11 @@ class PlateFileStreamRequest:
         plate_path: str,
         result_directory: str | None = None,
         file_paths: list[str] | None = None,
-        microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
+        source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
         path_contains: str | None = None,
-        partition: str | None = None,
+        component_filters: dict[str, list[str]] | None = None,
         limit: int = 1,
         viewer_config_key: str = NapariViewer.config_key,
         display_config: NapariDisplayConfig | None = None,
@@ -422,11 +454,11 @@ class PlateFileStreamRequest:
             plate_path=plate_path,
             result_directory=result_directory,
             file_paths=tuple(file_paths or ()),
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=pattern_format,
             kind=PlateFileInventoryQuery.kind_from_value(kind),
             path_contains=path_contains,
-            partition=partition,
+            component_filters=ComponentFilters.from_mapping(component_filters),
             limit=limit,
             viewer_config_key=viewer_config_key,
             display_config=display_config,
@@ -445,11 +477,11 @@ class PlateFileStreamRequest:
             "plate_path": self.plate_path,
             "result_directory": self.result_directory,
             "file_paths": list(self.file_paths) if self.file_paths else None,
-            "microscope_type": self.microscope_type,
+            "source_format": self.source_format,
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
             "path_contains": self.path_contains,
-            "partition": self.partition,
+            "component_filters": self.component_filters.as_mapping(),
             "limit": self.limit,
             "viewer_config_key": self.viewer_config_key,
             "display_config": to_jsonable(self.display_config),
@@ -478,7 +510,7 @@ class SelectedPlateImageInspectionRequest(SelectedPlateTargetOptions):
     def from_fields(
         cls,
         *,
-        microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
+        source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
         target: str = SelectedPlateFileQueryTarget.SELECTED.value,
         max_sample_files: int = PlateInspectionDefaults.DEFAULT_MAX_SAMPLE_FILES,
@@ -489,7 +521,7 @@ class SelectedPlateImageInspectionRequest(SelectedPlateTargetOptions):
         max_files_to_parse: int = PlateInspectionDefaults.DEFAULT_MAX_FILES_TO_PARSE,
     ) -> "SelectedPlateImageInspectionRequest":
         return cls(
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=pattern_format,
             target=cls.target_from_value(target),
             max_sample_files=max_sample_files,
@@ -500,7 +532,7 @@ class SelectedPlateImageInspectionRequest(SelectedPlateTargetOptions):
 
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
-            "microscope_type": self.microscope_type,
+            "source_format": self.source_format,
             "pattern_format": self.pattern_format,
             "target": self.target.value,
             "max_sample_files": self.max_sample_files,
@@ -513,11 +545,11 @@ class SelectedPlateImageInspectionRequest(SelectedPlateTargetOptions):
         self,
         *,
         plate_path: str,
-        microscope_type: str,
+        source_format: str,
     ) -> PlatePathInspectionRequest:
         return PlatePathInspectionRequest.from_fields(
             plate_path=plate_path,
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=self.pattern_format,
             max_sample_files=self.max_sample_files,
             max_component_values=self.max_component_values,
@@ -540,12 +572,12 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
     def from_fields(
         cls,
         *,
-        microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
+        source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
         target: str = SelectedPlateFileQueryTarget.SELECTED.value,
         path_contains: str | None = None,
-        partition: str | None = None,
+        component_filters: dict[str, list[str]] | None = None,
         offset: int = 0,
         limit: int = 50,
         include_previews: bool = True,
@@ -553,12 +585,12 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
         max_preview_bytes: int = 64 * 1024,
     ) -> "SelectedPlateFileQueryRequest":
         return cls(
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=pattern_format,
             kind=PlateFileInventoryQuery.kind_from_value(kind),
             target=cls.target_from_value(target),
             path_contains=path_contains,
-            partition=partition,
+            component_filters=ComponentFilters.from_mapping(component_filters),
             offset=offset,
             limit=limit,
             include_previews=include_previews,
@@ -568,12 +600,12 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
 
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
-            "microscope_type": self.microscope_type,
+            "source_format": self.source_format,
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
             "target": self.target.value,
             "path_contains": self.path_contains,
-            "partition": self.partition,
+            "component_filters": self.component_filters.as_mapping(),
             "offset": self.offset,
             "limit": self.limit,
             "include_previews": self.include_previews,
@@ -585,15 +617,15 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
         self,
         *,
         plate_path: str,
-        microscope_type: str,
+        source_format: str,
     ) -> PlateFileQueryRequest:
         return PlateFileQueryRequest(
             plate_path=plate_path,
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=self.pattern_format,
             kind=self.kind,
             path_contains=self.path_contains,
-            partition=self.partition,
+            component_filters=self.component_filters,
             offset=self.offset,
             limit=self.limit,
             include_previews=self.include_previews,
@@ -623,7 +655,7 @@ class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
         cls,
         *,
         image_path: str | None = None,
-        microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
+        source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
         target: str = SelectedPlateFileQueryTarget.SELECTED.value,
         y: int = 0,
@@ -639,7 +671,7 @@ class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
     ) -> "SelectedPlateImageSampleRequest":
         return cls(
             image_path=image_path,
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=pattern_format,
             target=cls.target_from_value(target),
             y=y,
@@ -655,7 +687,7 @@ class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
             "image_path": self.image_path,
-            "microscope_type": self.microscope_type,
+            "source_format": self.source_format,
             "pattern_format": self.pattern_format,
             "target": self.target.value,
             "y": self.y,
@@ -673,12 +705,12 @@ class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
         *,
         plate_path: str,
         image_path: str,
-        microscope_type: str,
+        source_format: str,
     ) -> PlateImageSampleRequest:
         return PlateImageSampleRequest(
             plate_path=plate_path,
             image_path=image_path,
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=self.pattern_format,
             y=self.y,
             x=self.x,
@@ -705,12 +737,12 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
         cls,
         *,
         file_paths: list[str] | None = None,
-        microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
+        source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
         target: str = SelectedPlateFileQueryTarget.SELECTED.value,
         path_contains: str | None = None,
-        partition: str | None = None,
+        component_filters: dict[str, list[str]] | None = None,
         limit: int = 1,
         viewer_config_key: str = NapariViewer.config_key,
         host: str = "localhost",
@@ -721,12 +753,12 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
     ) -> "SelectedPlateFileStreamRequest":
         return cls(
             file_paths=tuple(file_paths or ()),
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=pattern_format,
             kind=PlateFileInventoryQuery.kind_from_value(kind),
             target=cls.target_from_value(target),
             path_contains=path_contains,
-            partition=partition,
+            component_filters=ComponentFilters.from_mapping(component_filters),
             limit=limit,
             viewer_config_key=viewer_config_key,
             connection=ExecutionConnectionSpec(
@@ -741,12 +773,12 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
             "file_paths": list(self.file_paths) if self.file_paths else None,
-            "microscope_type": self.microscope_type,
+            "source_format": self.source_format,
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
             "target": self.target.value,
             "path_contains": self.path_contains,
-            "partition": self.partition,
+            "component_filters": self.component_filters.as_mapping(),
             "limit": self.limit,
             "viewer_config_key": self.viewer_config_key,
             **self.connection.tool_arguments(),
@@ -758,17 +790,17 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
         *,
         plate_path: str,
         context_plate_path: str | None,
-        microscope_type: str,
+        source_format: str,
     ) -> PlateFileStreamRequest:
         return PlateFileStreamRequest(
             plate_path=plate_path,
             context_plate_path=context_plate_path,
             file_paths=self.file_paths,
-            microscope_type=microscope_type,
+            source_format=source_format,
             pattern_format=self.pattern_format,
             kind=self.kind,
             path_contains=self.path_contains,
-            partition=self.partition,
+            component_filters=self.component_filters,
             limit=self.limit,
             viewer_config_key=self.viewer_config_key,
             connection=self.connection,
@@ -994,8 +1026,8 @@ class PlateFileQueryResult(AgentResultEnvelope):
 
     plate_path: str
     result_directory: str | None = None
-    requested_microscope_type: str
-    detected_microscope_type: str | None = None
+    requested_source_format: str
+    detected_source_format: str | None = None
     handler_class: str | None = None
     parser_class: str | None = None
     total_count: int = 0
@@ -1013,8 +1045,8 @@ class PlateFileStreamResult(AgentResultEnvelope):
     """Result from streaming plate inventory files to a live viewer."""
 
     plate_path: str
-    requested_microscope_type: str
-    detected_microscope_type: str | None = None
+    requested_source_format: str
+    detected_source_format: str | None = None
     handler_class: str | None = None
     parser_class: str | None = None
     viewer_config_key: str = ""
@@ -1047,7 +1079,7 @@ class SyntheticPlateGenerationResult(AgentResultEnvelope):
     sampled_image_files: tuple[str, ...] = ()
     truncated_image_count: int = 0
     metadata_file_path: str | None = None
-    detected_microscope_type: str | None = None
+    detected_source_format: str | None = None
     handler_class: str | None = None
     include_all_components: bool = True
 
@@ -1099,7 +1131,7 @@ class PlateInspectionWorkspacePreparation:
 class PlateInspectionHandlerCandidate:
     """Format-specific handler evidence recovered from authoritative parsers."""
 
-    microscope_type: str
+    source_format: str
     handler_class: str
     parser_class: str
     root_dir: str
@@ -1138,11 +1170,11 @@ class PlatePathInspectionResult(AgentResultEnvelope):
     """Read-only plate-folder inspection result."""
 
     plate_path: str
-    requested_microscope_type: str
+    requested_source_format: str
     status: PlateInspectionStatus = PlateInspectionStatus.ERROR
     confidence: PlateInspectionConfidence = PlateInspectionConfidence.NONE
-    available_microscope_types: tuple[str, ...] = ()
-    detected_microscope_type: str | None = None
+    available_source_formats: tuple[str, ...] = ()
+    detected_source_format: str | None = None
     handler_class: str | None = None
     parser_class: str | None = None
     metadata_handler_class: str | None = None

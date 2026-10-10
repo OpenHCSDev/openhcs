@@ -69,7 +69,7 @@ def test_real_binding_keeps_discovery_read_responsive_during_controlled_cold_io(
                 return PlatePathInspectionResult(
                     schema_version=SCHEMA_VERSION,
                     plate_path=request.plate_path,
-                    requested_microscope_type=request.microscope_type,
+                    requested_source_format=request.source_format,
                 )
 
         built = server.build_server(

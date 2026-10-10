@@ -35,7 +35,10 @@ from openhcs.agent.ui_bridge_identities import (
     UiStableWindowIdentityDeclaration,
     ZmqServerManagerWindowIdentity,
 )
+from openhcs.agent.dto.session import PipelineFileRequest
+from openhcs.authoring.session.operations.pipelines import LoadPipelineFile
 from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.pipeline_import import PipelineImporter
 from openhcs.core.progress.projection import ExecutionRuntimeProjection
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.pyqt_gui.services.window_config import (
@@ -48,7 +51,6 @@ if TYPE_CHECKING:
     from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
     from openhcs.pyqt_gui.services.ui_bridge_server import UiBridgeControlServer
     from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
-    from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
     from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 logger = logging.getLogger(__name__)
@@ -611,47 +613,6 @@ class MainWindowDockLayoutStore:
 
 
 @dataclass(frozen=True, slots=True)
-class MainWindowWidgetConnector:
-    """Owns cross-widget wiring between plate and pipeline widgets."""
-
-    def connect(
-        self,
-        plate_manager: PlateManagerWidget,
-        pipeline_editor: PipelineEditorWidget,
-    ) -> None:
-        plate_manager.plate_selected.connect(pipeline_editor.set_current_plate)
-        plate_manager.orchestrator_config_changed.connect(
-            pipeline_editor.on_orchestrator_config_changed
-        )
-        plate_manager.orchestrator_state_changed.connect(
-            pipeline_editor.on_orchestrator_state_changed
-        )
-        plate_manager.manager_execution_state_changed.connect(
-            pipeline_editor.on_manager_execution_state_changed
-        )
-        plate_manager.action_availability_changed.connect(
-            pipeline_editor.update_button_states
-        )
-        plate_manager.pipeline_data_changed.connect(
-            pipeline_editor.on_pipeline_data_changed
-        )
-        plate_manager.cellprofiler_pipeline_imported.connect(
-            pipeline_editor.on_cellprofiler_pipeline_imported
-        )
-        plate_manager.debug_snapshot_available.connect(
-            pipeline_editor.show_debug_snapshot
-        )
-        pipeline_editor.plate_manager = plate_manager
-
-        plate_manager.refresh_prepared_cellprofiler_pipelines()
-
-        if plate_manager.selected_plate_path:
-            pipeline_editor.set_current_plate(plate_manager.selected_plate_path)
-
-        logger.debug("Connected plate manager and pipeline editor widgets")
-
-
-@dataclass(frozen=True, slots=True)
 class MainWindowPipelineActions:
     """File-menu actions for the embedded pipeline editor."""
 
@@ -659,29 +620,31 @@ class MainWindowPipelineActions:
     pipeline_editor: PipelineEditorWidget
 
     def new_pipeline(self) -> None:
-        self.pipeline_editor.require_pipeline_definition_mutation_allowed()
-        self.pipeline_editor.pipeline_steps = []
-        self.pipeline_editor.update_item_list()
-        self.pipeline_editor.update_button_states()
-        self.pipeline_editor.pipeline_changed.emit(self.pipeline_editor.pipeline_steps)
+        session = self.pipeline_editor.session
+        if session.current_scope_id:
+            session.set_pipeline(session.current_scope_id, [])
 
     def open_pipeline(self, selected_path: Path | None = None) -> None:
+        session = self.pipeline_editor.session
         file_path = selected_path
         if file_path is None:
             selected, _ = QFileDialog.getOpenFileName(
                 self.main_window,
                 "Open Pipeline",
                 "",
-                "OpenHCS Pipelines (*.py);;CellProfiler Pipelines (*.cppipe)",
+                PipelineImporter.file_filter(),
             )
             if not selected:
                 return
             file_path = Path(selected)
-        try:
-            self.pipeline_editor.load_pipeline_from_file(file_path)
-        except Exception as error:
-            logger.exception("Failed to open pipeline %s", file_path)
-            QMessageBox.critical(self.main_window, "Open Pipeline", str(error))
+        result = session.invoke(
+            LoadPipelineFile,
+            PipelineFileRequest(scope_id=session.current_scope_id, path=str(file_path)),
+        )
+        if result.errors:
+            QMessageBox.critical(
+                self.main_window, "Open Pipeline", result.errors[0].message
+            )
 
     def save_pipeline(self, selected_path: Path | None = None) -> None:
         file_path = selected_path
@@ -696,7 +659,9 @@ class MainWindowPipelineActions:
                 return
             file_path = Path(selected).with_suffix(".py")
         try:
-            self.pipeline_editor.save_pipeline_to_file(file_path)
+            file_path.write_text(
+                self.pipeline_editor.code_document_source(clean=True), encoding="utf-8"
+            )
         except Exception as error:
             logger.exception("Failed to save pipeline %s", file_path)
             QMessageBox.critical(self.main_window, "Save Pipeline", str(error))
@@ -714,25 +679,11 @@ class MainWindowLifecycleWorkflow:
     ui_services: PyQtServiceAdapter
 
     def propagate_config(self, new_config: GlobalPipelineConfig) -> None:
-        self.embedded_widgets.require_plate_manager().on_config_changed(new_config)
-        self.embedded_widgets.require_pipeline_editor().on_config_changed(new_config)
-
-    def progress_started(self, max_value: int) -> None:
-        del max_value
-        self.refresh_progress()
-
-    def progress_updated(self, value: int) -> None:
-        del value
-        self.refresh_progress()
-
-    def progress_finished(self) -> None:
-        self.refresh_progress()
+        self.main_window.session.adopt_global_config(new_config)
 
     def refresh_progress(self) -> None:
         """Reproject the existing work owners after local initialization changes."""
-        self.runtime_progress_changed(
-            self.embedded_widgets.require_plate_manager().runtime_progress_projection
-        )
+        self.runtime_progress_changed(self.main_window.session.runtime_projection)
 
     def runtime_progress_changed(
         self,
@@ -740,9 +691,7 @@ class MainWindowLifecycleWorkflow:
     ) -> None:
         """Render the progress registry's current projection without retaining it."""
 
-        initializing = bool(
-            self.embedded_widgets.require_plate_manager().plate_init_pending
-        )
+        initializing = bool(self.main_window.session.init_pending)
         self.status_progress_bar.setRange(
             0, 100 if projection.has_active_work or not initializing else 0
         )
@@ -768,6 +717,7 @@ class MainWindowLifecycleWorkflow:
             "cleaning up plate manager",
             lambda: self.embedded_widgets.require_plate_manager().cleanup(),
         )
+        attempt("closing the session", self.main_window.session.close)
         attempt(
             "cleaning up ZMQ server manager",
             lambda: self.embedded_widgets.require_zmq_manager().cleanup(),

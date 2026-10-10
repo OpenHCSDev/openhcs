@@ -9,7 +9,7 @@ import pytest
 from skimage.color import rgb2gray
 import tifffile
 
-from openhcs.agent.services.execution_session_service import (
+from openhcs.agent.services.artifact_plan_inspection_service import (
     AgentProgressQueue, CompileInspectionInput, InProcessCompileInspectionGateway,
 )
 from openhcs.core.config import (

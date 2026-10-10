@@ -2,21 +2,18 @@
 
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 from zmqruntime.config import TransportMode
-from zmqruntime.execution import ExecutionProgressObservation
-from zmqruntime.messages import TaskProgress
 
 from python_introspect import to_jsonable
 
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.common import SCHEMA_VERSION
-from openhcs.agent.dto.execution import ExecutionJobRef, ExecutionJobStatus
+from openhcs.agent.dto.session import DatasetListState, DatasetRowState
 from openhcs.agent.dto.plate import PlateFileQueryRecordSummary
 from openhcs.agent.dto.viewer import (
     ViewerWindowDescriptor,
@@ -58,19 +55,6 @@ def _records(tmp_path: Path) -> tuple[PlateFileQueryRecordSummary, ...]:
             )
         )
     return tuple(records)
-
-
-def _job(status: str, **values) -> ExecutionJobStatus:
-    return ExecutionJobStatus(
-        schema_version=SCHEMA_VERSION,
-        session_id="session-1",
-        job_id="job-1",
-        kind="execute",
-        uri="openhcs://jobs/job-1",
-        server_execution_id=None,
-        status=status,
-        **values,
-    )
 
 
 def _validation(*, settled: bool) -> ViewerWindowValidationSummaryResult:
@@ -349,192 +333,59 @@ def test_command_payload_rejects_a_missing_declared_result() -> None:
         )
 
 
-def test_execute_pipeline_submits_then_polls_declared_job_status(
+def _dataset_row(root: Path, terminal_status: str | None) -> DatasetRowState:
+    return DatasetRowState(
+        scope_id=str(root), name=root.name, root=str(root), pipeline_path=None,
+        selected=True, initialized=True, compiled=True, init_pending=False,
+        compile_pending=False, execution_active=False, status_prefix="",
+        orchestrator_state=None, execution_id=None, terminal_status=terminal_status,
+        runtime_state=None, runtime_percent=None, queue_position=None,
+    )
+
+
+@pytest.mark.parametrize("terminal_status", ("complete", "failed"))
+def test_execute_pipeline_runs_the_session_journey_and_reads_its_row(
     monkeypatch,
     tmp_path: Path,
+    terminal_status: str,
 ) -> None:
-    observed: dict[str, object] = {"submissions": []}
+    plate = tmp_path / "plate"
+    calls = []
+    rows = (
+        _dataset_row(tmp_path / "other", "failed"),
+        _dataset_row(plate, terminal_status),
+    )
 
     def fake_run_mcp(client, argv, *, capability, payload_type, timeout_seconds):
-        observed["submissions"].append(
-            {
-                "client": client,
-                "argv": tuple(argv),
-                "capability": capability,
-                "timeout_seconds": timeout_seconds,
-            }
+        calls.append((client, tuple(argv), capability, payload_type, timeout_seconds))
+        return DatasetListState(
+            rows=rows, selected_scope_ids=(str(plate),), execution_state="idle",
         )
-        return ExecutionJobRef(
-            session_id="session-1",
-            job_id="job-1",
-            kind="execute",
-            uri="openhcs://jobs/job-1",
-            server_execution_id=None,
-            schema_version=SCHEMA_VERSION,
-            status="submitted",
-        )
-
-    def fake_poll(client, *, job_id, timeout_seconds=180.0):
-        observed.update(
-            poll_client=client,
-            job_id=job_id,
-            poll_timeout_seconds=timeout_seconds,
-        )
-        return _job("complete")
 
     monkeypatch.setattr(installed_demo, "_run_mcp", fake_run_mcp)
-    monkeypatch.setattr(installed_demo, "_poll_execution_job", fake_poll)
     client = object()
 
-    payload = installed_demo._execute_pipeline(
-        client,
-        plate_path=tmp_path / "plate",
-        source_path=tmp_path / "pipeline.py",
-        runtime_port=43125,
-    )
-
-    assert payload == _job("complete")
-    submissions = observed["submissions"]
-    assert isinstance(submissions, list) and len(submissions) == 1
-    submission = submissions[0]
-    assert submission["client"] is client
-    assert submission["capability"] is agent_capabilities.submit_pipeline_execution
-    assert submission["timeout_seconds"] is None
-    assert "--submit-timeout-ms" not in submission["argv"]
-    assert "--no-wait" in submission["argv"]
-    assert "--wait-timeout-ms" not in submission["argv"]
-    assert observed["poll_client"] is client
-    assert observed["job_id"] == "job-1"
-
-
-def test_execution_status_call_uses_owned_job_request() -> None:
-    capability = agent_capabilities.get_execution_status
-    tool_name = capability.name
-    observed: dict[str, object] = {}
-
-    class FakeClient:
-        def execute(self, argv, *, timeout_seconds):
-            observed.update(argv=tuple(argv), timeout_seconds=timeout_seconds)
-            return _execution(capability, _job("running"))
-
-    payload = installed_demo._execution_status_payload(
-        FakeClient(),
-        request=installed_demo.ExecutionStatusRequest(job_id="job-1"),
-    )
-
-    argv = observed["argv"]
-    assert payload == _job("running")
-    assert observed["timeout_seconds"] is None
-    assert argv[:5] == (
-        "--timeout-seconds",
-        "10.0",
-        "--allow-error-payloads",
-        "call",
-        tool_name,
-    )
-    arguments_index = argv.index("--arguments")
-    assert json.loads(argv[arguments_index + 1]) == {
-        "job_id": "job-1",
-        "timeout_ms": 5000,
-    }
-
-
-def test_execution_poll_observes_progress_until_complete(monkeypatch) -> None:
-    statuses = iter(("submitted", "running", "complete"))
-    calls: list[str] = []
-
-    def fake_status(_client, *, request):
-        status = next(statuses)
-        calls.append(status)
-        return _job(status)
-
-    monkeypatch.setattr(installed_demo, "_execution_status_payload", fake_status)
-    monkeypatch.setattr(installed_demo.time, "sleep", lambda _seconds: None)
-
-    payload = installed_demo._poll_execution_job(
-        object(),
-        job_id="job-1",
-        stall_timeout_seconds=1.0,
-        maximum_duration_seconds=2.0,
-    )
-
-    assert calls == ["submitted", "running", "complete"]
-    assert payload == _job("complete")
-
-
-def _progress(sequence: int, *, percent: float) -> ExecutionProgressObservation:
-    event = TaskProgress(
-        execution_id="execution-1",
-        phase="execute",
-        status="running",
-        percent=percent,
-        timestamp=float(sequence),
-        completed=sequence,
-        total=3,
-    ).to_dict()
-    return ExecutionProgressObservation(sequence=sequence, event=event)
-
-
-def test_execution_poll_refreshes_stall_budget_from_exact_progress(monkeypatch) -> None:
-    payloads = iter(
-        (
-            _job("running", progress=_progress(1, percent=10.0)),
-            _job("running", progress=_progress(2, percent=50.0)),
-            _job("complete", progress=_progress(3, percent=100.0)),
+    def execute():
+        return installed_demo._execute_pipeline(
+            client,
+            plate_path=plate,
+            source_path=tmp_path / "pipeline.py",
+            runtime_port=43125,
         )
-    )
-    now = 0.0
 
-    def monotonic() -> float:
-        nonlocal now
-        now += 0.75
-        return now
-
-    monkeypatch.setattr(
-        installed_demo,
-        "_execution_status_payload",
-        lambda _client, *, request: next(payloads),
-    )
-    monkeypatch.setattr(installed_demo.time, "monotonic", monotonic)
-    monkeypatch.setattr(installed_demo.time, "sleep", lambda _seconds: None)
-
-    payload = installed_demo._poll_execution_job(
-        object(),
-        job_id="job-1",
-        stall_timeout_seconds=1.0,
-        maximum_duration_seconds=10.0,
-    )
-
-    assert payload.status == "complete"
-    assert now > 1.0
-
-
-def test_execution_poll_fails_when_running_status_has_no_progress(monkeypatch) -> None:
-    now = 0.0
-
-    def monotonic() -> float:
-        nonlocal now
-        now += 0.6
-        return now
-
-    monkeypatch.setattr(
-        installed_demo,
-        "_execution_status_payload",
-        lambda _client, *, request: _job("running"),
-    )
-    monkeypatch.setattr(installed_demo.time, "monotonic", monotonic)
-    monkeypatch.setattr(installed_demo.time, "sleep", lambda _seconds: None)
-
-    with pytest.raises(
-        installed_demo.InstalledDemoFailure,
-        match="no lifecycle or progress activity",
-    ):
-        installed_demo._poll_execution_job(
-            object(),
-            job_id="job-1",
-            stall_timeout_seconds=1.0,
-            maximum_duration_seconds=10.0,
-        )
+    if terminal_status == "complete":
+        assert execute() == rows[1]
+    else:
+        with pytest.raises(installed_demo.InstalledDemoFailure, match="failed"):
+            execute()
+    ((called_client, argv, capability, payload_type, timeout_seconds),) = calls
+    assert called_client is client
+    assert argv[:2] == ("execute-source", str(plate))
+    assert argv[argv.index("--port") + 1] == "43125"
+    assert "--wait" in argv and "--no-wait" not in argv
+    assert capability is agent_capabilities.session_datasets
+    assert payload_type is DatasetListState
+    assert timeout_seconds is None
 
 
 def test_validate_viewer_polls_until_debounced_layers_settle(monkeypatch) -> None:

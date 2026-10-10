@@ -15,7 +15,6 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
     ZmqServerManagerWindowIdentity,
 )
-from openhcs.pyqt_gui.services.main_window_workflows import MainWindowWidgetConnector
 
 
 class _ManagedChildCleanupWindow(QDialog):
@@ -26,31 +25,9 @@ class _ManagedChildCleanupWindow(QDialog):
         super().closeEvent(event)
 
 
-class ManagedPlatePipelineConnector:
-    """Connects managed plate and pipeline windows when both are open."""
-
-    PLATE_WINDOW_ID = PlateManagerWidgetIdentity.require_value()
-    PIPELINE_WINDOW_ID = PipelineEditorWidgetIdentity.require_value()
-
-    def connect_plate(self, plate_widget) -> None:
-        pipeline_widget = self._open_widget(self.PIPELINE_WINDOW_ID)
-        if pipeline_widget is not None:
-            MainWindowWidgetConnector().connect(plate_widget, pipeline_widget)
-
-    def connect_pipeline(self, pipeline_widget) -> None:
-        plate_widget = self._open_widget(self.PLATE_WINDOW_ID)
-        if plate_widget is not None:
-            MainWindowWidgetConnector().connect(plate_widget, pipeline_widget)
-
-    @staticmethod
-    def _open_widget(window_id: str):
-        from pyqt_reactive.services.window_manager import WindowManager
-
-        window = WindowManager._scoped_windows.get(window_id)
-        return window.widget if window is not None else None
-
-
 class PlateManagerWindow(_ManagedChildCleanupWindow):
+    """A floating dataset list rendering the main window's session."""
+
     def __init__(self, main_window, service_adapter):
         super().__init__(main_window)
         self.main_window = main_window
@@ -64,42 +41,16 @@ class PlateManagerWindow(_ManagedChildCleanupWindow):
         layout = QVBoxLayout(self)
         self.widget = PlateManagerWidget(
             self.service_adapter,
+            main_window.session,
             self.service_adapter.get_current_color_scheme(),
             gui_config=self.service_adapter.widget_gui_config,
         )
         layout.addWidget(self.widget)
-        self._setup_connections()
-
-    def _setup_connections(self):
-        self.widget.global_config_changed.connect(
-            lambda: self.main_window.on_config_changed(
-                self.service_adapter.get_global_config()
-            )
-        )
-
-        self._setup_progress_signals()
-
-        self._connect_to_pipeline_editor()
-
-    def _setup_progress_signals(self):
-        self.widget.progress_started.connect(
-            self.main_window._on_plate_progress_started
-        )
-        self.widget.progress_updated.connect(
-            self.main_window._on_plate_progress_updated
-        )
-        self.widget.progress_finished.connect(
-            self.main_window._on_plate_progress_finished
-        )
-        self.widget.runtime_progress_projection_changed.connect(
-            self.main_window._on_runtime_progress_projection_changed
-        )
-
-    def _connect_to_pipeline_editor(self):
-        ManagedPlatePipelineConnector().connect_plate(self.widget)
 
 
 class PipelineEditorWindow(QDialog):
+    """A floating pipeline editor rendering the main window's session."""
+
     def __init__(self, main_window, service_adapter):
         super().__init__(main_window)
         self.main_window = main_window
@@ -113,13 +64,10 @@ class PipelineEditorWindow(QDialog):
         layout = QVBoxLayout(self)
         self.widget = PipelineEditorWidget(
             self.service_adapter,
+            main_window.session,
             self.service_adapter.get_current_color_scheme(),
         )
         layout.addWidget(self.widget)
-        self._setup_connections()
-
-    def _setup_connections(self):
-        ManagedPlatePipelineConnector().connect_pipeline(self.widget)
 
 
 class ImageBrowserWindow(_ManagedChildCleanupWindow):
@@ -169,7 +117,7 @@ class ImageBrowserWindow(_ManagedChildCleanupWindow):
             self._update_orchestrator(plate_widget)
 
     def _update_orchestrator(self, plate_widget):
-        orchestrator = plate_widget.get_selected_orchestrator()
+        orchestrator = plate_widget._get_current_orchestrator()
         if orchestrator:
             self.widget.set_orchestrator(orchestrator)
 

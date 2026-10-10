@@ -58,7 +58,7 @@ from openhcs.pyqt_gui.widgets.artifact_plan_view import (
     ArtifactPlanViewModel,
     ArtifactPlanViewWidget,
 )
-from openhcs.pyqt_gui.widgets.shared.services.runtime_artifact_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
 )
 from openhcs.runtime.zmq_compilation import (

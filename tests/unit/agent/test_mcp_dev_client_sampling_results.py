@@ -1,6 +1,7 @@
 """Bounded source journeys through original commands, ingress and presentation."""
 
 from __future__ import annotations
+from openhcs.agent.dto.session import DatasetRowState
 
 import ast
 import asyncio
@@ -14,7 +15,6 @@ import pytest
 from openhcs.agent.capabilities import SamplePlateImageCapability, agent_capabilities
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.plate import PlateImageSampleResult, SelectedPlateImageSampleResult
-from openhcs.agent.dto.ui_bridge import UiPlateManagerRowState
 from openhcs.agent.dto.viewer import ViewerWindowImageSampleRecord, ViewerWindowImageSampleResult
 from openhcs.mcp import dev_client
 from openhcs.mcp.dev_client_commanding import CapabilityBackedCommandSpec
@@ -50,9 +50,9 @@ def sample(**kwargs):
 
 
 def selected_row():
-    return UiPlateManagerRowState(
-        plate_scope_id="selected-root", name="selection", plate_root="selected-root",
-        cppipe_path=None, selected=True, initialized=True, compiled=False,
+    return DatasetRowState(
+        scope_id="selected-root", name="selection", root="selected-root",
+        pipeline_path=None, selected=True, initialized=True, compiled=False,
         init_pending=False, compile_pending=False, execution_active=False,
         status_prefix="", orchestrator_state=None, execution_id=None,
         terminal_status=None, runtime_state=None, runtime_percent=None, queue_position=None,

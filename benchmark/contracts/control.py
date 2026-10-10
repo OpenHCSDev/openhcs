@@ -121,9 +121,9 @@ class MeasuredPipelineRunInspectionRequest:
 
 @dataclass(frozen=True, slots=True)
 class MeasuredPipelineRunFinalizationRequest:
-    """Label evidence for an already-completed ordinary execution job."""
+    """Label evidence for an ordinary execution the session already finished."""
 
-    job_id: str
+    execution_id: str
     run_id: str
     pipeline_name: str
 

@@ -891,11 +891,11 @@ class GalleryUiBridgeSession:
             for action in self.action_catalog().actions
             if action.identity.widget_id
             == target.capture_widget_identity.require_value()
-            and action.identity.action_id == target.action.value
+            and action.identity.action_id == target.action.operation_id
         )
         if len(matches) != 1:
             raise MediaGalleryError(
-                f"Expected one declared {target.action.value!r} action, "
+                f"Expected one declared {target.action.operation_id!r} action, "
                 f"found {len(matches)}."
             )
         summary = matches[0]
@@ -909,7 +909,7 @@ class GalleryUiBridgeSession:
         result = self._service.invoke_action(request, self.connection)
         if result.errors or not result.receipt.accepted:
             raise MediaGalleryError(
-                f"UI action {target.action.value!r} was rejected: {result!r}"
+                f"UI action {target.action.operation_id!r} was rejected: {result!r}"
             )
         return result
 

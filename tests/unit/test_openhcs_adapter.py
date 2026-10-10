@@ -58,9 +58,8 @@ from openhcs.processing.backends import cellprofiler as cellprofiler_backend
 from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdMethod,
 )
-from openhcs.pyqt_gui.widgets.shared.services.plate_pipeline_request_builder import (
-    PlatePipelineRequest,
-)
+from openhcs.authoring.session.compilation import DatasetPipelineRequest
+from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
@@ -70,7 +69,6 @@ from openhcs.runtime.zmq_execution_observation import (
     ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION,
     ZMQRuntimeExecutionObservationExport,
 )
-from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
 
 _HAS_INTERVAL_TIMER = all(
     hasattr(signal, attribute) for attribute in ("SIGALRM", "ITIMER_REAL", "setitimer")
@@ -593,14 +591,16 @@ def test_benchmark_submission_matches_pyqt_submission_payload() -> None:
             "runtime_observation_export_path": "/tmp/runtime_observation.pkl",
         },
     )
-    ui_request = PlatePipelineRequest(
-        plate_scope=PlateScopeIdentity.from_scope_id(plate_id),
-        execution_plate_path=execution_plate_id,
-        selected_pipeline_path=selected_pipeline_path,
-        definition_pipeline=tuple(steps),
+    ui_request = DatasetPipelineRequest(
+        scope=DatasetScope.parse(plate_id),
+        name="pipeline",
+        execution_root=execution_plate_id,
+        pipeline_path=selected_pipeline_path,
+        steps=list(steps),
         pipeline_config=pipeline_config,
+        global_config=global_config,
     )
-    ui_submission = ui_request.submission(global_config=global_config)
+    ui_submission = ui_request.submission()
 
     assert (
         benchmark_submission.global_pipeline_config

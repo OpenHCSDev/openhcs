@@ -38,10 +38,18 @@ class _MainWindowLifecycleHarness(_MainWindowStatusBarHarness):
 
 def _configure_status_bar_harness(window) -> None:
     window.service_adapter = SimpleNamespace(get_current_color_scheme=ColorScheme)
-    window.plate_manager_widget = SimpleNamespace(
-        update_button_states=lambda: None,
-        require_pipeline_definition_mutation_allowed=lambda: None,
-    )
+    window.session = SimpleNamespace(require_definition_mutation_allowed=lambda: None)
+    window.button_refreshes = []
+    for name in ("plate_manager_widget", "pipeline_editor_widget"):
+        setattr(
+            window,
+            name,
+            SimpleNamespace(
+                update_button_states=lambda name=name: window.button_refreshes.append(
+                    name
+                )
+            ),
+        )
     window.embedded_widgets = MainWindowEmbeddedWidgets()
     window.floating_windows = {}
     window.ui_bridge_lifecycle = SimpleNamespace(close=lambda: None)
@@ -121,6 +129,7 @@ def test_endpoint_and_application_status_have_one_visual_owner(
 
         assert window._status_message_label.text() == application_message
         assert window._zmq_status_indicator._label.text() == "ZMQ: Connected"
+        assert window.button_refreshes == ["plate_manager_widget", "pipeline_editor_widget"]
         assert (
             window._zmq_status_indicator.toolTip()
             == "Execution endpoint 7777: Connected"

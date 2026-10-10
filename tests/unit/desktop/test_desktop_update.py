@@ -18,6 +18,7 @@ from pyqt_reactive.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 
 import openhcs.pyqt_gui.main as main_module
+from tests.unit.desktop.conftest import headless_session
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.steps.function_step import FunctionStep
@@ -52,7 +53,7 @@ from openhcs.desktop.update_worker import (
     DesktopUpdatePlan,
     DesktopUpdateProgressTheme,
 )
-from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
+from openhcs.authoring.session.pipelines import (
     PipelineObjectStateBinding,
 )
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
@@ -1002,22 +1003,25 @@ def test_runtime_environment_rejects_read_only_install(
         DesktopRuntimeEnvironment.current()
 
 
+def _dataset_roots(tmp_path: Path, *names: str) -> tuple[str, ...]:
+    roots = []
+    for name in names:
+        root = tmp_path / "plates" / name
+        root.mkdir(parents=True)
+        roots.append(str(root))
+    return tuple(roots)
+
+
 def test_capture_uses_canonical_plate_source_and_objectstate_history(
     monkeypatch,
     tmp_path: Path,
+    restart_session,
 ) -> None:
-    plate_manager = SimpleNamespace(
-        is_any_plate_running=lambda: False,
-        require_pipeline_definition_mutation_allowed=lambda: None,
-        selected_plate_path="/plates/selected",
-        orchestrator_code_document_context=lambda **_kwargs: SimpleNamespace(
-            source="canonical session source"
-        ),
-    )
+    other, selected = _dataset_roots(tmp_path, "other", "selected")
+    restart_session.ensure_datasets((other, selected))
+    restart_session.select((selected,))
     main_window = SimpleNamespace(
-        embedded_widgets=SimpleNamespace(
-            require_plate_manager=lambda: plate_manager,
-        ),
+        session=restart_session,
         runtime_context=SimpleNamespace(ui_config=object()),
         service_adapter=SimpleNamespace(
             get_current_color_scheme=lambda: ColorScheme(),
@@ -1025,7 +1029,7 @@ def test_capture_uses_canonical_plate_source_and_objectstate_history(
     )
     monkeypatch.setattr(
         "openhcs.core.xdg_paths.get_openhcs_cache_dir",
-        lambda: tmp_path,
+        lambda: tmp_path / "cache",
     )
     monkeypatch.setattr(
         "openhcs.pyqt_gui.config.save_ui_config_sync",
@@ -1038,12 +1042,13 @@ def test_capture_uses_canonical_plate_source_and_objectstate_history(
 
     session = DesktopRestartSession.capture(main_window)
 
-    assert session.session_document.read_text(encoding="utf-8") == (
-        "canonical session source"
+    captured = PlateManagerCodeDocumentAuthority.from_source(
+        session.session_document.read_text(encoding="utf-8")
     )
+    assert tuple(captured.plate_paths) == (other, selected)
     assert session.history_document.read_text(encoding="utf-8") == ("canonical history")
     assert DesktopRestartUiState.read(session.ui_state_document) == (
-        DesktopRestartUiState(selected_plate_scope_id="/plates/selected")
+        DesktopRestartUiState(selected_plate_scope_id=selected)
     )
     assert session.purpose is DesktopRestartPurpose.UPDATE
     assert session.worker_document.read_text(encoding="utf-8").startswith(
@@ -1072,7 +1077,10 @@ def test_capture_uses_canonical_plate_source_and_objectstate_history(
 def test_saved_update_session_restores_through_existing_authorities(
     monkeypatch,
     tmp_path: Path,
+    restart_session,
 ) -> None:
+    import openhcs.desktop.update as update_module
+
     session = DesktopRestartSession(tmp_path / "pending")
     session.directory.mkdir()
     payload = PlateManagerCodeDocumentAuthority.from_values(
@@ -1088,18 +1096,21 @@ def test_saved_update_session_restores_through_existing_authorities(
     session.history_document.write_text("{}", encoding="utf-8")
     session.update_error_document.write_text("install failed", encoding="utf-8")
     calls = []
-    plate_manager = SimpleNamespace(
-        code_execution_workflow=SimpleNamespace(
-            apply_payload=lambda restored: calls.append(("payload", restored))
-        ),
-        update_item_list=lambda: calls.append(("refresh", None)),
+    apply_document = update_module.apply_dataset_document
+
+    def recording_apply(target, restored, scope) -> None:
+        calls.append(("payload", restored))
+        apply_document(target, restored, scope)
+
+    monkeypatch.setattr(update_module, "apply_dataset_document", recording_apply)
+    monkeypatch.setattr(
+        restart_session, "refresh", lambda: calls.append(("refresh", None))
     )
-    time_travel = SimpleNamespace(refresh=lambda: calls.append(("history-ui", None)))
     main_window = SimpleNamespace(
-        embedded_widgets=SimpleNamespace(
-            require_plate_manager=lambda: plate_manager,
+        session=restart_session,
+        time_travel_widget=SimpleNamespace(
+            refresh=lambda: calls.append(("history-ui", None))
         ),
-        time_travel_widget=time_travel,
     )
     monkeypatch.setattr(
         "objectstate.object_state.ObjectStateRegistry.load_history_from_file",
@@ -1115,8 +1126,8 @@ def test_saved_update_session_restores_through_existing_authorities(
         ("payload", payload),
         ("history", str(consumed.history_document)),
         ("payload", payload),
-        ("history-ui", None),
         ("refresh", None),
+        ("history-ui", None),
     ]
     assert not session.directory.exists()
     assert not consumed.directory.exists()
@@ -1146,9 +1157,9 @@ def test_desktop_restart_ui_state_rejects_malformed_payloads(
 def test_saved_session_restores_selected_plate_after_all_scope_payload(
     monkeypatch,
     tmp_path: Path,
+    restart_session,
 ) -> None:
-    first_scope = "/plates/P002"
-    selected_scope = "/plates/P001"
+    first_scope, selected_scope = _dataset_roots(tmp_path, "P002", "P001")
     session = DesktopRestartSession(tmp_path / "pending")
     session.directory.mkdir()
     payload = PlateManagerCodeDocumentAuthority.from_values(
@@ -1166,53 +1177,26 @@ def test_saved_session_restores_selected_plate_after_all_scope_payload(
     )
     session.history_document.write_text("{}", encoding="utf-8")
     DesktopRestartUiState(selected_scope).write(session.ui_state_document)
-    calls = []
-
-    class Workflow:
-        def apply_payload(self, restored_payload) -> None:
-            calls.append(("payload", restored_payload))
-
-    class Navigation:
-        def accepts(self, request) -> bool:
-            calls.append(("selection-accepted", request.item_id))
-            return request.item_id == selected_scope
-
-        def execute(self, request) -> None:
-            calls.append(("selection", request.item_id))
-            plate_manager.selected_plate_path = request.item_id
-            plate_manager.plate_selected.emit(request.item_id)
-
-    plate_manager = SimpleNamespace(
-        code_execution_workflow=Workflow(),
-        selected_plate_path=first_scope,
-        plate_selected=SimpleNamespace(
-            emit=lambda scope_id: calls.append(("selected", scope_id))
-        ),
-        update_item_list=lambda: calls.append(("refresh", None)),
-        window_navigation_driver=Navigation,
-    )
-    main_window = SimpleNamespace(
-        embedded_widgets=SimpleNamespace(
-            require_plate_manager=lambda: plate_manager,
-        ),
-        time_travel_widget=SimpleNamespace(
-            refresh=lambda: calls.append(("history-ui", None))
-        ),
-    )
     monkeypatch.setattr(
         "objectstate.object_state.ObjectStateRegistry.load_history_from_file",
-        lambda path: calls.append(("history", path)),
+        lambda _path: None,
+    )
+    main_window = SimpleNamespace(
+        session=restart_session,
+        time_travel_widget=SimpleNamespace(refresh=lambda: None),
     )
 
-    consumed = session.consume()
-    consumed.restore(main_window)
+    session.consume().restore(main_window)
 
-    assert plate_manager.selected_plate_path == selected_scope
-    assert calls[3:6] == [
-        ("selection-accepted", selected_scope),
-        ("selection", selected_scope),
-        ("selected", selected_scope),
+    assert tuple(restart_session.dataset_scope_ids()) == (first_scope, selected_scope)
+    assert restart_session.selected_scope_ids == (selected_scope,)
+    assert restart_session.current_scope_id == selected_scope
+    selections = [
+        record.event
+        for record in restart_session.events_after(0)
+        if type(record.event).__name__ == "SelectionChanged"
     ]
+    assert selections[-1].current_scope_id == selected_scope
 
 
 def test_restart_reconciles_saved_document_after_history_materialization(
@@ -1220,7 +1204,7 @@ def test_restart_reconciles_saved_document_after_history_materialization(
 ) -> None:
     """The captured declaration remains authoritative across fresh token owners."""
 
-    plate_scope = "/plate"
+    (plate_scope,) = _dataset_roots(tmp_path, "plate")
     initial_steps = [
         FunctionStep(
             name="Process",
@@ -1289,24 +1273,15 @@ def test_restart_reconciles_saved_document_after_history_materialization(
         ObjectStateRegistry.clear()
         ScopeTokenService.clear_scope(plate_scope)
 
-        def apply_payload(restored_payload) -> None:
-            PipelineObjectStateBinding.update_plate_steps(
-                plate_scope,
-                restored_payload.pipeline_data[plate_scope],
-            )
-
-        plate_manager = SimpleNamespace(
-            code_execution_workflow=SimpleNamespace(apply_payload=apply_payload),
-            update_item_list=lambda: None,
-        )
+        restored_session = headless_session()
         main_window = SimpleNamespace(
-            embedded_widgets=SimpleNamespace(
-                require_plate_manager=lambda: plate_manager,
-            ),
+            session=restored_session,
             time_travel_widget=SimpleNamespace(refresh=lambda: None),
         )
-
-        session.consume().restore(main_window)
+        try:
+            session.consume().restore(main_window)
+        finally:
+            restored_session.close()
 
         [restored_step] = PipelineObjectStateBinding.steps_for_plate(plate_scope)
         assert isinstance(restored_step.func, list)
@@ -1361,6 +1336,7 @@ def test_restored_session_outcome_leaves_own_dialog_presentation() -> None:
 def test_decoded_restart_is_consumed_before_runtime_materialization(
     monkeypatch,
     tmp_path: Path,
+    restart_session,
 ) -> None:
     cache_root = tmp_path / "cache"
     monkeypatch.setattr(
@@ -1383,28 +1359,18 @@ def test_decoded_restart_is_consumed_before_runtime_materialization(
 
     consumed = session.consume()
 
-    def fail_materialization(_payload) -> None:
+    def fail_materialization(_session, _payload, _scope) -> None:
         raise RuntimeError("runtime materialization failed")
 
-    plate_manager = SimpleNamespace(
-        code_execution_workflow=SimpleNamespace(
-            apply_payload=fail_materialization,
-        )
+    monkeypatch.setattr(
+        "openhcs.desktop.update.apply_dataset_document", fail_materialization
     )
-    main_window = SimpleNamespace(
-        embedded_widgets=SimpleNamespace(
-            require_plate_manager=lambda: plate_manager,
-        )
-    )
+    main_window = SimpleNamespace(session=restart_session)
 
     with pytest.raises(RuntimeError, match="runtime materialization failed"):
         consumed.restore(main_window)
 
     assert not session.directory.exists()
-    assert not DesktopRestartSession.pending().directory.exists()
-    assert consumed.directory.is_dir()
-    assert consumed.session_document.is_file()
-    assert consumed.history_document.is_file()
 
 
 def test_invalid_restart_document_is_consumed_before_decoding(

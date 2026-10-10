@@ -198,8 +198,14 @@ def test_zmq_startup_status_only_commits_to_endpoint_authority() -> None:
 def test_zmq_endpoint_snapshot_only_updates_dedicated_indicator() -> None:
     indicator = _StatusIndicatorHarness()
     messages = []
+    refreshed = []
     main_window = SimpleNamespace(
-        plate_manager_widget=SimpleNamespace(update_button_states=lambda: None),
+        plate_manager_widget=SimpleNamespace(
+            update_button_states=lambda: refreshed.append("plate_manager")
+        ),
+        pipeline_editor_widget=SimpleNamespace(
+            update_button_states=lambda: refreshed.append("pipeline_editor")
+        ),
         _zmq_status_indicator=indicator,
         status_message=SimpleNamespace(emit=messages.append),
         runtime_context=SimpleNamespace(
@@ -236,52 +242,57 @@ def test_zmq_endpoint_snapshot_only_updates_dedicated_indicator() -> None:
     assert indicator.text == "ZMQ: Not connected"
     assert indicator.tooltip == "Execution endpoint 7777: Not connected"
     assert messages == []
+    assert refreshed == ["plate_manager", "pipeline_editor"] * 2
 
 
 def test_zmq_endpoint_termination_descends_to_client_lifecycle_owner() -> None:
-    status_signal = _SignalHarness()
-    compatibility_signal = _SignalHarness()
-    execution_state_signal = _SignalHarness()
     endpoint_signal = _SignalHarness()
     snapshot_signal = _SignalHarness()
-    received_statuses = []
     received_snapshots = []
     terminated_ports = []
     main_window = SimpleNamespace(
-        plate_manager_widget=SimpleNamespace(
-            zmq_connection_status_changed=status_signal,
-            zmq_endpoint_compatibility_observed=compatibility_signal,
-            manager_execution_state_changed=execution_state_signal,
-            zmq_client_service=SimpleNamespace(
-                endpoint_terminated=terminated_ports.append,
-            ),
+        session=SimpleNamespace(
+            client=SimpleNamespace(endpoint_terminated=terminated_ports.append)
         ),
         zmq_manager_widget=SimpleNamespace(
             endpoint_terminated=endpoint_signal,
             endpoint_snapshot_changed=snapshot_signal,
-        ),
-        _observe_zmq_startup_status=received_statuses.append,
-        zmq_version_restart_workflow=SimpleNamespace(
-            observe_compatibility=received_statuses.append,
-            observe_execution_state=received_statuses.append,
         ),
         _apply_zmq_endpoint_snapshot=received_snapshots.append,
     )
 
     OpenHCSMainWindow._connect_zmq_lifecycle(main_window)
     endpoint_signal.emit("termination")
-    status_signal.emit("connected")
-    compatibility_signal.emit("compatible")
-    execution_state_signal.emit("idle")
     snapshot_signal.emit("snapshot")
 
     assert terminated_ports == ["termination"]
-    assert received_statuses == [
-        "connected",
-        "compatible",
-        "idle",
-    ]
     assert received_snapshots == ["snapshot"]
+
+
+def test_session_server_events_reach_the_window_lifecycle_owners() -> None:
+    from openhcs.authoring.session.events import (
+        ExecutionStateChanged,
+        ServerCompatibilityObserved,
+        ServerConnectionChanged,
+    )
+
+    received = []
+    main_window = SimpleNamespace(
+        _observe_zmq_startup_status=received.append,
+        zmq_version_restart_workflow=SimpleNamespace(
+            observe_compatibility=received.append,
+            observe_execution_state=received.append,
+        ),
+    )
+    on_session_event = OpenHCSMainWindow.__dict__["on_session_event"].__get__(
+        main_window, OpenHCSMainWindow
+    )
+
+    on_session_event(ServerConnectionChanged("connected"))
+    on_session_event(ServerCompatibilityObserved("compatible"))
+    on_session_event(ExecutionStateChanged(ManagerExecutionState.IDLE))
+
+    assert received == ["connected", "compatible", ManagerExecutionState.IDLE]
 
 
 def test_version_replacement_is_deferred_until_manager_is_idle(qapp) -> None:
@@ -358,9 +369,7 @@ def test_execution_service_preparation_starts_endpoint_before_catalog() -> None:
         return True
 
     window = SimpleNamespace(
-        plate_manager_widget=SimpleNamespace(
-            ensure_execution_server=ensure_execution_server,
-        ),
+        session=SimpleNamespace(ensure_server=ensure_execution_server),
         function_catalog_service=SimpleNamespace(
             prepare=lambda: calls.append("catalog") or catalog_future,
         ),
@@ -379,9 +388,7 @@ def test_execution_service_preparation_accepts_owned_teardown_cancellation() -> 
         raise EndpointConnectionCancelledError("closing")
 
     window = SimpleNamespace(
-        plate_manager_widget=SimpleNamespace(
-            ensure_execution_server=ensure_execution_server,
-        ),
+        session=SimpleNamespace(ensure_server=ensure_execution_server),
         function_catalog_service=SimpleNamespace(prepare=lambda: catalog_future),
     )
 

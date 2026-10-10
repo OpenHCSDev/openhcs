@@ -2,85 +2,31 @@
 
 from __future__ import annotations
 
-from objectstate import patch_lazy_constructors
+from contextlib import contextmanager
+
 import pytest
-from pyqt_reactive.widgets.shared.manager_action_controller import (
-    CodeEditorPayload,
-    ManagerActionController,
-    ManagerActionOperations,
-)
 
-from openhcs.core.pipeline_document import PipelineDocument
-from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
-    PipelineEditorCodeWorkflow,
-)
+from openhcs.authoring.session.events import PipelineChanged
+from openhcs.constants.constants import OrchestratorState
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.unit.pyqt_gui.session_harness import add_datasets, session_gui
 
 
-class _Signal:
-    def __init__(self) -> None:
-        self.values: list[tuple[object, ...]] = []
+@contextmanager
+def _editor(tmp_path):
+    """The pipeline editor showing one initialized dataset, with its changes."""
 
-    def emit(self, *values: object) -> None:
-        self.values.append(values)
-
-
-class _PipelineEditorHarness:
-    def __init__(self) -> None:
-        self.current_plate = ""
-        self.plate_manager = None
-        self.pipeline_steps = []
-        self.pipeline_changed = _Signal()
-        self.status_message = _Signal()
-        self.event_bus = None
-        self.item_list_update_count = 0
-        self._suppress_pipeline_state_sync = False
-
-    @staticmethod
-    def require_pipeline_definition_mutation_allowed(
-        plate_path: str | None = None,
-    ) -> None:
-        del plate_path
-
-    @staticmethod
-    def _normalize_step_scope_tokens(*, register: bool) -> None:
-        assert register is False
-
-    def update_item_list(self) -> None:
-        self.item_list_update_count += 1
-
-
-def _operations(editor: _PipelineEditorHarness) -> ManagerActionOperations:
-    workflow = PipelineEditorCodeWorkflow(editor)
-    return ManagerActionOperations(
-        widget=editor,
-        action_handlers={},
-        dynamic_action_handlers={},
-        run_async=lambda _operation: None,
-        selected_items=list,
-        item_name_singular="step",
-        item_name_plural="steps",
-        show_error=lambda _message: None,
-        validate_delete=lambda _items: True,
-        perform_delete=lambda _items: None,
-        update_item_list=editor.update_item_list,
-        emit_items_changed=lambda: None,
-        emit_status=lambda _message: None,
-        show_item_editor=lambda _item: None,
-        validate_code_action=lambda: True,
-        code_payload=CodeEditorPayload(
-            declaration_type=PipelineDocument,
-            missing_error_message="Pipeline code must define 'pipeline_steps'.",
-        ),
-        pre_code_execution=lambda: None,
-        patch_lazy_constructors=patch_lazy_constructors,
-        migrate_code_namespace=(
-            lambda code, error, _namespace: workflow.migration_namespace(code, error)
-        ),
-        validate_code_namespace=workflow.validate_namespace,
-        apply_code_namespace=workflow.apply_namespace,
-        post_code_execution=lambda: None,
-    )
+    with session_gui() as gui:
+        (scope_id,) = add_datasets(gui.session, tmp_path, "plate")
+        gui.session.set_dataset_state(scope_id, OrchestratorState.READY)
+        gui.settle()
+        changes = []
+        gui.session.subscribe(
+            lambda record: changes.append(record.event.scope_id)
+            if isinstance(record.event, PipelineChanged)
+            else None
+        )
+        yield gui, scope_id, gui.pipeline_editor.code_document_driver(), changes
 
 
 INVALID_SOURCE = """
@@ -119,36 +65,31 @@ pipeline_steps = [
 """
 
 
-def test_invalid_config_is_rejected_before_pipeline_editor_mutation() -> None:
-    editor = _PipelineEditorHarness()
-    operations = _operations(editor)
-    controller = ManagerActionController()
+def test_invalid_config_is_rejected_before_pipeline_editor_mutation(tmp_path) -> None:
+    with _editor(tmp_path) as (gui, scope_id, driver, changes):
+        with pytest.raises(TypeError, match="LazyProcessingConfig.group_by"):
+            driver.validate_source(INVALID_SOURCE)
+        with pytest.raises(TypeError, match="LazyProcessingConfig.group_by"):
+            driver.apply_source(INVALID_SOURCE)
 
-    with pytest.raises(TypeError, match="LazyProcessingConfig.group_by"):
-        controller.validate_edited_code(operations, INVALID_SOURCE)
-    with pytest.raises(TypeError, match="LazyProcessingConfig.group_by"):
-        controller.apply_edited_code(operations, INVALID_SOURCE)
+        assert gui.session.pipeline_steps(scope_id) == []
+        assert changes == []
 
-    assert editor.pipeline_steps == []
-    assert editor.item_list_update_count == 0
-    assert editor.pipeline_changed.values == []
+        driver.validate_source(VALID_SOURCE)
+        driver.apply_source(VALID_SOURCE)
+        gui.settle()
 
-    controller.validate_edited_code(operations, VALID_SOURCE)
-    controller.apply_edited_code(operations, VALID_SOURCE)
-
-    assert len(editor.pipeline_steps) == 1
-    assert editor.pipeline_steps[0].processing_config.group_by is Microscopy.Channel
-    assert editor.item_list_update_count == 1
-    assert len(editor.pipeline_changed.values) == 1
+        (step,) = gui.session.pipeline_steps(scope_id)
+        assert step.processing_config.group_by is Microscopy.Channel
+        assert gui.pipeline_editor.item_list.count() == 1
+        assert changes == [scope_id]
 
 
-def test_pipeline_editor_accepts_steps_without_pipeline_config() -> None:
-    editor = _PipelineEditorHarness()
-    operations = _operations(editor)
-    controller = ManagerActionController()
+def test_pipeline_editor_accepts_steps_without_pipeline_config(tmp_path) -> None:
+    with _editor(tmp_path) as (gui, scope_id, driver, _changes):
+        driver.validate_source(VALID_DEFAULT_CONFIG_SOURCE)
+        driver.apply_source(VALID_DEFAULT_CONFIG_SOURCE)
+        gui.settle()
 
-    controller.validate_edited_code(operations, VALID_DEFAULT_CONFIG_SOURCE)
-    controller.apply_edited_code(operations, VALID_DEFAULT_CONFIG_SOURCE)
-
-    assert len(editor.pipeline_steps) == 1
-    assert editor.item_list_update_count == 1
+        assert len(gui.session.pipeline_steps(scope_id)) == 1
+        assert gui.pipeline_editor.item_list.count() == 1

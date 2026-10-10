@@ -666,6 +666,12 @@ def build_server(
         if main_thread_dispatcher is not None
         else McpMainThreadDispatcher()
     )
+    if isinstance(ctx, OpenHCSAgentContext):
+        # The session runs ObjectState work on the transport's main thread;
+        # test doubles that carry only some services have no session.
+        from openhcs.authoring.session.session import DispatcherThread
+
+        ctx.bind_main_thread(DispatcherThread(dispatcher))
     capability_surface_selection = AgentCapabilitySurfaceSelection(
         transport=capability_transport,
         local_profile=(

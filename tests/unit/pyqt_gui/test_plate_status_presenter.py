@@ -7,7 +7,7 @@ from openhcs.core.progress.projection import (
 from openhcs.core.execution_state import (
     TerminalExecutionStatus,
 )
-from openhcs.pyqt_gui.widgets.shared.services.plate_status_presenter import (
+from openhcs.authoring.session.dataset_status import (
     PlateStatusPresenter,
 )
 

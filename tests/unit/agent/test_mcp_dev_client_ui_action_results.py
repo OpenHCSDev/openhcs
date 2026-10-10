@@ -1,3 +1,4 @@
+from openhcs.agent.dto.session import DatasetRowState
 """Real CLI/codec action-family checks without a server or UI mutation."""
 import sys
 import json
@@ -15,7 +16,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiBridgeOperationRoute,
     UiMutationReceipt,
     UiMutationRequestToken,
-    UiPlateManagerRowState,
     UiPlateManagerState,
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowResult,
@@ -42,7 +42,7 @@ from python_introspect import to_jsonable
 def action_fixture():
     return UiActionInvokeResult(
         SCHEMA_VERSION,
-        UiActionIdentity(widget_id="plate_manager", action_id="run_plate"),
+        UiActionIdentity(widget_id="plate_manager", action_id="run_datasets"),
         "accepted",
         UiMutationReceipt(UiMutationRequestToken(), accepted=True),
         target_scope_ids=("scope-1",),
@@ -60,9 +60,9 @@ def state_fixture(compiled, revision):
         SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="plate_manager.state"),
         "Plate Manager", True, widget_id="plate_manager",
     )
-    row = UiPlateManagerRowState(
-        plate_scope_id="scope-1", name="plate-one", plate_root="/plate-one",
-        cppipe_path=None, selected=True, initialized=True, compiled=compiled,
+    row = DatasetRowState(
+        scope_id="scope-1", name="plate-one", root="/plate-one",
+        pipeline_path=None, selected=True, initialized=True, compiled=compiled,
         init_pending=False, compile_pending=False, execution_active=False,
         status_prefix="Compiled" if compiled else "Created",
         orchestrator_state="compiled" if compiled else "created",
@@ -87,9 +87,9 @@ def test_named_cli_wait_preserves_action_receipt_poll_and_final_rows(
 ):
     """Actual CLI/controller/codec chain, with only the MCP wire controlled."""
     native = UiSelectedPlateWorkflowResult(
-        SCHEMA_VERSION, UiSelectedPlateWorkflowKind("compile_plate"),
+        SCHEMA_VERSION, UiSelectedPlateWorkflowKind("compile_datasets"),
         replace(action_fixture(),
-                identity=UiActionIdentity(widget_id="plate_manager", action_id="compile_plate"),
+                identity=UiActionIdentity(widget_id="plate_manager", action_id="compile_datasets"),
                 receipt=UiMutationReceipt(UiMutationRequestToken(), "operation-one", True)),
     )
     receipt = UiBridgeOperationRef(
@@ -119,7 +119,7 @@ def test_named_cli_wait_preserves_action_receipt_poll_and_final_rows(
         def forbidden_serialization(value):
             raise AssertionError("Compact polling must retain its typed summary")
         monkeypatch.setattr(serialization, "to_jsonable", forbidden_serialization)
-    argv = ["selected-workflow", "compile_plate", "--wait", "--wait-interval-seconds", "0"]
+    argv = ["selected-workflow", "compile_datasets", "--wait", "--wait-interval-seconds", "0"]
     if json_output:
         argv.append("--json")
     assert dev_client.main(argv) == 0
@@ -144,7 +144,7 @@ def test_named_cli_wait_preserves_action_receipt_poll_and_final_rows(
 
 
 def test_malformed_action_is_nonzero_and_preserves_invalid_wire_payload(monkeypatch, capsys):
-    malformed = {"workflow": "run_plate", "action_result": {"status": "accepted"}}
+    malformed = {"workflow": "run_datasets", "action_result": {"status": "accepted"}}
     result = McpDevToolResult.from_payload(
         agent_capabilities.ui_selected_plate_workflow.name,
         {"isError": False, "structuredContent": malformed, "content": []},
@@ -155,9 +155,9 @@ def test_malformed_action_is_nonzero_and_preserves_invalid_wire_payload(monkeypa
         return response
 
     monkeypatch.setattr(dev_client, "_run_async", controlled_wire)
-    assert dev_client.main(["selected-workflow", "run_plate"]) == 1
+    assert dev_client.main(["selected-workflow", "run_datasets"]) == 1
     assert "mcp_payload_invalid" in capsys.readouterr().out
-    assert dev_client.main(["selected-workflow", "run_plate", "--json"]) == 1
+    assert dev_client.main(["selected-workflow", "run_datasets", "--json"]) == 1
     rejection = json.loads(capsys.readouterr().out)["results"][0]["payloads"][0]
     assert rejection["payload"] == malformed
     assert rejection["errors"] == to_jsonable(result.diagnostic_errors())
@@ -170,18 +170,18 @@ def test_poll_presentation_rejects_row_missing_declared_state_field():
         McpDevServerSpec(sys.executable),
         (action_result(agent_capabilities.ui_get_state_surface, state),
          workflow_poll_summary_result(
-             workflow="compile_plate", poll_requested=True,
+             workflow="compile_datasets", poll_requested=True,
              poll_completed=True, poll_count=1, action_status="accepted",
          )),
     )
-    args = dev_client._build_parser().parse_args(["selected-workflow", "compile_plate", "--wait"])
+    args = dev_client._build_parser().parse_args(["selected-workflow", "compile_datasets", "--wait"])
     with pytest.raises(ValueError, match="missing required field.*initialized"):
         dev_client.McpDevCommandSpec.for_name("selected-workflow").render_result(response, args)
 
 
 def test_actual_generic_cli_retains_nested_action_without_json_roundtrip(monkeypatch, capsys):
     native = UiSelectedPlateWorkflowResult(
-        SCHEMA_VERSION, UiSelectedPlateWorkflowKind("run_plate"), action_fixture(),
+        SCHEMA_VERSION, UiSelectedPlateWorkflowKind("run_datasets"), action_fixture(),
     )
     result = action_result(agent_capabilities.ui_selected_plate_workflow, native)
     response = McpDevToolBatchResponse.from_results(McpDevServerSpec(sys.executable), (result,))
@@ -197,10 +197,10 @@ def test_actual_generic_cli_retains_nested_action_without_json_roundtrip(monkeyp
     monkeypatch.setattr(serialization, "to_jsonable", forbidden_serialization)
     assert dev_client.main([
         "call", agent_capabilities.ui_selected_plate_workflow.name,
-        "--arguments", '{"workflow":"run_plate"}',
+        "--arguments", '{"workflow":"run_datasets"}',
     ]) == 0
     rendered = capsys.readouterr().out
-    assert "action=plate_manager/run_plate status=accepted" in rendered
+    assert "action=plate_manager/run_datasets status=accepted" in rendered
     assert "accepted=True" in rendered and "targets=scope-1" in rendered
     assert workflow_result_action_status(result) == "accepted"
     assert workflow_result_target_scope_ids(result) == ("scope-1",)
@@ -284,7 +284,7 @@ def test_independent_presentation_capabilities_cooperate_in_both_mro_orders(reve
     try:
         assert McpDevOutputRenderer.for_output_contract(ExtendedAction) is extension
         value = ExtendedAction(
-            SCHEMA_VERSION, UiActionIdentity(widget_id="plate_manager", action_id="run_plate"),
+            SCHEMA_VERSION, UiActionIdentity(widget_id="plate_manager", action_id="run_datasets"),
             "accepted", UiMutationReceipt(UiMutationRequestToken(), accepted=True),
         )
         decoded = McpDevToolResult._decode_payload(to_jsonable(value), (ExtendedAction,))

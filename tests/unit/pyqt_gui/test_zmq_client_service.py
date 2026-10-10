@@ -16,7 +16,7 @@ from zmqruntime import (
 from zmqruntime.client import EndpointConnectionAttempt
 
 from openhcs import __version__ as OPENHCS_VERSION
-from openhcs.pyqt_gui.widgets.shared.services.zmq_client_service import ZMQClientService
+from openhcs.authoring.session.execution_client import ZMQClientService
 from openhcs.runtime.zmq_application import (
     OPENHCS_ENDPOINT_APPLICATION,
 )

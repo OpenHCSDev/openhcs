@@ -11,11 +11,12 @@ from openhcs.agent.dto.execution import (
     ArtifactMaterializationPlanSummary,
     ArtifactPlanInspection,
     CompiledStepPlanSummary,
-    ExecutionJobRef,
-    ExecutionJobIdentity,
-    ExecutionJobStatus,
-    OrchestratorSessionRef,
     SourceWorkspaceSummary,
+)
+from openhcs.agent.dto.session import (
+    DatasetListState,
+    SessionEventBatch,
+    SessionOperationResult,
 )
 from openhcs.agent.dto.pipeline import (
     FunctionStepSpec,
@@ -357,49 +358,54 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
         return lines
 
 
-class OrchestratorSessionReferenceRenderer(McpDevOutputRenderer):
-    output_contract = OrchestratorSessionRef
+class SessionOperationResultRenderer(McpDevOutputRenderer):
+    output_contract = SessionOperationResult
 
     @classmethod
     def render_payload(
-        cls, payload: OrchestratorSessionRef, options: McpDevOutputRenderOptions
+        cls, payload: SessionOperationResult, options: McpDevOutputRenderOptions
     ) -> str:
-        return f"Session: id={payload.session_id} uri={payload.uri}"
+        lines = [
+            f"{payload.operation_id}: {payload.status} "
+            f"targets={_sequence_text(payload.target_scope_ids) or '-'} "
+            f"event_sequence={payload.event_sequence}"
+        ]
+        lines.extend(diagnostic_lines(payload.errors))
+        return "\n".join(lines)
 
 
-class ExecutionJobRenderer(McpDevOutputRenderer):
-    """Presentation shared by the actual job-identity family, not sibling DTOs."""
-
-    @staticmethod
-    def identity_line(payload: ExecutionJobIdentity, status: str) -> str:
-        return f"Job: id={payload.job_id} kind={payload.kind} status={status} server_execution={McpDevOutputRenderer.text(payload.server_execution_id)}"
-
-
-class ExecutionJobReferenceRenderer(ExecutionJobRenderer):
-    output_contract = ExecutionJobRef
+class SessionEventBatchRenderer(McpDevOutputRenderer):
+    output_contract = SessionEventBatch
 
     @classmethod
     def render_payload(
-        cls, payload: ExecutionJobRef, options: McpDevOutputRenderOptions
+        cls, payload: SessionEventBatch, options: McpDevOutputRenderOptions
     ) -> str:
-        return cls.identity_line(payload, payload.status)
-
-
-class ExecutionJobStatusRenderer(ExecutionJobRenderer):
-    output_contract = ExecutionJobStatus
-
-    @classmethod
-    def render_payload(
-        cls, payload: ExecutionJobStatus, options: McpDevOutputRenderOptions
-    ) -> str:
-        lines = [cls.identity_line(payload, payload.status)]
-        if payload.response:
-            lines.append(
-                "Response: "
-                + " ".join(f"{key}={value}" for key, value in payload.response.items())
-            )
+        lines = [f"Session events (last_sequence={payload.last_sequence}):"]
         lines.extend(
-            cls.optional_lines(payload.progress, lambda value: (f"Progress: {value}",))
+            f"  #{event.sequence} {event.kind} {event.scope_id or '-'}: {event.message}"
+            for event in payload.events
+        )
+        return "\n".join(lines)
+
+
+class DatasetListRenderer(McpDevOutputRenderer):
+    output_contract = DatasetListState
+
+    @classmethod
+    def render_payload(
+        cls, payload: DatasetListState, options: McpDevOutputRenderOptions
+    ) -> str:
+        lines = [
+            f"Datasets ({len(payload.rows)}): execution={payload.execution_state} "
+            f"available={_sequence_text(payload.available_operation_ids) or '-'}"
+        ]
+        lines.extend(
+            f"  {row.name}: {row.status_prefix or row.orchestrator_state or '-'} "
+            f"initialized={row.initialized} compiled={row.compiled} "
+            f"terminal={McpDevOutputRenderer.text(row.terminal_status)} "
+            f"scope={row.scope_id}"
+            for row in payload.rows
         )
         return "\n".join(lines)
 
@@ -408,25 +414,12 @@ class ExecuteSourceRenderer:
     @classmethod
     def render(cls, response) -> str:
         decoded = McpDevToolBatchResponse.for_rendering(response)
-        session: OrchestratorSessionRef | None = decoded.payload_for(
-            agent_capabilities.create_orchestrator_session_from_pipeline_source
-        )
-        job: ExecutionJobRef | ExecutionJobStatus | None = decoded.payload_for(
-            agent_capabilities.submit_pipeline_execution
-        )
         options = McpDevOutputRenderOptions()
         lines = ["Headless source execution:"]
-        lines.append(
-            "Session: <not created>"
-            if session is None
-            else OrchestratorSessionReferenceRenderer.render_payload(session, options)
-        )
-        lines.append(
-            "Job: <not submitted>"
-            if job is None
-            else McpDevOutputRenderer.render_payload_value(job, options)
-        )
         lines.extend(
-            diagnostic_lines(decoded.diagnostic_errors())
+            McpDevOutputRenderer.render_payload_value(payload, options)
+            for result in decoded.results
+            if (payload := result.first_decoded_payload()) is not None
         )
+        lines.extend(diagnostic_lines(decoded.diagnostic_errors()))
         return "\n".join(lines)

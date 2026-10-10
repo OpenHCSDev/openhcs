@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import ast
 import inspect
-import time
 from collections.abc import Callable
 from dataclasses import dataclass, fields
 from pathlib import Path
@@ -18,7 +17,6 @@ from pyqt_reactive.services.window_snapshot import (
 )
 from zmqruntime.client import EndpointShutdownResult
 from zmqruntime.config import TransportMode
-from zmqruntime.execution import ExecutionProgressObservation
 from zmqruntime.execution.server import ExecutionServer
 from zmqruntime.messages import (
     PongResponse,
@@ -31,11 +29,8 @@ from openhcs.agent.dto.authoring import AuthoringContextRequest
 from openhcs.agent.dto.config import ConfigPatch
 from openhcs.agent.dto.execution import (
     MAX_EXECUTION_STATUS_TRACEBACK_CHARS,
-    ExecutionCancellationRequest,
     ExecutionConnectionSpec,
-    OrchestratorSessionCreationRequest,
     PipelineSourceArtifactPlanInspectionRequest,
-    PipelineSourceOrchestratorSessionRequest,
     RuntimeServerExecutionStatusRequest,
 )
 from openhcs.agent.dto.functions import FunctionParameterSource
@@ -56,14 +51,13 @@ from openhcs.agent.dto.viewer import (
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services import function_catalog_service as function_catalog_module
-from openhcs.agent.services import execution_session_service as execution_session_module
+from openhcs.agent.services import artifact_plan_inspection_service as artifact_plan_module
 from openhcs.agent.services import viewer_window_service as viewer_window_service_module
 from openhcs.agent.services.config_service import ConfigService
-from openhcs.agent.services.execution_session_service import (
+from openhcs.agent.services.artifact_plan_inspection_service import (
+    ArtifactPlanInspectionService,
     CompileInspectionGatewayABC,
     CompileInspectionResult,
-    ExecutionSessionService,
-    PipelineSourceSessionRequest,
     artifact_plan_inspection_from_compilation,
 )
 from openhcs.agent.services.function_catalog_service import (
@@ -132,14 +126,6 @@ from openhcs.runtime.viewer_protocol import (
     ViewerStateControlOptions,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.runtime.zmq_execution_client import (
-    ExecutionSubmissionPreparationTimeoutError,
-)
-from openhcs.runtime.zmq_execution_signature import (
-    ZMQExecutionIdentity,
-    ZMQRuntimeObservationExportScope,
-)
-from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -284,237 +270,9 @@ def _pipeline_document_source(
     )
 
 
-def test_execution_session_request_contracts_do_not_mirror_pipeline_config_id():
-    request_types = (
-        OrchestratorSessionCreationRequest,
-        PipelineSourceOrchestratorSessionRequest,
-        PipelineSourceArtifactPlanInspectionRequest,
-    )
-
-    assert all(
-        "pipeline_config_id" not in {field.name for field in fields(request_type)}
-        for request_type in request_types
-    )
-
-
-def test_execution_cancellation_request_requires_job_and_bounded_timeout():
-    with pytest.raises(ValueError):
-        ExecutionCancellationRequest(job_id="")
-    with pytest.raises(ValueError):
-        ExecutionCancellationRequest(job_id="job-1", timeout_ms=0)
-
-
 class _ExecutionTestId:
     COMPILE = "compile-1"
     EXECUTE = "execute-1"
-
-
-class _FakeExecutionClient:
-    def __init__(self) -> None:
-        self.compile_submissions = []
-        self.execution_submissions = []
-        self.status_requests = []
-        self.wait_requests = []
-        self.submit_timeout_requests = []
-        self.progress_by_execution_id = {}
-        self.disconnect_count = 0
-
-    def endpoint_handshake(self):
-        return None
-
-    def submit_prepared_pipeline(self, request, *, timeout_ms=OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms):
-        if request.compile_control.compile_only:
-            return self.submit_compile(request, timeout_ms=timeout_ms)
-        return self.submit_pipeline(request, timeout_ms=timeout_ms)
-
-    def submit_compile(
-        self,
-        submission,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
-    ):
-        self.submit_timeout_requests.append(("compile", timeout_ms))
-        self.compile_submissions.append(submission)
-        return {"status": "accepted", "execution_id": _ExecutionTestId.COMPILE}
-
-    def submit_pipeline(
-        self,
-        submission,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
-    ):
-        self.submit_timeout_requests.append(("execute", timeout_ms))
-        self.execution_submissions.append(submission)
-        return {"status": "accepted", "execution_id": _ExecutionTestId.EXECUTE}
-
-    def get_status(
-        self,
-        execution_id=None,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ):
-        self.status_requests.append((execution_id, timeout_ms))
-        return {"status": "complete", "execution_id": execution_id}
-
-    def cancel_execution(
-        self,
-        execution_id: str,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ):
-        return {"status": "error", "error": "Cancellation not configured in fake"}
-
-    def wait_for_completion(self, execution_id: str):
-        self.wait_requests.append(execution_id)
-        return {"status": "complete", "execution_id": execution_id}
-
-    def progress_observation(self, execution_id: str):
-        return self.progress_by_execution_id.get(execution_id)
-
-    def disconnect(self) -> None:
-        self.disconnect_count += 1
-
-
-class _EnvelopeStatusExecutionClient(_FakeExecutionClient):
-    def get_status(
-        self,
-        execution_id=None,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ):
-        self.status_requests.append((execution_id, timeout_ms))
-        return {
-            "status": "ok",
-            "execution": {
-                "status": "running",
-                "execution_id": execution_id,
-            },
-        }
-
-
-class _DisconnectFailureExecutionClient(_FakeExecutionClient):
-    def disconnect(self) -> None:
-        super().disconnect()
-        raise RuntimeError("synthetic disconnect failure")
-
-
-class _HeadlessCompleteExecutionClient(_FakeExecutionClient):
-    def get_status(
-        self,
-        execution_id=None,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ):
-        self.status_requests.append((execution_id, timeout_ms))
-        return {
-            "status": "ok",
-            "execution": {
-                "status": "complete",
-                "execution_id": execution_id,
-                "results_summary": {
-                    "output_plate_root": "/tmp/source_openhcs",
-                    "auto_add_output_plate_to_plate_manager": False,
-                },
-            },
-        }
-
-
-class _FailedStatusExecutionClient(_FakeExecutionClient):
-    def get_status(
-        self,
-        execution_id=None,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ):
-        self.status_requests.append((execution_id, timeout_ms))
-        return {
-            "status": "ok",
-            "execution": {
-                "status": "failed",
-                "execution_id": execution_id,
-                "error": "synthetic failure",
-                "traceback": "T" * (MAX_EXECUTION_STATUS_TRACEBACK_CHARS + 200),
-            },
-        }
-
-
-class _CustomFunctionImportFailedStatusExecutionClient(_FakeExecutionClient):
-    def get_status(
-        self,
-        execution_id=None,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ):
-        self.status_requests.append((execution_id, timeout_ms))
-        message = (
-            "cannot import name 'agent_threshold_mask' from "
-            "'openhcs.processing.custom_functions'"
-        )
-        return {
-            "status": "ok",
-            "execution": {
-                "status": "failed",
-                "execution_id": execution_id,
-                "error": message,
-                "traceback": f"ImportError: {message}",
-            },
-        }
-
-
-class _TimeoutStatusExecutionClient(_FakeExecutionClient):
-    def get_status(
-        self,
-        execution_id=None,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    ):
-        self.status_requests.append((execution_id, timeout_ms))
-        raise TimeoutError(f"status timed out after {timeout_ms}ms")
-
-
-class _TimeoutSubmitExecutionClient(_FakeExecutionClient):
-    def submit_compile(
-        self,
-        submission,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
-    ):
-        self.submit_timeout_requests.append(("compile", timeout_ms))
-        raise TimeoutError(f"submit timed out after {timeout_ms}ms")
-
-
-class _PreparationTimeoutSubmitExecutionClient(_FakeExecutionClient):
-    def submit_compile(
-        self,
-        submission,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
-    ):
-        self.submit_timeout_requests.append(("compile", timeout_ms))
-        raise ExecutionSubmissionPreparationTimeoutError("No execute request was sent.")
-
-
-class _SlowSubmitExecutionClient(_FakeExecutionClient):
-    def submit_compile(
-        self,
-        submission,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
-    ):
-        self.submit_timeout_requests.append(("compile", timeout_ms))
-        time.sleep(0.05)
-        self.compile_submissions.append(submission)
-        return {"status": "accepted", "execution_id": _ExecutionTestId.COMPILE}
-
-
-class _FakeExecutionClientFactory:
-    def __init__(self, client: _FakeExecutionClient) -> None:
-        self.client = client
-        self.creation_count = 0
-
-    def create_client(self, connection):
-        self.creation_count += 1
-        return self.client
 
 
 def _compile_inspection_result(
@@ -3133,321 +2891,28 @@ def test_pipeline_authoring_service_warns_for_empty_pipeline(monkeypatch):
     assert "openhcs_add_function_step" in validation.warnings[0].hint
 
 
-def test_execution_session_service_submits_compile_and_execution_jobs(
-    monkeypatch,
-    tmp_path: Path,
-):
-    pipeline_service = PipelineAuthoringService(_catalog(monkeypatch))
-    pipeline_ref = pipeline_service.create_pipeline()
-    step = pipeline_service.make_step_spec(
-        function_id="test:sample_processing_function",
-        kwargs={"sigma": 2.0},
-    )
-    pipeline_service.add_step(pipeline_ref, step)
-    fake_client = _FakeExecutionClient()
-    client_factory = _FakeExecutionClientFactory(fake_client)
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=pipeline_service,
-        config_service=ConfigService(),
-        client_factory=client_factory,
-    )
-
-    session_ref = execution_service.create_session(
-        plate_path=str(tmp_path),
-        pipeline_id=pipeline_ref.pipeline_id,
-    )
-    session = execution_service.get_session(session_ref.session_id)
-    compile_ref = execution_service.submit_compile(session_ref.session_id)
-    execute_ref = execution_service.submit_execution(
-        session_ref.session_id,
-        compile_artifact_id=_ExecutionTestId.COMPILE,
-    )
-    compile_status = execution_service.get_job_status(compile_ref.job_id)
-
-    assert compile_ref.server_execution_id == _ExecutionTestId.COMPILE
-    assert execute_ref.server_execution_id == _ExecutionTestId.EXECUTE
-    assert compile_status.status == "complete"
-    assert fake_client.submit_timeout_requests == [
-        ("compile", OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms),
-        ("execute", OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms),
-    ]
-    assert fake_client.compile_submissions[0].identity.plate_id == str(tmp_path.resolve())
-    assert (
-        session.pipeline_config_id
-        == pipeline_service.get_pipeline(pipeline_ref).pipeline_config_id
-    )
-    assert (
-        PipelineDocumentCodec.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_config
-        == pipeline_service.to_pipeline_document(pipeline_ref).pipeline_config
-    )
-    assert fake_client.status_requests[0] == (
-        _ExecutionTestId.COMPILE,
-        OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    )
-    assert client_factory.creation_count == 2
-    assert fake_client.disconnect_count == 1
-    repeated_status = execution_service.get_job_status(compile_ref.job_id)
-    assert repeated_status.status == "complete"
-    assert len(fake_client.status_requests) == 1
-    assert fake_client.disconnect_count == 1
-    assert (
-        fake_client.execution_submissions[0].compile_control.compile_artifact_id
-        == _ExecutionTestId.COMPILE
-    )
-    assert type(PipelineDocumentCodec.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_steps) is list
-    assert len(PipelineDocumentCodec.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_steps) == 1
-    assert not hasattr(fake_client.compile_submissions[0], "submission_pipeline")
-
-
-def test_execution_session_observation_export_uses_ordinary_submission(
-    monkeypatch, tmp_path: Path
-) -> None:
-    fake_client = _FakeExecutionClient()
-    service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-    session = service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    export_path = tmp_path / "evidence" / "observation.pkl"
-
-    job = service.submit_execution(
-        session.session_id,
-        runtime_observation_export_path=str(export_path),
-    )
-
-    assert job.server_execution_id == _ExecutionTestId.EXECUTE
-    assert fake_client.execution_submissions[0].config_params == {
-        "runtime_observation_export_path": str(export_path),
-        "runtime_observation_export_scope": "values",
-    }
-
-    outcome_path = tmp_path / "evidence" / "outcomes.pkl"
-    outcome_job = service.submit_execution(
-        session.session_id,
-        runtime_observation_export_path=str(outcome_path),
-        runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
-    )
-    assert outcome_job.server_execution_id == _ExecutionTestId.EXECUTE
-    assert fake_client.execution_submissions[1].config_params == {
-        "runtime_observation_export_path": str(outcome_path),
-        "runtime_observation_export_scope": "outcomes",
-    }
-    with pytest.raises(ValueError, match="requires an export path"):
-        service.submit_execution(
-            session.session_id,
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
-        )
-
-    with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
-        service.submit_execution(
-            session.session_id,
-            runtime_observation_export_path=str(tmp_path.parent / "outside.pkl"),
-        )
-    export_path.parent.mkdir()
-    export_path.touch()
-    with pytest.raises(FileExistsError, match="already exists"):
-        service.submit_execution(
-            session.session_id,
-            runtime_observation_export_path=str(export_path),
-        )
-    assert len(fake_client.execution_submissions) == 2
-
-
-def test_execution_session_service_cancels_through_submitting_client(
-    monkeypatch,
-    tmp_path: Path,
-):
-    class CancellableExecutionClient(_FakeExecutionClient):
-        def __init__(self) -> None:
-            super().__init__()
-            self.cancel_requests: list[tuple[str, int]] = []
-            self.cancelled = False
-
-        def cancel_execution(self, execution_id, *, timeout_ms):
-            self.cancel_requests.append((execution_id, timeout_ms))
-            self.cancelled = True
-            return {"status": "ok", "message": "Cancelled"}
-
-        def get_status(self, execution_id=None, *, timeout_ms):
-            self.status_requests.append((execution_id, timeout_ms))
-            return {
-                "status": "cancelled" if self.cancelled else "running",
-                "execution_id": execution_id,
-            }
-
-    client = CancellableExecutionClient()
-    service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(client),
-    )
-    session = service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    job = service.submit_execution(session.session_id)
-
-    cancelled = service.cancel_job(job.job_id, timeout_ms=1234)
-
-    assert cancelled.applied is True
-    assert cancelled.job_status.status == "cancelled"
-    assert cancelled.job_status.is_terminal
-    assert client.cancel_requests == [(_ExecutionTestId.EXECUTE, 1234)]
-    assert client.status_requests == [(_ExecutionTestId.EXECUTE, 1234)]
-    assert client.disconnect_count == 1
-
-    repeated = service.cancel_job(job.job_id)
-    assert repeated.applied is False
-    assert repeated.job_status.status == "cancelled"
-    assert client.cancel_requests == [(_ExecutionTestId.EXECUTE, 1234)]
-
-
-def test_execution_session_service_reports_rejected_cancellation(
-    monkeypatch,
-    tmp_path: Path,
-):
-    class RejectingExecutionClient(_FakeExecutionClient):
-        def get_status(self, execution_id=None, *, timeout_ms):
-            return {"status": "running", "execution_id": execution_id}
-
-    client = RejectingExecutionClient()
-    service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(client),
-    )
-    session = service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    job = service.submit_execution(session.session_id)
-
-    outcome = service.cancel_job(job.job_id)
-
-    assert outcome.applied is False
-    assert outcome.job_status.status == "running"
-    assert outcome.errors[0].code == "execution_cancel_rejected"
-    assert "not configured" in outcome.errors[0].message
-    assert client.disconnect_count == 0
-
-
-def test_execution_session_service_preserves_terminal_result_when_release_fails(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _DisconnectFailureExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    compile_ref = execution_service.submit_compile(session_ref.session_id)
-
-    status = execution_service.get_job_status(compile_ref.job_id)
-
-    assert status.status == "complete"
-    assert fake_client.disconnect_count == 1
-
-
-def test_execution_session_service_preserves_pipeline_source_document(
-    monkeypatch,
-    tmp_path: Path,
-):
-    pipeline_config = PipelineConfig(num_workers=7)
-    pipeline_source = _pipeline_document_source(pipeline_config)
-    fake_client = _FakeExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=pipeline_source,
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    execution_service.submit_compile(session_ref.session_id)
-
-    submission = fake_client.compile_submissions[0]
-    assert submission.pipeline_code == pipeline_source
-    assert PipelineDocumentCodec.from_source(submission.pipeline_code).pipeline_steps == []
-    assert PipelineDocumentCodec.from_source(submission.pipeline_code).pipeline_config == pipeline_config
-    assert not hasattr(submission, "pipeline_steps_boundary")
-
-
-def test_execution_session_service_inspects_pipeline_source_artifact_plan(
+def test_artifact_plan_inspection_inspects_pipeline_source_artifact_plan(
     monkeypatch,
     tmp_path: Path,
 ):
     compile_gateway = _FakeCompileInspectionGateway()
-    execution_service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,),
             writable_roots=(tmp_path,),
         ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
         config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=compile_gateway,
     )
 
-    inspection = execution_service.inspect_pipeline_source_artifact_plan(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+    inspection = service.inspect(
+        PipelineSourceArtifactPlanInspectionRequest(
+            plate_path=str(tmp_path),
             pipeline_source=_pipeline_document_source(),
             global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        ),
-        axis_filter=("A01",),
+            axis_filter=("A01",
+        )
+    ),
     )
 
     assert compile_gateway.requests[0].plate == tmp_path.resolve()
@@ -3571,26 +3036,23 @@ def test_compile_inspection_rejects_read_only_plate_before_initialization(
         (plate / "openhcs_metadata.json").write_text('{"saved": true}')
     before = {path.name: path.read_bytes() for path in plate.iterdir()}
     gateway = _WorkspacePreparingCompileInspectionGateway()
-    service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(plate,),
             writable_roots=(output,),
         ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
         config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=gateway,
     )
 
     with pytest.raises(AgentPathPolicyError, match="Writable path is outside"):
-        service.inspect_pipeline_source_artifact_plan(
-            PipelineSourceSessionRequest(
-                identity=ZMQExecutionIdentity(plate_id=str(plate)),
-                pipeline_source=_pipeline_document_source(),
-                global_config_id=None,
-                connection=ExecutionConnectionSpec(),
-            ),
+        service.inspect(
+        PipelineSourceArtifactPlanInspectionRequest(
+            plate_path=str(plate),
+            pipeline_source=_pipeline_document_source(),
+            global_config_id=None,
         )
+    )
 
     assert gateway.requests == []
     assert {path.name: path.read_bytes() for path in plate.iterdir()} == before
@@ -3638,25 +3100,22 @@ def test_compile_inspection_rejects_escaping_metadata_transaction(
         lock.symlink_to(plate / "admitted.lock")
     config = metadata_module.OpenHCSMetadataConfig(METADATA_FILENAME=filename)
     monkeypatch.setattr(metadata_module, "METADATA_CONFIG", config)
-    monkeypatch.setattr(execution_session_module, "METADATA_CONFIG", config)
+    monkeypatch.setattr(artifact_plan_module, "METADATA_CONFIG", config)
     before = tuple((path.name, path.is_symlink()) for path in outside.iterdir())
     gateway = _MetadataTransactionCompileInspectionGateway()
-    service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(plate,), writable_roots=(plate,)
         ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
         config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=gateway,
     )
     with pytest.raises(AgentPathPolicyError, match="Writable path is outside"):
-        service.inspect_pipeline_source_artifact_plan(
-            PipelineSourceSessionRequest(
-                identity=ZMQExecutionIdentity(plate_id=str(plate)),
+        service.inspect(
+            PipelineSourceArtifactPlanInspectionRequest(
+                plate_path=str(plate),
                 pipeline_source=_pipeline_document_source(),
                 global_config_id=None,
-                connection=ExecutionConnectionSpec(),
             )
         )
     assert gateway.requests == []
@@ -3672,24 +3131,21 @@ def test_compile_inspection_uses_metadata_owner_despite_environment_drift(
         METADATA_FILENAME="transaction/metadata.json"
     )
     monkeypatch.setattr(metadata_module, "METADATA_CONFIG", config)
-    monkeypatch.setattr(execution_session_module, "METADATA_CONFIG", config)
+    monkeypatch.setattr(artifact_plan_module, "METADATA_CONFIG", config)
     monkeypatch.setenv("OPENHCS_METADATA_FILENAME", "../unadmitted/metadata.json")
     gateway = _MetadataTransactionCompileInspectionGateway()
-    service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,), writable_roots=(tmp_path,)
         ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
         config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=gateway,
     )
-    inspection = service.inspect_pipeline_source_artifact_plan(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+    inspection = service.inspect(
+        PipelineSourceArtifactPlanInspectionRequest(
+            plate_path=str(tmp_path),
             pipeline_source=_pipeline_document_source(),
             global_config_id=None,
-            connection=ExecutionConnectionSpec(),
         )
     )
     assert inspection.errors == ()
@@ -3708,28 +3164,25 @@ def test_compile_inspection_capability_declares_workspace_persistence():
     assert spec.side_effects == ("may_persist_workspace_metadata",)
 
 
-def test_execution_session_service_warns_when_compile_inspection_initializes_workspace(
+def test_artifact_plan_inspection_warns_when_compile_inspection_initializes_workspace(
     monkeypatch,
     tmp_path: Path,
 ):
-    execution_service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,),
             writable_roots=(tmp_path,),
         ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
         config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=_WorkspacePreparingCompileInspectionGateway(),
     )
 
-    inspection = execution_service.inspect_pipeline_source_artifact_plan(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+    inspection = service.inspect(
+        PipelineSourceArtifactPlanInspectionRequest(
+            plate_path=str(tmp_path),
             pipeline_source=_pipeline_document_source(),
             global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        ),
+        )
     )
 
     assert inspection.errors == ()
@@ -3738,48 +3191,43 @@ def test_execution_session_service_warns_when_compile_inspection_initializes_wor
     assert "openhcs_inspect_plate_path" in inspection.warnings[0].hint
 
 
-def test_execution_session_service_projects_invalid_pipeline_document_errors(
+def test_artifact_plan_inspection_projects_invalid_pipeline_document_errors(
     monkeypatch,
     tmp_path: Path,
 ):
-    execution_service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,),
             writable_roots=(tmp_path,),
         ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
         config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=_FakeCompileInspectionGateway(),
     )
 
-    inspection = execution_service.inspect_pipeline_source_artifact_plan(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+    inspection = service.inspect(
+        PipelineSourceArtifactPlanInspectionRequest(
+            plate_path=str(tmp_path),
             pipeline_source="x = 1\n",
             global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        ),
+        )
     )
 
     assert inspection.errors[0].code == "pipeline_source_invalid_document"
     assert "openhcs_render_pipeline_source" in inspection.errors[0].hint
 
 
-def test_execution_session_service_projects_missing_artifact_input_guidance(
+def test_artifact_plan_inspection_projects_missing_artifact_input_guidance(
     monkeypatch,
     tmp_path: Path,
 ):
     from openhcs.core.pipeline.path_planner import MissingArtifactInputError
 
-    execution_service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,),
             writable_roots=(tmp_path,),
         ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
         config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=_FailingCompileInspectionGateway(
             MissingArtifactInputError(
                 step_id=0,
@@ -3789,13 +3237,12 @@ def test_execution_session_service_projects_missing_artifact_input_guidance(
         ),
     )
 
-    inspection = execution_service.inspect_pipeline_source_artifact_plan(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+    inspection = service.inspect(
+        PipelineSourceArtifactPlanInspectionRequest(
+            plate_path=str(tmp_path),
             pipeline_source=_pipeline_document_source(),
             global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        ),
+        )
     )
 
     error = inspection.errors[0]
@@ -3806,31 +3253,28 @@ def test_execution_session_service_projects_missing_artifact_input_guidance(
     assert "openhcs_architecture_quick_start#compile-before-execution" in error.hint
 
 
-def test_execution_session_service_projects_pixel_size_compile_inspection_error(
+def test_artifact_plan_inspection_projects_pixel_size_compile_inspection_error(
     monkeypatch,
     tmp_path: Path,
 ):
     image_path = tmp_path / "A14_s001_w1_z001_t001.tif"
-    execution_service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,),
             writable_roots=(tmp_path,),
         ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
         config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=_FailingCompileInspectionGateway(
             PixelSizeUnavailableError(image_path)
         ),
     )
 
-    inspection = execution_service.inspect_pipeline_source_artifact_plan(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+    inspection = service.inspect(
+        PipelineSourceArtifactPlanInspectionRequest(
+            plate_path=str(tmp_path),
             pipeline_source=_pipeline_document_source(),
             global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        ),
+        )
     )
 
     error = inspection.errors[0]
@@ -3847,23 +3291,20 @@ def test_compile_inspection_syntax_error_preflight_avoids_compile_gateway(
     tmp_path: Path,
 ):
     compile_gateway = _FakeCompileInspectionGateway()
-    execution_service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,),
             writable_roots=(tmp_path,),
         ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
         config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=compile_gateway,
     )
 
-    inspection = execution_service.inspect_pipeline_source_artifact_plan(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+    inspection = service.inspect(
+        PipelineSourceArtifactPlanInspectionRequest(
+            plate_path=str(tmp_path),
             pipeline_source="not valid python !!!",
             global_config_id=None,
-            connection=ExecutionConnectionSpec(),
         )
     )
 
@@ -3876,553 +3317,30 @@ def test_compile_inspection_requires_direct_pipeline_step_list(
     tmp_path: Path,
 ) -> None:
     compile_gateway = _FakeCompileInspectionGateway()
-    execution_service = ExecutionSessionService(
+    service = ArtifactPlanInspectionService(
         path_policy=AgentPathPolicy.with_roots(
             readable_roots=(tmp_path,),
             writable_roots=(tmp_path,),
         ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
         config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=compile_gateway,
     )
 
-    inspection = execution_service.inspect_pipeline_source_artifact_plan(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+    inspection = service.inspect(
+        PipelineSourceArtifactPlanInspectionRequest(
+            plate_path=str(tmp_path),
             pipeline_source=(
                 "from openhcs.core.config import PipelineConfig\n"
                 "pipeline_config = PipelineConfig()\n"
                 "pipeline_steps = ()\n"
             ),
             global_config_id=None,
-            connection=ExecutionConnectionSpec(),
         )
     )
 
     assert inspection.errors[0].code == "pipeline_source_invalid_document"
     assert "list[FunctionStep]" in inspection.errors[0].message
     assert compile_gateway.requests == []
-
-
-def test_pipeline_source_session_uses_prepared_execution_plate(tmp_path: Path):
-    source = tmp_path / "source"
-    prepared = tmp_path / "prepared"
-    source.mkdir()
-    prepared.mkdir()
-    request = PipelineSourceOrchestratorSessionRequest.from_fields(
-        plate_path=str(source),
-        execution_plate_path=str(prepared),
-        pipeline_source=_pipeline_document_source(),
-    )
-    fake_client = _FakeExecutionClient()
-    service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
-        ),
-        pipeline_service=PipelineAuthoringService(),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-
-    session_ref = service.create_session_from_pipeline_source_request(request)
-    session = service.get_session(session_ref.session_id)
-
-    assert session.plate_path == str(source)
-    assert session.execution_plate_path == str(prepared)
-    assert session.selected_pipeline_path is None
-    job = service.submit_execution(session_ref.session_id)
-    assert job.server_execution_id == _ExecutionTestId.EXECUTE
-    assert fake_client.execution_submissions[0].identity.execution_plate_id == str(prepared)
-    assert fake_client.execution_submissions[0].identity.selected_pipeline_path is None
-
-    with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
-        service.create_session_from_pipeline_source_request(
-            PipelineSourceOrchestratorSessionRequest.from_fields(
-                plate_path=str(source),
-                execution_plate_path=str(tmp_path.parent / "outside"),
-                pipeline_source=_pipeline_document_source(),
-            )
-        )
-
-
-def test_completed_pipeline_job_retains_exact_submission_and_server_result(
-    tmp_path: Path,
-):
-    class CompleteClient(_FakeExecutionClient):
-        def get_status(
-            self,
-            execution_id=None,
-            *,
-            timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-        ):
-            self.status_requests.append((execution_id, timeout_ms))
-            return {
-                "status": "ok",
-                "execution": {
-                    "execution_id": execution_id,
-                    "subject_id": str(tmp_path),
-                    "client_address": None,
-                    "status": "complete",
-                    "start_time": 10.0,
-                    "end_time": 12.0,
-                    "results_summary": {"output_plate_root": str(tmp_path)},
-                },
-            }
-
-    fake_client = CompleteClient()
-    service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
-        ),
-        pipeline_service=PipelineAuthoringService(),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-    session = service.create_session_from_pipeline_source_request(
-        PipelineSourceOrchestratorSessionRequest.from_fields(
-            plate_path=str(tmp_path),
-            pipeline_source=_pipeline_document_source(),
-        )
-    )
-    job = service.submit_execution(session.session_id)
-
-    completed = service.require_completed_pipeline_execution(job.job_id)
-
-    assert completed.request is fake_client.execution_submissions[0]
-    assert completed.record.start_time == 10.0
-    assert completed.record.end_time == 12.0
-    assert completed.record.results_summary == {"output_plate_root": str(tmp_path)}
-    assert fake_client.disconnect_count == 1
-    assert service.require_completed_pipeline_execution(job.job_id) == completed
-    assert fake_client.disconnect_count == 1
-
-    compile_job = service.submit_compile(session.session_id)
-    with pytest.raises(ValueError, match="not a pipeline execution"):
-        service.require_completed_pipeline_execution(compile_job.job_id)
-
-
-def test_accepted_job_survives_optional_endpoint_observation_failure(
-    tmp_path: Path,
-):
-    class UnreadableEndpointClient(_FakeExecutionClient):
-        def endpoint_handshake(self):
-            raise RuntimeError("endpoint metadata unavailable")
-
-    fake_client = UnreadableEndpointClient()
-    service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
-        ),
-        pipeline_service=PipelineAuthoringService(),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-    session = service.create_session_from_pipeline_source_request(
-        PipelineSourceOrchestratorSessionRequest.from_fields(
-            plate_path=str(tmp_path),
-            pipeline_source=_pipeline_document_source(),
-        )
-    )
-
-    job = service.submit_execution(session.session_id)
-
-    assert job.server_execution_id == _ExecutionTestId.EXECUTE
-    assert service.get_job_status(job.job_id).status == "complete"
-    assert fake_client.disconnect_count == 1
-
-
-def test_pipeline_source_session_rejects_competing_selected_pipeline_path(
-    tmp_path: Path,
-):
-    with pytest.raises(ValueError, match="selected_pipeline_path must be None"):
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(
-                plate_id=str(tmp_path),
-                selected_pipeline_path=str(tmp_path / "pipeline.cppipe"),
-            ),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-
-
-def test_execution_session_service_reports_nested_runtime_status(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _EnvelopeStatusExecutionClient()
-    fake_client.progress_by_execution_id[_ExecutionTestId.COMPILE] = (
-        ExecutionProgressObservation(
-            sequence=1,
-            event={
-                "execution_id": _ExecutionTestId.COMPILE,
-                "phase": "compile",
-                "status": "running",
-                "percent": 25.0,
-            }
-        )
-    )
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    compile_ref = execution_service.submit_compile(session_ref.session_id)
-    status = execution_service.get_job_status(compile_ref.job_id)
-
-    assert status.status == "running"
-    assert status.response["status"] == "ok"
-    assert status.progress is not None
-    assert status.progress.sequence == 1
-    assert status.progress.event["phase"] == "compile"
-    serialized_status = to_jsonable(status)
-    assert serialized_status["progress"]["event"]["phase"] == "compile"
-    assert fake_client.status_requests[0] == (
-        _ExecutionTestId.COMPILE,
-        OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    )
-
-
-def test_execution_session_service_warns_when_headless_run_skips_plate_manager(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _HeadlessCompleteExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    execute_ref = execution_service.submit_execution(session_ref.session_id)
-    status = execution_service.get_job_status(execute_ref.job_id)
-
-    assert status.status == "complete"
-    assert status.warnings[0].code == "headless_execution_did_not_update_plate_manager"
-    assert "plate_manager.orchestrator_config" in status.warnings[0].hint
-    assert "openhcs_ui_selected_plate_workflow" in status.warnings[0].hint
-
-
-def test_execution_session_service_wait_true_is_bounded_polling(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _EnvelopeStatusExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    status = execution_service.submit_compile(
-        session_ref.session_id,
-        wait=True,
-        wait_timeout_ms=1,
-    )
-
-    assert status.status == "running"
-    assert status.warnings[0].code == "execution_wait_timeout"
-    assert status.response["wait_timed_out"] is True
-    assert status.response["wait_timeout_ms"] == 1
-    assert fake_client.status_requests[0][0] == _ExecutionTestId.COMPILE
-    assert fake_client.status_requests[0][1] <= OPENHCS_ZMQ_CONFIG.control_timeout_ms
-    assert fake_client.wait_requests == []
-
-
-def test_execution_session_service_wait_job_keeps_accepted_job_addressable(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _EnvelopeStatusExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    submitted = execution_service.submit_execution(session_ref.session_id, wait=False)
-
-    status = execution_service.wait_job(submitted.job_id, timeout_ms=1)
-
-    assert status.job_id == submitted.job_id
-    assert status.response["wait_timed_out"] is True
-    assert status.status == "running"
-    assert execution_service.get_job_status(submitted.job_id).job_id == submitted.job_id
-    assert fake_client.disconnect_count == 0
-
-
-def test_execution_session_service_wait_true_converts_status_timeout_to_warning(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _TimeoutStatusExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    status = execution_service.submit_compile(
-        session_ref.session_id,
-        wait=True,
-        wait_timeout_ms=1,
-    )
-
-    assert status.status == "running"
-    assert status.errors == ()
-    assert status.warnings[0].code == "execution_wait_timeout"
-    assert status.response["wait_timed_out"] is True
-    assert status.response["last_status_error"]["exception_type"] == "TimeoutError"
-    assert fake_client.status_requests[0][0] == _ExecutionTestId.COMPILE
-    assert fake_client.wait_requests == []
-
-
-def test_execution_session_service_submit_timeout_returns_agent_error(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _TimeoutSubmitExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    status = execution_service.submit_compile(
-        session_ref.session_id,
-        submit_timeout_ms=7,
-    )
-
-    assert status.status == "submit_error"
-    assert status.errors[0].code == "execution_submit_timeout"
-    assert "unknown" in status.errors[0].hint
-    assert status.response["submit_timeout_ms"] == 7
-    assert fake_client.submit_timeout_requests == [("compile", 7)]
-
-
-def test_execution_session_service_reports_known_preparation_timeout(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _PreparationTimeoutSubmitExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-
-    status = execution_service.submit_compile(
-        session_ref.session_id,
-        submit_timeout_ms=7,
-    )
-
-    assert status.status == "submit_error"
-    assert status.errors[0].code == "execution_submit_timeout"
-    assert "no execution request was sent" in status.errors[0].hint
-    assert "outcome is unknown" not in status.errors[0].hint
-
-
-def test_execution_session_service_does_not_abandon_live_submit_operation(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _SlowSubmitExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    started = time.monotonic()
-    ref = execution_service.submit_compile(
-        session_ref.session_id,
-        submit_timeout_ms=5,
-    )
-    elapsed = time.monotonic() - started
-
-    assert elapsed >= 0.05
-    assert ref.status == "accepted"
-    assert ref.server_execution_id == _ExecutionTestId.COMPILE
-    assert fake_client.submit_timeout_requests == [("compile", 5)]
-    assert len(fake_client.compile_submissions) == 1
-
-
-def test_execution_session_service_bounds_failed_execution_status(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _FailedStatusExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    execute_ref = execution_service.submit_execution(session_ref.session_id)
-    status = execution_service.get_job_status(execute_ref.job_id)
-
-    execution_payload = status.response["execution"]
-
-    assert status.status == "failed"
-    assert status.errors[0].code == "execution_failed"
-    assert status.errors[0].message == "synthetic failure"
-    assert len(execution_payload["traceback"]) == MAX_EXECUTION_STATUS_TRACEBACK_CHARS
-    assert execution_payload["traceback_truncated"] is True
-    assert (
-        execution_payload["traceback_original_chars"]
-        == MAX_EXECUTION_STATUS_TRACEBACK_CHARS + 200
-    )
-    assert fake_client.status_requests[0] == (
-        _ExecutionTestId.EXECUTE,
-        OPENHCS_ZMQ_CONFIG.control_timeout_ms,
-    )
-
-
-def test_execution_session_service_hints_custom_function_import_failures(
-    monkeypatch,
-    tmp_path: Path,
-):
-    fake_client = _CustomFunctionImportFailedStatusExecutionClient()
-    execution_service = ExecutionSessionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,),
-            writable_roots=(tmp_path,),
-        ),
-        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
-        config_service=ConfigService(),
-        client_factory=_FakeExecutionClientFactory(fake_client),
-    )
-
-    session_ref = execution_service.create_session_from_pipeline_source(
-        PipelineSourceSessionRequest(
-            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
-            pipeline_source=_pipeline_document_source(),
-            global_config_id=None,
-            connection=ExecutionConnectionSpec(),
-        )
-    )
-    execute_ref = execution_service.submit_execution(session_ref.session_id)
-    status = execution_service.get_job_status(execute_ref.job_id)
-
-    assert status.status == "failed"
-    assert status.errors[0].code == "execution_failed"
-    assert status.errors[0].message == (
-        "cannot import name 'agent_threshold_mask' from "
-        "'openhcs.processing.custom_functions'"
-    )
-    assert "custom function" in status.errors[0].hint
-    assert "XDG_DATA_HOME" in status.errors[0].hint
-    assert "custom_functions directory" in status.errors[0].hint
-    assert "restart or reload the runtime server" in status.errors[0].hint
 
 
 def test_runtime_server_service_reads_runtime_server_state():

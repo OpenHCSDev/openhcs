@@ -22,6 +22,8 @@ from openhcs.core.plate_file_inventory import PlateFileInventoryQuery
 from openhcs.core.synthetic_plate_generation import SYNTHETIC_PLATE_GENERATION_PROFILE
 from openhcs.mcp.dev_client_commanding import SingleToolCommandSpec
 from openhcs.mcp.dev_client_core import (
+    add_component_filter_option,
+    component_filter_argument,
     McpToolArguments,
     add_request_field_option,
     add_ui_connection_options,
@@ -183,8 +185,8 @@ class InspectPlateCommandSpec(SingleToolCommandSpec):
         add_request_field_option(
             parser,
             PlatePathInspectionRequest,
-            "microscope_type",
-            "--microscope-type",
+            "source_format",
+            "--source-format",
             help="Microscope type to use, or auto for handler detection.",
         )
         add_request_field_option(
@@ -225,7 +227,7 @@ class InspectPlateCommandSpec(SingleToolCommandSpec):
     ) -> dict[str, JsonValue]:
         request = PlatePathInspectionRequest.from_fields(
             plate_path=args.plate_path,
-            microscope_type=args.microscope_type,
+            source_format=args.source_format,
             pattern_format=args.pattern_format,
             max_sample_files=args.max_sample_files,
             max_component_values=args.max_component_values,
@@ -246,8 +248,8 @@ class QueryPlateFilesCommandSpec(SingleToolCommandSpec):
         add_request_field_option(
             parser,
             PlateFileQueryRequest,
-            "microscope_type",
-            "--microscope-type",
+            "source_format",
+            "--source-format",
             help="Microscope type to use, or auto for handler detection.",
         )
         add_request_field_option(
@@ -271,7 +273,7 @@ class QueryPlateFilesCommandSpec(SingleToolCommandSpec):
             "path_contains",
             "--path-contains",
         )
-        add_request_field_option(parser, PlateFileQueryRequest, "partition", "--partition")
+        add_component_filter_option(parser)
         add_request_field_option(parser, PlateFileQueryRequest, "offset", "--offset")
         add_request_field_option(parser, PlateFileQueryRequest, "limit", "--limit")
         add_request_field_option(
@@ -308,11 +310,11 @@ class QueryPlateFilesCommandSpec(SingleToolCommandSpec):
     ) -> dict[str, JsonValue]:
         request = PlateFileQueryRequest.from_fields(
             plate_path=args.plate_path,
-            microscope_type=args.microscope_type,
+            source_format=args.source_format,
             pattern_format=args.pattern_format,
             kind=args.kind,
             path_contains=args.path_contains,
-            partition=args.partition,
+            component_filters=component_filter_argument(args),
             offset=args.offset,
             limit=args.limit,
             include_previews=args.include_previews,
@@ -337,8 +339,8 @@ class SamplePlateImageCommandSpec(SingleToolCommandSpec):
         add_request_field_option(
             parser,
             PlateImageSampleRequest,
-            "microscope_type",
-            "--microscope-type",
+            "source_format",
+            "--source-format",
             help="Microscope type to use, or auto for handler detection.",
         )
         add_request_field_option(
@@ -409,7 +411,7 @@ class SamplePlateImageCommandSpec(SingleToolCommandSpec):
         request = PlateImageSampleRequest.from_fields(
             plate_path=args.plate_path,
             image_path=args.image_path,
-            microscope_type=args.microscope_type,
+            source_format=args.source_format,
             pattern_format=args.pattern_format,
             y=args.y,
             x=args.x,
@@ -451,8 +453,8 @@ class PlateFileStreamCommandOptions:
         add_request_field_option(
             parser,
             request_type,
-            "microscope_type",
-            "--microscope-type",
+            "source_format",
+            "--source-format",
             help="Microscope type to use, or auto for handler detection.",
         )
         add_request_field_option(
@@ -481,7 +483,7 @@ class PlateFileStreamCommandOptions:
                 help="Plate root to stream from the selected PlateManager row.",
             )
         parser.add_argument("--path-contains")
-        parser.add_argument("--partition")
+        add_component_filter_option(parser)
         add_request_field_option(
             parser,
             request_type,
@@ -559,7 +561,7 @@ class StreamPlateFilesCommandSpec(SingleToolCommandSpec):
         request = PlateFileStreamRequest.from_fields(
             plate_path=args.plate_path,
             file_paths=list(args.file_paths),
-            microscope_type=args.microscope_type,
+            source_format=args.source_format,
             pattern_format=args.pattern_format,
             kind=plate_file_stream_kind_argument(
                 PlateFileStreamRequest,
@@ -567,7 +569,7 @@ class StreamPlateFilesCommandSpec(SingleToolCommandSpec):
                 args.file_paths,
             ),
             path_contains=args.path_contains,
-            partition=args.partition,
+            component_filters=component_filter_argument(args),
             limit=args.limit,
             viewer_config_key=args.viewer_config_key,
             host=args.viewer_host,
@@ -586,8 +588,8 @@ class SelectedPlateImagesCommandSpec(SingleToolCommandSpec):
         add_request_field_option(
             parser,
             SelectedPlateImageInspectionRequest,
-            "microscope_type",
-            "--microscope-type",
+            "source_format",
+            "--source-format",
             help="Microscope type to use, or auto for handler detection.",
         )
         add_request_field_option(
@@ -636,7 +638,7 @@ class SelectedPlateImagesCommandSpec(SingleToolCommandSpec):
         args: argparse.Namespace,
     ) -> dict[str, JsonValue]:
         request = SelectedPlateImageInspectionRequest.from_fields(
-            microscope_type=args.microscope_type,
+            source_format=args.source_format,
             pattern_format=args.pattern_format,
             target=args.target,
             max_sample_files=args.max_sample_files,
@@ -659,8 +661,8 @@ class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
         add_request_field_option(
             parser,
             SelectedPlateFileQueryRequest,
-            "microscope_type",
-            "--microscope-type",
+            "source_format",
+            "--source-format",
             help="Microscope type to use, or auto for handler detection.",
         )
         add_request_field_option(
@@ -692,12 +694,7 @@ class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
             "path_contains",
             "--path-contains",
         )
-        add_request_field_option(
-            parser,
-            SelectedPlateFileQueryRequest,
-            "partition",
-            "--partition",
-        )
+        add_component_filter_option(parser)
         add_request_field_option(
             parser,
             SelectedPlateFileQueryRequest,
@@ -744,12 +741,12 @@ class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
         args: argparse.Namespace,
     ) -> dict[str, JsonValue]:
         request = SelectedPlateFileQueryRequest.from_fields(
-            microscope_type=args.microscope_type,
+            source_format=args.source_format,
             pattern_format=args.pattern_format,
             kind=args.kind,
             target=args.target,
             path_contains=args.path_contains,
-            partition=args.partition,
+            component_filters=component_filter_argument(args),
             offset=args.offset,
             limit=args.limit,
             include_previews=args.include_previews,
@@ -779,8 +776,8 @@ class SelectedPlateSampleCommandSpec(SingleToolCommandSpec):
         add_request_field_option(
             parser,
             SelectedPlateImageSampleRequest,
-            "microscope_type",
-            "--microscope-type",
+            "source_format",
+            "--source-format",
             help="Microscope type to use, or auto for handler detection.",
         )
         add_request_field_option(
@@ -864,7 +861,7 @@ class SelectedPlateSampleCommandSpec(SingleToolCommandSpec):
     ) -> dict[str, JsonValue]:
         request = SelectedPlateImageSampleRequest.from_fields(
             image_path=args.image_path,
-            microscope_type=args.microscope_type,
+            source_format=args.source_format,
             pattern_format=args.pattern_format,
             target=args.target,
             y=args.y,
@@ -903,7 +900,7 @@ class SelectedPlateStreamCommandSpec(SingleToolCommandSpec):
     ) -> dict[str, JsonValue]:
         request = SelectedPlateFileStreamRequest.from_fields(
             file_paths=list(args.file_paths),
-            microscope_type=args.microscope_type,
+            source_format=args.source_format,
             pattern_format=args.pattern_format,
             kind=plate_file_stream_kind_argument(
                 SelectedPlateFileStreamRequest,
@@ -912,7 +909,7 @@ class SelectedPlateStreamCommandSpec(SingleToolCommandSpec):
             ),
             target=args.target,
             path_contains=args.path_contains,
-            partition=args.partition,
+            component_filters=component_filter_argument(args),
             limit=args.limit,
             viewer_config_key=args.viewer_config_key,
             host=args.viewer_host,

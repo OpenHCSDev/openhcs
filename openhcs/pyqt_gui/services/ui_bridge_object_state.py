@@ -1478,7 +1478,7 @@ class ObjectStateBridgeProviderSet(UiBridgeProviderSetABC):
     @classmethod
     def for_main_window(cls, main_window) -> "ObjectStateBridgeProviderSet":
         return cls(
-            main_window.plate_manager_widget.require_pipeline_definition_mutation_allowed_for_scope
+            main_window.session.require_definition_mutation_allowed_for_object_scope
         )
 
     def register(self, context: UiBridgeRegistrationContext) -> None:

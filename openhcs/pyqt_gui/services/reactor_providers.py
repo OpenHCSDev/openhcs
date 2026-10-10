@@ -223,7 +223,7 @@ class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
 
     def _get_current_orchestrator(self) -> PipelineOrchestrator | None:
         plate_manager = self._get_plate_manager()
-        if plate_manager is None or not plate_manager.selected_plate_path:
+        if plate_manager is None or not plate_manager.session.current_scope_id:
             return None
 
         from objectstate import ObjectStateRegistry
@@ -231,7 +231,7 @@ class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
         from openhcs.constants.constants import OrchestratorState
         from openhcs.core.orchestrator import PipelineOrchestrator
 
-        orchestrator = ObjectStateRegistry.get_object(plate_manager.selected_plate_path)
+        orchestrator = ObjectStateRegistry.get_object(plate_manager.session.current_scope_id)
         if not isinstance(orchestrator, PipelineOrchestrator):
             return None
         if orchestrator.state is OrchestratorState.CREATED:
