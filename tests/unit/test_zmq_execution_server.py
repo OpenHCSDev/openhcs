@@ -427,7 +427,7 @@ def test_zmq_server_admits_compiled_declaration_without_reevaluating_source(
         lambda *args: pytest.fail("Artifact executed config source"),
     )
     monkeypatch.setattr(
-        zmq_execution_server_module.PipelineDocumentAuthority,
+        zmq_execution_server_module.PipelineDocumentCodec,
         "from_namespace",
         lambda *args: pytest.fail("Artifact rebuilt pipeline declaration"),
     )

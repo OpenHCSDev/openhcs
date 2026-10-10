@@ -16,7 +16,7 @@ from openhcs.agent.services.plate_inspection_service import PlateInspectionServi
 from openhcs.constants.constants import Microscope
 from openhcs.core.config import LazyWellFilterConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.microscopes import create_microscope_handler, get_all_handler_types
 from openhcs.microscopes.microscope_base import (
@@ -222,8 +222,8 @@ def test_explicit_inspection_and_artifact_plan_reach_opera_axes(
         microscope=Microscope.OPERAPHENIX,
         well_filter_config=LazyWellFilterConfig(well_filter="R04C09"),
     )
-    pipeline_source = PipelineDocumentAuthority.render(
-        PipelineDocumentAuthority.from_values(
+    pipeline_source = PipelineDocumentCodec.render(
+        PipelineDocumentCodec.from_values(
             pipeline_config=config,
             pipeline_steps=[FunctionStep(func=percentile_normalize)],
         )

@@ -56,7 +56,7 @@ from benchmark.equivalence.report import (
 )
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from benchmark.equivalence.runtime import (
     runtime_reference_artifact_equivalence,
 )
@@ -179,7 +179,7 @@ def _execute_pipeline_via_zmq_server(
         plate_id=plate_id,
         execution_plate_id=execution_plate_id,
         selected_pipeline_path=selected_pipeline_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=transport_pipeline
         ),
         global_config=global_config,

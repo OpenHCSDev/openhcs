@@ -386,10 +386,10 @@ def test_pypi_wheel_smoke_uses_the_canonical_pipeline_document_boundary():
 
     assert "from openhcs.core.config import PipelineConfig" in smoke
     assert (
-        "from openhcs.core.pipeline_document import PipelineDocumentAuthority" in smoke
+        "from openhcs.core.pipeline_document import PipelineDocumentCodec" in smoke
     )
     assert "from openhcs.core.steps.function_step import FunctionStep" in smoke
-    assert "PipelineDocumentAuthority.from_values(" in smoke
+    assert "PipelineDocumentCodec.from_values(" in smoke
     assert "pipeline_config=PipelineConfig()" in smoke
     assert "pipeline_steps=[FunctionStep()]" in smoke
     assert "Pipeline(" not in smoke

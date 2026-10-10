@@ -23,7 +23,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowValidationSummaryResult,
 )
 from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.mcp import installed_demo
 from openhcs.mcp.dev_client import McpDevCommandExecution
@@ -132,7 +132,7 @@ def test_portable_source_projects_authoritative_neurite_preset(
         viewer=True,
     )
 
-    document = PipelineDocumentAuthority.from_source(source)
+    document = PipelineDocumentCodec.from_source(source)
     expected_steps = observed["pipeline_steps"]
 
     assert document.pipeline_config == observed["pipeline_config"]
@@ -258,7 +258,7 @@ def test_portable_source_normalization_defers_catalog_and_execution_runtimes(
     probe = """
 import sys
 from pathlib import Path
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
 def forbidden_catalog_discovery(cls):
@@ -268,7 +268,7 @@ RegistryService.get_all_functions_with_metadata = classmethod(
     forbidden_catalog_discovery
 )
 baseline_modules = frozenset(sys.modules)
-PipelineDocumentAuthority.from_source(Path(sys.argv[1]).read_text(encoding="utf-8"))
+PipelineDocumentCodec.from_source(Path(sys.argv[1]).read_text(encoding="utf-8"))
 execution_prefixes = (
     "centrosome.cpmorphology",
     "centrosome.zernike",
@@ -308,7 +308,7 @@ def test_headless_portable_source_disables_every_viewer_config(
         viewer=False,
     )
 
-    document = PipelineDocumentAuthority.from_source(source)
+    document = PipelineDocumentCodec.from_source(source)
 
     assert all(
         not step.napari_streaming_config.enabled

@@ -22,7 +22,7 @@ from pyqt_reactive.services.pattern_data_manager import (
 from pyqt_reactive.services.scope_token_service import ScopeTokenService
 
 from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.assemblers.blending import TileBlendMethod
@@ -148,8 +148,8 @@ def test_typed_history_restart_preserves_occurrences_and_earlier_timeline(
             snapshot.id: set(snapshot.all_states)
             for snapshot in ObjectStateRegistry.get_branch_history()
         }
-        source = PipelineDocumentAuthority.render(
-            PipelineDocumentAuthority.from_values(
+        source = PipelineDocumentCodec.render(
+            PipelineDocumentCodec.from_values(
                 pipeline_config=PipelineConfig(),
                 pipeline_steps=PipelineObjectStateBinding.steps_for_plate(SCOPE),
             )
@@ -161,7 +161,7 @@ def test_typed_history_restart_preserves_occurrences_and_earlier_timeline(
 
         # Exact fresh-process boundary: no old registry/limbo/graveyard or tokens.
         _reset()
-        parsed = PipelineDocumentAuthority.from_source(source)
+        parsed = PipelineDocumentCodec.from_source(source)
         PipelineObjectStateBinding.update_plate_steps(SCOPE, parsed.pipeline_steps)
         fresh_before_history = _capture()
         ObjectStateRegistry.load_history_from_file(str(history_path))

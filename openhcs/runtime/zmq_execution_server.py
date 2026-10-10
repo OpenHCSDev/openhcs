@@ -30,7 +30,7 @@ from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
@@ -503,7 +503,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             )
         finally:
             sys.modules.pop(module_name, None)
-        pipeline_document = PipelineDocumentAuthority.from_namespace(module.__dict__)
+        pipeline_document = PipelineDocumentCodec.from_namespace(module.__dict__)
         resolved_config = self._resolve_request_config(
             request_payload,
             pipeline_document.pipeline_config,

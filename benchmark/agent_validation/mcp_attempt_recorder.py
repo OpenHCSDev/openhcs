@@ -58,7 +58,7 @@ from openhcs.agent.dto.functions import (
 from openhcs.agent.dto.ui_bridge import UiCodeDocument
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.function_reference import FunctionReference
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.dev_client import McpDevClient, McpDevCommandExecution
 from openhcs.mcp.dev_client_core import (
@@ -262,7 +262,7 @@ def _derive_evidence(
 
     rendered_sources = tuple(_rendered_sources(successful_results))
     rendered_documents = tuple(
-        PipelineDocumentAuthority.from_source(rendered_source.source)
+        PipelineDocumentCodec.from_source(rendered_source.source)
         for rendered_source in rendered_sources
     )
     for document in rendered_documents:
@@ -474,7 +474,7 @@ def _ui_function_paths(results: list[McpDevToolResult]) -> set[str]:
         if document is None:
             continue
         try:
-            pipeline_document = PipelineDocumentAuthority.from_source(document.source)
+            pipeline_document = PipelineDocumentCodec.from_source(document.source)
         except (ImportError, SyntaxError, TypeError, ValueError):
             continue
         paths.update(_pipeline_function_paths((pipeline_document,)))

@@ -61,7 +61,7 @@ from openhcs.core.debug import DebugExecutionConfig
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
 from openhcs.core.pipeline_document import (
     PipelineDocument,
-    PipelineDocumentAuthority,
+    PipelineDocumentCodec,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
@@ -251,7 +251,7 @@ class OpenHCSExecutionSubmission:
         compile_artifact_id: str | None = None,
         compile_only: bool = False,
     ) -> None:
-        normalized_document = PipelineDocumentAuthority.from_values(
+        normalized_document = PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_document.pipeline_config,
             pipeline_steps=pipeline_document.pipeline_steps,
         )
@@ -393,7 +393,7 @@ class OpenHCSExecutionSubmission:
         )
 
     def pipeline_code(self) -> str:
-        return PipelineDocumentAuthority.execution_source(self.pipeline_document)
+        return PipelineDocumentCodec.execution_source(self.pipeline_document)
 
 
 class ZMQPipelineRunPhase(Enum):

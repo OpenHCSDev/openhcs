@@ -237,7 +237,6 @@ def check_dependencies():
     optional_deps = {
         "pyqtgraph": "System monitor graphs",
         "cupy": "GPU acceleration",
-        "dill": "Pipeline serialization",
         "psutil": "System monitoring",
     }
 

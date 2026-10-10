@@ -1,4 +1,4 @@
-"""Canonical FunctionStep Python document contracts."""
+"""FunctionStep Python document contracts."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import pytest
 
 from openhcs.core.function_step_document import (
     FunctionStepDocument,
-    FunctionStepDocumentAuthority,
+    FunctionStepDocumentCodec,
     FunctionStepDocumentField,
 )
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
@@ -33,16 +33,16 @@ def test_default_function_patterns_are_not_shared_between_steps() -> None:
 
 
 def test_function_step_document_round_trip() -> None:
-    document = FunctionStepDocumentAuthority.from_value(_step())
+    document = FunctionStepDocumentCodec.from_value(_step())
 
-    source = FunctionStepDocumentAuthority.render(document)
-    restored = FunctionStepDocumentAuthority.from_source(source)
+    source = FunctionStepDocumentCodec.render(document)
+    restored = FunctionStepDocumentCodec.from_source(source)
 
     assert "step = FunctionStep(" in source
     assert restored.step.func is RegistryService.registered_callable(
         cellprofiler_backend.crop
     )
-    assert FunctionStepDocumentAuthority.render(restored) == source
+    assert FunctionStepDocumentCodec.render(restored) == source
 
 
 def test_from_value_delegates_transport_normalization(monkeypatch) -> None:
@@ -59,7 +59,7 @@ def test_from_value_delegates_transport_normalization(monkeypatch) -> None:
         normalize_step,
     )
 
-    document = FunctionStepDocumentAuthority.from_value(step)
+    document = FunctionStepDocumentCodec.from_value(step)
 
     assert calls == [step]
     assert document.step is step
@@ -79,20 +79,20 @@ def test_from_namespace_requires_exact_field_and_type(
     message: str,
 ) -> None:
     with pytest.raises(error_type, match=message):
-        FunctionStepDocumentAuthority.from_namespace(namespace)
+        FunctionStepDocumentCodec.from_namespace(namespace)
 
 
 def test_render_revalidates_direct_document_instances() -> None:
     invalid = FunctionStepDocument(step=object())  # type: ignore[arg-type]
 
     with pytest.raises(TypeError, match="FunctionStep"):
-        FunctionStepDocumentAuthority.render(invalid)
+        FunctionStepDocumentCodec.render(invalid)
 
 
 def test_openhcs_codegen_provider_delegates_step_documents() -> None:
     step = _step()
-    source = FunctionStepDocumentAuthority.render(
-        FunctionStepDocumentAuthority.from_value(step)
+    source = FunctionStepDocumentCodec.render(
+        FunctionStepDocumentCodec.from_value(step)
     )
 
     assert OpenHCSCodegenProvider().normalize_source(

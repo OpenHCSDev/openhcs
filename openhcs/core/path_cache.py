@@ -22,27 +22,7 @@ class PathCacheKey(Enum):
     across both TUI and PyQt GUI implementations.
     """
 
-    # Original keys from both implementations
-    FILE_SELECTION = "file_selection"
-    DIRECTORY_SELECTION = "directory_selection"
     PLATE_IMPORT = "plate_import"
-    CONFIG_EXPORT = "config_export"
-    GENERAL = "general"
-
-    # Specific file type contexts
-    FUNCTION_PATTERNS = "function_patterns"  # .func files
-    PIPELINE_FILES = "pipeline_files"  # .pipeline files
-    STEP_SETTINGS = "step_settings"  # .step files
-    DEBUG_FILES = "debug_files"  # .pkl debug files
-    CODE_EDITOR = "code_editor"  # .py files from code editor
-
-    # Additional contexts for future use
-    PLATE_BROWSER = "plate_browser"
-    FUNCTION_BROWSER = "function_browser"
-    PIPELINE_BROWSER = "pipeline_browser"
-    EXPORT_BROWSER = "export_browser"
-    CONFIG_BROWSER = "config_browser"
-    ANALYSIS_BROWSER = "analysis_browser"
 
 
 class UnifiedPathCache:
@@ -205,19 +185,6 @@ def cache_path(key: PathCacheKey, path: Path) -> None:
     get_path_cache().set_cached_path(key, path)
 
 
-def get_cached_path(key: PathCacheKey) -> Optional[Path]:
-    """
-    Convenience function to get cached path.
-
-    Args:
-        key: PathCacheKey identifying the context
-
-    Returns:
-        Cached Path if exists and valid, None otherwise
-    """
-    return get_path_cache().get_cached_path(key)
-
-
 def get_initial_path(key: PathCacheKey, fallback: Optional[Path] = None) -> Path:
     """
     Convenience function to get initial path with fallback.
@@ -230,24 +197,3 @@ def get_initial_path(key: PathCacheKey, fallback: Optional[Path] = None) -> Path
         Best available path (cached > fallback > home directory)
     """
     return get_path_cache().get_initial_path(key, fallback)
-
-
-# Backward compatibility aliases for existing code
-def cache_browser_path(key: PathCacheKey, path: Path) -> None:
-    """Backward compatibility alias for TUI code."""
-    cache_path(key, path)
-
-
-def cache_dialog_path(key: PathCacheKey, path: Path) -> None:
-    """Backward compatibility alias for PyQt code."""
-    cache_path(key, path)
-
-
-def get_cached_browser_path(key: PathCacheKey, fallback: Optional[Path] = None) -> Path:
-    """Backward compatibility alias for TUI code."""
-    return get_initial_path(key, fallback)
-
-
-def get_cached_dialog_path(key: PathCacheKey, fallback: Optional[Path] = None) -> Path:
-    """Backward compatibility alias for PyQt code."""
-    return get_initial_path(key, fallback)
