@@ -10,7 +10,7 @@ from openhcs.core.source_bindings import (
     SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.source_bindings_view import SourceInventory
+from openhcs.core.source_bindings_preview import SourceInventory
 from openhcs.core.vfs_protocol import FileManagerLike
 
 

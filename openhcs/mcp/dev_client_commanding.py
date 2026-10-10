@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from collections.abc import Callable, Mapping
 from contextlib import AbstractContextManager, nullcontext
 import inspect
@@ -15,9 +16,7 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.agent.capabilities import (
-    AgentCapabilitySpec,
-    AgentScalarInputContract,
-    CapabilityCliConnectionProfile,
+    AgentCapabilityDeclaration,
     get_agent_capability,
     get_capability_registry,
     require_agent_type_contract,
@@ -30,7 +29,6 @@ from openhcs.agent.dto.common import (
 )
 from openhcs.agent.dto.execution import (
     RuntimeServerConnectionToolRequest,
-    RuntimeServerToolRequest,
 )
 from openhcs.mcp.control_timeout import McpUiBridgeTimeoutPolicy
 from openhcs.mcp.dev_client_core import (
@@ -261,9 +259,9 @@ class TypedCompositeCommandSpec(McpDevCommandSpec):
 class CapabilityBackedCommandSpec(McpDevCommandSpec):
     """Command whose primary MCP tool capability is declared on the command."""
 
-    capability: ClassVar[AgentCapabilitySpec]
+    capability: ClassVar[type[AgentCapabilityDeclaration]]
     __capability_registry__: ClassVar[
-        dict[AgentCapabilitySpec, type["CapabilityBackedCommandSpec"]]
+        dict[type[AgentCapabilityDeclaration], type["CapabilityBackedCommandSpec"]]
     ] = {}
 
     def __init_subclass__(cls, **kwargs: JsonValue) -> None:
@@ -490,7 +488,7 @@ class UiBridgeCommandSpec(McpDevCommandSpec):
 class SingleUiBridgeToolCommandSpec(UiBridgeCommandSpec, CapabilityBackedCommandSpec):
     """UI bridge command whose entire operation is one MCP tool call."""
 
-    capability: ClassVar[AgentCapabilitySpec]
+    capability: ClassVar[type[AgentCapabilityDeclaration]]
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
         super().configure_parser(parser)
@@ -535,206 +533,19 @@ class SingleUiBridgeToolCommandSpec(UiBridgeCommandSpec, CapabilityBackedCommand
         )
 
 
-class GeneratedCapabilityCommandBinding:
-    """Instance binding shared by generated capability-backed CLI commands."""
+@dataclass(frozen=True, slots=True)
+class AgentCliRequestProjection:
+    """CLI options and tool arguments projected from one ``AgentCliRequest``.
 
-    def __init__(self, capability: AgentCapabilitySpec) -> None:
-        command = capability.cli_command
-        if command is None:
-            raise ValueError(f"{capability.name} does not declare a CLI command.")
-        self.capability = capability
-        self.command = command
+    Runtime-server connection requests share the dev client's connection
+    options instead of restating their connection fields per command.
+    """
 
-
-class GeneratedAgentCliRequestCommandMixin:
-    """Parser/tool projection for generated commands backed by AgentCliRequest."""
-
-    capability: AgentCapabilitySpec
-
-    @property
-    def request_type(self) -> type[AgentCliRequest]:
-        input_contract = require_agent_type_contract(self.capability.input_contract)
-        if not issubclass(
-            input_contract,
-            AgentCliRequest,
-        ):
-            raise TypeError(
-                f"{self.capability.name} must declare an agent CLI request "
-                "input contract."
-            )
-        return input_contract
+    request_type: type[AgentCliRequest]
 
     @property
     def request_factory(self):
         return self.request_type.agent_cli_factory()
-
-    def request_factory_parameters(self) -> tuple[inspect.Parameter, ...]:
-        return tuple(inspect.signature(self.request_factory).parameters.values())
-
-    def configure_request_parser(self, parser: argparse.ArgumentParser) -> None:
-        for parameter in self.request_factory_parameters():
-            argument_spec = self.request_argument_spec(parameter.name)
-            add_request_factory_option(
-                parser,
-                self.request_factory,
-                parameter.name,
-                *self.request_argument_flags(parameter.name, argument_spec),
-                **self.request_argument_kwargs(argument_spec),
-            )
-
-    def request_argument_spec(
-        self,
-        field_name: str,
-    ) -> AgentCliArgumentSpec | None:
-        for argument_spec in self.request_type.agent_cli_argument_specs():
-            if argument_spec.field_name == field_name:
-                return argument_spec
-        return None
-
-    @staticmethod
-    def request_argument_flags(
-        field_name: str,
-        argument_spec: AgentCliArgumentSpec | None,
-    ) -> tuple[str, ...]:
-        if argument_spec is None:
-            return (f"--{field_name.replace('_', '-')}",)
-        if argument_spec.positional:
-            return (field_name,)
-        if argument_spec.flags:
-            return argument_spec.flags
-        return (f"--{field_name.replace('_', '-')}",)
-
-    @staticmethod
-    def request_argument_kwargs(
-        argument_spec: AgentCliArgumentSpec | None,
-    ) -> dict[str, object]:
-        if argument_spec is None:
-            return {}
-        kwargs: dict[str, object] = {}
-        if argument_spec.nargs is not None:
-            kwargs["nargs"] = argument_spec.nargs
-        if argument_spec.action is not None:
-            kwargs["action"] = argument_spec.action
-        if argument_spec.help is not None:
-            kwargs["help"] = argument_spec.help
-        return kwargs
-
-    def request_fields_from_args(
-        self,
-        args: argparse.Namespace,
-    ) -> dict[str, object]:
-        argument_values = vars(args)
-        return {
-            parameter.name: argument_values[parameter.name]
-            for parameter in self.request_factory_parameters()
-        }
-
-    def tool_arguments_from_agent_request(
-        self,
-        args: argparse.Namespace,
-    ) -> dict[str, JsonValue]:
-        try:
-            request = self.request_factory(**self.request_fields_from_args(args))
-        except (TypeError, ValueError) as exc:
-            raise McpDevCliUsageError(str(exc)) from exc
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
-
-
-class GeneratedSingleToolCommandSpec(
-    GeneratedAgentCliRequestCommandMixin,
-    GeneratedCapabilityCommandBinding,
-    SingleToolCommandSpec,
-):
-    """Single-tool command projected directly from a capability declaration."""
-
-    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
-        input_contract = self.capability.input_contract
-        if isinstance(input_contract, AgentScalarInputContract):
-            self.configure_scalar_input_parser(parser, input_contract)
-        elif isinstance(input_contract, type) and issubclass(
-            input_contract,
-            AgentCliRequest,
-        ):
-            self.configure_request_parser(parser)
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
-
-    @staticmethod
-    def configure_scalar_input_parser(
-        parser: argparse.ArgumentParser,
-        input_contract: AgentScalarInputContract,
-    ) -> None:
-        if input_contract.default_value is None:
-            parser.add_argument(input_contract.field_name)
-            return
-        parser.add_argument(
-            input_contract.field_name,
-            nargs="?",
-            default=input_contract.default_value,
-        )
-
-    def tool_arguments(self, args: argparse.Namespace) -> dict[str, JsonValue]:
-        input_contract = self.capability.input_contract
-        if isinstance(input_contract, AgentScalarInputContract):
-            return {
-                input_contract.field_name: vars(args)[input_contract.field_name],
-            }
-        if isinstance(input_contract, type) and issubclass(
-            input_contract,
-            AgentCliRequest,
-        ):
-            return self.tool_arguments_from_agent_request(args)
-        return super().tool_arguments(args)
-
-
-class GeneratedUiBridgeToolCommandSpec(
-    GeneratedCapabilityCommandBinding,
-    SingleUiBridgeToolCommandSpec,
-):
-    """UI bridge command projected directly from a capability declaration."""
-
-
-class GeneratedViewerWindowToolCommandSpec(
-    GeneratedCapabilityCommandBinding,
-    SingleToolCommandSpec,
-):
-    """Viewer-window command projected directly from a capability declaration."""
-
-    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
-        add_viewer_port_argument(parser)
-        add_viewer_connection_options(parser)
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
-
-    def tool_arguments(self, args: argparse.Namespace) -> dict[str, JsonValue]:
-        return viewer_connection_arguments(args)
-
-
-class GeneratedRuntimeServerToolCommandSpec(
-    GeneratedAgentCliRequestCommandMixin,
-    GeneratedCapabilityCommandBinding,
-    SingleToolCommandSpec,
-):
-    """Runtime-server command projected directly from a capability declaration."""
-
-    @property
-    def request_type(self) -> type[RuntimeServerToolRequest]:
-        input_contract = require_agent_type_contract(self.capability.input_contract)
-        if not issubclass(
-            input_contract,
-            RuntimeServerToolRequest,
-        ):
-            raise TypeError(
-                f"{self.capability.name} must declare a runtime server "
-                "request input contract."
-            )
-        return input_contract
 
     @property
     def uses_runtime_connection_options(self) -> bool:
@@ -761,123 +572,132 @@ class GeneratedRuntimeServerToolCommandSpec(
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
         if self.uses_runtime_connection_options:
             add_runtime_connection_options(parser, include_port=True)
-        self.configure_request_parser(parser)
+        argument_specs = {
+            argument_spec.field_name: argument_spec
+            for argument_spec in self.request_type.agent_cli_argument_specs()
+        }
+        for parameter in self.request_factory_parameters():
+            argument_spec = argument_specs.get(parameter.name)
+            add_request_factory_option(
+                parser,
+                self.request_factory,
+                parameter.name,
+                *self.argument_flags(parameter.name, argument_spec),
+                **self.argument_kwargs(argument_spec),
+            )
+
+    @staticmethod
+    def argument_flags(
+        field_name: str,
+        argument_spec: AgentCliArgumentSpec | None,
+    ) -> tuple[str, ...]:
+        if argument_spec is not None and argument_spec.positional:
+            return (field_name,)
+        if argument_spec is not None and argument_spec.flags:
+            return argument_spec.flags
+        return (f"--{field_name.replace('_', '-')}",)
+
+    @staticmethod
+    def argument_kwargs(
+        argument_spec: AgentCliArgumentSpec | None,
+    ) -> dict[str, object]:
+        if argument_spec is None:
+            return {}
+        declared = {
+            "nargs": argument_spec.nargs,
+            "action": argument_spec.action,
+            "help": argument_spec.help,
+        }
+        return {key: value for key, value in declared.items() if value is not None}
+
+    def tool_arguments(self, args: argparse.Namespace) -> dict[str, JsonValue]:
+        argument_values = vars(args)
+        field_names = (
+            *(
+                self.runtime_connection_parameter_names()
+                if self.uses_runtime_connection_options
+                else ()
+            ),
+            *(parameter.name for parameter in self.request_factory_parameters()),
+        )
+        try:
+            request = self.request_factory(
+                **{field_name: argument_values[field_name] for field_name in field_names}
+            )
+        except (TypeError, ValueError) as exc:
+            raise McpDevCliUsageError(str(exc)) from exc
+        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+
+
+class McpDevCliProjection:
+    """Dev-client argument primitives a capability invocation composes."""
+
+    @staticmethod
+    def configure_ui_connection(parser: argparse.ArgumentParser) -> None:
+        add_ui_connection_options(parser)
+
+    @staticmethod
+    def ui_connection_arguments(args: argparse.Namespace) -> dict[str, JsonValue]:
+        return ui_tool_arguments(args, timeout_ms=args.timeout_ms)
+
+    @staticmethod
+    def ui_timeout_seconds(args: argparse.Namespace, timeout_seconds: float) -> float:
+        """Keep the MCP deadline outside the request-owned bridge deadline."""
+        return mcp_tool_timeout_seconds(
+            McpUiBridgeTimeoutPolicy.resolve(args.timeout_ms),
+            timeout_seconds=timeout_seconds,
+        )
+
+    @staticmethod
+    def configure_viewer_connection(parser: argparse.ArgumentParser) -> None:
+        add_viewer_port_argument(parser)
+        add_viewer_connection_options(parser)
+
+    @staticmethod
+    def viewer_connection_arguments(args: argparse.Namespace) -> dict[str, JsonValue]:
+        return viewer_connection_arguments(args)
+
+    @staticmethod
+    def configure_request(parser: argparse.ArgumentParser, request_type: type) -> None:
+        if issubclass(request_type, AgentCliRequest):
+            AgentCliRequestProjection(request_type).configure_parser(parser)
+
+    @staticmethod
+    def request_tool_arguments(
+        args: argparse.Namespace,
+        request_type: type,
+    ) -> dict[str, JsonValue]:
+        if issubclass(request_type, AgentCliRequest):
+            return AgentCliRequestProjection(request_type).tool_arguments(args)
+        return {}
+
+
+class GeneratedCapabilityCommandSpec(SingleToolCommandSpec):
+    """Command projected from a capability declaration through its invocation."""
+
+    def __init__(self, capability: type[AgentCapabilityDeclaration]) -> None:
+        self.capability = capability
+        self.command = capability.cli_command
+
+    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
+        self.capability.invocation.configure_cli(
+            self.capability, parser, McpDevCliProjection
+        )
         parser.add_argument(
             "--json",
             action="store_true",
             help="Render the complete MCP JSON response instead of a compact summary.",
         )
 
-    def request_fields_from_args(
-        self,
-        args: argparse.Namespace,
-    ) -> dict[str, object]:
-        argument_values = vars(args)
-        request_fields = {}
-        if self.uses_runtime_connection_options:
-            request_fields.update(
-                {
-                    parameter_name: argument_values[parameter_name]
-                    for parameter_name in self.runtime_connection_parameter_names()
-                }
-            )
-        request_fields.update(
-            {
-                parameter.name: argument_values[parameter.name]
-                for parameter in self.request_factory_parameters()
-            }
-        )
-        return request_fields
-
     def tool_arguments(self, args: argparse.Namespace) -> dict[str, JsonValue]:
-        return self.tool_arguments_from_agent_request(args)
+        return self.capability.invocation.cli_tool_arguments(
+            self.capability, args, McpDevCliProjection
+        )
 
-
-class GeneratedMcpDevCommandProfile(ABC, metaclass=AutoRegisterMeta):
-    """Registered generator for one capability CLI connection profile."""
-
-    __registry__: ClassVar[
-        dict[CapabilityCliConnectionProfile, type["GeneratedMcpDevCommandProfile"]]
-    ] = {}
-    __registry_key__ = "profile"
-    __skip_if_no_key__ = True
-
-    profile: ClassVar[CapabilityCliConnectionProfile]
-
-    @classmethod
-    def for_capability(
-        cls,
-        capability: AgentCapabilitySpec,
-    ) -> type["GeneratedMcpDevCommandProfile"]:
-        return cls.__registry__[capability.cli_connection_profile]
-
-    @classmethod
-    @abstractmethod
-    def command_spec(
-        cls,
-        capability: AgentCapabilitySpec,
-    ) -> CapabilityBackedCommandSpec:
-        """Build the generated command spec for this profile."""
-
-
-class DirectGeneratedMcpDevCommandProfile(GeneratedMcpDevCommandProfile):
-    """Generated command profile for direct MCP tool calls."""
-
-    profile = CapabilityCliConnectionProfile.DIRECT
-
-    @classmethod
-    def command_spec(
-        cls,
-        capability: AgentCapabilitySpec,
-    ) -> CapabilityBackedCommandSpec:
-        return GeneratedSingleToolCommandSpec(capability)
-
-
-class UiBridgeGeneratedMcpDevCommandProfile(GeneratedMcpDevCommandProfile):
-    """Generated command profile for MCP tools requiring a UI bridge connection."""
-
-    profile = CapabilityCliConnectionProfile.UI_BRIDGE
-
-    @classmethod
-    def command_spec(
-        cls,
-        capability: AgentCapabilitySpec,
-    ) -> CapabilityBackedCommandSpec:
-        return GeneratedUiBridgeToolCommandSpec(capability)
-
-
-class ViewerWindowGeneratedMcpDevCommandProfile(GeneratedMcpDevCommandProfile):
-    """Generated command profile for viewer-window MCP tools."""
-
-    profile = CapabilityCliConnectionProfile.VIEWER_WINDOW
-
-    @classmethod
-    def command_spec(
-        cls,
-        capability: AgentCapabilitySpec,
-    ) -> CapabilityBackedCommandSpec:
-        return GeneratedViewerWindowToolCommandSpec(capability)
-
-
-class RuntimeServerGeneratedMcpDevCommandProfile(GeneratedMcpDevCommandProfile):
-    """Generated command profile for runtime-server MCP tools."""
-
-    profile = CapabilityCliConnectionProfile.RUNTIME_SERVER
-
-    @classmethod
-    def command_spec(
-        cls,
-        capability: AgentCapabilitySpec,
-    ) -> CapabilityBackedCommandSpec:
-        return GeneratedRuntimeServerToolCommandSpec(capability)
-
-
-def generated_mcp_dev_command_spec(
-    capability: AgentCapabilitySpec,
-) -> CapabilityBackedCommandSpec:
-    return GeneratedMcpDevCommandProfile.for_capability(capability).command_spec(
-        capability
-    )
+    def timeout_seconds(self, args: argparse.Namespace) -> float:
+        return self.capability.invocation.cli_timeout_seconds(
+            args, super().timeout_seconds(args), McpDevCliProjection
+        )
 
 
 def generated_mcp_dev_command_specs() -> tuple[CapabilityBackedCommandSpec, ...]:
@@ -885,7 +705,7 @@ def generated_mcp_dev_command_specs() -> tuple[CapabilityBackedCommandSpec, ...]
         CapabilityBackedCommandSpec.__capability_registry__
     )
     return tuple(
-        generated_mcp_dev_command_spec(capability)
+        GeneratedCapabilityCommandSpec(capability)
         for capability in get_capability_registry().capabilities
         if capability.cli_command is not None
         and capability not in explicit_capabilities
@@ -902,13 +722,11 @@ def generated_mcp_dev_command_spec_for_name(
 
 
 def generated_mcp_dev_command_spec_for_capability(
-    capability: AgentCapabilitySpec,
+    capability: type[AgentCapabilityDeclaration],
 ) -> CapabilityBackedCommandSpec | None:
-    if capability.cli_command is None:
+    if (
+        capability.cli_command is None
+        or capability in CapabilityBackedCommandSpec.__capability_registry__
+    ):
         return None
-    explicit_capabilities = frozenset(
-        CapabilityBackedCommandSpec.__capability_registry__
-    )
-    if capability in explicit_capabilities:
-        return None
-    return generated_mcp_dev_command_spec(capability)
+    return GeneratedCapabilityCommandSpec(capability)

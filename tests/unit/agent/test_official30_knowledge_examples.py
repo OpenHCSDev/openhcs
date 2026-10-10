@@ -357,7 +357,7 @@ def test_official30_source_document_renders_through_mcp_dev_renderer():
 def test_mcp_capabilities_discover_examples_architecture_and_function_docs():
     context = OpenHCSAgentContext()
 
-    example_search = SearchKnowledgeCapability.execute_request(
+    example_search = SearchKnowledgeCapability.invocation.execute(
         context,
         KnowledgeBaseSearchRequest(query="ExampleHuman OpenHCS Python", limit=5),
     )
@@ -366,7 +366,7 @@ def test_mcp_capabilities_discover_examples_architecture_and_function_docs():
         for hit in example_search.hits
         if hit.section is not None and hit.section.title.endswith("OpenHCS Python")
     )
-    example_document = GetKnowledgeDocumentCapability.execute_request(
+    example_document = GetKnowledgeDocumentCapability.invocation.execute(
         context,
         KnowledgeBaseDocumentRequest.from_fields(
             document_id=example_hit.document.document_id,
@@ -375,14 +375,14 @@ def test_mcp_capabilities_discover_examples_architecture_and_function_docs():
         ),
     )
 
-    architecture_search = SearchKnowledgeCapability.execute_request(
+    architecture_search = SearchKnowledgeCapability.invocation.execute(
         context,
         KnowledgeBaseSearchRequest(query="nominal ownership registry MRO", limit=10),
     )
     architecture_hit = next(
         hit for hit in architecture_search.hits if hit.section is not None
     )
-    architecture_document = GetKnowledgeDocumentCapability.execute_request(
+    architecture_document = GetKnowledgeDocumentCapability.invocation.execute(
         context,
         KnowledgeBaseDocumentRequest.from_fields(
             document_id=architecture_hit.document.document_id,
@@ -391,23 +391,23 @@ def test_mcp_capabilities_discover_examples_architecture_and_function_docs():
         ),
     )
 
-    topics = ListArchitectureTopicsCapability.execute_no_argument(context)
+    topics = ListArchitectureTopicsCapability.invocation.execute(context)
     cellprofiler_topic_id = next(
         topic.topic_id for topic in topics.topics if "CellProfiler" in topic.title
     )
-    cellprofiler_topic = ExplainArchitectureCapability.execute_scalar(
+    cellprofiler_topic = ExplainArchitectureCapability.invocation.execute(
         context,
         cellprofiler_topic_id,
     )
 
-    functions = SearchFunctionsCapability.execute_request(
+    functions = SearchFunctionsCapability.invocation.execute(
         context,
         FunctionSearchRequest(query="count cells simple", limit=5),
     )
     function_entry = next(
         entry for entry in functions.items if entry.name == "count_cells_simple"
     )
-    function_detail = DescribeFunctionCapability.execute_request(
+    function_detail = DescribeFunctionCapability.invocation.execute(
         context,
         FunctionDetailRequest(
             function_id=function_entry.function_id,

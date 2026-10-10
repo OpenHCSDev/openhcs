@@ -1,10 +1,13 @@
 from dataclasses import fields as dataclass_fields
 
 from openhcs.agent.capabilities import (
+    AgentCapabilityDeclaration,
     AgentCapabilityExposition,
-    AgentCapabilitySpec,
+    AgentConnectionServiceInvocation,
     AgentDataclassRequestServiceInvocation,
-    CapabilityCliConnectionProfile,
+    AgentFromFieldsServiceInvocation,
+    AgentServiceInvocation,
+    AgentViewerWindowRequestServiceInvocation,
     CapabilityKind,
     CapabilityRole,
     CapabilityTargetContext,
@@ -22,13 +25,14 @@ from openhcs.agent.capabilities import (
     PipelineDraftCapability,
     PlatePathCapability,
     ProgressAcknowledgedCapability,
-    RuntimeServerCliConnectionCapability,
+    RuntimeServerCapability,
     UiBridgeCapability,
-    ViewerWindowCliConnectionCapability,
+    ViewerWindowCapability,
+    agent_capabilities,
     agent_capability_declarations,
     get_capability_registry,
-    validate_capability_registry,
 )
+import pytest
 from openhcs.agent.dto.pipeline import CreatePipelineRequest
 
 
@@ -96,19 +100,13 @@ def test_create_pipeline_capability_accepts_optional_pipeline_config_reference()
 
     assert create_pipeline.input_contract is CreatePipelineRequest
     assert isinstance(
-        create_pipeline.request_invocation,
+        create_pipeline.invocation,
         AgentDataclassRequestServiceInvocation,
     )
 
 
 def test_capability_transport_defaults_to_local_stdio():
-    capability = AgentCapabilitySpec(
-        name="openhcs_local_default",
-        kind=CapabilityKind.TOOL,
-        title="Local default",
-        description="Transport default test.",
-        service="test",
-    )
+    capability = agent_capabilities.inspect_plate_path
 
     assert capability.transport_availability == (CapabilityTransport.LOCAL_STDIO,)
     assert capability.supports_transport(CapabilityTransport.LOCAL_STDIO)
@@ -119,10 +117,8 @@ def test_capability_exposition_owns_its_json_projection():
     capability = next(
         capability
         for capability in get_capability_registry().capabilities
-        if capability.exposition is not None
     )
     exposition = capability.exposition
-    assert exposition is not None
 
     expected_projection = {
         declared_field.name: getattr(exposition, declared_field.name).value
@@ -132,24 +128,6 @@ def test_capability_exposition_owns_its_json_projection():
     assert {
         key: capability.as_jsonable()[key] for key in expected_projection
     } == expected_projection
-
-
-def test_capability_without_exposition_projects_declared_empty_facets():
-    capability = AgentCapabilitySpec(
-        name="openhcs_no_exposition",
-        kind=CapabilityKind.TOOL,
-        title="No exposition",
-        description="Optional exposition projection test.",
-        service="test",
-    )
-
-    projection = capability.as_jsonable()
-
-    expected_projection = {
-        declared_field.name: None
-        for declared_field in dataclass_fields(AgentCapabilityExposition)
-    }
-    assert {key: projection[key] for key in expected_projection} == expected_projection
 
 
 def test_hosted_capabilities_are_nominal_opt_ins_and_read_only():
@@ -166,7 +144,7 @@ def test_hosted_capabilities_are_nominal_opt_ins_and_read_only():
         issubclass(declaration, HostedTransportCapabilityMixin)
         for declaration in hosted_declarations
     )
-    assert all(declaration.to_spec().read_only for declaration in hosted_declarations)
+    assert all(declaration.read_only for declaration in hosted_declarations)
     assert all(not declaration.requires_network for declaration in hosted_declarations)
     assert all(
         not declaration.security_requirements for declaration in hosted_declarations
@@ -179,8 +157,8 @@ def test_local_runtime_capability_families_are_not_hosted():
         PipelineDraftCapability,
         HeadlessExecutionCapability,
         UiBridgeCapability,
-        ViewerWindowCliConnectionCapability,
-        RuntimeServerCliConnectionCapability,
+        ViewerWindowCapability,
+        RuntimeServerCapability,
     )
 
     for declaration in agent_capability_declarations():
@@ -260,8 +238,8 @@ def test_local_surface_profiles_filter_declaration_metadata_without_name_lists()
     }
     for recovery_name in recovery_names:
         recovery = desktop_capabilities[recovery_name]
-        assert recovery.visibility is CapabilityVisibility.STANDARD
-        assert recovery.role is CapabilityRole.PRIMARY
+        assert recovery.exposition.visibility is CapabilityVisibility.STANDARD
+        assert recovery.exposition.role is CapabilityRole.PRIMARY
 
     core = get_capability_registry(
         capability_surface_profile=CoreLocalCapabilitySurfaceProfile(),
@@ -310,11 +288,11 @@ def test_custom_function_registration_is_a_desktop_authoring_mutation():
     }
     registration = full_capabilities["openhcs_register_custom_function"]
 
-    assert registration.workflow_group is CapabilityWorkflowGroup.FUNCTION_AUTHORING
-    assert registration.workflow_stage is CapabilityWorkflowStage.AUTHORING
-    assert registration.target_context is CapabilityTargetContext.FUNCTION_REGISTRY
-    assert registration.visibility is CapabilityVisibility.STANDARD
-    assert registration.role is CapabilityRole.PRIMARY
+    assert registration.exposition.workflow_group is CapabilityWorkflowGroup.FUNCTION_AUTHORING
+    assert registration.exposition.workflow_stage is CapabilityWorkflowStage.AUTHORING
+    assert registration.exposition.target_context is CapabilityTargetContext.FUNCTION_REGISTRY
+    assert registration.exposition.visibility is CapabilityVisibility.STANDARD
+    assert registration.exposition.role is CapabilityRole.PRIMARY
     assert registration.mutating is True
     assert registration.side_effects == (
         "writes_custom_function_file",
@@ -353,22 +331,36 @@ def test_health_capability_declares_mcp_reliability_contract():
     assert health.output_type == "McpServerHealthResult"
 
 
-def test_mutating_tools_must_declare_side_effects():
-    mutating_tool = AgentCapabilitySpec(
-        name="openhcs_create_something",
-        kind=CapabilityKind.TOOL,
-        title="Create something",
-        description="Mutation without side-effect metadata.",
-        service="test",
-        mutating=True,
+def _declaration_error(**attributes) -> Exception:
+    name = "openhcs_test_rejected_declaration"
+    try:
+        with pytest.raises((TypeError, ValueError)) as caught:
+            type(
+                "RejectedDeclaration",
+                (UiBridgeCapability,),
+                {"name": name, "title": "Rejected", "description": "", "service": "test"}
+                | attributes,
+            )
+    finally:
+        AgentCapabilityDeclaration.__registry__.pop(name, None)
+    return caught.value
+
+
+def test_declarations_are_validated_when_defined():
+    invocation = AgentServiceInvocation(
+        service=lambda context: context, method=lambda service: service
     )
 
-    try:
-        validate_capability_registry((mutating_tool,))
-    except ValueError as exc:
-        assert "side_effects" in str(exc)
-    else:
-        raise AssertionError("mutating tools without side effects must fail")
+    assert "invocation" in str(_declaration_error())
+    assert "side_effects" in str(
+        _declaration_error(invocation=invocation, mutating=True)
+    )
+    assert "side_effects" in str(
+        _declaration_error(invocation=invocation, side_effects=("writes",))
+    )
+    assert "transports" in str(
+        _declaration_error(invocation=invocation, transport_availability=())
+    )
 
 
 def test_capability_registry_projects_non_read_only_tools_from_declarations():
@@ -379,23 +371,6 @@ def test_capability_registry_projects_non_read_only_tools_from_declarations():
         capability.kind is CapabilityKind.TOOL and not capability.read_only
         for capability in registry.non_read_only_tools
     )
-
-
-def test_tool_capabilities_declare_group_target_and_role_metadata():
-    registry = get_capability_registry()
-
-    tools = [
-        capability
-        for capability in registry.capabilities
-        if capability.kind is CapabilityKind.TOOL
-    ]
-
-    assert tools
-    assert all(capability.workflow_group is not None for capability in tools)
-    assert all(capability.workflow_stage is not None for capability in tools)
-    assert all(capability.target_context is not None for capability in tools)
-    assert all(capability.visibility is not None for capability in tools)
-    assert all(capability.role is not None for capability in tools)
 
 
 def test_capability_registry_groups_are_generated_from_declarations():
@@ -413,7 +388,7 @@ def test_capability_registry_groups_are_generated_from_declarations():
         workflow_group
         for workflow_group in CapabilityWorkflowGroup
         if any(
-            capability.workflow_group is workflow_group
+            capability.exposition.workflow_group is workflow_group
             for capability in registry.capabilities
         )
     ]
@@ -423,49 +398,49 @@ def test_similar_mcp_tool_names_are_disambiguated_by_target_context_and_role():
     registry = get_capability_registry()
     capabilities = {capability.name: capability for capability in registry.capabilities}
 
-    assert capabilities["openhcs_sample_plate_image"].target_context is (
+    assert capabilities["openhcs_sample_plate_image"].exposition.target_context is (
         CapabilityTargetContext.PLATE_PATH
     )
-    assert capabilities["openhcs_ui_sample_selected_plate_image"].target_context is (
+    assert capabilities["openhcs_ui_sample_selected_plate_image"].exposition.target_context is (
         CapabilityTargetContext.UI_SELECTED_PLATE
     )
-    assert capabilities["openhcs_ui_sample_selected_plate_image"].role is (
+    assert capabilities["openhcs_ui_sample_selected_plate_image"].exposition.role is (
         CapabilityRole.MODE_VARIANT
     )
-    assert capabilities["openhcs_get_execution_status"].target_context is (
+    assert capabilities["openhcs_get_execution_status"].exposition.target_context is (
         CapabilityTargetContext.SUBMITTED_JOB
     )
-    assert capabilities["openhcs_cancel_execution"].target_context is (
+    assert capabilities["openhcs_cancel_execution"].exposition.target_context is (
         CapabilityTargetContext.SUBMITTED_JOB
     )
     assert (
-        capabilities["openhcs_get_runtime_server_execution_status"].target_context
+        capabilities["openhcs_get_runtime_server_execution_status"].exposition.target_context
         is CapabilityTargetContext.RUNTIME_SERVER
     )
-    assert capabilities["openhcs_ui_get_operation_status"].target_context is (
+    assert capabilities["openhcs_ui_get_operation_status"].exposition.target_context is (
         CapabilityTargetContext.UI_BRIDGE
     )
-    assert capabilities["openhcs_ui_wait_for_operation_receipt"].target_context is (
+    assert capabilities["openhcs_ui_wait_for_operation_receipt"].exposition.target_context is (
         CapabilityTargetContext.UI_BRIDGE
     )
     assert (
-        capabilities["openhcs_ui_wait_for_operation_receipt"].role
+        capabilities["openhcs_ui_wait_for_operation_receipt"].exposition.role
         is CapabilityRole.PRIMARY
     )
-    assert capabilities["openhcs_ui_invoke_action"].role is CapabilityRole.PRIMARY
-    assert capabilities["openhcs_ui_invoke_widget_action"].role is (
+    assert capabilities["openhcs_ui_invoke_action"].exposition.role is CapabilityRole.PRIMARY
+    assert capabilities["openhcs_ui_invoke_widget_action"].exposition.role is (
         CapabilityRole.FALLBACK
     )
-    assert capabilities["openhcs_ui_get_code_document"].workflow_group is (
+    assert capabilities["openhcs_ui_get_code_document"].exposition.workflow_group is (
         CapabilityWorkflowGroup.UI_STATE_EDITING
     )
-    assert capabilities["openhcs_ui_get_code_document"].target_context is (
+    assert capabilities["openhcs_ui_get_code_document"].exposition.target_context is (
         CapabilityTargetContext.UI_CODE_DOCUMENT
     )
-    assert capabilities["openhcs_validate_pipeline"].workflow_stage is (
+    assert capabilities["openhcs_validate_pipeline"].exposition.workflow_stage is (
         CapabilityWorkflowStage.VALIDATION
     )
-    assert capabilities["openhcs_ui_mutate_object_state_field"].visibility is (
+    assert capabilities["openhcs_ui_mutate_object_state_field"].exposition.visibility is (
         CapabilityVisibility.EXPERT
     )
 
@@ -529,30 +504,21 @@ def test_viewer_probe_capability_declares_compact_liveness_contract():
     assert probe.output_type == "ViewerWindowProbeResult"
 
 
-def test_cli_connection_profiles_are_declared_on_capabilities():
-    registry = get_capability_registry()
-    profiles = {
-        capability.name: capability.cli_connection_profile
-        for capability in registry.capabilities
-        if capability.cli_command is not None
-    }
-
-    assert profiles["openhcs_ui_bridge_status"] is (
-        CapabilityCliConnectionProfile.UI_BRIDGE
+def test_connection_shape_is_declared_by_the_invocation_family():
+    assert isinstance(
+        agent_capabilities.ui_bridge_status.invocation,
+        AgentConnectionServiceInvocation,
     )
-    assert profiles["openhcs_ui_get_widget_tree"] is (
-        CapabilityCliConnectionProfile.UI_BRIDGE
-    )
-    assert profiles["openhcs_get_viewer_window_payloads"] is (
-        CapabilityCliConnectionProfile.VIEWER_WINDOW
-    )
-    assert profiles["openhcs_validate_viewer_window_state"] is (
-        CapabilityCliConnectionProfile.VIEWER_WINDOW
-    )
-    assert profiles["openhcs_get_runtime_server_info"] is (
-        CapabilityCliConnectionProfile.RUNTIME_SERVER
-    )
-    assert profiles["openhcs_scan_runtime_servers"] is (
-        CapabilityCliConnectionProfile.RUNTIME_SERVER
-    )
-    assert profiles["openhcs_health_check"] is CapabilityCliConnectionProfile.DIRECT
+    for capability in (
+        agent_capabilities.get_viewer_window_payloads,
+        agent_capabilities.validate_viewer_window_state,
+    ):
+        assert isinstance(
+            capability.invocation, AgentViewerWindowRequestServiceInvocation
+        )
+    for capability in (
+        agent_capabilities.get_runtime_server_info,
+        agent_capabilities.scan_runtime_servers,
+    ):
+        assert issubclass(capability, RuntimeServerCapability)
+        assert isinstance(capability.invocation, AgentFromFieldsServiceInvocation)

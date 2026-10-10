@@ -39,7 +39,7 @@ def test_mcp_launch_preserves_bundle_root_separately_from_run_cache(
 
 
 def test_inspection_declares_progress_and_optional_runtime_side_effects():
-    capability = InspectPlatePathCapability.to_spec()
+    capability = InspectPlatePathCapability
     assert (
         capability.progress_heartbeat_seconds
         == ProgressAcknowledgedCapability.progress_heartbeat_seconds
@@ -126,7 +126,7 @@ def test_existing_progress_reports_held_work_and_propagates_terminal_failure(
             return "ready"
 
         pending = server._await_with_declared_progress(
-            InspectPlatePathCapability.to_spec(), RecordingContext(), operation()
+            InspectPlatePathCapability, RecordingContext(), operation()
         )
         if fails:
             with pytest.raises(RuntimeError) as caught:

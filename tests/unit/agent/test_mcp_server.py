@@ -726,15 +726,16 @@ def test_mcp_open_world_annotation_projects_every_authoritative_signal(
     if importlib.util.find_spec("mcp") is None:
         return
 
-    from openhcs.agent.capabilities import AgentCapabilitySpec, CapabilityKind
-
-    capability = AgentCapabilitySpec(
-        name="openhcs_test_projection",
-        kind=CapabilityKind.TOOL,
+    declared = {
+        "side_effects": (),
+        "requires_network": False,
+        "data_exposure": (),
+        "security_requirements": (),
+    } | metadata
+    capability = SimpleNamespace(
         title="Projection test",
-        description="Test capability metadata projection.",
-        service="test",
-        **metadata,
+        read_only=not declared["side_effects"],
+        **declared,
     )
 
     annotations = server._mcp_tool_annotations(capability)
@@ -1169,10 +1170,10 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
 
 
 @pytest.mark.parametrize(
-    "binding,method,catalog",
+    "capability,method,catalog",
     [
         (
-            server.UiListCodeDocumentsMcpToolBinding,
+            agent_capabilities.ui_list_code_documents,
             "list_documents",
             UiCodeDocumentCatalog(
                 schema_version=SCHEMA_VERSION,
@@ -1191,7 +1192,7 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
             ),
         ),
         (
-            server.UiListStateSurfacesMcpToolBinding,
+            agent_capabilities.ui_list_state_surfaces,
             "list_state_surfaces",
             UiStateSurfaceCatalog(
                 schema_version=SCHEMA_VERSION,
@@ -1209,7 +1210,7 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
             ),
         ),
         (
-            server.UiListActionsMcpToolBinding,
+            agent_capabilities.ui_list_actions,
             "list_actions",
             UiActionCatalog(
                 schema_version=SCHEMA_VERSION,
@@ -1227,7 +1228,7 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
             ),
         ),
         (
-            server.UiListWindowsMcpToolBinding,
+            agent_capabilities.ui_list_windows,
             "list_windows",
             UiWindowCatalog(
                 schema_version=SCHEMA_VERSION,
@@ -1245,19 +1246,21 @@ def test_mcp_widget_tree_projection_preserves_semantic_action_values():
         ),
     ],
 )
-def test_mcp_ui_catalog_bindings_preserve_declared_identity(binding, method, catalog):
+def test_mcp_ui_catalog_invocations_preserve_declared_identity(
+    capability, method, catalog
+):
     from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
 
     context = SimpleNamespace(
         ui_bridge_service=SimpleNamespace(**{method: lambda connection: catalog})
     )
-    payload = binding.execute(context, DEFAULT_UI_BRIDGE_CONNECTION_SPEC)
+    payload = server.to_jsonable(
+        capability.invocation.execute(context, DEFAULT_UI_BRIDGE_CONNECTION_SPEC)
+    )
 
     assert payload == server.to_jsonable(catalog)
     assert (
-        AgentDtoJsonCodec.dataclass_from_json(
-            binding.capability.output_contract, payload
-        )
+        AgentDtoJsonCodec.dataclass_from_json(capability.output_contract, payload)
         == catalog
     )
 
@@ -3783,18 +3786,6 @@ def test_mcp_dev_client_accepts_common_flags_after_subcommands():
 
     assert after_command.allow_error_payloads is True
     assert before_command.allow_error_payloads is True
-
-
-def test_mcp_dev_client_generated_profiles_cover_capability_connection_profiles():
-    if importlib.util.find_spec("mcp") is None:
-        return
-
-    import openhcs.mcp.dev_client as dev_client
-    from openhcs.agent.capabilities import CapabilityCliConnectionProfile
-
-    assert set(dev_client.GeneratedMcpDevCommandProfile.__registry__) == set(
-        CapabilityCliConnectionProfile
-    )
 
 
 def test_mcp_dev_client_knowledge_commands_project_tool_arguments():
@@ -15544,7 +15535,7 @@ def test_declared_progress_helper_emits_heartbeats_while_work_runs(monkeypatch):
         "progress_heartbeat_seconds",
         0.005,
     )
-    capability = CreateOrchestratorSessionFromPipelineSourceCapability.to_spec()
+    capability = CreateOrchestratorSessionFromPipelineSourceCapability
     context = RecordingMcpContext()
 
     def slow_operation():
@@ -15593,7 +15584,7 @@ def test_declared_progress_propagates_terminal_operation_errors(
         "progress_heartbeat_seconds",
         0.005,
     )
-    capability = CreateOrchestratorSessionFromPipelineSourceCapability.to_spec()
+    capability = CreateOrchestratorSessionFromPipelineSourceCapability
     error = error_type("operation terminated")
 
     async def operation():
@@ -15615,7 +15606,7 @@ def test_declared_progress_propagates_terminal_operation_errors(
 
 def test_verbose_blocking_operation_arms_bounded_stack_diagnostic(monkeypatch):
     monkeypatch.setenv(server.MCP_VERBOSE_ENVIRONMENT_VARIABLE, "1")
-    capability = CreateOrchestratorSessionFromPipelineSourceCapability.to_spec()
+    capability = CreateOrchestratorSessionFromPipelineSourceCapability
     observed = []
     monkeypatch.setattr(
         server.faulthandler,
@@ -15893,15 +15884,14 @@ def test_mcp_viewer_connection_fields_project_timeout_policy():
 
 
 def test_mcp_viewer_connection_tool_fields_parse_nominal_transport_from_wire():
-    control_args = server.McpViewerRequestToolBindingABC.control_args(
+    control_args = server.McpCapabilityBinder.viewer_control(
         {
             "port": 5555,
             "host": "127.0.0.1",
             "transport_mode": "tcp",
             "timeout_ms": 2000,
             "route_key": "image-layer",
-        },
-        server.McpViewerTimeoutPolicy,
+        }
     )
 
     assert control_args.connection.transport_mode is TransportMode.TCP

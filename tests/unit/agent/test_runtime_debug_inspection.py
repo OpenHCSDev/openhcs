@@ -6,9 +6,9 @@ from types import SimpleNamespace
 from zmqruntime.config import TransportMode
 
 from openhcs.agent.capabilities import (
-    CapabilityCliConnectionProfile,
+    AgentFromFieldsServiceInvocation,
+    RuntimeServerCapability,
     get_agent_capability,
-    get_agent_capability_declaration,
 )
 from openhcs.agent.dto.execution import (
     ExecutionConnectionSpec,
@@ -171,7 +171,7 @@ def test_zmq_runtime_gateway_reuses_typed_client_inspection(monkeypatch):
 def test_runtime_debug_capability_uses_declared_service_boundary():
     view_model = _runtime_view()
     service = RuntimeServerService(gateway=_RuntimeDebugGateway(view_model))
-    declaration = get_agent_capability_declaration(
+    declaration = get_agent_capability(
         "openhcs_inspect_debug_runtime_values"
     )
     request = RuntimeDebugInspectionRequest.from_fields(
@@ -179,7 +179,7 @@ def test_runtime_debug_capability_uses_declared_service_boundary():
         port=7787,
     )
 
-    result = declaration.execute_request(
+    result = declaration.invocation.execute(
         SimpleNamespace(runtime_server_service=service),
         request,
     )
@@ -189,9 +189,8 @@ def test_runtime_debug_capability_uses_declared_service_boundary():
     assert capability.input_contract is RuntimeDebugInspectionRequest
     assert capability.output_contract is RuntimeDebugInspectionResult
     assert capability.cli_command == "runtime-debug-values"
-    assert capability.cli_connection_profile is (
-        CapabilityCliConnectionProfile.RUNTIME_SERVER
-    )
+    assert issubclass(capability, RuntimeServerCapability)
+    assert isinstance(capability.invocation, AgentFromFieldsServiceInvocation)
     assert capability.side_effects == ()
     assert capability.runtime_requirements == (
         "running_openhcs_execution_server",

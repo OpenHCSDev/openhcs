@@ -11,7 +11,7 @@ from typing import Any
 
 from openhcs.agent.capabilities import (
     AgentCapabilityRegistry,
-    AgentCapabilitySpec,
+    AgentCapabilityDeclaration,
     CapabilityTransport,
     get_capability_registry,
 )
@@ -28,11 +28,11 @@ _AUDIT_LOGGER = logging.getLogger("openhcs.mcp.audit")
 
 def create_hosted_invocation_observer(
     settings: McpHttpResourceServerSettings,
-) -> Callable[[AgentCapabilitySpec, McpInvocationOutcome], None]:
+) -> Callable[[type[AgentCapabilityDeclaration], McpInvocationOutcome], None]:
     """Create a token-free structured audit observer for one hosted instance."""
 
     def observe(
-        capability: AgentCapabilitySpec,
+        capability: type[AgentCapabilityDeclaration],
         outcome: McpInvocationOutcome,
     ) -> None:
         event = {

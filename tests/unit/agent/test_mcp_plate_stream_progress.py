@@ -112,7 +112,7 @@ def saved_roi_stream(tmp_path, monkeypatch):
 ))
 def test_stream_declaration_composes_original_progress_and_main_affinity(declaration):
     assert issubclass(declaration, MainThreadProgressCapability)
-    spec = declaration.to_spec()
+    spec = declaration
     assert spec.progress_heartbeat_seconds == 1.0
     assert spec.progress_worker_thread_safe is False
     assert "progress_heartbeat_seconds" not in declaration.__dict__
@@ -190,7 +190,7 @@ def test_independent_stream_leaf_cooperative_hook_uses_generated_consumer(saved_
         @classmethod
         def execute_connection_request(cls, context, request, connection):
             hooks.append("enter")
-            result = super().execute_connection_request(context, request, connection)
+            result = super().invocation.execute(context, request, connection)
             hooks.append("exit")
             return result
 

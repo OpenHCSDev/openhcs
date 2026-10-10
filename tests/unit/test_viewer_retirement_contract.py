@@ -17,10 +17,10 @@ from openhcs.agent.dto.viewer import (
 from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService, ZMQViewerWindowGateway,
 )
-from openhcs.mcp.server import (
-    GeneratedMcpViewerRequestToolBinding, build_server,
-    generated_viewer_request_capability_declarations,
+from openhcs.agent.capabilities import (
+    AgentCapabilitySurfaceSelection, AgentViewerWindowRequestServiceInvocation,
 )
+from openhcs.mcp.server import McpCapabilityBinder, build_server
 from openhcs.mcp.dev_client_commands.viewer import RetireViewerCommandSpec
 from openhcs.runtime.viewer_protocol import ViewerLayerRetirementReceipt
 from openhcs.serialization.json import to_jsonable
@@ -40,8 +40,11 @@ def request():
     )
 
 
-def test_generated_mcp_binding_discovers_and_executes_new_declaration_without_consumer_edits():
-    assert RetireViewerWindowLayersCapability in generated_viewer_request_capability_declarations()
+def test_declared_invocation_binds_and_executes_new_declaration_without_consumer_edits():
+    assert isinstance(
+        RetireViewerWindowLayersCapability.invocation,
+        AgentViewerWindowRequestServiceInvocation,
+    )
     captured = []
     received = []
     class Service:
@@ -52,15 +55,22 @@ def test_generated_mcp_binding_discovers_and_executes_new_declaration_without_co
                 observed=True, applied=True, retired_route_keys=("exact-route",),
                 remaining_route_keys=("retained-raw",),
             )
-    def tool_decorator(*, capability):
+    def tool_decorator(*, capability, allow_stale_server):
+        assert allow_stale_server is False
         def register(function):
             captured.append((capability, function))
             return function
         return register
-    # This is the original generated callable/codec/invocation, not a mirrored tool.
-    GeneratedMcpViewerRequestToolBinding.bind_to_server(
-        RetireViewerWindowLayersCapability,
-        SimpleNamespace(viewer_window_service=Service()), tool_decorator,
+    # This is the declaration's own invocation binding, not a mirrored tool.
+    binder = McpCapabilityBinder(
+        context=SimpleNamespace(viewer_window_service=Service()),
+        server=None,
+        selection=AgentCapabilitySurfaceSelection(),
+        openhcs_tool=tool_decorator,
+        observe_invocation=lambda capability, outcome: None,
+    )
+    RetireViewerWindowLayersCapability.invocation.bind_mcp(
+        RetireViewerWindowLayersCapability, binder
     )
     capability, tool = captured[0]
     result = tool(port=5584, transport_mode="tcp", expected_producers=producers())
@@ -85,7 +95,7 @@ def test_cli_leaf_projects_same_typed_request_and_connection():
 def test_real_fastmcp_constructs_and_decodes_original_producer_identity():
     # A fake registration decorator cannot exercise FastMCP's schema generation.
     server = build_server()
-    capability = RetireViewerWindowLayersCapability.to_spec()
+    capability = RetireViewerWindowLayersCapability
     registered = server._tool_manager.get_tool(capability.name)
     model = registered.fn_metadata.arg_model
     payload = request().as_tool_arguments()
