@@ -34,7 +34,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
     tophat,
 )
-from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
+from openhcs.authoring.session.pipelines import (
     PipelineObjectStateBinding,
 )
 

@@ -49,7 +49,7 @@ from openhcs.desktop.update_worker import (
     DesktopUpdatePlan,
     DesktopUpdateProgressTheme,
 )
-from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
+from openhcs.authoring.session.pipelines import (
     PipelineObjectStateBinding,
 )
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter

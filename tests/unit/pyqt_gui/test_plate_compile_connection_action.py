@@ -11,7 +11,7 @@ from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.pyqt_gui.services.ui_bridge_plate_manager import PlateManagerActionProvider
 from PyQt6.QtWidgets import QPushButton
 from openhcs.core.execution_state import ManagerExecutionState
-from openhcs.pyqt_gui.widgets.shared.services.execution_state import (
+from openhcs.authoring.session.execution_batch import (
     ExecutionBatchRuntime,
 )
 

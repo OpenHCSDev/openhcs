@@ -35,7 +35,7 @@ from openhcs.pyqt_gui.services.plate_manager_batch_workflow import (
     DebugSnapshotAvailableNotification,
     PlateManagerBatchWorkflow,
 )
-from openhcs.pyqt_gui.widgets.shared.services.execution_state import (
+from openhcs.authoring.session.execution_batch import (
     ExecutionBatchRuntime,
 )
 from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget

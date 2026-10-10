@@ -920,7 +920,7 @@ class Session:
     async def connect_client(self) -> "ZMQExecutionClient":
         return await self.client.connect(
             progress_callback=self.progress.on_progress,
-            persistent=True,
+            persistent=self.client.config.persistent,
         )
 
     async def ensure_server(self) -> bool:
@@ -930,7 +930,7 @@ class Session:
     async def attach_existing_server(self) -> bool:
         client = await self.client.connect_existing(
             progress_callback=self.progress.on_progress,
-            persistent=True,
+            persistent=self.client.config.persistent,
             timeout=self.client.config.server_info_timeout_ms / 1000,
         )
         return client is not None

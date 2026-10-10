@@ -207,7 +207,7 @@ from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
     PipelineDebugSessionContext,
     PipelineDebugTargetState,
 )
-from openhcs.pyqt_gui.widgets.shared.services.execution_state import (
+from openhcs.authoring.session.execution_batch import (
     ExecutionBatchRuntime,
 )
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (

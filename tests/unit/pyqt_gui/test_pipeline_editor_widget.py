@@ -44,12 +44,12 @@ from openhcs.processing.backends.cellprofiler.illumination import (
 from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
-from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
+from openhcs.authoring.session.pipelines import (
     PipelineEditorStateRoot,
     PipelineObjectStateBinding,
 )
 from openhcs.pyqt_gui.services.service_adapter import GlobalEventBus
-from openhcs.pyqt_gui.services.step_scope_identity import StepEditorScope
+from openhcs.authoring.session.step_scopes import StepEditorScope
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
 from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
     PipelineDebugPauseBoundaryState,

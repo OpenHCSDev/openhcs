@@ -58,7 +58,7 @@ from openhcs.processing.backends import cellprofiler as cellprofiler_backend
 from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdMethod,
 )
-from openhcs.pyqt_gui.widgets.shared.services.plate_pipeline_request_builder import (
+from openhcs.authoring.session.run_requests import (
     PlatePipelineRequest,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION

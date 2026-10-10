@@ -43,7 +43,7 @@ from openhcs.pyqt_gui.services.ui_bridge_plate_manager import (
 )
 from openhcs.pyqt_gui.services.ui_bridge_registry import CompositeUiBridgeProviderSet
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
-from openhcs.pyqt_gui.widgets.shared.services.live_measurement_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     LiveMeasurementAvailableNotification,
 )
 from openhcs.pyqt_gui.windows.live_measurements_window import LiveMeasurementTableModel

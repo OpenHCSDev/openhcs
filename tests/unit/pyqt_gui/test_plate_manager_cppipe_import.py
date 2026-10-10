@@ -8,7 +8,7 @@ from objectstate.collection_containers import RootState
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from openhcs.pyqt_gui.config import get_default_ui_config
 from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
-from openhcs.pyqt_gui.services.plate_manager_row import PlateManagerRow
+from openhcs.authoring.session.datasets import PlateManagerRow
 from openhcs.pyqt_gui.widgets.plate_manager import (
     PlateManagerWidget,
     ROOT_SCOPE_ID,

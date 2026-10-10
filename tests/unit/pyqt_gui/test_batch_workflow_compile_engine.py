@@ -45,56 +45,56 @@ from openhcs.pyqt_gui.services.plate_manager_batch_workflow import (
     DebugSnapshotAvailableNotification,
     PlateManagerBatchWorkflow,
 )
-from openhcs.pyqt_gui.services.plate_manager_row import PlateManagerRow
+from openhcs.authoring.session.datasets import PlateManagerRow
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.pyqt_gui.widgets.shared.services import execution_submission_service
 from openhcs.pyqt_gui.widgets.shared.services.batch_context import (
     BatchWorkflowContext,
 )
-from openhcs.pyqt_gui.widgets.shared.services.compile_batch_workflow_service import (
+from openhcs.authoring.session.compile_batch import (
     CompileBatchWorkflowService,
 )
-from openhcs.pyqt_gui.widgets.shared.services.compile_workflow_service import (
+from openhcs.authoring.session.compilation import (
     CompileJob,
     CompileWorkflowService,
     PlateCompiledState,
     PlatePipelineRequest,
 )
-from openhcs.pyqt_gui.widgets.shared.services.debug_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     DebugProgressNotificationService,
 )
-from openhcs.pyqt_gui.widgets.shared.services.debug_workflow_service import (
+from openhcs.authoring.session.debug_runs import (
     DebugCompileArtifactCacheKey,
     DebugPlateRunRequest,
 )
-from openhcs.pyqt_gui.widgets.shared.services.execution_control_service import (
+from openhcs.authoring.session.execution_control import (
     ExecutionControlService,
 )
-from openhcs.pyqt_gui.widgets.shared.services.execution_server_status_presenter import (
+from openhcs.authoring.session.server_status import (
     ExecutionServerStatusPresenter,
 )
-from openhcs.pyqt_gui.widgets.shared.services.execution_state import (
+from openhcs.authoring.session.execution_batch import (
     ExecutionBatchRuntime,
 )
-from openhcs.pyqt_gui.widgets.shared.services.execution_submission_service import (
+from openhcs.authoring.session.submission import (
     ExecutionSubmissionService,
 )
-from openhcs.pyqt_gui.widgets.shared.services.live_measurement_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     LiveMeasurementAvailableNotification,
     LiveMeasurementProgressNotificationService,
 )
-from openhcs.pyqt_gui.widgets.shared.services.plate_pipeline_request_builder import (
+from openhcs.authoring.session.run_requests import (
     PlatePipelineRequestBuilder,
     RunSpec,
 )
-from openhcs.pyqt_gui.widgets.shared.services.progress_workflow_service import (
+from openhcs.authoring.session.progress import (
     ProgressWorkflowService,
 )
-from openhcs.pyqt_gui.widgets.shared.services.runtime_artifact_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
     RuntimeArtifactProgressNotificationService,
 )
-from openhcs.pyqt_gui.widgets.shared.services.zmq_client_service import (
+from openhcs.authoring.session.execution_client import (
     ZMQClientService,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG

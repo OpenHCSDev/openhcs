@@ -4,7 +4,7 @@ from openhcs.core.progress.projection import (
     PlateRuntimeProjection,
     PlateRuntimeState,
 )
-from openhcs.pyqt_gui.widgets.shared.services.execution_server_status_presenter import (
+from openhcs.authoring.session.server_status import (
     ExecutionServerStatusPresenter,
 )
 

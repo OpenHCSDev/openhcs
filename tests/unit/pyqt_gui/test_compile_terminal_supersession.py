@@ -13,11 +13,11 @@ from openhcs.core.orchestrator.orchestrator import (
     PipelineOrchestrator,
 )
 from openhcs.core.progress.projection import ExecutionRuntimeProjection
-from openhcs.pyqt_gui.services.plate_manager_row import PlateManagerRow
-from openhcs.pyqt_gui.services.plate_manager_state_projection import (
+from openhcs.authoring.session.datasets import PlateManagerRow
+from openhcs.authoring.session.dataset_list import (
     PlateRowActivityProjection,
 )
-from openhcs.pyqt_gui.widgets.shared.services.compile_batch_workflow_service import (
+from openhcs.authoring.session.compile_batch import (
     CompileBatchWorkflowService,
 )
 from tests.unit.pyqt_gui.test_batch_workflow_compile_engine import (

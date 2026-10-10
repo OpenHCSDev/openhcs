@@ -52,20 +52,20 @@ from openhcs.core.runtime_stores import (
 )
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.widgets.artifact_plan_view import ArtifactPlanViewModel
-from openhcs.pyqt_gui.widgets.shared.services.compile_workflow_service import (
+from openhcs.authoring.session.compilation import (
     CompileWorkflowService,
     PlateCompiledState,
 )
-from openhcs.pyqt_gui.widgets.shared.services.debug_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     DebugProgressNotificationService,
 )
-from openhcs.pyqt_gui.widgets.shared.services.execution_server_status_presenter import (
+from openhcs.authoring.session.server_status import (
     ExecutionServerStatusPresenter,
 )
-from openhcs.pyqt_gui.widgets.shared.services.progress_workflow_service import (
+from openhcs.authoring.session.progress import (
     ProgressWorkflowService,
 )
-from openhcs.pyqt_gui.widgets.shared.services.runtime_artifact_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
     RuntimeArtifactProgressNotificationService,
 )

@@ -30,7 +30,7 @@ from openhcs.pyqt_gui.services.main_window_workflows import (
 from openhcs.pyqt_gui.widgets.shared.services.batch_workflow_components import (
     BatchWorkflowComponents,
 )
-from openhcs.pyqt_gui.widgets.shared.services.progress_workflow_service import (
+from openhcs.authoring.session.progress import (
     ProgressWorkflowService,
 )
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig

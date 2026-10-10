@@ -18,7 +18,7 @@ from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.theming import ColorScheme
 
 import openhcs.processing.backends.cellprofiler as cellprofiler_backend
-import openhcs.pyqt_gui.widgets.shared.services.execution_submission_service as execution_submission_service
+import openhcs.authoring.session.submission as execution_submission_service
 from openhcs.agent.dto.ui_bridge import (
     UiBridgeConfirmationRequirement,
     UiCodeDocumentApplyRequest,
@@ -72,14 +72,14 @@ from openhcs.desktop.update import (
     DesktopRestartUiState,
 )
 from openhcs.pyqt_gui.services.main_window_workflows import MainWindowPipelineActions
-from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
+from openhcs.authoring.session.pipelines import (
     PipelineObjectStateBinding,
 )
-from openhcs.pyqt_gui.services.plate_manager_root_state import (
+from openhcs.authoring.session.datasets import (
     root_orchestrator_scope_ids,
 )
-from openhcs.pyqt_gui.services.plate_manager_row import PlateManagerRow
-from openhcs.pyqt_gui.services.plate_manager_state_projection import (
+from openhcs.authoring.session.datasets import PlateManagerRow
+from openhcs.authoring.session.dataset_list import (
     PlateManagerOutputPlateRelationAuthority,
 )
 from openhcs.pyqt_gui.services.service_adapter import GlobalEventBus
@@ -97,10 +97,10 @@ from openhcs.pyqt_gui.widgets.plate_manager import (
     PlateOperation,
     PlateOperationValidator,
 )
-from openhcs.pyqt_gui.widgets.shared.services.execution_state import (
+from openhcs.authoring.session.execution_batch import (
     ExecutionBatchRuntime,
 )
-from openhcs.pyqt_gui.widgets.shared.services.execution_submission_service import (
+from openhcs.authoring.session.submission import (
     ExecutionSubmissionService,
 )
 from openhcs.pyqt_gui.widgets.shared.services.plate_manager_workflows import (
