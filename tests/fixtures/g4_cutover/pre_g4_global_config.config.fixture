@@ -1,0 +1,19 @@
+# OpenHCS configuration
+
+from openhcs.constants.constants import Microscope
+from openhcs.core.config import (
+    AnalysisConsolidationConfig,
+    GlobalPipelineConfig,
+    PlateMetadataConfig,
+)
+
+config = GlobalPipelineConfig(
+    microscope=Microscope.IMAGEXPRESS,
+    analysis_consolidation_config=AnalysisConsolidationConfig(
+        enabled=False,
+        output_filename='custom.csv'
+    ),
+    plate_metadata_config=PlateMetadataConfig(
+        barcode='BC-1'
+    )
+)

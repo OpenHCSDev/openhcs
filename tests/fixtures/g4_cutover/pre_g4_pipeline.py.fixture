@@ -1,0 +1,17 @@
+# OpenHCS pipeline
+
+from openhcs.constants.constants import Microscope
+from openhcs.core.config import PipelineConfig
+from openhcs.core.steps.function_step import FunctionStep
+from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
+
+pipeline_config = PipelineConfig(
+    microscope=Microscope.OPERAPHENIX
+)
+
+pipeline_steps = [
+    FunctionStep(
+        func=percentile_normalize,
+        name='percentile_normalize'
+    )
+]
