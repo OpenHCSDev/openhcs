@@ -73,7 +73,6 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerStateSurfaceIdentityDeclaration,
     PlateManagerWidgetIdentity,
 )
-from openhcs.constants.constants import AllComponents
 from openhcs.core.config_cache import ConfigCacheSpec, save_config_sync
 from openhcs.mcp.dev_client import McpDevClient
 from openhcs.mcp.dev_client_core import (
@@ -97,6 +96,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerTransportEndpoint,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
+from openhcs.domains.microscopy.axes import Microscopy
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DEMO_ROOT = ROOT / "mcp_outputs" / "thesis_demo" / "live"
@@ -188,7 +188,7 @@ AUTHORING_SCHEMA_PROBES = (
         (
             "napari_streaming_config.enabled",
             "napari_streaming_config.port",
-            "napari_streaming_config.site_mode",
+            "napari_streaming_config.tile_mode",
         ),
     ),
     (
@@ -197,7 +197,7 @@ AUTHORING_SCHEMA_PROBES = (
         (
             "fiji_streaming_config.enabled",
             "fiji_streaming_config.port",
-            "fiji_streaming_config.site_mode",
+            "fiji_streaming_config.tile_mode",
         ),
     ),
     (
@@ -239,7 +239,7 @@ AUTHORING_SCHEMA_PROBES = (
         (
             "napari_streaming_config.enabled",
             "napari_streaming_config.port",
-            "napari_streaming_config.site_mode",
+            "napari_streaming_config.tile_mode",
         ),
     ),
     (
@@ -248,7 +248,7 @@ AUTHORING_SCHEMA_PROBES = (
         (
             "fiji_streaming_config.enabled",
             "fiji_streaming_config.port",
-            "fiji_streaming_config.site_mode",
+            "fiji_streaming_config.tile_mode",
         ),
     ),
 )
@@ -1214,12 +1214,8 @@ def demo_source(
 from pathlib import Path
 
 from arraybridge.decorators import DtypeConversion
-from openhcs.constants.constants import (
-    AllComponents,
-    GroupBy,
-    VariableComponents,
-)
 from openhcs.constants.input_source import InputSource
+from openhcs.core.axes import Ungrouped
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyDtypeConfig,
@@ -1238,6 +1234,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     DetectionMethod,
     count_cells_single_channel,
@@ -1274,14 +1271,14 @@ per_plate_configs = {{
                     selector=SourceSelector(
                         components=(
                             ComponentSelector(
-                                component=AllComponents.CHANNEL,
+                                component=Microscopy.Channel,
                                 value={primary_channel!r}
                             ),
                         )
                     ),
                     component_identity=(
                         ComponentSelector(
-                            component=AllComponents.CHANNEL,
+                            component=Microscopy.Channel,
                             value={binding_state.channel_identity!r}
                         ),
                     )
@@ -1291,14 +1288,14 @@ per_plate_configs = {{
                     selector=SourceSelector(
                         components=(
                             ComponentSelector(
-                                component=AllComponents.CHANNEL,
+                                component=Microscopy.Channel,
                                 value={secondary_channel!r}
                             ),
                         )
                     ),
                     component_identity=(
                         ComponentSelector(
-                            component=AllComponents.CHANNEL,
+                            component=Microscopy.Channel,
                             value='MCP_AGP'
                         ),
                     )
@@ -1331,9 +1328,9 @@ pipeline_data = {{
             name='create_composite',
             processing_config=LazyProcessingConfig(
                 variable_components=[
-                    VariableComponents.CHANNEL
+                    Microscopy.Channel
                 ],
-                group_by=GroupBy.NONE
+                group_by=Ungrouped
             )
         ),
         FunctionStep(
@@ -1343,7 +1340,7 @@ pipeline_data = {{
             name='Z-Stack Flattening',
             processing_config=LazyProcessingConfig(
                 variable_components=[
-                    VariableComponents.Z_INDEX
+                    Microscopy.ZIndex
                 ]
             ),
             step_materialization_config=LazyStepMaterializationConfig()
@@ -1373,7 +1370,7 @@ pipeline_data = {{
             name='Z-Stack Flattening',
             processing_config=LazyProcessingConfig(
                 variable_components=[
-                    VariableComponents.Z_INDEX
+                    Microscopy.ZIndex
                 ]
             )
         ),
@@ -1386,7 +1383,7 @@ pipeline_data = {{
                 }}),
             name='Cell Counting',
             processing_config=LazyProcessingConfig(
-                group_by=GroupBy.CHANNEL
+                group_by=Microscopy.Channel
             ),
             dtype_config=LazyDtypeConfig(
                 default_dtype_conversion=DtypeConversion.UINT8
@@ -2005,9 +2002,9 @@ def assert_applied_document_state(
     expected_bindings = (
         (
             binding_state.source_alias,
-            ((AllComponents.CHANNEL, binding_state.channel_identity),),
+            ((Microscopy.Channel, binding_state.channel_identity),),
         ),
-        ("MCP_AGP", ((AllComponents.CHANNEL, "MCP_AGP"),)),
+        ("MCP_AGP", ((Microscopy.Channel, "MCP_AGP"),)),
     )
     if observed_bindings != expected_bindings:
         raise RehearsalFailure(
@@ -2031,9 +2028,9 @@ def assert_applied_document_state(
         processing_semantics.append(
             {
                 "step_index": step_index,
-                "group_by": processing_config.group_by.value,
+                "group_by": processing_config.group_by.name,
                 "variable_components": [
-                    component.value
+                    component.name
                     for component in processing_config.variable_components
                 ],
             }
@@ -2048,14 +2045,14 @@ def assert_applied_document_state(
                 "alias": binding.alias,
                 "selector_components": [
                     {
-                        "component": selector.component.value,
+                        "component": selector.component.name,
                         "value": selector.value,
                     }
                     for selector in binding.selector.components
                 ],
                 "component_identity": [
                     {
-                        "component": selector.component.value,
+                        "component": selector.component.name,
                         "value": selector.value,
                     }
                     for selector in binding.component_identity

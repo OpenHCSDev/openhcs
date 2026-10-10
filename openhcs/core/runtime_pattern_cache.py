@@ -7,10 +7,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Hashable, TYPE_CHECKING
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.function_patterns import FunctionGroupKey
 from openhcs.core.source_binding_selection import SourceCandidatePath
+from openhcs.core.axes import Axis, GroupingDeclaration
 
 if TYPE_CHECKING:
     from openhcs.microscopes.microscope_interfaces import FilenameParser
@@ -27,8 +27,8 @@ class RuntimePatternDiscoveryCacheKey:
 
     axis_id: str
     source_files: tuple[str, ...]
-    group_by: str | None
-    variable_components: tuple[str, ...]
+    group_by: type[GroupingDeclaration] | None
+    variable_components: tuple[type[Axis], ...]
 
     @classmethod
     def from_source_files(
@@ -36,8 +36,8 @@ class RuntimePatternDiscoveryCacheKey:
         *,
         axis_id: str,
         source_files: Sequence[str],
-        group_by: str | None,
-        variable_components: Sequence[str],
+        group_by: type[GroupingDeclaration] | None,
+        variable_components: Sequence[type[Axis]],
     ) -> "RuntimePatternDiscoveryCacheKey":
         if not axis_id:
             raise ValueError("Runtime pattern cache axis_id cannot be empty.")
@@ -46,10 +46,8 @@ class RuntimePatternDiscoveryCacheKey:
         return cls(
             axis_id=str(axis_id),
             source_files=tuple(str(source_file) for source_file in source_files),
-            group_by=None if group_by is None else str(group_by),
-            variable_components=tuple(
-                str(component) for component in variable_components
-            ),
+            group_by=group_by,
+            variable_components=tuple(variable_components),
         )
 
 
@@ -127,7 +125,7 @@ class RuntimePatternDiscoveryCache:
         FilenameParseResult | None,
     ] = field(default_factory=dict)
     filenames_by_component: dict[
-        tuple["FilenameParser", tuple[Hashable, ...], AllComponents, str], set[str],
+        tuple["FilenameParser", tuple[Hashable, ...], type[Axis], str], set[str],
     ] = field(default_factory=dict)
 
     def metadata_for_filename(
@@ -150,7 +148,7 @@ class RuntimePatternDiscoveryCache:
         self,
         parser: "FilenameParser",
         files: Sequence[str],
-        component: AllComponents,
+        component: type[Axis],
         value: object,
     ) -> list[str]:
         """Select component membership from the admitted filename inventory."""

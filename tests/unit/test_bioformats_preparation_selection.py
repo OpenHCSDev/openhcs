@@ -9,7 +9,7 @@ import tifffile
 from objectstate.lazy_factory import ensure_global_config_context
 from polystore.bioformats_java import BioFormatsJavaContext
 
-from openhcs.constants.constants import AllComponents, Microscope
+from openhcs.constants.constants import Microscope
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
@@ -34,6 +34,7 @@ from tests.unit.test_bioformats_java_adapter import (
     FakeBioFormatsContext,
     FakeBioFormatsMetadata,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _file_filter(name):
@@ -112,7 +113,7 @@ def test_selected_container_opens_once_and_projects_both_planes(
         ).initialize()
         assert orchestrator.is_initialized()
         assert opened == [names[7]] * (2 if entrypoint == "auto_orchestrator" else 1)
-        assert len(orchestrator.get_component_keys(AllComponents.WELL)) == 1
+        assert len(orchestrator.get_component_keys(Microscopy.Well)) == 1
     workspace = json.loads((tmp_path / "openhcs_metadata.json").read_text())
     mapping = workspace["subdirectories"]["."]["workspace_mapping"]
     assert len(mapping) == 2

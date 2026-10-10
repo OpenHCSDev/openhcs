@@ -525,7 +525,7 @@ class FunctionRuntimeContractSummary:
     processing_contract: str | None = None
     declared_processing_contract: str | None = None
     runtime_bound_parameters: tuple[str, ...] = ()
-    required_variable_components: tuple[str, ...] = ()
+    required_axis_roles: tuple[str, ...] = ()
     artifact_inputs: tuple[FunctionArtifactSpec, ...] = ()
     artifact_outputs: tuple[FunctionArtifactSpec, ...] = ()
     cellprofiler_module: CellProfilerModuleDeclarationSummary | None = None

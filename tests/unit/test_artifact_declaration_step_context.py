@@ -2,7 +2,6 @@
 
 from dataclasses import fields
 
-from openhcs.constants.constants import GroupBy
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -21,6 +20,7 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     StepSourceBindingsConfig,
 )
+from openhcs.core.axes import Ungrouped
 
 
 def test_context_owns_exact_step_artifact_projection_facts() -> None:
@@ -30,7 +30,7 @@ def test_context_owns_exact_step_artifact_projection_facts() -> None:
     assert "input_source" in field_names
     assert "invocation_ordinal" not in field_names
     assert "processing_config" not in field_names
-    assert ArtifactDeclarationStepContext.empty().group_by is GroupBy.NONE
+    assert ArtifactDeclarationStepContext.empty().group_by is Ungrouped
     assert (
         ArtifactDeclarationStepContext.empty().input_source is InputSource.PREVIOUS_STEP
     )

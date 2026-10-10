@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from types import ModuleType, SimpleNamespace
 
+from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 from openhcs.microscopes.omero import OMEROFilenameParser, OMEROMetadataHandler
 
@@ -48,14 +49,14 @@ def test_omero_pattern_discovery_round_trips_symbolic_site() -> None:
             "/omero/plate_1/A01_s002_w2_z003_t001.tif",
         ],
         axis_id="A01",
-        variable_components=["site"],
+        variable_components=[Microscopy.Site],
     )
 
     assert patterns == {"A01": ["A01_s{iii}_w2_z003_t001.tif"]}
     pattern = patterns["A01"][0]
     parsed = parser.parse_filename(pattern)
     assert parsed is not None
-    assert parsed.value_for(parser.component_for_name("site")) == "{iii}"
+    assert parsed.value_for(Microscopy.Site) == "{iii}"
 
 
 def test_grid_dimensions_follow_canonical_key_across_annotation_namespaces(

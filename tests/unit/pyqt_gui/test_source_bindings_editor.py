@@ -43,7 +43,7 @@ from openhcs.core.config import (
     SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.source_bindings_preview import SourceInventory
 from openhcs.pyqt_gui.widgets.source_bindings_editor import (
@@ -99,6 +99,8 @@ from pyqt_reactive.widgets.shared.clickable_help_components import ProvenanceLab
 from pyqt_reactive.widgets.no_scroll_spinbox import NoScrollComboBox, NoneAwareCheckBox
 from pyqt_reactive.widgets.shared.scoped_table_widget import ScopedTableWidget
 from pyqt_reactive.widgets.shared.scope_color_utils import get_scope_color_scheme
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def assert_label_masked(label_widget, window, masks):
@@ -224,7 +226,7 @@ def test_structured_selector_dialog_choices_come_from_field_type() -> None:
     dialog = StructuredSelectorDialog(
         element_type=ComponentSelector,
         suggestions=(),
-        value=(ComponentSelector(AllComponents.CHANNEL, "DNA"),),
+        value=(ComponentSelector(Microscopy.Channel, "DNA"),),
     )
 
     component_widget = dialog.table.cellWidget(
@@ -233,8 +235,8 @@ def test_structured_selector_dialog_choices_come_from_field_type() -> None:
     assert isinstance(component_widget, QComboBox)
     assert tuple(
         component_widget.itemData(index) for index in range(component_widget.count())
-    ) == tuple(AllComponents)
-    assert component_widget.currentData() is AllComponents.CHANNEL
+    ) == AxisFamily.active().axes
+    assert component_widget.currentData() is Microscopy.Channel
 
 
 def test_structured_selector_dialog_reports_incomplete_rows() -> None:
@@ -4507,7 +4509,7 @@ def test_source_bindings_editor_edits_step_binding_table() -> None:
 def test_source_bindings_editor_preserves_selector_on_basic_edits() -> None:
     QtApplicationHarness.app()
     selector = SourceSelector(
-        components=(ComponentSelector(AllComponents.CHANNEL, "DNA"),),
+        components=(ComponentSelector(Microscopy.Channel, "DNA"),),
         metadata=(MetadataSelector("Well", "A01"),),
         filters=(
             SourceFilterClause(
@@ -4537,7 +4539,7 @@ def test_source_bindings_editor_preserves_binding_identity_on_basic_edits() -> N
     QtApplicationHarness.app()
     binding = NamedSourceBinding(
         alias="DNA",
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
         projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
     )
     widget = SourceBindingsEditorWidget.from_bindings(
@@ -4550,7 +4552,7 @@ def test_source_bindings_editor_preserves_binding_identity_on_basic_edits() -> N
 
     edited = widget.get_value().bindings[0]
     assert edited.alias == "OrigDNA"
-    assert edited.component_identity == (ComponentSelector(AllComponents.CHANNEL, "1"),)
+    assert edited.component_identity == (ComponentSelector(Microscopy.Channel, "1"),)
     assert edited.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
 
 
@@ -4564,7 +4566,7 @@ def test_source_bindings_editor_edits_binding_identity_columns() -> None:
     set_editable_cell_text(
         table,
         *binding_cell_position(0, "component_identity"),
-        (ComponentSelector(AllComponents.CHANNEL, "2"), ComponentSelector(AllComponents.SITE, "1")),
+        (ComponentSelector(Microscopy.Channel, "2"), ComponentSelector(Microscopy.Site, "1")),
     )
     set_binding_cell_text(
         table,
@@ -4582,8 +4584,8 @@ def test_source_bindings_editor_edits_binding_identity_columns() -> None:
 
     binding = widget.get_value().bindings[0]
     assert binding.component_identity == (
-        ComponentSelector(AllComponents.CHANNEL, "2"),
-        ComponentSelector(AllComponents.SITE, "1"),
+        ComponentSelector(Microscopy.Channel, "2"),
+        ComponentSelector(Microscopy.Site, "1"),
     )
     assert binding.source_set_role is SourceSetRole.BROADCAST
     assert binding.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
@@ -4599,7 +4601,7 @@ def test_source_bindings_editor_edits_selector_columns() -> None:
     set_editable_cell_text(
         table,
         *binding_cell_position(0, "components"),
-        (ComponentSelector(AllComponents.CHANNEL, "DNA"), ComponentSelector(AllComponents.SITE, "1")),
+        (ComponentSelector(Microscopy.Channel, "DNA"), ComponentSelector(Microscopy.Site, "1")),
     )
     set_editable_cell_text(
         table,
@@ -4616,8 +4618,8 @@ def test_source_bindings_editor_edits_selector_columns() -> None:
 
     selector = widget.get_value().bindings[0].selector
     assert selector.components == (
-        ComponentSelector(AllComponents.CHANNEL, "DNA"),
-        ComponentSelector(AllComponents.SITE, "1"),
+        ComponentSelector(Microscopy.Channel, "DNA"),
+        ComponentSelector(Microscopy.Site, "1"),
     )
     assert selector.metadata == (MetadataSelector("Well", "A01"),)
     assert selector.filters == (

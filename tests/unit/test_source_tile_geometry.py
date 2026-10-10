@@ -12,7 +12,7 @@ from polystore.filemanager import FileManager
 from polystore.source_tile_geometry import SourceTileGeometry
 from polystore.tiff_header import TiffImageHeader
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.memory import numpy
 from openhcs.core.runtime_adapters import runtime_adapter
@@ -43,6 +43,8 @@ from openhcs.processing.backends.pos_gen.acquisition_positions import (
     _source_metadata,
     acquisition_tile_positions,
 )
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _xml(
@@ -258,8 +260,8 @@ def test_materialization_preserves_binding_axes_serialization_and_shared_sparse_
     assert SourceTileLayout.metadata_grid_dimensions(projection) == []
     assert {
         (
-            p.address.value_for(AllComponents.SITE),
-            p.address.value_for(AllComponents.CHANNEL),
+            p.address.value_for(Microscopy.Site),
+            p.address.value_for(Microscopy.Channel),
         )
         for p in projection.plane_projections
     } == {("1", "1"), ("1", "2"), ("3", "1"), ("3", "2")}
@@ -395,7 +397,7 @@ def _verify_paired_stitched_mosaics(
     assert len(records) == 2
     assert tuple(
         source_component_metadata_value(
-            record.source_component_metadata, AllComponents.CHANNEL
+            record.source_component_metadata, Microscopy.Channel
         )
         for record in records
     ) == ("1", "2")
@@ -468,7 +470,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
     from objectstate import ObjectStateRegistry
     from objectstate.lazy_factory import ensure_global_config_context
 
-    from openhcs.constants.constants import GroupBy, Microscope, VariableComponents
+    from openhcs.constants.constants import Microscope
     from openhcs.core.config import (
         AnalysisConsolidationConfig,
         GlobalPipelineConfig,
@@ -545,7 +547,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
         orchestrator = PipelineOrchestrator(plate, pipeline_config=config).initialize()
         if embedded:
             site_processing = LazyProcessingConfig(
-                variable_components=[VariableComponents.SITE], group_by=GroupBy.CHANNEL
+                variable_components=[Microscopy.Site], group_by=Microscopy.Channel
             )
             steps = [
                 FunctionStep(
@@ -565,8 +567,8 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                         enabled=True, sub_dir="checkpoints"
                     ),
                     processing_config=LazyProcessingConfig(
-                        variable_components=[VariableComponents.CHANNEL],
-                        group_by=GroupBy.NONE,
+                        variable_components=[Microscopy.Channel],
+                        group_by=Ungrouped,
                         input_source=InputSource.PREVIOUS_STEP,
                     ),
                 ),
@@ -597,7 +599,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                 edge.spec.name == "positions" for edge in consumer.artifact_input_edges
             )
             assert context.step_plans[2].variable_components == [
-                VariableComponents.CHANNEL
+                Microscopy.Channel
             ]
         result = orchestrator.execute_compiled_plate(
             execution_bundle=compilation,
@@ -678,8 +680,8 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                     FunctionStep(
                         func=_verify_paired_stitched_mosaics,
                         processing_config=LazyProcessingConfig(
-                            variable_components=[VariableComponents.CHANNEL],
-                            group_by=GroupBy.NONE,
+                            variable_components=[Microscopy.Channel],
+                            group_by=Ungrouped,
                             input_source=InputSource.PIPELINE_START,
                         ),
                     )

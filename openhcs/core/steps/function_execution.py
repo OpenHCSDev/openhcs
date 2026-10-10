@@ -9,7 +9,6 @@ from collections.abc import Callable, Mapping, Sequence
 from itertools import zip_longest
 from typing import TYPE_CHECKING
 
-from openhcs.constants import MULTIPROCESSING_AXIS
 from openhcs.constants.constants import (
     LOADABLE_IMAGE_EXTENSIONS,
     Backend,
@@ -58,6 +57,7 @@ from openhcs.core.steps.function_runtime import (
     _process_single_pattern_group,
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
+from openhcs.core.axes import AxisFamily
 
 if TYPE_CHECKING:
     from openhcs.microscopes.microscope_interfaces import FilenameParser
@@ -603,7 +603,7 @@ class FunctionStepExecutor:
             ).candidate_execution_scopes(
                 context.runtime_value_store,
                 execution_scope,
-                variable_components=ComponentSet.coerce(plan.variable_components),
+                variable_components=ComponentSet.of(plan.variable_components),
             )
 
         if scope.is_dynamic:
@@ -803,7 +803,7 @@ class FunctionStepExecutor:
 
     def _detect_patterns(self) -> dict[str, DiscoveredPatternCollection]:
         plan = self.plan
-        axis_name = MULTIPROCESSING_AXIS.value
+        axis_name = AxisFamily.active().partition_axis().name
         axis_filter = {f"{axis_name}_filter": [plan.axis_id]}
         source_files = step_output_manifest(self.context).producer_paths_for(plan)
         if source_files is None:
@@ -822,8 +822,8 @@ class FunctionStepExecutor:
             cache_key = RuntimePatternDiscoveryCacheKey.from_source_files(
                 axis_id=plan.axis_id,
                 source_files=source_files,
-                group_by=plan.group_by_value,
-                variable_components=plan.variable_component_values,
+                group_by=plan.group_by,
+                variable_components=plan.require_variable_components(),
             )
             cached_patterns = self.context.runtime_pattern_discovery_cache.get(
                 cache_key
@@ -837,7 +837,7 @@ class FunctionStepExecutor:
             ).auto_detect_patterns_from_axis_files(
                 list(source_files),
                 axis_id=plan.axis_id,
-                variable_components=plan.variable_component_values,
+                variable_components=plan.require_variable_components(),
                 group_by=plan.group_by,
             )
             self.context.runtime_pattern_discovery_cache.store(
@@ -850,7 +850,7 @@ class FunctionStepExecutor:
             plan.read_backend,
             extensions=LOADABLE_IMAGE_EXTENSIONS,
             group_by=plan.group_by,
-            variable_components=plan.variable_component_values,
+            variable_components=plan.require_variable_components(),
             pattern_cache=self.context.runtime_pattern_discovery_cache,
             **axis_filter,
         )
@@ -984,7 +984,7 @@ class FunctionStepExecutor:
                 f"Step '{plan.step_name}' uses a dict function pattern without "
                 "a concrete execution group component. Dict keys are dispatch "
                 "groups and require group_by to resolve to a real component; "
-                "GroupBy.NONE is only valid for non-dict function patterns."
+                "Ungrouped is only valid for non-dict function patterns."
             )
         if (
             plan.execution_group_scope.is_ungrouped

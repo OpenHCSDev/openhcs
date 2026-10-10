@@ -24,7 +24,7 @@ from polystore.ome_zarr_storage import OmeZarrArrayRef
 from polystore.virtual_workspace import SourcePixelRef
 from polystore.zarr_batch import ZarrStoredBatchSemantics
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.source_bindings import SourceBindingsConfig
 from openhcs.core.source_matching import (
@@ -42,6 +42,7 @@ from openhcs.core.source_projection import (
     SourcePlaneStoreIdentity,
 )
 from openhcs.microscopes.bioformats_well_key import BIOFORMATS_WELL_KEYS
+from openhcs.domains.microscopy.axes import Microscopy
 
 if TYPE_CHECKING:
     from ome_zarr.format import Format
@@ -420,12 +421,14 @@ class BioFormatsStoreMetadata:
         )
         candidates = []
         for plane in image.pixels.planes:
-            address = OpenHCSPlaneAddress.from_values(
-                well=well,
-                site=site,
-                channel=str(plane.c),
-                z_index=str(plane.z),
-                timepoint=str(plane.t),
+            address = OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, well),
+                    (Microscopy.Site, site),
+                    (Microscopy.Channel, str(plane.c)),
+                    (Microscopy.ZIndex, str(plane.z)),
+                    (Microscopy.Timepoint, str(plane.t)),
+                )
             )
             metadata: dict[str, object] = {
                 "ome_image_id": image.image_id,
@@ -465,11 +468,11 @@ class BioFormatsStoreMetadata:
                     source_axis_shape=source_axis_shape,
                     source_filter_paths=filter_paths,
                     component_labels={
-                        AllComponents.WELL.value: well_label,
-                        AllComponents.SITE.value: site_label,
-                        AllComponents.CHANNEL.value: image.channel_names[plane.c - 1],
-                        AllComponents.Z_INDEX.value: None,
-                        AllComponents.TIMEPOINT.value: None,
+                        Microscopy.Well.name: well_label,
+                        Microscopy.Site.name: site_label,
+                        Microscopy.Channel.name: image.channel_names[plane.c - 1],
+                        Microscopy.ZIndex.name: None,
+                        Microscopy.Timepoint.name: None,
                     },
                     declared_address=address,
                     dataset_identity=dataset_identity,
@@ -918,12 +921,14 @@ class ImageFileStoreAdapter(SourcePlaneStoreAdapter):
                 )
             relative_path = _relative_path(root, source_path)
             sample_id = OpenHCSPlaneAddress.component_token(relative_path)
-            address = OpenHCSPlaneAddress.from_values(
-                well=sample_id,
-                site="1",
-                channel="1",
-                z_index="1",
-                timepoint="1",
+            address = OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, sample_id),
+                    (Microscopy.Site, "1"),
+                    (Microscopy.Channel, "1"),
+                    (Microscopy.ZIndex, "1"),
+                    (Microscopy.Timepoint, "1"),
+                )
             )
             metadata: dict[str, object] = {}
             for component, value in address.component_values().items():
@@ -937,11 +942,11 @@ class ImageFileStoreAdapter(SourcePlaneStoreAdapter):
                 metadata=metadata,
                 source_filter_paths=_physical_path_identities(root, source_path),
                 component_labels={
-                    AllComponents.WELL.value: relative_path,
-                    AllComponents.SITE.value: None,
-                    AllComponents.CHANNEL.value: None,
-                    AllComponents.Z_INDEX.value: None,
-                    AllComponents.TIMEPOINT.value: None,
+                    Microscopy.Well.name: relative_path,
+                    Microscopy.Site.name: None,
+                    Microscopy.Channel.name: None,
+                    Microscopy.ZIndex.name: None,
+                    Microscopy.Timepoint.name: None,
                 },
                 declared_address=address,
                 dataset_identity=identity,
@@ -1327,12 +1332,14 @@ def _ngff_image_candidates(
                 "NGFF image declares unsupported nonspatial axes "
                 f"{tuple(coordinates)!r}."
             )
-        address = OpenHCSPlaneAddress.from_values(
-            well=well,
-            site=str(site),
-            channel=str(channel),
-            z_index=str(z_index),
-            timepoint=str(timepoint),
+        address = OpenHCSPlaneAddress(
+            (
+                (Microscopy.Well, well),
+                (Microscopy.Site, str(site)),
+                (Microscopy.Channel, str(channel)),
+                (Microscopy.ZIndex, str(z_index)),
+                (Microscopy.Timepoint, str(timepoint)),
+            )
         )
         metadata: dict[str, object] = {
             "ngff_dataset_id": dataset_identity.value,
@@ -1356,11 +1363,11 @@ def _ngff_image_candidates(
                 source_axis_shape=source_axis_shape,
                 source_filter_paths=filter_paths,
                 component_labels={
-                    AllComponents.WELL.value: well,
-                    AllComponents.SITE.value: None,
-                    AllComponents.CHANNEL.value: channel_labels[channel_index],
-                    AllComponents.Z_INDEX.value: None,
-                    AllComponents.TIMEPOINT.value: None,
+                    Microscopy.Well.name: well,
+                    Microscopy.Site.name: None,
+                    Microscopy.Channel.name: channel_labels[channel_index],
+                    Microscopy.ZIndex.name: None,
+                    Microscopy.Timepoint.name: None,
                 },
                 declared_address=address,
                 dataset_identity=dataset_identity,

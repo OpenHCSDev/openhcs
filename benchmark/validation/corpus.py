@@ -32,7 +32,7 @@ from benchmark.datasets.acquire import (
 from benchmark.datasets.registry import get_dataset_spec
 from benchmark.validation.layouts import ValidationCorpusLayoutStrategy
 from benchmark.validation.references import ValidationReferenceStrategy
-from openhcs.constants import AllComponents, Microscope
+from openhcs.constants import Microscope
 from openhcs.core.config import LazySourceBindingsConfig, PipelineConfig
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -53,6 +53,7 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class ValidationCorpusPreparationError(RuntimeError):
@@ -532,7 +533,7 @@ def source_bindings_for_validation(
             origin=SourceBindingOrigin.PIPELINE_START,
             component_identity=(
                 ComponentSelector(
-                    component=AllComponents.CHANNEL,
+                    component=Microscopy.Channel,
                     value=channel.value,
                 ),
             ),

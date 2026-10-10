@@ -177,7 +177,7 @@ Do not use ``group_by=CHANNEL`` for assembly. ``group_by`` partitions an already
 assembled value and selects branches only for a dictionary function pattern.
 For this non-dictionary MetaXpress callable, an overlapping
 ``group_by=CHANNEL`` is redundant and the compiler normalizes it to
-``GroupBy.NONE``.
+``Ungrouped``.
 
 The explicit-subset regression is intentionally generic rather than a
 MetaXpress channel map: an implicit-main-flow callable must retain its ordered
@@ -425,13 +425,13 @@ values equal merely to satisfy validation.
 
 .. code-block:: python
 
-   from openhcs.constants.constants import AllComponents
    from openhcs.core.config import LazySourceBindingsConfig, PipelineConfig
    from openhcs.core.source_bindings import (
        ComponentSelector,
        NamedSourceBinding,
        SourceSelector,
    )
+   from openhcs.domains.microscopy.axes import Microscopy
 
    pipeline_config = PipelineConfig(
        source_bindings_config=LazySourceBindingsConfig(
@@ -440,12 +440,12 @@ values equal merely to satisfy validation.
                    alias="DNA",
                    selector=SourceSelector(
                        components=(
-                           ComponentSelector(AllComponents.WELL, "A01"),
-                           ComponentSelector(AllComponents.CHANNEL, "2"),
+                           ComponentSelector(Microscopy.Well, "A01"),
+                           ComponentSelector(Microscopy.Channel, "2"),
                        ),
                    ),
                    component_identity=(
-                       ComponentSelector(AllComponents.CHANNEL, "DNA"),
+                       ComponentSelector(Microscopy.Channel, "DNA"),
                    ),
                ),
            ),

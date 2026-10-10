@@ -16,7 +16,7 @@ from zmqruntime.execution.responses import (
 )
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants import Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.core.artifacts import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -55,6 +55,7 @@ from openhcs.runtime.zmq_execution_observation import (
 from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _write_known_dual_channel_images(plate_dir):
@@ -153,7 +154,7 @@ def test_dual_channel_count_runs_on_synthetic_plate_with_channel_stack(
             },
         ),
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
+            variable_components=[Microscopy.Channel],
         ),
     )
     aggregate_step = FunctionStep(
@@ -171,8 +172,8 @@ def test_dual_channel_count_runs_on_synthetic_plate_with_channel_stack(
         ),
         processing_config=LazyProcessingConfig(
             variable_components=[
-                VariableComponents.SITE,
-                VariableComponents.CHANNEL,
+                Microscopy.Site,
+                Microscopy.Channel,
             ],
         ),
     )
@@ -221,17 +222,17 @@ def persisted_special_output_probe(image):
         func=persisted_special_output_probe,
         processing_config=LazyProcessingConfig(
             variable_components=[
-                VariableComponents.SITE,
-                VariableComponents.CHANNEL,
+                Microscopy.Site,
+                Microscopy.Channel,
             ],
         ),
     )
     pipeline_steps = [step, aggregate_step, custom_step]
 
-    assert step.processing_config.variable_components == [VariableComponents.CHANNEL]
+    assert step.processing_config.variable_components == [Microscopy.Channel]
     assert aggregate_step.processing_config.variable_components == [
-        VariableComponents.SITE,
-        VariableComponents.CHANNEL,
+        Microscopy.Site,
+        Microscopy.Channel,
     ]
 
     output_plate_root = PathPlannerPathAuthority.build_output_plate_root(

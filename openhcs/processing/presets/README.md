@@ -264,9 +264,9 @@ step_2 = FunctionStep(
 Control which dimensions are collapsed:
 
 ```python
-variable_components=[VariableComponents.CHANNEL]  # Collapse channels → composite
-variable_components=[VariableComponents.SITE]     # Collapse sites → stitched
-variable_components=[VariableComponents.Z_INDEX]  # Collapse Z → projection
+variable_components=[Microscopy.Channel]  # Collapse channels → composite
+variable_components=[Microscopy.Site]     # Collapse sites → stitched
+variable_components=[Microscopy.ZIndex]   # Collapse Z → projection
 ```
 
 ### Per-Channel Processing

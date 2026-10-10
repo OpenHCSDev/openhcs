@@ -5652,7 +5652,7 @@
     "readOnlyHint": false,
     "title": "Set native image colormap and blending"
    },
-   "description": "Set an installed Napari colormap and blending mode on one exact mounted scalar image route. Returns actual native readback. Use channel_mode=LAYER in the stream's original display_config for simultaneous channel composition, and the existing image-intensity tool for each route's numeric window. No pixels, axes, transforms or physical source identities change. RGB images fail closed.",
+   "description": "Set an installed Napari colormap and blending mode on one exact mounted scalar image route. Returns actual native readback. Use colour_mode=LAYER in the stream's original display_config for simultaneous channel composition, and the existing image-intensity tool for each route's numeric window. No pixels, axes, transforms or physical source identities change. RGB images fail closed.",
    "execution": null,
    "icons": null,
    "inputSchema": {
@@ -6464,11 +6464,6 @@
      },
      "NapariDisplayConfig": {
       "properties": {
-       "channel_mode": {
-        "$ref": "#/$defs/NapariDimensionMode",
-        "default": "stack",
-        "description": "Whether channel values are stacked or use separate layers."
-       },
        "colormap": {
         "default": "gray",
         "description": "Name of a colormap registered in the installed Napari viewer. Napari validates this extensible registry name when displaying the layer.",
@@ -6476,30 +6471,35 @@
         "title": "Colormap",
         "type": "string"
        },
-       "site_mode": {
+       "colour_mode": {
         "$ref": "#/$defs/NapariDimensionMode",
         "default": "stack",
-        "description": "Whether site values are stacked or use separate layers."
+        "description": "Whether colour-axis values are stacked or use separate layers."
        },
-       "timepoint_mode": {
+       "partition_mode": {
         "$ref": "#/$defs/NapariDimensionMode",
         "default": "stack",
-        "description": "Whether timepoint values are stacked or use separate layers."
+        "description": "Whether parallel-axis values are stacked or use separate layers."
+       },
+       "stack_mode": {
+        "$ref": "#/$defs/NapariDimensionMode",
+        "default": "stack",
+        "description": "Whether stack-axis values are stacked or use separate layers."
+       },
+       "tile_mode": {
+        "$ref": "#/$defs/NapariDimensionMode",
+        "default": "stack",
+        "description": "Whether tile-axis values are stacked or use separate layers."
+       },
+       "time_mode": {
+        "$ref": "#/$defs/NapariDimensionMode",
+        "default": "stack",
+        "description": "Whether time-axis values are stacked or use separate layers."
        },
        "variable_size_handling": {
         "$ref": "#/$defs/NapariVariableSizeHandling",
         "default": "pad_to_max",
         "description": "How Napari handles streamed images with different spatial dimensions: preserve each shape in separate layers or pad smaller images to the largest shape before stacking."
-       },
-       "well_mode": {
-        "$ref": "#/$defs/NapariDimensionMode",
-        "default": "stack",
-        "description": "Whether well values are stacked or use separate layers."
-       },
-       "z_index_mode": {
-        "$ref": "#/$defs/NapariDimensionMode",
-        "default": "stack",
-        "description": "Whether z-index values are stacked or use separate layers."
        }
       },
       "title": "NapariDisplayConfig",

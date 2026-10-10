@@ -1,7 +1,6 @@
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 import pytest
 
-from openhcs.constants import VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import ProcessingConfig, StepMaterializationConfig
 from openhcs.core.source_bindings import (
@@ -12,6 +11,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.function_patterns import normalize_function_pattern
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _identity(image):
@@ -24,7 +24,7 @@ def test_resolved_pipeline_reads_steps_without_object_conversion():
             NamedSourceBinding(
                 alias="OrigBlue",
                 selector=SourceSelector(
-                    components=(ComponentSelector("channel", "1"),)
+                    components=(ComponentSelector(Microscopy.Channel, "1"),)
                 ),
             ),
         )
@@ -34,7 +34,7 @@ def test_resolved_pipeline_reads_steps_without_object_conversion():
         name="identity",
         source_bindings=source_bindings,
         processing_config=ProcessingConfig(
-            variable_components=[VariableComponents.SITE],
+            variable_components=[Microscopy.Site],
             group_by=None,
             input_source=InputSource.PIPELINE_START,
         ),
@@ -52,7 +52,7 @@ def test_resolved_pipeline_reads_steps_without_object_conversion():
         pipeline.steps[0].processing_config.input_source is InputSource.PIPELINE_START
     )
     assert pipeline.steps[0].processing_config.variable_components == [
-        VariableComponents.SITE
+        Microscopy.Site
     ]
 
 

@@ -14,9 +14,7 @@ from test_function_outputs import (
     context_stub, function_step_plan, record_output_path,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
-from openhcs.constants.constants import (
-    AllComponents, Backend, GroupBy, Microscope, VariableComponents,
-)
+from openhcs.constants.constants import Backend, Microscope
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext, stack_image_payloads
 from openhcs.core.artifacts import ArtifactOutputPlan, ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import ComponentGroupScope, RuntimeExecutionAxisScope
@@ -44,6 +42,7 @@ from python_introspect import to_jsonable
 from openhcs.processing.materialization import (
     ImageFileOptions, MaterializationSpec, MaterializedFilenameIdentity,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.parametrize("scenario,aggregate", (
@@ -90,10 +89,10 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
     )
     if aggregate:
         components.update(channel="1", z_index="0")
-        plan.variable_components = (VariableComponents.Z_INDEX,)
-        plan.group_by = GroupBy.CHANNEL
+        plan.variable_components = (Microscopy.ZIndex,)
+        plan.group_by = Microscopy.Channel
         plan.execution_group_scope = ComponentGroupScope.from_raw(
-            ("1",), component=AllComponents.CHANNEL,
+            ("1",), component=Microscopy.Channel,
         )
         source_planes = []
         source_dir = tmp_path / "physical_source"
@@ -140,8 +139,8 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         )
         if aggregate:
             output_plan = replace(
-                output_plan, group_keys=("1",), group_component=AllComponents.CHANNEL,
-                variable_components=(AllComponents.Z_INDEX,),
+                output_plan, group_keys=("1",), group_component=Microscopy.Channel,
+                variable_components=(Microscopy.ZIndex,),
             )
         plan.artifact_outputs[output_plan.ref()] = output_plan
         payload = ImageMetadataPayload(
@@ -184,9 +183,9 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
             )
         if aggregate:
             execution_scope = RuntimeExecutionAxisScope.from_raw(
-                "A01", component=AllComponents.CHANNEL, value="1",
+                "A01", component=Microscopy.Channel, value="1",
                 fixed_component_values=(
-                    (AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "1"),
+                    (Microscopy.Site, "1"), (Microscopy.Timepoint, "1"),
                 ),
             )
             payload = RuntimeValue.normalize_for_execution_scope(
@@ -218,9 +217,9 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
                 output_plan, artifact_payload,
                 execution_scope=(
                     RuntimeExecutionAxisScope.from_raw(
-                        "A01", component=AllComponents.CHANNEL, value="1",
+                        "A01", component=Microscopy.Channel, value="1",
                         fixed_component_values=(
-                            (AllComponents.SITE, "2"), (AllComponents.TIMEPOINT, "1"),
+                            (Microscopy.Site, "2"), (Microscopy.Timepoint, "1"),
                         ),
                     ) if scenario == "conflicting_scope" else execution_scope
                 ),
@@ -229,8 +228,8 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
                     output_plan, artifact_payload,
                     execution_scope=RuntimeExecutionAxisScope.from_raw(
                         "A01", component=None, value=None, fixed_component_values=(
-                            (AllComponents.CHANNEL, "2"), (AllComponents.Z_INDEX, "1"),
-                            (AllComponents.TIMEPOINT, "1"),
+                            (Microscopy.Channel, "2"), (Microscopy.ZIndex, "1"),
+                            (Microscopy.Timepoint, "1"),
                         ),
                     ),
                 ) if mosaic else RuntimeValue.normalize(output_plan, artifact_payload, axis_id="A01")
@@ -381,8 +380,8 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
             assert metadata.source_image_provenance_planes.contributor_count == 2
             assert metadata.source_voxel_spacing.values_zyx == (0.5, 0.5)
             assert projection.execution_scope.fixed_component_values == (
-                (AllComponents.CHANNEL, "2"), (AllComponents.Z_INDEX, "1"),
-                (AllComponents.TIMEPOINT, "1"),
+                (Microscopy.Channel, "2"), (Microscopy.ZIndex, "1"),
+                (Microscopy.Timepoint, "1"),
             )
             np.testing.assert_array_equal(tifffile.imread(tmp_path / relative_path), mosaic_pixels)
             continue

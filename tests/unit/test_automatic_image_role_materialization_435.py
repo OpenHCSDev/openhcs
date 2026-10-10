@@ -12,7 +12,7 @@ from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
 from test_function_outputs import context_stub, function_step_plan, record_output_path
-from openhcs.constants.constants import Backend, Microscope, VariableComponents
+from openhcs.constants.constants import Backend, Microscope
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext, ImagePayloadBundleContext
 from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ImageArtifactType
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
@@ -31,6 +31,7 @@ from openhcs.core.steps.function_outputs import (
     PrimaryImageMetadataTarget,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.parametrize("plane_count", (1, 2))
@@ -46,7 +47,7 @@ def test_automatic_two_role_images_publish_their_actual_saved_occurrences(tmp_pa
     context.tiff_config = None
     plan = function_step_plan(
         "Declared raw and capped roles",
-        variable_components=((VariableComponents.Z_INDEX,) if plane_count > 1 else ()),
+        variable_components=((Microscopy.ZIndex,) if plane_count > 1 else ()),
     )
     plan.streaming_configs = {}
     plan.write_backend = Backend.DISK.value
@@ -189,7 +190,7 @@ def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(tmp_pat
     outputs = materialization_outputs(
         spec, value, str(tmp_path / "AuthoredBase"), filemanager,
         context=context, output_plan=output_plan,
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
     expected_paths = (
         ("authored/plane_1.tif", "authored/plane_2.tif") if purpose.endswith("template")
@@ -234,7 +235,7 @@ def test_retained_image_qualifier_respects_complete_writer_suffix(tmp_path, suff
 
     manager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})
     context = context_stub(manager, parser=SourceSchemaFilenameParser())
-    plan = function_step_plan("Retained format role", variable_components=(VariableComponents.Z_INDEX,) if plane_count > 1 else ())
+    plan = function_step_plan("Retained format role", variable_components=(Microscopy.ZIndex,) if plane_count > 1 else ())
     plan.output_dir = tmp_path / "images"
     plan.analysis_results_dir = str(plan.output_dir)
     output_plan = ArtifactOutputPlan(

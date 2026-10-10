@@ -13,15 +13,15 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceSelector,
 )
-from openhcs.constants.constants import AllComponents
 from openhcs.pyqt_gui.widgets.source_bindings_editor import SourceBindingsEditorWidget
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def binding_with_unlisted_fields() -> NamedSourceBinding:
     return NamedSourceBinding(
         alias="DNA",
         selector=SourceSelector(
-            components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+            components=(ComponentSelector(Microscopy.Channel, "1"),),
         ),
         explicit_source=ImagePlaneSource(uri="/data/plate/dna.tif", series="0"),
         load_as_monochrome=True,
@@ -43,7 +43,7 @@ def test_bindings_table_round_trip_preserves_every_binding_field(qapp) -> None:
 
         editor.table.item(*editor.cell_position(0, "alias")).setText("Nuclei")
         editor.table.cellWidget(*editor.cell_position(0, "components")).set_value(
-            (ComponentSelector(AllComponents.CHANNEL, "2"),)
+            (ComponentSelector(Microscopy.Channel, "2"),)
         )
         mask_checkbox = editor.table.cellWidget(*editor.cell_position(0, "load_as_mask"))
         assert isinstance(mask_checkbox, QCheckBox)
@@ -54,7 +54,7 @@ def test_bindings_table_round_trip_preserves_every_binding_field(qapp) -> None:
             alias="Nuclei",
             selector=replace(
                 binding.selector,
-                components=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                components=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
             load_as_mask=False,
         )

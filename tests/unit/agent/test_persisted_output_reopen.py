@@ -8,6 +8,7 @@ from polystore.exceptions import MetadataNotFoundError
 from polystore.virtual_workspace import SourcePixelRef
 from polystore.source_tile_geometry import SourceTileGeometry
 
+from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.agent.dto.plate import (
     PlateFileQueryRequest,
     PlateFileStreamRequest,
@@ -68,7 +69,7 @@ def declared_output(root, aliases):
         image_format.write(path, payload)
         virtual_path = str(path.relative_to(root))
         projection = SourceArtifactProjection(
-            address=OpenHCSPlaneAddress.from_values("A01", 1, 2, 1, 1),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             ref=SourcePixelRef("disk", virtual_path),
             source_alias=alias,
             artifact_kind=ImageArtifactType,
@@ -198,7 +199,7 @@ def test_mixed_plane_and_artifact_projections_keep_scope_and_storage_independent
         ImageFileFormat.require_path(plane_path).write(plane_path, pixels)
         row, column = divmod(site - 1, 2)
         planes.append(SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values("A01", site, 2, 1, 1),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, site), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             ref=SourcePixelRef("disk", str(plane_path.relative_to(root))),
             source_metadata={SourceTileGeometry.metadata_field: SourceTileGeometry(
                 x_pixels=column * 6, y_pixels=row * 5,

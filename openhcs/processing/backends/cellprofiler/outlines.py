@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
-from openhcs.constants.constants import MemoryType, VariableComponents
+from openhcs.constants.constants import MemoryType
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -79,6 +79,7 @@ from openhcs.interop.cellprofiler.runtime.object_input_policies import (
     ObjectLabelsInputBindingMixin,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import (
@@ -136,7 +137,7 @@ class OverlayObjectsModule(
         *,
         image: "RuntimeArrayData",
         kwargs: "RuntimeCallableKwargs",
-        variable_components: tuple[VariableComponents, ...],
+        variable_components: tuple[type[Axis], ...],
     ) -> ImagePayloadExecutionMode:
         """Preserve one payload-scoped object volume as one invocation."""
 

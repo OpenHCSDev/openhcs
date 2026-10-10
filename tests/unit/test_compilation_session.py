@@ -8,7 +8,6 @@ from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 
-from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
@@ -58,6 +57,8 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     neurite_outgrowth_metaxpress,
     neurite_outgrowth_metaxpress_pixels,
 )
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _identity(image):
@@ -70,7 +71,7 @@ def test_shared_declaration_checks_full_plate_group_domain_with_held_config(
 ):
     step = FunctionStep(func={channel: _identity}, name="Grouped")
     step.processing_config = ProcessingConfig(
-        variable_components=[VariableComponents.SITE], group_by=GroupBy.CHANNEL
+        variable_components=[Microscopy.Site], group_by=Microscopy.Channel
     )
     pipeline = ResolvedPipelineDefinition(
         (step,), {0: "plate::functionstep_0"}, {0: {}}
@@ -91,7 +92,7 @@ def test_shared_declaration_checks_full_plate_group_domain_with_held_config(
             pipeline.validate_source_group_domains(orchestrator, held_config)
     else:
         pipeline.validate_source_group_domains(orchestrator, held_config)
-    assert requests == [(GroupBy.CHANNEL, held_config)]
+    assert requests == [(Microscopy.Channel, held_config)]
 
 
 @pytest.mark.parametrize(
@@ -260,14 +261,14 @@ def _previous_step_and_external_source(image, dna):
 
 def _resolved_step(
     step: FunctionStep,
-    variable_components=(VariableComponents.SITE,),
+    variable_components=(Microscopy.Site,),
     source_bindings=EMPTY_SOURCE_BINDINGS,
     input_source: InputSource = InputSource.PREVIOUS_STEP,
 ) -> AbstractStep:
     step.source_bindings = source_bindings
     step.processing_config = ProcessingConfig(
         variable_components=list(variable_components),
-        group_by=GroupBy.NONE,
+        group_by=Ungrouped,
         input_source=input_source,
     )
     step.step_materialization_config = StepMaterializationConfig(enabled=False)
@@ -343,7 +344,7 @@ def test_axis_compilation_request_preserves_effective_auto_add_flag():
 
     assert context.auto_add_output_plate_to_plate_manager is True
     assert context.source_image_set_identity_policy.plane_member_components == (
-        frozenset((AllComponents.CHANNEL,))
+        frozenset((Microscopy.Channel,))
     )
 
 
@@ -495,7 +496,7 @@ def test_compiler_keeps_variable_components_as_stack_source():
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(
-                _resolved_step(step, variable_components=(VariableComponents.CHANNEL,)),
+                _resolved_step(step, variable_components=(Microscopy.Channel,)),
             ),
             step_scope_ids={0: "plate::functionstep_0"},
             step_provenance={0: {}},
@@ -504,7 +505,7 @@ def test_compiler_keeps_variable_components_as_stack_source():
 
     PipelineCompiler._supplement_step_plans(session)
 
-    assert session.plan(0).variable_components == [VariableComponents.CHANNEL]
+    assert session.plan(0).variable_components == [Microscopy.Channel]
 
 
 def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
@@ -517,7 +518,7 @@ def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
     binding = NamedSourceBinding(
         alias="DNA",
         selector=SourceSelector(
-            components=(ComponentSelector(AllComponents.CHANNEL, "1"),)
+            components=(ComponentSelector(Microscopy.Channel, "1"),)
         ),
     )
     ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
@@ -847,7 +848,7 @@ def test_path_planner_preserves_metaxpress_primary_source_order(
     step = FunctionStep(func=function, name="neurite")
     snapshot = _resolved_step(
         step,
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
             bindings=selected_bindings,
@@ -896,11 +897,11 @@ def test_path_planner_execution_groups_use_resolved_source_bindings():
     bindings = (
         NamedSourceBinding(
             alias="OrigStain1",
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
         ),
         NamedSourceBinding(
             alias="OrigStain2",
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
         ),
     )
     snapshot = _resolved_step(
@@ -915,12 +916,12 @@ def test_path_planner_execution_groups_use_resolved_source_bindings():
 
     scope = PathPlannerExecutionGroups(planner).source_binding_scope_for_group_by(
         snapshot,
-        GroupBy.CHANNEL,
+        Microscopy.Channel,
         source_bindings=snapshot.source_bindings,
     )
 
     assert scope.keys == ("1", "2")
-    assert scope.component is AllComponents.CHANNEL
+    assert scope.component is Microscopy.Channel
 
 
 def test_path_planner_execution_groups_preserve_declared_component_identity() -> None:
@@ -929,16 +930,16 @@ def test_path_planner_execution_groups_preserve_declared_component_identity() ->
         NamedSourceBinding(
             alias="MCP_DNA",
             selector=SourceSelector(
-                components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                components=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "MCP_DNA"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "MCP_DNA"),),
         ),
         NamedSourceBinding(
             alias="MCP_AGP",
             selector=SourceSelector(
-                components=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                components=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "MCP_AGP"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "MCP_AGP"),),
         ),
     )
     snapshot = _resolved_step(
@@ -958,12 +959,12 @@ def test_path_planner_execution_groups_preserve_declared_component_identity() ->
 
     scope = PathPlannerExecutionGroups(planner).source_binding_scope_for_group_by(
         snapshot,
-        GroupBy.CHANNEL,
+        Microscopy.Channel,
         source_bindings=snapshot.source_bindings,
     )
 
     assert scope.keys == ("MCP_DNA", "MCP_AGP")
-    assert scope.component is AllComponents.CHANNEL
+    assert scope.component is Microscopy.Channel
 
 
 def test_path_planner_freezes_only_contract_selected_source_bindings():
@@ -1043,7 +1044,7 @@ def test_headless_resolution_preserves_saved_ui_ancestors_and_registrations(tmp_
         PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig(bindings=(saved_binding,)),
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.SITE],
+                variable_components=[Microscopy.Site],
             ),
         ),
         scope_id=str(plate_path),
@@ -1084,9 +1085,9 @@ def test_headless_resolution_preserves_saved_ui_ancestors_and_registrations(tmp_
         saved_components = object.__getattribute__(
             ui_state.object_instance.processing_config, "variable_components"
         )
-        saved_components.append(VariableComponents.Z_INDEX)
+        saved_components.append(Microscopy.ZIndex)
         assert resolved.steps[0].processing_config.variable_components == [
-            VariableComponents.SITE
+            Microscopy.Site
         ]
     finally:
         subscription.release()

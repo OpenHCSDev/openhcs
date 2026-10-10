@@ -8,7 +8,6 @@ import numpy as np
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ImageArtifactType,
@@ -74,6 +73,7 @@ from openhcs.processing.materialization import (
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _compiled_pattern(
@@ -404,7 +404,7 @@ def test_artifact_viewer_expectation_preserves_exact_output_plane_components() -
         path="/tmp/A01_w1_labels.roi.zip",
         content=(),
         metadata=metadata,
-    ).with_variable_components((VariableComponents.SITE,))
+    ).with_variable_components((Microscopy.Site,))
 
     payloads = _runtime_artifact_viewer_output_payloads((output,))
 

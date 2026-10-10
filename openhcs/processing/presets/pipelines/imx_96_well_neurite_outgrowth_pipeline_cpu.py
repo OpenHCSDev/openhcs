@@ -1,7 +1,6 @@
 # Edit this pipeline and save to apply changes
 
 # Automatically collected imports
-from openhcs.constants.constants import VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import LazyNapariStreamingConfig
 from openhcs.core.steps.function_step import FunctionStep
@@ -20,6 +19,7 @@ from openhcs.processing.backends.processors.numpy_processor import mean_projecti
 from openhcs.processing.backends.processors.torch_processor import (
     stack_percentile_normalize as stack_percentile_normalize_torch_processor,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 # Pipeline steps
 pipeline_steps = []
@@ -36,7 +36,7 @@ pipeline_steps.append(step_1)
 step_2 = FunctionStep(
     func=mean_projection,
     name="z_flatten",
-    variable_components=[VariableComponents.Z_INDEX],
+    variable_components=[Microscopy.ZIndex],
     napari_streaming_config=LazyNapariStreamingConfig(),
 )
 pipeline_steps.append(step_2)
@@ -45,7 +45,7 @@ pipeline_steps.append(step_2)
 step_3 = FunctionStep(
     func=create_composite,
     name="composite",
-    variable_components=[VariableComponents.CHANNEL],
+    variable_components=[Microscopy.Channel],
     napari_streaming_config=LazyNapariStreamingConfig(),
 )
 pipeline_steps.append(step_3)

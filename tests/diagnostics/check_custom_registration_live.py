@@ -18,6 +18,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
+from openhcs.domains.microscopy.axes import Microscopy
 
 SOURCE = Path(__file__).resolve().parents[2]
 PYTHON = Path("/home/ts/code/projects/openhcs/.venv/bin/python")
@@ -125,7 +126,7 @@ def fixture(root: Path) -> tuple[Path, object]:
     projections = SourceProjectionSet(
         (
             SourcePlaneProjection(
-                OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
+                OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
                 SourcePixelRef("disk", path.name),
                 image_metadata=fmt.persisted_metadata(path, payload),
             ),

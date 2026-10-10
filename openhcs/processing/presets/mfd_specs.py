@@ -12,7 +12,6 @@ from typing import Any
 from metaclass_registry import AutoRegisterMeta
 from arraybridge.decorators import DtypeConversion
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import LazyDtypeConfig, LazyProcessingConfig
 from openhcs.core.steps.function_step import FunctionStep
@@ -45,6 +44,7 @@ from openhcs.processing.backends.processors.cupy_processor import (
     stack_percentile_normalize,
     tophat,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 MFD_WHOLE_DEVICE_TEMPLATE_PATH = Path("templates/mfd_96_sobel_10x_whole_device.tif")
 MFD_COMPARTMENT_WIDTH = 5046
@@ -259,7 +259,7 @@ STITCH_STEP_TEMPLATES: tuple[PresetStepTemplate, ...] = (
     PresetStepTemplate(
         binding=PresetStepBinding(
             name="composite",
-            variable_components=(VariableComponents.CHANNEL,),
+            variable_components=(Microscopy.Channel,),
         ),
         func_factory_factory=lambda definition: lambda: create_composite,
     ),
@@ -338,7 +338,7 @@ class CropAnalyzeMfdPresetMaterializer(MfdPresetMaterializer):
                 PresetStepSpec(
                     binding=PresetStepBinding(
                         name="crop_device",
-                        variable_components=(VariableComponents.CHANNEL,),
+                        variable_components=(Microscopy.Channel,),
                     ),
                     func_factory=_template_crop_func,
                 ),

@@ -1203,7 +1203,7 @@ def test_demo_source_saves_source_bindings_through_pipeline_config(
     assert "SourceBindingsConfig()" not in baseline_source
     assert demo.BASELINE_SOURCE_ALIAS in baseline_source
     assert demo.EDITED_SOURCE_ALIAS in edited_source
-    assert "group_by=GroupBy.CHANNEL" in baseline_source
+    assert "group_by=Microscopy.Channel" in baseline_source
     assert "pipeline_config =" not in baseline_source
     assert "pipeline_steps =" not in baseline_source
     assert UiCodeDocumentSourcePolicy().validate(baseline_source) == ()
@@ -1869,7 +1869,7 @@ def complete_objective_report() -> dict[str, object]:
                 },
             ],
             "processing_semantics": [
-                {"group_by": None, "variable_components": ["z_index"]},
+                {"group_by": "none", "variable_components": ["z_index"]},
                 {"group_by": "channel", "variable_components": []},
             ],
             "config_families": {

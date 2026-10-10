@@ -84,7 +84,8 @@ def test_z_only_stack_is_not_an_observation_ensemble():
             for i in range(3)
         ]
     )
-    with pytest.raises(ValueError, match="independent SITE observations"):
+    with pytest.raises(ValueError, match=r"independent TileAxis observations \(site\)"):
+
         FittedIlluminationFieldOutput.validate_observation_domain(source)
 
 

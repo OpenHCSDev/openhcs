@@ -6,6 +6,8 @@ private plate, segmentation replacement, mocked runtime or biological verdict.
 
 import numpy as np
 import pytest
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _field(empty=False):
@@ -105,7 +107,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         CompileInspectionInput,
         InProcessCompileInspectionGateway,
     )
-    from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+    from openhcs.constants import Microscope
     from openhcs.constants.input_source import InputSource
     from openhcs.core.artifacts import (
         ArtifactInputPlan,
@@ -174,8 +176,8 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
             func=(func, kwargs),
             name=name,
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.SITE],
-                group_by=GroupBy.NONE,
+                variable_components=[Microscopy.Site],
+                group_by=Ungrouped,
                 input_source=InputSource.PIPELINE_START,
             ),
             source_bindings=StepSourceBindingsConfig(enabled=True),
@@ -240,7 +242,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
                             )
                         ),
                         component_identity=(
-                            ComponentSelector(AllComponents.CHANNEL, "1"),
+                            ComponentSelector(Microscopy.Channel, "1"),
                         ),
                     ),
                 )
@@ -403,7 +405,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         assert result_record.source_projection == projection
         assert result_record.require_image_source_ref() == projection.ref
         for component, value in projection.address.component_values().items():
-            assert str(result_record.metadata[component.value]) == value
+            assert str(result_record.metadata[component.name]) == value
         assert projection.source_alias == spec.name
         assert projection.artifact_kind is ImageArtifactType
         assert projection.image_metadata is not None

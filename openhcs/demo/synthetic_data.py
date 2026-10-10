@@ -33,7 +33,6 @@ import numpy as np
 import tifffile
 from skimage import draw, filters
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress, SourcePlaneProjection, SourceProjectionSet,
     SourceProjectionMetadataSerializer,
@@ -45,6 +44,7 @@ from polystore.constants import Backend
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class SyntheticMicroscopyGenerator:
@@ -996,9 +996,9 @@ class SyntheticMicroscopyGenerator:
     def _plane_components(self, well: str, site: int, channel: int, z_index: int):
         """Bind the complete acquisition address before physical spelling."""
         return self.parser.bind_declared_values(
-            ((AllComponents.WELL, well), (AllComponents.SITE, site),
-             (AllComponents.CHANNEL, channel), (AllComponents.Z_INDEX, z_index),
-             (AllComponents.TIMEPOINT, 1))
+            ((Microscopy.Well, well), (Microscopy.Site, site),
+             (Microscopy.Channel, channel), (Microscopy.ZIndex, z_index),
+             (Microscopy.Timepoint, 1))
         )
 
     def _write_plane(self, tile, target_dir: Path, well: str, site: int,

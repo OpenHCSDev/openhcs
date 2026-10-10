@@ -6,7 +6,6 @@ import pytest
 
 from arraybridge import MemoryType
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ImageArtifactType,
@@ -47,6 +46,7 @@ from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.processing.materialization.persistence import TerminalMaterializationSpec
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
@@ -269,7 +269,7 @@ def test_runtime_execution_observation_merges_into_parent_contexts():
             name="measurements",
             path="/memory/measurements.pkl",
             artifact_type=MeasurementsArtifactType,
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             group_keys=("DAPI",),
         ),
         MeasurementTable(
@@ -309,7 +309,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
         name="measurements",
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         group_keys=("DAPI",),
     )
 

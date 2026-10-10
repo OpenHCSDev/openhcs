@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, ClassVar, cast
 from metaclass_registry import AutoRegisterMeta
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents, Backend, Microscope
+from openhcs.constants.constants import Backend, Microscope
 from openhcs.core.image_shapes import ArrayShape
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
@@ -67,6 +67,7 @@ from openhcs.core.virtual_workspace_metadata import (
     get_metadata_path,
 )
 from openhcs.core.vfs_protocol import FileManagerLike
+from openhcs.core.axes import AxisFamily, ColourAxis, PartitionAxis
 
 if TYPE_CHECKING:
     from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -527,12 +528,13 @@ class PrimaryPlaneBindingProjection(SourceBindingProjectionStrategy):
         address: OpenHCSPlaneAddress,
     ) -> SourceProjection:
         component_labels = dict(candidate.component_labels)
-        declared_channels = binding.component_values(AllComponents.CHANNEL)
-        if len(declared_channels) == 1 and source_metadata_values_equal(
-            declared_channels[0],
-            address.value_for(AllComponents.CHANNEL),
-        ):
-            component_labels[AllComponents.CHANNEL.value] = binding.alias
+        for colour_axis in AxisFamily.active().with_role(ColourAxis):
+            declared_colours = binding.component_values(colour_axis)
+            if len(declared_colours) == 1 and source_metadata_values_equal(
+                declared_colours[0],
+                address.value_for(colour_axis),
+            ):
+                component_labels[colour_axis.name] = binding.alias
         return SourcePlaneProjection(
             address=address,
             ref=candidate.source_ref,
@@ -1066,7 +1068,7 @@ class SourceBindingWorkspaceProjector:
             if current is not None and not source_metadata_values_equal(current, value):
                 raise ValueError(
                     f"Source candidate {candidate.relative_path!r} has conflicting "
-                    f"{component.value!r} values {current!r} and {value!r}."
+                    f"{component.name!r} values {current!r} and {value!r}."
                 )
             metadata = with_source_component_metadata(metadata, component, value)
         for identity in binding.component_identity:
@@ -1079,7 +1081,7 @@ class SourceBindingWorkspaceProjector:
                 identity.value,
             ):
                 OriginalSourceMetadata.from_mapping(
-                    {identity.component.value: current}
+                    {identity.component.name: current}
                 ).merge_into(
                     metadata,
                     path=candidate.relative_path,
@@ -1089,7 +1091,7 @@ class SourceBindingWorkspaceProjector:
                 identity.component,
                 identity.value,
             )
-            component_labels[identity.component.value] = None
+            component_labels[identity.component.name] = None
         return replace(
             candidate,
             metadata=metadata,
@@ -1204,28 +1206,20 @@ class SourceBindingWorkspaceProjector:
                 ):
                     address = candidate.declared_address
                 else:
-                    address = OpenHCSPlaneAddress.from_values(
-                        well=well,
-                        site=SourceComponentProjectionStrategy.project_component(
-                            AllComponents.SITE,
-                            source_set.metadata,
-                            source_set.index,
-                        ),
-                        channel=SourceComponentProjectionStrategy.project_component(
-                            AllComponents.CHANNEL,
-                            candidate.metadata,
-                            projection_index,
-                        ),
-                        z_index=SourceComponentProjectionStrategy.project_component(
-                            AllComponents.Z_INDEX,
-                            source_set.metadata,
-                            source_set.index,
-                        ),
-                        timepoint=SourceComponentProjectionStrategy.project_component(
-                            AllComponents.TIMEPOINT,
-                            source_set.metadata,
-                            source_set.index,
-                        ),
+                    address = OpenHCSPlaneAddress(
+                        (
+                            axis,
+                            well
+                            if issubclass(axis, PartitionAxis)
+                            else SourceComponentProjectionStrategy.project_bound_component(
+                                axis,
+                                set_metadata=source_set.metadata,
+                                set_index=source_set.index,
+                                candidate_metadata=candidate.metadata,
+                                candidate_index=projection_index,
+                            ),
+                        )
+                        for axis in AxisFamily.active().axes
                     )
                 projections.append(
                     SourceBindingProjectionStrategy.for_enum_member(
@@ -1252,7 +1246,7 @@ class SourceBindingWorkspaceProjector:
         fields = self.source_bindings.grouping_metadata_fields
         if not fields:
             return SourceComponentProjectionStrategy.project_component(
-                AllComponents.WELL,
+                AxisFamily.active().partition_axis(),
                 source_set.metadata,
                 source_set.index,
             )
@@ -1267,22 +1261,23 @@ class SourceBindingWorkspaceProjector:
                 )
             group_metadata[field_name] = str(value)
 
-        fields_are_well_identity = all(
+        partition_axis = AxisFamily.active().partition_axis()
+        fields_are_partition_identity = all(
             SourceComponentProjectionStrategy.component_for_metadata_field(field)
-            is AllComponents.WELL
+            is partition_axis
             for field in fields
         )
-        if fields_are_well_identity:
-            well = SourceComponentProjectionStrategy.metadata_component(
-                AllComponents.WELL,
+        if fields_are_partition_identity:
+            partition_value = SourceComponentProjectionStrategy.metadata_component(
+                partition_axis,
                 group_metadata,
             )
-            if well is None:
+            if partition_value is None:
                 raise ValueError(
-                    "Source grouping fields declared well identity but did not "
-                    f"resolve one from {group_metadata!r}."
+                    f"Source grouping fields declared {partition_axis.name} identity "
+                    f"but did not resolve one from {group_metadata!r}."
                 )
-            return well
+            return partition_value
 
         encoded_fields: list[str] = []
         for field_name in fields:
@@ -1328,7 +1323,7 @@ class SourceBindingWorkspaceProjector:
                             index,
                         ),
                     )
-                    for component in AllComponents
+                    for component in AxisFamily.active().axes
                 ),
                 ref=candidate.source_ref,
                 source_metadata=_workspace_source_metadata(candidate),
@@ -1435,7 +1430,7 @@ def _projected_candidate_components(
     candidates: tuple[SourceCandidate, ...],
 ) -> SourceMetadataMapping:
     projected: dict[str, str] = {}
-    for component in AllComponents:
+    for component in AxisFamily.active().axes:
         values = {
             value
             for candidate in candidates
@@ -1452,14 +1447,14 @@ def _projected_candidate_components(
         if not values:
             continue
         value = next(iter(values))
-        existing = source_metadata_value(group_metadata, component.value)
+        existing = source_metadata_value(group_metadata, component.name)
         if existing is not None and not source_metadata_values_equal(existing, value):
             raise ValueError(
-                f"Source set has conflicting {component.value!r} values "
+                f"Source set has conflicting {component.name!r} values "
                 f"{existing!r} and {value!r}."
             )
         if existing is None:
-            projected[component.value] = value
+            projected[component.name] = value
     return MappingProxyType(projected)
 
 

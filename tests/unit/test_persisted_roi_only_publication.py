@@ -43,6 +43,7 @@ from openhcs.processing.materialization.core import (
     prepare_materialization,
 )
 from openhcs.processing.materialization.options import FileBundleOptions
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _publish_saved_step(context, plan, *, artifact_materializations=()):
@@ -308,7 +309,7 @@ def test_measurement_only_step_does_not_reconcile_pending_image_producer(
 
     virtual_path = str(pending.relative_to(plate))
     projection = SourceArtifactProjection(
-        address=OpenHCSPlaneAddress.from_values("A04", 1, 2, 1, 1),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A04"), (Microscopy.Site, 1), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
         ref=SourcePixelRef(Backend.DISK.value, virtual_path),
         source_alias="declared_image", artifact_kind=ImageArtifactType,
     )
@@ -342,9 +343,7 @@ def test_reconciliation_keeps_artifact_destination_without_results_field(
     plate = tmp_path / "plate"
     plate.mkdir()
     projection = SourceArtifactProjection(
-        address=OpenHCSPlaneAddress.from_values(
-            well="A01", site="1", channel="2", z_index="1", timepoint="1"
-        ),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "2"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
         ref=SourcePixelRef(Backend.DISK.value, "physical/acquisition-source.tif"),
         source_alias="Declared",
         artifact_kind=MetadataArtifactType,

@@ -178,7 +178,6 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from openhcs.processing.backends.cellprofiler.morphology import (
     CellProfilerDeclumpMethod,
 )
-from openhcs.constants.constants import VariableComponents
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -189,6 +188,9 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     SourceQualifiedMeasurementFeatureModule,
     SourceQualifiedWideMeasurementRowsModule,
 )
+from openhcs.core.axes import TimeAxis
+from openhcs.domains.microscopy.axes import Microscopy
+
 
 
 def test_module_registry_resolves_every_declared_function():
@@ -254,24 +256,25 @@ def test_track_objects_callable_requires_timepoint():
     track_objects = CellProfilerModule.__registry__["TrackObjects"].require_callable()
     assert CallableContract.from_callable(
         track_objects
-    ).required_variable_components == (VariableComponents.TIMEPOINT,)
+    ).required_axis_roles == (TimeAxis,)
 
 
 def test_correct_illumination_apply_inherits_resolved_stack_grouping() -> None:
     assert (
         CallableContract.from_callable(
             correct_illumination_apply
-        ).required_variable_components
+        ).required_axis_roles
         == ()
     )
     assert (
-        CellProfilerModule.require_module("CorrectIlluminationApply").group_by is None
+        CellProfilerModule.require_module("CorrectIlluminationApply").group_by_role
+        is None
     )
 
 
 def test_mask_objects_has_no_unconditional_image_stack_axis() -> None:
     assert (
-        CallableContract.from_callable(mask_objects).required_variable_components == ()
+        CallableContract.from_callable(mask_objects).required_axis_roles == ()
     )
 
 
@@ -708,7 +711,7 @@ def test_threshold_executes_site_stacks_as_independent_planes() -> None:
             ImagePayloadExecutionMode.FULL_STACK,
             image=np.zeros((2, 4, 5), dtype=np.float32),
             kwargs={},
-            variable_components=(VariableComponents.SITE,),
+            variable_components=(Microscopy.Site,),
         )
         is ImagePayloadExecutionMode.NATURAL
     )
@@ -720,7 +723,7 @@ def test_threshold_preserves_declared_z_stack_execution() -> None:
             ImagePayloadExecutionMode.FULL_STACK,
             image=np.zeros((2, 4, 5), dtype=np.float32),
             kwargs={},
-            variable_components=(VariableComponents.Z_INDEX,),
+            variable_components=(Microscopy.ZIndex,),
         )
         is ImagePayloadExecutionMode.FULL_STACK
     )

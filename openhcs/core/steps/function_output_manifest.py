@@ -38,7 +38,7 @@ from openhcs.core.source_binding_selection import (
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.constants import AllComponents
+from openhcs.core.axes import AxisFamily, PartitionAxis
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,7 +132,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         group_value = (
             None
             if group_component is None
-            else self.component_values.get(group_component.value)
+            else self.component_values.get(group_component.name)
         )
         return RuntimeExecutionAxisScope.from_raw(
             plan.axis_id,
@@ -140,10 +140,10 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
             value=group_value,
             fixed_component_values=tuple(
                 (component, str(value))
-                for component in AllComponents
-                if not component.is_multiprocessing_axis()
+                for component in AxisFamily.active().axes
+                if not issubclass(component, PartitionAxis)
                 and component is not group_component
-                and (value := self.component_values.get(component.value)) is not None
+                and (value := self.component_values.get(component.name)) is not None
             ),
         )
 
@@ -392,7 +392,7 @@ class StepOutputManifestStore:
             value = (
                 None
                 if component is None
-                else record.component_values.get(component.value)
+                else record.component_values.get(component.name)
             )
             key = plan.execution_group_scope.normalize_key(value)
             if plan.execution_group_scope.contains_runtime_key(key):

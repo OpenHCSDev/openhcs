@@ -10,7 +10,6 @@ import numpy as np
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -54,6 +53,8 @@ from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceSourceMetadataEntries,
 )
 from python_introspect import to_jsonable
+from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.axes import AxisFamily
 
 
 @pytest.mark.parametrize("owner", (ResolvedSourceMetadataRecord, DurableSourceMetadata))
@@ -103,9 +104,7 @@ def test_runtime_birth_canonicalizes_but_durable_and_derived_values_keep_literal
     assert derived["path"] == str(tmp_path / "image.tif")
     assert derived["new_path"] == spelling
     projection = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress.from_values(
-            well="A01", site="1", channel="1", z_index="1", timepoint="1"
-        ),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
         ref=SourcePixelRef("disk", "plane.tif"),
         source_metadata=derived,
     )
@@ -173,11 +172,11 @@ def test_owned_updates_replace_aliases_and_keep_original_literals():
             ORIGINAL_SOURCE_METADATA_FIELD: {"ChannelNumber": "literal"},
         }
     )
-    updated = with_source_component_metadata(owner, AllComponents.CHANNEL, "3")
+    updated = with_source_component_metadata(owner, Microscopy.Channel, "3")
     assert isinstance(updated, DurableSourceMetadata)
     assert "ChannelNumber" not in updated
     assert source_metadata_value(updated, "ChannelNumber") == "literal"
-    assert source_component_metadata_values(updated, AllComponents.CHANNEL) == ("3",)
+    assert source_component_metadata_values(updated, Microscopy.Channel) == ("3",)
     assert owner["channel"] == "1"
 
 
@@ -194,9 +193,9 @@ def test_custom_scalar_remains_live_for_queries_and_new_fingerprints(owner):
     value.tag = "before"
     record = owner.from_mapping({"channel": value})
     first = SourceImageIdentity(component_metadata=record)
-    assert source_component_metadata_value(record, AllComponents.CHANNEL) == "before"
+    assert source_component_metadata_value(record, Microscopy.Channel) == "before"
     value.tag = "after"
-    assert source_component_metadata_value(record, AllComponents.CHANNEL) == "after"
+    assert source_component_metadata_value(record, Microscopy.Channel) == "after"
     assert SourceImageIdentity(component_metadata=record).identity != first.identity
     assert first.identity[1] == (("channel", "before"),)
 
@@ -210,13 +209,13 @@ def test_lazy_role_errors_are_unchanged_by_owned_construction():
             ORIGINAL_SOURCE_METADATA_FIELD: 7,
         }
     )
-    assert source_component_metadata_value(record, AllComponents.CHANNEL) == "1"
+    assert source_component_metadata_value(record, Microscopy.Channel) == "1"
     with pytest.raises(ValueError):
-        source_component_metadata_value(record, AllComponents.WELL)
+        source_component_metadata_value(record, Microscopy.Well)
     with pytest.raises(RuntimeError, match="must be a mapping"):
         source_metadata_value(record, "channel")
     with pytest.raises(RuntimeError, match="must be a mapping"):
-        source_component_metadata_values(record, AllComponents.CHANNEL)
+        source_component_metadata_values(record, Microscopy.Channel)
 
 
 @pytest.mark.parametrize("invalid", ([1], {"deep": {"unsupported": 1}}, object()))
@@ -357,7 +356,7 @@ def test_owned_transport_stores_only_authoritative_fields_and_rebuilds_local_vie
     )
     before = SourceImageIdentity(component_metadata=record).identity
     assert source_metadata_value(record, "literal") == "value"
-    assert source_component_metadata_value(record, AllComponents.WELL) == "A01"
+    assert source_component_metadata_value(record, Microscopy.Well) == "A01"
     assert record._views
     restored = serializer.loads(serializer.dumps(record))
     assert isinstance(restored, owner)
@@ -401,7 +400,7 @@ def test_ordered_component_batch_matches_sequential_raw_updates():
         ORIGINAL_SOURCE_METADATA_FIELD: {"Well": "literal"},
     }
     components = tuple(
-        (component, str(index)) for index, component in enumerate(AllComponents, 1)
+        (component, str(index)) for index, component in enumerate(AxisFamily.active().axes, 1)
     )
     raw = dict(fields)
     for component, value in components:
@@ -451,9 +450,7 @@ def test_stringified_key_collisions_keep_platform_map_last_value_at_owned_birth(
     durable = VirtualWorkspaceSourceMetadataEntries.normalize_metadata_fields(fields)
     assert tuple(durable.items()) == (("1", "last"),)
     projection = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress.from_values(
-            well="A01", site="1", channel="1", z_index="1", timepoint="1"
-        ),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
         ref=SourcePixelRef("disk", "plane.tif"),
         source_metadata=fields,
     )
@@ -508,9 +505,7 @@ def test_mapping_and_ordered_record_equality_namespaces_stay_separate():
         lambda metadata: RuntimeSourceImageProvenancePlane(SourceImageIdentity(component_metadata=metadata)),
         lambda metadata: SourcePlaneIndexedMetadata(metadata, 0, 1),
         lambda metadata: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values(
-                well="A01", site="1", channel="1", z_index="1", timepoint="1"
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
             ref=SourcePixelRef("disk", "plane.tif"),
             source_metadata=metadata,
         ),

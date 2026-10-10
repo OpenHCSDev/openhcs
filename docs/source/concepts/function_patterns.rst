@@ -37,12 +37,12 @@ A dictionary selects a function pattern for each compiled group key. The
 
 .. code-block:: python
 
-   from openhcs.constants import GroupBy, VariableComponents
    from openhcs.core.config import LazyProcessingConfig, ProcessingConfig
+   from openhcs.domains.microscopy.axes import Microscopy
 
    by_channel = ProcessingConfig(
-       variable_components=(VariableComponents.SITE,),
-       group_by=GroupBy.CHANNEL,
+       variable_components=(Microscopy.Site,),
+       group_by=Microscopy.Channel,
    )
    step = FunctionStep(
        func={

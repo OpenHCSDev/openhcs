@@ -39,6 +39,7 @@ from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _filemanager() -> FileManager:
@@ -129,7 +130,7 @@ def test_runtime_axis_matching_preserves_numeric_filename_components() -> None:
             "/virtual/1_s001_w1_z001_t001.tif",
             "/virtual/2_s001_w1_z001_t001.tif",
         ],
-        variable_components=["channel"],
+        variable_components=[Microscopy.Channel],
         well_filter=["1"],
     )
     assert tuple(patterns) == ("1",)
@@ -379,7 +380,7 @@ def test_object_only_source_anchors_match_compiled_pattern_after_loading(
         "A01_s{iii}_w1_z001_t001.tif",
         filemanager,
         Backend.MEMORY.value,
-        ["site"],
+        [Microscopy.Site],
     ) == ["A01_s001_w1_z001_t001.tif"]
 
 

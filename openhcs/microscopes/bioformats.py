@@ -9,7 +9,7 @@ from polystore.bioformats_storage import BioFormatsStorageBackend
 from polystore.filemanager import FileManager
 from polystore.ome_zarr_storage import OmeZarrStorageBackend
 
-from openhcs.constants.constants import AllComponents, Backend, Microscope
+from openhcs.constants.constants import Backend, Microscope
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.source_bindings import (
     SourceBindingsConfig,
@@ -37,6 +37,7 @@ from openhcs.microscopes.microscope_interfaces import (
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+from openhcs.core.axes import Axis, AxisFamily
 
 
 class BioFormatsFilenameParser(SourceSchemaFilenameParser):
@@ -95,7 +96,7 @@ class BioFormatsMetadataHandler(MetadataHandler):
     def _component_values(
         self,
         plate_path: Union[str, Path],
-        component: AllComponents,
+        component: type[Axis],
     ) -> Optional[Dict[str, Optional[str]]]:
         values: dict[str, str | None] = {}
         for candidate in self.source_dataset(plate_path).candidates:
@@ -103,11 +104,11 @@ class BioFormatsMetadataHandler(MetadataHandler):
             if address is None:
                 raise ValueError("Store candidate lacks an exact plane address.")
             coordinate = address.component_values()[component]
-            label = candidate.component_labels.get(component.value)
+            label = candidate.component_labels.get(component.name)
             previous = values.get(coordinate)
             if previous is not None and label is not None and previous != label:
                 raise ValueError(
-                    f"Conflicting {component.value} label for {coordinate!r}."
+                    f"Conflicting {component.name} label for {coordinate!r}."
                 )
             values[coordinate] = label if label is not None else previous
         return dict(sorted(values.items())) or None
@@ -154,7 +155,7 @@ class BioFormatsMetadataHandler(MetadataHandler):
         return MetadataComponentValueSet(
             (
                 (component, self._component_values(plate_path, component))
-                for component in AllComponents
+                for component in AxisFamily.active().axes
             )
         )
 

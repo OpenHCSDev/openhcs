@@ -21,6 +21,7 @@ from polystore.streaming.receivers.napari.viewport_presentation import (
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerNativeViewportPresentation, ViewerWireField
 
+from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowViewportRequest
 from openhcs.agent.services.viewer_window_service import (
@@ -574,9 +575,9 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     spacing = SourceVoxelSpacing((1.3556, 1.3556))
     domain = SourceSpatialDomain((7, 11), (20, 30), 0, "Retained crop")
     for channel in (1, 2):
-        address = OpenHCSPlaneAddress.from_values(well, 1, channel, 1, 1)
+        address = OpenHCSPlaneAddress(((Microscopy.Well, well), (Microscopy.Site, 1), (Microscopy.Channel, channel), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1)))
         component_metadata = {
-            component.value: value
+            component.name: value
             for component, value in address.component_values().items()
         }
         contributors = tuple(

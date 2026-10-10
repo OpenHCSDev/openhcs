@@ -5,7 +5,6 @@ from types import ModuleType, SimpleNamespace
 
 from PyQt6.QtWidgets import QApplication, QWidget
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.pyqt_gui.windows.live_measurements_window import (
     LiveMeasurementsWindow,
@@ -13,14 +12,15 @@ from openhcs.pyqt_gui.windows.live_measurements_window import (
     _scope_text,
 )
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_live_measurement_scope_uses_biological_coordinate_labels() -> None:
     scope = RuntimeExecutionAxisScope.from_raw(
         "A01",
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
         value="2",
-        fixed_component_values=((AllComponents.SITE, "3"),),
+        fixed_component_values=((Microscopy.Site, "3"),),
     )
 
     label = _scope_text(scope)

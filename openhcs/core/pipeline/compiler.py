@@ -21,8 +21,6 @@ from typing import (
 import dill as pickle
 
 from openhcs.constants.constants import (
-    AllComponents,
-    get_multiprocessing_axis,
     OrchestratorState,
     READ_BACKEND,
     WRITE_BACKEND,
@@ -102,6 +100,7 @@ from objectstate import ObjectState, ObjectStateRegistry, get_base_type_for_lazy
 from openhcs.core.steps.function_step import FunctionStep  # Used for isinstance check
 from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
 from dataclasses import dataclass, replace
+from openhcs.core.axes import AxisFamily
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -358,7 +357,7 @@ class PipelineCompiler:
                 logger.warning(
                     "Step %r uses a non-routed function pattern with group_by=%s "
                     "also present in variable_components; compiled group_by is "
-                    "GroupBy.NONE because variable_components owns the runtime "
+                    "Ungrouped because variable_components owns the runtime "
                     "stack axis.",
                     step.name,
                     declared_group_by.name,
@@ -386,7 +385,7 @@ class PipelineCompiler:
             for seq_component in seq_config.sequential_components
             if len(
                 session.orchestrator.get_component_keys(
-                    AllComponents(seq_component.value),
+                    seq_component,
                     resolved_config=session.global_config,
                 )
             )
@@ -511,7 +510,7 @@ class PipelineCompiler:
         last_step_index = session.step_count - 1
         session.plan(last_step_index).zarr_config = {
             "all_wells": session.orchestrator.get_component_keys(
-                get_multiprocessing_axis(), resolved_config=session.global_config
+                AxisFamily.active().partition_axis(), resolved_config=session.global_config
             ),
             "needs_initialization": True,
         }
@@ -612,7 +611,7 @@ class PipelineCompiler:
 
         Args:
             steps: ObjectState-resolved pipeline steps
-            sequential_components: List of SequentialComponents from pipeline config
+            sequential_components: Sequential axes from pipeline config
 
         Raises:
             ValueError: If any step has variable_components that overlap with sequential_components
@@ -620,7 +619,7 @@ class PipelineCompiler:
         if not sequential_components:
             return
 
-        seq_comp_values = {sc.value for sc in sequential_components}
+        seq_comp_values = {sc.name for sc in sequential_components}
 
         for step in steps:
             if not isinstance(step, FunctionStep):
@@ -628,7 +627,7 @@ class PipelineCompiler:
             var_comps = step.processing_config.variable_components
             if not var_comps:
                 continue
-            var_comp_values = {vc.value for vc in var_comps}
+            var_comp_values = {vc.name for vc in var_comps}
             overlap = seq_comp_values & var_comp_values
 
             if overlap:
@@ -666,11 +665,10 @@ class PipelineCompiler:
         if seq_config and seq_config.sequential_components:
             # Enable pipeline-wide sequential mode
             context.pipeline_sequential_mode = True
-            seq_comps = tuple(sc.value for sc in seq_config.sequential_components)
+            seq_comps = tuple(seq_config.sequential_components)
 
             # Precompute combinations from orchestrator's component keys cache
             # This cache is populated from filename parsing during init, so it's always available
-            from openhcs.constants import AllComponents
             import itertools
 
             # Extract component values from orchestrator's cache for each sequential component
@@ -679,13 +677,11 @@ class PipelineCompiler:
             filtered_seq_comps = []
 
             for seq_comp in seq_comps:
-                # Convert component name to AllComponents enum
-                component_enum = AllComponents(seq_comp)
-
                 # Get component values from orchestrator's cache (populated from filename parsing)
                 component_values = orchestrator.get_component_keys(
-                    component_enum, resolved_config=global_config
+                    seq_comp, resolved_config=global_config
                 )
+
 
                 if not component_values:
                     logger.warning(f"No {seq_comp} values found in orchestrator cache")
@@ -901,7 +897,7 @@ class PipelineCompiler:
         )
         if well_filter_config and well_filter_config.well_filter is not None:
             available_wells = orchestrator.get_component_keys(
-                get_multiprocessing_axis(), resolved_config=effective_config
+                AxisFamily.active().partition_axis(), resolved_config=effective_config
             )
             resolved_wells = WellFilterProcessor.resolve_filter_with_mode(
                 well_filter_config.well_filter,
@@ -923,7 +919,7 @@ class PipelineCompiler:
                 )
 
         return orchestrator.get_component_keys(
-            get_multiprocessing_axis(),
+            AxisFamily.active().partition_axis(),
             resolved_axis_filter,
             resolved_config=effective_config,
         )
@@ -1249,7 +1245,7 @@ class PipelineCompiler:
             raise ValueError(
                 f"{owner}: cannot project source bindings for routed group "
                 f"{routed_group!r} on "
-                f"{execution_scope.component.value!r}: {error}"
+                f"{execution_scope.component.name!r}: {error}"
             ) from error
         if (
             source_binding_plan is not None
@@ -1653,7 +1649,7 @@ class PipelineCompiler:
                     filemanager=orchestrator.filemanager,
                     input_dir=orchestrator.input_dir,
                     available_axis_values=orchestrator.get_component_keys(
-                        get_multiprocessing_axis(), resolved_config=effective_config
+                        AxisFamily.active().partition_axis(), resolved_config=effective_config
                     ),
                 ),
                 source_projections_by_axis=DEFAULT_SOURCE_PROJECTION_CACHE.partition_by_axes(
@@ -1753,7 +1749,7 @@ def _resolve_step_axis_filters(
     # Get available axis values from orchestrator using multiprocessing axis
 
     available_axis_values = orchestrator.get_component_keys(
-        get_multiprocessing_axis(), resolved_config=global_config
+        AxisFamily.active().partition_axis(), resolved_config=global_config
     )
     if not available_axis_values:
         logger.warning("No available axis values found for axis filter resolution")

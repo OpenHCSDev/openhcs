@@ -195,10 +195,24 @@ class OpenHCSServerScanProvider(ServerScanProviderABC):
 class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
     """Component selection provider backed by OpenHCS orchestrator metadata."""
 
-    def get_groupby_enum(self) -> Any:
-        from openhcs.constants.constants import GroupBy
+    def is_grouped(self, group_by: Any) -> bool:
+        return bool(group_by.grouping_axes())
 
-        return GroupBy
+    def grouping_label(self, group_by: Any) -> str:
+        return group_by.name.replace("_", " ").title()
+
+    def grouping_overlaps_variable_components(
+        self,
+        group_by: Any,
+        variable_components: Iterable[Any],
+    ) -> bool:
+        variable = tuple(variable_components)
+        return any(axis in variable for axis in group_by.grouping_axes())
+
+    @staticmethod
+    def _grouping_axis(group_by: Any):
+        (axis,) = group_by.grouping_axes()
+        return axis
 
     def _get_plate_manager(self):
         from pyqt_reactive.services.service_registry import ServiceRegistry
@@ -229,7 +243,7 @@ class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
         orchestrator = self._get_current_orchestrator()
         if orchestrator is None:
             return False
-        return bool(orchestrator.get_component_keys(group_by))
+        return bool(orchestrator.get_component_keys(self._grouping_axis(group_by)))
 
     def get_component_keys(self, group_by: Any) -> list[str]:
         orchestrator = self._get_current_orchestrator()
@@ -237,7 +251,7 @@ class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
             raise RuntimeError(
                 "Component selection requires an initialized plate orchestrator."
             )
-        return orchestrator.get_component_keys(group_by)
+        return orchestrator.get_component_keys(self._grouping_axis(group_by))
 
     def get_component_display_name(
         self, group_by: Any, component_key: str
@@ -246,7 +260,7 @@ class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
         if orchestrator is None:
             return None
         return orchestrator.metadata_cache.get_component_metadata(
-            group_by, component_key
+            self._grouping_axis(group_by), component_key
         )
 
     def select_components(
@@ -263,7 +277,9 @@ class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
             available_components=list(available_components),
             selected_components=list(selected_components),
             group_by=group_by,
+            group_label=self.grouping_label(group_by),
             metadata_lookup=self.get_component_display_name,
+
             parent=parent,
         )
 

@@ -33,6 +33,7 @@ from openhcs.agent.dto.knowledge import (
 from openhcs.agent.image_analysis_qa import ImageAnalysisQaPolicy
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
+from openhcs.core.axes import Ungrouped
 
 
 class _UnexpectedFunctionCatalog:
@@ -445,7 +446,7 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "not equivalent to MAP2-seeded analysis" in folder
     assert "generic compiler regression protects any explicit ordered" in folder
     assert "variable_components=[CHANNEL] assembles that stack" in folder
-    assert "normalizes group_by to GroupBy.NONE" in folder
+    assert "normalizes group_by to Ungrouped" in folder
     assert "do not reinterpret a previous-step output" in folder
     assert "Follow current artifact provenance" in folder
     assert "Use SourceBindingsHandler only when an arbitrary image folder" not in folder

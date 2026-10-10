@@ -16,7 +16,6 @@ from openhcs.processing.backends.cellprofiler._preparation import (
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts import (
@@ -84,6 +83,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_int,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts import ArtifactSpec
@@ -336,7 +336,7 @@ class GridCycleScopeExecutionModePolicy:
         *,
         image: RuntimeCallableArgument,
         kwargs: RuntimeCallableKwargs,
-        variable_components: tuple[VariableComponents, ...],
+        variable_components: tuple[type[Axis], ...],
     ) -> ImagePayloadExecutionMode:
         del cls, image, variable_components
         parameter_name = (

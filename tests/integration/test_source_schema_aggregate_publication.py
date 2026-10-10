@@ -18,7 +18,7 @@ from openhcs.agent.services.execution_session_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ImageArtifactType, MainFlowStackOutputSpec, SpecialArtifactType
 from openhcs.core.config import (
@@ -46,6 +46,8 @@ from openhcs.processing.custom_functions.runtime_registry import (
     register_custom_function,
 )
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @numpy_function(contract=ProcessingContract.PURE_3D)
@@ -61,7 +63,7 @@ def volume_scalar_609(image: np.ndarray):
     return image, ({"volume_sum": int(image.sum()), "voxel_count": int(image.size)},)
 
 
-@pytest.mark.parametrize("group_by", [GroupBy.NONE, GroupBy.CHANNEL])
+@pytest.mark.parametrize("group_by", [Ungrouped, Microscopy.Channel])
 def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path, group_by):
     source = tmp_path / "input"
     source.mkdir()
@@ -84,14 +86,14 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
                     ),),
                     bindings=(NamedSourceBinding(
                         alias="Fixture", selector=SourceSelector(),
-                        component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                        component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
                     ),),
                 ),
             ),
             pipeline_steps=[FunctionStep(
                 func=registered, name="Actual volume scalar",
                 processing_config=LazyProcessingConfig(
-                    variable_components=[VariableComponents.Z_INDEX],
+                    variable_components=[Microscopy.ZIndex],
                     group_by=group_by,
                     input_source=InputSource.PIPELINE_START,
                 ),
@@ -103,7 +105,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
             progress_queue=AgentProgressQueue(),
         )).execution_bundle
         context = bundle.runtime_contexts["A01"]
-        assert tuple(context.step_plans[0].variable_components) == (VariableComponents.Z_INDEX,)
+        assert tuple(context.step_plans[0].variable_components) == (Microscopy.ZIndex,)
         orchestrator = PipelineOrchestrator(source, pipeline_config=document.pipeline_config).initialize()
         outcomes = orchestrator.execute_compiled_plate(
             execution_bundle=bundle, max_workers=1,

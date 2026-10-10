@@ -1,0 +1,54 @@
+# OpenHCS pipeline
+
+from openhcs.constants.constants import (
+    GroupBy,
+    SequentialComponents,
+    VariableComponents,
+)
+from openhcs.core.config import (
+    FijiDimensionMode,
+    FijiStreamingConfig,
+    LazySequentialProcessingConfig,
+    NapariDimensionMode,
+    NapariStreamingConfig,
+    PipelineConfig,
+    ProcessingConfig,
+)
+from openhcs.core.steps.function_step import FunctionStep
+from openhcs.processing.backends.processors.numpy_processor import (
+    create_projection,
+    stack_percentile_normalize,
+)
+
+pipeline_config = PipelineConfig(
+    sequential_processing_config=LazySequentialProcessingConfig(
+        sequential_components=[
+            SequentialComponents.CHANNEL
+        ]
+    )
+)
+
+pipeline_steps = [
+    FunctionStep(
+        func=stack_percentile_normalize,
+        name='normalize',
+        processing_config=ProcessingConfig()
+    ),
+    FunctionStep(
+        func=create_projection,
+        name='project',
+        processing_config=ProcessingConfig(
+            variable_components=[
+                VariableComponents.Z_INDEX
+            ],
+            group_by=GroupBy.NONE
+        ),
+        napari_streaming_config=NapariStreamingConfig(
+            channel_mode=NapariDimensionMode.LAYER,
+            well_mode=NapariDimensionMode.LAYER
+        ),
+        fiji_streaming_config=FijiStreamingConfig(
+            z_index_mode=FijiDimensionMode.FRAME
+        )
+    )
+]

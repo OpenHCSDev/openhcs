@@ -133,9 +133,9 @@ EXECUTION_MODE_CONFIGS = ["threading", "multiprocessing"]
 ZMQ_EXECUTION_MODE_CONFIGS = ["direct", "zmq", "zmq-tcp"]
 
 # Sequential processing configurations for parametrized testing
-component1 = "TIMEPOINT"
-component2 = "TIMEPOINT,CHANNEL"
-component_invalid = "CHANNEL"
+component1 = "timepoint"
+component2 = "timepoint,channel"
+component_invalid = "channel"
 SEQUENTIAL_CONFIGS = {
     "none": {
         "name": "none",
@@ -152,14 +152,14 @@ SEQUENTIAL_CONFIGS = {
     "valid_2_components": {
         "name": "valid_2_components",
         "description": "Sequential with 2 components (TIMEPOINT, CHANNEL)",
-        "sequential_components": ["TIMEPOINT", "CHANNEL"],
+        "sequential_components": ["timepoint", "channel"],
         "should_fail": False,
         "note": "CHANNEL will be filtered out for create_composite step (which uses CHANNEL in variable_components), but applied to other steps",
     },
     "invalid_overlap": {
         "name": "invalid_overlap",
         "description": "CHANNEL conflicts with create_composite's variable_components - will be filtered out",
-        "sequential_components": ["CHANNEL"],
+        "sequential_components": ["channel"],
         "should_fail": False,
         "note": "CHANNEL will be filtered out for create_composite step, but applied to other steps",
     },

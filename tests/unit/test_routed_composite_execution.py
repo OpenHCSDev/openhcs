@@ -8,7 +8,7 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import InputSource, Microscope, VariableComponents
+from openhcs.constants import InputSource, Microscope
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -31,6 +31,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     crop,
     tophat,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.parametrize("channels", [(1, 2), (2, 3)])
@@ -72,7 +73,7 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
         FunctionStep(
             func=[tophat, stack_function] if preprocess else stack_function,
             processing_config=LazyProcessingConfig(
-                variable_components=[VariableComponents.CHANNEL]
+                variable_components=[Microscopy.Channel]
             ),
         ),
         FunctionStep(func=identity),
@@ -94,7 +95,7 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
             FunctionStep(
                 func=create_projection,
                 processing_config=LazyProcessingConfig(
-                    variable_components=[VariableComponents.Z_INDEX]
+                    variable_components=[Microscopy.ZIndex]
                 ),
             ),
         )
@@ -108,7 +109,7 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
                     {"template_path": str(template), "rotate_result": False},
                 ),
                 processing_config=LazyProcessingConfig(
-                    variable_components=[VariableComponents.CHANNEL]
+                    variable_components=[Microscopy.Channel]
                 ),
             )
         )

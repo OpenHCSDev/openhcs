@@ -17,15 +17,15 @@ configuration objects.
 
 .. code-block:: python
 
-   from openhcs.constants import VariableComponents
    from openhcs.core.config import LazyProcessingConfig, ProcessingConfig
    from openhcs.core.steps.function_step import FunctionStep
+   from openhcs.domains.microscopy.axes import Microscopy
 
    def normalize(image, *, scale=1.0):
        return image * scale
 
    processing = ProcessingConfig(
-       variable_components=(VariableComponents.SITE,),
+       variable_components=(Microscopy.Site,),
    )
    step = FunctionStep(
        func=(normalize, {"scale": 0.5}),

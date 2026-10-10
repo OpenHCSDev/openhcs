@@ -37,7 +37,7 @@ class WellFilterProcessor:
         Args:
             well_filter: Filter specification (list, string pattern, or max count)
             well_filter_mode: Whether to include or exclude the matched wells
-            available_wells: Ordered list of wells from orchestrator.get_component_keys(MULTIPROCESSING_AXIS)
+            available_wells: Ordered list of wells from orchestrator.get_component_keys(partition_axis)
 
         Returns:
             List of well IDs to process (order preserved from available_wells)
@@ -100,7 +100,7 @@ class WellFilterProcessor:
 
         Args:
             well_filter: Filter specification (list, string pattern, or max count)
-            available_wells: Ordered list of wells from orchestrator.get_component_keys(MULTIPROCESSING_AXIS)
+            available_wells: Ordered list of wells from orchestrator.get_component_keys(partition_axis)
             strict: If True, raise error for non-existent wells. If False, silently ignore them.
 
         Returns:

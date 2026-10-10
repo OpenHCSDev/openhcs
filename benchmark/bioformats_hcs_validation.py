@@ -17,11 +17,12 @@ from benchmark.contracts.dataset import (
 )
 from benchmark.datasets.acquire import acquire_dataset
 from benchmark.datasets.registry import DATASET_REGISTRY
-from openhcs.constants import AllComponents
-from openhcs.core.components.component_values import OpenHCSComponentValues
+from openhcs.core.components.component_values import AxisValues
 from openhcs.core.virtual_workspace_metadata import component_metadata_field
 from openhcs.microscopes import create_microscope_handler
 from openhcs.microscopes.bioformats import BioFormatsHandler
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 BIOFORMATS_HCS_VALIDATION_CSV = "bioformats_hcs_validation.csv"
 BIOFORMATS_HCS_VALIDATION_JSON = "bioformats_hcs_validation.json"
@@ -152,18 +153,18 @@ def validate_acquired_bioformats_hcs_dataset(
 
     metadata_handler = handler.metadata_handler
     component_values = metadata_handler.component_value_set(acquired.path)
-    component_keys = OpenHCSComponentValues(
+    component_keys = AxisValues(
         (
             component,
             _component_keys(component_values.values_for(component)),
         )
-        for component in AllComponents
+        for component in AxisFamily.active().axes
     )
-    wells = component_keys[AllComponents.WELL]
-    sites = component_keys[AllComponents.SITE]
-    channels = component_keys[AllComponents.CHANNEL]
-    z_indexes = component_keys[AllComponents.Z_INDEX]
-    timepoints = component_keys[AllComponents.TIMEPOINT]
+    wells = component_keys[Microscopy.Well]
+    sites = component_keys[Microscopy.Site]
+    channels = component_keys[Microscopy.Channel]
+    z_indexes = component_keys[Microscopy.ZIndex]
+    timepoints = component_keys[Microscopy.Timepoint]
     grid_dimensions = tuple(
         metadata_handler.get_metadata_grid_dimensions(acquired.path)
     )
@@ -297,7 +298,7 @@ def _result_fieldnames() -> tuple[str, ...]:
 
 def _csv_row(result: BioFormatsHcsValidationResult) -> dict[str, object]:
     row = asdict(result)
-    for component in AllComponents:
+    for component in AxisFamily.active().axes:
         field_name = component_metadata_field(component)
         row[field_name] = ";".join(row[field_name])
     row["grid_dimensions"] = (
@@ -310,7 +311,7 @@ def _csv_row(result: BioFormatsHcsValidationResult) -> dict[str, object]:
 
 def _json_row(result: BioFormatsHcsValidationResult) -> dict[str, object]:
     row = asdict(result)
-    for component in AllComponents:
+    for component in AxisFamily.active().axes:
         field_name = component_metadata_field(component)
         row[field_name] = list(row[field_name])
     row["grid_dimensions"] = (

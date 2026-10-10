@@ -27,6 +27,7 @@ from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_outputs import PrimaryImageMetadataTarget
 from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _facts(plate_root: Path) -> StepExecutionObservation:
@@ -35,7 +36,7 @@ def _facts(plate_root: Path) -> StepExecutionObservation:
         sub_dir="images", results_dir=None,
     )
     projection = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress.from_values("A01", 1, 0, 1, 1),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 0), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
         ref=SourcePixelRef("disk", "images/saved.tif"), source_alias="saved",
         image_metadata=ImagePayloadMetadata(source_dtype="uint16"),
     )
@@ -152,7 +153,7 @@ def test_runtime_axis_query_is_explicit_and_full_plate_outputs_remain_available(
     first = _facts(tmp_path)
     target, entries = next(iter(first.source_projection_entries_by_target.items()))
     projection, _ = entries.projection_paths[0]
-    second = replace(projection, address=OpenHCSPlaneAddress.from_values("A02", 1, 0, 1, 1))
+    second = replace(projection, address=OpenHCSPlaneAddress(((Microscopy.Well, "A02"), (Microscopy.Site, 1), (Microscopy.Channel, 0), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))))
     outputs = replace(first, source_projection_entries_by_target=MappingProxyType({
         target: VirtualWorkspaceSourceProjectionEntries.from_projection_paths((
             (projection, "images/A01.tif"), (second, "images/A02.tif"),

@@ -61,7 +61,7 @@ def test_original_mcp_generators_publish_and_invoke_both_native_operations():
     tools = {tool.name: tool for tool in asyncio.run(built.list_tools())}
     stream = tools["openhcs_stream_plate_files_to_viewer"].inputSchema
     assert "display_config" in stream["properties"]
-    assert "channel_mode" in next(
+    assert "colour_mode" in next(
         definition["properties"]
         for definition in stream["$defs"].values()
         if definition.get("title") == "NapariDisplayConfig"

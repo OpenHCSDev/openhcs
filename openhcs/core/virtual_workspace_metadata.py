@@ -15,7 +15,6 @@ from polystore.atomic import FileLockError, atomic_update_json
 from polystore.metadata_writer import MetadataConfig
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -35,6 +34,7 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.source_tile_geometry import SourceTileLayout
+from openhcs.core.axes import Axis, AxisFamily, ColourAxis, is_axis
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -144,7 +144,7 @@ class AtomicMetadataWriter:
         saved_image_paths: Sequence[str],
         microscope_handler_name: str,
         source_filename_parser_name: str,
-        component_labels: Mapping[AllComponents, Mapping[str, str | None] | None],
+        component_labels: Mapping[type[Axis], Mapping[str, str | None] | None],
         backend: str,
         is_main: bool,
         results_dir: str | None,
@@ -318,13 +318,13 @@ def get_metadata_path(plate_root: str | Path) -> Path:
     return METADATA_CONFIG.metadata_path(plate_root)
 
 
-def component_metadata_field(component: AllComponents) -> str:
+def component_metadata_field(component: type[Axis]) -> str:
     """Derive the persisted collection field for one declared component."""
 
-    if not isinstance(component, AllComponents):
-        raise TypeError("Metadata fields require an exact AllComponents member")
-    suffix = "es" if component.value.endswith("x") else "s"
-    return f"{component.value}{suffix}"
+    if not is_axis(component):
+        raise TypeError(f"Metadata fields require a declared axis; got {component!r}")
+    suffix = "es" if component.name.endswith("x") else "s"
+    return f"{component.name}{suffix}"
 
 
 @dataclass(frozen=True)
@@ -355,13 +355,8 @@ class OpenHCSMetadataFields:
     MICROSCOPE_HANDLER_NAME: str = (
         SourceProjectionMetadataSerializer.MICROSCOPE_HANDLER_NAME_FIELD
     )
-    CHANNELS: str = component_metadata_field(AllComponents.CHANNEL)
-    WELLS: str = component_metadata_field(AllComponents.WELL)
-    SITES: str = component_metadata_field(AllComponents.SITE)
-    Z_INDEXES: str = component_metadata_field(AllComponents.Z_INDEX)
-    TIMEPOINTS: str = component_metadata_field(AllComponents.TIMEPOINT)
-    # Declared legacy collection fields without a current AllComponents member;
-    # readers still consume them from persisted plates.
+    # Per-axis collection fields derive from component_metadata_field(axis).
+    # Collection fields owned by no axis; readers consume them from persisted plates.
     OBJECTIVES: str = "objectives"
     ACQUISITION_DATETIME: str = "acquisition_datetime"
     PLATE_NAME: str = "plate_name"
@@ -682,13 +677,11 @@ class VirtualWorkspaceSourceProjectionEntries:
         if address_value is None:
             address = None
         elif isinstance(address_value, Mapping):
-            address = OpenHCSPlaneAddress.from_values(
-                well=cls._required_text(address_value, "well"),
-                site=cls._required_text(address_value, "site"),
-                channel=cls._required_text(address_value, "channel"),
-                z_index=cls._required_text(address_value, "z_index"),
-                timepoint=cls._required_text(address_value, "timepoint"),
+            address = OpenHCSPlaneAddress(
+                (axis, cls._required_text(address_value, axis.name))
+                for axis in AxisFamily.active().axes
             )
+
         else:
             raise RuntimeError(
                 "virtual_workspace source_projection address must be a mapping or "
@@ -769,12 +762,16 @@ class VirtualWorkspaceSourceProjectionEntries:
                     "virtual_workspace source_projection execution_scope fixed "
                     "components must be two-item sequences."
                 )
-            fixed_components.append((str(item[0]), str(item[1])))
+            fixed_components.append(
+                (AxisFamily.active().named(str(item[0])), str(item[1]))
+            )
         component = value.get("component")
         scope_value = value.get("value")
         return RuntimeExecutionAxisScope.from_raw(
             cls._required_text(value, "axis_id"),
-            component=None if component is None else str(component),
+            component=(
+                None if component is None else AxisFamily.active().named(str(component))
+            ),
             value=None if scope_value is None else str(scope_value),
             fixed_component_values=tuple(fixed_components),
         )
@@ -881,7 +878,7 @@ class VirtualWorkspaceSourceMetadataEntries:
 
 @dataclass(frozen=True, slots=True)
 class VirtualWorkspaceChannelLabels:
-    """Validated channel labels for one virtual-workspace subdirectory."""
+    """Validated colour-axis labels for one virtual-workspace subdirectory."""
 
     entries: Mapping[str, str]
 
@@ -890,14 +887,18 @@ class VirtualWorkspaceChannelLabels:
         cls,
         subdirectory: OpenHCSSubdirectoryPayload,
     ) -> "VirtualWorkspaceChannelLabels":
-        channels = subdirectory.get(FIELDS.CHANNELS)
-        if channels is None:
-            return cls(MappingProxyType({}))
-        if not isinstance(channels, Mapping):
-            raise RuntimeError("virtual_workspace channels must be a mapping.")
-        return cls(
-            MappingProxyType({str(key): str(value) for key, value in channels.items()})
-        )
+        entries: dict[str, str] = {}
+        for colour_axis in AxisFamily.active().with_role(ColourAxis):
+            labels = subdirectory.get(component_metadata_field(colour_axis))
+            if labels is None:
+                continue
+            if not isinstance(labels, Mapping):
+                raise RuntimeError(
+                    f"virtual_workspace {colour_axis.name} labels must be a mapping."
+                )
+            entries.update({str(key): str(value) for key, value in labels.items()})
+        return cls(MappingProxyType(entries))
+
 
     def label_for(self, channel_value: SourceMetadataScalar) -> str | None:
         return self.entries.get(str(channel_value))

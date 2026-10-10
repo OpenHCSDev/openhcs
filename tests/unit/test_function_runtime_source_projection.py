@@ -16,12 +16,7 @@ import pytest
 from objectstate.global_config import GlobalContextValues
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import (
-    AllComponents,
-    Backend,
-    GroupBy,
-    VariableComponents,
-)
+from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
@@ -123,6 +118,7 @@ from openhcs.core.steps.function_output_manifest import (
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _anchor_executor(
@@ -229,7 +225,7 @@ def test_pattern_discovery_uses_authoritative_virtual_source_files(
 
     patterns = engine.auto_detect_patterns_from_files(
         source_files,
-        variable_components=[VariableComponents.SITE.value],
+        variable_components=[Microscopy.Site],
         well_filter=["A01"],
     )
 
@@ -297,13 +293,7 @@ def test_workspace_source_files_select_exact_projection_roles(
     plate_path = tmp_path / "plate"
     canonical_path = "A01_s001_w1_z001_t001.tif"
     artifact_path = f"_source/Illumination/{canonical_path}"
-    address = OpenHCSPlaneAddress.from_values(
-        well="A01",
-        site="1",
-        channel="1",
-        z_index="1",
-        timepoint="1",
-    )
+    address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")))
     plane_projection = SourcePlaneProjection(
         address=address,
         ref=SourcePixelRef("disk", "/source/image.tif"),
@@ -342,7 +332,7 @@ def test_workspace_logical_identity_requires_paired_projection_declaration(
     path = "A01_s001_w1_z001_t001.tif"
     full_path = str(tmp_path / path)
     first = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
         ref=SourcePixelRef("disk", "/physical/shared.tif"),
         source_alias="Original",
     )
@@ -358,7 +348,7 @@ def test_workspace_logical_identity_requires_paired_projection_declaration(
 
     # Sharing a backend reference does not prove a shared logical declaration.
     declarations[full_path] = replace(
-        first, address=OpenHCSPlaneAddress.from_values("B01", 1, 1, 1, 1)
+        first, address=OpenHCSPlaneAddress(((Microscopy.Well, "B01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1)))
     )
     assert projection.logical_path_for(lookup) == full_path
     assert projection.source_path_for(lookup) == "/physical/shared.tif"
@@ -375,13 +365,7 @@ def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance
     projection_set = SourceProjectionSet(
         tuple(
             SourcePlaneProjection(
-                address=OpenHCSPlaneAddress.from_values(
-                    well="A01",
-                    site="1",
-                    channel=str(channel),
-                    z_index="1",
-                    timepoint="1",
-                ),
+                address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, str(channel)), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
                 ref=SourcePixelRef("disk", str(source_path)),
                 source_alias=alias,
             )
@@ -482,7 +466,7 @@ def test_workspace_replay_preserves_collapsed_semantic_identity(
     projection_set = SourceProjectionSet(
         (
             SourcePlaneProjection(
-                address=OpenHCSPlaneAddress.from_values("A14", 1, 1, 1, 1),
+                address=OpenHCSPlaneAddress(((Microscopy.Well, "A14"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
                 ref=SourcePixelRef("disk", "/outputs/A14_mosaic.tif"),
                 source_alias="neurite",
                 image_metadata=persisted_metadata,
@@ -552,13 +536,7 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
     )
     virtual_path = "A01_s001_w1_z001_t001.tif"
     source_plane = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress.from_values(
-            well="A01",
-            site="1",
-            channel="1",
-            z_index="1",
-            timepoint="1",
-        ),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
         ref=SourcePixelRef("disk", str(source_path)),
         source_alias="OrigBlue",
     )
@@ -1461,7 +1439,7 @@ def test_step_output_anchor_uses_compiler_owned_component_scope() -> None:
         ),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("0",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
     )
@@ -1503,7 +1481,7 @@ def test_step_output_dispatch_projects_producer_group_before_pattern_selection(
         execution_group_value="channel",
         execution_group_scope=ComponentGroupScope.from_raw(
             ("2",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=compiled_pattern,
     )
@@ -1557,7 +1535,7 @@ def test_artifact_managed_dispatch_validates_producer_before_group_projection() 
         },
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         consumer_variable_components=ComponentSet(),
     )
@@ -1577,7 +1555,7 @@ def test_artifact_managed_dispatch_validates_producer_before_group_projection() 
         execution_group_value="channel",
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=compiled_pattern,
     )
@@ -1648,7 +1626,7 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
             source_step_index=4,
             source_step_scope_id="crop",
         ),
-        execution_group_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
+        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
         compiled_function_pattern=compile_function_pattern(
             lambda image: image,
             {},
@@ -1683,7 +1661,7 @@ def test_source_anchor_uses_compiler_owned_static_component_scope() -> None:
         main_input_dependency=StepInputDependency.pipeline_start(),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=compile_function_pattern(
             lambda image: image,
@@ -1713,18 +1691,18 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
         NamedSourceBinding(
             alias="OrigStain1",
             selector=SourceSelector(
-                components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                components=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             origin=SourceBindingOrigin.PIPELINE_START,
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
         ),
         NamedSourceBinding(
             alias="OrigStain2",
             selector=SourceSelector(
-                components=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                components=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
             origin=SourceBindingOrigin.PIPELINE_START,
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
         ),
     )
     source_binding_plan = CompiledSourceBindingPlan(
@@ -1753,7 +1731,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
         path="/memory/SourceSetMeasurements.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         relations=source_set_measurements.relations,
     )
 
@@ -1765,7 +1743,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
         source_binding_plan=source_binding_plan,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=compile_function_pattern(
             measure_source_set,
@@ -1887,7 +1865,7 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
         },
         execution_group_scope=ComponentGroupScope.from_raw(
             ("3",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         consumer_variable_components=ComponentSet(),
     )
@@ -1907,18 +1885,18 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
             NamedSourceBinding(
                 alias="OrigBlue",
                 selector=SourceSelector(
-                    components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    components=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="OrigRed",
                 selector=SourceSelector(
-                    components=(ComponentSelector(AllComponents.CHANNEL, "3"),),
+                    components=(ComponentSelector(Microscopy.Channel, "3"),),
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "3"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "3"),),
             ),
         ),
         match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
@@ -1931,7 +1909,7 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
         source_binding_plan=source_binding_plan,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("3",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=compiled_pattern,
     )
@@ -1973,10 +1951,10 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
             NamedSourceBinding(
                 alias="OrigBlue",
                 selector=SourceSelector(
-                    components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    components=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
         match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
@@ -1989,7 +1967,7 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
         source_binding_plan=source_binding_plan,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=compiled_pattern,
     )
@@ -2027,10 +2005,10 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
             NamedSourceBinding(
                 alias="OrigBlue",
                 selector=SourceSelector(
-                    components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    components=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
         match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
@@ -2043,7 +2021,7 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
         source_binding_plan=source_binding_plan,
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=compile_function_pattern(exact_source_input, {}, {}),
     )
@@ -2072,18 +2050,18 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
         NamedSourceBinding(
             alias="MCP_DNA",
             selector=SourceSelector(
-                components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                components=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             origin=SourceBindingOrigin.PIPELINE_START,
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "MCP_DNA"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "MCP_DNA"),),
         ),
         NamedSourceBinding(
             alias="MCP_AGP",
             selector=SourceSelector(
-                components=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                components=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
             origin=SourceBindingOrigin.PIPELINE_START,
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "MCP_AGP"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "MCP_AGP"),),
         ),
     )
     plan = SimpleNamespace(
@@ -2092,7 +2070,7 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
         source_binding_plan=CompiledSourceBindingPlan(bindings=bindings),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("MCP_DNA", "MCP_AGP"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=compile_function_pattern(
             lambda image: image,
@@ -2163,16 +2141,16 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
         NamedSourceBinding(
             alias="MCP_DNA",
             selector=SourceSelector(
-                components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                components=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "MCP_DNA"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "MCP_DNA"),),
         ),
         NamedSourceBinding(
             alias="MCP_AGP",
             selector=SourceSelector(
-                components=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                components=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "MCP_AGP"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "MCP_AGP"),),
         ),
     )
     pipeline_config = PipelineConfig(
@@ -2248,10 +2226,10 @@ def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
             NamedSourceBinding(
                 alias="OrigStain1",
                 selector=SourceSelector(
-                    components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                    components=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
         match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
@@ -2301,11 +2279,11 @@ def test_default_callable_runtime_scope_projects_bindings_to_selected_group() ->
         bindings=(
             NamedSourceBinding(
                 alias="OrigStain1",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="OrigStain2",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         )
     )
@@ -2313,7 +2291,7 @@ def test_default_callable_runtime_scope_projects_bindings_to_selected_group() ->
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compile_function_pattern(
                 lambda image: image,
@@ -2341,11 +2319,11 @@ def test_dict_callable_runtime_scope_projects_bindings_to_selected_group() -> No
         bindings=(
             NamedSourceBinding(
                 alias="OrigStain1",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="OrigStain2",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         )
     )
@@ -2358,7 +2336,7 @@ def test_dict_callable_runtime_scope_projects_bindings_to_selected_group() -> No
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
         ),
@@ -2384,11 +2362,11 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         bindings=(
             NamedSourceBinding(
                 alias="OrigStain1",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="OrigStain2",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         )
     )
@@ -2401,10 +2379,10 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         step_index=0,
         step_name="consume channel source",
         axis_id="A01",
-        execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         source_binding_plan=source_binding_plan,
         compiled_function_pattern=compiled_pattern,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
     scope = PatternGroupData(
         matching_files=["first.tif", "second.tif"],
@@ -2478,7 +2456,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
             path=f"/memory/{spec.name}.pkl",
             artifact_type=spec.artifact_type,
             group_keys=(channel,),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
             paths_by_group={channel: f"/memory/{spec.name}__{channel}.pkl"},
             relations=spec.relations,
         )
@@ -2523,10 +2501,10 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
         step_index=0,
         step_name="consume channel source",
         axis_id="A01",
-        execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         source_binding_plan=source_binding_plan,
         input_memory_type="numpy",
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         compiled_function_pattern=compiled_pattern,
         artifact_inputs={},
         artifact_outputs=output_plans,
@@ -2685,7 +2663,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         path="/memory/FirstLabels.pkl",
         artifact_type=first_spec.artifact_type,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"1": "/memory/FirstLabels_1.pkl"},
     )
     second_plan = ArtifactOutputPlan(
@@ -2693,7 +2671,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         path="/memory/SecondLabels.pkl",
         artifact_type=second_spec.artifact_type,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"2": "/memory/SecondLabels_2.pkl"},
     )
 
@@ -2744,10 +2722,10 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         step_index=0,
         step_scope_id="pipeline::step_0",
         step_name="record labels",
-        execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
         input_memory_type="numpy",
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         artifact_inputs={},
         artifact_outputs=output_plans,
     )
@@ -2800,11 +2778,11 @@ def test_invocation_source_artifact_owns_cross_component_runtime_binding_scope()
         bindings=(
             NamedSourceBinding(
                 alias="OrigStain1",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="OrigStain2",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         )
     )
@@ -2819,7 +2797,7 @@ def test_invocation_source_artifact_owns_cross_component_runtime_binding_scope()
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
         ),
@@ -2839,11 +2817,11 @@ def test_main_flow_input_owns_runtime_binding_scope_with_auxiliary_source() -> N
         bindings=(
             NamedSourceBinding(
                 alias="OrigStain1",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="OrigStain2",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         )
     )
@@ -2894,7 +2872,7 @@ def test_main_flow_input_owns_runtime_binding_scope_with_auxiliary_source() -> N
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
         ),
@@ -2918,7 +2896,7 @@ def test_payload_provenance_excludes_auxiliary_binding_from_main_flow_scope() ->
         bindings=(
             NamedSourceBinding(
                 alias="FilenamePrefix",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         )
     )
@@ -2937,9 +2915,9 @@ def test_payload_provenance_excludes_auxiliary_binding_from_main_flow_scope() ->
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
             source_binding_plan=source_binding_plan,
-            variable_components=(VariableComponents.SITE,),
+            variable_components=(Microscopy.Site,),
             compiled_function_pattern=compiled_pattern,
         ),
         compiled_group=compiled_pattern.default_group,
@@ -2962,7 +2940,7 @@ def test_payload_provenance_outranks_unrelated_artifact_execution_group() -> Non
         bindings=(
             NamedSourceBinding(
                 alias="OrigGreen",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         )
     )
@@ -2973,10 +2951,10 @@ def test_payload_provenance_outranks_unrelated_artifact_execution_group() -> Non
             axis_id="A01",
             execution_group_scope=ComponentGroupScope.from_raw(
                 ("1",),
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
             ),
             source_binding_plan=source_binding_plan,
-            variable_components=(VariableComponents.SITE,),
+            variable_components=(Microscopy.Site,),
         ),
         compiled_group=compiled_pattern.default_group,
         component_value="1",
@@ -3000,7 +2978,7 @@ def test_payload_provenance_preserves_bindings_across_a_variable_stack_axis() ->
         bindings=tuple(
             NamedSourceBinding(
                 alias=alias,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+                component_identity=(ComponentSelector(Microscopy.Channel, channel),),
             )
             for alias, channel in (("OrigBlue", "1"), ("OrigGreen", "2"))
         )
@@ -3046,9 +3024,9 @@ def test_payload_provenance_preserves_bindings_across_a_variable_stack_axis() ->
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
             source_binding_plan=source_binding_plan,
-            variable_components=(VariableComponents.CHANNEL,),
+            variable_components=(Microscopy.Channel,),
         ),
         compiled_group=compiled_group,
         component_value="1",
@@ -3072,7 +3050,7 @@ def test_main_flow_source_scope_intersects_cross_component_invocation_inputs() -
         bindings=tuple(
             NamedSourceBinding(
                 alias=alias,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+                component_identity=(ComponentSelector(Microscopy.Channel, channel),),
             )
             for alias, channel in (
                 ("Worms", "1"),
@@ -3123,7 +3101,7 @@ def test_main_flow_source_scope_intersects_cross_component_invocation_inputs() -
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
         ),
@@ -3147,7 +3125,7 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
         bindings=tuple(
             NamedSourceBinding(
                 alias=alias,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+                component_identity=(ComponentSelector(Microscopy.Channel, channel),),
             )
             for alias, channel in (("SMI312", "4"), ("Hoechst", "1"))
         )
@@ -3188,7 +3166,7 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="R04C09",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
         ),
@@ -3239,11 +3217,11 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     )
     primary_source = NamedSourceBinding(
         alias="Primary",
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     )
     pipeline_start = LazyProcessingConfig(
-        variable_components=[VariableComponents.SITE],
-        group_by=GroupBy.CHANNEL,
+        variable_components=[Microscopy.Site],
+        group_by=Microscopy.Channel,
         input_source=InputSource.PIPELINE_START,
     )
     steps = [
@@ -3325,11 +3303,11 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
 
     plan = SimpleNamespace(
         axis_id="A01",
-        execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
         artifact_outputs={},
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
     request = PatternGroupExecutionRequest(
         context=SimpleNamespace(),
@@ -3380,8 +3358,8 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
 
     assert scope.runtime_plane_count == 2
     assert scope.axis_scope.fixed_component_values == (
-        (AllComponents.Z_INDEX, "3"),
-        (AllComponents.TIMEPOINT, "2"),
+        (Microscopy.ZIndex, "3"),
+        (Microscopy.Timepoint, "2"),
     )
 
 
@@ -3403,7 +3381,7 @@ def test_grouped_main_flow_context_uses_component_selected_output_plan() -> None
         path="/memory/CorrectedStain1.pkl",
         artifact_type=corrected_stain_1_spec.artifact_type,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"1": "/memory/CorrectedStain1_1.pkl"},
     )
     corrected_stain_2 = ArtifactOutputPlan(
@@ -3411,7 +3389,7 @@ def test_grouped_main_flow_context_uses_component_selected_output_plan() -> None
         path="/memory/CorrectedStain2.pkl",
         artifact_type=corrected_stain_2_spec.artifact_type,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"2": "/memory/CorrectedStain2_2.pkl"},
     )
     plan = SimpleNamespace(
@@ -3419,7 +3397,7 @@ def test_grouped_main_flow_context_uses_component_selected_output_plan() -> None
         artifact_outputs={
             plan.ref(): plan for plan in (corrected_stain_1, corrected_stain_2)
         },
-        execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         source_binding_plan=CompiledSourceBindingPlan(),
     )
 
@@ -3518,7 +3496,7 @@ def test_component_output_selection_keeps_distinct_axes_with_equal_keys() -> Non
         path="/memory/Stain1.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"1": "/memory/Stain1_1.pkl"},
     )
     channel_2 = ArtifactOutputPlan(
@@ -3526,13 +3504,13 @@ def test_component_output_selection_keeps_distinct_axes_with_equal_keys() -> Non
         path="/memory/Stain2.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"2": "/memory/Stain2_2.pkl"},
     )
     plan = SimpleNamespace(
         artifact_inputs={},
         artifact_outputs={plan.ref(): plan for plan in (channel_1, channel_2)},
-        execution_group_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
+        execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
     )
 
     selected = PatternGroupExecutionScope._select_output_plans_for_component(
@@ -3633,7 +3611,7 @@ def test_grouped_runtime_scope_preserves_empty_source_binding_plan() -> None:
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
             source_binding_plan=source_binding_plan,
         ),
         compiled_group=compiled_pattern.default_group,
@@ -3661,7 +3639,7 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
                         ),
                     )
                 ),
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="OrigStain2",
@@ -3674,7 +3652,7 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
                         ),
                     )
                 ),
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         )
     )
@@ -3686,16 +3664,16 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
     runtime = function_runtime.PatternGroupExecutionRequest(
         context=SimpleNamespace(
             source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-                frozenset((AllComponents.SITE,))
+                frozenset((Microscopy.Site,))
             )
         ),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
             main_input_dependency=StepInputDependency.pipeline_start(),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compiled_pattern,
-            variable_component_values=(VariableComponents.SITE.value,),
+            variable_component_values=(Microscopy.Site.name,),
         ),
         compiled_group=compiled_pattern.require_group("1"),
         component_value="1",
@@ -3753,13 +3731,7 @@ def test_alias_only_workspace_filter_excludes_unselected_source_and_orders_stack
     )
     source_planes = tuple(
         SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values(
-                well="R04C09",
-                site="11",
-                channel=channel,
-                z_index="1",
-                timepoint="1",
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "R04C09"), (Microscopy.Site, "11"), (Microscopy.Channel, channel), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
             ref=SourcePixelRef("disk", f"/source/ch{channel}.tiff"),
             source_alias=binding.alias,
         )
@@ -3833,11 +3805,11 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
     source_ref = SourcePixelRef("disk", str(tmp_path / "raw-image.tif"))
     source_metadata = {
         SOURCE_BINDING_ALIAS_METADATA_FIELD: "OrigDNA",
-        AllComponents.SITE.value: 2,
-        AllComponents.CHANNEL.value: 1,
-        AllComponents.Z_INDEX.value: 3,
-        AllComponents.TIMEPOINT.value: 4,
-        AllComponents.WELL.value: "A01",
+        Microscopy.Site.name: 2,
+        Microscopy.Channel.name: 1,
+        Microscopy.ZIndex.name: 3,
+        Microscopy.Timepoint.name: 4,
+        Microscopy.Well.name: "A01",
         SourceFilterSubject.EXTENSION.value: ".tif",
     }
     projection = VirtualWorkspaceSourceProjection(
@@ -3845,13 +3817,7 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
         source_metadata_by_path={virtual_path: source_metadata},
         source_projections_by_virtual_path={
             virtual_path: SourcePlaneProjection(
-                address=OpenHCSPlaneAddress.from_values(
-                    well="A01",
-                    site="2",
-                    channel="1",
-                    z_index="3",
-                    timepoint="4",
-                ),
+                address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "2"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "3"), (Microscopy.Timepoint, "4"))),
                 ref=source_ref,
                 source_alias="OrigDNA",
                 source_metadata=source_metadata,
@@ -3907,11 +3873,11 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
     )
 
     assert image_payload_metadata(projected).source_component_metadata == {
-        AllComponents.SITE.value: 2,
-        AllComponents.CHANNEL.value: 1,
-        AllComponents.Z_INDEX.value: 3,
-        AllComponents.TIMEPOINT.value: 4,
-        AllComponents.WELL.value: "A01",
+        Microscopy.Site.name: 2,
+        Microscopy.Channel.name: 1,
+        Microscopy.ZIndex.name: 3,
+        Microscopy.Timepoint.name: 4,
+        Microscopy.Well.name: "A01",
         SourceFilterSubject.EXTENSION.value: ".tif",
     }
     assert image_payload_metadata(
@@ -4000,13 +3966,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     )
     source_planes = tuple(
         SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values(
-                well="A01",
-                site="1",
-                channel=str(channel),
-                z_index="1",
-                timepoint="1",
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, str(channel)), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
             ref=SourcePixelRef("disk", str(source_path)),
             source_alias=alias,
         )
@@ -4202,7 +4162,7 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
         axis_id="A01",
         input_dir=tmp_path,
         input_memory_type="numpy",
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=0,
@@ -4324,7 +4284,7 @@ def test_ungrouped_runtime_scope_omits_axis_component() -> None:
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
             axis_id="A01",
-            group_by_value=GroupBy.CHANNEL.value,
+            group_by_value=Microscopy.Channel.name,
             execution_group_value=None,
         ),
         compiled_group=SimpleNamespace(),
@@ -5158,7 +5118,7 @@ def test_function_output_path_uses_variable_component_identity(
         output_dir=tmp_path,
         output_payload=payload,
         input_path=None,
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
 
     identity = FunctionOutputIdentity.from_request(request)
@@ -5213,7 +5173,7 @@ def test_collapsed_output_identity_uses_retained_source_contributors(
         output_dir=tmp_path,
         output_payload=payload,
         input_path=None,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
 
     identity = FunctionOutputIdentity.from_request(request)
@@ -5285,7 +5245,7 @@ def test_composite_then_z_collapse_uses_current_scalar_identity(
         output_dir=tmp_path,
         output_payload=payload,
         input_path="A01_s001_w1_z001_t001.tif",
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
 
     identity = FunctionOutputIdentity.from_request(request)
@@ -5322,7 +5282,7 @@ def test_variable_component_identity_uses_fallback_path_extension(
         output_dir=tmp_path,
         output_payload=payload,
         input_path="A01_s001_w2_z001_t001.png",
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
 
     identity = FunctionOutputIdentity.from_request(request)
@@ -5394,7 +5354,7 @@ def test_function_output_path_rejects_variation_outside_identity_components(
                 output_dir=tmp_path,
                 output_payload=payload,
                 input_path=None,
-                variable_components=(VariableComponents.Z_INDEX,),
+                variable_components=(Microscopy.ZIndex,),
             )
         )
 
@@ -5418,7 +5378,7 @@ def test_function_output_path_rejects_group_by_component_stack_variation(
                 output_dir=tmp_path,
                 output_payload=payload,
                 input_path=None,
-                variable_components=(VariableComponents.SITE,),
+                variable_components=(Microscopy.Site,),
             )
         )
 
@@ -5439,7 +5399,7 @@ def test_input_aligned_stack_output_uses_input_filename_identity(
         output_dir=tmp_path,
         output_payload=payload,
         input_path="A01_s002_w1_z001_t001.png",
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         input_aligned_output=True,
     )
 
@@ -5483,7 +5443,7 @@ def test_function_output_path_keeps_payload_split_axis_over_input_alignment(
         output_dir=tmp_path,
         output_payload=payload,
         input_path="A01_s003_w1_z001_t001.tif",
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         input_aligned_output=True,
     )
 
@@ -5556,7 +5516,7 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
             axis_id="A01",
             output_dir=tmp_path,
             output_memory_type="numpy",
-            variable_components=(VariableComponents.SITE,),
+            variable_components=(Microscopy.Site,),
             step_name="ExplicitIdentity",
             pipeline_position=0,
             step_scope_id="explicit-identity",

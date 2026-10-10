@@ -13,7 +13,7 @@ from objectstate.lazy_factory import (
     resolve_lazy_configurations_for_serialization,
 )
 
-from openhcs.constants import AllComponents, Backend, GroupBy, VariableComponents
+from openhcs.constants import Backend
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -23,7 +23,6 @@ from openhcs.core.artifacts import (
     ArtifactSpecRef,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.component_set import ComponentSet
 from openhcs.core.config import (
     LazyProcessingConfig,
     LazyStepSourceBindingsConfig,
@@ -57,6 +56,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     SettingsBinder,
     SettingToKeywordBinding,
 )
+from openhcs.core.axes import AxisFamily, Ungrouped
 
 
 @dataclass(frozen=True, slots=True)
@@ -332,7 +332,7 @@ def _parsed_pipeline_declaration(
 
     forward_context = ArtifactDeclarationStepContext().with_source_binding_scope(
         source_bindings=step_source_bindings,
-        group_by=GroupBy.NONE,
+        group_by=Ungrouped,
         input_source=InputSource.PIPELINE_START,
     )
     target_units = _parsed_target_units(
@@ -358,25 +358,24 @@ def _pipeline_processing_config(
 ) -> ProcessingConfig:
     """Resolve pipeline-wide axes from exact source and callable declarations."""
 
-    variable_components = tuple(
-        VariableComponents(component.value)
-        for component in source_bindings.source_stack_components
-    )
+    family = AxisFamily.active()
+    variable_components = tuple(source_bindings.source_stack_components)
     if source_bindings.grouping_metadata_fields:
         grouped_components = tuple(
             dict.fromkeys(
-                component
+                axis
                 for module_type, _module in executable_modules
                 for function_name in module_type.declared_function_names()
-                for component in CallableContract.from_callable(
+                for role in CallableContract.from_callable(
                     module_type.require_callable(function_name)
-                ).required_variable_components
+                ).required_axis_roles
+                for axis in family.with_role(role)
             )
         )
         if len(grouped_components) > 1:
             raise ValueError(
                 "CellProfiler source grouping contains callables with incompatible "
-                f"required variable components {grouped_components!r}."
+                f"required axis roles {grouped_components!r}."
             )
         variable_components = tuple(
             dict.fromkeys((*variable_components, *grouped_components))
@@ -385,13 +384,10 @@ def _pipeline_processing_config(
         return ProcessingConfig()
     inherited = ProcessingConfig()
     group_by = inherited.group_by
-    if (
-        group_by is not None
-        and group_by.value is not None
-        and AllComponents.from_value(group_by.value)
-        in ComponentSet.from_enum_values(variable_components)
+    if group_by is not None and any(
+        axis in variable_components for axis in group_by.grouping_axes()
     ):
-        group_by = GroupBy.NONE
+        group_by = Ungrouped
     return replace(
         inherited,
         variable_components=list(variable_components),
@@ -948,7 +944,8 @@ def _lower_module_batch(
     )
     lineage_keys: tuple[tuple[str, ...], ...] = ((),) * len(units)
     if source_group_keys:
-        group_component = AllComponents.from_value(processing_config.group_by.value)
+        (group_component,) = processing_config.group_by.grouping_axes()
+
         lineage_keys = tuple(
             source_bindings.component_group_keys_for_artifact_specs(
                 group_component,

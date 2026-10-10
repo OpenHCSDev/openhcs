@@ -1,16 +1,15 @@
-"""Filename parsing bound to the canonical OpenHCS component declaration."""
+"""Filename parsing bound to the active axis family."""
 
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from enum import Enum
 from typing import Optional, Tuple, TypeAlias
 
 from polystore.streaming.viewer_transport import ViewerFilenameParseResultABC
 
-from openhcs.constants.constants import AllComponents
-from openhcs.core.components.component_values import OpenHCSComponentValues
+from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.components.component_values import AxisValues
 
 logger = logging.getLogger(__name__)
 
@@ -19,14 +18,14 @@ FilenameParseValue: TypeAlias = str | int | float | bool | None
 
 @dataclass(frozen=True, slots=True, init=False)
 class FilenameParseResult(ViewerFilenameParseResultABC):
-    """Immutable parser result keyed by nominal component declarations."""
+    """Immutable parser result keyed by declared axes."""
 
-    components: OpenHCSComponentValues[FilenameParseValue]
+    components: AxisValues[FilenameParseValue]
     extension: str
 
     def __init__(
         self,
-        component_values: Iterable[tuple[AllComponents, FilenameParseValue]],
+        component_values: Iterable[tuple[type[Axis], FilenameParseValue]],
         *,
         extension: str,
     ) -> None:
@@ -36,27 +35,13 @@ class FilenameParseResult(ViewerFilenameParseResultABC):
         if not normalized_extension.startswith("."):
             normalized_extension = f".{normalized_extension}"
 
-        object.__setattr__(self, "components", OpenHCSComponentValues(component_values))
+        object.__setattr__(self, "components", AxisValues(component_values))
         object.__setattr__(self, "extension", normalized_extension)
-
-    @classmethod
-    def from_projection(
-        cls,
-        source_values: Iterable[tuple[Enum, FilenameParseValue]],
-        *,
-        extension: str,
-    ) -> "FilenameParseResult":
-        """Project one nominal component enum onto another by declared member name."""
-
-        return cls.from_components(
-            OpenHCSComponentValues.from_member_projection(source_values),
-            extension=extension,
-        )
 
     @classmethod
     def from_components(
         cls,
-        components: OpenHCSComponentValues[FilenameParseValue],
+        components: AxisValues[FilenameParseValue],
         *,
         extension: str,
     ) -> "FilenameParseResult":
@@ -73,29 +58,26 @@ class FilenameParseResult(ViewerFilenameParseResultABC):
     ) -> "FilenameParseResult":
         """Create a nominal result at an explicit keyword or wire boundary."""
 
-        return cls(
-            (
-                (component, component_values.get(component.value))
-                for component in AllComponents
-            ),
+        return cls.from_components(
+            AxisValues.from_wire_mapping(component_values, missing_value=None),
             extension=extension,
         )
 
     def declared_values(
         self,
-    ) -> tuple[tuple[AllComponents, FilenameParseValue], ...]:
+    ) -> tuple[tuple[type[Axis], FilenameParseValue], ...]:
         """Return parsed values in declaration order."""
 
         return self.components.declared_values()
 
-    def value_for(self, component: AllComponents) -> FilenameParseValue:
+    def value_for(self, component: type[Axis]) -> FilenameParseValue:
         """Return the value owned by one exact component declaration."""
 
         return self.components.value_for(component)
 
     def with_value(
         self,
-        component: AllComponents,
+        component: type[Axis],
         value: FilenameParseValue,
     ) -> "FilenameParseResult":
         """Return a result with one nominal component value replaced."""
@@ -107,16 +89,16 @@ class FilenameParseResult(ViewerFilenameParseResultABC):
 
     def with_values(
         self,
-        replacements: Iterable[tuple[AllComponents, FilenameParseValue]],
+        replacements: Iterable[tuple[type[Axis], FilenameParseValue]],
     ) -> "FilenameParseResult":
         """Return a result with nominally declared component replacements."""
 
         components = self.components
-        seen: set[AllComponents] = set()
+        seen: set[type[Axis]] = set()
         for component, value in replacements:
             if component in seen:
                 raise ValueError(
-                    f"Filename component {component.value!r} was replaced more than once"
+                    f"Filename component {component.name!r} was replaced more than once"
                 )
             seen.add(component)
             components = components.with_value(component, value)
@@ -124,7 +106,7 @@ class FilenameParseResult(ViewerFilenameParseResultABC):
 
     def component_matches(
         self,
-        component: AllComponents,
+        component: type[Axis],
         expected_value: object,
     ) -> bool:
         """Compare one parsed component through its nominal declaration."""
@@ -134,12 +116,12 @@ class FilenameParseResult(ViewerFilenameParseResultABC):
             return parsed_value is expected_value
         return str(parsed_value) == str(expected_value)
 
-    def required_value(self, component: AllComponents) -> str | int | float | bool:
+    def required_value(self, component: type[Axis]) -> str | int | float | bool:
         """Return one required component or fail with its declared identity."""
 
         value = self.value_for(component)
         if value is None or value == "":
-            raise MissingFilenameComponentError(component.value, empty=True)
+            raise MissingFilenameComponentError(component.name, empty=True)
         return value
 
     def wire_mapping(self) -> Mapping[str, FilenameParseValue]:
@@ -178,7 +160,7 @@ class GenericFilenameParser(ABC):
     DEFAULT_EXTENSION = ".tif"
 
     def __init__(self) -> None:
-        self.FILENAME_COMPONENTS = tuple(AllComponents)
+        self.FILENAME_COMPONENTS = AxisFamily.active().axes
         self.PLACEHOLDER_PATTERN = "{iii}"
 
     @classmethod
@@ -218,10 +200,10 @@ class GenericFilenameParser(ABC):
         """
         return self.construct_filename(components)
 
-    def component_for_name(self, component_name: str) -> AllComponents:
-        """Resolve one external component name through the declared enum."""
+    def component_for_name(self, component_name: str) -> type[Axis]:
+        """Decode one external axis name through the active family."""
 
-        return AllComponents(component_name)
+        return AxisFamily.active().named(component_name)
 
     def bind_component_values(
         self,
@@ -238,7 +220,7 @@ class GenericFilenameParser(ABC):
 
     def bind_declared_values(
         self,
-        component_values: Iterable[tuple[AllComponents, FilenameParseValue]],
+        component_values: Iterable[tuple[type[Axis], FilenameParseValue]],
         *,
         extension: str | None = None,
     ) -> FilenameParseResult:

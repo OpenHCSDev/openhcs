@@ -13,7 +13,6 @@ from typing import Callable, ClassVar, Mapping, Sequence, TYPE_CHECKING, TypeAli
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.constants.constants import AllComponents
 from polystore.formats import get_format_from_extension
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.source_bindings import (
@@ -41,6 +40,7 @@ from openhcs.core.source_metadata import (
     source_metadata_scalar,
 )
 from openhcs.core.source_path_identity import source_path_identity_key
+from openhcs.core.axes import Axis, AxisFamily
 
 if TYPE_CHECKING:
     from openhcs.core.config import PipelineConfig
@@ -392,7 +392,7 @@ class SourceImageSetComponentRole(Enum):
 class SourceImageSetIdentityPolicy:
     """Nominal policy for reducing source plane metadata to image-set identity."""
 
-    plane_member_components: frozenset[AllComponents] = frozenset()
+    plane_member_components: frozenset[type[Axis]] = frozenset()
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -401,17 +401,17 @@ class SourceImageSetIdentityPolicy:
             frozenset(self.plane_member_components),
         )
 
-    def role(self, component: AllComponents) -> SourceImageSetComponentRole:
+    def role(self, component: type[Axis]) -> SourceImageSetComponentRole:
         """Return whether a component identifies the image set or a plane in it."""
         if component in self.plane_member_components:
             return SourceImageSetComponentRole.IMAGE_PLANE_MEMBER
         return SourceImageSetComponentRole.IMAGE_SET_AXIS
 
-    def identity_components(self) -> tuple[AllComponents, ...]:
+    def identity_components(self) -> tuple[type[Axis], ...]:
         """Return generated source components that identify one image set."""
         return tuple(
             component
-            for component in AllComponents
+            for component in AxisFamily.active().axes
             if self.role(component) is SourceImageSetComponentRole.IMAGE_SET_AXIS
         )
 
@@ -422,7 +422,7 @@ class SourceImageSetIdentityPolicy:
     ) -> "SourceImageSetIdentityPolicy":
         """Return the exact image-plane membership declared by the step stack."""
 
-        plane_member_components: set[AllComponents] = set()
+        plane_member_components: set[type[Axis]] = set()
         for field in fields:
             component = source_metadata_component(field)
             if component is None:
@@ -433,7 +433,7 @@ class SourceImageSetIdentityPolicy:
             plane_member_components.add(component)
         return cls(frozenset(plane_member_components))
 
-    def is_identity_component(self, component: AllComponents) -> bool:
+    def is_identity_component(self, component: type[Axis]) -> bool:
         """Return whether a metadata component participates in image-set identity."""
         return self.role(component) is SourceImageSetComponentRole.IMAGE_SET_AXIS
 
@@ -453,7 +453,7 @@ class SourceImageSetIdentityPolicy:
         cls,
         source_bindings: SourceBindingDeclarationsMixin,
         *,
-        group_component: AllComponents | None = None,
+        group_component: type[Axis] | None = None,
     ) -> "SourceImageSetIdentityPolicy":
         """Return image-plane membership declared by source and group semantics.
 
@@ -471,7 +471,7 @@ class SourceImageSetIdentityPolicy:
         bindings = source_bindings.primary_plane_bindings
         shared_components = frozenset(
             component
-            for component in AllComponents
+            for component in AxisFamily.active().axes
             if len(bindings) > 1
             for values in (
                 tuple(binding.component_values(component) for binding in bindings),
@@ -510,8 +510,9 @@ class SourceImageSetIdentityPolicy:
         group_by = pipeline_config.processing_config.group_by
         group_component = (
             None
-            if group_by is None or group_by.value is None
-            else ComponentSet.coerce_component(group_by)
+            if group_by is None or not group_by.grouping_axes()
+            else group_by.grouping_axes()[0]
+
         )
         source_bindings = resolve_lazy_configurations_for_serialization(
             pipeline_config.source_bindings_config
@@ -542,7 +543,7 @@ class SourceImageSetIdentity:
     ) -> tuple[tuple[str, str], ...]:
         """Return ordered source image-set components from one metadata mapping."""
         return tuple(
-            (component.value, value)
+            (component.name, value)
             for component in policy.identity_components()
             if (
                 value := SourceComponentProjectionStrategy.metadata_component(
@@ -658,7 +659,7 @@ def merge_source_metadata(
         component = source_metadata_component(key)
         canonical_component_values_match = (
             component is not None
-            and key == component.value
+            and key == component.name
             and str(existing) == str(normalized_value)
         )
         if (
@@ -689,7 +690,7 @@ def overlay_source_metadata(
     overlaid = dict(metadata)
     projected_components = {
         component: value
-        for component in AllComponents
+        for component in AxisFamily.active().axes
         if (
             value := SourceComponentProjectionStrategy.metadata_component(
                 component,
@@ -767,7 +768,7 @@ def source_metadata_value(
 
 def source_component_metadata_value(
     metadata: SourceMetadataMapping,
-    component: AllComponents,
+    component: type[Axis],
 ) -> str | None:
     """Return metadata for an OpenHCS component across canonical and alias fields."""
     return SourceComponentProjectionStrategy.metadata_component(component, metadata)
@@ -775,11 +776,11 @@ def source_component_metadata_value(
 
 def source_component_metadata_items(
     metadata: SourceMetadataMapping,
-) -> tuple[tuple[AllComponents, SourceMetadataScalar], ...]:
+) -> tuple[tuple[type[Axis], SourceMetadataScalar], ...]:
     """Return component metadata through each registered nominal projection."""
     return tuple(
         (component, value)
-        for component in AllComponents
+        for component in AxisFamily.active().axes
         if (
             value := SourceComponentProjectionStrategy.metadata_component(
                 component,
@@ -792,7 +793,7 @@ def source_component_metadata_items(
 
 def source_component_metadata_raw_value(
     metadata: SourceMetadataMapping,
-    component: AllComponents,
+    component: type[Axis],
 ) -> SourceMetadataScalar:
     """Return metadata through the registered nominal component projection."""
     return SourceComponentProjectionStrategy.metadata_component(component, metadata)
@@ -835,7 +836,7 @@ def semantic_source_metadata_value(
 
 def source_component_metadata_values(
     metadata: SourceMetadataMapping,
-    component: AllComponents,
+    component: type[Axis],
 ) -> tuple[str, ...]:
     """Return all metadata values that semantically describe a component."""
     return SourceMetadataFields.component_values(metadata, component)
@@ -843,7 +844,7 @@ def source_component_metadata_values(
 
 def with_source_component_metadata(
     metadata: SourceMetadataMapping,
-    component: AllComponents,
+    component: type[Axis],
     value: SourceMetadataScalar,
 ) -> SourceMetadataMapping:
     """Return metadata with one canonical component value.
@@ -926,9 +927,8 @@ class SourceAxisMetadataScope:
 
     def multiprocessing_axis_scope(self) -> "SourceAxisMetadataScope":
         """Return the stable worker-axis partition of this runtime scope."""
-        from openhcs.constants.constants import get_multiprocessing_axis
 
-        multiprocessing_axis = ComponentSet.coerce_component(get_multiprocessing_axis())
+        multiprocessing_axis = AxisFamily.active().require(AxisFamily.active().partition_axis())
         return type(self).from_component_values(
             tuple(
                 (component, value)

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from openhcs.constants.constants import AllComponents
+from openhcs.core.axes import AxisFamily
 from openhcs.core.config import AnalysisConsolidationConfig, PlateMetadataConfig
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.orchestrator.execution_result import (
@@ -325,17 +325,19 @@ def runtime_analysis_table_output(
     """Project table identity from the typed runtime address, never its filename."""
 
     scope = materialization.record.key.scope
-    well_id = scope.value_text_for_component(AllComponents.WELL)
+    partition_axis = AxisFamily.active().partition_axis()
+    well_id = scope.value_text_for_component(partition_axis)
     if well_id is None:
         raise ValueError(
-            "Analysis consolidation requires a well coordinate in the runtime "
-            f"artifact scope for {materialization.output_plan.name!r}."
+            f"Analysis consolidation requires a {partition_axis.name} coordinate in "
+            f"the runtime artifact scope for {materialization.output_plan.name!r}."
         )
     coordinate_segments = tuple(
-        f"{component.value}-{value}"
+        f"{component.name}-{value}"
         for component, value in scope.presentation_component_values
-        if component is not AllComponents.WELL
+        if component is not partition_axis
     )
+
     analysis_type = "_".join(
         (
             *coordinate_segments,

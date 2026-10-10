@@ -11,7 +11,7 @@ import pytest
 import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants.constants import AllComponents, Microscope
+from openhcs.constants.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -84,6 +84,7 @@ from openhcs.processing.backends.cellprofiler.shape import (
     MeasureObjectSizeShapeModule,
 )
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
+from openhcs.domains.microscopy.axes import Microscopy
 
 PUBLIC_IMPORT_CPIPE = """CellProfiler Pipeline: https://cellprofiler.org
 NamesAndTypes:[module_num:1|enabled:True]
@@ -170,7 +171,7 @@ def test_compiler_derives_runtime_executor_after_generic_transport(
         ),
         component_identity=(
             ComponentSelector(
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
                 value="1",
             ),
         ),

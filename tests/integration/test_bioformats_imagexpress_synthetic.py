@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.microscopes.bioformats_adapter import (
     SourcePlaneStoreAdapter,
@@ -11,6 +10,7 @@ from openhcs.microscopes.bioformats_adapter import (
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from tests.unit.bioformats_imagexpress_fixture import IMAGE_XPRESS_PLATE_FACTORY
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.integration
@@ -23,7 +23,7 @@ def test_bioformats_detects_synthetic_imagexpress_plate(tmp_path: Path) -> None:
     assert dataset.identity.value == "Plate:0"
     assert len(dataset.candidates) == 8
     assert {
-        candidate.declared_address.value_for(AllComponents.WELL)
+        candidate.declared_address.value_for(Microscopy.Well)
         for candidate in dataset.candidates
     } == {"A01"}
 

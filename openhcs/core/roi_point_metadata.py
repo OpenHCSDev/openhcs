@@ -8,7 +8,7 @@ from typing import ClassVar, Mapping
 
 from polystore.roi import ROI
 
-from openhcs.constants.constants import AllComponents
+from openhcs.core.axes import AxisFamily, StackAxis
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_image_provenance import SourceComponentMetadata
 from openhcs.core.source_matching import source_component_metadata_items
@@ -54,7 +54,8 @@ class ROIFractionalZ:
         domain = planes.component_metadata
         if not domain or any(plane is None for plane in domain):
             raise ValueError("3D point ROI requires an exact source-plane Z domain.")
-        z_field = AllComponents.Z_INDEX.value
+        stack_axis = AxisFamily.active().one(StackAxis)
+        z_field = stack_axis.name
         if any(z_field not in plane for plane in domain):
             raise ValueError("3D point ROI source planes require z_index metadata.")
         z_values = tuple(plane[z_field] for plane in domain)
@@ -88,9 +89,9 @@ class ROIFractionalZ:
         components = tuple(
             dict(source_component_metadata_items(plane)) for plane in domain
         )
-        common_keys = set(components[0]) - {AllComponents.Z_INDEX}
+        common_keys = set(components[0]) - {stack_axis}
         if any(
-            set(plane) - {AllComponents.Z_INDEX} != common_keys
+            set(plane) - {stack_axis} != common_keys
             for plane in components
         ):
             raise ValueError("3D point ROI source planes have inconsistent components.")

@@ -13,15 +13,15 @@ FunctionStep
 
 .. code-block:: python
 
-   from openhcs.constants import VariableComponents
    from openhcs.core.config import LazyProcessingConfig, ProcessingConfig
    from openhcs.core.steps.function_step import FunctionStep
+   from openhcs.domains.microscopy.axes import Microscopy
 
    def normalize(image, *, low=1.0, high=99.0):
        return image
 
    processing = ProcessingConfig(
-       variable_components=(VariableComponents.SITE,),
+       variable_components=(Microscopy.Site,),
    )
    normalize_step = FunctionStep(
        func=(normalize, {"low": 1.0, "high": 99.0}),

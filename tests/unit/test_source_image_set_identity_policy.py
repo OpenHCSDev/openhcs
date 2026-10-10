@@ -2,7 +2,6 @@
 
 import pytest
 
-from openhcs.constants.constants import AllComponents, GroupBy
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -18,6 +17,7 @@ from openhcs.core.source_matching import (
 from openhcs.interop.cellprofiler.image_set_numbering import (
     CellProfilerImageSetNumbering,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _bindings(*, stack=(), selectors=False):
@@ -36,11 +36,11 @@ def _bindings(*, stack=(), selectors=False):
                 tuple(
                     ComponentSelector(component, value)
                     for component, value in (
-                        (AllComponents.WELL, "A01"),
-                        (AllComponents.SITE, "1"),
-                        (AllComponents.CHANNEL, channel),
-                        (AllComponents.Z_INDEX, "1"),
-                        (AllComponents.TIMEPOINT, "1"),
+                        (Microscopy.Well, "A01"),
+                        (Microscopy.Site, "1"),
+                        (Microscopy.Channel, channel),
+                        (Microscopy.ZIndex, "1"),
+                        (Microscopy.Timepoint, "1"),
                     )
                 ),
             )
@@ -54,11 +54,11 @@ def test_shared_binding_coordinates_remain_field_axes(selectors):
         _bindings(selectors=selectors)
     )
 
-    assert policy.plane_member_components == frozenset((AllComponents.CHANNEL,))
+    assert policy.plane_member_components == frozenset((Microscopy.Channel,))
 
 
 @pytest.mark.parametrize(
-    "component", (AllComponents.SITE, AllComponents.Z_INDEX, AllComponents.TIMEPOINT)
+    "component", (Microscopy.Site, Microscopy.ZIndex, Microscopy.Timepoint)
 )
 def test_explicit_stack_and_group_axes_override_shared_coordinates(component):
     for policy in (
@@ -70,24 +70,24 @@ def test_explicit_stack_and_group_axes_override_shared_coordinates(component):
         ),
     ):
         assert policy.plane_member_components == frozenset(
-            (AllComponents.CHANNEL, component)
+            (Microscopy.Channel, component)
         )
 
 
 @pytest.mark.parametrize(
     "component",
     (
-        AllComponents.WELL,
-        AllComponents.SITE,
-        AllComponents.Z_INDEX,
-        AllComponents.TIMEPOINT,
+        Microscopy.Well,
+        Microscopy.Site,
+        Microscopy.ZIndex,
+        Microscopy.Timepoint,
     ),
 )
 def test_numbering_combines_channels_but_preserves_independent_fields(component):
     policy = SourceImageSetIdentityPolicy.from_source_bindings(_bindings())
     numbering = CellProfilerImageSetNumbering(policy)
     scope = RuntimeExecutionAxisScope.from_raw(
-        "A01", component=AllComponents.CHANNEL, value="1"
+        "A01", component=Microscopy.Channel, value="1"
     )
     metadata = {
         "well": "A01",
@@ -103,7 +103,7 @@ def test_numbering_combines_channels_but_preserves_independent_fields(component)
                 source_path=f"/synthetic/field-{field_value}-plane-{channel}.tif",
                 source_component_metadata={
                     **metadata,
-                    component.value: field_value,
+                    component.name: field_value,
                     "channel": channel,
                 },
             )
@@ -122,11 +122,11 @@ def test_component_assignment_owns_identity_over_physical_selector():
             NamedSourceBinding(
                 alias=f"Plane{channel}",
                 selector=SourceSelector(
-                    components=(ComponentSelector(AllComponents.SITE, physical_site),)
+                    components=(ComponentSelector(Microscopy.Site, physical_site),)
                 ),
                 component_identity=(
-                    ComponentSelector(AllComponents.SITE, "1"),
-                    ComponentSelector(AllComponents.CHANNEL, channel),
+                    ComponentSelector(Microscopy.Site, "1"),
+                    ComponentSelector(Microscopy.Channel, channel),
                 ),
             )
             for channel, physical_site in (("1", "7"), ("2", "8"))
@@ -134,7 +134,7 @@ def test_component_assignment_owns_identity_over_physical_selector():
     )
     policy = SourceImageSetIdentityPolicy.from_source_bindings(declarations)
 
-    assert policy.plane_member_components == frozenset((AllComponents.CHANNEL,))
+    assert policy.plane_member_components == frozenset((Microscopy.Channel,))
 
 
 def test_path_identity_stays_distinct_without_semantic_field_coordinates():
@@ -155,10 +155,10 @@ def test_pipeline_config_compiles_the_same_paired_field_identity_policy():
     )
 
     config = PipelineConfig(
-        processing_config=LazyProcessingConfig(group_by=GroupBy.CHANNEL),
+        processing_config=LazyProcessingConfig(group_by=Microscopy.Channel),
         source_bindings_config=LazySourceBindingsConfig(bindings=_bindings().bindings),
     )
 
     policy = SourceImageSetIdentityPolicy.from_pipeline_config(config)
 
-    assert policy.plane_member_components == frozenset((AllComponents.CHANNEL,))
+    assert policy.plane_member_components == frozenset((Microscopy.Channel,))

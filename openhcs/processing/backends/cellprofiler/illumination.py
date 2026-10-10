@@ -14,7 +14,7 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
-from openhcs.constants.constants import MemoryType, VariableComponents
+from openhcs.constants.constants import MemoryType
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImagePayloadExecutionMode,
@@ -91,6 +91,7 @@ from openhcs.processing.backends.cellprofiler.worm_geometry import (
     _fill_cellprofiler_line_points_numba,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -389,7 +390,7 @@ class IlluminationCalculationScopeExecutionModePolicy:
         *,
         image: RuntimeCallableArgument,
         kwargs: RuntimeCallableKwargs,
-        variable_components: tuple[VariableComponents, ...],
+        variable_components: tuple[type[Axis], ...],
     ) -> ImagePayloadExecutionMode:
         del cls, image, variable_components
         scope = kwargs.get("calculation_scope", CalculationScope.EACH)

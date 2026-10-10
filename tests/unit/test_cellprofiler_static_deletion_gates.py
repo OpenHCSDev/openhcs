@@ -8,6 +8,7 @@ from fnmatch import fnmatchcase
 from functools import cache
 from pathlib import Path
 import warnings
+from openhcs.core.axes import Axis
 
 PROJECT_ROOT = Path(__file__).parents[2]
 PLAN_PATH = (
@@ -1020,7 +1021,7 @@ def test_source_component_tuple_state_is_not_mirrored() -> None:
         for statement in node.body
         if isinstance(statement, ast.AnnAssign)
         and isinstance(statement.target, ast.Name)
-        and "tuple[AllComponents" in ast.unparse(statement.annotation)
+        and "tuple[type[Axis]" in ast.unparse(statement.annotation)
     )
     assert source_component_fields
 

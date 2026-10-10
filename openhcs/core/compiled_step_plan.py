@@ -10,13 +10,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Mapping, Sequence
 
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.constants.constants import (
-    Backend,
-    GPU_MEMORY_TYPES,
-    MemoryType,
-    SequentialComponents,
-    VariableComponents,
-)
+from openhcs.constants.constants import Backend, GPU_MEMORY_TYPES, MemoryType
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -34,6 +28,7 @@ from openhcs.core.source_bindings import (
     CompiledSourceUniversePlan,
 )
 from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageSliceContext
@@ -201,12 +196,12 @@ class MaterializedOutputPlan:
 class SequentialRuntimeFilter:
     """One compile-resolved sequential component constraint."""
 
-    component: SequentialComponents
+    component: type[Axis]
     value: str
 
     @property
     def component_name(self) -> str:
-        return self.component.value
+        return self.component.name
 
 
 @dataclass(frozen=True, slots=True)
@@ -274,7 +269,7 @@ class CompiledStepPlan:
     analysis_results_dir: str | None = None
     pipeline_position: int | None = None
     input_source: Any = None
-    variable_components: Sequence[VariableComponents] | None = None
+    variable_components: Sequence[type[Axis]] | None = None
     group_by: Any = None
     sequential_processing: Any = None
     sequential_filter_plan: SequentialRuntimeFilterPlan = field(
@@ -484,7 +479,7 @@ class CompiledStepPlan:
             )
         return self
 
-    def require_variable_components(self) -> Sequence[VariableComponents]:
+    def require_variable_components(self) -> Sequence[type[Axis]]:
         variable_components = self.variable_components
         if variable_components is None:
             raise ValueError(
@@ -557,18 +552,11 @@ class CompiledStepPlan:
 
         return self.device_assignment.scope_for(declaration)
 
-    @property
-    def variable_component_values(self) -> list[str]:
-        return [component.value for component in self.require_variable_components()]
-
-    @property
-    def group_by_value(self) -> str | None:
-        return self.group_by.value if self.group_by else None
 
     @property
     def execution_group_value(self) -> str | None:
         component = self.execution_group_scope.component
-        return None if component is None else component.value
+        return None if component is None else component.name
 
     @property
     def artifact_output_plate_root(self) -> str:

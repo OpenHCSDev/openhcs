@@ -46,6 +46,7 @@ from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceSourceMetadataEntries,
 )
 from polystore.virtual_workspace import SourcePixelRef
+from openhcs.core.axes import AxisFamily
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -552,7 +553,6 @@ class VirtualWorkspaceSourceProjection:
         axis_ids: Sequence[str],
     ) -> Mapping[str, "VirtualWorkspaceSourceProjection"]:
         """Admit all requested axis views in one traversal of this source epoch."""
-        from openhcs.constants import MULTIPROCESSING_AXIS
 
         source_refs = {axis_id: {} for axis_id in axis_ids}
         source_metadata = {axis_id: {} for axis_id in source_refs}
@@ -565,7 +565,9 @@ class VirtualWorkspaceSourceProjection:
             )
             values = (
                 () if metadata is None
-                else source_component_metadata_values(metadata, MULTIPROCESSING_AXIS)
+                else source_component_metadata_values(
+                    metadata, AxisFamily.active().partition_axis()
+                )
             )
             selected_axes = (
                 tuple(dict.fromkeys(value for value in values if value in source_refs))
@@ -616,9 +618,10 @@ class VirtualWorkspaceSourceProjection:
         )
         if metadata is None:
             return True
-        from openhcs.constants import MULTIPROCESSING_AXIS
 
-        values = source_component_metadata_values(metadata, MULTIPROCESSING_AXIS)
+        values = source_component_metadata_values(
+            metadata, AxisFamily.active().partition_axis()
+        )
         if not values:
             return True
         return any(source_metadata_values_equal(value, axis_id) for value in values)

@@ -9,25 +9,28 @@ from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, ClassVar, Mapping, Sequence, TypeAlias
 
-from metaclass_registry import AutoRegisterMeta
 from polystore.zarr_batch import ZarrBatchAxis, ZarrBatchAxisRole, ZarrBatchLayout
 
-from openhcs.constants.constants import (
-    LOADABLE_IMAGE_EXTENSIONS,
-    AllComponents,
-    Backend,
-)
+from openhcs.constants.constants import LOADABLE_IMAGE_EXTENSIONS, Backend
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.image_file_serialization import (
     ImageFileFormat,
     prepare_disk_image_payloads,
 )
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
 )
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
+from openhcs.core.axes import (
+    Axis,
+    AxisFamily,
+    AxisRoleKeyedStrategyMixin,
+    ColourAxis,
+    StackAxis,
+    TileAxis,
+    TimeAxis,
+)
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -90,9 +93,9 @@ class ZarrBatchItemIdentity:
                 (
                     (
                         component,
-                        output_identity.component_values.get(component.value),
+                        output_identity.component_values.get(component.name),
                     )
-                    for component in AllComponents
+                    for component in AxisFamily.active().axes
                 ),
                 extension=output_identity.extension or ".tif",
             ),
@@ -100,14 +103,9 @@ class ZarrBatchItemIdentity:
         )
 
 
-class ZarrComponentAxisProjection(
-    EnumKeyedStrategyMixin[AllComponents],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Project one OpenHCS component into its declaration-owned NGFF axis."""
+class ZarrComponentAxisProjection(AxisRoleKeyedStrategyMixin, ABC):
+    """Project the axis carrying one role into its NGFF axis."""
 
-    strategy_key: ClassVar[AllComponents | None] = None
     axis_order: ClassVar[int]
     axis_name: ClassVar[str]
     axis_type: ClassVar[str]
@@ -118,7 +116,7 @@ class ZarrComponentAxisProjection(
         """Return declared storage axes in NGFF-valid order."""
 
         return tuple(
-            sorted(cls.registered_strategy_types(), key=lambda item: item.axis_order)
+            sorted(cls.role_strategy_types(), key=lambda item: item.axis_order)
         )
 
     @classmethod
@@ -163,11 +161,17 @@ class ZarrComponentAxisProjection(
         cls,
         item_identities: Sequence[ZarrBatchItemIdentity],
     ) -> tuple[str, ...] | None:
-        """Project this axis when it is retained by every output identity."""
+        """Project this role's axis when it is retained by every output identity."""
 
-        component = cls.strategy_key
-        if component is None:
-            raise RuntimeError("Zarr axis projection is missing its component owner")
+        role_axes = AxisFamily.active().with_role(cls.implements_role)
+        if not role_axes:
+            return None
+        if len(role_axes) > 1:
+            raise ValueError(
+                f"NGFF axis {cls.axis_name!r} admits one axis with role "
+                f"{cls.implements_role.__name__}; the family declares {role_axes}."
+            )
+        (component,) = role_axes
         presence = tuple(
             identity.component_values.value_for(component) is not None
             for identity in item_identities
@@ -180,32 +184,31 @@ class ZarrComponentAxisProjection(
             )
             raise ValueError(
                 "Parsed output identities disagree on component "
-                f"{component.value!r}; missing from item indices {missing_indices!r}"
+                f"{component.name!r}; missing from item indices {missing_indices!r}"
             )
-        return tuple(cls.item_value(identity) for identity in item_identities)
+        return tuple(cls.item_value(identity, component) for identity in item_identities)
 
     @classmethod
-    def item_value(cls, identity: ZarrBatchItemIdentity) -> str:
-        component = cls.strategy_key
-        if component is None:
-            raise RuntimeError("Zarr axis projection is missing its component owner")
+    def item_value(
+        cls, identity: ZarrBatchItemIdentity, component: type[Axis]
+    ) -> str:
         value = identity.component_values.value_for(component)
         if value is None:
             raise ValueError(
-                f"Parsed output identity is missing component {component.value!r}"
+                f"Parsed output identity is missing component {component.name!r}"
             )
         return str(value)
 
 
 class TimepointZarrAxisProjection(ZarrComponentAxisProjection):
-    strategy_key = AllComponents.TIMEPOINT
+    implements_role = TimeAxis
     axis_order = 0
     axis_name = "t"
     axis_type = "time"
 
 
 class SiteZarrAxisProjection(ZarrComponentAxisProjection):
-    strategy_key = AllComponents.SITE
+    implements_role = TileAxis
     axis_order = 1
     axis_name = "field"
     axis_type = "field"
@@ -213,20 +216,22 @@ class SiteZarrAxisProjection(ZarrComponentAxisProjection):
 
 
 class ChannelZarrAxisProjection(ZarrComponentAxisProjection):
-    strategy_key = AllComponents.CHANNEL
+    implements_role = ColourAxis
     axis_order = 2
     axis_name = "c"
     axis_type = "channel"
 
     @classmethod
-    def item_value(cls, identity: ZarrBatchItemIdentity) -> str:
-        channel = super().item_value(identity)
+    def item_value(
+        cls, identity: ZarrBatchItemIdentity, component: type[Axis]
+    ) -> str:
+        channel = super().item_value(identity, component)
         qualifier = identity.filename_qualifier
         return channel if qualifier is None else f"{channel}:{qualifier}"
 
 
 class ZIndexZarrAxisProjection(ZarrComponentAxisProjection):
-    strategy_key = AllComponents.Z_INDEX
+    implements_role = StackAxis
     axis_order = 3
     axis_name = "z"
     axis_type = "space"
@@ -331,7 +336,6 @@ def get_all_image_paths(
     microscope_handler: MicroscopeHandler,
 ) -> list[str]:
     """Get all image file paths for one multiprocessing axis value."""
-    from openhcs.constants import MULTIPROCESSING_AXIS
 
     all_image_files = filemanager.list_image_files(
         str(input_dir),
@@ -345,7 +349,10 @@ def get_all_image_paths(
     for file_path in all_image_files:
         filename = os.path.basename(str(file_path))
         metadata = parser.parse_filename(filename)
-        if metadata and metadata.component_matches(MULTIPROCESSING_AXIS, axis_id):
+        if metadata and metadata.component_matches(
+            AxisFamily.active().partition_axis(), axis_id
+        ):
+
             axis_files.append(str(file_path))
 
     full_file_paths = sorted(

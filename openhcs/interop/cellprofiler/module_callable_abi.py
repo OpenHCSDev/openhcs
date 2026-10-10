@@ -15,7 +15,6 @@ from typing import (
     get_type_hints,
 )
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -29,6 +28,7 @@ from openhcs.core.pipeline.function_contracts import (
     annotation_produces_runtime_type,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelValue
+from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
@@ -115,7 +115,7 @@ class CellProfilerModuleCallableABI:
         *,
         image: "RuntimeCallableArgument",
         kwargs: "RuntimeCallableKwargs",
-        variable_components: tuple[VariableComponents, ...],
+        variable_components: tuple[type[Axis], ...],
     ) -> "ImagePayloadExecutionMode":
         """Return the default runtime image execution mode."""
 

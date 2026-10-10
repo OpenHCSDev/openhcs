@@ -86,7 +86,13 @@ from pyqt_reactive.widgets.shared.clickable_help_components import (
     InlineDataclassGroupBox,
 )
 from pyqt_reactive.widgets.no_scroll_spinbox import NoScrollComboBox, NoneAwareCheckBox
-from python_introspect import Enableable, SignatureAnalyzer, is_enableable
+from python_introspect import (
+    AnnotationChoices,
+    Enableable,
+    SignatureAnalyzer,
+    declared_annotation_choices,
+    is_enableable,
+)
 
 from openhcs.core.field_label import FieldLabel
 from openhcs.core.source_bindings import (
@@ -343,17 +349,26 @@ class BooleanCellEditor(CellEditor):
 class ChoiceCellEditor(CellEditor):
     """Combo box whose choices are the field type's members.
 
-    An ``Enum`` type supplies its members; ``type[F]`` for an ``AutoRegisterMeta``
-    family supplies the family registry, labelled by each member's registry key.
+    Declared ``AnnotationChoices`` supply their choices and labels; an ``Enum``
+    type supplies its members; ``type[F]`` for an ``AutoRegisterMeta`` family
+    supplies the family registry, labelled by each member's registry key.
     """
 
     COMBO_LOGICAL_TEXT_ROLE = Qt.ItemDataRole.UserRole + 1
 
     @classmethod
     def accepts(cls, annotation: object) -> bool:
-        return cls.family(annotation) is not None or (
-            isinstance(annotation, type) and issubclass(annotation, Enum)
+        return (
+            cls.declared_choices(annotation) is not None
+            or cls.family(annotation) is not None
+            or (isinstance(annotation, type) and issubclass(annotation, Enum))
         )
+
+    @staticmethod
+    def declared_choices(annotation: object) -> AnnotationChoices | None:
+        if get_origin(annotation) is not Annotated:
+            return None
+        return declared_annotation_choices(annotation)
 
     @staticmethod
     def family(annotation: object) -> type | None:
@@ -364,6 +379,9 @@ class ChoiceCellEditor(CellEditor):
 
     @property
     def choices(self) -> tuple[object, ...]:
+        declared = self.declared_choices(self.annotation)
+        if declared is not None:
+            return declared.choices()
         family = self.family(self.annotation)
         if family is not None:
             return tuple(family.__registry__.values())
@@ -379,6 +397,9 @@ class ChoiceCellEditor(CellEditor):
         return raw
 
     def display(self, value: object) -> str:
+        declared = self.declared_choices(self.annotation)
+        if declared is not None:
+            return declared.label(value)
         family = self.family(self.annotation)
         if family is not None:
             return str(getattr(value, family.__registry_key__))
@@ -556,7 +577,12 @@ class DataclassFieldColumns:
             if isinstance(annotation, type) and is_dataclass(annotation):
                 cls._collect(annotation, path, columns)
                 continue
-            editor = CellEditor.for_annotation(annotation)
+            editor = CellEditor.for_annotation(
+                hints[row_field.name]
+                if any(isinstance(item, AnnotationChoices) for item in metadata)
+                else annotation
+            )
+
             if editor is None:
                 continue
             columns.append(

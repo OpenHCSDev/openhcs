@@ -341,7 +341,7 @@ class ValidateViewerCommandSpec(SingleToolCommandSpec):
         parser.add_argument(
             "--require-components",
             action="store_true",
-            help="Require every OpenHCS component label declared by AllComponents.",
+            help="Require every OpenHCS component label declared by the active axis family.",
         )
         parser.add_argument(
             "--allow-zero-payloads",

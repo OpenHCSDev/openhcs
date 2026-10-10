@@ -23,7 +23,6 @@ from polystore.streaming.viewer_transport import (
 )
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
-from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
@@ -167,11 +166,13 @@ from openhcs.processing.materialization.options import (
     ImageFileOptions,
     MaterializedFilenameIdentity,
 )
+from openhcs.core.axes import AxisFamily, Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class StreamingConfigStub(ViewerDisplayConfigABC):
     backend = SimpleNamespace(value="napari_stream")
-    COMPONENT_ORDER = AllComponents.ordered_names()
+    COMPONENT_ORDER = AxisFamily.active().names()
     host = "127.0.0.1"
     transport_mode = "tcp"
     colormap = SimpleNamespace(value="gray")
@@ -310,11 +311,11 @@ class FilenameParserStub:
         self,
         components,
     ):
-        well = components.value_for(AllComponents.WELL)
-        site = components.value_for(AllComponents.SITE)
-        channel = components.value_for(AllComponents.CHANNEL)
-        z_index = components.value_for(AllComponents.Z_INDEX)
-        timepoint = components.value_for(AllComponents.TIMEPOINT)
+        well = components.value_for(Microscopy.Well)
+        site = components.value_for(Microscopy.Site)
+        channel = components.value_for(Microscopy.Channel)
+        z_index = components.value_for(Microscopy.ZIndex)
+        timepoint = components.value_for(Microscopy.Timepoint)
         extension = components.extension
         if str(site).startswith("POS"):
             return f"{well}_{site}_{channel}{extension}"
@@ -404,11 +405,7 @@ def _plan(
         execution_group_value = group_by_value
     execution_group_scope = ComponentGroupScope.ungrouped()
     if execution_group_value is not None:
-        execution_group_component = AllComponents.from_value(execution_group_value)
-        if execution_group_component is None:
-            raise ValueError(
-                f"Unknown execution group component {execution_group_value!r}."
-            )
+        execution_group_component = AxisFamily.active().named(execution_group_value)
         execution_group_scope = ComponentGroupScope.dynamic(execution_group_component)
     return CompiledStepPlan(
         step_index=6,
@@ -424,7 +421,10 @@ def _plan(
         read_backend="memory",
         write_backend="memory",
         group_by=(
-            GroupBy(group_by_value) if group_by_value is not None else GroupBy.NONE
+            AxisFamily.active().named(group_by_value)
+            if group_by_value is not None
+            else Ungrouped
+
         ),
         execution_group_scope=execution_group_scope,
         variable_components=variable_components,
@@ -889,8 +889,8 @@ def test_materialize_artifact_outputs_attaches_image_schema_provenance(monkeypat
     PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(
             output_plan,
             variable_components=(
-                VariableComponents.Z_INDEX,
-                VariableComponents.CHANNEL,
+                Microscopy.ZIndex,
+                Microscopy.Channel,
             ),
         ), context)
 
@@ -922,7 +922,7 @@ def test_materialize_artifact_outputs_uses_output_plan_axes_for_source_named_run
         path="/memory/SavedImages.pkl",
         artifact_type=ImageArtifactType,
         materialization=materialization,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
     payload = ImagePayloadMetadata(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
@@ -962,7 +962,7 @@ def test_materialize_artifact_outputs_uses_output_plan_axes_for_source_named_run
 
     plan = _plan(
         output_plan,
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
         persistent_enabled=True,
@@ -1035,7 +1035,7 @@ def test_materialize_artifact_outputs_uses_runtime_record_identity_not_final_pat
         artifact_type=MeasurementsArtifactType,
         materialization=csv_only(),
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"1": "/analysis/A01_measurements_step7.csv"},
     )
     runtime_output_plan = output_plan.for_group("1")
@@ -1136,7 +1136,7 @@ def test_runtime_artifact_plan_materializes_3d_point_measurements(source_z_origi
                 x_feature=features.CENTER_X,
             )
         ),
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
     source_path = "/input/A01/image.ome.tif"
     table = MeasurementTable(
@@ -1174,7 +1174,7 @@ def test_runtime_artifact_plan_materializes_3d_point_measurements(source_z_origi
         path=output_plan.path,
         backend="memory",
     )
-    plan = _plan(output_plan, variable_components=(VariableComponents.Z_INDEX,))
+    plan = _plan(output_plan, variable_components=(Microscopy.ZIndex,))
 
     [materialization] = runtime_artifact_materializations(plan, context)
     [result] = materialization.outputs(plan, context)
@@ -1197,7 +1197,7 @@ def test_runtime_artifact_plan_materializes_3d_point_measurements(source_z_origi
     config = streaming_config_stub()
     plan = _plan(
         output_plan,
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         streaming_configs={"napari_stream": config},
     )
     [saved] = StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(
@@ -1219,8 +1219,8 @@ def test_multi_plane_measurement_materialization_uses_aggregate_artifact_name():
         artifact_type=MeasurementsArtifactType,
         materialization=csv_only(),
         variable_components=(
-            AllComponents.SITE,
-            AllComponents.CHANNEL,
+            Microscopy.Site,
+            Microscopy.Channel,
         ),
     )
     source_metadata = (
@@ -1272,8 +1272,8 @@ def test_multi_plane_measurement_materialization_uses_aggregate_artifact_name():
     plan = _plan(
         output_plan,
         variable_components=(
-            VariableComponents.SITE,
-            VariableComponents.CHANNEL,
+            Microscopy.Site,
+            Microscopy.Channel,
         ),
     )
 
@@ -1313,8 +1313,8 @@ def test_multi_plane_special_output_uses_aggregate_artifact_name(parser_type):
                 component=None,
                 value=None,
                 fixed_component_values=(
-                    (AllComponents.Z_INDEX, "1"),
-                    (AllComponents.TIMEPOINT, "1"),
+                    (Microscopy.ZIndex, "1"),
+                    (Microscopy.Timepoint, "1"),
                 ),
             ),
         ),
@@ -1324,8 +1324,8 @@ def test_multi_plane_special_output_uses_aggregate_artifact_name(parser_type):
     plan = _plan(
         output_plan,
         variable_components=(
-            VariableComponents.SITE,
-            VariableComponents.CHANNEL,
+            Microscopy.Site,
+            Microscopy.Channel,
         ),
     )
 
@@ -1361,10 +1361,10 @@ def test_scalar_special_output_preserves_complete_source_identity(parser_type):
                 component=None,
                 value=None,
                 fixed_component_values=(
-                    (AllComponents.SITE, "1"),
-                    (AllComponents.CHANNEL, "2"),
-                    (AllComponents.Z_INDEX, "1"),
-                    (AllComponents.TIMEPOINT, "1"),
+                    (Microscopy.Site, "1"),
+                    (Microscopy.Channel, "2"),
+                    (Microscopy.ZIndex, "1"),
+                    (Microscopy.Timepoint, "1"),
                 ),
             ),
         ),
@@ -1405,8 +1405,8 @@ def test_incomplete_scalar_special_output_keeps_strict_filename_failure(parser_t
                 component=None,
                 value=None,
                 fixed_component_values=(
-                    (AllComponents.Z_INDEX, "1"),
-                    (AllComponents.TIMEPOINT, "1"),
+                    (Microscopy.ZIndex, "1"),
+                    (Microscopy.Timepoint, "1"),
                 ),
             ),
         ),
@@ -1428,7 +1428,7 @@ def test_grouped_special_output_retains_group_coordinate_in_aggregate_name(parse
         path="/memory/cell_counts.pkl",
         artifact_type=SpecialArtifactType,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         materialization=csv_only(),
     )
     context = _context(FileManagerStub())
@@ -1445,11 +1445,11 @@ def test_grouped_special_output_retains_group_coordinate_in_aggregate_name(parse
             ),
             execution_scope=RuntimeExecutionAxisScope.from_raw(
                 "A01",
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
                 value="2",
                 fixed_component_values=(
-                    (AllComponents.Z_INDEX, "1"),
-                    (AllComponents.TIMEPOINT, "1"),
+                    (Microscopy.ZIndex, "1"),
+                    (Microscopy.Timepoint, "1"),
                 ),
             ),
         ),
@@ -1458,7 +1458,7 @@ def test_grouped_special_output_retains_group_coordinate_in_aggregate_name(parse
     )
     plan = _plan(
         output_plan,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
 
     [materialization] = runtime_artifact_materializations(plan, context)
@@ -1480,8 +1480,8 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
         path="/memory/segmentation_masks.pkl",
         artifact_type=ObjectLabelsArtifactType,
         variable_components=(
-            VariableComponents.SITE,
-            VariableComponents.CHANNEL,
+            Microscopy.Site,
+            Microscopy.Channel,
         ),
         materialization=roi_zip(),
     )
@@ -1532,8 +1532,8 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
                 component=None,
                 value=None,
                 fixed_component_values=(
-                    (AllComponents.Z_INDEX, "1"),
-                    (AllComponents.TIMEPOINT, "1"),
+                    (Microscopy.ZIndex, "1"),
+                    (Microscopy.Timepoint, "1"),
                 ),
             ),
         ),
@@ -1543,8 +1543,8 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
     plan = _plan(
         output_plan,
         variable_components=(
-            VariableComponents.SITE,
-            VariableComponents.CHANNEL,
+            Microscopy.Site,
+            Microscopy.Channel,
         ),
     )
 
@@ -1592,7 +1592,7 @@ def test_multi_plane_measurement_aggregate_names_retain_runtime_group_coordinate
         path="/memory/neurite_outgrowth_summary.pkl",
         artifact_type=MeasurementsArtifactType,
         materialization=csv_only(),
-        variable_components=(AllComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     context = _context(FileManagerStub())
     for site in ("1", "2"):
@@ -1629,11 +1629,11 @@ def test_multi_plane_measurement_aggregate_names_retain_runtime_group_coordinate
                 table,
                 execution_scope=RuntimeExecutionAxisScope.from_raw(
                     "A01",
-                    component=AllComponents.SITE,
+                    component=Microscopy.Site,
                     value=site,
                     fixed_component_values=(
-                        (AllComponents.Z_INDEX, "1"),
-                        (AllComponents.TIMEPOINT, "1"),
+                        (Microscopy.ZIndex, "1"),
+                        (Microscopy.Timepoint, "1"),
                     ),
                 ),
             ),
@@ -1645,7 +1645,7 @@ def test_multi_plane_measurement_aggregate_names_retain_runtime_group_coordinate
         _plan(
             output_plan,
             group_by_value="site",
-            variable_components=(VariableComponents.CHANNEL,),
+            variable_components=(Microscopy.Channel,),
         ),
         context,
     )
@@ -1668,13 +1668,13 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
         path="/memory/cell_counts.pkl",
         artifact_type=MeasurementsArtifactType,
         materialization=csv_only(),
-        variable_components=(AllComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     context = _context(FileManagerStub())
     plan = _plan(
         output_plan,
         group_by_value="site",
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
         persistent_enabled=True,
@@ -1714,11 +1714,11 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
                 ),
                 execution_scope=RuntimeExecutionAxisScope.from_raw(
                     "A01",
-                    component=AllComponents.SITE,
+                    component=Microscopy.Site,
                     value=site,
                     fixed_component_values=(
-                        (AllComponents.Z_INDEX, "1"),
-                        (AllComponents.TIMEPOINT, "1"),
+                        (Microscopy.ZIndex, "1"),
+                        (Microscopy.Timepoint, "1"),
                     ),
                 ),
             ),
@@ -1793,13 +1793,13 @@ def test_scalar_acquired_tables_keep_fixed_site_addresses_on_shared_runtime_path
             AutomaticMeasurementsArtifactOutputMaterializationStrategy().materialization()
             if automatic else csv_only()
         ),
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
     context = _context(FileManagerStub())
     plan = _plan(
         output_plan,
         group_by_value="channel",
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
     plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
         persistent_enabled=True,
@@ -1828,10 +1828,10 @@ def test_scalar_acquired_tables_keep_fixed_site_addresses_on_shared_runtime_path
                     subject=MeasurementSubject(MeasurementScope.ARTIFACT),
                 ),
                 execution_scope=RuntimeExecutionAxisScope.from_raw(
-                    "A01", component=AllComponents.CHANNEL, value="1",
+                    "A01", component=Microscopy.Channel, value="1",
                     fixed_component_values=(
-                        (AllComponents.SITE, site),
-                        (AllComponents.TIMEPOINT, "1"),
+                        (Microscopy.Site, site),
+                        (Microscopy.Timepoint, "1"),
                     ),
                 ),
             ),
@@ -1850,7 +1850,7 @@ def test_scalar_acquired_tables_keep_fixed_site_addresses_on_shared_runtime_path
     for item in saved:
         record = item.materialization.record
         observation = item.observation(plan, context)
-        site = record.key.scope.value_text_for_component(AllComponents.SITE)
+        site = record.key.scope.value_text_for_component(Microscopy.Site)
         paths = observation.paths_for(record)
         expected_stem = (
             f"A01_site-{site}_channel-1_timepoint-1"
@@ -2068,7 +2068,7 @@ def test_materialize_artifact_outputs_unions_measurement_subject_records(
         artifact_type=MeasurementsArtifactType,
         materialization=csv_only(),
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"1": "/memory/A01_w1_measurements_step7.pkl"},
     )
     runtime_output_plan = output_plan.for_group("1")
@@ -2134,7 +2134,7 @@ def test_fixed_component_scopes_materialize_distinct_measurement_paths() -> None
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"2": "/memory/measurements.pkl"},
         materialization=csv_only(),
     )
@@ -2147,9 +2147,9 @@ def test_fixed_component_scopes_materialize_distinct_measurement_paths() -> None
     ):
         execution_scope = RuntimeExecutionAxisScope.from_raw(
             "A01",
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
             value="2",
-            fixed_component_values=((AllComponents.Z_INDEX, z_index),),
+            fixed_component_values=((Microscopy.ZIndex, z_index),),
         )
         for subject_name in subjects:
             table = MeasurementTable(
@@ -2189,7 +2189,7 @@ def test_fixed_component_scopes_materialize_distinct_measurement_paths() -> None
     plan = _plan(
         output_plan,
         group_by_value="channel",
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
     records = actual_materialization_records(
         store=context.runtime_value_store,
@@ -2201,7 +2201,7 @@ def test_fixed_component_scopes_materialize_distinct_measurement_paths() -> None
     assert len(records) == 2
     assert tuple(record.data.rows.row_count() for record in records) == (2, 1)
     assert tuple(
-        record.key.scope.value_text_for_component(AllComponents.Z_INDEX)
+        record.key.scope.value_text_for_component(Microscopy.ZIndex)
         for record in records
     ) == ("1", "2")
     assert tuple(str(item.base_path) for item in materializations) == (
@@ -2216,7 +2216,7 @@ def test_artifact_name_materialization_ignores_incomplete_source_identity() -> N
         path="/memory/SavedImage.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("3",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"3": "/memory/SavedImage.pkl"},
         materialization=MaterializationSpec(
             ImageFileOptions(
@@ -2240,9 +2240,9 @@ def test_artifact_name_materialization_ignores_incomplete_source_identity() -> N
             ).payload_with(np.ones((3, 4), dtype=np.uint8), None),
             execution_scope=RuntimeExecutionAxisScope.from_raw(
                 "A01",
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
                 value="3",
-                fixed_component_values=((AllComponents.Z_INDEX, "1"),),
+                fixed_component_values=((Microscopy.ZIndex, "1"),),
             ),
         ),
         path=group_plan.path,
@@ -2265,7 +2265,7 @@ def test_fixed_scope_preserves_distinct_source_group_identity() -> None:
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"2": "/memory/measurements.pkl"},
         materialization=csv_only(),
     )
@@ -2295,9 +2295,9 @@ def test_fixed_scope_preserves_distinct_source_group_identity() -> None:
             ),
             execution_scope=RuntimeExecutionAxisScope.from_raw(
                 "A01",
-                component=AllComponents.CHANNEL,
+                component=Microscopy.Channel,
                 value="2",
-                fixed_component_values=((AllComponents.Z_INDEX, "1"),),
+                fixed_component_values=((Microscopy.ZIndex, "1"),),
             ),
         ),
         path=group_plan.path,
@@ -2320,7 +2320,7 @@ def test_fixed_component_scope_rejects_unresolved_filename_identity() -> None:
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"2": "/memory/measurements.pkl"},
         materialization=csv_only(),
     )
@@ -2328,9 +2328,9 @@ def test_fixed_component_scope_rejects_unresolved_filename_identity() -> None:
     context = _context(FileManagerStub())
     execution_scope = RuntimeExecutionAxisScope.from_raw(
         "A01",
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
         value="2",
-        fixed_component_values=((AllComponents.Z_INDEX, "1"),),
+        fixed_component_values=((Microscopy.ZIndex, "1"),),
     )
     context.runtime_value_store.record(
         RuntimeValue.normalize_for_execution_scope(
@@ -2429,7 +2429,7 @@ def test_materialize_artifact_outputs_uses_actual_group_records(monkeypatch):
         path="/memory/A01_measurements_step7.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={
             "1": "/memory/A01_w1_measurements_step7.pkl",
             "2": "/memory/A01_w2_measurements_step7.pkl",
@@ -2500,11 +2500,11 @@ def _duplicate_scalar_image_context(
         group_plan = output_plan.for_group(channel)
         execution_scope = RuntimeExecutionAxisScope.from_raw(
             "A01",
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
             value=channel,
             fixed_component_values=(
-                (AllComponents.Z_INDEX, "1"),
-                (AllComponents.TIMEPOINT, "1"),
+                (Microscopy.ZIndex, "1"),
+                (Microscopy.Timepoint, "1"),
             ),
         )
         context.runtime_value_store.record(
@@ -2549,7 +2549,7 @@ def test_overlay_and_save_image_materialization_use_source_address_owner(
         path=f"/memory/A01_{artifact_name}_step7.pkl",
         artifact_type=ImageArtifactType,
         group_keys=(None,),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={None: f"/memory/A01_{artifact_name}_step7.pkl"},
         materialization=TerminalMaterializationSpec(
             ImageFileOptions(filename_suffix=".tif")
@@ -2576,14 +2576,14 @@ def test_overlay_and_save_image_materialization_use_source_address_owner(
 
     assert len(records) == 1
     assert (
-        records[0].key.scope.value_text_for_component(AllComponents.CHANNEL)
+        records[0].key.scope.value_text_for_component(Microscopy.Channel)
         == source_channel
     )
     assert len(materializations) == 1
     assert len(observed_materializations) == 1
     assert (
         materializations[0].record.key.scope.value_text_for_component(
-            AllComponents.CHANNEL
+            Microscopy.Channel
         )
         == source_channel
     )
@@ -2595,7 +2595,7 @@ def test_scalar_image_materialization_rejects_conflicting_duplicate_payloads():
         path="/memory/A01_Overlay_step7.pkl",
         artifact_type=ImageArtifactType,
         group_keys=(None,),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={None: "/memory/A01_Overlay_step7.pkl"},
         materialization=TerminalMaterializationSpec(
             ImageFileOptions(filename_suffix=".tif")
@@ -2623,7 +2623,7 @@ def test_actual_materialization_records_uses_dynamic_runtime_groups():
         path="/memory/A01_segmentation_masks_step7.pkl",
         artifact_type=ObjectLabelsArtifactType,
         group_keys=(None,),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={None: "/memory/A01_segmentation_masks_step7.pkl"},
     )
     group_one = output_plan.for_group("1")
@@ -2667,7 +2667,7 @@ def test_materialize_artifact_outputs_uses_group_measurement_artifact_identity(
         path="/memory/A01_measurements_step7.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
         paths_by_group={
             "1": "/memory/A01_s001_measurements_step7.pkl",
             "2": "/memory/A01_s002_measurements_step7.pkl",
@@ -2757,7 +2757,7 @@ def test_materialize_artifact_outputs_uses_grouped_scope_not_record_location(
         path="/memory/A01_measurements_step7.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={
             "2": "/memory/A01_w2_measurements_step7.pkl",
         },
@@ -2808,7 +2808,7 @@ def test_materialize_artifact_outputs_uses_null_component_group_identity_for_str
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={
             "2": "/memory/channel2_Nuclei.pkl",
         },
@@ -2951,7 +2951,7 @@ def test_projected_artifact_uses_filename_identity_without_restoring_collapsed_s
         path="/memory/neurons.pkl",
         artifact_type=ObjectLabelsArtifactType,
         materialization=roi_zip(),
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 4, 4), dtype=np.int32)),
@@ -3004,7 +3004,7 @@ def test_projected_artifact_uses_filename_identity_without_restoring_collapsed_s
     )
     plan = _plan(
         output_plan,
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
 
     [materialization] = runtime_artifact_materializations(plan, context)
@@ -3112,7 +3112,7 @@ def test_tile_positions_runtime_materializes_native_json_without_changing_payloa
         path=str(tmp_path / "runtime" / "positions.pkl"),
         artifact_type=spec.artifact_type,
         materialization=spec.materialization,
-        group_component=AllComponents.CHANNEL if group_key is not None else None,
+        group_component=Microscopy.Channel if group_key is not None else None,
         group_keys=(group_key,),
     )
     ensure_storage_registry()
@@ -3472,7 +3472,7 @@ def test_materialize_artifact_outputs_uses_runtime_plane_group_identity(
         artifact_type=ImageArtifactType,
         materialization=csv_only(),
         group_keys=("11",),
-        group_component=AllComponents.TIMEPOINT,
+        group_component=Microscopy.Timepoint,
         paths_by_group={
             "11": "/memory/A01_t11_AdjacentImage_step7.pkl",
         },
@@ -3509,7 +3509,7 @@ def test_materialize_artifact_outputs_uses_runtime_plane_group_identity(
     PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(
             output_plan,
             group_by_value="timepoint",
-            variable_components=(VariableComponents.TIMEPOINT,),
+            variable_components=(Microscopy.Timepoint,),
         ), context)
 
     assert materialized == [
@@ -3663,7 +3663,7 @@ def test_materialize_artifact_outputs_uses_variable_components_for_streaming_ide
     StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config},
-            variable_components=(VariableComponents.Z_INDEX,),
+            variable_components=(Microscopy.ZIndex,),
         ), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
@@ -3699,7 +3699,7 @@ def test_materialize_artifact_outputs_streams_singleton_roi_plane_from_output_pl
         name="Nuclei",
         path="/memory/Nuclei.pkl",
         artifact_type=ObjectLabelsArtifactType,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         materialization=roi_zip(),
     )
     labels_array = np.zeros((1, 8, 8), dtype=np.int32)
@@ -3727,7 +3727,7 @@ def test_materialize_artifact_outputs_streams_singleton_roi_plane_from_output_pl
     StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config_stub()},
-            variable_components=(VariableComponents.Z_INDEX,),
+            variable_components=(Microscopy.ZIndex,),
         ), context)
 
     roi_saves = [item for item in filemanager.saved if item[1].endswith(".roi.zip")]
@@ -3821,7 +3821,7 @@ def test_materialize_artifact_outputs_streams_source_binding_roi_plane_metadata(
     StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config},
-            variable_components=(VariableComponents.CHANNEL,),
+            variable_components=(Microscopy.Channel,),
         ), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
@@ -3922,7 +3922,7 @@ def test_materialize_rgb_artifact_streams_filename_channel_identity(
     StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config},
-            variable_components=(VariableComponents.CHANNEL,),
+            variable_components=(Microscopy.Channel,),
         ), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
@@ -3996,7 +3996,7 @@ def test_materialize_image_uses_declared_filename_source_identity(monkeypatch):
 
     _observe_materialization(monkeypatch, fake_materialize)
 
-    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan, variable_components=(VariableComponents.CHANNEL,)), context)
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan, variable_components=(Microscopy.Channel,)), context)
 
     assert materialized == ["/images/A01_s001_w1_z001_t001.TIF"]
 
@@ -4070,7 +4070,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
                 filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
             )
         ),
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(
             MaterializationSourceIdentityRelation(filename_source.ref()),
             GroupLineageSourceRelation(selected_image.ref()),
@@ -4147,7 +4147,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
     )
     plan = _plan(
         output_plan,
-        variable_components=(VariableComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
     )
     plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
         persistent_enabled=True,
@@ -4237,7 +4237,7 @@ def test_materialize_rgb_artifact_keeps_scalar_filename_identity_for_mixed_prove
     StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config},
-            variable_components=(VariableComponents.SITE,),
+            variable_components=(Microscopy.Site,),
         ), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]

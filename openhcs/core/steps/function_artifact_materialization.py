@@ -14,7 +14,7 @@ from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer
 
-from openhcs.constants.constants import AllComponents, Backend, VariableComponents
+from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
 )
@@ -67,6 +67,7 @@ from openhcs.processing.materialization.core import (
     materialization_outputs,
     prepare_materialization,
 )
+from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -560,9 +561,9 @@ class RuntimeArtifactMaterialization:
             ""
             if scope is None
             else "".join(
-                (f"_{component.value}-" f"{OpenHCSPlaneAddress.component_token(value)}")
+                (f"_{component.name}-" f"{OpenHCSPlaneAddress.component_token(value)}")
                 for component, value in scope.source_component_values
-                if not component.is_multiprocessing_axis()
+                if not issubclass(component, PartitionAxis)
             )
         )
         return (
@@ -689,14 +690,15 @@ class RuntimeArtifactMaterialization:
     def missing_component_is_aggregated(
         component_name: str,
         execution_scope: RuntimeExecutionAxisScope,
-        invocation_variable_components: tuple[VariableComponents, ...],
+        invocation_variable_components: tuple[type[Axis], ...],
     ) -> bool:
         """Return whether a missing source coordinate is a stacked invocation axis."""
 
-        component = AllComponents.from_value(component_name)
-        if component is None:
+        family = AxisFamily.active()
+        if component_name not in family.names():
             return False
-        variable_components = ComponentSet.coerce(invocation_variable_components)
+        component = family.named(component_name)
+        variable_components = ComponentSet.of(invocation_variable_components)
         return (
             component in variable_components
             and execution_scope.value_text_for_component(component) is None

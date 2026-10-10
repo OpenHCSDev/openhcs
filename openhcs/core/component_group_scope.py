@@ -4,17 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from enum import Enum
 from typing import TYPE_CHECKING
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.source_metadata import (
     SourceMetadataFields,
     SourceMetadataMapping,
     SourceMetadataScalar,
-    SourceMetadataValue,
 )
+from openhcs.core.axes import Axis, AxisFamily, PartitionAxis, is_axis
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -25,7 +23,7 @@ if TYPE_CHECKING:
     )
 
 ComponentGroupKey = str | None
-RuntimeFixedComponentValues = tuple[tuple[AllComponents, str], ...]
+RuntimeFixedComponentValues = tuple[tuple[type[Axis], str], ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,7 +31,7 @@ class ComponentGroupScope:
     """One validated ungrouped, static, or runtime-discovered component scope."""
 
     keys: tuple[ComponentGroupKey, ...]
-    component: AllComponents | None = None
+    component: type[Axis] | None = None
 
     def __post_init__(self) -> None:
         if not self.keys:
@@ -47,13 +45,8 @@ class ComponentGroupScope:
                 "ComponentGroupScope may use None only as the sole dynamic or "
                 "ungrouped key."
             )
-        if self.component is not None and not isinstance(
-            self.component,
-            AllComponents,
-        ):
-            raise TypeError(
-                "ComponentGroupScope.component must be an AllComponents value."
-            )
+        if self.component is not None and not is_axis(self.component):
+            raise TypeError("ComponentGroupScope.component must be a declared axis.")
         if self.component is None and self.keys != (None,):
             raise ValueError(
                 "Concrete component-group keys require a component identity."
@@ -66,7 +59,7 @@ class ComponentGroupScope:
     @classmethod
     def dynamic(
         cls,
-        component: AllComponents,
+        component: type[Axis],
     ) -> "ComponentGroupScope":
         """Declare a typed scope whose concrete keys are discovered at runtime."""
 
@@ -77,12 +70,12 @@ class ComponentGroupScope:
         cls,
         group_keys: Iterable[Hashable | None],
         *,
-        component: AllComponents | Enum | str | None = None,
+        component: type[Axis] | None = None,
     ) -> "ComponentGroupScope":
         return cls(
             tuple(cls.normalize_key(group_key) for group_key in group_keys),
             component=(
-                None if component is None else ComponentSet.coerce_component(component)
+                None if component is None else AxisFamily.active().require(component)
             ),
         )
 
@@ -123,7 +116,7 @@ class ComponentGroupScope:
         )
         if not keys:
             raise ValueError(
-                f"Dynamic {self.component.value} execution scope requires "
+                f"Dynamic {self.component.name} execution scope requires "
                 "component-grouped runtime patterns."
             )
         return keys
@@ -163,14 +156,14 @@ class ComponentGroupScope:
         if self.is_dynamic:
             if normalized_key is None:
                 raise ValueError(
-                    f"Dynamic {self.component.value} component scope requires a "
+                    f"Dynamic {self.component.name} component scope requires a "
                     "concrete runtime key."
                 )
             return normalized_key
         if normalized_key in self.keys:
             return normalized_key
         raise ValueError(
-            f"Component scope {self.component.value!r} groups {self.keys!r} do not "
+            f"Component scope {self.component.name!r} groups {self.keys!r} do not "
             f"contain runtime key {normalized_key!r}."
         )
 
@@ -211,8 +204,8 @@ class ComponentGroupScope:
         if consumer_scope.is_ungrouped or self.component is consumer_scope.component:
             return self
         raise ValueError(
-            f"Output lineage component {self.component.value!r} is neither the "
-            f"consumer group component {consumer_scope.component.value!r} nor one "
+            f"Output lineage component {self.component.name!r} is neither the "
+            f"consumer group component {consumer_scope.component.name!r} nor one "
             "of its variable components."
         )
 
@@ -222,7 +215,7 @@ class RuntimeExecutionAxisScope:
     """Typed runtime axis coordinate for component projection."""
 
     axis_id: str
-    component: AllComponents | None = None
+    component: type[Axis] | None = None
     value: SourceMetadataScalar = None
     fixed_component_values: RuntimeFixedComponentValues = ()
 
@@ -231,7 +224,7 @@ class RuntimeExecutionAxisScope:
         cls,
         context: "ProcessingContext",
         *,
-        component: AllComponents | str | None = None,
+        component: type[Axis] | str | None = None,
         value: SourceMetadataScalar = None,
     ) -> "RuntimeExecutionAxisScope":
         axis_id = context.axis_id
@@ -250,16 +243,16 @@ class RuntimeExecutionAxisScope:
         cls,
         axis_id: str,
         *,
-        component: AllComponents | Enum | str | None,
+        component: type[Axis] | None,
         value: SourceMetadataScalar,
         fixed_component_values: Iterable[
-            tuple[AllComponents | Enum | str, SourceMetadataScalar]
+            tuple[type[Axis], SourceMetadataScalar]
         ] = (),
     ) -> "RuntimeExecutionAxisScope":
         if not axis_id:
             raise ValueError("RuntimeExecutionAxisScope.axis_id cannot be empty.")
         resolved_component = (
-            None if component is None else ComponentSet.coerce_component(component)
+            None if component is None else AxisFamily.active().require(component)
         )
         canonical_value = None if value is None else str(value)
         canonical_fixed_values = cls._canonical_fixed_component_values(
@@ -276,9 +269,9 @@ class RuntimeExecutionAxisScope:
     def __post_init__(self) -> None:
         if not self.axis_id:
             raise ValueError("RuntimeExecutionAxisScope.axis_id cannot be empty.")
-        if self.component is not None and not isinstance(self.component, AllComponents):
+        if self.component is not None and not is_axis(self.component):
             raise TypeError(
-                "RuntimeExecutionAxisScope.component must be an AllComponents value. "
+                "RuntimeExecutionAxisScope.component must be a declared axis. "
                 "Use RuntimeExecutionAxisScope.from_raw() for coercion."
             )
         if (self.component is None) != (self.value is None):
@@ -305,17 +298,17 @@ class RuntimeExecutionAxisScope:
     @staticmethod
     def _canonical_fixed_component_values(
         fixed_component_values: Iterable[
-            tuple[AllComponents | Enum | str, SourceMetadataScalar]
+            tuple[type[Axis], SourceMetadataScalar]
         ],
         *,
-        group_component: AllComponents | None,
+        group_component: type[Axis] | None,
     ) -> RuntimeFixedComponentValues:
         """Validate and order fixed coordinates before scope construction."""
 
-        normalized_fixed_values: dict[AllComponents, str] = {}
+        normalized_fixed_values: dict[type[Axis], str] = {}
         for component, value in fixed_component_values:
-            resolved_component = ComponentSet.coerce_component(component)
-            if resolved_component.is_multiprocessing_axis():
+            resolved_component = AxisFamily.active().require(component)
+            if issubclass(resolved_component, PartitionAxis):
                 raise ValueError(
                     "RuntimeExecutionAxisScope fixed components cannot repeat the "
                     "multiprocessing axis."
@@ -327,7 +320,7 @@ class RuntimeExecutionAxisScope:
             if resolved_component in normalized_fixed_values:
                 raise ValueError(
                     "RuntimeExecutionAxisScope fixed components cannot contain "
-                    f"duplicate {resolved_component.value!r} identity."
+                    f"duplicate {resolved_component.name!r} identity."
                 )
             normalized_fixed_values[resolved_component] = str(value)
         if group_component in normalized_fixed_values:
@@ -337,7 +330,7 @@ class RuntimeExecutionAxisScope:
             )
         return tuple(
             (component, normalized_fixed_values[component])
-            for component in AllComponents
+            for component in AxisFamily.active().axes
             if component in normalized_fixed_values
         )
 
@@ -345,7 +338,7 @@ class RuntimeExecutionAxisScope:
     def component_name(self) -> str | None:
         if self.component is None:
             return None
-        return str(self.component.value)
+        return str(self.component.name)
 
     def require_component_name(self) -> str:
         component_name = self.component_name
@@ -367,14 +360,14 @@ class RuntimeExecutionAxisScope:
 
     def value_text_for_component(
         self,
-        component: AllComponents | Enum | str | None,
+        component: type[Axis] | None,
     ) -> str | None:
         """Return this runtime scope's value for one component axis."""
 
         if component is None:
             return None
-        resolved_component = ComponentSet.coerce_component(component)
-        if resolved_component.is_multiprocessing_axis():
+        resolved_component = AxisFamily.active().require(component)
+        if issubclass(resolved_component, PartitionAxis):
             return self.axis_id
         if self.component == resolved_component:
             return self.value_text
@@ -424,8 +417,8 @@ class RuntimeExecutionAxisScope:
     def source_component_values(self) -> RuntimeFixedComponentValues:
         """Return every typed source coordinate represented by this scope."""
 
-        values: list[tuple[AllComponents, str]] = []
-        for component in AllComponents:
+        values: list[tuple[type[Axis], str]] = []
+        for component in AxisFamily.active().axes:
             value = self.value_text_for_component(component)
             if value is not None:
                 values.append((component, value))
@@ -437,8 +430,8 @@ class RuntimeExecutionAxisScope:
 
         values = self.source_component_values
         return (
-            *(item for item in values if item[0].is_multiprocessing_axis()),
-            *(item for item in values if not item[0].is_multiprocessing_axis()),
+            *(item for item in values if issubclass(item[0], PartitionAxis)),
+            *(item for item in values if not issubclass(item[0], PartitionAxis)),
         )
 
     @property
@@ -446,19 +439,19 @@ class RuntimeExecutionAxisScope:
         """Return a stable user-facing label without enum representations."""
 
         return " / ".join(
-            f"{component.value}={value}"
+            f"{component.name}={value}"
             for component, value in self.presentation_component_values
         )
 
     def for_group_coordinate(
         self,
-        component: AllComponents | Enum | str | None,
+        component: type[Axis] | None,
         value: SourceMetadataScalar,
     ) -> "RuntimeExecutionAxisScope":
         """Project this execution identity onto one artifact group coordinate."""
 
         resolved_component = (
-            None if component is None else ComponentSet.coerce_component(component)
+            None if component is None else AxisFamily.active().require(component)
         )
         if (resolved_component is None) != (value is None):
             raise ValueError(
@@ -471,7 +464,7 @@ class RuntimeExecutionAxisScope:
             if existing is not None and existing != self.require_value_text():
                 raise ValueError(
                     "Runtime execution group conflicts with its fixed component "
-                    f"identity for {self.component.value!r}."
+                    f"identity for {self.component.name!r}."
                 )
             fixed_values[self.component] = self.require_value_text()
         if resolved_component is not None:
@@ -479,7 +472,7 @@ class RuntimeExecutionAxisScope:
             if existing is not None and existing != resolved_value:
                 raise ValueError(
                     "Artifact group coordinate conflicts with fixed runtime identity "
-                    f"for {resolved_component.value!r}: {existing!r} != "
+                    f"for {resolved_component.name!r}: {existing!r} != "
                     f"{resolved_value!r}."
                 )
             if (
@@ -488,7 +481,7 @@ class RuntimeExecutionAxisScope:
             ):
                 raise ValueError(
                     "Artifact group coordinate conflicts with runtime execution group "
-                    f"for {resolved_component.value!r}: {self.value_text!r} != "
+                    f"for {resolved_component.name!r}: {self.value_text!r} != "
                     f"{resolved_value!r}."
                 )
         return type(self).from_raw(
@@ -524,7 +517,7 @@ class RuntimeExecutionAxisScope:
             if existing is not None and str(existing) != value:
                 raise ValueError(
                     "Runtime execution scope conflicts with source component metadata "
-                    f"for {component.value!r}: {existing!r} != {value!r}."
+                    f"for {component.name!r}: {existing!r} != {value!r}."
                 )
             merged = with_source_component_metadata(merged, component, value)
         return merged
@@ -546,24 +539,23 @@ class RuntimeExecutionAxisScope:
     @property
     def cache_key(self) -> tuple[tuple[str, str], ...]:
         return tuple(
-            (component.value, value)
+            (component.name, value)
             for component, value in self.source_component_values
-            if not component.is_multiprocessing_axis()
+            if not issubclass(component, PartitionAxis)
         )
 
     def source_axis_metadata_scope(self) -> "SourceAxisMetadataScope":
         """Return metadata constraints for this runtime axis."""
 
-        from openhcs.constants.constants import get_multiprocessing_axis
         from openhcs.core.source_matching import SourceAxisMetadataScope
 
         component_values = tuple(
-            (component.value, value)
+            (component.name, value)
             for component, value in self.source_component_values
         )
-        multiprocessing_component = get_multiprocessing_axis()
+        multiprocessing_component = AxisFamily.active().partition_axis()
         if not any(
-            component_name == multiprocessing_component.value
+            component_name == multiprocessing_component.name
             for component_name, _value in component_values
         ):
             raise RuntimeError(
@@ -583,7 +575,7 @@ class RuntimeExecutionAxisScope:
 
         return SourceImageSetIdentity(
             tuple(
-                (component.value, value)
+                (component.name, value)
                 for component, value in self.source_component_values
                 if component in components
                 if policy.is_identity_component(component)

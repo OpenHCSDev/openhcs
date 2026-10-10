@@ -11,7 +11,6 @@ from pycodify import Assignment, generate_python_source
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
 from openhcs.constants import InputSource
-from openhcs.constants.constants import GroupBy
 from openhcs.core.callable_contract import CallableContract, CallableImportIdentity
 from openhcs.core.config import (
     DtypeConfig,
@@ -41,6 +40,7 @@ from openhcs.processing.materialization import (
     TerminalMaterializationSpec,
     WriteMode,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.fixture(autouse=True)
@@ -210,7 +210,7 @@ def test_clean_function_step_keeps_nondefault_lazy_config_values():
     step = FunctionStep(
         func=count_cells_simple,
         name="count_cells",
-        processing_config=LazyProcessingConfig(group_by=GroupBy.CHANNEL),
+        processing_config=LazyProcessingConfig(group_by=Microscopy.Channel),
     )
 
     source = generate_python_source(
@@ -219,7 +219,7 @@ def test_clean_function_step_keeps_nondefault_lazy_config_values():
     )
 
     assert "processing_config=LazyProcessingConfig(" in source
-    assert "group_by=GroupBy.CHANNEL" in source
+    assert "group_by=Microscopy.Channel" in source
     assert "dtype_config=" not in source
 
 

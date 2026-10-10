@@ -22,7 +22,6 @@ from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.window_navigation import WindowNavigationRequest
 from pyqt_reactive.theming.color_scheme import ColorScheme
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.config import (
     GlobalPipelineConfig,
     PipelineConfig,
@@ -41,6 +40,7 @@ from openhcs.pyqt_gui.windows.config_window import (
 )
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class PipelineConfigHost:
@@ -700,12 +700,12 @@ def test_global_config_concrete_variable_components_are_not_placeholder(qapp) ->
             group
             for group in groups
             if any(
-                enum_value is VariableComponents.SITE
+                enum_value is Microscopy.Site
                 for enum_value, _ in group.checkbox_items()
             )
         )
 
-        assert variable_components_group.get_value() == [VariableComponents.SITE]
+        assert variable_components_group.get_value() == [Microscopy.Site]
         assert not variable_components_group.has_placeholder_state()
         for _, checkbox in variable_components_group.checkbox_items():
             assert not checkbox.is_placeholder()

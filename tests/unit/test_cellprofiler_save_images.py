@@ -9,7 +9,6 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -85,6 +84,7 @@ from openhcs.processing.materialization import (
 )
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _module(**settings: str) -> ModuleBlock:
@@ -949,7 +949,7 @@ def test_image_output_context_projects_declared_group_lineage_source() -> None:
         name="SavedRGB",
         path="/memory/SavedRGB.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         relations=(
             GroupLineageSourceRelation(
                 source=ArtifactSpec.input("OrigBlue", ImageArtifactType).ref(),
@@ -1029,7 +1029,7 @@ def test_declared_group_lineage_source_overrides_complete_output_identity() -> N
         name="SavedRGB",
         path="/memory/SavedRGB.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         relations=(
             GroupLineageSourceRelation(
                 source=ArtifactSpec.input("OrigBlue", ImageArtifactType).ref(),
@@ -1077,7 +1077,7 @@ def test_planned_image_output_restores_axis_without_duplicate_provenance() -> No
         name="SavedCells",
         path="/memory/SavedCells.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(
             GroupLineageSourceRelation(
                 source=ArtifactSpec.input("CellsImage", ImageArtifactType).ref(),

@@ -56,7 +56,7 @@ from openhcs.agent.dto.ui_bridge import (
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
 from openhcs.agent.ui_bridge_environment import UiBridgeDescriptorEnvironment
-from openhcs.constants.constants import AllComponents, OrchestratorState
+from openhcs.constants.constants import OrchestratorState
 from openhcs.core.execution_state import (
     ManagerExecutionState,
     TerminalExecutionStatus,
@@ -72,6 +72,7 @@ from openhcs.mcp.control_timeout import (
 from openhcs.agent.ui_bridge_environment import UIConfigCacheEnvironment
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+from openhcs.core.axes import AxisFamily
 
 if TYPE_CHECKING:
     from mcp.types import ProgressNotification
@@ -2050,8 +2051,8 @@ def extend_required_component_labels(
     if not require_all_components:
         return labels
     seen = set(labels)
-    for component in AllComponents:
-        label = component.value
+    for component in AxisFamily.active().axes:
+        label = component.name
         if label not in seen:
             labels.append(label)
             seen.add(label)

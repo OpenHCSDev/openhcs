@@ -13,7 +13,6 @@ from benchmark.agent_validation.challenge_functions import (
 )
 from benchmark.agent_validation.contracts import DiagnosticCheck, ScoringCase
 from benchmark.agent_validation.declarations import ValidationTaskDeclaration
-from openhcs.constants import GroupBy
 from openhcs.core.config import (
     LazyProcessingConfig,
     LazyStepMaterializationConfig,
@@ -21,6 +20,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentAuthority
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.core.axes import Ungrouped
 
 
 class DiagnosticPerturbationDeclaration(ABC, metaclass=AutoRegisterMeta):
@@ -159,7 +159,7 @@ class ExpandLabelsInsufficientGrowthProbe(DiagnosticPerturbationDeclaration):
                     name="Expand labels without overlap",
                     processing_config=LazyProcessingConfig(
                         variable_components=[],
-                        group_by=GroupBy.NONE,
+                        group_by=Ungrouped,
                     ),
                     step_materialization_config=LazyStepMaterializationConfig(
                         enabled=True,

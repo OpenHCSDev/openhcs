@@ -5,18 +5,25 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from enum import Enum, StrEnum
+from enum import StrEnum
 from functools import lru_cache
 from math import isfinite
 from pathlib import Path
 from types import MappingProxyType
 from typing import ClassVar, NoReturn, Self, TYPE_CHECKING, TypeAlias, TypeVar
 
-from metaclass_registry import AutoRegisterMeta
 from zmqruntime.viewer_protocol import ViewerWireField
 
-from openhcs.constants.constants import AllComponents
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from openhcs.core.axes import (
+    Axis,
+    AxisFamily,
+    AxisRoleKeyedStrategyMixin,
+    ColourAxis,
+    PartitionAxis,
+    StackAxis,
+    TileAxis,
+    TimeAxis,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.source_bindings import MetadataExtractionRule
@@ -56,11 +63,11 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
 
     @staticmethod
     def canonical_component_value(
-        component: AllComponents | None,
+        component: type[Axis] | None,
         value: SourceMetadataScalar,
     ) -> str | int:
         """Canonicalize numeric variable coordinates while retaining labels."""
-        if component is None or not component.is_variable_axis():
+        if component is None or issubclass(component, PartitionAxis):
             return str(value)
         value_text = str(value)
         return int(value_text) if value_text.isdecimal() else value_text
@@ -129,14 +136,14 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         """Compare through the declared record or mapping namespace."""
 
     def _derived_view(
-        self, key: str | AllComponents, derive: Callable[[], _MetadataViewT]
+        self, key: str | type[Axis], derive: Callable[[], _MetadataViewT]
     ) -> _MetadataViewT:
         return derive()
 
     @staticmethod
     def _view(
         metadata: SourceMetadataMapping,
-        key: str | AllComponents,
+        key: str | type[Axis],
         derive: Callable[[], _MetadataViewT],
     ) -> _MetadataViewT:
         if isinstance(metadata, SourceMetadataFields):
@@ -265,12 +272,12 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
 
     @classmethod
     def component_value(
-        cls, metadata: SourceMetadataMapping, component: AllComponents
+        cls, metadata: SourceMetadataMapping, component: type[Axis]
     ) -> str | None:
         return cls._view(
             metadata,
             component,
-            lambda: SourceComponentProjectionStrategy.for_enum_member(
+            lambda: SourceComponentProjectionStrategy.for_axis(
                 component
             ).metadata_value(metadata),
         )
@@ -278,11 +285,11 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
     @classmethod
     def _ordered_component_fields(
         cls, metadata: SourceMetadataMapping
-    ) -> Iterator[tuple[AllComponents, SourceMetadataNonNullScalar]]:
+    ) -> Iterator[tuple[type[Axis], SourceMetadataNonNullScalar]]:
         """Admit component fields once, with canonical spelling before aliases."""
         scalars = cls.scalar_items(metadata)
         cls.original_items(metadata)
-        aliases: list[tuple[AllComponents, SourceMetadataNonNullScalar]] = []
+        aliases: list[tuple[type[Axis], SourceMetadataNonNullScalar]] = []
         for name, value in scalars:
             if value is None:
                 continue
@@ -291,7 +298,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
             if component is None:
                 continue
             item = (component, value)
-            if name == component.value:
+            if name == component.name:
                 yield item
             else:
                 aliases.append(item)
@@ -299,7 +306,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
 
     @classmethod
     def component_values(
-        cls, metadata: SourceMetadataMapping, component: AllComponents
+        cls, metadata: SourceMetadataMapping, component: type[Axis]
     ) -> tuple[str, ...]:
         """Read only the requested component from the current field admission."""
         return tuple(dict.fromkeys(
@@ -311,9 +318,9 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
     @classmethod
     def component_domains(
         cls, metadata: SourceMetadataMapping
-    ) -> Mapping[AllComponents, tuple[str, ...]]:
+    ) -> Mapping[type[Axis], tuple[str, ...]]:
         """Expand all ordered component domains from one current field admission."""
-        domains: dict[AllComponents, list[str]] = {}
+        domains: dict[type[Axis], list[str]] = {}
         for component, value in cls._ordered_component_fields(metadata):
             domains.setdefault(component, []).append(str(value))
         return {
@@ -363,7 +370,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         updates: SourceMetadataMapping,
         *,
         without: Iterable[str] = (),
-        components: Iterable[tuple[AllComponents, SourceMetadataScalar]] = (),
+        components: Iterable[tuple[type[Axis], SourceMetadataScalar]] = (),
         after_components: SourceMetadataMapping | None = None,
     ) -> SourceMetadataMapping:
         excluded = frozenset(without)
@@ -376,7 +383,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
                 if key == ORIGINAL_SOURCE_METADATA_FIELD
                 or source_metadata_component(str(key)) is not component
             }
-            fields[component.value] = str(value)
+            fields[component.name] = str(value)
         if after_components is not None:
             fields.update(after_components)
         return cls.derived_mapping(metadata, fields)
@@ -385,7 +392,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
     def with_component(
         cls,
         metadata: SourceMetadataMapping,
-        component: AllComponents,
+        component: type[Axis],
         value: SourceMetadataScalar,
     ) -> SourceMetadataMapping:
         return cls.with_fields(metadata, {}, components=((component, value),))
@@ -400,7 +407,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
             ()
             if isinstance(metadata, SourceMetadataFields)
             and metadata._admitted_components_complete
-            else AllComponents
+            else AxisFamily.active().axes
         )
         for component in components:
             if cls.component_value(current, component) is not None:
@@ -409,7 +416,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
             if value is not None:
                 if merged is None:
                     merged = dict(metadata)
-                merged[component.value] = value
+                merged[component.name] = value
                 current = merged
         if cls.literal_value(metadata, "extension") is None:
             extension = cls.literal_value(fallback, "extension")
@@ -451,7 +458,7 @@ class OwnedSourceMetadataFields(SourceMetadataFields):
     _field_index: Mapping[str, SourceMetadataValue] = field(
         init=False, repr=False, compare=False
     )
-    _views: dict[str | AllComponents, object] = field(
+    _views: dict[str | type[Axis], object] = field(
         default_factory=dict, init=False, repr=False, compare=False
     )
     _cacheable: bool = field(init=False, repr=False, compare=False)
@@ -531,7 +538,7 @@ class OwnedSourceMetadataFields(SourceMetadataFields):
         return self._field_index
 
     def _derived_view(
-        self, key: str | AllComponents, derive: Callable[[], _MetadataViewT]
+        self, key: str | type[Axis], derive: Callable[[], _MetadataViewT]
     ) -> _MetadataViewT:
         if not self._cacheable:
             return derive()
@@ -542,7 +549,7 @@ class OwnedSourceMetadataFields(SourceMetadataFields):
     @property
     def _admitted_components_complete(self) -> bool:
         return self._cacheable and all(
-            self._views.get(component) is not None for component in AllComponents
+            self._views.get(component) is not None for component in AxisFamily.active().axes
         )
 
     def _literal_value(self, key: str) -> SourceMetadataScalar:
@@ -1093,9 +1100,13 @@ class SourceVoxelSpacing:
         units = ["dimensionless"] * len(labels)
         scale[-2:] = self.spacing_for_ndim(2)
         units[-2:] = (self.native_coordinate_unit,) * 2
-        z_component = AllComponents.Z_INDEX.value
-        if len(self.values_zyx) == 3 and z_component in labels:
-            z_axis = labels.index(z_component)
+        stack_labels = tuple(
+            axis.name
+            for axis in AxisFamily.active().with_role(StackAxis)
+            if axis.name in labels
+        )
+        if len(self.values_zyx) == 3 and stack_labels:
+            z_axis = labels.index(stack_labels[0])
             scale[z_axis] = self.spacing_for_ndim(3)[0]
             units[z_axis] = self.native_coordinate_unit
         return {"scale": tuple(scale), "units": tuple(units)}
@@ -1134,35 +1145,53 @@ def source_metadata_field_identity(field: str) -> str:
 
 
 @lru_cache(maxsize=256)
-def source_metadata_component(field: str) -> AllComponents | None:
+def source_metadata_component(field: str) -> type[Axis] | None:
     """Return the nominal component owner of a metadata field."""
     return SourceComponentProjectionStrategy.component_for_metadata_field(field)
 
 
-class SourceComponentProjectionStrategy(
-    EnumKeyedStrategyMixin[AllComponents],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Project one OpenHCS component through its nominal enum-owned leaf."""
+class SourceComponentProjectionStrategy(AxisRoleKeyedStrategyMixin, ABC):
+    """Project one axis through the leaf owning its role."""
 
-    strategy_key: ClassVar[AllComponents | None] = None
     metadata_collection_field: ClassVar[str]
     metadata_field_groups: ClassVar[tuple[tuple[str, ...], ...]] = ()
+    bound_per_candidate: ClassVar[bool] = False
+    """Each bound source candidate carries its own value (one per binding)."""
 
     @classmethod
     def project_component(
         cls,
-        component: AllComponents,
+        component: type[Axis],
         metadata: SourceMetadataMapping,
         image_set_index: int,
     ) -> str:
-        return cls.for_enum_member(component).project(metadata, image_set_index)
+        return cls.for_axis(component).project(metadata, image_set_index)
+
+    @classmethod
+    def project_bound_component(
+        cls,
+        component: type[Axis],
+        *,
+        set_metadata: SourceMetadataMapping,
+        set_index: int,
+        candidate_metadata: SourceMetadataMapping,
+        candidate_index: int,
+    ) -> str:
+        """Project one axis of a bound source set.
+
+        Axes whose role is bound per candidate read the candidate; every other
+        axis reads the shared source set.
+        """
+
+        strategy = cls.for_axis(component)
+        if strategy.bound_per_candidate:
+            return strategy.project(candidate_metadata, candidate_index)
+        return strategy.project(set_metadata, set_index)
 
     @classmethod
     def metadata_component(
         cls,
-        component: AllComponents,
+        component: type[Axis],
         metadata: SourceMetadataMapping,
     ) -> str | None:
         return SourceMetadataFields.component_value(metadata, component)
@@ -1171,11 +1200,13 @@ class SourceComponentProjectionStrategy(
     def component_for_metadata_field(
         cls,
         field: str,
-    ) -> AllComponents | None:
+    ) -> type[Axis] | None:
+        family = AxisFamily.active()
         owners = tuple(
-            strategy_type.strategy_key
-            for strategy_type in cls.registered_strategy_types()
+            axis
+            for strategy_type in cls.role_strategy_types()
             if strategy_type.owns_metadata_field(field)
+            for axis in family.with_role(strategy_type.implements_role)
         )
         if len(owners) > 1:
             raise RuntimeError(
@@ -1228,7 +1259,7 @@ class SourceComponentProjectionStrategy(
 
 
 class WellSourceComponentProjection(SourceComponentProjectionStrategy):
-    strategy_key = AllComponents.WELL
+    implements_role = PartitionAxis
     metadata_collection_field = "wells"
     metadata_field_groups = (
         ("well",),
@@ -1256,7 +1287,7 @@ class WellSourceComponentProjection(SourceComponentProjectionStrategy):
 
 
 class SiteSourceComponentProjection(SourceComponentProjectionStrategy):
-    strategy_key = AllComponents.SITE
+    implements_role = TileAxis
     metadata_collection_field = "sites"
     metadata_field_groups = (("site", "imagenumber"),)
 
@@ -1271,15 +1302,20 @@ class SiteSourceComponentProjection(SourceComponentProjectionStrategy):
         if any(
             SourceComponentProjectionStrategy.metadata_component(component, metadata)
             is not None
-            for component in (AllComponents.Z_INDEX, AllComponents.TIMEPOINT)
+            for component in (
+                *AxisFamily.active().with_role(StackAxis),
+                *AxisFamily.active().with_role(TimeAxis),
+            )
         ):
             return "1"
         return str(image_set_index + 1)
 
 
 class ChannelSourceComponentProjection(SourceComponentProjectionStrategy):
-    strategy_key = AllComponents.CHANNEL
+    implements_role = ColourAxis
     metadata_collection_field = "channels"
+    bound_per_candidate = True
+
     metadata_field_groups = (("channel", "channelnumber"),)
 
     def project(
@@ -1291,7 +1327,7 @@ class ChannelSourceComponentProjection(SourceComponentProjectionStrategy):
 
 
 class ZIndexSourceComponentProjection(SourceComponentProjectionStrategy):
-    strategy_key = AllComponents.Z_INDEX
+    implements_role = StackAxis
     metadata_collection_field = "z_indexes"
     metadata_field_groups = (("zindex", "z", "zplane", "zslice", "plane", "slice"),)
 
@@ -1305,8 +1341,9 @@ class ZIndexSourceComponentProjection(SourceComponentProjectionStrategy):
 
 
 class TimepointSourceComponentProjection(SourceComponentProjectionStrategy):
-    strategy_key = AllComponents.TIMEPOINT
+    implements_role = TimeAxis
     metadata_collection_field = "timepoints"
+
     metadata_field_groups = (("timepoint", "time", "framenumber", "frame"),)
 
     def project(

@@ -4,7 +4,6 @@ from dataclasses import replace
 
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -27,6 +26,8 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     RemoveHolesModule,
     ShrinkToObjectCentersModule,
 )
+from openhcs.core.axes import Axis
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _module(name: str, settings: dict[str, str]) -> ModuleBlock:
@@ -44,7 +45,7 @@ def _contract_and_source_bindings(
     module: ModuleBlock,
     *,
     object_input: bool = False,
-    source_stack_components: tuple[AllComponents, ...] = (),
+    source_stack_components: tuple[type[Axis], ...] = (),
 ) -> tuple[CallableContract, StepSourceBindingsConfig]:
     module_type = CellProfilerModule.require_module(module.name)
     raw_contract = CallableContract.from_callable(module_type.require_callable())
@@ -197,7 +198,7 @@ def test_source_stack_variants_use_declared_source_components(
     contract, source_bindings = _contract_and_source_bindings(
         module,
         object_input=object_input,
-        source_stack_components=(AllComponents.Z_INDEX,),
+        source_stack_components=(Microscopy.ZIndex,),
     )
     resolved = module_type.resolve_function(
         module,

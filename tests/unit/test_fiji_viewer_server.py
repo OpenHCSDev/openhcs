@@ -9,6 +9,7 @@ import tifffile
 from zmqruntime.streaming import StreamingVisualizerServer
 from zmqruntime.messages import AckReturnRoute, ImageTransferIdentity, ProcessIdentity
 
+from openhcs.core.axes import AxisFamily
 from openhcs.core.config import (
     FijiDisplayConfig,
     FijiStreamingConfig,
@@ -598,7 +599,7 @@ def test_fiji_window_item_projection_preserves_nominal_items() -> None:
     assert projection.coordinate_components.z_axis_components == ["z_index"]
     assert projection.coordinate_components.frame == [
         component
-        for component in FijiDisplayConfig.COMPONENT_ORDER
+        for component in AxisFamily.active().names()
         if component in {"site", "well", "timepoint"}
     ]
 

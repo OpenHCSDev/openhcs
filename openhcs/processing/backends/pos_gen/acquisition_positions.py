@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 from polystore.source_tile_geometry import SourceTileGeometry
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
@@ -18,6 +17,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
     TILE_POSITIONS_OUTPUT,
 )
+from openhcs.core.axes import AxisFamily, TileAxis
 
 
 def _source_metadata(request: RuntimeAdapterRequest) -> ImagePayloadMetadata:
@@ -64,8 +64,8 @@ def acquisition_tile_positions(
                 record.source_component_metadata or {},
                 component,
             )
-            for component in AllComponents
-            if component is not AllComponents.SITE
+            for component in AxisFamily.active().axes
+            if not issubclass(component, TileAxis)
         )
         for record in records
     )
@@ -81,12 +81,14 @@ def acquisition_tile_positions(
         raise ValueError(
             "Source tiles lack exact embedded acquisition geometry; no grid is inferred."
         )
+    tile_axis = AxisFamily.active().one(TileAxis)
     sites = tuple(
         source_component_metadata_value(
-            record.source_component_metadata or {}, AllComponents.SITE
+            record.source_component_metadata or {}, tile_axis
         )
         for record in records
     )
+
     if None in sites or len(sites) != len(set(sites)):
         raise ValueError(
             "Every acquisition tile must carry a distinct source site identity."

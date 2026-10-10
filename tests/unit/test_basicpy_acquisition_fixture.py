@@ -3,7 +3,6 @@
 import numpy as np
 import pytest
 
-from openhcs.constants import AllComponents
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 
@@ -14,6 +13,7 @@ from polystore.filemanager import FileManager
 
 from tests.diagnostics.basicpy_observation_fixture import shaded_observations
 from tests.diagnostics.create_basicpy_acquisition_fixture import create_acquisition
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_saved_numerical_control_has_real_independent_site_calibration(tmp_path):
@@ -29,9 +29,9 @@ def test_saved_numerical_control_has_real_independent_site_calibration(tmp_path)
     for path, expected in zip(files, observations, strict=True):
         parsed = handler.parser.parse_filename(path.name)
         assert parsed is not None
-        sites.append(parsed.required_value(AllComponents.SITE))
-        assert parsed.required_value(AllComponents.CHANNEL) == 1
-        assert parsed.required_value(AllComponents.Z_INDEX) == 1
+        sites.append(parsed.required_value(Microscopy.Site))
+        assert parsed.required_value(Microscopy.Channel) == 1
+        assert parsed.required_value(Microscopy.ZIndex) == 1
         np.testing.assert_array_equal(ImageFileFormat.require_path(path).read(path), expected)
     assert sites == list(range(1, 25))
     np.testing.assert_array_equal(

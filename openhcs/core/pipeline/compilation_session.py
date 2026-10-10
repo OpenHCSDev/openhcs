@@ -31,6 +31,7 @@ from openhcs.core.vfs_protocol import (
     FileManagerLike,
     PlatePathDeclaration,
 )
+from openhcs.core.axes import AxisFamily, Ungrouped
 
 if TYPE_CHECKING:
     from openhcs.core.config import GlobalPipelineConfig
@@ -193,7 +194,6 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
         """Admit fixed contracts and forward topology once, before axis fanout."""
         if self._artifact_graphs is not None:
             return
-        from openhcs.constants import GroupBy
         from openhcs.core.callable_contract import FunctionStepExecutionScope
         from openhcs.core.pipeline.artifact_planning import (
             ArtifactGraph,
@@ -218,7 +218,7 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
                     step.func,
                 )
                 if isinstance(step, FunctionStep)
-                else GroupBy.NONE
+                else Ungrouped
             )
             context = replace(
                 context, step_name=step.name, step_index=index
@@ -324,11 +324,11 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
         global_config: GlobalPipelineConfig,
     ) -> None:
         """Validate declaration-owned group keys once against the whole plate."""
-        from openhcs.constants.constants import GroupBy, get_openhcs_config
         from openhcs.core.callable_contract import FunctionStepExecutionScope
         from openhcs.core.components.validation import GenericValidator
 
-        validator = GenericValidator(get_openhcs_config())
+        validator = GenericValidator(AxisFamily.active())
+
         for index, (graph, context) in enumerate(
             zip(self.artifact_graphs, self.artifact_contexts)
         ):
@@ -336,7 +336,7 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
             if (
                 pattern is None
                 or not pattern.is_grouped
-                or context.group_by is GroupBy.NONE
+                or context.group_by is Ungrouped
             ):
                 continue
             if FunctionStepExecutionScope.require_uniform(

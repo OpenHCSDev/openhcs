@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from python_introspect import RuntimeParameterDeclarationABC, to_jsonable
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -47,6 +47,7 @@ from openhcs.core.source_matching import (
     semantic_source_metadata_value,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
 
 if TYPE_CHECKING:
     from openhcs.processing.materialization.core import Output
@@ -370,7 +371,7 @@ class RuntimeArtifactInput:
         return (
             projection.selects_declared_complete_producer(self.edge_plan.spec, storage_plan)
             or storage_plan.composes_producer_groups(
-                ComponentSet.coerce(projection.consumer_variable_components)
+                ComponentSet.of(projection.consumer_variable_components)
             )
             or (
                 selection_scope == producer_scope
@@ -440,7 +441,7 @@ class RuntimeArtifactInput:
                     component_scope = projection.component_scope(component)
                     if component_scope.is_dynamic:
                         component_value = semantic_source_metadata_value(
-                            metadata, component.value,
+                            metadata, component.name,
                         )
                         if component_value is None:
                             break
@@ -448,12 +449,12 @@ class RuntimeArtifactInput:
                     else:
                         component_value = component_scope.select_runtime_key(None)
                     if not SourceAxisMetadataScope.constraint_matches_metadata(
-                        metadata, component.value, component_value,
+                        metadata, component.name, component_value,
                     ):
                         break
                     existing_value = coordinates.get(component)
                     if existing_value is not None and not SourceAxisMetadataScope.constraint_matches_metadata(
-                        metadata, component.value, existing_value,
+                        metadata, component.name, existing_value,
                     ):
                         break
                     coordinates.setdefault(component, component_value)
@@ -477,7 +478,7 @@ class RuntimeArtifactInput:
                             (component, value)
                             for component, value in coordinates.items()
                             if component is not execution_scope.component
-                            and not component.is_multiprocessing_axis()
+                            and not issubclass(component, PartitionAxis)
                             and component not in variable_components
                             and identity_policy.is_identity_component(component)
                         )
@@ -520,7 +521,7 @@ class RuntimeArtifactInput:
                 f"Missing dynamic grouped artifact input {storage_plan.name!r} "
                 f"({storage_plan.artifact_type.value}) on axis "
                 f"{self.axis_scope.axis_id!r} for producer component "
-                f"{producer_scope.component.value!r}."
+                f"{producer_scope.component.name!r}."
             )
         records_by_group: OrderedDict[str, list[StoredRuntimeValue]] = OrderedDict()
         for record in records:
@@ -574,7 +575,7 @@ class RuntimeArtifactInput:
         """Return declared group-axis reconstruction semantics for this input."""
 
         storage_plan = self.edge_plan.storage_plan
-        consumer_components = ComponentSet.coerce(
+        consumer_components = ComponentSet.of(
             self.edge_plan.projection.consumer_variable_components
         )
         if not storage_plan.composes_producer_groups(consumer_components):
@@ -582,7 +583,7 @@ class RuntimeArtifactInput:
         return storage_plan.producer_group_scope()
 
     def _axis_value(self, value: RuntimeValue) -> RuntimeValue:
-        projected_components = ComponentSet.coerce(
+        projected_components = ComponentSet.of(
             self.edge_plan.projection.projected_variable_components(
                 self.edge_plan.storage_plan
             )
@@ -592,7 +593,7 @@ class RuntimeArtifactInput:
 
         component_values = tuple(
             (
-                component.value,
+                component.name,
                 self._consumer_component_value(component),
             )
             for component in projected_components
@@ -664,13 +665,13 @@ class RuntimeArtifactInput:
             materialization_source_metadata=value.materialization_source_metadata,
         )
 
-    def _consumer_component_value(self, component: AllComponents) -> str:
+    def _consumer_component_value(self, component: type[Axis]) -> str:
         component_scope = self.edge_plan.projection.component_scope(component)
         if component_scope is None:
             raise RuntimeError(
                 "Artifact input "
                 f"{self.edge_plan.storage_plan.name!r} has no compiled coordinate "
-                f"for component {component.value!r}."
+                f"for component {component.name!r}."
             )
         runtime_value = self.axis_scope.value_text_for_component(component)
         return component_scope.select_runtime_key(runtime_value)
@@ -736,7 +737,7 @@ class RuntimeArtifactInput:
     ) -> bool:
         """Match image-set context, preserving declared producer/axis projections."""
 
-        projected_components = ComponentSet.coerce(
+        projected_components = ComponentSet.of(
             self.edge_plan.projection.projected_variable_components(
                 self.edge_plan.storage_plan
             )
@@ -970,7 +971,8 @@ class RuntimeArtifactAddress:
                 "RuntimeArtifactAddress.key.scope.fixed_component_values must be a "
                 "sequence."
             )
-        fixed_values: list[tuple[str, str]] = []
+        family = AxisFamily.active()
+        fixed_values: list[tuple[type[Axis], str]] = []
         for item in fixed_component_values:
             if (
                 not isinstance(item, Sequence)
@@ -981,7 +983,7 @@ class RuntimeArtifactAddress:
                     "Runtime artifact fixed component coordinates must be "
                     "two-item sequences."
                 )
-            fixed_values.append((str(item[0]), str(item[1])))
+            fixed_values.append((family.named(str(item[0])), str(item[1])))
         value_type = data.get("value_type")
         return cls(
             key=ArtifactKey(
@@ -989,7 +991,8 @@ class RuntimeArtifactAddress:
                 artifact_type=ArtifactType.coerce(str(key["artifact_type"])),
                 scope=RuntimeExecutionAxisScope.from_raw(
                     str(scope["axis_id"]),
-                    component=component,
+                    component=None if component is None else family.named(str(component)),
+
                     value=None if value is None else str(value),
                     fixed_component_values=tuple(fixed_values),
                 ),
@@ -1194,7 +1197,7 @@ class RuntimeValueStore:
         name: str | None = None,
         artifact_type: ArtifactType | None = None,
         axis_id: str | None = None,
-        group_component: AllComponents | None = None,
+        group_component: type[Axis] | None = None,
         group_key: str | None = None,
         match_component: bool = False,
         match_group: bool = False,

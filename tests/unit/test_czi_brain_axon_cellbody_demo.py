@@ -6,7 +6,7 @@ from polystore.base import ImageSamplingResult
 from polystore.bioformats_storage import BioFormatsPlaneRef
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
@@ -36,6 +36,8 @@ from openhcs.processing.presets.pipelines.czi_brain_axon_cellbody import (
     build_czi_brain_axon_cellbody_demo,
     czi_brain_axon_cellbody_demo_contribution,
 )
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _inputs(plate_path: Path, output_root: Path) -> CziBrainAxonCellBodyInputs:
@@ -70,16 +72,10 @@ def _candidate(
         relative_path=source_path.name,
         metadata={},
         component_labels={
-            AllComponents.SITE.value: site_label,
-            AllComponents.CHANNEL.value: channel_label,
+            Microscopy.Site.name: site_label,
+            Microscopy.Channel.name: channel_label,
         },
-        declared_address=OpenHCSPlaneAddress.from_values(
-            well=".",
-            site=site,
-            channel=channel,
-            z_index="1",
-            timepoint="1",
-        ),
+        declared_address=OpenHCSPlaneAddress(((Microscopy.Well, "."), (Microscopy.Site, site), (Microscopy.Channel, channel), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
         dataset_identity=identity,
         store_identity=SourcePlaneStoreIdentity(
             container_paths=(source_path,),
@@ -155,9 +151,9 @@ def test_czi_demo_declares_bounded_three_channel_analysis_and_artifacts(
         "Nuclei",
     ]
     assert [binding.selector.components for binding in source_bindings] == [
-        (ComponentSelector(AllComponents.CHANNEL, "1"),),
-        (ComponentSelector(AllComponents.CHANNEL, "2"),),
-        (ComponentSelector(AllComponents.CHANNEL, "3"),),
+        (ComponentSelector(Microscopy.Channel, "1"),),
+        (ComponentSelector(Microscopy.Channel, "2"),),
+        (ComponentSelector(Microscopy.Channel, "3"),),
     ]
     assert [step.name for step in steps] == [
         "CZI Tissue Background Correction",
@@ -171,23 +167,23 @@ def test_czi_demo_declares_bounded_three_channel_analysis_and_artifacts(
     assert get_core_callable(steps[3].func) is skan_axon_skeletonize_and_analyze
 
     assert steps[0].processing_config.variable_components == [
-        VariableComponents.CHANNEL
+        Microscopy.Channel
     ]
     assert steps[0].processing_config.input_source is InputSource.PIPELINE_START
     assert steps[1].processing_config.variable_components == [
-        VariableComponents.CHANNEL
+        Microscopy.Channel
     ]
     assert steps[1].processing_config.input_source is InputSource.PREVIOUS_STEP
-    assert steps[2].processing_config.group_by is GroupBy.NONE
+    assert steps[2].processing_config.group_by is Ungrouped
     assert steps[2].processing_config.variable_components == [
-        VariableComponents.CHANNEL
+        Microscopy.Channel
     ]
     assert steps[2].processing_config.input_source is InputSource.PIPELINE_START
     assert steps[2].source_bindings.enabled is True
     assert [binding.alias for binding in steps[2].source_bindings.bindings] == ["Axon"]
-    assert steps[3].processing_config.group_by is GroupBy.NONE
+    assert steps[3].processing_config.group_by is Ungrouped
     assert steps[3].processing_config.variable_components == [
-        VariableComponents.CHANNEL
+        Microscopy.Channel
     ]
     assert steps[3].processing_config.input_source is InputSource.PREVIOUS_STEP
 
@@ -403,11 +399,11 @@ def test_czi_contributor_samples_only_declared_crop_planes(
     )
     assert prepared_dataset.pixel_size == 0.325
     assert [
-        candidate.component_labels[AllComponents.CHANNEL.value]
+        candidate.component_labels[Microscopy.Channel.name]
         for candidate in prepared_dataset.candidates
     ] == list(selection.ordered_channel_labels)
     assert [
-        candidate.declared_address.value_for(AllComponents.CHANNEL)
+        candidate.declared_address.value_for(Microscopy.Channel)
         for candidate in prepared_dataset.candidates
         if candidate.declared_address is not None
     ] == ["1", "2", "3"]
@@ -485,7 +481,7 @@ def test_czi_contributor_rejects_missing_declared_role_plane(
         candidates=tuple(
             candidate
             for candidate in dataset.candidates
-            if candidate.component_labels.get(AllComponents.CHANNEL.value)
+            if candidate.component_labels.get(Microscopy.Channel.name)
             != "Rhodamine (Green Laser)"
         ),
         pixel_size=dataset.pixel_size,

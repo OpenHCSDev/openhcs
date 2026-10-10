@@ -48,9 +48,9 @@ read one post-initialisation authority instead of conditionally combining raw
 store coordinates with projected workspace coordinates.
 
 ``MetadataHandler.component_value_set()`` returns one complete
-``MetadataComponentValueSet`` keyed by the canonical ``AllComponents``
-declaration. Handlers implement that single projection; generic consumers
-iterate the declaration instead of calling one handler method per concrete
+``MetadataComponentValueSet`` keyed by the axes of the active ``AxisFamily``.
+Handlers implement that single projection; generic consumers
+iterate the family instead of calling one handler method per concrete
 axis. Viewer and serialized mappings receive string keys only at their explicit
 boundary.
 

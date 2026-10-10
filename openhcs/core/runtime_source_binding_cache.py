@@ -25,7 +25,7 @@ if TYPE_CHECKING:
         SourceUniverseRuntimeState,
     )
     from openhcs.core.source_image_provenance import SourceImageIdentity
-    from openhcs.constants.constants import AllComponents
+    from openhcs.core.axes import Axis
     from openhcs.core.source_workspace_projection import (
         VirtualWorkspaceSourceProjection,
     )
@@ -39,7 +39,7 @@ class RuntimeSourceResolutionSnapshot:
     projection: "VirtualWorkspaceSourceProjection"
     context: "SourcePatternResolutionContext"
     path_resolutions: Mapping[str, "SourceCandidatePathResolution"]
-    component_values: Mapping[str, tuple[Mapping["AllComponents", str], ...]]
+    component_values: Mapping[str, tuple[Mapping["type[Axis]", str], ...]]
 
     def context_for_matching(self) -> "SourcePatternResolutionContext":
         """Expose this admitted epoch through the existing matching context."""

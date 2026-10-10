@@ -17,7 +17,6 @@ from typing import (
 
 from python_introspect import RuntimeParameterDeclarationABC, add_parameter_exclusions
 
-from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -38,6 +37,7 @@ from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirement,
 )
 from openhcs.processing.materialization import MaterializationSpec
+from openhcs.core.axes import AxisRole
 
 F = TypeVar("F", bound=Callable)
 
@@ -343,21 +343,21 @@ def _runtime_parameter_declaration_types(
     )
 
 
-def required_variable_components(
-    *components: VariableComponents,
-) -> Callable[[F], F]:
-    """Declare FunctionStep variable axes required by a callable."""
-    normalized = tuple(
-        (
-            component
-            if isinstance(component, VariableComponents)
-            else VariableComponents(component)
-        )
-        for component in components
-    )
+def _axis_roles(roles: tuple[type[AxisRole], ...], decorator_name: str) -> tuple:
+    for role in roles:
+        if not (isinstance(role, type) and issubclass(role, AxisRole)):
+            raise TypeError(f"{decorator_name} takes axis roles; got {role!r}.")
+    if len(roles) != len(set(roles)):
+        raise TypeError(f"{decorator_name} roles must be unique.")
+    return roles
+
+
+def required_axis_roles(*roles: type[AxisRole]) -> Callable[[F], F]:
+    """Declare axis roles the step's variable axes must cover for a callable."""
+    normalized = _axis_roles(roles, "required_axis_roles")
 
     def decorator(func: F) -> F:
-        vars(func)[FunctionContractAttribute.required_variable_components] = normalized
+        vars(func)[FunctionContractAttribute.required_axis_roles] = normalized
         return func
 
     return decorator
@@ -390,15 +390,12 @@ def variable_component_stack_requirement(
     return decorator
 
 
-def allowed_group_by(*group_by_values: GroupBy) -> Callable[[F], F]:
-    """Declare FunctionStep group_by values allowed by a callable."""
-    normalized = tuple(
-        group_by if isinstance(group_by, GroupBy) else GroupBy(group_by)
-        for group_by in group_by_values
-    )
+def allowed_group_by_roles(*roles: type[AxisRole]) -> Callable[[F], F]:
+    """Declare the axis roles a callable's step may group by."""
+    normalized = _axis_roles(roles, "allowed_group_by_roles")
 
     def decorator(func: F) -> F:
-        vars(func)[FunctionContractAttribute.allowed_group_by] = normalized
+        vars(func)[FunctionContractAttribute.allowed_group_by_roles] = normalized
         return func
 
     return decorator

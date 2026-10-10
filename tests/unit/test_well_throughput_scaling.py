@@ -42,7 +42,6 @@ from benchmark.well_throughput_scaling import (
     well_throughput_start_method_from_manifest,
     write_well_throughput_csv,
 )
-from openhcs.constants.constants import AllComponents
 from openhcs.core.config import (
     MultiprocessingStartMethod,
     PipelineConfig,
@@ -62,6 +61,8 @@ from openhcs.core.virtual_workspace_metadata import (
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.virtual_workspace_metadata import component_metadata_field
 
 
 def test_reused_server_suite_keeps_one_client_and_distinct_resume_identity(
@@ -605,7 +606,7 @@ def test_repeated_wells_keep_all_declared_projection_fields_coherent(
 ) -> None:
     parser = SourceSchemaFilenameParser()
     original = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
         ref=SourcePixelRef("disk", "/source/blue.tif"),
         source_alias="Blue",
         source_metadata={"Well": "A01", "site": "1", "channel": "1"},
@@ -615,7 +616,7 @@ def test_repeated_wells_keep_all_declared_projection_fields_coherent(
     main = {
         **serializer.projection_fields(((original, original_path),)),
         FIELDS.IMAGE_FILES: [original_path],
-        FIELDS.WELLS: {"A01": None},
+        component_metadata_field(Microscopy.Well): {"A01": None},
     }
     metadata_path = tmp_path / "openhcs_metadata.json"
     metadata_path.write_text(
@@ -636,7 +637,7 @@ def test_repeated_wells_keep_all_declared_projection_fields_coherent(
     assert set(mapping) == set(projections) == set(updated[FIELDS.IMAGE_FILES])
     assert len(projections) == 2
     assert {
-        projection.address.value_for(AllComponents.WELL)
+        projection.address.value_for(Microscopy.Well)
         for projection in projections.values()
     } == {
         "W001",
@@ -659,7 +660,7 @@ def test_repeated_wells_use_manifest_source_well_scope(
     serializer = SourceProjectionMetadataSerializer(parser=parser)
     sources = tuple(
         SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values(well, 1, 1, 1, 1),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, well), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             ref=SourcePixelRef("disk", f"/source/{well}.tif"),
             source_metadata={"Well": well},
         )
@@ -672,7 +673,7 @@ def test_repeated_wells_use_manifest_source_well_scope(
     main = {
         **serializer.projection_fields(entries),
         FIELDS.IMAGE_FILES: [path for _source, path in entries],
-        FIELDS.WELLS: {"A01": None, "B01": None},
+        component_metadata_field(Microscopy.Well): {"A01": None, "B01": None},
     }
     metadata_path = tmp_path / "openhcs_metadata.json"
     metadata_path.write_text(

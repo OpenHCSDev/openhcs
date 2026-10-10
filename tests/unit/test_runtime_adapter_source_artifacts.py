@@ -8,7 +8,7 @@ from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from scipy.io import savemat
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
@@ -46,6 +46,7 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
 from openhcs.microscopes import create_microscope_handler
 from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _filemanager() -> FileManager:
@@ -145,7 +146,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
         microscope_handler=microscope_handler,
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-            frozenset((AllComponents.CHANNEL,))
+            frozenset((Microscopy.Channel,))
         ),
     )
     context.runtime_source_workspace_projection_authority = VirtualWorkspaceSourceProjectionAuthority.from_context(

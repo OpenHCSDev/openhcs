@@ -14,7 +14,6 @@ import numpy.typing as npt
 from arraybridge.decorators import DtypeConversionConfig
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImagePayloadSliceStack,
@@ -67,6 +66,7 @@ from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
 )
+from openhcs.core.axes import Axis
 
 RuntimeProjectionPrimitive: TypeAlias = str | bytes | int | float | bool | None
 RuntimeProjectionMapping: TypeAlias = Mapping[str, "RuntimeProjectionData"]
@@ -104,7 +104,7 @@ class RuntimeProjectionSourceIdentityRequest:
 
     value: RuntimeProjectionData
     source_description: str
-    variable_components: Sequence[VariableComponents] = field(default_factory=tuple)
+    variable_components: Sequence[type[Axis]] = field(default_factory=tuple)
     plane_projection: RuntimePlaneAxisValueProjection | None = None
 
     def runtime_slice_count(self) -> int | None:

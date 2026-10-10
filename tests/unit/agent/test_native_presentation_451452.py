@@ -17,7 +17,7 @@ from openhcs.core.config import (
 
 def test_stream_admits_original_display_declaration_without_changing_endpoint():
     display = NapariDisplayConfig(
-        channel_mode=NapariDimensionMode.LAYER, colormap="green"
+        colour_mode=NapariDimensionMode.LAYER, colormap="green"
     )
     request = PlateFileStreamRequest.from_fields(
         plate_path="/synthetic",
@@ -25,10 +25,10 @@ def test_stream_admits_original_display_declaration_without_changing_endpoint():
         port=6004,
     )
     config = PlateStreamingService._streaming_config(request)
-    assert config.channel_mode is NapariDimensionMode.LAYER
+    assert config.colour_mode is NapariDimensionMode.LAYER
     assert config.colormap == "green"
     assert config.port == 6004
-    assert request.as_tool_arguments()["display_config"]["channel_mode"] == "layer"
+    assert request.as_tool_arguments()["display_config"]["colour_mode"] == "layer"
     assert isinstance(config, NapariDisplayConfig)
 
 
@@ -106,7 +106,7 @@ def test_two_physical_channel_layers_share_spatial_view_without_remapping_pixels
         PlateFileStreamRequest.from_fields(
             plate_path="/synthetic",
             display_config=NapariDisplayConfig(
-                channel_mode=NapariDimensionMode.LAYER,
+                colour_mode=NapariDimensionMode.LAYER,
             ),
         )
     )

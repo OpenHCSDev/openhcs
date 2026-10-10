@@ -15,9 +15,10 @@ from matplotlib.figure import Figure
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
+from openhcs.core.axes import TimeAxis
 from openhcs.processing.backends.cellprofiler._font_raster_native import rasterize
 
-from openhcs.constants.constants import MemoryType, VariableComponents
+from openhcs.constants.constants import MemoryType
 from openhcs.core.artifacts import (
     ArtifactType,
     ImageArtifactType,
@@ -38,7 +39,7 @@ from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
     object_label_input_execution_mode,
-    required_variable_components,
+    required_axis_roles,
     special_inputs,
 )
 from python_introspect import public_names_from_objects
@@ -1319,7 +1320,7 @@ class DistanceTrackObjectsMethodStrategy(TrackObjectsMethodStrategy):
         return tuple(pairs)
 
 
-@required_variable_components(VariableComponents.TIMEPOINT)
+@required_axis_roles(TimeAxis)
 @numpy(contract=ProcessingContract.PURE_3D)
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
 @special_inputs("labels")

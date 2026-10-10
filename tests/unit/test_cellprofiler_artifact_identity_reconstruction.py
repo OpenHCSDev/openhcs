@@ -16,7 +16,6 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.constants.constants import AllComponents
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.function_patterns import (
@@ -53,6 +52,7 @@ from openhcs.processing.backends.cellprofiler.intensity import (
     MeasureObjectIntensityModule,
     measure_object_intensity,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class _ContractProvider(InvocationContractProvider):
@@ -170,7 +170,7 @@ def test_registered_reconstruction_overrides_stay_on_semantic_leaves() -> None:
 
 
 def test_authored_identity_remains_visible_through_compiled_artifact_graph() -> None:
-    object_scope = ComponentSelector(AllComponents.SITE, "A02")
+    object_scope = ComponentSelector(Microscopy.Site, "A02")
     source_bindings = StepSourceBindingsConfig(
         enabled=True,
         bindings=(

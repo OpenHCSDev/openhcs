@@ -6,7 +6,6 @@ from collections.abc import Iterable
 from functools import lru_cache
 from dataclasses import dataclass
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     NamedArtifactPayload,
 )
@@ -40,6 +39,7 @@ from typing import ClassVar
 import math
 import numpy as np
 import re
+from openhcs.core.axes import AxisFamily
 
 
 @dataclass(slots=True, kw_only=True)
@@ -1144,7 +1144,7 @@ class MeasurementRowAxisField(str, Enum):
         return frozenset(
             (
                 *(field.value for field in cls),
-                *(component.value for component in AllComponents),
+                *AxisFamily.active().names(),
             )
         )
 

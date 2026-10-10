@@ -9,7 +9,7 @@ import pytest
 import tifffile
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import GroupBy, VariableComponents, Microscope
+from openhcs.constants.constants import Microscope
 from openhcs.core.config import (
     LazyPathPlanningConfig,
     PipelineConfig,
@@ -50,6 +50,7 @@ from openhcs.processing.backends.cellprofiler.object_images import (
     ImageMode,
     convert_objects_to_image,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @artifact_outputs(ArtifactSpec.output("objects", ObjectLabelsArtifactType))
@@ -96,7 +97,7 @@ def _plate(root: Path, site_count: int = 1) -> Path:
     for site in range(1, site_count + 1):
         path = root / f"A01_s{site:03d}_w1_z001_t001.tif"
         tifffile.imwrite(path, pixels)
-        address = OpenHCSPlaneAddress.from_values("A01", site, 1, 1, 1)
+        address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, site), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1)))
         metadata = ImagePayloadMetadata(
             source_path=str(path),
             source_component_metadata={**address.as_component_metadata(), "extension": ".tif"},
@@ -129,8 +130,8 @@ def _compile(root: Path, results: Path, main_filter=0):
         materialization_results_path=results,
         path_planning_config=LazyPathPlanningConfig(output_dir_suffix="_out", well_filter=main_filter),
         processing_config=LazyProcessingConfig(
-            group_by=GroupBy.CHANNEL,
-            variable_components=[VariableComponents.SITE],
+            group_by=Microscopy.Channel,
+            variable_components=[Microscopy.Site],
         ),
         num_workers=1,
         use_threading=True,
@@ -183,7 +184,7 @@ def test_converted_checkpoint_has_typed_address_on_final_reconciliation(tmp_path
     reopened_metadata = orchestrator.microscope_handler.metadata_handler.load_metadata_document(saved.parent)
     reopened = VirtualWorkspaceSourceProjection.from_openhcs_metadata(saved.parent, reopened_metadata)
     retained = reopened.source_projections_by_virtual_path[projection["virtual_path"]]
-    assert retained.address == OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1)
+    assert retained.address == OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1)))
     assert retained.image_metadata.source_voxel_spacing == SourceVoxelSpacing((0.65, 0.65))
     assert retained.image_metadata.source_path == projected_metadata.source_path
     if main_filter:

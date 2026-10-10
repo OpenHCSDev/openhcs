@@ -13,7 +13,6 @@ import pytest
 from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
-from openhcs.constants.constants import AllComponents, GroupBy
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -85,6 +84,7 @@ from openhcs.processing.backends.cellprofiler.shape import (
 from openhcs.processing.backends.cellprofiler.texture import MeasureTextureModule
 from openhcs.processing.backends.cellprofiler.outlines import OverlayObjectsModule
 from openhcs.processing.backends.cellprofiler.morphology import MaskObjectsModule
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _module(
@@ -625,11 +625,11 @@ def test_calculate_math_retains_measurement_subjects_across_producer_channels() 
         path="/memory/intensity.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=("2", "1"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
     )
     assert ArtifactInputProjectionPlan.declared_producer_selection_scope(
         measurement_input, storage
-    ) == ComponentGroupScope.from_raw(("2", "1"), component=AllComponents.CHANNEL)
+    ) == ComponentGroupScope.from_raw(("2", "1"), component=Microscopy.Channel)
 
 
 def test_declarations_carry_cross_step_object_and_measurement_flow() -> None:
@@ -801,7 +801,7 @@ def test_primary_source_binding_resolves_the_exact_module_input() -> None:
     source_binding = NamedSourceBinding(
         alias=source_image.name,
         artifact_kind=ImageArtifactType,
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
     )
 
     contract = module_type.callable_contract(
@@ -817,7 +817,7 @@ def test_primary_source_binding_resolves_the_exact_module_input() -> None:
                 enabled=True,
                 bindings=(source_binding,),
             ),
-            group_by=GroupBy.CHANNEL,
+            group_by=Microscopy.Channel,
             available_artifacts=ArtifactSpecCollection((source_image,)),
             main_flow_artifacts=ArtifactSpecCollection((source_image,)),
         ),
@@ -858,12 +858,12 @@ def test_primary_source_binding_rejects_a_different_channel_group() -> None:
                             alias=source_image.name,
                             artifact_kind=ImageArtifactType,
                             component_identity=(
-                                ComponentSelector(AllComponents.CHANNEL, "2"),
+                                ComponentSelector(Microscopy.Channel, "2"),
                             ),
                         ),
                     ),
                 ),
-                group_by=GroupBy.CHANNEL,
+                group_by=Microscopy.Channel,
                 available_artifacts=ArtifactSpecCollection((source_image,)),
                 main_flow_artifacts=ArtifactSpecCollection((source_image,)),
             ),
@@ -873,22 +873,22 @@ def test_primary_source_binding_rejects_a_different_channel_group() -> None:
 def test_group_artifact_context_reseeds_main_flow_from_exact_primary_bindings() -> None:
     dna = NamedSourceBinding(
         alias="DNA",
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     )
     rna = NamedSourceBinding(
         alias="RNA",
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
     )
     illumination = NamedSourceBinding(
         alias="Illumination",
         artifact_kind=ImageArtifactType,
         projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
     )
     bindings = (dna, rna, illumination)
     context = ArtifactDeclarationStepContext(
         source_bindings=StepSourceBindingsConfig(enabled=True, bindings=bindings),
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
         input_source=InputSource.PIPELINE_START,
     ).with_source_declarations(binding.input_spec() for binding in bindings)
 

@@ -9,7 +9,7 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import ArtifactViewerStreaming
@@ -41,6 +41,8 @@ from openhcs.processing.presets.pipelines.neuroncyto_ii_crossover_neurite_outgro
 )
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _inputs(plate_path: Path, output_root: Path) -> NeuronCytoIICrossoverInputs:
@@ -79,7 +81,7 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
         next(
             selector.value
             for selector in binding.component_identity
-            if selector.component is AllComponents.CHANNEL
+            if selector.component is Microscopy.Channel
         )
         for binding in bindings
     ] == ["1", "2"]
@@ -87,8 +89,8 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
     assert len(steps) == 1
     step = steps[0]
     assert get_core_callable(step.func) is neurite_outgrowth_metaxpress_pixels
-    assert step.processing_config.variable_components == [VariableComponents.CHANNEL]
-    assert step.processing_config.group_by is GroupBy.NONE
+    assert step.processing_config.variable_components == [Microscopy.Channel]
+    assert step.processing_config.group_by is Ungrouped
     assert step.processing_config.input_source is InputSource.PIPELINE_START
     assert step.napari_streaming_config.enabled is True
     assert step.napari_streaming_config.persistent is True
@@ -188,7 +190,7 @@ def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
     context = compilation.runtime_contexts[inputs.image_id]
     plan = context.step_plans[0]
     assert plan.step_name == "NeuronCyto II Crossover Neurite Outgrowth"
-    assert tuple(plan.variable_components) == (VariableComponents.CHANNEL,)
+    assert tuple(plan.variable_components) == (Microscopy.Channel,)
     assert plan.compiled_function_pattern is not None
     assert {
         output.name: output.viewer_streaming
@@ -303,11 +305,11 @@ def test_neuroncyto_declared_identity_replaces_loose_tiff_store_coordinates(
     assert projection is not None
     source_projections = tuple(projection.source_projections_by_virtual_path.values())
     assert {
-        source_projection.address.value_for(AllComponents.WELL)
+        source_projection.address.value_for(Microscopy.Well)
         for source_projection in source_projections
     } == {inputs.image_id}
     assert {
-        source_projection.address.value_for(AllComponents.CHANNEL)
+        source_projection.address.value_for(Microscopy.Channel)
         for source_projection in source_projections
     } == {"1", "2"}
     assert {

@@ -18,6 +18,7 @@ import json
 from typing import ClassVar, Mapping
 
 from metaclass_registry import AutoRegisterMeta
+from openhcs.core.axes import is_grouping_declaration
 
 
 class DebugViewTableProjection(Enum):
@@ -431,6 +432,8 @@ def debug_view_jsonable(value: object) -> object:
         return value
     if isinstance(value, Enum):
         return value.value
+    if is_grouping_declaration(value):
+        return value.name
     if isinstance(value, tuple):
         return [debug_view_jsonable(item) for item in value]
     if isinstance(value, list):

@@ -8,7 +8,8 @@ from typing import Annotated, Any, ClassVar
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from scipy.fftpack import fft2, ifft2
-from openhcs.constants.constants import GroupBy, MemoryType, VariableComponents
+from openhcs.core.axes import ColourAxis, TileAxis
+from openhcs.constants.constants import MemoryType
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
 )
@@ -25,7 +26,7 @@ from openhcs.core.artifacts import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.pipeline.function_contracts import (
-    required_variable_components,
+    required_axis_roles,
 )
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
@@ -205,7 +206,7 @@ class AlignModule(
     module_name = "Align"
     function_name = "align"
     validated = True
-    group_by = GroupBy.SITE
+    group_by_role = TileAxis
     confidence = 1.0
 
     class Method(Enum):
@@ -1074,7 +1075,7 @@ def prepare_align() -> None:
     ).offset()
 
 
-@required_variable_components(VariableComponents.CHANNEL)
+@required_axis_roles(ColourAxis)
 @numpy(contract=ProcessingContract.PURE_3D)
 def align(
     image: RuntimeArrayData,

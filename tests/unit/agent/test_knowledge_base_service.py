@@ -19,6 +19,7 @@ from openhcs.agent.services.knowledge_base_service import (
 )
 from openhcs.mcp.context import OpenHCSAgentContext
 from python_introspect import to_jsonable
+from openhcs.core.axes import Ungrouped
 
 
 def test_knowledge_base_catalog_lists_source_backed_documents():
@@ -350,7 +351,7 @@ def test_knowledge_base_retrieves_canonical_image_source_guide():
         document.content
     )
     assert "compiler normalizes it to" in document.content
-    assert "``GroupBy.NONE``" in document.content
+    assert "``Ungrouped``" in document.content
     assert "intentionally generic rather than a" in document.content
     assert "They do not reinterpret a previous step's output" in document.content
     assert "current artifact provenance" in document.content

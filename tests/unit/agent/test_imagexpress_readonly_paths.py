@@ -17,12 +17,13 @@ from openhcs.agent.services.plate_inspection_service import (
     PlateInspectionFilenameParser,
     PlateInspectionService,
 )
-from openhcs.constants.constants import AllComponents
 from openhcs.core.plate_image_inventory import PlateFileInventory
 from openhcs.microscopes import create_microscope_handler
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 from openhcs.microscopes.microscope_base import MICROSCOPE_HANDLERS
 from openhcs.microscopes.microscope_interfaces import MicroscopeImagePathParser
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def write_plate(root: Path) -> Path:
@@ -83,7 +84,7 @@ def inventory_for(plate: Path):
 
 def identity(record):
     return frozenset(
-        (c, record.metadata[c.value]) for c in AllComponents
+        (c, record.metadata[c.name]) for c in AxisFamily.active().axes
     ), record.source_path
 
 
@@ -97,7 +98,7 @@ def test_raw_inspection_retains_folder_z_and_never_initializes(tmp_path: Path):
     assert result.image_files.count == result.parse_summary.parsed_file_count == 4
     assert result.pixel_size == 0.5
     z = next(
-        item for item in result.components if item.component is AllComponents.Z_INDEX
+        item for item in result.components if item.component == Microscopy.ZIndex.name
     )
     assert z.count == 2
     assert {
@@ -113,11 +114,11 @@ def test_real_inventory_query_and_initialization_agree_on_physical_identity(tmp_
         (
             frozenset(
                 (
-                    (AllComponents.WELL, "A01"),
-                    (AllComponents.SITE, 1),
-                    (AllComponents.CHANNEL, channel),
-                    (AllComponents.Z_INDEX, z),
-                    (AllComponents.TIMEPOINT, 1),
+                    (Microscopy.Well, "A01"),
+                    (Microscopy.Site, 1),
+                    (Microscopy.Channel, channel),
+                    (Microscopy.ZIndex, z),
+                    (Microscopy.Timepoint, 1),
                 )
             ),
             str(plate / "TimePoint_1" / f"ZStep_{z}" / f"plate_A01_s1_w{channel}.tif"),
@@ -156,7 +157,7 @@ def test_real_inventory_query_and_initialization_agree_on_physical_identity(tmp_
     )
     assert (
         next(
-            c for c in inspection.components if c.component is AllComponents.Z_INDEX
+            c for c in inspection.components if c.component == Microscopy.ZIndex.name
         ).count
         == 2
     )
@@ -175,9 +176,9 @@ def test_path_owner_preserves_flat_and_folder_precedence(relative_path, z, time)
     ensure_storage_registry()
     handler = ImageXpressHandler(FileManager(dict(storage_registry)))
     parsed = handler.parse_image_path(relative_path)
-    assert parsed.value_for(AllComponents.Z_INDEX) == z
-    assert parsed.value_for(AllComponents.TIMEPOINT) == time
-    assert parsed.value_for(AllComponents.CHANNEL) == 2
+    assert parsed.value_for(Microscopy.ZIndex) == z
+    assert parsed.value_for(Microscopy.Timepoint) == time
+    assert parsed.value_for(Microscopy.Channel) == 2
 
 
 def test_parse_bounds_errors_unparsed_and_absence_keep_original_receipts(tmp_path):
@@ -191,7 +192,7 @@ def test_parse_bounds_errors_unparsed_and_absence_keep_original_receipts(tmp_pat
     ) == (2, 2)
     assert inspection.image_files.truncated_file_count == 3
     channel = next(
-        c for c in inspection.components if c.component is AllComponents.CHANNEL
+        c for c in inspection.components if c.component == Microscopy.Channel.name
     )
     assert channel.count == 2 and len(channel.values) == 1
     handler, _, _ = inventory_for(plate)
@@ -241,7 +242,7 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
                 *super().image_path_components(path),
                 *self.indexed_folder_components(
                     path,
-                    AllComponents.SITE,
+                    Microscopy.Site,
                     self._site_pattern,
                 ),
             )
@@ -268,9 +269,9 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
         assert result.handler_class == subtype.__name__
         assert result.image_files.count == result.parse_summary.parsed_file_count == 4
         summaries = {item.component: item for item in result.components}
-        assert tuple(v.key for v in summaries[AllComponents.SITE].values) == ("7",)
-        assert tuple(v.key for v in summaries[AllComponents.TIMEPOINT].values) == ("3",)
-        assert summaries[AllComponents.Z_INDEX].count == 2
+        assert tuple(v.key for v in summaries[Microscopy.Site.name].values) == ("7",)
+        assert tuple(v.key for v in summaries[Microscopy.Timepoint.name].values) == ("3",)
+        assert summaries[Microscopy.ZIndex.name].count == 2
         query = service_for(plate).query_files(
             PlateFileQueryRequest.from_fields(
                 plate_path=str(plate),

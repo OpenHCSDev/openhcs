@@ -4,7 +4,6 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
@@ -42,6 +41,7 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
     ImageOutputRecorder,
     RelationshipsOutputRecorder,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _contract(*, outputs: tuple[ArtifactSpec, ...]) -> CallableContract:
@@ -200,7 +200,7 @@ def test_image_output_recording_uses_exact_invocation_projection_for_rgb(
         path="ColorNeighbors.tif",
         artifact_type=output.artifact_type,
         relations=output.relations,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
     source_slice = ImagePayloadMetadata(
         source_image_names=(measured_objects.name,),

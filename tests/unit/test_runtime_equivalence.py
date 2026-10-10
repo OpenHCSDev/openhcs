@@ -8,7 +8,6 @@ import imageio.v3 as imageio
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ImageArtifactType,
@@ -141,6 +140,7 @@ from openhcs.processing.backends.cellprofiler.grid import (
 from openhcs.processing.backends.cellprofiler.shape import (
     MeasureObjectSizeShapeModule,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def RuntimeEquivalencePolicy(**kwargs):
@@ -4489,7 +4489,7 @@ def test_runtime_reference_artifact_equivalence_deduplicates_full_axis_relations
                     artifact_type=MeasurementsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value=f"w{index + 1}",
                     ),
                 ),
@@ -4518,7 +4518,7 @@ def test_runtime_reference_artifact_equivalence_deduplicates_full_axis_relations
                     artifact_type=RelationshipsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value=f"w{index + 1}",
                     ),
                 ),
@@ -5377,7 +5377,7 @@ def test_runtime_reference_artifact_equivalence_does_not_treat_measurement_group
                     artifact_type=MeasurementsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.SITE,
+                        component=Microscopy.Site,
                         value=group_key,
                     ),
                 ),
@@ -5471,7 +5471,7 @@ def test_runtime_reference_artifact_equivalence_does_not_treat_paired_artifact_g
                     artifact_type=MeasurementsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.SITE,
+                        component=Microscopy.Site,
                         value=group_key,
                     ),
                 ),
@@ -5494,7 +5494,7 @@ def test_runtime_reference_artifact_equivalence_does_not_treat_paired_artifact_g
                     artifact_type=RelationshipsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.SITE,
+                        component=Microscopy.Site,
                         value=group_key,
                     ),
                 ),
@@ -5661,7 +5661,7 @@ def test_runtime_reference_artifact_equivalence_aligns_scoped_child_tables_by_so
                     artifact_type=MeasurementsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.SITE,
+                        component=Microscopy.Site,
                         value=site,
                     ),
                 ),
@@ -5714,7 +5714,7 @@ def test_runtime_reference_artifact_equivalence_aligns_scoped_child_tables_by_so
         ),
         RuntimeExportObservation.from_output_root(candidate_root),
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-            frozenset((AllComponents.CHANNEL,))
+            frozenset((Microscopy.Channel,))
         ),
     )
 
@@ -8308,7 +8308,7 @@ def test_runtime_measurement_snapshot_deduplicates_aggregate_group_tables(
                     artifact_type=MeasurementsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value=group_key,
                     ),
                 ),
@@ -8480,7 +8480,7 @@ def test_runtime_measurement_observation_preserves_site_local_complete_columnar_
                     artifact_type=MeasurementsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.SITE,
+                        component=Microscopy.Site,
                         value=site,
                     ),
                 ),
@@ -8634,7 +8634,7 @@ def test_runtime_measurement_snapshot_preserves_group_local_duplicate_rows(
                     artifact_type=MeasurementsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value=group_key,
                     ),
                 ),
@@ -8706,7 +8706,7 @@ def test_runtime_measurement_snapshot_deduplicates_grouped_full_axis_tables(
                     artifact_type=MeasurementsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value=group_key,
                     ),
                 ),
@@ -8834,7 +8834,7 @@ def test_runtime_measurement_snapshot_does_not_partition_location_rows_by_group_
                     artifact_type=MeasurementsArtifactType,
                     scope=RuntimeExecutionAxisScope(
                         axis_id="A01",
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value=group_key,
                     ),
                 ),
@@ -10865,7 +10865,7 @@ def test_runtime_reference_artifact_equivalence_ignores_grouped_duplicate_image_
                 artifact_type=MeasurementsArtifactType,
                 scope=RuntimeExecutionAxisScope(
                     axis_id="A01",
-                    component=AllComponents.CHANNEL,
+                    component=Microscopy.Channel,
                     value=group_key,
                 ),
             ),
@@ -11159,7 +11159,7 @@ def test_runtime_reference_artifact_equivalence_ignores_group_replayed_image_tab
                 artifact_type=MeasurementsArtifactType,
                 scope=RuntimeExecutionAxisScope(
                     axis_id="A01",
-                    component=AllComponents.CHANNEL,
+                    component=Microscopy.Channel,
                     value=channel,
                 ),
             ),
@@ -11225,7 +11225,7 @@ def test_runtime_reference_artifact_equivalence_preserves_local_group_image_rows
                 artifact_type=MeasurementsArtifactType,
                 scope=RuntimeExecutionAxisScope(
                     axis_id="A01",
-                    component=AllComponents.CHANNEL,
+                    component=Microscopy.Channel,
                     value=channel,
                 ),
             ),

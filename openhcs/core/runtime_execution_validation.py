@@ -37,7 +37,7 @@ def runtime_artifact_viewer_component_identity(
     """Return nominal component coordinates from source or viewer metadata."""
 
     return tuple(
-        (component.value, str(value))
+        (component.name, str(value))
         for component, value in source_component_metadata_items(metadata)
     )
 
@@ -274,7 +274,7 @@ def _runtime_artifact_viewer_output_payloads(
         payloads.append(
             RuntimeArtifactViewerPayloadExpectation(
                 components=tuple(
-                    (component.value, str(value))
+                    (component.name, str(value))
                     for component, value in source_component_metadata_items(
                         source_identity.component_metadata or {}
                     )

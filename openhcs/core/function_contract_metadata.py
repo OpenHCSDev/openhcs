@@ -30,13 +30,11 @@ class FunctionContractAttribute:
     )
     runtime_bound_parameters: ClassVar[str] = "__openhcs_runtime_bound_parameters__"
     runtime_context_parameter: ClassVar[str] = "__openhcs_runtime_context_parameter__"
-    required_variable_components: ClassVar[str] = (
-        "__openhcs_required_variable_components__"
-    )
+    required_axis_roles: ClassVar[str] = "__openhcs_required_axis_roles__"
     variable_component_stack_requirement: ClassVar[str] = (
         "__openhcs_variable_component_stack_requirement__"
     )
-    allowed_group_by: ClassVar[str] = "__openhcs_allowed_group_by__"
+    allowed_group_by_roles: ClassVar[str] = "__openhcs_allowed_group_by_roles__"
     object_label_input_execution_mode: ClassVar[str] = (
         "__object_label_input_execution_mode__"
     )

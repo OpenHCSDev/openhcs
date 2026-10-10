@@ -32,6 +32,7 @@ from openhcs.core.runtime_stores import (
     RuntimeValueStore,
     StoredRuntimeValue,
 )
+from openhcs.core.axes import is_grouping_declaration
 
 
 def dataclass_record_columns(record_type: type) -> tuple[str, ...]:
@@ -260,6 +261,8 @@ def _debug_table_jsonable(value: object) -> object:
         return value
     if isinstance(value, Enum):
         return value.value
+    if is_grouping_declaration(value):
+        return value.name
     if isinstance(value, type) and issubclass(value, ArtifactType):
         return value.require_value()
     if isinstance(value, tuple):

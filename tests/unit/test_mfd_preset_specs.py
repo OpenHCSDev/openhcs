@@ -3,7 +3,6 @@ from pathlib import Path
 
 from arraybridge.decorators import DtypeConversion
 
-from openhcs.constants.constants import VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import LazyDtypeConfig
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
@@ -40,6 +39,7 @@ from openhcs.processing.presets.mfd_specs import (
     MfdPresetKey,
     build_mfd_preset,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 PIPELINE_DIR = (
     Path(__file__).resolve().parents[2]
@@ -88,7 +88,7 @@ def test_crop_analyze_spec_matches_expected_step_contract():
         "analysis",
     ]
     assert steps[0].processing_config.variable_components == [
-        VariableComponents.CHANNEL
+        Microscopy.Channel
     ]
     assert steps[0].func == (
         multi_template_crop_reference_channel,
@@ -175,7 +175,7 @@ def test_stitch_specs_share_structure_and_vary_backend():
     assert cpu_steps[0].func == gpu_steps[0].func
     assert cpu_steps[1].func == gpu_steps[1].func == create_composite
     assert cpu_steps[1].processing_config.variable_components == [
-        VariableComponents.CHANNEL
+        Microscopy.Channel
     ]
     assert cpu_steps[2].func == (
         ashlar_compute_tile_positions_cpu,

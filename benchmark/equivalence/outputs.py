@@ -25,7 +25,6 @@ from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
 from openhcs.core.runtime_exports import RuntimeExportObservation
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_projection import SourceProjectionSet
@@ -34,6 +33,7 @@ from openhcs.core.virtual_workspace_metadata import (
     METADATA_CONFIG,
     OpenHCSMetadataSubdirectories,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,7 +136,7 @@ class RuntimeOutputSnapshot:
         if (
             not paths
             or not source_workspaces
-            or image_set_policy.is_identity_component(AllComponents.Z_INDEX)
+            or image_set_policy.is_identity_component(Microscopy.ZIndex)
         ):
             return tuple(RuntimeImageSnapshot.from_image_file(path) for path in paths)
         expected_paths = frozenset(path.absolute() for path in paths)

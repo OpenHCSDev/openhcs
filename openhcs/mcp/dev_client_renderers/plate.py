@@ -31,6 +31,7 @@ from openhcs.mcp.dev_client_rendering import (
     McpDevPayloadProjection,
     McpDiagnosticRenderer,
 )
+from openhcs.core.axes import AxisFamily
 
 
 class PlateImageSampleRenderer(McpDevTypedOutputRenderer):
@@ -665,21 +666,27 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
             )
         return lines
 
+    @staticmethod
+    def _summary_axis_names() -> tuple[str, ...]:
+        """Partition axis first, then the variable axes in declaration order."""
+
+        family = AxisFamily.active()
+        return (
+            family.partition_axis().name,
+            *(axis.name for axis in family.variable_axes()),
+        )
+
     @classmethod
     def _axis_summary_line(
         cls,
         components: tuple[Mapping[str, JsonValue], ...],
     ) -> str:
         counts = cls._component_counts(components)
-        return (
-            "Axis sizes: "
-            f"wells={cls._axis_count_text(counts, 'well')} "
-            f"sites={cls._axis_count_text(counts, 'site')} "
-            f"channels={cls._axis_count_text(counts, 'channel')} "
-            f"z={cls._axis_count_text(counts, 'z_index')} "
-            f"timepoints={cls._axis_count_text(counts, 'timepoint')} "
-            f"profile={cls._axis_profile_text(counts)}"
+        sizes = " ".join(
+            f"{name}={cls._axis_count_text(counts, name)}"
+            for name in cls._summary_axis_names()
         )
+        return f"Axis sizes: {sizes} profile={cls._axis_profile_text(counts)}"
 
     @classmethod
     def _metadata_sources_line(
@@ -694,7 +701,7 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
         }
         ordered_parts = [
             f"{component}={sources.get(component, '<none>')}"
-            for component in ("well", "site", "channel", "z_index", "timepoint")
+            for component in cls._summary_axis_names()
             if component in sources
         ]
         return f"Metadata sources: {', '.join(ordered_parts) or '<none>'}"
@@ -722,37 +729,19 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
 
     @classmethod
     def _axis_profile_text(cls, counts: Mapping[str, int]) -> str:
-        profile = (
-            cls._axis_profile_part(counts, "site", "multi-site", "single-site"),
-            cls._axis_profile_part(
-                counts,
-                "channel",
-                "multi-channel",
-                "single-channel",
-            ),
-            cls._axis_profile_part(counts, "z_index", "3D", "2D"),
-            cls._axis_profile_part(
-                counts,
-                "timepoint",
-                "time-series",
-                "single-timepoint",
-            ),
+        return ",".join(
+            cls._axis_profile_part(counts, axis.name)
+            for axis in AxisFamily.active().variable_axes()
         )
-        return ",".join(profile)
 
     @staticmethod
-    def _axis_profile_part(
-        counts: Mapping[str, int],
-        component: str,
-        multiple_label: str,
-        singleton_label: str,
-    ) -> str:
+    def _axis_profile_part(counts: Mapping[str, int], component: str) -> str:
         count = counts.get(component)
         if count is None:
             return f"unknown-{component}"
         if count > 1:
-            return multiple_label
-        return singleton_label
+            return f"multi-{component}"
+        return f"single-{component}"
 
     @staticmethod
     def _component_value_text(value: Mapping[str, JsonValue]) -> str:

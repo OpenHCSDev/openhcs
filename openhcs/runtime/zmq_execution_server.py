@@ -738,14 +738,18 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         *,
         execution_bundle: CompiledExecutionBundle | None = None,
     ) -> list[str]:
-        from openhcs.constants import MULTIPROCESSING_AXIS
+        from openhcs.core.axes import AxisFamily
 
         if axis_filter is not None:
             return list(axis_filter)
         available_axis_ids = (
             execution_bundle.axis_ids
             if execution_bundle is not None
-            else tuple(orchestrator.get_component_keys(MULTIPROCESSING_AXIS))
+            else tuple(
+                orchestrator.get_component_keys(
+                    AxisFamily.active().partition_axis()
+                )
+            )
         )
         return debug_execution_policy.axis_filter_for_available(available_axis_ids)
 

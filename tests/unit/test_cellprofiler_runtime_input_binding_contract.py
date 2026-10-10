@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -49,6 +49,7 @@ from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
     cellprofiler_runtime_input_edge_for_test,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _contract(func, inputs: tuple[ArtifactSpec, ...] = ()) -> CallableContract:
@@ -237,7 +238,7 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
         invocation_scope=ComponentGroupScope.ungrouped(),
         producer_selection_scope=ComponentGroupScope.ungrouped(),
         component_scopes=(),
-        consumer_variable_components=(AllComponents.Z_INDEX,),
+        consumer_variable_components=(Microscopy.ZIndex,),
     )
     mask_plane_metadata = tuple(
         {
@@ -293,8 +294,8 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
     ).payload_with(np.zeros((3, 2, 2), dtype=np.float32), None)
     source_binding_plan = CompiledSourceBindingPlan(
         source_stack_components=(
-            AllComponents.CHANNEL,
-            AllComponents.Z_INDEX,
+            Microscopy.Channel,
+            Microscopy.ZIndex,
         )
     )
     stack_adapter = cellprofiler_runtime_adapter_for_test(
@@ -400,7 +401,7 @@ def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> 
         invocation_scope=ComponentGroupScope.ungrouped(),
         producer_selection_scope=ComponentGroupScope.ungrouped(),
         component_scopes=(),
-        consumer_variable_components=(AllComponents.Z_INDEX,),
+        consumer_variable_components=(Microscopy.ZIndex,),
     )
     mask_payload = ImagePayloadMetadata(
         source_image_names=(mask.name,),
@@ -457,8 +458,8 @@ def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> 
         plane_projection=RuntimePlaneProjection.stack(3),
         source_binding_plan=CompiledSourceBindingPlan(
             source_stack_components=(
-                AllComponents.CHANNEL,
-                AllComponents.Z_INDEX,
+                Microscopy.Channel,
+                Microscopy.ZIndex,
             )
         ),
     )

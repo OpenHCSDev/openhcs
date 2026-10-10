@@ -8,7 +8,7 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -20,6 +20,7 @@ from openhcs.core.progress import set_progress_queue
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_htd_spacing_survives_gaussian_compile_execute_and_persist(tmp_path):
@@ -55,7 +56,7 @@ def test_htd_spacing_survives_gaussian_compile_execute_and_persist(tmp_path):
                 FunctionStep(
                     func=(gaussian_blur, {"sigma": 1}),
                     processing_config=LazyProcessingConfig(
-                        variable_components=[VariableComponents.Z_INDEX]
+                        variable_components=[Microscopy.ZIndex]
                     ),
                 )
             ],

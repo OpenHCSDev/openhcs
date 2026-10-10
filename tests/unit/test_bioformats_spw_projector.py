@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.microscopes.bioformats_adapter import (
@@ -15,6 +14,7 @@ from openhcs.microscopes.bioformats_adapter import (
     BioFormatsWell,
     BioFormatsWellSample,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _image(
@@ -80,10 +80,10 @@ def test_store_metadata_emits_exact_plate_planes(tmp_path: Path) -> None:
 
     assert dataset.identity.value == "Plate:0"
     assert [candidate.declared_address for candidate in dataset.candidates] == [
-        OpenHCSPlaneAddress.from_values("A02", "3", "1", "1", "1"),
-        OpenHCSPlaneAddress.from_values("A02", "3", "2", "1", "1"),
-        OpenHCSPlaneAddress.from_values("A02", "3", "1", "1", "2"),
-        OpenHCSPlaneAddress.from_values("A02", "3", "2", "1", "2"),
+        OpenHCSPlaneAddress(((Microscopy.Well, "A02"), (Microscopy.Site, "3"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
+        OpenHCSPlaneAddress(((Microscopy.Well, "A02"), (Microscopy.Site, "3"), (Microscopy.Channel, "2"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
+        OpenHCSPlaneAddress(((Microscopy.Well, "A02"), (Microscopy.Site, "3"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "2"))),
+        OpenHCSPlaneAddress(((Microscopy.Well, "A02"), (Microscopy.Site, "3"), (Microscopy.Channel, "2"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "2"))),
     ]
 
 
@@ -98,14 +98,14 @@ def test_nonplate_images_map_to_distinct_well_samples(tmp_path: Path) -> None:
     ).source_dataset()
 
     assert [
-        candidate.declared_address.value_for(AllComponents.WELL)
+        candidate.declared_address.value_for(Microscopy.Well)
         for candidate in dataset.candidates
     ] == [
         "Image%3Asample-a.npy",
         "Image%3Asample-b.npy",
     ]
     assert [
-        candidate.declared_address.value_for(AllComponents.SITE)
+        candidate.declared_address.value_for(Microscopy.Site)
         for candidate in dataset.candidates
     ] == [
         "1",
@@ -126,8 +126,8 @@ def test_one_nonplate_czi_maps_many_scenes_to_exact_series_sites(
 
     assert dataset.identity.value == tmp_path.resolve().as_uri()
     assert [candidate.declared_address for candidate in dataset.candidates] == [
-        OpenHCSPlaneAddress.from_values("many-scenes.czi", "1", "1", "1", "1"),
-        OpenHCSPlaneAddress.from_values("many-scenes.czi", "4", "1", "1", "1"),
+        OpenHCSPlaneAddress(((Microscopy.Well, "many-scenes.czi"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
+        OpenHCSPlaneAddress(((Microscopy.Well, "many-scenes.czi"), (Microscopy.Site, "4"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
     ]
     assert {
         candidate.store_identity.container_key for candidate in dataset.candidates
@@ -174,9 +174,9 @@ def test_one_plate_czi_preserves_many_wells_and_sparse_sample_indexes(
 
     assert dataset.identity.value == "Plate:many-samples"
     assert [candidate.declared_address for candidate in dataset.candidates] == [
-        OpenHCSPlaneAddress.from_values("A01", "1", "1", "1", "1"),
-        OpenHCSPlaneAddress.from_values("A01", "5", "1", "1", "1"),
-        OpenHCSPlaneAddress.from_values("B02", "10", "1", "1", "1"),
+        OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
+        OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "5"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
+        OpenHCSPlaneAddress(((Microscopy.Well, "B02"), (Microscopy.Site, "10"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
     ]
     assert {
         candidate.store_identity.sample_group_id for candidate in dataset.candidates

@@ -11,7 +11,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, ClassVar
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactType,
     ImageArtifactType,
@@ -61,6 +60,7 @@ from openhcs.interop.cellprofiler.settings_binder import parse_cellprofiler_bool
 from openhcs.interop.cellprofiler.source_metadata import (
     CellProfilerSourceMetadataField,
 )
+from openhcs.core.axes import Axis, AxisFamily, ColourAxis, StackAxis
 
 _METADATA_MATCH_PATTERN = re.compile(
     '\\(metadata does (?P<field>[A-Za-z0-9_]+) \\"(?P<value>[^\\"]+)\\"\\)'
@@ -485,7 +485,7 @@ def _selector_from_rule_criteria(rule_criteria: str) -> SourceSelector:
 
 def _selector_component_identity(
     selector: SourceSelector,
-    component: AllComponents,
+    component: type[Axis],
 ) -> ComponentSelector | None:
     declared = tuple(
         candidate
@@ -500,7 +500,7 @@ def _selector_component_identity(
     values = tuple(dict.fromkeys(candidate.value for candidate in declared))
     if len(values) > 1:
         raise ValueError(
-            f"Source selector declares conflicting {component.value} values "
+            f"Source selector declares conflicting {component.name} values "
             f"{values!r}."
         )
     if not values:
@@ -510,7 +510,7 @@ def _selector_component_identity(
 
 def _metadata_rules_declare_component(
     config: SourceBindingsConfig,
-    component: AllComponents,
+    component: type[Axis],
 ) -> bool:
     return any(
         source_metadata_component(field) is component
@@ -1310,9 +1310,11 @@ class NamesAndTypesModule(SourceSetupCellProfilerModule):
 
         bindings: list[NamedSourceBinding] = []
         explicit_sources: list[ImagePlaneSource] = []
+        # CellProfiler image names are the colour axis of the active family.
+        colour_axis = AxisFamily.active().one(ColourAxis)
         metadata_declares_channel = _metadata_rules_declare_component(
             config,
-            AllComponents.CHANNEL,
+            colour_axis,
         )
         used_channel_values: set[str] = set()
         next_channel_index = 1
@@ -1346,13 +1348,13 @@ class NamesAndTypesModule(SourceSetupCellProfilerModule):
             if source_type.projection_role is SourceProjectionRole.PRIMARY_PLANE:
                 channel_identity = _selector_component_identity(
                     selector,
-                    AllComponents.CHANNEL,
+                    colour_axis,
                 )
                 if channel_identity is None and not metadata_declares_channel:
                     while str(next_channel_index) in used_channel_values:
                         next_channel_index += 1
                     channel_identity = ComponentSelector(
-                        component=AllComponents.CHANNEL,
+                        component=colour_axis,
                         value=str(next_channel_index),
                     )
                 if channel_identity is not None:
@@ -1396,7 +1398,7 @@ class NamesAndTypesModule(SourceSetupCellProfilerModule):
                 while str(next_channel_index) in used_channel_values:
                     next_channel_index += 1
                 channel_identity = ComponentSelector(
-                    component=AllComponents.CHANNEL,
+                    component=colour_axis,
                     value=str(next_channel_index),
                 )
                 used_channel_values.add(channel_identity.value)
@@ -1412,7 +1414,9 @@ class NamesAndTypesModule(SourceSetupCellProfilerModule):
         source_spatial_domain = config.source_spatial_domain
         if module.get_setting("Process as 3D?", "No").strip().casefold() == "yes":
             source_stack_components = tuple(
-                dict.fromkeys((*source_stack_components, AllComponents.Z_INDEX))
+                dict.fromkeys(
+                    (*source_stack_components, AxisFamily.active().one(StackAxis))
+                )
             )
             source_spatial_domain = VolumeSourceSpatialDomain()
         voxel_spacing = SourceVoxelSpacing.from_cellprofiler_xyz(

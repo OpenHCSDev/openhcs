@@ -32,7 +32,6 @@ from benchmark.datasets.cache import (
     resolve_benchmark_path_root,
 )
 from openhcs.constants import Backend, Microscope
-from openhcs.constants.constants import AllComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactType,
@@ -96,6 +95,7 @@ from openhcs.runtime.zmq_execution_observation import (
 from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _materialize_imported_sources(
@@ -374,7 +374,7 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
                         ),
                         origin=SourceBindingOrigin.PIPELINE_START,
                         component_identity=(
-                            ComponentSelector(AllComponents.CHANNEL, "1"),
+                            ComponentSelector(Microscopy.Channel, "1"),
                         ),
                     ),
                 ),
@@ -841,7 +841,7 @@ def test_official_colocalization_preserves_relationships_and_configured_export(
     } == {
         "Objects1": (
             (
-                AllComponents.CHANNEL,
+                Microscopy.Channel,
                 "1",
                 (2, 1040, 1392),
                 RuntimePlaneAxis.RUNTIME_SLICE,
@@ -849,7 +849,7 @@ def test_official_colocalization_preserves_relationships_and_configured_export(
         ),
         "Objects2": (
             (
-                AllComponents.CHANNEL,
+                Microscopy.Channel,
                 "2",
                 (2, 1040, 1392),
                 RuntimePlaneAxis.RUNTIME_SLICE,
@@ -857,7 +857,7 @@ def test_official_colocalization_preserves_relationships_and_configured_export(
         ),
         "ColocalizedRegion": (
             (
-                AllComponents.CHANNEL,
+                Microscopy.Channel,
                 "1",
                 (2, 1040, 1392),
                 RuntimePlaneAxis.RUNTIME_SLICE,
@@ -1003,7 +1003,7 @@ def test_official_illumination_preserves_rule_row_binding_over_zmq(
     assert source_bindings.binding_for_alias("DNA") is None
     assert orig_green.origin is SourceBindingOrigin.PIPELINE_START
     assert orig_green.component_identity == (
-        ComponentSelector(AllComponents.CHANNEL, "1"),
+        ComponentSelector(Microscopy.Channel, "1"),
     )
     assert len(orig_green.selector.filters) == 1
     source_filter = orig_green.selector.filters[0]

@@ -123,11 +123,11 @@ def enqueue(
     voxel_spacing=None,
 ):
     config = display_config or NapariDisplayConfig(
-        well_mode=NapariDimensionMode.STACK,
-        site_mode=NapariDimensionMode.LAYER,
-        channel_mode=NapariDimensionMode.LAYER,
-        z_index_mode=(NapariDimensionMode.STACK if z_domain else NapariDimensionMode.LAYER),
-        timepoint_mode=NapariDimensionMode.LAYER,
+        partition_mode=NapariDimensionMode.STACK,
+        tile_mode=NapariDimensionMode.LAYER,
+        colour_mode=NapariDimensionMode.LAYER,
+        stack_mode=(NapariDimensionMode.STACK if z_domain else NapariDimensionMode.LAYER),
+        time_mode=NapariDimensionMode.LAYER,
         variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
     )
     semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
@@ -211,7 +211,7 @@ def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
     receiver.replace_layers = replace_layers
     wells = [f"{row}{column:02}" for row in "ABCDEFGH" for column in range(1, 13)]
     raw_config = NapariDisplayConfig(
-        channel_mode=NapariDimensionMode.LAYER, well_mode=NapariDimensionMode.LAYER,
+        colour_mode=NapariDimensionMode.LAYER, partition_mode=NapariDimensionMode.LAYER,
     )
     result_config = NapariDisplayConfig()
     raw_routes = {}

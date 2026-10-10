@@ -6,7 +6,6 @@ from PyQt6.QtWidgets import QApplication
 from objectstate import ObjectStateRegistry
 from objectstate.global_config import set_global_config_for_editing
 from objectstate.object_state import ObjectState
-from openhcs.constants.constants import VariableComponents
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from pyqt_reactive.forms.parameter_form_chrome_sync import ParameterFormChromeSync
 from pyqt_reactive.forms.parameter_form_tree_index import ParameterFormTreeIndex
@@ -19,6 +18,7 @@ from pyqt_reactive.services.field_change_dispatcher import (
     FieldChangeEvent,
 )
 from pyqt_reactive.theming.color_scheme import ColorScheme
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class QtApplicationHarness:
@@ -470,7 +470,7 @@ def test_list_enum_placeholder_preview_refreshes_structural_child_paths() -> Non
             checkbox_group
             for checkbox_group in manager.findChildren(CheckboxGroupAdapter)
             if any(
-                enum_value is VariableComponents.SITE
+                enum_value is Microscopy.Site
                 for enum_value, _ in checkbox_group.checkbox_items()
             )
         )
@@ -478,13 +478,13 @@ def test_list_enum_placeholder_preview_refreshes_structural_child_paths() -> Non
 
         assert plate_state.parameters["processing_config.variable_components"] is None
         assert group.get_value() is None
-        assert checkboxes[VariableComponents.SITE].isChecked()
-        assert not checkboxes[VariableComponents.CHANNEL].isChecked()
+        assert checkboxes[Microscopy.Site].isChecked()
+        assert not checkboxes[Microscopy.Channel].isChecked()
         assert group.has_placeholder_state()
 
         global_state.update_parameter(
             "processing_config.variable_components",
-            [VariableComponents.SITE, VariableComponents.CHANNEL],
+            [Microscopy.Site, Microscopy.Channel],
         )
         loop = QEventLoop()
         QTimer.singleShot(300, loop.quit)
@@ -493,12 +493,12 @@ def test_list_enum_placeholder_preview_refreshes_structural_child_paths() -> Non
 
         assert plate_state.get_resolved_value(
             "processing_config.variable_components"
-        ) == [VariableComponents.SITE, VariableComponents.CHANNEL]
+        ) == [Microscopy.Site, Microscopy.Channel]
         assert group.get_value() is None
-        assert checkboxes[VariableComponents.SITE].isChecked()
-        assert checkboxes[VariableComponents.CHANNEL].isChecked()
-        assert checkboxes[VariableComponents.SITE].get_value() is None
-        assert checkboxes[VariableComponents.CHANNEL].get_value() is None
+        assert checkboxes[Microscopy.Site].isChecked()
+        assert checkboxes[Microscopy.Channel].isChecked()
+        assert checkboxes[Microscopy.Site].get_value() is None
+        assert checkboxes[Microscopy.Channel].get_value() is None
         assert group.has_placeholder_state()
     finally:
         manager.deleteLater()

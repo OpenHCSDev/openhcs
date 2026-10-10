@@ -23,7 +23,7 @@ from pathlib import Path
 
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.constants.constants import AllComponents, Microscope
+from openhcs.constants.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
@@ -74,6 +74,7 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     threshold,
 )
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
+from openhcs.domains.microscopy.axes import Microscopy
 
 NEURITE_BRANCHPOINT_IMAGE_NAME = "NeuriteBranchpoints"
 
@@ -141,11 +142,11 @@ def _exact_image_binding(
             ),
         ),
         component_identity=(
-            ComponentSelector(AllComponents.WELL, inputs.well),
-            ComponentSelector(AllComponents.SITE, inputs.site),
-            ComponentSelector(AllComponents.CHANNEL, source.channel),
-            ComponentSelector(AllComponents.Z_INDEX, inputs.z_index),
-            ComponentSelector(AllComponents.TIMEPOINT, inputs.timepoint),
+            ComponentSelector(Microscopy.Well, inputs.well),
+            ComponentSelector(Microscopy.Site, inputs.site),
+            ComponentSelector(Microscopy.Channel, source.channel),
+            ComponentSelector(Microscopy.ZIndex, inputs.z_index),
+            ComponentSelector(Microscopy.Timepoint, inputs.timepoint),
         ),
     )
 

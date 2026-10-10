@@ -6,7 +6,6 @@ from types import MappingProxyType
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_binding_selection import (
@@ -28,6 +27,7 @@ from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProje
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.microscopes.microscope_interfaces import FilenameParseResult
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.domains.microscopy.axes import Microscopy
 
 PATH = "A01_s001_w1_z001_t001.tif"
 
@@ -48,7 +48,7 @@ class CountingParser(SourceSchemaFilenameParser):
                     component,
                     (
                         int(self.pattern_format)
-                        if component is AllComponents.SITE
+                        if component is Microscopy.Site
                         else value
                     ),
                 )
@@ -272,7 +272,7 @@ def test_snapshot_owns_position_and_projection_map_views():
     refs = {PATH: original_ref}
     positions = {
         PATH: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             ref=original_ref,
             source_alias="original",
         )

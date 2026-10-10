@@ -4,7 +4,6 @@ from dataclasses import replace
 
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -32,6 +31,7 @@ from openhcs.core.pipeline.path_planner import (
 from openhcs.core.source_bindings import EMPTY_SOURCE_BINDINGS
 from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsModule
 from tests.unit.test_cellprofiler_relationship_contracts import _contract, _module
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _declared_input(*, enabled=True):
@@ -72,7 +72,7 @@ def _compiled_edge(*, dynamic=False, declared=True):
         path="/memory/intensity.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=(None,) if dynamic else ("1", "2", "5", "3"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group=(
             None
             if dynamic
@@ -95,10 +95,10 @@ def _compiled_edge(*, dynamic=False, declared=True):
         input_spec=spec,
         storage_plan=storage,
         invocation_scope=PathPlannerGroupScope.from_raw(
-            ("3",), component=AllComponents.CHANNEL
+            ("3",), component=Microscopy.Channel
         ),
         relation_source_scopes={},
-        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        consumer_variable_components=ComponentSet((Microscopy.Site,)),
         source_bindings=EMPTY_SOURCE_BINDINGS,
         available_artifacts=ArtifactSpecCollection(()),
         main_flow_projection=None,
@@ -112,14 +112,14 @@ def test_relate_prior_child_measurements_compile_all_source_channels():
         edge.projection.producer_selection_scope
         == edge.storage_plan.producer_group_scope()
     )
-    assert edge.projection.consumer_variable_components == (AllComponents.SITE,)
+    assert edge.projection.consumer_variable_components == (Microscopy.Site,)
 
 
 def test_ordinary_measurement_input_still_selects_invocation_channel():
     edge, _ = _compiled_edge(declared=False)
     assert edge.projection.producer_selection_scope == ComponentGroupScope.from_raw(
         ("3",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
 
@@ -156,7 +156,7 @@ def _measurement_store(edge, *, well="A01", fixed=()):
             path=path,
             artifact_type=MeasurementsArtifactType,
             group_keys=(channel,),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
         )
         for subject in ("Children", "Unrelated"):
             table = MeasurementTable(
@@ -174,7 +174,7 @@ def _measurement_store(edge, *, well="A01", fixed=()):
                     table,
                     execution_scope=RuntimeExecutionAxisScope.from_raw(
                         well,
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value=channel,
                         fixed_component_values=fixed,
                     ),
@@ -191,7 +191,7 @@ def _runtime_input(edge, *, fixed=()):
         backend="memory",
         axis_scope=RuntimeExecutionAxisScope.from_raw(
             "A01",
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
             value="3",
             fixed_component_values=fixed,
         ),
@@ -235,7 +235,7 @@ def test_ordinary_dynamic_input_keeps_current_channel_selection():
 
 @pytest.mark.parametrize("dynamic", (False, True))
 @pytest.mark.parametrize(
-    "component", (AllComponents.SITE, AllComponents.TIMEPOINT, AllComponents.Z_INDEX)
+    "component", (Microscopy.Site, Microscopy.Timepoint, Microscopy.ZIndex)
 )
 def test_complete_measurement_selection_rejects_other_fixed_context(dynamic, component):
     edge, _ = _compiled_edge(dynamic=dynamic)
@@ -271,7 +271,7 @@ def _source_axis(channel, *, sites=("1", "2"), well="A01", time="1"):
         bindings=tuple(
             NamedSourceBinding(
                 alias=f"Orig{value}",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, value),),
+                component_identity=(ComponentSelector(Microscopy.Channel, value),),
             )
             for value in ("1", "2", "5", "3")
         )
@@ -377,8 +377,8 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
         path="/memory/children.pkl",
         artifact_type=ObjectLabelsArtifactType,
         group_keys=("3",),
-        group_component=AllComponents.CHANNEL,
-        variable_components=(AllComponents.SITE,),
+        group_component=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
         source_step_id=1,
     )
     child_edge = InvocationArtifactInputEdgePlan(
@@ -398,8 +398,8 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
         path=storage.path,
         artifact_type=ObjectLabelsArtifactType,
         group_keys=("3",),
-        group_component=AllComponents.CHANNEL,
-        variable_components=(AllComponents.SITE,),
+        group_component=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
     )
     store.record(
         RuntimeValue.normalize(plan, labels, axis_id="A01"),
@@ -427,7 +427,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
             path=path,
             artifact_type=MeasurementsArtifactType,
             group_keys=(channel,),
-            group_component=AllComponents.CHANNEL,
+            group_component=Microscopy.Channel,
         )
         for subject in ("Children", "Unrelated"):
             table = MeasurementTable(
@@ -466,7 +466,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
         bindings=tuple(
             NamedSourceBinding(
                 alias=f"Orig{channel}",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+                component_identity=(ComponentSelector(Microscopy.Channel, channel),),
             )
             for channel in ("1", "2", "5", "3")
         )
@@ -476,7 +476,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
         callable_contract=contract,
         artifact_inputs={edge.key: edge for edge in (child_edge, measurement_edge)},
         axis_scope=RuntimeExecutionAxisScope.from_raw(
-            "A01", component=AllComponents.CHANNEL, value="3"
+            "A01", component=Microscopy.Channel, value="3"
         ),
         source_image_set_identity_policy=SourceImageSetIdentityPolicy.from_source_bindings(
             bindings
@@ -652,7 +652,7 @@ def test_compiled_input_cannot_silently_narrow_complete_declaration():
         projection=replace(
             edge.projection,
             producer_selection_scope=ComponentGroupScope.from_raw(
-                ("3",), component=AllComponents.CHANNEL
+                ("3",), component=Microscopy.Channel
             ),
         ),
     )
@@ -662,8 +662,8 @@ def test_compiled_input_cannot_silently_narrow_complete_declaration():
 
 def test_complete_input_keeps_existing_record_scope_ambiguity_guard():
     edge, _ = _compiled_edge(dynamic=True)
-    store = _measurement_store(edge, fixed=((AllComponents.SITE, "1"),))
-    other = _measurement_store(edge, fixed=((AllComponents.SITE, "2"),))
+    store = _measurement_store(edge, fixed=((Microscopy.Site, "1"),))
+    other = _measurement_store(edge, fixed=((Microscopy.Site, "2"),))
     store.merge_observed_values(other.observed_values)
     with pytest.raises(RuntimeError, match="Ambiguous RuntimeValueStore records"):
         _runtime_input(edge).records(store)
@@ -716,7 +716,7 @@ def test_relation_selection_conflicts_fail_without_last_writer_precedence():
         target_plan_type = ArtifactInputPlan
 
         def input_producer_selection_scope(self, producer_scope):
-            return ComponentGroupScope.from_raw(("1",), component=AllComponents.CHANNEL)
+            return ComponentGroupScope.from_raw(("1",), component=Microscopy.Channel)
 
     spec = replace(
         edge.spec, relations=(*edge.spec.relations, SingleChannelRelation(child.ref()))

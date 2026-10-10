@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import inspect
 
+from openhcs.core.axes import ColourAxis, TileAxis
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     block_setting_value,
@@ -47,7 +48,6 @@ from scipy.ndimage import (
     label,
 )
 from python_introspect import set_signature_analysis_target
-from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
@@ -109,7 +109,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
     object_label_input_execution_mode,
-    required_variable_components,
+    required_axis_roles,
     runtime_bound_parameters,
     special_inputs,
 )
@@ -710,7 +710,7 @@ class StraightenWormsModule(
     module_name = "StraightenWorms"
     function_name = "straighten_worms"
     validated = True
-    group_by = GroupBy.SITE
+    group_by_role = TileAxis
     confidence = 1.0
 
     input_objects_setting = "Select the input untangled worm objects"
@@ -2105,7 +2105,7 @@ for _function_name in UntangleWormsModule.declared_function_names():
 del _function_name
 
 
-@required_variable_components(VariableComponents.CHANNEL)
+@required_axis_roles(ColourAxis)
 @numpy(contract=ProcessingContract.FLEXIBLE)
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
 @special_inputs("worm_labels")

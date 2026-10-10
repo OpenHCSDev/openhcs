@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 from polystore.bioformats_storage import BioFormatsPlaneRef
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
@@ -21,6 +20,8 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.axes import Axis
+from openhcs.domains.microscopy.axes import Microscopy
 
 _OWNED_PROJECTION_MODULES = (
     Path("openhcs/core/source_projection.py"),
@@ -30,13 +31,7 @@ _OWNED_PROJECTION_MODULES = (
 
 
 def test_projection_nominal_owners_declare_projection_semantics() -> None:
-    address = OpenHCSPlaneAddress.from_values(
-        well="A01",
-        site="1",
-        channel="1",
-        z_index="1",
-        timepoint="1",
-    )
+    address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")))
     plane = SourcePlaneProjection(
         address=address,
         ref=SourcePixelRef("disk", "plane.tif"),
@@ -117,13 +112,7 @@ def test_source_projection_serializes_canonical_virtual_filename() -> None:
     projection_set = SourceProjectionSet(
         (
             SourcePlaneProjection(
-                address=OpenHCSPlaneAddress.from_values(
-                    well="A01",
-                    site="1",
-                    channel="2",
-                    z_index="3",
-                    timepoint="4",
-                ),
+                address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "2"), (Microscopy.ZIndex, "3"), (Microscopy.Timepoint, "4"))),
                 ref=SourcePixelRef(
                     backend="bioformats",
                     backend_address=BioFormatsPlaneRef(
@@ -171,34 +160,16 @@ def test_source_projection_serializes_canonical_virtual_filename() -> None:
 
 
 def test_source_plane_address_canonicalizes_numeric_axis_padding() -> None:
-    address = OpenHCSPlaneAddress.from_values(
-        well="01",
-        site="001",
-        channel="02",
-        z_index="003",
-        timepoint="0004",
-    )
+    address = OpenHCSPlaneAddress(((Microscopy.Well, "01"), (Microscopy.Site, "001"), (Microscopy.Channel, "02"), (Microscopy.ZIndex, "003"), (Microscopy.Timepoint, "0004")))
 
-    assert address == OpenHCSPlaneAddress.from_values(
-        well="01",
-        site="1",
-        channel="2",
-        z_index="3",
-        timepoint="4",
-    )
+    assert address == OpenHCSPlaneAddress(((Microscopy.Well, "01"), (Microscopy.Site, "1"), (Microscopy.Channel, "2"), (Microscopy.ZIndex, "3"), (Microscopy.Timepoint, "4")))
 
 
 def test_source_projection_rejects_metadata_component_conflict() -> None:
     projection_set = SourceProjectionSet(
         (
             SourcePlaneProjection(
-                address=OpenHCSPlaneAddress.from_values(
-                    well="A01",
-                    site="1",
-                    channel="2",
-                    z_index="3",
-                    timepoint="4",
-                ),
+                address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "2"), (Microscopy.ZIndex, "3"), (Microscopy.Timepoint, "4"))),
                 ref=SourcePixelRef(
                     backend="disk",
                     backend_address="image.tif",
@@ -221,25 +192,19 @@ def test_source_projection_rejects_metadata_component_conflict() -> None:
 @pytest.mark.parametrize(
     ("component", "source_value", "address_value"),
     (
-        (AllComponents.WELL, "A01", "fields"),
-        (AllComponents.SITE, "7", "1"),
-        (AllComponents.CHANNEL, "9", "2"),
-        (AllComponents.Z_INDEX, "8", "3"),
-        (AllComponents.TIMEPOINT, "6", "4"),
+        (Microscopy.Well, "A01", "fields"),
+        (Microscopy.Site, "7", "1"),
+        (Microscopy.Channel, "9", "2"),
+        (Microscopy.ZIndex, "8", "3"),
+        (Microscopy.Timepoint, "6", "4"),
     ),
 )
 def test_source_projection_preserves_provenance_owned_component_remaps(
-    component: AllComponents,
+    component: type[Axis],
     source_value: str,
     address_value: str,
 ) -> None:
-    address = OpenHCSPlaneAddress.from_values(
-        well="A01",
-        site="1",
-        channel="2",
-        z_index="3",
-        timepoint="4",
-    ).with_value(component, address_value)
+    address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "2"), (Microscopy.ZIndex, "3"), (Microscopy.Timepoint, "4"))).with_value(component, address_value)
     projection_set = SourceProjectionSet(
         (
             SourcePlaneProjection(
@@ -249,9 +214,9 @@ def test_source_projection_preserves_provenance_owned_component_remaps(
                     backend_address="image.tif",
                 ),
                 source_metadata={
-                    component.value: source_value,
+                    component.name: source_value,
                     ORIGINAL_SOURCE_METADATA_FIELD: {
-                        component.value: source_value,
+                        component.name: source_value,
                     },
                 },
             ),
@@ -267,21 +232,15 @@ def test_source_projection_preserves_provenance_owned_component_remaps(
     )
     source_metadata = next(iter(metadata["source_metadata"].values()))
 
-    assert source_metadata[component.value] == address_value
+    assert source_metadata[component.name] == address_value
     assert (
-        dict(SourceMetadataFields.original_items(source_metadata))[component.value]
+        dict(SourceMetadataFields.original_items(source_metadata))[component.name]
         == source_value
     )
 
 
 def test_source_projection_rejects_duplicate_addresses() -> None:
-    address = OpenHCSPlaneAddress.from_values(
-        well="A01",
-        site="1",
-        channel="1",
-        z_index="1",
-        timepoint="1",
-    )
+    address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")))
 
     with pytest.raises(ValueError, match="Duplicate source projection address"):
         SourceProjectionSet(
@@ -301,13 +260,7 @@ def test_source_projection_rejects_duplicate_addresses() -> None:
 def test_artifact_only_projection_set_serializes_typed_execution_anchors() -> None:
     projections = tuple(
         SourceArtifactProjection(
-            address=OpenHCSPlaneAddress.from_values(
-                well="A01",
-                site="1",
-                channel=str(channel),
-                z_index="1",
-                timepoint="1",
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, str(channel)), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
             ref=SourcePixelRef("disk", source_path),
             source_alias=alias,
             artifact_kind=ObjectLabelsArtifactType,

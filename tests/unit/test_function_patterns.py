@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
 
-from openhcs.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactInputProjectionPlan,
     ArtifactInputPlan,
@@ -56,6 +55,7 @@ from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.processing.materialization import csv_only
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @artifact_outputs(ArtifactSpec.output("positions", SpecialArtifactType))
@@ -693,7 +693,7 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
         artifact_type=measurements.artifact_type,
         relations=measurements.relations,
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         group_scope_sources_by_group={
             "1": (blue.ref(),),
             "2": (green.ref(),),
@@ -727,7 +727,7 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
     group = replace(compiled.default_group, invocations=(invocation,))
     execution_scope = ComponentGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
     assert group.main_flow_input_refs_for_component(execution_scope, "1", source_bindings=CompiledSourceBindingPlan.empty()) == (
@@ -817,7 +817,7 @@ def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() ->
         artifact_type=scoped.artifact_type,
         relations=scoped.relations,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         group_scope_sources_by_group={"1": (source.ref(),)},
     )
     invocation = compile_function_pattern(
@@ -844,7 +844,7 @@ def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() ->
     active_outputs = invocation.output_plans_for_component(
         ComponentGroupScope.from_raw(
             ("1", "2"),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         "2",
     )
@@ -896,7 +896,7 @@ def test_shared_output_plan_uses_each_invocation_declared_group_lineage() -> Non
         artifact_type=blue_measurements.artifact_type,
         relations=(*blue_measurements.relations, *green_measurements.relations),
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         group_scope_sources_by_group={
             "1": (blue.ref(),),
             "2": (green.ref(),),
@@ -909,7 +909,7 @@ def test_shared_output_plan_uses_each_invocation_declared_group_lineage() -> Non
     ).default_group.invocations
     execution_scope = ComponentGroupScope.from_raw(
         ("1", "2"),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
 
     assert blue_invocation.output_plans_for_component(execution_scope, "1") is not None
@@ -1146,7 +1146,7 @@ def test_adapter_managed_invocation_rejects_cross_component_input_loss():
         path="/memory/cross_channel.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("3",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"3": "/memory/cross_channel__3.pkl"},
     )
     current_channel_plan = ArtifactInputPlan(
@@ -1154,7 +1154,7 @@ def test_adapter_managed_invocation_rejects_cross_component_input_loss():
         path="/memory/current_channel.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"1": "/memory/current_channel__1.pkl"},
     )
     compiled = compile_function_pattern(
@@ -1212,7 +1212,7 @@ def test_adapter_managed_outputs_use_exact_compiled_output_plans():
         path="/memory/Cells.pkl",
         artifact_type=ObjectLabelsArtifactType,
         group_keys=("3",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"3": "/memory/w3_Cells.pkl"},
     )
     measurement_output = ArtifactOutputPlan(
@@ -1220,7 +1220,7 @@ def test_adapter_managed_outputs_use_exact_compiled_output_plans():
         path="/memory/Measurements.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"1": "/memory/w1_Measurements.pkl"},
     )
     compiled = compile_function_pattern(

@@ -11,7 +11,6 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
 )
 
 
-from openhcs.constants.constants import AllComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
@@ -81,6 +80,7 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdAssignment,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @pytest.mark.parametrize("shape", [(32, 32), (33, 35), (64, 97), (97, 64)])
@@ -545,7 +545,7 @@ def test_quality_control_measurements_keep_distinct_site_image_identities() -> N
     )
 
     projected_rows = CellProfilerImageSetNumbering(
-        SourceImageSetIdentityPolicy(frozenset((AllComponents.CHANNEL,)))
+        SourceImageSetIdentityPolicy(frozenset((Microscopy.Channel,)))
     ).project_measurement_rows(
         scope=RuntimeExecutionAxisScope(axis_id="A01"),
         table=table,

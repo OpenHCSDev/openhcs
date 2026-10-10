@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
@@ -19,6 +18,7 @@ from openhcs.core.invocation_artifacts import (
     InvocationContractProvider,
 )
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class _RuntimeInputContractProvider(InvocationContractProvider):
@@ -118,7 +118,7 @@ def test_repeated_input_roles_compile_distinct_relation_owned_edge_projections()
         path="/memory/source.pkl",
         artifact_type=ObjectLabelsArtifactType,
         group_keys=("1",),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
     )
     compiled = compile_function_pattern(
         consume_ambiguous_objects,

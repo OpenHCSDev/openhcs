@@ -40,7 +40,6 @@ from python_introspect import (
     validate_annotation_value,
 )
 
-from openhcs.constants.constants import GroupBy, VariableComponents
 from openhcs.core.image_payload_execution_mode import (
     ImagePayloadExecutionMode,
 )
@@ -61,6 +60,7 @@ from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirement,
 )
 from metaclass_registry.caches import IdentityBoundProcessCache
+from openhcs.core.axes import AxisRole
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import (
@@ -384,11 +384,11 @@ class CallableMetadata:
     artifact_input_parameter_names: tuple[str, ...] = ()
     artifact_outputs: tuple[ArtifactSpec, ...] = ()
     runtime_bound_parameters: tuple[type[RuntimeParameterDeclarationABC], ...] = ()
-    required_variable_components: tuple[VariableComponents, ...] = ()
+    required_axis_roles: tuple[type[AxisRole], ...] = ()
     variable_component_stack_requirement: VariableComponentStackRequirement | None = (
         None
     )
-    allowed_group_by: tuple[GroupBy, ...] = ()
+    allowed_group_by_roles: tuple[type[AxisRole], ...] = ()
     runtime_adapter: RuntimeAdapterSpec | None = None
     runtime_context_parameter: str | None = None
     execution_scope: FunctionStepExecutionScope = FunctionStepExecutionScope.AXIS
@@ -680,16 +680,16 @@ class CallableMetadata:
             runtime_bound_parameters=reader.optional_runtime_parameter_type_tuple(
                 FunctionContractAttribute.runtime_bound_parameters,
             ),
-            required_variable_components=reader.optional_variable_component_tuple(
-                FunctionContractAttribute.required_variable_components,
+            required_axis_roles=reader.optional_axis_role_tuple(
+                FunctionContractAttribute.required_axis_roles,
             ),
             variable_component_stack_requirement=(
                 reader.optional_variable_component_stack_requirement(
                     FunctionContractAttribute.variable_component_stack_requirement
                 )
             ),
-            allowed_group_by=reader.optional_group_by_tuple(
-                FunctionContractAttribute.allowed_group_by,
+            allowed_group_by_roles=reader.optional_axis_role_tuple(
+                FunctionContractAttribute.allowed_group_by_roles,
             ),
             runtime_adapter=runtime_adapter,
             runtime_context_parameter=_runtime_context_parameter(reader, signature),
@@ -779,17 +779,17 @@ class CallableMetadata:
             namespace[FunctionContractAttribute.runtime_bound_parameters] = (
                 self.runtime_bound_parameters
             )
-        if self.required_variable_components:
-            namespace[FunctionContractAttribute.required_variable_components] = (
-                self.required_variable_components
+        if self.required_axis_roles:
+            namespace[FunctionContractAttribute.required_axis_roles] = (
+                self.required_axis_roles
             )
         if self.variable_component_stack_requirement is not None:
             namespace[
                 FunctionContractAttribute.variable_component_stack_requirement
             ] = self.variable_component_stack_requirement
-        if self.allowed_group_by:
-            namespace[FunctionContractAttribute.allowed_group_by] = (
-                self.allowed_group_by
+        if self.allowed_group_by_roles:
+            namespace[FunctionContractAttribute.allowed_group_by_roles] = (
+                self.allowed_group_by_roles
             )
         if self.runtime_adapter is not None:
             namespace[FunctionContractAttribute.runtime_adapter] = self.runtime_adapter
@@ -1359,9 +1359,9 @@ class CallableContract(ArtifactPlanKeySelector):
         return resolved
 
     @property
-    def required_variable_components(self) -> tuple[VariableComponents, ...]:
-        """Declared FunctionStep variable axes required by this callable."""
-        return self.metadata.required_variable_components
+    def required_axis_roles(self) -> tuple[type[AxisRole], ...]:
+        """Axis roles the step's variable axes must cover for this callable."""
+        return self.metadata.required_axis_roles
 
     @property
     def variable_component_stack_requirement(
@@ -1381,9 +1381,9 @@ class CallableContract(ArtifactPlanKeySelector):
         return processing_contract.variable_component_stack_requirement
 
     @property
-    def allowed_group_by(self) -> tuple[GroupBy, ...]:
-        """Declared FunctionStep group_by values allowed by this callable."""
-        return self.metadata.allowed_group_by
+    def allowed_group_by_roles(self) -> tuple[type[AxisRole], ...]:
+        """Axis roles this callable's step may group by (empty: any)."""
+        return self.metadata.allowed_group_by_roles
 
     @property
     def processing_contract(self) -> Enum | None:
@@ -2450,33 +2450,26 @@ class CallableMetadataReader:
             boundary=f"{self.function_name!r}.{field_name}",
         )
 
-    def optional_variable_component_tuple(
+    def optional_axis_role_tuple(
         self,
         field_name: str,
-    ) -> tuple[VariableComponents, ...]:
-        """Return optional required FunctionStep variable-component metadata."""
+    ) -> tuple[type[AxisRole], ...]:
+        """Return an optional tuple of declared axis roles."""
         value = self.namespace.get(field_name)
         if value is None:
             return ()
-        if not isinstance(value, tuple):
+        if not isinstance(value, tuple) or not all(
+            isinstance(role, type) and issubclass(role, AxisRole) for role in value
+        ):
             raise TypeError(
-                f"{self.function_name!r}.{field_name} must be a tuple, "
-                f"got {type(value).__name__}."
+                f"{self.function_name!r}.{field_name} must be a tuple of axis "
+                f"roles, got {value!r}."
             )
-        normalized = tuple(
-            (
-                component
-                if isinstance(component, VariableComponents)
-                else VariableComponents(component)
-            )
-            for component in value
-        )
-        if len(normalized) != len(set(normalized)):
+        if len(value) != len(set(value)):
             raise TypeError(
-                f"{self.function_name!r}.{field_name} must contain unique "
-                "VariableComponents values."
+                f"{self.function_name!r}.{field_name} must contain unique roles."
             )
-        return normalized
+        return value
 
     def optional_variable_component_stack_requirement(
         self,
@@ -2494,29 +2487,6 @@ class CallableMetadataReader:
             )
         return value
 
-    def optional_group_by_tuple(
-        self,
-        field_name: str,
-    ) -> tuple[GroupBy, ...]:
-        """Return optional allowed FunctionStep group_by metadata."""
-        value = self.namespace.get(field_name)
-        if value is None:
-            return ()
-        if not isinstance(value, tuple):
-            raise TypeError(
-                f"{self.function_name!r}.{field_name} must be a tuple, "
-                f"got {type(value).__name__}."
-            )
-        normalized = tuple(
-            group_by if isinstance(group_by, GroupBy) else GroupBy(group_by)
-            for group_by in value
-        )
-        if len(normalized) != len(set(normalized)):
-            raise TypeError(
-                f"{self.function_name!r}.{field_name} must contain unique "
-                "GroupBy values."
-            )
-        return normalized
 
     def optional_execution_mode(
         self,

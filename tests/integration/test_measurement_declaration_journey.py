@@ -15,7 +15,7 @@ from openhcs.agent.services.execution_session_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
+from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -90,6 +90,8 @@ from openhcs.processing.custom_functions.runtime_registry import (
     register_custom_function,
 )
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 @dataclass(frozen=True)
@@ -188,7 +190,7 @@ def _source(alias, channel):
                 ),
             ),
         ),
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+        component_identity=(ComponentSelector(Microscopy.Channel, channel),),
     )
 
 
@@ -197,8 +199,8 @@ def _step(func, name, kwargs):
         func=(func, kwargs),
         name=name,
         processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.SITE],
-            group_by=GroupBy.NONE,
+            variable_components=[Microscopy.Site],
+            group_by=Ungrouped,
             input_source=InputSource.PIPELINE_START,
         ),
         source_bindings=StepSourceBindingsConfig(enabled=True),
@@ -438,8 +440,8 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
     store = context.runtime_value_store
     [primary] = store.find(name="Nuclei", axis_id="A01")
     [secondary] = store.find(name="Cells", axis_id="A01")
-    assert primary.key.scope.value_text_for_component(AllComponents.CHANNEL) == "1"
-    assert secondary.key.scope.value_text_for_component(AllComponents.CHANNEL) == (
+    assert primary.key.scope.value_text_for_component(Microscopy.Channel) == "1"
+    assert secondary.key.scope.value_text_for_component(Microscopy.Channel) == (
         "1" if same_source else "2"
     )
     primary_area = np.count_nonzero(object_label_dense_array(primary.data))
@@ -472,7 +474,7 @@ def test_omitted_secondary_selector_still_fails_closed(tmp_path):
         )
 
 
-@pytest.mark.parametrize("producer_group_by", [GroupBy.NONE, GroupBy.CHANNEL])
+@pytest.mark.parametrize("producer_group_by", [Ungrouped, Microscopy.Channel])
 def test_explicit_measurement_rosters_preserve_compiled_source_groups(
     tmp_path, producer_group_by,
 ):
@@ -507,7 +509,7 @@ def test_explicit_measurement_rosters_preserve_compiled_source_groups(
     context = bundle.runtime_contexts["A01"]
     executor = FunctionStepExecutor(context, 2)
     prepared = executor._prepare_groups(executor._detect_patterns())
-    expected_keys = (None,) if producer_group_by is GroupBy.NONE else ("1", "2")
+    expected_keys = (None,) if producer_group_by is Ungrouped else ("1", "2")
     assert context.step_plans[2].execution_group_scope.keys == expected_keys
     assert tuple(prepared) == expected_keys
     assert all(len(patterns) == 1 for patterns in prepared.values())

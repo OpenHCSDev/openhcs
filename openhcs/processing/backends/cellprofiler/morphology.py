@@ -303,7 +303,10 @@ class ZStackFunctionVariantModule:
         del module, contract
         function_name = (
             cls.function_variants[0]
-            if AllComponents.Z_INDEX in source_bindings.source_stack_components
+            if any(
+                issubclass(axis, StackAxis)
+                for axis in source_bindings.source_stack_components
+            )
             else str(cls.function_name)
         )
         return cls.require_callable(function_name)
@@ -666,10 +669,8 @@ import time
 from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
-from openhcs.constants.constants import (
-    AllComponents,
-    MemoryType,
-)
+from openhcs.constants.constants import MemoryType
+from openhcs.core.axes import StackAxis
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy as numpy_decorator

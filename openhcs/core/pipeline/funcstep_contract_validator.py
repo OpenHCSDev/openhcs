@@ -29,10 +29,6 @@ from typing import (
     get_type_hints,
 )
 
-from openhcs.constants.constants import (
-    GroupBy,
-    get_openhcs_config,
-)
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.function_patterns import (
     CompiledFunctionPattern,
@@ -49,6 +45,7 @@ from openhcs.core.variable_component_stack_requirement import (
 )
 
 from openhcs.core.components.validation import GenericValidator
+from openhcs.core.axes import AxisFamily, Ungrouped
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -541,9 +538,11 @@ class FuncStepContractValidator:
     ):
         """Return pattern-aware grouping semantics for compiled execution."""
         variable_components = () if variable_components is None else variable_components
-        if group_by and group_by.value in [vc.value for vc in variable_components]:
+        if group_by is not None and any(
+            axis in variable_components for axis in group_by.grouping_axes()
+        ):
             if not pattern.is_grouped:
-                return GroupBy.NONE
+                return Ungrouped
             variable_component_names = tuple(
                 component.name for component in variable_components
             )
@@ -683,8 +682,7 @@ class FuncStepContractValidator:
                         "bindings."
                     )
             return
-        config = get_openhcs_config()
-        validator = GenericValidator(config)
+        validator = GenericValidator(AxisFamily.active())
         group_by = step_plan.group_by
         if step_plan.variable_components is None:
             variable_components = ()
@@ -707,7 +705,7 @@ class FuncStepContractValidator:
         if not validation_result.is_valid:
             raise ValueError(validation_result.error_message)
 
-        FuncStepContractValidator.validate_required_variable_components(
+        FuncStepContractValidator.validate_required_axis_roles(
             variable_components,
             contracts,
             step_name,
@@ -791,8 +789,7 @@ class FuncStepContractValidator:
             return
 
         # Validate using generic validation system
-        config = get_openhcs_config()
-        validator = GenericValidator(config)
+        validator = GenericValidator(AxisFamily.active())
 
         # Check for constraint violation: group_by ∈ variable_components
         group_by = FuncStepContractValidator.normalized_group_by(
@@ -811,7 +808,7 @@ class FuncStepContractValidator:
         if not validation_result.is_valid:
             raise ValueError(validation_result.error_message)
 
-        FuncStepContractValidator.validate_required_variable_components(
+        FuncStepContractValidator.validate_required_axis_roles(
             variable_components,
             contracts,
             step_name,
@@ -831,7 +828,8 @@ class FuncStepContractValidator:
         if (
             orchestrator is not None
             and normalized.is_grouped
-            and group_by not in (None, GroupBy.NONE)
+            and group_by is not None
+            and group_by.grouping_axes()
         ):
             dict_validation_result = validator.validate_dict_pattern_keys(
                 func_pattern, group_by, step_name, orchestrator
@@ -1120,26 +1118,33 @@ class FuncStepContractValidator:
             raise ValueError(invalid_pattern_error(func)) from exc
 
     @staticmethod
-    def validate_required_variable_components(
+    def validate_required_axis_roles(
         variable_components,
         contracts: Sequence[CallableContract],
         step_name: str,
     ) -> None:
-        """Validate callable/module required axes against resolved step config."""
-        resolved_components = set(variable_components or ())
+        """Require the step's variable axes to cover each callable's roles."""
+        resolved_components = tuple(variable_components or ())
         for contract in contracts:
             missing = tuple(
-                component
-                for component in contract.required_variable_components
-                if component not in resolved_components
+                role
+                for role in contract.required_axis_roles
+                if not any(issubclass(axis, role) for axis in resolved_components)
             )
             if not missing:
                 continue
-            required = ", ".join(component.name for component in missing)
+            family = AxisFamily.active()
+            required = ", ".join(
+                f"{role.__name__} "
+                f"({', '.join(axis.name for axis in family.with_role(role)) or 'none'})"
+                for role in missing
+            )
+
             actual = ", ".join(component.name for component in resolved_components)
             raise ValueError(
                 f"Step '{step_name}' callable '{contract.function_name}' requires "
-                f"variable_components {required}; resolved {actual or 'none'}."
+                f"variable_components with role {required}; resolved "
+                f"{actual or 'none'}."
             )
 
     @staticmethod
@@ -1224,19 +1229,23 @@ class FuncStepContractValidator:
         contracts: Sequence[CallableContract],
         step_name: str,
     ) -> None:
-        """Validate callable/module allowed group_by values against step config."""
-        resolved_group_by = GroupBy.NONE if group_by is None else group_by
+        """Require the step's grouping axes to carry a role each callable allows."""
+        resolved_group_by = Ungrouped if group_by is None else group_by
+        grouping_axes = resolved_group_by.grouping_axes()
         for contract in contracts:
-            allowed = contract.allowed_group_by
-            if not allowed or resolved_group_by in allowed:
+            allowed = contract.allowed_group_by_roles
+            if not allowed or (
+                grouping_axes
+                and all(
+                    any(issubclass(axis, role) for role in allowed)
+                    for axis in grouping_axes
+                )
+            ):
                 continue
-            allowed_names = ", ".join(value.name for value in allowed)
-            actual = (
-                resolved_group_by.name
-                if isinstance(resolved_group_by, Enum)
-                else str(resolved_group_by)
-            )
+            allowed_names = ", ".join(role.__name__ for role in allowed)
             raise ValueError(
                 f"Step '{step_name}' callable '{contract.function_name}' allows "
-                f"group_by {allowed_names}; resolved {actual}."
+                f"group_by axes with role {allowed_names}; resolved "
+                f"{resolved_group_by.name}."
             )
+

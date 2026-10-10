@@ -49,6 +49,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerGraphicalSessionUnavailableError,
     ViewerLaunchContext,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class FakeHandler:
@@ -101,8 +102,8 @@ def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp
         address=None, ref=ref, source_alias="Signal", artifact_kind=ImageArtifactType,
         source_metadata=components, image_metadata=metadata,
         execution_scope=RuntimeExecutionAxisScope.from_raw(
-            "A01", component="channel", value="1",
-            fixed_component_values=(("z_index", "1"), ("timepoint", "1")),
+            "A01", component=Microscopy.Channel, value="1",
+            fixed_component_values=((Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")),
         ),
     )
     builder = VirtualWorkspaceSourceProjectionBuilder(tmp_path)

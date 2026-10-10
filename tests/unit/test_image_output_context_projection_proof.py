@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
@@ -20,6 +19,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneProjection,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 
@@ -63,7 +63,7 @@ def _scalar_rgb_output():
         name="SavedColorNeighbors",
         path="/memory/SavedColorNeighbors.png",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
     return source, output, output_plan
@@ -100,7 +100,7 @@ def test_projected_variable_stack_proves_source_ownership_once(
         name="SavedVolume",
         path="/memory/SavedVolume.tif",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
     proof_calls = _track_ownership_proofs(monkeypatch)
@@ -143,7 +143,7 @@ def test_derived_2d_image_does_not_inherit_input_runtime_plane_axis() -> None:
         name="Projection",
         path="/memory/Projection.tif",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
@@ -171,7 +171,7 @@ def test_bare_full_stack_image_inherits_source_runtime_plane_axis() -> None:
         name="FilteredVolume",
         path="/memory/FilteredVolume.tif",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
@@ -199,7 +199,7 @@ def test_derived_image_preserves_explicit_output_runtime_plane_axis() -> None:
         name="FilteredVolume",
         path="/memory/FilteredVolume.tif",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
@@ -255,7 +255,7 @@ def test_projected_crop_preserves_complete_spatial_domain_after_plane_compositio
         name="CropBlue",
         path="/memory/CropBlue.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
@@ -321,7 +321,7 @@ def test_unowned_variable_output_without_projector_preserves_error(
         name="SavedVolume",
         path="/memory/SavedVolume.tif",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
     proof_calls = _track_ownership_proofs(monkeypatch)

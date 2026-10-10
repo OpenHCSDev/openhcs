@@ -1,6 +1,5 @@
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactInputProjectionPlan,
@@ -10,6 +9,8 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
+from openhcs.core.axes import Axis
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _projection(
@@ -18,7 +19,7 @@ def _projection(
     invocation_scope: ComponentGroupScope,
     producer_selection_scope: ComponentGroupScope,
     component_scopes: tuple[ComponentGroupScope, ...] = (),
-    consumer_variable_components: tuple[AllComponents, ...] = (),
+    consumer_variable_components: tuple[type[Axis], ...] = (),
 ) -> ArtifactInputProjectionPlan:
     return ArtifactInputProjectionPlan(
         invocation_scope=invocation_scope,
@@ -32,7 +33,7 @@ def _projection(
     "invocation_scope",
     (
         ComponentGroupScope.ungrouped(),
-        ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+        ComponentGroupScope.dynamic(Microscopy.Channel),
     ),
     ids=("ungrouped-invocation", "dynamic-dispatch-invocation"),
 )
@@ -44,13 +45,13 @@ def test_grouped_producer_selection_domain_is_independent_of_invocation_dispatch
         path="/memory/measurements.pkl",
         artifact_type=MeasurementsArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
     )
     projection = _projection(
         storage_plan,
         invocation_scope=invocation_scope,
         producer_selection_scope=storage_plan.producer_group_scope(),
-        consumer_variable_components=(AllComponents.SITE,),
+        consumer_variable_components=(Microscopy.Site,),
     )
 
     projection.validate_axis_projection(storage_plan)
@@ -62,13 +63,13 @@ def test_dynamic_producer_coordinate_requires_matching_invocation_dispatch() -> 
         path="/memory/objects.pkl",
         artifact_type=ObjectLabelsArtifactType,
         group_keys=(None,),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
     )
     projection = _projection(
         storage_plan,
-        invocation_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
-        producer_selection_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
-        consumer_variable_components=(AllComponents.TIMEPOINT,),
+        invocation_scope=ComponentGroupScope.dynamic(Microscopy.Site),
+        producer_selection_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
+        consumer_variable_components=(Microscopy.Timepoint,),
     )
 
     with pytest.raises(ValueError, match="not owned by invocation scope"):
@@ -83,10 +84,10 @@ def test_existing_producer_stack_is_retained_when_consumer_relabels_third_axis()
         path="/memory/objects.pkl",
         artifact_type=ObjectLabelsArtifactType,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
-        variable_components=(AllComponents.SITE,),
+        group_component=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
     )
-    consumer_components = ComponentSet((AllComponents.TIMEPOINT,))
+    consumer_components = ComponentSet((Microscopy.Timepoint,))
     projection = _projection(
         storage_plan,
         invocation_scope=ComponentGroupScope.ungrouped(),
@@ -111,8 +112,8 @@ def test_scalar_consumer_requires_coordinate_for_each_producer_stack_component()
         path="/memory/objects.pkl",
         artifact_type=ObjectLabelsArtifactType,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
-        variable_components=(AllComponents.SITE,),
+        group_component=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
     )
     projection = _projection(
         storage_plan,
@@ -130,15 +131,15 @@ def test_transposed_producer_group_axis_requires_old_stack_coordinate() -> None:
         path="/memory/image.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
-        variable_components=(AllComponents.SITE,),
+        group_component=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
     )
-    consumer_components = ComponentSet((AllComponents.CHANNEL,))
+    consumer_components = ComponentSet((Microscopy.Channel,))
     projection = _projection(
         storage_plan,
-        invocation_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+        invocation_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         producer_selection_scope=storage_plan.producer_group_scope(),
-        component_scopes=(ComponentGroupScope.dynamic(AllComponents.CHANNEL),),
+        component_scopes=(ComponentGroupScope.dynamic(Microscopy.Channel),),
         consumer_variable_components=consumer_components.as_tuple(),
     )
 
@@ -158,20 +159,20 @@ def test_transposed_producer_stack_rejects_multi_coordinate_projection() -> None
         path="/memory/image.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
-        variable_components=(AllComponents.SITE,),
+        group_component=Microscopy.Channel,
+        variable_components=(Microscopy.Site,),
     )
     projection = _projection(
         storage_plan,
-        invocation_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+        invocation_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         producer_selection_scope=storage_plan.producer_group_scope(),
         component_scopes=(
             ComponentGroupScope.from_raw(
                 ("1", "2", "3"),
-                component=AllComponents.SITE,
+                component=Microscopy.Site,
             ),
         ),
-        consumer_variable_components=(AllComponents.CHANNEL,),
+        consumer_variable_components=(Microscopy.Channel,),
     )
 
     with pytest.raises(ValueError, match="site.*not a single exact coordinate"):

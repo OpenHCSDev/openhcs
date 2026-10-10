@@ -3,7 +3,6 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
@@ -30,6 +29,7 @@ from openhcs.core.function_patterns import (
     CompiledFunctionInvocation,
     FunctionInvocationKey,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _contract(
@@ -271,7 +271,7 @@ def test_compiled_output_selection_accepts_exact_runtime_group_projection(
         path="/memory/output",
         artifact_type=output.artifact_type,
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={
             "1": "/memory/output/1",
             "2": "/memory/output/2",
@@ -296,7 +296,7 @@ def test_compiled_output_selection_rejects_same_ref_non_owner_projection() -> No
         path="/memory/output",
         artifact_type=output.artifact_type,
         group_keys=("1", "2"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={
             "1": "/memory/output/1",
             "2": "/memory/output/2",
@@ -312,7 +312,7 @@ def test_compiled_output_selection_rejects_same_ref_non_owner_projection() -> No
         path="/memory/wrong",
         artifact_type=output.artifact_type,
         group_keys=("1",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"1": "/memory/wrong"},
     )
 

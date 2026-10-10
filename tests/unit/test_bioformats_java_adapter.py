@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import tifffile
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.microscopes.bioformats_adapter import (
     BioFormatsContainerOpenError,
     BioFormatsDatasetAmbiguityError,
@@ -17,6 +17,7 @@ from openhcs.microscopes.bioformats_adapter import (
 from polystore.bioformats_java import BioFormatsOpenedReader, BioFormatsJavaContext
 from polystore.bioformats_java import sample_bioformats_plane
 from polystore.base import ImageSamplingRequest
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class JavaValue:
@@ -698,14 +699,14 @@ def test_java_adapter_projects_one_czi_ome_spw_metadata(
     assert dataset.identity.value == "Plate:0"
     assert dataset.pixel_size == 0.65
     assert [
-        candidate.declared_address.value_for(AllComponents.CHANNEL)
+        candidate.declared_address.value_for(Microscopy.Channel)
         for candidate in dataset.candidates
     ] == [
         "1",
         "2",
     ]
     assert {
-        candidate.declared_address.value_for(AllComponents.WELL)
+        candidate.declared_address.value_for(Microscopy.Well)
         for candidate in dataset.candidates
     } == {"A01"}
     assert [
@@ -779,7 +780,7 @@ def test_java_adapter_aggregates_independent_czi_containers_with_one_plate_id(
     assert dataset.identity.value == "Plate:0"
     assert len(dataset.candidates) == 4
     assert {
-        candidate.declared_address.value_for(AllComponents.WELL)
+        candidate.declared_address.value_for(Microscopy.Well)
         for candidate in dataset.candidates
     } == {
         "A01",
@@ -827,14 +828,14 @@ def test_java_adapter_aggregates_multiple_nonplate_czi_by_container_identity(
 
     assert dataset.identity.value == tmp_path.resolve().as_uri()
     assert {
-        candidate.declared_address.value_for(AllComponents.WELL)
+        candidate.declared_address.value_for(Microscopy.Well)
         for candidate in dataset.candidates
     } == {
         "sample-a.czi",
         "sample-b.czi",
     }
     assert {
-        candidate.declared_address.value_for(AllComponents.SITE)
+        candidate.declared_address.value_for(Microscopy.Site)
         for candidate in dataset.candidates
     } == {"1"}
     assert {

@@ -2,17 +2,18 @@ from types import SimpleNamespace
 
 from objectstate import ObjectStateRegistry
 
-from openhcs.constants.constants import GroupBy, OrchestratorState
+from openhcs.constants.constants import OrchestratorState
 from openhcs.core.orchestrator import PipelineOrchestrator
 from openhcs.pyqt_gui.services.reactor_providers import (
     OpenHCSComponentSelectionProvider,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 class _ComponentOrchestrator(PipelineOrchestrator):
     def get_component_keys(self, group_by, component_filter=None):
         del component_filter
-        assert group_by is GroupBy.CHANNEL
+        assert group_by is Microscopy.Channel
         return ["1", "2"]
 
 
@@ -33,9 +34,9 @@ def test_component_provider_resolves_the_public_orchestrator_declaration(
         lambda _scope_id: orchestrator,
     )
 
-    assert provider.has_components_available(GroupBy.CHANNEL) is False
+    assert provider.has_components_available(Microscopy.Channel) is False
 
     orchestrator.state = OrchestratorState.READY
 
-    assert provider.has_components_available(GroupBy.CHANNEL) is True
-    assert provider.get_component_keys(GroupBy.CHANNEL) == ["1", "2"]
+    assert provider.has_components_available(Microscopy.Channel) is True
+    assert provider.get_component_keys(Microscopy.Channel) == ["1", "2"]

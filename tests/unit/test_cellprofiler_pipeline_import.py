@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from objectstate import config_context
 
-from openhcs.constants import AllComponents, Backend, GroupBy, VariableComponents
+from openhcs.constants import Backend
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -71,6 +71,8 @@ from openhcs.processing.backends.cellprofiler.neighbors import (
     measure_object_neighbors,
 )
 from openhcs.processing.backends.cellprofiler.outlines import OverlayObjectsModule
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 PIPELINE_IMPORT_PATH = (
     Path(__file__).parents[2]
@@ -730,14 +732,14 @@ RemoveHoles:[module_num:3|enabled:True]
     )
 
     assert pipeline_config.source_bindings_config.source_stack_components == (
-        AllComponents.Z_INDEX,
+        Microscopy.ZIndex,
     )
     assert pipeline_config.processing_config.variable_components == [
-        VariableComponents.Z_INDEX
+        Microscopy.ZIndex
     ]
     with config_context(pipeline_config):
         assert pipeline_steps[0].processing_config.variable_components == [
-            VariableComponents.Z_INDEX
+            Microscopy.ZIndex
         ]
         assert (
             pipeline_steps[1].processing_config.input_source
@@ -850,7 +852,7 @@ SaveImages:[module_num:4|enabled:True]
     )
 
     assert pipeline_config.processing_config.variable_components == [
-        VariableComponents.SITE
+        Microscopy.Site
     ]
     assert [step.name for step in pipeline_steps] == ["TrackObjects", "SaveImages"]
     track_invocation = next(
@@ -860,10 +862,10 @@ SaveImages:[module_num:4|enabled:True]
     assert track_invocation.kwargs_dict["name_the_output_image"] == "TrackedNuclei"
     with config_context(pipeline_config):
         assert pipeline_steps[0].processing_config.variable_components == [
-            VariableComponents.TIMEPOINT
+            Microscopy.Timepoint
         ]
         assert pipeline_steps[1].processing_config.variable_components == [
-            VariableComponents.SITE
+            Microscopy.Site
         ]
     assert (
         len(tuple(normalize_function_pattern(pipeline_steps[1].func).iter_items())) == 2
@@ -908,11 +910,11 @@ SaveImages:[module_num:5|enabled:True]
     )
 
     assert pipeline_config.processing_config.variable_components == [
-        VariableComponents.TIMEPOINT
+        Microscopy.Timepoint
     ]
     with config_context(pipeline_config):
         assert all(
-            step.processing_config.variable_components == [VariableComponents.TIMEPOINT]
+            step.processing_config.variable_components == [Microscopy.Timepoint]
             for step in pipeline_steps
         )
 
@@ -1363,7 +1365,7 @@ MeasureObjectIntensity:[module_num:3|enabled:True]
     )
     assert invocations[0].kwargs_dict["select_images_to_measure"] == ("DNA", "PH3")
     with config_context(pipeline_config):
-        assert measurement_step.processing_config.group_by is GroupBy.NONE
+        assert measurement_step.processing_config.group_by is Ungrouped
         assert measurement_step.processing_config.input_source is InputSource.PIPELINE_START
 
 
@@ -1524,7 +1526,7 @@ MeasureObjectSizeShape:[module_num:5|enabled:True]
         "Nuclei", "Cells",
     )
     with config_context(config):
-        assert measurement_step.processing_config.group_by is GroupBy.NONE
+        assert measurement_step.processing_config.group_by is Ungrouped
         assert measurement_step.processing_config.input_source is InputSource.PREVIOUS_STEP
 
 
@@ -1601,7 +1603,7 @@ def test_multi_image_source_contract_keeps_every_source_input_exact() -> None:
     bindings = tuple(
         NamedSourceBinding(
             alias=alias,
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+            component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
         for alias, channel in (
             ("origDNA", "2"),
@@ -1614,7 +1616,7 @@ def test_multi_image_source_contract_keeps_every_source_input_exact() -> None:
         step_name="ImageMath",
         step_index=13,
         source_bindings=source_bindings,
-        group_by=GroupBy.CHANNEL,
+        group_by=Microscopy.Channel,
         input_source=InputSource.PIPELINE_START,
     ).with_source_declarations(binding.input_spec() for binding in bindings)
     module = ModuleBlock(

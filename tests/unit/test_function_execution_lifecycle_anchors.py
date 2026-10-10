@@ -8,7 +8,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
@@ -29,6 +28,7 @@ from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_execution import FunctionStepExecutor
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _anchor_executor(
@@ -100,7 +100,7 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -
         source_step_id=7,
         source_step_scope_id="measurement-producer",
         group_keys=("2",),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={"2": "/memory/measurements_w2.pkl"},
     )
     compiled_pattern = compile_function_pattern(
@@ -118,7 +118,7 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -
         },
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         consumer_variable_components=ComponentSet(),
     )
@@ -139,7 +139,7 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -
         execution_group_value="channel",
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
         ),
         compiled_function_pattern=compiled_pattern,
     )

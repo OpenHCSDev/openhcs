@@ -81,7 +81,7 @@ def step_receipt():
                     "host": "127.0.0.1",
                     "port": 5992,
                     "transport_mode": "tcp",
-                    "channel_mode": "layer",
+                    "colour_mode": "layer",
                 },
             ),
         },

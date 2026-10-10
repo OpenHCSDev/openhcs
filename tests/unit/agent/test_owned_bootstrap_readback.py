@@ -5,6 +5,7 @@ import json
 from types import SimpleNamespace
 
 from polystore.virtual_workspace import SourcePixelRef
+from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.agent.dto.execution import ArtifactMaterializationPlanSummary, ArtifactPlanSummary
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection, SourcePlaneProjection
@@ -27,7 +28,7 @@ def projections_for(addresses, name="probe_image"):
 
 
 def test_named_and_primary_inventory_is_complete_and_extends_from_declarations():
-    addresses = tuple(OpenHCSPlaneAddress.from_values("image.ome.tif", 1, 1, z, 1) for z in (3, 1))
+    addresses = tuple(OpenHCSPlaneAddress(((Microscopy.Well, "image.ome.tif"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, z), (Microscopy.Timepoint, 1))) for z in (3, 1))
     saved = projections_for(addresses)
     require_projection_inventory(saved, addresses, (image_plan(),))
     with pytest.raises(AssertionError):
@@ -42,7 +43,7 @@ def test_named_and_primary_inventory_is_complete_and_extends_from_declarations()
 
 @pytest.mark.parametrize("field", ["well", "site", "channel", "z_index", "timepoint"])
 def test_csv_address_cannot_match_only_slice_label_and_count(field):
-    address = OpenHCSPlaneAddress.from_values("image.ome.tif", 1, 2, 3, 4)
+    address = OpenHCSPlaneAddress(((Microscopy.Well, "image.ome.tif"), (Microscopy.Site, 1), (Microscopy.Channel, 2), (Microscopy.ZIndex, 3), (Microscopy.Timepoint, 4)))
     row = dict(address.as_component_metadata(), slice_index="0", object_label="13",
                pixel_count="16", object_name="probe_labels")
     expected = ((0, 13, 16),)

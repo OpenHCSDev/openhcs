@@ -14,13 +14,7 @@ from openhcs.core.runtime_relationships import (
     DirectParentReferenceFeatureDeclaration,
     DirectParentReferenceMeasurementFeature,
 )
-from openhcs.constants.constants import (
-    AllComponents,
-    Backend,
-    GroupBy,
-    MemoryType,
-    VariableComponents,
-)
+from openhcs.constants.constants import Backend, MemoryType
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
@@ -407,6 +401,8 @@ from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_input_edge_for_test,
     runtime_adapter_request_for_test,
 )
+from openhcs.core.axes import Axis, Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _compiled_callable_contract(
@@ -503,7 +499,7 @@ def test_default_invocation_keeps_compiled_source_bindings_outside_anchor_group(
     executor = _module_executor(contract)
     channel_scope = ComponentGroupScope(
         ("1",),
-        component=AllComponents.CHANNEL,
+        component=Microscopy.Channel,
     )
     runtime = _FakeCellProfilerRuntime(
         {},
@@ -528,16 +524,16 @@ def test_default_invocation_keeps_compiled_source_bindings_outside_anchor_group(
         source_bindings=(
             NamedSourceBinding(
                 alias="BF_image",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias=image_spec.name,
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(
             "A01",
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
             value="1",
         ),
     )
@@ -557,7 +553,7 @@ def test_active_inputs_restore_repeated_contract_roles_from_unique_storage() -> 
         artifact_inputs=(objects, objects),
     )
     executor = _module_executor(contract)
-    channel_scope = ComponentGroupScope(("1",), component=AllComponents.CHANNEL)
+    channel_scope = ComponentGroupScope(("1",), component=Microscopy.Channel)
     runtime = _FakeCellProfilerRuntime(
         {},
         artifact_input_edges=(
@@ -609,7 +605,7 @@ def test_active_inputs_exclude_unselected_independent_contract_roles() -> None:
         artifact_inputs=(first, second),
     )
     executor = _module_executor(contract)
-    channel_scope = ComponentGroupScope(("1",), component=AllComponents.CHANNEL)
+    channel_scope = ComponentGroupScope(("1",), component=Microscopy.Channel)
     runtime = _FakeCellProfilerRuntime(
         {},
         artifact_input_edges=(
@@ -2746,7 +2742,7 @@ def test_object_label_output_source_preserves_matching_input_object_plane_contex
                 consumer_variable_components=(),
             ),
         ),
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     current_image = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -4038,7 +4034,7 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
             tuple[ArtifactSpec, ArtifactOutputPlan], ...
         ] = (),
         source_bindings: tuple[NamedSourceBinding, ...] = (),
-        variable_components: tuple[VariableComponents, ...] = (),
+        variable_components: tuple[type[Axis], ...] = (),
         plane_projection: RuntimePlaneProjection = RuntimePlaneProjection.stack(),
         axis_scope: RuntimeExecutionAxisScope | None = None,
         source_image_set_identity_policy: SourceImageSetIdentityPolicy = (
@@ -4118,7 +4114,7 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
         self.objects: list[tuple[str, np.ndarray, dict[str, object]]] = []
         self.spatial_grids: dict[str, SpatialGrid] = {}
         self.relationships: list[ObjectRelationship] = []
-        self.group_by = GroupBy.NONE
+        self.group_by = Ungrouped
 
     def install_artifact_input_edges(
         self,
@@ -8477,7 +8473,7 @@ def test_illumination_apply_projects_broadcast_input_to_selected_primary_site(
                 illumination_spec,
             ),
         ),
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     executor = _module_executor(contract)
 
@@ -8612,7 +8608,7 @@ def test_illumination_apply_image_output_uses_original_input_source_payload() ->
     (
         ((), None, None),
         (
-            (VariableComponents.CHANNEL,),
+            (Microscopy.Channel,),
             RuntimePlaneAxisValueProjection.preserve(
                 axis=RuntimePlaneAxis.RUNTIME_SLICE,
                 axis_size=2,
@@ -8622,7 +8618,7 @@ def test_illumination_apply_image_output_uses_original_input_source_payload() ->
     ),
 )
 def test_image_output_projection_uses_exact_invocation_projection(
-    output_variable_components: tuple[VariableComponents, ...],
+    output_variable_components: tuple[type[Axis], ...],
     plane_projection: RuntimePlaneAxisValueProjection | None,
     expected_plane_axis: RuntimePlaneAxis | None,
 ) -> None:
@@ -8667,7 +8663,7 @@ def test_image_output_projection_uses_exact_invocation_projection(
                 ),
             ),
         ),
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
         plane_projection=RuntimePlaneProjection.stack(plane_count=2),
     )
     executor = _module_executor(
@@ -8747,14 +8743,14 @@ def test_declared_output_source_uses_projected_object_input_value() -> None:
     )
     output_plan = replace(
         _artifact_output_plan(output_spec),
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
     )
     runtime = _FakeCellProfilerRuntime(
         {},
         objects={object_spec.name: labels},
         artifact_input_edges=(_artifact_input_edge_for_test(object_spec),),
         artifact_output_bindings=((output_spec, output_plan),),
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         plane_projection=RuntimePlaneProjection.selected(0, plane_count=1),
     )
     callable_contract = _compiled_callable_contract(
@@ -8833,7 +8829,7 @@ def test_image_output_recording_projects_masked_singleton_rgb_payload() -> None:
     runtime = _FakeCellProfilerRuntime(
         {source_spec.name: source_payload},
         plane_projection=RuntimePlaneProjection.stack(plane_count=1),
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     executor = _module_executor(
         _compiled_callable_contract(
@@ -12326,11 +12322,11 @@ def test_align_measurement_builder_records_output_scoped_shifts() -> None:
         source_bindings=(
             NamedSourceBinding(
                 alias="Stain1Raw",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
                 alias="Stain2Raw",
-                component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         ),
     )
@@ -12847,7 +12843,7 @@ def test_filterobjects_binds_selection_measurement_values_to_label_slices(
         measurement_tables={"Cells": (measurements,)},
         plane_projection=RuntimePlaneProjection.stack(2),
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-            frozenset((AllComponents.CHANNEL,))
+            frozenset((Microscopy.Channel,))
         ),
     )
     runtime._store_runtime_artifact(
@@ -13589,7 +13585,7 @@ def test_object_measurement_table_uses_provenance_without_image_ownership() -> N
         output_plans=(
             replace(
                 _artifact_output_plan(measurement_spec),
-                group_component=AllComponents.CHANNEL,
+                group_component=Microscopy.Channel,
             ),
         ),
         spec=measurement_spec,
@@ -13607,7 +13603,7 @@ def test_object_measurement_table_uses_provenance_without_image_ownership() -> N
                             path=f"/memory/{spec.name}.pkl",
                             artifact_type=ObjectLabelsArtifactType,
                             group_keys=(channel,),
-                            group_component=AllComponents.CHANNEL,
+                            group_component=Microscopy.Channel,
                             paths_by_group={
                                 channel: f"/memory/{spec.name}_{channel}.pkl"
                             },
@@ -13616,20 +13612,20 @@ def test_object_measurement_table_uses_provenance_without_image_ownership() -> N
                         invocation_scope=ComponentGroupScope.ungrouped(),
                         producer_selection_scope=ComponentGroupScope(
                             (channel,),
-                            component=AllComponents.CHANNEL,
+                            component=Microscopy.Channel,
                         ),
                         component_scopes=(
                             ComponentGroupScope(
                                 (channel,),
-                                component=AllComponents.CHANNEL,
+                                component=Microscopy.Channel,
                             ),
                         ),
-                        consumer_variable_components=(AllComponents.SITE,),
+                        consumer_variable_components=(Microscopy.Site,),
                     )
                     for spec, channel in zip(object_specs, ("1", "2"), strict=True)
                 )
             ),
-            variable_components=(VariableComponents.SITE,),
+            variable_components=(Microscopy.Site,),
             axis_scope=RuntimeExecutionAxisScope.from_raw(
                 "test-axis", component=None, value=None
             ),
@@ -13808,26 +13804,26 @@ def test_relate_objects_measurement_table_rejects_distinct_image_set_axes() -> N
                             path=f"/memory/{name}.pkl",
                             artifact_type=ObjectLabelsArtifactType,
                             group_keys=(channel,),
-                            group_component=AllComponents.CHANNEL,
+                            group_component=Microscopy.Channel,
                             paths_by_group={channel: f"/memory/{name}_{channel}.pkl"},
                         ),
                         invocation_scope=ComponentGroupScope.ungrouped(),
                         producer_selection_scope=ComponentGroupScope(
                             (channel,),
-                            component=AllComponents.CHANNEL,
+                            component=Microscopy.Channel,
                         ),
                         component_scopes=(
                             ComponentGroupScope(
                                 (channel,),
-                                component=AllComponents.CHANNEL,
+                                component=Microscopy.Channel,
                             ),
                         ),
-                        consumer_variable_components=(AllComponents.SITE,),
+                        consumer_variable_components=(Microscopy.Site,),
                     )
                     for name, channel in (("Parents", "1"), ("Children", "2"))
                 )
             ),
-            variable_components=(VariableComponents.SITE,),
+            variable_components=(Microscopy.Site,),
             axis_scope=RuntimeExecutionAxisScope.from_raw(
                 "test-axis", component=None, value=None
             ),
@@ -18268,7 +18264,7 @@ def test_convert_objects_to_image_uses_declared_label_source_for_runtime_plane_d
         name="NucleiImage",
         path="/memory/NucleiImage.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
@@ -18300,7 +18296,7 @@ def test_object_label_image_output_rejects_source_plane_count_drift() -> None:
         name="NucleiImage",
         path="/memory/NucleiImage.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
     with pytest.raises(
@@ -18334,7 +18330,7 @@ def test_object_label_singleton_volume_output_declares_runtime_plane_axis() -> N
         name="NucleiImage",
         path="/memory/NucleiImage.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
@@ -18366,7 +18362,7 @@ def test_object_label_scalar_image_output_does_not_invent_runtime_plane_axis() -
         name="NucleiImage",
         path="/memory/NucleiImage.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 

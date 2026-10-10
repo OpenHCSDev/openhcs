@@ -3,14 +3,10 @@ Consolidated constants for OpenHCS.
 
 This module defines all constants related to backends, defaults, I/O, memory, and pipeline.
 These constants are governed by various doctrinal clauses.
-
-Component enums are created once per process from the declared component order.
 """
 
-import logging
 from enum import Enum
-from functools import lru_cache
-from typing import Any, Set
+from typing import Set
 
 from arraybridge.types import (
     CPU_MEMORY_TYPES as CPU_MEMORY_TYPES,
@@ -50,8 +46,6 @@ from arraybridge.types import (
 )
 from polystore.constants import Backend
 
-logger = logging.getLogger(__name__)
-
 
 class Microscope(Enum):
     AUTO = "auto"
@@ -61,164 +55,6 @@ class Microscope(Enum):
     OMERO = "omero"  # Added for OMERO virtual filesystem backend
     BIOFORMATS = "bioformats"
     SOURCE_BINDINGS = "source_bindings"
-
-
-def get_openhcs_config():
-    """Get the OpenHCS configuration, initializing it if needed."""
-    from openhcs.core.components.framework import ComponentConfigurationFactory
-
-    return ComponentConfigurationFactory.create_openhcs_default_configuration()
-
-
-def _enum_value_for_comparison(value: Any) -> Any:
-    """Return enum value for equality hooks without reflective attribute access."""
-    if isinstance(value, Enum):
-        return value.value
-    return value
-
-
-def _add_groupby_methods(GroupBy: Enum) -> Enum:
-    """Add custom methods to GroupBy enum."""
-
-    def groupby_eq(self, other: Any) -> bool:
-        # GroupBy.NONE is a concrete enum value in user/config state. It must
-        # not compare equal to Python None, which is the lazy-inheritance
-        # sentinel in ObjectState and lazy dataclass fields.
-        if other is None:
-            return False
-        return self.value == _enum_value_for_comparison(other)
-
-    GroupBy.component = property(lambda self: self.value)
-    GroupBy.__eq__ = groupby_eq
-    GroupBy.__hash__ = lambda self: (
-        hash("GroupBy.NONE") if self.value is None else hash(self.value)
-    )
-    GroupBy.__str__ = lambda self: f"GroupBy.{self.name}"
-    GroupBy.__repr__ = lambda self: f"GroupBy.{self.name}"
-    return GroupBy
-
-
-def _add_allcomponents_methods(AllComponents: Enum) -> Enum:
-    """Add component-axis semantic methods to the dynamic component enum."""
-
-    def from_value(cls, value: Any):
-        for component in cls:
-            if component.value == value:
-                return component
-        return None
-
-    def ordered_names(cls) -> tuple[str, ...]:
-        return tuple(component.value for component in cls)
-
-    def is_multiprocessing_axis(self) -> bool:
-        return self.value == get_multiprocessing_axis().value
-
-    def is_variable_axis(self) -> bool:
-        return not self.is_multiprocessing_axis()
-
-    def is_default_group_by_axis(self) -> bool:
-        group_by = get_default_group_by()
-        return group_by is not None and self.value == group_by.value
-
-    AllComponents.from_value = classmethod(from_value)
-    AllComponents.ordered_names = classmethod(ordered_names)
-    AllComponents.is_multiprocessing_axis = is_multiprocessing_axis
-    AllComponents.is_variable_axis = is_variable_axis
-    AllComponents.is_default_group_by_axis = is_default_group_by_axis
-    return AllComponents
-
-
-# Simple lazy initialization - just defer the config call
-@lru_cache(maxsize=1)
-def _create_enums():
-    """Create process-local component enums when first needed.
-
-    CRITICAL: This function must create enums with proper __module__ and __qualname__
-    attributes so they can be pickled correctly in multiprocessing contexts.
-    The enums are stored in module globals() to ensure identity consistency.
-
-    The function-local cache preserves enum identity within the process.
-    """
-    import os
-
-    logger.debug("_create_enums() called in process %s", os.getpid())
-    logger.debug("_create_enums() cache_info: %s", _create_enums.cache_info())
-    if logger.isEnabledFor(logging.DEBUG):
-        import traceback
-
-        logger.debug(
-            "_create_enums() stack trace:\n%s",
-            "".join(traceback.format_stack()),
-        )
-
-    config = get_openhcs_config()
-    remaining = config.get_remaining_components()
-
-    # AllComponents: ALL possible dimensions (including multiprocessing axis)
-    all_components_dict = {c.name: c.value for c in config.all_components}
-    all_components = Enum("AllComponents", all_components_dict)
-    all_components.__module__ = __name__
-    all_components.__qualname__ = "AllComponents"
-    all_components = _add_allcomponents_methods(all_components)
-
-    # VariableComponents: Components available for variable selection (excludes multiprocessing axis)
-    vc_dict = {c.name: c.value for c in remaining}
-    vc = Enum("VariableComponents", vc_dict)
-    vc.__module__ = __name__
-    vc.__qualname__ = "VariableComponents"
-
-    # GroupBy: Same as VariableComponents + NONE option (they're the same concept)
-    gb_dict = {c.name: c.value for c in remaining}
-    gb_dict["NONE"] = None
-    GroupBy = Enum("GroupBy", gb_dict)
-    GroupBy.__module__ = __name__
-    GroupBy.__qualname__ = "GroupBy"
-    GroupBy = _add_groupby_methods(GroupBy)
-
-    # SequentialComponents: Same as VariableComponents (for sequential processing)
-    sc_dict = {c.name: c.value for c in remaining}
-    sc = Enum("SequentialComponents", sc_dict)
-    sc.__module__ = __name__
-    sc.__qualname__ = "SequentialComponents"
-
-    logger.debug(
-        "_create_enums() returning in process %s: AllComponents=%s, "
-        "VariableComponents=%s, GroupBy=%s, SequentialComponents=%s",
-        os.getpid(),
-        id(all_components),
-        id(vc),
-        id(GroupBy),
-        id(sc),
-    )
-    logger.debug(
-        "_create_enums() cache_info after return: %s",
-        _create_enums.cache_info(),
-    )
-    return all_components, vc, GroupBy, sc
-
-
-@lru_cache(maxsize=1)
-def _create_streaming_components():
-    """Create StreamingComponents enum from real filename components."""
-    import os
-
-    logger.debug("_create_streaming_components() called in process %s", os.getpid())
-
-    components_dict = {c.name: c.value for c in AllComponents}
-
-    streaming_components = Enum("StreamingComponents", components_dict)
-    streaming_components.__module__ = __name__
-    streaming_components.__qualname__ = "StreamingComponents"
-
-    logger.debug(
-        "_create_streaming_components() returning: StreamingComponents=%s",
-        id(streaming_components),
-    )
-    return streaming_components
-
-
-AllComponents, VariableComponents, GroupBy, SequentialComponents = _create_enums()
-StreamingComponents = _create_streaming_components()
 
 
 # Documentation URL
@@ -303,33 +139,6 @@ DEFAULT_IMAGE_EXTENSIONS: Set[str] = set(_TIFF_IMAGE_EXTENSIONS)
 LOADABLE_IMAGE_EXTENSIONS: Set[str] = _TIFF_IMAGE_EXTENSIONS | _RASTER_IMAGE_EXTENSIONS
 DEFAULT_SITE_PADDING = 3
 DEFAULT_RECURSIVE_PATTERN_SEARCH = False
-
-
-# Lazy default resolution using lru_cache
-@lru_cache(maxsize=1)
-def get_default_variable_components():
-    """Get default variable components from ComponentConfiguration."""
-    _, vc, _, _ = _create_enums()  # Get the enum directly
-    return [vc.__members__[c.name] for c in get_openhcs_config().default_variable]
-
-
-@lru_cache(maxsize=1)
-def get_default_group_by():
-    """Get default group_by from ComponentConfiguration."""
-    _, _, gb, _ = _create_enums()  # Get the enum directly
-    config = get_openhcs_config()
-    if config.default_group_by is None:
-        return gb.__members__["NONE"]
-    return gb.__members__[config.default_group_by.name]
-
-
-@lru_cache(maxsize=1)
-def get_multiprocessing_axis():
-    """Get the multiprocessing axis from the canonical component enum."""
-
-    all_components, _, _, _ = _create_enums()
-    config = get_openhcs_config()
-    return all_components.__members__[config.multiprocessing_axis.name]
 
 
 DEFAULT_MICROSCOPE: Microscope = Microscope.AUTO

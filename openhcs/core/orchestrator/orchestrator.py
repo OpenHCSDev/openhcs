@@ -9,14 +9,7 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union, Set
 
-from openhcs.constants.constants import (
-    Backend,
-    LOADABLE_IMAGE_EXTENSIONS,
-    GroupBy,
-    OrchestratorState,
-    AllComponents,
-    VariableComponents,
-)
+from openhcs.constants.constants import Backend, LOADABLE_IMAGE_EXTENSIONS, OrchestratorState
 from openhcs.constants import Microscope
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config import GlobalPipelineConfig
@@ -33,7 +26,7 @@ from openhcs.core.source_binding_context import SourceBindingContext
 from openhcs.core.source_bindings import source_bindings_defaults_to_base
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.core.components.validation import convert_enum_by_value
+
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeObservationMode,
@@ -63,6 +56,7 @@ from polystore.zarr import ZarrStorageBackend
 from openhcs.microscopes import create_microscope_handler
 from openhcs.microscopes.microscope_base import MicroscopeHandler
 from openhcs.core.alias_property import AliasProperty
+from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
 
 # Import generic component system - required for orchestrator functionality
 
@@ -233,8 +227,8 @@ class PipelineOrchestrator:
         if progress_callback:
             logger.info("PipelineOrchestrator initialized with progress callback")
 
-        # Component keys cache for fast access - uses AllComponents (includes multiprocessing axis)
-        self._component_keys_cache: Dict["AllComponents", List[str]] = {}
+        # Component keys cache for every declared axis (including the partition axis)
+        self._component_keys_cache: Dict[type[Axis], List[str]] = {}
 
         self.metadata_cache = MetadataCache()
 
@@ -553,9 +547,8 @@ class PipelineOrchestrator:
         self.input_dir = source.input_dir
         self.workspace_path = source.workspace_path
         self.default_pipeline_definition = list(execution_bundle.pipeline_definition)
-        from openhcs.constants import MULTIPROCESSING_AXIS
 
-        self._component_keys_cache[MULTIPROCESSING_AXIS] = list(
+        self._component_keys_cache[AxisFamily.active().partition_axis()] = list(
             execution_bundle.axis_ids
         )
         self._initialized = True
@@ -677,7 +670,7 @@ class PipelineOrchestrator:
         # CRITICAL: Pass metadata cache for OpenHCS metadata creation
         # Extract cached metadata from service and convert to dict format expected by OpenHCSMetadataGenerator
         metadata_dict = {}
-        for component in AllComponents:
+        for component in AxisFamily.active().axes:
             cached_metadata = self.metadata_cache.get_cached_metadata(
                 component
             )
@@ -822,13 +815,13 @@ class PipelineOrchestrator:
 
     def get_component_keys(
         self,
-        component: Union["AllComponents", "VariableComponents"],
+        component: type[GroupingDeclaration],
         component_filter: Optional[List[Union[str, int]]] = None,
         *,
         resolved_config: GlobalPipelineConfig | None = None,
     ) -> List[str]:
         """
-        Generic method to get component keys using VariableComponents directly.
+        Return the discovered values of one declared axis.
 
         Returns the discovered component values as strings to match the pattern
         detection system format.
@@ -836,8 +829,8 @@ class PipelineOrchestrator:
         Tries metadata cache first, falls back to filename parsing cache if metadata is empty.
 
         Args:
-            component: AllComponents or VariableComponents enum specifying which component to extract
-                      (also accepts GroupBy enum which will be converted to AllComponents)
+            component: The axis whose values to return; a step's grouping
+                      declaration is accepted when it names one axis
             component_filter: Optional list of component values to filter by
             resolved_config: Existing compilation configuration. Omit for live
                 inspection of the current saved declaration.
@@ -853,12 +846,10 @@ class PipelineOrchestrator:
                 "Orchestrator must be initialized before getting component keys."
             )
 
-        # Convert GroupBy to AllComponents using OpenHCS generic utility
-        if isinstance(component, GroupBy) and component.value is None:
-            raise ValueError("Cannot get component keys for GroupBy.NONE")
-
-        # Convert to AllComponents for cache lookup (includes multiprocessing axis)
-        component = convert_enum_by_value(component, AllComponents) or component
+        grouping_axes = component.grouping_axes()
+        if len(grouping_axes) != 1:
+            raise ValueError(f"Cannot get component keys for {component!r}")
+        (component,) = grouping_axes
 
         effective_config = (
             self.get_effective_config() if resolved_config is None else resolved_config
@@ -867,7 +858,7 @@ class PipelineOrchestrator:
             effective_config.source_bindings_config
         )
         # Use component directly - let natural errors occur for wrong types
-        component_name = component.value
+        component_name = component.name
 
         # Try metadata cache first (preferred source)
         cached_metadata = self.metadata_cache.get_cached_metadata(component)
@@ -895,7 +886,7 @@ class PipelineOrchestrator:
                 return []
 
             logger.debug(
-                f"Using filename parsing cache for {component.value}: {len(all_components)} components"
+                f"Using filename parsing cache for {component.name}: {len(all_components)} components"
             )
 
         if component_filter:
@@ -912,7 +903,7 @@ class PipelineOrchestrator:
             return all_components
 
     def cache_component_keys(
-        self, components: Optional[List["AllComponents"]] = None
+        self, components: Optional[List[type[Axis]]] = None
     ) -> None:
         """
         Pre-compute and cache component keys for fast access using single-pass parsing.
@@ -921,8 +912,8 @@ class PipelineOrchestrator:
         extracting all component types in a single pass for maximum efficiency.
 
         Args:
-            components: Optional list of AllComponents to cache.
-                       If None, caches all components in the AllComponents enum.
+            components: Optional list of axes to cache.
+                       If None, caches every axis of the active family.
         """
         if not self.is_initialized():
             raise RuntimeError(
@@ -930,16 +921,14 @@ class PipelineOrchestrator:
             )
 
         if components is None:
-            components = list(
-                AllComponents
-            )  # Cache all enum values including multiprocessing axis
+            components = list(AxisFamily.active().axes)
 
         logger.info(
-            f"Caching component keys for: {[comp.value for comp in components]}"
+            f"Caching component keys for: {[comp.name for comp in components]}"
         )
 
         # Initialize component sets for all requested components
-        component_sets: Dict["AllComponents", Set[Union[str, int]]] = {}
+        component_sets: Dict[type[Axis], Set[Union[str, int]]] = {}
         for component in components:
             component_sets[component] = set()
 
@@ -1006,11 +995,11 @@ class PipelineOrchestrator:
         for component, component_set in component_sets.items():
             sorted_components = [str(comp) for comp in sorted(list(component_set))]
             self._component_keys_cache[component] = sorted_components
-            logger.debug(f"Cached {len(sorted_components)} {component.value} keys")
+            logger.debug(f"Cached {len(sorted_components)} {component.name} keys")
 
             if not sorted_components:
                 logger.warning(
-                    f"No {component.value} values found in input directory: {self.input_dir}"
+                    f"No {component.name} values found in input directory: {self.input_dir}"
                 )
 
         logger.info(
@@ -1018,7 +1007,7 @@ class PipelineOrchestrator:
         )
 
     def clear_component_cache(
-        self, components: Optional[List["AllComponents"]] = None
+        self, components: Optional[List[type[Axis]]] = None
     ) -> None:
         """
         Clear cached component keys to force recomputation.
@@ -1027,7 +1016,7 @@ class PipelineOrchestrator:
         to refresh the component key cache.
 
         Args:
-            components: Optional list of AllComponents to clear from cache.
+            components: Optional list of axes to clear from cache.
                        If None, clears entire cache.
         """
         if components is None:
@@ -1037,7 +1026,8 @@ class PipelineOrchestrator:
             for component in components:
                 if component in self._component_keys_cache:
                     del self._component_keys_cache[component]
-                    logger.debug(f"Cleared cache for {component.value}")
+                    logger.debug(f"Cleared cache for {component.name}")
+
             logger.info(f"Cleared cache for {len(components)} component types")
 
     # Global config management removed - handled by UI layer

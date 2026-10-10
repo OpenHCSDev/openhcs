@@ -7,7 +7,6 @@ from zmqruntime.viewer_protocol import (
     ViewerComponentMode,
 )
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_binding_workspace import PrimaryPlaneBindingProjection
 from openhcs.core.source_bindings import ComponentSelector, NamedSourceBinding
 from openhcs.core.source_projection import (
@@ -29,16 +28,11 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentNameMetadata,
     ViewerLayerAxisProjection,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _address(channel: str = "1") -> OpenHCSPlaneAddress:
-    return OpenHCSPlaneAddress.from_values(
-        well="A01",
-        site="1",
-        channel=channel,
-        z_index="1",
-        timepoint="1",
-    )
+    return OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, channel), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")))
 
 
 def _component_name_metadata() -> ViewerComponentNameMetadata:
@@ -64,13 +58,13 @@ def test_primary_plane_projection_preserves_exact_binding_alias_as_channel_label
     projection = PrimaryPlaneBindingProjection().projection(
         NamedSourceBinding(
             alias="DNA",
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+            component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
         ),
         candidate,
         address,
     )
 
-    assert projection.address.value_for(AllComponents.CHANNEL) == "1"
+    assert projection.address.value_for(Microscopy.Channel) == "1"
     assert dict(projection.component_labels) == {"channel": "DNA"}
     metadata = SourceProjectionSet((projection,)).metadata_dict(
         parser=SourceSchemaFilenameParser(),

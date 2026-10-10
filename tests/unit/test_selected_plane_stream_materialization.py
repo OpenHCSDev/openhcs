@@ -64,9 +64,10 @@ from test_function_artifact_materialization import (
     streaming_config_stub,
 )
 from test_materialization_core import _viewer_stream_backend_kwargs
+from openhcs.domains.microscopy.axes import Microscopy
 
 
-def _source_stack(axis, component="channel"):
+def _source_stack(axis, component=Microscopy.Channel.name):
     spacing = SourceVoxelSpacing((1.3556, 1.3556))
     coordinates = tuple(
         {

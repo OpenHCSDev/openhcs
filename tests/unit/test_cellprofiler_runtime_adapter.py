@@ -8,7 +8,6 @@ from typing import Annotated, ClassVar
 import numpy as np
 import pytest
 
-from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
@@ -182,6 +181,7 @@ from tests.unit.cellprofiler_runtime_test_support import (
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 AXIS_ID = "A01"
 DNA_IMAGE = "DNA"
@@ -373,11 +373,14 @@ def runtime_axis_scope(
     component: str | None = None,
     value: str | None = None,
 ) -> RuntimeExecutionAxisScope:
+    """Build a scope from a boundary axis name, as the runtime wire carries it."""
     return RuntimeExecutionAxisScope.from_raw(
         axis_id,
-        component=component,
+        component=None if component is None else Microscopy.named(component),
         value=value,
     )
+
+
 
 
 @dataclass(frozen=True)
@@ -702,7 +705,15 @@ def _source_bound_image_adapter(output_bindings, images):
     context = ContextStub(filemanager)
     projections = SourceProjectionSet(tuple(
         SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values('A01', '1', str(index), '1', '1'),
+            address=OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, 'A01'),
+                    (Microscopy.Site, '1'),
+                    (Microscopy.Channel, str(index)),
+                    (Microscopy.ZIndex, '1'),
+                    (Microscopy.Timepoint, '1'),
+                )
+            ),
             ref=SourcePixelRef('memory', f'/src/{alias}.tif'),
             source_alias=alias,
         )
@@ -1235,7 +1246,7 @@ def test_cellprofiler_adapter_does_not_cache_current_image_object_selection():
     store = RuntimeValueStore()
     outputs = {
         NUCLEI: _plan(
-            NUCLEI, ObjectLabelsArtifactType, group_component=AllComponents.SITE
+            NUCLEI, ObjectLabelsArtifactType, group_component=Microscopy.Site
         )
     }
     output_bindings = (
@@ -1297,18 +1308,18 @@ def test_cellprofiler_adapter_does_not_cache_current_image_object_selection():
                         name=NUCLEI,
                         path=outputs[NUCLEI].path,
                         artifact_type=ObjectLabelsArtifactType,
-                        group_component=AllComponents.SITE,
+                        group_component=Microscopy.Site,
                     ),
                     invocation_scope=ComponentGroupScope.ungrouped(),
                     producer_selection_scope=ComponentGroupScope.dynamic(
-                        AllComponents.SITE
+                        Microscopy.Site
                     ),
-                    component_scopes=(ComponentGroupScope.dynamic(AllComponents.SITE),),
-                    consumer_variable_components=(AllComponents.SITE,),
+                    component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                    consumer_variable_components=(Microscopy.Site,),
                 ),
             )
         },
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         microscope_handler=(
             processing_context.microscope_handler
             if processing_context is not None
@@ -1352,7 +1363,7 @@ def test_cellprofiler_adapter_does_not_select_relationship_from_current_source_p
         path="/memory/relationships.pkl",
         artifact_type=RelationshipsArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
         paths_by_group=group_paths,
     )
     filemanager = FileManagerStub()
@@ -1399,14 +1410,14 @@ def test_cellprofiler_adapter_does_not_select_relationship_from_current_source_p
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.from_raw(
-                    ("1", "2"), component=AllComponents.SITE
+                    ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        ("1", "2"), component=AllComponents.SITE
+                        ("1", "2"), component=Microscopy.Site
                     ),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -1415,7 +1426,7 @@ def test_cellprofiler_adapter_does_not_select_relationship_from_current_source_p
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -1456,7 +1467,7 @@ def test_cellprofiler_adapter_aligns_grouped_relationships_to_runtime_slices():
         path="/memory/relationships.pkl",
         artifact_type=RelationshipsArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
         paths_by_group=group_paths,
     )
     filemanager = FileManagerStub()
@@ -1499,14 +1510,14 @@ def test_cellprofiler_adapter_aligns_grouped_relationships_to_runtime_slices():
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.from_raw(
-                    ("1", "2"), component=AllComponents.SITE
+                    ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        ("1", "2"), component=AllComponents.SITE
+                        ("1", "2"), component=Microscopy.Site
                     ),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -1516,7 +1527,7 @@ def test_cellprofiler_adapter_aligns_grouped_relationships_to_runtime_slices():
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -1538,7 +1549,7 @@ def test_cellprofiler_adapter_does_not_source_scope_default_image_records():
     store = RuntimeValueStore()
     outputs = {
         DNA_IMAGE: _plan(
-            DNA_IMAGE, ImageArtifactType, group_component=AllComponents.SITE
+            DNA_IMAGE, ImageArtifactType, group_component=Microscopy.Site
         )
     }
     output_bindings = (
@@ -1573,14 +1584,14 @@ def test_cellprofiler_adapter_does_not_source_scope_default_image_records():
                     name=DNA_IMAGE,
                     path=outputs[DNA_IMAGE].path,
                     artifact_type=ImageArtifactType,
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
-                    AllComponents.SITE
+                    Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(AllComponents.SITE),),
-                consumer_variable_components=(AllComponents.SITE,),
+                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -1589,7 +1600,7 @@ def test_cellprofiler_adapter_does_not_source_scope_default_image_records():
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -1627,7 +1638,7 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
         path=image_path,
         artifact_type=ImageArtifactType,
         group_keys=(None,),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
     )
 
     for group_key, source_path, value in (
@@ -1660,21 +1671,21 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
                     path=image_path,
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.from_raw(
-                    (AXIS_ID,), component=AllComponents.WELL
+                    (AXIS_ID,), component=Microscopy.Well
                 ),
                 producer_selection_scope=ComponentGroupScope.dynamic(
-                    AllComponents.SITE
+                    Microscopy.Site
                 ),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        (AXIS_ID,), component=AllComponents.WELL
+                        (AXIS_ID,), component=Microscopy.Well
                     ),
-                    ComponentGroupScope.dynamic(AllComponents.SITE),
+                    ComponentGroupScope.dynamic(Microscopy.Site),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -1684,7 +1695,7 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
         artifact_inputs=_compiled_artifact_inputs,
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -1730,7 +1741,7 @@ def test_cellprofiler_adapter_keeps_multisource_current_image_grouped_when_files
         path=image_path,
         artifact_type=ImageArtifactType,
         group_keys=(None,),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
     )
 
     for group_key, source_path, value in (
@@ -1762,14 +1773,14 @@ def test_cellprofiler_adapter_keeps_multisource_current_image_grouped_when_files
                     path=image_path,
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
-                    AllComponents.SITE
+                    Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(AllComponents.SITE),),
-                consumer_variable_components=(AllComponents.SITE,),
+                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -1780,7 +1791,7 @@ def test_cellprofiler_adapter_keeps_multisource_current_image_grouped_when_files
         artifact_inputs=_compiled_artifact_inputs,
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -1820,7 +1831,7 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
         path=image_path,
         artifact_type=ImageArtifactType,
         group_keys=(None,),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
     )
 
     for group_key, source_path, value in (
@@ -1853,14 +1864,14 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
                     path=image_path,
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
-                    AllComponents.SITE
+                    Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(AllComponents.SITE),),
-                consumer_variable_components=(AllComponents.SITE,),
+                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -1871,7 +1882,7 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
         artifact_inputs=_compiled_artifact_inputs,
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -1908,7 +1919,7 @@ def test_cellprofiler_adapter_records_output_in_declared_invocation_group():
         path=f"/memory/{output_name}.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("0", "3"),
-        group_component=AllComponents.CHANNEL,
+        group_component=Microscopy.Channel,
         paths_by_group={
             "0": f"/memory/{output_name}_w0.pkl",
             "3": f"/memory/{output_name}_w3.pkl",
@@ -1918,11 +1929,11 @@ def test_cellprofiler_adapter_records_output_in_declared_invocation_group():
         runtime_value_store=store,
         axis_scope=RuntimeExecutionAxisScope.from_raw(
             AXIS_ID,
-            component=AllComponents.CHANNEL,
+            component=Microscopy.Channel,
             value="3",
             fixed_component_values=(
-                (AllComponents.Z_INDEX, "1"),
-                (AllComponents.TIMEPOINT, "1"),
+                (Microscopy.ZIndex, "1"),
+                (Microscopy.Timepoint, "1"),
             ),
         ),
         group_key="3",
@@ -1947,8 +1958,8 @@ def test_cellprofiler_adapter_records_output_in_declared_invocation_group():
 
     assert stored.key.scope.value_text == "3"
     assert stored.key.scope.fixed_component_values == (
-        (AllComponents.Z_INDEX, "1"),
-        (AllComponents.TIMEPOINT, "1"),
+        (Microscopy.ZIndex, "1"),
+        (Microscopy.Timepoint, "1"),
     )
     assert ("memory", f"/memory/{output_name}_w3.pkl") in filemanager.saved
 
@@ -1983,7 +1994,7 @@ def test_cellprofiler_adapter_projects_source_bound_runtime_image_to_group_plane
                     path=image_path,
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
-                    variable_components=(AllComponents.SITE,),
+                    variable_components=(Microscopy.Site,),
                     paths_by_group={None: image_path},
                 ),
             ),
@@ -2018,14 +2029,14 @@ def test_cellprofiler_adapter_projects_source_bound_runtime_image_to_group_plane
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
                     paths_by_group={None: image_path},
-                    variable_components=(AllComponents.SITE,),
+                    variable_components=(Microscopy.Site,),
                 ),
                 invocation_scope=ComponentGroupScope.from_raw(
-                    ("2",), component=AllComponents.SITE
+                    ("2",), component=Microscopy.Site
                 ),
                 producer_selection_scope=ComponentGroupScope.ungrouped(),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(("2",), component=AllComponents.SITE),
+                    ComponentGroupScope.from_raw(("2",), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(),
             ),
@@ -2084,7 +2095,7 @@ def test_cellprofiler_adapter_deduplicates_grouped_runtime_image_input_locations
                     path=image_path,
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
-                    variable_components=(AllComponents.SITE,),
+                    variable_components=(Microscopy.Site,),
                     paths_by_group={None: image_path},
                 ),
             ),
@@ -2119,14 +2130,14 @@ def test_cellprofiler_adapter_deduplicates_grouped_runtime_image_input_locations
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
                     paths_by_group={None: image_path},
-                    variable_components=(AllComponents.SITE,),
+                    variable_components=(Microscopy.Site,),
                 ),
                 invocation_scope=ComponentGroupScope.from_raw(
-                    ("2",), component=AllComponents.SITE
+                    ("2",), component=Microscopy.Site
                 ),
                 producer_selection_scope=ComponentGroupScope.ungrouped(),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(("2",), component=AllComponents.SITE),
+                    ComponentGroupScope.from_raw(("2",), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(),
             ),
@@ -2236,7 +2247,7 @@ def test_cellprofiler_adapter_uses_grouped_input_when_consumer_group_is_differen
         path=image_path,
         artifact_type=ImageArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
         paths_by_group={
             "1": "/memory/A01_w1_Mito.pkl",
             "2": "/memory/A01_w2_Mito.pkl",
@@ -2266,27 +2277,27 @@ def test_cellprofiler_adapter_uses_grouped_input_when_consumer_group_is_differen
                     path=image_path,
                     artifact_type=ImageArtifactType,
                     group_keys=("1", "2"),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group={
                         "1": "/memory/A01_w1_Mito.pkl",
                         "2": "/memory/A01_w2_Mito.pkl",
                     },
                 ),
                 invocation_scope=ComponentGroupScope.from_raw(
-                    ("1",), component=AllComponents.CHANNEL
+                    ("1",), component=Microscopy.Channel
                 ),
                 producer_selection_scope=ComponentGroupScope.from_raw(
-                    ("1", "2"), component=AllComponents.SITE
+                    ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        ("1",), component=AllComponents.CHANNEL
+                        ("1",), component=Microscopy.Channel
                     ),
                     ComponentGroupScope.from_raw(
-                        ("1", "2"), component=AllComponents.SITE
+                        ("1", "2"), component=Microscopy.Site
                     ),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -2296,7 +2307,7 @@ def test_cellprofiler_adapter_uses_grouped_input_when_consumer_group_is_differen
         group_key="1",
         artifact_inputs=_compiled_artifact_inputs,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -2343,13 +2354,13 @@ def test_cellprofiler_adapter_does_not_project_channel_stack_for_site_group():
                     path=image_path,
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
-                    variable_components=(AllComponents.CHANNEL,),
+                    variable_components=(Microscopy.Channel,),
                     paths_by_group={None: image_path},
                 ),
             ),
         ),
         filemanager=filemanager,
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
     )
     producer.add_image(
         image_name,
@@ -2378,19 +2389,19 @@ def test_cellprofiler_adapter_does_not_project_channel_stack_for_site_group():
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
                     paths_by_group={None: image_path},
-                    variable_components=(AllComponents.CHANNEL,),
+                    variable_components=(Microscopy.Channel,),
                 ),
                 invocation_scope=ComponentGroupScope.from_raw(
-                    ("2",), component=AllComponents.SITE
+                    ("2",), component=Microscopy.Site
                 ),
                 producer_selection_scope=ComponentGroupScope.ungrouped(),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(("2",), component=AllComponents.SITE),
+                    ComponentGroupScope.from_raw(("2",), component=Microscopy.Site),
                     ComponentGroupScope.from_raw(
-                        ("1", "2"), component=AllComponents.CHANNEL
+                        ("1", "2"), component=Microscopy.Channel
                     ),
                 ),
-                consumer_variable_components=(AllComponents.CHANNEL,),
+                consumer_variable_components=(Microscopy.Channel,),
             ),
         )
     }
@@ -2401,7 +2412,7 @@ def test_cellprofiler_adapter_does_not_project_channel_stack_for_site_group():
         plane_projection=RuntimePlaneProjection.selected(1, 2),
         artifact_inputs=_compiled_artifact_inputs,
         filemanager=filemanager,
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -2442,7 +2453,7 @@ def test_cellprofiler_adapter_projects_stack_without_replacing_artifact_provenan
                     path=image_path,
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
-                    variable_components=(AllComponents.SITE,),
+                    variable_components=(Microscopy.Site,),
                     paths_by_group={None: image_path},
                 ),
             ),
@@ -2486,14 +2497,14 @@ def test_cellprofiler_adapter_projects_stack_without_replacing_artifact_provenan
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
                     paths_by_group={None: image_path},
-                    variable_components=(AllComponents.SITE,),
+                    variable_components=(Microscopy.Site,),
                 ),
                 invocation_scope=ComponentGroupScope.from_raw(
-                    ("2",), component=AllComponents.SITE
+                    ("2",), component=Microscopy.Site
                 ),
                 producer_selection_scope=ComponentGroupScope.ungrouped(),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(("2",), component=AllComponents.SITE),
+                    ComponentGroupScope.from_raw(("2",), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(),
             ),
@@ -2545,7 +2556,7 @@ def test_cellprofiler_adapter_does_not_select_image_record_from_current_source_s
         path="/memory/Mito.pkl",
         artifact_type=ImageArtifactType,
         group_keys=("1", "2"),
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
         paths_by_group=image_paths,
     )
     for group_key, site, value in (
@@ -2581,19 +2592,19 @@ def test_cellprofiler_adapter_does_not_select_image_record_from_current_source_s
                     path="/memory/Mito.pkl",
                     artifact_type=ImageArtifactType,
                     group_keys=("1", "2"),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group=image_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.from_raw(
-                    ("1", "2"), component=AllComponents.SITE
+                    ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        ("1", "2"), component=AllComponents.SITE
+                        ("1", "2"), component=Microscopy.Site
                     ),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -2602,7 +2613,7 @@ def test_cellprofiler_adapter_does_not_select_image_record_from_current_source_s
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -2652,7 +2663,7 @@ def test_cellprofiler_adapter_keeps_template_scoped_object_records_grouped():
     store = RuntimeValueStore()
     outputs = {
         NUCLEI: _plan(
-            NUCLEI, ObjectLabelsArtifactType, group_component=AllComponents.SITE
+            NUCLEI, ObjectLabelsArtifactType, group_component=Microscopy.Site
         )
     }
     output_bindings = (
@@ -2694,14 +2705,14 @@ def test_cellprofiler_adapter_keeps_template_scoped_object_records_grouped():
                     name=NUCLEI,
                     path=outputs[NUCLEI].path,
                     artifact_type=ObjectLabelsArtifactType,
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
-                    AllComponents.SITE
+                    Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(AllComponents.SITE),),
-                consumer_variable_components=(AllComponents.SITE,),
+                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -2710,7 +2721,7 @@ def test_cellprofiler_adapter_keeps_template_scoped_object_records_grouped():
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -3020,7 +3031,7 @@ def test_cellprofiler_adapter_availability_accepts_grouped_runtime_inputs():
                         path=path,
                         artifact_type=ObjectLabelsArtifactType,
                         group_keys=(group_key,),
-                        group_component=AllComponents.SITE,
+                        group_component=Microscopy.Site,
                         paths_by_group={group_key: path},
                     ),
                 ),
@@ -3044,19 +3055,19 @@ def test_cellprofiler_adapter_availability_accepts_grouped_runtime_inputs():
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=tuple(group_paths),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.from_raw(
-                    ("1", "2"), component=AllComponents.SITE
+                    ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        ("1", "2"), component=AllComponents.SITE
+                        ("1", "2"), component=Microscopy.Site
                     ),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -3066,7 +3077,7 @@ def test_cellprofiler_adapter_availability_accepts_grouped_runtime_inputs():
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -3099,7 +3110,7 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
                     path=realized_path,
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=("1",),
-                    group_component=AllComponents.CHANNEL,
+                    group_component=Microscopy.Channel,
                     paths_by_group={"1": realized_path},
                 ),
             ),
@@ -3123,15 +3134,15 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=(None,),
-                    group_component=AllComponents.CHANNEL,
+                    group_component=Microscopy.Channel,
                     paths_by_group={"1": realized_path},
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
-                    AllComponents.CHANNEL
+                    Microscopy.Channel
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(AllComponents.CHANNEL),),
-                consumer_variable_components=(AllComponents.CHANNEL,),
+                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Channel),),
+                consumer_variable_components=(Microscopy.Channel,),
             ),
         )
     }
@@ -3141,7 +3152,7 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         filemanager=filemanager,
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -3201,7 +3212,7 @@ def test_cellprofiler_adapter_discovers_realized_dynamic_grouped_object_inputs()
                         path=group_paths[group_key],
                         artifact_type=ObjectLabelsArtifactType,
                         group_keys=(group_key,),
-                        group_component=AllComponents.CHANNEL,
+                        group_component=Microscopy.Channel,
                         paths_by_group={group_key: group_paths[group_key]},
                     ),
                 ),
@@ -3227,15 +3238,15 @@ def test_cellprofiler_adapter_discovers_realized_dynamic_grouped_object_inputs()
                     path="/memory/Cells.pkl",
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=(None,),
-                    group_component=AllComponents.CHANNEL,
+                    group_component=Microscopy.Channel,
                     paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
-                    AllComponents.CHANNEL
+                    Microscopy.Channel
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(AllComponents.CHANNEL),),
-                consumer_variable_components=(AllComponents.CHANNEL,),
+                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Channel),),
+                consumer_variable_components=(Microscopy.Channel,),
             ),
         )
     }
@@ -3245,7 +3256,7 @@ def test_cellprofiler_adapter_discovers_realized_dynamic_grouped_object_inputs()
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         filemanager=filemanager,
-        variable_components=(VariableComponents.CHANNEL,),
+        variable_components=(Microscopy.Channel,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -3288,7 +3299,7 @@ def test_cellprofiler_adapter_composes_object_input_across_declared_site_axis():
                         path=group_paths[group_key],
                         artifact_type=ObjectLabelsArtifactType,
                         group_keys=(group_key,),
-                        group_component=AllComponents.SITE,
+                        group_component=Microscopy.Site,
                         paths_by_group={group_key: group_paths[group_key]},
                     ),
                 ),
@@ -3314,19 +3325,19 @@ def test_cellprofiler_adapter_composes_object_input_across_declared_site_axis():
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=("1", "2"),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.from_raw(
-                    ("1", "2"), component=AllComponents.SITE
+                    ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        ("1", "2"), component=AllComponents.SITE
+                        ("1", "2"), component=Microscopy.Site
                     ),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -3336,7 +3347,7 @@ def test_cellprofiler_adapter_composes_object_input_across_declared_site_axis():
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -3381,7 +3392,7 @@ def test_cellprofiler_adapter_does_not_resolve_object_input_from_source_context(
                         path=group_paths[group_key],
                         artifact_type=ObjectLabelsArtifactType,
                         group_keys=(group_key,),
-                        group_component=AllComponents.SITE,
+                        group_component=Microscopy.Site,
                         paths_by_group={group_key: group_paths[group_key]},
                     ),
                 ),
@@ -3408,19 +3419,19 @@ def test_cellprofiler_adapter_does_not_resolve_object_input_from_source_context(
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=("1", "2"),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.from_raw(
-                    ("1", "2"), component=AllComponents.SITE
+                    ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        ("1", "2"), component=AllComponents.SITE
+                        ("1", "2"), component=Microscopy.Site
                     ),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -3430,7 +3441,7 @@ def test_cellprofiler_adapter_does_not_resolve_object_input_from_source_context(
         artifact_inputs=_compiled_artifact_inputs,
         microscope_handler=(ContextStub(filemanager)).microscope_handler,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -3463,7 +3474,7 @@ def test_cellprofiler_adapter_preserves_ungrouped_runtime_slice_output_stack():
                     name=NUCLEI,
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    variable_components=(AllComponents.SITE,),
+                    variable_components=(Microscopy.Site,),
                 ),
             ),
         ),
@@ -3497,16 +3508,16 @@ def test_cellprofiler_adapter_preserves_ungrouped_runtime_slice_output_stack():
                     name=NUCLEI,
                     path="/memory/Nuclei.pkl",
                     artifact_type=ObjectLabelsArtifactType,
-                    variable_components=(AllComponents.SITE,),
+                    variable_components=(Microscopy.Site,),
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.ungrouped(),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        ("1", "2"), component=AllComponents.SITE
+                        ("1", "2"), component=Microscopy.Site
                     ),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -3516,7 +3527,7 @@ def test_cellprofiler_adapter_preserves_ungrouped_runtime_slice_output_stack():
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -3553,7 +3564,7 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                     path=group_paths["1"],
                     artifact_type=ImageArtifactType,
                     group_keys=("1",),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group={"1": group_paths["1"]},
                 ),
             ),
@@ -3573,7 +3584,7 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                     path=group_paths["2"],
                     artifact_type=ImageArtifactType,
                     group_keys=("2",),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group={"2": group_paths["2"]},
                 ),
             ),
@@ -3591,15 +3602,15 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                     path="/memory/DNA.pkl",
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
-                    AllComponents.SITE
+                    Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(AllComponents.SITE),),
-                consumer_variable_components=(AllComponents.SITE,),
+                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -3609,7 +3620,7 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -3772,7 +3783,7 @@ def test_cellprofiler_adapter_relationships_accept_grouped_parent_inputs():
                     path="/memory/Cells_s1.pkl",
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=("1",),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group={"1": "/memory/Cells_s1.pkl"},
                 ),
             ),
@@ -3792,7 +3803,7 @@ def test_cellprofiler_adapter_relationships_accept_grouped_parent_inputs():
                     path="/memory/Cells_s2.pkl",
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=("2",),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group={"2": "/memory/Cells_s2.pkl"},
                 ),
             ),
@@ -4151,7 +4162,7 @@ def test_cellprofiler_adapter_uses_static_output_scope():
                     path=output_path,
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=("3",),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group={"3": output_path},
                 ),
             ),
@@ -4310,7 +4321,7 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
                         path=object_group_paths[group_key],
                         artifact_type=ObjectLabelsArtifactType,
                         group_keys=(group_key,),
-                        group_component=AllComponents.SITE,
+                        group_component=Microscopy.Site,
                         paths_by_group={group_key: object_group_paths[group_key]},
                     ),
                 ),
@@ -4322,7 +4333,7 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
                         path=group_paths[group_key],
                         artifact_type=MeasurementsArtifactType,
                         group_keys=(group_key,),
-                        group_component=AllComponents.SITE,
+                        group_component=Microscopy.Site,
                         paths_by_group={group_key: group_paths[group_key]},
                     ),
                 ),
@@ -4359,19 +4370,19 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
                     path="/memory/NucleiMeasurements.pkl",
                     artifact_type=MeasurementsArtifactType,
                     group_keys=("1", "2"),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.from_raw(
-                    ("1", "2"), component=AllComponents.SITE
+                    ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        ("1", "2"), component=AllComponents.SITE
+                        ("1", "2"), component=Microscopy.Site
                     ),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -4381,7 +4392,7 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
         artifact_inputs=_compiled_artifact_inputs,
         microscope_handler=(ContextStub(filemanager)).microscope_handler,
         filemanager=filemanager,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -4660,7 +4671,7 @@ def test_declared_measurement_inputs_require_producer_declared_slice_indexes():
         name=MEASUREMENTS,
         path=f"/memory/{MEASUREMENTS}.pkl",
         artifact_type=MeasurementsArtifactType,
-        group_component=AllComponents.SITE,
+        group_component=Microscopy.Site,
         group_keys=tuple(group_paths),
         paths_by_group=group_paths,
     )
@@ -4668,7 +4679,7 @@ def test_declared_measurement_inputs_require_producer_declared_slice_indexes():
         group_key = str(index)
         producer = cellprofiler_runtime_adapter_for_test(
             runtime_value_store=store,
-            axis_scope=runtime_axis_scope(AXIS_ID, AllComponents.SITE, group_key),
+            axis_scope=runtime_axis_scope(AXIS_ID, Microscopy.Site.name, group_key),
             artifact_output_bindings=(
                 _output_binding(
                     MEASUREMENTS,
@@ -4710,7 +4721,7 @@ def test_declared_measurement_inputs_require_producer_declared_slice_indexes():
     consumer = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=store,
         callable_contract=contract,
-        axis_scope=runtime_axis_scope(AXIS_ID, AllComponents.CHANNEL, "1"),
+        axis_scope=runtime_axis_scope(AXIS_ID, Microscopy.Channel.name, "1"),
         artifact_inputs={
             edge.key: edge
             for edge in (
@@ -4719,30 +4730,30 @@ def test_declared_measurement_inputs_require_producer_declared_slice_indexes():
                         name=MEASUREMENTS,
                         path=output_plan.path,
                         artifact_type=MeasurementsArtifactType,
-                        group_component=AllComponents.SITE,
+                        group_component=Microscopy.Site,
                         group_keys=output_plan.group_keys,
                         paths_by_group=output_plan.paths_by_group,
                     ),
                     invocation_scope=ComponentGroupScope.from_raw(
-                        ("1",), component=AllComponents.CHANNEL
+                        ("1",), component=Microscopy.Channel
                     ),
                     producer_selection_scope=ComponentGroupScope.from_raw(
-                        output_plan.group_keys, component=AllComponents.SITE
+                        output_plan.group_keys, component=Microscopy.Site
                     ),
                     component_scopes=(
                         ComponentGroupScope.from_raw(
-                            ("1",), component=AllComponents.CHANNEL
+                            ("1",), component=Microscopy.Channel
                         ),
                         ComponentGroupScope.from_raw(
-                            output_plan.group_keys, component=AllComponents.SITE
+                            output_plan.group_keys, component=Microscopy.Site
                         ),
                     ),
-                    consumer_variable_components=(AllComponents.SITE,),
+                    consumer_variable_components=(Microscopy.Site,),
                 ),
             )
         },
         artifact_outputs={},
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         source_binding_plan=source_binding_plan,
         filemanager=filemanager,
     )
@@ -4763,12 +4774,12 @@ def test_cellprofiler_adapter_aligns_multiplane_measurements_across_groups():
     filemanager = FileManagerStub()
     outputs = {
         NUCLEI: _plan(
-            NUCLEI, ObjectLabelsArtifactType, group_component=AllComponents.SITE
+            NUCLEI, ObjectLabelsArtifactType, group_component=Microscopy.Site
         ),
         NUCLEI_MEASUREMENTS: _plan(
             NUCLEI_MEASUREMENTS,
             MeasurementsArtifactType,
-            group_component=AllComponents.SITE,
+            group_component=Microscopy.Site,
         ),
     }
     output_bindings = (
@@ -4833,14 +4844,14 @@ def test_cellprofiler_adapter_aligns_multiplane_measurements_across_groups():
                     name=NUCLEI_MEASUREMENTS,
                     path=outputs[NUCLEI_MEASUREMENTS].path,
                     artifact_type=MeasurementsArtifactType,
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
-                    AllComponents.SITE
+                    Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(AllComponents.SITE),),
-                consumer_variable_components=(AllComponents.SITE,),
+                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -4854,7 +4865,7 @@ def test_cellprofiler_adapter_aligns_multiplane_measurements_across_groups():
         filemanager=filemanager,
         group_key="collapsed",
         plane_projection=RuntimePlaneProjection.stack(2),
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -5194,7 +5205,7 @@ def test_cellprofiler_adapter_multiplane_measurement_alignment_is_feature_scoped
         NUCLEI_MEASUREMENTS: _plan(
             NUCLEI_MEASUREMENTS,
             MeasurementsArtifactType,
-            group_component=AllComponents.SITE,
+            group_component=Microscopy.Site,
         ),
     }
     output_bindings = (
@@ -5261,14 +5272,14 @@ def test_cellprofiler_adapter_multiplane_measurement_alignment_is_feature_scoped
                     name=NUCLEI_MEASUREMENTS,
                     path=outputs[NUCLEI_MEASUREMENTS].path,
                     artifact_type=MeasurementsArtifactType,
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
-                    AllComponents.SITE
+                    Microscopy.Site
                 ),
-                component_scopes=(ComponentGroupScope.dynamic(AllComponents.SITE),),
-                consumer_variable_components=(AllComponents.SITE,),
+                component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -5282,7 +5293,7 @@ def test_cellprofiler_adapter_multiplane_measurement_alignment_is_feature_scoped
         filemanager=filemanager,
         group_key="collapsed",
         plane_projection=RuntimePlaneProjection.stack(2),
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -7031,7 +7042,7 @@ def test_relationship_plane_records_use_compiled_input_projection_order():
                 path=group_paths[group_key],
                 artifact_type=RelationshipsArtifactType,
                 group_keys=(group_key,),
-                group_component=AllComponents.SITE,
+                group_component=Microscopy.Site,
                 paths_by_group={group_key: group_paths[group_key]},
             ),
             relationship,
@@ -7047,19 +7058,19 @@ def test_relationship_plane_records_use_compiled_input_projection_order():
                     path="/memory/relationships.pkl",
                     artifact_type=RelationshipsArtifactType,
                     group_keys=("site_a", "site_b"),
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                     paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.from_raw(
-                    ("site_a", "site_b"), component=AllComponents.SITE
+                    ("site_a", "site_b"), component=Microscopy.Site
                 ),
                 component_scopes=(
                     ComponentGroupScope.from_raw(
-                        ("site_a", "site_b"), component=AllComponents.SITE
+                        ("site_a", "site_b"), component=Microscopy.Site
                     ),
                 ),
-                consumer_variable_components=(AllComponents.SITE,),
+                consumer_variable_components=(Microscopy.Site,),
             ),
         )
     }
@@ -7067,7 +7078,7 @@ def test_relationship_plane_records_use_compiled_input_projection_order():
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        variable_components=(VariableComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         callable_contract=_compiled_callable_contract(
             calculate_math,
             artifact_inputs=tuple(
@@ -7500,7 +7511,7 @@ def test_adapter_measurement_vector_scope_rejects_undeclared_axis_table():
                 NUCLEI,
                 ObjectLabelsArtifactType,
                 plan=_plan(
-                    NUCLEI, ObjectLabelsArtifactType, group_component=AllComponents.SITE
+                    NUCLEI, ObjectLabelsArtifactType, group_component=Microscopy.Site
                 ),
             ),
             _output_binding(
@@ -7509,7 +7520,7 @@ def test_adapter_measurement_vector_scope_rejects_undeclared_axis_table():
                 plan=_plan(
                     MEASUREMENTS,
                     MeasurementsArtifactType,
-                    group_component=AllComponents.SITE,
+                    group_component=Microscopy.Site,
                 ),
             ),
         ),

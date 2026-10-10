@@ -14,6 +14,7 @@ from zmqruntime.messages import AckReturnRoute, ProcessIdentity
 from zmqruntime.transport import get_zmq_transport_url, remove_ipc_socket
 from zmqruntime.viewer_protocol import ViewerBatchDisplayPayload
 
+from openhcs.core.axes import AxisFamily
 from openhcs.core.config import NapariDisplayConfig
 from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
@@ -89,7 +90,7 @@ def test_napari_transport_rep_follows_receiver_owned_shared_memory_copy(
         ],
         "display_config": ViewerBatchDisplayPayload(
             component_modes=NapariDisplayConfig().component_modes(),
-            component_order=NapariDisplayConfig.COMPONENT_ORDER,
+            component_order=AxisFamily.active().names(),
             extra=NapariDisplayConfig().display_payload_extra(),
         ).to_wire_mapping(),
         "component_value_domain": {"well": ["A01"]},

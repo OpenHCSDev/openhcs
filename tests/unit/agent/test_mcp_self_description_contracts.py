@@ -10,7 +10,7 @@ import pytest
 
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services.config_service import ConfigService
-from openhcs.constants.constants import AllComponents, FileFormat
+from openhcs.constants.constants import FileFormat
 from openhcs.core.plate_file_inventory import (
     PlateFileInventoryQuery,
     PlateFileKind,
@@ -26,6 +26,7 @@ from openhcs.mcp.control_timeout import (
     McpViewerTimeoutPolicy,
 )
 from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _tool_schemas() -> dict[str, dict]:
@@ -204,7 +205,7 @@ def test_openhcs_metadata_preserves_null_component_labels(monkeypatch) -> None:
     )
     handler = object.__new__(OpenHCSMetadataHandler)
 
-    assert handler.component_value_set("/plate").values_for(AllComponents.WELL) == {
+    assert handler.component_value_set("/plate").values_for(Microscopy.Well) == {
         "A01": None,
         "A02": "Treatment",
     }

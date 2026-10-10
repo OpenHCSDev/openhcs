@@ -13,6 +13,7 @@ from pycodify import FormatContext, SourceFormatter, SourceFragment, to_source
 from pyqt_reactive.pattern_metadata import PatternScopeToken
 from python_introspect import callable_declaration_kwargs, parameter_exclusions
 
+from openhcs.core.axes import is_grouping_declaration
 from openhcs.core.callable_contract import CallableContract, CallableImportIdentity
 from openhcs.core.function_reference import (
     FunctionReference,
@@ -64,6 +65,22 @@ class OpenHCSImportableTypeFormatter(OpenHCSCallableFormatter):
         return ImportableFunctionReference(
             import_identity=identity, composite_key=identity.import_path,
         )
+
+
+class AxisDeclarationFormatter(SourceFormatter):
+    """Axes and grouping declarations are spelled by their qualified class path."""
+
+    priority = 77
+
+    def can_format(self, value) -> bool:
+        return is_grouping_declaration(value)
+
+    def format(self, value, context: FormatContext) -> SourceFragment:
+        root_name, _, nested_path = value.__qualname__.partition(".")
+        import_pair = (value.__module__, root_name)
+        mapped_root = NameMappingLookup.resolve(context, import_pair, root_name)
+        reference = f"{mapped_root}.{nested_path}" if nested_path else mapped_root
+        return SourceFragment(reference, frozenset([import_pair]))
 
 
 class PythonSourceLiteralFormatter(SourceFormatter):
@@ -180,6 +197,8 @@ class MaterializationSpecFormatter(SourceFormatter):
 def _public_pattern_callable(value: object) -> Callable | None:
     if isinstance(value, FunctionReference):
         return value.resolve()
+    if is_grouping_declaration(value):
+        return None
     return value if callable(value) else None
 
 

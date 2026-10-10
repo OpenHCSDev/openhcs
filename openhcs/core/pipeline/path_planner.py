@@ -14,7 +14,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Mapping, Optional
 
-from openhcs.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.axis_filter import StepAxisFilterSet
 from openhcs.core.artifacts import (
@@ -76,6 +75,7 @@ from openhcs.core.step_dependencies import (
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration, Ungrouped
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +136,7 @@ class PathPlannerGroupScope(ComponentGroupScope):
     def relation_scope_from_plan(
         cls,
         plan: ArtifactInputPlan | ArtifactOutputPlan,
-        component: AllComponents | None,
+        component: type[Axis] | None,
     ) -> "PathPlannerGroupScope":
         """Return the plan domain relevant to one relation component."""
 
@@ -188,7 +188,7 @@ class PathPlannerGroupScope(ComponentGroupScope):
 class PathPlannerComponentScopes:
     """Component value scopes carried by the main-flow image branch."""
 
-    scopes: Mapping[VariableComponents, PathPlannerGroupScope]
+    scopes: Mapping[type[Axis], PathPlannerGroupScope]
 
     @classmethod
     def empty(cls) -> "PathPlannerComponentScopes":
@@ -196,7 +196,7 @@ class PathPlannerComponentScopes:
 
     def scope_for_group_by(
         self,
-        group_by: GroupBy | None,
+        group_by: type[GroupingDeclaration] | None,
     ) -> PathPlannerGroupScope | None:
         group_by_component = self.component_from_group_by(group_by)
         if group_by_component is None:
@@ -238,10 +238,13 @@ class PathPlannerComponentScopes:
         return PathPlannerComponentScopes(scopes)
 
     @staticmethod
-    def component_from_group_by(group_by: GroupBy | None) -> VariableComponents | None:
-        if group_by is None or group_by is GroupBy.NONE:
+    def component_from_group_by(
+        group_by: type[GroupingDeclaration] | None,
+    ) -> type[Axis] | None:
+        if group_by is None:
             return None
-        return VariableComponents(group_by.value)
+        grouping_axes = group_by.grouping_axes()
+        return grouping_axes[0] if grouping_axes else None
 
 
 @dataclass(frozen=True)
@@ -271,7 +274,7 @@ class PathPlannerExecutionGroups:
         self,
         producer: ArtifactProducer,
         *,
-        source_component: AllComponents | None,
+        source_component: type[Axis] | None,
     ) -> PathPlannerGroupScope:
         """Resolve producer groups against their own compiled axis authority."""
 
@@ -400,7 +403,7 @@ class PathPlannerExecutionGroups:
         normalized_group_component = (
             None
             if group_component is None
-            else ComponentSet.coerce_component(group_component)
+            else AxisFamily.active().require(group_component)
         )
         scopes: list[PathPlannerGroupScope] = []
         for spec in owner_specs:
@@ -440,7 +443,7 @@ class PathPlannerExecutionGroups:
                     spec.name
                 ):
                     continue
-                if group_by is not GroupBy.NONE:
+                if group_by is not Ungrouped:
                     raise ValueError(
                         f"Artifact-owned FunctionStep {step.name!r} cannot "
                         f"resolve group scope for {spec.ref()!r}."
@@ -468,7 +471,7 @@ class PathPlannerExecutionGroups:
                 if source_group_keys
                 else PathPlannerGroupScope.ungrouped()
             )
-            if source_scope.is_ungrouped and group_by is not GroupBy.NONE:
+            if source_scope.is_ungrouped and group_by is not Ungrouped:
                 raise ValueError(
                     f"Artifact-owned FunctionStep {step.name!r} cannot "
                     f"resolve group scope for {spec.ref()!r}."
@@ -478,7 +481,7 @@ class PathPlannerExecutionGroups:
         if not scopes:
             return consumer_scope
 
-        consumer_variable_components = ComponentSet.from_enum_values(
+        consumer_variable_components = ComponentSet.of(
             step.processing_config.variable_components or ()
         )
         projected_scopes = tuple(
@@ -499,7 +502,7 @@ class PathPlannerExecutionGroups:
     def dynamic_execution_scope_for_group_by(
         self,
         step: AbstractStep,
-        group_by: GroupBy | None,
+        group_by: type[GroupingDeclaration] | None,
     ) -> PathPlannerGroupScope:
         """Return a typed runtime-discovered scope for a concrete group axis."""
         group_by_component = PathPlannerComponentScopes.component_from_group_by(group_by)
@@ -518,16 +521,16 @@ class PathPlannerExecutionGroups:
         if source_keys:
             return PathPlannerGroupScope.from_raw(
                 source_keys,
-                component=ComponentSet.coerce_component(group_by_component),
+                component=AxisFamily.active().require(group_by_component),
             )
         return PathPlannerGroupScope.dynamic(
-            ComponentSet.coerce_component(group_by_component)
+            AxisFamily.active().require(group_by_component)
         )
 
     def source_binding_scope_for_group_by(
         self,
         step: AbstractStep,
-        group_by: GroupBy | None,
+        group_by: type[GroupingDeclaration] | None,
         *,
         source_bindings: SourceBindingDeclarationsMixin | None = None,
     ) -> PathPlannerGroupScope:
@@ -540,7 +543,7 @@ class PathPlannerExecutionGroups:
             source_bindings = step.source_bindings
         if not source_bindings.binding_declarations:
             return PathPlannerGroupScope.ungrouped()
-        component = ComponentSet.coerce_component(group_by_component)
+        component = AxisFamily.active().require(group_by_component)
         group_keys = source_binding_group_keys_for_group_by(
             source_bindings,
             group_by,
@@ -552,20 +555,22 @@ class PathPlannerExecutionGroups:
 
     @staticmethod
     def execution_component_for_dict_pattern(
-        group_by: GroupBy | None,
+        group_by: type[GroupingDeclaration] | None,
         step_name: str | None,
-    ) -> AllComponents:
+    ) -> type[Axis]:
         """Return the declared component for dict-pattern runtime dispatch."""
-        if group_by is None or group_by is GroupBy.NONE or group_by.value is None:
+        grouping_axes = () if group_by is None else group_by.grouping_axes()
+        if not grouping_axes:
             raise ValueError(
                 f"Step '{step_name}' uses a dict function pattern without a "
                 "concrete group_by component. Dict keys are dispatch groups; "
-                "GroupBy.NONE is only valid for non-dict function patterns."
+                "Ungrouped is only valid for non-dict function patterns."
             )
-        return AllComponents.from_value(group_by.value)
+        return grouping_axes[0]
+
 
     @staticmethod
-    def normalized_group_by(step: AbstractStep) -> GroupBy:
+    def normalized_group_by(step: AbstractStep) -> type[GroupingDeclaration]:
         """Use the same group_by normalization as compiled execution plans."""
         from openhcs.core.pipeline.funcstep_contract_validator import (
             FuncStepContractValidator,
@@ -634,7 +639,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         )
         return tuple(
             PathPlannerGroupScope.from_raw(values, component=component)
-            for component in AllComponents
+            for component in AxisFamily.active().axes
             for values in (
                 tuple(dict.fromkeys(
                     value
@@ -672,7 +677,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         source_universe_plan = CompiledSourceUniversePlan.from_source_binding_plan(
             source_binding_plan
         )
-        consumer_variable_components = ComponentSet.from_enum_values(
+        consumer_variable_components = ComponentSet.of(
             step.processing_config.variable_components or ()
         )
         artifact_inputs = self.process_artifact_inputs(
@@ -875,7 +880,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         *,
         group_scope: PathPlannerGroupScope,
         source_bindings: SourceBindingDeclarationsMixin,
-        group_by: GroupBy | None,
+        group_by: type[GroupingDeclaration] | None,
     ) -> dict[ArtifactSpecRef, PathPlannerGroupScope]:
         """Return exact group scopes for every declared relation source."""
 
@@ -890,7 +895,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                 group_by
             )
             if grouped_component is not None:
-                component = ComponentSet.coerce_component(grouped_component)
+                component = AxisFamily.active().require(grouped_component)
         for input_ref, spec in declarations.inputs.items():
             input_plan = artifact_inputs.get(input_ref)
             if input_plan is None:
@@ -1059,7 +1064,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             artifact_inputs=artifact_inputs,
             relation_source_scopes=relation_source_scopes,
             execution_group_scope=execution_group_scope,
-            consumer_variable_components=ComponentSet.from_enum_values(
+            consumer_variable_components=ComponentSet.of(
                 step.processing_config.variable_components or ()
             ),
             source_bindings=step_context.source_bindings,
@@ -1307,8 +1312,8 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
     ) -> tuple[ComponentGroupScope, ...]:
         """Resolve exact producer coordinates without conflating consumer scope."""
 
-        by_component: dict[AllComponents, ComponentGroupScope] = {}
-        storage_components: set[AllComponents] = set()
+        by_component: dict[type[Axis], ComponentGroupScope] = {}
+        storage_components: set[type[Axis]] = set()
         for domain in storage_domains:
             if domain.is_ungrouped or domain.is_dynamic or len(domain.keys) != 1:
                 continue
@@ -1330,7 +1335,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             if existing is not None and existing != scope:
                 raise ValueError(
                     f"Invocation {invocation.key!r} input {artifact_ref!r} declares "
-                    f"conflicting {component.value!r} coordinates {existing!r} and "
+                    f"conflicting {component.name!r} coordinates {existing!r} and "
                     f"{scope!r}."
                 )
             by_component[component] = scope
@@ -1349,7 +1354,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             ):
                 raise ValueError(
                     f"Invocation {invocation.key!r} input {artifact_ref!r} "
-                    f"has exact {component.value!r} coordinate {exact_scope!r} "
+                    f"has exact {component.name!r} coordinate {exact_scope!r} "
                     f"outside component domain {domain!r}."
                 )
 
@@ -1491,7 +1496,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                     f"undeclared input {source_ref!r}."
                 )
             lineage_domains_by_component: dict[
-                AllComponents,
+                type[Axis],
                 list[PathPlannerGroupScope],
             ] = defaultdict(list)
             for domain in source_stack_domains:
@@ -1502,7 +1507,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                 if domain not in lineage_domains_by_component[domain.component]:
                     lineage_domains_by_component[domain.component].append(domain)
             binding_domains_by_component: dict[
-                AllComponents,
+                type[Axis],
                 list[PathPlannerGroupScope],
             ] = defaultdict(list)
             for domain in source_binding_domains:
@@ -1532,7 +1537,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                 ):
                     raise ValueError(
                         f"Artifact output {spec.ref()!r} inherits "
-                        f"{component.value!r} lineage {lineage_domain!r} outside "
+                        f"{component.name!r} lineage {lineage_domain!r} outside "
                         f"source-binding domain {binding_domain!r}."
                     )
                 component_domain = lineage_domain or binding_domain

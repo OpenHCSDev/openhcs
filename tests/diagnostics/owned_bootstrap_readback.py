@@ -8,7 +8,6 @@ from pathlib import Path
 import numpy as np
 
 from openhcs.agent.dto.execution import ArtifactPlanInspection
-from openhcs.constants import AllComponents
 from openhcs.core.artifacts import ArtifactType, ImageArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
@@ -24,6 +23,8 @@ from openhcs.core.virtual_workspace_metadata import (
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionObservationExport
 from python_introspect import to_jsonable
 from polystore.roi import load_rois_from_zip
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def projections(plate: Path):
@@ -39,7 +40,7 @@ def projections(plate: Path):
 def addresses(metadata):
     return tuple(
         tuple(source_component_metadata_value(plane.component_metadata, component)
-              for component in AllComponents)
+              for component in AxisFamily.active().axes)
         for plane in metadata.source_provenance.source_image_provenance_planes.planes
     )
 
@@ -81,7 +82,7 @@ def verify_volume_publication(owned: Path, image_path: Path, pixels: np.ndarray,
     [axis_id] = observation.records_by_axis
     records = observation.records_by_axis[axis_id]
     native = sorted(projections(image_path.parent),
-                    key=lambda item: int(item.address.value_for(AllComponents.Z_INDEX)))
+                    key=lambda item: int(item.address.value_for(Microscopy.ZIndex)))
     assert len(native) == 3
     assert all(item.image_metadata is not None for item in native)
     source_addresses = tuple(addresses(item.image_metadata)[0] for item in native)
@@ -144,8 +145,8 @@ def verify_volume_publication(owned: Path, image_path: Path, pixels: np.ndarray,
                                 rows.rows.column_values('object_label'),
                                 rows.rows.column_values('pixel_count'), strict=True))
         assert actual_rows == expected_rows
-        for component in AllComponents:
-            assert tuple(str(value) for value in rows.rows.column_values(component.value)) == tuple(
+        for component in AxisFamily.active().axes:
+            assert tuple(str(value) for value in rows.rows.column_values(component.name)) == tuple(
                 address.value_for(component) for address in selected_addresses)
         analysis = Path(plans['volume_fixture_rows_v2'].materialization.analysis_output_dir)
         [csv_path] = list(analysis.glob(f'*_volume_fixture_rows_v2_step{summary.step_index}_details.csv'))

@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 import numpy as np
 
-from openhcs.constants.constants import AllComponents, MEMORY_TYPE_NUMPY
+from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.artifacts import (
     ArtifactType,
     ArtifactMeasurementSubjectRelation,
@@ -113,6 +113,7 @@ from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.processing.backends.analysis.multi_template_matching import (
     TemplateMatchResult,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def passthrough(image):
@@ -338,7 +339,7 @@ def test_image_output_context_preserves_stack_after_exact_source_projection():
         name="CorrGray",
         path="/memory/CorrGray.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
@@ -388,7 +389,7 @@ def test_image_output_context_does_not_infer_axis_for_unmarked_payload():
         name="SavedNuclei",
         path="/memory/SavedNuclei.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
@@ -416,7 +417,7 @@ def test_image_output_context_rejects_declared_output_axis_shape_drift():
         name="SavedNuclei",
         path="/memory/SavedNuclei.pkl",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
@@ -457,7 +458,7 @@ def test_image_output_context_preserves_complete_scalar_rgb_identity() -> None:
         name="SavedColorNeighbors",
         path="/memory/SavedColorNeighbors.png",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.SITE,),
+        variable_components=(Microscopy.Site,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
@@ -543,7 +544,7 @@ def test_image_output_context_projects_complete_multi_plane_identity() -> None:
         name="SavedVolume",
         path="/memory/SavedVolume.tif",
         artifact_type=ImageArtifactType,
-        variable_components=(AllComponents.Z_INDEX,),
+        variable_components=(Microscopy.ZIndex,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
@@ -1096,7 +1097,7 @@ def test_execute_function_core_attaches_execution_group_identity_to_artifact():
                         name="segmentation_masks",
                         path="/memory/A01_w2_segmentation_masks.pkl",
                         artifact_type=ObjectLabelsArtifactType,
-                        group_component=AllComponents.CHANNEL,
+                        group_component=Microscopy.Channel,
                         group_keys=("2",),
                         paths_by_group={
                             "2": "/memory/A01_w2_segmentation_masks.pkl",
@@ -1105,7 +1106,7 @@ def test_execute_function_core_attaches_execution_group_identity_to_artifact():
                 )
             },
             group_key="2",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         )
     )
 
@@ -1162,7 +1163,7 @@ def test_execute_function_core_attaches_dynamic_execution_group_to_artifact():
                         path="/memory/A01_segmentation_masks.pkl",
                         artifact_type=ObjectLabelsArtifactType,
                         group_keys=(None,),
-                        group_component=AllComponents.CHANNEL,
+                        group_component=Microscopy.Channel,
                         paths_by_group={
                             None: "/memory/A01_segmentation_masks.pkl",
                         },
@@ -1170,7 +1171,7 @@ def test_execute_function_core_attaches_dynamic_execution_group_to_artifact():
                 )
             },
             group_key="2",
-            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+            execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         )
     )
 
@@ -1504,7 +1505,7 @@ def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
                         name=output_spec.name,
                         path="/memory/derived-image.pkl",
                         artifact_type=ImageArtifactType,
-                        variable_components=(AllComponents.SITE,),
+                        variable_components=(Microscopy.Site,),
                     ),
                 )
             },
@@ -1582,7 +1583,7 @@ def test_execute_function_core_saves_artifact_to_runtime_group_path():
                         path="/memory/A01_measurements.pkl",
                         artifact_type=MeasurementsArtifactType,
                         relations=measurement_spec.relations,
-                        group_component=AllComponents.SITE,
+                        group_component=Microscopy.Site,
                         group_keys=("1", "2"),
                         paths_by_group={
                             "1": "/memory/A01_s1_measurements.pkl",
@@ -1594,7 +1595,7 @@ def test_execute_function_core_saves_artifact_to_runtime_group_path():
             group_key="2",
             execution_group_scope=ComponentGroupScope.from_raw(
                 ("2",),
-                component=AllComponents.SITE,
+                component=Microscopy.Site,
             ),
         )
     )
@@ -2299,7 +2300,7 @@ def test_execute_function_core_aggregates_and_names_slice_aligned_object_labels(
                         name=output_spec.name,
                         path="/memory/cells.pkl",
                         artifact_type=ObjectLabelsArtifactType,
-                        variable_components=(AllComponents.SITE,),
+                        variable_components=(Microscopy.Site,),
                     ),
                 )
             },
@@ -2514,8 +2515,8 @@ def test_native_measurement_rows_retain_two_site_two_channel_source_coordinates(
                         path="/memory/cell-counts.pkl",
                         artifact_type=MeasurementsArtifactType,
                         variable_components=(
-                            AllComponents.SITE,
-                            AllComponents.CHANNEL,
+                            Microscopy.Site,
+                            Microscopy.Channel,
                         ),
                         relations=measurement_spec.relations,
                     ),

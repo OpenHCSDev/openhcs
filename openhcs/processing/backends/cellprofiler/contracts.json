@@ -721,7 +721,7 @@
     "contract": "pure_2d",
     "category": "image_operation",
     "confidence": 1.0,
-    "reasoning": "The Tile function is designed to arrange individual images (typically sites/fields of view) into a single large grid. It processes images independently and does not require volumetric Z-stacks or multiple channels simultaneously to perform its core logic. In the OpenHCS context, this is a per-site operation where the orchestrator handles the stacking of sites via variable_components=[VariableComponents.SITE].",
+    "reasoning": "The Tile function is designed to arrange individual images (typically sites/fields of view) into a single large grid. It processes images independently and does not require volumetric Z-stacks or multiple channels simultaneously to perform its core logic. In the OpenHCS context, this is a per-site operation where the orchestrator handles the stacking of sites via variable_components=[Microscopy.Site].",
     "validated": true
   },
   "TrackObjects": {

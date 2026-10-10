@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
+from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.config import NapariStreamingConfig
 from openhcs.core.runtime_image_values import (
     image_payload_data,
@@ -194,7 +195,7 @@ def test_independent_capabilities_cooperate_with_full_native_window_admission(tm
     metadata = image_payload_metadata(image)
     filename = "image.tif"
     declaration = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress.from_values("A01", 1, 2, 1, 1),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
         ref=SourcePixelRef("disk", filename),
         image_metadata=metadata,
     )

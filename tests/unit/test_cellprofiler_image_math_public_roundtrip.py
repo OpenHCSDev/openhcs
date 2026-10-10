@@ -2,10 +2,11 @@
 
 from pathlib import Path
 
-from openhcs.constants import GroupBy, VariableComponents
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
+from openhcs.core.axes import Ungrouped
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _image_math_public_kwargs(pipeline_steps) -> tuple[dict[str, object], ...]:
@@ -14,8 +15,8 @@ def _image_math_public_kwargs(pipeline_steps) -> tuple[dict[str, object], ...]:
     )
     assert len(image_math_steps) == 2
     assert tuple(step.processing_config.group_by for step in image_math_steps) == (
-        GroupBy.CHANNEL,
-        GroupBy.NONE,
+        Microscopy.Channel,
+        Ungrouped,
     )
     return tuple(
         invocation.kwargs_dict
@@ -75,6 +76,6 @@ def test_single_channel_image_math_retains_inherited_channel_grouping() -> None:
 
     assert len(image_math_steps) == 1
     assert image_math_steps[0].processing_config.variable_components == [
-        VariableComponents.SITE
+        Microscopy.Site
     ]
-    assert image_math_steps[0].processing_config.group_by is GroupBy.CHANNEL
+    assert image_math_steps[0].processing_config.group_by is Microscopy.Channel

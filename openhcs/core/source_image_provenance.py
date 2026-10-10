@@ -16,7 +16,6 @@ from metaclass_registry import AutoRegisterMeta
 from python_introspect.validation import validate_annotation_value
 from python_introspect import to_jsonable
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
@@ -34,6 +33,7 @@ from openhcs.core.source_matching import (
     source_metadata_value,
     with_source_component_metadata,
 )
+from openhcs.core.axes import Axis, AxisFamily, StackAxis
 
 SourceComponentMetadata = SourceMetadataMapping
 SourceImageProvenancePlanePathValues = tuple[str | None, ...]
@@ -452,7 +452,7 @@ class SourceImageProvenancePlanes:
         Neither filenames, page counts, nor plate cardinalities establish this
         coordinate domain. The caller must supply its original declaration.
         """
-        component_names = frozenset(component.value for component in AllComponents)
+        component_names = frozenset(AxisFamily.active().names())
         if (
             len(aggregate_components) != 1
             or set(fixed_components) & set(aggregate_components)
@@ -1059,7 +1059,7 @@ class SourceImageProvenance:
             for contributor in contributors
         )
         reduced = set()
-        for component in AllComponents:
+        for component in AxisFamily.active().axes:
             if component in scalar_components:
                 continue
             if len(contributor_components) < 2 or not all(
@@ -1070,7 +1070,7 @@ class SourceImageProvenance:
                 value for values in contributor_components for value in values[component]
             )
             if len(values) > 1:
-                reduced.add(component.value)
+                reduced.add(component.name)
         return tuple(component for component in component_order if component not in reduced)
 
     def image_set_identities(
@@ -1234,7 +1234,7 @@ class SourceImageProvenance:
 
     def varying_plane_component_values(
         self,
-        components: Sequence[AllComponents],
+        components: Sequence[type[Axis]],
     ) -> dict[str, tuple[SourceMetadataScalar, ...]]:
         """Return exact component values that vary across declared source planes."""
         if not components or self.source_plane_count <= 1:
@@ -1255,13 +1255,13 @@ class SourceImageProvenance:
             if any(value is None for value in values):
                 continue
             if len(frozenset(values)) > 1:
-                values_by_component[component.value] = values
+                values_by_component[component.name] = values
         return values_by_component
 
     def require_common_component_values(
         self,
-        components: Sequence[AllComponents],
-    ) -> tuple[tuple[AllComponents, str], ...]:
+        components: Sequence[type[Axis]],
+    ) -> tuple[tuple[type[Axis], str], ...]:
         """Return fixed component values shared by every represented source plane."""
 
         if not components:
@@ -1274,7 +1274,7 @@ class SourceImageProvenance:
             if self.source_plane_count
             else (self.source_component_metadata or {},)
         )
-        values: list[tuple[AllComponents, str]] = []
+        values: list[tuple[type[Axis], str]] = []
         for component in components:
             metadata_values = tuple(
                 source_component_metadata_value(
@@ -1286,12 +1286,12 @@ class SourceImageProvenance:
             if any(value is None for value in metadata_values):
                 raise ValueError(
                     "Source provenance does not declare component "
-                    f"{component.value!r} on every represented plane."
+                    f"{component.name!r} on every represented plane."
                 )
             unique_values = tuple(dict.fromkeys(metadata_values))
             if len(unique_values) != 1:
                 raise ValueError(
-                    f"Source provenance component {component.value!r} is not fixed: "
+                    f"Source provenance component {component.name!r} is not fixed: "
                     f"{unique_values!r}."
                 )
             values.append((component, unique_values[0]))
@@ -1591,9 +1591,9 @@ class SourcePlaneIndexedMetadata:
     source_plane_count: int
 
     @staticmethod
-    def projected_component() -> AllComponents:
-        """Return the component represented by indexed source-plane metadata."""
-        return AllComponents.Z_INDEX
+    def projected_component() -> type[Axis]:
+        """Return the stack axis that indexed source-plane metadata represents."""
+        return AxisFamily.active().one(StackAxis)
 
     @classmethod
     def from_metadata(
@@ -1766,14 +1766,16 @@ class SourcePlaneIndexedMetadata:
                 SOURCE_PLANE_INDEX_FIELD: str(plane_index),
                 SOURCE_PLANE_COUNT_FIELD: str(self.source_plane_count),
             },
-            components=((AllComponents.Z_INDEX, self.z_index_for_plane(plane_index)),),
+            components=(
+                (self.projected_component(), self.z_index_for_plane(plane_index)),
+            ),
         )
         return SourceMetadataFields.readonly_snapshot(metadata)
 
     def z_index_for_plane(self, plane_index: int) -> int:
         scalar_z_index = source_component_metadata_value(
             self.scalar_metadata,
-            AllComponents.Z_INDEX,
+            self.projected_component(),
         )
         if scalar_z_index is None:
             return plane_index + 1
@@ -2118,7 +2120,7 @@ class VariableComponentAxisProjection:
         return not self.axes
 
     def ordered_axes(self) -> tuple[str, ...]:
-        component_order = AllComponents.ordered_names()
+        component_order = AxisFamily.active().names()
         ordered_known = tuple(axis for axis in component_order if axis in self.axes)
         ordered_unknown = tuple(sorted(self.axes.difference(ordered_known)))
         return ordered_known + ordered_unknown
@@ -2174,37 +2176,37 @@ class VariableComponentAxisProjection:
         )
 
     @staticmethod
-    def component_for_axis(axis: str) -> AllComponents:
-        component = AllComponents.from_value(axis)
-        if component is None:
+    def component_for_axis(axis: str) -> type[Axis]:
+        if axis not in AxisFamily.active().names():
             raise ValueError(
                 "Variable component axis is not an OpenHCS component: " f"{axis!r}."
             )
+        component = AxisFamily.active().named(axis)
         return component
 
     @staticmethod
     def projected_axis_value(
         metadata: SourceComponentMetadata,
-        component: AllComponents,
+        component: type[Axis],
         plane_index: int,
     ) -> int:
         current = source_component_metadata_raw_value(metadata, component)
         if current is None:
             raise ValueError(
                 "Variable component axis projection requires scalar "
-                f"{component.value!r} metadata."
+                f"{component.name!r} metadata."
             )
         if isinstance(current, bool):
             raise ValueError(
                 "Variable component axis "
-                f"{component.value!r} must be numeric, got bool."
+                f"{component.name!r} must be numeric, got bool."
             )
         try:
             base_value = int(current)
         except (TypeError, ValueError) as exc:
             raise ValueError(
                 "Variable component axis "
-                f"{component.value!r} must be numeric, got {current!r}."
+                f"{component.name!r} must be numeric, got {current!r}."
             ) from exc
         return base_value + plane_index
 

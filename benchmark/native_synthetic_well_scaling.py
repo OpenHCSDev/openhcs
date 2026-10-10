@@ -27,12 +27,12 @@ from benchmark.matched_cellprofiler_batch import (
     _native_python_executable,
 )
 from benchmark.well_throughput_scaling import _synthetic_well_ids
-from openhcs.constants.constants import AllComponents
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.source_matching import source_component_metadata_value
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -126,7 +126,7 @@ def main(argv: list[str] | None = None) -> int:
     if prepared.materialization is None:
         raise RuntimeError("Pipeline import has no declared source-binding planes.")
     source_wells = {
-        source_component_metadata_value(metadata, AllComponents.WELL)
+        source_component_metadata_value(metadata, Microscopy.Well)
         for metadata in prepared.materialization.source_metadata.values()
     }
     if len(source_wells) != 1 or None in source_wells or "" in source_wells:

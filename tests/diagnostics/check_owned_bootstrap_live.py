@@ -18,6 +18,7 @@ import subprocess
 import sys
 import time
 import traceback
+from openhcs.domains.microscopy.axes import Microscopy
 
 SOURCE = Path(__file__).resolve().parents[2]
 PYTHON = Path('/home/ts/code/projects/openhcs/.venv/bin/python')
@@ -315,7 +316,7 @@ def run(args) -> None:
             from openhcs.core.config import (PipelineConfig, LazyPathPlanningConfig,
                                              LazyVFSConfig, MaterializationBackend,
                                              LazyStepMaterializationConfig, LazyProcessingConfig)
-            from openhcs.constants import Microscope, VariableComponents
+            from openhcs.constants import Microscope
             from openhcs.core.pipeline_document import PipelineDocumentAuthority
             from openhcs.core.steps.function_step import FunctionStep
             from openhcs.processing.custom_functions import (
@@ -328,7 +329,7 @@ def run(args) -> None:
                     steps.append(FunctionStep(
                         func=((function, dict(plane_indices=indices)) if phase == 0 else function),
                         name=f'ProjectionCase{case}Step{phase}',
-                        processing_config=LazyProcessingConfig(variable_components=[VariableComponents.Z_INDEX]),
+                        processing_config=LazyProcessingConfig(variable_components=[Microscopy.ZIndex]),
                         step_materialization_config=LazyStepMaterializationConfig(enabled=True)))
             document = PipelineDocumentAuthority.from_values(
                 pipeline_config=PipelineConfig(num_workers=1, use_threading=True,

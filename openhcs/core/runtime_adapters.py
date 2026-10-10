@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from python_introspect import add_parameter_exclusions
 
-from openhcs.constants.constants import Backend, VariableComponents
+from openhcs.constants.constants import Backend
 from openhcs.core.artifact_key_selection import (
     ArtifactOutputPolicy,
     NativeReturnArtifactOutputPolicy,
@@ -40,6 +40,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
+from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
@@ -80,7 +81,7 @@ class RuntimeAdapterRequest:
     plane_projection: RuntimePlaneProjection = field(
         default_factory=RuntimePlaneProjection.stack
     )
-    variable_components: tuple[VariableComponents, ...] = ()
+    variable_components: tuple[type[Axis], ...] = ()
     execution_scope: "FunctionCoreExecutor | None" = None
 
     def __post_init__(self) -> None:

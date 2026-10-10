@@ -15,7 +15,6 @@ from objectstate.object_state_registry import ObjectStateRegistry
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants import Microscope
-from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core import source_bindings as source_bindings_module
 from openhcs.core.artifacts import (
@@ -90,20 +89,22 @@ from openhcs.core.source_projection import (
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.axes import AxisFamily
+from openhcs.domains.microscopy.axes import Microscopy
 
 
 def test_component_selector_coerces_existing_component_vocabulary():
-    selector = ComponentSelector(component=GroupBy.CHANNEL, value=1)
+    selector = ComponentSelector(component=Microscopy.Channel, value=1)
 
-    assert selector.component is AllComponents.CHANNEL
+    assert selector.component is Microscopy.Channel
     assert selector.value == "1"
 
     variable_selector = ComponentSelector(
-        component=VariableComponents.SITE,
+        component=Microscopy.Site,
         value="3",
     )
 
-    assert variable_selector.component is AllComponents.SITE
+    assert variable_selector.component is Microscopy.Site
 
 
 def test_metadata_selector_preserves_and_uses_declared_scalar_type():
@@ -126,15 +127,15 @@ def test_metadata_selector_preserves_and_uses_declared_scalar_type():
 
 def test_source_image_set_plane_members_are_exactly_the_step_stack_axes():
     site_stack = SourceImageSetIdentityPolicy.from_plane_member_fields(
-        frozenset((AllComponents.SITE.value,))
+        frozenset((Microscopy.Site.name,))
     )
 
     assert (
-        site_stack.role(AllComponents.SITE)
+        site_stack.role(Microscopy.Site)
         is SourceImageSetComponentRole.IMAGE_PLANE_MEMBER
     )
     assert (
-        site_stack.role(AllComponents.CHANNEL)
+        site_stack.role(Microscopy.Channel)
         is SourceImageSetComponentRole.IMAGE_SET_AXIS
     )
 
@@ -144,16 +145,16 @@ def test_source_image_set_policy_uses_binding_and_source_stack_declarations():
         bindings=(
             NamedSourceBinding(
                 alias="DNA",
-                component_identity=(ComponentSelector("channel", "1"),),
+                component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
-        source_stack_components=(AllComponents.Z_INDEX,),
+        source_stack_components=(Microscopy.ZIndex,),
     )
 
     policy = SourceImageSetIdentityPolicy.from_source_bindings(source_bindings)
 
     assert policy.plane_member_components == frozenset(
-        (AllComponents.CHANNEL, AllComponents.Z_INDEX)
+        (Microscopy.Channel, Microscopy.ZIndex)
     )
 
 
@@ -410,7 +411,7 @@ def test_step_source_bindings_inherit_plate_source_bindings_for_snapshot():
         PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(binding,),
-                source_stack_components=(AllComponents.Z_INDEX,),
+                source_stack_components=(Microscopy.ZIndex,),
                 grouping_metadata_fields=("Plate",),
                 metadata_fields=metadata_fields,
             ),
@@ -433,14 +434,14 @@ def test_step_source_bindings_inherit_plate_source_bindings_for_snapshot():
         ObjectStateRegistry.clear()
 
     assert snapshot.source_bindings.bindings == (binding,)
-    assert snapshot.source_bindings.source_stack_components == (AllComponents.Z_INDEX,)
+    assert snapshot.source_bindings.source_stack_components == (Microscopy.ZIndex,)
     assert snapshot.source_bindings.grouping_metadata_fields == ("Plate",)
     assert snapshot.source_bindings.metadata_fields == metadata_fields
     compiled = CompiledSourceBindingPlan.from_config(
         snapshot.source_bindings,
     )
     assert compiled.bindings == (binding,)
-    assert compiled.source_stack_components == (AllComponents.Z_INDEX,)
+    assert compiled.source_stack_components == (Microscopy.ZIndex,)
     assert compiled.metadata_fields == metadata_fields
     assert compiled.has_primary_content
     assert pickle.loads(pickle.dumps(compiled)) == compiled
@@ -558,7 +559,7 @@ def test_pipeline_start_binding_groups_do_not_mutate_resolved_enabled_state():
     binding = NamedSourceBinding(
         alias="DNA",
         component_identity=(
-            ComponentSelector(component=AllComponents.CHANNEL, value="1"),
+            ComponentSelector(component=Microscopy.Channel, value="1"),
         ),
     )
     source_bindings = StepSourceBindingsConfig(
@@ -574,7 +575,7 @@ def test_pipeline_start_binding_groups_do_not_mutate_resolved_enabled_state():
     assert source_bindings.enabled is False
     assert source_binding_group_keys_for_group_by(
         source_bindings,
-        GroupBy.CHANNEL,
+        Microscopy.Channel,
     ) == ("1",)
     assert (
         source_bindings.for_input_source(InputSource.PIPELINE_START) is source_bindings
@@ -596,7 +597,7 @@ def test_source_lineage_requires_its_declared_cursor_artifact() -> None:
                 alias="DNA",
                 component_identity=(
                     ComponentSelector(
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value="1",
                     ),
                 ),
@@ -606,7 +607,7 @@ def test_source_lineage_requires_its_declared_cursor_artifact() -> None:
 
     with pytest.raises(ValueError, match="lineage.*unavailable source"):
         source_bindings.component_group_keys_for_artifact_specs(
-            AllComponents.CHANNEL,
+            Microscopy.Channel,
             (derived,),
             ArtifactSpecCollection(()),
         )
@@ -626,7 +627,7 @@ def test_source_lineage_resolves_consumer_view_to_active_artifact_binding() -> N
                 alias="DNA",
                 component_identity=(
                     ComponentSelector(
-                        component=AllComponents.CHANNEL,
+                        component=Microscopy.Channel,
                         value="1",
                     ),
                 ),
@@ -635,7 +636,7 @@ def test_source_lineage_resolves_consumer_view_to_active_artifact_binding() -> N
     )
 
     assert source_bindings.component_group_keys_for_artifact_specs(
-        AllComponents.CHANNEL,
+        Microscopy.Channel,
         (derived.for_plan_type(ArtifactInputPlan),),
         ArtifactSpecCollection((source, derived)),
     ) == ("1",)
@@ -776,7 +777,7 @@ def test_source_bindings_expose_generic_resolution_requirements():
             NamedSourceBinding(
                 alias="DNA",
                 selector=SourceSelector(
-                    components=(ComponentSelector(AllComponents.CHANNEL, "1"),)
+                    components=(ComponentSelector(Microscopy.Channel, "1"),)
                 ),
             ),
             NamedSourceBinding(
@@ -786,23 +787,25 @@ def test_source_bindings_expose_generic_resolution_requirements():
         )
     )
 
-    assert config.requires_step_input_channel_stack
+    assert config.requires_step_input_component_stack((Microscopy.Channel,))
     assert config.requires_pipeline_start_resolution
     assert config.bindings[0].requires_selector_resolution
-    assert not config.bindings[1].requires_step_input_channel_stack
+    assert not config.bindings[1].requires_step_input_component_stack(
+        (Microscopy.Channel,)
+    )
 
 
 def test_component_identity_owns_realized_source_group_values() -> None:
     binding = NamedSourceBinding(
         alias="DNA",
         selector=SourceSelector(
-            components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+            components=(ComponentSelector(Microscopy.Channel, "1"),),
         ),
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "DNA"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "DNA"),),
     )
 
     assert binding.component_values(
-        AllComponents.CHANNEL,
+        Microscopy.Channel,
         realized_source_metadata=(
             {"channel": 1},
             {"channel": 2},
@@ -814,12 +817,12 @@ def test_realized_component_values_are_scoped_by_source_selector(monkeypatch) ->
     binding = NamedSourceBinding(
         alias="DNA",
         selector=SourceSelector(
-            components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+            components=(ComponentSelector(Microscopy.Channel, "1"),),
         ),
     )
 
     assert binding.component_values(
-        AllComponents.SITE,
+        Microscopy.Site,
         realized_source_metadata=(
             {"channel": 1, "site": 3},
             {"channel": 2, "site": 7},
@@ -833,7 +836,7 @@ def test_realized_component_values_are_scoped_by_source_selector(monkeypatch) ->
         component: binding.component_values(
             component, realized_source_metadata=records
         )
-        for component in AllComponents
+        for component in AxisFamily.active().axes
     }
     matched = []
     original_match = NamedSourceBinding.matches_realized_source_metadata
@@ -844,12 +847,12 @@ def test_realized_component_values_are_scoped_by_source_selector(monkeypatch) ->
 
     monkeypatch.setattr(NamedSourceBinding, "matches_realized_source_metadata", record_match)
     domains = binding.component_domains(realized_source_metadata=iter(records))
-    assert {component: domains.get(component, ()) for component in AllComponents} == expected
+    assert {component: domains.get(component, ()) for component in AxisFamily.active().axes} == expected
     assert matched == records
-    assert domains[AllComponents.SITE] == ("3",)
-    assert domains[AllComponents.Z_INDEX] == ("4", "5")
+    assert domains[Microscopy.Site] == ("3",)
+    assert domains[Microscopy.ZIndex] == ("4", "5")
     records[0]["channel"] = 2
-    assert AllComponents.SITE not in binding.component_domains(
+    assert Microscopy.Site not in binding.component_domains(
         realized_source_metadata=records
     )
 
@@ -861,8 +864,8 @@ def test_compiled_source_binding_plan_preserves_named_selectors():
                 alias="OrigBlue",
                 selector=SourceSelector(
                     components=(
-                        ComponentSelector("channel", "1"),
-                        ComponentSelector(AllComponents.SITE, "3"),
+                        ComponentSelector(Microscopy.Channel, "1"),
+                        ComponentSelector(Microscopy.Site, "3"),
                     ),
                     metadata=(MetadataSelector("stain", "DAPI"),),
                 ),
@@ -912,7 +915,7 @@ def test_compiled_source_binding_plan_preserves_named_selectors():
     assert plan.match_plan.method is SourceBindingMatchMethod.METADATA
     binding = plan.bindings[0]
     assert binding.alias == "OrigBlue"
-    assert binding.selector.components[0].component is AllComponents.CHANNEL
+    assert binding.selector.components[0].component is Microscopy.Channel
     assert binding.selector.metadata[0].field == "stain"
     assert plan.binding_for_alias("OrigBlue") == binding
     assert plan.binding_for_alias("Missing") is None
@@ -925,7 +928,7 @@ def test_pipeline_start_binding_does_not_force_full_source_universe():
                 NamedSourceBinding(
                     alias="OrigBlue",
                     selector=SourceSelector(
-                        components=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                        components=(ComponentSelector(Microscopy.Channel, "1"),),
                     ),
                     origin=SourceBindingOrigin.PIPELINE_START,
                 ),
@@ -999,13 +1002,7 @@ def test_alias_only_step_bindings_filter_and_order_workspace_projections() -> No
     )
     source_projections = {
         virtual_path: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values(
-                well="R04C09",
-                site="11",
-                channel=channel,
-                z_index="1",
-                timepoint="1",
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "R04C09"), (Microscopy.Site, "11"), (Microscopy.Channel, channel), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
             ref=SourcePixelRef("disk", f"/source/ch{channel}.tiff"),
             source_alias=binding.alias,
         )
@@ -1075,7 +1072,7 @@ def test_narrow_step_binding_uses_exact_workspace_provenance_identity():
             selector=SourceSelector(
                 metadata=(MetadataSelector("ChannelNumber", channel),),
             ),
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+            component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
         for alias, channel in (("DNA", "2"), ("Mito", "1"), ("Membrane", "0"))
     )
@@ -1207,8 +1204,8 @@ def test_source_binding_members_use_exact_source_identity_without_metadata_axes(
         "timepoint": "1",
     }
     coordinates = tuple(
-        ComponentSelector(component, metadata[component.value])
-        for component in AllComponents
+        ComponentSelector(component, metadata[component.name])
+        for component in AxisFamily.active().axes
     )
     primary = NamedSourceBinding(alias="SavedImage", component_identity=coordinates)
     objects = NamedSourceBinding(
@@ -1264,7 +1261,7 @@ def test_source_binding_members_load_one_store_for_multiple_matching_identities(
         selector=SourceSelector(
             metadata=(MetadataSelector("ChannelNumber", "0"),),
         ),
-        component_identity=(ComponentSelector(AllComponents.CHANNEL, "0"),),
+        component_identity=(ComponentSelector(Microscopy.Channel, "0"),),
     )
     virtual_path = "A01_s001_w0_z001_t001.tif"
     source_path = "/source/channel_0.tif"
@@ -1339,7 +1336,7 @@ def test_source_binding_members_canonicalize_declared_physical_spellings(aliases
         NamedSourceBinding(
             alias=alias,
             selector=SourceSelector(metadata=(MetadataSelector("channel", channel),)),
-            component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+            component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
         for alias, channel in zip(aliases, map(str, range(1, len(aliases) + 1)), strict=True)
     )
@@ -1392,7 +1389,7 @@ def test_source_binding_members_collapse_lookup_aliases_of_same_projection():
     binding = NamedSourceBinding(alias="OriginalPhysical")
     projections = tuple(
         SourcePlaneProjection(
-            address=OpenHCSPlaneAddress.from_values("A01", "1", "1", z, "1"),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, z), (Microscopy.Timepoint, "1"))),
             ref=SourcePixelRef("disk", source_path), source_alias=binding.alias,
         )
         for z in (0, 1)
@@ -1622,13 +1619,7 @@ def test_virtual_workspace_source_matching_uses_declared_filter_identity():
 
 
 def test_virtual_workspace_source_matching_requires_exact_projection_binding():
-    address = OpenHCSPlaneAddress.from_values(
-        well="A01",
-        site="1",
-        channel="1",
-        z_index="1",
-        timepoint="1",
-    )
+    address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")))
     original_path = "A01_s001_w1_z001_t001.tif"
     illumination_path = f"_source/Illumination/{original_path}"
     original = SourcePlaneProjection(
@@ -1698,7 +1689,7 @@ def test_compiled_source_binding_plan_round_trips_through_pickle():
                 NamedSourceBinding(
                     alias="OrigBlue",
                     selector=SourceSelector(
-                        components=(ComponentSelector("channel", "1"),),
+                        components=(ComponentSelector(Microscopy.Channel, "1"),),
                     ),
                     origin=SourceBindingOrigin.STEP_INPUT,
                 ),

@@ -88,7 +88,7 @@ Measurement source provenance
 
 Measurement rows retain the exact biological coordinates of the runtime planes
 they represent. ``SourceImageProvenance`` is the authority for source image
-names and ``AllComponents`` values such as well, site, channel, z-index, and
+names and declared axis values such as well, site, channel, z-index, and
 timepoint. A row carrying the canonical ``slice_index`` receives the matching
 plane coordinates. A row without a slice axis receives only coordinates common
 to the whole represented stack; OpenHCS does not label an aggregate row with a

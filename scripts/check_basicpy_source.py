@@ -96,9 +96,9 @@ class BasicPySourceTests(unittest.TestCase):
             "jax_func(contract=ProcessingContract.PURE_3D, dtype_config_default=DtypeConfig())",
             decorators,
         )
-        self.assertIn("allowed_group_by(GroupBy.CHANNEL)", decorators)
+        self.assertIn("allowed_group_by_roles(ColourAxis)", decorators)
         self.assertIn(
-            "required_variable_components(FittedIlluminationFieldOutput.observation_axis)",
+            "required_axis_roles(FittedIlluminationFieldOutput.observation_role)",
             decorators,
         )
         self.assertFalse(
