@@ -72,10 +72,10 @@ from openhcs.interop.cellprofiler.settings_binder import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendAuthority,
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NativeBackendProvider,
+    NumbaBackendProvider,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 
@@ -228,8 +228,6 @@ class ObjectTextureCropBackendStrategy(
 ):
     """Extract masked object intensity crops for texture measurement."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def object_intensity_crops(
@@ -243,8 +241,6 @@ class HaralickTextureBackendStrategy(
 ):
     """Compute CP-compatible 2-D Haralick feature matrices."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def haralick_features(
@@ -256,11 +252,8 @@ class HaralickTextureBackendStrategy(
 class NumbaNumpyObjectTextureCropBackendStrategy(ObjectTextureCropBackendStrategy):
     """Numba-accelerated NumPy backend for object texture crop extraction."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -297,11 +290,8 @@ class NumbaNumpyObjectTextureCropBackendStrategy(ObjectTextureCropBackendStrateg
 class NumbaNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy):
     """Numba implementation of mahotas' default 2-D Haralick semantics."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -327,11 +317,8 @@ class NumbaNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy):
 class NativeNumpyHaralickTextureBackendStrategy(HaralickTextureBackendStrategy):
     """Explicit mahotas backend used as the native reference implementation."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NATIVE
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
 
     def haralick_features(
         self, pixel_data: np.ndarray, *, scale: int, ignore_zeros: bool

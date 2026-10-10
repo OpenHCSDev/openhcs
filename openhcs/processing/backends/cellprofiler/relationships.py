@@ -828,10 +828,9 @@ class RelateObjectsDistanceAggregateFeatureSemantics(
 
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
-    CellProfilerBackendAuthority,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NumbaBackendProvider,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomainAdapter
 from openhcs.core.runtime_relationships import (
@@ -881,8 +880,6 @@ class ObjectRelationshipBackendStrategy(
 ):
     """Object relationship operations keyed by OpenHCS memory type/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def relate_children_to_parents(
@@ -1775,11 +1772,8 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
 class NumbaNumpyObjectRelationshipBackendStrategy(ObjectRelationshipBackendStrategy):
     """Numba-accelerated NumPy object relationship primitives."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:

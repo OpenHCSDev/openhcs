@@ -97,7 +97,6 @@ from openhcs.interop.cellprofiler.setting_names import (
 )
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
-    coerce_cellprofiler_enum,
     parse_cellprofiler_bool,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
@@ -261,11 +260,12 @@ class IdentifyTertiaryObjectsModule(
 
 
 from openhcs.processing.backends.cellprofiler._backend import (
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     BackendProviderInput,
-    CellProfilerBackendAuthority,
-    CellProfilerBackendProvider,
+    BackendProviderSelectionInput,
     CellProfilerBackendStrategyMixin,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NativeBackendProvider,
+    NumbaBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.distance_propagation_numba import (
     _distance_to_positive_labels_numba,
@@ -380,7 +380,7 @@ class SecondarySegmentationRequest:
     thresholded: np.ndarray
     distance_to_dilate: int
     regularization_factor: float
-    watershed_backend_provider: CellProfilerBackendProvider | None
+    watershed_backend_provider: BackendProviderSelectionInput
     distance_backend_provider: BackendProviderInput = (
         DEFAULT_CELLPROFILER_BACKEND_SELECTION
     )
@@ -484,7 +484,7 @@ class DistanceOnlySegmentationStrategy(SecondarySegmentationStrategy):
 
 class DistanceMaskedSegmentationStrategy(SecondarySegmentationStrategy):
     method = SecondaryMethod.DISTANCE_B
-    default_propagation_backend_provider = CellProfilerBackendProvider.NUMBA
+    default_propagation_backend_provider = NumbaBackendProvider
 
     def _segment_non_empty(self, request: SecondarySegmentationRequest) -> np.ndarray:
         labels_out = self.propagate_labels(
@@ -500,7 +500,7 @@ class DistanceMaskedSegmentationStrategy(SecondarySegmentationStrategy):
 
 class PropagationSegmentationStrategy(SecondarySegmentationStrategy):
     method = SecondaryMethod.PROPAGATION
-    default_propagation_backend_provider = CellProfilerBackendProvider.NUMBA
+    default_propagation_backend_provider = NumbaBackendProvider
 
     def _segment_non_empty(self, request: SecondarySegmentationRequest) -> np.ndarray:
         return self.propagate_labels(
@@ -532,8 +532,6 @@ class SecondaryDistanceTransformBackendStrategy(
 ):
     """Distance transform operations used by secondary segmentation."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def distance_to_foreground(self, labels: np.ndarray) -> np.ndarray:
@@ -551,8 +549,8 @@ class NumpySecondaryDistanceTransformBackendStrategy(
 ):
     """Reference NumPy/SciPy secondary distance-transform backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(MemoryType.NUMPY)
     memory_type = MemoryType.NUMPY
+    backend_provider = NativeBackendProvider
     is_default_backend = True
 
     def distance_to_foreground(self, labels: np.ndarray) -> np.ndarray:
@@ -580,11 +578,8 @@ class NumbaSecondaryDistanceTransformBackendStrategy(
 ):
     """Numba-accelerated exact 2-D Euclidean distance-transform backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = False
 
     def prepare_backend(self) -> None:
@@ -618,8 +613,6 @@ class SecondaryPropagationBackendStrategy(
 ):
     """Regularized label propagation backend for secondary segmentation."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def propagate_result(
@@ -679,11 +672,8 @@ class SecondaryPropagationBackendStrategy(
 class NumbaSecondaryPropagationBackendStrategy(SecondaryPropagationBackendStrategy):
     """Numba implementation of regularized secondary-label propagation."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:
@@ -764,11 +754,8 @@ class NativeSecondaryPropagationBackendStrategy(
 ):
     """Native compatibility key backed by absorbed propagation semantics."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NATIVE
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     is_default_backend = False
 
 

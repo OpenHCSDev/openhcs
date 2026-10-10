@@ -106,10 +106,11 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    CellProfilerBackendAuthority,
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NativeBackendProvider,
+    NumbaBackendProvider,
 )
 from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.secondary import (
@@ -1667,8 +1668,6 @@ class RadialDistributionBackendStrategy(
 ):
     """Radial-distribution operations keyed by OpenHCS memory type/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
     center_propagation_backend_provider = CellProfilerBackendProvider.NUMBA
     shape_geometry_backend_provider: BackendProviderInput = (
         DEFAULT_CELLPROFILER_BACKEND_SELECTION
@@ -1895,11 +1894,8 @@ class RadialDistributionBackendStrategy(
 class NativeNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStrategy):
     """CellProfiler-native NumPy radial-distribution backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NATIVE
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     is_default_backend = False
 
     def measure(
@@ -2006,11 +2002,8 @@ class NativeNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStra
 class NumbaNumpyRadialDistributionBackendStrategy(RadialDistributionBackendStrategy):
     """Numba-accelerated NumPy radial-distribution backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def prepare_backend(self) -> None:

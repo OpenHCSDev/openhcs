@@ -412,10 +412,11 @@ from openhcs.core.runtime_object_label_building import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
-    CellProfilerBackendAuthority,
+    CentrosomeBackendProvider,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NativeBackendProvider,
+    NumbaBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.structuring_elements import (
     StructuringElement,
@@ -1594,8 +1595,6 @@ class LegacyWatershedBackendStrategy(
 ):
     """Legacy watershed operations keyed by OpenHCS memory type."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
     prefer_fast: ClassVar[bool]
 
     def validated_request(
@@ -1619,8 +1618,8 @@ class LegacyWatershedBackendStrategy(
 class NumpyLegacyWatershedBackendStrategy(LegacyWatershedBackendStrategy):
     """NumPy-memory reference legacy watershed backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(MemoryType.NUMPY)
     memory_type = MemoryType.NUMPY
+    backend_provider = NativeBackendProvider
     is_default_backend = False
     prefer_fast = False
 
@@ -1629,19 +1628,15 @@ class CentrosomeNumpyLegacyWatershedBackendStrategy(NumpyLegacyWatershedBackendS
     """Centrosome provider using the absorbed CellProfiler reference semantics."""
 
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.CENTROSOME
-    backend_key = CellProfilerBackendAuthority.backend_key(memory_type, backend_provider)
+    backend_provider = CentrosomeBackendProvider
     is_default_backend = False
 
 
 class NumbaNumpyLegacyWatershedBackendStrategy(LegacyWatershedBackendStrategy):
     """NumPy-memory legacy watershed backend with required Numba acceleration."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
     prefer_fast = True
 
@@ -1659,8 +1654,6 @@ class CellProfiler4DistanceMarkerBackendStrategy(
 ):
     """Build CellProfiler 4 distance-watershed markers through a typed backend."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def distance_markers(
@@ -1677,11 +1670,8 @@ class MahotasCellProfiler4DistanceMarkerBackendStrategy(
 ):
     """Reference CellProfiler 4 marker backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NATIVE
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     is_default_backend = False
 
     def distance_markers(
@@ -1702,11 +1692,8 @@ class NumbaCellProfiler4DistanceMarkerBackendStrategy(
 ):
     """Exact numba backend for CellProfiler 4 regional-maxima markers."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
 
     def distance_markers(

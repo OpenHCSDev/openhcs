@@ -261,7 +261,6 @@ class MeasureImageIntensityModule(
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable
 from dataclasses import field
-from enum import Enum
 import logging
 import time
 from typing import TypeAlias
@@ -324,11 +323,10 @@ from openhcs.interop.cellprofiler.runtime.measurement_execution_support import (
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
-    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendAuthority,
-    CellProfilerBackendProvider,
-    CellProfilerBackendProviderSelection,
+    CellProfilerBackendSelection,
     CellProfilerBackendStrategyMixin,
+    DEFAULT_CELLPROFILER_BACKEND_SELECTION,
+    NumbaBackendProvider,
 )
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
@@ -890,7 +888,7 @@ class ObjectIntensityMeasurementContext(ObjectIntensityMeasurementAxisContext):
     """Nominal measurement context for object-intensity execution."""
 
     labels: ObjectIntensityLabelInput
-    backend_provider: CellProfilerBackendProviderSelection
+    backend_provider: type[CellProfilerBackendSelection]
     prepared_labels: ObjectIntensityPreparedLabels | None = None
 
     @classmethod
@@ -906,7 +904,7 @@ class ObjectIntensityMeasurementContext(ObjectIntensityMeasurementAxisContext):
     ) -> "ObjectIntensityMeasurementContext":
         return cls(
             labels=labels,
-            backend_provider=CellProfilerBackendAuthority.provider_selection(
+            backend_provider=CellProfilerBackendSelection.from_input(
                 backend_provider
             ),
             slice_index=int(slice_index),
@@ -943,7 +941,7 @@ class ObjectIntensityMeasurementContext(ObjectIntensityMeasurementAxisContext):
         ):
             return cls(
                 labels=labels,
-                backend_provider=CellProfilerBackendAuthority.provider_selection(
+                backend_provider=CellProfilerBackendSelection.from_input(
                     backend_provider
                 ),
                 slice_index=(
@@ -1027,8 +1025,6 @@ class ObjectIntensityBackendStrategy(
 ):
     """Object-intensity operations keyed by OpenHCS memory type/provider."""
 
-    __registry_key__ = "backend_key"
-    __skip_if_no_key__ = True
 
     @abstractmethod
     def measure(
@@ -1052,11 +1048,8 @@ class ObjectIntensityBackendStrategy(
 class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
     """Numba-accelerated NumPy object-intensity backend."""
 
-    backend_key = CellProfilerBackendAuthority.backend_key(
-        MemoryType.NUMPY, CellProfilerBackendProvider.NUMBA
-    )
     memory_type = MemoryType.NUMPY
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     is_default_backend = True
     sparse_foreground_max_fraction: ClassVar[float] = 0.6
 

@@ -30,8 +30,8 @@ def test_explicit_centrosome_watershed_executes_absorbed_reference_without_depen
     strategy = LegacyWatershedBackendStrategy.for_memory_type(
         MemoryType.NUMPY, backend_provider=provider
     )
-    assert strategy.backend_provider is provider
-    assert provider in LegacyWatershedBackendStrategy.available_backend_providers(
+    assert strategy.backend_provider is provider.provider
+    assert provider.provider in LegacyWatershedBackendStrategy.available_backend_providers(
         MemoryType.NUMPY
     )
     image = np.array([[0.0, 1.0, 0.0]])
@@ -154,7 +154,7 @@ def test_real_primary_callable_declumps_through_selected_signed_watershed(
     )
     (selected_backend,) = selected
     (request,) = requests
-    assert selected_backend.backend_provider is provider
+    assert selected_backend.backend_provider is provider.provider
     assert np.unique(request.markers).tolist() == [-2, -1, 0]
     assert request.prefer_fast is False
     labels = object_label_dense_array(payload)

@@ -81,12 +81,14 @@ from openhcs.core.runtime_image_values import (
     image_payload_mask,
     image_payload_metadata,
 )
-from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.processing.backends.cellprofiler._backend import (
+    BackendProvider,
     BackendProviderInput,
+    CellProfilerBackendSelection,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
-    CellProfilerBackendProvider,
-    CellProfilerBackendAuthority,
+    NativeBackendProvider,
+    NumbaBackendProvider,
+    OpencvBackendProvider,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 
@@ -106,12 +108,12 @@ class SmoothingMethod(Enum):
 class SmoothingStrategyKey:
     """Provider/method key for CellProfiler Smooth strategy registration."""
 
-    backend_provider: CellProfilerBackendProvider
+    backend_provider: type[BackendProvider]
     method: SmoothingMethod
 
     @property
     def label(self) -> str:
-        return f"{self.backend_provider.value}:{self.method.value}"
+        return f"{self.backend_provider.selection_name}:{self.method.value}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,7 +122,7 @@ class SmoothingRequest:
 
     pixel_data: np.ndarray
     mask: np.ndarray | None
-    backend_provider: CellProfilerBackendProvider
+    backend_provider: type[BackendProvider]
     method: SmoothingMethod
     object_size: float
     sigma: float
@@ -170,8 +172,8 @@ class SmoothingBackendProviderPolicy(
         method: SmoothingMethod,
         backend_provider: BackendProviderInput,
         selection_request: SmoothingBackendSelectionRequest | None = None,
-    ) -> CellProfilerBackendProvider:
-        selection = CellProfilerBackendAuthority.provider_selection(backend_provider)
+    ) -> type[BackendProvider]:
+        selection = CellProfilerBackendSelection.from_input(backend_provider)
         return selection.provider_or(
             cls.for_enum_member(method).default_provider(selection_request)
         )
@@ -179,7 +181,7 @@ class SmoothingBackendProviderPolicy(
     @abstractmethod
     def default_provider(
         self, selection_request: SmoothingBackendSelectionRequest | None
-    ) -> CellProfilerBackendProvider:
+    ) -> type[BackendProvider]:
         """Return CP-compatible default provider for this Smooth method."""
 
 
@@ -188,9 +190,9 @@ class NativeSmoothingBackendProviderPolicy(SmoothingBackendProviderPolicy):
 
     def default_provider(
         self, selection_request: SmoothingBackendSelectionRequest | None
-    ) -> CellProfilerBackendProvider:
+    ) -> type[BackendProvider]:
         del selection_request
-        return CellProfilerBackendProvider.NATIVE
+        return NativeBackendProvider
 
 
 class GaussianSmoothingBackendProviderPolicy(SmoothingBackendProviderPolicy):
@@ -201,13 +203,13 @@ class GaussianSmoothingBackendProviderPolicy(SmoothingBackendProviderPolicy):
 
     def default_provider(
         self, selection_request: SmoothingBackendSelectionRequest | None
-    ) -> CellProfilerBackendProvider:
+    ) -> type[BackendProvider]:
         if (
             selection_request is not None
             and selection_request.sigma >= self.opencv_equivalent_min_sigma
         ):
-            return CellProfilerBackendProvider.OPENCV
-        return CellProfilerBackendProvider.NATIVE
+            return OpencvBackendProvider
+        return NativeBackendProvider
 
 
 class MedianSmoothingBackendProviderPolicy(NativeSmoothingBackendProviderPolicy):
@@ -251,7 +253,7 @@ class SmoothingStrategy(ABC, metaclass=AutoRegisterMeta):
         strategy_type = cls.__registry__.get(strategy_key.label)
         if strategy_type is None:
             raise NotImplementedError(
-                f"No CellProfiler smoothing backend is registered for provider {strategy_key.backend_provider.value!r} and method {strategy_key.method.value!r}."
+                f"No CellProfiler smoothing backend is registered for provider {strategy_key.backend_provider.selection_name!r} and method {strategy_key.method.value!r}."
             )
         return strategy_type()
 
@@ -274,7 +276,7 @@ class SmoothingStrategy(ABC, metaclass=AutoRegisterMeta):
 class SmoothingStrategyLeaf(SmoothingStrategy):
     """Declarative base for concrete smoothing leaves."""
 
-    backend_provider: ClassVar[CellProfilerBackendProvider | None] = None
+    backend_provider: ClassVar[type[BackendProvider] | None] = None
     method: ClassVar[SmoothingMethod | None] = None
 
     def __init_subclass__(cls, **kwargs: object) -> None:
@@ -428,7 +430,7 @@ class OpenCVMaskedGaussianFilterRequest(MaskedFilterRequest):
 
 
 class NumbaGaussianSmoothingStrategy(SmoothingStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NUMBA
+    backend_provider = NumbaBackendProvider
     method = SmoothingMethod.GAUSSIAN_FILTER
 
     def smooth(self, request: SmoothingRequest) -> np.ndarray:
@@ -436,7 +438,7 @@ class NumbaGaussianSmoothingStrategy(SmoothingStrategyLeaf):
 
 
 class NumpyGaussianSmoothingStrategy(SmoothingStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = SmoothingMethod.GAUSSIAN_FILTER
 
     @property
@@ -469,7 +471,7 @@ class NumpyGaussianSmoothingStrategy(SmoothingStrategyLeaf):
 
 
 class OpenCVGaussianSmoothingStrategy(SmoothingStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.OPENCV
+    backend_provider = OpencvBackendProvider
     method = SmoothingMethod.GAUSSIAN_FILTER
 
     @property
@@ -490,7 +492,7 @@ class OpenCVGaussianSmoothingStrategy(SmoothingStrategyLeaf):
 
 
 class MedianSmoothingStrategy(SmoothingStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = SmoothingMethod.MEDIAN_FILTER
 
     def smooth(self, request: SmoothingRequest) -> np.ndarray:
@@ -500,7 +502,7 @@ class MedianSmoothingStrategy(SmoothingStrategyLeaf):
 
 
 class EdgePreservingSmoothingStrategy(SmoothingStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = SmoothingMethod.SMOOTH_KEEPING_EDGES
 
     def smooth(self, request: SmoothingRequest) -> np.ndarray:
@@ -515,7 +517,7 @@ class EdgePreservingSmoothingStrategy(SmoothingStrategyLeaf):
 
 
 class PolynomialSmoothingStrategy(SmoothingStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = SmoothingMethod.FIT_POLYNOMIAL
 
     def smooth(self, request: SmoothingRequest) -> np.ndarray:
@@ -525,7 +527,7 @@ class PolynomialSmoothingStrategy(SmoothingStrategyLeaf):
 
 
 class CircularAverageSmoothingStrategy(SmoothingStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = SmoothingMethod.CIRCULAR_AVERAGE_FILTER
 
     def smooth(self, request: SmoothingRequest) -> np.ndarray:
@@ -535,7 +537,7 @@ class CircularAverageSmoothingStrategy(SmoothingStrategyLeaf):
 
 
 class SmoothToAverageStrategy(SmoothingStrategyLeaf):
-    backend_provider = CellProfilerBackendProvider.NATIVE
+    backend_provider = NativeBackendProvider
     method = SmoothingMethod.SMOOTH_TO_AVERAGE
 
     def smooth(self, request: SmoothingRequest) -> np.ndarray:
