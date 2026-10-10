@@ -50,18 +50,18 @@ from openhcs.core.source_bindings import SourceBindingsConfig
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
 from python_introspect import SignatureAnalyzer
-from openhcs.pyqt_gui.services.step_scope_identity import (
+from openhcs.authoring.session.step_scopes import (
     StepEditorScope,
     build_step_scope_id,
 )
 from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab
-from openhcs.pyqt_gui.widgets.shared.services.compile_workflow_service import (
+from openhcs.authoring.session.compilation import (
     PlateCompiledState,
 )
-from openhcs.pyqt_gui.widgets.shared.services.debug_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     DebugSnapshotAvailableNotification,
 )
-from openhcs.pyqt_gui.widgets.shared.services.runtime_artifact_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
 )
 from openhcs.pyqt_gui.windows.dual_editor_session import (

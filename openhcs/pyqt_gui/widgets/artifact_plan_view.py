@@ -20,7 +20,7 @@ from openhcs.core.artifact_inspection import (
 from openhcs.core.artifacts import ArtifactPlan, ArtifactSpec
 from openhcs.core.debug import DebugArtifactIdentity, DebugArtifactRef, DebugSnapshot
 from openhcs.core.runtime_stores import RuntimeArtifactAddress, RuntimeValueStore
-from openhcs.pyqt_gui.widgets.shared.services.runtime_artifact_progress_service import (
+from openhcs.authoring.session.progress_notifications import (
     RuntimeArtifactAvailableNotification,
 )
 

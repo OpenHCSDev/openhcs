@@ -47,7 +47,7 @@ from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.pyqt_gui.widgets.shared.services.plate_manager_workflows import (
     PlateManagerCodeMutationScope,
 )
-from openhcs.pyqt_gui.services.plate_manager_state_projection import (
+from openhcs.authoring.session.dataset_list import (
     PlateManagerStateProjectionService,
 )
 from openhcs.pyqt_gui.services.ui_agent_bridge import (

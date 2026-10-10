@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from openhcs.core.dataset_sources.dataset_scopes import SCOPE_SEGMENT_SEPARATOR
 from openhcs.core.steps.function_step import FunctionStep
 from pyqt_reactive.services.function_navigation import (
     FUNCTION_FIELD_ROOT,
@@ -13,7 +14,6 @@ from pyqt_reactive.services.function_navigation import (
 )
 from pyqt_reactive.services.scope_token_service import ScopeTokenService
 
-SCOPE_SEGMENT_SEPARATOR = "::"
 FUNCTION_STEP_SCOPE_TOKEN_PREFIX = f"{FunctionStep.__name__.lower()}_"
 
 _SCOPE_SEPARATOR_PATTERN = re.escape(SCOPE_SEGMENT_SEPARATOR)

@@ -27,7 +27,7 @@ from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
+from openhcs.authoring.session.pipelines import (
     PipelineObjectStateBinding,
 )
 from openhcs.pyqt_gui.widgets.shared.services.gui_event_bus_broadcast import (

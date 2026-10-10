@@ -1,4 +1,4 @@
-"""GUI-local ObjectState binding for pipeline editor state and step children."""
+"""Each dataset's pipeline: an ObjectState with one child state per step."""
 
 from __future__ import annotations
 
@@ -9,17 +9,16 @@ from typing import Self
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from objectstate.construction_binding import StateScopeOwner
 from openhcs.core.steps.function_step import FunctionEntry, FunctionSpec, FunctionStep
-from openhcs.pyqt_gui.services.plate_manager_root_state import (
-    root_orchestrator_scope_ids,
+from openhcs.authoring.session.datasets import (
+    DATASET_LIST_SCOPE_ID,
+    dataset_scope_ids,
 )
-from openhcs.ui.shared.plate_scope_identity import (
-    PipelineScopeIdentity,
-    PlateScopeIdentity,
-)
-from openhcs.pyqt_gui.services.step_scope_identity import (
-    FunctionStepScopeToken,
+from openhcs.core.dataset_sources.dataset_scopes import (
     SCOPE_SEGMENT_SEPARATOR,
+    DatasetScope,
 )
+from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
+from openhcs.authoring.session.step_scopes import FunctionStepScopeToken
 from pyqt_reactive.services.function_pattern_code_document import (
     FunctionPatternCodeDocumentService,
     FunctionPatternValue,
@@ -84,7 +83,7 @@ class PipelineObjectStateBinding:
         pipeline_scope = PipelineScopeIdentity.from_plate_scope(plate_path).scope_id
         state = ObjectStateRegistry.get_by_scope(pipeline_scope)
         if state is None:
-            identity = PlateScopeIdentity.from_scope_id(plate_path)
+            identity = DatasetScope.parse(plate_path)
             state = ObjectState(
                 object_instance=PipelineEditorStateRoot(
                     name=identity.display_name,
@@ -242,12 +241,12 @@ class PipelineObjectStateBinding:
     def registered_plate_steps(cls) -> dict[str, list[FunctionStep]]:
         """Return visible plate step lists from the shared ObjectState registry."""
 
-        root_state = ObjectStateRegistry.get_by_scope("__plates__")
+        root_state = ObjectStateRegistry.get_by_scope(DATASET_LIST_SCOPE_ID)
         if root_state is None:
             return {}
 
         result: dict[str, list[FunctionStep]] = {}
-        for plate_path in root_orchestrator_scope_ids(root_state):
+        for plate_path in dataset_scope_ids(root_state):
             result[plate_path] = cls.steps_for_plate(plate_path)
         return result
 

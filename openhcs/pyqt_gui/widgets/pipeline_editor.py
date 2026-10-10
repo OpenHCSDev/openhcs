@@ -90,7 +90,7 @@ from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pip
 from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
 )
-from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
+from openhcs.authoring.session.pipelines import (
     PipelineObjectStateBinding,
 )
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (

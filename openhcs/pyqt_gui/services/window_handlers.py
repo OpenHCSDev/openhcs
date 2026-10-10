@@ -15,7 +15,7 @@ from pyqt_reactive.services.scope_window_factory import (
 )
 
 from openhcs.agent.ui_bridge_identities import GlobalConfigWindowIdentity
-from openhcs.pyqt_gui.services.step_scope_identity import StepEditorScope
+from openhcs.authoring.session.step_scopes import StepEditorScope
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 

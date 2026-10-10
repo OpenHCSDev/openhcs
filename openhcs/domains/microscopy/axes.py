@@ -28,6 +28,8 @@ class Microscopy(AxisFamily):
     extension_modules = (
         "openhcs.microscopes",
         "openhcs.domains.microscopy.analysis_consolidation",
+        "openhcs.interop.cellprofiler.dataset_scope",
+        "openhcs.interop.cellprofiler.pipeline_importer",
     )
 
     payload_spatial_rank = 2
