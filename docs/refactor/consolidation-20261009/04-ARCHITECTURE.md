@@ -188,3 +188,47 @@ The owner's goal is to split the codebase into a domain-agnostic platform and Op
 5. **Viewers extracted (L7):** `streamviewer` is a first-party library under both.
 
 Then the kernel moves to its own repository and distribution (name decided by the owner), and OpenHCS depends on it with a pinned version, in lockstep like the other first-party libraries.
+
+## The UI: one session interface, thin renderers (surfaces U1 to U5)
+
+**What is wrong today** (UI audit at `1c1059867`; `openhcs/pyqt_gui` is 46.2k lines, 106 files):
+- **Semantics live in Qt widgets, and the agent interface reaches them by calling widget methods.** `agent/ui_bridge_actions.py` has 11 `lambda widget: widget.action_add`-style handlers typed against `PlateManagerWidget`.
+- **The MCP DTOs import pyqt-reactive** (`agent/dto/ui_bridge.py:12,21`), so headless MCP pulls in PyQt6.
+- **Each of the 26 UI-bridge operations is written about six times:** the contract, an abstract gateway method, the unavailable, ZMQ and in-process gateways, a service method and a capability. That is about 130 forwarded answers.
+- **Plate add, compile, run and viewer streaming are implemented twice,** once on the GUI path and once on the headless agent path.
+- **Session state is held on widgets instead of ObjectState:** `plate_configs: Dict[str, Dict]`, `plate_compile_pending`, `pipeline_steps` and about 10 other fields.
+- **The deleted Textual TUI (`32ca17c17`) had to re-implement** button availability, the run loop, plate add and the same `plate_compiled_data` dict. That is evidence of what a session interface must provide once.
+
+**Target:**
+
+```python
+class SessionOperation(AgentCapabilityDeclaration):   # one declaration: MCP tool, Qt button, gateway
+    request: ClassVar[type]; result: ClassVar[type]
+    def available(self, session: "Session") -> AgentError | None: ...
+    def run(self, session: "Session", request): ...
+class SessionView(ABC, metaclass=AutoRegisterMeta):    # dataset list, pipeline steps, live measurements, debug session
+    state: ClassVar[type]                               # frozen DTO backed by ObjectState
+    operations: ClassVar[tuple[type[SessionOperation], ...]]
+class Session:
+    def invoke(self, operation: type[SessionOperation], request): ...
+    def view(self, view: type[SessionView]): ...
+    def events(self) -> Iterable[SessionEvent]: ...     # state changed, selection, progress (push, not 500 ms polling)
+```
+
+- The session owns all state through ObjectState; widgets hold none.
+- The Qt GUI and MCP are both clients. Headless MCP is a session with no renderer, and the GUI process hosts the session the ZMQ bridge exposes.
+- Gateways collapse to one generic `invoke(contract, payload)`. Action enums become `SessionOperation` subclasses (rule 1a).
+- pyqt-reactive renders a `SessionView` and binds its buttons from `operations`, which replaces `ManagerStateBinding`.
+- Widget-tree and snapshot capabilities stay as debugging and visual QA inside pyqt-reactive, outside the semantic interface.
+
+| ID | Surface | Est. |
+|---|---|---|
+| U1 | Session, `SessionOperation` and `SessionView` families in `openhcs/authoring/session`. Plate-manager and pipeline-editor semantics move out of widgets; one implementation each of dataset add, compile, run and streaming, shared by the GUI and headless MCP; state in ObjectState. Takes over G8 (container manager, component filters, grid role, importer and scope families). | ~10.4k moved, ~2k collapsed |
+| U2 | UI-bridge contract family derives its gateways (about 130 forwarded answers deleted); action providers inherit one base | ~2.1k |
+| U3 | Generic Qt machinery moves to pyqt-reactive (bridge server and window introspection, time travel, config windows, grid selector, dock and shortcut layout) and to ObjectState (`inspection`, typed `ScopeKey` instead of `::` strings, non-persisted view fields, change subscription replacing `GlobalEventBus`). Merges with L4. | ~8–9k after deduplication |
+| U4 | A toolkit-neutral library holding pyqt-reactive's Qt-free tier (about 11k) and the generic bridge DTO and contract machinery (about 4.5k), so MCP DTOs no longer need PyQt6. Second consumer: the MCP server, including hosted HTTP. | new library |
+| U5 | Dead and misplaced code: the copy of pyqt-reactive's pattern data manager, dead dialogs and re-exports, unused workflow-surface ABCs, the unused `GlobalEventBus` paths, dead adapter methods, the stale `__all__` roster. The desktop updater (2.4k) moves beside `desktop_installation.py`. `history_migration` (a rule-2 converter in `openhcs/`) is deleted, because desktop histories are runtime state. | ~1.2k deleted |
+
+Order: U5 now (disjoint from step 3; F1 owns the pickle pattern files). U3 and U4 run as library lockstep releases. U1 and U2 follow G6, since they share the viewer streaming request.
+
+Afterwards about 15–17k lines of thin Qt instantiation remain in `pyqt_gui`.
