@@ -8,7 +8,7 @@ import json
 from collections.abc import Mapping
 from typing import cast
 
-from python_introspect import dataclass_from_mapping
+from python_introspect import JsonObject, JsonValue, dataclass_from_mapping
 
 from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotCaptureScope,
@@ -16,7 +16,6 @@ from pyqt_reactive.services.window_snapshot import (
 )
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import JsonObject, JsonValue
 from openhcs.agent.dto.ui_bridge import (
     UiActionInvokeRequest,
     UiCodeDocumentApplyRequest,

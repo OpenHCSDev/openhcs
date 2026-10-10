@@ -284,7 +284,7 @@ from openhcs.core.runtime_batch_contracts import (
     measurement_image_batch_executor,
     pure_2d_batch_executor,
 )
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_object_label_domains import (
     ConsecutiveObjectLabelIdProjection,
     ObjectLabelDomain,

@@ -28,7 +28,7 @@ from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from pyqt_reactive.services.window_navigation import (
     RegisteredWindowNavigationRequest,
 )
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, to_jsonable
 
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.desktop_deployment import (
@@ -42,7 +42,6 @@ from openhcs.mcp.bootstrap import MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE
 from openhcs.pyqt_gui.services.desktop_update_worker import DesktopUpdatePlan
 from openhcs.pyqt_gui.services.history_migration import DesktopHistoryUpgrade
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
-from openhcs.serialization.json import to_jsonable
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )

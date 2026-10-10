@@ -48,7 +48,7 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_batch_contracts import (
     RuntimeBatchInvocationRequest,
     measurement_image_batch_executor,

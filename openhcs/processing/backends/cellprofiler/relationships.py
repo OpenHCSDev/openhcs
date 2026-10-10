@@ -755,7 +755,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_output_matching import (
     RuntimeOutputBundle,
 )

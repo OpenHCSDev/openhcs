@@ -10,7 +10,7 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.runtime_relationships import ChildCountFeatureDeclaration
-from openhcs.core.public_api import declared_public_names
+from python_introspect import declared_public_names
 from openhcs.core.measurement_feature_queries import measurement_values_for_feature
 
 

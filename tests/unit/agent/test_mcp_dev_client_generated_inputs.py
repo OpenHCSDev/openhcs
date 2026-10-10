@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, replace
 import json
 
 import pytest
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, to_jsonable
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import ProcessIdentity
 
@@ -17,7 +17,6 @@ from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import FunctionCatalogPreparationHandle
 from openhcs.mcp.dev_client import _build_parser, _calls_from_args
 from openhcs.mcp.dev_client_core import McpDevCliUsageError
-from openhcs.serialization.json import to_jsonable
 
 
 @pytest.fixture(scope="module")

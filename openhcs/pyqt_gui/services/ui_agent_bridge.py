@@ -27,8 +27,7 @@ from openhcs.agent.dto.common import (
     AgentWarning,
     AgentResultEnvelope,
 )
-from openhcs.serialization.json import to_jsonable
-from python_introspect import project_dataclass
+from python_introspect import project_dataclass, to_jsonable
 from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
 from openhcs.core.function_reference import FunctionReference
 from openhcs.agent.dto.ui_bridge import (

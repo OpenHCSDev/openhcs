@@ -30,7 +30,7 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementFeature,
 )
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,

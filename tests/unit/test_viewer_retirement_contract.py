@@ -23,7 +23,7 @@ from openhcs.agent.capabilities import (
 from openhcs.mcp.server import McpCapabilityBinder, build_server
 from openhcs.mcp.dev_client_commands.viewer import RetireViewerCommandSpec
 from openhcs.runtime.viewer_protocol import ViewerLayerRetirementReceipt
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def producers():

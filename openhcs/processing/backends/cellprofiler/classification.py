@@ -1291,7 +1291,7 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_measurements import ObjectLabelMeasurementValues
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,

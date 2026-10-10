@@ -32,7 +32,7 @@ from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRow
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
 )
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     enum_member_with_payload,

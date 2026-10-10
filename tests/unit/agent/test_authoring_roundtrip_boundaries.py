@@ -9,7 +9,7 @@ from typing import get_type_hints
 
 import pytest
 from pycodify import FormatContext, to_source
-from python_introspect import dataclass_from_mapping
+from python_introspect import JsonObject, dataclass_from_mapping, to_jsonable
 from skimage.exposure import adjust_gamma
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
@@ -36,7 +36,6 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
     ProcessingContract,
 )
-from openhcs.serialization.json import JsonObject, to_jsonable
 
 
 @dataclass(frozen=True)

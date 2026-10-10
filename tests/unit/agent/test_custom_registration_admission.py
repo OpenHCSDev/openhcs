@@ -742,7 +742,7 @@ def test_generated_mcp_preparation_tools_use_reflected_connection_and_handle():
             "openhcs_start_function_catalog_preparation",
             {"port": 15993, "transport_mode": "tcp"},
         )
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         args = to_jsonable(handle)
         status = await built.call_tool(

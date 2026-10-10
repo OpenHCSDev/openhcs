@@ -3,7 +3,7 @@ from enum import Enum
 from types import MappingProxyType
 from typing import Mapping
 
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 class ThresholdMode(Enum):

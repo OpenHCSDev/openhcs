@@ -108,7 +108,7 @@ class InspectBenchmarkRunCommand(BenchmarkCliCommand):
     def run(self, args: argparse.Namespace) -> int:
         from benchmark.contracts.control import BenchmarkRunInspectionRequest
         from benchmark.control import inspect_benchmark_run, report_benchmark_run
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         inspection = inspect_benchmark_run(
             BenchmarkRunInspectionRequest(
@@ -149,7 +149,7 @@ class InspectMeasuredPipelineCommand(BenchmarkCliCommand):
             inspect_measured_pipeline_run,
             report_measured_pipeline_run,
         )
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         inspection = inspect_measured_pipeline_run(args.output_dir)
         if args.report:
@@ -226,7 +226,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         from openhcs.runtime.zmq_execution_signature import (
             ZMQRuntimeObservationExportScope,
         )
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         output_dir = args.output_dir.expanduser().resolve()
         policy = AgentPathPolicy.with_roots(
@@ -333,7 +333,7 @@ class ListBenchmarkCasesCommand(BenchmarkCliCommand):
 
     def run(self, args: argparse.Namespace) -> int:
         from benchmark.control import discover_benchmark_cases
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         result = discover_benchmark_cases(
             args.manifest,
@@ -422,7 +422,7 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
             well_throughput_start_method_from_manifest,
         )
         from openhcs.core.config import MultiprocessingStartMethod
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
 
         if args.max_memory_mb is not None and (
             not math.isfinite(args.max_memory_mb) or args.max_memory_mb <= 0

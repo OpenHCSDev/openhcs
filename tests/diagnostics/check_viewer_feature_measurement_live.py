@@ -200,7 +200,7 @@ def main() -> None:
     from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
     from openhcs.core.streaming_config_declarations import ViewerType
     from zmqruntime.config import TransportMode
-    from openhcs.serialization.json import to_jsonable
+    from python_introspect import to_jsonable
     from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
     from polystore.imagej_distribution import (
         FijiArchiveDistribution,

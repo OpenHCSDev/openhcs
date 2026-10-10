@@ -1,6 +1,6 @@
 """Dataset utilities and registry."""
 
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 
 from benchmark.contracts.dataset import (
     ArchiveFormat,

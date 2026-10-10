@@ -19,7 +19,7 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeDescriptorReader,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def _write_descriptor(path: Path) -> None:

@@ -36,7 +36,7 @@ from openhcs.core.config import PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.dev_client import McpDevCommandExecution
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 class _FakeMcpClient:

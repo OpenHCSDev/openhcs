@@ -17,7 +17,13 @@ from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotFrameCondition,
     WindowVisualObservation,
 )
-from python_introspect import dataclass_from_mapping, project_dataclass
+from python_introspect import (
+    JsonObject,
+    JsonValue,
+    dataclass_from_mapping,
+    project_dataclass,
+    to_jsonable,
+)
 from pydantic import BeforeValidator, StrictFloat, StrictInt
 from zmqruntime.timeouts import OperationDeadline
 from zmqruntime.viewer_protocol import (
@@ -34,8 +40,6 @@ from openhcs.agent.dto.common import (
     AgentError,
     AgentResourceRef,
     AgentResultEnvelope,
-    JsonObject,
-    JsonValue,
 )
 from openhcs.agent.dto.execution import (
     ExecutionConnectionProjection,
@@ -60,7 +64,6 @@ from openhcs.runtime.viewer_controls import (
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
 )
-from openhcs.serialization.json import to_jsonable
 from openhcs.runtime.viewer_protocol import (
     ViewerPayloadSummary, ViewerPayloadRecord, ViewerPayloadContent,
     ViewerProjectionRecord, ViewerShapeCoordinateBounds,

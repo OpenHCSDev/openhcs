@@ -13,7 +13,7 @@ from openhcs.agent.authoring_contexts import (
 )
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.authoring import AuthoringContextRequest
-from openhcs.agent.dto.common import JsonObject, JsonValue
+from python_introspect import JsonObject, JsonValue, to_jsonable
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
@@ -53,7 +53,6 @@ from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.serialization.json import to_jsonable
 
 
 class KnowledgeCommandSpec(SingleToolCommandSpec):

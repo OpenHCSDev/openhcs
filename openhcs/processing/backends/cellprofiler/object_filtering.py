@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, ClassVar
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.callable_contract import KeywordRuntimeParameter
 from openhcs.core.pipeline.function_contracts import (

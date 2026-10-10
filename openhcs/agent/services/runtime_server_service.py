@@ -5,7 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import replace
 
-from openhcs.agent.dto.common import AgentError, JsonObject, SCHEMA_VERSION
+from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
+from python_introspect import JsonObject
 from openhcs.agent.dto.execution import (
     RuntimeDebugArtifactExportRequest,
     RuntimeDebugArtifactExportResult,

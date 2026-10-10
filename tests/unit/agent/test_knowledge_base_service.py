@@ -18,7 +18,7 @@ from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseService,
 )
 from openhcs.mcp.context import OpenHCSAgentContext
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def test_knowledge_base_catalog_lists_source_backed_documents():

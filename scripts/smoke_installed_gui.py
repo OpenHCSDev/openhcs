@@ -455,10 +455,10 @@ def _typed_tool_payload(
 ) -> AgentDtoT:
     """Hydrate one MCP result through the declared agent DTO contract."""
 
-    from openhcs.agent.services.ui_bridge_transport import AgentDtoJsonCodec
+    from python_introspect import dataclass_from_mapping
 
     payload = _tool_payload(execution, tool_name=tool_name)
-    return AgentDtoJsonCodec.dataclass_from_json(payload_type, dict(payload))
+    return dataclass_from_mapping(payload_type, dict(payload))
 
 
 def _declared_catalog_items(

@@ -42,7 +42,7 @@ from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def metadata_fixture():

@@ -10,7 +10,7 @@ import time
 from typing import TYPE_CHECKING
 from enum import Enum
 from openhcs.core.memory import numpy
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,

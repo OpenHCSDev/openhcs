@@ -46,7 +46,7 @@ from openhcs.core.runtime_image_values import (
     project_image_mask_to_data_domain,
 )
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.interop.cellprofiler.module_measurement_features import (
     IntensityFeature,
     ShapeDescriptorFeature,

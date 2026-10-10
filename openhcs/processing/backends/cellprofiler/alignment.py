@@ -27,7 +27,7 @@ from openhcs.core.artifacts import (
 from openhcs.core.pipeline.function_contracts import (
     required_variable_components,
 )
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,

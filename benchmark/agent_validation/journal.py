@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from benchmark.agent_validation.contracts import AttemptRecord
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 @dataclass(frozen=True, slots=True)

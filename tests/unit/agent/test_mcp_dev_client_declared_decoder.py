@@ -16,7 +16,7 @@ from openhcs.mcp.dev_client_core import (
     workflow_result_payload,
 )
 from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def test_valid_tool_boundary_failure_is_not_a_malformed_runtime_state():

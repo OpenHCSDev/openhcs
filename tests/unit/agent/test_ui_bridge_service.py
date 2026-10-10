@@ -105,7 +105,7 @@ from openhcs.agent.services.ui_bridge_service import (
 from openhcs.agent.services.ui_bridge_transport import UiBridgeControlClient
 from openhcs.runtime.viewer_protocol import ViewerLaunchContextMode
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 DOCUMENT_ID = UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value
 STATE_SURFACE_ID = UiStateSurfaceId.PLATE_MANAGER.value

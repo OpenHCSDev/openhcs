@@ -121,7 +121,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQRuntimeObservationExportScope,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def _parser() -> argparse.ArgumentParser:

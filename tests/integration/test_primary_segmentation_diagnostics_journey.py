@@ -161,7 +161,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         CellProfilerThresholdMethod,
     )
     from openhcs.processing.materialization.core import MaterializationInput
-    from openhcs.serialization.json import to_jsonable
+    from python_introspect import to_jsonable
 
     def binding(module, plan_type, artifact_type):
         (declared,) = module.declared_artifact_bindings(

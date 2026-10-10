@@ -10,14 +10,13 @@ from dataclasses import MISSING, dataclass, fields
 from functools import cache, wraps
 from typing import Self, cast, get_type_hints
 
-from python_introspect import dataclass_from_mapping
-
-from openhcs.serialization.json import (
+from python_introspect import (
     JsonObject,
-    JsonScalar as JsonScalar,
-    JsonValue as JsonValue,
+    JsonValue,
+    dataclass_from_mapping,
     to_jsonable,
 )
+
 
 SCHEMA_VERSION = "openhcs.agent.v1"
 AGENT_PARAMETER_DESCRIPTION_METADATA_KEY = "agent_parameter_description"

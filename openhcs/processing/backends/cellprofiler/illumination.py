@@ -30,7 +30,7 @@ from openhcs.core.artifacts import (
 from openhcs.core.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import special_inputs
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (

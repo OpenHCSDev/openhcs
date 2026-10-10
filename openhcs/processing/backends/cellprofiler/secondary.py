@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Annotated, Callable, ClassVar, Tuple, TypeAlia
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
-from python_introspect import set_signature_analysis_target
+from python_introspect import public_names_from_objects, set_signature_analysis_target
 
 from openhcs.constants.constants import MemoryType
 from openhcs.core.artifacts import (
@@ -33,7 +33,6 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
-from openhcs.core.public_api import public_names_from_objects
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     RegisteredLeafClassSpec,

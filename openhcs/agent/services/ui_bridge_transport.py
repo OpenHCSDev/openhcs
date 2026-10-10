@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 import uuid
-from collections.abc import Mapping, Sequence
-from dataclasses import MISSING, fields, is_dataclass
-from enum import Enum
-from types import NoneType, UnionType
-from typing import TypeVar, get_args, get_origin, get_type_hints
+from collections.abc import Mapping
 
-from typing_extensions import TypeForm
+from python_introspect import JsonObject, dataclass_from_mapping, to_jsonable
 
 import openhcs.agent.services.ui_bridge_service as ui_bridge_service
-from openhcs.agent.dto.common import SCHEMA_VERSION, JsonObject, JsonValue
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
     UiActionCatalog,
     UiActionInvokeRequest,
@@ -73,111 +69,9 @@ from openhcs.agent.services.ui_bridge_service import (
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from openhcs.serialization.json import to_jsonable
 
-DtoT = TypeVar("DtoT")
 UI_BRIDGE_CONTROL_TIMEOUT_MAX_MS = DEFAULT_UI_BRIDGE_TIMEOUT_MS
 UI_BRIDGE_CONTROL_TIMEOUT_MIN_MS = 1
-
-
-class AgentDtoJsonCodec:
-    """Typed JSON hydration for OpenHCS agent dataclasses."""
-
-    @classmethod
-    def dataclass_from_json(
-        cls,
-        target_type: type[DtoT],
-        payload: JsonObject,
-    ) -> DtoT:
-        if not is_dataclass(target_type):
-            raise TypeError(f"Target is not a dataclass: {target_type!r}")
-        if not isinstance(payload, Mapping):
-            raise TypeError(
-                f"Expected JSON object for {target_type.__name__}, "
-                f"got {type(payload).__name__}"
-            )
-        type_hints = get_type_hints(target_type)
-        kwargs = {}
-        for field in fields(target_type):
-            if field.name in payload:
-                if field.name in type_hints:
-                    annotation = type_hints[field.name]
-                else:
-                    annotation = field.type
-                kwargs[field.name] = cls.coerce(
-                    annotation,
-                    payload[field.name],
-                )
-                continue
-            if field.default is not MISSING or field.default_factory is not MISSING:
-                continue
-            raise KeyError(
-                f"Missing required field {field.name!r} for {target_type.__name__}"
-            )
-        return target_type(**kwargs)
-
-    @classmethod
-    def coerce(cls, annotation: TypeForm, value: JsonValue):
-        if value is None:
-            return None
-
-        origin = get_origin(annotation)
-        args = get_args(annotation)
-
-        if origin in (UnionType,):
-            return cls._coerce_union(args, value)
-        if origin is None and isinstance(annotation, UnionType):
-            return cls._coerce_union(args, value)
-        if str(origin) == "typing.Union":
-            return cls._coerce_union(args, value)
-        if origin is tuple:
-            return cls._coerce_tuple(args, value)
-        if origin in (list, Sequence):
-            element_type = args[0] if args else JsonValue
-            return [cls.coerce(element_type, item) for item in cls._sequence(value)]
-        if origin in (dict, Mapping):
-            if not isinstance(value, Mapping):
-                raise TypeError(f"Expected JSON object, got {type(value).__name__}")
-            return dict(value)
-        if is_dataclass(annotation):
-            return cls.dataclass_from_json(annotation, value)
-        if isinstance(annotation, type) and issubclass(annotation, Enum):
-            return annotation(value)
-        return value
-
-    @classmethod
-    def _coerce_union(cls, args: tuple[TypeForm, ...], value: JsonValue):
-        errors: list[Exception] = []
-        for candidate in args:
-            if candidate is NoneType:
-                continue
-            try:
-                return cls.coerce(candidate, value)
-            except Exception as exc:
-                errors.append(exc)
-        if errors:
-            raise errors[-1]
-        return value
-
-    @classmethod
-    def _coerce_tuple(cls, args: tuple[TypeForm, ...], value: JsonValue):
-        sequence = cls._sequence(value)
-        if not args:
-            return tuple(sequence)
-        if len(args) == 2 and args[1] is Ellipsis:
-            return tuple(cls.coerce(args[0], item) for item in sequence)
-        return tuple(
-            cls.coerce(item_type, item)
-            for item_type, item in zip(args, sequence, strict=False)
-        )
-
-    @staticmethod
-    def _sequence(value: JsonValue) -> Sequence[JsonValue]:
-        if isinstance(value, (str, bytes, bytearray)) or not isinstance(
-            value, Sequence
-        ):
-            raise TypeError(f"Expected JSON array, got {type(value).__name__}")
-        return value
 
 
 class UiBridgeControlClient:
@@ -203,7 +97,7 @@ class UiBridgeControlClient:
             payload=self._payload_object(payload),
         )
         response_payload = self._send(connection, to_jsonable(request))
-        response = AgentDtoJsonCodec.dataclass_from_json(
+        response = dataclass_from_mapping(
             UiBridgeResponseEnvelope,
             response_payload,
         )
@@ -315,7 +209,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
 
     def status(self, connection: UiBridgeConnectionSpec) -> UiBridgeStatus:
         payload = self._request(connection, ui_bridge_service.UiBridgeStatusOperation)
-        return AgentDtoJsonCodec.dataclass_from_json(UiBridgeStatus, payload)
+        return dataclass_from_mapping(UiBridgeStatus, payload)
 
     def list_documents(
         self,
@@ -324,7 +218,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
         payload = self._request(
             connection, ui_bridge_service.UiBridgeListDocumentsOperation
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiCodeDocumentCatalog, payload)
+        return dataclass_from_mapping(UiCodeDocumentCatalog, payload)
 
     def list_state_surfaces(
         self,
@@ -333,7 +227,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
         payload = self._request(
             connection, ui_bridge_service.UiBridgeListStateSurfacesOperation
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiStateSurfaceCatalog, payload)
+        return dataclass_from_mapping(UiStateSurfaceCatalog, payload)
 
     def list_actions(
         self,
@@ -342,7 +236,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
         payload = self._request(
             connection, ui_bridge_service.UiBridgeListActionsOperation
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiActionCatalog, payload)
+        return dataclass_from_mapping(UiActionCatalog, payload)
 
     def list_windows(
         self,
@@ -351,7 +245,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
         payload = self._request(
             connection, ui_bridge_service.UiBridgeListWindowsOperation
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiWindowCatalog, payload)
+        return dataclass_from_mapping(UiWindowCatalog, payload)
 
     def list_object_state_scopes(
         self,
@@ -363,7 +257,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeListObjectStateScopesOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiObjectStateScopeCatalog, payload)
+        return dataclass_from_mapping(UiObjectStateScopeCatalog, payload)
 
     def describe_object_state_field(
         self,
@@ -375,7 +269,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeDescribeObjectStateFieldOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(
+        return dataclass_from_mapping(
             UiObjectStateFieldHelpResult,
             payload,
         )
@@ -390,7 +284,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeMutateObjectStateFieldOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(
+        return dataclass_from_mapping(
             UiObjectStateFieldMutationResult,
             payload,
         )
@@ -403,7 +297,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
         payload = self._request(
             connection, ui_bridge_service.UiBridgeGetDocumentOperation, request
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiCodeDocument, payload)
+        return dataclass_from_mapping(UiCodeDocument, payload)
 
     def get_state_surface(
         self,
@@ -415,7 +309,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeGetStateSurfaceOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiStateSurfaceDocument, payload)
+        return dataclass_from_mapping(UiStateSurfaceDocument, payload)
 
     def invoke_action(
         self,
@@ -427,7 +321,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeInvokeActionOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiActionInvokeResult, payload)
+        return dataclass_from_mapping(UiActionInvokeResult, payload)
 
     def selected_plate_workflow(
         self,
@@ -439,7 +333,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeSelectedPlateWorkflowOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(
+        return dataclass_from_mapping(
             UiSelectedPlateWorkflowResult,
             payload,
         )
@@ -454,7 +348,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeFocusWindowOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiWindowFocusResult, payload)
+        return dataclass_from_mapping(UiWindowFocusResult, payload)
 
     def navigate_window(
         self,
@@ -466,7 +360,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeNavigateWindowOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiWindowNavigateResult, payload)
+        return dataclass_from_mapping(UiWindowNavigateResult, payload)
 
     def close_window(
         self,
@@ -478,7 +372,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeCloseWindowOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiWindowCloseResult, payload)
+        return dataclass_from_mapping(UiWindowCloseResult, payload)
 
     def snapshot_window(
         self,
@@ -490,7 +384,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeSnapshotWindowOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiWindowSnapshotResult, payload)
+        return dataclass_from_mapping(UiWindowSnapshotResult, payload)
 
     def widget_tree(
         self,
@@ -502,7 +396,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeWidgetTreeOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiWidgetTreeResult, payload)
+        return dataclass_from_mapping(UiWidgetTreeResult, payload)
 
     def invoke_widget_action(
         self,
@@ -514,7 +408,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeInvokeWidgetActionOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(
+        return dataclass_from_mapping(
             UiWidgetActionInvokeResult,
             payload,
         )
@@ -529,7 +423,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeValidateDocumentOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(
+        return dataclass_from_mapping(
             UiCodeDocumentValidationResult,
             payload,
         )
@@ -544,7 +438,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeApplyDocumentOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiCodeDocumentApplyResult, payload)
+        return dataclass_from_mapping(UiCodeDocumentApplyResult, payload)
 
     def list_snapshots(
         self,
@@ -556,7 +450,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeListSnapshotsOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiSnapshotCatalog, payload)
+        return dataclass_from_mapping(UiSnapshotCatalog, payload)
 
     def restore_snapshot(
         self,
@@ -568,7 +462,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeRestoreSnapshotOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiSnapshotRestoreResult, payload)
+        return dataclass_from_mapping(UiSnapshotRestoreResult, payload)
 
     def time_travel_head(
         self,
@@ -580,13 +474,13 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeTimeTravelHeadOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiSnapshotRestoreResult, payload)
+        return dataclass_from_mapping(UiSnapshotRestoreResult, payload)
 
     def list_branches(self, connection: UiBridgeConnectionSpec) -> UiBranchCatalog:
         payload = self._request(
             connection, ui_bridge_service.UiBridgeListBranchesOperation
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiBranchCatalog, payload)
+        return dataclass_from_mapping(UiBranchCatalog, payload)
 
     def switch_branch(
         self,
@@ -598,7 +492,7 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeSwitchBranchOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiSnapshotRestoreResult, payload)
+        return dataclass_from_mapping(UiSnapshotRestoreResult, payload)
 
     def get_operation_status(
         self,
@@ -610,4 +504,4 @@ class ZMQUiBridgeGateway(UiBridgeGatewayABC):
             ui_bridge_service.UiBridgeGetOperationStatusOperation,
             request,
         )
-        return AgentDtoJsonCodec.dataclass_from_json(UiBridgeOperationRef, payload)
+        return dataclass_from_mapping(UiBridgeOperationRef, payload)

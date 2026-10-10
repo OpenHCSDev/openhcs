@@ -75,7 +75,7 @@ from openhcs.core.runtime_batch_contracts import (
     RuntimePure2DSliceBatchRequest,
     pure_2d_batch_executor,
 )
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
     image_payload_mask,

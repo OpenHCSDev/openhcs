@@ -22,7 +22,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     count_neuronal_cell_bodies_metaxpress,
     neurite_outgrowth_metaxpress,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 @dataclass(frozen=True)

@@ -17,7 +17,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, fields
 from pathlib import Path
 
-from python_introspect import dataclass_from_mapping
+from python_introspect import JsonObject, dataclass_from_mapping, to_jsonable
 
 from benchmark.agent_validation.contracts import (
     ArchitectureViolation,
@@ -49,7 +49,7 @@ from openhcs.agent.capabilities import (
     ValidatePipelineCapability,
     get_agent_capability,
 )
-from openhcs.agent.dto.common import JsonObject, RenderedSource
+from openhcs.agent.dto.common import RenderedSource
 from openhcs.agent.dto.execution import ArtifactPlanInspection, ExecutionJobRef
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
@@ -66,7 +66,6 @@ from openhcs.mcp.dev_client_core import (
     McpDevToolResult,
     first_payload_mapping,
 )
-from openhcs.serialization.json import to_jsonable
 
 
 @dataclass(frozen=True, slots=True)

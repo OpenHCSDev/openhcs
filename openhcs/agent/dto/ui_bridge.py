@@ -25,8 +25,11 @@ from pyqt_reactive.services.window_snapshot import (
     WindowVisualObservation,
 )
 from python_introspect import (
+    JsonObject,
+    JsonValue,
     overlay_non_none_dataclass,
     project_dataclass,
+    to_jsonable,
     validate_annotated_dataclass,
 )
 from zmqruntime import EndpointApplication
@@ -46,8 +49,6 @@ from openhcs.agent.dto.common import (
     AgentResultEnvelope,
     AgentTimedStatusEnvelope,
     AgentWarning,
-    JsonObject,
-    JsonValue,
 )
 from openhcs.agent.dto.execution import (
     ExecutionConnectionProjection,
@@ -105,7 +106,6 @@ from openhcs.core.selection import (
     SelectedScopeIdsCarrier,
     SelectionModeCarrier,
 )
-from openhcs.serialization.json import to_jsonable
 
 UI_BRIDGE_UNKNOWN_OPERATION = "unknown"
 UI_BRIDGE_UNKNOWN_WIDGET = "unknown"

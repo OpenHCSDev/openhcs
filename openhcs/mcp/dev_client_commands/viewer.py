@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import JsonValue
+from python_introspect import JsonValue
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import (
     VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,

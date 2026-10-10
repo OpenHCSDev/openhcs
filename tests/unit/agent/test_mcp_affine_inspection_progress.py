@@ -26,7 +26,7 @@ from pyqt_reactive.services.ui_thread_dispatch import (
     UiThreadDispatchError, UiThreadDispatcherClosedError, UiThreadDispatchTimeoutError,
 )
 from openhcs.mcp.server import build_server
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 @pytest.mark.parametrize("declaration", (

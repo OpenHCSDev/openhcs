@@ -19,7 +19,13 @@ from typing import TYPE_CHECKING, Annotated, ClassVar, Self, TypeAlias, TypeVar,
 from annotated_types import Gt, Le
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import dataclass_from_mapping
+from python_introspect import (
+    JsonObject,
+    JsonScalar,
+    JsonValue,
+    dataclass_from_mapping,
+    to_jsonable,
+)
 from python_introspect.validation import validate_annotated_dataclass
 from pydantic import StrictInt
 from polystore.backend_registry import register_cleanup_callback
@@ -96,7 +102,6 @@ from openhcs.runtime.viewer_controls import (
     ViewerStateControlOptions,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.serialization.json import JsonObject, JsonScalar, JsonValue, to_jsonable
 
 if TYPE_CHECKING:
     from openhcs.runtime.napari_streaming_handlers import NapariNativeWindowPresentation
