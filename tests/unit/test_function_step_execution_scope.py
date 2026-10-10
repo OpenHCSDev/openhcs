@@ -220,7 +220,6 @@ def test_plate_scope_drives_no_main_flow_paths() -> None:
         1: CompiledStepPlan(
             step_index=1,
             step_name="export",
-            step_type="FunctionStep",
             axis_id="A01",
         )
     }
@@ -257,7 +256,6 @@ def test_path_validation_accepts_explicit_no_main_flow_dependency(
         1: CompiledStepPlan(
             step_index=1,
             step_name="export",
-            step_type="FunctionStep",
             axis_id="A01",
             main_input_dependency=StepInputDependency.no_main_flow(),
         )
@@ -406,7 +404,6 @@ def _plate_step_plan(
     return CompiledStepPlan(
         step_index=step_index,
         step_name=func.__name__,
-        step_type="FunctionStep",
         axis_id=axis_id,
         input_dir=Path("/plate/images"),
         output_dir=Path("/plate/images"),

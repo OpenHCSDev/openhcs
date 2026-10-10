@@ -1,6 +1,5 @@
 """Outcome-only evidence from ordinary ZMQ execution."""
 
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -117,62 +116,16 @@ def test_value_export_rejects_an_uncompiled_execution_axis() -> None:
         exported.require_valid_observation()
 
 
-def test_previous_runtime_export_versions_remain_readable(tmp_path: Path) -> None:
-    outcome_path = tmp_path / "outcome-v1.pkl.gz"
-    replace(
-        ZMQRuntimeExecutionOutcomeExport.from_execution(
-            compiled_axis_ids=("A01",),
-            execution_results={"A01": ExecutionResult.success("A01")},
-            output_roots=(tmp_path,),
-            execution_id="new-job",
-        ),
-        schema_version=1,
-        execution_id=None,
-    ).write(outcome_path)
-    assert ZMQRuntimeExecutionOutcomeExport.read(outcome_path).execution_id is None
-
-    outcome_v2_path = tmp_path / "outcome-v2.pkl.gz"
-    replace(
-        ZMQRuntimeExecutionOutcomeExport.from_execution(
-            compiled_axis_ids=("A01",),
-            execution_results={"A01": ExecutionResult.success("A01")},
-            output_roots=(tmp_path,),
-            execution_id="old-job",
-        ),
-        schema_version=2,
-        compiled_axis_ids=None,
-    ).write(outcome_v2_path)
-    restored_v2 = ZMQRuntimeExecutionOutcomeExport.read(outcome_v2_path)
-    assert restored_v2.execution_id == "old-job"
-    assert restored_v2.compiled_axis_ids is None
-    assert restored_v2.exports is None
-
-    outcome_v3_path = tmp_path / "outcome-v3.pkl.gz"
-    replace(
-        ZMQRuntimeExecutionOutcomeExport.from_execution(
-            compiled_axis_ids=("A01",),
-            execution_results={"A01": ExecutionResult.success("A01")},
-            output_roots=(tmp_path,),
-            execution_id="old-v3-job",
-        ),
-        schema_version=3,
-    ).write(outcome_v3_path)
-    restored_v3 = ZMQRuntimeExecutionOutcomeExport.read(outcome_v3_path)
-    assert restored_v3.execution_id == "old-v3-job"
-    assert restored_v3.compiled_axis_ids == ("A01",)
-    assert restored_v3.exports is None
-
-    observation_path = tmp_path / "observation-v6.pkl.gz"
-    replace(
-        ZMQRuntimeExecutionObservationExport.from_execution(
-            compiled_contexts={},
-            execution_results={},
-            output_roots=(),
-            execution_id="new-job",
-            runtime_observations=(),
-        ),
-        schema_version=6,
-        execution_id=None,
+def test_runtime_observation_export_never_overwrites_existing_file(
+    tmp_path: Path,
+) -> None:
+    observation_path = tmp_path / "observation.pkl.gz"
+    ZMQRuntimeExecutionObservationExport.from_execution(
+        compiled_contexts={},
+        execution_results={},
+        output_roots=(),
+        execution_id="first-job",
+        runtime_observations=(),
     ).write(observation_path)
     retained_bytes = observation_path.read_bytes()
     with pytest.raises(FileExistsError):
@@ -185,5 +138,6 @@ def test_previous_runtime_export_versions_remain_readable(tmp_path: Path) -> Non
         ).write(observation_path)
     assert observation_path.read_bytes() == retained_bytes
     assert (
-        ZMQRuntimeExecutionObservationExport.read(observation_path).execution_id is None
+        ZMQRuntimeExecutionObservationExport.read(observation_path).execution_id
+        == "first-job"
     )

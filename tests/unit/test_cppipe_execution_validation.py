@@ -17,6 +17,7 @@ from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
 )
 from openhcs.core.runtime_execution_validation import (
+    RuntimeArtifactAxisExpectation,
     RuntimeArtifactExecutionExpectation,
 )
 from openhcs.core.runtime_exports import (
@@ -295,9 +296,11 @@ def _validate(
     *,
     table_path: Path | None = None,
 ):
-    expectation = RuntimeArtifactExecutionExpectation.from_output_specs(
-        output_specs,
+    artifact_kinds = frozenset(spec.artifact_type for spec in output_specs)
+    expectation = RuntimeArtifactExecutionExpectation(
+        artifact_kinds=artifact_kinds,
         exports=RuntimeExportExpectation.from_output_specs(output_specs),
+        axis_expectations=(RuntimeArtifactAxisExpectation("A01", artifact_kinds),),
     )
     return ZMQRuntimeExecutionObservationExport(
         schema_version=ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION,

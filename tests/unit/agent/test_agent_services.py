@@ -564,7 +564,6 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
         step_plan = CompiledStepPlan(
             step_index=0,
             step_name="WriteArtifacts",
-            step_type="FunctionStep",
             axis_id="A01",
             output_dir=Path("/tmp/out/A01"),
             main_flow_axis_persistence_enabled=False,

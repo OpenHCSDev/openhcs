@@ -537,7 +537,6 @@ RuntimeMeasurementQualifierCacheKey = tuple[
     tuple[object | None, ...],
 ]
 RuntimeMeasurementRowIdentity = tuple[tuple[str, object], ...]
-RuntimeMeasurementRowIdentityOrMissing = RuntimeMeasurementRowIdentity | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -635,7 +634,6 @@ RuntimeMeasurementPaddingGroupCache = dict[
     tuple[str, RuntimeMeasurementProjectedFeatureCacheKey],
     RuntimeMeasurementPaddingGroup,
 ]
-RuntimeMeasurementIndexedQualifierCache = dict[int, tuple[str, ...]]
 RuntimeRowQualifierResolutionCache = dict[
     int,
     tuple[tuple[RuntimeMeasurementIndexedQualifier, ...], tuple[str, ...]],
@@ -1187,17 +1185,6 @@ def runtime_metadata_map_row_matches(
     if subject.scope is not MeasurementScope.EXPERIMENT:
         return False
     return row.normalized_field_names == frozenset(("key", "value"))
-
-
-def runtime_measurement_identity_field_matches(
-    field_name: str,
-    dialect: RuntimeMeasurementDialect,
-) -> bool:
-    """Return whether a field is row identity, qualifier, or metadata."""
-    return normalized_runtime_measurement_identity_field_matches(
-        normalize_runtime_identifier(field_name),
-        dialect,
-    )
 
 
 def normalized_runtime_measurement_identity_field_matches(
@@ -2306,46 +2293,6 @@ class RuntimeLongFormMeasurementFact:
         if self.key is None or self.value is None:
             return None
         return self.key, self.value
-
-
-@dataclass(frozen=True, slots=True)
-class RuntimeSnapshotLongFormMeasurementFactProjector:
-    """Project one snapshot long-form measurement row into a semantic fact."""
-
-    context: RuntimeLongFormMeasurementContext
-
-    def fact(self) -> RuntimeLongFormMeasurementFactValue:
-        return self.resolved_fact().as_tuple
-
-    def resolved_fact(self) -> RuntimeLongFormMeasurementFact:
-        source = RuntimeLongFormMeasurementSource.from_row(self.context.row)
-        if source is None:
-            return RuntimeLongFormMeasurementFact(None, None)
-        qualifiers = measurement_row_qualifiers(
-            self.context.row.row,
-            self.context.policy.measurement_dialect,
-            source.feature_text,
-        )
-        key = RuntimeMeasurementFeatureKeyProjection(
-            RuntimeMeasurementFeatureKeySourceContext(
-                source.feature_text,
-                self.context.subject,
-                self.context.policy,
-                qualifiers,
-                self.context.source_name,
-                self.context.known_source_names,
-            ),
-            strip_subject_suffix=False,
-        ).key()
-        if key is None:
-            return RuntimeLongFormMeasurementFact(None, None)
-        return RuntimeLongFormMeasurementFact(
-            key,
-            source.cell_signature(
-                self.context.image_number_offset,
-                self.context.policy,
-            ),
-        )
 
 
 @dataclass(frozen=True, slots=True)

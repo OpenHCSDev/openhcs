@@ -51,7 +51,6 @@ class ExecutionStatus(Enum):
 
     SUCCESS = "success"
     ERROR = "error"
-    PENDING = "pending"
     CANCELLED = "cancelled"
 
 

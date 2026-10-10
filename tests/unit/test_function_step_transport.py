@@ -470,7 +470,7 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     assert first_invocation.contract is second_invocation.contract
     prepared_callable = invocation.contract.resolve_runtime_callable()
     plan = CompiledStepPlan(
-        step_index=0, step_name="Crop", step_type="FunctionStep", axis_id="A01",
+        step_index=0, step_name="Crop", axis_id="A01",
         compiled_function_pattern=pattern,
     )
     context = ProcessingContext(

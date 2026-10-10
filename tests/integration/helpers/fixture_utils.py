@@ -13,7 +13,6 @@ from pathlib import Path
 
 import pytest
 
-# from openhcs.core.utils import stack
 from openhcs.core.config import (
     GlobalPipelineConfig,
     MaterializationBackend,
@@ -21,7 +20,6 @@ from openhcs.core.config import (
     VFSConfig,
     ZarrConfig,
 )
-from openhcs.core.orchestrator import PipelineOrchestrator
 
 # from openhcs.core.config import StitcherConfig, PipelineConfig
 # from openhcs.core.step_base import Step
@@ -476,39 +474,6 @@ def zstack_plate_dir(test_function_dir, microscope_config, test_params):
         z_stack_levels=5,  # Z-stack plate has 5 Z-levels
     )
     yield plate_path
-
-
-# Mock thread tracking utilities
-def track_thread_activity(func):
-    """Mock decorator for tracking thread activity."""
-    return func
-
-
-def clear_thread_activity():
-    """Mock function for clearing thread activity."""
-
-
-def print_thread_activity_report():
-    """Mock function for printing thread activity report."""
-
-
-@pytest.fixture
-def thread_tracker():
-    """Fixture to track thread activity for tests."""
-    # Store the original method
-    original_process_well = PipelineOrchestrator.process_well
-
-    # Apply the decorator to the process_well method
-    PipelineOrchestrator.process_well = track_thread_activity(original_process_well)
-
-    # Clear any previous thread activity data
-    clear_thread_activity()
-
-    # Provide the fixture
-    yield
-
-    # Restore the original method
-    PipelineOrchestrator.process_well = original_process_well
 
 
 @pytest.fixture

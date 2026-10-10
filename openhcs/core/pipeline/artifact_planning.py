@@ -4,7 +4,7 @@ import inspect
 from collections import Counter, OrderedDict, defaultdict
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
-from typing import Any, Callable, ClassVar, Iterable, Iterator, Mapping, Optional, TYPE_CHECKING
+from typing import Any, ClassVar, Iterable, Mapping, Optional, TYPE_CHECKING
 
 from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts import (
@@ -669,16 +669,6 @@ class ArtifactGraph:
             if value not in unique:
                 unique.append(value)
         return tuple(unique)
-
-
-def normalize_pattern(pattern: Any) -> Iterator[tuple[Callable, str, int]]:
-    """Extract enabled functions from any pattern with runtime invocation positions."""
-    for invocation in normalize_function_pattern(pattern).iter_items():
-        yield (
-            invocation.func,
-            invocation.key.group_key,
-            invocation.key.position,
-        )
 
 
 def extract_artifact_declarations(

@@ -21,7 +21,6 @@ from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
-from openhcs.core.pipeline.function_contracts import special_input_names_from_callable
 from openhcs.processing.backends.cellprofiler.worms import (
     OverlapStyle,
     StraightenWormsModule,
@@ -146,7 +145,7 @@ def _straighten_worms_binding_request(
 
 
 def _straighten_worm_labels(bound: dict[str, object]) -> object:
-    parameter_names = special_input_names_from_callable(straighten_worms)
+    parameter_names = CallableContract.from_callable(straighten_worms).artifact_input_parameter_names
     assert len(parameter_names) == 1
     return bound[parameter_names[0]]
 

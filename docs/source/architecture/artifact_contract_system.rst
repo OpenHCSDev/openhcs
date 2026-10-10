@@ -105,9 +105,7 @@ not present an ROI-shaped base path as though it were also the CSV output.
 Callable ABI versus semantic artifacts
 --------------------------------------
 
-Legacy decorators and loaders may expose ``special_inputs`` or
-``special_outputs`` names. Those names describe callable ABI slots or output
-positions. They do not by themselves declare artifact types, producers,
+The ``special_inputs`` decorator names callable ABI slots. They do not by themselves declare artifact types, producers,
 materialisation, or runtime-store identity.
 
 Semantic ownership comes from ``artifact_inputs`` and ``artifact_outputs`` on
@@ -231,7 +229,7 @@ queries derived from compiled input edges. Repeated producers replace the
 current binding explicitly while the observation stream retains history.
 
 Materialisation is a plan over an artifact declaration. It is not a side effect
-of naming a Python return value or applying ``@special_outputs``.
+of naming a Python return value or applying ``@artifact_outputs``.
 
 When an image result selects source planes, ``SelectedPlaneImageOutput`` carries
 the resulting array and the ordered source indices. The runtime resolves this

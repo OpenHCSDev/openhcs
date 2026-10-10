@@ -38,7 +38,6 @@ def _runtime(tmp_path):
     plan = CompiledStepPlan(
         step_index=0,
         step_name="OutputOwnership",
-        step_type="FunctionStep",
         step_scope_id="output-ownership",
         axis_id="A01",
         input_memory_type="numpy",

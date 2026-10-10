@@ -182,14 +182,14 @@ def test_dual_channel_count_runs_on_synthetic_plate_with_channel_stack(
     [persisted_special_output_probe] = custom_function_manager.register_from_code(
         """
 from openhcs.core.memory import numpy
-from openhcs.core.pipeline.function_contracts import special_outputs
+from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec, ROIOptions
 
 import numpy as np
 
 
 @numpy
-@special_outputs(
+@artifact_outputs(
     (
         "legacy_counts",
         MaterializationSpec(CsvOptions(fields=["slice_index", "cell_count"])),

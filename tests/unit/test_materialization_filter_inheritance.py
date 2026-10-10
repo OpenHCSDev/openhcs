@@ -97,7 +97,6 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
     plan = CompiledStepPlan(
         step_index=0,
         step_name="checkpoint",
-        step_type="FunctionStep",
         axis_id="A01",
         materialized_output=MaterializedOutputPlan(
             output_dir=checkpoint_dir,

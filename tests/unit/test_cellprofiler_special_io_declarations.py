@@ -35,10 +35,7 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.pipeline.function_contracts import (
-    annotation_produces_runtime_type,
-    runtime_bound_parameter_names_from_callable,
-)
+from openhcs.core.pipeline.function_contracts import annotation_produces_runtime_type
 from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.runtime_tabular_values import ColumnarRows
@@ -825,9 +822,7 @@ def test_object_colocalization_rank_provider_is_runtime_bound() -> None:
     parameter = parameters["rank_provider"]
 
     assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
-    assert runtime_bound_parameter_names_from_callable(
-        measure_colocalization_objects
-    ) == ("rank_provider", "threshold_mask_outputs", "costes_threshold_batch")
+    assert CallableContract.from_callable(measure_colocalization_objects).runtime_bound_parameters == ("rank_provider", "threshold_mask_outputs", "costes_threshold_batch")
     contract = CallableContract.from_callable(measure_colocalization_objects)
     assert contract.config_bound_parameter_names == ("dtype_config",)
     assert parameters["dtype_config"].annotation is LazyDtypeConfig

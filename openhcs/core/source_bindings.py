@@ -9,11 +9,10 @@ import re
 import tempfile
 import urllib.request
 from abc import ABC, abstractmethod
-from collections.abc import Hashable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from dataclasses import fields as dataclass_fields
 from enum import Enum
-from functools import lru_cache
 from pathlib import Path, PureWindowsPath
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar
@@ -2514,55 +2513,6 @@ class CompiledSourceUniversePlan:
             ),
             uses_pipeline_start_binding_origin=uses_pipeline_start_binding_origin,
         )
-
-
-@dataclass(frozen=True, slots=True)
-class SourceRuntimePathLookup:
-    """Runtime path identities used by source-binding provenance maps."""
-
-    file_path: str
-    step_input_dir: str | None = None
-
-    def keys(self) -> tuple[str, ...]:
-        return _source_runtime_path_lookup_keys(self.file_path, self.step_input_dir)
-
-    def first_value(
-        self,
-        mapping: Mapping[str, Any],
-        *,
-        include_native_path_fallback: bool = False,
-    ) -> Any | None:
-        for key in self.keys():
-            value = mapping.get(key)
-            if value is not None:
-                return value
-        if include_native_path_fallback:
-            return mapping.get(_source_runtime_native_path(self.file_path))
-        return None
-
-
-@lru_cache(maxsize=65536)
-def _source_runtime_path_lookup_keys(
-    file_path: str,
-    step_input_dir: str | None,
-) -> tuple[str, ...]:
-    """Return path lookup spellings for one runtime source path."""
-    path = Path(file_path)
-    keys = dict.fromkeys((str(file_path), path.as_posix()))
-    if path.is_absolute() and step_input_dir is not None:
-        try:
-            relative_path = path.relative_to(step_input_dir)
-        except ValueError:
-            pass
-        else:
-            keys[relative_path.as_posix()] = None
-    return tuple(keys)
-
-
-@lru_cache(maxsize=65536)
-def _source_runtime_native_path(file_path: str) -> str:
-    """Return the native-path spelling used as the final runtime lookup fallback."""
-    return str(Path(file_path))
 
 
 @dataclass(frozen=True, slots=True)

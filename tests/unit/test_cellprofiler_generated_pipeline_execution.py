@@ -52,9 +52,6 @@ from openhcs.core.pipeline.artifact_planning import (
     ArtifactProducer,
     artifact_producers_for_outputs,
 )
-from openhcs.core.pipeline.function_contracts import (
-    validate_artifact_input_parameter_bindings,
-)
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.source_bindings import (
@@ -650,11 +647,7 @@ def test_filter_objects_child_count_consumes_exact_declared_relationship() -> No
         contract.artifact_inputs,
         RelationshipsArtifactType,
     ) == (relationship_output.name,)
-    validate_artifact_input_parameter_bindings(
-        filter_objects,
-        contract.artifact_inputs,
-        adapter_manages_inputs=True,
-    )
+    contract.validate_artifact_input_parameter_bindings()
 
 
 def test_filter_objects_contract_declares_removed_object_topology() -> None:
@@ -755,11 +748,7 @@ def test_filter_objects_function_step_reconstructs_exact_public_topology(
         invocation_key=invocation.key,
         step_context=step_context,
     )
-    validate_artifact_input_parameter_bindings(
-        filter_objects,
-        contract.artifact_inputs,
-        adapter_manages_inputs=True,
-    )
+    contract.validate_artifact_input_parameter_bindings()
 
     assert consumed == ()
     assert _artifact_names(contract.artifact_inputs, ObjectLabelsArtifactType) == (

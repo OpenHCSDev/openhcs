@@ -459,7 +459,7 @@ def _compiled_custom_contexts(payload, runtime):
         assert callable(invocation.contract.raw_processing_function)
         prepared = invocation.contract.resolve_runtime_callable()
         plan = CompiledStepPlan(
-            step_index=0, step_name="Synthetic custom", step_type="FunctionStep",
+            step_index=0, step_name="Synthetic custom",
             axis_id=axis_id, compiled_function_pattern=pattern,
         )
         context = ProcessingContext(

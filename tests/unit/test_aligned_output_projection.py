@@ -47,7 +47,7 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
     monkeypatch.setattr(aligned_image_payload, "payload_slices_for_alignment", counted)
     runtime = PatternGroupExecutionRequest(pattern_group_info="generic-output-projection",
             execution_plan=CompiledStepPlan(
-                step_index=0, step_name="output-projection", step_type="FunctionStep",
+                step_index=0, step_name="output-projection",
                 axis_id="A01", output_memory_type=MemoryType.NUMPY,
             ),
             context=ProcessingContext(axis_id="A01"),

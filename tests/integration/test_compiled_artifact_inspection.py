@@ -224,7 +224,6 @@ def _compiled_record() -> tuple[ZMQCompileArtifactRecord, ArtifactOutputPlan]:
     step_plan = CompiledStepPlan(
         step_index=0,
         step_name="Produce",
-        step_type="FunctionStep",
         axis_id="A01",
         artifact_inputs=OrderedDict(),
         artifact_outputs=OrderedDict(((output_plan.ref(), output_plan),)),

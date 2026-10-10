@@ -142,13 +142,11 @@ def _compiled_context(axis_id: str) -> ProcessingContext:
             1: CompiledStepPlan(
                 step_index=1,
                 step_name="measure",
-                step_type="FunctionStep",
                 axis_id=axis_id,
             ),
             0: CompiledStepPlan(
                 step_index=0,
                 step_name="segment",
-                step_type="FunctionStep",
                 axis_id=axis_id,
             ),
         },

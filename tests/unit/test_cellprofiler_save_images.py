@@ -32,9 +32,6 @@ from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     InvocationContractPlan,
 )
-from openhcs.core.pipeline.function_contracts import (
-    special_input_names_from_callable,
-)
 from openhcs.core.pipeline.artifact_planning import (
     artifact_producers_for_outputs,
     extract_artifact_declarations,
@@ -223,7 +220,7 @@ def test_save_images_is_an_adapter_free_executable_axis_module() -> None:
     assert callable_contract.processing_contract is ProcessingContract.PURE_3D
     assert callable_contract.runtime_adapter is None
     assert callable_contract.resolve_runtime_callable() is save_images
-    assert special_input_names_from_callable(save_images) == ("image_to_save",)
+    assert CallableContract.from_callable(save_images).artifact_input_parameter_names == ("image_to_save",)
 
 
 def test_save_images_contract_consumes_runtime_image_and_declares_export_only() -> None:
@@ -273,7 +270,7 @@ def test_save_images_selected_image_binding_is_runtime_special_identity() -> Non
     assert bound.kwargs["file_format"] is SaveImagesFileFormat.PNG
     assert bound.kwargs["bit_depth"] is SaveImagesBitDepth.UINT8
     assert bound.kwargs["filename_method"] is SaveImagesFilenameMethod.SINGLE_NAME
-    assert special_input_names_from_callable(save_images) == ("image_to_save",)
+    assert CallableContract.from_callable(save_images).artifact_input_parameter_names == ("image_to_save",)
 
 
 def test_save_images_public_contract_selects_upstream_runtime_image() -> None:

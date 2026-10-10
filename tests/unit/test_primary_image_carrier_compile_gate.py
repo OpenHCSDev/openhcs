@@ -143,7 +143,6 @@ def _session(
     plan = CompiledStepPlan(
         step_index=0,
         step_name="Convert colour",
-        step_type="FunctionStep",
         axis_id="A01",
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=CompiledSourceBindingPlan(bindings=(binding,)),
@@ -285,7 +284,6 @@ def test_grouped_color_requirement_inspects_only_compatible_binding(
     plan = CompiledStepPlan(
         step_index=0,
         step_name="Grouped conversion",
-        step_type="FunctionStep",
         axis_id="A01",
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=CompiledSourceBindingPlan(
@@ -380,7 +378,6 @@ def test_declared_preserving_producer_carries_source_proof_between_steps(
     producer = CompiledStepPlan(
         step_index=0,
         step_name="Crop",
-        step_type="FunctionStep",
         axis_id="A01",
         step_scope_id="step-0",
         main_input_dependency=StepInputDependency.pipeline_start(),
@@ -390,7 +387,6 @@ def test_declared_preserving_producer_carries_source_proof_between_steps(
     consumer = CompiledStepPlan(
         step_index=1,
         step_name="Convert colour",
-        step_type="FunctionStep",
         axis_id="A01",
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=0,
@@ -423,7 +419,6 @@ def test_each_preserving_producer_in_a_chain_carries_source_proof(
     first_producer = CompiledStepPlan(
         step_index=0,
         step_name="First crop",
-        step_type="FunctionStep",
         axis_id="A01",
         step_scope_id="step-0",
         main_input_dependency=StepInputDependency.pipeline_start(),
@@ -433,7 +428,6 @@ def test_each_preserving_producer_in_a_chain_carries_source_proof(
     second_producer = CompiledStepPlan(
         step_index=1,
         step_name="Second crop",
-        step_type="FunctionStep",
         axis_id="A01",
         step_scope_id="step-1",
         main_input_dependency=StepInputDependency.step_output(
@@ -445,7 +439,6 @@ def test_each_preserving_producer_in_a_chain_carries_source_proof(
     consumer = CompiledStepPlan(
         step_index=2,
         step_name="Convert colour",
-        step_type="FunctionStep",
         axis_id="A01",
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=1,
@@ -475,7 +468,6 @@ def test_unproved_producer_transition_fails_compile_closed(tmp_path: Path) -> No
     producer = CompiledStepPlan(
         step_index=0,
         step_name="Unknown transform",
-        step_type="FunctionStep",
         axis_id="A01",
         step_scope_id="step-0",
         main_input_dependency=StepInputDependency.pipeline_start(),
@@ -485,7 +477,6 @@ def test_unproved_producer_transition_fails_compile_closed(tmp_path: Path) -> No
     consumer = CompiledStepPlan(
         step_index=1,
         step_name="Convert colour",
-        step_type="FunctionStep",
         axis_id="A01",
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=0,
@@ -527,7 +518,6 @@ def test_inherited_bindings_trace_exact_named_carrier_edges(
         plans[index] = CompiledStepPlan(
             step_index=index,
             step_name=f"Carrier step {index}",
-            step_type="FunctionStep",
             axis_id="A01",
             step_scope_id=f"step-{index}",
             main_input_dependency=(
@@ -581,7 +571,6 @@ def test_generic_main_flow_preservation_does_not_prove_carrier(
     producer = CompiledStepPlan(
         step_index=0,
         step_name="Generic flow producer",
-        step_type="FunctionStep",
         axis_id="A01",
         step_scope_id="step-0",
         main_input_dependency=StepInputDependency.pipeline_start(),
@@ -591,7 +580,6 @@ def test_generic_main_flow_preservation_does_not_prove_carrier(
     consumer = CompiledStepPlan(
         step_index=1,
         step_name="Convert colour",
-        step_type="FunctionStep",
         axis_id="A01",
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=0,
@@ -659,7 +647,6 @@ def test_unknown_routed_group_cannot_fall_back_to_all_primary_sources(
     plan = CompiledStepPlan(
         step_index=0,
         step_name="Unknown routed conversion",
-        step_type="FunctionStep",
         axis_id="A01",
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=CompiledSourceBindingPlan(

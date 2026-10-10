@@ -60,7 +60,6 @@ def _executor():
     invocation = invocation.with_artifact_input_edges(edges)
     plan = CompiledStepPlan(
         step_index=0,
-        step_type="FunctionStep",
         step_name="MetadataBinding",
         step_scope_id="metadata-binding",
         axis_id="A01",

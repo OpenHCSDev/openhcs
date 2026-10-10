@@ -177,7 +177,6 @@ def _compiler_contracts(
                 index: CompiledStepPlan(
                     step_index=index,
                     step_name=step.name,
-                    step_type=type(step).__name__,
                     axis_id="A01",
                 )
                 for index, step in enumerate(resolved_steps)

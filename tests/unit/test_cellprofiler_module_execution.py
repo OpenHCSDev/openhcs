@@ -9714,7 +9714,6 @@ def _pattern_group_runtime_for_output_memory(
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="pattern output",
-            step_type="FunctionStep",
             axis_id="A01",
             output_memory_type=output_memory_type,
         ),

@@ -1,7 +1,6 @@
 """Function-level artifact contract decorators for the pipeline compiler."""
 
 from collections.abc import Mapping, Sequence
-from dataclasses import replace
 from enum import Enum
 import inspect
 from types import UnionType
@@ -27,7 +26,6 @@ from openhcs.core.artifacts import (
     SpecialArtifactType,
 )
 from openhcs.core.callable_contract import (
-    CallableContract,
     CallableMetadata,
     FunctionStepExecutionScope,
     ImagePayloadConsumption,
@@ -263,11 +261,6 @@ def artifact_outputs(
     return decorator
 
 
-# Persisted user functions may use the original public spelling. Both names
-# intentionally expose the same decorator and therefore the same contract metadata.
-special_outputs = artifact_outputs
-
-
 def artifact_inputs(*input_specs: str | ArtifactSpec) -> Callable[[F], F]:
     """Declare named artifacts consumed by a processing function."""
 
@@ -471,90 +464,9 @@ def composed_image_payload(func: F) -> F:
     return func
 
 
-def image_payload_consumption_from_callable(
-    func: Callable,
-) -> ImagePayloadConsumption:
-    """Return how a callable consumes its primary image payload."""
-    return CallableMetadata.from_callable(func).image_payload_consumption
-
-
-def special_input_names_from_callable(func: Callable) -> tuple[str, ...]:
-    """Return normalized artifact-fed names under the compatibility API."""
-
-    return CallableMetadata.from_callable(func).artifact_input_parameter_names
-
-
-def special_input_parameters_from_callable(
-    func: Callable,
-) -> tuple[inspect.Parameter, ...]:
-    """Return special-input parameters in their canonical signature order."""
-
-    declared_names = special_input_names_from_callable(func)
-    signature = CallableMetadata.callable_signature(func)
-    missing = tuple(name for name in declared_names if name not in signature.parameters)
-    if missing:
-        raise ValueError(
-            f"Callable {func.__name__!r} declares absent special-input "
-            f"parameters {missing!r}."
-        )
-    ordered = tuple(
-        parameter
-        for parameter in signature.parameters.values()
-        if parameter.name in declared_names
-    )
-    if tuple(parameter.name for parameter in ordered) != declared_names:
-        raise ValueError(
-            f"Callable {func.__name__!r} special-input order {declared_names!r} "
-            "conflicts with its canonical signature order."
-        )
-    return tuple(
-        resolved_callable_parameter(func, parameter.name) for parameter in ordered
-    )
-
-
 def special_input_parameter_accepts_sequence(
     parameter: inspect.Parameter,
 ) -> bool:
     """Return whether one callable parameter declares an ordered value sequence."""
 
     return get_origin(parameter.annotation) in (Sequence, tuple, list)
-
-
-def validate_artifact_input_parameter_bindings(
-    func: Callable,
-    specs: Sequence[ArtifactSpec],
-    *,
-    adapter_manages_inputs: bool,
-) -> None:
-    """Compatibility wrapper for generic contract-owned binding validation."""
-
-    del adapter_manages_inputs
-    contract = CallableContract.from_callable(func)
-    contract = replace(
-        contract,
-        metadata=replace(contract.metadata, artifact_inputs=tuple(specs)),
-    )
-    contract.validate_artifact_input_parameter_bindings()
-
-
-def runtime_bound_parameter_names_from_callable(func: Callable) -> tuple[str, ...]:
-    """Return callable parameters declared as runtime-supplied."""
-    try:
-        namespace = vars(func)
-    except TypeError:
-        return ()
-    if FunctionContractAttribute.runtime_bound_parameters not in namespace:
-        return ()
-    declared = namespace[FunctionContractAttribute.runtime_bound_parameters]
-    if not isinstance(declared, tuple):
-        raise TypeError(
-            f"{func}.{FunctionContractAttribute.runtime_bound_parameters} "
-            "must be a tuple."
-        )
-    parameter_types = _runtime_parameter_declaration_types(
-        declared,
-        decorator_name="runtime_bound_parameters",
-    )
-    return tuple(
-        parameter_type.require_parameter_name() for parameter_type in parameter_types
-    )

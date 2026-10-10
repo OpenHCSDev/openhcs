@@ -393,7 +393,6 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
                 0: CompiledStepPlan(
                     step_index=0,
                     step_name=step.name,
-                    step_type="FunctionStep",
                     axis_id="A01",
                 ),
             },

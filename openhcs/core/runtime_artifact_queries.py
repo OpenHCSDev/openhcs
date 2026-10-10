@@ -13,7 +13,6 @@ from openhcs.core.artifacts import (
     ArtifactType,
     MeasurementsArtifactType,
     MeasurementBearingArtifactType,
-    RelationshipsArtifactType,
     SpatialGridArtifactType,
 )
 from openhcs.core.measurement_row_materialization import (
@@ -35,7 +34,6 @@ from openhcs.core.measurement_feature_queries import (
 from openhcs.core.process_local_cache import BoundedCache
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
-    MeasurementSubject,
     MeasurementScope,
     ObjectLabelMeasurementValues,
 )
@@ -56,9 +54,6 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
-)
-from openhcs.core.runtime_relationships import (
-    ObjectRelationship,
 )
 from openhcs.core.runtime_spatial_grid import (
     SpatialGrid,
@@ -210,42 +205,6 @@ def runtime_measurement_tables(
     return store_cache.store_value(cache_key, tables) if stored_tables_only else tables
 
 
-def runtime_measurement_tables_for_object(
-    context: RuntimeArtifactQueryContext,
-    object_name: str,
-) -> tuple[MeasurementTable, ...]:
-    """Return measurement tables whose subject is one object set."""
-    query = MeasurementObjectQuery(object_name)
-    return tuple(
-        table for table in runtime_measurement_tables(context) if query.matches(table)
-    )
-
-
-def runtime_measurement_tables_for_scope(
-    context: RuntimeArtifactQueryContext,
-    scope: MeasurementScope,
-    name: str | None = None,
-) -> tuple[MeasurementTable, ...]:
-    """Return measurement tables whose subject matches one semantic scope."""
-    query = MeasurementScopeQuery(scope, name)
-    return tuple(
-        table for table in runtime_measurement_tables(context) if query.matches(table)
-    )
-
-
-def runtime_relationship(
-    context: RuntimeArtifactQueryContext,
-    name: str,
-) -> ObjectRelationship:
-    """Return one relationship artifact as native OpenHCS relationship value."""
-    record = context.resolve(
-        name=name,
-        artifact_type=RelationshipsArtifactType,
-        purpose="relationship artifact",
-    )
-    return cast(ObjectRelationship, record.data)
-
-
 def runtime_spatial_grid(
     context: RuntimeArtifactQueryContext,
     name: str,
@@ -312,11 +271,6 @@ class MeasurementTableAxisProjection(MeasurementAxisValueProjection):
                 "projection was not constructed with one."
             )
         return target_table
-
-
-def measurement_table_slice_indices(table: MeasurementTable) -> set[int]:
-    """Return runtime slice indexes declared by one measurement table."""
-    return measurement_table_axis_values(table, MeasurementRowAxisField.SLICE_INDEX)
 
 
 @dataclass(frozen=True, slots=True)
@@ -768,9 +722,3 @@ class AxisFilteredMeasurementColumnarRows(MeasurementColumnarRowsView):
                 for column_name, column_values in columns.items()
             }
         self.validate_fields()
-
-
-def _label_planes_are_empty(label_planes: tuple[Any, ...]) -> bool:
-    import numpy as np
-
-    return all(not np.any(label_plane > 0) for label_plane in label_planes)

@@ -142,7 +142,6 @@ class FrozenWorkerContext(ProcessingContext):
                 0: CompiledStepPlan(
                     step_index=0,
                     step_name="Save",
-                    step_type="FunctionStep",
                     axis_id="A01",
                     compiled_function_pattern=compile_function_pattern(
                         lambda image: image, {}, {}
