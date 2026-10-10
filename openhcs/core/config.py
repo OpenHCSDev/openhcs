@@ -1075,6 +1075,17 @@ class FijiStreamingConfig(
     """Fiji viewer transport port; choose a free local port when streaming is enabled."""
 
 
+# The active domain's configuration sections join before the compilation-debug section, which stays last.
+from importlib import import_module  # noqa: E402
+
+from openhcs.core.config_sections import GlobalConfigSection  # noqa: E402
+
+for _domain_config_module in AxisFamily.active().config_modules:
+    import_module(_domain_config_module)
+for _section in GlobalConfigSection.declared_sections():
+    global_pipeline_config(_section)
+
+
 @abbreviation("compile_dbg")
 @global_pipeline_config(
     inherit_as_none=False,
@@ -1094,15 +1105,6 @@ class CompilationDebugConfig(AnnotatedDataclassValidationMixin, Enableable):
     """
 
 
-# The active domain's configuration sections join before field injection.
-from importlib import import_module  # noqa: E402
-
-from openhcs.core.config_sections import GlobalConfigSection  # noqa: E402
-
-for _domain_config_module in AxisFamily.active().config_modules:
-    import_module(_domain_config_module)
-for _section in GlobalConfigSection.declared_sections():
-    global_pipeline_config(_section)
 
 # Inject all accumulated fields at the end of module loading.
 # Use the ObjectState owner that registered the pending field declarations.

@@ -721,7 +721,7 @@ class ImageBrowserWidget(QWidget):
 
     def _create_instance_manager_panel(self):
         """Create the viewer instance manager panel using ZMQServerManagerWidget."""
-        from openhcs.core.config import get_all_streaming_ports
+        from openhcs.core.streaming_config_factory import get_all_streaming_ports
         from openhcs.pyqt_gui.widgets.shared.zmq_server_manager import (
             ZMQServerManagerWidget,
         )
@@ -749,7 +749,7 @@ class ImageBrowserWidget(QWidget):
         self._zmq_config = config
         if self.zmq_manager is None:
             return
-        from openhcs.core.config import get_all_streaming_ports
+        from openhcs.core.streaming_config_factory import get_all_streaming_ports
 
         self.zmq_manager.set_zmq_config(
             config,

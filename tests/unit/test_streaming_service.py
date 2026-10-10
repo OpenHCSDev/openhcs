@@ -34,8 +34,8 @@ from openhcs.core.config import (
     NapariStreamingConfig,
     PipelineConfig,
     StreamingConfig,
-    get_all_streaming_ports,
 )
+from openhcs.core.streaming_config_factory import get_all_streaming_ports
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,

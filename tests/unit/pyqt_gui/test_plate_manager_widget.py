@@ -2518,7 +2518,7 @@ def test_new_produced_row_selects_prepared_replay_without_overwriting_saved_or_l
         orchestrator = state.object_instance
         selected = DataclassFieldAccess.raw_init_values(orchestrator.pipeline_config)
         original = DataclassFieldAccess.raw_init_values(saved)
-        assert selected == {**original, "microscope": OpenHCSDatasetSource}
+        assert selected == {**original, "dataset_source": OpenHCSDatasetSource}
         assert orchestrator.get_effective_config().dataset_source is OpenHCSDatasetSource
         assert output_root in root_orchestrator_scope_ids(widget._ensure_root_state())
 

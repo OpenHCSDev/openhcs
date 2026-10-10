@@ -53,7 +53,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 
 
 class FakeHandler:
-    microscope_type = "openhcsdata"
+    source_name = "openhcsdata"
 
     def get_primary_backend(self, plate_path, filemanager):
         del plate_path, filemanager
