@@ -83,7 +83,7 @@ The guards pass with zero exceptions; `agent/ui_bridge_actions.py` is deleted; t
 
 ## Outcome and corrections
 
-Measured against `66a0b30a0` (Python only): production −12471 +8607, tests −12263 +7573 (the MCP contract fixture is 589 −/725 + of the test figure). Guards 11/11 (7 U1, 4 G8).
+Measured against `origin/main` (`89b8fdbff`, Python plus the MCP contract fixture): production −12471 +8607, tests −12278 +7588. Guards 11/11 (7 U1, 4 G8). Merging G2 (#1185) folded its `partition` plate filter into `component_filters`.
 
 Corrections to the plan above:
 
