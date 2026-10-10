@@ -143,7 +143,7 @@ def test_initial_coordinates_stay_captured_while_plan_selectors_follow_mutation(
         Microscopy.Site
     )
     assert loaded.axis_scope.axis_id == "B02"
-    assert loaded.axis_component == "site"
+    assert loaded.axis_component is Microscopy.Site
     assert loaded.fixed_component_values == (
         (Microscopy.ZIndex, "3"),
         (Microscopy.Timepoint, "2"),

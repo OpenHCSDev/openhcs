@@ -16,7 +16,6 @@ from abc import ABC, abstractmethod
 from typing import ClassVar, TypeGuard
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import AnnotationChoices, to_jsonable
 
 
 class AxisDeclarationMeta(AutoRegisterMeta):
@@ -183,7 +182,16 @@ class OrdinalValued(AxisValueKind):
 
 
 class GroupingDeclaration(ABC, metaclass=AxisDeclarationMeta):
-    """What a step's ``group_by`` holds: one axis, or :class:`Ungrouped`."""
+    """What a step's ``group_by`` holds: one axis, or :class:`Ungrouped`.
+
+    Declarations register under their boundary ``name``, which is therefore
+    also their JSON spelling. Boundaries decode names through the active family
+    (``AxisFamily.named``), never through this registry: two families may
+    declare the same name.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
 
     name: ClassVar[str]
 
@@ -196,11 +204,7 @@ class GroupingDeclaration(ABC, metaclass=AxisDeclarationMeta):
 class Axis(GroupingDeclaration):
     """One declared axis. Subclasses are nested in an :class:`AxisFamily`."""
 
-    __registry_key__ = "axis_key"
-    __skip_if_no_key__ = True
-
     name: ClassVar[str]
-    axis_key: ClassVar[str | None] = None
     family: ClassVar[type[AxisFamily]]
     filename_prefix: ClassVar[str | None] = None
     """Token before this axis's value in plane filenames (variable axes)."""
@@ -209,10 +213,6 @@ class Axis(GroupingDeclaration):
 
     sort_key: ClassVar  # supplied by the axis's AxisValueKind
     normalize_value: ClassVar  # supplied by the axis's AxisValueKind
-
-    def __init_subclass__(cls, **kwargs: object) -> None:
-        super().__init_subclass__(**kwargs)
-        cls.axis_key = f"{cls.__module__}:{cls.__qualname__}"
 
     @classmethod
     def _validate_declaration(cls) -> None:
@@ -511,53 +511,6 @@ class AxisRoleKeyedStrategyMixin:
         return cls.strategy_type_for_axis(axis)()
 
 
-# ---------------------------------------------------------------------------
-# Choice sets for configuration fields (form and validation boundary)
-# ---------------------------------------------------------------------------
-
-
-class _AxisDeclarationChoices(AnnotationChoices):
-    def label(self, choice: object) -> str:
-        return choice.name  # type: ignore[attr-defined]
-
-    def __eq__(self, other: object) -> bool:
-        return type(self) is type(other)
-
-    def __hash__(self) -> int:
-        return hash(type(self))
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}()"
-
-
-class AxisChoices(_AxisDeclarationChoices):
-    """A field holding any axis of the active family."""
-
-    def choices(self) -> tuple[object, ...]:
-        return AxisFamily.active().axes
-
-
-class VariableAxisChoices(_AxisDeclarationChoices):
-    """A field holding variable axes of the active family."""
-
-    def choices(self) -> tuple[object, ...]:
-        return AxisFamily.active().variable_axes()
-
-
-class GroupingChoices(_AxisDeclarationChoices):
-    """A field holding a grouping declaration of the active family."""
-
-    def choices(self) -> tuple[object, ...]:
-        return AxisFamily.active().grouping_choices()
-
-
-@to_jsonable.register(AxisDeclarationMeta)
-def _jsonable_axis_declaration(value: AxisDeclarationMeta) -> str:
-    """Axes and grouping declarations cross JSON boundaries by declared name."""
-
-    return value.name
-
-
 def _declared_roles(axes: tuple[type[Axis], ...]) -> tuple[type[AxisRole], ...]:
     roles: list[type[AxisRole]] = []
     for axis in axes:
@@ -575,7 +528,6 @@ def _declared_roles(axes: tuple[type[Axis], ...]) -> tuple[type[AxisRole], ...]:
 __all__ = [
     "AtMostOne",
     "Axis",
-    "AxisChoices",
     "AxisDeclarationMeta",
     "AxisFamily",
     "AxisFamilyNotActive",
@@ -587,7 +539,6 @@ __all__ = [
     "DefaultGroupBy",
     "DefaultVariable",
     "ExactlyOne",
-    "GroupingChoices",
     "GroupingDeclaration",
     "LabelValued",
     "Many",
@@ -597,7 +548,6 @@ __all__ = [
     "TileAxis",
     "TimeAxis",
     "Ungrouped",
-    "VariableAxisChoices",
     "is_axis",
     "is_grouping_declaration",
 ]

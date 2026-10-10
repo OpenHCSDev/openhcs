@@ -98,7 +98,7 @@ def test_raw_inspection_retains_folder_z_and_never_initializes(tmp_path: Path):
     assert result.image_files.count == result.parse_summary.parsed_file_count == 4
     assert result.pixel_size == 0.5
     z = next(
-        item for item in result.components if item.component is Microscopy.ZIndex
+        item for item in result.components if item.component == Microscopy.ZIndex.name
     )
     assert z.count == 2
     assert {

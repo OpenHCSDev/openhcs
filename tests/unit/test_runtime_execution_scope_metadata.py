@@ -39,7 +39,7 @@ def test_scope_rejects_conflicting_axis_and_fixed_identity(component, wrong):
         "A01", component=Microscopy.Channel, value="2",
         fixed_component_values=((Microscopy.Site, "3"), (Microscopy.Timepoint, "4")),
     )
-    metadata = {component.value: wrong, "custom": "retained"}
+    metadata = {component.name: wrong, "custom": "retained"}
     untouched = dict(metadata)
     with pytest.raises(ValueError, match="Runtime execution scope conflicts"):
         scope.source_component_metadata(metadata)

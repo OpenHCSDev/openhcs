@@ -18,18 +18,17 @@ from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
 from polystore import config as _polystore_config
 from openhcs.constants import Microscope
 from openhcs.constants.constants import Backend
+from openhcs.core.axis_boundaries import GroupingChoices, VariableAxisChoices
 from openhcs.core.axes import (
     Axis,
     AxisFamily,
     AxisRole,
     ColourAxis,
-    GroupingChoices,
     GroupingDeclaration,
     PartitionAxis,
     StackAxis,
     TileAxis,
     TimeAxis,
-    VariableAxisChoices,
 )
 from metaclass_registry import AutoRegisterMeta
 from openhcs.constants.input_source import InputSource

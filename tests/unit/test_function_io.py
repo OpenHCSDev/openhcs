@@ -380,7 +380,7 @@ def test_object_only_source_anchors_match_compiled_pattern_after_loading(
         "A01_s{iii}_w1_z001_t001.tif",
         filemanager,
         Backend.MEMORY.value,
-        ["site"],
+        [Microscopy.Site],
     ) == ["A01_s001_w1_z001_t001.tif"]
 
 

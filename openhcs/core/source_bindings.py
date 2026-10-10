@@ -47,7 +47,8 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.xdg_paths import get_openhcs_cache_dir
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.axes import Axis, AxisChoices, AxisFamily, GroupingDeclaration
+from openhcs.core.axis_boundaries import AxisChoices
+from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
 
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract

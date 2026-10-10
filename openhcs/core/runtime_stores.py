@@ -47,7 +47,7 @@ from openhcs.core.source_matching import (
     semantic_source_metadata_value,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.axes import Axis, PartitionAxis
+from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
 
 if TYPE_CHECKING:
     from openhcs.processing.materialization.core import Output
@@ -971,7 +971,8 @@ class RuntimeArtifactAddress:
                 "RuntimeArtifactAddress.key.scope.fixed_component_values must be a "
                 "sequence."
             )
-        fixed_values: list[tuple[str, str]] = []
+        family = AxisFamily.active()
+        fixed_values: list[tuple[type[Axis], str]] = []
         for item in fixed_component_values:
             if (
                 not isinstance(item, Sequence)
@@ -982,7 +983,7 @@ class RuntimeArtifactAddress:
                     "Runtime artifact fixed component coordinates must be "
                     "two-item sequences."
                 )
-            fixed_values.append((str(item[0]), str(item[1])))
+            fixed_values.append((family.named(str(item[0])), str(item[1])))
         value_type = data.get("value_type")
         return cls(
             key=ArtifactKey(
@@ -990,7 +991,8 @@ class RuntimeArtifactAddress:
                 artifact_type=ArtifactType.coerce(str(key["artifact_type"])),
                 scope=RuntimeExecutionAxisScope.from_raw(
                     str(scope["axis_id"]),
-                    component=component,
+                    component=None if component is None else family.named(str(component)),
+
                     value=None if value is None else str(value),
                     fixed_component_values=tuple(fixed_values),
                 ),

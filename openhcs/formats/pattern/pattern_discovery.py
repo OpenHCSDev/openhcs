@@ -71,6 +71,10 @@ class PatternDiscoveryEngine:
         variable_components: Optional[Sequence[type[Axis]]] = None,
     ) -> List[str]:
         """Get a list of filenames matching a pattern in a directory."""
+        variable_axes = tuple(
+            AxisFamily.active().require(component)
+            for component in variable_components or ()
+        )
         directory_path = str(directory)  # Keep as string for FileManager consistency
         if not self.filemanager.is_dir(directory_path, backend):
             raise FileNotFoundError(f"Directory not found: {directory_path}")
@@ -119,7 +123,7 @@ class PatternDiscoveryEngine:
 
             # Check if file matches pattern structure
             if self._matches_pattern_structure(
-                file_metadata, pattern_metadata, variable_components or []
+                file_metadata, pattern_metadata, variable_axes
             ):
                 matching_files.append(filename)
 
