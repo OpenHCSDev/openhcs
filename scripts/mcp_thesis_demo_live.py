@@ -1225,9 +1225,9 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     LazyStepMaterializationConfig,
     LazyStepWellFilterConfig,
-    NapariVariableSizeHandling,
     PipelineConfig,
 )
+from openhcs.runtime.viewer_display import NapariVariableSizeHandling
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,

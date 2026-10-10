@@ -1530,8 +1530,8 @@ def _viewer_streaming_summaries(
         summaries.append(
             ViewerStreamingPlanSummary(
                 config_key=str(config_key),
-                viewer_type=config.viewer_type,
-                backend=str(config.backend.value),
+                viewer_type=config.viewer_family.viewer_type(),
+                backend=str(config.viewer_family.backend.value),
                 effective_config=effective_config,
             )
         )

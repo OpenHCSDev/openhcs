@@ -6454,7 +6454,7 @@
       "type": "object"
      },
      "NapariDimensionMode": {
-      "description": "How component values are placed in Napari image layers.",
+      "description": "Napari places each axis on a stacked dims slider or in separate layers.",
       "enum": [
        "layer",
        "stack"

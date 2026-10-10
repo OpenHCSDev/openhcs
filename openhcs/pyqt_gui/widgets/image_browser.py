@@ -1292,14 +1292,14 @@ class ImageBrowserWidget(QWidget):
                 config=config,
                 status_callback=self._status_update_signal.emit,
                 error_callback=lambda e: self._show_streaming_error(
-                    config.display_name,
+                    config.viewer_family.display_name,
                     e,
                 ),
                 filenames=tuple(filenames),
                 read_backend=read_backend,
             )
         )
-        logger.info(f"Streaming {len(filenames)} images to {config.display_name}...")
+        logger.info(f"Streaming {len(filenames)} images to {config.viewer_family.display_name}...")
 
     def _show_streaming_error(self, viewer_name: str, error_msg: str):
         """Show streaming error in UI thread."""
@@ -1326,14 +1326,14 @@ class ImageBrowserWidget(QWidget):
                 config=config,
                 status_callback=self._status_update_signal.emit,
                 error_callback=lambda e: self._show_streaming_error(
-                    config.display_name,
+                    config.viewer_family.display_name,
                     e,
                 ),
                 roi_filenames=tuple(roi_filenames),
             )
         )
         logger.info(
-            f"Streaming {len(roi_filenames)} ROI files to {config.display_name}..."
+            f"Streaming {len(roi_filenames)} ROI files to {config.viewer_family.display_name}..."
         )
 
     def cleanup(self):

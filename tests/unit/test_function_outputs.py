@@ -86,7 +86,6 @@ from openhcs.core.steps.function_outputs import (
     StreamOutputBatch,
     finalize_function_step_outputs,
 )
-from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     StreamingViewerSurface,
@@ -110,6 +109,8 @@ from openhcs.processing.materialization import (
 )
 from openhcs.core.axes import Axis, AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.unit.viewer_axes_fixture import STREAM_AXES
+from openhcs.core.streaming_config_declarations import NapariViewer
 from openhcs.core.payload_axes import PayloadAxes
 
 
@@ -254,7 +255,7 @@ class FileManagerStub:
 
 
 class StreamingConfigStub(ViewerDisplayConfigABC):
-    backend = SimpleNamespace(value="napari_stream")
+    viewer_family = NapariViewer
     COMPONENT_ORDER = ("well", "site", "channel", "z_index", "timepoint")
     host = "127.0.0.1"
     port = 5555
@@ -264,7 +265,7 @@ class StreamingConfigStub(ViewerDisplayConfigABC):
         return {component: "stack" for component in self.COMPONENT_ORDER}
 
     def display_payload_extra(self):
-        return {}
+        return {"declared_axes": STREAM_AXES.to_wire()}
 
     def streaming_viewer_surface(self, context):
         return StreamingViewerSurface(
@@ -275,7 +276,7 @@ class StreamingConfigStub(ViewerDisplayConfigABC):
                     transport_mode=self.transport_mode,
                 ),
                 persistent=False,
-                viewer_type=ViewerType.NAPARI,
+                viewer_family=NapariViewer,
             ),
             display_config=self,
             source=ViewerStreamSourceIdentity(

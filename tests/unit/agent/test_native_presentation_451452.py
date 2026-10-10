@@ -252,9 +252,9 @@ def native_server():
 def test_color_native_action_preserves_units_and_has_one_reply_and_route_owner():
     import numpy as np
     from openhcs.runtime.napari_viewer_server import (
-        NapariControlMessageAction,
-        NapariMountedRouteControlMessageAction,
-        NapariPresentationControlMessageAction,
+        NapariControlAction,
+        NapariMountedRouteControlAction,
+        NapariPresentationControlAction,
     )
     from openhcs.runtime.viewer_protocol import (
         OpenHCSViewerControlMessageType,
@@ -263,11 +263,11 @@ def test_color_native_action_preserves_units_and_has_one_reply_and_route_owner()
     )
 
     server, _ = native_server()
-    action = NapariControlMessageAction.for_message_type(
+    action = NapariControlAction.for_message_type(
         OpenHCSViewerControlMessageType.IMAGE_COLOR.value
     )
-    assert isinstance(action, NapariMountedRouteControlMessageAction)
-    assert isinstance(action, NapariPresentationControlMessageAction)
+    assert isinstance(action, NapariMountedRouteControlAction)
+    assert isinstance(action, NapariPresentationControlAction)
     originals = [layer.data.copy() for layer in server.viewer.layers]
     camera = (server.viewer.camera.center, server.viewer.camera.zoom)
     for route, colormap in (("C1", "blue"), ("C3", "green")):
@@ -341,7 +341,7 @@ def test_color_native_action_preserves_units_and_has_one_reply_and_route_owner()
 
 
 def test_window_action_reads_actual_state_focuses_only_its_window_and_bounds_geometry():
-    from openhcs.runtime.napari_viewer_server import NapariControlMessageAction
+    from openhcs.runtime.napari_viewer_server import NapariControlAction
     from openhcs.runtime.viewer_protocol import (
         OpenHCSViewerControlMessageType,
         ViewerNativeWindowControlOptions,
@@ -351,7 +351,7 @@ def test_window_action_reads_actual_state_focuses_only_its_window_and_bounds_geo
 
     server, window = native_server()
     other = NativeWindowFixture(x=900)
-    action = NapariControlMessageAction.for_message_type(
+    action = NapariControlAction.for_message_type(
         OpenHCSViewerControlMessageType.WINDOW_PRESENTATION.value
     )
     before = action.handle(server, {"payload": ViewerNativeWindowControlOptions()})
@@ -385,8 +385,8 @@ def test_geometry_rejects_invalid_declarations(width):
 
 def test_independent_new_native_capability_composes_real_cooperative_mro():
     from openhcs.runtime.napari_viewer_server import (
-        NapariControlMessageAction,
-        NapariImageColorControlMessageAction,
+        NapariControlAction,
+        NapariImageColorControlAction,
     )
     from openhcs.runtime.viewer_protocol import (
         ViewerImageColorControlOptions,
@@ -403,13 +403,13 @@ def test_independent_new_native_capability_composes_real_cooperative_mro():
             return result
 
     class NewColorDeclaration(
-        IndependentReadbackCapability, NapariImageColorControlMessageAction
+        IndependentReadbackCapability, NapariImageColorControlAction
     ):
         message_type = "source-test-independent-color"
 
     server, _ = native_server()
     try:
-        action = NapariControlMessageAction.for_message_type(
+        action = NapariControlAction.for_message_type(
             NewColorDeclaration.message_type
         )
         reply = action.handle(
@@ -425,6 +425,6 @@ def test_independent_new_native_capability_composes_real_cooperative_mro():
         assert calls == ["before", ("after", "blue")]
         assert NewColorDeclaration.__mro__.index(
             IndependentReadbackCapability
-        ) < NewColorDeclaration.__mro__.index(NapariImageColorControlMessageAction)
+        ) < NewColorDeclaration.__mro__.index(NapariImageColorControlAction)
     finally:
-        NapariControlMessageAction.__registry__.pop(NewColorDeclaration.message_type)
+        NapariControlAction._registry.pop(NewColorDeclaration.message_type)

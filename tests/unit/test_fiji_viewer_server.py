@@ -22,13 +22,10 @@ from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
     FijiMacroExecutionResponse,
 )
+from openhcs.runtime.viewer_display import FijiDisplaySettings
 from openhcs.runtime.fiji_viewer_server import (
     FijiBatchSettlementState,
     FijiBatchWireParser,
-    FijiClearStateControlPlan,
-    FijiControlMessageAuthority,
-    FijiControlMessagePlan,
-    FijiControlRequestContext,
     FijiDimensionAxis,
     FijiHyperstackCoordinates,
     FijiImageIntensityRange,
@@ -39,7 +36,6 @@ from openhcs.runtime.fiji_viewer_server import (
     FijiPayloadLocalPlaneExpander,
     FijiPlaneGeometry,
     FijiRoiPayloadHandler,
-    FijiSettleControlPlan,
     FijiSharedMemoryItemCopier,
     FijiStackSliceLabelBuilder,
     FijiViewerServer,
@@ -52,18 +48,34 @@ from openhcs.runtime.napari_viewer_server import (
     PayloadMap,
 )
 from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentAxisSemanticsFactory,
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
     ViewerObjectDisplayConfigInput,
 )
 from openhcs.runtime.viewer_protocol import (
-    OpenHCSViewerControlMessageType,
     ViewerControlMessageType,
     ViewerControlResponse,
     ViewerSettlePhase,
     ViewerSettleProgress,
 )
+from tests.unit.viewer_axes_fixture import STREAM_AXES
+
+def fiji_control_server(*, settlement=None, ij=None, process_launch=None):
+    """A Fiji server with only the state its control actions read."""
+
+    server = object.__new__(FijiViewerServer)
+    server.ij = ij
+    server.windows = FijiWindowRegistry()
+    server.batch_processor = SimpleNamespace(
+        settlement=settlement or FijiBatchSettlementState()
+    )
+    server.launch_config = SimpleNamespace(
+        process_launch=process_launch or ViewerProcessLaunchConfig()
+    )
+    server._shutdown_requested = False
+    return server
+
 
 PRODUCER_IDENTITY = {
     "origin": "pipeline",
@@ -85,6 +97,7 @@ def _component_value_domain(payload: dict) -> ViewerComponentValueDomainPayload:
     return ViewerComponentValueDomainPayload.from_wire_mapping(
         payload,
         context="test Fiji component value domain",
+        declared_axes=STREAM_AXES,
     )
 
 
@@ -111,21 +124,17 @@ class _FakeImagePlus:
         self.visible = False
 
 
-def test_fiji_display_config_rehydrates_its_own_wire_payload() -> None:
-    default_config = FijiDisplayConfig()
-    config = FijiDisplayConfig.from_display_payload(
-        {
-            "component_modes": default_config.component_modes(),
-            "component_order": list(default_config.COMPONENT_ORDER),
-            "lut": "Fire",
-            "auto_contrast": False,
-        }
-    )
+def test_fiji_viewer_reads_its_settings_from_the_streamed_display_config() -> None:
+    streamed = FijiDisplayConfig(lut="Fire", auto_contrast=False)
+    payload = {
+        "component_modes": streamed.component_modes(),
+        "component_order": list(streamed.COMPONENT_ORDER),
+        **streamed.display_payload_extra(),
+    }
 
-    assert isinstance(config, FijiDisplayConfig)
-    assert config.lut == "Fire"
-    assert config.auto_contrast is False
-    assert config.component_modes() == default_config.component_modes()
+    assert FijiDisplaySettings.from_display_payload(payload) == FijiDisplaySettings(
+        lut="Fire", auto_contrast=False
+    )
 
 
 def test_fiji_runtime_mode_follows_inherited_streaming_enablement() -> None:
@@ -214,57 +223,12 @@ def test_fiji_server_stop_closes_transport_before_owned_jvm(monkeypatch) -> None
     assert server.ij is None
 
 
-def test_fiji_control_dispatch_registry_is_module_local_and_eager() -> None:
-    registry = FijiControlMessagePlan.__registry__
-
-    assert type(registry) is dict
-    assert (
-        registry[ViewerControlMessageType.CLEAR_STATE.value]
-        is FijiClearStateControlPlan
-    )
-    assert registry[ViewerControlMessageType.SETTLE.value] is FijiSettleControlPlan
 
 
-def test_fiji_process_launch_control_reports_server_owned_declaration() -> None:
-    active = ViewerProcessLaunchConfig(listen_host="*")
-    response = FijiControlMessageAuthority(
-        FijiControlRequestContext(
-            FijiWindowRegistry(), object(), FijiBatchSettlementState(), active
-        )
-    ).response_for({"type": OpenHCSViewerControlMessageType.PROCESS_LAUNCH.value})
-    wire = response.to_wire_mapping()
-    assert wire["status"] == "success"
-    assert ViewerProcessLaunchConfig.from_wire_mapping(wire["process_launch"]) == active
 
 
-def test_fiji_intensity_window_control_fails_closed_as_unsupported() -> None:
-    response = FijiControlMessageAuthority(
-        FijiControlRequestContext(
-            FijiWindowRegistry(),
-            object(),
-            FijiBatchSettlementState(),
-        )
-    ).response_for({"type": ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value})
-
-    wire_response = response.to_wire_mapping()
-    assert wire_response["status"] == "error"
-    assert "supported only by Napari" in wire_response["message"]
 
 
-def test_fiji_settlement_reports_typed_terminal_progress() -> None:
-    response = FijiControlMessageAuthority(
-        FijiControlRequestContext(
-            FijiWindowRegistry(),
-            object(),
-            FijiBatchSettlementState(),
-        )
-    ).response_for({"type": ViewerControlMessageType.SETTLE.value})
-    wire_response = ViewerControlResponse(response.to_wire_mapping())
-
-    assert wire_response.succeeded()
-    assert ViewerSettleProgress.from_response(wire_response) == (
-        ViewerSettleProgress.complete()
-    )
 
 
 def test_fiji_settlement_tracks_queued_and_bounded_native_work() -> None:
@@ -272,12 +236,12 @@ def test_fiji_settlement_tracks_queued_and_bounded_native_work() -> None:
 
     settlement.queue_items(2)
     settlement.queue_items(3)
-    queued_response = FijiSettleControlPlan().response(
-        FijiControlRequestContext(FijiWindowRegistry(), object(), settlement),
-        None,
-    )
     queued = ViewerSettleProgress.from_response(
-        ViewerControlResponse(queued_response.to_wire_mapping())
+        ViewerControlResponse(
+            fiji_control_server(settlement=settlement).handle_control_message(
+                {"type": ViewerControlMessageType.SETTLE.value}
+            )
+        )
     )
 
     assert queued.phase is ViewerSettlePhase.RUNNING
@@ -318,12 +282,11 @@ def test_fiji_clear_state_resets_terminal_settlement_for_next_run() -> None:
     route = settlement.begin_pending_update(1)
     settlement.fail_active_update(route, ValueError("invalid Fiji ROI"))
 
-    response = FijiClearStateControlPlan().response(
-        FijiControlRequestContext(FijiWindowRegistry(), object(), settlement),
-        None,
+    response = fiji_control_server(settlement=settlement).handle_control_message(
+        {"type": ViewerControlMessageType.CLEAR_STATE.value}
     )
 
-    assert response.header.status.value == "success"
+    assert response["status"] == "success"
     assert settlement.progress() == ViewerSettleProgress.complete()
     assert settlement.failure_message() is None
 
@@ -363,22 +326,6 @@ def test_fiji_window_registry_closes_replaced_hyperstack() -> None:
     assert registry.open_hyperstack("A14") is new_image_plus
 
 
-def test_fiji_state_control_message_fails_loudly_until_projector_exists() -> None:
-    response = FijiControlMessageAuthority(
-        FijiControlRequestContext(
-            FijiWindowRegistry(),
-            object(),
-            FijiBatchSettlementState(),
-        )
-    ).response_for({"type": ViewerControlMessageType.STATE.value})
-
-    wire_response = response.to_wire_mapping()
-
-    assert wire_response["status"] == "error"
-    assert wire_response["type"] == "state_ack"
-    assert (
-        "Fiji live viewer state polling is not implemented" in wire_response["message"]
-    )
 
 
 def test_fiji_macro_control_executes_inside_managed_imagej_runtime(tmp_path) -> None:
@@ -406,22 +353,16 @@ def test_fiji_macro_control_executes_inside_managed_imagej_runtime(tmp_path) -> 
         macro_variables={"Threshold": "0.25"},
         input_images=(np.zeros((4, 5), dtype=np.uint8),),
     )
-    response = FijiControlMessageAuthority(
-        FijiControlRequestContext(
-            FijiWindowRegistry(),
-            FakeImageJ(),
-            FijiBatchSettlementState(),
-        )
-    ).response_for(
+    response = fiji_control_server(ij=FakeImageJ()).handle_control_message(
         {
             "type": FijiMacroExecutionRequest.message_type,
             "payload": request,
         }
     )
 
-    assert response.header.status.value == "success"
-    assert isinstance(response.payload, FijiMacroExecutionResponse)
-    assert len(response.payload.outputs) == 1
+    assert response["status"] == "success"
+    assert isinstance(response["payload"], FijiMacroExecutionResponse)
+    assert len(response["payload"].outputs) == 1
 
 
 def test_fiji_batch_message_normalizes_wire_items() -> None:
@@ -442,6 +383,7 @@ def test_fiji_batch_message_normalizes_wire_items() -> None:
             "display_config": {
                 "component_modes": default_config.component_modes(),
                 "component_order": list(default_config.COMPONENT_ORDER),
+                "declared_axes": STREAM_AXES.to_wire(),
                 "lut": "Grays",
                 "auto_contrast": True,
             },
@@ -488,6 +430,7 @@ def test_fiji_batch_message_preserves_scoped_wire_component_layout() -> None:
             "display_config": {
                 "component_modes": component_modes,
                 "component_order": list(component_order),
+                "declared_axes": STREAM_AXES.to_wire(),
                 "lut": "Grays",
                 "auto_contrast": True,
             },
@@ -502,11 +445,9 @@ def test_fiji_batch_message_preserves_scoped_wire_component_layout() -> None:
         }
     ).batch_message()
 
-    assert isinstance(batch.viewer_display_config, FijiDisplayConfig)
+    assert batch.viewer_display_config == FijiDisplaySettings()
     assert batch.layout.component_order == component_order
-    assert batch.layout.component_modes == {
-        component: component_modes[component] for component in component_order
-    }
+    assert batch.layout.component_modes == component_modes
 
 
 def test_fiji_shared_memory_copy_leaves_sender_allocation_owned(monkeypatch) -> None:
@@ -579,7 +520,7 @@ def test_fiji_window_item_projection_preserves_nominal_items() -> None:
 
     projection = FijiWindowItemProjection.from_items(
         items,
-        ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerComponentAxisSemanticsFactory.from_display_config(
             ViewerObjectDisplayConfigInput(FijiDisplayConfig()),
             _component_value_domain(
                 {
@@ -595,13 +536,13 @@ def test_fiji_window_item_projection_preserves_nominal_items() -> None:
     window_items = next(iter(projection.windows.values()))
 
     assert window_items == items
-    assert projection.coordinate_components.channel == ["channel"]
-    assert projection.coordinate_components.z_axis_components == ["z_index"]
-    assert projection.coordinate_components.frame == [
+    assert projection.coordinate_components.channel == ("channel",)
+    assert projection.coordinate_components.z_axis_components == ("z_index",)
+    assert projection.coordinate_components.frame == tuple(
         component
         for component in AxisFamily.active().names()
         if component in {"site", "well", "timepoint"}
-    ]
+    )
 
 
 def test_payload_local_site_axis_projects_exactly_across_fiji_and_napari() -> None:
@@ -635,7 +576,7 @@ def test_payload_local_site_axis_projects_exactly_across_fiji_and_napari() -> No
         }
     )
 
-    fiji_semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+    fiji_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerObjectDisplayConfigInput(FijiDisplayConfig()),
         component_domain,
     )
@@ -662,7 +603,7 @@ def test_payload_local_site_axis_projects_exactly_across_fiji_and_napari() -> No
         for item in projected_items
     ] == ["C1_Z0_T1_0_A14", "C1_Z0_T2_0_A14"]
 
-    napari_semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+    napari_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerObjectDisplayConfigInput(NapariDisplayConfig()),
         component_domain,
     )
@@ -694,7 +635,7 @@ def test_fiji_payload_local_plane_axis_rejects_coordinate_count_mismatch() -> No
     )
 
     with pytest.raises(ValueError, match="coordinate count does not match"):
-        FijiPayloadLocalPlaneExpander.expand_item(item)
+        FijiPayloadLocalPlaneExpander(STREAM_AXES).expand_item(item)
 
 
 def test_fiji_payload_local_plane_axis_rejects_malformed_declarations() -> None:
@@ -715,13 +656,13 @@ def test_fiji_payload_local_plane_axis_rejects_malformed_declarations() -> None:
     }
 
     with pytest.raises(ValueError, match="exactly one component declaration"):
-        FijiPayloadLocalPlaneExpander.expand_item(FijiWireItem.from_payload(payload))
+        FijiPayloadLocalPlaneExpander(STREAM_AXES).expand_item(FijiWireItem.from_payload(payload))
 
     payload_without_axis = dict(payload)
     payload_without_axis["plane_component_values"] = {"site": [1, 2]}
     payload_without_axis.pop("plane_axis")
     with pytest.raises(ValueError, match="requires plane_axis"):
-        FijiPayloadLocalPlaneExpander.expand_item(
+        FijiPayloadLocalPlaneExpander(STREAM_AXES).expand_item(
             FijiWireItem.from_payload(payload_without_axis)
         )
 
@@ -999,7 +940,7 @@ def test_fiji_roi_handler_converts_and_adds_bounded_native_work_units(
     )
 
     display_config = FijiDisplayConfig()
-    semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+    semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerObjectDisplayConfigInput(display_config),
         _component_value_domain(
             {

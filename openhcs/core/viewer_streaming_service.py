@@ -208,19 +208,19 @@ class StreamingViewerLifecycle:
         from openhcs.runtime.viewer_protocol import (
             ViewerGraphicalSessionUnavailableError,
             ViewerLaunchContext,
-            ViewerProcessLaunchAdmission,
+            ViewerProcessLaunchReuseCheck,
         )
 
         resolved_launch_context = (
             launch_context or ViewerLaunchContext.inherited_graphical_session()
         )
         registry = GlobalQueueTrackerRegistry()
-        registry.get_or_create_tracker(config.port, config.viewer_type.wire_value)
+        registry.get_or_create_tracker(config.port, config.viewer_family.wire_value)
         manager = ViewerStateManager.get_instance()
 
         if fresh:
             manager.release_viewer(
-                config.viewer_type.wire_value,
+                config.viewer_family.wire_value,
                 config.port,
                 stop=True,
                 force=True,
@@ -242,12 +242,12 @@ class StreamingViewerLifecycle:
 
         try:
             viewer, _created = get_or_create_viewer(
-                viewer_type=config.viewer_type.wire_value,
+                viewer_type=config.viewer_family.wire_value,
                 port=config.port,
                 factory=create_viewer,
                 wait_for_ready=True,
                 ready_timeout=ready_timeout,
-                reuse_admission=ViewerProcessLaunchAdmission(
+                reuse_admission=ViewerProcessLaunchReuseCheck(
                     config.viewer_process_launch_config()
                 ),
             )
@@ -580,14 +580,14 @@ class StreamingService:
         # Update queued images for UI display via manager. The QueueTracker
         # will later update counts precisely as images are sent/acked.
         manager.update_queued_images(
-            config.viewer_type.wire_value,
+            config.viewer_family.wire_value,
             viewer.port,
             num_items,
         )
 
         if not is_already_running:
             logger.info(
-                f"Waiting for {config.display_name} viewer on port {viewer.port} to become ready"
+                f"Waiting for {config.viewer_family.display_name} viewer on port {viewer.port} to become ready"
             )
 
             if not viewer.runtime_endpoint.wait_ready(
@@ -596,15 +596,15 @@ class StreamingService:
             ):
                 # Clear queued count for UI if startup failed
                 manager.update_queued_images(
-                    config.viewer_type.wire_value,
+                    config.viewer_family.wire_value,
                     viewer.port,
                     0,
                 )
                 raise RuntimeError(
-                    f"{config.display_name} viewer on port {viewer.port} failed to become ready"
+                    f"{config.viewer_family.display_name} viewer on port {viewer.port} failed to become ready"
                 )
 
-            logger.info(f"{config.display_name} viewer on port {viewer.port} is ready")
+            logger.info(f"{config.viewer_family.display_name} viewer on port {viewer.port} is ready")
 
     @staticmethod
     def _require_viewer_settled(request: ViewerStreamingContext) -> None:
@@ -614,7 +614,7 @@ class StreamingService:
             return
         raise RuntimeError(
             "Failed to settle streamed updates for "
-            f"{request.config.display_name} viewer on port {request.viewer.port}."
+            f"{request.config.viewer_family.display_name} viewer on port {request.viewer.port}."
         )
 
     def stream_images_async(
@@ -625,7 +625,7 @@ class StreamingService:
 
         Uses chunked streaming to prevent file descriptor exhaustion.
         """
-        display_name = request.config.display_name
+        display_name = request.config.viewer_family.display_name
 
         def _worker():
             try:
@@ -637,7 +637,7 @@ class StreamingService:
 
         spawn_thread_with_context(
             _worker,
-            name=f"stream_images_{request.config.viewer_type.wire_value}",
+            name=f"stream_images_{request.config.viewer_family.wire_value}",
         )
         logger.info(
             f"Started streaming {len(request.filenames)} images to {display_name}"
@@ -648,8 +648,8 @@ class StreamingService:
         request: ImageStreamingRequest,
     ) -> ViewerStreamingResult:
         """Load and stream images to a viewer before returning."""
-        backend_enum = request.config.backend
-        display_name = request.config.display_name
+        backend_enum = request.config.viewer_family.backend
+        display_name = request.config.viewer_family.display_name
         messages: list[str] = []
 
         self._wait_for_viewer_ready(
@@ -762,7 +762,7 @@ class StreamingService:
         messages.append(message)
         request.status_callback(message)
         return ViewerStreamingResult(
-            viewer_type=request.config.viewer_type,
+            viewer_type=request.config.viewer_family.viewer_type(),
             port=request.viewer.port,
             display_name=display_name,
             payload_kind="image",
@@ -777,7 +777,7 @@ class StreamingService:
         request: RoiStreamingRequest,
     ) -> None:
         """Load and stream ROI files to viewer in background thread."""
-        display_name = request.config.display_name
+        display_name = request.config.viewer_family.display_name
 
         def _worker():
             try:
@@ -789,7 +789,7 @@ class StreamingService:
 
         spawn_thread_with_context(
             _worker,
-            name=f"stream_rois_{request.config.viewer_type.wire_value}",
+            name=f"stream_rois_{request.config.viewer_family.wire_value}",
         )
 
     def stream_rois(
@@ -799,14 +799,14 @@ class StreamingService:
         """Load and stream ROI files to a viewer before returning."""
         from polystore.roi import load_rois_from_zip
 
-        backend_enum = request.config.backend
-        display_name = request.config.display_name
+        backend_enum = request.config.viewer_family.backend
+        display_name = request.config.viewer_family.display_name
         messages: list[str] = []
 
         total = len(request.roi_filenames)
         if total == 0:
             return ViewerStreamingResult(
-                viewer_type=request.config.viewer_type,
+                viewer_type=request.config.viewer_family.viewer_type(),
                 port=request.viewer.port,
                 display_name=display_name,
                 payload_kind="rois",
@@ -861,7 +861,7 @@ class StreamingService:
             messages.append(message)
             request.status_callback(message)
             return ViewerStreamingResult(
-                viewer_type=request.config.viewer_type,
+                viewer_type=request.config.viewer_family.viewer_type(),
                 port=request.viewer.port,
                 display_name=display_name,
                 payload_kind="rois",
@@ -976,7 +976,7 @@ class StreamingService:
         messages.append(message)
         request.status_callback(message)
         return ViewerStreamingResult(
-            viewer_type=request.config.viewer_type,
+            viewer_type=request.config.viewer_family.viewer_type(),
             port=request.viewer.port,
             display_name=display_name,
             payload_kind="rois",

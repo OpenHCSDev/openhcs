@@ -12,25 +12,21 @@ from napari.components import Camera, Dims
 from napari.layers.shapes._shapes_constants import ShapeType
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
-from zmqruntime.viewer_protocol import ViewerComponentMode
 
 from openhcs.core.axes import AxisFamily
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import (
     NapariDisplayConfig,
     NapariDimensionMode,
-    NapariVariableSizeHandling,
 )
+from openhcs.runtime.viewer_display import NapariVariableSizeHandling
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.streaming_config_factory import ViewerProcessLaunchConfig
 from openhcs.runtime.viewer_protocol import (
     NapariLayerKind,
-    NapariViewerServerRequest,
-    ViewerControlMessageType,
     ViewerControlResponseField,
     ViewerNavigationControlOptions,
     ViewerPayloadControlOptions,
@@ -45,7 +41,7 @@ from openhcs.runtime.viewer_protocol import (
 )
 from openhcs.runtime.napari_streaming_handlers import (
     NapariAggregateAxisBinding,
-    NapariAggregateAxisBindingAuthority,
+    NapariAggregateAxisBindingBuilder,
     NapariAggregateAxisBindingSet,
     NapariAxisPresentation,
     NapariBatchProcessorStore,
@@ -54,7 +50,7 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariImageLayerPresentationPolicy,
     NapariLayerBatchDebouncePolicy,
     NapariLayerRouteStateStore,
-    NapariLayerUpdateAuthority,
+    NapariLayerUpdates,
     NapariPendingLayerUpdate,
     NapariShapeFeatureColumns,
     NapariShapeLayerPayload,
@@ -63,8 +59,8 @@ from openhcs.runtime.napari_streaming_handlers import (
 )
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemantics,
-    ViewerComponentAxisSemanticsAuthority,
-    ViewerComponentCoordinateAuthority,
+    ViewerComponentAxisSemanticsFactory,
+    ViewerComponentCoordinates,
     ViewerComponentLayout,
     ViewerComponentMetadataNormalizer,
     ViewerComponentNameMetadata,
@@ -79,7 +75,6 @@ from openhcs.runtime.viewer_component_system import (
 from openhcs.runtime.viewer_protocol import (
     NapariLayerKind,
     ViewerComponentValueOrdering,
-    ViewerControlMessageType,
     ViewerControlResponse,
     ViewerControlResponseField,
     ViewerIntensityWindowControlOptions,
@@ -93,6 +88,10 @@ from openhcs.runtime.viewer_protocol import (
     ViewerStateControlOptions,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.viewer_display import NapariSlots
+from tests.unit.viewer_axes_fixture import STREAM_AXES
+
+ALL_STACKED = {name: "stack" for name in STREAM_AXES.names()}
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.payload_axes import PayloadAxes
 
@@ -101,11 +100,12 @@ def _component_name_metadata(payload, context="test component metadata"):
     return ViewerComponentNameMetadata.from_wire_mapping(
         payload,
         context=context,
+        declared_axes=STREAM_AXES,
     )
 
 
 def _component_value_domain(payload, context="test component value domain"):
-    return ViewerComponentValueDomainPayload.from_wire_mapping(payload, context=context)
+    return ViewerComponentValueDomainPayload.from_wire_mapping(payload, context=context, declared_axes=STREAM_AXES)
 
 
 def _layer_item(
@@ -172,7 +172,7 @@ def test_napari_stream_context_reconstructs_exact_source_spatial_domain():
             },
             "test image payload",
         ),
-        ViewerComponentAxisSemanticsAuthority.empty(),
+        ViewerComponentAxisSemanticsFactory.empty(),
         NapariDisplayConfig(),
     )
 
@@ -212,13 +212,14 @@ def _axis_presentation(
                 )
             )
         )
-    component_axis_semantics = ViewerComponentAxisSemanticsAuthority.empty()
+    component_axis_semantics = ViewerComponentAxisSemanticsFactory.empty()
     component_layout = ViewerComponentLayout.from_parts(
         component_modes={
-            component: ViewerComponentMode.STACK
+            component: NapariSlots.Stack.wire_value
             for component in display_axis_components
         },
         component_order=display_axis_components,
+        declared_axes=STREAM_AXES,
     )
     return NapariAxisPresentation(
         entries=_component_value_domain(component_values).entries,
@@ -400,6 +401,7 @@ def test_component_value_domain_wire_mapping_normalizes_variable_axis_values():
     domain = ViewerComponentValueDomainPayload.from_wire_mapping(
         {"timepoint": ["1", 1], "channel": ["2", 2], "well": ["A01"]},
         context="mixed wire domain",
+        declared_axes=STREAM_AXES,
     )
 
     assert domain.to_wire_mapping() == {
@@ -786,7 +788,7 @@ def test_napari_state_control_message_honors_state_request_payload():
         _layer_item({"site": 1}, data=np.ones((2, 2), dtype=np.uint8))
     )
 
-    response = napari_viewer_server.NapariStateControlMessageAction().handle(
+    response = napari_viewer_server.NapariStateControlAction().handle(
         server,
         {
             "type": "state",
@@ -960,7 +962,7 @@ def _apply_intensity_window(
     route_key,
     axis_indices,
 ):
-    return napari_viewer_server.NapariIntensityWindowControlMessageAction().handle(
+    return napari_viewer_server.NapariIntensityWindowControlAction().handle(
         server,
         {
             ViewerControlResponseField.PAYLOAD.value: (
@@ -1179,7 +1181,7 @@ def test_napari_intensity_window_uses_matching_raw_payloads_not_sparse_padding()
     )
     server.component_groups.items_for(route_key).extend((first, second, excluded))
 
-    response = napari_viewer_server.NapariIntensityWindowControlMessageAction().handle(
+    response = napari_viewer_server.NapariIntensityWindowControlAction().handle(
         server,
         {
             ViewerControlResponseField.PAYLOAD.value: (
@@ -1209,7 +1211,7 @@ def test_napari_intensity_window_uses_matching_raw_payloads_not_sparse_padding()
     assert layer.contrast_limits == (10.0, 60.0)
 
     all_coordinates_response = (
-        napari_viewer_server.NapariIntensityWindowControlMessageAction().handle(
+        napari_viewer_server.NapariIntensityWindowControlAction().handle(
             server,
             {
                 ViewerControlResponseField.PAYLOAD.value: (
@@ -1283,7 +1285,7 @@ def test_napari_intensity_window_fails_closed(
     server.layer_route_state.set_layer(route_key, layer)
     server.component_groups.items_for(route_key).extend(items)
 
-    response = napari_viewer_server.NapariIntensityWindowControlMessageAction().handle(
+    response = napari_viewer_server.NapariIntensityWindowControlAction().handle(
         server,
         {
             ViewerControlResponseField.PAYLOAD.value: (
@@ -1305,7 +1307,7 @@ def test_napari_intensity_window_fails_closed(
 def test_napari_layer_update_authority_replaces_existing_image_without_global_axis_labels():
     viewer = _FakeViewer()
     layers = {}
-    authority = NapariLayerUpdateAuthority()
+    authority = NapariLayerUpdates()
 
     first = authority.create_or_update(
         layer_kind=NapariLayerKind.IMAGE,
@@ -1366,7 +1368,7 @@ def test_napari_layer_update_authority_preserves_user_selected_layer():
     viewer.layers.append(selected_layer)
     viewer.layers.selection.active = selected_layer
     layers = {}
-    authority = NapariLayerUpdateAuthority()
+    authority = NapariLayerUpdates()
 
     new_layer = authority.create_or_update(
         layer_kind=NapariLayerKind.IMAGE,
@@ -1388,7 +1390,7 @@ def test_napari_layer_update_authority_preserves_user_selected_layer():
 def test_napari_layer_update_authority_transfers_active_replaced_layer():
     viewer = _FakeViewer()
     layers = {}
-    authority = NapariLayerUpdateAuthority()
+    authority = NapariLayerUpdates()
 
     first = authority.create_or_update(
         layer_kind=NapariLayerKind.IMAGE,
@@ -1423,7 +1425,7 @@ def test_napari_layer_update_authority_transfers_active_replaced_layer():
 def test_napari_layer_update_authority_marks_color_images_as_rgb():
     viewer = _FakeViewer()
     layers = {}
-    authority = NapariLayerUpdateAuthority()
+    authority = NapariLayerUpdates()
 
     image = np.zeros((2, 16, 16, 3), dtype=np.uint8)
     layer = authority.create_or_update(
@@ -1582,9 +1584,11 @@ def test_napari_viewer_model_keeps_declared_plate_axis_sizes_across_routes() -> 
         entries=_component_value_domain(full_component_values).entries,
         layout=ViewerComponentLayout.from_parts(
             component_modes={
-                component: ViewerComponentMode.STACK for component in full_route_axes
+                **ALL_STACKED,
+                **{component: NapariSlots.Stack.wire_value for component in full_route_axes},
             },
             component_order=full_route_axes,
+            declared_axes=STREAM_AXES,
         ),
     )
     full_work = pipeline.display_layer_batch(
@@ -1609,9 +1613,11 @@ def test_napari_viewer_model_keeps_declared_plate_axis_sizes_across_routes() -> 
         entries=_component_value_domain(reduced_component_values).entries,
         layout=ViewerComponentLayout.from_parts(
             component_modes={
-                component: ViewerComponentMode.STACK for component in reduced_route_axes
+                **ALL_STACKED,
+                **{component: NapariSlots.Stack.wire_value for component in reduced_route_axes},
             },
             component_order=reduced_route_axes,
+            declared_axes=STREAM_AXES,
         ),
     )
     reduced_work = pipeline.display_layer_batch(
@@ -1701,7 +1707,7 @@ def test_napari_display_pipeline_applies_dimension_labels_to_layer_route_state()
 
     assert axis_labels == ("channel", "y", "x")
     state = pipeline.server.layer_route_state.dimension_state_for("route-labels")
-    assert state.labels == {"channel": ["Ch1: DAPI", "Ch 2"]}
+    assert state.labels == {"channel": ["Ch 1: DAPI", "Ch 2"]}
     assert state.stack_axes == ("channel",)
     assert state.axis_labels == ("channel", "y", "x")
 
@@ -1752,7 +1758,7 @@ def test_napari_display_pipeline_labels_collapsed_route_components():
     state = pipeline.server.layer_route_state.dimension_state_for("route-stack")
     assert axis_labels == ("site", "y", "x")
     assert state.labels == {"site": ["Site 1", "Site 2"]}
-    assert state.scalar_labels == ("Ch1: DAPI", "T 1", "Z 1")
+    assert state.scalar_labels == ("Ch 1: DAPI", "T 1", "Z 1")
 
 
 def test_napari_display_pipeline_rejects_nonsemantic_payload_axis_labels() -> None:
@@ -1777,11 +1783,12 @@ def test_napari_display_pipeline_projects_route_axes_locally():
         {"channel": [1, 2, 3, 4, 5], "site": [1, 2]}
     )
     component_axis_semantics = (
-        ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerComponentAxisSemanticsFactory.from_display_config(
             ViewerMappingDisplayConfigInput(
                 {
                     "component_modes": {"channel": "stack", "site": "stack"},
                     "component_order": ["channel", "site"],
+                    "declared_axes": STREAM_AXES.to_wire(),
                 }
             ),
             component_value_domain,
@@ -1827,11 +1834,12 @@ def test_napari_display_pipeline_uses_declared_domain_independent_of_arrival_ord
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
     component_axis_semantics = (
-        ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerComponentAxisSemanticsFactory.from_display_config(
             ViewerMappingDisplayConfigInput(
                 {
                     "component_modes": {"channel": "stack"},
                     "component_order": ["channel"],
+                    "declared_axes": STREAM_AXES.to_wire(),
                 }
             ),
             _component_value_domain({"channel": [1, 2, 4]}),
@@ -1875,8 +1883,9 @@ def test_napari_display_pipeline_aligns_scalar_and_stack_routes_by_semantic_valu
     raw_semantics = ViewerComponentAxisSemantics(
         entries=_component_value_domain({"channel": [2]}).entries,
         layout=ViewerComponentLayout.from_parts(
-            component_modes={"channel": ViewerComponentMode.STACK},
+            component_modes={**ALL_STACKED, "channel": NapariSlots.Stack.wire_value},
             component_order=("channel",),
+            declared_axes=STREAM_AXES,
         ),
     )
     server.layer_route_state.set_title(raw_route, "Raw channel 2")
@@ -1976,6 +1985,16 @@ class _RegionDisplayConfig(NapariDisplayConfig):
             self.REGION_COMPONENT: self.region_mode.value,
         }
 
+    def display_payload_extra(self) -> dict:
+        extra = super().display_payload_extra()
+        region = {
+            "name": self.REGION_COMPONENT,
+            "label": "Region",
+            "roles": [],
+            "value_kind": "OrdinalValued",
+        }
+        return {**extra, "declared_axes": [*extra["declared_axes"], region]}
+
 
 @pytest.mark.parametrize(
     "component, mode_field, config_type",
@@ -2060,6 +2079,7 @@ def test_display_batch_composes_domain_and_names_for_new_declared_component():
         entries=_component_value_domain({component: [1, 2]}).entries,
         layout=shared_layout,
         store=names.store,
+        declared_axes=shared_layout.declared_axes,
         viewer_display_config=config,
     )
 
@@ -2067,10 +2087,10 @@ def test_display_batch_composes_domain_and_names_for_new_declared_component():
     assert batch.axis_labels(component, [1, 2]) == ["Region 1: West", "Region 2: East"]
     projection = batch.axis_projection_semantics()
     assert projection.component_order == (component,)
-    assert projection.layout.components_for_mode(ViewerComponentMode.STACK) == (component,)
+    assert projection.layout.components_in(NapariSlots.Stack) == (component,)
     assert projection.entries is batch.entries
     assert batch.store is names.store
-    assert grouping_layout.components_for_mode(ViewerComponentMode.LAYER) == (component,)
+    assert grouping_layout.components_in(NapariSlots.Layer) == (component,)
 
 
 def test_paired_raw_projection_keeps_one_inherited_algorithm_owner():
@@ -2097,8 +2117,9 @@ def test_napari_display_pipeline_rejects_shared_axis_expansion_requiring_remater
     server.viewer = ViewerModel()
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
     component_layout = ViewerComponentLayout.from_parts(
-        component_modes={"channel": ViewerComponentMode.STACK},
+        component_modes={**ALL_STACKED, "channel": NapariSlots.Stack.wire_value},
         component_order=("channel",),
+        declared_axes=STREAM_AXES,
     )
 
     sparse_route = "channels-1-3"
@@ -2161,11 +2182,12 @@ def test_napari_display_pipeline_projects_aggregate_payload_axes_into_route_doma
         {"channel": [1], "z_index": [1, 2]}
     )
     component_axis_semantics = (
-        ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerComponentAxisSemanticsFactory.from_display_config(
             ViewerMappingDisplayConfigInput(
                 {
                     "component_modes": {"channel": "stack", "z_index": "stack"},
                     "component_order": ["z_index", "channel"],
+                    "declared_axes": STREAM_AXES.to_wire(),
                 }
             ),
             component_value_domain,
@@ -2430,7 +2452,7 @@ def test_napari_display_pipeline_applies_active_route_axis_labels_to_viewer():
     server.layer_route_state.set_dimension_state(
         "nuclei",
         NapariDimensionLayerState(
-            labels={"channel": ["Ch1: DAPI"]},
+            labels={"channel": ["Ch 1: DAPI"]},
             presentation=_axis_presentation(
                 layer_key="nuclei",
                 projected_axis_components=("channel",),
@@ -2443,7 +2465,7 @@ def test_napari_display_pipeline_applies_active_route_axis_labels_to_viewer():
     pipeline.dimension_label_overlay.setup_for_layer("nuclei")
 
     assert server.viewer.dims.axis_labels == ("channel", "y", "x")
-    assert server.viewer.text_overlay.text == "Ch1: DAPI"
+    assert server.viewer.text_overlay.text == "Ch 1: DAPI"
 
 
 def test_napari_display_pipeline_applies_value_overlay_for_offset_route():
@@ -2582,7 +2604,7 @@ def test_napari_navigation_control_selects_visible_layer_and_route_local_axes():
     server.component_groups = NapariComponentGroupStore()
     server.display_pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
 
-    response = napari_viewer_server.NapariNavigationControlMessageAction().handle(
+    response = napari_viewer_server.NapariNavigationControlAction().handle(
         server,
         {
             "type": "navigate",
@@ -2661,7 +2683,7 @@ def test_napari_navigation_visibility_change_preserves_selected_label_route():
         )
     server.component_groups = NapariComponentGroupStore()
     server.display_pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
-    navigation = napari_viewer_server.NapariNavigationControlMessageAction()
+    navigation = napari_viewer_server.NapariNavigationControlAction()
 
     navigation.handle(
         server,
@@ -2838,7 +2860,7 @@ def test_napari_display_pipeline_applies_updated_derived_route_overlay():
     server.layer_route_state.set_dimension_state(
         "source-map2",
         NapariDimensionLayerState(
-            labels={"channel": ["Ch2: MAP2"]},
+            labels={"channel": ["Ch 2: MAP2"]},
             presentation=_axis_presentation(
                 layer_key="source-map2",
                 projected_axis_components=("channel",),
@@ -2850,7 +2872,7 @@ def test_napari_display_pipeline_applies_updated_derived_route_overlay():
     server.layer_route_state.set_dimension_state(
         "derived-neurite-skeleton",
         NapariDimensionLayerState(
-            labels={"channel": ["Ch4: SMI312"]},
+            labels={"channel": ["Ch 4: SMI312"]},
             presentation=_axis_presentation(
                 layer_key="derived-neurite-skeleton",
                 projected_axis_components=("channel",),
@@ -2866,13 +2888,13 @@ def test_napari_display_pipeline_applies_updated_derived_route_overlay():
         "derived-neurite-skeleton"
     )
     assert server.viewer.dims.axis_labels == ("channel", "y", "x")
-    assert server.viewer.text_overlay.text == "Ch4: SMI312"
+    assert server.viewer.text_overlay.text == "Ch 4: SMI312"
     assert server.viewer.layers.selection.active is selected_layer
 
     pipeline.dimension_label_overlay._update_overlay()
 
     assert server.layer_route_state.active_dimension_label_route == "source-map2"
-    assert server.viewer.text_overlay.text == "Ch2: MAP2"
+    assert server.viewer.text_overlay.text == "Ch 2: MAP2"
 
 
 def test_napari_display_pipeline_preserves_active_non_openhcs_layer_during_update():
@@ -2890,7 +2912,7 @@ def test_napari_display_pipeline_preserves_active_non_openhcs_layer_during_updat
     server.layer_route_state.set_dimension_state(
         "derived",
         NapariDimensionLayerState(
-            labels={"channel": ["Ch4: SMI312"]},
+            labels={"channel": ["Ch 4: SMI312"]},
             presentation=_axis_presentation(
                 layer_key="derived",
                 projected_axis_components=("channel",),
@@ -2943,7 +2965,7 @@ def test_napari_display_pipeline_falls_back_when_selected_route_lacks_current_st
             labels={
                 "well": ["A14", "B13"],
                 "site": ["Site 1", "Site 2"],
-                "channel": ["Ch1: OrigDNA"],
+                "channel": ["Ch 1: OrigDNA"],
             },
             presentation=_axis_presentation(
                 layer_key="identify-primary",
@@ -2964,11 +2986,11 @@ def test_napari_display_pipeline_falls_back_when_selected_route_lacks_current_st
                 "well": ["A14", "B13"],
                 "site": ["Site 1", "Site 2"],
                 "channel": [
-                    "Ch1: OrigDNA",
-                    "Ch2: OrigER",
-                    "Ch3: OrigRNA",
-                    "Ch4: OrigActin_Golgi_Membrane",
-                    "Ch5: OrigMito",
+                    "Ch 1: OrigDNA",
+                    "Ch 2: OrigER",
+                    "Ch 3: OrigRNA",
+                    "Ch 4: OrigActin_Golgi_Membrane",
+                    "Ch 5: OrigMito",
                 ],
             },
             presentation=_axis_presentation(
@@ -2988,7 +3010,7 @@ def test_napari_display_pipeline_falls_back_when_selected_route_lacks_current_st
     pipeline.dimension_label_overlay._update_overlay()
 
     assert server.viewer.dims.axis_labels == ("well", "site", "channel", "y", "x")
-    assert server.viewer.text_overlay.text == "A14 | Site 1 | Ch2: OrigER"
+    assert server.viewer.text_overlay.text == "A14 | Site 1 | Ch 2: OrigER"
 
 
 def test_napari_display_pipeline_falls_back_from_selected_offset_channel():
@@ -3023,7 +3045,7 @@ def test_napari_display_pipeline_falls_back_from_selected_offset_channel():
     server.layer_route_state.set_dimension_state(
         "source",
         NapariDimensionLayerState(
-            labels={"channel": ["Ch1: Hoechst", "Ch2: MAP2", "Ch4: SMI312"]},
+            labels={"channel": ["Ch 1: Hoechst", "Ch 2: MAP2", "Ch 4: SMI312"]},
             presentation=_axis_presentation(
                 layer_key="source",
                 projected_axis_components=("channel",),
@@ -3035,7 +3057,7 @@ def test_napari_display_pipeline_falls_back_from_selected_offset_channel():
     server.layer_route_state.set_dimension_state(
         "neurites",
         NapariDimensionLayerState(
-            labels={"channel": ["Ch4: SMI312"]},
+            labels={"channel": ["Ch 4: SMI312"]},
             presentation=_axis_presentation(
                 layer_key="neurites",
                 projected_axis_components=("channel",),
@@ -3050,7 +3072,7 @@ def test_napari_display_pipeline_falls_back_from_selected_offset_channel():
     pipeline.dimension_label_overlay._update_overlay()
 
     assert server.layer_route_state.active_dimension_label_route == "source"
-    assert server.viewer.text_overlay.text == "Ch1: Hoechst"
+    assert server.viewer.text_overlay.text == "Ch 1: Hoechst"
 
 
 def test_napari_display_pipeline_labels_all_slices_from_nonzero_axis_origin():
@@ -3085,7 +3107,7 @@ def test_napari_display_pipeline_labels_all_slices_from_nonzero_axis_origin():
     server.layer_route_state.set_dimension_state(
         "map2",
         NapariDimensionLayerState(
-            labels={"channel": ["Ch2: MAP2"]},
+            labels={"channel": ["Ch 2: MAP2"]},
             presentation=_axis_presentation(
                 layer_key="map2",
                 projected_axis_components=("channel",),
@@ -3098,7 +3120,7 @@ def test_napari_display_pipeline_labels_all_slices_from_nonzero_axis_origin():
     server.layer_route_state.set_dimension_state(
         "smi312",
         NapariDimensionLayerState(
-            labels={"channel": ["Ch4: SMI312"]},
+            labels={"channel": ["Ch 4: SMI312"]},
             presentation=_axis_presentation(
                 layer_key="smi312",
                 projected_axis_components=("channel",),
@@ -3112,13 +3134,13 @@ def test_napari_display_pipeline_labels_all_slices_from_nonzero_axis_origin():
     pipeline.dimension_label_overlay._update_overlay()
 
     assert server.layer_route_state.active_dimension_label_route == "map2"
-    assert server.viewer.text_overlay.text == "Ch2: MAP2"
+    assert server.viewer.text_overlay.text == "Ch 2: MAP2"
 
     server.viewer.dims.current_step = (1, 0, 0)
     pipeline.dimension_label_overlay._update_overlay()
 
     assert server.layer_route_state.active_dimension_label_route == "smi312"
-    assert server.viewer.text_overlay.text == "Ch4: SMI312"
+    assert server.viewer.text_overlay.text == "Ch 4: SMI312"
 
 
 def test_napari_axis_origin_includes_implicit_zero_route_offsets():
@@ -3285,7 +3307,7 @@ def test_napari_display_pipeline_registers_recreated_shapes_before_selection_res
             "metadata": {"source_spatial_shape_yx": (2, 2)},
         }
     ]
-    display_semantics = ViewerComponentAxisSemanticsAuthority.empty()
+    display_semantics = ViewerComponentAxisSemanticsFactory.empty()
 
     class PendingTimer:
         def stop(self):
@@ -3331,7 +3353,7 @@ def test_napari_viewer_clear_state_resets_accumulated_axis_domains():
         NapariPendingLayerUpdate.from_semantics(
             timer=pending_timer,
             data_type=StreamingDataType.IMAGE,
-            semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+            semantics=ViewerComponentAxisSemanticsFactory.empty(),
             display_config=NapariDisplayConfig(),
         ),
     )
@@ -3348,7 +3370,7 @@ def test_napari_viewer_clear_state_resets_accumulated_axis_domains():
         debounce_policy=NapariLayerBatchDebouncePolicy(delay_ms=1)
     )
 
-    server.clear_accumulated_stream_state()
+    server.clear_stream_state()
 
     assert len(server.component_groups) == 0
     assert server.component_values.values_for(("old", ("well",)), ["well"]) == {
@@ -3390,7 +3412,7 @@ def test_clear_state_preserves_mounted_payload_and_domains_until_native_removal(
     server.display_pipeline = NapariLayerDisplayPipeline(server)
     server.batch_processors = NapariBatchProcessorStore()
 
-    server.clear_accumulated_stream_state()
+    server.clear_stream_state()
 
     assert server.component_groups.existing_items_for("retained") == [item]
     assert server.component_groups.existing_items_for("cancelled") is None
@@ -3400,7 +3422,7 @@ def test_clear_state_preserves_mounted_payload_and_domains_until_native_removal(
     assert server.component_name_metadata.display_name("well", "A01") == "source well"
 
     server.viewer.layers.remove(layer)
-    server.clear_accumulated_stream_state()
+    server.clear_stream_state()
     assert not server.layer_route_state.layers
     assert not server.component_groups.groups
     assert not server.component_values.domains
@@ -3939,7 +3961,7 @@ def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(
     )
     original_order = tuple(viewer.layers)
     monkeypatch.setattr(
-        napari_viewer_server.NapariResultSelectionGroupAuthority,
+        napari_viewer_server.NapariResultSelectionGroups,
         "feature_values",
         lambda *_args, **_kwargs: pytest.fail(
             "ROI selection rescanned features after layer binding"
@@ -4296,31 +4318,12 @@ def test_napari_entrypoint_bind_failure_quits_event_loop_and_stops_server(monkey
     assert events[-1] == "server_stop"
 
 
-def test_napari_unknown_control_message_returns_typed_protocol_error():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-
-    response = napari_viewer_server.NapariUnknownControlMessageAction().handle(
-        object(),
-        {ViewerControlResponseField.TYPE.value: "unsupported"},
-    )
-
-    assert response[ViewerControlResponseField.STATUS.value] == (
-        ViewerProtocolStatus.ERROR.value
-    )
-    assert response[ViewerControlResponseField.TYPE.value] == "error"
-    assert "unsupported" in response[ViewerControlResponseField.MESSAGE.value]
 
 
-@pytest.mark.parametrize(
-    "action_name",
-    (
-        "NapariGracefulShutdownControlMessageAction",
-        "NapariForceShutdownControlMessageAction",
-    ),
-)
+@pytest.mark.parametrize("message_type", ("shutdown", "force_shutdown"))
 def test_napari_shutdown_cancels_pending_updates_before_scheduling_viewer_close(
     monkeypatch,
-    action_name,
+    message_type,
 ):
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     from qtpy import QtCore
@@ -4365,13 +4368,13 @@ def test_napari_shutdown_cancels_pending_updates_before_scheduling_viewer_close(
             NapariPendingLayerUpdate.from_semantics(
                 timer=PendingTimer(route_key),
                 data_type=StreamingDataType.IMAGE,
-                semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+                semantics=ViewerComponentAxisSemanticsFactory.empty(),
                 display_config=NapariDisplayConfig(),
             ),
         )
 
     monkeypatch.setattr(QtCore, "QTimer", FakeQTimer)
-    action = getattr(napari_viewer_server, action_name)()
+    action = napari_viewer_server.NapariControlAction.for_message_type(message_type)
     response = action.handle(server, {})
 
     assert server.is_running() is False
@@ -4390,50 +4393,10 @@ def test_napari_shutdown_cancels_pending_updates_before_scheduling_viewer_close(
     assert not any(event.startswith("display:") for event in events)
 
 
-def test_napari_control_dispatch_registry_is_module_local_and_eager():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-
-    registry = napari_viewer_server.NapariControlMessageAction.__registry__
-
-    assert type(registry) is dict
-    assert registry[ViewerControlMessageType.CLEAR_STATE.value] is (
-        napari_viewer_server.NapariClearStateControlMessageAction
-    )
-    assert registry[ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value] is (
-        napari_viewer_server.NapariIntensityWindowControlMessageAction
-    )
 
 
-def test_napari_endpoint_lifecycle_capabilities_derive_from_registered_actions():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-    from zmqruntime.messages import EndpointControlCapability
-
-    expected = frozenset(EndpointControlCapability)
-    assert (
-        napari_viewer_server.NapariControlMessageAction.endpoint_control_capabilities()
-        == expected
-    )
-    server = napari_viewer_server.NapariViewerServer(
-        NapariViewerServerRequest(
-            port=54321,
-            viewer_title="lifecycle capability test",
-        )
-    )
-
-    assert server._create_pong_response().control_capabilities == expected
 
 
-def test_napari_process_launch_action_reports_immutable_declaration():
-    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
-    process_launch = ViewerProcessLaunchConfig(qt_font_dpi=96)
-
-    response = napari_viewer_server.NapariProcessLaunchControlMessageAction().handle(
-        SimpleNamespace(process_launch=process_launch),
-        {},
-    )
-
-    assert response["status"] == "success"
-    assert response["process_launch"] == process_launch.to_wire_mapping()
 
 
 def test_napari_axis_projector_drops_only_globally_singleton_axes():
@@ -4478,7 +4441,7 @@ def test_napari_axis_projector_drops_only_globally_singleton_axes():
 def test_napari_layer_update_authority_declares_shapes_and_points_kwargs():
     viewer = _FakeViewer()
     layers = {}
-    authority = NapariLayerUpdateAuthority()
+    authority = NapariLayerUpdates()
 
     shapes = authority.create_or_update(
         layer_kind=NapariLayerKind.SHAPES,
@@ -4539,7 +4502,7 @@ def test_napari_layer_title_authority_uses_stream_display_name_policy():
         component_order=["well", "channel"],
     )
 
-    title = napari_viewer_server.NapariLayerTitleAuthority.title(
+    title = napari_viewer_server.NapariLayerTitles.title(
         producer=producer,
         stream_layer_data_type=StreamingDataType.SHAPES,
         component_info={"well": "A01", "channel": 1},
@@ -4654,9 +4617,10 @@ def test_napari_component_display_coordinator_splits_declared_image_layouts():
     display_config = {
         "component_modes": {"well": "stack"},
         "component_order": ["well"],
+        "declared_axes": STREAM_AXES.to_wire(),
     }
     component_axis_semantics = (
-        ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerComponentAxisSemanticsFactory.from_display_config(
             ViewerMappingDisplayConfigInput(display_config),
             _component_value_domain({"well": ["A01"]}),
         )
@@ -4738,11 +4702,12 @@ def test_napari_component_display_coordinator_preserves_declared_singleton_stack
         pipeline_position=7,
     )
     component_axis_semantics = (
-        ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerComponentAxisSemanticsFactory.from_display_config(
             ViewerMappingDisplayConfigInput(
                 {
                     "component_modes": {"well": "stack", "channel": "stack"},
                     "component_order": ["well", "channel"],
+                    "declared_axes": STREAM_AXES.to_wire(),
                 }
             ),
             _component_value_domain({"well": ["A01"], "channel": [2]}),
@@ -4813,11 +4778,12 @@ def test_napari_variable_size_policy_routes_per_well_or_pads_shared_route():
             self.component_groups = NapariComponentGroupStore()
             self.replace_layers = False
 
-    semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+    semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerMappingDisplayConfigInput(
             {
                 "component_modes": {"well": "stack"},
                 "component_order": ["well"],
+                "declared_axes": STREAM_AXES.to_wire(),
             }
         ),
         _component_value_domain({"well": ["A01", "B01"]}),
@@ -4883,7 +4849,7 @@ def test_napari_variable_size_policy_routes_per_well_or_pads_shared_route():
     )
     assert len(separate_server.layer_route_state.layer_pending_updates) == 2
     assert {
-        route.layout.components_for_mode("layer")
+        route.layout.components_in(NapariSlots.Layer)
         for _, _, route, _ in separate_server.display_pipeline.scheduled
     } == {("well",)}
     assert sorted(
@@ -4925,7 +4891,7 @@ def test_napari_configured_colormap_reaches_native_layer_and_invalid_name_fails(
     viewer = napari.Viewer(show=False)
     try:
         with pytest.raises((KeyError, ValueError)):
-            NapariLayerUpdateAuthority().create_or_update(
+            NapariLayerUpdates().create_or_update(
                 layer_kind=NapariLayerKind.IMAGE,
                 viewer=viewer,
                 layers={},
@@ -4954,7 +4920,7 @@ def test_napari_layer_title_disambiguation_uses_display_step_number():
     layer_route_state.set_title("other-route", "4. Measure")
 
     assert (
-        napari_viewer_server.NapariLayerTitleAuthority.disambiguate(
+        napari_viewer_server.NapariLayerTitles.disambiguate(
             title="4. Measure",
             producer=producer,
             route_key="current-route",
@@ -4992,7 +4958,7 @@ def test_napari_layer_route_state_store_keeps_layer_labels_and_timers_together()
     pending_update = NapariPendingLayerUpdate.from_semantics(
         timer=timer,
         data_type=StreamingDataType.IMAGE,
-        semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+        semantics=ViewerComponentAxisSemanticsFactory.empty(),
         display_config=NapariDisplayConfig(),
     )
     store.set_pending_update("nuclei", pending_update)
@@ -5037,7 +5003,7 @@ def test_napari_settle_rejects_recorded_layer_update_failure():
     update = NapariPendingLayerUpdate.from_semantics(
         timer=_FakeTimer(),
         data_type=StreamingDataType.IMAGE,
-        semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+        semantics=ViewerComponentAxisSemanticsFactory.empty(),
         display_config=NapariDisplayConfig(),
         items=server.component_groups.items_for(route_key),
     )
@@ -5098,14 +5064,14 @@ def test_napari_settlement_reports_incremental_qt_progress(monkeypatch):
             NapariPendingLayerUpdate.from_semantics(
                 timer=_FakeTimer(),
                 data_type=StreamingDataType.IMAGE,
-                semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+                semantics=ViewerComponentAxisSemanticsFactory.empty(),
                 display_config=NapariDisplayConfig(),
                 items=server.component_groups.items_for(route_key),
             ),
         )
 
     monkeypatch.setattr(napari_viewer_server, "QTimer", DeferredQtTimer)
-    action = napari_viewer_server.NapariSettleControlMessageAction()
+    action = napari_viewer_server.NapariControlAction.for_message_type("settle")
 
     first_response = ViewerControlResponse(action.handle(server, {}))
     first_progress = ViewerSettleProgress.from_response(first_response)
@@ -5175,7 +5141,7 @@ def test_napari_settlement_reports_progress_within_one_large_route(monkeypatch):
     update = NapariPendingLayerUpdate.from_semantics(
         timer=_FakeTimer(),
         data_type=StreamingDataType.IMAGE,
-        semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+        semantics=ViewerComponentAxisSemanticsFactory.empty(),
         display_config=NapariDisplayConfig(),
         items=server.component_groups.items_for(route_key),
     )
@@ -5183,7 +5149,7 @@ def test_napari_settlement_reports_progress_within_one_large_route(monkeypatch):
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
     server.display_pipeline = pipeline
     monkeypatch.setattr(napari_viewer_server, "QTimer", DeferredQtTimer)
-    action = napari_viewer_server.NapariSettleControlMessageAction()
+    action = napari_viewer_server.NapariControlAction.for_message_type("settle")
 
     initial = ViewerSettleProgress.from_response(
         ViewerControlResponse(action.handle(server, {}))
@@ -5233,7 +5199,7 @@ def test_napari_scheduled_update_retains_failure_without_escaping_qt_callback():
     update = NapariPendingLayerUpdate.from_semantics(
         timer=_FakeTimer(),
         data_type=StreamingDataType.IMAGE,
-        semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+        semantics=ViewerComponentAxisSemanticsFactory.empty(),
         display_config=NapariDisplayConfig(),
         items=server.component_groups.items_for(route_key),
     )
@@ -5290,7 +5256,7 @@ def test_napari_batch_processor_returns_handler_owned_display_work():
         processor.add_items(
             layer_key="objects",
             items=(),
-            display_payload=ViewerComponentAxisSemanticsAuthority.empty(),
+            display_payload=ViewerComponentAxisSemanticsFactory.empty(),
             component_names_metadata=ViewerComponentNameMetadata.empty(),
         )
         is sentinel
@@ -5298,7 +5264,7 @@ def test_napari_batch_processor_returns_handler_owned_display_work():
 
 
 def test_napari_component_metadata_normalizer_coerces_indexed_strings():
-    normalizer = ViewerComponentMetadataNormalizer()
+    normalizer = ViewerComponentMetadataNormalizer(STREAM_AXES)
 
     normalized = normalizer.normalize(
         {
@@ -5323,7 +5289,7 @@ def test_napari_component_metadata_normalizer_coerces_indexed_strings():
 
 def test_viewer_component_coordinate_authority_rejects_missing_axis_component():
     with pytest.raises(ValueError, match="missing stack component 'channel'"):
-        ViewerComponentCoordinateAuthority.index(
+        ViewerComponentCoordinates.index(
             components={"site": 1},
             component_values={"site": [1], "channel": [1]},
             component="channel",
@@ -5423,11 +5389,12 @@ def test_napari_display_projection_derives_sparse_coordinates_from_routed_items(
         "site": [1, 2, 4, 7],
     }
     component_axis_semantics = (
-        ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerComponentAxisSemanticsFactory.from_display_config(
             ViewerMappingDisplayConfigInput(
                 {
                     "component_modes": {"well": "stack", "site": "stack"},
                     "component_order": ["well", "site"],
+                    "declared_axes": STREAM_AXES.to_wire(),
                 }
             ),
             _component_value_domain(component_values),
@@ -5645,7 +5612,7 @@ def test_viewer_component_name_metadata_owns_channel_well_and_generic_labels():
         context="test",
     )
 
-    assert metadata.axis_labels("channel", [1, 2]) == ["Ch1: DAPI", "Ch 2"]
+    assert metadata.axis_labels("channel", [1, 2]) == ["Ch 1: DAPI", "Ch 2"]
     assert metadata.axis_labels("well", ["A01"]) == ["A01"]
     assert metadata.axis_labels("site", [3]) == ["Site 3: Field"]
 
@@ -5852,11 +5819,12 @@ def test_napari_aggregate_axis_binding_uses_declared_component_not_equal_extent(
         {"site": [1, 2], "channel": [1, 2]}
     )
     component_axis_semantics = (
-        ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerComponentAxisSemanticsFactory.from_display_config(
             ViewerMappingDisplayConfigInput(
                 {
                     "component_modes": {"site": "stack", "channel": "stack"},
                     "component_order": ["site", "channel"],
+                    "declared_axes": STREAM_AXES.to_wire(),
                 }
             ),
             component_value_domain,
@@ -5873,7 +5841,7 @@ def test_napari_aggregate_axis_binding_uses_declared_component_not_equal_extent(
         )
     ]
 
-    bindings = NapariAggregateAxisBindingAuthority.bindings(
+    bindings = NapariAggregateAxisBindingBuilder.bindings(
         items,
         component_axis_semantics,
     )
@@ -5906,11 +5874,12 @@ def test_napari_shape_plane_metadata_requires_declared_component_axis():
         {"site": [1, 2], "channel": [1, 2]}
     )
     component_axis_semantics = (
-        ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerComponentAxisSemanticsFactory.from_display_config(
             ViewerMappingDisplayConfigInput(
                 {
                     "component_modes": {"site": "stack", "channel": "stack"},
                     "component_order": ["site", "channel"],
+                    "declared_axes": STREAM_AXES.to_wire(),
                 }
             ),
             component_value_domain,
@@ -5918,7 +5887,7 @@ def test_napari_shape_plane_metadata_requires_declared_component_axis():
     )
 
     with pytest.raises(ValueError, match="plane_component_values"):
-        NapariAggregateAxisBindingAuthority.bindings(
+        NapariAggregateAxisBindingBuilder.bindings(
             [
                 _layer_item(
                     {"site": 1, "channel": 1},
@@ -5945,11 +5914,12 @@ def test_napari_shape_label_rasterizer_rejects_mixed_aggregate_plane_metadata():
         {"channel": [1], "z_index": [1, 2]}
     )
     component_axis_semantics = (
-        ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerComponentAxisSemanticsFactory.from_display_config(
             ViewerMappingDisplayConfigInput(
                 {
                     "component_modes": {"channel": "stack", "z_index": "stack"},
                     "component_order": ["z_index", "channel"],
+                    "declared_axes": STREAM_AXES.to_wire(),
                 }
             ),
             component_value_domain,
@@ -5957,7 +5927,7 @@ def test_napari_shape_label_rasterizer_rejects_mixed_aggregate_plane_metadata():
     )
 
     with pytest.raises(ValueError, match="mixes plane-indexed and unindexed"):
-        NapariAggregateAxisBindingAuthority.bindings(
+        NapariAggregateAxisBindingBuilder.bindings(
             [
                 _layer_item(
                     {"channel": 1},
@@ -6228,8 +6198,9 @@ def test_napari_points_layer_uses_exact_fractional_z_from_native_roi_metadata():
     semantics = ViewerComponentAxisSemantics(
         entries=_component_value_domain({"z_index": [0, 1, 2, 3]}).entries,
         layout=ViewerComponentLayout.from_parts(
-            component_modes={"z_index": ViewerComponentMode.STACK},
+            component_modes={**ALL_STACKED, "z_index": NapariSlots.Stack.wire_value},
             component_order=("z_index",),
+            declared_axes=STREAM_AXES,
         ),
     )
     item = _layer_item(
@@ -6364,8 +6335,9 @@ def test_napari_fractional_z_points_are_relative_to_the_declared_anchor():
     semantics = ViewerComponentAxisSemantics(
         entries=_component_value_domain({"z_index": [0, 1, 2, 3, 4]}).entries,
         layout=ViewerComponentLayout.from_parts(
-            component_modes={"z_index": ViewerComponentMode.STACK},
+            component_modes={**ALL_STACKED, "z_index": NapariSlots.Stack.wire_value},
             component_order=("z_index",),
+            declared_axes=STREAM_AXES,
         ),
     )
     item = _layer_item(
@@ -6381,7 +6353,7 @@ def test_napari_fractional_z_points_are_relative_to_the_declared_anchor():
     )
     projection = pipeline.display_axis_projection("centres", semantics, [item])
     assert projection.component_values == {"z_index": [2, 3, 4]}
-    points, _properties = napari_viewer_server._build_nd_points([item], projection)
+    points, _properties = napari_viewer_server._build_nd_points([item], projection, ("z_index",))
     assert tuple(points[0]) == (1.25, 1.25, 3.5)
     assert projection.axis_offsets == (2,)
 
@@ -6405,7 +6377,9 @@ def test_napari_points_layer_rejects_fractional_z_without_z_axis():
         component_values={"channel": [1]},
     )
     with pytest.raises(ValueError, match="projected stack axis"):
-        napari_viewer_server._build_nd_points([item], presentation.projection)
+        napari_viewer_server._build_nd_points(
+            [item], presentation.projection, ("z_index",)
+        )
 
 
 def test_native_image_intensity_command_preserves_data_and_navigation():
@@ -6441,7 +6415,7 @@ def test_native_image_intensity_command_preserves_data_and_navigation():
     server.component_groups = NapariComponentGroupStore()
     server.display_pipeline = module.NapariLayerDisplayPipeline(server)
     presentation = ViewerNativeImageIntensityPresentation((5, 25), 1.5)
-    action = module.NapariImageIntensityControlMessageAction()
+    action = module.NapariImageIntensityControlAction()
     assert action.transport_thread_response(server, {}) is None
     response = action.handle(
         server, {"payload": ViewerImageIntensityControlOptions("image", presentation)}

@@ -79,7 +79,7 @@ from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemantics,
     ViewerComponentValueDomainPayload,
-    ViewerLayerAxisProjectionRequestAuthority,
+    ViewerLayerAxisProjectionRequestBuilder,
     ViewerLayerAxisProjector,
     ViewerObjectDisplayConfigInput,
     ViewerRouteComponentValueTracker,
@@ -90,6 +90,7 @@ from openhcs.processing.materialization import (
     materialize,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
 class FakeFileManager:
@@ -170,14 +171,14 @@ def filename_parse_result(*, channel: int = 1) -> FilenameParseResult:
 
 def test_streaming_config_separates_registry_key_from_viewer_identity() -> None:
     assert set(StreamingConfig.__registry__) == {
-        ViewerType.NAPARI,
-        ViewerType.FIJI,
+        NapariStreamingConfig.viewer_family,
+        FijiStreamingConfig.viewer_family,
     }
 
-    assert NapariStreamingConfig().streaming_config_key == "napari_streaming_config"
-    assert NapariStreamingConfig().viewer_type is ViewerType.NAPARI
-    assert FijiStreamingConfig().streaming_config_key == "fiji_streaming_config"
-    assert FijiStreamingConfig().viewer_type is ViewerType.FIJI
+    assert NapariStreamingConfig.viewer_family.config_key == "napari_streaming_config"
+    assert NapariStreamingConfig.viewer_family.viewer_type() is ViewerType.NAPARI
+    assert FijiStreamingConfig.viewer_family.config_key == "fiji_streaming_config"
+    assert FijiStreamingConfig.viewer_family.viewer_type() is ViewerType.FIJI
     assert "source" not in NapariStreamingConfig().component_modes()
     assert "source" not in FijiStreamingConfig().component_modes()
 
@@ -188,7 +189,7 @@ def test_streaming_config_separates_registry_key_from_viewer_identity() -> None:
     assert (
         StreamingConfig.display_name_for_config_key("fiji_streaming_config") == "Fiji"
     )
-    assert NapariStreamingConfig().display_name == "Napari"
+    assert NapariStreamingConfig.viewer_family.display_name == "Napari"
 
 
 def test_napari_streaming_config_owns_process_launch_projection() -> None:
@@ -1066,6 +1067,7 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
     domain = ViewerComponentValueDomainPayload.from_wire_mapping(
         stream.message_extra[ViewerBatchWireField.COMPONENT_VALUE_DOMAIN.value],
         context="native point archive",
+        declared_axes=STREAM_AXES,
     )
     semantics = ViewerComponentAxisSemantics(
         entries=domain.entries,
@@ -1082,7 +1084,7 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
         image_metadata=reopened_source,
         plane_component_domain=domain,
     )
-    request = ViewerLayerAxisProjectionRequestAuthority.from_component_axis_semantics(
+    request = ViewerLayerAxisProjectionRequestBuilder.from_component_axis_semantics(
         route_key="centres",
         component_axis_semantics=semantics,
         layer_items=[item],
@@ -1094,7 +1096,7 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
     assert "z_index" in projection.projected_axis_components
     from openhcs.runtime.napari_viewer_server import _build_nd_points
 
-    points, properties = _build_nd_points([item], projection)
+    points, properties = _build_nd_points([item], projection, ("z_index",))
     assert points[0, projection.projected_axis_components.index("z_index")] == 2.375
     assert properties["response"] == [4.75]
     assert properties[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE] == [
@@ -1358,7 +1360,7 @@ def test_streaming_viewer_lifecycle_reports_bounded_launch_log(
     monkeypatch.setattr(
         DetachedViewerServerEntrypointSpec,
         "log_file_for",
-        lambda self, port: tmp_path / f"{self.viewer_type.wire_value}_{port}.log",
+        lambda self, port: tmp_path / f"{self.viewer_family.wire_value}_{port}.log",
     )
 
     with pytest.raises(DetachedViewerLaunchFailure) as error:
@@ -1396,7 +1398,7 @@ def test_streaming_viewer_lifecycle_admits_new_launch_inside_managed_acquisition
         }),
     )
     lifecycle_manager.get_or_create_viewer(
-        active_config.viewer_type.wire_value, 5563, lambda: existing_viewer
+        active_config.viewer_family.wire_value, 5563, lambda: existing_viewer
     )
     monkeypatch.setattr(
         config_type,
@@ -1419,5 +1421,5 @@ def test_streaming_viewer_lifecycle_admits_new_launch_inside_managed_acquisition
                 filemanager=FakeFileManager(), config=requested, fresh=False,
             )
     assert lifecycle_manager.get_viewer(
-        active_config.viewer_type.wire_value, 5563
+        active_config.viewer_family.wire_value, 5563
     ) is existing_viewer

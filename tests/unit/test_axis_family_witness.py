@@ -107,8 +107,73 @@ def test_configuration_derives_from_the_active_family(remote_sensing) -> None:
         "scene": "frame",
     }
     assert set(NapariDisplayConfig().component_modes()) == set(RemoteSensing.names())
-    payload = {"component_modes": fiji.component_modes(), "lut": "Grays", "auto_contrast": True}
-    assert FijiDisplayConfig.from_display_payload(payload) == fiji
+
+
+def _streamed_display_config(config) -> dict:
+    """The display-config wire section a producer under ``RemoteSensing`` sends."""
+
+    return {
+        "component_modes": config.component_modes(),
+        "component_order": list(config.COMPONENT_ORDER),
+        **config.display_payload_extra(),
+    }
+
+
+def test_viewer_decodes_a_stream_by_its_own_declared_axes(remote_sensing) -> None:
+    from openhcs.core.config import FijiDisplayConfig, NapariDisplayConfig
+    from openhcs.runtime.viewer_component_system import (
+        ViewerComponentNameMetadata,
+        ViewerMappingDisplayConfigInput,
+    )
+    from openhcs.runtime.viewer_display import (
+        FijiDisplaySettings,
+        FijiSlots,
+        NapariSlots,
+    )
+
+    fiji_payload = _streamed_display_config(FijiDisplayConfig(lut="Fire"))
+    napari_payload = _streamed_display_config(NapariDisplayConfig())
+
+    # The viewer process runs with its own (microscopy) family active.
+    Microscopy.activate()
+    fiji = ViewerMappingDisplayConfigInput(fiji_payload).layout()
+    assert fiji.declared_axes.names() == ("tile", "band", "date", "scene")
+    assert fiji.components_in(FijiSlots.HyperstackChannel) == ("band",)
+    assert fiji.components_in(FijiSlots.HyperstackSlice) == ()
+    assert fiji.components_in(FijiSlots.HyperstackFrame) == ("tile", "date", "scene")
+    assert FijiDisplaySettings.from_display_payload(fiji_payload) == FijiDisplaySettings(
+        lut="Fire"
+    )
+
+    napari = ViewerMappingDisplayConfigInput(napari_payload).layout()
+    assert napari.components_in(NapariSlots.Stack) == ("tile", "band", "date", "scene")
+    assert napari.names_with_role(PartitionAxis) == ("scene",)
+    assert napari.names_with_role(StackAxis) == ()
+
+    names = ViewerComponentNameMetadata.from_wire_mapping(
+        {"band": {"3": "NIR"}, "scene": {"S07": "Lake"}},
+        declared_axes=fiji.declared_axes,
+        context="remote sensing names",
+    )
+    assert names.axis_label("band", 3) == "Band 3: NIR"
+    assert names.axis_label("date", 14) == "Date 14"
+    assert names.axis_label("scene", "S07") == "Lake"
+
+
+def test_an_axis_without_a_viewer_role_takes_each_viewer_default_slot() -> None:
+    from openhcs.core.config import FijiDisplayConfig, NapariDisplayConfig
+
+    class Survey(AxisFamily):
+        payload_spatial_rank = 2
+
+        class Replicate(Axis, DefaultVariable, OrdinalValued):
+            name = "replicate"
+
+        class Site(Axis, PartitionAxis, LabelValued):
+            name = "site"
+
+    assert FijiDisplayConfig().slot_for_axis(Survey.Replicate) == "frame"
+    assert NapariDisplayConfig().slot_for_axis(Survey.Replicate) == "stack"
 
 
 def test_plane_addresses_spell_the_declared_tokens(remote_sensing) -> None:

@@ -635,7 +635,7 @@ class StreamOutputsAuthority:
                     context.filemanager.save_batch(
                         stream_batch.data_list,
                         stream_batch.paths,
-                        config_instance.backend.value,
+                        config_instance.viewer_family.backend.value,
                         **stream_backend_kwargs.to_kwargs(),
                     )
 

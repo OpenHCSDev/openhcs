@@ -207,7 +207,7 @@ def test_image_browser_background_cycle_uses_synchronous_settled_stream_calls():
         _prepare_streaming=lambda _config_key: (
             object(),
             "disk",
-            SimpleNamespace(display_name="Napari"),
+            SimpleNamespace(viewer_family=SimpleNamespace(display_name="Napari")),
         ),
         streaming_service=StreamingService(),
         _status_update_signal=SimpleNamespace(emit=lambda _message: None),

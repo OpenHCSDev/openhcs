@@ -11,7 +11,6 @@ import numpy as np
 import pytest
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
-from zmqruntime.viewer_protocol import ViewerComponentMode
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import (
@@ -32,22 +31,22 @@ from openhcs.runtime.napari_streaming_handlers import (
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.runtime.napari_viewer_server import (
-    NapariLayerIsolationControlMessageAction,
-    NapariNavigationControlMessageAction,
-    NapariResultElementSelectionAuthority,
+    NapariLayerIsolationControlAction,
+    NapariNavigationControlAction,
+    NapariResultElementSelections,
     NapariResultSelectionController,
     NapariResultSelectionGroupBinding,
     NapariResultSelectionSurface,
     NapariViewerServer,
 )
 from openhcs.runtime.viewer_controls import (
-    ViewerPointCoordinateAuthority,
+    ViewerPointCoordinates,
     ViewerLayerIsolationControlOptions,
     ViewerNavigationControlOptions,
-    ViewerResultElementCoordinateAuthority,
+    ViewerResultElementCoordinates,
 )
 from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentAxisSemanticsFactory,
     ViewerComponentLayout,
     ViewerLayerAxisProjection,
     ViewerComponentValueDomainPayload,
@@ -56,6 +55,8 @@ from openhcs.runtime.viewer_protocol import (
     ViewerControlResponseField,
     ViewerLayerIsolationField,
 )
+from openhcs.runtime.viewer_display import NapariSlots
+from tests.unit.viewer_axes_fixture import STREAM_AXES, ordinal_axes
 
 
 class _NavigationResponseGateway(ViewerWindowGatewayABC):
@@ -160,7 +161,7 @@ def _viewer_server(viewer, layer, route_key: str = "result-rois", group_binding=
         ),
     )
     server.result_selection_controller = NapariResultSelectionController(server)
-    if NapariResultElementSelectionAuthority.state(layer).supported:
+    if NapariResultElementSelections.state(layer).supported:
         from napari.layers import Points
 
         server.component_groups.items_for(route_key).append(
@@ -197,7 +198,7 @@ def test_native_navigation_acknowledges_exact_bound_linked_selection(qtbot):
     server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
     server.result_selection_controller.bind(linked, group_binding=binding)
     original_data = [coordinates.copy() for coordinates in layer.data]
-    response = NapariNavigationControlMessageAction().handle(
+    response = NapariNavigationControlAction().handle(
         server,
         {
             "payload": ViewerNavigationControlOptions(
@@ -221,7 +222,7 @@ def test_singleton_selection_expands_only_after_queued_navigation(qtbot):
     layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8, 9]})
     binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
     _viewer_server(viewer, layer, group_binding=binding)
-    state = NapariResultElementSelectionAuthority.select(layer, 1)
+    state = NapariResultElementSelections.select(layer, 1)
     assert state.selected_data_indices == (1,)
     assert layer.selected_data == {1}
     qtbot.waitUntil(lambda: layer.selected_data == {0, 1}, timeout=1000)
@@ -364,7 +365,7 @@ def test_napari_navigation_selects_native_feature_row_and_projects_evidence(qtbo
         data_index=1,
     )
 
-    response = NapariNavigationControlMessageAction().handle(
+    response = NapariNavigationControlAction().handle(
         server,
         {ViewerControlResponseField.PAYLOAD.value: request},
     )
@@ -428,7 +429,7 @@ def test_napari_layer_isolation_applies_all_routes_in_one_control_action() -> No
         selected_route_key="keep",
     )
 
-    response = NapariLayerIsolationControlMessageAction().handle(
+    response = NapariLayerIsolationControlAction().handle(
         server,
         {ViewerControlResponseField.PAYLOAD.value: request},
     )
@@ -470,7 +471,7 @@ def test_napari_layer_isolation_rejects_missing_routes_before_mutation() -> None
         visible_route_keys=("missing",),
     )
 
-    response = NapariLayerIsolationControlMessageAction().handle(
+    response = NapariLayerIsolationControlAction().handle(
         server,
         {ViewerControlResponseField.PAYLOAD.value: request},
     )
@@ -502,7 +503,7 @@ def test_napari_layer_isolation_preflights_navigation_before_mutation() -> None:
         axis_indices={"channel": 0},
     )
 
-    response = NapariLayerIsolationControlMessageAction().handle(
+    response = NapariLayerIsolationControlAction().handle(
         server,
         {ViewerControlResponseField.PAYLOAD.value: request},
     )
@@ -550,7 +551,7 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
         routed_component_values={"channel": [0, 2], "z": [1, 3]},
         axis_offsets=(0, 0),
     )
-    semantics = ViewerComponentAxisSemanticsAuthority.empty()
+    semantics = ViewerComponentAxisSemanticsFactory.empty()
     server.layer_route_state.set_dimension_state(
         "result-rois",
         NapariDimensionLayerState(
@@ -562,10 +563,11 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
                 entries=semantics.entries,
                 layout=ViewerComponentLayout.from_parts(
                     component_modes={
-                        "channel": ViewerComponentMode.STACK,
-                        "z": ViewerComponentMode.STACK,
+                        "channel": NapariSlots.Stack.wire_value,
+                        "z": NapariSlots.Stack.wire_value,
                     },
                     component_order=("channel", "z"),
+                    declared_axes=ordinal_axes("channel", "z"),
                 ),
                 route_key="result-rois",
                 projection=projection,
@@ -574,7 +576,7 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
     )
     viewer.dims.current_step = (0, 1, 0, 0)
 
-    response = NapariNavigationControlMessageAction().handle(
+    response = NapariNavigationControlAction().handle(
         server,
         {
             ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions.from_overrides(
@@ -593,7 +595,7 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
         (layer, (0, 1)),
     )
 
-    conflicting_response = NapariNavigationControlMessageAction().handle(
+    conflicting_response = NapariNavigationControlAction().handle(
         server,
         {
             ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions.from_overrides(
@@ -618,14 +620,14 @@ def test_result_element_coordinate_authority_derives_native_slice_indices() -> N
         dtype=float,
     )
 
-    assert ViewerResultElementCoordinateAuthority.axis_indices(
+    assert ViewerResultElementCoordinates.axis_indices(
         coordinates=coordinates,
         axis_labels=("channel", "z", "y", "x"),
         displayed_axis_indices=(2, 3),
         spatial_axis_labels=("y", "x"),
     ) == {"channel": 2, "z": 3}
     assert (
-        ViewerResultElementCoordinateAuthority.axis_indices(
+        ViewerResultElementCoordinates.axis_indices(
             coordinates=(4, 5),
             axis_labels=("y", "x"),
             displayed_axis_indices=(0, 1),
@@ -637,7 +639,7 @@ def test_result_element_coordinate_authority_derives_native_slice_indices() -> N
 
 def test_result_element_coordinate_authority_rejects_cross_slice_geometry() -> None:
     with pytest.raises(ValueError, match="spans multiple 'z' slices"):
-        ViewerResultElementCoordinateAuthority.axis_indices(
+        ViewerResultElementCoordinates.axis_indices(
             coordinates=((2, 3, 4, 4), (2, 4, 4, 6), (2, 3, 6, 6)),
             axis_labels=("channel", "z", "y", "x"),
             displayed_axis_indices=(2, 3),
@@ -648,14 +650,14 @@ def test_result_element_coordinate_authority_rejects_cross_slice_geometry() -> N
 def test_fractional_z_point_navigation_chooses_slice_without_rounding_geometry() -> (
     None
 ):
-    assert ViewerPointCoordinateAuthority.axis_indices(
+    assert ViewerPointCoordinates.axis_indices(
         coordinates=(2.375, 1.25, 3.5),
         axis_labels=("z_index", "y", "x"),
         displayed_axis_indices=(1, 2),
         spatial_axis_labels=("z_index", "y", "x"),
     ) == {"z_index": 2}
     with pytest.raises(ValueError, match="integral slice"):
-        ViewerResultElementCoordinateAuthority.axis_indices(
+        ViewerResultElementCoordinates.axis_indices(
             coordinates=(2.375, 1.25, 3.5),
             axis_labels=("z_index", "y", "x"),
             displayed_axis_indices=(1, 2),
@@ -666,7 +668,7 @@ def test_fractional_z_point_navigation_chooses_slice_without_rounding_geometry()
 @pytest.mark.parametrize("coordinate", [1.5, float("nan"), float("inf")])
 def test_point_coordinate_owner_preserves_strict_acquisition_admission(coordinate):
     with pytest.raises(ValueError):
-        ViewerPointCoordinateAuthority.axis_indices(
+        ViewerPointCoordinates.axis_indices(
             coordinates=(coordinate, 1.5, 2.5, 3.5),
             axis_labels=("channel", "z_index", "y", "x"),
             displayed_axis_indices=(2, 3),
@@ -677,7 +679,7 @@ def test_point_coordinate_owner_preserves_strict_acquisition_admission(coordinat
 @pytest.mark.parametrize("displayed", [(1, 2), (0, 2), (0, 1)])
 def test_shapes_coordinate_owner_stays_strict_for_hidden_spatial_axes(displayed):
     with pytest.raises(ValueError, match="integral slice"):
-        ViewerResultElementCoordinateAuthority.axis_indices(
+        ViewerResultElementCoordinates.axis_indices(
             coordinates=((1.5, 2.5, 3.5),), axis_labels=("z_index", "y", "x"),
             displayed_axis_indices=displayed, spatial_axis_labels=("z_index", "y", "x"),
         )
@@ -700,7 +702,7 @@ def test_napari_navigation_selects_fractional_z_point_feature(qtbot) -> None:
         routed_component_values={"z_index": [0, 1, 2, 3]},
         axis_offsets=(0,),
     )
-    semantics = ViewerComponentAxisSemanticsAuthority.empty()
+    semantics = ViewerComponentAxisSemanticsFactory.empty()
     server.layer_route_state.set_dimension_state(
         "centres",
         NapariDimensionLayerState(
@@ -708,8 +710,9 @@ def test_napari_navigation_selects_fractional_z_point_feature(qtbot) -> None:
             presentation=NapariAxisPresentation(
                 entries=semantics.entries,
                 layout=ViewerComponentLayout.from_parts(
-                    component_modes={"z_index": ViewerComponentMode.STACK},
+                    component_modes={"z_index": NapariSlots.Stack.wire_value},
                     component_order=("z_index",),
+                    declared_axes=STREAM_AXES,
                 ),
                 route_key="centres",
                 projection=projection,
@@ -717,7 +720,7 @@ def test_napari_navigation_selects_fractional_z_point_feature(qtbot) -> None:
         ),
     )
 
-    response = NapariNavigationControlMessageAction().handle(
+    response = NapariNavigationControlAction().handle(
         server,
         {
             ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions.from_overrides(
@@ -748,7 +751,7 @@ def test_napari_navigation_rejects_out_of_range_data_index(qtbot) -> None:
         "result-points",
     )
 
-    response = NapariNavigationControlMessageAction().handle(
+    response = NapariNavigationControlAction().handle(
         server,
         {
             ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions.from_overrides(
@@ -773,7 +776,7 @@ def test_napari_navigation_rejects_layer_without_native_data_selection(qtbot) ->
         "result-image",
     )
 
-    response = NapariNavigationControlMessageAction().handle(
+    response = NapariNavigationControlAction().handle(
         server,
         {
             ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions.from_overrides(

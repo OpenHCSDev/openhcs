@@ -14,14 +14,9 @@ from openhcs.core.config import (
     LazyStepMaterializationConfig,
     LazyStepWellFilterConfig,
     LazyProcessingConfig,
-    NapariVariableSizeHandling,
     PipelineConfig,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.analysis.cell_counting_cpu import (
-    DetectionMethod,
-    count_cells_single_channel,
-)
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.pos_gen.ashlar_main_cpu import (
     ashlar_compute_tile_positions_cpu,

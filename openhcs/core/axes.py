@@ -279,6 +279,8 @@ class Axis(GroupingDeclaration):
     """Token before this axis's value in plane filenames (variable axes)."""
     filename_padding: ClassVar[int] = 0
     """Zero padding for ordinal values in plane filenames."""
+    label: ClassVar[str]
+    """Short human-facing name, for example a viewer axis label (default: title-cased name)."""
     metadata_aliases: ClassVar[tuple[str, ...]]
     """Source-metadata field spellings that carry this axis (default: its name)."""
     metadata_collection_field: ClassVar[str]
@@ -295,6 +297,8 @@ class Axis(GroupingDeclaration):
             return  # the declaring base itself
         if "name" not in cls.__dict__:
             raise TypeError(f"Axis {cls.__qualname__} must declare its boundary name.")
+        if "label" not in cls.__dict__:
+            cls.label = cls.name.replace("_", " ").title()
         kinds = [base for base in cls.__mro__ if AxisValueKind in base.__bases__]
         if len(kinds) != 1:
             raise TypeError(

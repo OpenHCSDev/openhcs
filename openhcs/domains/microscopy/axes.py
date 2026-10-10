@@ -41,12 +41,14 @@ class Microscopy(AxisFamily):
 
     class Channel(Axis, ColourAxis, DefaultGroupBy, OrdinalValued):
         name = "channel"
+        label = "Ch"
         filename_prefix = "w"
         metadata_aliases = ("channel", "channelnumber")
         metadata_fallback = ImageSetOrdinal()
 
     class ZIndex(Axis, StackAxis, OrdinalValued):
         name = "z_index"
+        label = "Z"
         filename_prefix = "z"
         filename_padding = 3
         metadata_aliases = ("zindex", "z", "zplane", "zslice", "plane", "slice")
@@ -54,6 +56,7 @@ class Microscopy(AxisFamily):
 
     class Timepoint(Axis, TimeAxis, OrdinalValued):
         name = "timepoint"
+        label = "T"
         filename_prefix = "t"
         filename_padding = 3
         metadata_aliases = ("timepoint", "time", "framenumber", "frame")

@@ -20,9 +20,9 @@ from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import ViewerWindowSnapshotRequest
 from openhcs.runtime.napari_viewer_server import (
     NapariAcceptedControlRequest,
-    NapariControlMessageAction,
+    NapariControlAction,
     NapariLayerDisplayPipeline,
-    NapariScreenshotControlMessageAction,
+    NapariScreenshotControlAction,
     NapariViewerServer,
 )
 from openhcs.runtime.viewer_snapshot import ViewerWindowSnapshotService
@@ -94,11 +94,11 @@ def test_default_render_condition_flows_through_registered_queue_and_real_paint(
         observation_timeout_s=0.5,
     )
     assert request.frame_condition is WindowSnapshotFrameCondition.RENDER_COMPLETE
-    action = NapariControlMessageAction.for_message_type("screenshot")
-    assert isinstance(action, NapariScreenshotControlMessageAction)
+    action = NapariControlAction.for_message_type("screenshot")
+    assert isinstance(action, NapariScreenshotControlAction)
     assert isinstance(action, ViewerWindowSnapshotService)
     assert action.__class__.__mro__.index(
-        NapariControlMessageAction
+        NapariControlAction
     ) < action.__class__.__mro__.index(ViewerWindowSnapshotService)
     reply = enqueue(server, request)
     assert not reply.done() and not tuple(tmp_path.glob("*.png"))
@@ -162,7 +162,7 @@ def test_real_vispy_native_binding_through_original_registered_queue(
     assert isinstance(native, QGLWidget) and isinstance(native, QtCore.QObject)
     native.hide()
     server.viewer.window.qt_viewer.canvas = canvas
-    action = NapariControlMessageAction.for_message_type("screenshot")
+    action = NapariControlAction.for_message_type("screenshot")
     assert action.qt_core() is QtCore
     print(f"QtPy binding={API_NAME}; native MRO={type(native).__mro__}")
     try:
@@ -194,7 +194,7 @@ def test_real_vispy_native_binding_through_original_registered_queue(
 def test_new_control_case_requires_only_registered_declaration_and_hook(queued_viewer):
     _, _, server = queued_viewer
 
-    class DeclarationOnlyControl(NapariControlMessageAction):
+    class DeclarationOnlyControl(NapariControlAction):
         message_type = "source_qa_declaration_only"
 
         def handle(self, server, message):
@@ -212,7 +212,7 @@ def test_new_control_case_requires_only_registered_declaration_and_hook(queued_v
         server.process_messages()
         assert pickle.loads(reply.result(timeout=0)) == {"status": "success", "token": 17}
     finally:
-        NapariControlMessageAction.__registry__.pop(DeclarationOnlyControl.message_type)
+        NapariControlAction._registry.pop(DeclarationOnlyControl.message_type)
 
 
 def test_deferred_reply_projection_error_completes_accepted_request(
@@ -224,7 +224,7 @@ def test_deferred_reply_projection_error_completes_accepted_request(
         raise ValueError("native dimension projection failed")
 
     monkeypatch.setattr(
-        NapariScreenshotControlMessageAction, "_native_reply",
+        NapariScreenshotControlAction, "_native_reply",
         staticmethod(reject_native_projection),
     )
     request = ViewerWindowSnapshotRequest.from_fields(

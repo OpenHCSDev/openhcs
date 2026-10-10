@@ -451,7 +451,7 @@ class PipelineCompiler:
                     for binding in invocation.runtime_parameter_bindings
                 )
             )
-            config_key = config_obj.streaming_config_key
+            config_key = config_obj.viewer_family.config_key
             if session.is_zmq_execution:
                 logger.info(
                     "Streaming resolution: step=%s field=%s defaults_enabled=%r per_stream_enabled=%r effective_enabled=%r",
@@ -464,7 +464,7 @@ class PipelineCompiler:
             if enabled is not True and not runtime_required:
                 continue
 
-            backend_name = config_obj.backend.name
+            backend_name = config_obj.viewer_family.backend.name
             required_visualizer = RequiredVisualizer(
                 backend_name=backend_name,
                 config=replace(config_obj, enabled=enabled is True),

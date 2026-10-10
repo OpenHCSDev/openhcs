@@ -35,7 +35,10 @@ from openhcs.agent.dto.common import (
     AgentResultEnvelope,
     AgentWarning,
 )
-from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+from openhcs.agent.dto.execution_connection import (
+    ExecutionConnectionFields,
+    ExecutionConnectionSpec,
+)
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerOrchestratorCodeDocumentIdentity,
 )
@@ -46,23 +49,6 @@ from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportS
 from openhcs.runtime.zmq_execution_client import ExecutionRuntimeLaunchPlan
 
 MAX_EXECUTION_STATUS_TRACEBACK_CHARS = 3000
-
-
-@dataclass(frozen=True, kw_only=True)
-class ExecutionConnectionProjection:
-    connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
-
-    @property
-    def host(self) -> str:
-        return self.connection.host
-
-    @property
-    def port(self) -> int | None:
-        return self.connection.port
-
-    @property
-    def transport_mode(self) -> TransportMode | None:
-        return self.connection.transport_mode
 
 
 class RuntimeServerConnectionToolRequest(AgentCliRequest):
@@ -120,7 +106,7 @@ class OrchestratorSessionRef(OrchestratorSessionIdentity):
 
 
 @dataclass(frozen=True, slots=True)
-class OrchestratorSessionCreationRequest(ExecutionConnectionProjection):
+class OrchestratorSessionCreationRequest(ExecutionConnectionFields):
     """Create an execution session from an in-memory pipeline draft."""
 
     plate_path: str
@@ -159,7 +145,7 @@ class OrchestratorSessionCreationRequest(ExecutionConnectionProjection):
 
 
 @dataclass(frozen=True, slots=True)
-class PipelineSourceOrchestratorSessionRequest(ExecutionConnectionProjection):
+class PipelineSourceOrchestratorSessionRequest(ExecutionConnectionFields):
     """Create an execution session from pycodified pipeline source."""
 
     plate_path: str
@@ -428,7 +414,7 @@ class ArtifactPlanInspection(AgentResultEnvelope):
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeServerInfo(ExecutionConnectionProjection):
+class RuntimeServerInfo(ExecutionConnectionFields):
     schema_version: str
     reachable: bool
     ready: bool | None = None
@@ -472,7 +458,7 @@ class RuntimeServerInfo(ExecutionConnectionProjection):
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeServerScanResult(ExecutionConnectionProjection):
+class RuntimeServerScanResult(ExecutionConnectionFields):
     schema_version: str
     ports: tuple[int, ...]
     timeout_ms: int
@@ -580,7 +566,7 @@ class RuntimeServerScanRequest(AgentCliRequest):
 @dataclass(frozen=True, slots=True)
 class RuntimeServerInfoRequest(
     RuntimeServerConnectionToolRequest,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     """Request a read-only runtime-server snapshot."""
 
@@ -724,7 +710,7 @@ class RuntimeBootstrapCloseResult(AgentResultEnvelope):
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeExecutionStatus(ExecutionConnectionProjection):
+class RuntimeExecutionStatus(ExecutionConnectionFields):
     schema_version: str
     execution_id: str | None
     status: str
@@ -735,7 +721,7 @@ class RuntimeExecutionStatus(ExecutionConnectionProjection):
 @dataclass(frozen=True, slots=True)
 class RuntimeServerExecutionStatusRequest(
     RuntimeServerConnectionToolRequest,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     """Request bounded execution status from a runtime server."""
 
@@ -775,7 +761,7 @@ class RuntimeServerExecutionStatusRequest(
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeDebugInspectionResult(ExecutionConnectionProjection):
+class RuntimeDebugInspectionResult(ExecutionConnectionFields):
     """Renderer-independent values visible in one paused debug worker."""
 
     schema_version: str
@@ -787,7 +773,7 @@ class RuntimeDebugInspectionResult(ExecutionConnectionProjection):
 @dataclass(frozen=True, slots=True)
 class RuntimeDebugInspectionRequest(
     RuntimeServerConnectionToolRequest,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     """Request the typed runtime-value view for one paused debug session."""
 
@@ -839,7 +825,7 @@ class RuntimeDebugInspectionRequest(
 @dataclass(frozen=True, slots=True)
 class RuntimeDebugCommandRequest(
     RuntimeServerConnectionToolRequest,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     """Request one debug-worker command on a paused OpenHCS debug session.
 
@@ -908,7 +894,7 @@ class RuntimeDebugCommandRequest(
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeDebugCommandResult(ExecutionConnectionProjection):
+class RuntimeDebugCommandResult(ExecutionConnectionFields):
     """One debug-worker command's resulting paused-worker status."""
 
     schema_version: str
@@ -922,7 +908,7 @@ class RuntimeDebugCommandResult(ExecutionConnectionProjection):
 @dataclass(frozen=True, slots=True)
 class RuntimeDebugArtifactExportRequest(
     RuntimeServerConnectionToolRequest,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     """Request server-side export of one paused debug worker's artifact.
 
@@ -1013,7 +999,7 @@ class RuntimeDebugArtifactExportRequest(
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeDebugArtifactExportResult(ExecutionConnectionProjection):
+class RuntimeDebugArtifactExportResult(ExecutionConnectionFields):
     """One debug artifact export's resulting exported reference."""
 
     schema_version: str

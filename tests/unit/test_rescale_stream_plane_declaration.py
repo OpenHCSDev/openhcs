@@ -32,10 +32,10 @@ from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdap
 from openhcs.interop.cellprofiler.runtime.module_execution import CellProfilerModuleExecutor
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.runtime.napari_streaming_handlers import (
-    NapariAggregateAxisBindingAuthority, NapariStreamLayerAddress, NapariStreamLayerItem,
+    NapariAggregateAxisBindingBuilder, NapariStreamLayerAddress, NapariStreamLayerItem,
 )
 from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority, ViewerComponentValueDomainPayload,
+    ViewerComponentAxisSemanticsFactory, ViewerComponentValueDomainPayload,
 )
 
 # Reuse the original provider-free compiler and runtime fixtures, not a second ABI.
@@ -43,6 +43,7 @@ from test_cellprofiler_generic_special_input_binding import _compile_public_step
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
 )
+from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 
 @pytest.mark.parametrize("method", [RescaleMethod.DIVIDE_BY_VALUE, RescaleMethod.MANUAL_INPUT_RANGE])
@@ -124,10 +125,11 @@ def test_public_rescale_preserves_one_source_plane_through_stream_binding(method
         image_metadata=item.metadata,
         plane_component_domain=ViewerComponentValueDomainPayload.from_wire_mapping(
             fields.get(ViewerWireField.PLANE_COMPONENT_VALUES.value, {}), context="synthetic producer fields",
+            declared_axes=STREAM_AXES,
         ),
     )
     # The exact original strict receiver is reached, not replaced by a mock.
-    NapariAggregateAxisBindingAuthority.bindings((native_item,), ViewerComponentAxisSemanticsAuthority.empty())
+    NapariAggregateAxisBindingBuilder.bindings((native_item,), ViewerComponentAxisSemanticsFactory.empty())
     assert contract.artifact_inputs.names() == ("Bright",)
     assert request.image_count == 1
     assert result.data.shape == (4, 5)

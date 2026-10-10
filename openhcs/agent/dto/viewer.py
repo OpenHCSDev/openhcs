@@ -41,8 +41,8 @@ from openhcs.agent.dto.common import (
     AgentResourceRef,
     AgentResultEnvelope,
 )
-from openhcs.agent.dto.execution import (
-    ExecutionConnectionProjection,
+from openhcs.agent.dto.execution_connection import (
+    ExecutionConnectionFields,
     ExecutionConnectionSpec,
 )
 from openhcs.agent.path_policy import DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR
@@ -71,7 +71,7 @@ from openhcs.runtime.viewer_protocol import (
     OpenHCSViewerControlMessageType, ViewerProtocolStatus,
     ViewerImageColorControlOptions, ViewerNativeImageColorPresentation,
     ViewerNativeWindowControlOptions, ViewerNativeWindowState,
-    ViewerLayerRetirementReceipt,
+    ViewerLayerRetirementResult,
 )
 
 VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT = 5000
@@ -92,13 +92,13 @@ class ViewerWindowDescriptor:
         title: str,
     ) -> Self:
         return cls(
-            viewer_type=ViewerType.from_wire_value(viewer_wire_value),
+            viewer_type=ViewerType(viewer_wire_value),
             title=title,
         )
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ViewerWindowControlRequest(ExecutionConnectionProjection):
+class ViewerWindowControlRequest(ExecutionConnectionFields):
     """Shared control-message request fields for running viewer windows."""
 
     timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT
@@ -118,7 +118,7 @@ class ViewerWindowControlRequest(ExecutionConnectionProjection):
     @classmethod
     def factory_injected_field_names(cls) -> frozenset[str]:
         connection_field_names = frozenset(
-            field.name for field in dataclass_fields(ExecutionConnectionProjection)
+            field.name for field in dataclass_fields(ExecutionConnectionFields)
         )
         timeout_field_names = frozenset(
             field.name
@@ -1010,7 +1010,7 @@ class ViewerWindowValidationRequest(ViewerWindowControlRequest):
 
 
 @dataclass(frozen=True, slots=True)
-class ViewerWindowProbeResult(AgentResultEnvelope, ExecutionConnectionProjection):
+class ViewerWindowProbeResult(AgentResultEnvelope, ExecutionConnectionFields):
     reachable: bool
     observed: bool = False
     viewer: ViewerWindowDescriptor | None = None
@@ -1168,7 +1168,7 @@ class ViewerWindowSnapshotResult(
     WindowSnapshotCaptureSpec,
     ViewerWindowSnapshotErrorResultMixin,
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     registry_key: ClassVar[str] = "snapshot"
 
@@ -1185,7 +1185,7 @@ class ViewerWindowSnapshotResult(
 class ViewerWindowStateResult(
     ViewerWindowObservedErrorResultMixin,
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     registry_key: ClassVar[str] = "state"
 
@@ -1305,7 +1305,7 @@ class ViewerWindowLayerPayloads(ViewerWindowLayerDescriptor):
 class ViewerWindowPayloadResult(
     ViewerWindowObservedErrorResultMixin,
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     registry_key: ClassVar[str] = "payload"
 
@@ -1320,7 +1320,7 @@ class ViewerWindowPayloadResult(
 class ViewerWindowPolylineMeasurementResult(
     ViewerWindowObservedErrorResultMixin,
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     registry_key: ClassVar[str] = "polyline_measurement"
     observed: bool
@@ -1332,7 +1332,7 @@ class ViewerWindowPolylineMeasurementResult(
 class ViewerWindowRegionMeasurementResult(
     ViewerWindowObservedErrorResultMixin,
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     registry_key: ClassVar[str] = "region_measurement"
     observed: bool
@@ -1344,7 +1344,7 @@ class ViewerWindowRegionMeasurementResult(
 class ViewerWindowPresentationResult(
     ViewerWindowObservedErrorResultMixin,
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     """One reply admission and error lifecycle shared by native presentations."""
 
@@ -1402,7 +1402,7 @@ class ViewerWindowNativePresentationResult(ViewerWindowPresentationResult):
 class ViewerWindowImageIntensityResult(
     ViewerWindowObservedErrorResultMixin,
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     registry_key: ClassVar[str] = "image_intensity"
 
@@ -1416,7 +1416,7 @@ class ViewerWindowImageIntensityResult(
 class ViewerWindowNavigationResult(
     ViewerWindowObservedErrorResultMixin,
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     registry_key: ClassVar[str] = "navigation"
 
@@ -1446,11 +1446,11 @@ class ViewerWindowLayerVisibilityRecord:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerWindowLayerRetirementResult(
     ViewerWindowPresentationResult,
-    ViewerLayerRetirementReceipt,
+    ViewerLayerRetirementResult,
 ):
     registry_key: ClassVar[str] = "layer_retirement"
     response_field = ViewerControlField.RETIREMENT
-    snapshot_type = ViewerLayerRetirementReceipt
+    snapshot_type = ViewerLayerRetirementResult
     observed: bool = field(kw_only=True)
 
     @classmethod
@@ -1478,7 +1478,7 @@ class ViewerWindowLayerRetirementResult(
 class ViewerWindowLayerIsolationResult(
     ViewerWindowObservedErrorResultMixin,
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     registry_key: ClassVar[str] = "layer_isolation"
 
@@ -1510,7 +1510,7 @@ class ViewerWindowIntensityPayloadIdentity:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerWindowIntensityWindowResult(
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     """Typed outcome of one route-global native viewer contrast mutation."""
 
@@ -1670,7 +1670,7 @@ class ViewerWindowValidationSummaryResult(
     ViewerWindowValidationErrorResultMixin,
     ViewerWindowValidationCounters,
     AgentResultEnvelope,
-    ExecutionConnectionProjection,
+    ExecutionConnectionFields,
 ):
     observed: bool = False
     viewer: ViewerWindowDescriptor | None = None
@@ -1703,7 +1703,7 @@ class ViewerWindowValidationSummaryResult(
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ViewerWindowErrorContext(ExecutionConnectionProjection):
+class ViewerWindowErrorContext(ExecutionConnectionFields):
     """Nominal source context for viewer result errors."""
 
     error: AgentError

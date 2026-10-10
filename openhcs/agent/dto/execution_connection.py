@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass, field, replace
 from typing import TYPE_CHECKING
 
 from python_introspect import (
@@ -110,3 +110,22 @@ class ExecutionConnectionSpec(AgentDataclassCliRequest):
             transport_mode=self.transport_mode,
             config=config,
         )
+
+
+@dataclass(frozen=True, kw_only=True)
+class ExecutionConnectionFields:
+    """A request or result that carries one execution connection."""
+
+    connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
+
+    @property
+    def host(self) -> str:
+        return self.connection.host
+
+    @property
+    def port(self) -> int | None:
+        return self.connection.port
+
+    @property
+    def transport_mode(self) -> TransportMode | None:
+        return self.connection.transport_mode

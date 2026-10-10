@@ -22,7 +22,7 @@ from openhcs.agent.capabilities import (
 )
 from openhcs.mcp.server import McpCapabilityBinder, build_server
 from openhcs.mcp.dev_client_commands.viewer import RetireViewerCommandSpec
-from openhcs.runtime.viewer_protocol import ViewerLayerRetirementReceipt
+from openhcs.runtime.viewer_protocol import ViewerLayerRetirementResult
 from python_introspect import to_jsonable
 
 
@@ -172,10 +172,10 @@ def test_service_rejects_failed_or_mismatched_retirement_receipt(native):
 
 
 def test_receipt_uses_original_declaration_codec_and_envelope_error_mro():
-    receipt = ViewerLayerRetirementReceipt.from_wire_mapping({
+    receipt = ViewerLayerRetirementResult.from_wire_mapping({
         "applied": True, "retired_route_keys": ["exact-route"], "remaining_route_keys": ["raw"],
     })
     assert receipt.retired_route_keys == ("exact-route",)
     with pytest.raises(ValueError, match="undeclared"):
-        ViewerLayerRetirementReceipt.from_wire_mapping({"extra": 1})
+        ViewerLayerRetirementResult.from_wire_mapping({"extra": 1})
     assert request().start_operation().control_deadline().timeout_ms == 5000
