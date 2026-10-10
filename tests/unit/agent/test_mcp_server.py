@@ -850,7 +850,7 @@ def test_mcp_tool_descriptions_expose_debugging_result_contracts():
     assert "output_dir" in synthetic_plate_properties
     assert "overlap_percent" in synthetic_plate_properties
     assert "wavelengths" in synthetic_plate_properties
-    assert "wells" in synthetic_plate_properties
+    assert "partition_values" in synthetic_plate_properties
     assert "image/result file records" in descriptions["openhcs_query_plate_files"]
     query_plate_files_properties = schemas["openhcs_query_plate_files"]["properties"]
     assert "kind" in query_plate_files_properties
@@ -2006,7 +2006,7 @@ def test_mcp_synthetic_plate_generation_tool_projects_request(tmp_path):
                 tile_size=(request.tile_width, request.tile_height),
                 overlap_percent=request.overlap_percent,
                 stage_error_px=request.stage_error_px,
-                wells=request.wells,
+                partition_values=request.partition_values,
                 wavelengths=request.wavelengths,
                 z_stack_levels=request.z_stack_levels,
                 num_cells=request.num_cells,
@@ -2040,7 +2040,7 @@ def test_mcp_synthetic_plate_generation_tool_projects_request(tmp_path):
                     "tile_height": 48,
                     "overlap_percent": 10,
                     "wavelengths": 2,
-                    "wells": ["A01"],
+                    "partition_values": ["A01"],
                     "random_seed": 11,
                 },
             ),
@@ -2060,7 +2060,7 @@ def test_mcp_synthetic_plate_generation_tool_projects_request(tmp_path):
     assert synthetic_plate_service.request.tile_height == 48
     assert synthetic_plate_service.request.overlap_percent == 10
     assert synthetic_plate_service.request.wavelengths == 2
-    assert synthetic_plate_service.request.wells == ("A01",)
+    assert synthetic_plate_service.request.partition_values == ("A01",)
     assert synthetic_plate_service.request.random_seed == 11
     assert payload["schema_version"] == "openhcs.agent.v1"
     assert payload["output_dir"] == str(output_dir)
@@ -4195,7 +4195,7 @@ def test_mcp_dev_client_generate_synthetic_plate_command_projects_tool_arguments
             "10",
             "--wavelengths",
             "2",
-            "--well",
+            "--partition-value",
             "A01",
             "--random-seed",
             "11",
@@ -4219,7 +4219,7 @@ def test_mcp_dev_client_generate_synthetic_plate_command_projects_tool_arguments
         "z_stack_levels": 1,
         "num_cells": 80,
         "shared_cell_fraction": 0.95,
-        "wells": ["A01"],
+        "partition_values": ["A01"],
         "format": "ImageXpress",
         "openhcs_format": False,
         "include_all_components": True,

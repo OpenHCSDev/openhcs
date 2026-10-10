@@ -831,7 +831,7 @@ class SyntheticPlateGenerationRequest:
     shared_cell_fraction: float = (
         SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.shared_cell_fraction
     )
-    wells: tuple[str, ...] = SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.wells
+    partition_values: tuple[str, ...] = SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.partition_values
     format: SyntheticPlateFormat = (
         SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.format
     )
@@ -873,7 +873,7 @@ class SyntheticPlateGenerationRequest:
         shared_cell_fraction: float = (
             SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.shared_cell_fraction
         ),
-        wells: list[str] | None = None,
+        partition_values: list[str] | None = None,
         format: str = (SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.format.value),
         openhcs_format: bool = (
             SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.openhcs_format
@@ -900,10 +900,10 @@ class SyntheticPlateGenerationRequest:
             z_stack_levels=z_stack_levels,
             num_cells=num_cells,
             shared_cell_fraction=shared_cell_fraction,
-            wells=(
-                tuple(wells)
-                if wells is not None
-                else SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.wells
+            partition_values=(
+                tuple(partition_values)
+                if partition_values is not None
+                else SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.partition_values
             ),
             format=SyntheticPlateFormat(format),
             openhcs_format=openhcs_format,
@@ -925,7 +925,7 @@ class SyntheticPlateGenerationRequest:
             "z_stack_levels": self.z_stack_levels,
             "num_cells": self.num_cells,
             "shared_cell_fraction": self.shared_cell_fraction,
-            "wells": list(self.wells),
+            "partition_values": list(self.partition_values),
             "format": self.format.value,
             "openhcs_format": self.openhcs_format,
             "include_all_components": self.include_all_components,
@@ -1070,7 +1070,7 @@ class SyntheticPlateGenerationResult(AgentResultEnvelope):
     tile_size: tuple[int, int] = ()
     overlap_percent: int = 0
     stage_error_px: int = 0
-    wells: tuple[str, ...] = ()
+    partition_values: tuple[str, ...] = ()
     wavelengths: int = 0
     z_stack_levels: int = 0
     num_cells: int = 0

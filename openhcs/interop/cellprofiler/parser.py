@@ -374,7 +374,7 @@ class CPPipeParser:
                         uri=uri,
                         series=values.get("Series"),
                         index=values.get("Index"),
-                        channel=values.get("Channel"),
+                        colour_sample=values.get("Channel"),
                     )
                 )
                 if len(plane_sources) == expected_count:

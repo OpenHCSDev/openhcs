@@ -1962,6 +1962,21 @@
       "title": "Overlap Percent",
       "type": "integer"
      },
+     "partition_values": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Partition Values"
+     },
      "random_seed": {
       "anyOf": [
        {
@@ -2003,21 +2018,6 @@
       "default": 2,
       "title": "Wavelengths",
       "type": "integer"
-     },
-     "wells": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "string"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": null,
-      "title": "Wells"
      },
      "z_stack_levels": {
       "default": 1,

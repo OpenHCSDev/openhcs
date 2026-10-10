@@ -351,7 +351,7 @@ class SyntheticPlateGenerationRenderer(McpDevOutputRenderer):
             ),
             (
                 "Content: "
-                f"wells={cls.sequence_text(payload.wells)} "
+                f"partition_values={cls.sequence_text(payload.partition_values)} "
                 f"channels={payload.wavelengths} "
                 f"z={payload.z_stack_levels} "
                 f"cells={payload.num_cells} "

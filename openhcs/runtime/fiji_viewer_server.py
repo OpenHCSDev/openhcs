@@ -230,9 +230,9 @@ class FijiBatchSettlementState:
 class FijiDimensionStorage:
     """Stored ImageJ C/Z/T domains for one Fiji window."""
 
-    channel: FijiDimensionValues
-    z_axis_values: FijiDimensionValues
-    frame: FijiDimensionValues
+    c: FijiDimensionValues
+    z: FijiDimensionValues
+    t: FijiDimensionValues
 
 
 @dataclass(frozen=True, slots=True)
@@ -614,27 +614,14 @@ class FijiStackSliceLabelBuilder:
     coordinates: "FijiHyperstackCoordinates"
 
     def label_for(self, key: FijiCoordinateKey) -> str:
-        c_key, z_key, t_key = key
-        label_parts = []
-        self._append_axis_label(label_parts, "C", c_key, self.coordinates.channel)
-        self._append_axis_label(
-            label_parts, "Z", z_key, self.coordinates.z_axis_coordinates
-        )
-        self._append_axis_label(label_parts, "T", t_key, self.coordinates.frame)
+        label_parts = [
+            f"{axis.name.upper()}{'_'.join(str(value) for value in axis_key)}"
+            for axis_key, axis in zip(key, self.coordinates.axes(), strict=True)
+            if axis.components
+        ]
         if label_parts:
             return "_".join(label_parts)
         return "slice"
-
-    @staticmethod
-    def _append_axis_label(
-        label_parts: list[str],
-        prefix: str,
-        axis_key: tuple,
-        axis: "FijiDimensionAxis",
-    ) -> None:
-        if not axis.components:
-            return
-        label_parts.append(f"{prefix}{'_'.join(str(value) for value in axis_key)}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -659,9 +646,9 @@ class FijiImageStackBuilder:
         label_builder = FijiStackSliceLabelBuilder(self.coordinates)
         pending_plane_count = 0
 
-        for t_key in self.coordinates.frame.values:
-            for z_key in self.coordinates.z_axis_coordinates.values:
-                for c_key in self.coordinates.channel.values:
+        for t_key in self.coordinates.t.values:
+            for z_key in self.coordinates.z.values:
+                for c_key in self.coordinates.c.values:
                     key = (c_key, z_key, t_key)
                     if self.image_lookup.contains(key):
                         processor = self._processor_for_key(key)
@@ -862,25 +849,25 @@ class FijiDimensionAxis:
 class FijiHyperstackCoordinateComponents:
     """OpenHCS components assigned to ImageJ C/Z/T dimensions."""
 
-    channel: FijiDimensionComponents
-    z_axis_components: FijiDimensionComponents
-    frame: FijiDimensionComponents
+    c: FijiDimensionComponents
+    z: FijiDimensionComponents
+    t: FijiDimensionComponents
 
     def collect(self, items: Sequence[FijiWireItem]) -> "FijiHyperstackCoordinates":
         return FijiHyperstackCoordinates(
-            channel=FijiDimensionAxis.collect(
-                name="channel",
-                components=self.channel,
+            c=FijiDimensionAxis.collect(
+                name="c",
+                components=self.c,
                 items=items,
             ),
-            z_axis_coordinates=FijiDimensionAxis.collect(
-                name="slice",
-                components=self.z_axis_components,
+            z=FijiDimensionAxis.collect(
+                name="z",
+                components=self.z,
                 items=items,
             ),
-            frame=FijiDimensionAxis.collect(
-                name="frame",
-                components=self.frame,
+            t=FijiDimensionAxis.collect(
+                name="t",
+                components=self.t,
                 items=items,
             ),
         )
@@ -890,19 +877,19 @@ class FijiHyperstackCoordinateComponents:
         images: Sequence[FijiImagePayload],
     ) -> "FijiHyperstackCoordinates":
         return FijiHyperstackCoordinates(
-            channel=FijiDimensionAxis.collect_from_images(
-                name="channel",
-                components=self.channel,
+            c=FijiDimensionAxis.collect_from_images(
+                name="c",
+                components=self.c,
                 images=images,
             ),
-            z_axis_coordinates=FijiDimensionAxis.collect_from_images(
-                name="z_axis",
-                components=self.z_axis_components,
+            z=FijiDimensionAxis.collect_from_images(
+                name="z",
+                components=self.z,
                 images=images,
             ),
-            frame=FijiDimensionAxis.collect_from_images(
-                name="frame",
-                components=self.frame,
+            t=FijiDimensionAxis.collect_from_images(
+                name="t",
+                components=self.t,
                 images=images,
             ),
         )
@@ -912,68 +899,57 @@ class FijiHyperstackCoordinateComponents:
 class FijiHyperstackCoordinates:
     """Complete ImageJ C/Z/T coordinate domain for one Fiji window."""
 
-    channel: FijiDimensionAxis
-    z_axis_coordinates: FijiDimensionAxis
-    frame: FijiDimensionAxis
+    c: FijiDimensionAxis
+    z: FijiDimensionAxis
+    t: FijiDimensionAxis
+
+    def axes(self) -> tuple[FijiDimensionAxis, FijiDimensionAxis, FijiDimensionAxis]:
+        """The hyperstack dimensions in ImageJ's C, Z, T order."""
+
+        return (self.c, self.z, self.t)
 
     def merge_storage(
         self,
         stored: FijiDimensionStorage,
     ) -> "FijiHyperstackCoordinates":
         return FijiHyperstackCoordinates(
-            channel=self.channel.merge_values(stored.channel),
-            z_axis_coordinates=self.z_axis_coordinates.merge_values(
-                stored.z_axis_values
-            ),
-            frame=self.frame.merge_values(stored.frame),
+            c=self.c.merge_values(stored.c),
+            z=self.z.merge_values(stored.z),
+            t=self.t.merge_values(stored.t),
         )
 
     def storage(self) -> FijiDimensionStorage:
         return FijiDimensionStorage(
-            channel=self.channel.values,
-            z_axis_values=self.z_axis_coordinates.values,
-            frame=self.frame.values,
+            c=self.c.values,
+            z=self.z.values,
+            t=self.t.values,
         )
 
     def dimensions(self) -> tuple[int, int, int]:
-        return (
-            len(self.channel.values),
-            len(self.z_axis_coordinates.values),
-            len(self.frame.values),
-        )
+        return tuple(len(axis.values) for axis in self.axes())
 
     def key(self, metadata: Mapping[str, ComponentValue]) -> FijiCoordinateKey:
-        return (
-            self.channel.value_tuple(metadata),
-            self.z_axis_coordinates.value_tuple(metadata),
-            self.frame.value_tuple(metadata),
-        )
+        return tuple(axis.value_tuple(metadata) for axis in self.axes())
 
     def imagej_position(
         self,
         metadata: Mapping[str, ComponentValue],
     ) -> tuple[int, int, int]:
-        return (
-            self.channel.index(metadata) + 1,
-            self.z_axis_coordinates.index(metadata) + 1,
-            self.frame.index(metadata) + 1,
-        )
+        return tuple(axis.index(metadata) + 1 for axis in self.axes())
 
     def stack_index(self, key: FijiCoordinateKey) -> int:
         """Return the 1-based ImageJ stack position for a C/Z/T key."""
         c_key, z_key, t_key = key
-        c_idx = self.channel.values.index(c_key)
-        z_idx = self.z_axis_coordinates.values.index(z_key)
-        t_idx = self.frame.values.index(t_key)
+        c_idx = self.c.values.index(c_key)
+        z_idx = self.z.values.index(z_key)
+        t_idx = self.t.values.index(t_key)
         n_channels, n_slices, _ = self.dimensions()
         return (t_idx * n_slices * n_channels) + (z_idx * n_channels) + c_idx + 1
 
     def contains_axis_values(self, key: FijiCoordinateKey) -> bool:
-        c_key, z_key, t_key = key
-        return (
-            c_key in self.channel.values
-            and z_key in self.z_axis_coordinates.values
-            and t_key in self.frame.values
+        return all(
+            axis_key in axis.values
+            for axis_key, axis in zip(key, self.axes(), strict=True)
         )
 
     def label_text_for_position(
@@ -988,19 +964,19 @@ class FijiHyperstackCoordinates:
             for component, value in fixed_labels
         ]
         labels.extend(
-            self.channel.labels_for_position(
+            self.c.labels_for_position(
                 imp.getChannel(),
                 component_names_metadata,
             )
         )
         labels.extend(
-            self.z_axis_coordinates.labels_for_position(
+            self.z.labels_for_position(
                 imp.getSlice(),
                 component_names_metadata,
             )
         )
         labels.extend(
-            self.frame.labels_for_position(
+            self.t.labels_for_position(
                 imp.getFrame(),
                 component_names_metadata,
             )
@@ -1025,10 +1001,10 @@ class FijiWindowCoordinateResolution:
         if self.stored is None:
             return False
         return (
-            len(self.coordinates.channel.values) > len(self.stored.channel)
-            or len(self.coordinates.z_axis_coordinates.values)
-            > len(self.stored.z_axis_values)
-            or len(self.coordinates.frame.values) > len(self.stored.frame)
+            len(self.coordinates.c.values) > len(self.stored.c)
+            or len(self.coordinates.z.values)
+            > len(self.stored.z)
+            or len(self.coordinates.t.values) > len(self.stored.t)
         )
 
 
@@ -1419,9 +1395,9 @@ class FijiWindowItemProjection(GroupedWindowItems[FijiWireItem]):
         return cls(
             window_components=projection.window_components,
             coordinate_components=FijiHyperstackCoordinateComponents(
-                channel=layout.components_in(FijiSlots.HyperstackChannel),
-                z_axis_components=layout.components_in(FijiSlots.HyperstackSlice),
-                frame=layout.components_in(FijiSlots.HyperstackFrame),
+                c=layout.components_in(FijiSlots.HyperstackChannel),
+                z=layout.components_in(FijiSlots.HyperstackSlice),
+                t=layout.components_in(FijiSlots.HyperstackFrame),
             ),
             windows=projection.windows,
             fixed_window_labels=projection.fixed_window_labels,
@@ -1437,9 +1413,9 @@ class FijiWindowItemProjection(GroupedWindowItems[FijiWireItem]):
         )
         logger.info("🗂️  FIJI SERVER: Dimension mapping:")
         logger.info("  WINDOW: %s", self.window_components)
-        logger.info("  CHANNEL: %s", self.coordinate_components.channel)
-        logger.info("  SLICE: %s", self.coordinate_components.z_axis_components)
-        logger.info("  FRAME: %s", self.coordinate_components.frame)
+        logger.info("  CHANNEL: %s", self.coordinate_components.c)
+        logger.info("  SLICE: %s", self.coordinate_components.z)
+        logger.info("  FRAME: %s", self.coordinate_components.t)
 
 
 @dataclass(slots=True)
@@ -1641,9 +1617,9 @@ class FijiBatchDispatcher:
             if coordinate_resolution.expanded_dimensions():
                 logger.info(
                     f"🔬 FIJI SERVER: Expanded dimensions for window '{request.window_key}': "
-                    f"{len(stored.channel)}→{len(coordinates.channel.values)}C, "
-                    f"{len(stored.z_axis_values)}→{len(coordinates.z_axis_coordinates.values)}Z, "
-                    f"{len(stored.frame)}→{len(coordinates.frame.values)}T"
+                    f"{len(stored.c)}→{len(coordinates.c.values)}C, "
+                    f"{len(stored.z)}→{len(coordinates.z.values)}Z, "
+                    f"{len(stored.t)}→{len(coordinates.t.values)}T"
                 )
             else:
                 logger.info(
@@ -1652,9 +1628,9 @@ class FijiBatchDispatcher:
         else:
             logger.info(
                 f"🔬 FIJI SERVER: First batch for window '{request.window_key}': "
-                f"{len(coordinates.channel.values)}C x "
-                f"{len(coordinates.z_axis_coordinates.values)}Z x "
-                f"{len(coordinates.frame.values)}T"
+                f"{len(coordinates.c.values)}C x "
+                f"{len(coordinates.z.values)}Z x "
+                f"{len(coordinates.t.values)}T"
             )
 
         self.server.windows.store_fixed_labels(request.window_key, request.fixed_labels)
@@ -1932,9 +1908,9 @@ class FijiViewerServer(ViewerServerPort, OpenHCSViewerServerABC):
 
         # Collect dimension values from existing images
         existing_coordinates = FijiHyperstackCoordinateComponents(
-            channel=coordinates.channel.components,
-            z_axis_components=coordinates.z_axis_coordinates.components,
-            frame=coordinates.frame.components,
+            c=coordinates.c.components,
+            z=coordinates.z.components,
+            t=coordinates.t.components,
         ).collect_images(existing_images)
 
         # Process new images and check whether the coordinate domain changed.
@@ -2511,27 +2487,27 @@ class FijiViewerServer(ViewerServerPort, OpenHCSViewerServerABC):
         """
         try:
             logger.info(
-                f"🏷️  FIJI SERVER: _set_dimension_labels called with {len(coordinates.channel.values)} channels"
+                f"🏷️  FIJI SERVER: _set_dimension_labels called with {len(coordinates.c.values)} channels"
             )
             logger.info(
-                f"🏷️  FIJI SERVER: channel axis components = {coordinates.channel.components}"
+                f"🏷️  FIJI SERVER: channel axis components = {coordinates.c.components}"
             )
             logger.info(
                 f"🏷️  FIJI SERVER: component_names_metadata = {component_names_metadata}"
             )
 
             # Set channel labels
-            if coordinates.channel.components and coordinates.channel.values:
+            if coordinates.c.components and coordinates.c.values:
                 logger.info(
-                    f"🏷️  FIJI SERVER: Setting labels for {len(coordinates.channel.values)} channels"
+                    f"🏷️  FIJI SERVER: Setting labels for {len(coordinates.c.values)} channels"
                 )
                 for idx, channel_tuple in enumerate(
-                    coordinates.channel.values, start=1
+                    coordinates.c.values, start=1
                 ):
-                    label = coordinates.channel.label_for_value(
+                    label = coordinates.c.label_for_value(
                         channel_tuple,
                         component_names_metadata,
-                        fallback_label=f"Ch{idx}",
+                        fallback_label=f"{coordinates.c.name.upper()}{idx}",
                     )
                     imp.setProperty(f"Label{idx}", label)
                     logger.info(
@@ -2637,11 +2613,11 @@ class FijiViewerServer(ViewerServerPort, OpenHCSViewerServerABC):
             # For single-channel images, add channel name to window title since no slider appears
             if (
                 nChannels == 1
-                and coordinates.channel.components
-                and coordinates.channel.values
+                and coordinates.c.components
+                and coordinates.c.values
             ):
-                first_comp = coordinates.channel.components[0]
-                first_value_tuple = coordinates.channel.values[0]
+                first_comp = coordinates.c.components[0]
+                first_value_tuple = coordinates.c.values[0]
                 channel_name = component_names_metadata.display_name(
                     first_comp,
                     first_value_tuple[0],
@@ -2844,11 +2820,11 @@ class FijiRoiPayloadHandler(FijiPayloadHandler):
             file_path = roi_item.path
 
             logger.info(f"🔬 FIJI SERVER: ROI metadata: {metadata}")
-            logger.info(f"🔬 FIJI SERVER: Channel axis: {request.coordinates.channel}")
+            logger.info(f"🔬 FIJI SERVER: Channel axis: {request.coordinates.c}")
             logger.info(
-                f"🔬 FIJI SERVER: Slice axis: {request.coordinates.z_axis_coordinates}"
+                f"🔬 FIJI SERVER: Slice axis: {request.coordinates.z}"
             )
-            logger.info(f"🔬 FIJI SERVER: Frame axis: {request.coordinates.frame}")
+            logger.info(f"🔬 FIJI SERVER: Frame axis: {request.coordinates.t}")
 
             c_value, z_value, t_value = request.coordinates.imagej_position(metadata)
 

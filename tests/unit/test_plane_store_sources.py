@@ -242,15 +242,14 @@ def test_polystore_zarr_semantic_coordinates_round_trip_through_store_discovery(
     ]
     layout = ZarrBatchLayout(
         axes=(
-            ZarrBatchAxis("t", "time", ("2", "1")),
+            ZarrBatchAxis("t", ("2", "1")),
             ZarrBatchAxis(
-                "field",
                 "field",
                 ("3",),
                 ZarrBatchAxisRole.HCS_IMAGE,
             ),
-            ZarrBatchAxis("c", "channel", ("2", "1")),
-            ZarrBatchAxis("z", "space", ("1",)),
+            ZarrBatchAxis("c", ("2", "1")),
+            ZarrBatchAxis("z", ("1",)),
         ),
         item_coordinates=(
             (0, 0, 0, 0),

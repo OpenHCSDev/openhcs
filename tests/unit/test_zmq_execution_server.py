@@ -837,5 +837,5 @@ def test_compiled_request_keeps_config_scope_without_resolving_configuration(mon
     assert initialized[0]["execution_bundle"] is bundle
     assert initialized[0]["resolved_config"] is None
     assert compilations[0]["resolved_config"] is None
-    assert compilations[0]["wells"] == ["A01"]
+    assert compilations[0]["partition_values"] == ["A01"]
     assert get_current_global_config(GlobalPipelineConfig, use_live=False) is global_config

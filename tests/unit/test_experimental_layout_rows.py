@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from openhcs.domains.microscopy.config import NormalizationMethod
-from openhcs.formats.experimental_analysis import (
+from openhcs.processing.backends.experimental_analysis.analysis import (
     average_wells,
     individual_wells,
     normalize_experiment,
@@ -12,11 +12,11 @@ from openhcs.formats.experimental_analysis import (
     project_plates_without_excluded_positions,
     write_values_heat_map,
 )
-from openhcs.formats.experimental_layout_rows import (
+from openhcs.processing.backends.experimental_analysis.layout_rows import (
     ExperimentalAnalysisScope,
     ExperimentalLayoutRowRole,
 )
-from openhcs.formats.experimental_result_formats import (
+from openhcs.processing.backends.experimental_analysis.result_formats import (
     CX5ExperimentalResultFormat,
     ExperimentalResultFormatStrategy,
     MetaXpressExperimentalResultFormat,

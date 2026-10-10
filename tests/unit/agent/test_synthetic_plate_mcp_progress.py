@@ -77,7 +77,7 @@ def test_real_mcp_generation_survives_post_inspection_inactivity_window(
                 "1",
                 "--num-cells",
                 "4",
-                "--well",
+                "--partition-value",
                 "A01",
                 "--random-seed",
                 "7",

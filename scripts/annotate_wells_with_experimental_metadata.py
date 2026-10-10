@@ -23,7 +23,7 @@ from typing import Dict, List, Tuple, Optional
 # Add openhcs to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from openhcs.formats.experimental_analysis import read_plate_layout, load_plate_groups
+from openhcs.processing.backends.experimental_analysis.analysis import read_plate_layout, load_plate_groups
 from polystore.metadata_writer import AtomicMetadataWriter, get_metadata_path
 
 

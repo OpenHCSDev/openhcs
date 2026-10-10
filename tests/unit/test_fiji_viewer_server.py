@@ -536,9 +536,9 @@ def test_fiji_window_item_projection_preserves_nominal_items() -> None:
     window_items = next(iter(projection.windows.values()))
 
     assert window_items == items
-    assert projection.coordinate_components.channel == ("channel",)
-    assert projection.coordinate_components.z_axis_components == ("z_index",)
-    assert projection.coordinate_components.frame == tuple(
+    assert projection.coordinate_components.c == ("channel",)
+    assert projection.coordinate_components.z == ("z_index",)
+    assert projection.coordinate_components.t == tuple(
         component
         for component in AxisFamily.active().names()
         if component in {"site", "well", "timepoint"}
@@ -593,7 +593,7 @@ def test_payload_local_site_axis_projects_exactly_across_fiji_and_napari() -> No
     assert all("plane_component_values" not in item.payload for item in projected_items)
 
     fiji_coordinates = fiji_projection.coordinate_components.collect(projected_items)
-    assert fiji_coordinates.frame.values == [
+    assert fiji_coordinates.t.values == [
         (1, 0, "A14"),
         (2, 0, "A14"),
     ]
@@ -721,9 +721,9 @@ def test_fiji_image_stack_builder_reports_bounded_native_work_units(
 
     channel_values = [(index,) for index in range(65)]
     coordinates = FijiHyperstackCoordinates(
-        channel=FijiDimensionAxis("channel", ["channel"], channel_values),
-        z_axis_coordinates=FijiDimensionAxis("z_axis", [], [()]),
-        frame=FijiDimensionAxis("frame", [], [()]),
+        c=FijiDimensionAxis("c", ["channel"], channel_values),
+        z=FijiDimensionAxis("z", [], [()]),
+        t=FijiDimensionAxis("t", [], [()]),
     )
     image_lookup = FijiImagePlaneLookup(
         {
@@ -802,9 +802,9 @@ def test_fiji_incremental_replacement_uses_imagej_set_pixels_signature(
             self.repaint_count += 1
 
     coordinates = FijiHyperstackCoordinates(
-        channel=FijiDimensionAxis("channel", ["channel"], [(1,)]),
-        z_axis_coordinates=FijiDimensionAxis("z_axis", ["z_index"], [(0,)]),
-        frame=FijiDimensionAxis("frame", ["timepoint"], [(0,)]),
+        c=FijiDimensionAxis("c", ["channel"], [(1,)]),
+        z=FijiDimensionAxis("z", ["z_index"], [(0,)]),
+        t=FijiDimensionAxis("t", ["timepoint"], [(0,)]),
     )
     existing_image = FijiImagePayload(
         data=np.zeros((2, 3), dtype=np.uint8),
@@ -859,9 +859,9 @@ def test_fiji_image_intensity_range_uses_extracted_planes() -> None:
 
 def test_fiji_stack_slice_label_builder_uses_coordinate_axes() -> None:
     coordinates = FijiHyperstackCoordinates(
-        channel=FijiDimensionAxis("channel", ["channel"], [(1,)]),
-        z_axis_coordinates=FijiDimensionAxis("z_axis", ["z_index"], [(0,)]),
-        frame=FijiDimensionAxis("frame", ["site", "well"], [(2, "A14")]),
+        c=FijiDimensionAxis("c", ["channel"], [(1,)]),
+        z=FijiDimensionAxis("z", ["z_index"], [(0,)]),
+        t=FijiDimensionAxis("t", ["site", "well"], [(2, "A14")]),
     )
 
     assert (
@@ -952,9 +952,9 @@ def test_fiji_roi_handler_converts_and_adds_bounded_native_work_units(
     )
     component_names = ViewerComponentNameMetadata.empty()
     coordinates = FijiHyperstackCoordinates(
-        channel=FijiDimensionAxis("channel", ["channel"], [(1,)]),
-        z_axis_coordinates=FijiDimensionAxis("z_axis", ["z_index"], [(0,)]),
-        frame=FijiDimensionAxis("frame", ["timepoint"], [(0,)]),
+        c=FijiDimensionAxis("c", ["channel"], [(1,)]),
+        z=FijiDimensionAxis("z", ["z_index"], [(0,)]),
+        t=FijiDimensionAxis("t", ["timepoint"], [(0,)]),
     )
     item = FijiWireItem.from_payload(
         {

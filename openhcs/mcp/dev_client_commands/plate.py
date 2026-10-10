@@ -103,10 +103,10 @@ class GenerateSyntheticPlateCommandSpec(SingleToolCommandSpec):
             "--shared-cell-fraction",
         )
         parser.add_argument(
-            "--well",
-            dest="wells",
+            "--partition-value",
+            dest="partition_values",
             action="append",
-            help="Well ID to generate. Repeat for multiple wells.",
+            help="Partition value to generate. Repeat for several.",
         )
         add_request_field_option(
             parser,
@@ -164,7 +164,7 @@ class GenerateSyntheticPlateCommandSpec(SingleToolCommandSpec):
             z_stack_levels=args.z_stack_levels,
             num_cells=args.num_cells,
             shared_cell_fraction=args.shared_cell_fraction,
-            wells=args.wells,
+            partition_values=args.partition_values,
             format=args.format,
             openhcs_format=args.openhcs_format,
             include_all_components=args.include_all_components,

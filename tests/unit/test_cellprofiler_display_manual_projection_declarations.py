@@ -550,14 +550,14 @@ def test_display_callables_resolve_values_from_declared_measurement_tables() -> 
     assert density.row_mappings()[0]["num_points"] == 2
     assert histogram.row_mappings()[0]["total_count"] == 2
     assert scatter.row_mappings()[0]["point_count"] == 2
-    assert {row["well"] for row in platemap.row_mappings() if "well" in row} == {
+    assert {row["well_name"] for row in platemap.row_mappings() if "well_name" in row} == {
         "A01",
         "A02",
     }
     object_well_values = {
-        row["well"]: row["value"]
+        row["well_name"]: row["value"]
         for row in object_platemap.row_mappings()
-        if "well" in row
+        if "well_name" in row
     }
     assert object_well_values == {"A01": 3.0, "A02": 6.0}
 

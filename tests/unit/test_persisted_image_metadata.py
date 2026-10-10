@@ -610,7 +610,7 @@ def test_zarr_batch_header_uses_native_mapping_without_pixels(tmp_path, monkeypa
         np.arange(20, dtype=np.uint16).reshape(4, 5) + channel for channel in (1, 2)
     ]
     layout = ZarrBatchLayout(
-        axes=(ZarrBatchAxis("c", "channel", ("1", "2"), ZarrBatchAxisRole.ARRAY),),
+        axes=(ZarrBatchAxis("c", ("1", "2"), ZarrBatchAxisRole.ARRAY),),
         item_coordinates=((0,), (1,)),
     )
     backend.save_batch(
@@ -720,7 +720,7 @@ def test_mixed_zarr_batch_preserves_lineage_but_not_quantized_value_proofs(tmp_p
         row="A",
         col="01",
         batch_layout=ZarrBatchLayout(
-            axes=(ZarrBatchAxis("c", "channel", ("1", "2")),),
+            axes=(ZarrBatchAxis("c", ("1", "2")),),
             item_coordinates=((0,), (1,)),
         ),
     )

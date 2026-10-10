@@ -27,7 +27,7 @@ class SyntheticPlateGenerationParameters:
     z_stack_levels: int = 1
     num_cells: int = 80
     shared_cell_fraction: float = 0.95
-    wells: tuple[str, ...] = ("A01",)
+    partition_values: tuple[str, ...] = ("A01",)
     format: SyntheticPlateFormat = SyntheticPlateFormat.IMAGE_XPRESS
     openhcs_format: bool = False
     include_all_components: bool = True
@@ -47,7 +47,7 @@ class SyntheticPlateGenerationBounds:
     max_stage_error_px: int = 128
     max_wavelengths: int = 8
     max_z_stack_levels: int = 16
-    max_wells: int = 96
+    max_partition_values: int = 96
     max_num_cells: int = 10_000
     max_sample_file_limit: int = 10_000
 
@@ -146,15 +146,15 @@ class SyntheticPlateGenerationProfile:
             minimum=0,
             maximum=self.bounds.max_sample_file_limit,
         )
-        if not request.wells:
-            raise ValueError("wells must contain at least one well.")
-        if len(request.wells) > self.bounds.max_wells:
+        if not request.partition_values:
+            raise ValueError("partition_values must contain at least one value.")
+        if len(request.partition_values) > self.bounds.max_partition_values:
             raise ValueError(
-                f"wells must not contain more than {self.bounds.max_wells} entries."
+                f"partition_values must not contain more than {self.bounds.max_partition_values} entries."
             )
-        for well in request.wells:
-            if not well:
-                raise ValueError("wells must not contain empty values.")
+        for value in request.partition_values:
+            if not value:
+                raise ValueError("partition_values must not contain empty values.")
         self.format_from_value(request.format)
 
     @staticmethod

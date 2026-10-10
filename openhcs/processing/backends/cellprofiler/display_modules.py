@@ -918,7 +918,7 @@ class PlatemapData:
     """Aggregated measurement data for plate map visualization."""
 
     plate: str
-    well: str
+    well_name: str
     row: str
     column: str
     value: float
@@ -1135,7 +1135,7 @@ def display_platemap(
             platemap_entries.append(
                 PlatemapData(
                     plate=plate,
-                    well=well,
+                    well_name=well,
                     row=row,
                     column=col,
                     value=aggregated,

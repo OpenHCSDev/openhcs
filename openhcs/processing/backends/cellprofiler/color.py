@@ -122,7 +122,7 @@ class ImageChannelType(Enum):
 
     RGB = ("rgb", SelectedColorChannelProjection)
     HSV = ("hsv", DerivedColorChannelProjection)
-    CHANNELS = ("channels", SelectedColorChannelProjection)
+    CHANNELS = ("numbered_channels", SelectedColorChannelProjection)
 
     @property
     def scalar_output_projection(self) -> ColorToGrayScalarOutputProjection:
@@ -162,11 +162,11 @@ class ColorToGrayModule(
     @dataclass(frozen=True, slots=True)
     class FixedImageType:
         output_offset: int
-        channels: tuple["ColorToGrayModule.FixedChannel", ...]
+        fixed_channels: tuple["ColorToGrayModule.FixedChannel", ...]
 
     rgb_fixed_image_type = FixedImageType(
         output_offset=1,
-        channels=(
+        fixed_channels=(
             FixedChannel(
                 "Convert red to gray?",
                 "Red",
@@ -186,13 +186,13 @@ class ColorToGrayModule(
     )
     hsv_fixed_image_type = FixedImageType(
         output_offset=4,
-        channels=(
+        fixed_channels=(
             FixedChannel("Convert hue to gray?", "Hue"),
             FixedChannel("Convert saturation to gray?", "Saturation"),
             FixedChannel("Convert value to gray?", "Value"),
         ),
     )
-    default_channel_indices = tuple(range(len(rgb_fixed_image_type.channels)))
+    default_channel_indices = tuple(range(len(rgb_fixed_image_type.fixed_channels)))
 
     input_image_binding = SettingToKeywordBinding.input(
         input_image_setting, ImageArtifactType
@@ -381,14 +381,14 @@ class ColorToGrayModule(
             return tuple(f"{base_name}Channel{index + 1}" for index in channel_indices)
         declaration = cls.fixed_image_type(image_type)
         if any(
-            index < 0 or index >= len(declaration.channels) for index in channel_indices
+            index < 0 or index >= len(declaration.fixed_channels) for index in channel_indices
         ):
             raise ValueError(
                 f"ColorToGray channel indices must address {image_type.value} "
                 f"channels, got {channel_indices!r}."
             )
         return tuple(
-            f"{base_name}{declaration.channels[index].output_suffix}"
+            f"{base_name}{declaration.fixed_channels[index].output_suffix}"
             for index in channel_indices
         )
 
@@ -400,7 +400,7 @@ class ColorToGrayModule(
             cls.channel_weight_setting,
             *(
                 channel.weight_setting
-                for channel in cls.rgb_fixed_image_type.channels
+                for channel in cls.rgb_fixed_image_type.fixed_channels
                 if channel.weight_setting is not None
             ),
             *(
@@ -409,7 +409,7 @@ class ColorToGrayModule(
                     cls.rgb_fixed_image_type,
                     cls.hsv_fixed_image_type,
                 )
-                for channel in declaration.channels
+                for channel in declaration.fixed_channels
             ),
         )
 
@@ -489,7 +489,7 @@ class ColorToGrayModule(
         output_names = setting_values(module, cls.output_image_setting)
         output_flag_values = tuple(
             optional_setting_value(module, channel.output_flag)
-            for channel in declaration.channels
+            for channel in declaration.fixed_channels
         )
         if all(value is None for value in output_flag_values):
             if not output_names:
@@ -501,7 +501,7 @@ class ColorToGrayModule(
         enabled_indices = tuple(
             index
             for index, (channel, value) in enumerate(
-                zip(declaration.channels, output_flag_values, strict=True)
+                zip(declaration.fixed_channels, output_flag_values, strict=True)
             )
             if value is not None
             and cls.flag_enabled(module, binder, channel.output_flag)
@@ -511,7 +511,7 @@ class ColorToGrayModule(
                 f"ColorToGray({module.module_num}) split mode must declare at least one enabled output channel."
             )
         full_cellprofiler_row_count = declaration.output_offset + len(
-            declaration.channels
+            declaration.fixed_channels
         )
         if len(output_names) >= full_cellprofiler_row_count:
             return tuple(
@@ -568,7 +568,7 @@ class ColorToGrayModule(
         declaration = cls.fixed_image_type(image_type)
         return tuple(
             index
-            for index, channel in enumerate(declaration.channels)
+            for index, channel in enumerate(declaration.fixed_channels)
             if cls.flag_enabled(module, binder, channel.output_flag)
         )
 
@@ -590,7 +590,7 @@ class ColorToGrayModule(
                             setting, required_setting_value(module, setting)
                         )
                     )
-                    for channel in cls.rgb_fixed_image_type.channels
+                    for channel in cls.rgb_fixed_image_type.fixed_channels
                     if (setting := channel.weight_setting) is not None
                 )
             )
@@ -2310,7 +2310,7 @@ class InvertForPrintingModule(
             "blue_output_name",
         ),
     )
-    channels = (red_channel, green_channel, blue_channel)
+    rgb_channels = (red_channel, green_channel, blue_channel)
     color_input_binding = SettingToKeywordBinding.input(
         color_input_setting,
         ImageArtifactType,
@@ -2321,9 +2321,9 @@ class InvertForPrintingModule(
         "color_output_name",
     )
     setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
-        *(channel.input_binding for channel in channels),
+        *(channel.input_binding for channel in rgb_channels),
         color_input_binding,
-        *(channel.output_binding for channel in channels),
+        *(channel.output_binding for channel in rgb_channels),
         color_output_binding,
         SettingToKeywordBinding(
             input_mode_setting,
@@ -2337,7 +2337,7 @@ class InvertForPrintingModule(
                 parse_cellprofiler_bool,
             )
             for channel, parameter_name in zip(
-                channels,
+                rgb_channels,
                 ("use_red_input", "use_green_input", "use_blue_input"),
                 strict=True,
             )
@@ -2354,7 +2354,7 @@ class InvertForPrintingModule(
                 parse_cellprofiler_bool,
             )
             for channel, parameter_name in zip(
-                channels,
+                rgb_channels,
                 ("output_red", "output_green", "output_blue"),
                 strict=True,
             )
@@ -2388,7 +2388,7 @@ class InvertForPrintingModule(
         else:
             active_inputs = tuple(
                 channel.input_binding
-                for channel in cls.channels
+                for channel in cls.rgb_channels
                 if parse_cellprofiler_bool(
                     required_setting_value(module, channel.input_flag_setting)
                 )
@@ -2403,7 +2403,7 @@ class InvertForPrintingModule(
         else:
             active_outputs = tuple(
                 channel.output_binding
-                for channel in cls.channels
+                for channel in cls.rgb_channels
                 if parse_cellprofiler_bool(
                     required_setting_value(module, channel.output_flag_setting)
                 )
@@ -2456,7 +2456,7 @@ class InvertForPrintingModule(
             parse_cellprofiler_bool(
                 required_setting_value(module, channel.output_flag_setting)
             )
-            for channel in cls.channels
+            for channel in cls.rgb_channels
         )
         return cls.require_callable(
             cls.function_variants[0]

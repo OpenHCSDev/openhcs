@@ -229,7 +229,7 @@ def test_complete_lazy_setup_facts_pycodify_and_reconstruct_in_fresh_process() -
                     uri="/data/explicit.npy",
                     series="0",
                     index="2",
-                    channel="1",
+                    colour_sample="1",
                 ),
             ),
             imported_metadata_tables=(
@@ -353,7 +353,7 @@ def test_cppipe_parser_preserves_embedded_image_plane_rows(tmp_path: Path) -> No
             uri="file:/tmp/A_F.TIF",
             series="0",
             index="1",
-            channel="2",
+            colour_sample="2",
         ),
     )
     assert "image_plane_sources" not in module.metadata
@@ -764,7 +764,7 @@ def test_names_and_types_parses_declared_single_image_as_broadcast_member() -> N
         uri="file:/data/flatfield.tif",
         series="2",
         index="3",
-        channel="4",
+        colour_sample="4",
     )
     assert config.image_plane_sources == (flatfield.explicit_source,)
 

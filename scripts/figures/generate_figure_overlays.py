@@ -34,7 +34,7 @@ from skimage.exposure import rescale_intensity
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from openhcs.core.roi import load_rois_from_zip, PolygonShape
-from openhcs.formats.experimental_analysis import read_plate_layout, load_plate_groups
+from openhcs.processing.backends.experimental_analysis.analysis import read_plate_layout, load_plate_groups
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)

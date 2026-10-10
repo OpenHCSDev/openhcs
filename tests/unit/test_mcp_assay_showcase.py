@@ -183,7 +183,7 @@ def test_showcase_sources_are_seven_bounded_distinct_pipeline_documents(tmp_path
         assert generation[generation.index("--z-stack-levels") + 1] == str(
             blueprint.z_stack_levels
         )
-        assert generation.count("--well") == 1
+        assert generation.count("--partition-value") == 1
         if blueprint.scenario_id == "spatial_neighbors":
             _callable, streamed_kwargs = streamed_steps[0].func
             assert streamed_kwargs["retain_neighbor_count_image"] is True

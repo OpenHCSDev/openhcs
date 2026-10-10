@@ -37,6 +37,8 @@ from openhcs.interop.cellprofiler.analyst_export import (
     CellProfilerAnalystProjectionBuilder,
     CellProfilerDatabaseExportSettings,
     CellProfilerObjectTableMode,
+    PLATE_METADATA_TAG,
+    WELL_METADATA_TAG,
 )
 from openhcs.interop.cellprofiler.workspace_export import (
     CPAWorkspacePanel,
@@ -943,8 +945,8 @@ def export_to_database(
     thumbnail_image_names: tuple[str, ...] = (),
     auto_scale_thumbnail_intensities: bool = True,
     plate_type: str | None = None,
-    plate_metadata: str = "Plate",
-    well_metadata: str = "Well",
+    plate_metadata: str = PLATE_METADATA_TAG,
+    well_metadata: str = WELL_METADATA_TAG,
     wants_group_fields: bool = False,
     group_fields: tuple[tuple[str, str], ...] = (),
     phenotype_class_table: str = "",

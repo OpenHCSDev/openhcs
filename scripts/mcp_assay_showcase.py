@@ -110,7 +110,7 @@ class ScenarioBlueprint:
             str(self.num_cells),
             "--shared-cell-fraction",
             str(self.shared_cell_fraction),
-            "--well",
+            "--partition-value",
             WELL,
             "--format",
             "ImageXpress",

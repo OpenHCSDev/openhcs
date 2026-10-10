@@ -327,7 +327,7 @@ def _generate_plate(
             "12",
             "--shared-cell-fraction",
             "0.95",
-            "--well",
+            "--partition-value",
             "A01",
             "--format",
             "ImageXpress",
