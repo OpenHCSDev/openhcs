@@ -14,7 +14,7 @@ from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotRenderOwner,
     WindowVisualObservation,
 )
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, to_jsonable
 
 from openhcs.agent.capabilities import ViewerSnapshotWindowCapability
 from openhcs.agent.dto.common import AgentError
@@ -28,7 +28,6 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.viewer_snapshot import ViewerWindowSnapshotService
-from openhcs.serialization.json import to_jsonable
 
 
 def _request(tmp_path):

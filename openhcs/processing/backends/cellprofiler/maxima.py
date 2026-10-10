@@ -23,7 +23,7 @@ from openhcs.core.measurement_row_materialization import (
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
 )

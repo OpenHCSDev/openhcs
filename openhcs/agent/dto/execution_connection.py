@@ -5,11 +5,15 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, replace
 from typing import TYPE_CHECKING
 
-from python_introspect import project_dataclass, validate_annotated_dataclass
+from python_introspect import (
+    JsonObject,
+    project_dataclass,
+    validate_annotated_dataclass,
+)
 from zmqruntime.config import NonBlankString, SocketPort, TransportMode
 from zmqruntime.transport import TransportEndpoint
 
-from openhcs.agent.dto.common import AgentDataclassCliRequest, JsonObject
+from openhcs.agent.dto.common import AgentDataclassCliRequest
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 if TYPE_CHECKING:

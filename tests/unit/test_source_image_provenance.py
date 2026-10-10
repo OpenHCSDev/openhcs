@@ -403,7 +403,7 @@ def test_removed_runtime_axis_retains_distinct_current_named_sources() -> None:
 
 
 def test_factored_provenance_preserves_current_facts_and_independent_wire_occurrences():
-    from openhcs.serialization.json import to_jsonable
+    from python_introspect import to_jsonable
 
     shared = SourceImageIdentity("birth.tif", {"source_metadata": {"site": "001"}})
     birth = shared.identity

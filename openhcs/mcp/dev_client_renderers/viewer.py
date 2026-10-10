@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import json
-from openhcs.serialization.json import to_jsonable
+from python_introspect import JsonObject, JsonValue, to_jsonable
 from collections.abc import Mapping
 from pathlib import Path
 
-from openhcs.agent.dto.common import JsonObject, JsonValue
 from openhcs.agent.dto.execution import (
     RuntimeDebugInspectionResult,
     RuntimeExecutionStatus,

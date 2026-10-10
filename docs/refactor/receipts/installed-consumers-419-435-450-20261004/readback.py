@@ -28,7 +28,7 @@ assert Path(openhcs.__file__).resolve()==original.SOURCE/'openhcs/__init__.py'
 import numpy as np, tifffile
 from scipy.ndimage import distance_transform_edt
 from openhcs.mcp.dev_client_core import McpDevServerSpec, McpDevStdioSession, McpDevToolResult
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 from benchmark.cellprofiler_reference_exports import CellProfilerReferenceExportArtifact, CellProfilerReferenceArtifactComparison

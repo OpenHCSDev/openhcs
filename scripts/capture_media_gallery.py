@@ -35,7 +35,7 @@ from pyqt_reactive.animation.flash_overlay_opengl import WindowFlashOverlayGL
 from pyqt_reactive.services.tab_identity import TabLabelDeclarationMixin
 from pyqt_reactive.services.widget_tree_projection import WidgetActionKind
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, to_jsonable
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.ui_bridge import (
@@ -64,7 +64,6 @@ from openhcs.agent.dto.viewer import (
 from openhcs.agent.services.ui_bridge_service import UiBridgeService
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.mcp.control_timeout import McpUiBridgeTimeoutPolicy, McpViewerTimeoutPolicy
-from openhcs.serialization.json import to_jsonable
 from scripts.gallery_catalog import (
     SOURCE_CAPTURE_EVIDENCE_RECORD_NAME,
     FunctionSelectorCaptureTarget,

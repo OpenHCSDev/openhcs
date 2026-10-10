@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeVar, get_typ
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect.validation import validate_annotation_value
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.source_metadata import (

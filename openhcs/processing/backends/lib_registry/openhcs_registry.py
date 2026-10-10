@@ -29,7 +29,7 @@ from openhcs.core.callable_contract import (
     FunctionStepExecutionScope,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.public_api import is_declared_public_name
+from python_introspect import is_declared_public_name
 from openhcs.processing.backends.lib_registry.unified_registry import (
     FunctionMetadata,
     LibraryRegistryBase,

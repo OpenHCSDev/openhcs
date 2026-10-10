@@ -7,9 +7,9 @@ from collections.abc import Mapping
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import project_dataclass
+from python_introspect import JsonValue, project_dataclass
 
-from openhcs.agent.dto.common import JsonValue, SCHEMA_VERSION
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
     UiObjectStateFieldFilter,
     UiObjectStateFieldListQuery,

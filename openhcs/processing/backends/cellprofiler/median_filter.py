@@ -14,7 +14,7 @@ from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_batch_contracts import (
     RuntimePure2DSliceBatchRequest,
     pure_2d_batch_executor,

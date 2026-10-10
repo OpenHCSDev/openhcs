@@ -16,7 +16,6 @@ roots = (
     repo / "openhcs/mcp",
     repo / "openhcs/core/plate_image_inventory.py",
     repo / "openhcs/runtime/viewer_protocol.py",
-    repo / "openhcs/serialization/json.py",
     backing / "python_introspect",
     paired / "metaclass_registry",
     paired / "pyqt_reactive",

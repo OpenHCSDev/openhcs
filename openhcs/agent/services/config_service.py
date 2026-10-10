@@ -30,17 +30,13 @@ from pyqt_reactive.services.parameter_help_service import (
     parameter_description_from_target,
 )
 from python_introspect import (
+    JsonValue,
     coerce_enum_member,
     declared_enum_type,
     enum_input_values,
 )
 
-from openhcs.agent.dto.common import (
-    AgentError,
-    JsonValue,
-    RenderedSource,
-    SCHEMA_VERSION,
-)
+from openhcs.agent.dto.common import AgentError, RenderedSource, SCHEMA_VERSION
 from openhcs.agent.dto.config import (
     ConfigFieldSchema,
     ConfigPatch,

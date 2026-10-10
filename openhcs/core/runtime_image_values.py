@@ -14,13 +14,12 @@ from typing import Any, TypeVar
 
 import numpy as np
 from arraybridge import ArrayGeometry, MemoryType, detect_memory_type
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, to_jsonable
 from zmqruntime.viewer_protocol import (
     ViewerWireField,
     ViewerWireMapping,
     ViewerWirePayload,
 )
-from openhcs.serialization.json import to_jsonable
 from collections.abc import Mapping
 
 from openhcs.constants.constants import AllComponents

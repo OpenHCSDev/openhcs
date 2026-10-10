@@ -40,7 +40,7 @@ from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.viewer_streaming_service import ViewerStreamingSource
 from openhcs.core.plate_file_inventory import PlateFileKind
 from openhcs.core.plate_image_inventory import PlateFileRecord
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from openhcs.runtime.viewer_protocol import ViewerPayloadSummary
 
 

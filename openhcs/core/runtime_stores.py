@@ -10,7 +10,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
-from python_introspect import RuntimeParameterDeclarationABC
+from python_introspect import RuntimeParameterDeclarationABC, to_jsonable
 
 from openhcs.constants.constants import AllComponents, Backend
 from openhcs.core.artifacts import (
@@ -47,7 +47,6 @@ from openhcs.core.source_matching import (
     semantic_source_metadata_value,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.serialization.json import to_jsonable
 
 if TYPE_CHECKING:
     from openhcs.processing.materialization.core import Output

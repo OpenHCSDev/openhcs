@@ -140,7 +140,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQExecutionIdentity,
     ZMQRuntimeObservationExportScope,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def sample_processing_function(image, sigma: float = 1.0):

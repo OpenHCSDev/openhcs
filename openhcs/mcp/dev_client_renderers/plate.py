@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import ClassVar
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import JsonObject, JsonValue
+from python_introspect import JsonObject, JsonValue
 from openhcs.agent.dto.plate import (
     PlateFileQueryResult,
     PlateFileStreamResult,

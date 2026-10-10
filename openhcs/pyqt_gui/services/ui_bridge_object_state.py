@@ -25,12 +25,14 @@ from pyqt_reactive.services.parameter_help_service import (
     resolved_parameter_description,
 )
 from python_introspect import (
+    JsonValue,
     UnifiedParameterAnalyzer,
     enum_input_values,
     project_dataclass,
+    to_jsonable,
 )
 
-from openhcs.agent.dto.common import AgentError, JsonValue, SCHEMA_VERSION
+from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
     UiCodeDocument,
     UiCodeDocumentApplyRequest,
@@ -56,7 +58,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateValuePreview,
     UiSemanticAddress,
 )
-from openhcs.serialization.json import to_jsonable
 from openhcs.agent.services.object_state_field_projection import (
     ObjectStateFieldFilterDeclaration,
 )

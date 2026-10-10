@@ -33,7 +33,7 @@ from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.mcp.dev_client_renderers.knowledge import KnowledgeDocumentRenderer
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 OFFICIAL30_DOCUMENT_ID = "openhcs_official30_benchmark_recipes"
 

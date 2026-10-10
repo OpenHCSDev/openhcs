@@ -9,7 +9,7 @@ import time
 import traceback
 import threading
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field, fields, is_dataclass, replace
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Callable, ClassVar, Mapping
 from uuid import uuid4
 
 from metaclass_registry import AutoRegisterMeta
+from python_introspect import dataclass_from_mapping, to_jsonable
 import numpy as np
 
 from openhcs.core.artifacts import (
@@ -276,7 +277,7 @@ class DebugPausedWorkerStatus:
             "cursor": (
                 None
                 if self.cursor is None
-                else DebugJsonCodec.cursor_to_record(self.cursor)
+                else to_jsonable(self.cursor)
             ),
         }
 
@@ -287,7 +288,7 @@ class DebugPausedWorkerStatus:
             debug_session_id=str(payload["debug_session_id"]),
             state=DebugPausedWorkerState(str(payload["state"])),
             cursor=(
-                None if cursor is None else DebugJsonCodec.cursor_from_record(cursor)
+                None if cursor is None else dataclass_from_mapping(DebugCursor, cursor)
             ),
         )
 
@@ -391,52 +392,6 @@ class DebugCursor:
         )
 
 
-class DebugJsonCodec:
-    """JSON-record codec derived from debug dataclass field authority."""
-
-    @staticmethod
-    def cursor_to_record(cursor: DebugCursor) -> dict[str, Any]:
-        return DebugJsonCodec.dataclass_record(cursor)
-
-    @staticmethod
-    def cursor_from_record(record: Mapping[str, Any]) -> DebugCursor:
-        cursor_record = dict(record)
-        cursor_record["step_index"] = int(cursor_record["step_index"])
-        return DebugJsonCodec.dataclass_from_record(DebugCursor, cursor_record)
-
-    @staticmethod
-    def dataclass_record(value: object) -> dict[str, Any]:
-        if not is_dataclass(value):
-            raise TypeError(
-                "DebugJsonCodec.dataclass_record requires a dataclass instance, "
-                f"got {type(value).__name__}."
-            )
-        return asdict(value)
-
-    @staticmethod
-    def dataclass_from_record(dataclass_type: type, record: Mapping[str, Any]):
-        if not is_dataclass(dataclass_type):
-            raise TypeError(
-                "DebugJsonCodec.dataclass_from_record requires a dataclass type, "
-                f"got {dataclass_type!r}."
-            )
-        missing_fields = tuple(
-            field_info.name
-            for field_info in fields(dataclass_type)
-            if field_info.name not in record
-        )
-        if missing_fields:
-            raise KeyError(
-                f"Debug record missing dataclass fields: {', '.join(missing_fields)}"
-            )
-        return dataclass_type(
-            **{
-                field_info.name: record[field_info.name]
-                for field_info in fields(dataclass_type)
-            }
-        )
-
-
 @dataclass(frozen=True, slots=True)
 class DebugArtifactRef:
     """Reference to a debug artifact or preview payload."""
@@ -507,7 +462,7 @@ class DebugArtifactRef:
         return {
             "kind": self.kind.value,
             "name": self.name,
-            "cursor": DebugJsonCodec.cursor_to_record(self.cursor),
+            "cursor": to_jsonable(self.cursor),
             "storage_ref": self.storage_ref,
             "storage_backend": self.storage_backend,
             "preview_ref": self.preview_ref,
@@ -523,7 +478,7 @@ class DebugArtifactRef:
         return cls(
             kind=ArtifactType.coerce(data["kind"]),
             name=str(data["name"]),
-            cursor=DebugJsonCodec.cursor_from_record(data["cursor"]),
+            cursor=dataclass_from_mapping(DebugCursor, data["cursor"]),
             storage_ref=str(data["storage_ref"]),
             storage_backend=data.get("storage_backend"),
             preview_ref=data.get("preview_ref"),
@@ -862,7 +817,7 @@ class DebugInvocationParameter:
         )
 
     def to_json_dict(self) -> dict[str, str]:
-        return DebugJsonCodec.dataclass_record(self)
+        return to_jsonable(self)
 
     @classmethod
     def from_json_dict(cls, data: Mapping[str, Any]) -> "DebugInvocationParameter":
@@ -903,7 +858,7 @@ class DebugSnapshot(DebugBoundaryState):
     def to_json_dict(self) -> dict[str, Any]:
         return {
             "snapshot_id": self.snapshot_id,
-            "cursor": DebugJsonCodec.cursor_to_record(self.cursor),
+            "cursor": to_jsonable(self.cursor),
             "step_name": self.step_name,
             "callable_name": self.callable_name,
             "axis_id": self.axis_id,
@@ -928,7 +883,7 @@ class DebugSnapshot(DebugBoundaryState):
     def from_json_dict(cls, data: Mapping[str, Any]) -> "DebugSnapshot":
         return cls(
             snapshot_id=str(data["snapshot_id"]),
-            cursor=DebugJsonCodec.cursor_from_record(data["cursor"]),
+            cursor=dataclass_from_mapping(DebugCursor, data["cursor"]),
             step_name=str(data["step_name"]),
             callable_name=data.get("callable_name"),
             axis_id=data.get("axis_id"),
@@ -1843,7 +1798,7 @@ class DebugProgressContext:
         return {
             "debug_session_id": self.debug_session_id,
             "snapshot_id": self.snapshot_id,
-            "cursor": DebugJsonCodec.cursor_to_record(self.cursor),
+            "cursor": to_jsonable(self.cursor),
             "event_type": self.event_type.value,
             "snapshot_store_ref": self.snapshot_store_ref,
             "snapshot_store_backend": self.snapshot_store_backend,
@@ -1857,7 +1812,7 @@ class DebugProgressContext:
         return cls(
             debug_session_id=str(context["debug_session_id"]),
             snapshot_id=context.get("snapshot_id"),
-            cursor=DebugJsonCodec.cursor_from_record(context["cursor"]),
+            cursor=dataclass_from_mapping(DebugCursor, context["cursor"]),
             event_type=DebugEventType(context["event_type"]),
             snapshot_store_ref=context.get("snapshot_store_ref"),
             snapshot_store_backend=context.get("snapshot_store_backend"),

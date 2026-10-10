@@ -16,9 +16,9 @@ before application.
 JSON transport
 --------------
 
-``openhcs.serialization.json.to_jsonable`` is the OpenHCS-owned nominal JSON
-projection for agent capabilities and UI-bridge transport. Its singledispatch
-implementations cover JSON scalars, collections, paths, enums, callables,
+``python_introspect.to_jsonable`` is the nominal JSON projection for agent
+capabilities and UI-bridge transport, and ``python_introspect.dataclass_from_mapping``
+is its decoder. The encoder's singledispatch implementations cover JSON scalars, collections, paths, enums, callables,
 dataclass instances, and registered nominal types. A registered type projects
 through its declared registry key; a callable projects through a stable import
 identity.

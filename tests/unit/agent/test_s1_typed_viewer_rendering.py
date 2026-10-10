@@ -39,7 +39,7 @@ from openhcs.mcp.dev_client_core import (
 from openhcs.mcp.dev_client_renderers.viewer import ViewerProbeRenderer, ViewerStateRenderer
 from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
 from openhcs.mcp.dev_client_rendering import McpDevTypedOutputRenderer
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def response(capability, value):

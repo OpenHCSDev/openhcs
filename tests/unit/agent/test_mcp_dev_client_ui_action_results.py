@@ -36,7 +36,7 @@ from openhcs.mcp.dev_client_rendering import (
     McpDevOutputRenderer, McpDevOutputRenderOptions,
 )
 from openhcs.mcp.dev_client_renderers.ui_bridge import UiActionInvokeRenderer
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def action_fixture():
@@ -113,7 +113,7 @@ def test_named_cli_wait_preserves_action_receipt_poll_and_final_rows(
             ControlledWireSession(), args,
         )
 
-    import openhcs.serialization.json as serialization
+    import python_introspect.jsonable as serialization
     monkeypatch.setattr(dev_client, "_run_async", controlled_session)
     if not json_output:
         def forbidden_serialization(value):
@@ -191,7 +191,7 @@ def test_actual_generic_cli_retains_nested_action_without_json_roundtrip(monkeyp
     def forbidden_serialization(value):
         raise AssertionError("Compact presentation must retain the decoded result")
 
-    import openhcs.serialization.json as serialization
+    import python_introspect.jsonable as serialization
     monkeypatch.setattr(dev_client, "_run_async", controlled_wire)
     monkeypatch.setattr(serialization, "to_jsonable", forbidden_serialization)
     assert dev_client.main([

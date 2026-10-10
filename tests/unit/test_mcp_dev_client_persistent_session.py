@@ -126,7 +126,7 @@ def test_persistent_client_initializes_once_for_distinct_command_specs(
 ) -> None:
     from openhcs.mcp.dev_client_commands import ui
     from openhcs.mcp.server import McpCapabilityBinder
-    from openhcs.serialization.json import to_jsonable
+    from python_introspect import to_jsonable
 
     health_payload = to_jsonable(McpCapabilityBinder.server_health())
 
@@ -330,7 +330,7 @@ def test_persistent_client_timeout_is_transport_inactivity_not_total_duration(
     monkeypatch,
 ) -> None:
     from openhcs.mcp.server import McpCapabilityBinder
-    from openhcs.serialization.json import to_jsonable
+    from python_introspect import to_jsonable
 
     health_payload = to_jsonable(McpCapabilityBinder.server_health())
 

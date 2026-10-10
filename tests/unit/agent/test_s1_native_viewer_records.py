@@ -38,7 +38,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerArrayValueSummary, ViewerPayloadSummary, ViewerProjectionRecord,
     ViewerPayloadControlOptions, ViewerPayloadProjectionOptions,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def item(data, *, kind=StreamingDataType.IMAGE):

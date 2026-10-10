@@ -135,14 +135,14 @@ class PublicJourney:
         self.sequence = 0
 
     def save(self, filename, value):
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
         with (self.root / filename).open("x") as stream:
             stream.write(json.dumps(to_jsonable(value), indent=2) + "\n")
 
     def call(self, name, arguments):
         from openhcs.agent.capabilities import get_agent_capability
         from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
         capability = get_agent_capability(name)
         self.sequence += 1
         stem = f"{self.sequence:03d}-{name}"
@@ -183,7 +183,7 @@ class PublicJourney:
         terminal inference; real terminal/unknown-owner/transport errors stop.
         """
         import psutil
-        from openhcs.serialization.json import to_jsonable
+        from python_introspect import to_jsonable
         started = time.monotonic()
         last_progress = None
         last_report = float("-inf")
@@ -236,7 +236,7 @@ def run(args):
     from openhcs.agent.dto.execution import RuntimeBootstrapCloseRequest, RuntimeBootstrapHandle
     from openhcs.mcp.dev_client import McpDevClient
     from openhcs.processing.custom_functions.manager import CustomFunctionManager
-    from openhcs.serialization.json import to_jsonable
+    from python_introspect import to_jsonable
     from python_introspect import dataclass_from_mapping
     from zmqruntime.messages import ExecutionStatus
 

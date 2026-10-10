@@ -35,7 +35,7 @@ from typing import Annotated, Any, Self, get_type_hints
 from pydantic import Field as PydanticField
 from pydantic import WithJsonSchema
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
-from python_introspect import dataclass_from_mapping
+from python_introspect import JsonValue, dataclass_from_mapping, to_jsonable
 from zmqruntime.config import TransportMode
 from zmqruntime.startup import EndpointStartupStatus
 
@@ -57,7 +57,6 @@ from openhcs.agent.dto.common import (
     AGENT_PARAMETER_PRODUCER_OUTPUT_CONTRACT_METADATA_KEY,
     SCHEMA_VERSION,
     AgentError,
-    JsonValue,
 )
 from openhcs.agent.dto.execution import (
     ExecutionConnectionSpec,
@@ -89,7 +88,6 @@ from openhcs.mcp.lifecycle import (
     McpProcessLifecycle,
     McpProcessRecoveryStatus,
 )
-from openhcs.serialization.json import to_jsonable
 
 MCP_SERVER_INSTRUCTIONS = CapabilityTransport.LOCAL_STDIO.server_instructions()
 

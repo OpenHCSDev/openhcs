@@ -22,7 +22,7 @@ from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionObservationExport
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from polystore.roi import load_rois_from_zip
 
 

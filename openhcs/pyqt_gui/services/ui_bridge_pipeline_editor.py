@@ -40,7 +40,7 @@ from openhcs.agent.ui_bridge_identities import (
     PipelineEditorWidgetIdentity,
     PlateManagerStateSurfaceIdentityDeclaration,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from objectstate.object_state import ObjectStateRegistry
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.progress.debug_projection import DebugRuntimeFrame

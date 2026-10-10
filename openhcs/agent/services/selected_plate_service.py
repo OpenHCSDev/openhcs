@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from openhcs.agent.dto.common import AgentError, AgentWarning, JsonValue, SCHEMA_VERSION
+from openhcs.agent.dto.common import AgentError, AgentWarning, SCHEMA_VERSION
+from python_introspect import JsonValue
 from openhcs.agent.dto.plate import (
     PlateInspectionDefaults,
     PlatePathInspectionRequest,

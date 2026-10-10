@@ -18,7 +18,7 @@ from zmqruntime.viewer_protocol import (
 )
 
 from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 SourceSpatialAliasValueT = TypeVar("SourceSpatialAliasValueT")
 

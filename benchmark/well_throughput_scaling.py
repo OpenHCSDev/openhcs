@@ -79,7 +79,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
     ZMQRuntimeObservationExportScope,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 WELL_THROUGHPUT_ROWS_CSV = "well_throughput.csv"
 WELL_THROUGHPUT_EVENTS_CSV = "well_throughput_progress_events.csv"

@@ -43,7 +43,7 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.equivalence.policy import (
     RuntimeMeasurementQualifierSuffixMatchStrategy,

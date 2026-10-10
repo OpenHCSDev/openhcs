@@ -37,7 +37,7 @@ from benchmark.annotated_validation import (
     summarize_cell_partition,
     Treatment,
 )
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 
 def test_official039_decoder_separates_reused_colors_and_touching_intensities(tmp_path):

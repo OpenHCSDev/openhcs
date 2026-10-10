@@ -42,7 +42,7 @@ from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode,
     special_inputs,
 )
-from openhcs.core.public_api import public_names_from_objects
+from python_introspect import public_names_from_objects
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     ObjectLabelStorageStrategy,

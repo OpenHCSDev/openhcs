@@ -6,7 +6,7 @@ from typing import cast
 import numpy as np
 import pytest
 
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (

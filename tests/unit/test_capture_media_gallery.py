@@ -11,14 +11,13 @@ import pytest
 from pyqt_reactive.animation import WindowFlashOverlay
 from pyqt_reactive.animation.flash_overlay_opengl import WindowFlashOverlayGL
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, to_jsonable
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentResourceRef
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.ui_bridge import UiWindowSnapshotResult
 from openhcs.agent.dto.viewer import ViewerWindowDescriptor, ViewerWindowSnapshotResult
 from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.serialization.json import to_jsonable
 from scripts.capture_media_gallery import (
     CaptureManifest,
     CaptureRecord,

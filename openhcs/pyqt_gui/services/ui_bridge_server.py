@@ -13,7 +13,12 @@ from pathlib import Path
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import project_dataclass
+from python_introspect import (
+    JsonObject,
+    dataclass_from_mapping,
+    project_dataclass,
+    to_jsonable,
+)
 from zmqruntime.messages import (
     ControlErrorResponse,
     ControlMessageType,
@@ -28,7 +33,7 @@ from zmqruntime.transport import (
     resolve_transport_mode,
 )
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, JsonObject
+from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.ui_bridge import (
     UiActionCatalog,
@@ -66,9 +71,6 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeOperationContract,
     UiBridgeOperationContractABC,
 )
-from openhcs.agent.services.ui_bridge_transport import (
-    AgentDtoJsonCodec,
-)
 from openhcs.pyqt_gui.config import AgentUiBridgeConfig
 from openhcs.pyqt_gui.services.ui_agent_bridge import (
     InProcessUiBridgeGateway,
@@ -76,7 +78,6 @@ from openhcs.pyqt_gui.services.ui_agent_bridge import (
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
-from openhcs.serialization.json import to_jsonable
 
 DEFAULT_UI_BRIDGE_START_TIMEOUT_SECONDS = 5.0
 UI_BRIDGE_BROWSER_SERVER_NAME = "OpenHCSUiBridgeServer"
@@ -353,7 +354,7 @@ class UiBridgeRequestDispatcher:
 
     def dispatch(self, payload: JsonObject) -> JsonObject:
         try:
-            request = AgentDtoJsonCodec.dataclass_from_json(
+            request = dataclass_from_mapping(
                 UiBridgeRequestEnvelope,
                 payload,
             )
@@ -396,17 +397,14 @@ class UiBridgeRequestDispatcher:
 
     @staticmethod
     def request_payload(target_type, request: UiBridgeRequestEnvelope):
-        return AgentDtoJsonCodec.dataclass_from_json(target_type, request.payload)
+        return dataclass_from_mapping(target_type, request.payload)
 
     def contract_payload(
         self,
         contract: UiBridgeOperationContract,
         request: UiBridgeRequestEnvelope,
     ):
-        return contract.decode_request_payload(
-            request.payload,
-            AgentDtoJsonCodec.dataclass_from_json,
-        )
+        return contract.decode_request_payload(request.payload)
 
     @staticmethod
     def _result_payload(result) -> JsonObject:

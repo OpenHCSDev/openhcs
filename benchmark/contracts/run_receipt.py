@@ -14,9 +14,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Self
 
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, to_jsonable
 
-from openhcs.serialization.json import to_jsonable
 
 COMPARISON_SUITE_RUN_RECEIPT_SCHEMA_VERSION = (
     "openhcs.benchmark.comparison-suite-run.v1"

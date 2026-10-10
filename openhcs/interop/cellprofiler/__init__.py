@@ -5,7 +5,7 @@ use these APIs to run parity checks, but benchmark code should not be the
 canonical owner of `.cppipe` import or CellProfiler measurement semantics.
 """
 
-from openhcs.core.public_api import exported_public_names
+from python_introspect import exported_public_names
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
     CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,

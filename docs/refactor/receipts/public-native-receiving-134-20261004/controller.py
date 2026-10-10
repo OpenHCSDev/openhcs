@@ -54,7 +54,7 @@ from openhcs.agent.dto.plate import PlateFileStreamRequest
 from openhcs.agent.dto.common import AgentResourceRef
 from openhcs.agent.dto.viewer import ViewerWindowStateRequest,ViewerWindowSnapshotRequest,ViewerWindowCloseRequest,ViewerWindowLayerIsolationRequest,ViewerWindowImageSampleRequest,ViewerWindowRoiSummaryRequest,ViewerWindowPayloadRequest,ViewerWindowViewportRequest
 from openhcs.mcp.dev_client_core import McpDevServerSpec,McpDevStdioSession,McpDevToolResult
-from openhcs.serialization.json import to_jsonable
+from python_introspect import to_jsonable
 from zmqruntime.config import TransportMode
 from zmqruntime.transport import TransportEndpoint
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG

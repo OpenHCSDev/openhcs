@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import JsonValue
+from python_introspect import JsonValue
 from openhcs.agent.dto.plate import (
     PlateFileQueryRequest,
     PlateFileStreamRequest,
