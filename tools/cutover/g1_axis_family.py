@@ -1,22 +1,21 @@
-"""One-shot G1 cutover: rewrite saved OpenHCS state onto the axis family.
+"""One-shot G1 cutover: rewrite saved OpenHCS Python sources onto the axis family.
 
 Surface G1 deleted the component enums (``AllComponents``,
 ``VariableComponents``, ``SequentialComponents``, ``StreamingComponents``,
-``GroupBy``) and replaced the per-member viewer mode fields with per-role
-fields. Two durable stores name them:
-
-* config documents (``global_config.config`` and saved plate configs): Python
-  source written by pycodify;
-* saved pipelines: dill pickles of ``FunctionStep`` lists.
+``GroupBy``), replaced the per-member viewer mode fields with per-role fields,
+and turned the member-keyed function requirements into role declarations.
+Pipelines and configs are saved as pycodify-generated Python (``.py``
+pipelines, ``global_config.config`` and plate configs); this tool rewrites any
+such source, and custom-function source that uses the decorators.
 
 Usage::
 
     python tools/cutover/g1_axis_family.py PATH [PATH ...]
 
-Each file is rewritten in place after a ``.pre-g1`` backup is written beside
-it. A file is detected as a pickle when it does not decode as UTF-8 Python.
-This tool is deleted once the owner has migrated; nothing in ``openhcs/``
-reads the pre-G1 format.
+Each file is rewritten in place after a ``<name>.pre-g1`` backup is written
+beside it. Pickled pipelines are deprecated and are not converted. This tool
+is deleted once the owner has migrated; nothing in ``openhcs/`` reads the
+pre-G1 format.
 """
 
 from __future__ import annotations
@@ -25,23 +24,8 @@ import ast
 import re
 import shutil
 import sys
-from dataclasses import is_dataclass
 from pathlib import Path
 
-MEMBER_CLASSES = {
-    "WELL": "Well",
-    "SITE": "Site",
-    "CHANNEL": "Channel",
-    "Z_INDEX": "ZIndex",
-    "TIMEPOINT": "Timepoint",
-}
-VALUE_CLASSES = {
-    "well": "Well",
-    "site": "Site",
-    "channel": "Channel",
-    "z_index": "ZIndex",
-    "timepoint": "Timepoint",
-}
 ENUM_NAMES = (
     "AllComponents",
     "VariableComponents",
@@ -49,6 +33,20 @@ ENUM_NAMES = (
     "StreamingComponents",
     "GroupBy",
 )
+MEMBER_CLASSES = {
+    "WELL": "Well",
+    "SITE": "Site",
+    "CHANNEL": "Channel",
+    "Z_INDEX": "ZIndex",
+    "TIMEPOINT": "Timepoint",
+}
+MEMBER_ROLES = {
+    "WELL": "PartitionAxis",
+    "SITE": "TileAxis",
+    "CHANNEL": "ColourAxis",
+    "Z_INDEX": "StackAxis",
+    "TIMEPOINT": "TimeAxis",
+}
 MODE_FIELDS = {
     "well_mode": "partition_mode",
     "site_mode": "tile_mode",
@@ -56,33 +54,78 @@ MODE_FIELDS = {
     "z_index_mode": "stack_mode",
     "timepoint_mode": "time_mode",
 }
-
-
-# ---------------------------------------------------------------------------
-# Config documents (Python source)
-# ---------------------------------------------------------------------------
+DECORATORS = {
+    "required_variable_components": "required_axis_roles",
+    "allowed_group_by": "allowed_group_by_roles",
+}
+REMOVED_CONSTANT_NAMES = {
+    *ENUM_NAMES,
+    "DEFAULT_GROUP_BY",
+    "DEFAULT_VARIABLE_COMPONENTS",
+    "MULTIPROCESSING_AXIS",
+}
+_ENUM_ALT = "|".join(ENUM_NAMES)
+_MEMBER_ALT = "|".join(MEMBER_CLASSES)
 
 
 def rewrite_source(source: str) -> str:
-    enum_alt = "|".join(ENUM_NAMES)
-    text = re.sub(r"\bGroupBy\.NONE\b", "Ungrouped", source)
-    for member, cls in MEMBER_CLASSES.items():
-        text = re.sub(rf"\b(?:{enum_alt})\.{member}\b", f"Microscopy.{cls}", text)
+    """Return ``source`` rewritten onto the axis family; it must still parse."""
+
+    text = _rewrite_decorators(source)
+    text = re.sub(r"\bGroupBy\.NONE\b", "Ungrouped", text)
+    text = re.sub(
+        rf"\b(?:{_ENUM_ALT})\.({_MEMBER_ALT})\b",
+        lambda match: f"Microscopy.{MEMBER_CLASSES[match.group(1)]}",
+        text,
+    )
     for old, new in MODE_FIELDS.items():
         text = re.sub(rf"\b{old}(?=\s*=)", new, text)
-    text = _drop_enum_imports(text)
+    text = _drop_removed_imports(text)
     imports = []
-    if "Microscopy." in text and "import Microscopy" not in text:
+    if "Microscopy." in text and not _imports(text, "Microscopy"):
         imports.append("from openhcs.domains.microscopy.axes import Microscopy\n")
-    if re.search(r"\bUngrouped\b", text) and "import Ungrouped" not in text:
-        imports.append("from openhcs.core.axes import Ungrouped\n")
+    axes_names = sorted(
+        name
+        for name in ("Ungrouped", *MEMBER_ROLES.values())
+        if re.search(rf"\b{name}\b", text) and not _imports(text, name)
+    )
+    if axes_names:
+        imports.append(f"from openhcs.core.axes import {', '.join(axes_names)}\n")
     if imports:
         text = _insert_after_imports(text, "".join(imports))
     ast.parse(text)
     return text
 
 
-def _drop_enum_imports(text: str) -> str:
+def _rewrite_decorators(text: str) -> str:
+    for old, new in DECORATORS.items():
+        text = re.sub(
+            rf"\b{old}\(([^()]*)\)",
+            lambda match, new=new: f"{new}({_members_to_roles(match.group(1))})",
+            text,
+        )
+        text = re.sub(rf"\b{old}\b", new, text)
+    return text
+
+
+def _members_to_roles(arguments: str) -> str:
+    return re.sub(
+        rf"\b(?:{_ENUM_ALT})\.({_MEMBER_ALT})\b",
+        lambda match: MEMBER_ROLES[match.group(1)],
+        arguments,
+    )
+
+
+def _imports(text: str, name: str) -> bool:
+    tree = ast.parse(text)
+    return any(
+        isinstance(node, ast.ImportFrom)
+        and any((alias.asname or alias.name) == name for alias in node.names)
+        for node in tree.body
+    )
+
+
+def _drop_removed_imports(text: str) -> str:
     pattern = re.compile(
         r"^from openhcs\.constants(?:\.constants)? import (\([^)]*\)|[^\n]*)\n",
         re.MULTILINE,
@@ -91,7 +134,7 @@ def _drop_enum_imports(text: str) -> str:
     def replace(match: re.Match[str]) -> str:
         body = match.group(1).strip("()")
         names = [n.strip() for n in body.replace("\n", ",").split(",") if n.strip()]
-        kept = [n for n in names if n.split(" as ")[0] not in ENUM_NAMES]
+        kept = [n for n in names if n.split(" as ")[0] not in REMOVED_CONSTANT_NAMES]
         if not kept:
             return ""
         module = match.group(0).split(" import ")[0][len("from ") :]
@@ -109,98 +152,25 @@ def _insert_after_imports(text: str, block: str) -> str:
     return "".join(lines)
 
 
-# ---------------------------------------------------------------------------
-# Saved pipelines (dill pickles)
-# ---------------------------------------------------------------------------
+def migrate(path: Path) -> bool:
+    """Rewrite one source file; return whether it changed."""
 
-
-def _axis_for_value(value: object) -> object:
-    from openhcs.core.axes import Ungrouped
-    from openhcs.domains.microscopy.axes import Microscopy
-
-    if value is None:
-        return Ungrouped
-    return getattr(Microscopy, VALUE_CLASSES[str(value)])
-
-
-class _PreG1Enum:
-    """Stands in for a deleted enum class while one pickle is decoded."""
-
-    def __call__(self, value: object) -> object:
-        return _axis_for_value(value)
-
-
-def load_pre_g1_pickle(path: Path) -> object:
-    import dill
-
-    class Unpickler(dill.Unpickler):
-        def find_class(self, module: str, name: str):  # noqa: ANN202
-            if module == "openhcs.constants.constants" and name in ENUM_NAMES:
-                return _PreG1Enum()
-            return super().find_class(module, name)
-
-    with path.open("rb") as handle:
-        loaded = Unpickler(handle).load()
-    _rename_mode_fields(loaded, set())
-    return loaded
-
-
-def _rename_mode_fields(value: object, seen: set[int]) -> None:
-    if id(value) in seen:
-        return
-    seen.add(id(value))
-    if isinstance(value, (list, tuple, set, frozenset)):
-        for item in value:
-            _rename_mode_fields(item, seen)
-        return
-    if isinstance(value, dict):
-        for item in value.values():
-            _rename_mode_fields(item, seen)
-        return
-    state = getattr(value, "__dict__", None)
-    if not isinstance(state, dict) or isinstance(value, type):
-        return
-    if is_dataclass(value):
-        for old, new in MODE_FIELDS.items():
-            if old in state:
-                state[new] = state.pop(old)
-    for item in list(state.values()):
-        _rename_mode_fields(item, seen)
-
-
-def rewrite_pickle(path: Path) -> None:
-    import dill
-
-    loaded = load_pre_g1_pickle(path)
-    with path.open("wb") as handle:
-        dill.dump(loaded, handle)
-
-
-# ---------------------------------------------------------------------------
-
-
-def migrate(path: Path) -> str:
+    source = path.read_text(encoding="utf-8")
+    rewritten = rewrite_source(source)
+    if rewritten == source:
+        return False
     shutil.copy2(path, path.with_name(path.name + ".pre-g1"))
-    raw = path.read_bytes()
-    try:
-        source = raw.decode("utf-8")
-        ast.parse(source)
-    except (UnicodeDecodeError, SyntaxError):
-        rewrite_pickle(path)
-        return "pickle"
-    path.write_text(rewrite_source(source), encoding="utf-8")
-    return "source"
+    path.write_text(rewritten, encoding="utf-8")
+    return True
 
 
 def main(argv: list[str]) -> int:
     if not argv:
         print(__doc__)
         return 2
-    import openhcs  # noqa: F401  activates the microscopy family
-
     for name in argv:
-        kind = migrate(Path(name))
-        print(f"migrated {kind}: {name}")
+        changed = migrate(Path(name))
+        print(f"{'migrated' if changed else 'unchanged'}: {name}")
     return 0
 
 

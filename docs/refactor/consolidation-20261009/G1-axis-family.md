@@ -55,9 +55,10 @@ class Microscopy(AxisFamily):
 |---|---|---|
 | Compiled plans, worker bundles, metadata caches, function registry cache | runtime | reset |
 | Global config document (`global_config.config`, executable Python) | durable | `GroupBy.X`/`VariableComponents.X` become `Microscopy.X`/`Ungrouped`; per-member viewer mode fields become per-role fields |
-| Saved pipelines (dill pickle of steps) and code-mode pipeline scripts | durable | pickles reference the deleted enum classes |
+| Saved `.py` pipelines (pycodify source) | durable | same rewrite as config documents |
+| Pickled pipelines | deprecated (owner) | not converted; surface F1 deletes the GUI pickle path |
 
-Neither durable store can load unchanged: both name the deleted classes. Owner decision G1-Q1 (default: as Q3, old files fail loudly) plus the one-shot rewrite `tools/cutover/g1_axis_family.py`, deleted once the owner has migrated.
+Pre-G1 sources name the deleted classes, so they cannot load unchanged. Owner decision G1-Q1: pickles are deprecated; `tools/cutover/g1_axis_family.py` rewrites pycodify Python sources (enum members, `GroupBy.NONE`, per-member viewer mode fields, `required_variable_components`/`allowed_group_by`, imports), keeping a `.pre-g1` backup. `tests/unit/test_g1_cutover_tool.py` converts fixtures rendered by pre-G1 main and loads and validates them. Tool, test and fixtures are deleted once the owner has migrated.
 
 ## Guards
 
@@ -89,7 +90,7 @@ Axis-name string literals left in kernel modules (24, from 49 at head): source m
 
 Viewer display configs carry one mode field per role; G6 turns them into slot families. The image browser plate grid uses the partition axis; G8 separates a grid role from the partition role. The debug JSON switches (`debug_views.py`, `debug_view_models.py`) gained an axis case beside their enum case; K6 merges them onto `to_jsonable`.
 
-Decision G1-Q1 (owner): saved pipelines and config documents written before G1 are rewritten by `tools/cutover/g1_axis_family.py` (verified on files written by pre-G1 `main`); the tool is deleted once the owner has migrated.
+Decision G1-Q1 (owner, decided): pickled pipelines are deprecated; `.py` pipelines and config documents are rewritten by `tools/cutover/g1_axis_family.py`, which is deleted once the owner has migrated.
 
 ## Done when
 
