@@ -2,40 +2,38 @@
 
 from __future__ import annotations
 
-import json
-from collections.abc import Mapping
 from typing import ClassVar
 
 from openhcs.agent.dto.architecture import (
     ArchitectureTopic,
     ArchitectureTopicPage,
+    ArchitectureTopicSummary,
     InternalApiSymbol,
 )
 from openhcs.agent.dto.authoring import AuthoringContext
-from python_introspect import JsonObject, JsonValue, to_jsonable
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationResult,
+    FunctionArtifactSpec,
+    FunctionCatalogEntry,
     FunctionCatalogPage,
     FunctionDetail,
+    FunctionParameterSource,
+    FunctionParameterSpec,
 )
 from openhcs.agent.dto.knowledge import (
     KnowledgeBaseCatalog,
     KnowledgeBaseDocument,
+    KnowledgeBaseDocumentSummary,
+    KnowledgeBaseSearchHit,
     KnowledgeBaseSearchResult,
+    KnowledgeBaseSectionSummary,
 )
 from openhcs.mcp.dev_client_rendering import (
     AuthoringContextRenderOptions,
     CatalogRenderOptions,
     CodeDocumentRenderOptions,
     McpDevOutputRenderer,
-    McpDevTypedOutputRenderer,
     McpDevOutputRenderOptions,
-    McpDevPayloadProjection,
-)
-from openhcs.mcp.dev_client_renderers.object_state import ObjectStateScopeRenderer
-from openhcs.mcp.dev_client_renderers.viewer import (
-    RuntimeServerRenderer,
-    ViewerValidationRenderer,
 )
 
 
@@ -43,65 +41,27 @@ class KnowledgeCatalogRenderer(McpDevOutputRenderer):
     """Compact renderer for knowledge-base document catalogs."""
 
     output_contract = KnowledgeBaseCatalog
+    render_options_type = CatalogRenderOptions
+    unavailable_summary = "Knowledge documents: unavailable"
 
     @classmethod
-    def render_with_options(
-        cls,
-        response: JsonObject,
-        options: CatalogRenderOptions,
+    def render_payload(
+        cls, payload: KnowledgeBaseCatalog, options: CatalogRenderOptions
     ) -> str:
-        return cls.render(
-            response,
-            contains=options.contains,
-            limit=options.limit,
+        documents, visible_documents = options.select(
+            payload.documents,
+            lambda document: " ".join(
+                (document.document_id, document.title, document.summary, *document.tags)
+            ),
         )
-
-    @classmethod
-    def render(
-        cls,
-        response: JsonObject,
-        *,
-        contains: str | None = None,
-        limit: int = 20,
-    ) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        documents = McpDevPayloadProjection.sequence_of_mappings(
-            payload.get("documents")
-        )
-        if contains:
-            needle = contains.casefold()
-            documents = tuple(
-                document
-                for document in documents
-                if needle
-                in McpDevPayloadProjection.text(document.get("document_id")).casefold()
-                or needle
-                in McpDevPayloadProjection.text(document.get("title")).casefold()
-                or needle
-                in McpDevPayloadProjection.text(document.get("summary")).casefold()
-                or any(
-                    needle in McpDevPayloadProjection.text(tag).casefold()
-                    for tag in cls._tag_values(document)
-                )
-            )
-        bounded_limit = max(limit, 0)
-        visible_documents = documents[:bounded_limit]
         lines = [
-            (
-                "Knowledge documents: "
-                f"matched={len(documents)} "
-                f"shown={len(visible_documents)}"
-            )
+            "Knowledge documents: "
+            f"matched={len(documents)} shown={len(visible_documents)}",
+            *options.filter_lines(),
         ]
-        if contains:
-            lines.append(f"Filter: contains={contains}")
-        ObjectStateScopeRenderer._append_messages(lines, payload)
         if visible_documents:
             lines.append("Documents:")
-            for document in visible_documents:
-                lines.append(cls._document_line(document))
+            lines.extend(cls._document_line(document) for document in visible_documents)
         if len(visible_documents) < len(documents):
             lines.append(
                 f"...<truncated {len(documents) - len(visible_documents)} documents>"
@@ -109,73 +69,49 @@ class KnowledgeCatalogRenderer(McpDevOutputRenderer):
         return "\n".join(lines)
 
     @classmethod
-    def _document_line(cls, document: Mapping[str, JsonValue]) -> str:
-        tag_values = cls._tag_values(document)
-        tag_text = ",".join(McpDevPayloadProjection.text(tag) for tag in tag_values[:6])
-        if len(tag_values) > 6:
-            tag_text += f",+{len(tag_values) - 6}"
+    def _document_line(cls, document: KnowledgeBaseDocumentSummary) -> str:
+        tag_text = ",".join(document.tags[:6])
+        if len(document.tags) > 6:
+            tag_text += f",+{len(document.tags) - 6}"
         return (
-            "- "
-            f"{McpDevPayloadProjection.text(document.get('document_id'))}: "
-            f"title={McpDevPayloadProjection.quoted_text(document.get('title'))} "
-            f"sections={McpDevPayloadProjection.text(document.get('section_count'))} "
-            f"path={McpDevPayloadProjection.text(document.get('source_path'))} "
+            f"- {document.document_id}: title={cls.quoted(document.title)} "
+            f"sections={document.section_count} path={document.source_path} "
             f"tags={tag_text}"
         )
-
-    @staticmethod
-    def _tag_values(document: Mapping[str, JsonValue]) -> tuple[JsonValue, ...]:
-        tags = document.get("tags")
-        if not isinstance(tags, list):
-            return ()
-        return tuple(tags)
 
 
 class KnowledgeSearchRenderer(McpDevOutputRenderer):
     """Compact renderer for knowledge search hits."""
 
     output_contract = KnowledgeBaseSearchResult
+    unavailable_summary = "Knowledge search: unavailable"
 
     @classmethod
-    def render(
-        cls,
-        response: JsonObject,
+    def render_payload(
+        cls, payload: KnowledgeBaseSearchResult, options: McpDevOutputRenderOptions
     ) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        hits = McpDevPayloadProjection.sequence_of_mappings(payload.get("hits"))
         lines = [
-            (
-                "Knowledge search: "
-                f"query={McpDevPayloadProjection.quoted_text(payload.get('query'))} "
-                f"hits={len(hits)}"
-            )
+            f"Knowledge search: query={cls.quoted(payload.query)} "
+            f"hits={len(payload.hits)}"
         ]
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        if hits:
+        if payload.hits:
             lines.append("Hits:")
-            lines.extend(cls._hit_lines(hits))
+            for hit in payload.hits:
+                lines.extend(cls._hit_lines(hit))
         return "\n".join(lines)
 
-    @staticmethod
-    def _hit_lines(hits: tuple[Mapping[str, JsonValue], ...]) -> list[str]:
-        lines: list[str] = []
-        for hit in hits:
-            document = McpDevPayloadProjection.nested_mapping(hit, "document")
-            section = McpDevPayloadProjection.nested_mapping(hit, "section")
-            lines.append(
-                "- "
-                f"{McpDevPayloadProjection.text(document.get('document_id'))}"
-                f"#{McpDevPayloadProjection.text(section.get('section_id'))}: "
-                f"score={McpDevPayloadProjection.text(hit.get('score'))} "
-                f"line={McpDevPayloadProjection.text(hit.get('line_number'))} "
-                f"title={McpDevPayloadProjection.quoted_text(section.get('title'))} "
-                f"terms={ViewerValidationRenderer._sequence_text(hit.get('matched_terms'))}"
-            )
-            snippet = McpDevPayloadProjection.text(hit.get("snippet"))
-            if snippet and snippet != "<none>":
-                lines.append(f"  {snippet}")
+    @classmethod
+    def _hit_lines(cls, hit: KnowledgeBaseSearchHit) -> list[str]:
+        section = hit.section
+        lines = [
+            f"- {hit.document.document_id}"
+            f"#{cls.text(None if section is None else section.section_id)}: "
+            f"score={hit.score} line={cls.text(hit.line_number)} "
+            f"title={cls.quoted(None if section is None else section.title)} "
+            f"terms={cls.sequence_text(hit.matched_terms)}"
+        ]
+        if hit.snippet:
+            lines.append(f"  {hit.snippet}")
         return lines
 
 
@@ -183,42 +119,29 @@ class KnowledgeDocumentRenderer(McpDevOutputRenderer):
     """Compact renderer for one knowledge-base document or section."""
 
     output_contract = KnowledgeBaseDocument
+    unavailable_summary = "Knowledge document: unavailable"
 
     MAX_SECTION_HINTS: ClassVar[int] = 12
 
     @classmethod
-    def render(
-        cls,
-        response: JsonObject,
+    def render_payload(
+        cls, payload: KnowledgeBaseDocument, options: McpDevOutputRenderOptions
     ) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        document = McpDevPayloadProjection.nested_mapping(payload, "document")
-        sections = McpDevPayloadProjection.sequence_of_mappings(payload.get("sections"))
+        document = payload.document
         lines = [
-            (
-                "Knowledge document: "
-                f"id={McpDevPayloadProjection.text(document.get('document_id'))} "
-                f"title={McpDevPayloadProjection.quoted_text(document.get('title'))} "
-                f"path={McpDevPayloadProjection.text(document.get('source_path'))} "
-                f"sections={len(sections)} "
-                f"max_chars={McpDevPayloadProjection.text(payload.get('max_chars'))}"
-            )
+            "Knowledge document: "
+            f"id={cls.text(None if document is None else document.document_id)} "
+            f"title={cls.quoted(None if document is None else document.title)} "
+            f"path={cls.text(None if document is None else document.source_path)} "
+            f"sections={len(payload.sections)} max_chars={payload.max_chars}"
         ]
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        selected_section_id = McpDevPayloadProjection.text(
-            payload.get("selected_section_id")
-        )
-        if sections and selected_section_id == "<none>":
-            lines.extend(cls._section_hint_lines(sections))
-        elif selected_section_id != "<none>":
-            lines.append(f"Selected section: {selected_section_id}")
-        content = payload.get("content")
-        if isinstance(content, str):
-            lines.append("Content:")
-            lines.append(content)
-        if payload.get("truncated") is True:
+        if payload.selected_section_id is not None:
+            lines.append(f"Selected section: {payload.selected_section_id}")
+        elif payload.sections:
+            lines.extend(cls._section_hint_lines(payload.sections))
+        lines.append("Content:")
+        lines.append(payload.content)
+        if payload.truncated:
             lines.append(
                 "Content truncated; rerun with a larger --max-chars or a narrower "
                 "--section-id."
@@ -228,17 +151,15 @@ class KnowledgeDocumentRenderer(McpDevOutputRenderer):
     @classmethod
     def _section_hint_lines(
         cls,
-        sections: tuple[Mapping[str, JsonValue], ...],
+        sections: tuple[KnowledgeBaseSectionSummary, ...],
     ) -> list[str]:
         lines = ["Sections:"]
         visible_sections = sections[: cls.MAX_SECTION_HINTS]
         for section in visible_sections:
-            section_id = McpDevPayloadProjection.text(section.get("section_id"))
-            title = McpDevPayloadProjection.text(section.get("title"))
-            if title and title != "<none>" and title != section_id:
-                lines.append(f"- {section_id}: {title}")
+            if section.title and section.title != section.section_id:
+                lines.append(f"- {section.section_id}: {section.title}")
             else:
-                lines.append(f"- {section_id}")
+                lines.append(f"- {section.section_id}")
         omitted_count = len(sections) - len(visible_sections)
         if omitted_count > 0:
             lines.append(f"- ... {omitted_count} more sections")
@@ -249,221 +170,147 @@ class ArchitectureCatalogRenderer(McpDevOutputRenderer):
     """Compact renderer for architecture topic catalogs."""
 
     output_contract = ArchitectureTopicPage
+    render_options_type = CatalogRenderOptions
+    unavailable_summary = "Architecture topics: unavailable"
 
     @classmethod
-    def render_with_options(
-        cls,
-        response: JsonObject,
-        options: CatalogRenderOptions,
+    def render_payload(
+        cls, payload: ArchitectureTopicPage, options: CatalogRenderOptions
     ) -> str:
-        return cls.render(
-            response,
-            contains=options.contains,
-            limit=options.limit,
+        topics, visible_topics = options.select(
+            payload.topics,
+            lambda topic: " ".join((topic.topic_id, topic.title, topic.summary)),
         )
-
-    @classmethod
-    def render(
-        cls,
-        response: JsonObject,
-        *,
-        contains: str | None = None,
-        limit: int = 20,
-    ) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        topics = McpDevPayloadProjection.sequence_of_mappings(payload.get("topics"))
-        if contains:
-            needle = contains.casefold()
-            topics = tuple(
-                topic
-                for topic in topics
-                if needle
-                in McpDevPayloadProjection.text(topic.get("topic_id")).casefold()
-                or needle in McpDevPayloadProjection.text(topic.get("title")).casefold()
-                or needle
-                in McpDevPayloadProjection.text(topic.get("summary")).casefold()
-            )
-        bounded_limit = max(limit, 0)
-        visible_topics = topics[:bounded_limit]
         lines = [
-            f"Architecture topics: matched={len(topics)} shown={len(visible_topics)}"
+            f"Architecture topics: matched={len(topics)} shown={len(visible_topics)}",
+            *options.filter_lines(),
         ]
-        if contains:
-            lines.append(f"Filter: contains={contains}")
-        ObjectStateScopeRenderer._append_messages(lines, payload)
         if visible_topics:
             lines.append("Topics:")
-            lines.extend(cls._topic_lines(visible_topics))
+            lines.extend(cls._topic_line(topic) for topic in visible_topics)
         if len(visible_topics) < len(topics):
             lines.append(f"...<truncated {len(topics) - len(visible_topics)} topics>")
         return "\n".join(lines)
 
-    @staticmethod
-    def _topic_lines(
-        topics: tuple[Mapping[str, JsonValue], ...],
-    ) -> list[str]:
-        lines: list[str] = []
-        for topic in topics:
-            lines.append(
-                "- "
-                f"{McpDevPayloadProjection.text(topic.get('topic_id'))}: "
-                f"title={McpDevPayloadProjection.quoted_text(topic.get('title'))} "
-                f"summary={McpDevPayloadProjection.quoted_text(topic.get('summary'))}"
-            )
-        return lines
+    @classmethod
+    def _topic_line(cls, topic: ArchitectureTopicSummary) -> str:
+        return (
+            f"- {topic.topic_id}: title={cls.quoted(topic.title)} "
+            f"summary={cls.quoted(topic.summary)}"
+        )
 
 
-class ArchitectureTopicRenderer(McpDevOutputRenderer):
+class InternalSymbolPresentation(McpDevOutputRenderer):
+    """Source location text shared by symbol presentations."""
+
+    @classmethod
+    def source_text(cls, symbol: InternalApiSymbol) -> str:
+        source = cls.text(symbol.source_path)
+        if symbol.line_number is None:
+            return source
+        return f"{source}:{symbol.line_number}"
+
+
+class ArchitectureTopicRenderer(InternalSymbolPresentation):
     """Compact renderer for one source-backed architecture topic."""
 
     output_contract = ArchitectureTopic
+    unavailable_summary = "Architecture topic: unavailable"
 
     @classmethod
-    def render(
-        cls,
-        response: JsonObject,
+    def render_payload(
+        cls, payload: ArchitectureTopic, options: McpDevOutputRenderOptions
     ) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        concepts = cls._text_sequence(payload.get("concepts"))
-        notes = cls._text_sequence(payload.get("cellprofiler_translation_notes"))
-        symbols = McpDevPayloadProjection.sequence_of_mappings(
-            payload.get("internal_symbols")
-        )
         lines = [
-            (
-                "Architecture topic: "
-                f"id={McpDevPayloadProjection.text(payload.get('topic_id'))} "
-                f"title={McpDevPayloadProjection.quoted_text(payload.get('title'))} "
-                f"concepts={len(concepts)} symbols={len(symbols)}"
-            )
+            "Architecture topic: "
+            f"id={payload.topic_id} title={cls.quoted(payload.title)} "
+            f"concepts={len(payload.concepts)} "
+            f"symbols={len(payload.internal_symbols)}"
         ]
-        summary = McpDevPayloadProjection.text(payload.get("summary"))
-        if summary != "<none>":
-            lines.append(f"Summary: {summary}")
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        if concepts:
+        if payload.summary:
+            lines.append(f"Summary: {payload.summary}")
+        if payload.concepts:
             lines.append("Concepts:")
-            lines.extend(f"- {concept}" for concept in concepts)
-        if notes:
+            lines.extend(f"- {concept}" for concept in payload.concepts)
+        if payload.cellprofiler_translation_notes:
             lines.append("CellProfiler notes:")
-            lines.extend(f"- {note}" for note in notes)
-        if symbols:
+            lines.extend(f"- {note}" for note in payload.cellprofiler_translation_notes)
+        if payload.internal_symbols:
             lines.append("Internal symbols:")
-            lines.extend(cls._symbol_lines(symbols))
+            for symbol in payload.internal_symbols:
+                lines.append(
+                    f"- {symbol.symbol_id}: {symbol.title} "
+                    f"kind={symbol.symbol_kind} import={symbol.import_path} "
+                    f"source={cls.source_text(symbol)}"
+                )
+                if symbol.role:
+                    lines.append(f"  role={symbol.role}")
         return "\n".join(lines)
 
-    @staticmethod
-    def _symbol_lines(
-        symbols: tuple[Mapping[str, JsonValue], ...],
-    ) -> list[str]:
-        lines: list[str] = []
-        for symbol in symbols:
-            source = McpDevPayloadProjection.text(symbol.get("source_path"))
-            line_number = symbol.get("line_number")
-            if line_number is not None:
-                source = f"{source}:{McpDevPayloadProjection.text(line_number)}"
-            lines.append(
-                "- "
-                f"{McpDevPayloadProjection.text(symbol.get('symbol_id'))}: "
-                f"{McpDevPayloadProjection.text(symbol.get('title'))} "
-                f"kind={McpDevPayloadProjection.text(symbol.get('symbol_kind'))} "
-                f"import={McpDevPayloadProjection.text(symbol.get('import_path'))} "
-                f"source={source}"
-            )
-            role = McpDevPayloadProjection.text(symbol.get("role"))
-            if role != "<none>":
-                lines.append(f"  role={role}")
-        return lines
 
-    @staticmethod
-    def _text_sequence(value: JsonValue) -> tuple[str, ...]:
-        if not isinstance(value, list):
-            return ()
-        return tuple(McpDevPayloadProjection.text(item) for item in value)
-
-
-class InternalSymbolRenderer(McpDevOutputRenderer):
-    """Compact renderer for one projected internal architecture symbol."""
+class InternalSymbolRenderer(InternalSymbolPresentation):
+    """Compact renderer for one internal architecture symbol."""
 
     output_contract = InternalApiSymbol
+    unavailable_summary = "Internal symbol: unavailable"
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        source = McpDevPayloadProjection.text(payload.get("source_path"))
-        line_number = payload.get("line_number")
-        if line_number is not None:
-            source = f"{source}:{McpDevPayloadProjection.text(line_number)}"
+    def render_payload(
+        cls, payload: InternalApiSymbol, options: McpDevOutputRenderOptions
+    ) -> str:
         lines = [
-            (
-                "Internal symbol: "
-                f"id={McpDevPayloadProjection.text(payload.get('symbol_id'))} "
-                f"title={McpDevPayloadProjection.quoted_text(payload.get('title'))} "
-                f"kind={McpDevPayloadProjection.text(payload.get('symbol_kind'))}"
-            ),
-            f"Import: {McpDevPayloadProjection.text(payload.get('import_path'))}",
-            f"Source: {source}",
+            "Internal symbol: "
+            f"id={payload.symbol_id} title={cls.quoted(payload.title)} "
+            f"kind={payload.symbol_kind}",
+            f"Import: {payload.import_path}",
+            f"Source: {cls.source_text(payload)}",
         ]
-        signature = payload.get("signature")
-        if isinstance(signature, str) and signature:
-            lines.append(f"Signature: {signature}")
-        role = McpDevPayloadProjection.text(payload.get("role"))
-        if role != "<none>":
-            lines.append(f"Role: {role}")
-        doc_summary = McpDevPayloadProjection.text(payload.get("doc_summary"))
-        if doc_summary != "<none>":
-            lines.append(f"Doc: {doc_summary}")
+        if payload.signature:
+            lines.append(f"Signature: {payload.signature}")
+        if payload.role:
+            lines.append(f"Role: {payload.role}")
+        if payload.doc_summary is not None:
+            lines.append(f"Doc: {payload.doc_summary}")
         return "\n".join(lines)
 
 
-class FunctionSearchRenderer(McpDevOutputRenderer):
+class FunctionEntryPresentation(McpDevOutputRenderer):
+    """Catalog-entry lines shared by function search and registration."""
+
+    @classmethod
+    def entry_lines(cls, entry: FunctionCatalogEntry) -> list[str]:
+        lines = [
+            f"- {entry.function_id}: {entry.signature} "
+            f"tags={cls.sequence_text(entry.backend_tags)}"
+        ]
+        if entry.summary:
+            lines.append(f"  {entry.summary}")
+        return lines
+
+
+class FunctionSearchRenderer(FunctionEntryPresentation):
     """Compact renderer for processing-function search results."""
 
     output_contract = FunctionCatalogPage
+    unavailable_summary = "Function search: unavailable"
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        items = McpDevPayloadProjection.sequence_of_mappings(payload.get("items"))
+    def render_payload(
+        cls, payload: FunctionCatalogPage, options: McpDevOutputRenderOptions
+    ) -> str:
         lines = [
-            (
-                "Function search: "
-                f"query={McpDevPayloadProjection.quoted_text(payload.get('query'))} "
-                f"library={McpDevPayloadProjection.text(payload.get('library'))} "
-                f"shown={len(items)} total={McpDevPayloadProjection.text(payload.get('total'))}"
-            )
+            "Function search: "
+            f"query={cls.quoted(payload.query)} library={cls.text(payload.library)} "
+            f"shown={len(payload.items)} total={payload.total}"
         ]
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        if items:
+        if payload.items:
             lines.append("Functions:")
-            lines.extend(cls._item_lines(items))
+            for item in payload.items:
+                lines.extend(cls.entry_lines(item))
         return "\n".join(lines)
 
-    @staticmethod
-    def _item_lines(items: tuple[Mapping[str, JsonValue], ...]) -> list[str]:
-        lines: list[str] = []
-        for item in items:
-            lines.append(
-                "- "
-                f"{McpDevPayloadProjection.text(item.get('function_id'))}: "
-                f"{McpDevPayloadProjection.text(item.get('signature'))} "
-                f"tags={ViewerValidationRenderer._sequence_text(item.get('backend_tags'))}"
-            )
-            summary = McpDevPayloadProjection.text(item.get("summary"))
-            if summary and summary != "<none>":
-                lines.append(f"  {summary}")
-        return lines
 
-
-class CustomFunctionRegistrationRenderer(McpDevTypedOutputRenderer):
+class CustomFunctionRegistrationRenderer(FunctionEntryPresentation):
     """Compact renderer for custom-function registration results."""
 
     output_contract = CustomFunctionRegistrationResult
@@ -471,36 +318,31 @@ class CustomFunctionRegistrationRenderer(McpDevTypedOutputRenderer):
 
     @classmethod
     def render_payload(
-        cls, payload: CustomFunctionRegistrationResult, options: McpDevOutputRenderOptions,
+        cls,
+        payload: CustomFunctionRegistrationResult,
+        options: McpDevOutputRenderOptions,
     ) -> str:
-        del options
-        # The existing typed ancestor owns batch decode and diagnostic rendering.
         if payload.errors:
             return "\n".join(
                 (
-                    "Custom function registration: incomplete observation or projection",
-                    f"Retained native receipt registered_count: {payload.registered_count} (zero/absent does not prove no mutation)",
-                    "Read-only observation handle: " + json.dumps(to_jsonable(payload.observation_handle), sort_keys=True),
+                    "Custom function registration: incomplete observation",
+                    f"Reported registered_count: {payload.registered_count} "
+                    "(zero/absent does not prove no mutation)",
+                    "Read-only observation handle: "
+                    + cls.json_text(payload.observation_handle),
                 )
             )
         lines = [
-            (
-                "Custom function registration: "
-                f"registered={payload.registered_count} "
-                f"persisted={payload.persisted} "
-                f"storage={McpDevPayloadProjection.text(payload.storage_dir)}"
-            )
+            "Custom function registration: "
+            f"registered={payload.registered_count} "
+            f"persisted={payload.persisted} storage={cls.text(payload.storage_dir)}"
         ]
         if payload.source_file_paths:
-            lines.append(
-                f"Files: {','.join(payload.source_file_paths)}"
-            )
+            lines.append(f"Files: {','.join(payload.source_file_paths)}")
         if payload.functions:
             lines.append("Functions:")
             for function in payload.functions:
-                lines.append(f"- {function.function_id}: {function.signature} tags={','.join(function.backend_tags)}")
-                if function.summary:
-                    lines.append(f"  {function.summary}")
+                lines.extend(cls.entry_lines(function))
             if payload.persisted is False:
                 lines.append(
                     "Lifetime: process-local only; follow-up dev_client commands "
@@ -510,7 +352,9 @@ class CustomFunctionRegistrationRenderer(McpDevTypedOutputRenderer):
             lines.append("Next:")
             for function in payload.functions:
                 lines.append(f"- function {function.function_id}")
-                lines.append(f"- draft-pipeline-step {function.function_id} --name <step_name>")
+                lines.append(
+                    f"- draft-pipeline-step {function.function_id} --name <step_name>"
+                )
         return "\n".join(lines)
 
 
@@ -518,152 +362,95 @@ class FunctionDetailRenderer(McpDevOutputRenderer):
     """Compact renderer for one processing-function detail payload."""
 
     output_contract = FunctionDetail
+    unavailable_summary = "Function: unavailable"
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        entry = McpDevPayloadProjection.nested_mapping(payload, "entry")
-        runtime_contract = McpDevPayloadProjection.nested_mapping(
-            payload,
-            "runtime_contract",
-        )
-        parameters = McpDevPayloadProjection.sequence_of_mappings(
-            payload.get("parameters")
-        )
+    def render_payload(
+        cls, payload: FunctionDetail, options: McpDevOutputRenderOptions
+    ) -> str:
+        entry = payload.entry
         agent_parameters = tuple(
             parameter
-            for parameter in parameters
-            if cls._parameter_supplier(parameter) == "agent"
+            for parameter in payload.parameters
+            if parameter.supplied_by is FunctionParameterSource.AGENT
         )
         runtime_parameters = tuple(
             parameter
-            for parameter in parameters
-            if cls._parameter_supplier(parameter) != "agent"
+            for parameter in payload.parameters
+            if parameter.supplied_by is not FunctionParameterSource.AGENT
         )
-        artifact_outputs = McpDevPayloadProjection.sequence_of_mappings(
-            runtime_contract.get("artifact_outputs")
+        artifact_outputs = (
+            ()
+            if payload.runtime_contract is None
+            else payload.runtime_contract.artifact_outputs
         )
         lines = [
-            (
-                "Function: "
-                f"id={McpDevPayloadProjection.text(entry.get('function_id'))} "
-                f"name={McpDevPayloadProjection.text(entry.get('name'))} "
-                f"library={McpDevPayloadProjection.text(entry.get('library'))}"
-            ),
-            f"Signature: {McpDevPayloadProjection.text(entry.get('signature'))}",
+            f"Function: id={entry.function_id} name={entry.name} library={entry.library}",
+            f"Signature: {entry.signature}",
         ]
-        summary = McpDevPayloadProjection.text(entry.get("summary"))
-        if summary and summary != "<none>":
-            lines.append(f"Summary: {summary}")
+        if entry.summary:
+            lines.append(f"Summary: {entry.summary}")
         if agent_parameters:
             lines.append("Agent parameters:")
-            lines.extend(cls._parameter_lines(agent_parameters))
+            lines.extend(cls._parameter_line(parameter) for parameter in agent_parameters)
         if runtime_parameters:
             lines.append("Runtime inputs:")
-            lines.extend(cls._runtime_parameter_lines(runtime_parameters))
+            lines.extend(
+                cls._runtime_parameter_line(parameter) for parameter in runtime_parameters
+            )
         if artifact_outputs:
             lines.append("Artifact outputs:")
-            lines.extend(cls._artifact_lines(artifact_outputs))
-        doc = payload.get("doc")
-        if isinstance(doc, str) and doc:
-            doc_chars = payload.get("doc_chars")
+            lines.extend(cls._artifact_line(artifact) for artifact in artifact_outputs)
+        if payload.doc:
             lines.append(
-                "Doc: "
-                f"chars={McpDevPayloadProjection.text(doc_chars)} "
-                f"truncated={McpDevPayloadProjection.text(payload.get('doc_truncated'))}"
+                f"Doc: chars={payload.doc_chars} truncated={payload.doc_truncated}"
             )
-            lines.append(doc)
-            if payload.get("doc_truncated") is True:
+            lines.append(payload.doc)
+            if payload.doc_truncated:
                 lines.append(
-                    "Doc truncated; rerun: "
-                    f"function {McpDevPayloadProjection.text(entry.get('function_id'))} "
-                    f"--max-doc-chars {McpDevPayloadProjection.text(doc_chars)}"
+                    f"Doc truncated; rerun: function {entry.function_id} "
+                    f"--max-doc-chars {payload.doc_chars}"
                 )
-        ObjectStateScopeRenderer._append_messages(lines, payload)
         return "\n".join(lines)
 
-    @staticmethod
-    def _parameter_lines(parameters: tuple[Mapping[str, JsonValue], ...]) -> list[str]:
-        lines: list[str] = []
-        for parameter in parameters:
-            default = McpDevPayloadProjection.text(parameter.get("default_repr"))
-            required = McpDevPayloadProjection.text(parameter.get("required"))
-            annotation = McpDevPayloadProjection.text(parameter.get("annotation"))
-            lines.append(
-                "- "
-                f"{McpDevPayloadProjection.text(parameter.get('name'))}: "
-                f"required={required} type={annotation} default={default}"
-            )
-        return lines
+    @classmethod
+    def _parameter_line(cls, parameter: FunctionParameterSpec) -> str:
+        return (
+            f"- {parameter.name}: required={parameter.required} "
+            f"type={cls.text(parameter.annotation)} "
+            f"default={cls.text(parameter.default_repr)}"
+        )
 
     @classmethod
-    def _runtime_parameter_lines(
-        cls,
-        parameters: tuple[Mapping[str, JsonValue], ...],
-    ) -> list[str]:
-        lines: list[str] = []
-        for parameter in parameters:
-            annotation = McpDevPayloadProjection.text(parameter.get("annotation"))
-            description = McpDevPayloadProjection.text(parameter.get("description"))
-            lines.append(
-                "- "
-                f"{McpDevPayloadProjection.text(parameter.get('name'))}: "
-                f"supplied_by={cls._parameter_supplier(parameter)} "
-                f"type={annotation} note={McpDevPayloadProjection.quoted_text(description)}"
-            )
-        return lines
+    def _runtime_parameter_line(cls, parameter: FunctionParameterSpec) -> str:
+        return (
+            f"- {parameter.name}: supplied_by={cls.text(parameter.supplied_by)} "
+            f"type={cls.text(parameter.annotation)} "
+            f"note={cls.quoted(parameter.description)}"
+        )
 
     @staticmethod
-    def _parameter_supplier(parameter: Mapping[str, JsonValue]) -> str:
-        supplied_by = parameter.get("supplied_by")
-        if isinstance(supplied_by, str) and supplied_by:
-            return supplied_by
-        return "agent"
-
-    @staticmethod
-    def _artifact_lines(artifacts: tuple[Mapping[str, JsonValue], ...]) -> list[str]:
-        return [
-            "- "
-            f"{McpDevPayloadProjection.text(artifact.get('name'))}: "
-            f"kind={McpDevPayloadProjection.text(artifact.get('kind'))} "
-            f"required={McpDevPayloadProjection.text(artifact.get('required'))}"
-            for artifact in artifacts
-        ]
+    def _artifact_line(artifact: FunctionArtifactSpec) -> str:
+        return f"- {artifact.name}: kind={artifact.kind} required={artifact.required}"
 
 
 class AuthoringContextRenderer(McpDevOutputRenderer):
     """Compact renderer for authoring guidance."""
 
     output_contract = AuthoringContext
+    render_options_type = AuthoringContextRenderOptions
+    unavailable_summary = "Authoring context: unavailable"
 
     @classmethod
-    def render_with_options(
-        cls,
-        response: JsonObject,
-        options: AuthoringContextRenderOptions,
+    def render_payload(
+        cls, payload: AuthoringContext, options: AuthoringContextRenderOptions
     ) -> str:
-        return cls.render(response, max_chars=options.max_chars)
-
-    @classmethod
-    def render(cls, response: JsonObject, *, max_chars: int = 2_000) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        content = payload.get("content")
-        lines = [
+        return "\n".join(
             (
-                "Authoring context: "
-                f"kind={McpDevPayloadProjection.text(payload.get('kind'))}"
+                f"Authoring context: kind={payload.kind}",
+                "Content:",
+                CodeDocumentRenderOptions(max_source_chars=options.max_chars).source_text(
+                    payload.content
+                ),
             )
-        ]
-        ObjectStateScopeRenderer._append_messages(lines, payload)
-        if isinstance(content, str):
-            lines.append("Content:")
-            lines.append(
-                CodeDocumentRenderOptions(max_source_chars=max_chars).source_text(
-                    content
-                )
-            )
-        return "\n".join(lines)
+        )

@@ -4,11 +4,8 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
-from collections.abc import Mapping
 from typing import cast
 
-from python_introspect import JsonObject, JsonValue, dataclass_from_mapping
 
 from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotCaptureScope,
@@ -27,7 +24,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateFieldMutationRequest,
     UiObjectStateScopeListRequest,
     UiPlateManagerRowState,
-    UiPlateManagerState,
     UiSelectedPlateWorkflowKind,
     UiWidgetActionInvokeRequest,
     UiWidgetTreeRequest,
@@ -36,14 +32,12 @@ from openhcs.agent.dto.ui_bridge import (
 from openhcs.agent.services.ui_bridge_service import UiBridgeGatewayTimeoutError
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerStateSurfaceIdentityDeclaration,
-    PlateManagerWidgetIdentity,
 )
 from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.mcp.dev_client_commanding import (
     CapabilityBackedCommandSpec,
     McpDevCommandSpec,
     StdinSourceCommandSpec,
-    TypedCompositeCommandSpec,
     UiBridgeCommandSpec,
 )
 from openhcs.mcp.dev_client_core import (
@@ -66,13 +60,11 @@ from openhcs.mcp.dev_client_core import (
     add_ui_connection_options,
     call_mcp_tool,
     code_document_source_from_args,
-    optional_str,
     parse_cli_json_value,
     parse_json_object,
     selected_workflow_tool_arguments,
     state_surface_tool_arguments,
-    state_surface_payload,
-    ui_connection_arguments,
+    state_surface_document,
     ui_request_tool_arguments,
     ui_tool_arguments,
     workflow_operation_receipt_skip_reason,
@@ -86,14 +78,8 @@ from openhcs.mcp.dev_client_core import (
     workflow_result_was_accepted,
 )
 from openhcs.mcp.dev_client_rendering import (
-    DEFAULT_CODE_DOCUMENT_MAX_CHARS,
-    CodeDocumentRenderOptions,
-    McpDiagnosticRenderer,
-    McpDevPayloadProjection,
-    UiActionCatalogRenderOptions,
-    UiActionInvokeRenderOptions,
+    McpDevOutputRenderer,
     WidgetTreeOutputFormat,
-    WidgetTreeRenderOptions,
 )
 
 
@@ -112,11 +98,6 @@ class StateSurfaceCommandSpec(CapabilityBackedCommandSpec):
             default=SelectedAllSelectionMode.ALL.value,
         )
         parser.add_argument("--base-revision-token")
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def calls_from_args(
@@ -148,11 +129,6 @@ class CallCommandSpec(McpDevCommandSpec):
             type=parse_json_object,
             help="JSON object passed as the MCP tool arguments.",
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def calls_from_args(
         self,
@@ -165,29 +141,14 @@ class CallCommandSpec(McpDevCommandSpec):
             ),
         )
 
-    def render_response(
-        self,
-        payload: JsonObject,
-        args: argparse.Namespace,
-    ) -> str:
-        if args.json:
-            return super().render_response(payload, args)
+    def render_compact(self, response, args: argparse.Namespace) -> str:
         command_spec = CapabilityBackedCommandSpec.for_capability_name(args.tool_name)
         if command_spec is None:
-            return super().render_response(payload, args)
-        return command_spec.render_call_response(
-            payload,
-            args.arguments,
-        )
-
-    def render_result(self, response, args: argparse.Namespace) -> str:
-        command_spec = CapabilityBackedCommandSpec.for_capability_name(args.tool_name)
-        if args.json or command_spec is None:
-            return super().render_result(response, args)
-        return command_spec.render_call_result(response, args.arguments)
+            return super().render_compact(response, args)
+        return command_spec.render_call_result(response)
 
 
-class SelectedWorkflowCommandSpec(TypedCompositeCommandSpec, CapabilityBackedCommandSpec):
+class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_selected_plate_workflow
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -235,11 +196,6 @@ class SelectedWorkflowCommandSpec(TypedCompositeCommandSpec, CapabilityBackedCom
             type=float,
             default=DEFAULT_WORKFLOW_POLL_TIMEOUT_SECONDS,
             help=f"Maximum elapsed time spent waiting on {state_surface_id}.",
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
         )
         add_ui_connection_options(parser)
 
@@ -441,77 +397,65 @@ class SelectedWorkflowCommandSpec(TypedCompositeCommandSpec, CapabilityBackedCom
             transient_poll_error_count,
         )
 
-    def render_response(
-        self,
-        payload: McpDevToolBatchResponse,
-        args: argparse.Namespace,
-    ) -> str:
-        response = McpDevToolBatchResponse.for_rendering(payload)
+    def render_compact(self, response, args: argparse.Namespace) -> str:
+        from openhcs.mcp.dev_client_renderers.ui_bridge import (
+            PlateManagerStateSurfaceRenderer,
+        )
+
+        response = McpDevToolBatchResponse.for_rendering(response)
         summary = next(
-            (result.first_decoded_payload() for result in response.results
-             if result.tool == WorkflowPollSummary.tool_name),
+            (
+                result.first_decoded_payload()
+                for result in response.results
+                if result.tool == WorkflowPollSummary.tool_name
+            ),
             None,
         )
         if summary is None:
-            return super().render_response(response, args)
+            return super().render_compact(response, args)
         lines = [
-            f"Workflow: {McpDevPayloadProjection.text(summary.workflow)}",
+            f"Workflow: {McpDevOutputRenderer.text(summary.workflow)}",
             (
                 "Action: "
-                f"{McpDevPayloadProjection.text(summary.action_status)} "
+                f"{McpDevOutputRenderer.text(summary.action_status)} "
                 f"poll={summary.status.value} count={summary.poll_count}"
             ),
         ]
         if summary.target_scope_ids:
-            lines.append(
-                f"Targets: {', '.join(summary.target_scope_ids)}"
-            )
-        lines.extend(self._skip_reason_lines(summary))
-        workflow_errors = response.diagnostic_errors()
-        if workflow_errors:
-            lines.append("Errors:")
-            lines.extend(McpDiagnosticRenderer.typed_error_lines(workflow_errors))
-
+            lines.append(f"Targets: {', '.join(summary.target_scope_ids)}")
+        if summary.skip_reason is not None:
+            lines.append(f"Skip reason: {summary.skip_reason.value}")
+        lines.extend(McpDevOutputRenderer.diagnostic_lines(response.diagnostic_errors()))
         final_rows = self._final_state_rows(response)
         if final_rows:
             lines.append("Rows:")
-            lines.extend(self._row_lines(final_rows))
+            lines.extend(PlateManagerStateSurfaceRenderer.row_lines(final_rows))
         return "\n".join(lines)
 
     @staticmethod
-    def _skip_reason_lines(summary: WorkflowPollSummary) -> tuple[str, ...]:
-        return (() if summary.skip_reason is None else
-                (f"Skip reason: {summary.skip_reason.value}",))
-
-    @staticmethod
-    def _final_state_rows(response: McpDevToolBatchResponse) -> tuple[UiPlateManagerRowState, ...]:
+    def _final_state_rows(
+        response: McpDevToolBatchResponse,
+    ) -> tuple[UiPlateManagerRowState, ...]:
         result = next(
-            (result for result in reversed(response.results)
-             if result.tool == agent_capabilities.ui_get_state_surface.name),
+            (
+                result
+                for result in reversed(response.results)
+                if result.tool == agent_capabilities.ui_get_state_surface.name
+            ),
             None,
         )
         if result is None or result.has_errors():
             return ()
-        # The selected workflow targets PlateManager, whose declared state
-        # owns the dynamic document body. Decode that owner once, not its rows
-        # through a second partial record reader.
-        return dataclass_from_mapping(
-            UiPlateManagerState, state_surface_payload(result)
-        ).rows
+        from openhcs.mcp.dev_client_renderers.ui_bridge import (
+            PlateManagerStateSurfaceRenderer,
+        )
 
-    @classmethod
-    def _row_lines(cls, rows: tuple[UiPlateManagerRowState, ...]) -> list[str]:
-        lines: list[str] = []
-        for row in rows:
-            state_parts = [
-                f"state={McpDevPayloadProjection.text(row.orchestrator_state)}",
-                f"status={McpDevPayloadProjection.quoted_text(row.status_prefix)}",
-                f"terminal={McpDevPayloadProjection.text(row.terminal_status)}",
-            ]
-            if row.selected:
-                state_parts.append("selected=True")
-            lines.append(f"- {row.name}: " + ", ".join(state_parts))
-        return lines
+        # The selected workflow targets PlateManager, whose state renderer
+        # decodes the document body into its declared state record.
+        document = state_surface_document(result)
+        if document is None:
+            return ()
+        return PlateManagerStateSurfaceRenderer.state_from_document(document).rows
 
 
 class CodeDocumentCommandSpec(CapabilityBackedCommandSpec):
@@ -533,21 +477,6 @@ class CodeDocumentCommandSpec(CapabilityBackedCommandSpec):
             dest="clean",
             action="store_false",
             help="Read full resolved source, including defaults and inherited values.",
-        )
-        parser.add_argument(
-            "--no-source",
-            action="store_true",
-            help="Only render document metadata, revision, and snapshot information.",
-        )
-        parser.add_argument(
-            "--max-source-chars",
-            type=int,
-            default=DEFAULT_CODE_DOCUMENT_MAX_CHARS,
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
         )
         add_ui_connection_options(parser)
 
@@ -571,26 +500,6 @@ class CodeDocumentCommandSpec(CapabilityBackedCommandSpec):
             ),
         )
 
-    def renderer_options(
-        self,
-        args: argparse.Namespace,
-    ) -> CodeDocumentRenderOptions:
-        return CodeDocumentRenderOptions(
-            include_source=not args.no_source,
-            max_source_chars=args.max_source_chars,
-        )
-
-    def call_render_args(
-        self,
-        tool_arguments: Mapping[str, JsonValue],
-    ) -> argparse.Namespace:
-        del tool_arguments
-        return argparse.Namespace(
-            json=False,
-            no_source=False,
-            max_source_chars=DEFAULT_CODE_DOCUMENT_MAX_CHARS,
-        )
-
 
 class ValidateCodeDocumentCommandSpec(StdinSourceCommandSpec, CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_validate_code_document
@@ -599,11 +508,6 @@ class ValidateCodeDocumentCommandSpec(StdinSourceCommandSpec, CapabilityBackedCo
         parser.add_argument("document_id")
         add_code_document_source_options(parser)
         parser.add_argument("--base-revision-token")
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def calls_from_args(
@@ -642,11 +546,6 @@ class ApplyCodeDocumentCommandSpec(StdinSourceCommandSpec, CapabilityBackedComma
         parser.add_argument("--snapshot-label")
         parser.add_argument("--apply-if-time-traveling", action="store_true")
         parser.add_argument("--request-token")
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def calls_from_args(
@@ -674,54 +573,6 @@ class ApplyCodeDocumentCommandSpec(StdinSourceCommandSpec, CapabilityBackedComma
         )
 
 
-class ActionsCommandSpec(CapabilityBackedCommandSpec):
-    capability = agent_capabilities.ui_list_actions
-
-    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument(
-            "widget_id",
-            nargs="?",
-            help="Optional widget id filter, for example plate_manager.",
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
-        add_ui_connection_options(parser)
-
-    def calls_from_args(
-        self,
-        args: argparse.Namespace,
-    ) -> tuple[McpDevToolCall, ...]:
-        return (
-            McpDevToolCall(
-                self.capability.name,
-                {
-                    "connection": ui_connection_arguments(
-                        args,
-                        timeout_ms=args.timeout_ms,
-                    ),
-                },
-            ),
-        )
-
-    def renderer_options(
-        self,
-        args: argparse.Namespace,
-    ) -> UiActionCatalogRenderOptions:
-        return UiActionCatalogRenderOptions(widget_id=args.widget_id)
-
-    def call_render_args(
-        self,
-        tool_arguments: Mapping[str, JsonValue],
-    ) -> argparse.Namespace:
-        return argparse.Namespace(
-            json=False,
-            widget_id=optional_str(tool_arguments.get("widget_id")),
-        )
-
-
 class InvokeActionCommandSpec(CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_invoke_action
 
@@ -740,11 +591,6 @@ class InvokeActionCommandSpec(CapabilityBackedCommandSpec):
             "--no-confirmation",
             action="store_true",
             help="Set require_confirmation=False and allow confirmed actions to proceed.",
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
         )
         add_ui_connection_options(parser)
 
@@ -771,25 +617,6 @@ class InvokeActionCommandSpec(CapabilityBackedCommandSpec):
             ),
         )
 
-    def renderer_options(
-        self,
-        args: argparse.Namespace,
-    ) -> UiActionInvokeRenderOptions:
-        return UiActionInvokeRenderOptions(
-            widget_id=args.widget_id,
-            action_id=args.action_id,
-        )
-
-    def call_render_args(
-        self,
-        tool_arguments: Mapping[str, JsonValue],
-    ) -> argparse.Namespace:
-        return argparse.Namespace(
-            json=False,
-            widget_id=optional_str(tool_arguments.get("widget_id")),
-            action_id=optional_str(tool_arguments.get("action_id")),
-        )
-
 
 class InvokeWidgetActionCommandSpec(CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_invoke_widget_action
@@ -801,11 +628,6 @@ class InvokeWidgetActionCommandSpec(CapabilityBackedCommandSpec):
         parser.add_argument("--target-index", type=int)
         parser.add_argument("--create-if-missing", action="store_true")
         parser.add_argument("--request-token")
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def calls_from_args(
@@ -835,6 +657,15 @@ class InvokeWidgetActionCommandSpec(CapabilityBackedCommandSpec):
 class WidgetTreeCommandSpec(CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_get_widget_tree
 
+    def configure_json_option(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            "--json",
+            dest="output",
+            action="store_const",
+            const=WidgetTreeOutputFormat.JSON.value,
+            help="Alias for --output json.",
+        )
+
     def requests_json_output(self, args: argparse.Namespace) -> bool:
         return WidgetTreeOutputFormat(args.output).is_json
 
@@ -862,22 +693,6 @@ class WidgetTreeCommandSpec(CapabilityBackedCommandSpec):
             choices=WidgetTreeOutputFormat.choices(),
             default=WidgetTreeOutputFormat.OUTLINE.value,
             help="Render JSON or a clean indented widget outline.",
-        )
-        parser.add_argument(
-            "--json",
-            dest="output",
-            action="store_const",
-            const=WidgetTreeOutputFormat.JSON.value,
-            help="Alias for --output json.",
-        )
-        parser.add_argument(
-            "--outline-root-class",
-            help="When rendering outline output, start at the first node with this Qt class.",
-        )
-        parser.add_argument(
-            "--include-technical-widgets",
-            action="store_true",
-            help="Include Qt infrastructure nodes such as scrollbars in outline output.",
         )
         parser.add_argument(
             "--include-non-actionable",
@@ -938,27 +753,6 @@ class WidgetTreeCommandSpec(CapabilityBackedCommandSpec):
             ),
         )
 
-    def renderer_options(
-        self,
-        args: argparse.Namespace,
-    ) -> WidgetTreeRenderOptions:
-        return WidgetTreeRenderOptions(
-            output=WidgetTreeOutputFormat(args.output),
-            outline_root_class=args.outline_root_class,
-            include_technical_widgets=args.include_technical_widgets,
-        )
-
-    def call_render_args(
-        self,
-        tool_arguments: Mapping[str, JsonValue],
-    ) -> argparse.Namespace:
-        del tool_arguments
-        return argparse.Namespace(
-            output=WidgetTreeOutputFormat.OUTLINE.value,
-            outline_root_class=None,
-            include_technical_widgets=False,
-        )
-
 
 class WindowSnapshotCommandSpec(CapabilityBackedCommandSpec):
     capability = agent_capabilities.ui_snapshot_window
@@ -989,11 +783,6 @@ class WindowSnapshotCommandSpec(CapabilityBackedCommandSpec):
             UiWindowSnapshotRequest,
             "observation_timeout_s",
             "--observation-timeout-s",
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
         )
         add_ui_connection_options(parser)
 
@@ -1048,11 +837,6 @@ class ObjectStateScopesCommandSpec(CapabilityBackedCommandSpec):
             default=200,
         )
         parser.add_argument("--field-offset", type=int, default=0)
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def calls_from_args(
@@ -1134,11 +918,6 @@ class ObjectStateFieldsCommandSpec(CapabilityBackedCommandSpec):
         parser.add_argument("--max-fields", type=int, default=100)
         parser.add_argument("--max-value-items", type=int, default=20)
         parser.add_argument("--max-value-chars", type=int, default=1000)
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def calls_from_args(
@@ -1204,11 +983,6 @@ class ObjectStateFieldHelpCommandSpec(CapabilityBackedCommandSpec):
         )
         parser.add_argument("--window-id")
         parser.add_argument("--max-description-chars", type=int, default=4_000)
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def calls_from_args(
@@ -1270,11 +1044,6 @@ class ObjectStateSetCommandSpec(CapabilityBackedCommandSpec):
             action="store_false",
             default=True,
         )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
         add_ui_connection_options(parser)
 
     def calls_from_args(
@@ -1318,11 +1087,6 @@ class UiSmokeCommandSpec(UiBridgeCommandSpec):
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
         super().configure_parser(parser)
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response instead of a compact summary.",
-        )
 
     def calls_from_args(
         self,
@@ -1340,13 +1104,8 @@ class UiSmokeCommandSpec(UiBridgeCommandSpec):
             ),
         )
 
-    def render_response(
-        self,
-        payload: JsonObject,
-        args: argparse.Namespace,
-    ) -> str:
-        if args.json:
-            return super().render_response(payload, args)
+    def render_compact(self, response, args: argparse.Namespace) -> str:
         from openhcs.mcp.dev_client_renderers.ui_bridge import UiSmokeRenderer
 
-        return UiSmokeRenderer.render(payload)
+        del args
+        return UiSmokeRenderer.render(response)

@@ -15,19 +15,29 @@ import os
 import sys
 import tempfile
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, replace
 from importlib.metadata import distribution
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, TypeVar
 
 from zmqruntime import TcpDataControlPortPairAuthority
 from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionProgressObservation
 from zmqruntime.messages import ControlMessageType, TaskProgress
 
-from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.execution import ExecutionJobStatus, ExecutionStatusRequest
+from openhcs.agent.capabilities import AgentCapabilityDeclaration, agent_capabilities
+from openhcs.agent.dto.execution import (
+    ExecutionJobIdentity,
+    ExecutionJobStatus,
+    ExecutionStatusRequest,
+)
+from openhcs.agent.dto.plate import (
+    PlateFileQueryRecordSummary,
+    PlateFileQueryResult,
+    SyntheticPlateGenerationResult,
+)
+from openhcs.agent.dto.viewer import ViewerWindowValidationSummaryResult
 from openhcs.core.config import LazyNapariStreamingConfig
 from openhcs.core.execution_state import TerminalExecutionStatus
 from openhcs.core.native_threading import configure_native_thread_environment
@@ -47,9 +57,9 @@ from openhcs.mcp.dev_client_commands.plate import (
 from openhcs.mcp.dev_client_commands.viewer import ValidateViewerCommandSpec
 from openhcs.mcp.dev_client_core import (
     DEFAULT_CALL_TIMEOUT_SECONDS,
+    McpDevToolBatchResponse,
     mcp_tool_timeout_seconds,
 )
-from openhcs.mcp.dev_client_rendering import McpDevPayloadProjection
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageRequest,
     ViewerRuntimeEndpoint,
@@ -160,26 +170,33 @@ def _report_phase(message: str) -> None:
     print(f"Installed demo phase: {message}", file=sys.stderr, flush=True)
 
 
+PayloadT = TypeVar("PayloadT")
+
+
 def _command_payload(
     execution: McpDevCommandExecution,
     *,
-    tool_name: str,
-) -> dict[str, Any]:
+    capability: type[AgentCapabilityDeclaration],
+    payload_type: type[PayloadT],
+) -> PayloadT:
+    """Decode one command's declared result for ``capability``."""
     if execution.returncode != 0:
         raise InstalledDemoFailure(
             f"MCP command {execution.argv!r} failed: "
             f"payload={execution.payload!r}; "
             f"server_stderr={execution.server_stderr_tail!r}"
         )
-    projected = McpDevPayloadProjection.tool_payload(execution.payload, tool_name)
-    if projected is None:
+    decoded = McpDevToolBatchResponse.for_rendering(execution.payload)
+    payload = decoded.payload_for(capability)
+    if not isinstance(payload, payload_type):
         raise InstalledDemoFailure(
-            f"MCP command {execution.argv!r} returned no payload for {tool_name}."
+            f"MCP command {execution.argv!r} returned no {payload_type.__name__} "
+            f"for {capability.name}: payload={execution.payload!r}"
         )
-    payload = dict(projected)
-    if payload.get("errors"):
+    errors = decoded.diagnostic_errors()
+    if errors:
         raise InstalledDemoFailure(
-            f"MCP tool {tool_name} returned errors: {payload['errors']}"
+            f"MCP tool {capability.name} returned errors: {errors}"
         )
     return payload
 
@@ -188,24 +205,22 @@ def _run_mcp(
     client: McpDevClient,
     argv: Sequence[str],
     *,
-    tool_name: str,
+    capability: type[AgentCapabilityDeclaration],
+    payload_type: type[PayloadT],
     timeout_seconds: float | None,
-) -> dict[str, Any]:
+) -> PayloadT:
     return _command_payload(
         client.execute(argv, timeout_seconds=timeout_seconds),
-        tool_name=tool_name,
+        capability=capability,
+        payload_type=payload_type,
     )
 
 
-def _source_records(payload: Mapping[str, Any]) -> tuple[Mapping[str, Any], ...]:
-    records = payload.get("records")
-    if not isinstance(records, list):
-        raise InstalledDemoFailure("Plate-file query returned no record collection.")
+def _source_records(
+    query: PlateFileQueryResult,
+) -> tuple[PlateFileQueryRecordSummary, ...]:
     image_records = tuple(
-        record
-        for record in records
-        if isinstance(record, Mapping)
-        and record.get("kind") == PlateFileKind.IMAGE.value
+        record for record in query.records if record.kind is PlateFileKind.IMAGE
     )
     if len(image_records) != 2:
         raise InstalledDemoFailure(
@@ -215,15 +230,11 @@ def _source_records(payload: Mapping[str, Any]) -> tuple[Mapping[str, Any], ...]
     return image_records
 
 
-def _record_metadata(record: Mapping[str, Any]) -> Mapping[str, Any]:
-    metadata = record.get("metadata")
-    if not isinstance(metadata, Mapping):
-        raise InstalledDemoFailure("Generated image record has no metadata object.")
-    return metadata
-
-
-def _record_component(record: Mapping[str, Any], component: type[Axis]) -> str:
-    value = _record_metadata(record).get(component.name)
+def _record_component(
+    record: PlateFileQueryRecordSummary, component: type[Axis]
+) -> str:
+    # A record's metadata is a dynamic JSON object keyed by axis name.
+    value = record.metadata.get(component.name)
     if value is None:
         raise InstalledDemoFailure(
             f"Generated image record is missing {component.name!r} metadata."
@@ -231,11 +242,10 @@ def _record_component(record: Mapping[str, Any], component: type[Axis]) -> str:
     return str(value)
 
 
-def _record_filename(record: Mapping[str, Any]) -> str:
-    source_path = record.get("source_path")
-    if not isinstance(source_path, str) or not source_path:
+def _record_filename(record: PlateFileQueryRecordSummary) -> str:
+    if not record.source_path:
         raise InstalledDemoFailure("Generated image record has no source path.")
-    return Path(source_path).name
+    return Path(record.source_path).name
 
 
 def _neurite_inputs(
@@ -243,7 +253,7 @@ def _neurite_inputs(
     plate_path: Path,
     output_root: Path,
     viewer_port: int,
-    records: Sequence[Mapping[str, Any]],
+    records: Sequence[PlateFileQueryRecordSummary],
 ) -> LooseOperaPhenixNeuriteInputs:
     from openhcs.processing.presets.pipelines.loose_operaphenix_neurite_outgrowth import (
         LooseOperaPhenixNeuriteInputs,
@@ -319,7 +329,7 @@ def build_portable_neurite_source(
     plate_path: Path,
     output_root: Path,
     viewer_port: int,
-    source_records: Sequence[Mapping[str, Any]],
+    source_records: Sequence[PlateFileQueryRecordSummary],
     viewer: bool,
 ) -> tuple[str, ViewerRuntimeEndpoint]:
     """Render the authoritative neurite preset for exact generated inputs."""
@@ -352,7 +362,9 @@ def build_portable_neurite_source(
     return PipelineDocumentCodec.render(document), endpoint
 
 
-def _generate_plate(client: McpDevClient, plate_path: Path) -> dict[str, Any]:
+def _generate_plate(
+    client: McpDevClient, plate_path: Path
+) -> SyntheticPlateGenerationResult:
     return _run_mcp(
         client,
         (
@@ -388,12 +400,13 @@ def _generate_plate(client: McpDevClient, plate_path: Path) -> dict[str, Any]:
             "10",
             "--json",
         ),
-        tool_name=agent_capabilities.generate_synthetic_plate.name,
+        capability=agent_capabilities.generate_synthetic_plate,
+        payload_type=SyntheticPlateGenerationResult,
         timeout_seconds=30.0,
     )
 
 
-def _query_plate(client: McpDevClient, plate_path: Path) -> dict[str, Any]:
+def _query_plate(client: McpDevClient, plate_path: Path) -> PlateFileQueryResult:
     return _run_mcp(
         client,
         (
@@ -407,7 +420,8 @@ def _query_plate(client: McpDevClient, plate_path: Path) -> dict[str, Any]:
             "10",
             "--json",
         ),
-        tool_name=agent_capabilities.query_plate_files.name,
+        capability=agent_capabilities.query_plate_files,
+        payload_type=PlateFileQueryResult,
         timeout_seconds=20.0,
     )
 
@@ -418,7 +432,7 @@ def _execute_pipeline(
     plate_path: Path,
     source_path: Path,
     runtime_port: int,
-) -> dict[str, Any]:
+) -> ExecutionJobStatus:
     submission = _run_mcp(
         client,
         (
@@ -436,25 +450,21 @@ def _execute_pipeline(
             "--no-wait",
             "--json",
         ),
-        tool_name=agent_capabilities.submit_pipeline_execution.name,
+        capability=agent_capabilities.submit_pipeline_execution,
+        payload_type=ExecutionJobIdentity,
         timeout_seconds=None,
     )
-    job_id = submission.get("job_id")
-    if not isinstance(job_id, str) or not job_id:
-        raise InstalledDemoFailure(
-            f"Portable neurite execution returned no job identity: {submission}"
-        )
-    return _poll_execution_job(client, job_id=job_id)
+    return _poll_execution_job(client, job_id=submission.job_id)
 
 
 def _execution_status_payload(
     client: McpDevClient,
     *,
     request: ExecutionStatusRequest,
-) -> dict[str, Any]:
-    """Return one independently bounded submitted-job status projection."""
+) -> ExecutionJobStatus:
+    """Return one independently bounded submitted-job status."""
 
-    tool_name = agent_capabilities.get_execution_status.name
+    capability = agent_capabilities.get_execution_status
     timeout_seconds = mcp_tool_timeout_seconds(
         request.timeout_ms,
         timeout_seconds=DEFAULT_CALL_TIMEOUT_SECONDS,
@@ -464,38 +474,22 @@ def _execution_status_payload(
         str(timeout_seconds),
         "--allow-error-payloads",
         "call",
-        tool_name,
+        capability.name,
         "--arguments",
         json.dumps(asdict(request), sort_keys=True),
         "--json",
     )
     execution = client.execute(argv, timeout_seconds=None)
-    projected = McpDevPayloadProjection.tool_payload(execution.payload, tool_name)
-    if projected is None:
+    status = McpDevToolBatchResponse.for_rendering(execution.payload).payload_for(
+        capability
+    )
+    if not isinstance(status, ExecutionJobStatus):
         raise InstalledDemoFailure(
-            f"MCP status command {execution.argv!r} returned no payload for "
-            f"{tool_name}: payload={execution.payload!r}; "
+            f"MCP status command {execution.argv!r} returned no status for "
+            f"{capability.name}: payload={execution.payload!r}; "
             f"server_stderr={execution.server_stderr_tail!r}"
         )
-    return dict(projected)
-
-
-def _execution_progress_observation(
-    payload: Mapping[str, Any],
-) -> ExecutionProgressObservation | None:
-    raw_observation = payload.get(ExecutionJobStatus.serialized_progress_field_name())
-    if raw_observation is None:
-        return None
-    if not isinstance(raw_observation, Mapping):
-        raise InstalledDemoFailure(
-            f"Execution progress observation is not an object: {raw_observation!r}"
-        )
-    try:
-        return ExecutionProgressObservation.from_wire(raw_observation)
-    except (KeyError, TypeError, ValueError) as exc:
-        raise InstalledDemoFailure(
-            f"Execution progress observation is invalid: {raw_observation!r}"
-        ) from exc
+    return status
 
 
 def _report_execution_progress(
@@ -524,7 +518,7 @@ def _poll_execution_job(
     job_id: str,
     stall_timeout_seconds: float = _EXECUTION_STALL_TIMEOUT_SECONDS,
     maximum_duration_seconds: float = _EXECUTION_MAXIMUM_DURATION_SECONDS,
-) -> dict[str, Any]:
+) -> ExecutionJobStatus:
     """Poll until terminal while exact progress proves slow work remains live."""
 
     deadline = ExecutionPollDeadline.start(
@@ -533,7 +527,7 @@ def _poll_execution_job(
         maximum_duration_seconds=maximum_duration_seconds,
     )
     request = ExecutionStatusRequest(job_id=job_id)
-    last_payload: dict[str, Any] | None = None
+    last_payload: ExecutionJobStatus | None = None
     last_error: InstalledDemoFailure | None = None
     last_reported_status: str | None = None
     last_progress_sequence: int | None = None
@@ -548,7 +542,7 @@ def _poll_execution_job(
             last_error = exc
         else:
             last_payload = payload
-            status = str(payload.get(ExecutionJobStatus.status.__name__, "unknown"))
+            status = payload.status
             activity_observed = status != last_reported_status
             if status != last_reported_status:
                 print(
@@ -557,7 +551,7 @@ def _poll_execution_job(
                     flush=True,
                 )
                 last_reported_status = status
-            progress_observation = _execution_progress_observation(payload)
+            progress_observation = payload.progress
             if (
                 progress_observation is not None
                 and progress_observation.sequence != last_progress_sequence
@@ -573,12 +567,11 @@ def _poll_execution_job(
                 raise InstalledDemoFailure(
                     f"Portable neurite execution ended with {status}: {payload}"
                 )
-            errors = payload.get("errors")
             last_error = (
                 InstalledDemoFailure(
                     f"Portable neurite execution status failed: {payload}"
                 )
-                if errors
+                if payload.errors
                 else None
             )
 
@@ -602,17 +595,19 @@ _VIEWER_SETTLE_DEADLINE_SECONDS = 60.0
 _VIEWER_SETTLE_POLL_SECONDS = 1.0
 
 
-def _viewer_is_settled(payload: Mapping[str, Any]) -> bool:
+def _viewer_is_settled(validation: ViewerWindowValidationSummaryResult) -> bool:
     """Return whether one observed viewer state shows settled mounted layers."""
 
     return (
-        payload.get("observed") is True
-        and payload.get("valid") is True
-        and payload.get("pending_update_count") == 0
+        validation.observed
+        and validation.valid
+        and validation.pending_update_count == 0
     )
 
 
-def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
+def _validate_viewer(
+    client: McpDevClient, viewer_port: int
+) -> ViewerWindowValidationSummaryResult:
     """Validate the viewer after its debounced layer updates settle.
 
     Layer mounts are debounced inside the viewer process and can legitimately
@@ -621,7 +616,6 @@ def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
     """
 
     deadline = time.monotonic() + _VIEWER_SETTLE_DEADLINE_SECONDS
-    payload: dict[str, Any] = {}
     last_failure: InstalledDemoFailure | None = None
     while True:
         try:
@@ -640,7 +634,8 @@ def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
                     "--include-state",
                     "--json",
                 ),
-                tool_name=agent_capabilities.validate_viewer_window_state.name,
+                capability=agent_capabilities.validate_viewer_window_state,
+                payload_type=ViewerWindowValidationSummaryResult,
                 timeout_seconds=30.0,
             )
         except InstalledDemoFailure as exc:
@@ -658,16 +653,13 @@ def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
                 f"Installed Napari viewer validation did not pass: {payload}"
             )
         time.sleep(_VIEWER_SETTLE_POLL_SECONDS)
-    viewer = payload.get("viewer")
-    viewer_type = viewer.get("viewer_type") if isinstance(viewer, Mapping) else None
     if (
-        payload.get("observed") is not True
-        or payload.get("valid") is not True
-        or not isinstance(payload.get("mounted_layer_count"), int)
-        or payload["mounted_layer_count"] < 1
-        or not isinstance(payload.get("nonzero_payload_count"), int)
-        or payload["nonzero_payload_count"] < 1
-        or viewer_type != ViewerType.NAPARI.wire_value
+        not payload.observed
+        or not payload.valid
+        or payload.mounted_layer_count < 1
+        or payload.nonzero_payload_count < 1
+        or payload.viewer is None
+        or payload.viewer.viewer_type is not ViewerType.NAPARI
     ):
         raise InstalledDemoFailure(
             f"Installed Napari viewer validation did not pass: {payload}"
@@ -746,7 +738,7 @@ def run_installed_demo(
         config=OPENHCS_ZMQ_CONFIG,
     )
     viewer_endpoint: ViewerRuntimeEndpoint | None = None
-    viewer_payload: dict[str, Any] = {}
+    viewer_payload: ViewerWindowValidationSummaryResult | None = None
     _report_phase("starting owned execution runtime")
     if not runtime_client.connect(timeout=20.0):
         raise InstalledDemoFailure("Could not start the owned execution runtime.")
@@ -802,11 +794,10 @@ def run_installed_demo(
         raise InstalledDemoFailure(
             f"Portable neurite execution produced no materialized output: {output_root}"
         )
-    viewer_descriptor = viewer_payload.get("viewer")
     viewer_type = (
-        viewer_descriptor.get("viewer_type")
-        if isinstance(viewer_descriptor, Mapping)
-        else None
+        None
+        if viewer_payload is None or viewer_payload.viewer is None
+        else viewer_payload.viewer.viewer_type.wire_value
     )
     result = InstalledDemoResult(
         openhcs_version=distribution("openhcs").version,
@@ -817,14 +808,16 @@ def run_installed_demo(
         pipeline_source_path=str(source_path),
         runtime_port=runtime_port,
         viewer_port=viewer_port if viewer else None,
-        generated_image_count=int(generated.get("image_count", 0)),
+        generated_image_count=generated.image_count,
         source_file_count=len(records),
-        execution_status=str(execution["status"]),
-        viewer_observed=viewer_payload.get("observed") is True,
-        viewer_type=str(viewer_type) if viewer_type is not None else None,
-        viewer_layer_count=int(viewer_payload.get("mounted_layer_count", 0)),
-        viewer_nonzero_payload_count=int(
-            viewer_payload.get("nonzero_payload_count", 0)
+        execution_status=execution.status,
+        viewer_observed=viewer_payload is not None and viewer_payload.observed,
+        viewer_type=viewer_type,
+        viewer_layer_count=(
+            0 if viewer_payload is None else viewer_payload.mounted_layer_count
+        ),
+        viewer_nonzero_payload_count=(
+            0 if viewer_payload is None else viewer_payload.nonzero_payload_count
         ),
     )
     _report_phase("acceptance complete")

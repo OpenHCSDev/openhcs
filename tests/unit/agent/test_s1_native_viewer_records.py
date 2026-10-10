@@ -86,10 +86,8 @@ def rendered(capability, value, options=None):
         results=(McpDevToolResult(capability.name, False, (value,)),),
     ))
     decoded = McpDevToolBatchResponse.for_rendering(wire)
-    binding = McpDevOutputRenderer.for_output_contract(capability.output_contract)
-    return decoded.payload_for(capability), binding.render_result(
-        decoded, options or binding.renderer_type.render_options_type(),
-    ), wire
+    renderer = McpDevOutputRenderer.for_output_contract(capability.output_contract)
+    return decoded.payload_for(capability), renderer.render(decoded, options), wire
 
 
 def test_summary_sparse_wire_keeps_null_zero_false_empty_and_rejects_unknown():

@@ -66,6 +66,10 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeSnapshotWindowOperation,
 )
 from openhcs.agent.dto.ui_bridge import (
+    DYNAMIC_SCOPE_WINDOW_KIND,
+    EMBEDDED_WINDOW_KIND,
+    MANAGED_WINDOW_KIND,
+    QT_TOP_LEVEL_WINDOW_KIND,
     UiActionCatalog,
     UiActionIdentity,
     UiActionInvocationStatus,
@@ -133,10 +137,6 @@ WindowRouteCollection: TypeAlias = (
 )
 MAIN_WINDOW_PROVIDER_ID = "main_window.windows"
 QT_TOP_LEVEL_PROVIDER_ID = "qt_top_level.windows"
-EMBEDDED_WINDOW_KIND = "embedded"
-MANAGED_WINDOW_KIND = "managed"
-DYNAMIC_SCOPE_WINDOW_KIND = "scope"
-QT_TOP_LEVEL_WINDOW_KIND = "qt_top_level"
 QT_TOP_LEVEL_WINDOW_ID_PREFIX = "qt_top_level:"
 MANAGED_WINDOW_ACTIONS_TITLE = "Managed window actions"
 MAIN_WINDOW_ACTIONS_TITLE = "Main window actions"

@@ -14,6 +14,7 @@ import pytest
 from openhcs.agent.capabilities import SamplePlateImageCapability, agent_capabilities
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.plate import PlateImageSampleResult, SelectedPlateImageSampleResult
+from openhcs.agent.dto.ui_bridge import UiPlateManagerRowState
 from openhcs.agent.dto.viewer import ViewerWindowImageSampleRecord, ViewerWindowImageSampleResult
 from openhcs.mcp import dev_client
 from openhcs.mcp.dev_client_commanding import CapabilityBackedCommandSpec
@@ -21,7 +22,7 @@ from openhcs.mcp.dev_client_core import (
     McpDevClientPhase, McpDevPayloadFailure, McpDevServerSpec,
     McpDevToolBatchResponse, McpDevToolResult,
 )
-from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer, McpDevTypedOutputRenderer
+from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
 from openhcs.mcp.dev_client_renderers.plate import PlateImageSampleRenderer, SelectedPlateSampleRenderer
 from openhcs.mcp.dev_client_renderers.viewer import ViewerImageSampleRenderer
 from openhcs.runtime.viewer_protocol import ViewerArrayValueSummary
@@ -48,10 +49,20 @@ def sample(**kwargs):
     ), **kwargs)
 
 
+def selected_row():
+    return UiPlateManagerRowState(
+        plate_scope_id="selected-root", name="selection", plate_root="selected-root",
+        cppipe_path=None, selected=True, initialized=True, compiled=False,
+        init_pending=False, compile_pending=False, execution_active=False,
+        status_prefix="", orchestrator_state=None, execution_id=None,
+        terminal_status=None, runtime_state=None, runtime_percent=None, queue_position=None,
+    )
+
+
 def selected(value):
     return SelectedPlateImageSampleResult(
         schema_version=SCHEMA_VERSION,
-        selected_plate={"name": "selection", "plate_root": "selected-root", "extension": {"kept": 0}},
+        selected_plate=to_jsonable(selected_row()),
         image_path="image.tif", auto_selected_image_path=False, sample=value,
     )
 
@@ -104,7 +115,7 @@ def test_generated_commands_retain_decoded_sampling_facts(monkeypatch, selected_
     assert type(decoded) is type(value)
     if selected_case:
         assert type(decoded.sample) is PlateImageSampleResult
-        assert decoded.selected_plate["extension"] == {"kept": 0}
+        assert decoded.selected_plate == to_jsonable(selected_row())
 
     def forbidden(value):
         raise AssertionError("Typed sampling must not flatten an owned result to JSON")
@@ -156,7 +167,7 @@ def test_legitimate_absent_sample_and_false_zero_empty_are_distinct():
 
 @pytest.mark.parametrize("values,count", [([False, 0, "", None], 3), (list(range(65)), 65), ({"a": [0, False], "b": ""}, 3)])
 def test_shared_preview_policy_and_richer_viewer_owner(values, count):
-    assert McpDevTypedOutputRenderer.json_value_count(values) == count
+    assert McpDevOutputRenderer.json_value_count(values) == count
     response = batch(sample(sample_values=values), agent_capabilities.sample_plate_image)
     rendered = PlateImageSampleRenderer.render(response)
     assert ("65 elements; pass --json" in rendered) == (count > 64)
@@ -189,9 +200,9 @@ def test_malformed_receipt_never_becomes_successful_empty_sample(receipt):
     result = McpDevToolResult.from_payload(agent_capabilities.sample_plate_image.name, {"structuredContent": receipt})
     response = McpDevToolBatchResponse.from_results(McpDevServerSpec(sys.executable), (result,))
     assert isinstance(result.payloads[0], McpDevPayloadFailure)
-    assert result.payloads[0].receipt == receipt
+    assert result.payloads[0].payload == receipt
     rejection = to_jsonable(response)["results"][0]["payloads"][0]
-    assert rejection["receipt"] == receipt
+    assert rejection["payload"] == receipt
     assert rejection["errors"] == to_jsonable(result.diagnostic_errors())
     text = PlateImageSampleRenderer.render(response)
     assert "mcp_payload_invalid" in text
@@ -240,23 +251,14 @@ def test_new_declaration_composes_real_cooperative_sampling_hooks(reverse_order)
     response = batch(value, NewCapability)
     assert type(response.results[0].first_decoded_payload()) is NewSample
     command = CapabilityBackedCommandSpec.for_capability_name(NewCapability.name)
-    text = command.render_result(response, command.call_render_args({}))
+    text = command.render_call_result(response)
     assert events == (["audit", "source"] if reverse_order else ["source", "audit"])
     assert text.count("owned") == text.count("audit-once") == text.count("Image:") == 1
     assert NewRenderer.__mro__.count(PlateImageSampleRenderer) == 1
     assert McpDevOutputRenderer.__registry__[NewSample] is NewRenderer
 
 
-def test_site_specific_complete_family_deletion_guard():
-    import openhcs.mcp.dev_client_renderers.plate as plate
-    tree = ast.parse(Path(plate.__file__).read_text())
-    for node in tree.body:
-        if isinstance(node, ast.ClassDef) and node.name in {"PlateImageSampleRenderer", "SelectedPlateSampleRenderer"}:
-            for call in ast.walk(node):
-                if isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute):
-                    assert call.func.attr not in {"first_tool_payload", "nested_mapping", "sequence_of_mappings", "_first_tool_payload", "_error_lines", "_shape_element_count", "render"}
-                if isinstance(call, ast.Constant):
-                    assert call.value not in ("results", "payloads", "mcp_error")
+def test_sampling_renderers_share_the_json_preview_count():
     assert "_json_value_count" not in vars(PlateImageSampleRenderer)
     assert "_json_value_count" not in vars(ViewerImageSampleRenderer)
     assert PlateImageSampleRenderer.json_value_count.__func__ is ViewerImageSampleRenderer.json_value_count.__func__

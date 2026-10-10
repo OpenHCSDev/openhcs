@@ -12,7 +12,7 @@ from openhcs.agent.dto.execution import RuntimeBootstrapState, RuntimeBootstrapH
 from openhcs.agent.dto.mcp import McpToolErrorResult
 from openhcs.mcp.dev_client_core import (
     McpDevToolBatchResponse, McpDevToolResult, McpDevPayloadFailure, McpDevServerSpec,
-    state_surface_document, state_surface_payload, ui_bridge_operation_result,
+    state_surface_document, plate_manager_state, ui_bridge_operation_result,
     workflow_result_payload,
 )
 from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
@@ -51,7 +51,7 @@ def test_contradictory_tool_error_contract_remains_a_failed_receipt(change):
         original.tool, False, (wire,)
     ).decoded_for_rendering()
     assert isinstance(result.payloads[0], McpDevPayloadFailure)
-    assert result.payloads[0].receipt is wire
+    assert result.payloads[0].payload is wire
     assert result.first_decoded_payload() is None
     assert "mcp_payload_invalid" in result.agent_error_codes()
 
@@ -142,7 +142,7 @@ def test_independent_derived_claim_cannot_override_cooperative_owner():
     result = McpDevToolResult(DerivedRenderlessCapability.name, False, (wire,)).decoded_for_rendering()
     assert result.has_errors() and result.first_decoded_payload() is None
     assert isinstance(result.payloads[0], McpDevPayloadFailure)
-    assert result.payloads[0].receipt == wire
+    assert result.payloads[0].payload == wire
     assert "disagrees" in result.diagnostic_errors()[0].message
 
 
@@ -151,30 +151,30 @@ def test_renderless_malformed_record_is_rejected_with_original_receipt():
     result = McpDevToolResult(RenderlessCapability.name, False, (raw,)).decoded_for_rendering()
     assert result.first_decoded_payload() is None
     assert isinstance(result.payloads[0], McpDevPayloadFailure)
-    assert result.payloads[0].receipt is raw and result.has_errors()
+    assert result.payloads[0].payload is raw and result.has_errors()
     assert result.decoded_for_rendering().payloads[0] is result.payloads[0]
 
 
-def test_json_rejection_preserves_cause_receipt_and_original_batch_roundtrip():
+def test_json_rejection_preserves_cause_payload_and_batch_roundtrip():
     raw = {"schema_version": SCHEMA_VERSION, "fact": {}}
     result = McpDevToolResult(RenderlessCapability.name, False, (raw,)).decoded_for_rendering()
     batch = McpDevToolBatchResponse.from_results(McpDevServerSpec(sys.executable), (result,))
     wire = to_jsonable(batch)
     rejection = wire["results"][0]["payloads"][0]
-    assert rejection["receipt"] == raw
+    assert rejection["payload"] == raw
     assert rejection["errors"] == to_jsonable(result.diagnostic_errors())
     assert rejection["errors"][0]["code"] == "mcp_payload_invalid"
     restored = McpDevToolBatchResponse.for_rendering(wire)
     assert restored.has_errors()
     assert restored.diagnostic_errors() == batch.diagnostic_errors()
     assert len(restored.diagnostic_errors()) == 1
-    assert restored.results[0].payloads[0].receipt == raw
+    assert restored.results[0].payloads[0].payload == raw
     assert isinstance(restored.results[0].payloads[0], McpDevPayloadFailure)
 
 
 def test_rejection_declaration_cannot_claim_failure_without_a_cause():
     with pytest.raises(ValueError, match="diagnostic cause"):
-        McpDevPayloadFailure(receipt={}, errors=())
+        McpDevPayloadFailure(payload={}, errors=())
 
 
 @pytest.mark.parametrize("raw", (
@@ -185,7 +185,7 @@ def test_rejection_declaration_cannot_claim_failure_without_a_cause():
 def test_original_contract_rejects_extra_fields_and_invalid_nested_values(raw):
     result = McpDevToolResult(RenderlessCapability.name, False, (raw,)).decoded_for_rendering()
     assert isinstance(result.payloads[0], McpDevPayloadFailure)
-    assert result.payloads[0].receipt is raw and result.first_decoded_payload() is None
+    assert result.payloads[0].payload is raw and result.first_decoded_payload() is None
     assert result.has_errors() and len(result.payloads[0].errors) == 1
 
 
@@ -230,7 +230,7 @@ def test_unknown_union_shape_preserves_each_rejection():
     result = McpDevToolResult(UnionCapability.name, False, (raw,)).decoded_for_rendering()
     assert result.first_decoded_payload() is None
     assert isinstance(result.payloads[0], McpDevPayloadFailure)
-    assert len(result.payloads[0].errors) == 2 and result.payloads[0].receipt is raw
+    assert len(result.payloads[0].errors) == 2 and result.payloads[0].payload is raw
 
 
 @pytest.mark.parametrize("tool", ("external_unknown_tool400", RenderlessCapability.name))
@@ -238,7 +238,7 @@ def test_unknown_raw_or_rejected_records_cannot_masquerade_as_ui_contract(tool):
     raw = {"payload": {"rows": []}, "status": "completed"}
     result = McpDevToolResult(tool, False, (raw,))
     assert state_surface_document(result) is None
-    assert state_surface_payload(result) == {}
+    assert plate_manager_state(result) is None
     assert ui_bridge_operation_result(result) is None
     assert workflow_result_payload(result) is None
 
