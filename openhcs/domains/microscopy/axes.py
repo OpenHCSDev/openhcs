@@ -9,6 +9,7 @@ from openhcs.core.axes import (
     ConstantValue,
     DefaultGroupBy,
     DefaultVariable,
+    GridAddressed,
     ImageSetOrdinal,
     ImageSetOrdinalUnlessIndexedBy,
     LabelValued,
@@ -61,7 +62,7 @@ class Microscopy(AxisFamily):
         filename_padding = 3
         metadata_aliases = ("timepoint", "time", "framenumber", "frame")
 
-    class Well(Axis, PartitionAxis, LabelValued):
+    class Well(Axis, PartitionAxis, GridAddressed, LabelValued):
         """A plate well, spelled ``<row letter><two-digit column>`` (``A01``)."""
 
         name = "well"
@@ -75,6 +76,7 @@ class Microscopy(AxisFamily):
             "col",
         )
         metadata_fallback = ConstantValue("A01")
+        default_grid = (8, 12)  # a 96-well plate
 
         @classmethod
         def grid_coordinates(cls, value: object) -> tuple[str, str]:
@@ -82,8 +84,29 @@ class Microscopy(AxisFamily):
 
             match = re.match(r"^([A-Za-z]+)([0-9]+)$", str(value))
             if match is None:
-                return str(value), ""
+                raise ValueError(f"{value!r} is not a well spelled <row letters><column>.")
             return match.group(1), match.group(2)
+
+        @classmethod
+        def grid_position(cls, row_label: str, column_label: str) -> tuple[int, int]:
+            """Rows count A=1 … Z=26, AA=27; columns are the column number."""
+
+            if not row_label.isalpha() or not column_label.isdecimal():
+                raise ValueError(f"Not a well row and column: {row_label!r}, {column_label!r}.")
+            row = 0
+            for letter in row_label.upper():
+                row = row * 26 + (ord(letter) - ord("A") + 1)
+            return row, int(column_label)
+
+        @classmethod
+        def row_label(cls, row: int) -> str:
+            """Inverse of the row count in :meth:`grid_position` (1=A, 27=AA)."""
+
+            label = ""
+            while row > 0:
+                row, remainder = divmod(row - 1, 26)
+                label = chr(ord("A") + remainder) + label
+            return label
 
         @classmethod
         def metadata_value(cls, lookup: MetadataLookup) -> str | None:

@@ -1,8 +1,8 @@
 """
 Plate View Widget - Visual grid representation of plate wells.
 
-Displays a clickable grid of wells (e.g., A01-H12 for 96-well plate) with visual
-states for empty/has-images/selected. Supports multi-select and subdirectory selection.
+Displays a clickable grid of the active axis family's GridAddressed values
+(plate wells for microscopy) with visual states for empty/has-images/selected. Supports multi-select and subdirectory selection.
 """
 
 import logging
@@ -23,6 +23,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QRect
 from pyqt_reactive.theming import ColorScheme
+from openhcs.core.axes import Axis, AxisFamily, GridAddressed
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +109,31 @@ class PlateGridBounds:
         return (self.max_row - self.min_row + 1, self.max_col - self.min_col + 1)
 
 
+def active_grid_axis() -> type[Axis] | None:
+    """The active family's grid-addressed axis, if it declares one."""
+
+    grid_axes = AxisFamily.active().with_role(GridAddressed)
+    return grid_axes[0] if grid_axes else None
+
+
+def grid_value_noun() -> str:
+    """Plural noun for the grid axis's values in status text (``wells``)."""
+
+    return f"{require_grid_axis().label.lower()}s"
+
+
+def require_grid_axis() -> type[Axis]:
+    """The grid axis a plate view lays out; a plate view needs one."""
+
+    grid_axis = active_grid_axis()
+    if grid_axis is None:
+        raise TypeError(
+            f"Axis family {AxisFamily.active().__qualname__} declares no "
+            "GridAddressed axis; it has no plate grid."
+        )
+    return grid_axis
+
+
 @dataclass(frozen=True, slots=True)
 class PlateGridModel:
     """Pure plate-coordinate model backing the Qt grid facade."""
@@ -126,7 +152,7 @@ class PlateGridModel:
             wells_with_images=frozenset(),
             coord_to_well={},
             well_to_coord={},
-            plate_dimensions=(8, 12),
+            plate_dimensions=require_grid_axis().default_grid,
             row_offset=0,
             col_offset=0,
             bounds=None,
@@ -153,7 +179,11 @@ class PlateGridModel:
         dimensions = (
             plate_dimensions
             if plate_dimensions is not None
-            else (bounds.dimensions if bounds is not None else (8, 12))
+            else (
+                bounds.dimensions
+                if bounds is not None
+                else require_grid_axis().default_grid
+            )
         )
 
         return cls(
@@ -170,25 +200,13 @@ class PlateGridModel:
     def _coordinates_from_standard_well_ids(
         cls, well_ids: Set[str]
     ) -> dict[tuple[int, int], str]:
+        grid_axis = require_grid_axis()
         coordinates: dict[tuple[int, int], str] = {}
         for well_id in well_ids:
-            coord = cls._parse_standard_well_id(well_id)
+            coord = grid_axis.grid_index(well_id)
             if coord is not None:
                 coordinates[coord] = well_id
         return coordinates
-
-    @staticmethod
-    def _parse_standard_well_id(well_id: str) -> tuple[int, int] | None:
-        row_part = "".join(c for c in well_id if c.isalpha())
-        col_part = "".join(c for c in well_id if c.isdigit())
-        if not row_part or not col_part:
-            return None
-
-        row_idx = sum(
-            (ord(c.upper()) - ord("A") + 1) * (26**i)
-            for i, c in enumerate(reversed(row_part))
-        )
-        return (row_idx, int(col_part))
 
     @classmethod
     def _detect_bounds(
@@ -501,10 +519,12 @@ class PlateSelectionController:
 
         if selected_count > 0:
             self.view.status_label.setText(
-                f"{total_wells} wells have images | {selected_count} selected"
+                f"{total_wells} {grid_value_noun()} have images | {selected_count} selected"
             )
         else:
-            self.view.status_label.setText(f"{total_wells} wells have images")
+            self.view.status_label.setText(
+                f"{total_wells} {grid_value_noun()} have images"
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -824,7 +844,7 @@ class PlateViewWidget(QWidget):
         self.wells_with_images = set()  # Set of well IDs that have images
         self.selected_wells = set()  # Currently selected wells
         self.grid_model = PlateGridModel.empty()
-        self.plate_dimensions = (8, 12)  # rows, cols (default 96-well)
+        self.plate_dimensions = self.grid_model.plate_dimensions
         self.row_offset = 0  # Offset for tight bounding box (first row index - 1)
         self.col_offset = 0  # Offset for tight bounding box (first col index - 1)
         self.subdirs = []  # List of subdirectory names
@@ -959,7 +979,7 @@ class PlateViewWidget(QWidget):
         layout.addWidget(grid_container, 1)  # Stretch to fill
 
         # Status label
-        self.status_label = QLabel("No wells")
+        self.status_label = QLabel(f"No {grid_value_noun()}")
         self.status_label.setStyleSheet(
             f"color: {self.color_scheme.to_hex(self.color_scheme.text_secondary)};"
         )
@@ -1003,7 +1023,7 @@ class PlateViewWidget(QWidget):
 
         if self.grid_model.is_empty:
             self._clear_grid()
-            self.status_label.setText("No wells")
+            self.status_label.setText(f"No {grid_value_noun()}")
             return
 
         # Rebuild grid
@@ -1107,7 +1127,7 @@ class PlateViewWidget(QWidget):
         # Add row headers and well buttons - for all rows in bounding rectangle
         for grid_row, actual_row in enumerate(all_rows, start=1):
             # Row header (A, B, C, ...)
-            row_letter = self._index_to_row_letter(actual_row)
+            row_letter = require_grid_axis().row_label(actual_row)
             header = QPushButton(row_letter)
             header.setFlat(True)
             header.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -1175,15 +1195,6 @@ class PlateViewWidget(QWidget):
         # Set aspect ratio on container to maintain square wells
         # Add 1 to account for header row/column
         self.aspect_container.set_aspect_ratio(len(all_cols) + 1, len(all_rows) + 1)
-
-    def _index_to_row_letter(self, index: int) -> str:
-        """Convert row index to letter(s) (1=A, 2=B, 27=AA, etc.)."""
-        result = ""
-        while index > 0:
-            index -= 1
-            result = chr(ord("A") + (index % 26)) + result
-            index //= 26
-        return result
 
     def _get_well_button_style(self, state: WellButtonState) -> str:
         """Generate style for well button based on state."""
