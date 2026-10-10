@@ -1,7 +1,7 @@
 """
-OpenHCS microscope handler implementation for openhcs.
+The openhcsdata format: the kernel's own dataset source, reader and writer.
 
-This module provides the OpenHCSDatasetSource, which reads plates
+This module provides the OpenHCSDatasetSource, which reads datasets
 that have been pre-processed and standardized into the OpenHCS format.
 The metadata for such plates is defined in an 'openhcs_metadata.json' file.
 """
@@ -86,7 +86,7 @@ def _get_available_filename_parsers():
 
 
 class OpenHCSMetadataBase(ABC, metaclass=AutoRegisterMeta):
-    """Shared OpenHCS metadata I/O authorities."""
+    """Shared OpenHCS metadata reading and writing."""
 
     __registry_key__ = "__name__"
     __skip_if_no_key__ = True
@@ -397,11 +397,11 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
     def reconciliation_directories(
         self, plate_path: Union[str, Path], backend: str
     ) -> tuple[Path, ...]:
-        """Derive artifact and result destinations from one admitted document.
+        """Derive artifact and result destinations from one accepted document.
 
-        Projection records are admitted before workspace fields, as required by
-        completed-plate reconciliation. The same admitted records then populate
-        the result-directory source authority; they are not decoded a second time.
+        Projection records are read before workspace fields, as required by
+        completed-plate reconciliation. The same records then populate the
+        result directories' source bindings; they are not decoded a second time.
         """
         plate_root = Path(plate_path)
         metadata_path = METADATA_CONFIG.metadata_path(plate_root)
@@ -411,12 +411,12 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 for directory in self.analysis_result_directories(plate_root)
             )
         document = OpenHCSMetadataSubdirectories.from_path(metadata_path)
-        admitted_entries = {
+        accepted_entries = {
             name: VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
             for name, subdirectory in document.items()
         }
         return self.reconciliation_directories_from_document(
-            plate_root, backend, document, admitted_entries
+            plate_root, backend, document, accepted_entries
         )
 
     def reconciliation_directories_from_document(
@@ -424,20 +424,20 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         plate_path: Union[str, Path],
         backend: str,
         document: OpenHCSMetadataSubdirectories,
-        admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries],
+        accepted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries],
     ) -> tuple[Path, ...]:
-        """Select destinations from the current transaction's admitted entries."""
+        """Select destinations from the current transaction's accepted entries."""
         plate_root = Path(plate_path)
-        admitted = tuple(
+        accepted = tuple(
             (
                 subdirectory,
-                admitted_entries[name],
+                accepted_entries[name],
             )
             for name, subdirectory in document.items()
         )
         directories = tuple(
             plate_root / directory
-            for _subdirectory, entries in admitted
+            for _subdirectory, entries in accepted
             for path, projection in entries.entries.items()
             if (directory := projection.artifact_result_directory(path, backend))
             is not None
@@ -448,11 +448,11 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         source_projection = None
         if document.has_workspace_mapping():
             builder = VirtualWorkspaceSourceProjectionBuilder(plate_root)
-            for subdirectory, entries in admitted:
+            for subdirectory, entries in accepted:
                 builder.ingest_workspace_mapping(
                     VirtualWorkspaceMapping.from_subdirectory(subdirectory)
                 )
-                builder.ingest_admitted_subdirectory(subdirectory, entries)
+                builder.ingest_accepted_subdirectory(subdirectory, entries)
             source_projection = builder.projection()
         results = self._analysis_result_directories(
             plate_root, subdirectories, source_projection
@@ -467,7 +467,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         subdirectories: Mapping[str, Mapping[str, Any]],
         source_projection: VirtualWorkspaceSourceProjection | None,
     ) -> tuple[AnalysisResultDirectory, ...]:
-        """Admit declared result paths against their document's source authority."""
+        """Keep declared result paths that their document's sources cover."""
         result_directories = []
         for subdirectory_name, subdirectory_data in subdirectories.items():
             result_dir_name = _optional_metadata_field(subdirectory_data, "results_dir")
@@ -506,7 +506,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         subdirectories: Mapping[str, Mapping[str, Any]],
         plate_path: Union[str, Path],
     ) -> Dict[str, Any]:
-        """Project no-main output metadata when subdirectories share authority."""
+        """Merge no-main output metadata when every subdirectory agrees."""
         metadata_by_subdirectory = {
             subdirectory_name: _openhcs_metadata_from_subdirectory(
                 subdirectory_name,
@@ -722,7 +722,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         self,
         plate_path: Union[str, Path],
     ) -> MetadataComponentValueSet:
-        """Read every canonical component through the persisted schema declaration."""
+        """Read every declared axis's value labels from the persisted record."""
 
         return MetadataComponentValueSet(
             (
@@ -912,7 +912,7 @@ class OpenHCSMetadata:
         source_diagnostics: Optional[List[Dict[str, Any]]] = None,
         main: Optional[bool] = None,
     ) -> "OpenHCSMetadata":
-        """Construct persisted metadata from the nominal component authority."""
+        """Construct persisted metadata from per-axis value labels."""
 
         def serialized_values(
             component: type[Axis],
@@ -1054,7 +1054,7 @@ def _optional_metadata_field(
 
 @dataclass(frozen=True)
 class OpenHCSMetadataGenerationRequest:
-    """Authoritative request for writing one OpenHCS metadata subdirectory."""
+    """Request for writing one OpenHCS metadata subdirectory."""
 
     context: "ProcessingContext"
     output_dir: str
@@ -1325,7 +1325,7 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         cls, *, filemanager: FileManager, pattern_format: Optional[str] = None,
         source_bindings_config=None,
     ) -> "OpenHCSDatasetSource":
-        """Keep prepared source ownership while consuming declared admission."""
+        """Keep the prepared source while applying the declared source bindings."""
         from openhcs.core.source_bindings import source_bindings_defaults_to_base
 
         handler = super().create(
@@ -1345,7 +1345,7 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
 
     @classmethod
     def source_selection_guidance(cls) -> str:
-        """Explain when OpenHCS workspace metadata is authoritative."""
+        """Explain when OpenHCS workspace metadata describes the dataset."""
 
         return (
             "Use for a workspace already prepared by OpenHCS and carrying its "
@@ -1549,7 +1549,7 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         if "zarr" in available_backends_dict and available_backends_dict["zarr"]:
             return "zarr"
 
-        # 2. A declared workspace mapping is itself the virtual-workspace authority.
+        # 2. A declared workspace mapping means the virtual workspace serves reads.
         subdir_metadata = self.metadata_handler.workspace_mapping_metadata(
             self.plate_folder
         )
@@ -1585,9 +1585,9 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         # The caller's declared projection selects facts; storage stays root-relative.
         self.plate_folder = plate_path
         if self._source_bindings_config is not None:
-            from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionAuthority
+            from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 
-            projection = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+            projection = WorkspaceSourceProjections.from_plate_metadata(
                 plate_path=plate_path,
                 metadata_handler=self.metadata_handler,
                 filemanager=filemanager,

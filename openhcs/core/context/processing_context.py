@@ -31,7 +31,7 @@ from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -125,8 +125,8 @@ class ProcessingContext:
         from openhcs.core.steps.abstract import StepExecutionObservation
 
         self.completed_step_outputs = StepExecutionObservation.empty()
-        self._runtime_source_workspace_projection_authority: (
-            VirtualWorkspaceSourceProjectionAuthority | None
+        self._runtime_source_workspace_projections: (
+            WorkspaceSourceProjections | None
         ) = None
         self.source_image_set_identity_policy = SourceImageSetIdentityPolicy()
         self.axis_id = axis_id
@@ -151,16 +151,16 @@ class ProcessingContext:
         self.current_sequential_combination = None
 
     @property
-    def runtime_source_workspace_projection_authority(
+    def runtime_source_workspace_projections(
         self,
-    ) -> VirtualWorkspaceSourceProjectionAuthority:
+    ) -> WorkspaceSourceProjections:
         """Hold the context's metadata owners; projection documents remain live."""
-        authority = self._runtime_source_workspace_projection_authority
+        authority = self._runtime_source_workspace_projections
         if authority is None or not authority.is_bound_to_context(self):
-            authority = VirtualWorkspaceSourceProjectionAuthority.from_context(
+            authority = WorkspaceSourceProjections.from_context(
                 self,
             )
-            self._runtime_source_workspace_projection_authority = authority
+            self._runtime_source_workspace_projections = authority
         return authority
 
     def bind_execution_runtime(

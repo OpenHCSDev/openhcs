@@ -182,7 +182,7 @@ class RuntimeAnalysisConsolidationInputs:
         ],
         destinations: set[RuntimeAnalysisSummaryDestination],
     ) -> RuntimeAnalysisConsolidationInputs | None:
-        """Admit the single compiled summary destination for projected tables."""
+        """Require one compiled summary destination for the projected tables."""
         if not output_groups:
             return None
         if len(destinations) != 1:

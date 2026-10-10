@@ -52,7 +52,7 @@ from openhcs.core.dataset_sources.openhcs_format import (
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionCache,
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
     VirtualWorkspacePathLookup,
 )
 from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceMapping
@@ -142,17 +142,17 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     assert isinstance(handler, OpenHCSDatasetSource)
     handler.initialize_workspace(workspace, filemanager)
     cache = VirtualWorkspaceSourceProjectionCache()
-    full = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+    full = WorkspaceSourceProjections.from_plate_metadata(
         plate_path=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache,
     ).projection_or_empty()
     admissions = []
-    original_admit = SourceBindingWorkspaceProjector.admit_prepared_projection
+    original_admit = SourceBindingWorkspaceProjector.accept_prepared_projection
     def observe_admission(projector, projection):
         admissions.append(projection)
         return original_admit(projector, projection)
-    monkeypatch.setattr(SourceBindingWorkspaceProjector, "admit_prepared_projection", observe_admission)
-    selected = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+    monkeypatch.setattr(SourceBindingWorkspaceProjector, "accept_prepared_projection", observe_admission)
+    selected = WorkspaceSourceProjections.from_plate_metadata(
         plate_path=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache, source_bindings=config,
     ).projection_or_empty()
@@ -171,7 +171,7 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     context.microscope_handler = handler
     from openhcs.core import source_workspace_projection
     monkeypatch.setattr(source_workspace_projection, "DEFAULT_SOURCE_PROJECTION_CACHE", cache)
-    runtime_projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
+    runtime_projection = WorkspaceSourceProjections.from_context(
         context,
     ).projection_or_empty()
     assert runtime_projection.pipeline_start_files() == selected.pipeline_start_files()
@@ -179,42 +179,42 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     other = ProcessingContext(filemanager=filemanager, axis_id="A01")
     other.plate_path = workspace
     other.microscope_handler = handler
-    assert context.runtime_source_workspace_projection_authority.cache is other.runtime_source_workspace_projection_authority.cache is cache
-    assert other.runtime_source_workspace_projection_authority.projection_or_empty() is selected
-    equivalent = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+    assert context.runtime_source_workspace_projections.cache is other.runtime_source_workspace_projections.cache is cache
+    assert other.runtime_source_workspace_projections.projection_or_empty() is selected
+    equivalent = WorkspaceSourceProjections.from_plate_metadata(
         plate_path=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache, source_bindings=replace(config),
     ).projection_or_empty()
     assert equivalent is selected
     compiled_views = cache.partition_by_axes(selected, axis_ids=("A01",))
-    assert context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01") is compiled_views["A01"]
+    assert context.runtime_source_workspace_projections.projection_or_empty(axis_id="A01") is compiled_views["A01"]
     assert len(admissions) == (0 if selection is None else 1)
     with monkeypatch.context() as admitted_query:
         def reject_redecode(_cls, _subdirectory):
             raise AssertionError("An admitted document must not decode its whole workspace again.")
         admitted_query.setattr(VirtualWorkspaceMapping, "from_subdirectory", classmethod(reject_redecode))
-        assert context.runtime_source_workspace_projection_authority.projection_or_empty() is selected
-        assert context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01") is compiled_views["A01"]
-    prior_authority = context.runtime_source_workspace_projection_authority
+        assert context.runtime_source_workspace_projections.projection_or_empty() is selected
+        assert context.runtime_source_workspace_projections.projection_or_empty(axis_id="A01") is compiled_views["A01"]
+    prior_authority = context.runtime_source_workspace_projections
     handler._source_bindings_config = replace(config, source_filters=(
         SourceFilterClause(subject=SourceFilterSubject.FILE,
                           match_type=SourceFilterMatchType.CONTAINS, value="_s008_"),
     ))
-    changed = context.runtime_source_workspace_projection_authority
+    changed = context.runtime_source_workspace_projections
     assert changed is not prior_authority
     assert changed.projection_or_empty().component_values(Microscopy.Site) == ("8",)
     handler._source_bindings_config = replace(config, source_filters=())
-    assert context.runtime_source_workspace_projection_authority.projection_or_empty() is full
+    assert context.runtime_source_workspace_projections.projection_or_empty() is full
     handler._source_bindings_config = replace(config, source_filters=(
         SourceFilterClause(subject=SourceFilterSubject.FILE,
                           match_type=SourceFilterMatchType.CONTAINS, value="_s099_"),
     ))
     with pytest.raises(ValueError, match="matched no prepared workspace sources"):
-        context.runtime_source_workspace_projection_authority.projection_or_empty()
+        context.runtime_source_workspace_projections.projection_or_empty()
     handler._source_bindings_config = config
-    assert context.runtime_source_workspace_projection_authority.projection_or_empty() is selected
+    assert context.runtime_source_workspace_projections.projection_or_empty() is selected
     handler.metadata_handler.invalidate_metadata_cache()
-    replacement = context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01")
+    replacement = context.runtime_source_workspace_projections.projection_or_empty(axis_id="A01")
     assert replacement is not compiled_views["A01"]
     assert replacement.source_metadata_by_path == compiled_views["A01"].source_metadata_by_path
     from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig
@@ -230,13 +230,13 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     assert orchestrator.get_component_keys(Microscopy.Site, ["99"]) == []
     from tests.unit.test_completed_output_publication_lifecycle import _facts
     context.record_completed_step_outputs(_facts(workspace))
-    with_output = VirtualWorkspaceSourceProjectionAuthority.from_context(context).projection_or_empty()
+    with_output = WorkspaceSourceProjections.from_context(context).projection_or_empty()
     assert set(with_output.pipeline_start_files()) == {
         *selected.pipeline_start_files(), str(workspace / "images/saved.tif"),
     }
     assert materialization.metadata_path.read_bytes() == original_bytes
     with pytest.raises(ValueError, match="matched no prepared workspace sources"):
-        VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        WorkspaceSourceProjections.from_plate_metadata(
             plate_path=workspace, metadata_handler=handler.metadata_handler,
             filemanager=filemanager, source_bindings=SourceBindingsConfig(source_filters=(
                 SourceFilterClause(subject=SourceFilterSubject.FILE,
@@ -561,7 +561,7 @@ def test_source_binding_workspace_projects_semantic_identity_after_raw_selection
 
     assert projection.address.value_for(Microscopy.Channel) == "MCP_DNA"
     original_metadata = dict(
-        SourceMetadataFields.original_items(projection.source_metadata)
+        SourceMetadataFields.declared_items(projection.source_metadata)
     )
     assert original_metadata[Microscopy.Channel.name] == "1"
 
@@ -784,7 +784,7 @@ def test_group_address_preserves_distinct_source_well_as_literal_metadata(tmp_pa
     source_metadata = next(iter(metadata[FIELDS.SOURCE_METADATA].values()))
 
     assert source_metadata["well"] == "Sequence1"
-    assert dict(SourceMetadataFields.original_items(source_metadata)) == {
+    assert dict(SourceMetadataFields.declared_items(source_metadata)) == {
         "Well": "A01",
         "FrameNumber": "0000",
         "Run": "Sequence1",
@@ -953,7 +953,7 @@ def test_order_source_sets_join_imported_metadata_across_aliases(tmp_path):
     assert {projection.source_alias for projection in projections} == {"DNA", "Actin"}
     for projection in projections:
         original = dict(
-            SourceMetadataFields.original_items(projection.source_metadata)
+            SourceMetadataFields.declared_items(projection.source_metadata)
         )
         assert original["Compound"] == "DMSO"
         assert original["Dose"] == "0"
@@ -1077,7 +1077,7 @@ def test_metadata_source_sets_propagate_imported_metadata(tmp_path):
 
     assert len(projections) == 2
     assert all(
-        dict(SourceMetadataFields.original_items(item.source_metadata))["Compound"]
+        dict(SourceMetadataFields.declared_items(item.source_metadata))["Compound"]
         == "DrugA"
         for item in projections
     )
@@ -1123,7 +1123,7 @@ def test_imported_metadata_duplicate_join_uses_first_matching_row(tmp_path):
 
     assert metadata["Site"] == "1"
     assert metadata["Compound"] == "First"
-    original = dict(SourceMetadataFields.original_items(metadata))
+    original = dict(SourceMetadataFields.declared_items(metadata))
     assert original["Site"] == "1"
     assert original["Plate"] == "20585"
     assert original["Well"] == "A01"
@@ -1171,7 +1171,7 @@ def test_imported_metadata_later_stage_overrides_extracted_field(tmp_path):
     assert metadata["Plate"] == "plate_1"
     assert metadata["Dose"] == "0"
     assert projection.address.value_for(Microscopy.Well) == "A01"
-    original = dict(SourceMetadataFields.original_items(metadata))
+    original = dict(SourceMetadataFields.declared_items(metadata))
     assert original["Plate"] == "plate_1"
     assert original["Well"] == "A01"
     assert original["ChannelNumber"] == "2"
@@ -1223,7 +1223,7 @@ def test_imported_metadata_coerces_join_and_payload_values_through_declared_type
         filemanager=_filemanager(),
     )
     projection = projection_set.projections[0]
-    original = dict(SourceMetadataFields.original_items(projection.source_metadata))
+    original = dict(SourceMetadataFields.declared_items(projection.source_metadata))
 
     assert original["Site"] == 5
     assert original["Dose"] == 0.25
@@ -1237,7 +1237,7 @@ def test_imported_metadata_coerces_join_and_payload_values_through_declared_type
         pixel_size=1.0,
     )
     serialized = next(iter(metadata[FIELDS.SOURCE_METADATA].values()))
-    serialized_original = dict(SourceMetadataFields.original_items(serialized))
+    serialized_original = dict(SourceMetadataFields.declared_items(serialized))
     assert serialized_original["Dose"] == 0.25
     assert serialized_original["Frame"] == 7
 
@@ -1326,7 +1326,7 @@ def test_imported_metadata_skips_source_sets_with_partial_join_identity(tmp_path
     )
 
     assert "Compound" not in dict(
-        SourceMetadataFields.original_items(projection.source_metadata)
+        SourceMetadataFields.declared_items(projection.source_metadata)
     )
 
 
@@ -1450,7 +1450,7 @@ def test_source_bindings_reinitialization_resolves_current_imported_metadata(tmp
         )
     )
     assert (
-        dict(SourceMetadataFields.original_items(first_metadata))["Compound"]
+        dict(SourceMetadataFields.declared_items(first_metadata))["Compound"]
         == "First"
     )
 
@@ -1465,7 +1465,7 @@ def test_source_bindings_reinitialization_resolves_current_imported_metadata(tmp
 
     assert metadata_path.read_bytes() != first_payload
     assert (
-        dict(SourceMetadataFields.original_items(second_metadata))["Compound"]
+        dict(SourceMetadataFields.declared_items(second_metadata))["Compound"]
         == "Second"
     )
 

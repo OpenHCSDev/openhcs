@@ -22,7 +22,7 @@ from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.core.virtual_workspace_metadata import (
     JsonScalar,
@@ -272,7 +272,7 @@ class PlateImageInventory:
         metadata_handler: "MetadataHandler",
         filemanager: "FileManager",
     ) -> VirtualWorkspaceSourceProjection | None:
-        return VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        return WorkspaceSourceProjections.from_plate_metadata(
             plate_path=plate_path,
             metadata_handler=metadata_handler,
             filemanager=filemanager,

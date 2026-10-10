@@ -406,8 +406,8 @@ class BioFormatsStoreMetadata:
                 key=str,
             )
         )
-        canonical_source = image.source_path.resolve(strict=False)
-        backend_source = _relative_path(self.root, canonical_source)
+        normalized_source = image.source_path.resolve(strict=False)
+        backend_source = _relative_path(self.root, normalized_source)
         filter_paths = tuple(
             value
             for path in container_paths
@@ -436,7 +436,7 @@ class BioFormatsStoreMetadata:
             if image.reader == "npy":
                 source_ref = SourcePixelRef(
                     backend=Backend.DISK.value,
-                    backend_address=_relative_path(self.root, canonical_source),
+                    backend_address=_relative_path(self.root, normalized_source),
                     source_axis_indices=(plane.t - 1, plane.z - 1, plane.c - 1),
                 )
                 source_axis_shape = (
@@ -457,7 +457,7 @@ class BioFormatsStoreMetadata:
             candidates.append(
                 SourceCandidate(
                     source_ref=source_ref,
-                    relative_path=_relative_path(self.root, canonical_source),
+                    relative_path=_relative_path(self.root, normalized_source),
                     metadata=metadata,
                     source_axis_shape=source_axis_shape,
                     source_filter_paths=filter_paths,

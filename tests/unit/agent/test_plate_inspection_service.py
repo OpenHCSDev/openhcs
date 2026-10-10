@@ -30,7 +30,7 @@ from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.plate_image_inventory import PlateFileKind
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.core.dataset_sources.source import BroadStoreSource, DeclaredFileSource
@@ -1584,7 +1584,7 @@ def test_plate_file_query_resolves_source_projection_once(
     plate = ImageXpressPlateFixture.write(tmp_path)
     source_projection_resolution_count = 0
     original_from_plate_metadata = (
-        VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata.__func__
+        WorkspaceSourceProjections.from_plate_metadata.__func__
     )
 
     def counted_from_plate_metadata(cls, **kwargs):
@@ -1593,7 +1593,7 @@ def test_plate_file_query_resolves_source_projection_once(
         return original_from_plate_metadata(cls, **kwargs)
 
     monkeypatch.setattr(
-        VirtualWorkspaceSourceProjectionAuthority,
+        WorkspaceSourceProjections,
         "from_plate_metadata",
         classmethod(counted_from_plate_metadata),
     )

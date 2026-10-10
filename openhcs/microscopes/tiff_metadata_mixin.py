@@ -7,7 +7,7 @@ from typing import Dict, Optional
 import re
 import tifffile
 
-from openhcs.core.dataset_sources.exceptions import MicroscopePixelSizeUnavailableError
+from openhcs.core.dataset_sources.exceptions import PixelSizeUnavailableError
 
 
 class TiffPixelSizeMixin:
@@ -41,7 +41,7 @@ class TiffPixelSizeMixin:
                 )
                 if m:
                     return float(m.group(1))
-        raise MicroscopePixelSizeUnavailableError(img)
+        raise PixelSizeUnavailableError(img)
 
     def _channel_from_tiff(
         self, plate_path, filemanager

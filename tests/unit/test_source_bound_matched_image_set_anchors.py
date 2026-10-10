@@ -39,7 +39,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjection, VirtualWorkspaceSourceProjectionAuthority,
+    VirtualWorkspaceSourceProjection, WorkspaceSourceProjections,
 )
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_execution import (
@@ -74,8 +74,8 @@ def _anchor_executor(
         filemanager=SimpleNamespace(exists=lambda *_args: False),
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
     )
-    executor.context.runtime_source_workspace_projection_authority = (
-        VirtualWorkspaceSourceProjectionAuthority.from_context(
+    executor.context.runtime_source_workspace_projections = (
+        WorkspaceSourceProjections.from_context(
             executor.context, cache=source_workspace_projection_cache,
         )
     )

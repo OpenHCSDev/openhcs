@@ -46,7 +46,7 @@ from openhcs.core.source_image_provenance import (
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,
@@ -351,7 +351,7 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
     microscope_handler: DatasetSource
 
     def source_workspace_projection(self) -> VirtualWorkspaceSourceProjection:
-        return VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        return WorkspaceSourceProjections.from_plate_metadata(
             plate_path=Path(self.plate_path),
             metadata_handler=self.microscope_handler.metadata_handler,
             filemanager=self.filemanager,

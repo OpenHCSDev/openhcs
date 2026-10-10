@@ -10,7 +10,7 @@ from openhcs.constants.constants import Backend
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
     VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.core.dataset_sources.choice import DatasetSourceChoice
@@ -162,7 +162,7 @@ def test_bioformats_structured_refs_project_inside_pattern_runtime(
         tmp_path,
         filemanager,
     )
-    authority = VirtualWorkspaceSourceProjectionAuthority(
+    authority = WorkspaceSourceProjections(
         plate_path=tmp_path,
         metadata_handler=OpenHCSMetadataHandler(filemanager),
         filemanager=filemanager,

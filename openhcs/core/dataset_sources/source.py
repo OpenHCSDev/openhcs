@@ -27,7 +27,7 @@ from openhcs.core.dataset_sources.discovery import domain_registry_config
 from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
     MetadataHandler,
-    MicroscopeImagePathParser,
+    FilenameParserCapability,
 )
 
 logger = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ class PreparedWorkspaceSource(SourceSelectionRole):
 
 class DatasetSource(
     DatasetSourceChoice,
-    MicroscopeImagePathParser,
+    FilenameParserCapability,
     ViewerMicroscopeHandlerABC,
     FormatSpecificSource,
     ABC,
@@ -152,7 +152,7 @@ class DatasetSource(
 
     The protocol the kernel uses: :meth:`axis_values`,
     :meth:`available_backends`, :meth:`resolve_metadata_artifact`, plus the
-    optional filename parser supplied through :class:`MicroscopeImagePathParser`.
+    optional filename parser supplied through :class:`FilenameParserCapability`.
     """
 
     __registry_config__ = domain_registry_config(

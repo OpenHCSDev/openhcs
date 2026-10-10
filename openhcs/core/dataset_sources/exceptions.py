@@ -1,16 +1,16 @@
-"""Typed microscope metadata exceptions."""
+"""Typed dataset metadata exceptions."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 
-class MicroscopeMetadataError(ValueError):
-    """Base class for microscope metadata contract failures."""
+class SourceMetadataError(ValueError):
+    """Base class for dataset metadata contract failures."""
 
 
-class MicroscopePixelSizeUnavailableError(MicroscopeMetadataError):
-    """Raised when a microscope handler cannot determine physical pixel size."""
+class PixelSizeUnavailableError(SourceMetadataError):
+    """Raised when a dataset source cannot determine physical pixel size."""
 
     def __init__(self, image_path: str | Path) -> None:
         self.image_path = Path(image_path)

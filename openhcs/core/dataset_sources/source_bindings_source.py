@@ -1,4 +1,4 @@
-"""Microscope handler for source-binding projected workspaces."""
+"""Dataset source for image folders described by source-binding declarations."""
 
 from __future__ import annotations
 

@@ -379,7 +379,7 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
     assert session.plan(0).step_name == "step"
 
     from openhcs.core.source_metadata import (
-        ORIGINAL_SOURCE_METADATA_FIELD,
+        DECLARED_SOURCE_METADATA_FIELD,
         DurableSourceMetadata,
         SourceMetadataFields,
     )
@@ -414,7 +414,7 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
                 source_refs_by_virtual_path={},
                 source_metadata_by_path={
                     "image": DurableSourceMetadata.from_mapping({
-                        ORIGINAL_SOURCE_METADATA_FIELD: {"Dose": value}
+                        DECLARED_SOURCE_METADATA_FIELD: {"Dose": value}
                     }),
                 },
             ),

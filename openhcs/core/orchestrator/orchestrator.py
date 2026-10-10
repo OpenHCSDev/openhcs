@@ -690,10 +690,10 @@ class PipelineOrchestrator:
         plate_path = Path(self.plate_path)
         from openhcs.core.source_workspace_projection import (
             VirtualWorkspaceSourceProjection,
-            VirtualWorkspaceSourceProjectionAuthority,
+            WorkspaceSourceProjections,
         )
 
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        projection = WorkspaceSourceProjections.from_plate_metadata(
             plate_path=plate_path,
             metadata_handler=self.microscope_handler.metadata_handler,
             filemanager=self.filemanager,

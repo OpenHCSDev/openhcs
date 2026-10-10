@@ -10,7 +10,7 @@ from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import (
-    OriginalSourceMetadata,
+    DeclaredSourceMetadata,
     SourceFilterPathMetadata,
     SourceVoxelSpacing,
 )
@@ -23,7 +23,7 @@ def source_records(planes=4, origin=0):
         for index in range(planes)
     )
     for record, path in zip(records, paths, strict=True):
-        OriginalSourceMetadata.from_mapping(
+        DeclaredSourceMetadata.from_mapping(
             {key: str(value) for key, value in record.items()}
         ).merge_into(record, path=path)
         SourceFilterPathMetadata.from_paths((path,)).merge_into(record, path=path)

@@ -76,7 +76,7 @@ from openhcs.core.source_matching import (
     SourceImageSetIdentityPolicy,
 )
 from openhcs.core.source_metadata import (
-    ORIGINAL_SOURCE_METADATA_FIELD,
+    DECLARED_SOURCE_METADATA_FIELD,
     SourceFilterPathMetadata,
     SourceVoxelSpacing,
 )
@@ -462,7 +462,7 @@ def test_compiled_source_bindings_include_realized_original_metadata_schema():
         config,
         realized_source_metadata=(
             {
-                ORIGINAL_SOURCE_METADATA_FIELD: {
+                DECLARED_SOURCE_METADATA_FIELD: {
                     "Dose": "0.25",
                     "Compound": "DMSO",
                     "Replicate": 1,
@@ -470,7 +470,7 @@ def test_compiled_source_bindings_include_realized_original_metadata_schema():
                 }
             },
             {
-                ORIGINAL_SOURCE_METADATA_FIELD: {
+                DECLARED_SOURCE_METADATA_FIELD: {
                     "Dose": "0.50",
                     "Compound": "Drug",
                     "Replicate": 2,
@@ -1673,7 +1673,7 @@ def test_rule_metadata_preserves_original_source_metadata_mapping():
     metadata = context.metadata_for_path(path)
 
     assert metadata is not None
-    assert metadata[ORIGINAL_SOURCE_METADATA_FIELD] == {
+    assert metadata[DECLARED_SOURCE_METADATA_FIELD] == {
         "Plate": "monolayer",
         "Site": "1",
     }

@@ -22,7 +22,7 @@ from openhcs.core.dataset_sources.interfaces import (
     FilenameParseResult,
     FilenameParser,
     MetadataComponentValueSet,
-    MicroscopeImagePathParser,
+    FilenameParserCapability,
 )
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
@@ -30,7 +30,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 logger = logging.getLogger(__name__)
 
 
-class ImageXpressTimePointPaths(MicroscopeImagePathParser):
+class ImageXpressTimePointPaths(FilenameParserCapability):
     """TimePoint folders independently own the acquisition time coordinate."""
 
     _timepoint_folder_pattern = re.compile(r"TimePoint[_-]?(\d+)", re.IGNORECASE)
@@ -48,7 +48,7 @@ class ImageXpressTimePointPaths(MicroscopeImagePathParser):
         )
 
 
-class ImageXpressZStepPaths(MicroscopeImagePathParser):
+class ImageXpressZStepPaths(FilenameParserCapability):
     """ZStep folders independently own the acquisition depth coordinate."""
 
     _zstep_folder_pattern = re.compile(r"ZStep[_-]?(\d+)", re.IGNORECASE)

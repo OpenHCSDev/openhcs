@@ -24,9 +24,9 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
 )
 from openhcs.core.source_metadata import (
-    ORIGINAL_SOURCE_METADATA_FIELD,
+    DECLARED_SOURCE_METADATA_FIELD,
     SOURCE_FILTER_PATHS_METADATA_FIELD,
-    OriginalSourceMetadata,
+    DeclaredSourceMetadata,
     SourceFilterPathMetadata,
     SourceMetadataMapping,
     SourceMetadataFields,
@@ -303,7 +303,7 @@ def metadata_from_rules(
         )
     if not extracted:
         return {}
-    return with_original_source_metadata(
+    return with_declared_source_metadata(
         extracted,
         extracted,
         path=file_path,
@@ -638,8 +638,8 @@ def merge_source_metadata(
     for key, value in additions.items():
         if value is None:
             continue
-        if key == ORIGINAL_SOURCE_METADATA_FIELD:
-            OriginalSourceMetadata.from_reserved_value(
+        if key == DECLARED_SOURCE_METADATA_FIELD:
+            DeclaredSourceMetadata.from_reserved_value(
                 value,
                 path=path,
             ).merge_into(target, path=path)
@@ -707,7 +707,7 @@ def overlay_source_metadata(
 
     for field, value in additions.items():
         if field in {
-            ORIGINAL_SOURCE_METADATA_FIELD,
+            DECLARED_SOURCE_METADATA_FIELD,
             SOURCE_FILTER_PATHS_METADATA_FIELD,
         }:
             continue
@@ -717,9 +717,9 @@ def overlay_source_metadata(
                 for nested_field, nested_value in value.items()
             }
 
-    original = additions.get(ORIGINAL_SOURCE_METADATA_FIELD)
+    original = additions.get(DECLARED_SOURCE_METADATA_FIELD)
     if original is not None:
-        OriginalSourceMetadata.from_reserved_value(
+        DeclaredSourceMetadata.from_reserved_value(
             original,
             path=path,
         ).overlay_into(overlaid, path=path)
@@ -732,7 +732,7 @@ def overlay_source_metadata(
     return overlaid
 
 
-def with_original_source_metadata(
+def with_declared_source_metadata(
     metadata: SourceMetadataMapping,
     original_metadata: Mapping[str, SourceMetadataScalar],
     *,
@@ -741,7 +741,7 @@ def with_original_source_metadata(
     """Return metadata carrying source-literal fields in the reserved channel."""
 
     enriched = dict(metadata)
-    OriginalSourceMetadata.from_mapping(original_metadata).merge_into(
+    DeclaredSourceMetadata.from_mapping(original_metadata).merge_into(
         enriched,
         path=path,
     )

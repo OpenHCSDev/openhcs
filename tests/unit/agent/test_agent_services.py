@@ -120,7 +120,7 @@ from openhcs.core.source_bindings import (
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core import virtual_workspace_metadata as metadata_module
-from openhcs.core.dataset_sources.exceptions import MicroscopePixelSizeUnavailableError
+from openhcs.core.dataset_sources.exceptions import PixelSizeUnavailableError
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponseField,
@@ -3820,7 +3820,7 @@ def test_execution_session_service_projects_pixel_size_compile_inspection_error(
         config_service=ConfigService(),
         client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=_FailingCompileInspectionGateway(
-            MicroscopePixelSizeUnavailableError(image_path)
+            PixelSizeUnavailableError(image_path)
         ),
     )
 
@@ -3835,7 +3835,7 @@ def test_execution_session_service_projects_pixel_size_compile_inspection_error(
 
     error = inspection.errors[0]
     assert error.code == "compile_inspection_pixel_size_unavailable"
-    assert error.exception_type == "MicroscopePixelSizeUnavailableError"
+    assert error.exception_type == "PixelSizeUnavailableError"
     assert error.path == str(image_path)
     assert "openhcs_inspect_plate_path" in error.hint
     assert "physical pixel size" in error.hint

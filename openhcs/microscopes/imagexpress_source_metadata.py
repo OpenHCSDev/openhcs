@@ -9,7 +9,7 @@ from polystore.source_tile_geometry import SourceTileGeometry
 from polystore.tiff_header import TiffImageHeader
 
 from openhcs.core.source_metadata import (
-    OriginalSourceMetadata,
+    DeclaredSourceMetadata,
     SourceMetadataMapping,
     SourceVoxelSpacing,
 )
@@ -107,7 +107,7 @@ class ImageXpressTiffMetadataEnricher(SourceMetadataEnricher):
         )
         metadata = {SourceTileGeometry.metadata_field: geometry.as_metadata_value()}
         spacing.merge_into(metadata, path=str(path))
-        OriginalSourceMetadata.from_mapping(
+        DeclaredSourceMetadata.from_mapping(
             {key: properties[key] for key in required}
         ).merge_into(
             metadata,

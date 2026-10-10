@@ -18,7 +18,7 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.source_bindings import source_bindings_defaults_to_base
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
@@ -297,7 +297,7 @@ def test_neuroncyto_declared_identity_replaces_loose_tiff_store_coordinates(
 
     handler.initialize_workspace(plate_path, filemanager)
 
-    projection = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+    projection = WorkspaceSourceProjections.from_plate_metadata(
         plate_path=plate_path,
         metadata_handler=handler.metadata_handler,
         filemanager=filemanager,

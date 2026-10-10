@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
-ORIGINAL_SOURCE_METADATA_FIELD = "OpenHCSOriginalSourceMetadata"
+DECLARED_SOURCE_METADATA_FIELD = "OpenHCSOriginalSourceMetadata"
 SOURCE_FILTER_PATHS_METADATA_FIELD = "OpenHCSSourceFilterPaths"
 SOURCE_PLANE_INDEX_FIELD = "source_plane_index"
 SOURCE_PLANE_COUNT_FIELD = "source_plane_count"
@@ -92,15 +92,15 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         if value is None:
             return None
         if isinstance(value, SourceMetadataNonNullScalar):
-            return cls._normalize_admitted_scalar(value)
+            return cls._normalize_accepted_scalar(value)
         return cls._reject_scalar(value)
 
     @staticmethod
-    def _normalize_admitted_scalar(
+    def _normalize_accepted_scalar(
         value: SourceMetadataNonNullScalar,
     ) -> SourceMetadataNonNullScalar:
         if isinstance(value, str):
-            return canonical_path_metadata_value(value)
+            return normalized_path_metadata_value(value)
         return value
 
     @staticmethod
@@ -152,7 +152,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
             lambda: tuple(
                 (str(key), value)
                 for key, value in metadata.items()
-                if key != ORIGINAL_SOURCE_METADATA_FIELD
+                if key != DECLARED_SOURCE_METADATA_FIELD
                 and not isinstance(value, Mapping)
             ),
         )
@@ -164,18 +164,18 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         return tuple(value for _key, value in cls.scalar_items(metadata))
 
     @classmethod
-    def original_items(
+    def declared_items(
         cls, metadata: SourceMetadataMapping
     ) -> tuple[tuple[str, SourceMetadataScalar], ...]:
         def project() -> tuple[tuple[str, SourceMetadataScalar], ...]:
-            original_metadata = metadata.get(ORIGINAL_SOURCE_METADATA_FIELD)
-            if original_metadata is None:
+            declared_metadata = metadata.get(DECLARED_SOURCE_METADATA_FIELD)
+            if declared_metadata is None:
                 return ()
-            return OriginalSourceMetadata.from_reserved_value(
-                original_metadata, path=ORIGINAL_SOURCE_METADATA_FIELD
+            return DeclaredSourceMetadata.from_reserved_value(
+                declared_metadata, path=DECLARED_SOURCE_METADATA_FIELD
             ).fields
 
-        return cls._view(metadata, "original_items", project)
+        return cls._view(metadata, "declared_items", project)
 
     @classmethod
     def source_filter_paths(cls, metadata: SourceMetadataMapping) -> tuple[str, ...]:
@@ -233,7 +233,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         # Preserve the existing lookup's role-validation order even when the
         # requested literal could be read without the original metadata role.
         scalars = SourceMetadataFields.scalar_items(self)
-        original = SourceMetadataFields.original_items(self)
+        original = SourceMetadataFields.declared_items(self)
         for fields in (original, scalars):
             for candidate_key, value in fields:
                 if str(candidate_key) == key and value is not None:
@@ -241,7 +241,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         return None
 
     @property
-    def _admitted_components_complete(self) -> bool:
+    def _accepted_components_complete(self) -> bool:
         """Whether retained, already demanded views cover every component slot."""
         return False
 
@@ -252,7 +252,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         """Infer ordered source literal types for one admitted source cohort."""
         types_by_name: dict[str, set[type[object]]] = {}
         for metadata in metadata_records:
-            for name, value in cls.original_items(metadata):
+            for name, value in cls.declared_items(metadata):
                 value_types = types_by_name.setdefault(name, set())
                 if value is not None:
                     value_types.add(type(value))
@@ -277,7 +277,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
     ) -> Iterator[tuple[type[Axis], SourceMetadataNonNullScalar]]:
         """Admit component fields once, with canonical spelling before aliases."""
         scalars = cls.scalar_items(metadata)
-        cls.original_items(metadata)
+        cls.declared_items(metadata)
         aliases: list[tuple[type[Axis], SourceMetadataNonNullScalar]] = []
         for name, value in scalars:
             if value is None:
@@ -369,7 +369,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
             fields = {
                 key: field_value
                 for key, field_value in fields.items()
-                if key == ORIGINAL_SOURCE_METADATA_FIELD
+                if key == DECLARED_SOURCE_METADATA_FIELD
                 or source_metadata_component(str(key)) is not component
             }
             fields[component.name] = str(value)
@@ -395,7 +395,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         components = (
             ()
             if isinstance(metadata, SourceMetadataFields)
-            and metadata._admitted_components_complete
+            and metadata._accepted_components_complete
             else AxisFamily.active().axes
         )
         for component in components:
@@ -536,7 +536,7 @@ class OwnedSourceMetadataFields(SourceMetadataFields):
         return self._views[key]
 
     @property
-    def _admitted_components_complete(self) -> bool:
+    def _accepted_components_complete(self) -> bool:
         return self._cacheable and all(
             self._views.get(component) is not None for component in AxisFamily.active().axes
         )
@@ -547,7 +547,7 @@ class OwnedSourceMetadataFields(SourceMetadataFields):
 
         def project() -> dict[str, SourceMetadataScalar]:
             scalars = SourceMetadataFields.scalar_items(self)
-            original = SourceMetadataFields.original_items(self)
+            original = SourceMetadataFields.declared_items(self)
             values: dict[str, SourceMetadataScalar] = {}
             for fields in (original, scalars):
                 for name, value in fields:
@@ -606,7 +606,7 @@ class DurableSourceMetadata(OwnedSourceMetadataFields):
     __hash__ = None
 
     @staticmethod
-    def _normalize_admitted_scalar(
+    def _normalize_accepted_scalar(
         value: SourceMetadataNonNullScalar,
     ) -> SourceMetadataNonNullScalar:
         return value
@@ -634,8 +634,8 @@ def source_metadata_dict(
     detached: dict[str, SourceMetadataValue] = {}
     for key, value in metadata.items():
         field = str(key)
-        if field == ORIGINAL_SOURCE_METADATA_FIELD:
-            detached[field] = OriginalSourceMetadata.from_reserved_value(
+        if field == DECLARED_SOURCE_METADATA_FIELD:
+            detached[field] = DeclaredSourceMetadata.from_reserved_value(
                 value,
                 path=field,
             ).as_dict()
@@ -660,14 +660,14 @@ def source_metadata_scalar(value: SourceMetadataScalar) -> SourceMetadataScalar:
     return SourceMetadataFields.normalized_scalar(value)
 
 
-def canonical_path_metadata_value(value: str) -> str:
+def normalized_path_metadata_value(value: str) -> str:
     """Normalize absolute path values while leaving ordinary labels unchanged."""
 
-    return _cached_canonical_path_metadata_value(value)
+    return _cached_normalized_path_metadata_value(value)
 
 
 @lru_cache(maxsize=65536)
-def _cached_canonical_path_metadata_value(value: str) -> str:
+def _cached_normalized_path_metadata_value(value: str) -> str:
     """Return the canonical absolute path spelling for path-like metadata."""
 
     path = Path(value)
@@ -696,7 +696,7 @@ def _cached_path_metadata_values_equivalent(left: str, right: str) -> bool:
 
 
 @dataclass(frozen=True, slots=True)
-class OriginalSourceMetadata:
+class DeclaredSourceMetadata:
     """Source-literal metadata preserved separately from canonical axis fields."""
 
     fields: tuple[tuple[str, SourceMetadataScalar], ...]
@@ -705,7 +705,7 @@ class OriginalSourceMetadata:
     def from_mapping(
         cls,
         metadata: Mapping[str, SourceMetadataScalar],
-    ) -> "OriginalSourceMetadata":
+    ) -> "DeclaredSourceMetadata":
         return cls(
             tuple(
                 (str(key), source_metadata_scalar(value))
@@ -719,10 +719,10 @@ class OriginalSourceMetadata:
         value: SourceMetadataValue,
         *,
         path: str,
-    ) -> "OriginalSourceMetadata":
+    ) -> "DeclaredSourceMetadata":
         if not isinstance(value, Mapping):
             raise RuntimeError(
-                f"{ORIGINAL_SOURCE_METADATA_FIELD} for {path!r} must be a mapping, "
+                f"{DECLARED_SOURCE_METADATA_FIELD} for {path!r} must be a mapping, "
                 f"got {type(value).__name__}: {value!r}."
             )
         return cls.from_mapping(value)
@@ -736,11 +736,11 @@ class OriginalSourceMetadata:
         *,
         path: str,
     ) -> None:
-        existing = target.get(ORIGINAL_SOURCE_METADATA_FIELD)
+        existing = target.get(DECLARED_SOURCE_METADATA_FIELD)
         merged = (
             {}
             if existing is None
-            else OriginalSourceMetadata.from_reserved_value(
+            else DeclaredSourceMetadata.from_reserved_value(
                 existing,
                 path=path,
             ).as_dict()
@@ -762,7 +762,7 @@ class OriginalSourceMetadata:
                     f"{existing_value!r} != {value!r}."
                 )
             merged[key] = value
-        target[ORIGINAL_SOURCE_METADATA_FIELD] = merged
+        target[DECLARED_SOURCE_METADATA_FIELD] = merged
 
     def overlay_into(
         self,
@@ -772,17 +772,17 @@ class OriginalSourceMetadata:
     ) -> None:
         """Apply one later declared metadata stage over earlier literal fields."""
 
-        existing = target.get(ORIGINAL_SOURCE_METADATA_FIELD)
+        existing = target.get(DECLARED_SOURCE_METADATA_FIELD)
         merged = (
             {}
             if existing is None
-            else OriginalSourceMetadata.from_reserved_value(
+            else DeclaredSourceMetadata.from_reserved_value(
                 existing,
                 path=path,
             ).as_dict()
         )
         merged.update(self.fields)
-        target[ORIGINAL_SOURCE_METADATA_FIELD] = merged
+        target[DECLARED_SOURCE_METADATA_FIELD] = merged
 
 
 @dataclass(frozen=True, slots=True)

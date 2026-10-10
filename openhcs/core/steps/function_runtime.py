@@ -92,7 +92,7 @@ from openhcs.core.source_image_provenance import (
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.core.source_binding_selection import (
     SourceBindingCandidateMatcher,
@@ -439,8 +439,8 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
 
     def source_workspace_projection_authority(
         self,
-    ) -> VirtualWorkspaceSourceProjectionAuthority:
-        return self.context.runtime_source_workspace_projection_authority
+    ) -> WorkspaceSourceProjections:
+        return self.context.runtime_source_workspace_projections
 
     @staticmethod
     def _is_relative_to(path: Path, root: Path) -> bool:

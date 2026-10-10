@@ -1,4 +1,4 @@
-"""Nominal Bio-Formats well-key projection authority."""
+"""Bio-Formats well keys projected onto plate wells."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
-class BioFormatsWellKeyAuthority:
+class BioFormatsWellKeys:
     """Convert vendor and OME row/column coordinates to OpenHCS well keys."""
 
     def key_from_ome(self, row: int | str, column: int | str) -> str:
@@ -53,4 +53,4 @@ class BioFormatsWellKeyAuthority:
         return self.ome_column_index(int(column_text))
 
 
-BIOFORMATS_WELL_KEYS = BioFormatsWellKeyAuthority()
+BIOFORMATS_WELL_KEYS = BioFormatsWellKeys()

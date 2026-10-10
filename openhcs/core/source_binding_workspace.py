@@ -41,8 +41,8 @@ from openhcs.core.source_matching import (
     with_source_component_metadata,
 )
 from openhcs.core.source_metadata import (
-    ORIGINAL_SOURCE_METADATA_FIELD,
-    OriginalSourceMetadata,
+    DECLARED_SOURCE_METADATA_FIELD,
+    DeclaredSourceMetadata,
     SourceFilterPathMetadata,
     SourceMetadataMapping,
     SourceMetadataFields,
@@ -97,7 +97,7 @@ class _SourceSet:
 
         metadata = dict(self.metadata)
         metadata.update(imported_metadata)
-        OriginalSourceMetadata.from_mapping(imported_metadata).overlay_into(
+        DeclaredSourceMetadata.from_mapping(imported_metadata).overlay_into(
             metadata,
             path=path,
         )
@@ -632,7 +632,7 @@ class SourceBindingWorkspaceProjector:
                 f"SourceBindingsConfig, got {type(self.source_bindings).__name__}."
             )
 
-    def admit_prepared_projection(
+    def accept_prepared_projection(
         self, projection: "VirtualWorkspaceSourceProjection"
     ) -> "VirtualWorkspaceSourceProjection":
         """Admit retained sources without rebuilding their paths or provenance."""
@@ -1078,7 +1078,7 @@ class SourceBindingWorkspaceProjector:
                 current,
                 identity.value,
             ):
-                OriginalSourceMetadata.from_mapping(
+                DeclaredSourceMetadata.from_mapping(
                     {identity.component.name: current}
                 ).merge_into(
                     metadata,
@@ -1381,15 +1381,15 @@ def _workspace_source_metadata(
     metadata = dict(candidate.metadata)
     if source_set_metadata is not None:
         source_set_original_metadata = source_set_metadata.get(
-            ORIGINAL_SOURCE_METADATA_FIELD
+            DECLARED_SOURCE_METADATA_FIELD
         )
         metadata.update(
             (field_name, value)
             for field_name, value in source_set_metadata.items()
-            if field_name != ORIGINAL_SOURCE_METADATA_FIELD
+            if field_name != DECLARED_SOURCE_METADATA_FIELD
         )
         if source_set_original_metadata is not None:
-            OriginalSourceMetadata.from_reserved_value(
+            DeclaredSourceMetadata.from_reserved_value(
                 source_set_original_metadata,
                 path=candidate.relative_path,
             ).overlay_into(metadata, path=candidate.relative_path)

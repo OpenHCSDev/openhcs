@@ -37,7 +37,7 @@ from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_projection import SourcePlaneProjection
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
     VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.interop.cellprofiler.runtime.output_recording import (
@@ -144,10 +144,10 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
             frozenset((Microscopy.Channel,))
         ),
     )
-    context.runtime_source_workspace_projection_authority = VirtualWorkspaceSourceProjectionAuthority.from_context(
+    context.runtime_source_workspace_projections = WorkspaceSourceProjections.from_context(
         context, cache=projection_cache,
     )
-    projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
+    projection = WorkspaceSourceProjections.from_context(
         context,
         cache=projection_cache,
     ).projection_or_empty()
@@ -297,7 +297,7 @@ def test_workspace_materialization_preserves_declared_source_pixels(tmp_path, mo
         completed_step_outputs=StepExecutionObservation.empty(),
         plate_path=workspace_root, filemanager=filemanager, microscope_handler=microscope,
     )
-    workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(context, cache=cache).projection_or_empty()
+    workspace = WorkspaceSourceProjections.from_context(context, cache=cache).projection_or_empty()
     paths = tuple(path for path, _projection in workspace.source_occurrences_for_binding(binding, axis_id="A01"))
     assert len(paths) == 1
     (payload,) = workspace.load_binding_payloads(paths, binding=binding, filemanager=filemanager)

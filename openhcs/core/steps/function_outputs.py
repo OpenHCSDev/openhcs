@@ -714,7 +714,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         context: ProcessingContext,
         *,
         document: OpenHCSMetadataSubdirectories | None = None,
-        admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
+        accepted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
     ) -> tuple[OpenHCSMetadataTarget, ...]:
         """Resolve destinations after runtime values have been released."""
         return (self,)
@@ -764,7 +764,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         produced_plan: CompiledStepPlan | None = None,
         metadata_writer: AtomicMetadataWriter | None = None,
         metadata_document: dict[str, Any] | None = None,
-        admitted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
+        accepted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
     ) -> VirtualWorkspaceSourceProjectionEntries:
         """Project the target's current storage state into plate metadata."""
 
@@ -803,7 +803,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
                 else None
             ),
             metadata_document=metadata_document,
-            admitted_entries=admitted_entries,
+            accepted_entries=accepted_entries,
         )
 
     def produced_projection_entries(
@@ -1196,18 +1196,18 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
         context: ProcessingContext,
         *,
         document: OpenHCSMetadataSubdirectories | None = None,
-        admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
+        accepted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
     ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
         """Use durable typed projections, without reloading cleaned artifact values."""
         from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
-        if (document is None) != (admitted_entries is None):
+        if (document is None) != (accepted_entries is None):
             raise ValueError("Reconciliation requires one document and its admitted entries.")
         handler = OpenHCSMetadataHandler(context.filemanager)
         directories = (
             handler.reconciliation_directories(self.plate_root, self.backend)
             if document is None else handler.reconciliation_directories_from_document(
-                self.plate_root, self.backend, document, admitted_entries
+                self.plate_root, self.backend, document, accepted_entries
             )
         )
         return tuple(

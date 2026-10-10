@@ -74,33 +74,33 @@ class VirtualMappingSource(DatasetSource):
         )
         rename_map = {}
         for file_path in filemanager.list_image_files(image_dir, backend_type):
-            original_name = os.path.basename(str(file_path))
-            parsed = self.parser.parse_filename(original_name)
+            listed_name = os.path.basename(str(file_path))
+            parsed = self.parser.parse_filename(listed_name)
             if not parsed:
-                logger.warning("Could not parse filename: %s", original_name)
+                logger.warning("Could not parse filename: %s", listed_name)
                 continue
             if (
                 parsed.value_for(Microscopy.Site) is None
                 or parsed.value_for(Microscopy.Channel) is None
             ):
-                logger.warning("Missing site or channel in filename: %s", original_name)
+                logger.warning("Missing site or channel in filename: %s", listed_name)
                 continue
             z_index = parsed.value_for(Microscopy.ZIndex)
             new_name = self.parser.construct_filename(
                 parsed.with_value(Microscopy.ZIndex, 1 if z_index is None else z_index)
             )
-            if original_name != new_name:
-                rename_map[original_name] = new_name
+            if listed_name != new_name:
+                rename_map[listed_name] = new_name
 
-        for original_name, new_name in rename_map.items():
-            original_path = Path(image_dir) / original_name
+        for listed_name, new_name in rename_map.items():
+            listed_path = Path(image_dir) / listed_name
             new_path = Path(image_dir) / new_name
             try:
                 filemanager.ensure_directory(new_path.parent, Backend.DISK.value)
                 filemanager.move(
-                    original_path, new_path, Backend.DISK.value, replace_symlinks=True
+                    listed_path, new_path, Backend.DISK.value, replace_symlinks=True
                 )
             except Exception as e:
-                logger.error("Error renaming %s to %s: %s", original_path, new_path, e)
+                logger.error("Error renaming %s to %s: %s", listed_path, new_path, e)
         return image_dir
 

@@ -1672,7 +1672,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                 f"Source-bound artifact {ref!r} requires main-flow source provenance."
             )
 
-        projection = request.context.runtime_source_workspace_projection_authority.projection_if_available(
+        projection = request.context.runtime_source_workspace_projections.projection_if_available(
             axis_id=request.axis_scope.axis_id,
         )
         if projection is None:

@@ -137,7 +137,7 @@ def test_publication_retains_typed_provenance_and_exact_wire_document() -> None:
     typed = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
     retained = typed.publish_into_subdirectory(
         subdirectory, saved_image_paths=(VIRTUAL_PATH,), reconcile_directory=".",
-        admitted_entries=typed,
+        accepted_entries=typed,
     )
 
     assert retained.entries[VIRTUAL_PATH].image_metadata == _collapsed_metadata()

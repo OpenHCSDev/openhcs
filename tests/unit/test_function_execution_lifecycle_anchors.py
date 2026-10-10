@@ -23,7 +23,7 @@ from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionAuthority
+from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
 from openhcs.core.step_dependencies import StepInputDependency
@@ -48,8 +48,8 @@ def _anchor_executor(
         filemanager=SimpleNamespace(exists=lambda *_args: False),
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
     )
-    executor.context.runtime_source_workspace_projection_authority = (
-        VirtualWorkspaceSourceProjectionAuthority.from_context(
+    executor.context.runtime_source_workspace_projections = (
+        WorkspaceSourceProjections.from_context(
             executor.context, cache=source_workspace_projection_cache,
         )
     )

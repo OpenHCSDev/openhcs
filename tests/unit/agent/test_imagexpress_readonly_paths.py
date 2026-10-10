@@ -21,7 +21,7 @@ from openhcs.core.plate_image_inventory import PlateFileInventory
 from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 from openhcs.core.dataset_sources.source import DatasetSource
-from openhcs.core.dataset_sources.interfaces import MicroscopeImagePathParser
+from openhcs.core.dataset_sources.interfaces import FilenameParserCapability
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -226,7 +226,7 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
 ):
     events = []
 
-    class PathTerminus(MicroscopeImagePathParser):
+    class PathTerminus(FilenameParserCapability):
         def image_path_components(self, path):
             events.append(("ancestor", str(path)))
             return super().image_path_components(path)
@@ -285,7 +285,7 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
             assert events.count(("site", path)) == events.count(("ancestor", path)) == 3
         assert (
             subtype.__mro__.count(PathTerminus)
-            == subtype.__mro__.count(MicroscopeImagePathParser)
+            == subtype.__mro__.count(FilenameParserCapability)
             == 1
         )
         assert DatasetSource.__registry__[key] is subtype

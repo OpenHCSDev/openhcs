@@ -67,7 +67,7 @@ from openhcs.core.steps.function_artifact_materialization import (
     planned_materialization_preview,
 )
 from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
-from openhcs.core.dataset_sources.exceptions import MicroscopePixelSizeUnavailableError
+from openhcs.core.dataset_sources.exceptions import PixelSizeUnavailableError
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import (
     ZMQExecutionRequestBuilder,
@@ -1410,7 +1410,7 @@ def _compile_inspection_error(exception: Exception) -> AgentError:
                 "retrying artifact-plan."
             ),
         )
-    if isinstance(exception, MicroscopePixelSizeUnavailableError):
+    if isinstance(exception, PixelSizeUnavailableError):
         return AgentError.from_exception(
             "compile_inspection_pixel_size_unavailable",
             exception,

@@ -59,7 +59,7 @@ from openhcs.core.source_bindings import (
     StepSourceBindingsConfig,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_matching import with_original_source_metadata
+from openhcs.core.source_matching import with_declared_source_metadata
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
@@ -1071,7 +1071,7 @@ def test_measurement_provenance_projects_exact_named_contributors_by_site(
         tuple(
             RuntimeSourceImageProvenancePlane(
                 SourceImageIdentity(
-                    component_metadata=with_original_source_metadata(
+                    component_metadata=with_declared_source_metadata(
                         {"Plate": "20585", "Well": "A01", "Site": site},
                         {"Plate": "20585", "Well": "A01", "Site": site},
                         path=str(source_paths[(site, "DNA")]),
@@ -1081,7 +1081,7 @@ def test_measurement_provenance_projects_exact_named_contributors_by_site(
                     SourceImageProvenanceContributor(
                         SourceImageIdentity(
                             str(source_paths[(site, alias)]),
-                            with_original_source_metadata(
+                            with_declared_source_metadata(
                                 {
                                     "Plate": "20585",
                                     "Well": "A01",
@@ -1898,7 +1898,7 @@ def _record_image(
         path=f"/memory/{name}.pkl",
         artifact_type=ImageArtifactType,
     )
-    source_metadata = with_original_source_metadata(
+    source_metadata = with_declared_source_metadata(
         metadata,
         metadata,
         path=source_path,

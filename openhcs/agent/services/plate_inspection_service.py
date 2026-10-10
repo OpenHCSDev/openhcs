@@ -72,7 +72,7 @@ if TYPE_CHECKING:
         FilenameParser,
         MetadataComponentValueSet,
         MetadataHandler,
-        MicroscopeImagePathParser,
+        FilenameParserCapability,
     )
     from polystore.filemanager import FileManager
 
@@ -522,7 +522,7 @@ class PlateInspectionFilenameParser:
     def parse(
         self,
         *,
-        parser: "MicroscopeImagePathParser | None",
+        parser: "FilenameParserCapability | None",
         image_files: tuple[str, ...],
         bounds: PlateInspectionBounds,
     ) -> PlateInspectionParsedFileSet:
