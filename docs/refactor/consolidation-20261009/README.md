@@ -8,7 +8,8 @@ Plans for deleting unneeded production code and giving each owned concept one ow
 2. **[01-INDEX.md](01-INDEX.md):** evidence, surfaces, order, crossings, decisions.
 3. **[02-SHARED-ABSTRACTIONS.md](02-SHARED-ABSTRACTIONS.md):** the two new mechanisms more than one surface uses.
 4. **[03-COORDINATION.md](03-COORDINATION.md):** agents, status, cutover, the prompt addendum.
-5. **Surface files:** [D1](D1-dead-processing.md), [D2](D2-dead-core-runtime.md), [D3](D3-product-boundary.md), [D4](D4-equivalence-tooling.md), [D5](D5-validation-logs.md).
+5. **[04-ARCHITECTURE.md](04-ARCHITECTURE.md):** the domain-blind target that steps 2 onward build.
+6. **Surface files:** [D1](D1-dead-processing.md), [D2](D2-dead-core-runtime.md), [D3](D3-product-boundary.md), [D4](D4-equivalence-tooling.md), [D5](D5-validation-logs.md).
 
 ## What the owner does
 

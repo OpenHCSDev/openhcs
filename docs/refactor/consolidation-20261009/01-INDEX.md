@@ -94,3 +94,31 @@ Written just in time:
 - [D3-product-boundary.md](D3-product-boundary.md)
 - [D4-equivalence-tooling.md](D4-equivalence-tooling.md)
 - [D5-validation-logs.md](D5-validation-logs.md)
+
+## Revised plan after the genericity audits (2026-10-10)
+
+The owner set the direction: OpenHCS is a domain-blind tensor dataflow kernel, microscopy is one domain, and every hardcoded domain member is slop to be derived from the declared axis family. [04-ARCHITECTURE.md](04-ARCHITECTURE.md) gives the target and its evidence. This section replaces steps 2 to 4 above. Step 1 (D1 to D5) is unchanged.
+
+| ID | Surface | Replaces | Depends on |
+|---|---|---|---|
+| G1 | Axis family: `Axis`/`AxisFamily`/roles with cardinality; the microscopy family declared in the domain package; enums and config as derived views; per-call enum construction deleted | none | none |
+| G2 | Member references derived: every `AllComponents.<MEMBER>` and per-member field, strategy or roster in kernel modules asks the family by role (`function_io` strategies, `config.py` viewer mode fields, source projections, analysis consolidation, `required_variable_components`) | parts of K4, K7 | G1 |
+| G3 | Tensor payload with declared axes; N-d spatial domain; one boundary wrap | K1 | G1 |
+| G4 | `DatasetSource` protocol; kernel `SourcePlaneStoreAdapter`; openhcsdata format derived from declared axes; domain post-execute hooks | K4 | G1 |
+| G5 | Processing contract family owns execute; role-declared function requirements; measurement dialect ABC with the CellProfiler instance in interop | K3, K8 | G1 |
+| G6 | Viewers take declared axes; slot families; one control family (fixes Fiji answering SUCCESS to unknown messages); `ViewerFamily` | C7 | G1 |
+| G7 | Runtime vocabulary and protocol: partition, dataset and axis values; typed worker IPC; lane identity derived | K7, C6 | G1, L3 |
+| G8 | Authoring surfaces: container manager, MCP component filters, grid role, importer and scope families | none | G1, G4 |
+| L1–L7 | First-party library moves (04-ARCHITECTURE.md, First-party libraries) | C4 → L5 | in the listed order |
+| C1, C2, C3, C5, K2, K5, K6 | Unchanged from the table above. K6 uses L2's codec; C3 hands its table to L4 | | |
+| W | Witness: a non-microscopy family runs end to end in CI with zero kernel edits; a ratchet on domain member references in kernel modules | none | G1–G7 |
+| P | Layout: `openhcs/kernel`, `openhcs/authoring`, `openhcs/domains/{microscopy,cellprofiler}` | P1, P2 | last |
+
+Order:
+
+| Step | In parallel |
+|---|---|
+| 2 | G1; L1; L2; C1 then C2; C3; C5 |
+| 3 | G2; G3; G4; G5; G6; L3; L4; K6 |
+| 4 | G7; G8; L5; L6; K2; K5 |
+| 5 | L7 (`streamviewer`); W; P |
