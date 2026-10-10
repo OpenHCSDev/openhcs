@@ -425,21 +425,23 @@ def update_metadata_for_zarr_conversion(
                 str(zarr_dir), Backend.ZARR.value
             ):
                 try:
-                    source_virtual_path = Path(output_path).relative_to(zarr_dir)
+                    store_path = PurePosixPath(
+                        Path(output_path).relative_to(zarr_dir).as_posix()
+                    )
                 except ValueError as exc:
                     raise ValueError(
                         "Zarr conversion output lies outside its declared store: "
                         f"{output_path!r}."
                     ) from exc
-                source_virtual_text = source_virtual_path.as_posix()
+                # Conversion mirrors the source subdirectory's layout inside the
+                # store, while virtual paths are plate-relative.
+                source_virtual_text = str(PurePosixPath(original_subdir) / store_path)
                 if source_virtual_text not in source_projections.entries:
                     raise ValueError(
                         "Zarr conversion output has no declared source projection: "
                         f"{source_virtual_text!r}."
                     )
-                materialized_path = str(
-                    PurePosixPath(zarr_subdir) / source_virtual_path
-                )
+                materialized_path = str(PurePosixPath(zarr_subdir) / store_path)
                 materialized_projections.append(
                     replace(
                         source_projections.entries[source_virtual_text],

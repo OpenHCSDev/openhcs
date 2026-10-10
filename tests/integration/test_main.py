@@ -64,7 +64,6 @@ from arraybridge.decorators import DtypeConversion
 # Test utilities and fixtures
 from tests.integration.helpers.fixture_utils import (
     backend_config,
-    base_test_dir,
     data_type_config,
     execution_mode,
     microscope_config,
@@ -116,6 +115,23 @@ class TestConstants:
         )
 
 
+@dataclass(frozen=True)
+class TestPorts:
+    """This test's own endpoints; concurrent runs never share one."""
+
+    execution: int
+    napari: tuple[int, int, int]
+    fiji: tuple[int, int]
+
+    @classmethod
+    def allocate(cls, free_port_pair) -> "TestPorts":
+        return cls(
+            execution=free_port_pair(),
+            napari=(free_port_pair(), free_port_pair(), free_port_pair()),
+            fiji=(free_port_pair(), free_port_pair()),
+        )
+
+
 @dataclass
 class TestConfig:
     """Configuration for test execution."""
@@ -124,6 +140,7 @@ class TestConfig:
     backend_config: str
     execution_mode: str
     microscope_config: Dict
+    ports: TestPorts
     use_threading: bool = False
 
     def __post_init__(self):
@@ -211,31 +228,28 @@ def _fiji_enabled() -> bool:
 
 
 @pytest.fixture
-def test_function_dir(base_test_dir, microscope_config, request):
-    """Create test directory for a specific test function."""
-    test_name = request.node.originalname or request.node.name.split("[")[0]
-    test_dir = base_test_dir / f"{test_name}[{microscope_config['format']}]"
-    test_dir.mkdir(parents=True, exist_ok=True)
-    yield test_dir
+def test_function_dir(tmp_path, microscope_config):
+    """Give every parametrization a fresh plate directory.
+
+    A shared directory let one run's converted input (a second ``main``
+    subdirectory) and saved outputs leak into the next parametrization.
+    """
+    test_dir = tmp_path / microscope_config["format"]
+    test_dir.mkdir()
+    return test_dir
 
 
 def create_test_pipeline(
+    ports: TestPorts,
     enable_napari: bool = False,
     enable_fiji: bool = False,
-    sequential_config: dict = None,
 ) -> list[Step]:
     """Create test pipeline with materialization configuration.
 
     Args:
+        ports: This test's viewer endpoints
         enable_napari: Enable Napari streaming
         enable_fiji: Enable Fiji streaming
-        sequential_config: Sequential processing configuration dict with keys:
-            - sequential_components: List of component names to process sequentially
-            - should_fail: Whether this config should fail validation
-            - expected_error: Expected error message substring (if should_fail=True)
-
-    Note: sequential_config is NOT used in this function - it should be set in PipelineConfig instead.
-    This parameter is kept for backward compatibility but is ignored.
     """
     cpu_only_mode = os.getenv("OPENHCS_CPU_ONLY", "false").lower() == "true"
     if cpu_only_mode:
@@ -266,9 +280,11 @@ def create_test_pipeline(
             ),
             step_materialization_config=LazyStepMaterializationConfig(),
             napari_streaming_config=LazyNapariStreamingConfig(
-                port=5555, enabled=enable_napari
+                port=ports.napari[0], enabled=enable_napari
             ),
-            fiji_streaming_config=LazyFijiStreamingConfig(enabled=enable_fiji),
+            fiji_streaming_config=LazyFijiStreamingConfig(
+                port=ports.fiji[0], enabled=enable_fiji
+            ),
         ),
         Step(
             func=create_composite,
@@ -277,10 +293,10 @@ def create_test_pipeline(
                 group_by=Ungrouped,
             ),
             napari_streaming_config=LazyNapariStreamingConfig(
-                port=5557, enabled=enable_napari
+                port=ports.napari[1], enabled=enable_napari
             ),
             fiji_streaming_config=LazyFijiStreamingConfig(
-                port=5556, enabled=enable_fiji
+                port=ports.fiji[1], enabled=enable_fiji
             ),
         ),
         Step(
@@ -343,11 +359,13 @@ def create_test_pipeline(
                 }
             ),
             napari_streaming_config=LazyNapariStreamingConfig(
-                port=5559,
+                port=ports.napari[2],
                 variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
                 enabled=enable_napari,
             ),
-            fiji_streaming_config=LazyFijiStreamingConfig(enabled=enable_fiji),
+            fiji_streaming_config=LazyFijiStreamingConfig(
+                port=ports.fiji[0], enabled=enable_fiji
+            ),
         ),
     ]
 
@@ -698,7 +716,7 @@ def _execute_pipeline_zmq(
 
     # Create ZMQ client and connect to server
     # The server will create its own orchestrator and get the well list
-    client = ZMQExecutionClient(port=7777, persistent=False)
+    client = ZMQExecutionClient(port=test_config.ports.execution, persistent=False)
 
     try:
         # Connect to server (spawns if needed)
@@ -812,17 +830,18 @@ def test_main(
     enable_napari: bool,
     enable_fiji: bool,
     sequential_config: Dict,
+    free_port_pair,
 ):
     """Unified test for all combinations of microscope types, backends, data types, execution modes, and sequential processing."""
+    ports = TestPorts.allocate(free_port_pair)
     # Handle both Path and int (OMERO plate_id)
-    if isinstance(plate_dir, int):
-        test_config = TestConfig(
-            plate_dir, backend_config, execution_mode, microscope_config
-        )
-    else:
-        test_config = TestConfig(
-            Path(plate_dir), backend_config, execution_mode, microscope_config
-        )
+    test_config = TestConfig(
+        plate_dir if isinstance(plate_dir, int) else Path(plate_dir),
+        backend_config,
+        execution_mode,
+        microscope_config,
+        ports,
+    )
 
     print(
         f"{CONSTANTS.START_INDICATOR} with plate: {plate_dir}, backend: {backend_config}, microscope: {microscope_config['format']}, mode: {execution_mode}, zmq: {zmq_execution_mode}, sequential: {sequential_config['name']}"
@@ -830,9 +849,9 @@ def test_main(
 
     # Create pipeline with sequential configuration
     pipeline = create_test_pipeline(
+        ports,
         enable_napari=enable_napari,
         enable_fiji=enable_fiji,
-        sequential_config=sequential_config,
     )
 
     # If this configuration should fail validation, expect ValueError during compilation
@@ -881,186 +900,3 @@ def test_main(
         print(f"{'=' * 80}\n")
 
     print(f"{CONSTANTS.SUCCESS_INDICATOR} ({len(results)} wells processed)")
-
-
-def _test_main_with_code_serialization(
-    plate_dir: Union[Path, str, int],
-    backend_config: str,
-    data_type_config: Dict,
-    execution_mode: str,
-    zmq_execution_mode: str,
-    microscope_config: Dict,
-):
-    """
-    DISABLED: Code serialization test (not run as pytest test).
-
-    This function tests the code serializer for code-based object serialization,
-    but is disabled because:
-    1. It's redundant with test_main (which tests the actual integration)
-    2. Code serialization is already tested in the PyQt UI
-    3. It breaks with OMERO (plate_dir is int, not Path)
-
-    The function is kept for reference but prefixed with _ to exclude from pytest.
-
-    Original purpose:
-    - Test using the serializer for code-based object serialization
-    - Mirror the UI's approach: create objects → convert to code → exec → use
-    - Prove code-based serialization works for remote execution
-    """
-    # Handle both Path and int (OMERO plate_id)
-    if isinstance(plate_dir, int):
-        test_config = TestConfig(
-            plate_dir, backend_config, execution_mode, microscope_config
-        )
-    else:
-        test_config = TestConfig(
-            Path(plate_dir), backend_config, execution_mode, microscope_config
-        )
-
-    print(
-        f"{CONSTANTS.START_INDICATOR} [CODE SERIALIZATION TEST] with plate: {plate_dir}, backend: {backend_config}, mode: {execution_mode}, zmq: {zmq_execution_mode}"
-    )
-
-    # Step 1: Create objects normally
-    from polystore.base import reset_memory_backend
-
-    reset_memory_backend()
-
-    global_config = _create_pipeline_config(test_config)
-
-    # Create PipelineConfig with lazy configs for proper hierarchical inheritance
-    pipeline_config = PipelineConfig(
-        path_planning_config=LazyPathPlanningConfig(
-            output_dir_suffix=CONSTANTS.OUTPUT_SUFFIX
-        ),
-        step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=CONSTANTS.PIPELINE_STEP_WELL_FILTER_TEST
-        ),
-    )
-
-    pipeline = create_test_pipeline()
-
-    print("📦 Step 1: Created original objects")
-    print(f"   - GlobalPipelineConfig: {type(global_config).__name__}")
-    print(f"   - PipelineConfig: {type(pipeline_config).__name__}")
-    print(f"   - Pipeline: {len(pipeline)} steps")
-
-    # Step 2: Convert to Python code using the serializer
-    import openhcs.serialization.pycodify_formatters  # noqa: F401
-    from pycodify import Assignment, generate_python_source
-
-    print("\n🔄 Step 2: Converting objects to Python code...")
-
-    # Generate code for GlobalPipelineConfig
-    global_config_code = generate_python_source(
-        Assignment("config", global_config),
-        header="# Configuration Code",
-        clean_mode=True,
-    )
-
-    # Generate code for PipelineConfig
-    pipeline_config_code = generate_python_source(
-        Assignment("config", pipeline_config),
-        header="# Configuration Code",
-        clean_mode=True,
-    )
-
-    # Generate code for Pipeline steps through the canonical transport authority.
-    pipeline_steps_code = FunctionStepTransportAuthority.source_from_pipeline(pipeline)
-
-    print(f"   - GlobalPipelineConfig code: {len(global_config_code)} chars")
-    print(f"   - PipelineConfig code: {len(pipeline_config_code)} chars")
-    print(f"   - Pipeline steps code: {len(pipeline_steps_code)} chars")
-
-    # Save the generated code to files for inspection
-    code_output_dir = test_config.plate_dir / "generated_code"
-    code_output_dir.mkdir(exist_ok=True)
-
-    (code_output_dir / "global_config.py").write_text(global_config_code)
-    (code_output_dir / "pipeline_config.py").write_text(pipeline_config_code)
-    (code_output_dir / "pipeline_steps.py").write_text(pipeline_steps_code)
-
-    print(f"   - Saved code to: {code_output_dir}")
-
-    # Step 3: Exec the code to recreate objects
-    print("\n⚙️  Step 3: Recreating objects from Python code using exec()...")
-
-    # Recreate GlobalPipelineConfig
-    global_config_namespace = {}
-    exec(global_config_code, global_config_namespace)
-    recreated_global_config = global_config_namespace["config"]
-
-    # Recreate PipelineConfig
-    pipeline_config_namespace = {}
-    exec(pipeline_config_code, pipeline_config_namespace)
-    recreated_pipeline_config = pipeline_config_namespace["config"]
-
-    # Recreate Pipeline steps
-    pipeline_steps_namespace = {}
-    exec(pipeline_steps_code, pipeline_steps_namespace)
-    recreated_pipeline_steps = (
-        FunctionStepTransportAuthority.pipeline_steps_from_namespace(
-            pipeline_steps_namespace
-        )
-    )
-
-    print(
-        f"   - Recreated GlobalPipelineConfig: {type(recreated_global_config).__name__}"
-    )
-    print(f"   - Recreated PipelineConfig: {type(recreated_pipeline_config).__name__}")
-    print(f"   - Recreated Pipeline steps: {len(recreated_pipeline_steps)} steps")
-
-    # Verify the recreated objects match the originals
-    print("\n🔍 Step 4: Verifying recreated objects...")
-
-    # Check GlobalPipelineConfig fields
-    assert recreated_global_config.num_workers == global_config.num_workers
-    assert recreated_global_config.use_threading == global_config.use_threading
-    print(f"   ✅ GlobalPipelineConfig fields match")
-
-    # Check PipelineConfig fields
-    assert type(recreated_pipeline_config) == type(pipeline_config)
-    print(f"   ✅ PipelineConfig type matches")
-
-    # Check Pipeline steps
-    assert len(recreated_pipeline_steps) == len(pipeline)
-    for i, (orig_step, recreated_step) in enumerate(
-        zip(pipeline, recreated_pipeline_steps)
-    ):
-        assert type(orig_step) == type(recreated_step)
-        assert orig_step.name == recreated_step.name
-    print(f"   ✅ Pipeline steps match ({len(recreated_pipeline_steps)} steps)")
-
-    # Step 5: Use recreated objects for execution
-    print("\n🚀 Step 5: Executing pipeline with recreated objects...")
-
-    # Copy reconstructed steps into the mutable execution list.
-    recreated_pipeline = list(recreated_pipeline_steps)
-
-    # Execute using the specified mode (direct or zmq)
-    if zmq_execution_mode == "zmq":
-        # For ZMQ mode, use the recreated configs directly
-        results = _execute_pipeline_zmq(
-            test_config,
-            recreated_pipeline,
-            recreated_global_config,
-            recreated_pipeline_config,
-        )
-    else:
-        # For direct mode, set up global context and use orchestrator
-        ensure_global_config_context(GlobalPipelineConfig, recreated_global_config)
-        orchestrator = PipelineOrchestrator(
-            test_config.plate_dir, pipeline_config=recreated_pipeline_config
-        )
-        orchestrator.initialize()
-        results = _execute_pipeline_phases(orchestrator, recreated_pipeline)
-
-    validate_separate_materialization(test_config.plate_dir)
-
-    print(
-        f"\n{CONSTANTS.SUCCESS_INDICATOR} [CODE SERIALIZATION TEST] ({len(results)} wells processed)"
-    )
-    print("✅ Code-based serialization works perfectly!")
-    print(
-        "   This proves we can use Python code instead of pickling for remote execution."
-    )
