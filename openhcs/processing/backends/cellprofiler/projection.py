@@ -14,7 +14,7 @@ from enum import Enum
 from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
@@ -80,7 +80,6 @@ class ProjectionStrategy(
     __registry_key__ = "projection_type_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "projection_type"
-    __enum_label_attr__ = "projection_type_label"
     projection_type: ClassVar[ProjectionType | None] = None
     projection_type_label: ClassVar[str | None] = None
 

@@ -16,7 +16,7 @@ from metaclass_registry import AutoRegisterMeta
 from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 
 if TYPE_CHECKING:
     from openhcs.core.source_bindings import MetadataExtractionRule

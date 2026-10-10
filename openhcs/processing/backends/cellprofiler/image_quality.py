@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+from metaclass_registry.caches import ProcessLocalBoundedCache
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
@@ -761,7 +761,7 @@ class ImageQualityThresholdMetrics(ImageQualityMeasurementRecord):
 
 @dataclass
 class RadialSpectrumGeometryCache(
-    RegisteredProcessLocalBoundedCache[tuple[int, int], _RadialSpectrumGeometry]
+    ProcessLocalBoundedCache[tuple[int, int], _RadialSpectrumGeometry]
 ):
     """Process-local numerical geometry with shared bounded storage."""
 

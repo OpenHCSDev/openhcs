@@ -9,7 +9,7 @@ from typing import Annotated, ClassVar, TypeAlias
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 
 
 class StructuringElement(str, Enum):
@@ -45,7 +45,6 @@ class StructuringElementFactory(
     __registry_key__ = "structuring_element_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "structuring_element"
-    __enum_label_attr__ = "structuring_element_label"
     structuring_element_label: ClassVar[str | None] = None
     structuring_element: ClassVar[StructuringElement | None] = None
 

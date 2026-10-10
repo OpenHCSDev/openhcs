@@ -25,7 +25,7 @@ from openhcs.core.equivalence.policy import (
     RuntimeMeasurementDialect,
     normalize_runtime_identifier,
 )
-from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
+from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.core.runtime_measurements import (
     MeasurementStatistic,
 )

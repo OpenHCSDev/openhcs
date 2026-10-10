@@ -20,7 +20,7 @@ from openhcs.core.artifacts import (
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.public_api import public_names_from_objects
@@ -115,7 +115,6 @@ class MaximaInputStrategy(
     __registry_key__ = "exclude_mode_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "exclude_mode"
-    __enum_label_attr__ = "exclude_mode_label"
     exclude_mode: ClassVar[ExcludeMode | None] = None
     exclude_mode_label: ClassVar[str | None] = None
 

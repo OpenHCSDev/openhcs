@@ -25,7 +25,7 @@ from openhcs.core.progress.projection import (
     build_execution_runtime_projection,
 )
 from openhcs.core.progress.types import ProgressChannelRole
-from openhcs.core.registry_strategies import (
+from metaclass_registry.strategies import (
     AlwaysMatchesContextMixin,
     MostDerivedContextStrategyMixin,
 )

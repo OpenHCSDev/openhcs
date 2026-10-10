@@ -31,7 +31,7 @@ from openhcs.core.equivalence.policy import (
 from openhcs.core.equivalence.measurement_facts import (
     RuntimeMeasurementFactCounterMapping,
 )
-from openhcs.core.registry_strategies import (
+from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     MostDerivedContextStrategyMixin,
 )

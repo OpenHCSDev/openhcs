@@ -43,8 +43,8 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.measurement_row_materialization import (
     ObjectMeasurementColumnarRows,
 )
-from openhcs.core.process_local_cache import (
-    RegisteredProcessLocalBoundedCache,
+from metaclass_registry.caches import (
+    ProcessLocalBoundedCache,
     SynchronizedBoundedCache,
 )
 from openhcs.core.runtime_tabular_values import (
@@ -674,7 +674,7 @@ class GranularityImageSeriesCache(
         tuple[str, tuple[int, ...], bytes, float, float, int, int],
         GranularityImageSeries,
     ],
-    RegisteredProcessLocalBoundedCache[
+    ProcessLocalBoundedCache[
         tuple[str, tuple[int, ...], bytes, float, float, int, int],
         GranularityImageSeries,
     ],

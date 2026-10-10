@@ -19,10 +19,8 @@ from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementProjectedColumnarRows,
 )
-from openhcs.core.registry_strategies import (
-    RegisteredEnumMeta,
-    str_enum_member_with_payload,
-)
+from metaclass_registry import RegisteredEnumMeta
+from metaclass_registry.strategies import str_enum_member_with_payload
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )

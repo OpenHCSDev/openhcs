@@ -113,7 +113,7 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerStateSurfaceIdentityDeclaration,
     PlateManagerWidgetIdentity,
 )
-from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
+from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     CONFIRMATION_REQUIRED_GUARD,
     RESTORE_TIME_TRAVEL_OPT_IN_GUARD,

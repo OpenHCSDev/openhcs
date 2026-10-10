@@ -20,7 +20,7 @@ from openhcs.core.measurement_row_materialization import (
     is_structural_missing_measurement_cell,
     measurement_object_label,
 )
-from openhcs.core.registry_strategies import (
+from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     StrategyLabelRegistryMixin,
 )

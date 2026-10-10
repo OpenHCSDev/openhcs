@@ -113,7 +113,7 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.interop.cellprofiler.module_settings import (
     BoundModuleSettings,
@@ -188,7 +188,6 @@ class WormLabelOutputStrategy(
     __registry_key__ = "overlap_style_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "overlap_style"
-    __enum_label_attr__ = "overlap_style_label"
     overlap_style_label: ClassVar[str | None] = None
     overlap_style: ClassVar[OverlapStyle | None] = None
     callable_name: ClassVar[str]

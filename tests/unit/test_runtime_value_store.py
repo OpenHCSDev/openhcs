@@ -2629,7 +2629,7 @@ def test_store_transport_excludes_all_derived_lookup_caches():
 
 
 def test_unified_store_cache_keeps_both_query_domains_and_empty_results():
-    from openhcs.core.process_local_cache import BoundedCache
+    from metaclass_registry.caches import BoundedCache
 
     store = RuntimeValueStore()
     record = store.record(_runtime_value(), path="/memory/measurements.pkl", backend="memory")
@@ -2658,7 +2658,7 @@ def test_unified_store_cache_keeps_both_query_domains_and_empty_results():
 
 
 def test_unified_store_cache_eviction_recomputes_order_without_changing_record_aliases():
-    from openhcs.core.process_local_cache import BoundedCache
+    from metaclass_registry.caches import BoundedCache
 
     store = RuntimeValueStore()
     first_value = _runtime_value(name="first")

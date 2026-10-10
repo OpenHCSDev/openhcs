@@ -13,7 +13,7 @@ from openhcs.core.artifacts import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
-from openhcs.core.registry_strategies import (
+from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
 )
 from openhcs.core.source_bindings import StepSourceBindingsConfig

@@ -16,10 +16,11 @@
 - `ProcessLocalBoundedCache` (unregistered singleton) has no production subclass outside the registered root; it is a second mode of the same family.
 - `identity_owner_tuples_match` and `named_identity_owner_tuples_match` have no caller.
 - The clear-all function `clear_registered_process_local_caches` has no production caller; only tests clear caches.
+- The strategy mixins memoize registry views (`registered_strategy_types`, `strategy_type_for_enum_member`, `strategy_types_for_nominal_type`) with `lru_cache` forever, so a member declared after the first lookup is never selected.
 
 ## Target
 
-`metaclass_registry.strategies`: the strategy mixins, moved unchanged except for deleting `__enum_label_attr__`, `stable_key_axis` and `GeneratedEnumClassSpec`.
+`metaclass_registry.strategies`: the strategy mixins, moved unchanged except for deleting `__enum_label_attr__`, `stable_key_axis` and `GeneratedEnumClassSpec`, and rebuilding the memoized registry views whenever a family gains a member. `AutoRegisterMeta` forwards class keywords to `__init_subclass__`, which the folded cache root needs for cooperative subclass hooks.
 
 `metaclass_registry.caches`: one registered family.
 
@@ -27,7 +28,7 @@
 class BoundedCache(Generic[K, V]): ...                 # LRU values, lifetime owned by the consumer
 class SynchronizedBoundedCache(BoundedCache[K, V]): ... # one instance lock
 class ProcessLocalBoundedCache(BoundedCache[K, V], metaclass=AutoRegisterMeta):
-    # every subclass is a member by inheritance (key: module.qualname); one singleton per class
+    # every subclass is a member by inheritance (key: module.ClassName); one singleton per class
     @classmethod
     def clear_process_caches(cls) -> None: ...         # clears every member that is a subclass of cls
 class IdentityBoundProcessCache(ProcessLocalBoundedCache[int, tuple[object, Any]]): ...  # get_bound / put_bound
@@ -41,7 +42,7 @@ Lockstep: library 0.3.0 (new public modules), OpenHCS pin `metaclass-registry>=0
 
 `tests/unit/test_registry_library_boundary.py`:
 - AST: no Python file under `openhcs/`, `benchmark/`, `tests/` or `scripts/` imports `openhcs.core.registry_strategies` or `openhcs.core.process_local_cache`, and neither module file exists.
-- AST: no class under `openhcs/` assigns `__enum_label_attr__`, `stable_key_axis` or `RegisteredProcessLocalBoundedCache`, and no `ProcessLocalBoundedCache` subclass assigns `registry_key`.
+- AST: no class under `openhcs/` assigns `__enum_label_attr__` or `stable_key_axis`, and no direct `ProcessLocalBoundedCache`/`IdentityBoundProcessCache` subclass assigns `registry_key`.
 
 ## Tests
 

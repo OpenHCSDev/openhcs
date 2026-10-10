@@ -42,7 +42,7 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.public_api import public_names_from_objects
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
     RuntimeArrayData,
     image_payload_data,
@@ -1185,7 +1185,6 @@ class TrackObjectsMethodStrategy(
     __registry_key__ = "method_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "method"
-    __enum_label_attr__ = "method_label"
     method: ClassVar[TrackingMethod | None] = None
     method_label: ClassVar[str | None] = None
 

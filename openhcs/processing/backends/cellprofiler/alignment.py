@@ -28,7 +28,7 @@ from openhcs.core.pipeline.function_contracts import (
     required_variable_components,
 )
 from openhcs.core.public_api import public_names_from_objects
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )
@@ -680,7 +680,6 @@ class AlignCropModeStrategy(
     __registry_key__ = "crop_mode_label"
     __skip_if_no_key__ = True
     __enum_member_attr__ = "crop_mode"
-    __enum_label_attr__ = "crop_mode_label"
     crop_mode: ClassVar[AlignModule.CropMode | None] = None
     crop_mode_label: ClassVar[str | None] = None
 
