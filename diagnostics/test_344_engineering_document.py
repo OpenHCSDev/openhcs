@@ -6,7 +6,7 @@ from openhcs.constants import AllComponents, GroupBy, Microscope, VariableCompon
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import ArtifactInputPlan, ArtifactOutputPlan, ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.processing.backends.cellprofiler.intensity import (
     RescaleIntensityModule,
@@ -20,7 +20,7 @@ def test_complete_engineering_document_uses_declared_primary_sources():
         Path(__file__).resolve().parents[1]
         / "docs/refactor/examples/344-aligned-rescale-engineering.py"
     ).read_text()
-    document = PipelineDocumentAuthority.from_source(source)
+    document = PipelineDocumentCodec.from_source(source)
     assert document.original_source == source
     assert document.pipeline_config.microscope is Microscope.IMAGEXPRESS
     plan = document.pipeline_config.source_bindings_config

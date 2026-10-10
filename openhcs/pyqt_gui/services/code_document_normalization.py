@@ -13,9 +13,9 @@ from python_introspect import AnnotatedDataclassValidationMixin
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.function_step_document import (
     FunctionStepDocument,
-    FunctionStepDocumentAuthority,
+    FunctionStepDocumentCodec,
 )
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from metaclass_registry.strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.ui.shared.plate_manager_code_document import (
@@ -69,8 +69,8 @@ class PipelineDocumentNormalizationStrategy(CodeDocumentNormalizationStrategy):
         clean_mode: bool,
     ) -> str:
         del declaration_type
-        return PipelineDocumentAuthority.render(
-            PipelineDocumentAuthority.from_source(source),
+        return PipelineDocumentCodec.render(
+            PipelineDocumentCodec.from_source(source),
             clean_mode=clean_mode,
         )
 
@@ -86,8 +86,8 @@ class StepDocumentNormalizationStrategy(CodeDocumentNormalizationStrategy):
         clean_mode: bool,
     ) -> str:
         del declaration_type
-        return FunctionStepDocumentAuthority.render(
-            FunctionStepDocumentAuthority.from_source(source),
+        return FunctionStepDocumentCodec.render(
+            FunctionStepDocumentCodec.from_source(source),
             clean_mode=clean_mode,
         )
 

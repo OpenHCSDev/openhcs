@@ -21,7 +21,7 @@ from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.orchestrator.execution_result import ExecutionResult
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
@@ -36,7 +36,7 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
     monkeypatch, tmp_path: Path, valid_observation: bool
 ) -> None:
     observation_path = tmp_path / "observation.pkl"
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(), pipeline_steps=[]
     )
     submission = OpenHCSExecutionSubmission(
@@ -290,7 +290,7 @@ def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
         observation_path.parent.mkdir()
         submission = OpenHCSExecutionSubmission(
             plate_id=tmp_path,
-            pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_document=PipelineDocumentCodec.from_values(
                 pipeline_config=PipelineConfig(), pipeline_steps=[]
             ),
             global_config=GlobalPipelineConfig(),
@@ -337,7 +337,7 @@ def test_measured_run_requires_observation_before_connecting(
     monkeypatch.setattr(measured_run, "ZMQExecutionClient", unexpected_client)
     submission = OpenHCSExecutionSubmission(
         plate_id=tmp_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(), pipeline_steps=[]
         ),
         global_config=GlobalPipelineConfig(),
@@ -362,7 +362,7 @@ def test_shared_evidence_writer_never_overwrites_existing_artifact(
     existing_source.write_text("keep this evidence", encoding="utf-8")
     submission = OpenHCSExecutionSubmission(
         plate_id=tmp_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(), pipeline_steps=[]
         ),
         global_config=GlobalPipelineConfig(),
@@ -473,7 +473,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     ).write(observation_path)
     submission = OpenHCSExecutionSubmission(
         plate_id=tmp_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(), pipeline_steps=[]
         ),
         global_config=GlobalPipelineConfig(materialize_runtime_artifacts=False),
@@ -639,7 +639,7 @@ def test_measured_run_refuses_to_reuse_an_unowned_server(
     )
     submission = OpenHCSExecutionSubmission(
         plate_id=tmp_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(), pipeline_steps=[]
         ),
         global_config=GlobalPipelineConfig(),

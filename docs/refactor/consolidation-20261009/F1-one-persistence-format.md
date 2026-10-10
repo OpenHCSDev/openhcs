@@ -30,8 +30,8 @@ Other pickle uses in `openhcs/`, classified:
 
 - A pipeline file is the pipeline code document: save writes `code_document_source()` (config plus steps, the same text the code editor shows); load of `.py` runs `_handle_edited_code`, `.cppipe` runs the CellProfiler importer, anything else raises. `main.py`'s agent load path calls `load_pipeline_from_file` instead of re-branching.
 - Step settings and patterns persist only through their code editors (`FunctionStepCodeDocumentDriver`, `FunctionPatternCodeDocumentService`) and the editor's Save/Open `.py`.
-- **Deleted:** both pickle branches in `pipeline_editor.py`; `StepSettingsDialogRequest`, `StepSettingsFileController`, `load_step_settings`, `save_step_settings`; `ui/shared/pattern_file_service.py`; `show_cached_file_dialog`; path-cache keys `FUNCTION_PATTERNS`, `PIPELINE_FILES`, `STEP_SETTINGS`, `DEBUG_FILES` and the unused browser keys; `*.func` dialog filters; the dill "Pipeline serialization" entry; the legacy-pickle UI-config test; the G1 cutover tool, test and fixtures.
-- Rule 1b: `PipelineDocumentAuthority` → `PipelineDocumentCodec`, `FunctionStepDocumentAuthority` → `FunctionStepDocumentCodec`, with every caller.
+- **Deleted:** both pickle branches in `pipeline_editor.py`; `StepSettingsDialogRequest`, `StepSettingsFileController`, `load_step_settings`, `save_step_settings`; `ui/shared/pattern_file_service.py`; `show_cached_file_dialog`; every path-cache key but `PLATE_IMPORT` (the pickle-format keys and nine never-read ones), the module's "backward compatibility alias" functions and `get_cached_path`, and the `pyqt_gui/utils` re-export package nothing imports; `*.func` dialog filters; the dill "Pipeline serialization" entry; the legacy-pickle UI-config test; the G1 cutover tool, test and fixtures.
+- Rule 1b: `PipelineDocumentAuthority` → `PipelineDocumentCodec`, `FunctionStepDocumentAuthority` → `FunctionStepDocumentCodec`, with every caller (71 files), and the "canonical" docstrings in the touched modules.
 
 ## Persisted state
 
@@ -65,3 +65,5 @@ The guards pass; the three round trips pass; no pickle or dill save/load remains
 - **L4:** pyqt-reactive `core/path_cache.py` still restates `FUNCTION_PATTERNS`, `PIPELINE_FILES`, `STEP_SETTINGS`, `DEBUG_FILES` and the browser keys, used by `EnhancedPathWidget` behaviours; `openhcs/core/path_cache.py` is a copy of that module. One open key family in the library should replace both.
 - **L6:** ObjectState history persistence is dill; the restart handoff could store history as a document like the declarations beside it.
 - pyqt-reactive `AbstractManagerWidget.handle_code_execution_error` docstring still describes old-format migration (L4).
+- Rule 1b, not renamed here: `FunctionStepTransportAuthority` (153 sites) and the sibling `PlateManagerCodeDocumentAuthority`/`ConfigDocumentAuthority`; whichever surface next touches them renames them the same way (`…Codec`).
+- `openhcs/core/xdg_paths.py:181` still migrates `path_cache.json` from a legacy directory (L4, with the path cache).

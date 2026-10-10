@@ -11,7 +11,7 @@ from pyqt_reactive.services.function_pattern_code_document import (
 from pyqt_reactive.services.scope_token_service import ScopeTokenService
 
 from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import (
     create_composite,
@@ -83,15 +83,15 @@ def test_legacy_history_restores_owned_functions_and_full_timeline(change):
         head_id = ObjectStateRegistry.get_branch_history()[-1].id
         document = legacy_document()
         original = deepcopy(document)
-        source = PipelineDocumentAuthority.render(
-            PipelineDocumentAuthority.from_values(
+        source = PipelineDocumentCodec.render(
+            PipelineDocumentCodec.from_values(
                 pipeline_config=PipelineConfig(),
                 pipeline_steps=PipelineObjectStateBinding.steps_for_plate(SCOPE),
             )
         )
         reset()
         PipelineObjectStateBinding.update_plate_steps(
-            SCOPE, PipelineDocumentAuthority.from_source(source).pipeline_steps
+            SCOPE, PipelineDocumentCodec.from_source(source).pipeline_steps
         )
         ObjectStateRegistry.import_history_from_dict(
             document, migration=DesktopHistoryUpgrade()

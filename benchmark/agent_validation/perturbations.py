@@ -18,7 +18,7 @@ from openhcs.core.config import (
     LazyStepMaterializationConfig,
     PipelineConfig,
 )
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.axes import Ungrouped
 
@@ -151,7 +151,7 @@ class ExpandLabelsInsufficientGrowthProbe(DiagnosticPerturbationDeclaration):
 
     @classmethod
     def flawed_pipeline_document(cls) -> PipelineDocument:
-        return PipelineDocumentAuthority.from_values(
+        return PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(),
             pipeline_steps=[
                 FunctionStep(
