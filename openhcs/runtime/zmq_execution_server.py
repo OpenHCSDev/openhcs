@@ -762,7 +762,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
     ) -> None:
         if compile_artifact_id is None:
             progress_emitter.planned_init_started(
-                partition_values=partition_values,
+                wells=partition_values,
                 step_names=[step.name for step in pipeline_steps],
             )
 

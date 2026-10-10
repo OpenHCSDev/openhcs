@@ -38,34 +38,54 @@ Already clean at this head (re-measured; done by G1/G4/G6): the `function_io` Za
 
 Domain modules in the G1 allowlist that are not in the domain's package: `formats/experimental_analysis.py` sits apart from its two sibling modules (`experimental_layout_rows.py`, `experimental_result_formats.py`), which are not allowlisted and so count above.
 
-## Target
+## Target (as built)
 
-- **Asked by role / derived:** the MCP and kernel file filter `well` becomes `partition` (the value of the family's partition axis; `plate_image_inventory` already resolves it by role); `ZMQCompilationRequest.wells` and the synthetic-plate `wells` become `partition_values`; the runtime tree's partition node is `PartitionProgressTreeNode` (`node_kind = "partition"`); the CellProfiler plate map splits positions with `partition_axis().grid_coordinates` (its private `_parse_well_name` copy is deleted).
-- **External vocabularies owned by their owners:** the NGFF axis type is derived from the NGFF axis name by PolyStore (`ZarrBatchAxis` no longer takes `axis_type`; lockstep PolyStore PR), so `function_io` declares only `"t"`, `"field"`, `"c"`, `"z"`. CellProfiler's well metadata tag is declared once in interop and `ExportToDatabase`/`DisplayPlatemap` defaults derive from it. CellProfiler's ColorToGray "Channels" choice is declared through `cellprofiler_literals`.
-- **Named for what they are:** Fiji hyperstack coordinates use ImageJ's position letters `c`, `z`, `t` (`setPosition(c, z, t)`), and slice labels and the label fallback derive from the dimension's name; progress streams are `progress_channel`; ColorToGray's fixed colour planes are `fixed_channels`; `ImagePlaneSource.channel` is `colour_sample` (the colour sample within one source plane); `SaveImagesSeriesAxis` members are CellProfiler's `TIME`/`SLICE`.
-- **Moved into the domain package:** `formats/experimental_{analysis,layout_rows,result_formats}.py` move into `processing/backends/experimental_analysis/` (the MetaXpress experimental-analysis package already allowlisted), so the allowlist loses `formats/experimental_analysis.py`.
-- **One external spelling kept:** `FijiSlots.HyperstackChannel.wire_value == "channel"` is ImageJ's hyperstack channel dimension, and saved configs spell it `FijiDimensionMode.CHANNEL` (G6 kept member names so saved configs load unchanged). The guard pins exactly this one declaration.
+- **Asked by role / derived:** the MCP and kernel plate-file filter `well` is `partition` (`PlateFileInventoryQuery`, the three plate-file DTOs, both services, the dev client `--partition`); `plate_image_inventory` already resolved it through `partition_axis()`. The synthetic-plate profile, request and result carry `partition_values` (`--partition-value`); `ZMQCompilationRequest.wells` is `partition_values`. The runtime tree's partition node is `PartitionProgressTreeNode` (`node_kind = "partition"`).
+- **External vocabularies declared by their owners:** PolyStore 0.5.0 declares `NGFF_AXIS_TYPES` and derives each axis's NGFF type from its name, so `ZarrBatchAxis` takes no `axis_type` and `function_io` declares only `t`, `field`, `c`, `z` (lockstep PR OpenHCSDev/PolyStore#36; pin `polystore>=0.5.0,<0.6`). The four role-keyed Zarr leaves are named by role (`Time`, `Tile`, `Colour`, `Stack` `ZarrAxisProjection`), not by microscopy member. CellProfiler's `Plate`/`Well` metadata tags are declared once in `interop/cellprofiler/analyst_export.py` (`PLATE_METADATA_TAG`, `WELL_METADATA_TAG`); `CellProfilerDatabaseExportSettings` and `export_to_database` take their defaults from them.
+- **Named for what they are:** Fiji hyperstack coordinates are ImageJ's `c`, `z`, `t` (`FijiDimensionStorage`, `FijiHyperstackCoordinateComponents`, `FijiHyperstackCoordinates`); `FijiHyperstackCoordinates.axes()` gives them in ImageJ order, and `dimensions`, `key`, `imagej_position`, `contains_axis_values` and the slice-label builder iterate it instead of restating the triple; slice labels and the channel-label fallback derive from the dimension name. Progress declarations name their stream `progress_channel`. ColorToGray's fixed colour planes are `fixed_channels`, InvertForPrinting's are `rgb_channels`, and the ColorToGray "Channels" type's value is `numbered_channels` (CellProfiler's spelling still matches by member name). `ImagePlaneSource.channel` is `colour_sample`. `SaveImagesSeriesAxis` members are CellProfiler's `TIME`/`SLICE`. `PlatemapData.well` is `well_name` (CellProfiler's DisplayPlatemap term).
+- **Moved into the domain package:** `formats/experimental_analysis.py`, `experimental_layout_rows.py` and `experimental_result_formats.py` are `processing/backends/experimental_analysis/{analysis,layout_rows,result_formats}.py`. `openhcs/formats/` holds only `pattern/`; the G1 and G4 allowlists lose `formats/experimental_analysis.py`.
+- **One external spelling kept:** `FijiSlots.HyperstackChannel.wire_value == "channel"` is ImageJ's hyperstack channel dimension, and saved configs spell the slot `FijiDimensionMode.CHANNEL` (G6 kept member names so saved configs load unchanged). The guard pins exactly this declaration.
+
+Production (Python under `openhcs/`): −294 +264.
+
+## Corrections made while executing
+
+- The CellProfiler plate map keeps its own well-name split: it parses CellProfiler's `Metadata_Well` measurement, not the partition axis, so binding it to `partition_axis().grid_coordinates` would couple CellProfiler's vocabulary to the active family. The private `_parse_well_name` copy of the well codec stays with the CellProfiler domain (owner: P1).
+- The spelling scan excludes `openhcs/interop/` as well as the G1 domain allowlist: interop is the CellProfiler domain (04-ARCHITECTURE, P moves it to `domains/cellprofiler`) and owns CellProfiler's `Well` tag. The member-class scan of G1 still covers interop.
+- The NGFF types could not be expressed as kernel declarations without restating `"channel"` in a kernel module; they belong to the NGFF writer, so they moved to PolyStore.
 
 ## Persisted state
 
 | Store | Class | At cutover |
 |---|---|---|
-| Fiji/progress/runtime-tree wire values, compile requests, MCP requests | runtime | reset |
-| Saved pipelines naming `ImagePlaneSource(channel=…)` or `SaveImagesSeriesAxis.TIMEPOINT/Z_INDEX` | durable | Only CellProfiler-imported pipelines that set a single-image channel or a non-default series axis spell these; both parameters are carried but never read. Not converted (reported to the owner). |
+| Fiji/progress/runtime-tree wire values, compile requests, MCP plate requests and results | runtime | reset |
+| Saved pipelines naming `ImagePlaneSource(channel=…)` or `SaveImagesSeriesAxis.TIMEPOINT/Z_INDEX` | durable | Only CellProfiler-imported pipelines that set a single-image channel or a non-default series axis spell these; neither parameter is read by any code path. Not converted (decision G2-Q1 in the index; default: no tool). |
 | Saved configs (`FijiDimensionMode.*`) | durable | unchanged |
 
 ## Guards
 
-`tests/unit/test_axis_family_guards.py` gains an exact kernel scan: over every module outside the G1 domain allowlist, no string literal (docstrings aside), attribute or class field equals a token derived from the active domain family (name, collection key, multi-letter label). The only admitted occurrence is the Fiji slot declaration above, pinned by module, class and value. The allowlist itself shrinks by one entry.
+`tests/unit/test_axis_family_guards.py`:
+- `test_kernel_modules_spell_no_microscopy_member`: over every module outside the G1 domain allowlist and `interop/`, the set of (module, enclosing class, spelling) for string literals (docstrings aside, f-string parts included), attribute names and class-body fields equal to a microscopy spelling (each axis's `name`, `metadata_collection_field`, and `label` when longer than one letter) **equals** `EXTERNAL_SPELLINGS`, which holds the one Fiji declaration. Exact equality: a new spelling or a removed exemption both fail.
+- `test_domain_allowlist_names_existing_domain_modules`: every allowlist entry exists.
+- The allowlist shrinks by `formats/experimental_analysis.py` (also in `test_dataset_source_guards.py`).
+
+Census: 134 occurrences in 22 kernel files at `66a0b30a0`; 1 (the pinned Fiji declaration) after.
 
 ## Tests
 
-- Witness (`tests/unit/test_axis_family_witness.py`): extended so the remote-sensing family's Zarr layout follows its roles (NGFF types from PolyStore) and its Fiji slots map band→channel and date→frame, with no domain module loaded; the end-to-end subprocess witness stays green.
-- Touched behaviour tests are updated to the new names; no assertion is weakened.
+- Witness (`tests/unit/test_axis_family_witness.py`): new `test_zarr_layout_follows_roles_and_ngff_types` (the remote-sensing family's Zarr layout follows its roles: tile → HCS image `field`, band → `c`, date → `t`, NGFF types from PolyStore). The end-to-end subprocess witness (no domain module loaded) passes unchanged.
+- PolyStore: `test_array_axes_take_their_type_from_the_ngff_axis_name`; constructor calls lose the restated type.
+- Touched behaviour tests take the new names; no assertion is weakened.
 
 ## New-case experiments
 
-Before: a second domain finds `well`/`wells` in the MCP file filter, synthetic plate profile, compile request and runtime tree, and the NGFF type restated beside its name. After: those read the partition axis or the external standard's owner.
+Before: a second domain meets `well`/`wells` in the MCP file filter, the synthetic-plate profile, the compile request and the runtime tree, and `function_io` restates the NGFF type beside each NGFF name. After: those read the partition axis, and the NGFF type comes from the writer.
+
+## Handoff (recorded for later surfaces)
+
+- **G7:** identifiers that contain a member name are runtime vocabulary and are not guarded yet: `WellFilterConfig`/`well_filter`/`well_filter_mode`/`WellFilterProcessor` (`core/config.py`, `core/utils.py`), `owned_wells`/`total_wells` (progress), `available_wells`, `_wells_for_execution` (`zmq_execution_server.py`), `plate_*` names. Once renamed, the guard's token match should extend to identifier substrings.
+- **U1:** `pyqt_gui/widgets/shared/plate_view_widget.py` (`coord_to_well`, `wells_with_images`), the image browser's well decoding, and the MCP `component_filters` generalisation of the single `partition` filter.
+- **P / P1:** `processing/backends/analysis/consolidate_analysis_results.py` and `processing/backends/experimental_analysis/` move into `openhcs/domains/microscopy`; `processing/backends/cellprofiler/` (with `display_modules._parse_well_name` and the `Metadata_Well*` defaults) into `domains/cellprofiler`. The G1 spelling scan then excludes only `domains/`.
 
 ## Done when
 

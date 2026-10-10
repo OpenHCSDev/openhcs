@@ -85,6 +85,7 @@ Total: about −16k production lines removed from `openhcs/`, plus up to −6k o
 | Q3 | Delete the GroupBy pickle migration (old saved pipelines then fail loudly)? | Yes |
 | Q4 | Delete validation logs under `docs/validation` that nothing links to? | Yes |
 | Q5 | `omero/` (a separate Django plugin) | Out of scope |
+| G2-Q1 | Rewrite saved pipelines that set `ImagePlaneSource(channel=…)` or `SaveImagesSeriesAxis.TIMEPOINT/Z_INDEX` (both unread)? | No tool; such pipelines fail loudly on load |
 
 ## Surface files
 
