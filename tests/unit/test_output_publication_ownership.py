@@ -18,10 +18,11 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.steps.function_output_manifest import step_output_manifest
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 SOURCE = "/source/A01_s001_w1_z001_t001.tif"
@@ -76,7 +77,7 @@ def test_buffer_preparation_failure_precedes_any_vfs_publication(tmp_path, monke
     def unexpected_exists(*args, **kwargs):
         pytest.fail("output path access must follow independent buffer preparation")
 
-    monkeypatch.setattr(ImagePayloadStackComposition, "copy_whole_image", staticmethod(fail_copy))
+    monkeypatch.setattr(ImagePayload, "copied", fail_copy)
     monkeypatch.setattr(files, "exists", unexpected_exists)
     with pytest.raises(ValueError, match="buffer allocation failed"):
         runtime._save_outputs(payload, [SOURCE])
@@ -91,13 +92,13 @@ def test_saved_metadata_failure_keeps_actual_commit_but_no_cache_or_manifest(tmp
 
     def fail_attachment(*args, **kwargs):
         assert files.load(path, "memory") is args[1][0]
-        assert np.shares_memory(image_payload_data(args[1][0]), payload.data)
+        assert np.shares_memory(args[1][0].data, payload.data)
         raise ValueError("saved context failed")
 
     monkeypatch.setattr(ImagePayloadStackComposition, "with_saved_output_context", staticmethod(fail_attachment))
     with pytest.raises(ValueError, match="saved context failed"):
         runtime._save_outputs(payload, [SOURCE])
-    assert np.shares_memory(image_payload_data(files.load(path, "memory")), payload.data)
+    assert np.shares_memory(files.load(path, "memory").data, payload.data)
     assert runtime.context.runtime_image_stack_cache.stacks == {}
     assert step_output_manifest(runtime.context).produced_records_for(runtime.execution_plan) == ()
 
@@ -134,7 +135,7 @@ def test_original_named_owner_is_consulted_at_saved_metadata_epoch(tmp_path):
     with pytest.raises(ValueError, match="post-save domain rejected"):
         runtime._save_outputs(output, [SOURCE])
     assert calls == [False, True]
-    np.testing.assert_array_equal(image_payload_data(files.load(path, "memory")), payload.data)
+    np.testing.assert_array_equal(files.load(path, "memory").data, payload.data)
     assert runtime.context.runtime_image_stack_cache.stacks == {}
 
 

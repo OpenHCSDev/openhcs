@@ -5,7 +5,7 @@ from __future__ import annotations
 from inspect import getdoc
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import AgentError, AgentWarning, RenderedSource
+from openhcs.agent.dto.common import AgentError, RenderedSource
 from openhcs.agent.dto.execution import (
     ArtifactInputPlanSummary,
     ArtifactMaterializationPlanSummary,
@@ -27,9 +27,8 @@ from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
 from openhcs.mcp.dev_client_rendering import (
     CodeDocumentRenderOptions,
     McpDevOutputRenderOptions,
-    McpDevPayloadProjection,
-    McpDevTypedOutputRenderer,
-    McpDiagnosticRenderer,
+    McpDevOutputRenderer,
+    diagnostic_lines,
 )
 
 
@@ -39,26 +38,11 @@ def _sequence_text(values) -> str:
 
 def _mapping_text(values) -> str:
     return ", ".join(
-        f"{key}={McpDevPayloadProjection.text(value)}" for key, value in values.items()
+        f"{key}={McpDevOutputRenderer.text(value)}" for key, value in values.items()
     )
 
 
-def _append_messages(
-    lines: list[str],
-    errors: tuple[AgentError, ...],
-    warnings: tuple[AgentWarning, ...],
-    label: str = "",
-) -> None:
-    prefix = f"{label} " if label else ""
-    if errors:
-        lines.append(f"{prefix}errors:")
-        lines.extend(McpDiagnosticRenderer.typed_error_lines(errors))
-    if warnings:
-        lines.append(f"{prefix}warnings:")
-        lines.extend(McpDiagnosticRenderer.typed_error_lines(warnings))
-
-
-class PipelineReferenceRenderer(McpDevTypedOutputRenderer):
+class PipelineReferenceRenderer(McpDevOutputRenderer):
     output_contract = PipelineRef
 
     @classmethod
@@ -68,7 +52,7 @@ class PipelineReferenceRenderer(McpDevTypedOutputRenderer):
         return f"Pipeline: id={payload.pipeline_id} uri={payload.uri}"
 
 
-class PipelineSpecRenderer(McpDevTypedOutputRenderer):
+class PipelineSpecRenderer(McpDevOutputRenderer):
     output_contract = PipelineSpec
 
     @classmethod
@@ -85,13 +69,13 @@ class PipelineSpecRenderer(McpDevTypedOutputRenderer):
     @staticmethod
     def step_lines(steps: tuple[FunctionStepSpec, ...]) -> list[str]:
         return [
-            f"- {step.step_id}: name={McpDevPayloadProjection.quoted_text(step.name)} "
+            f"- {step.step_id}: name={McpDevOutputRenderer.quoted(step.name)} "
             f"enabled={step.enabled} functions={','.join(function.function_id for function in step.functions) or '<none>'}"
             for step in steps
         ]
 
 
-class PipelineValidationRenderer(McpDevTypedOutputRenderer):
+class PipelineValidationRenderer(McpDevOutputRenderer):
     output_contract = PipelineValidationResult
 
     @classmethod
@@ -101,11 +85,10 @@ class PipelineValidationRenderer(McpDevTypedOutputRenderer):
         lines = [
             f"Pipeline validation: id={payload.pipeline_ref.pipeline_id} valid={payload.valid}"
         ]
-        _append_messages(lines, (), payload.warnings)
         return "\n".join(lines)
 
 
-class PipelineSourceRenderer(McpDevTypedOutputRenderer):
+class PipelineSourceRenderer(McpDevOutputRenderer):
     output_contract = RenderedSource
     render_options_type = CodeDocumentRenderOptions
 
@@ -114,7 +97,7 @@ class PipelineSourceRenderer(McpDevTypedOutputRenderer):
         cls, payload: RenderedSource, options: CodeDocumentRenderOptions
     ) -> str:
         lines = [
-            f"Source: title={McpDevPayloadProjection.quoted_text(payload.title)} bytes={len(payload.source)}"
+            f"Source: title={McpDevOutputRenderer.quoted(payload.title)} bytes={len(payload.source)}"
         ]
         if options.include_source:
             lines.append(options.source_text(payload.source))
@@ -141,7 +124,7 @@ class PipelineDraftStepRenderer:
         )
         steps = () if added is None else added.steps
         lines = [
-            f"Pipeline draft: id={McpDevPayloadProjection.text(None if created is None else created.pipeline_id)} "
+            f"Pipeline draft: id={McpDevOutputRenderer.text(None if created is None else created.pipeline_id)} "
             f"valid={'<not-run>' if validated is None else validated.valid} steps={len(steps)}"
         ]
         if created is not None:
@@ -149,10 +132,12 @@ class PipelineDraftStepRenderer:
         if validated is not None and validated.errors:
             lines.append("Validate errors:")
         lines.extend(
-            McpDiagnosticRenderer.typed_error_lines(decoded.diagnostic_errors())
+            diagnostic_lines(decoded.diagnostic_errors())
         )
         if validated is not None:
-            _append_messages(lines, (), validated.warnings, "Validate")
+            if validated.warnings:
+                lines.append("Validate warnings:")
+                lines.extend(diagnostic_lines(validated.warnings))
             cls._append_repair_hints(lines, validated.errors, steps)
         if steps:
             lines.append("Steps:")
@@ -211,7 +196,7 @@ class PipelineDraftStepRenderer:
         )
 
 
-class PipelineArtifactPlanRenderer(McpDevTypedOutputRenderer):
+class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
     output_contract = ArtifactPlanInspection
 
     @classmethod
@@ -221,7 +206,6 @@ class PipelineArtifactPlanRenderer(McpDevTypedOutputRenderer):
         lines = [
             f"Artifact plan: plate={payload.plate_path} axes={payload.axis_count} steps={payload.step_count} progress_events={payload.progress_event_count}"
         ]
-        _append_messages(lines, (), payload.warnings)
         if payload.axes:
             lines.append(f"Axes: {_sequence_text(payload.axes)}")
         if payload.axis_filter:
@@ -359,7 +343,7 @@ class PipelineArtifactPlanRenderer(McpDevTypedOutputRenderer):
         lines = [f"    materialization: {' '.join(parts)}"]
         for path in materialization.paths[:3]:
             lines.append(
-                f"      candidates group={McpDevPayloadProjection.text(path.group_key)}: {', '.join(path.candidate_paths)}"
+                f"      candidates group={McpDevOutputRenderer.text(path.group_key)}: {', '.join(path.candidate_paths)}"
             )
         if len(materialization.paths) > 3:
             lines.append(
@@ -373,7 +357,7 @@ class PipelineArtifactPlanRenderer(McpDevTypedOutputRenderer):
         return lines
 
 
-class OrchestratorSessionReferenceRenderer(McpDevTypedOutputRenderer):
+class OrchestratorSessionReferenceRenderer(McpDevOutputRenderer):
     output_contract = OrchestratorSessionRef
 
     @classmethod
@@ -383,12 +367,12 @@ class OrchestratorSessionReferenceRenderer(McpDevTypedOutputRenderer):
         return f"Session: id={payload.session_id} uri={payload.uri}"
 
 
-class ExecutionJobRenderer(McpDevTypedOutputRenderer):
+class ExecutionJobRenderer(McpDevOutputRenderer):
     """Presentation shared by the actual job-identity family, not sibling DTOs."""
 
     @staticmethod
     def identity_line(payload: ExecutionJobIdentity, status: str) -> str:
-        return f"Job: id={payload.job_id} kind={payload.kind} status={status} server_execution={McpDevPayloadProjection.text(payload.server_execution_id)}"
+        return f"Job: id={payload.job_id} kind={payload.kind} status={status} server_execution={McpDevOutputRenderer.text(payload.server_execution_id)}"
 
 
 class ExecutionJobReferenceRenderer(ExecutionJobRenderer):
@@ -417,7 +401,6 @@ class ExecutionJobStatusRenderer(ExecutionJobRenderer):
         lines.extend(
             cls.optional_lines(payload.progress, lambda value: (f"Progress: {value}",))
         )
-        _append_messages(lines, (), payload.warnings)
         return "\n".join(lines)
 
 
@@ -441,9 +424,9 @@ class ExecuteSourceRenderer:
         lines.append(
             "Job: <not submitted>"
             if job is None
-            else McpDevTypedOutputRenderer.render_payload_value(job, options)
+            else McpDevOutputRenderer.render_payload_value(job, options)
         )
         lines.extend(
-            McpDiagnosticRenderer.typed_error_lines(decoded.diagnostic_errors())
+            diagnostic_lines(decoded.diagnostic_errors())
         )
         return "\n".join(lines)

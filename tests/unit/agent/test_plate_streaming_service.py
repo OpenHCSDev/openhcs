@@ -25,7 +25,6 @@ from openhcs.core.plate_image_inventory import (
 )
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
@@ -53,7 +52,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 
 
 class FakeHandler:
-    microscope_type = "openhcsdata"
+    source_name = "openhcsdata"
 
     def get_primary_backend(self, plate_path, filemanager):
         del plate_path, filemanager
@@ -65,7 +64,7 @@ def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp
     from openhcs.core.artifacts import ImageArtifactType
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
     from openhcs.core.plate_image_inventory import PlateImageInventory
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_metadata
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.source_image_provenance import (
         SourceImageIdentity, SourceImageProvenance, SourceImageProvenanceContributor,
     )
@@ -73,7 +72,7 @@ def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp
     from openhcs.core.source_metadata import SourceVoxelSpacing
     from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionBuilder
     from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     filename = "A01_s001_w1_z001_t001.tif"
     pixels = np.concatenate((
@@ -129,8 +128,8 @@ def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp
     actual = stream_source.load_image(
         filename, "disk", source_projection=projection, component_metadata=record.metadata,
     )
-    np.testing.assert_array_equal(image_payload_data(actual), pixels)
-    actual_metadata = image_payload_metadata(actual)
+    np.testing.assert_array_equal(actual.data, pixels)
+    actual_metadata = actual.metadata
     assert "site" not in actual_metadata.source_component_metadata
     assert actual_metadata.plane_axis is None
     assert actual_metadata.source_voxel_spacing.values_zyx == (0.25, 0.5)
@@ -520,7 +519,7 @@ def test_inventory_source_projection_loads_exact_ome_stack_planes(tmp_path):
             source_projection=projection,
             component_metadata=record.metadata,
         )
-        np.testing.assert_array_equal(image_payload_data(image), pixels[index])
+        np.testing.assert_array_equal(image.data, pixels[index])
         assert record.metadata["z_index"] == str(index + 1)
 
     table = MeasurementTable(
@@ -607,7 +606,7 @@ def test_inventory_source_projection_loads_exact_ordinary_tiff(tmp_path):
         source_projection=projection,
         component_metadata=record.metadata,
     )
-    np.testing.assert_array_equal(image_payload_data(image), pixels)
+    np.testing.assert_array_equal(image.data, pixels)
 
 
 def test_plate_streaming_service_rejects_non_roi_result_files(monkeypatch):

@@ -16,7 +16,7 @@ from openhcs.core.source_projection import (
 from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraPayload,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.napari_streaming_handlers import (
     NapariAxisPresentation,
     NapariLayerRouteStateStore,

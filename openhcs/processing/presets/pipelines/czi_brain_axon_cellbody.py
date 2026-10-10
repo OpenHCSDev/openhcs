@@ -31,7 +31,6 @@ from polystore.base import (
 from polystore.filemanager import FileManager
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ArtifactSpec
 from openhcs.core.config import (
@@ -126,7 +125,7 @@ def build_czi_brain_axon_cellbody_demo(
 
     output_root = inputs.output_root.expanduser().resolve()
     pipeline_config = PipelineConfig(
-        microscope=Microscope.BIOFORMATS,
+        dataset_source=BioFormatsHandler,
         source_bindings_config=LazySourceBindingsConfig(
             bindings=(
                 NamedSourceBinding(

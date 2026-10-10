@@ -427,7 +427,7 @@ def test_zmq_server_admits_compiled_declaration_without_reevaluating_source(
         lambda *args: pytest.fail("Artifact executed config source"),
     )
     monkeypatch.setattr(
-        zmq_execution_server_module.PipelineDocumentAuthority,
+        zmq_execution_server_module.PipelineDocumentCodec,
         "from_namespace",
         lambda *args: pytest.fail("Artifact rebuilt pipeline declaration"),
     )
@@ -656,7 +656,7 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
+    from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 
     previous = PipelineOrchestrator(
         plate_path=tmp_path, pipeline_config=PipelineConfig()
@@ -686,7 +686,7 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
     previous._execution_cancellation.request()
     previous.filemanager.ensure_directory(str(tmp_path), Backend.MEMORY.value)
     previous.filemanager.save("stale", str(tmp_path / "old.tif"), Backend.MEMORY.value)
-    handler = OpenHCSMicroscopeHandler(previous.filemanager)
+    handler = OpenHCSDatasetSource(previous.filemanager)
     context = ProcessingContext(axis_id="A01", filemanager=previous.filemanager)
     context.plate_path = tmp_path
     context.input_dir = tmp_path

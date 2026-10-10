@@ -449,7 +449,7 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "normalizes group_by to Ungrouped" in folder
     assert "do not reinterpret a previous-step output" in folder
     assert "Follow current artifact provenance" in folder
-    assert "Use SourceBindingsHandler only when an arbitrary image folder" not in folder
+    assert "Use SourceBindingsSource only when an arbitrary image folder" not in folder
     assert "openhcs_ui_sample_selected_plate_image" not in folder
     assert "CONFIG SCHEMA HINTS" not in folder
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from openhcs.core.config import NormalizationMethod
+from openhcs.domains.microscopy.config import NormalizationMethod
 from openhcs.formats.experimental_analysis import (
     average_wells,
     individual_wells,

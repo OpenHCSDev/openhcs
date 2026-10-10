@@ -68,7 +68,6 @@ from openhcs.core.runtime_stores import RuntimeArtifactBatch, StoredRuntimeValue
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
-from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
@@ -1127,9 +1126,7 @@ class CPATableRowProjection:
         for channel in image_channels:
             for record in records:
                 if record.key.name == channel.alias:
-                    yield image_payload_metadata(
-                        record.data
-                    ).source_provenance, record.key.scope, channel.alias
+                    yield record.data.metadata.source_provenance, record.key.scope, channel.alias
 
     def collect_source_bound_image_provenance(
         self,
@@ -1174,7 +1171,7 @@ class CPATableRowProjection:
                     "CPA source-bound thumbnails require a runtime context."
                 )
             return
-        workspace = self.context.runtime_source_workspace_projection_authority.projection_if_available()
+        workspace = self.context.runtime_source_workspace_projections.projection_if_available()
         if workspace is None:
             if settings.write_image_thumbnails and any(
                 binding.alias in settings.thumbnail_image_names
@@ -1251,13 +1248,13 @@ class CPATableRowProjection:
         image_rows_by_number: dict[int, dict[str, Any]],
     ) -> None:
         """Render the selected named pixels into their exact source image rows."""
-        provenance = image_payload_metadata(payload).source_provenance
+        provenance = payload.metadata.source_provenance
         image_numbers = self.image_numbers_for_provenance(
             provenance,
             scope=scope,
             owner=image_name,
         )
-        pixels = np.asarray(image_payload_data(payload))
+        pixels = np.asarray(payload.data)
         planes = self._thumbnail_planes(pixels, len(image_numbers))
         thumbnail_field = self.dialect.thumbnail_field(image_name)
         image_id_field = self.image_id_field()
@@ -1319,7 +1316,7 @@ class CPATableRowProjection:
             raise RuntimeError(
                 "Virtual workspace source resolution requires a runtime FileManager."
             )
-        projection = self.context.runtime_source_workspace_projection_authority.projection_if_available()
+        projection = self.context.runtime_source_workspace_projections.projection_if_available()
         if projection is None:
             return Path(source_path).resolve(strict=False)
         return Path(

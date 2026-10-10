@@ -8,10 +8,7 @@ from polystore.source_tile_geometry import SourceTileGeometry
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_matching import source_component_metadata_value
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
@@ -22,7 +19,7 @@ from openhcs.core.axes import AxisFamily, TileAxis
 
 def _source_metadata(request: RuntimeAdapterRequest) -> ImagePayloadMetadata:
     """Bind final ordered source-plane provenance before array conversion."""
-    return image_payload_metadata(request.source_payload)
+    return request.source_payload.metadata
 
 
 @artifact_outputs(TILE_POSITIONS_OUTPUT)

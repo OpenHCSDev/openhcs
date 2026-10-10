@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path, PureWindowsPath
 
-from openhcs.desktop_installation import (
+from openhcs.desktop.installation import (
     DESKTOP_INSTALL_PROFILE,
     DesktopPackageSourceOverrideVariable,
 )

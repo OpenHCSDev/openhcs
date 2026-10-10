@@ -18,9 +18,6 @@ from openhcs.core.image_file_serialization import (
     prepare_disk_image_payloads,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-)
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 from openhcs.core.axes import (
     Axis,
@@ -31,13 +28,14 @@ from openhcs.core.axes import (
     TileAxis,
     TimeAxis,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
     from openhcs.core.config import ZarrConfig
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.microscopes.microscope_base import MicroscopeHandler
+    from openhcs.core.dataset_sources.source import DatasetSource
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +59,7 @@ def prepare_storage_image_payloads(
         )
     if backend == Backend.DISK.value:
         return prepare_disk_image_payloads(payloads, paths)
-    return [image_payload_data(payload) for payload in payloads]
+    return [ImagePayload.of(payload).data for payload in payloads]
 
 
 def generate_materialized_paths(
@@ -239,7 +237,7 @@ class ZIndexZarrAxisProjection(ZarrComponentAxisProjection):
 
 def zarr_batch_layout(
     file_paths: Sequence[str | Path],
-    microscope_handler: MicroscopeHandler,
+    microscope_handler: DatasetSource,
 ) -> ZarrBatchLayout:
     """Return the declaration-driven Zarr layout for output image planes."""
 
@@ -282,7 +280,7 @@ def save_materialized_data(
     """Save data to a materialized backend with microscope/Zarr metadata."""
     save_kwargs: dict[str, BackendOptionValue] = {
         "parser_name": context.microscope_handler.parser.__class__.__name__,
-        "microscope_type": context.microscope_handler.microscope_type,
+        "microscope_type": context.microscope_handler.source_name,
     }
 
     if materialized_backend == Backend.ZARR.value:
@@ -333,7 +331,7 @@ def get_all_image_paths(
     backend: str,
     axis_id: str,
     filemanager: FileManager,
-    microscope_handler: MicroscopeHandler,
+    microscope_handler: DatasetSource,
 ) -> list[str]:
     """Get all image file paths for one multiprocessing axis value."""
 
@@ -390,7 +388,7 @@ def update_metadata_for_zarr_conversion(
         VirtualWorkspaceSourceProjectionEntries,
         get_metadata_path,
     )
-    from openhcs.microscopes.openhcs import (
+    from openhcs.core.dataset_sources.openhcs_format import (
         OpenHCSMetadataGenerator,
         OpenHCSMetadataHandler,
     )
@@ -460,7 +458,7 @@ def update_metadata_for_zarr_conversion(
                 path_prefix=zarr_subdir,
             ).metadata_dict(
                 SourceProjectionSet(tuple(materialized_projections)),
-                microscope_handler_name=context.microscope_handler.microscope_type,
+                microscope_handler_name=context.microscope_handler.source_name,
                 source_filename_parser_name=type(
                     context.microscope_handler.parser
                 ).__name__,

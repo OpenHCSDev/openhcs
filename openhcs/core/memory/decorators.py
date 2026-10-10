@@ -8,6 +8,7 @@ and callable preparation contracts compose predictably.
 from __future__ import annotations
 
 from collections.abc import Callable
+import functools
 import inspect
 from typing import Any
 
@@ -35,7 +36,7 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
             kwargs["contract"] = contract
 
         if args and callable(args[0]) and len(args) == 1:
-            wrapped = decorator(args[0], **kwargs)
+            wrapped = decorator(image_payload_boundary(args[0]), **kwargs)
             _attach_openhcs_metadata(
                 wrapped,
                 prepare=prepare,
@@ -46,7 +47,7 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
         arraybridge_decorator = decorator(*args, **kwargs)
 
         def decorate(target: Any) -> Any:
-            wrapped = arraybridge_decorator(target)
+            wrapped = arraybridge_decorator(image_payload_boundary(target))
             _attach_openhcs_metadata(
                 wrapped,
                 prepare=prepare,
@@ -60,6 +61,99 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
     openhcs_decorator.__doc__ = getattr(decorator, "__doc__", None)
     openhcs_decorator.__module__ = __name__
     return openhcs_decorator
+
+
+def _declares_image_payload(annotation: Any, *, member: type) -> bool:
+    """Whether a parameter annotation admits payloads of family ``member``."""
+    from python_introspect import is_union_type, resolve_annotated
+    from typing import get_args
+
+    annotation = resolve_annotated(annotation)
+    if is_union_type(annotation):
+        return any(
+            _declares_image_payload(declared, member=member)
+            for declared in get_args(annotation)
+        )
+    return isinstance(annotation, type) and issubclass(annotation, member)
+
+
+def _admits_plain_image_payload(annotation: Any) -> bool:
+    """Whether a parameter annotation names ``ImagePayload`` itself."""
+    from python_introspect import is_union_type, resolve_annotated
+    from typing import get_args
+
+    from openhcs.core.runtime_image_values import ImagePayload
+
+    annotation = resolve_annotated(annotation)
+    if is_union_type(annotation):
+        return any(_admits_plain_image_payload(member) for member in get_args(annotation))
+    return annotation is ImagePayload
+
+
+@functools.cache
+def image_payload_boundary(wrapped: Any) -> Any:
+    """Wrap bare image arguments once where the callable declares ``ImagePayload``.
+
+    This is where a processing function's image arguments turn from bare
+    arrays into payloads: inside the memory decorator (so direct, runtime and
+    slice-by-slice calls share it), and on composed raw leaves. The primary
+    parameter is wrapped when it declares any payload family member; another
+    parameter is wrapped when it declares ``ImagePayload`` itself and receives
+    a bare array.
+    """
+    from openhcs.core.runtime_array_values import is_array_payload
+    from openhcs.core.runtime_image_values import ImagePayload, PlainImagePayload
+
+    raw_signature = inspect.signature(inspect.unwrap(wrapped), eval_str=True)
+    parameters = tuple(raw_signature.parameters.values())
+    if not parameters:
+        return wrapped
+    primary = parameters[0].name
+    image_parameters = tuple(
+        (index, parameter.name)
+        for index, parameter in enumerate(parameters)
+        if (
+            _declares_image_payload(parameter.annotation, member=ImagePayload)
+            if index == 0
+            else _admits_plain_image_payload(parameter.annotation)
+        )
+    )
+    if not image_parameters:
+        return wrapped
+    positions = dict(image_parameters)
+
+    def as_payload(name: str, value: Any) -> Any:
+        if name == primary:
+            return ImagePayload.of(value)
+        if is_array_payload(value) and not isinstance(value, ImagePayload):
+            return PlainImagePayload(value)
+        return value
+
+    def as_bare(value: Any) -> Any:
+        if type(value) is PlainImagePayload:
+            return value.data
+        if type(value) is tuple:
+            return tuple(as_bare(item) for item in value)
+        return value
+
+    @functools.wraps(wrapped)
+    def image_payload_callable(*args: Any, **kwargs: Any) -> Any:
+        primary_value = args[0] if args else kwargs.get(primary)
+        args = tuple(
+            as_payload(positions[index], value) if index in positions else value
+            for index, value in enumerate(args)
+        )
+        for name in positions.values():
+            if name in kwargs:
+                kwargs[name] = as_payload(name, kwargs[name])
+        result = wrapped(*args, **kwargs)
+        # Bare pixels in, bare pixels out: a caller that passed an array (an
+        # array library, slice-by-slice stacking) gets arrays back.
+        if primary in positions.values() and not isinstance(primary_value, ImagePayload):
+            return as_bare(result)
+        return result
+
+    return image_payload_callable
 
 
 def _declared_processing_contract_name(contract: Any) -> str | None:

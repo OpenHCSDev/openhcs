@@ -293,23 +293,20 @@ def test_explicit_plane_domain_still_requires_projection_and_rejects_global_coun
 
 @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
 def test_generic_output_context_uses_execution_projection_not_image_storage_axis(axis):
-    from openhcs.core.projected_image_output import (
-    NumpyArrayObjectLabelOutputValueContextStrategy,
-)
+    from openhcs.core.runtime_image_values import ImagePayload
 
     labels = np.zeros((2, 6, 7), dtype=np.int32)
     labels[0, 1:3, 2:4] = 29
     labels[1, 2:4, 3:5] = 106
     source = _source(labels, axis=axis, spacing=(2.0, 1.3556, 1.3556))
-    strategy = NumpyArrayObjectLabelOutputValueContextStrategy()
-    volume = strategy.contextualize(source, labels, None)
+    volume = ImagePayload.of(labels).object_label_output(source, None)
     assert volume.domain.scope is ObjectLabelDomainScope.PAYLOAD
     assert volume.domain.declared_object_ids == (29, 106)
     np.testing.assert_array_equal(volume.measurement_planes()[0].labels, labels)
     projection = RuntimePlaneAxisValueProjection.from_source_declaration(
         source.metadata.plane_axis, source.metadata.source_provenance,
     )
-    planes = strategy.contextualize(source, labels, projection)
+    planes = ImagePayload.of(labels).object_label_output(source, projection)
     assert planes.domain.scope is ObjectLabelDomainScope.PLANE
     assert planes.domain.declared_object_id_domains == ((29,), (106,))
     assert planes.plane_axis is axis

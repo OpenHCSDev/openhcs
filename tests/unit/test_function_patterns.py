@@ -600,6 +600,47 @@ def test_compiled_group_declares_managed_artifact_input_domain():
     assert group.runtime_domain is RuntimeInvocationDomain.ARTIFACT_MANAGED
 
 
+def test_stored_context_input_beside_main_flow_image_keeps_every_anchor():
+    """A plain callable fed main-flow pixels runs once per anchor (B1).
+
+    Stitching consumed stored ``positions`` beside its image tiles; treating
+    that input as the group-scope owner kept one anchor, so only the first
+    z-plane was ever assembled.
+    """
+    positions = ArtifactSpec.input("positions", SpecialArtifactType)
+
+    @artifact_inputs(positions)
+    def assemble(image_tiles, positions):
+        del positions
+        return image_tiles
+
+    positions_plan = ArtifactInputPlan(
+        name="positions",
+        path="/memory/positions.pkl",
+        artifact_type=SpecialArtifactType,
+    )
+    compiled = compile_function_pattern(
+        assemble, {positions_plan.ref(): positions_plan}, {},
+    )
+    invocation = compiled.default_group.invocations[0]
+    invocation = invocation.with_artifact_input_edges((
+        exact_input_edge(
+            invocation,
+            input_index=0,
+            spec=positions,
+            storage_plan=positions_plan,
+            parameter_name="positions",
+        ),
+    ))
+    group = replace(compiled.default_group, invocations=(invocation,))
+
+    assert invocation.contract.main_flow_supplies_primary_image
+    assert invocation.contract.lifecycle_anchor_owner_inputs == ArtifactSpecCollection(())
+    assert group.runtime_domain is RuntimeInvocationDomain.SOURCE_ANCHORED
+    anchors = ["z001", "z002", "z003"]
+    assert group.runtime_domain.select_lifecycle_anchors(anchors) == anchors
+
+
 def test_source_bound_input_edge_keeps_source_anchored_runtime_domain():
     source_spec = ArtifactSpec.input("source", ImageArtifactType)
 

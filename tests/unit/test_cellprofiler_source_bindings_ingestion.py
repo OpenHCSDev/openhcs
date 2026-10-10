@@ -118,16 +118,30 @@ def test_source_candidate_owns_one_exact_source_ref() -> None:
     assert candidate.source_ref is source_ref
 
 
-def test_component_projection_strategies_cover_every_declared_axis() -> None:
+def test_axis_projection_reads_each_axis_through_its_declarations() -> None:
     from openhcs.core.axes import AxisFamily
-    from openhcs.core.source_metadata import SourceComponentProjectionStrategy
+    from openhcs.core.source_metadata import (
+        SourceAxisProjection,
+        source_metadata_component,
+    )
+    from openhcs.domains.microscopy.axes import Microscopy
 
     family = AxisFamily.active()
-    strategies = {
-        axis: SourceComponentProjectionStrategy.strategy_type_for_axis(axis)
-        for axis in family.axes
-    }
-    assert len(set(strategies.values())) == len(family.axes)
+    collection_fields = [axis.metadata_collection_field for axis in family.axes]
+    assert len(set(collection_fields)) == len(family.axes)
+    for axis in family.axes:
+        for alias in axis.metadata_aliases:
+            assert source_metadata_component(alias) is axis
+        primary = axis.metadata_aliases[0]
+        assert SourceAxisProjection.project(axis, {primary: "B07"}, 0) == "B07"
+    assert SourceAxisProjection.project(
+        Microscopy.Well, {"Metadata_Row": "c", "Metadata_Column": "4"}, 0
+    ) == "C04"
+    assert SourceAxisProjection.project(Microscopy.Well, {}, 3) == "A01"
+    assert SourceAxisProjection.project(Microscopy.Channel, {}, 3) == "4"
+    assert SourceAxisProjection.project(Microscopy.ZIndex, {}, 3) == "1"
+    assert SourceAxisProjection.project(Microscopy.Site, {}, 3) == "4"
+    assert SourceAxisProjection.project(Microscopy.Site, {"z_index": "2"}, 3) == "1"
 
 
 def test_workspace_projection_uses_exact_submitted_root_and_file_universe(

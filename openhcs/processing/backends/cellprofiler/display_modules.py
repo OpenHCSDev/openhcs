@@ -30,11 +30,6 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
@@ -93,6 +88,8 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
+from openhcs.core.payload_axes import ColourSampleAxisSpec
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -496,7 +493,7 @@ class DisplayDataOnImageRenderer:
 @special_inputs("labels")
 @runtime_bound_parameters(_DisplayMeasurementsRuntimeParameter)
 def display_data_on_image(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     labels: Optional[ObjectLabelValue] = None,
     measurements: Optional[np.ndarray] = None,
     measurement_feature: Optional[str] = None,
@@ -543,7 +540,7 @@ def display_data_on_image(
         RGB image with measurements displayed, shape (D, H, W, 3) or (H, W, 3)
     """
     request = DisplayDataOnImageRequest(
-        image=np.asarray(image_payload_data(image)),
+        image=np.asarray(image.data),
         labels=labels,
         measurements=measurements,
         objects_or_image=objects_or_image,
@@ -562,11 +559,8 @@ def display_data_on_image(
     )
 
     output = DisplayDataOnImageRenderer(request).render_slice()
-    return with_image_payload_data(
-        image,
-        output,
-        metadata=replace(image_payload_metadata(image), source_channel_axis=-1),
-    )
+    return image.with_pixels(output,
+        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),)
 
 
 class DensityPlotScaleType(Enum):

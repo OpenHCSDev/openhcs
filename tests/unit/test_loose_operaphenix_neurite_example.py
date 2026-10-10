@@ -11,7 +11,6 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseSearchRequest,
 )
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.constants.constants import Microscope
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.function_patterns import get_core_callable, normalize_function_pattern
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -40,6 +39,7 @@ from openhcs.processing.presets.pipelines.loose_operaphenix_neurite_outgrowth im
     loose_operaphenix_neurite_demo_contribution,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 def _inputs(plate_path: Path, output_root: Path) -> LooseOperaPhenixNeuriteInputs:
@@ -75,7 +75,7 @@ def test_neurite_example_declares_bounded_sources_and_final_user_result(
     inputs = _inputs(tmp_path / "plate", tmp_path / "output")
     pipeline_config, steps = build_loose_operaphenix_neurite_pipeline(inputs)
 
-    assert pipeline_config.microscope is Microscope.SOURCE_BINDINGS
+    assert pipeline_config.dataset_source is SourceBindingsSource
     assert pipeline_config.well_filter_config.well_filter == "B03"
     assert pipeline_config.path_planning_config.well_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is True

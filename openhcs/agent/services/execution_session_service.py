@@ -57,7 +57,7 @@ from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.pipeline.path_planner import MissingArtifactInputError
-from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent, ProgressQueue
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
@@ -67,7 +67,7 @@ from openhcs.core.steps.function_artifact_materialization import (
     planned_materialization_preview,
 )
 from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
-from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
+from openhcs.core.dataset_sources.exceptions import PixelSizeUnavailableError
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import (
     ZMQExecutionRequestBuilder,
@@ -475,7 +475,7 @@ class PipelineSourceSessionRequest(ExecutionPipelineSessionRequest):
     ) -> ExecutionPipelineDefinition:
         del pipeline_service
         logger.info("Parsing pipeline source for execution session %s", session_id)
-        document = PipelineDocumentAuthority.from_source(self.pipeline_source)
+        document = PipelineDocumentCodec.from_source(self.pipeline_source)
         logger.info("Parsed pipeline source for execution session %s", session_id)
         return ExecutionPipelineDefinition(
             pipeline_id=f"pipeline-source:{session_id}",
@@ -890,7 +890,7 @@ class ExecutionSessionService:
                 EndpointStartupPhase.PREPARING_CAPABILITIES,
                 "Resolving pipeline source document",
             ).publish()
-            document = PipelineDocumentAuthority.from_source(request.pipeline_source)
+            document = PipelineDocumentCodec.from_source(request.pipeline_source)
         except Exception as exc:
             return ArtifactPlanInspection(
                 schema_version=SCHEMA_VERSION,
@@ -1410,7 +1410,7 @@ def _compile_inspection_error(exception: Exception) -> AgentError:
                 "retrying artifact-plan."
             ),
         )
-    if isinstance(exception, MicroscopePixelSizeUnavailableError):
+    if isinstance(exception, PixelSizeUnavailableError):
         return AgentError.from_exception(
             "compile_inspection_pixel_size_unavailable",
             exception,

@@ -125,7 +125,7 @@ def test_composed_measurement_caller_preserves_ordered_source_aliases() -> None:
     measurement_image = measurement_images[0]
     assert measurement_image.source_image_name is None
     assert measurement_image.source_aliases == source_aliases
-    assert measurement_image.payload is payload
+    assert measurement_image.payload.data is payload
     assert tuple(
         (pair.first.name, pair.second.name, pair.runtime_pair.source_name)
         for pair in measurement_image.source_image_pairs()

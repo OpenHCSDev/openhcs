@@ -16,11 +16,7 @@ from openhcs.core.artifacts import (
     SpatialGridArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract, CallableMetadata
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -247,8 +243,8 @@ def test_image_output_recording_uses_exact_invocation_projection_for_rgb(
     )
 
     recorded = adapter.add_image.call_args.args[1]
-    assert image_payload_data(recorded).shape == output_shape
-    assert image_payload_metadata(recorded).plane_axis is expected_plane_axis
+    assert recorded.data.shape == output_shape
+    assert recorded.metadata.plane_axis is expected_plane_axis
 
 
 def test_output_recording_carries_exact_invocation_plane_projection(

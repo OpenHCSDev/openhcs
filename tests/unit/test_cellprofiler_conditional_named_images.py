@@ -22,7 +22,6 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import ArtifactProducer
-from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
@@ -49,6 +48,8 @@ from openhcs.processing.backends.cellprofiler.skeleton import (
     measure_object_skeleton,
     measure_object_skeleton_with_branchpoint_image,
 )
+from openhcs.core.axes import ColourAxis
+from openhcs.core.memory.decorators import image_payload_boundary
 
 
 def _invocation(func: Callable, kwargs: Mapping[str, object] | None = None):
@@ -255,7 +256,7 @@ def test_invert_for_printing_runtime_returns_enabled_channels_in_rgb_order() -> 
     image[..., 0] = 0.2
     image[..., 1] = 0.4
     image[..., 2] = 0.6
-    raw = inspect.unwrap(invert_for_printing)
+    raw = image_payload_boundary(inspect.unwrap(invert_for_printing))
     expected = (
         np.full((2, 3), 0.24, dtype=np.float32),
         np.full((2, 3), 0.32, dtype=np.float32),
@@ -280,8 +281,8 @@ def test_invert_for_printing_runtime_returns_enabled_channels_in_rgb_order() -> 
         )
         assert len(values) == len(selected_expected)
         for value, expected_value in zip(values, selected_expected, strict=True):
-            assert image_payload_metadata(value).source_channel_axis is None
-            np.testing.assert_allclose(image_payload_data(value), expected_value)
+            assert value.metadata.axis_position(ColourAxis) is None
+            np.testing.assert_allclose(value.data, expected_value)
 
 
 def test_invert_for_printing_runtime_declares_color_channel_axis() -> None:
@@ -290,13 +291,13 @@ def test_invert_for_printing_runtime_declares_color_channel_axis() -> None:
     image[..., 1] = 0.4
     image[..., 2] = 0.6
 
-    output = inspect.unwrap(invert_for_printing)(
+    output = image_payload_boundary(inspect.unwrap(invert_for_printing))(
         image,
         output_mode=OutputMode.COLOR,
     )
 
-    assert image_payload_data(output).shape == (2, 3, 3)
-    assert image_payload_metadata(output).source_channel_axis == -1
+    assert output.data.shape == (2, 3, 3)
+    assert output.metadata.axis_position(ColourAxis) == -1
 
 
 def test_invert_for_printing_public_variants_reconstruct_without_sidecars() -> None:
@@ -377,7 +378,7 @@ def test_measure_object_skeleton_retained_runtime_image_is_exact_analysis_image(
     labels = np.zeros((9, 9), dtype=np.int32)
     labels[3:6, 3:5] = 1
     payload = ObjectLabelPayload(variant_data=ObjectLabelVariantData(labels=labels))
-    raw = inspect.unwrap(measure_object_skeleton_with_branchpoint_image)
+    raw = image_payload_boundary(inspect.unwrap(measure_object_skeleton_with_branchpoint_image))
 
     branchpoint_image, rows = raw(
         skeleton,
@@ -393,7 +394,7 @@ def test_measure_object_skeleton_retained_runtime_image_is_exact_analysis_image(
     ).analyze()
 
     np.testing.assert_array_equal(
-        image_payload_data(branchpoint_image),
+        branchpoint_image.data,
         expected.branchpoint_image,
     )
     assert rows.row_type is ObjectSkeletonMeasurement
@@ -496,7 +497,7 @@ def test_run_imagej_macro_runtime_returns_declared_group_order(
         )
 
     monkeypatch.setattr(FijiMacroExecutionRequest, "send", fake_send)
-    raw = inspect.unwrap(run_imagej_macro)
+    raw = image_payload_boundary(inspect.unwrap(run_imagej_macro))
     result = raw(
         np.stack(
             (
@@ -516,7 +517,7 @@ def test_run_imagej_macro_runtime_returns_declared_group_order(
         "SecondOutput",
     )
     assert tuple(
-        float(np.mean(image_payload_data(value))) for value in result.slices
+        float(np.mean(value.data)) for value in result.slices
     ) == (
         3.0,
         1.0,

@@ -13,7 +13,7 @@ from openhcs.core.source_binding_selection import SourceCandidatePath
 from openhcs.core.axes import Axis, GroupingDeclaration
 
 if TYPE_CHECKING:
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 DiscoveredPatternCollection = (
     Sequence[SourceCandidatePath]

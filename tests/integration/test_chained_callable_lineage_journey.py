@@ -12,7 +12,6 @@ from openhcs.agent.services.execution_session_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants import Microscope
 from openhcs.core.artifacts import ArtifactInputPlan, ImageArtifactType
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -24,8 +23,7 @@ from openhcs.core.config import (
 from openhcs.core.function_patterns import MainFlowInputProjection
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
-from openhcs.core.runtime_image_values import image_payload_data
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.runtime_stores import RuntimeArtifactQuery
 from openhcs.core.source_bindings import (
@@ -46,6 +44,7 @@ from polystore.roi import load_rois_from_zip
 # Reuse the public reference's authoritative code block, not a copied callable.
 from tests.unit.agent.test_callable_artifact_reference import reference_namespace  # noqa: F401
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 @pytest.fixture
@@ -80,11 +79,11 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
         )),
         component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     )
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(
             num_workers=1,
             use_threading=True,
-            microscope=Microscope.SOURCE_BINDINGS,
+            dataset_source=SourceBindingsSource,
             source_bindings_config=LazySourceBindingsConfig(bindings=(source,)),
             path_planning_config=LazyPathPlanningConfig(
                 global_output_folder=tmp_path / "outputs",
@@ -99,8 +98,8 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
             for index in range(2)
         ],
     )
-    document = PipelineDocumentAuthority.from_source(
-        PipelineDocumentAuthority.render(document)
+    document = PipelineDocumentCodec.from_source(
+        PipelineDocumentCodec.render(document)
     )
     bundle = InProcessCompileInspectionGateway().compile(
         CompileInspectionInput(
@@ -161,7 +160,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
             )
             records.append(record)
         image, labels, rows = (record.data for record in records)
-        np.testing.assert_array_equal(np.squeeze(image_payload_data(image)), fixture)
+        np.testing.assert_array_equal(np.squeeze(image.data), fixture)
         np.testing.assert_array_equal(np.squeeze(object_label_dense_array(labels)), fixture)
         assert rows.subject.object_name == labels_plan.name
         assert rows.subject.id_field == "object_label"

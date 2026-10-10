@@ -12,7 +12,6 @@ from polystore.memory import MemoryStorageBackend
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
-    image_payload_metadata,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
@@ -27,7 +26,7 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import ImageFileOptions, MaterializationSpec
 from openhcs.processing.materialization.core import (
     ParserBackedSourceStemAuthority,
@@ -90,7 +89,7 @@ def test_native_header_only_workspace_keeps_loaded_source_identity(extension):
         VirtualWorkspacePathLookup.from_paths(virtual_path, f"/plate/{virtual_path}"),
         loaded,
     )
-    metadata = image_payload_metadata(projected)
+    metadata = projected.metadata
     assert metadata.source_path == source_path
     assert metadata.source_component_metadata == {**COMPONENTS, "extension": extension}
     assert metadata.source_image_names == ("fixture",)

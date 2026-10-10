@@ -12,14 +12,13 @@ import tifffile
 from openhcs.agent.services.execution_session_service import (
     AgentProgressQueue, CompileInspectionInput, InProcessCompileInspectionGateway,
 )
-from openhcs.constants import Microscope
 from openhcs.core.config import (
     GlobalPipelineConfig, LazyNapariStreamingConfig, LazyPathPlanningConfig,
     LazyProcessingConfig,
 )
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import MetadataExtractionRule, MetadataSource
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -28,6 +27,7 @@ from openhcs.core.virtual_workspace_metadata import (
 )
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 @pytest.mark.parametrize("rgb", (False, True))
@@ -45,7 +45,7 @@ def test_registered_mixed_image_math_publishes_once_in_both_operand_orders(tmp_p
     fixture = Path(__file__).resolve().parents[1] / 'fixtures/pipelines/image_math_mixed_publication.cppipe'
     steps, imported = import_cellprofiler_pipeline(fixture)
     config = replace(
-        imported, microscope=Microscope.SOURCE_BINDINGS,
+        imported, dataset_source=SourceBindingsSource,
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.ZIndex], group_by=Microscopy.Channel),
         path_planning_config=LazyPathPlanningConfig(global_output_folder=tmp_path / 'results'),
@@ -55,7 +55,7 @@ def test_registered_mixed_image_math_publishes_once_in_both_operand_orders(tmp_p
             source_stack_components=(), source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5))),
         napari_streaming_config=LazyNapariStreamingConfig(enabled=False),
     )
-    document = PipelineDocumentAuthority.from_values(pipeline_config=config, pipeline_steps=steps)
+    document = PipelineDocumentCodec.from_values(pipeline_config=config, pipeline_steps=steps)
     bundle = InProcessCompileInspectionGateway().compile(CompileInspectionInput(
         plate=source, pipeline_document=document, axis_filter=('A01',),
         global_pipeline_config=GlobalPipelineConfig(num_workers=1, use_threading=True),

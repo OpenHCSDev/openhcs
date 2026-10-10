@@ -41,9 +41,11 @@ from openhcs.core.virtual_workspace_metadata import (
     MetadataWriteError,
     VirtualWorkspaceSourceProjectionEntries,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 def metadata_fixture():
@@ -145,7 +147,7 @@ def test_saved_two_channel_planes_keep_runtime_axis_not_contributor_axis(
     )
     assert image_format.read(path).shape == (2, 4, 5)
     assert restored.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert restored.source_channel_axis is None
+    assert restored.axis_position(ColourAxis) is None
     assert restored.source_provenance.source_plane_count == 2
     assert all(
         len(
@@ -515,15 +517,9 @@ def test_native_header_reload_preserves_declared_crop_and_alias(tmp_path, origin
     restored = image_format.persisted_metadata(path, payload)
     reloaded = ImageMetadataPayload(image_format.read(path), restored)
     context = ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path), {}))
-    from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_bindings import NamedSourceBinding
 
-    current = image_payload_metadata(
-        NamedSourceBinding(alias="neurite").apply_loaded_payload(
-            reloaded,
-            context,
-        )
-    )
+    current = NamedSourceBinding(alias="neurite").apply_loaded_payload( reloaded, context, ).metadata
     assert current.source_dtype == "float32"
     assert current.source_spatial_domain == metadata.source_spatial_domain
     assert current.source_image_names == ("neurite",)
@@ -537,7 +533,6 @@ def test_native_header_reload_preserves_declared_crop_and_alias(tmp_path, origin
 def test_native_mosaic_replaces_incompatible_old_tile_domain_without_losing_source_facts(
     tmp_path,
 ):
-    from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_bindings import NamedSourceBinding
 
     metadata = metadata_fixture().replace_fields(
@@ -550,12 +545,10 @@ def test_native_mosaic_replaces_incompatible_old_tile_domain_without_losing_sour
     reloaded = ImageMetadataPayload(
         image_format.read(path), image_format.persisted_metadata(path, payload)
     )
-    current = image_payload_metadata(
-        NamedSourceBinding(alias="neurite").apply_loaded_payload(
+    current = (NamedSourceBinding(alias="neurite").apply_loaded_payload(
             reloaded,
             ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path), {})),
-        )
-    )
+        )).metadata
     assert current.source_spatial_domain.origin_yx == (0, 0)
     assert current.source_spatial_domain.source_shape_yx == (10, 16)
     assert current.source_image_names == ("neurite",)
@@ -583,7 +576,6 @@ def test_native_mosaic_replaces_incompatible_old_tile_domain_without_losing_sour
 def test_persisted_projection_validates_loaded_window_not_full_source_extent(
     authored_domain, expected_domain
 ):
-    from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_workspace_projection import (
         VirtualWorkspaceImagePayloadProjection,
     )
@@ -598,7 +590,7 @@ def test_persisted_projection_validates_loaded_window_not_full_source_extent(
         source_alias="neurite",
         persisted_metadata=persisted,
     ).apply(payload)
-    metadata = image_payload_metadata(restored)
+    metadata = restored.metadata
     assert metadata.source_spatial_domain == expected_domain
     assert metadata.source_image_names == ("neurite",)
     assert metadata.source_voxel_spacing == persisted.source_voxel_spacing
@@ -648,13 +640,12 @@ def test_native_headerless_hwc_replay_retains_declared_channel_semantics(
     from polystore.filemanager import FileManager
     from polystore.zarr import ZarrStorageBackend
 
-    from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_bindings import NamedSourceBinding
 
     pixels = np.arange(60, dtype=np.uint8).reshape(4, 5, 3)
     metadata = metadata_fixture().replace_fields(
         source_dtype="uint8",
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         source_spatial_domain=SourceSpatialDomain((1, 2), (10, 12)),
     )
     payload = ImageMetadataPayload(pixels, metadata)
@@ -684,13 +675,13 @@ def test_native_headerless_hwc_replay_retains_declared_channel_semantics(
     restored = ImagePayloadMetadata.from_mapping(
         json.loads(json.dumps(to_jsonable(restored)))
     )
-    assert restored.source_channel_axis == -1
+    assert restored.axis_position(ColourAxis) == -1
     bound = NamedSourceBinding(alias="neurite").apply_loaded_payload(
         ImageMetadataPayload(loaded, restored),
         context,
     )
-    current = image_payload_metadata(bound)
-    assert current.source_channel_axis == -1
+    current = bound.metadata
+    assert current.axis_position(ColourAxis) == -1
     assert current.spatial_shape_yx(loaded) == (4, 5)
     assert current.source_spatial_domain == metadata.source_spatial_domain
     assert current.source_voxel_spacing == metadata.source_voxel_spacing

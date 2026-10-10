@@ -12,7 +12,7 @@ from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-from openhcs.desktop_installation import (
+from openhcs.desktop.installation import (
     DESKTOP_INSTALL_PROFILE,
     DesktopInstallerContract,
     DesktopPackageSourceOverrideVariable,

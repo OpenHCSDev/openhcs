@@ -49,9 +49,6 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_intensity_scale_for_dtype,
-    image_mask_for_data_domain,
-    image_payload_data,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -143,6 +140,7 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu 
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.core.axes import Axis, StackAxis
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts import ArtifactSpecCollection, ArtifactSpecRelation
@@ -551,12 +549,7 @@ class GlobalThresholdSourceSelection:
 
 def normalize_cellprofiler_image(image: RuntimeArrayData) -> np.ndarray:
     """Return an image in CellProfiler's normalized pixel-data convention."""
-    return image_payload_data(
-        normalize_cellprofiler_image_payload(
-            image,
-            dtype=np.float32,
-        )
-    )
+    return normalize_cellprofiler_image_payload( image, dtype=np.float32, ).data
 
 
 def unit_interval_scale_for_threshold_selection(
@@ -2560,7 +2553,7 @@ class _ThresholdEmbeddedMaskRuntimeParameter(KeywordRuntimeParameter):
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy(contract=ProcessingContract.PURE_2D)
 def threshold(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     mask: np.ndarray | None = None,
     threshold_scope: ThresholdScope = ThresholdScope.GLOBAL,
     threshold_method: ThresholdMethod = ThresholdMethod.OTSU,
@@ -2602,11 +2595,9 @@ def threshold(
         image,
         dtype=np.float32,
     )
-    image = np.asarray(image_payload_data(source_payload), dtype=np.float32)
-    metadata = image_payload_metadata(source_payload)
-    projected_mask = image_mask_for_data_domain(
-        explicit_mask=mask, source_payload=source_payload, data=image
-    )
+    image = np.asarray(source_payload.data, dtype=np.float32)
+    metadata = source_payload.metadata
+    projected_mask = source_payload.mask_for_data(image, mask=mask)
     mask = None if projected_mask is None else np.asarray(projected_mask, dtype=bool)
     proven_unit_interval_scale = unit_interval_scale_for_threshold_selection(
         image, metadata
@@ -2640,7 +2631,7 @@ def threshold(
         proven_unit_interval_scale=proven_unit_interval_scale,
     ).calculate()
     output_image = (
-        image_payload_metadata(source_payload)
+        source_payload.metadata
         .without_unit_interval_intensity_scale()
         .payload_with(threshold_result.mask.astype(np.float32), mask)
     )

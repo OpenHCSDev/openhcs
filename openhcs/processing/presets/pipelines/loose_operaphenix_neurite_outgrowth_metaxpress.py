@@ -7,7 +7,7 @@ CellProfiler-compatible segmentation and skeleton leaves while preserving the
 smaller MetaXpress-style public API and typed outputs.
 
 Use a complete Opera Phenix plate with its ``Index.xml`` through the native
-``Microscope.OPERAPHENIX`` handler. Source bindings are only needed here because
+``OperaPhenixHandler`` handler. Source bindings are only needed here because
 the selected TIFFs were copied away from that plate metadata.
 """
 

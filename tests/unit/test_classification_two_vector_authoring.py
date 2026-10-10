@@ -14,7 +14,7 @@ import pytest
 from openhcs.agent.dto.pipeline import FunctionSpecRef, FunctionStepAddRequest, FunctionStepSpec
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
 from openhcs.core.function_patterns import normalize_function_pattern
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.memory.decorators import numpy as numpy_function
@@ -318,7 +318,7 @@ def test_original_public_016_json_kwargs_reach_strict_020_callable_abi(clean, mo
         name="engineering_pair_classification", kwargs=kwargs,
     ))
     assert author.validate(ref).valid
-    document = PipelineDocumentAuthority.from_source(author.render_source(ref, clean=clean).source)
+    document = PipelineDocumentCodec.from_source(author.render_source(ref, clean=clean).source)
     invocation = next(normalize_function_pattern(document.pipeline_steps[0].func).iter_items())
     values = invocation.kwargs_dict
     assert values["threshold1_method"] is ClassificationThresholdMethod.CUSTOM
@@ -581,7 +581,7 @@ def test_paired_author_validate_render_parse_compile_and_original_runtime(
         )
     )
     assert author.validate(ref).valid
-    restored = PipelineDocumentAuthority.from_source(
+    restored = PipelineDocumentCodec.from_source(
         author.render_source(ref, clean=clean).source
     )
     invocation = next(

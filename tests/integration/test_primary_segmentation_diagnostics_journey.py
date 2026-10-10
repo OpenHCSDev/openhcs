@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 def _field(empty=False):
@@ -25,7 +26,6 @@ def _field(empty=False):
 )
 def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
     from openhcs.core.config import DtypeConfig
-    from openhcs.core.runtime_image_values import image_payload_data
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
     from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
@@ -72,7 +72,7 @@ def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
         dtype_config=DtypeConfig(),
     )
     diagnostics = PrimaryObjectDiagnosticPlanes(*planes)
-    np.testing.assert_array_equal(image_payload_data(original), image)
+    np.testing.assert_array_equal(original.data, image)
     np.testing.assert_array_equal(diagnostics.threshold_support.data, image > 0.2)
     np.testing.assert_array_equal(
         diagnostics.unedited_objects.data, objects.unedited_labels
@@ -107,7 +107,6 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         CompileInspectionInput,
         InProcessCompileInspectionGateway,
     )
-    from openhcs.constants import Microscope
     from openhcs.constants.input_source import InputSource
     from openhcs.core.artifacts import (
         ArtifactInputPlan,
@@ -123,10 +122,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     )
     from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-    from openhcs.core.pipeline_document import PipelineDocumentAuthority
-    from openhcs.core.runtime_image_values import (
-        image_payload_metadata,
-    )
+    from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.core.runtime_object_labels import object_label_dense_array
     from openhcs.core.source_bindings import (
         ComponentSelector,
@@ -225,9 +221,9 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
             "distance_to_dilate": 2,
         },
     )
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(
-            microscope=Microscope.SOURCE_BINDINGS,
+            dataset_source=SourceBindingsSource,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(
                     NamedSourceBinding(
@@ -250,8 +246,8 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         ),
         pipeline_steps=[primary, secondary],
     )
-    document = PipelineDocumentAuthority.from_source(
-        PipelineDocumentAuthority.render(document)
+    document = PipelineDocumentCodec.from_source(
+        PipelineDocumentCodec.render(document)
     )
     bundle = (
         InProcessCompileInspectionGateway()
@@ -342,7 +338,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
             record.data, options
         ).items
         np.testing.assert_array_equal(tifffile.imread(saved_path), plane.data)
-        metadata = image_payload_metadata(record.data)
+        metadata = record.data.metadata
         # Sidecars have their own runtime alias, retaining the same source
         # address and pixel contributors as the primary object payload.
         assert metadata.source_provenance.scalar_source_identity == (
@@ -383,7 +379,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         PlateFileRecord,
         PlateResultFileInventory,
     )
-    from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+    from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
     result_inventory = PlateResultFileInventory.from_handler_and_configured_output_root(
         plate_path=metadata_path.parent,

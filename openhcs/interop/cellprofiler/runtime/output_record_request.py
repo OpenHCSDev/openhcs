@@ -18,10 +18,7 @@ from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_plane_alignment import (
     SourcePlaneIdentitySequenceAlignment,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.interop.cellprofiler.runtime.invocation import (
@@ -184,7 +181,7 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
         if not specs:
             raise ValueError("Measurement source context requires declared artifacts.")
         artifact_values = tuple(self.declared_artifact_value(spec) for spec in specs)
-        metadata = tuple(image_payload_metadata(value) for value in artifact_values)
+        metadata = tuple(value.metadata for value in artifact_values)
         source_group_component = self.output_plan.group_component
         identity_policy = SourceImageSetIdentityPolicy(
             frozenset(
@@ -192,7 +189,7 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
             )
         )
         image_set_axes = tuple(
-            image_payload_metadata(value).source_provenance.image_set_axis(
+            value.metadata.source_provenance.image_set_axis(
                 identity_policy
             )
             for value in artifact_values
@@ -278,11 +275,9 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
         source_ref = self.output_plan.materialization_source()
         if source_ref is None or source_ref == self.output_plan.source_context_source():
             return None
-        return image_payload_metadata(
-            self.artifact_source_payload(
+        return (self.artifact_source_payload(
                 self.adapter.request.require_artifact_input_edge(source_ref)
-            )
-        )
+            )).metadata
 
     def object_label_output_domain_scope(self) -> ObjectLabelDomainScope | None:
         """Return the declared object-label output domain for this invocation."""

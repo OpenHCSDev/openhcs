@@ -65,13 +65,9 @@ def stack_runtime_slices(
 
 def runtime_slice_stack_geometry(slices: Sequence[Any]) -> ArrayGeometry:
     """Validate the geometry shared by deferred and concrete slice stacks."""
-    from openhcs.core.runtime_array_values import RuntimeArrayPayload
+    from openhcs.core.runtime_array_values import array_geometry
 
-    shapes = tuple(
-        tuple(value.shape) if isinstance(value, RuntimeArrayPayload)
-        else ArrayGeometry.require_from_value(value).shape
-        for value in slices
-    )
+    shapes = tuple(array_geometry(value).shape for value in slices)
     if not shapes:
         raise ValueError("Runtime-slice stacking requires at least one slice.")
     if any(shape != shapes[0] for shape in shapes[1:]):

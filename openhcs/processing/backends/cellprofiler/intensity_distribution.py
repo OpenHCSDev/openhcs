@@ -53,12 +53,7 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    image_mask_for_data_domain,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
     project_image_mask_to_data_domain,
-    with_image_payload_data,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -81,7 +76,7 @@ from openhcs.core.runtime_object_label_domains import (
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
-    RuntimeSliceProjectableValue,
+    RuntimeSliceIndexedValue,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.runtime_tabular_values import ColumnarRows
@@ -152,6 +147,9 @@ from openhcs.processing.backends.cellprofiler.zernike import (
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import ColourSampleAxisSpec
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 class IntensityDistributionHeatmapMeasurement(Enum):
@@ -283,7 +281,7 @@ class IntensityDistributionHeatmapObjectRelation(ArtifactSpecRelation):
 
 
 @dataclass(frozen=True, slots=True)
-class IntensityDistributionHeatmapRuntimeOutput(RuntimeSliceProjectableValue):
+class IntensityDistributionHeatmapRuntimeOutput(RuntimeSliceIndexedValue):
     """Runtime heatmap request in compiled image-output order."""
 
     group: IntensityDistributionHeatmapGroup
@@ -2453,7 +2451,7 @@ def _radial_distribution_arrays_from_bin_totals_numba(
     _IntensityDistributionHeatmapOutputsRuntimeParameter,
 )
 def measure_object_intensity_distribution(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     labels: ObjectLabelValue,
     bin_count: int = 4,
     wants_scaled: bool = True,
@@ -2483,7 +2481,7 @@ def measure_object_intensity_distribution(
         function_name="measure_object_intensity_distribution"
     )
     del center_choice
-    source_image_names = image_payload_metadata(image).source_image_names
+    source_image_names = image.metadata.source_image_names
     if len(source_image_names) != 1:
         raise ValueError(
             "MeasureObjectIntensityDistribution requires exactly one declared "
@@ -2493,12 +2491,9 @@ def measure_object_intensity_distribution(
     radial_backend = radial_distribution_backend(
         backend_provider=radial_distribution_backend_provider
     )
-    image_array = np.asarray(image_payload_data(image))
-    image_mask = image_payload_mask(image)
-    projected_mask = image_mask_for_data_domain(
-        source_payload=image,
-        data=image_array,
-    )
+    image_array = np.asarray(image.data)
+    image_mask = image.mask
+    projected_mask = image.mask_for_data(image_array)
     if image_mask is not None and projected_mask is None:
         raise ValueError(
             "MeasureObjectIntensityDistribution image mask must already match "
@@ -2562,19 +2557,16 @@ def _intensity_distribution_heatmap(
     """Render one CellProfiler radial-distribution heatmap."""
 
     group = request.group
-    source_names = image_payload_metadata(image).source_image_names
+    source_names = image.metadata.source_image_names
     if source_names != (group.source_image_name,):
         raise ValueError(
             "MeasureObjectIntensityDistribution heatmap source does not match "
             f"the active image payload: {group.source_image_name!r} not in "
             f"{source_names!r}."
         )
-    image_array = np.asarray(image_payload_data(image))
-    image_mask = image_payload_mask(image)
-    projected_mask = image_mask_for_data_domain(
-        source_payload=image,
-        data=image_array,
-    )
+    image_array = np.asarray(image.data)
+    image_mask = image.mask
+    projected_mask = image.mask_for_data(image_array)
     if image_mask is not None and projected_mask is None:
         raise ValueError(
             "MeasureObjectIntensityDistribution heatmap image mask must match "
@@ -2642,11 +2634,8 @@ def _intensity_distribution_heatmap(
         heatmap[rows, columns] = values
     colormap_name = group.colormap
     if colormap_name == "gray":
-        return with_image_payload_data(
-            image,
-            heatmap,
-            metadata=image_payload_metadata(image).without_source_channel_axis(),
-        )
+        return image.with_pixels(heatmap,
+            metadata=image.metadata.without_axis(ColourAxis),)
     if colormap_name == "Default":
         colormap_name = "viridis"
     import matplotlib
@@ -2656,11 +2645,8 @@ def _intensity_distribution_heatmap(
         :, :, :3
     ]
     rgb[labels == 0] = 0
-    return with_image_payload_data(
-        image,
-        rgb,
-        metadata=image_payload_metadata(image).replace_fields(source_channel_axis=-1),
-    )
+    return image.with_pixels(rgb,
+        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),)
 
 
 def intensity_distribution_object_domain(labels: object) -> tuple[int, ...]:

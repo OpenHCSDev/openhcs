@@ -1,5 +1,5 @@
 from __future__ import annotations
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 
 import ast
 import os
@@ -31,7 +31,7 @@ from benchmark.datasets.cache import (
     BenchmarkPathRootKind,
     resolve_benchmark_path_root,
 )
-from openhcs.constants import Backend, Microscope
+from openhcs.constants import Backend
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactType,
@@ -44,7 +44,6 @@ from openhcs.core.artifacts import (
     SpatialGridArtifactType,
 )
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -53,6 +52,7 @@ from openhcs.core.config import (
     MaterializationBackend,
     PipelineConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -82,7 +82,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.cellprofiler import align
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
@@ -96,6 +96,9 @@ from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.choice import AutoDetectedSource, DatasetSourceChoice
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 def _materialize_imported_sources(
@@ -137,7 +140,7 @@ def _execute_imported_cppipe_via_zmq(
     *,
     cppipe_path: Path,
     source_root: Path,
-    microscope: Microscope = Microscope.AUTO,
+    dataset_source: type[DatasetSourceChoice] = AutoDetectedSource,
     well_filter: tuple[str, ...] | int | None = None,
     materialize_runtime_artifacts: bool = True,
 ) -> tuple[
@@ -162,7 +165,7 @@ def _execute_imported_cppipe_via_zmq(
     global_config = GlobalPipelineConfig(
         num_workers=1,
         use_threading=False,
-        microscope=microscope,
+        dataset_source=dataset_source,
         materialize_runtime_artifacts=materialize_runtime_artifacts,
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
     )
@@ -194,13 +197,13 @@ def _execute_imported_cppipe_via_zmq(
         plate_id=source_root,
         execution_plate_id=execution_plate_path,
         selected_pipeline_path=cppipe_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
         ),
         global_config=global_config,
         config_params=config_params,
     )
-    assert submission.pipeline_code() == PipelineDocumentAuthority.render(
+    assert submission.pipeline_code() == PipelineDocumentCodec.render(
         submission.pipeline_document
     )
 
@@ -224,7 +227,7 @@ def _execute_imported_cppipe_via_zmq(
             plate_id=source_root,
             execution_plate_id=execution_plate_path,
             selected_pipeline_path=cppipe_path,
-            pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_document=PipelineDocumentCodec.from_values(
                 pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
             ),
             global_config=global_config,
@@ -352,13 +355,13 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
     global_config = GlobalPipelineConfig(
         num_workers=1,
         use_threading=False,
-        microscope=Microscope.SOURCE_BINDINGS,
+        dataset_source=SourceBindingsSource,
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
     )
     ensure_global_config_context(GlobalPipelineConfig, global_config)
     pipeline_config = replace_raw(
         PipelineConfig(
-            microscope=Microscope.SOURCE_BINDINGS,
+            dataset_source=SourceBindingsSource,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(
                     NamedSourceBinding(
@@ -392,13 +395,13 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
         plate_id=source_root,
         execution_plate_id=source_root,
         selected_pipeline_path=selected_pipeline_path,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
         ),
         global_config=global_config,
         config_params={"runtime_observation_export_path": str(observation_path)},
     )
-    assert submission.pipeline_code() == PipelineDocumentAuthority.render(
+    assert submission.pipeline_code() == PipelineDocumentCodec.render(
         submission.pipeline_document
     )
 
@@ -479,7 +482,7 @@ def test_bbbc021_cppipe_executes_named_channel_bindings_through_zmq(
         tmp_path,
         cppipe_path=cppipe_path,
         source_root=plate_path,
-        microscope=Microscope.SOURCE_BINDINGS,
+        dataset_source=SourceBindingsSource,
     )
 
     nuclei_records = _runtime_records(
@@ -519,7 +522,7 @@ def test_bbbc021_canonical_illum_cppipe_materializes_declared_images_through_zmq
         tmp_path,
         cppipe_path=cppipe_path,
         source_root=plate_path,
-        microscope=Microscope.SOURCE_BINDINGS,
+        dataset_source=SourceBindingsSource,
     )
 
     image_names = {path.name for path in export.exports.image_outputs}
@@ -555,7 +558,7 @@ def test_loadimages_cppipe_preserves_source_artifact_bindings_through_zmq(
         tmp_path,
         cppipe_path=cppipe_path,
         source_root=plate_path,
-        microscope=Microscope.IMAGEXPRESS,
+        dataset_source=ImageXpressHandler,
     )
 
     corrected_records = _runtime_records(

@@ -32,7 +32,6 @@ from benchmark.datasets.acquire import (
 from benchmark.datasets.registry import get_dataset_spec
 from benchmark.validation.layouts import ValidationCorpusLayoutStrategy
 from benchmark.validation.references import ValidationReferenceStrategy
-from openhcs.constants import Microscope
 from openhcs.core.config import LazySourceBindingsConfig, PipelineConfig
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -54,6 +53,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 class ValidationCorpusPreparationError(RuntimeError):
@@ -438,7 +438,7 @@ class ValidationCorpusPreparer:
             grouping_metadata_fields=config.grouping_metadata_fields,
         )
         pipeline_config = PipelineConfig(
-            microscope=Microscope.SOURCE_BINDINGS,
+            dataset_source=SourceBindingsSource,
             source_bindings_config=lazy_config,
         )
         path.write_text(

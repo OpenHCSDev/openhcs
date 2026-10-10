@@ -33,7 +33,6 @@ from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.constants.constants import Backend
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     CompilationDebugConfig,
     GlobalPipelineConfig,
     MaterializationBackend,
@@ -42,8 +41,9 @@ from openhcs.core.config import (
     VFSConfig,
     WellFilterConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.pipeline_document_fields import PipelineDocumentField
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactAxisExpectation,
@@ -583,7 +583,7 @@ def test_benchmark_submission_matches_pyqt_submission_payload() -> None:
 
     benchmark_submission = OpenHCSExecutionSubmission(
         plate_id=plate_id,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=steps
         ),
         global_config=global_config,

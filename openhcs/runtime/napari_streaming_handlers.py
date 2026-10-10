@@ -47,6 +47,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerNativeWindowGeometry,
     ViewerNativeWindowState,
 )
+from openhcs.core.axes import ColourAxis
 
 if TYPE_CHECKING:
     from qtpy.QtWidgets import QWidget
@@ -616,7 +617,7 @@ class NapariImagePayloadAxisLabelPolicy:
         spatial_axes = image_metadata.spatial_axes_yx(data)
         if spatial_axes is None:
             raise ValueError("Napari image payload requires two declared spatial axes.")
-        channel_axis = image_metadata.normalized_source_channel_axis(data)
+        channel_axis = image_metadata.axis_index(ColourAxis, data)
         return tuple(
             axis
             for axis in range(ndim)
@@ -995,7 +996,7 @@ class NapariImageLayerPresentationPolicy(ABC):
         image_metadata: ImagePayloadMetadata,
     ) -> NapariImageLayerPresentationPolicy:
         """Decode the declared channel layout into Napari's native interpretations."""
-        channel_axis = image_metadata.normalized_source_channel_axis(image_data)
+        channel_axis = image_metadata.axis_index(ColourAxis, image_data)
         if channel_axis is None:
             return NapariScalarImageLayerPresentationPolicy()
         shape = tuple(int(dimension) for dimension in np.shape(image_data))

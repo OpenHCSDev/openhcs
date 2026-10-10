@@ -58,11 +58,6 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadSliceProjector,
     image_intensity_scale_for_dtype,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-    image_payload_slice_context,
-    with_image_payload_data,
 )
 from openhcs.core.runtime_object_label_aggregation import DenseObjectLabelAggregation
 from openhcs.core.runtime_object_labels import (
@@ -81,7 +76,7 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimeSliceInvariantValue,
-    RuntimeSliceProjectableValue,
+    RuntimeSliceIndexedValue,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.runtime_tabular_values import ColumnarRows
@@ -165,6 +160,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
@@ -236,7 +232,7 @@ class ColocalizationThresholdMaskObjectRelation(ArtifactSpecRelation):
 
 
 @dataclass(frozen=True, slots=True)
-class ColocalizationThresholdMaskRuntimeOutput(RuntimeSliceProjectableValue):
+class ColocalizationThresholdMaskRuntimeOutput(RuntimeSliceIndexedValue):
     """Runtime mask request in compiled image-output order."""
 
     group: ColocalizationThresholdMaskGroup
@@ -1670,7 +1666,7 @@ class ColocalizationImagePairContext:
         """Return CellProfiler-style valid pixels for a two-image measurement."""
         first_pixels = image_data[channel_1]
         second_pixels = image_data[channel_2]
-        mask = image_payload_mask(image)
+        mask = image.mask
         if mask is None:
             if bool(np.all(np.isfinite(first_pixels))) and bool(
                 np.all(np.isfinite(second_pixels))
@@ -1678,7 +1674,7 @@ class ColocalizationImagePairContext:
                 return None
             return np.isfinite(first_pixels) & np.isfinite(second_pixels)
         valid = np.isfinite(first_pixels) & np.isfinite(second_pixels)
-        metadata = image_payload_metadata(image)
+        metadata = image.metadata
         if metadata.plane_axis is None:
             raise ValueError(
                 "MeasureColocalization masked image pairs require a declared "
@@ -1707,6 +1703,7 @@ class ColocalizationImagePairContext:
     def from_request(
         cls, image: object, *, channel_1: int, channel_2: int
     ) -> "ColocalizationImagePairContext":
+        image = ImagePayload.of(image)
         image_data = cls.measurement_pixels(image)
         image_float = np.asarray(image_data, dtype=np.float32)
         first_image = image_float[channel_1]
@@ -1731,12 +1728,12 @@ class ColocalizationImagePairContext:
     @staticmethod
     def measurement_pixels(image: object) -> np.ndarray:
         """Return stacked image pixels for colocalization measurement."""
-        image_data = image_payload_data(image)
+        image_data = ImagePayload.of(image).data
         if isinstance(image_data, AlignedImageStack):
             return np.stack(
                 tuple(
                     (
-                        np.asarray(image_payload_data(slice_payload))
+                        np.asarray(slice_payload.data)
                         for slice_payload in image_data.slices
                     )
                 ),
@@ -2239,6 +2236,7 @@ def _prepare_object_colocalization_context(
     image_pair_context: ColocalizationImagePairContext | None,
     object_label_context: ColocalizationObjectLabelContext | None,
 ) -> ObjectColocalizationRequestContext:
+    image = ImagePayload.of(image)
     if image_pair_context is None:
         image_pair_context = ColocalizationImagePairContext.from_request(
             image, channel_1=channel_1, channel_2=channel_2
@@ -2528,7 +2526,7 @@ def _colocalization_unit_interval_scale(
     image: object, channel_1: int, channel_2: int
 ) -> int | None:
     """Return a shared proof scale when both channels are exact unit interval."""
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
     first_scale = metadata.unit_interval_intensity_scale_for_source_plane(channel_1)
     second_scale = metadata.unit_interval_intensity_scale_for_source_plane(channel_2)
     if first_scale is None or second_scale is None:
@@ -2544,7 +2542,7 @@ def _colocalization_unit_interval_scale(
 @numpy(contract=ProcessingContract.FLEXIBLE)
 @runtime_bound_parameters(_ColocalizationThresholdMaskOutputsRuntimeParameter)
 def measure_colocalization(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     channel_1: int = 0,
     channel_2: int = 1,
     threshold_percent: float = 15.0,
@@ -2593,7 +2591,7 @@ def measure_colocalization(
         'Method for Costes thresholding' -> costes_method"""
     total_started_at = time.perf_counter()
     phase_started_at = time.perf_counter()
-    image_data = image_payload_data(image)
+    image_data = image.data
     if channel_1 >= image_data.shape[0] or channel_2 >= image_data.shape[0]:
         raise ValueError(
             f"Channel indices ({channel_1}, {channel_2}) out of range for image with {image_data.shape[0]} channels"
@@ -2626,9 +2624,9 @@ def measure_colocalization(
         function="measure_colocalization",
         scale_max=options.scale_max,
         source_plane_intensity_scales=(
-            image_payload_metadata(image).source_plane_intensity_scales
+            image.metadata.source_plane_intensity_scales
         ),
-        intensity_scale=image_payload_metadata(image).intensity_scale,
+        intensity_scale=image.metadata.intensity_scale,
         payload_type=type(image).__name__,
     )
     phase_started_at = time.perf_counter()
@@ -2695,7 +2693,7 @@ def _measure_colocalization_objects_core(
     )
     if not context.has_labels:
         return (
-            image_payload_metadata(context.image).project_channel_payload(
+            context.image.metadata.project_channel_payload(
                 context.image, context.image_data, context.channel_1
             ),
             _empty_object_colocalization_rows(
@@ -2705,7 +2703,7 @@ def _measure_colocalization_objects_core(
         )
     if not context.has_object_pixels:
         return (
-            image_payload_metadata(context.image).project_channel_payload(
+            context.image.metadata.project_channel_payload(
                 context.image, context.image_data, context.channel_1
             ),
             _empty_object_colocalization_rows(
@@ -2794,7 +2792,7 @@ def _measure_colocalization_objects_core(
         channel_2=context.channel_2,
     )
     return (
-        image_payload_metadata(context.image).project_channel_payload(
+        context.image.metadata.project_channel_payload(
             context.image, context.image_data, context.channel_1
         ),
         rows,
@@ -2812,7 +2810,7 @@ def _measure_colocalization_objects_core(
     _ColocalizationCostesThresholdBatchRuntimeParameter,
 )
 def measure_colocalization_objects(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     labels: ObjectLabelValue,
     measurement_scope: CellProfilerMeasurementTargetScope = CellProfilerMeasurementTargetScope.OBJECT,
     channel_1: int = 0,
@@ -2917,9 +2915,9 @@ def _colocalization_threshold_mask_canonical_output(
             "MeasureColocalization runtime mask outputs do not match the public "
             f"saved-mask groups: {runtime_groups!r} != {threshold_mask_groups!r}."
         )
-    image_data = np.asarray(image_payload_data(image))
+    image_data = np.asarray(image.data)
     if not threshold_mask_outputs:
-        return image_payload_metadata(image).project_channel_payload(
+        return image.metadata.project_channel_payload(
             image,
             image_data,
             fallback_channel_index,
@@ -2938,7 +2936,7 @@ def _colocalization_threshold_mask(
 ) -> RuntimeArrayData:
     """Apply CellProfiler's whole-image or per-object percentage threshold."""
 
-    image_data = np.asarray(image_payload_data(image))
+    image_data = np.asarray(image.data)
     if image_data.ndim < 3:
         raise ValueError(
             "MeasureColocalization saved masks require a composed channel image, "
@@ -2952,7 +2950,7 @@ def _colocalization_threshold_mask(
         )
     pixels = np.asarray(image_data[request.source_channel_index])
     valid_mask = np.isfinite(pixels)
-    payload_mask = image_payload_mask(image)
+    payload_mask = image.mask
     if payload_mask is not None:
         mask_array = np.asarray(payload_mask, dtype=bool)
         if mask_array.shape == image_data.shape:
@@ -2997,7 +2995,7 @@ def _colocalization_source_plane_output(
 ) -> RuntimeArrayData:
     """Attach one declared composed-image source plane to a derived output."""
 
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
     if metadata.plane_axis is None:
         return metadata.project_channel_payload(
             image,
@@ -3010,12 +3008,9 @@ def _colocalization_source_plane_output(
             "MeasureColocalization source channels require the declared "
             f"source-binding plane axis, got {metadata.plane_axis.value!r}."
         )
-    source_plane = image_payload_slice_context(
-        image,
-        image_data[source_channel_index],
-        source_channel_index,
-    )
-    return with_image_payload_data(source_plane, output_data)
+    source_plane = image.slice_payload(image_data[source_channel_index],
+        source_channel_index,)
+    return source_plane.with_pixels(output_data)
 
 
 @dataclass(frozen=True)
@@ -3079,7 +3074,7 @@ class ColocalizationCostesThresholdRequest:
         """Resolve Costes scale from image metadata, with dtype fallback."""
         if explicit_scale_max is not None:
             return int(explicit_scale_max)
-        metadata = image_payload_metadata(image)
+        metadata = image.metadata
         metadata_scales = tuple(
             (
                 scale
@@ -3110,7 +3105,7 @@ class ColocalizationCostesThresholdRequest:
         image_data = (
             image_pair_context.image_data
             if image_pair_context is not None
-            else image_payload_data(request.image)
+            else request.image.data
         )
         channel_1 = int(kwargs.get("channel_1", 0))
         channel_2 = int(kwargs.get("channel_2", 1))
@@ -3185,7 +3180,7 @@ class ColocalizationCostesThresholdBatch(RuntimeSliceInvariantValue):
     ) -> ColocalizationImagePairContext:
         """Return the batch-local resolved image-pair context."""
         kwargs = request.kwargs
-        image_data = image_payload_data(request.image)
+        image_data = ImagePayload.of(request.image).data
         channel_1 = int(kwargs.get("channel_1", 0))
         channel_2 = int(kwargs.get("channel_2", 1))
         key = ColocalizationImagePairCacheKey(

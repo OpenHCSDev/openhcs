@@ -5,7 +5,6 @@ import pytest
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.microscopes.bioformats_adapter import (
-    BioFormatsDatasetAmbiguityError,
     BioFormatsImage,
     BioFormatsPixels,
     BioFormatsPlane,
@@ -14,6 +13,7 @@ from openhcs.microscopes.bioformats_adapter import (
     BioFormatsWell,
     BioFormatsWellSample,
 )
+from openhcs.core.dataset_sources.plane_stores import PlaneStoreAmbiguityError
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -196,7 +196,7 @@ def test_one_container_rejects_multiple_embedded_plates_actionably(
     )
 
     with pytest.raises(
-        BioFormatsDatasetAmbiguityError,
+        PlaneStoreAmbiguityError,
         match=r"Plate:first.*Plate:second.*one embedded dataset identity.*Source bindings",
     ):
         metadata.source_dataset()

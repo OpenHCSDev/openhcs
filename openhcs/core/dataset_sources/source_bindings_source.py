@@ -1,0 +1,203 @@
+"""Dataset source for image folders described by source-binding declarations."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Union
+
+from polystore.filemanager import FileManager
+
+from openhcs.constants.constants import Backend
+from openhcs.core.source_bindings import (
+    SourceBindingsConfig,
+    source_bindings_defaults_to_base,
+)
+from openhcs.core.virtual_workspace_metadata import FIELDS, METADATA_CONFIG
+from openhcs.core.dataset_sources.source import DatasetSource
+from openhcs.core.dataset_sources.source import DeclaredFileSource
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
+
+
+class SourceBindingsSource(DeclaredFileSource, DatasetSource):
+    """Handler for arbitrary image folders using source-binding declarations."""
+
+    source_name = "source_bindings"
+    metadata_handler_class = OpenHCSMetadataHandler
+
+    @classmethod
+    def projects_declared_source_bindings(cls) -> bool:
+        """Declare that this handler owns generic source-binding projection."""
+
+        return True
+
+
+    @classmethod
+    def source_selection_guidance(cls) -> str:
+        """Explain when declarations, rather than a vendor/store owner, ingest files."""
+
+        return (
+            "Use for arbitrary ordinary image files whose selection, semantic aliases, "
+            "and filename metadata are declared by SourceBindingsConfig. Parser-like "
+            "vendor filenames may still use this fallback when the format-specific "
+            "owner declares its complete metadata contract mandatory and that contract "
+            "is unsatisfied. Do not replace a valid native layout or supported "
+            "structured container with this fallback."
+        )
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        filemanager: FileManager,
+        pattern_format: str | None = None,
+        source_bindings_config: SourceBindingsConfig | None = None,
+    ) -> "SourceBindingsSource":
+        if source_bindings_config is None:
+            raise ValueError(
+                "SourceBindingsSource requires SourceBindingsConfig declarations."
+            )
+        return cls(
+            filemanager,
+            source_bindings_config=source_bindings_config,
+            pattern_format=pattern_format,
+        )
+
+    def __init__(
+        self,
+        filemanager: FileManager,
+        source_bindings_config: SourceBindingsConfig,
+        pattern_format: str | None = None,
+    ):
+        source_bindings_config = source_bindings_defaults_to_base(
+            source_bindings_config
+        )
+        if source_bindings_config.is_empty:
+            raise ValueError(
+                "SourceBindingsSource requires non-empty SourceBindingsConfig "
+                "declarations."
+            )
+        parser = SourceSchemaFilenameParser(filemanager, pattern_format)
+        super().__init__(
+            parser=parser,
+            metadata_handler=OpenHCSMetadataHandler(filemanager),
+        )
+        from openhcs.core.source_binding_workspace import (
+            SourceBindingWorkspaceProjector,
+        )
+
+        self._source_bindings_config = source_bindings_config
+        self._projector = SourceBindingWorkspaceProjector(
+            source_bindings=source_bindings_config,
+            parser=parser,
+        )
+
+    @property
+    def root_dir(self) -> str:
+        return FIELDS.DEFAULT_SUBDIRECTORY
+
+
+
+    @property
+    def compatible_backends(self) -> list[Backend]:
+        return [Backend.DISK]
+
+    @classmethod
+    def detect(
+        cls,
+        plate_folder: Path,
+        filemanager: FileManager,
+        source_bindings_config: SourceBindingsConfig | None = None,
+    ) -> bool:
+        del plate_folder, filemanager, source_bindings_config
+        return False
+
+    def _replay_persisted_workspace(
+        self,
+        plate_root: Path,
+        filemanager: FileManager,
+    ) -> bool:
+        """Replay a persisted projection for a workspace without physical sources.
+
+        A materialized workspace owns metadata and virtual aliases, not source
+        files; rebuilding it would resolve an empty declared universe. A plate
+        root that still lists physical sources must always rebuild so new files
+        and refreshed imported tables are picked up.
+        """
+        if self._list_source_files(plate_root, filemanager):
+            return False
+        metadata_path = plate_root / OpenHCSMetadataHandler.METADATA_FILENAME
+        if not filemanager.exists(str(metadata_path), Backend.DISK.value):
+            return False
+        from openhcs.core.source_workspace_projection import (
+            VirtualWorkspaceSourceProjection,
+        )
+
+        metadata = self.metadata_handler.source_workspace_metadata_document(plate_root)
+        workspace_metadata = self.metadata_handler.workspace_mapping_metadata(
+            plate_root
+        )
+        if workspace_metadata is None:
+            return False
+        if workspace_metadata.get(FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY) != (
+            self._source_bindings_config.declaration_identity()
+        ):
+            return False
+        if (
+            VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
+                plate_root,
+                metadata,
+            )
+            is None
+        ):
+            return False
+        self._register_virtual_workspace_backend(plate_root, filemanager)
+        return True
+
+    def initialize_workspace(
+        self,
+        plate_path: Union[str, Path],
+        filemanager: FileManager,
+    ) -> Path:
+        """Rebuild declared sources on explicit initialization.
+
+        This handler resolves current declarations and physical source files.
+        Replaying persisted projection metadata belongs to the OpenHCS handler.
+        """
+        from openhcs.core.source_binding_workspace import (
+            materialize_source_binding_workspace,
+        )
+
+        plate_root = Path(plate_path)
+        self.plate_folder = plate_root
+        if self._replay_persisted_workspace(plate_root, filemanager):
+            return plate_root
+        materialize_source_binding_workspace(
+            plate_root,
+            plate_root,
+            self._source_bindings_config,
+            filemanager=filemanager,
+            source_backend=Backend.DISK,
+            workspace_backend=Backend.DISK,
+            source_files=self._list_source_files(plate_root, filemanager),
+            parser=self.parser,
+        )
+        self.metadata_handler = OpenHCSMetadataHandler(filemanager)
+        self._register_virtual_workspace_backend(plate_root, filemanager)
+        return plate_root
+
+    def _list_source_files(
+        self,
+        plate_path: Path,
+        filemanager: FileManager,
+    ) -> tuple[Path, ...]:
+        managed_paths = METADATA_CONFIG.managed_paths(plate_path)
+        return tuple(
+            Path(path)
+            for path in filemanager.list_files(
+                plate_path,
+                Backend.DISK.value,
+                recursive=True,
+            )
+            if Path(path) not in managed_paths
+        )

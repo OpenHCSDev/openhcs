@@ -38,7 +38,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceProjectionRole,
@@ -233,7 +232,7 @@ def test_neighbor_invocation_image_uses_declared_object_label_domain() -> None:
         runtime_kwargs={"labels": labels, "neighbor_labels": labels},
     )
 
-    assert np.shape(image_payload_data(projected.payload)) == (2, 3)
+    assert np.shape(projected.payload.data) == (2, 3)
     assert projected.source_image_name is None
     assert projected.source_aliases == ()
     assert projected.plane_projection == labels.declared_plane_projection()

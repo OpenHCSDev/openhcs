@@ -188,7 +188,7 @@ class ZMQCompilationRequest:
         first_context = next(iter(compiled_contexts.values()))
         output_plate_root = first_context.output_plate_root
         auto_add_output_plate = bool(
-            first_context.auto_add_output_plate_to_plate_manager
+            self.resolved_config.auto_add_output_plate_to_plate_manager
         )
         logger.info(
             "[%s] Captured auto_add_output_plate=%s output_plate_root=%s",

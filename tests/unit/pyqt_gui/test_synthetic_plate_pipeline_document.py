@@ -3,8 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from openhcs.core.config import PipelineConfig
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.pyqt_gui.main import OpenHCSMainWindow
+from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
     PipelineEditorCodeWorkflow,
 )
@@ -39,6 +40,8 @@ class _SyntheticPlateGenerationHarness:
 
 
 class _PipelineEditorHarness:
+    load_pipeline_from_file = PipelineEditorWidget.load_pipeline_from_file
+
     def __init__(self) -> None:
         self.current_plate = ""
         self.plate_manager = _PlateManagerHarness()
@@ -123,7 +126,7 @@ def test_synthetic_plate_generation_emits_complete_pipeline_document(
     assert len(harness.plate_generated.emissions) == 1
     output_dir, pipeline_path = harness.plate_generated.emissions[0]
     assert output_dir == str(tmp_path)
-    document = PipelineDocumentAuthority.from_source(Path(pipeline_path).read_text())
+    document = PipelineDocumentCodec.from_source(Path(pipeline_path).read_text())
     assert isinstance(document.pipeline_config, PipelineConfig)
     assert len(document.pipeline_steps) == 8
 
@@ -154,7 +157,7 @@ def test_main_window_loads_emitted_synthetic_pipeline_document(
     assert editor.applied is True
     assert isinstance(editor.plate_manager.plate_configs[plate_path], PipelineConfig)
     assert isinstance(
-        PipelineDocumentAuthority.from_source(
+        PipelineDocumentCodec.from_source(
             Path(synthetic_plate_pipeline.__file__).read_text()
         ).pipeline_config,
         PipelineConfig,

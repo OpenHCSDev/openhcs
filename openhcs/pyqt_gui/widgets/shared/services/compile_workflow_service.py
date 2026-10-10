@@ -16,7 +16,7 @@ from zmqruntime.execution import (
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.pyqt_gui.widgets.shared.services.batch_context import (
     BatchWorkflowContext,
 )
@@ -75,7 +75,7 @@ class PlatePipelineRequest(PlateExecutionIdentity):
             plate_id=self.scope_id,
             execution_plate_id=self.execution_plate_path,
             selected_pipeline_path=self.selected_pipeline_path,
-            pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_document=PipelineDocumentCodec.from_values(
                 pipeline_config=self.pipeline_config, pipeline_steps=transport_pipeline
             ),
             global_config=global_config,

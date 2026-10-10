@@ -92,6 +92,8 @@ from openhcs.runtime.viewer_display import NapariSlots
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 
 ALL_STACKED = {name: "stack" for name in STREAM_AXES.names()}
+from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.payload_axes import PayloadAxes
 
 
 def _component_name_metadata(payload, context="test component metadata"):
@@ -1435,7 +1437,7 @@ def test_napari_layer_update_authority_marks_color_images_as_rgb():
         data=image,
         layer_kwargs=NapariImageLayerPresentationPolicy.for_payload(
             image,
-            ImagePayloadMetadata(source_channel_axis=-1),
+            ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)),
         ).layer_kwargs("green"),
     )
 
@@ -1448,7 +1450,7 @@ def test_napari_image_presentation_uses_payload_local_color_axis():
 
     layer_kwargs = NapariImageLayerPresentationPolicy.for_payload(
         image_payload,
-        ImagePayloadMetadata(source_channel_axis=2),
+        ImagePayloadMetadata(axes=PayloadAxes.colour_samples(2)),
     ).layer_kwargs("green")
 
     assert layer_kwargs == {"blending": "additive", "rgb": True}
@@ -1475,7 +1477,7 @@ def test_napari_image_display_stacks_sites_without_rebasing_payload_color_axis()
                 _layer_item(
                     {"site": site},
                     data=np.full((16, 16, 3), site, dtype=np.uint8),
-                    image_metadata=ImagePayloadMetadata(source_channel_axis=2),
+                    image_metadata=ImagePayloadMetadata(axes=PayloadAxes.colour_samples(2)),
                 )
                 for site in (1, 2)
             ],
@@ -1720,7 +1722,7 @@ def test_napari_display_pipeline_rejects_unbound_payload_local_image_axes():
             ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
         )
     color_stack_metadata = ImagePayloadMetadata(
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     )
     with pytest.raises(ValueError, match="component-axis binding"):
@@ -1730,7 +1732,7 @@ def test_napari_display_pipeline_rejects_unbound_payload_local_image_axes():
     )
     assert (
         policy.axis_labels(
-            np.zeros((16, 16, 3)), ImagePayloadMetadata(source_channel_axis=-1)
+            np.zeros((16, 16, 3)), ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1))
         )
         == ()
     )
@@ -4629,7 +4631,7 @@ def test_napari_component_display_coordinator_splits_declared_image_layouts():
         (
             np.zeros((4, 16, 16, 3)),
             ImagePayloadMetadata(
-                source_channel_axis=-1,
+                axes=PayloadAxes.colour_samples(-1),
                 plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
             ),
         ),
@@ -4724,7 +4726,7 @@ def test_napari_component_display_coordinator_preserves_declared_singleton_stack
                 stream_layer_data_type=StreamingDataType.IMAGE,
             ),
             image_metadata=ImagePayloadMetadata(
-                source_channel_axis=-1,
+                axes=PayloadAxes.colour_samples(-1),
                 plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
             ),
             plane_component_domain=ViewerComponentValueDomainPayload(()),

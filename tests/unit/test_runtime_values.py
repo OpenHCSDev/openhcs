@@ -29,10 +29,6 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadataCompositionMode,
     ImageUnitIntervalIntensityMetadata,
     MaskedImagePayload,
-    image_mask_for_data_domain,
-    image_payload_data,
-    image_payload_metadata,
-    normalize_image_payload_intensity,
 )
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_array_values import RuntimeArrayPayload, runtime_array_operand
@@ -99,9 +95,9 @@ from openhcs.core.runtime_spatial_grid import (
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_slice_projection import (
     RuntimeProjectionSourceIdentityRequest,
-    RuntimeProjectionSourceIdentityRequirement,
+    OptionalSourceIdentity,
+    RequiredSourceComponentMetadata,
     RuntimeSliceProjection,
-    RuntimeSliceProjectionStrategy,
 )
 from openhcs.core.runtime_spatial_grid import (
     SpatialGrid,
@@ -121,9 +117,6 @@ from openhcs.core.source_metadata import (
     SourceVoxelSpacing,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.projected_image_output import (
-    DefaultImageOutputSourceContextStrategy,
-)
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
 )
@@ -139,6 +132,9 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     Pure2DAuxiliaryOutputAggregator,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 def test_object_label_set_is_a_runtime_array_payload() -> None:
@@ -1137,7 +1133,7 @@ def test_empty_sparse_ijv_stack_preserves_runtime_slice_count() -> None:
     )
 
     projected_items = (
-        RuntimeProjectionSourceIdentityRequirement.OPTIONAL
+        OptionalSourceIdentity
     ).project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=aggregated,
@@ -1428,7 +1424,7 @@ def test_composed_image_metadata_preserves_single_channel_source_context() -> No
 def test_composed_image_metadata_preserves_declared_source_channel_axis() -> None:
     first = ImagePayloadMetadata(
         source_component_metadata={"channel": "1"},
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s001_w1_z001_t001.JPG",),
             component_metadata=({"site": "1"},),
@@ -1436,7 +1432,7 @@ def test_composed_image_metadata_preserves_declared_source_channel_axis() -> Non
     ).payload_with(np.zeros((4, 5, 3), dtype=np.float32), None)
     second = ImagePayloadMetadata(
         source_component_metadata={"channel": "1"},
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s002_w1_z001_t001.JPG",),
             component_metadata=({"site": "2"},),
@@ -1445,7 +1441,7 @@ def test_composed_image_metadata_preserves_declared_source_channel_axis() -> Non
 
     metadata = ImagePayloadMetadata.compose((first, second))
 
-    assert metadata.source_channel_axis == 3
+    assert metadata.axis_position(ColourAxis) == 3
     assert dict(metadata.source_component_metadata) == {"channel": "1"}
     assert tuple(
         dict(item)
@@ -1492,12 +1488,12 @@ def test_collapse_leading_plane_axis_keeps_common_identity_and_contributors() ->
 
 def test_source_channel_axis_is_resolved_only_from_declaration() -> None:
     payload = ImagePayloadMetadata(
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
     ).payload_with(np.zeros((4, 5, 3), dtype=np.float32), None)
 
-    metadata = image_payload_metadata(payload)
+    metadata = payload.metadata
 
-    assert metadata.normalized_source_channel_axis(payload) == 2
+    assert metadata.axis_index(ColourAxis, payload) == 2
 
 
 def test_source_channel_axis_is_absent_unless_declared() -> None:
@@ -1508,9 +1504,9 @@ def test_source_channel_axis_is_absent_unless_declared() -> None:
         ),
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
-    metadata = image_payload_metadata(payload)
-    assert metadata.source_channel_axis is None
-    assert metadata.normalized_source_channel_axis(payload) is None
+    metadata = payload.metadata
+    assert metadata.axis_position(ColourAxis) is None
+    assert metadata.axis_index(ColourAxis, payload) is None
 
 
 def test_source_context_preserves_target_payload_channel_axis_domain() -> None:
@@ -1518,21 +1514,21 @@ def test_source_context_preserves_target_payload_channel_axis_domain() -> None:
         source_path="/input/A01_s001_color.tif",
         source_component_metadata={"well": "A01", "site": "1"},
         source_image_names=("OrigColor",),
-        source_channel_axis=3,
+        axes=PayloadAxes.colour_samples(3),
     ).payload_with(np.zeros((2, 4, 5, 3), dtype=np.float32), None)
     target = ImagePayloadMetadata(
-        source_channel_axis=4,
+        axes=PayloadAxes.colour_samples(4),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.zeros((1, 2, 4, 5, 3), dtype=np.float32), None)
 
     contextualized = (
-        image_payload_metadata(target)
-        .with_source_context_from(image_payload_metadata(source))
+        target.metadata
+        .with_source_context_from(source.metadata)
         .attach_source_context_to(target)
     )
 
-    metadata = image_payload_metadata(contextualized)
-    assert metadata.normalized_source_channel_axis(contextualized) == 4
+    metadata = contextualized.metadata
+    assert metadata.axis_index(ColourAxis, contextualized) == 4
     assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert metadata.source_path == "/input/A01_s001_color.tif"
     assert dict(metadata.source_component_metadata or {}) == {
@@ -1745,7 +1741,7 @@ def test_object_label_payload_from_composed_source_image_keeps_site_axis_metadat
         ).payload_with(np.ones((4, 5), dtype=np.float32), None),
     )
     image = ImagePayloadMetadata.compose(source_slices).payload_with(
-        np.stack(tuple(image_payload_data(payload) for payload in source_slices)),
+        np.stack(tuple(payload.data for payload in source_slices)),
         None,
     )
     labels = np.ones((2, 4, 5), dtype=np.int32)
@@ -1879,7 +1875,7 @@ def test_source_image_metadata_does_not_guess_plane_axis_from_paths() -> None:
         ),
     )
 
-    assert image_payload_metadata(image).plane_axis is None
+    assert image.metadata.plane_axis is None
 
 
 def test_source_image_metadata_does_not_guess_axis_from_channel_components() -> None:
@@ -1895,7 +1891,7 @@ def test_source_image_metadata_does_not_guess_axis_from_channel_components() -> 
         ),
     )
 
-    assert image_payload_metadata(image).plane_axis is None
+    assert image.metadata.plane_axis is None
 
 
 def test_source_image_metadata_preserves_explicit_runtime_slice_axis() -> None:
@@ -1918,7 +1914,7 @@ def test_source_image_metadata_preserves_explicit_runtime_slice_axis() -> None:
         )
     )
 
-    assert image_payload_metadata(image).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert image.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     payload = SourceImageObjectLabelBuildRequest(
         image=image,
         labels=labels,
@@ -2186,7 +2182,7 @@ def test_source_image_loading_semantics_attaches_component_metadata() -> None:
         ),
     )
 
-    metadata = image_payload_metadata(payload)
+    metadata = payload.metadata
     assert metadata.source_path == "01_POS002_D.TIF"
     assert dict(metadata.source_component_metadata) == {
         "well": "01",
@@ -2308,13 +2304,13 @@ def test_declared_source_image_projection_selects_pixels_and_metadata_together()
         plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
     ).payload_with(planes, None)
 
-    projected = image_payload_metadata(payload).project_declared_source_image(
+    projected = payload.metadata.project_declared_source_image(
         payload,
         "Green",
     )
 
-    np.testing.assert_array_equal(image_payload_data(projected), planes[1])
-    metadata = image_payload_metadata(projected)
+    np.testing.assert_array_equal(projected.data, planes[1])
+    metadata = projected.metadata
     assert metadata.plane_axis is None
     assert metadata.source_image_names == ("Green",)
     assert metadata.source_path == "green.tif"
@@ -2326,7 +2322,7 @@ def test_declared_source_pixel_channel_axis_owns_source_spatial_domain() -> None
         data=image,
         metadata=ImagePayloadMetadata(
             source_dtype="uint8",
-            source_channel_axis=-1,
+            axes=PayloadAxes.colour_samples(-1),
             source_spatial_domain=SourceSpatialDomain(
                 origin_yx=(0, 0),
                 source_shape_yx=(5, 3),
@@ -2343,8 +2339,8 @@ def test_declared_source_pixel_channel_axis_owns_source_spatial_domain() -> None
         ImagePayloadSourceMetadataContext(SourceImageIdentity("color.tif")),
     )
 
-    metadata = image_payload_metadata(bound)
-    assert metadata.source_channel_axis == -1
+    metadata = bound.metadata
+    assert metadata.axis_position(ColourAxis) == -1
     assert metadata.source_spatial_shape_yx == (4, 5)
 
 
@@ -2354,7 +2350,7 @@ def test_object_label_source_image_semantics_treats_rgb_image_as_label_plane() -
     image[2:4, 3:5] = (0, 255, 0)
     source = ImageMetadataPayload(
         image,
-        ImagePayloadMetadata(source_channel_axis=-1),
+        ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)),
     )
 
     payload = NamedSourceBinding(
@@ -2368,11 +2364,11 @@ def test_object_label_source_image_semantics_treats_rgb_image_as_label_plane() -
         ImagePayloadSourceMetadataContext(SourceImageIdentity("objects.png")),
     )
 
-    labels = image_payload_data(payload)
+    labels = payload.data
     assert labels.shape == (4, 5)
     assert labels.dtype == np.int32
     assert set(np.unique(labels)) == {0, 1, 2}
-    assert image_payload_metadata(payload).source_path == "objects.png"
+    assert payload.metadata.source_path == "objects.png"
 
 
 def test_source_file_pixel_semantics_declare_ingestion_channel_axis(
@@ -2393,7 +2389,7 @@ def test_source_file_pixel_semantics_declare_ingestion_channel_axis(
         ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path))),
     )
 
-    assert image_payload_metadata(payload).source_channel_axis == -1
+    assert payload.metadata.axis_position(ColourAxis) == -1
 
 
 def test_source_file_pixel_semantics_fill_missing_projected_channel_axis(
@@ -2412,7 +2408,7 @@ def test_source_file_pixel_semantics_fill_missing_projected_channel_axis(
         SourceImageIdentity(str(path))
     ).metadata(projected)
 
-    assert metadata.source_channel_axis == -1
+    assert metadata.axis_position(ColourAxis) == -1
     assert metadata.source_image_names == ("Color",)
 
 
@@ -2433,7 +2429,7 @@ def test_source_file_pixel_semantics_allow_monochrome_without_declared_channel_a
         ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path))),
     )
 
-    assert image_payload_metadata(payload).source_channel_axis is None
+    assert payload.metadata.axis_position(ColourAxis) is None
 
 
 def test_object_label_set_replacement_preserves_sparse_ijv_representation() -> None:
@@ -2586,7 +2582,7 @@ def test_runtime_projection_requirement_projects_singleton_object_label_stack() 
     )
 
     (item,) = (
-        RuntimeProjectionSourceIdentityRequirement.OPTIONAL
+        OptionalSourceIdentity
     ).project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload,
@@ -2623,7 +2619,7 @@ def test_runtime_projection_requirement_tracks_multi_plane_runtime_coordinates()
     )
 
     first, second = (
-        RuntimeProjectionSourceIdentityRequirement.OPTIONAL
+        OptionalSourceIdentity
     ).project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload,
@@ -2668,7 +2664,7 @@ def test_runtime_projection_does_not_expand_indexed_scalar_source_metadata() -> 
     ).payload_with(np.arange(12, dtype=np.uint16).reshape(3, 2, 2), None)
 
     projected = (
-        RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA
+        RequiredSourceComponentMetadata
     ).project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload,
@@ -2695,7 +2691,7 @@ def test_runtime_projection_keeps_unindexed_scalar_volume_as_one_payload() -> No
     ).payload_with(np.arange(8, dtype=np.uint16).reshape(2, 2, 2), None)
 
     (projected,) = (
-        RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA
+        RequiredSourceComponentMetadata
     ).project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload,
@@ -2905,8 +2901,8 @@ def test_group_scoped_artifact_consumes_singleton_payload_axis() -> None:
         axis_id="A01",
     )
 
-    assert image_payload_data(value.data).shape == (4, 5)
-    assert image_payload_metadata(value.data).plane_axis is None
+    assert value.data.data.shape == (4, 5)
+    assert value.data.metadata.plane_axis is None
 
 
 def test_group_scoped_artifact_rejects_multi_plane_payload_axis() -> None:
@@ -2942,9 +2938,9 @@ def test_group_scoped_stack_artifact_preserves_declared_payload_axis() -> None:
         axis_id="A01",
     )
 
-    assert image_payload_data(value.data).shape == (2, 4, 5)
+    assert value.data.data.shape == (2, 4, 5)
     assert (
-        image_payload_metadata(value.data).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+        value.data.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     )
 
 
@@ -2999,8 +2995,8 @@ def test_grouped_scalar_artifact_records_compose_one_runtime_axis() -> None:
 
     composed = RuntimeValue.compose(records)
 
-    assert image_payload_data(composed).shape == (2, 4, 5)
-    assert image_payload_metadata(composed).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert composed.data.shape == (2, 4, 5)
+    assert composed.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_normalize_artifact_value_accepts_dataclass_measurement_rows():
@@ -3291,7 +3287,7 @@ def test_slice_aligned_spatial_grid_preserves_nominal_value_sequence():
     assert value.artifact_type is SpatialGridArtifactType
     assert isinstance(runtime_grids, RuntimeSliceAlignedValues)
     assert runtime_grids.slice_count == 2
-    assert [runtime_grids.value_for_slice(index).x_origin for index in range(2)] == [
+    assert [runtime_grids.value_at(index).x_origin for index in range(2)] == [
         1.0,
         2.0,
     ]
@@ -3320,10 +3316,10 @@ def test_spatial_grid_normalizes_pure_2d_sequence_from_canonical_mappings():
 
     assert isinstance(value.data, RuntimeSliceAlignedValues)
     assert [
-        value.data.value_for_slice(slice_index).name for slice_index in range(2)
+        value.data.value_at(slice_index).name for slice_index in range(2)
     ] == ["Grid", "Grid"]
     assert [
-        value.data.value_for_slice(slice_index).x_origin for slice_index in range(2)
+        value.data.value_at(slice_index).x_origin for slice_index in range(2)
     ] == [1.0, 2.0]
     assert [mapping["x_origin"] for mapping in value.materialization_payload()] == [
         1.0,
@@ -3399,8 +3395,8 @@ def test_normalize_image_metadata_payload_applies_declared_identity():
     )
 
     assert value.artifact_type is ImageArtifactType
-    assert image_payload_data(value.data) is image
-    metadata = image_payload_metadata(value.data)
+    assert value.data.data is image
+    metadata = value.data.metadata
     assert metadata.source_image_names == ("DNA",)
     assert metadata.source_provenance.represented_source_image_names == (
         "DNA",
@@ -3480,7 +3476,7 @@ def test_derived_image_payload_context_rejects_undeclared_mask_axis_reduction() 
     source = MaskedImagePayload(data=np.stack((image, image)), mask=mask)
 
     with pytest.raises(ValueError, match="Mask shape"):
-        image_payload_metadata(source).derive_payload(source, image)
+        source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(image))
 
 
 def test_default_image_output_context_preserves_explicit_intensity_proof_invalidation() -> (
@@ -3499,13 +3495,9 @@ def test_default_image_output_context_preserves_explicit_intensity_proof_invalid
         .payload_with(np.ones((4, 5), dtype=np.float32))
     )
 
-    result = DefaultImageOutputSourceContextStrategy().contextualize(
-        source,
-        output,
-        None,
-    )
+    result = source.contextualize_image_output(output, None)
 
-    result_metadata = image_payload_metadata(result)
+    result_metadata = result.metadata
     assert result_metadata.unit_interval_intensity == (
         ImageUnitIntervalIntensityMetadata()
     )
@@ -3524,13 +3516,9 @@ def test_default_image_output_context_inherits_unspecified_intensity_proof() -> 
         np.ones((4, 5), dtype=np.float32)
     )
 
-    result = DefaultImageOutputSourceContextStrategy().contextualize(
-        source,
-        output,
-        None,
-    )
+    result = source.contextualize_image_output(output, None)
 
-    result_metadata = image_payload_metadata(result)
+    result_metadata = result.metadata
     assert result_metadata.unit_interval_intensity == (
         ImageUnitIntervalIntensityMetadata(scale=255)
     )
@@ -3547,7 +3535,7 @@ def test_derived_image_payload_context_preserves_declared_resized_spatial_domain
         )
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
     output = (
-        image_payload_metadata(source)
+        source.metadata
         .with_spatial_resize((4, 15))
         .payload_with(
             np.ones((4, 15), dtype=np.float32),
@@ -3555,9 +3543,9 @@ def test_derived_image_payload_context_preserves_declared_resized_spatial_domain
         )
     )
 
-    result = image_payload_metadata(source).derive_payload(source, output)
+    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
 
-    assert image_payload_metadata(result).source_spatial_domain == SourceSpatialDomain(
+    assert result.metadata.source_spatial_domain == SourceSpatialDomain(
         origin_yx=(0, 0),
         source_shape_yx=(4, 15),
     )
@@ -3586,9 +3574,9 @@ def test_derived_image_payload_context_merges_source_provenance_into_output_meta
         metadata=ImagePayloadMetadata(source_dtype="float32"),
     )
 
-    result = image_payload_metadata(source).derive_payload(source, output)
+    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
 
-    result_metadata = image_payload_metadata(result)
+    result_metadata = result.metadata
     assert result_metadata.source_dtype == "float32"
     assert result_metadata.source_image_provenance_planes.paths == (
         "/input/A01_s001_w1_z001_t001.tif",
@@ -3614,7 +3602,7 @@ def test_derived_image_payload_context_preserves_explicit_channel_axis_removal()
         data=np.zeros((1, 4, 5, 3), dtype=np.float32),
         metadata=ImagePayloadMetadata(
             source_dtype="uint8",
-            source_channel_axis=3,
+            axes=PayloadAxes.colour_samples(3),
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         ),
     )
@@ -3626,12 +3614,12 @@ def test_derived_image_payload_context_preserves_explicit_channel_axis_removal()
         ),
     )
 
-    result = image_payload_metadata(source).derive_payload(
-        source, output, plane_projection=projection
+    result = source.metadata.derive_payload(
+        ImagePayload.of(source), ImagePayload.of(output), plane_projection=projection
     )
 
-    assert np.shape(image_payload_data(result)) == (1, 4, 5)
-    assert image_payload_metadata(result).source_channel_axis is None
+    assert np.shape(result.data) == (1, 4, 5)
+    assert result.metadata.axis_position(ColourAxis) is None
 
 
 def test_derived_image_payload_context_inherits_channel_axis_for_plain_array() -> None:
@@ -3643,18 +3631,18 @@ def test_derived_image_payload_context_inherits_channel_axis_for_plain_array() -
         data=np.zeros((1, 4, 5, 3), dtype=np.float32),
         metadata=ImagePayloadMetadata(
             source_dtype="uint8",
-            source_channel_axis=3,
+            axes=PayloadAxes.colour_samples(3),
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         ),
     )
 
-    result = image_payload_metadata(source).derive_payload(
-        source,
-        np.ones((1, 4, 5, 3), dtype=np.float32),
+    result = source.metadata.derive_payload(
+        ImagePayload.of(source),
+        ImagePayload.of(np.ones((1, 4, 5, 3), dtype=np.float32)),
         plane_projection=projection,
     )
 
-    assert image_payload_metadata(result).source_channel_axis == 3
+    assert result.metadata.axis_position(ColourAxis) == 3
 
 
 def test_derived_image_payload_context_replaces_stale_scalar_source_with_planes() -> (
@@ -3683,8 +3671,8 @@ def test_derived_image_payload_context_replaces_stale_scalar_source_with_planes(
         ),
     )
 
-    result = image_payload_metadata(source).derive_payload(source, output)
-    metadata = image_payload_metadata(result)
+    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    metadata = result.metadata
 
     assert metadata.source_path is None
     assert metadata.source_component_metadata is None
@@ -3737,8 +3725,8 @@ def test_derived_image_payload_context_preserves_output_name_while_replacing_sta
         ),
     )
 
-    result = image_payload_metadata(source).derive_payload(source, output)
-    metadata = image_payload_metadata(result)
+    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    metadata = result.metadata
 
     assert metadata.source_image_provenance_planes.paths == (
         "/input/A01_s001_w3_z001_t001.tif",
@@ -3774,8 +3762,8 @@ def test_derived_image_payload_context_preserves_output_name_while_replacing_sta
         ),
     )
 
-    result = image_payload_metadata(source).derive_payload(source, output)
-    metadata = image_payload_metadata(result)
+    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    metadata = result.metadata
 
     assert metadata.source_path == "/input/A01_s001_w3_z001_t001.tif"
     assert metadata.source_component_metadata == {
@@ -3823,8 +3811,8 @@ def test_derived_image_payload_context_preserves_output_name_while_replacing_sin
         ),
     )
 
-    result = image_payload_metadata(source).derive_payload(source, output)
-    metadata = image_payload_metadata(result)
+    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    metadata = result.metadata
 
     assert metadata.source_path == "/input/Sequence1_s001_w1_z001_t007.tif"
     assert metadata.source_component_metadata == {
@@ -3864,8 +3852,8 @@ def test_derived_image_payload_context_expands_indexed_scalar_source_metadata_fo
     )
     output = np.ones((3, 4, 5), dtype=np.float32)
 
-    result = image_payload_metadata(source).derive_payload(source, output)
-    metadata = image_payload_metadata(result)
+    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    metadata = result.metadata
 
     assert metadata.source_image_provenance_planes.paths == (
         source_path,
@@ -3929,11 +3917,11 @@ def test_derived_image_payload_context_expands_indexed_scalar_output_metadata_fo
         ),
     )
 
-    result = image_payload_metadata(source).derive_payload(
-        source,
-        output,
+    result = ImagePayload.of(source).metadata.derive_payload(
+        ImagePayload.of(source),
+        ImagePayload.of(output),
     )
-    metadata = image_payload_metadata(result)
+    metadata = result.metadata
 
     assert metadata.source_image_provenance_planes.paths == (
         source_path,
@@ -4003,8 +3991,8 @@ def test_derived_image_payload_context_uses_source_provenance_atomically() -> No
         ),
     )
 
-    result = image_payload_metadata(source).derive_payload(source, output)
-    metadata = image_payload_metadata(result)
+    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    metadata = result.metadata
 
     assert metadata.source_path is None
     assert metadata.source_component_metadata is None
@@ -4025,14 +4013,14 @@ def test_derived_image_context_admits_current_calibration_before_channel_axis(
     output = ImagePayloadMetadata(source_path="/stale/output.tif").payload_with(
         np.ones((4, 5), dtype=np.float32)
     )
-    metadata = image_payload_metadata(source if invalid_owner == "source" else output)
+    metadata = (source if invalid_owner == "source" else output).metadata
     metadata.source_provenance.source_identity.component_metadata = {
         SOURCE_VOXEL_SPACING_FIELD: "-1,1,1",
     }
     metadata.source_channel_axis = False
 
     with pytest.raises(ValueError, match="finite and positive"):
-        image_payload_metadata(source).derive_payload(source, output)
+        source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
 
 
 def test_object_label_source_context_keeps_source_aligned_stack_planes() -> None:
@@ -4143,20 +4131,16 @@ def test_object_label_source_context_keeps_source_aligned_stack_planes_with_scal
     )
 
 
-def test_image_mask_for_data_domain_broadcasts_only_declared_channel_axis() -> None:
-    image = ImagePayloadMetadata(source_channel_axis=-1).payload_with(
+def test_mask_for_data_broadcasts_only_declared_colour_axis() -> None:
+    image = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)).payload_with(
         np.zeros((4, 5, 2), dtype=np.float32), None
     )
     mask = np.ones((4, 5), dtype=bool)
     mask[0, 0] = False
 
-    projected = image_mask_for_data_domain(
-        source_payload=image,
-        data=image,
-        explicit_mask=mask,
-    )
+    projected = image.mask_for_data(image.data, mask=mask)
 
-    assert projected.shape == image_payload_data(image).shape
+    assert projected.shape == image.data.shape
     np.testing.assert_array_equal(projected[..., 0], mask)
     np.testing.assert_array_equal(projected[..., 1], mask)
 
@@ -4183,7 +4167,7 @@ def test_image_payload_channel_projection_preserves_channel_mask_and_metadata() 
         ),
     )
 
-    result = image_payload_metadata(payload).project_channel_payload(payload, data, 1)
+    result = payload.metadata.project_channel_payload(payload, data, 1)
 
     assert isinstance(result, MaskedImagePayload)
     assert result.data.shape == (1, 3, 4)
@@ -4201,11 +4185,11 @@ def test_color_channel_projection_removes_channel_axis_without_selecting_runtime
         ImagePayloadMetadata(
             source_path="/input/color.jpg",
             source_component_metadata={"site": "1"},
-            source_channel_axis=-1,
+            axes=PayloadAxes.colour_samples(-1),
         ),
     )
 
-    selected = image_payload_metadata(source).project_channel_payload(
+    selected = source.metadata.project_channel_payload(
         source_payload=source,
         source_data=data,
         channel_index=1,
@@ -4213,9 +4197,9 @@ def test_color_channel_projection_removes_channel_axis_without_selecting_runtime
         channel_axis=-1,
     )
 
-    metadata = image_payload_metadata(selected)
-    assert np.shape(image_payload_data(selected)) == (4, 5)
-    assert metadata.source_channel_axis is None
+    metadata = selected.metadata
+    assert np.shape(selected.data) == (4, 5)
+    assert metadata.axis_position(ColourAxis) is None
     assert metadata.source_path == "/input/color.jpg"
     assert dict(metadata.source_component_metadata or {}) == {"site": "1"}
 
@@ -4236,11 +4220,11 @@ def test_selected_channel_projection_keeps_its_declared_scalar_identity() -> Non
             ),
         )
     ).payload_with(data, None)
-    selected = image_payload_metadata(source).project_channel_payload(source, data, 0)
+    selected = source.metadata.project_channel_payload(source, data, 0)
 
-    metadata = image_payload_metadata(selected)
+    metadata = selected.metadata
 
-    assert image_payload_metadata(selected).has_complete_source_identity(selected)
+    assert selected.metadata.has_complete_source_identity(selected)
     assert metadata.source_path == "/input/A01_s001_w1.tif"
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
@@ -4268,7 +4252,7 @@ def test_masked_image_payload_omits_only_declared_channel_axis() -> None:
         mask=np.ones((2, 4, 5), dtype=bool),
         metadata=ImagePayloadMetadata(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-            source_channel_axis=-1,
+            axes=PayloadAxes.colour_samples(-1),
         ),
     )
 
@@ -4434,7 +4418,7 @@ def test_image_payload_metadata_reads_object_label_spatial_context() -> None:
         source_path="/input/A01_s001_w1_z001_t001.TIF",
     )
 
-    metadata = image_payload_metadata(payload)
+    metadata = payload.metadata
 
     assert metadata.spatial_origin_yx == (3, 2)
     assert metadata.source_spatial_shape_yx == (10, 12)
@@ -4480,7 +4464,7 @@ def test_object_label_runtime_slice_projection_projects_source_path() -> None:
         "channel": "1",
     }
     assert projected.source_image_provenance_planes.paths == ()
-    assert image_payload_metadata(projected).source_path == (
+    assert projected.metadata.source_path == (
         "/input/A01_s002_w1_z001_t001.TIF"
     )
 
@@ -4538,7 +4522,7 @@ def test_object_label_set_runtime_slice_projection_projects_source_path() -> Non
         "channel": "1",
     }
     assert projected.source_image_provenance_planes.paths == ()
-    assert image_payload_metadata(projected).source_path == (
+    assert projected.metadata.source_path == (
         "/input/A01_s003_w1_z001_t001.TIF"
     )
 
@@ -4679,11 +4663,11 @@ def test_pure_2d_auxiliary_aggregator_preserves_image_payload_metadata() -> None
     stacked = Pure2DAuxiliaryOutputAggregator.aggregate([first, second], "numpy")
 
     assert isinstance(stacked, ImageMetadataPayload)
-    assert image_payload_data(stacked).shape == (2, 2, 3)
+    assert stacked.data.shape == (2, 2, 3)
     assert (
-        image_payload_metadata(stacked).for_source_plane(0).intensity_scale == 65535.0
+        stacked.metadata.for_source_plane(0).intensity_scale == 65535.0
     )
-    assert image_payload_metadata(stacked).for_source_plane(1).source_dtype == "uint8"
+    assert stacked.metadata.for_source_plane(1).source_dtype == "uint8"
 
 
 def test_pure_2d_auxiliary_aggregator_preserves_stacked_object_labels() -> None:
@@ -4758,7 +4742,7 @@ def test_pure_2d_auxiliary_aggregator_preserves_slice_aligned_spatial_grids() ->
 
     assert isinstance(aggregated, RuntimeSliceAlignedValues)
     assert tuple(
-        aggregated.value_for_slice(index).x_origin
+        aggregated.value_at(index).x_origin
         for index in range(aggregated.slice_count)
     ) == (1.0, 3.0)
 
@@ -4869,9 +4853,7 @@ def test_pure_2d_slice_identity_does_not_select_object_label_planes() -> None:
         ),
     )
 
-    projected = RuntimeSliceProjectionStrategy.strategy_for_value(
-        payload,
-    ).identity_projected_value(
+    projected = RuntimeSliceProjection.identity_projected_value(
         payload,
         RuntimePlaneAxisValueProjection.from_selected_plane(
             axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=1, axis_size=3
@@ -4892,9 +4874,7 @@ def test_pure_2d_slice_index_projector_preserves_explicit_payload_domain() -> No
         ),
     )
 
-    projected = RuntimeSliceProjectionStrategy.strategy_for_value(
-        payload,
-    ).identity_projected_value(
+    projected = RuntimeSliceProjection.identity_projected_value(
         payload,
         RuntimePlaneAxisValueProjection.from_selected_plane(
             axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1
@@ -4914,21 +4894,21 @@ def test_normalize_image_payload_intensity_uses_semantic_scale() -> None:
         intensity_scale=4095.0, source_dtype="uint16"
     ).payload_with(image, None)
 
-    normalized = normalize_image_payload_intensity(payload)
+    normalized = payload.normalize_intensity_payload()
 
-    assert image_payload_metadata(normalized).intensity_scale == 4095.0
-    assert image_payload_metadata(normalized).unit_interval_intensity_scale == 4095
-    assert image_payload_data(normalized).dtype == np.float32
-    np.testing.assert_allclose(image_payload_data(normalized), [[0.0, 1.0]])
+    assert normalized.metadata.intensity_scale == 4095.0
+    assert normalized.metadata.unit_interval_intensity_scale == 4095
+    assert normalized.data.dtype == np.float32
+    np.testing.assert_allclose(normalized.data, [[0.0, 1.0]])
 
 
 def test_normalize_image_payload_intensity_falls_back_to_dtype_scale() -> None:
-    image = np.array([[0, 255]], dtype=np.uint8)
+    image = ImagePayload.of(np.array([[0, 255]], dtype=np.uint8))
 
-    normalized = normalize_image_payload_intensity(image)
+    normalized = image.normalize_intensity_payload()
 
-    assert normalized.dtype == np.float32
-    np.testing.assert_allclose(normalized, [[0.0, 1.0]])
+    assert normalized.data.dtype == np.float32
+    np.testing.assert_allclose(normalized.data, [[0.0, 1.0]])
 
 
 def test_masked_image_payload_rejects_unaligned_mask_shape() -> None:

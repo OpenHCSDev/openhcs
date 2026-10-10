@@ -36,10 +36,7 @@ from openhcs.core.config import (
     StreamingConfig,
 )
 from openhcs.core.streaming_config_factory import get_all_streaming_ports
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_measurements import (
@@ -413,7 +410,7 @@ def test_stream_images_uses_plate_calibration_without_overwriting_native_spacing
     assert result.streamed_count == 1
     data, _paths, _backend, metadata = filemanager.saved_batches[0]
     expected = spacing if spacing.has_values else SourceVoxelSpacing((1.3556, 1.3556))
-    np.testing.assert_array_equal(image_payload_data(data[0]), pixels)
+    np.testing.assert_array_equal(data[0].data, pixels)
     stream_request = metadata[ViewerStreamKwarg.STREAM_REQUEST.value]
     wire_metadata = ImagePayloadMetadata.from_viewer_image_metadata(
         stream_request.source.item_fields[ViewerWireField.IMAGE_METADATA.value]

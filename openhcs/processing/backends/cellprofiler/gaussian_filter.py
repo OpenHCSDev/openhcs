@@ -8,11 +8,6 @@ from typing import ClassVar
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_float,
@@ -38,11 +33,12 @@ class GaussianFilterModule(CellProfilerModule):
 import numpy as np
 from openhcs.core.memory.decorators import numpy
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy(contract=ProcessingContract.FLEXIBLE)
-def gaussian_filter(image: RuntimeArrayData, sigma: float = 1.0) -> np.ndarray:
+def gaussian_filter(image: ImagePayload, sigma: float = 1.0) -> np.ndarray:
     """
     Apply CellProfiler-compatible Gaussian smoothing to an image.
 
@@ -52,8 +48,8 @@ def gaussian_filter(image: RuntimeArrayData, sigma: float = 1.0) -> np.ndarray:
     """
     from skimage.filters import gaussian as skimage_gaussian
 
-    pixel_data = np.asarray(image_payload_data(image))
-    metadata = image_payload_metadata(image)
+    pixel_data = np.asarray(image.data)
+    metadata = image.metadata
     spatial_axes = metadata.spatial_axes(pixel_data)
     spacing = metadata.source_voxel_spacing.spacing_for_ndim(len(spatial_axes))
     effective_sigma = np.zeros(pixel_data.ndim, dtype=np.float64)
@@ -61,4 +57,4 @@ def gaussian_filter(image: RuntimeArrayData, sigma: float = 1.0) -> np.ndarray:
         float(sigma), np.asarray(spacing, dtype=np.float64)
     )
     filtered = skimage_gaussian(pixel_data, sigma=effective_sigma)
-    return with_image_payload_data(image, filtered)
+    return image.with_pixels(filtered)

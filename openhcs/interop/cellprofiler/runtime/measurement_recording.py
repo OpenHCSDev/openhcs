@@ -38,13 +38,11 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementRowsAxisProjection,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.source_image_provenance import SourceImageProvenance
+from openhcs.core.runtime_image_values import image_metadata_of
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts import ArtifactSpec
@@ -266,7 +264,7 @@ class CellProfilerMeasurementTableModule(ABC):
         del cls, rows
         return request.source.composed_source_metadata(
             (request.source,)
-        ) or image_payload_metadata(request.source.payload)
+        ) or image_metadata_of(request.source.payload)
 
     @staticmethod
     def rows_only_declare_object_name(rows: ColumnarRows) -> bool:
@@ -656,7 +654,7 @@ class CurrentPayloadMeasurementRecordMixin(PayloadOnlyMeasurementRecordMixin):
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
     ) -> ImagePayloadMetadata:
         del cls, rows
-        return image_payload_metadata(request.source.payload)
+        return image_metadata_of(request.source.payload)
 
     @classmethod
     def clear_source_when_rows_declare_object_name(cls) -> bool:
@@ -712,11 +710,9 @@ class ProducedImageMeasurementRecordMixin(CellProfilerMeasurementTableModule):
     ) -> ImagePayloadMetadata:
         del rows
         source_spec = cls.primary_image_output_spec(request)
-        return image_payload_metadata(
-            request.source.payload
+        return (request.source.payload
             if source_spec is None
-            else request.artifact_output_value(source_spec)
-        )
+            else request.artifact_output_value(source_spec)).metadata
 
 
 class ProducedImagePayloadMeasurementRecordMixin(
@@ -736,10 +732,7 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
     ) -> ImagePayloadMetadata:
         from openhcs.core.artifacts import ImageArtifactType
-        from openhcs.core.runtime_image_values import (
-            ImagePayloadMetadata,
-            image_payload_metadata,
-        )
+        from openhcs.core.runtime_image_values import ImagePayloadMetadata
         from openhcs.core.source_matching import SourceImageSetIdentityPolicy
         from openhcs.core.source_plane_alignment import (
             SourcePlaneIdentitySequenceAlignment,
@@ -764,7 +757,7 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
             request.adapter.request.source_binding_plan
         )
         identity_axes = tuple(
-            image_payload_metadata(payload).source_provenance.image_set_axis(
+            payload.metadata.source_provenance.image_set_axis(
                 identity_policy
             )
             for payload in source_payloads
@@ -792,7 +785,7 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
         source_metadata = ImagePayloadMetadata.compose(
             source_payloads,
             source_metadata=tuple(
-                image_payload_metadata(payload) for payload in source_payloads
+                payload.metadata for payload in source_payloads
             ),
         ).collapse_leading_plane_axis()
         return source_metadata

@@ -8,10 +8,8 @@ from functools import partial
 import time
 from typing import TYPE_CHECKING
 
-from openhcs.core.aligned_image_payload import (
-    ImagePayloadExecutionMode,
-    payload_slice_count,
-)
+from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.pipeline.function_contracts import (
@@ -178,7 +176,9 @@ def object_measurement_runtime_inputs(
     execution_mode = execution_policy.image_execution_mode(
         semantic_label_payload,
         measurement_image.execution_mode,
-        runtime_slice_count=payload_slice_count(aligned_measurement_image.payload),
+        runtime_slice_count=len(
+            RuntimeSliceProjection.alignment_slices(aligned_measurement_image.payload)
+        ),
     )
     return (
         aligned_measurement_image,

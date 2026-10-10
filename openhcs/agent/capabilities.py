@@ -276,7 +276,7 @@ class LocalStdioCapabilityTransportSemantics(CapabilityTransportSemanticsABC):
             "separate: recognized HCS layouts retain their native handler; CZI, OME-TIFF, and "
             "other supported rich containers retain Bio-Formats/store decoding. "
             "SourceBindingsConfig may name or select the planes emitted after discovery; "
-            "SourceBindingsHandler is the fallback ingestion owner only for an otherwise "
+            "SourceBindingsSource is the fallback ingestion owner only for an otherwise "
             "unrecognized arbitrary-file folder. "
             "Choose the state owner from user intent. A UI-visible request uses capabilities for "
             "the already-running OpenHCS GUI; use a headless route only when UI visibility is not "

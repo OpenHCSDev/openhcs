@@ -36,14 +36,12 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_intensity_scale_for_dtype,
-    image_payload_data,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_slice_projection import (
     RuntimeProjectedPayloadItem,
     RuntimeProjectionSourceIdentityRequest,
-    RuntimeProjectionSourceIdentityRequirement,
+    RequiredSourceComponentMetadata,
 )
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
@@ -85,7 +83,7 @@ from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataSubdirectories,
     VirtualWorkspaceSourceProjectionEntries,
 )
-from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
@@ -94,9 +92,8 @@ logger = logging.getLogger(__name__)
 StreamPayload = RuntimeArrayData
 
 
-def stream_payload_summary(payload: StreamPayload) -> str:
-    """Return bounded image payload facts for runtime streaming diagnostics."""
-    data = image_payload_data(payload)
+def stream_payload_summary(data: object) -> str:
+    """Return bounded facts about streamed item data for runtime diagnostics."""
     if not isinstance(data, np.ndarray):
         return f"type={type(data).__name__}"
 
@@ -205,7 +202,7 @@ class MemoryOutputWriter:
         ]
         handler = context.microscope_handler
         parser = handler.parser
-        microscope_type = handler.microscope_type
+        microscope_type = handler.source_name
         row, col = parser.extract_component_coordinates(plan.axis_id)
         context.filemanager.ensure_directory(
             plan.output_dir,
@@ -517,7 +514,7 @@ class StreamOutputBatch:
         request: RuntimeProjectionSourceIdentityRequest,
     ) -> tuple[RuntimeProjectedPayloadItem, ...]:
         return (
-            RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA
+            RequiredSourceComponentMetadata
         ).project_payload_items(request)
 
     @staticmethod
@@ -714,7 +711,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         context: ProcessingContext,
         *,
         document: OpenHCSMetadataSubdirectories | None = None,
-        admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
+        accepted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
     ) -> tuple[OpenHCSMetadataTarget, ...]:
         """Resolve destinations after runtime values have been released."""
         return (self,)
@@ -764,7 +761,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         produced_plan: CompiledStepPlan | None = None,
         metadata_writer: AtomicMetadataWriter | None = None,
         metadata_document: dict[str, Any] | None = None,
-        admitted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
+        accepted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
     ) -> VirtualWorkspaceSourceProjectionEntries:
         """Project the target's current storage state into plate metadata."""
 
@@ -779,7 +776,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         )
         handler = context.microscope_handler
         parser = handler.parser
-        microscope_type = handler.microscope_type
+        microscope_type = handler.source_name
         saved_image_paths = tuple(
             str(Path(path).relative_to(self.plate_root))
             for path in context.filemanager.list_image_files(
@@ -803,7 +800,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
                 else None
             ),
             metadata_document=metadata_document,
-            admitted_entries=admitted_entries,
+            accepted_entries=accepted_entries,
         )
 
     def produced_projection_entries(
@@ -1024,10 +1021,10 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
             source_dtype=native_dtype,
             intensity_scale=image_intensity_scale_for_dtype(native_dtype),
         ).project_image_metadata(
-            image_payload_metadata(payload),
+            payload.metadata,
             values_preserved=context.filemanager.image_serialization_preserves_values(
                 self.backend,
-                image_payload_data(payload).dtype,
+                payload.data.dtype,
                 native_dtype,
             ),
         )
@@ -1196,18 +1193,18 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
         context: ProcessingContext,
         *,
         document: OpenHCSMetadataSubdirectories | None = None,
-        admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
+        accepted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
     ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
         """Use durable typed projections, without reloading cleaned artifact values."""
-        from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
-        if (document is None) != (admitted_entries is None):
+        if (document is None) != (accepted_entries is None):
             raise ValueError("Reconciliation requires one document and its admitted entries.")
         handler = OpenHCSMetadataHandler(context.filemanager)
         directories = (
             handler.reconciliation_directories(self.plate_root, self.backend)
             if document is None else handler.reconciliation_directories_from_document(
-                self.plate_root, self.backend, document, admitted_entries
+                self.plate_root, self.backend, document, accepted_entries
             )
         )
         return tuple(

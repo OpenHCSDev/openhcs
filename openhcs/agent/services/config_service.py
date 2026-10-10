@@ -30,6 +30,7 @@ from pyqt_reactive.services.parameter_help_service import (
     parameter_description_from_target,
 )
 from python_introspect import (
+    declared_annotation_choices,
     JsonValue,
     coerce_enum_member,
     declared_enum_type,
@@ -51,6 +52,7 @@ from openhcs.agent.dto.config import (
 )
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.core.artifacts import ArtifactType
+from openhcs.core.dataset_sources.choice import DatasetSourceChoices
 from openhcs.core.config import (
     GlobalPipelineConfig,
     PipelineConfig,
@@ -475,9 +477,17 @@ def coerce_dataclass_patch_values(
 ) -> dict[str, object]:
     field_by_name = {field.name: field for field in fields(cls)}
     resolved_types = get_type_hints(cls)
+    annotated_types = get_type_hints(cls, include_extras=True)
     return {
         name: (
-            _coerce_patch_value(
+            _coerce_choice_label(annotated_types[name], value)
+            if name in field_by_name
+            and isinstance(value, str)
+            and isinstance(
+                declared_annotation_choices(annotated_types[name]),
+                DatasetSourceChoices,
+            )
+            else _coerce_patch_value(
                 resolved_types.get(name, field_by_name[name].type),
                 value,
             )
@@ -486,6 +496,11 @@ def coerce_dataclass_patch_values(
         )
         for name, value in values.items()
     }
+
+
+def _coerce_choice_label(field_type, label: str) -> object:
+    """Decode a choice field's boundary label through its declared choices."""
+    return declared_annotation_choices(field_type).choice_for_label(label)
 
 
 def _coerce_patch_value(field_type, value: JsonValue) -> object:

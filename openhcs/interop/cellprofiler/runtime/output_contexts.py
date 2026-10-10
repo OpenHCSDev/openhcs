@@ -5,9 +5,6 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import dataclass, replace
 from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.runtime_image_values import (
-    image_payload_metadata,
-)
 from openhcs.interop.cellprofiler.runtime.output_record_request import (
     CellProfilerOutputRecordRequest,
 )
@@ -24,14 +21,14 @@ class CellProfilerObjectLabelOutputSourceContext:
     @property
     def source_metadata(self):
         """Return metadata for the declared source payload."""
-        return image_payload_metadata(self.source_payload)
+        return self.source_payload.metadata
 
     @property
     def parent_image_source_voxel_spacing(self) -> SourceVoxelSpacing:
         """Return spacing stamped from the CP parent image, or absence."""
         if self.parent_image_payload is None:
             return SourceVoxelSpacing()
-        return image_payload_metadata(self.parent_image_payload).source_voxel_spacing
+        return self.parent_image_payload.metadata.source_voxel_spacing
 
 
 class InputObjectLabelWithoutParentImageOutputSourceContextPolicyMixin(

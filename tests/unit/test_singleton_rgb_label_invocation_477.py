@@ -19,6 +19,8 @@ from tests.unit.test_cellprofiler_module_execution import (
     _compiled_callable_contract,
     _module_executor,
 )
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 def _invocation_case(*, root_count=1, label_count=1):
@@ -27,7 +29,7 @@ def _invocation_case(*, root_count=1, label_count=1):
     raw = OverlayOutlinesModule.require_callable()
     contract = _compiled_callable_contract(raw, artifact_inputs=(image_spec, labels_spec))
     data = np.linspace(0, 1, 8 * 9 * 3, dtype=np.float32).reshape(8, 9, 3)
-    image = ImageMetadataPayload(data, ImagePayloadMetadata(source_channel_axis=2, source_image_names=('GFPandDNA',)))
+    image = ImageMetadataPayload(data, ImagePayloadMetadata(axes=PayloadAxes.colour_samples(2), source_image_names=('GFPandDNA',)))
     label_data = np.zeros((label_count, 8, 9), dtype=np.int32)
     label_data[:, 2:5, 3:6] = 1
     labels = ObjectLabelSet(
@@ -70,7 +72,7 @@ def test_match_image_labels_consume_declared_singleton_root_for_scalar_rgb():
     selected = invocation.kwargs['object_labels'][0]
     assert invocation.execution_mode is ImagePayloadExecutionMode.NATURAL
     assert invocation.plane_projection is None
-    assert invocation.payload.metadata.source_channel_axis == 2
+    assert invocation.payload.metadata.axis_position(ColourAxis) == 2
     assert selected.plane_axis is None
     assert object_label_dense_array(selected).shape == (8, 9)
     output = _execute(case, invocation)

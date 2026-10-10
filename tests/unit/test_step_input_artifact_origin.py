@@ -7,11 +7,7 @@ import pytest
 
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_binding_selection import (
     PipelineStartSourceUniverseRequest,
@@ -47,9 +43,9 @@ def test_step_input_names_current_pixels_without_loading_workspace(alias):
 
     result = request.source_artifact_payload(binding.input_spec().ref())
 
-    assert image_payload_data(result) is data
-    assert image_payload_metadata(result).source_image_names == (alias,)
-    assert image_payload_metadata(result).source_path == "/synthetic/raw.tif"
+    assert result.data is data
+    assert result.metadata.source_image_names == (alias,)
+    assert result.metadata.source_path == "/synthetic/raw.tif"
 
 
 def test_step_input_selects_current_component_planes_not_original_aliases():
@@ -69,9 +65,9 @@ def test_step_input_selects_current_component_planes_not_original_aliases():
 
     result = binding.project_step_input_payload(payload)
 
-    np.testing.assert_array_equal(image_payload_data(result), data[1])
-    assert image_payload_metadata(result).source_image_names == ("Processed2",)
-    assert image_payload_metadata(result).source_path == "/synthetic/ch2.tif"
+    np.testing.assert_array_equal(result.data, data[1])
+    assert result.metadata.source_image_names == ("Processed2",)
+    assert result.metadata.source_path == "/synthetic/ch2.tif"
     missing = NamedSourceBinding(
         alias="Absent",
         selector=SourceSelector(components=(ComponentSelector(Microscopy.Channel, "3"),)),
@@ -110,12 +106,12 @@ def test_named_step_inputs_select_distinct_current_pixels_independent_of_order(a
 
     for binding in bindings:
         result = request.source_artifact_payload(binding.input_spec().ref())
-        np.testing.assert_array_equal(image_payload_data(result), np.full((4, 5), values[binding.alias]))
-        metadata = image_payload_metadata(result)
+        np.testing.assert_array_equal(result.data, np.full((4, 5), values[binding.alias]))
+        metadata = result.metadata
         assert metadata.source_image_names == (binding.alias,)
         assert metadata.source_path == f"/synthetic/{binding.alias}.tif"
         assert metadata.plane_axis is None
-    np.testing.assert_array_equal(image_payload_data(payload), data)
+    np.testing.assert_array_equal(payload.data, data)
 
 
 def test_existing_alias_and_explicit_selector_must_agree():
@@ -148,9 +144,9 @@ def test_named_step_input_preserves_all_planes_of_a_multi_plane_image():
 
     result = NamedSourceBinding(alias="Volume").project_step_input_payload(payload)
 
-    np.testing.assert_array_equal(image_payload_data(result), data[:2])
-    assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert image_payload_metadata(result).source_provenance.source_plane_count == 2
+    np.testing.assert_array_equal(result.data, data[:2])
+    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.source_provenance.source_plane_count == 2
 
 
 def test_new_alias_without_selectors_still_names_the_complete_current_stack():
@@ -165,6 +161,6 @@ def test_new_alias_without_selectors_still_names_the_complete_current_stack():
 
     result = NamedSourceBinding(alias="Response").project_step_input_payload(payload)
 
-    assert image_payload_data(result) is data
-    assert image_payload_metadata(result).source_image_names == ("Response",)
-    assert image_payload_metadata(result).source_provenance.source_plane_count == 2
+    assert result.data is data
+    assert result.metadata.source_image_names == ("Response",)
+    assert result.metadata.source_provenance.source_plane_count == 2

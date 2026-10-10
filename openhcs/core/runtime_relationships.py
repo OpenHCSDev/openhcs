@@ -17,7 +17,7 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
 )
-from openhcs.core.runtime_plane_projection import RuntimeSliceProjectableValue
+from openhcs.core.runtime_plane_projection import RuntimeSliceIndexedValue
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenanceFields,
@@ -324,7 +324,7 @@ class ObjectRelationshipDeclaration(ArtifactSpecRelation):
 @dataclass(slots=True, kw_only=True)
 class ObjectRelationship(
     SourceImageProvenanceFields,
-    RuntimeSliceProjectableValue,
+    RuntimeSliceIndexedValue,
     NamedArtifactPayload,
 ):
     """Native OpenHCS directed object relationship value."""
@@ -370,6 +370,9 @@ class ObjectRelationship(
                 "ObjectRelationship.payload must be DirectedObjectRelationshipPayload, "
                 f"got {type(self.payload).__name__}."
             )
+
+    def runtime_slice_count(self) -> int | None:
+        return self.payload.slice_count
 
     def project_runtime_slice(self, slice_index: int) -> "ObjectRelationship":
         """Return only relationship rows belonging to one runtime slice."""
@@ -480,7 +483,7 @@ def _directed_relationship_payload_fields(
 
 @dataclass(frozen=True, slots=True)
 class DirectedObjectRelationshipPayload(
-    RuntimeSliceProjectableValue, RuntimeSliceIdentityProjectableValue
+    RuntimeSliceIndexedValue, RuntimeSliceIdentityProjectableValue
 ):
     """Endpoint-neutral directed object ID pairs awaiting contract binding."""
 
@@ -503,6 +506,9 @@ class DirectedObjectRelationshipPayload(
             strict=True,
         ):
             object.__setattr__(self, field_name, value)
+
+    def runtime_slice_count(self) -> int | None:
+        return self.slice_count
 
     def with_runtime_slice_identity(
         self, *, slice_index: int, slice_count: int

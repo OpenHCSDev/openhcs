@@ -22,7 +22,7 @@ from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import NormalizedFunctionGroup
 from openhcs.core.function_reference import ImportableFunctionReference
 from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.pipeline.function_contracts import composed_image_payload
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
@@ -244,7 +244,7 @@ def test_compiled_raw_projection_never_queries_signature_or_annotations(monkeypa
     monkeypatch.setattr(inspect, "signature", forbidden)
     payload = ImagePayloadMetadata(source_image_names=("DNA",)).payload_with(np.ones((2, 3)), None)
     for _ in range(40):
-        assert restored.raw_main_flow_call_argument(payload) is image_payload_data(payload)
+        assert restored.raw_main_flow_call_argument(payload) is payload.data
         assert restored.primary_input_parameter_name == "image"
         assert restored.canonical_parameter_annotations["image"] is np.ndarray
 
@@ -406,7 +406,6 @@ def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(mo
         AlignedImageSliceContext, ImageOutputBundle,
     )
     from openhcs.core.function_patterns import compile_function_pattern
-    from openhcs.core.runtime_image_values import image_payload_mask
     from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 
     pixels = tuple(np.full((3, 4), value, dtype=np.float32) for value in (0.25, 0.75))
@@ -428,15 +427,15 @@ def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(mo
     invocation = compile_function_pattern(gaussian_blur, {}, {}).default_group.invocations[0]
     placed = invocation.convert_input(source, "numpy")
     invocation.main_flow_call_argument(placed)
-    image_payload_data(placed)
-    image_payload_mask(placed)
+    placed.data
+    placed.mask
 
     assert calls == [{"memory_type": "numpy", "device_id": None}]
-    np.testing.assert_array_equal(image_payload_data(placed), np.stack(pixels))
-    assert image_payload_data(placed).shape == (2, 3, 4)
-    assert image_payload_mask(placed).shape == (2, 3, 4)
+    np.testing.assert_array_equal(placed.data, np.stack(pixels))
+    assert placed.data.shape == (2, 3, 4)
+    assert placed.mask.shape == (2, 3, 4)
     assert placed.metadata.source_image_names == ("DNA", "Membrane")
-    np.testing.assert_array_equal(image_payload_mask(placed), np.stack(masks))
+    np.testing.assert_array_equal(placed.mask, np.stack(masks))
 
 
 def test_compiled_input_reuses_produced_stack_realization_without_copy():
@@ -453,5 +452,5 @@ def test_compiled_input_reuses_produced_stack_realization_without_copy():
     invocation = compile_function_pattern(gaussian_blur, {}, {}).default_group.invocations[0]
     placed = invocation.convert_input(source, "numpy")
     assert invocation.convert_input(source, "numpy") is placed
-    assert image_payload_data(placed) is image_payload_data(source)
-    assert np.shares_memory(source.slices[0], image_payload_data(placed))
+    assert placed.data is source.data
+    assert np.shares_memory(source.slices[0], placed.data)

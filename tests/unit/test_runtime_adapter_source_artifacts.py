@@ -14,7 +14,6 @@ from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_binding_selection import SourcePatternResolutionContext
 from openhcs.core.runtime_object_labels import ObjectLabelSet
@@ -37,16 +36,17 @@ from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_projection import SourcePlaneProjection
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
     VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )
-from openhcs.microscopes import create_microscope_handler
-from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.axes import ColourAxis
 
 
 def _filemanager() -> FileManager:
@@ -130,13 +130,8 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     )
     # This opens the persisted projection; it does not ingest workspace files
     # as a new raw source folder. Physical inputs remain in source_root.
-    microscope_handler = create_microscope_handler(
-        microscope_type="auto",
-        plate_folder=workspace_root,
-        filemanager=filemanager,
-        source_bindings_config=source_bindings,
-    )
-    assert isinstance(microscope_handler, OpenHCSMicroscopeHandler)
+    microscope_handler = DatasetSourceChoice.named("auto").open(workspace_root, filemanager=filemanager, source_bindings_config=source_bindings)
+    assert isinstance(microscope_handler, OpenHCSDatasetSource)
     microscope_handler.initialize_workspace(workspace_root, filemanager)
     projection_cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(
@@ -149,10 +144,10 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
             frozenset((Microscopy.Channel,))
         ),
     )
-    context.runtime_source_workspace_projection_authority = VirtualWorkspaceSourceProjectionAuthority.from_context(
+    context.runtime_source_workspace_projections = WorkspaceSourceProjections.from_context(
         context, cache=projection_cache,
     )
-    projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
+    projection = WorkspaceSourceProjections.from_context(
         context,
         cache=projection_cache,
     ).projection_or_empty()
@@ -217,7 +212,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
         illumination_binding.input_spec().ref()
     )
     np.testing.assert_array_equal(
-        image_payload_data(illumination_payload),
+        illumination_payload.data,
         illumination[np.newaxis, ...],
     )
 
@@ -260,10 +255,10 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
         (labels_payload, live_labels),
     ):
         np.testing.assert_array_equal(
-            image_payload_data(produced), image_payload_data(live)
+            produced.data, live.data
         )
-        produced_metadata = image_payload_metadata(produced)
-        live_metadata = image_payload_metadata(live)
+        produced_metadata = produced.metadata
+        live_metadata = live.metadata
         assert produced_metadata == live_metadata
         assert (
             produced_metadata.source_provenance.source_identity.identity
@@ -295,24 +290,21 @@ def test_workspace_materialization_preserves_declared_source_pixels(tmp_path, mo
         source_root, workspace_root, filemanager=filemanager,
         source_backend=Backend.DISK, workspace_backend=Backend.DISK, source_files=(path,),
     )
-    microscope = create_microscope_handler(
-        microscope_type="auto", plate_folder=workspace_root,
-        filemanager=filemanager, source_bindings_config=bindings,
-    )
+    microscope = DatasetSourceChoice.named("auto").open(workspace_root, filemanager=filemanager, source_bindings_config=bindings)
     microscope.initialize_workspace(workspace_root, filemanager)
     cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(
         completed_step_outputs=StepExecutionObservation.empty(),
         plate_path=workspace_root, filemanager=filemanager, microscope_handler=microscope,
     )
-    workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(context, cache=cache).projection_or_empty()
+    workspace = WorkspaceSourceProjections.from_context(context, cache=cache).projection_or_empty()
     paths = tuple(path for path, _projection in workspace.source_occurrences_for_binding(binding, axis_id="A01"))
     assert len(paths) == 1
     (payload,) = workspace.load_binding_payloads(paths, binding=binding, filemanager=filemanager)
     expected = rgb2gray(pixels.astype(np.float32) / 255) if mode == "monochrome" else pixels.astype(bool) if mode == "mask" else pixels
-    assert np.allclose(image_payload_data(payload), expected)
-    metadata = image_payload_metadata(payload)
-    assert metadata.source_channel_axis == (-1 if mode == "rgb" else None)
+    assert np.allclose(payload.data, expected)
+    metadata = payload.metadata
+    assert metadata.axis_position(ColourAxis) == (-1 if mode == "rgb" else None)
     assert metadata.source_provenance.represented_source_image_names == ("Raw",)
     if mode in ("monochrome", "mask"):
         assert metadata.has_normalized_intensity

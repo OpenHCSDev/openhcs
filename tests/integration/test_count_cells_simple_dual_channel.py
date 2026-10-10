@@ -1,4 +1,4 @@
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 import csv
 import io
 import logging
@@ -16,14 +16,12 @@ from zmqruntime.execution.responses import (
 )
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants import Microscope
 from openhcs.core.artifacts import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     SpecialArtifactType,
 )
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -33,6 +31,7 @@ from openhcs.core.config import (
     PipelineConfig,
     VFSConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.steps import FunctionStep
 from openhcs.processing.backends.analysis.count_cells_simple import (
@@ -119,7 +118,7 @@ def test_dual_channel_count_runs_on_synthetic_plate_with_channel_stack(
     vfs_config = VFSConfig(materialization_backend=MaterializationBackend.DISK)
     global_config = GlobalPipelineConfig(
         num_workers=2,
-        microscope=Microscope.IMAGEXPRESS,
+        dataset_source=ImageXpressHandler,
         use_threading=False,
         path_planning_config=PathPlanningConfig(output_dir_suffix=suffix),
         vfs_config=vfs_config,
@@ -187,6 +186,7 @@ from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec, ROIOptions
 
 import numpy as np
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 @numpy
@@ -253,7 +253,7 @@ def persisted_special_output_probe(image):
     ensure_global_config_context(GlobalPipelineConfig, global_config)
     submission = OpenHCSExecutionSubmission(
         plate_id=plate_dir,
-        pipeline_document=PipelineDocumentAuthority.from_values(
+        pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
         ),
         global_config=global_config,
@@ -261,7 +261,7 @@ def persisted_special_output_probe(image):
             "runtime_observation_export_path": str(observation_path),
         },
     )
-    assert submission.pipeline_code() == PipelineDocumentAuthority.render(
+    assert submission.pipeline_code() == PipelineDocumentCodec.render(
         submission.pipeline_document
     )
     client = ZMQExecutionClient(
@@ -284,7 +284,7 @@ def persisted_special_output_probe(image):
             client.submit_pipeline(
                 OpenHCSExecutionSubmission(
                     plate_id=plate_dir,
-                    pipeline_document=PipelineDocumentAuthority.from_values(
+                    pipeline_document=PipelineDocumentCodec.from_values(
                         pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
                     ),
                     global_config=global_config,

@@ -45,7 +45,11 @@ from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import AnalysisConsolidationConfig, TiffConfig, WellFilterMode
+from openhcs.core.config import TiffConfig, WellFilterMode
+from openhcs.domains.microscopy.config import (
+    AnalysisConsolidationConfig,
+    PlateMetadataConfig,
+)
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
     CompiledFunctionGroup,
@@ -56,9 +60,8 @@ from openhcs.core.function_patterns import (
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.orchestrator.analysis_consolidation import (
-    RuntimeAnalysisConsolidationInputs,
-)
+from openhcs.core.post_execute import PostExecuteHook
+from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
 from openhcs.core.orchestrator.execution_result import (
     RuntimeContextObservation,
     RuntimeExecutionObservation,
@@ -74,7 +77,6 @@ from openhcs.core.runtime_artifact_values import (
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
@@ -139,7 +141,7 @@ from openhcs.core.streaming_config_factory import (
     StreamingViewerSurface,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
     TILE_POSITIONS_OUTPUT,
 )
@@ -167,6 +169,8 @@ from openhcs.core.axes import AxisFamily, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 from openhcs.core.streaming_config_declarations import NapariViewer
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 class StreamingConfigStub(ViewerDisplayConfigABC):
@@ -510,7 +514,9 @@ def _context(filemanager):
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
     context.axis_id = "A01"
     context.step_axis_filters = {}
-    context.analysis_consolidation_config = AnalysisConsolidationConfig()
+    context.post_execute_hooks = (
+        AnalysisConsolidationHook(AnalysisConsolidationConfig(), PlateMetadataConfig()),
+    )
     context.tiff_config = TiffConfig()
     return context
 
@@ -663,7 +669,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     np.testing.assert_array_equal(runtime_value.data.labels, expected_labels)
     assert runtime_value.data.dtype == np.dtype(np.int32)
     assert runtime_value.data.representation is (
-        contextualized.value_for_slice(0).representation
+        contextualized.value_at(0).representation
     )
     assert runtime_value.data.domain == ObjectLabelDomain(
         declared_object_id_domains=((1,), (2,)),
@@ -681,7 +687,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     }
     assert runtime_value.data.source_image_names == ()
     assert runtime_value.data.source_image_provenance_planes == (
-        image_payload_metadata(source).source_image_provenance_planes
+        source.metadata.source_image_provenance_planes
     )
     assert runtime_value.data.dimensions == ()
     assert runtime_value.data.source_image_name is None
@@ -732,7 +738,7 @@ def test_image_outputs_merge_source_provenance_when_output_already_has_metadata(
         ),
     )
 
-    metadata = image_payload_metadata(contextualized)
+    metadata = contextualized.metadata
     assert metadata.source_dtype == "float32"
     assert metadata.source_image_provenance_planes.paths == (
         "/input/A02_s001_w1_z001_t001.tif",
@@ -804,7 +810,7 @@ def test_object_label_payload_stack_preserves_source_slice_metadata():
         value_name="Object-label"
     )
     assert runtime_value.data.source_provenance == (
-        image_payload_metadata(source).source_provenance
+        source.metadata.source_provenance
     )
     assert runtime_value.data.dimensions == ()
     assert runtime_value.data.source_image_name is None
@@ -898,7 +904,7 @@ def test_materialize_artifact_outputs_attaches_image_schema_provenance(monkeypat
     data, path = materialized[0]
     assert path == "/images/A01_s001_w3_z001_t001.tif"
     assert isinstance(data, ImageMetadataPayload)
-    assert dict(image_payload_metadata(data).source_component_metadata) == {
+    assert dict(data.metadata.source_component_metadata) == {
         "well": "A01",
         "site": "1",
         "channel": "3",
@@ -1578,12 +1584,8 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
             "Consolidation must not reconstruct unrelated ROI geometry"
         ),
     )
-    assert (
-        RuntimeAnalysisConsolidationInputs.from_reused_outputs(
-            context, plan, materialization, roi_outputs,
-        )
-        is None
-    )
+    hook = AnalysisConsolidationHook(AnalysisConsolidationConfig(), PlateMetadataConfig())
+    assert hook.observe_reused_outputs(context, plan, materialization, roi_outputs) is None
 
 
 def test_multi_plane_measurement_aggregate_names_retain_runtime_group_coordinate():
@@ -1743,8 +1745,8 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
     historical_content = "cell_count\r\n99\r\n"
     context.filemanager.save(historical_content, selected_path, "disk")
     reused = preview_reused_step_outputs(plan, context, current_execution_records)
-    assert reused.analysis_inputs is not None
-    assert reused.analysis_inputs.outputs_by_directory[Path("/analysis")][0].csv_content == historical_content
+    assert reused.hook_observations.get("analysis_consolidation") is not None
+    assert reused.hook_observations.get("analysis_consolidation").outputs_by_directory[Path("/analysis")][0].csv_content == historical_content
     assert tuple(
         Path(location.path)
         for locations in reused.materialized_locations_by_address.values()
@@ -1767,7 +1769,7 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
         ),
     }
     context.step_plans = {plan.step_index: plan}
-    consolidation_inputs = selected_saved[0].observation(plan, context).analysis_inputs
+    consolidation_inputs = selected_saved[0].observation(plan, context).hook_observations.get("analysis_consolidation")
     assert consolidation_inputs is not None
     runtime_output = consolidation_inputs.outputs_by_directory[Path("/analysis")][0]
     assert runtime_output.path == Path(
@@ -1901,7 +1903,7 @@ def test_terminal_persistence_is_reported_without_becoming_declared_export() -> 
 
     reused = preview_reused_step_outputs(plan, context, (record,))
     assert reused.runtime_export_paths == ()
-    assert reused.analysis_inputs is None
+    assert reused.hook_observations.get("analysis_consolidation") is None
     assert reused.materialized_locations_by_address == {
         RuntimeArtifactAddress.from_record(record): (
             RuntimeArtifactLocation(
@@ -1956,7 +1958,7 @@ def test_consolidation_preserves_export_bundle_and_text_tables(options, payload)
     saved = PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(context.filemanager, plan, context)
     consolidation = StepExecutionObservation.combine(
         artifact.observation(plan, context) for artifact in saved
-    ).analysis_inputs
+    ).hook_observations.get("analysis_consolidation")
     assert consolidation is not None
     outputs = tuple(
         output
@@ -2040,14 +2042,16 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
     )
     assert len(observation.outputs.runtime_export_paths) == 1
     assert observation.outputs.runtime_export_paths[0].suffix == ".csv"
-    assert observation.outputs.analysis_inputs is not None
-    assert observation.outputs.analysis_inputs.destination.backend == "disk"
-    assert observation.outputs.analysis_inputs.destination.images_dir == "/images"
+    assert observation.outputs.hook_observations.get("analysis_consolidation") is not None
+    assert observation.outputs.hook_observations.get("analysis_consolidation").destination.backend == "disk"
+    assert observation.outputs.hook_observations.get("analysis_consolidation").destination.images_dir == "/images"
     execution_observation = RuntimeExecutionObservation(contexts=(observation,))
     transported = pickle.loads(pickle.dumps(execution_observation))
-    consolidated = RuntimeAnalysisConsolidationInputs.from_observations(
-        {"A01": context}, (transported, transported),
-    )
+    consolidated = PostExecuteHook.combine_all(
+        context_observation.outputs.hook_observations
+        for runtime_observation in (transported, transported)
+        for context_observation in runtime_observation.contexts
+    ).get("analysis_consolidation")
     assert consolidated is not None
     outputs = consolidated.outputs_by_directory[Path("/analysis")]
     assert len(outputs) == 1
@@ -2056,7 +2060,7 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
     assert "2" in outputs[0].csv_content
     assert outputs[0].path == observation.outputs.runtime_export_paths[0]
     with pytest.raises(KeyError, match="unknown compiled context"):
-        RuntimeAnalysisConsolidationInputs.from_observations({}, (transported,))
+        PostExecuteHook.run_all({}, {}, transported)
 
 
 def test_materialize_artifact_outputs_unions_measurement_subject_records(
@@ -3520,7 +3524,7 @@ def test_materialize_artifact_outputs_uses_runtime_plane_group_identity(
         )
     ]
     assert materialized[0][0] is runtime_value.data
-    assert image_payload_metadata(materialized[0][0]).source_image_names == (
+    assert materialized[0][0].metadata.source_image_names == (
         "AdjacentImage",
     )
 
@@ -4029,7 +4033,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
             "timepoint": "1",
         },
         source_image_names=("OrigDNA",),
-        source_channel_axis=0,
+        axes=PayloadAxes.colour_samples(0),
         plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
     )
     value = RuntimeValue.normalize(
@@ -4037,7 +4041,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
         ImagePayloadMetadata(
             source_path="/derived/nuclei-rgb.tif",
             source_image_names=("NucleiImage",),
-            source_channel_axis=3,
+            axes=PayloadAxes.colour_samples(3),
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         ).payload_with(
             np.ones((2, 5, 7, 3), dtype=np.uint16),
@@ -4049,12 +4053,12 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
 
     metadata = output_plan.materialization_metadata(value)
 
-    pixel_metadata = image_payload_metadata(value.materialization_payload())
+    pixel_metadata = value.materialization_payload().metadata
     assert pixel_metadata.source_path == "/derived/nuclei-rgb.tif"
     assert pixel_metadata.source_image_names == ("SavedNuclei",)
     assert metadata.source_path == "/input/A01_s001_w2_z001_t001.tif"
     assert metadata.source_image_names == ("OrigDNA",)
-    assert metadata.source_channel_axis == 3
+    assert metadata.axis_position(ColourAxis) == 3
     assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
@@ -4155,7 +4159,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
         persistent_backend="disk",
     )
 
-    assert image_payload_metadata(saved_payload).plane_axis is (
+    assert saved_payload.metadata.plane_axis is (
         RuntimePlaneAxis.RUNTIME_SLICE
     )
     assert tuple(

@@ -20,13 +20,13 @@ from openhcs.core.source_bindings import (
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_image_provenance import SourceImageIdentity
 from openhcs.core.source_metadata import (
-    ORIGINAL_SOURCE_METADATA_FIELD,
+    DECLARED_SOURCE_METADATA_FIELD,
     ResolvedSourceMetadataRecord,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.microscopes.microscope_interfaces import FilenameParseResult
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParseResult
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 
 PATH = "A01_s001_w1_z001_t001.tif"
@@ -74,7 +74,7 @@ def snapshot(cache, source_projection, parser, rules=()):
 def test_declared_record_resolves_live_parser_and_nested_metadata():
     nested = {"Plate": "before"}
     record = DeclaredSourceMetadataRecord.from_mapping(
-        {ORIGINAL_SOURCE_METADATA_FIELD: nested, "site": 8}
+        {DECLARED_SOURCE_METADATA_FIELD: nested, "site": 8}
     )
     assert isinstance(record, DeclaredSourceMetadataRecord)
     parser = CountingParser()
@@ -82,14 +82,14 @@ def test_declared_record_resolves_live_parser_and_nested_metadata():
     nested["Plate"] = "after"
     second = record.resolve(PATH, parser, ())
     assert first["site"] == second["site"] == 8
-    assert first[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"] == "before"
-    assert second[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"] == "after"
+    assert first[DECLARED_SOURCE_METADATA_FIELD]["Plate"] == "before"
+    assert second[DECLARED_SOURCE_METADATA_FIELD]["Plate"] == "after"
     assert parser.calls == [PATH, PATH]
 
 
 def test_runtime_snapshot_owns_nested_metadata_and_unknown_fallback():
     nested = {"Plate": "before"}
-    source_projection = projection({ORIGINAL_SOURCE_METADATA_FIELD: nested})
+    source_projection = projection({DECLARED_SOURCE_METADATA_FIELD: nested})
     parser = CountingParser()
     cache = RuntimeSourceBindingContextCache()
     context = snapshot(cache, source_projection, parser)
@@ -98,10 +98,10 @@ def test_runtime_snapshot_owns_nested_metadata_and_unknown_fallback():
     for _ in range(3):
         metadata = context.metadata_for_path(PATH)
         assert isinstance(metadata, ResolvedSourceMetadataRecord)
-        assert metadata[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"] == "before"
+        assert metadata[DECLARED_SOURCE_METADATA_FIELD]["Plate"] == "before"
     assert tuple(parser.calls) == calls
     with pytest.raises(TypeError):
-        metadata[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"] = "invalid"
+        metadata[DECLARED_SOURCE_METADATA_FIELD]["Plate"] = "invalid"
     unknown = "A02_s001_w1_z001_t001.tif"
     assert context.metadata_for_path(unknown)["well"] == "A02"
     assert parser.calls[-1] == unknown
@@ -149,15 +149,15 @@ def test_direct_projection_context_remains_live():
     parser = CountingParser()
     context = SourcePatternResolutionContext.from_projection(
         parser=parser,
-        projection=projection({ORIGINAL_SOURCE_METADATA_FIELD: nested}),
+        projection=projection({DECLARED_SOURCE_METADATA_FIELD: nested}),
     )
     assert (
-        context.metadata_for_path(PATH)[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"]
+        context.metadata_for_path(PATH)[DECLARED_SOURCE_METADATA_FIELD]["Plate"]
         == "before"
     )
     nested["Plate"] = "after"
     assert (
-        context.metadata_for_path(PATH)[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"]
+        context.metadata_for_path(PATH)[DECLARED_SOURCE_METADATA_FIELD]["Plate"]
         == "after"
     )
     assert parser.calls == [PATH, PATH]
@@ -186,7 +186,7 @@ def test_snapshot_replacement_tracks_projection_parser_semantics_and_rules():
     changed_rules = snapshot(cache, source_projection, parser, rules)
     assert changed_rules is not changed_parser
     assert (
-        changed_rules.metadata_for_path(PATH)[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"]
+        changed_rules.metadata_for_path(PATH)[DECLARED_SOURCE_METADATA_FIELD]["Plate"]
         == "A01"
     )
 
@@ -260,7 +260,7 @@ def test_declared_and_resolved_records_preserve_family_value_identity():
     assert declared != DeclaredSourceMetadataRecord.from_mapping(
         {"site": 2, "well": "A01"}
     )
-    nested = {ORIGINAL_SOURCE_METADATA_FIELD: {"Plate": "A"}}
+    nested = {DECLARED_SOURCE_METADATA_FIELD: {"Plate": "A"}}
     with pytest.raises(TypeError):
         hash(DeclaredSourceMetadataRecord.from_mapping(nested))
     with pytest.raises(TypeError):
@@ -296,11 +296,11 @@ def test_snapshot_owns_position_and_projection_map_views():
 
 def test_resolved_direct_constructor_owns_deep_immutable_invariant():
     nested = {"Plate": "before"}
-    resolved = ResolvedSourceMetadataRecord(((ORIGINAL_SOURCE_METADATA_FIELD, nested),))
+    resolved = ResolvedSourceMetadataRecord(((DECLARED_SOURCE_METADATA_FIELD, nested),))
     nested["Plate"] = "after"
-    assert resolved[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"] == "before"
+    assert resolved[DECLARED_SOURCE_METADATA_FIELD]["Plate"] == "before"
     with pytest.raises(TypeError):
-        resolved[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"] = "invalid"
+        resolved[DECLARED_SOURCE_METADATA_FIELD]["Plate"] = "invalid"
     with pytest.raises(TypeError, match="Source metadata scalar values"):
         ResolvedSourceMetadataRecord((("nested", {"unsupported": {"deep": 1}}),))
 
@@ -314,7 +314,7 @@ def test_warmed_cache_transport_reconstructs_all_derived_defaults(context_owned)
         else RuntimeSourceBindingContextCache()
     )
     parser = CountingParser()
-    source_projection = projection({ORIGINAL_SOURCE_METADATA_FIELD: {"Plate": "A"}})
+    source_projection = projection({DECLARED_SOURCE_METADATA_FIELD: {"Plate": "A"}})
     context = snapshot(cache, source_projection, parser)
     cache.normalized_source_metadata(source_projection.source_metadata_by_path)
     assert cache.source_resolution_snapshots
@@ -358,5 +358,5 @@ def test_durable_workspace_mapping_still_runs_selector_parser_and_rule_fallbacks
     assert resolved["site"] == 8
     assert resolved["well"] == "A01"
     assert resolved["literal"] == "kept"
-    assert resolved[ORIGINAL_SOURCE_METADATA_FIELD]["Plate"] == "A01"
+    assert resolved[DECLARED_SOURCE_METADATA_FIELD]["Plate"] == "A01"
     assert parser.calls == [PATH]

@@ -21,7 +21,6 @@ from openhcs.core.function_patterns import (
     normalize_function_pattern,
 )
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
@@ -185,6 +184,6 @@ def test_primary_image_projection_consumes_nominal_binding_hook(monkeypatch) -> 
         },
     )
 
-    assert np.shape(image_payload_data(projected.payload)) == (4, 5)
+    assert np.shape(projected.payload.data) == (4, 5)
     assert projected.source_image_name is None
     assert projected.source_aliases == ()

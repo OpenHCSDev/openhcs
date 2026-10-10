@@ -51,7 +51,14 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
 )
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.microscopes.microscope_base import MicroscopeSourceSelectionRole
+from openhcs.core.dataset_sources.dataset_roots import (
+    DatasetRootRule,
+    LocalDirectoryRoot,
+)
+from openhcs.core.dataset_sources.source import (
+    PreparedWorkspaceSource,
+    SourceSelectionRole,
+)
 from openhcs.core.input_workspace import (
     InputWorkspacePreparationRequest,
     InputWorkspacePreparationResult,
@@ -1217,7 +1224,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         *,
         plate_root: Path | str | None = None,
         cppipe_path: Path | str | None = None,
-        source_role: MicroscopeSourceSelectionRole | None = None,
+        source_role: type[SourceSelectionRole] | None = None,
     ) -> ObjectState:
         """
         Create an orchestrator for a plate (in CREATED state, not initialized).
@@ -1274,8 +1281,6 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         logger.info(f"Created orchestrator for plate (CREATED state): {plate_path}")
 
         return orchestrator_state
-
-    # action_delete_plate() REMOVED - now uses ABC's action_delete() template with deletion_workflow
 
     def _validate_plates_for_operation(
         self,
@@ -1787,9 +1792,9 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         if output_plate_root in current_paths:
             return
 
-        # PipelineOrchestrator requires a real directory for non-OMERO paths.
-        # Ensure it exists so we can register an orchestrator.
-        if not output_plate_root.startswith("/omero/"):
+        # Local-directory datasets need a real directory before an orchestrator
+        # can open them; datasets a domain root rule claims do not.
+        if DatasetRootRule.for_dataset(output_plate_root) is LocalDirectoryRoot:
             out_path = Path(output_plate_root)
             try:
                 out_path.mkdir(parents=True, exist_ok=True)
@@ -1806,7 +1811,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         # Create orchestrator and add to root scope list (do not change selection)
         self._create_orchestrator_for_plate(
             output_plate_root,
-            source_role=MicroscopeSourceSelectionRole.PREPARED_WORKSPACE,
+            source_role=PreparedWorkspaceSource,
         )
         new_paths = list(current_paths)
         new_paths.append(output_plate_root)
@@ -2344,8 +2349,6 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
 
     # ========== UI Helper Methods ==========
 
-    # update_item_list() REMOVED - uses ABC template with list update hooks
-
     def get_selected_orchestrator(self):
         """
         Get the orchestrator for the currently selected plate.
@@ -2530,14 +2533,9 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
                 )
                 count += 1
 
-        # REMOVED: Thread-local modification - dual-axis resolver handles orchestrator context automatically
-
         logger.info(f"Applied new global config to {count} orchestrators")
 
         # SIMPLIFIED: Dual-axis resolver handles placeholder updates automatically
-
-    # REMOVED: _refresh_all_parameter_form_placeholders and _refresh_widget_parameter_forms
-    # SIMPLIFIED: Dual-axis resolver handles placeholder updates automatically
 
     # ========== Helper Methods ==========
 

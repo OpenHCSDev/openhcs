@@ -53,7 +53,7 @@ from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.pipeline_import import (
     import_cellprofiler_pipeline,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.cellprofiler.infrastructure import MetadataModule
 from openhcs.domains.microscopy.axes import Microscopy
 

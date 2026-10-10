@@ -28,7 +28,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionAuthority
+from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.microscopes.bioformats import BioFormatsMetadataHandler
 from tests.unit.bioformats_fixture import write_bioformats_manifest_fixture
@@ -165,7 +165,7 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
         # The original generic (pipeline/Image Browser) constructor still gives
         # the selected projection precedence even over an exact acquisition owner.
         physical_handler = BioFormatsHandler(filemanager)
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        projection = WorkspaceSourceProjections.from_plate_metadata(
             plate_path=tmp_path,
             metadata_handler=physical_handler.metadata_handler,
             filemanager=filemanager,
@@ -184,7 +184,6 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
         # Exercise the existing stream's source preparation, not a viewer/mock
         # or a new decoder. The actual native launch remains parent-owned.
         from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-        from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
         from openhcs.core.viewer_streaming_service import ViewerStreamingSource
 
         context, errors, _ = service.open_context(
@@ -209,8 +208,8 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
             source_projection=stream_projection,
             component_metadata=stream_record.metadata,
         )
-        np.testing.assert_array_equal(image_payload_data(image), stack[0, 0, 2])
-        metadata = image_payload_metadata(image)
+        np.testing.assert_array_equal(image.data, stack[0, 0, 2])
+        metadata = image.metadata
         assert metadata.source_voxel_spacing == SourceVoxelSpacing((0.5, 0.5))
 
         ambiguous = service.sample_image(

@@ -306,10 +306,6 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     MaskedImagePayload,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-    with_image_payload_data,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -353,6 +349,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 from openhcs.core.equivalence.measurement_features import (
     TieSensitiveLocationValueFeatureRelation,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 logger = logging.getLogger(__name__)
 ImageIntensityOutput: TypeAlias = np.ndarray | ImageMetadataPayload | MaskedImagePayload
@@ -973,8 +970,8 @@ class ObjectIntensityMeasurementRequest(ObjectIntensityMeasurementContext):
 
     @property
     def measurement_image(self) -> np.ndarray:
-        image = np.asarray(image_payload_data(self.image))
-        mask = image_payload_mask(self.image)
+        image = np.asarray(self.image.data)
+        mask = self.image.mask
         if mask is None:
             return image
         mask_array = np.asarray(mask, dtype=bool)
@@ -1427,9 +1424,7 @@ def object_intensity_backend(
 def measure_object_intensity_batch(
     request: RuntimePure2DSliceBatchRequest,
 ) -> list[object]:
-    return [
-        request.execute_one(slice_index) for slice_index in range(request.slice_count)
-    ]
+    return request.execute_each()
 
 
 def measure_object_intensity_measurement_image_batch(
@@ -1458,7 +1453,7 @@ def measure_object_intensity_measurement_image_batch(
             ).backend_provider
         )
         images = tuple(
-            (np.asarray(image_payload_data(request.image)) for _index, request in group)
+            (np.asarray(request.image.data) for _index, request in group)
         )
         batch_started_at = time.perf_counter()
         measurement_batches = backend.measure_prepared_batch(images, prepared_labels)
@@ -1504,7 +1499,7 @@ def _object_intensity_prepared_labels_for_batch_group(
     if labels.plane_axis is RuntimePlaneAxis.SOURCE_BINDING:
         return None
     return ObjectIntensityPreparedLabels.from_measurement(
-        image=image_payload_data(first_request.image),
+        image=first_request.image.data,
         labels=labels,
         slice_index=context.slice_index,
     )
@@ -1534,7 +1529,7 @@ def _object_intensity_batch_key(
 ) -> tuple[tuple[str, Hashable], ...] | None:
     if request.execution_mode is not ImagePayloadExecutionMode.FULL_STACK:
         return None
-    if image_payload_mask(request.image) is not None:
+    if request.image.mask is not None:
         return None
     semantic_group_key = request.semantic_group_key
     if semantic_group_key is None:
@@ -1560,7 +1555,7 @@ def _object_intensity_batch_key(
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
 def measure_object_intensity(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     labels: ObjectLabelValue,
     object_intensity_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     slice_index: int = OBJECT_INTENSITY_DEFAULT_SLICE_INDEX,
@@ -1698,7 +1693,7 @@ class RescaleIntensityContext:
     @classmethod
     def from_settings(
         cls,
-        image: np.ndarray,
+        image: ImagePayload,
         *,
         automatic_low: AutomaticLow,
         automatic_high: AutomaticHigh,
@@ -1708,7 +1703,7 @@ class RescaleIntensityContext:
         dest_high: float,
         divisor_value: float,
     ) -> "RescaleIntensityContext":
-        source_data = np.asarray(image_payload_data(image))
+        source_data = np.asarray(ImagePayload.of(image).data)
         return cls(
             data=source_data.astype(np.float32, copy=False),
             automatic_low=coerce_cellprofiler_enum(AutomaticLow, automatic_low),
@@ -1857,7 +1852,7 @@ class DivideByValueRescaleMethodRunner(RescaleMethodRunner):
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def rescale_intensity(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     rescale_method: RescaleMethod = RescaleMethod.STRETCH,
     automatic_low: AutomaticLow = AutomaticLow.EACH_IMAGE,
     automatic_high: AutomaticHigh = AutomaticHigh.EACH_IMAGE,
@@ -1886,10 +1881,10 @@ def rescale_intensity(
         divisor_value=divisor_value,
     )
     rescaled = RescaleMethodRunner.for_method(rescale_method).run(context)
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
     if not context.preserves_unit_interval_intensity_scale(rescale_method):
         metadata = metadata.without_unit_interval_intensity_scale()
-    return with_image_payload_data(image, rescaled, metadata=metadata)
+    return image.with_pixels(rescaled, metadata=metadata)
 
 
 def rescale_source_range(

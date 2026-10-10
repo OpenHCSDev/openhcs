@@ -9,11 +9,7 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImagePayloadBundleContext,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -47,6 +43,8 @@ from openhcs.processing.backends.cellprofiler.worms import (
     _overlapping_worm_outline,
     straighten_worms,
 )
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 def _source_binding_payload(
@@ -97,10 +95,10 @@ def test_colocalization_saved_mask_projects_its_declared_source_plane() -> None:
         threshold_mask_outputs=(ColocalizationThresholdMaskRuntimeOutput(group, 1),),
     )
 
-    metadata = image_payload_metadata(output)
-    assert image_payload_data(output).shape == rna.shape
+    metadata = output.metadata
+    assert output.data.shape == rna.shape
     assert metadata.plane_axis is None
-    assert metadata.source_channel_axis is None
+    assert metadata.axis_position(ColourAxis) is None
     assert metadata.source_image_paths == ("/input/rna.tif",)
 
 
@@ -121,7 +119,7 @@ def test_image_math_collapses_all_source_binding_contributors() -> None:
         truncate_high=False,
     )
 
-    metadata = image_payload_metadata(output)
+    metadata = output.metadata
     assert metadata.plane_axis is None
     assert metadata.source_path == "/input/shared.tif"
     assert len(metadata.source_provenance.represented_source_identities) == 2
@@ -144,8 +142,8 @@ def test_all_image_illumination_collapses_all_source_plane_contributors() -> Non
         rescale_option=RescaleOption.NO,
     )
 
-    metadata = image_payload_metadata(output)
-    assert image_payload_data(output).shape == (4, 5)
+    metadata = output.metadata
+    assert output.data.shape == (4, 5)
     assert metadata.plane_axis is None
     assert metadata.source_path == "/input/shared.tif"
     assert len(metadata.source_provenance.represented_source_identities) == 2
@@ -169,9 +167,9 @@ def test_skeleton_branchpoint_image_declares_rgb_channel_axis() -> None:
         branchpoint_image_name="Branches",
     )
 
-    metadata = image_payload_metadata(branchpoints)
-    assert image_payload_data(branchpoints).shape == (9, 9, 3)
-    assert metadata.source_channel_axis == -1
+    metadata = branchpoints.metadata
+    assert branchpoints.data.shape == (9, 9, 3)
+    assert metadata.axis_position(ColourAxis) == -1
     assert metadata.plane_axis is None
 
 
@@ -188,16 +186,16 @@ def test_worm_outline_images_declare_rgb_and_scalar_channel_semantics() -> None:
     ).payload()
 
     overlapping = _overlapping_worm_outline(source, labels, "Default")
-    assert image_payload_data(overlapping).shape == (7, 8, 3)
-    assert image_payload_metadata(overlapping).source_channel_axis == -1
+    assert overlapping.data.shape == (7, 8, 3)
+    assert overlapping.metadata.axis_position(ColourAxis) == -1
 
-    rgb_source = ImagePayloadMetadata(source_channel_axis=-1).payload_with(
+    rgb_source = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)).payload_with(
         np.zeros((7, 8, 3), dtype=np.float32),
         None,
     )
     nonoverlapping = _nonoverlapping_worm_outline(rgb_source, labels)
-    assert image_payload_data(nonoverlapping).shape == (7, 8)
-    assert image_payload_metadata(nonoverlapping).source_channel_axis is None
+    assert nonoverlapping.data.shape == (7, 8)
+    assert nonoverlapping.metadata.axis_position(ColourAxis) is None
 
 
 @pytest.mark.parametrize(
@@ -224,7 +222,7 @@ def test_straighten_worms_projects_sources_into_warped_spatial_domain(
         else ImagePayloadMetadata.compose(source_payloads)
         .replace_fields(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
         .payload_with(
-            np.stack(tuple(image_payload_data(payload) for payload in source_payloads)),
+            np.stack(tuple(payload.data for payload in source_payloads)),
             None,
         )
     )
@@ -243,10 +241,10 @@ def test_straighten_worms_projects_sources_into_warped_spatial_domain(
     assert isinstance(output, AlignedImageStack)
     assert len(output.slices) == 2
     for index, warped in enumerate(output.slices, start=1):
-        metadata = image_payload_metadata(warped)
+        metadata = warped.metadata
         assert metadata.plane_axis is None
         assert metadata.source_image_paths == (f"/input/channel_{index}.tif",)
         assert metadata.source_spatial_domain.origin_yx == (0, 0)
         assert metadata.source_spatial_domain.source_shape_yx == (
-            image_payload_data(warped).shape[-2:]
+            warped.data.shape[-2:]
         )

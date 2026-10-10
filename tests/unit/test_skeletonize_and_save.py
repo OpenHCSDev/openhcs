@@ -16,11 +16,14 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import AnalysisConsolidationConfig, PlateMetadataConfig
+from openhcs.domains.microscopy.config import (
+    AnalysisConsolidationConfig,
+    PlateMetadataConfig,
+)
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.orchestrator.analysis_consolidation import (
+from openhcs.domains.microscopy.analysis_consolidation import (
     FileManagerAnalysisSummaryWriter,
     RuntimeAnalysisSummaryDestination,
 )

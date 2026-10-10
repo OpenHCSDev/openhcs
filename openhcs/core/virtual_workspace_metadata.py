@@ -34,7 +34,7 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.source_tile_geometry import SourceTileLayout
-from openhcs.core.axes import Axis, AxisFamily, ColourAxis, is_axis
+from openhcs.core.axes import Axis, AxisFamily, ColourAxis
 
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
@@ -149,7 +149,7 @@ class AtomicMetadataWriter:
         is_main: bool,
         results_dir: str | None,
         metadata_document: dict[str, Any] | None = None,
-        admitted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
+        accepted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
     ) -> VirtualWorkspaceSourceProjectionEntries:
         """Publish saved inventory from retained addresses, never generated names.
 
@@ -175,7 +175,7 @@ class AtomicMetadataWriter:
                 reconcile_directory=(
                     subdirectory_name if projection_entries is None else None
                 ),
-                admitted_entries=admitted_entries,
+                accepted_entries=accepted_entries,
             )
             entries = published_entries.entries
             # Concurrent axes may persist their pixels before publishing their
@@ -253,7 +253,7 @@ class AtomicMetadataWriter:
             reconciliation_contexts = {}
             for owner, context in target_contexts.items():
                 for target in owner.reconciliation_targets(
-                    context, document=document, admitted_entries=admitted
+                    context, document=document, accepted_entries=admitted
                 ):
                     reconciliation_contexts.setdefault(target, context)
             for target, context in reconciliation_contexts.items():
@@ -262,7 +262,7 @@ class AtomicMetadataWriter:
                         context,
                         metadata_writer=self,
                         metadata_document=data,
-                        admitted_entries=admitted.get(
+                        accepted_entries=admitted.get(
                             target.sub_dir,
                             VirtualWorkspaceSourceProjectionEntries(MappingProxyType({})),
                         ),
@@ -318,13 +318,6 @@ def get_metadata_path(plate_root: str | Path) -> Path:
     return METADATA_CONFIG.metadata_path(plate_root)
 
 
-def component_metadata_field(component: type[Axis]) -> str:
-    """Derive the persisted collection field for one declared component."""
-
-    if not is_axis(component):
-        raise TypeError(f"Metadata fields require a declared axis; got {component!r}")
-    suffix = "es" if component.name.endswith("x") else "s"
-    return f"{component.name}{suffix}"
 
 
 @dataclass(frozen=True)
@@ -355,7 +348,7 @@ class OpenHCSMetadataFields:
     MICROSCOPE_HANDLER_NAME: str = (
         SourceProjectionMetadataSerializer.MICROSCOPE_HANDLER_NAME_FIELD
     )
-    # Per-axis collection fields derive from component_metadata_field(axis).
+    # Per-axis collection fields derive from axis.metadata_collection_field.
     # Collection fields owned by no axis; readers consume them from persisted plates.
     OBJECTIVES: str = "objectives"
     ACQUISITION_DATETIME: str = "acquisition_datetime"
@@ -519,9 +512,9 @@ class VirtualWorkspaceSourceProjectionEntries:
     ) -> "VirtualWorkspaceSourceProjectionEntries":
         """Admit current durable records, retaining the actual typed replacements."""
         records = self._records_by_path(subdirectory)
-        return self._admit_retained_records(records)
+        return self._accept_retained_records(records)
 
-    def _admit_retained_records(
+    def _accept_retained_records(
         self,
         records: Mapping[str, JsonValue],
     ) -> "VirtualWorkspaceSourceProjectionEntries":
@@ -553,7 +546,7 @@ class VirtualWorkspaceSourceProjectionEntries:
     ) -> "VirtualWorkspaceSourceProjectionEntries":
         """Merge producer fields without normalizing opaque retained wire fields."""
         records = self._records_by_path(subdirectory)
-        admitted = self._admit_retained_records(records)
+        admitted = self._accept_retained_records(records)
         fields = SourceProjectionMetadataSerializer.projection_fields(
             self.projection_paths
         )
@@ -572,7 +565,7 @@ class VirtualWorkspaceSourceProjectionEntries:
         *,
         saved_image_paths: Sequence[str],
         reconcile_directory: str | None,
-        admitted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
+        accepted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
     ) -> "VirtualWorkspaceSourceProjectionEntries":
         """Publish current path views while retaining admitted durable records.
 
@@ -583,8 +576,8 @@ class VirtualWorkspaceSourceProjectionEntries:
         """
         records = self._records_by_path(subdirectory)
         admitted = (
-            self._admit_retained_records(records)
-            if admitted_entries is None else admitted_entries
+            self._accept_retained_records(records)
+            if accepted_entries is None else accepted_entries
         )
         saved_set = frozenset(saved_image_paths)
         missing = saved_set.difference(admitted.entries)
@@ -612,11 +605,11 @@ class VirtualWorkspaceSourceProjectionEntries:
         for path, record in records.items():
             if path in self.entries:
                 continue  # Replacements can repair an invalid durable record.
-            canonical_path = self._required_text(record, "virtual_path")
-            if canonical_path in retained.entries:
-                retained_records[canonical_path] = (
-                    record if path == canonical_path
-                    else {**record, "virtual_path": canonical_path}
+            normalized_path = self._required_text(record, "virtual_path")
+            if normalized_path in retained.entries:
+                retained_records[normalized_path] = (
+                    record if path == normalized_path
+                    else {**record, "virtual_path": normalized_path}
                 )
         retained_records.update(
             (record["virtual_path"], record)
@@ -889,7 +882,7 @@ class VirtualWorkspaceChannelLabels:
     ) -> "VirtualWorkspaceChannelLabels":
         entries: dict[str, str] = {}
         for colour_axis in AxisFamily.active().with_role(ColourAxis):
-            labels = subdirectory.get(component_metadata_field(colour_axis))
+            labels = subdirectory.get(colour_axis.metadata_collection_field)
             if labels is None:
                 continue
             if not isinstance(labels, Mapping):

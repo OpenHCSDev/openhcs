@@ -35,9 +35,6 @@ from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
     project_image_mask_to_data_domain,
 )
 from openhcs.core.steps.function_runtime import (
@@ -92,6 +89,7 @@ from openhcs.processing.backends.cellprofiler.worm_geometry import (
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.core.axes import Axis
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -926,7 +924,7 @@ class IlluminationCalculationRequest:
 
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def correct_illumination_calculate(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     intensity_choice: IntensityChoice = IntensityChoice.REGULAR,
     dilate_objects: bool = False,
     object_dilation_radius: int = 1,
@@ -964,9 +962,9 @@ def correct_illumination_calculate(
     acquisition bias rather than foreground biology.
     """
     morphology = MorphologyBackendStrategy.for_callable(correct_illumination_calculate)
-    pixel_data = np.asarray(image_payload_data(image))
-    raw_mask = image_payload_mask(image)
-    metadata = image_payload_metadata(image).without_unit_interval_intensity_scale()
+    pixel_data = np.asarray(image.data)
+    raw_mask = image.mask
+    metadata = image.metadata.without_unit_interval_intensity_scale()
     request = IlluminationCalculationRequest(
         image_data=pixel_data,
         mask=None if raw_mask is None else np.asarray(raw_mask, dtype=bool),
@@ -1055,7 +1053,7 @@ def _prepare_correct_illumination_calculate() -> None:
 @numpy(contract=ProcessingContract.PURE_2D)
 @special_inputs("illumination_function")
 def correct_illumination_apply(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     *,
     illumination_function: RuntimeArrayData,
     method: IlluminationCorrectionMethod = IlluminationCorrectionMethod.DIVIDE,
@@ -1069,8 +1067,8 @@ def correct_illumination_apply(
             the input, divided into or subtracted from it according to ``method``.
     """
 
-    image_pixels = np.asarray(image_payload_data(image))
-    illumination_pixels = np.asarray(image_payload_data(illumination_function))
+    image_pixels = np.asarray(image.data)
+    illumination_pixels = np.asarray(ImagePayload.of(illumination_function).data)
     if image_pixels.shape != illumination_pixels.shape:
         raise ValueError(
             f"Input image shape {image_pixels.shape} and illumination function "
@@ -1083,9 +1081,9 @@ def correct_illumination_apply(
         np.maximum(output_pixels, 0.0, out=output_pixels)
     if truncate_high:
         np.minimum(output_pixels, 1.0, out=output_pixels)
-    mask = image_payload_mask(image)
+    mask = image.mask
     return (
-        image_payload_metadata(image)
+        image.metadata
         .without_unit_interval_intensity_scale()
         .payload_with(
             output_pixels, None if mask is None else np.asarray(mask, dtype=bool)

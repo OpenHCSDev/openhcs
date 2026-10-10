@@ -4,10 +4,7 @@ from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType
 from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode_from_callable,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
@@ -84,5 +81,5 @@ def test_singleton_object_projection_consumes_measurement_image_plane_proof() ->
     )
 
     assert aligned_source.plane_projection is None
-    assert image_payload_metadata(aligned_source.payload).plane_axis is None
+    assert aligned_source.payload.metadata.plane_axis is None
     assert np.shape(aligned_source.payload) == (4, 5)

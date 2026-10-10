@@ -105,7 +105,6 @@ def fixture(root: Path) -> tuple[Path, object]:
     import numpy as np
     from polystore.virtual_workspace import SourcePixelRef
 
-    from openhcs.constants import Microscope
     from openhcs.core.image_file_serialization import ImageFileFormat
     from openhcs.core.source_projection import (
         OpenHCSPlaneAddress,
@@ -113,7 +112,7 @@ def fixture(root: Path) -> tuple[Path, object]:
         SourceProjectionSet,
     )
     from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     root.mkdir()
     pixels = np.arange(64, dtype=np.uint16).reshape(8, 8)
@@ -134,7 +133,7 @@ def fixture(root: Path) -> tuple[Path, object]:
     )
     metadata = projections.metadata_dict(
         parser=SourceSchemaFilenameParser(),
-        microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+        microscope_handler_name="source_bindings",
         source_filename_parser_name="SourceSchemaFilenameParser",
         grid_dimensions=[],
         pixel_size=1,
@@ -644,11 +643,11 @@ def run(args) -> None:
             MaterializationBackend,
             PipelineConfig,
         )
-        from openhcs.core.pipeline_document import PipelineDocumentAuthority
+        from openhcs.core.pipeline_document import PipelineDocumentCodec
         from openhcs.core.steps.function_step import FunctionStep
         from openhcs.processing.custom_functions import registration_live_probe
 
-        document = PipelineDocumentAuthority.from_values(
+        document = PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(
                 num_workers=1,
                 use_threading=True,
@@ -669,7 +668,7 @@ def run(args) -> None:
                 )
             ],
         )
-        pipeline_source = PipelineDocumentAuthority.render(document)
+        pipeline_source = PipelineDocumentCodec.render(document)
         (receipt_dir / "pipeline.py").write_text(pipeline_source)
         inspected = call(
             "openhcs_inspect_pipeline_source_artifact_plan",

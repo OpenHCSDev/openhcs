@@ -33,12 +33,7 @@ from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
@@ -46,7 +41,7 @@ from openhcs.core.source_image_provenance import (
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,
@@ -60,7 +55,7 @@ if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
     from openhcs.core.config import StreamingConfig
-    from openhcs.microscopes.microscope_base import MicroscopeHandler
+    from openhcs.core.dataset_sources.source import DatasetSource
     from openhcs.runtime.viewer_protocol import (
         ManagedViewerLifecycleMixin,
         ViewerLaunchContext,
@@ -96,7 +91,7 @@ class ImageStreamingRequest(ViewerStreamingContext):
 
     def image_plane_projection(self, image) -> RuntimePlaneAxisValueProjection | None:
         """Select only a leading axis proven singleton by its source declaration."""
-        return image_payload_metadata(image).singleton_plane_projection()
+        return image.metadata.singleton_plane_projection()
 
     def project_image(self, image):
         """Use the original projection owner for display pixels, masks and lineage."""
@@ -113,7 +108,7 @@ class ImageStreamingRequest(ViewerStreamingContext):
         projection: VirtualWorkspaceSourceProjection,
     ) -> None:
         """Admit the original source window, including a declared bounded crop."""
-        metadata = image_payload_metadata(image)
+        metadata = image.metadata
         shape_yx = metadata.spatial_shape_yx(image)
         if shape_yx is None:
             raise ValueError("Streamed image requires declared spatial Y/X axes.")
@@ -348,10 +343,10 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
     """Source authority for viewer streaming from one initialized plate."""
 
     filemanager: FileManager
-    microscope_handler: MicroscopeHandler
+    microscope_handler: DatasetSource
 
     def source_workspace_projection(self) -> VirtualWorkspaceSourceProjection:
-        return VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        return WorkspaceSourceProjections.from_plate_metadata(
             plate_path=Path(self.plate_path),
             metadata_handler=self.microscope_handler.metadata_handler,
             filemanager=self.filemanager,
@@ -418,7 +413,7 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
         ).metadata(image)
         metadata = self.calibrated_metadata(metadata)
         return metadata.payload_with(
-            image_payload_data(image), image_payload_mask(image)
+            image.data, image.mask
         )
 
     def component_metadata_by_path(
@@ -493,7 +488,7 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
                 "Explicit image projection requires a metadata-bearing source."
             )
         metadata = projection.image_metadata
-        shape = tuple(image_payload_data(image).shape)
+        shape = tuple(image.data.shape)
         if (
             len(shape) != 3
             or metadata.plane_axis is None
@@ -554,7 +549,7 @@ class StreamingService:
     def __init__(
         self,
         filemanager: FileManager,
-        microscope_handler: MicroscopeHandler,
+        microscope_handler: DatasetSource,
         plate_path: Path,
         transport_config: ZMQConfig = OPENHCS_ZMQ_CONFIG,
     ):
@@ -725,10 +720,10 @@ class StreamingService:
 
             component_order = message_authority.layout.component_order
             for indices in StreamImagePayloadMetadataProjector.partition_indices(
-                (image_payload_metadata(image) for image in image_data_list),
+                (image.metadata for image in image_data_list),
                 component_order,
             ):
-                metadata = image_payload_metadata(image_data_list[indices[0]])
+                metadata = (image_data_list[indices[0]]).metadata
                 item_fields = StreamImagePayloadMetadataProjector.item_fields(
                     metadata,
                     component_order,
@@ -741,7 +736,7 @@ class StreamingService:
                     tuple(start_idx + index for index in indices), total_images
                 )
                 self.source.filemanager.save_batch(
-                    [image_payload_data(image_data_list[index]) for index in indices],
+                    [image_data_list[index].data for index in indices],
                     [file_paths[index] for index in indices],
                     backend_enum.value,
                     **message_authority.viewer_backend_kwargs(

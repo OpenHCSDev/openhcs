@@ -29,11 +29,10 @@ from openhcs.core.source_matching import (
     source_component_metadata_values,
     source_metadata_component,
     source_metadata_values_equal,
-    with_original_source_metadata,
+    with_declared_source_metadata,
     with_source_component_metadata,
 )
 from openhcs.core.source_metadata import (
-    SourceComponentProjectionStrategy,
     SourceMetadataFields,
     ResolvedSourceMetadataRecord,
     SourceMetadataMapping,
@@ -661,14 +660,14 @@ class SourceProjection:
 
     def virtual_workspace_path(
         self,
-        canonical_path: str,
+        normalized_path: str,
         *,
         execution_anchor: bool,
     ) -> str:
         """Return this projection's path within the virtual workspace."""
 
         del execution_anchor
-        return canonical_path
+        return normalized_path
 
     def extend_source_metadata(
         self,
@@ -888,16 +887,16 @@ class SourceArtifactProjection(SourceProjection):
 
     def virtual_workspace_path(
         self,
-        canonical_path: str,
+        normalized_path: str,
         *,
         execution_anchor: bool,
     ) -> str:
         """Namespace non-anchor artifacts beneath their source alias."""
 
         if execution_anchor:
-            return canonical_path
+            return normalized_path
         alias = quote(self.source_alias, safe="-_.")
-        return str(Path("_source") / alias / canonical_path)
+        return str(Path("_source") / alias / normalized_path)
 
     def extend_source_metadata(
         self,
@@ -992,7 +991,7 @@ class SourceProjectionSet:
         tuple[SourceArtifactProjection, ...],
         tuple[tuple[SourceArtifactProjection, ...], ...],
     ]:
-        """Partition whole exports and ordered scalar Z cohorts from one set.
+        """Partition whole exports and ordered stack-plane cohorts from one set.
 
         Producer, execution scope and all other source coordinates remain
         distinct. Coordinates alone never declare a pixel axis.
@@ -1008,25 +1007,28 @@ class SourceProjectionSet:
         ordered_groups = []
         for group in groups.values():
             stack_axis = AxisFamily.active().one(StackAxis)
-            z_indexes = tuple(
+            stack_values = tuple(
                 projection.component_value(stack_axis) for projection in group
             )
-            if any(value is None or not value.isdecimal() for value in z_indexes):
+            if any(value is None or not value.isdecimal() for value in stack_values):
                 raise ValueError(
-                    "Exported Z planes require integral source coordinates."
+                    f"Exported {stack_axis.name} planes require integral source "
+                    "coordinates."
                 )
             ordered = tuple(
                 projection
                 for _, projection in sorted(
-                    zip((int(value) for value in z_indexes), group, strict=True),
+                    zip((int(value) for value in stack_values), group, strict=True),
                     key=lambda item: item[0],
                 )
             )
-            first_z_index = int(ordered[0].component_value(stack_axis))
+            first_value = int(ordered[0].component_value(stack_axis))
             if tuple(
                 int(projection.component_value(stack_axis)) for projection in ordered
-            ) != tuple(range(first_z_index, first_z_index + len(ordered))):
-                raise ValueError("Exported Z planes must be unique and contiguous.")
+            ) != tuple(range(first_value, first_value + len(ordered))):
+                raise ValueError(
+                    f"Exported {stack_axis.name} planes must be unique and contiguous."
+                )
             ordered_groups.append(ordered)
         return tuple(whole_images), tuple(ordered_groups)
 
@@ -1148,9 +1150,7 @@ class SourceProjectionMetadataSerializer:
             values = self._component_values(projection_set, component)
             component_labels = (labels or {}).get(component) or {}
             metadata[
-                SourceComponentProjectionStrategy.for_axis(
-                    component
-                ).metadata_collection_field
+                component.metadata_collection_field
             ] = {
                 value: label if label is not None else component_labels.get(value)
                 for value, label in values.items()
@@ -1310,32 +1310,32 @@ class SourceProjectionMetadataSerializer:
             )
         }
         if source_component_fields:
-            metadata = with_original_source_metadata(
+            metadata = with_declared_source_metadata(
                 metadata,
                 source_component_fields,
                 path=projection.ref.backend_address,
             )
-        original_metadata = dict(SourceMetadataFields.original_items(metadata))
+        declared_metadata = dict(SourceMetadataFields.declared_items(metadata))
         for component, value in projection.source_component_values():
-            canonical_value = metadata.get(component.name)
+            normalized_value = metadata.get(component.name)
             conflicts_with_address = (
-                canonical_value is not None
-                and not isinstance(canonical_value, Mapping)
+                normalized_value is not None
+                and not isinstance(normalized_value, Mapping)
                 and not source_metadata_values_equal(
-                    source_metadata_scalar(canonical_value),
+                    source_metadata_scalar(normalized_value),
                     value,
                 )
             )
             provenance_values = source_component_metadata_values(
-                original_metadata,
+                declared_metadata,
                 component,
             )
             if conflicts_with_address and not any(
-                source_metadata_values_equal(source_value, canonical_value)
+                source_metadata_values_equal(source_value, normalized_value)
                 for source_value in provenance_values
             ):
                 raise ValueError(
-                    f"Source metadata {component.name}={canonical_value!r} conflicts "
+                    f"Source metadata {component.name}={normalized_value!r} conflicts "
                     f"with canonical {component.name}={value!r}."
                 )
             metadata = with_source_component_metadata(metadata, component, value)

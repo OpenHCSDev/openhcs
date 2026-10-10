@@ -27,7 +27,6 @@ def make_fixture(root: Path) -> tuple[Path, Path]:
     """Two known cropped planes, one field, sparse channel/Z cross product."""
     import numpy as np
     from polystore.virtual_workspace import SourcePixelRef
-    from openhcs.constants import Microscope
     from openhcs.core.image_file_serialization import ImageFileFormat
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
@@ -38,7 +37,7 @@ def make_fixture(root: Path) -> tuple[Path, Path]:
     )
     from openhcs.core.source_spatial_domain import SourceSpatialDomain
     from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     root.mkdir()
     gradient = (10 * np.arange(64)[:, None] + np.arange(64)[None, :]).astype(np.uint16)
@@ -67,7 +66,7 @@ def make_fixture(root: Path) -> tuple[Path, Path]:
         paths.append(path)
     metadata = SourceProjectionSet(tuple(projections)).metadata_dict(
         parser=SourceSchemaFilenameParser(),
-        microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+        microscope_handler_name="source_bindings",
         source_filename_parser_name="SourceSchemaFilenameParser",
         grid_dimensions=[],
         pixel_size=1,

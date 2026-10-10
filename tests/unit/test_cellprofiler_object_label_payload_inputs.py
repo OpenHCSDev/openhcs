@@ -20,6 +20,7 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
 )
+from openhcs.core.runtime_image_values import array_data_of
 
 
 def test_area_occupied_accepts_object_label_payload_input() -> None:
@@ -82,8 +83,10 @@ def test_convert_objects_to_image_accepts_object_label_payload_input() -> None:
         image_mode=ImageMode.BINARY,
     )
 
-    assert converted.dtype == np.float32
-    assert converted.sum() == 1.0
+    # The rendered image carries the labels' image context, so it is a payload.
+    pixels = array_data_of(converted)
+    assert pixels.dtype == np.float32
+    assert pixels.sum() == 1.0
 
 
 def test_measure_object_skeleton_rejects_unprojected_object_label_stack() -> None:

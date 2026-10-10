@@ -16,7 +16,7 @@ from openhcs.core.function_reference import (
     FunctionReferenceTransportAuthority,
     RegistryFunctionReference,
 )
-from openhcs.core.function_step_document import FunctionStepDocumentAuthority
+from openhcs.core.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressOutgrowthSettings,
@@ -168,10 +168,10 @@ def test_explicit_function_dtype_override_survives_object_state_round_trip():
             reconstructed.func[1]["dtype_config"].default_dtype_conversion
             is DtypeConversion.UINT16
         )
-        rendered = FunctionStepDocumentAuthority.render(
-            FunctionStepDocumentAuthority.from_value(reconstructed)
+        rendered = FunctionStepDocumentCodec.render(
+            FunctionStepDocumentCodec.from_value(reconstructed)
         )
-        reparsed = FunctionStepDocumentAuthority.from_source(rendered).step
+        reparsed = FunctionStepDocumentCodec.from_source(rendered).step
         assert (
             reparsed.func[1]["dtype_config"].default_dtype_conversion
             is DtypeConversion.UINT16
@@ -225,12 +225,12 @@ def test_added_nested_dataclass_field_survives_pipeline_code_round_trip():
         assert reconstructed.func[1]["outgrowth"] == MetaXpressOutgrowthSettings(
             candidate_threshold_correction_factor=0.5,
         )
-        rendered = FunctionStepDocumentAuthority.render(
-            FunctionStepDocumentAuthority.from_value(reconstructed)
+        rendered = FunctionStepDocumentCodec.render(
+            FunctionStepDocumentCodec.from_value(reconstructed)
         )
         assert "correction_factor=0.5" in rendered
         assert (
-            FunctionStepDocumentAuthority.from_source(rendered)
+            FunctionStepDocumentCodec.from_source(rendered)
             .step.func[1]["outgrowth"]
             .candidate_threshold_correction_factor
             == 0.5

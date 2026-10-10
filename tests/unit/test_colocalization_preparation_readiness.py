@@ -16,7 +16,8 @@ def test_public_preparation_covers_canonical_metric_states_and_scopes(tmp_path):
         from openhcs.core.callable_contract import (
             CallableContract, CallableProjection, prepare_processing_callable,
         )
-        from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+        from openhcs.core.payload_axes import PayloadAxes
+        from openhcs.core.runtime_image_values import ImagePayloadMetadata
         from openhcs.processing.backends.cellprofiler import colocalization as module
 
         for process in (module.measure_colocalization, module.measure_colocalization_objects):
@@ -31,7 +32,7 @@ def test_public_preparation_covers_canonical_metric_states_and_scopes(tmp_path):
         first = np.linspace(0.05, 0.95, 36, dtype=np.float32).reshape(6, 6)
         second = np.flip(first).copy()
         original_image = np.stack((first, second))
-        image = ImagePayloadMetadata(source_channel_axis=0).payload_with(original_image.copy())
+        image = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(0)).payload_with(original_image.copy())
         labels = np.repeat(np.arange(1, 5, dtype=np.int32), 9).reshape(6, 6)
         original_labels = labels.copy()
 
@@ -59,10 +60,10 @@ def test_public_preparation_covers_canonical_metric_states_and_scopes(tmp_path):
                         selection = scope.measurement_scope_selection
                         expected_rows = int(selection.includes(module.MeasurementScope.IMAGE)) + 4 * int(selection.includes(module.MeasurementScope.OBJECT))
                         assert rows.row_count() == expected_rows
-                        np.testing.assert_array_equal(image_payload_data(output), original_image[0:1])
+                        np.testing.assert_array_equal(output.data, original_image[0:1])
                     output, rows = image_call(image, **options)
                     assert rows.row_count() == 1
-                    np.testing.assert_array_equal(image_payload_data(output), original_image[0:1])
+                    np.testing.assert_array_equal(output.data, original_image[0:1])
             context = module._prepare_object_colocalization_context(
                 image, labels, channel_1=0, channel_2=1,
                 threshold_percent=20.0, do_correlation=True, do_manders=True,
@@ -73,7 +74,7 @@ def test_public_preparation_covers_canonical_metric_states_and_scopes(tmp_path):
             )
             _, rows = module._measure_colocalization_objects_core(context)
             np.testing.assert_allclose(rows.columns['correlation'], -1.0, atol=1e-6)
-        np.testing.assert_array_equal(image_payload_data(image), original_image)
+        np.testing.assert_array_equal(image.data, original_image)
         np.testing.assert_array_equal(labels, original_labels)
     """)
     environment = os.environ.copy()

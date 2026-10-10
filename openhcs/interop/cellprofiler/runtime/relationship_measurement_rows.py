@@ -36,9 +36,6 @@ from openhcs.core.runtime_relationships import (
     DirectParentReferenceFeatureDeclaration,
     DirectParentReferenceMeasurementFeature,
 )
-from openhcs.core.runtime_image_values import (
-    image_payload_metadata,
-)
 from openhcs.interop.cellprofiler.measurement_lookup import (
     CellProfilerMeasurementFeature,
 )
@@ -46,6 +43,7 @@ from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
+from openhcs.core.runtime_image_values import image_metadata_of
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
@@ -165,7 +163,7 @@ class RelationshipMeasurementRows:
                         name=spec.name,
                         declaration=declaration,
                         payload=payload,
-                        source_provenance=image_payload_metadata(
+                        source_provenance=image_metadata_of(
                             self.request.source.payload
                         ).source_provenance,
                     ),
@@ -535,7 +533,6 @@ class RelationshipMeasurementRows:
             labels,
             slice_index=slice_index,
             slice_count=slice_count,
-            source_description=f"object labels {spec.name!r}",
         )
         return RuntimeSliceProjection.object_label_endpoint(labels, context=context)
 

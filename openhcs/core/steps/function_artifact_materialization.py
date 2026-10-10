@@ -19,17 +19,14 @@ from openhcs.core.artifacts import (
     ArtifactOutputPlan,
 )
 from openhcs.core.axis_filter import step_axis_allows_config
-from openhcs.microscopes.microscope_interfaces import FilenameParser
+from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
@@ -68,6 +65,7 @@ from openhcs.processing.materialization.core import (
     prepare_materialization,
 )
 from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
+from openhcs.core.runtime_image_values import image_metadata_of
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -540,7 +538,7 @@ class RuntimeArtifactMaterialization:
     def payload_source_identity(
         data: MaterializationValue,
     ) -> SourceImageIdentity | None:
-        metadata = image_payload_metadata(data)
+        metadata = image_metadata_of(data)
         source_identity = metadata.source_provenance.scalar_source_identity
         if source_identity.addressable:
             return source_identity
@@ -714,7 +712,7 @@ class RuntimeArtifactMaterialization:
             return ImagePayloadMetadata(
                 source_provenance=record.data.source_provenance,
             )
-        return image_payload_metadata(record.data)
+        return image_metadata_of(record.data)
 
     @classmethod
     def record_metadata_with_runtime_scope(
@@ -1021,9 +1019,7 @@ class RuntimeArtifactMaterialization:
         context: "ProcessingContext",
     ) -> StepExecutionObservation:
         """Report historical debug destinations and read their retained CSV text."""
-        from openhcs.core.orchestrator.analysis_consolidation import (
-            RuntimeAnalysisConsolidationInputs,
-        )
+        from openhcs.core.post_execute import PostExecuteHook
 
         target = plan.runtime_artifact_materialization
         if not target.has_persistent_target:
@@ -1048,7 +1044,7 @@ class RuntimeArtifactMaterialization:
         return StepExecutionObservation(
             MappingProxyType(locations),
             paths,
-            RuntimeAnalysisConsolidationInputs.from_reused_outputs(
+            hook_observations=PostExecuteHook.observe_reused(
                 context, plan, self, outputs
             ),
         )
@@ -1248,14 +1244,12 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             if self.materialization.spec.participates_in_runtime_export_observation()
             else ()
         )
-        from openhcs.core.orchestrator.analysis_consolidation import (
-            RuntimeAnalysisConsolidationInputs,
-        )
+        from openhcs.core.post_execute import PostExecuteHook
 
         return StepExecutionObservation(
             MappingProxyType({address: locations}),
             paths,
-            RuntimeAnalysisConsolidationInputs.from_saved_outputs(context, plan, self),
+            PostExecuteHook.observe_saved(context, plan, self),
             MappingProxyType(
                 {
                     Path(output.path): output.image_numbers_by_axis

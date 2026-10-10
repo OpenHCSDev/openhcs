@@ -30,8 +30,8 @@ from openhcs.core.viewer_streaming_service import ViewerStreamingSource
 from openhcs.microscopes.bioformats import BioFormatsMetadataHandler
 from types import SimpleNamespace
 from openhcs.microscopes.bioformats import BioFormatsHandler
-from openhcs.microscopes.bioformats_adapter import BioFormatsAdapterUnavailableError
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+from openhcs.core.dataset_sources.plane_stores import PlaneStoreUnavailableError
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.processing.materialization import (
     MaterializationSpec,
     ROIOptions,
@@ -235,13 +235,13 @@ def test_anisotropic_coordinates_are_preserved_without_a_false_scalar(
 def test_invalid_ome_calibration_is_rejected_at_the_original_decoder(
     tmp_path, monkeypatch, pixel_size
 ):
-    with pytest.raises(BioFormatsAdapterUnavailableError, match="finite and positive"):
+    with pytest.raises(PlaneStoreUnavailableError, match="finite and positive"):
         _prepare(tmp_path, monkeypatch, pixel_size)
 
 
 def test_partial_ome_calibration_is_not_inferred(tmp_path, monkeypatch):
     with pytest.raises(
-        BioFormatsAdapterUnavailableError, match="both PhysicalSizeX and PhysicalSizeY"
+        PlaneStoreUnavailableError, match="both PhysicalSizeX and PhysicalSizeY"
     ):
         _prepare(tmp_path, monkeypatch, 0.65, _IncompleteHeader)
 

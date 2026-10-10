@@ -19,7 +19,7 @@ from openhcs.core.config import GlobalPipelineConfig, MaterializationBackend
 from openhcs.core.utils import WellFilterProcessor
 
 from openhcs.core.vfs_protocol import FileManagerLike
-from openhcs.microscopes.microscope_base import MicroscopeHandler
+from openhcs.core.dataset_sources.source import DatasetSource
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class MaterializationFlagPlanner:
     """Admit source backend and persistence policy for one compilation submission."""
 
     pipeline_config: GlobalPipelineConfig
-    microscope_handler: MicroscopeHandler
+    microscope_handler: DatasetSource
     filemanager: FileManagerLike
     input_dir: Path
     available_axis_values: Sequence[str]

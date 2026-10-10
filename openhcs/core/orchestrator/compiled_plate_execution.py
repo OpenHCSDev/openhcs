@@ -39,10 +39,7 @@ from openhcs.core.context.processing_context import (
 from openhcs.core.debug import DebugExecutionPolicy
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.function_patterns import CompiledFunctionInvocation
-from openhcs.core.orchestrator.analysis_consolidation import (
-    RuntimeAnalysisConsolidationInputs,
-    consolidate_analysis_outputs,
-)
+from openhcs.core.post_execute import PostExecuteHook
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
@@ -310,10 +307,10 @@ def execute_compiled_plate_request(
                 orchestrator._executor_resources = None
 
             if execution_results.is_success():
-                consolidate_analysis_outputs(
+                PostExecuteHook.run_all(
                     validated.compiled_contexts,
                     execution_results,
-                    plate_runtime_observation=plate_runtime_observation,
+                    plate_runtime_observation,
                 )
         finally:
             OpenHCSMetadataTarget.finalize_completed_plate(

@@ -25,7 +25,7 @@ from openhcs.mcp.control_timeout import (
     McpUiBridgeTimeoutPolicy,
     McpViewerTimeoutPolicy,
 )
-from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.domains.microscopy.axes import Microscopy
 
 

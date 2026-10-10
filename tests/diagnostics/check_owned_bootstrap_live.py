@@ -19,6 +19,7 @@ import sys
 import time
 import traceback
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.microscopes.bioformats import BioFormatsHandler
 
 SOURCE = Path(__file__).resolve().parents[2]
 PYTHON = Path('/home/ts/code/projects/openhcs/.venv/bin/python')
@@ -36,10 +37,10 @@ def fixture_registration_sources():
     dependencies = (
         (fixture.select_volume_fixture_planes_v2,
          'ArrayPayload, numpy, ProcessingContract, artifact_outputs, SELECTED_VOLUME, '
-         'SelectedPlaneImageOutput, np, image_payload_data'),
+         'SelectedPlaneImageOutput, np'),
         (fixture.inspect_volume_fixture_v2,
          'ArrayPayload, numpy, ProcessingContract, artifact_outputs, VOLUME_IMAGE, '
-         'VOLUME_LABELS, VOLUME_ROWS, np, image_payload_data, image_payload_metadata, '
+         'VOLUME_LABELS, VOLUME_ROWS, np, '
          'DataclassMeasurementColumnarRows, VolumeProjectionFixtureRow'),
     )
     return tuple(
@@ -316,8 +317,7 @@ def run(args) -> None:
             from openhcs.core.config import (PipelineConfig, LazyPathPlanningConfig,
                                              LazyVFSConfig, MaterializationBackend,
                                              LazyStepMaterializationConfig, LazyProcessingConfig)
-            from openhcs.constants import Microscope
-            from openhcs.core.pipeline_document import PipelineDocumentAuthority
+            from openhcs.core.pipeline_document import PipelineDocumentCodec
             from openhcs.core.steps.function_step import FunctionStep
             from openhcs.processing.custom_functions import (
                 select_volume_fixture_planes_v2, inspect_volume_fixture_v2,
@@ -331,14 +331,14 @@ def run(args) -> None:
                         name=f'ProjectionCase{case}Step{phase}',
                         processing_config=LazyProcessingConfig(variable_components=[Microscopy.ZIndex]),
                         step_materialization_config=LazyStepMaterializationConfig(enabled=True)))
-            document = PipelineDocumentAuthority.from_values(
+            document = PipelineDocumentCodec.from_values(
                 pipeline_config=PipelineConfig(num_workers=1, use_threading=True,
-                    microscope=Microscope.BIOFORMATS,
+                    dataset_source=BioFormatsHandler,
                     path_planning_config=LazyPathPlanningConfig(global_output_folder=owned/'outputs'),
                     vfs_config=LazyVFSConfig(materialization_backend=MaterializationBackend.DISK)),
                 pipeline_steps=steps,
             )
-            source = PipelineDocumentAuthority.render(document)
+            source = PipelineDocumentCodec.render(document)
             (root/'pipeline.py').write_text(source)
             from openhcs.agent.dto.execution import ArtifactPlanInspection
             inspected = call('openhcs_inspect_pipeline_source_artifact_plan',

@@ -22,7 +22,6 @@ from metaclass_registry import AutoRegisterMeta
 from python_introspect import Enableable
 from python_introspect.enableable import EnableableMeta
 
-from openhcs.constants.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -1084,20 +1083,21 @@ class NamedSourceBinding(SourceAssignmentBase):
         """Apply this declaration to one freshly loaded source payload."""
         import numpy as np
 
+        from openhcs.core.axes import ColourAxis
+        from openhcs.core.payload_axes import PayloadAxes
         from openhcs.core.runtime_image_values import (
+            ImagePayload,
             ImagePayloadMetadata,
             ImageUnitIntervalIntensityMetadata,
-            image_payload_data,
-            image_payload_mask,
-            image_payload_metadata,
         )
 
+        payload = ImagePayload.of(payload)
         if source_context is None:
-            existing = image_payload_metadata(payload)
+            existing = payload.metadata
             metadata = (
                 existing
                 if existing.has_values
-                else ImagePayloadMetadata.for_array_payload(payload)
+                else ImagePayloadMetadata.for_array_payload(payload.data)
             )
         else:
             # The physical context needs the declared channel axis before it
@@ -1110,20 +1110,22 @@ class NamedSourceBinding(SourceAssignmentBase):
         )
         if source_context is None:
             metadata = metadata.replace_fields(
-                source_channel_axis=self.source_channel_axis_for_shape(
-                    np.shape(image_payload_data(payload)),
-                    observed_axis=metadata.source_channel_axis,
+                axes=PayloadAxes.colour_samples(
+                    self.source_channel_axis_for_shape(
+                        np.shape(payload.data),
+                        observed_axis=metadata.axis_position(ColourAxis),
+                    )
                 ),
             )
-        metadata.normalized_source_channel_axis(payload)
+        metadata.axis_index(ColourAxis, payload)
 
-        data, source_channel_axis = self.artifact_kind.normalize_source_payload(
-            image_payload_data(payload),
-            metadata.source_channel_axis,
+        data, colour_axis_position = self.artifact_kind.normalize_source_payload(
+            payload.data,
+            metadata.axis_position(ColourAxis),
         )
-        if self.load_as_monochrome and source_channel_axis is not None:
-            data = self._monochrome_source_data(data, source_channel_axis, metadata)
-            source_channel_axis = None
+        if self.load_as_monochrome and colour_axis_position is not None:
+            data = self._monochrome_source_data(data, colour_axis_position, metadata)
+            colour_axis_position = None
             metadata = metadata.replace_fields(
                 unit_interval_intensity=ImageUnitIntervalIntensityMetadata(),
             )
@@ -1133,8 +1135,10 @@ class NamedSourceBinding(SourceAssignmentBase):
                 unit_interval_intensity=ImageUnitIntervalIntensityMetadata(scale=1),
             )
 
-        metadata = metadata.replace_fields(source_channel_axis=source_channel_axis)
-        return metadata.payload_with(data, image_payload_mask(payload))
+        metadata = metadata.replace_fields(
+            axes=PayloadAxes.colour_samples(colour_axis_position)
+        )
+        return metadata.payload_with(data, payload.mask)
 
     def project_step_input_payload(self, payload: RuntimeArrayData) -> RuntimeArrayData:
         """Select current pixels by provenance, then assign this binding's name.
@@ -1143,9 +1147,8 @@ class NamedSourceBinding(SourceAssignmentBase):
         selectors. A new alias names the selector's current-plane selection.
         Neither case reloads original pixels.
         """
-        from openhcs.core.runtime_image_values import image_payload_metadata
 
-        metadata = image_payload_metadata(payload)
+        metadata = payload.metadata
         provenance = metadata.source_provenance
         if not provenance.has_values:
             raise ValueError(f"STEP_INPUT binding {self.alias!r} requires source provenance.")
@@ -1186,17 +1189,10 @@ class NamedSourceBinding(SourceAssignmentBase):
         """Convert declared RGB channels using the source intensity domain."""
         import numpy as np
 
-        from openhcs.core.runtime_image_values import (
-            image_payload_data,
-            normalize_image_payload_intensity,
-        )
 
-        normalized = normalize_image_payload_intensity(
-            metadata.payload_with(data),
-            dtype=np.float32,
-        )
+        normalized = metadata.payload_with(data).normalize_intensity_payload(dtype=np.float32,)
         rgb = np.moveaxis(
-            np.asarray(image_payload_data(normalized)), channel_axis, -1
+            np.asarray(normalized.data), channel_axis, -1
         )[..., :3]
         if np.all(rgb == rgb[..., :1]):
             return np.ascontiguousarray(rgb[..., 0])
@@ -1876,7 +1872,6 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     """
 
     registry_key: ClassVar[str] = "source"
-    microscope_handler_name: ClassVar[str] = Microscope.SOURCE_BINDINGS.value
     source_filters: tuple[SourceFilterClause, ...] = ()
     """Filters limiting the source universe before named bindings are resolved."""
 

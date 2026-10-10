@@ -113,14 +113,14 @@ def test_filename_declaration_mismatch_is_not_accepted(source_owner):
 
 
 def test_public_canonical_source_evaluation_and_render_roundtrip_use_selected_owner(source_owner, monkeypatch):
-    from openhcs.core.pipeline_document import PipelineDocumentAuthority
+    from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 
     name = "canonical_roundtrip_source"
     (source_owner / f"{name}.py").write_text(source(name), encoding="utf-8")
     monkeypatch.setattr(RegistryService, "_metadata_cache", None)
     forbid_catalog(monkeypatch)
-    document = PipelineDocumentAuthority.from_source(
+    document = PipelineDocumentCodec.from_source(
         "from openhcs.processing.func_registry import get_function\n"
         "from openhcs.core.steps.function_step import FunctionStep\n"
         f"pipeline_steps = [FunctionStep(func=get_function('openhcs:{name}'), name='probe')]\n"
@@ -128,10 +128,10 @@ def test_public_canonical_source_evaluation_and_render_roundtrip_use_selected_ow
     function = CustomFunctionRuntimeRegistry.metadata_by_name()[name].func
     assert document.pipeline_steps[0].func is function
     assert FunctionReferenceTransportAuthority.function_reference(function).resolve() is function
-    rendered = PipelineDocumentAuthority.render(document)
+    rendered = PipelineDocumentCodec.render(document)
     assert f"from openhcs.processing.custom_functions import {name}" in rendered
     assert "get_function" not in rendered
-    restored = PipelineDocumentAuthority.from_source(rendered)
+    restored = PipelineDocumentCodec.from_source(rendered)
     assert restored.pipeline_steps[0].func is function
     reference = FunctionReferenceTransportAuthority.function_reference(function)
     from openhcs.core.function_reference import ModuleExportRegistryFunctionReference

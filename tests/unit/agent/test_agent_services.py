@@ -106,7 +106,7 @@ from openhcs.core.config import (
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import (
     ProgressEventPayload, ProgressIdentity, ProgressPhase, ProgressStatus, create_event,
 )
@@ -120,7 +120,7 @@ from openhcs.core.source_bindings import (
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core import virtual_workspace_metadata as metadata_module
-from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
+from openhcs.core.dataset_sources.exceptions import PixelSizeUnavailableError
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponseField,
@@ -276,8 +276,8 @@ def _pipeline_document_source(
     pipeline_config: PipelineConfig | None = None,
 ) -> str:
     config = pipeline_config if pipeline_config is not None else PipelineConfig()
-    return PipelineDocumentAuthority.render(
-        PipelineDocumentAuthority.from_values(
+    return PipelineDocumentCodec.render(
+        PipelineDocumentCodec.from_values(
             pipeline_config=config,
             pipeline_steps=[],
         )
@@ -3181,7 +3181,7 @@ def test_execution_session_service_submits_compile_and_execution_jobs(
         == pipeline_service.get_pipeline(pipeline_ref).pipeline_config_id
     )
     assert (
-        PipelineDocumentAuthority.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_config
+        PipelineDocumentCodec.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_config
         == pipeline_service.to_pipeline_document(pipeline_ref).pipeline_config
     )
     assert fake_client.status_requests[0] == (
@@ -3198,8 +3198,8 @@ def test_execution_session_service_submits_compile_and_execution_jobs(
         fake_client.execution_submissions[0].compile_control.compile_artifact_id
         == _ExecutionTestId.COMPILE
     )
-    assert type(PipelineDocumentAuthority.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_steps) is list
-    assert len(PipelineDocumentAuthority.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_steps) == 1
+    assert type(PipelineDocumentCodec.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_steps) is list
+    assert len(PipelineDocumentCodec.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_steps) == 1
     assert not hasattr(fake_client.compile_submissions[0], "submission_pipeline")
 
 
@@ -3419,8 +3419,8 @@ def test_execution_session_service_preserves_pipeline_source_document(
 
     submission = fake_client.compile_submissions[0]
     assert submission.pipeline_code == pipeline_source
-    assert PipelineDocumentAuthority.from_source(submission.pipeline_code).pipeline_steps == []
-    assert PipelineDocumentAuthority.from_source(submission.pipeline_code).pipeline_config == pipeline_config
+    assert PipelineDocumentCodec.from_source(submission.pipeline_code).pipeline_steps == []
+    assert PipelineDocumentCodec.from_source(submission.pipeline_code).pipeline_config == pipeline_config
     assert not hasattr(submission, "pipeline_steps_boundary")
 
 
@@ -3820,7 +3820,7 @@ def test_execution_session_service_projects_pixel_size_compile_inspection_error(
         config_service=ConfigService(),
         client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
         compile_inspection_gateway=_FailingCompileInspectionGateway(
-            MicroscopePixelSizeUnavailableError(image_path)
+            PixelSizeUnavailableError(image_path)
         ),
     )
 
@@ -3835,7 +3835,7 @@ def test_execution_session_service_projects_pixel_size_compile_inspection_error(
 
     error = inspection.errors[0]
     assert error.code == "compile_inspection_pixel_size_unavailable"
-    assert error.exception_type == "MicroscopePixelSizeUnavailableError"
+    assert error.exception_type == "PixelSizeUnavailableError"
     assert error.path == str(image_path)
     assert "openhcs_inspect_plate_path" in error.hint
     assert "physical pixel size" in error.hint

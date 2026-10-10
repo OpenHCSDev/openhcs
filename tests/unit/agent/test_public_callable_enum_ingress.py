@@ -13,7 +13,7 @@ from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringS
 from openhcs.core.callable_contract import CallableContract, callable_request
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from tests.unit.agent.test_compile_selector_authoring import SelectedDeclarations
 
@@ -73,7 +73,7 @@ def test_new_callable_json_roundtrip_exercises_cooperative_member(author, clean,
     ))
     validation = service.validate(ref)
     assert validation.valid, validation.errors
-    document = PipelineDocumentAuthority.from_source(service.render_source(ref, clean=clean).source)
+    document = PipelineDocumentCodec.from_source(service.render_source(ref, clean=clean).source)
     invocation = next(normalize_function_pattern(document.pipeline_steps[0].func).iter_items())
     expected = None if mode is None else IndependentProjection.DOUBLE_WITH_OFFSET
     if mode is None:

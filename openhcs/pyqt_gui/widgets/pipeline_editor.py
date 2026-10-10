@@ -77,7 +77,7 @@ from openhcs.core.execution_state import ManagerExecutionState
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import (
     PipelineDocument,
-    PipelineDocumentAuthority,
+    PipelineDocumentCodec,
 )
 from openhcs.core.progress.debug_projection import DebugRuntimeProjection
 from openhcs.core.source_binding_context import SourceBindingContext
@@ -853,9 +853,6 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         editor.raise_()
         editor.activateWindow()
 
-    # action_delete_step() REMOVED - now uses ABC's action_delete() template with deletion_workflow
-    # action_edit_step() REMOVED - now uses ABC's action_edit() template with show_item_editor()
-
     def action_auto_load_pipeline(self):
         """Handle Auto button - load basic_pipeline.py automatically."""
         if not self.current_plate:
@@ -927,7 +924,7 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         return bool(self.current_plate)
 
     def code_document_source(self, clean: bool = True) -> str:
-        """Render the selected plate's canonical pipeline document."""
+        """Render the selected plate's pipeline document."""
         pipeline_config = PipelineConfig()
         if self.current_plate and self.plate_manager is not None:
             pipeline_config = (
@@ -935,8 +932,8 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
                     self.current_plate
                 )
             )
-        return PipelineDocumentAuthority.render(
-            PipelineDocumentAuthority.from_values(
+        return PipelineDocumentCodec.render(
+            PipelineDocumentCodec.from_values(
                 pipeline_config=pipeline_config,
                 pipeline_steps=self._code_document_steps(),
             ),
@@ -954,47 +951,14 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
             return list(self.pipeline_steps)
         return self._get_steps_from_pipeline_state(self.current_plate)
 
-    def load_pipeline_from_file(self, file_path: Path):
-        """Load a saved pipeline (pickled step list) or a CellProfiler `.cppipe`."""
-        try:
-            if file_path.suffix == ".cppipe":
-                self._load_cppipe_pipeline_from_file(file_path)
-                return
-
-            import dill as pickle
-
-            with open(file_path, "rb") as f:
-                steps = pickle.load(f)
-            if not isinstance(steps, list):
-                raise TypeError(
-                    f"Pipeline file {file_path.name} holds "
-                    f"{type(steps).__name__}, expected a list of steps."
-                )
-
-            self.require_pipeline_definition_mutation_allowed(self.current_plate)
-            self.pipeline_steps = steps
-            # Don't register here; update_pipeline_for_plate handles atomic registration
-            self._normalize_step_scope_tokens(register=False)
-
-            # Update Pipeline ObjectState with loaded steps
-            if self.current_plate:
-                self.update_pipeline_for_plate(self.current_plate, self.pipeline_steps)
-                self.notify_pipeline_definition_changed(self.current_plate)
-                logger.debug(
-                    f"Updated Pipeline ObjectState ({len(self.pipeline_steps)} steps) for plate: {self.current_plate}"
-                )
-
-            self.update_item_list()
-            self._suppress_pipeline_state_sync = True
-            try:
-                self.pipeline_changed.emit(self.pipeline_steps)
-            finally:
-                self._suppress_pipeline_state_sync = False
-            self.status_message.emit(f"Loaded {len(steps)} steps from {file_path.name}")
-
-        except Exception as e:
-            logger.error(f"Failed to load pipeline: {e}")
-            self.service_adapter.show_error_dialog(f"Failed to load pipeline: {e}")
+    def load_pipeline_from_file(self, file_path: Path) -> None:
+        """Load a pipeline from its Python document (`.py`) or a CellProfiler `.cppipe`."""
+        if file_path.suffix == ".cppipe":
+            self._load_cppipe_pipeline_from_file(file_path)
+        elif file_path.suffix == ".py":
+            self._handle_edited_code(file_path.read_text(encoding="utf-8"))
+        else:
+            raise ValueError(f"Pipeline files are .py or .cppipe, got {file_path.name}.")
 
     def _load_cppipe_pipeline_from_file(self, file_path: Path) -> None:
         """Translate a CellProfiler `.cppipe` into public OpenHCS state."""
@@ -1036,23 +1000,10 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
             f"Imported {len(self.pipeline_steps)} steps from {file_path.name}"
         )
 
-    def save_pipeline_to_file(self, file_path: Path):
-        """
-        Save pipeline to file (extracted from Textual version).
-
-        Args:
-            file_path: Path to save pipeline
-        """
-        try:
-            import dill as pickle
-
-            with open(file_path, "wb") as f:
-                pickle.dump(list(self.pipeline_steps), f)
-            self.status_message.emit(f"Saved pipeline to {file_path.name}")
-
-        except Exception as e:
-            logger.error(f"Failed to save pipeline: {e}")
-            self.service_adapter.show_error_dialog(f"Failed to save pipeline: {e}")
+    def save_pipeline_to_file(self, file_path: Path) -> None:
+        """Save the pipeline as its Python document, the code editor's text."""
+        file_path.write_text(self.code_document_source(clean=True), encoding="utf-8")
+        self.status_message.emit(f"Saved pipeline to {file_path.name}")
 
     def save_pipeline_for_plate(self, plate_path: str, pipeline: List[FunctionStep]):
         """
@@ -1241,8 +1192,6 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         self.update_item_list()
 
     # ========== UI Helper Methods ==========
-
-    # update_item_list() REMOVED - uses ABC template with list update hooks
 
     def update_button_states(self):
         """Update button enabled/disabled states based on mathematical constraints (mirrors Textual TUI)."""
@@ -1703,7 +1652,6 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
 
     # === CrossWindowPreviewMixin Hook ===
     # _get_current_orchestrator() is implemented above (line ~795) - does actual lookup from plate manager
-    # _configure_preview_fields() REMOVED - now uses declarative PREVIEW_FIELD_CONFIGS (line ~99)
 
     # ========== End Abstract Hook Implementations ==========
 

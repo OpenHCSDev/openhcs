@@ -96,11 +96,6 @@ from openhcs.core.runtime_object_labels import (
     object_label_sparse_ijv_rows,
     object_label_value_with_dense_labels,
 )
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -156,6 +151,8 @@ from openhcs.processing.backends.cellprofiler.worm_geometry import (
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
+from openhcs.core.payload_axes import ColourSampleAxisSpec
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import (
@@ -1939,7 +1936,7 @@ def _untangle_worms_output(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def untangle_worms(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     overlap_style: OverlapStyle = OverlapStyle.WITHOUT_OVERLAP,
     min_worm_area: float = 100.0,
     max_worm_area: float = 5000.0,
@@ -1992,7 +1989,7 @@ def untangle_worms(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def untangle_worms_with_overlap(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     overlap_style: OverlapStyle = OverlapStyle.WITH_OVERLAP,
     min_worm_area: float = 100.0,
     max_worm_area: float = 5000.0,
@@ -2045,7 +2042,7 @@ def untangle_worms_with_overlap(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def untangle_worms_both(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     overlap_style: OverlapStyle = OverlapStyle.BOTH,
     min_worm_area: float = 100.0,
     max_worm_area: float = 5000.0,
@@ -2111,7 +2108,7 @@ del _function_name
 @special_inputs("worm_labels")
 @runtime_bound_parameters(_StraightenWormControlPointsRuntimeParameter)
 def straighten_worms(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     worm_labels: ObjectLabelValue,
     control_points: np.ndarray | None = None,
     worm_width: int = 20,
@@ -2138,9 +2135,9 @@ def straighten_worms(
     del number_of_segments, number_of_stripes
     if flip_mode is FlipMode.MANUAL:
         raise NotImplementedError("StraightenWorms manual flipping is interactive.")
-    image_data = np.asarray(image_payload_data(image))
+    image_data = np.asarray(image.data)
     image_stack = image_data[np.newaxis, :, :] if image_data.ndim == 2 else image_data
-    source_metadata = image_payload_metadata(image)
+    source_metadata = image.metadata
     if image_stack.shape[0] > 1 and source_metadata.plane_axis is None:
         raise ValueError(
             "StraightenWorms requires a declared leading plane axis for "
@@ -2225,7 +2222,7 @@ def straighten_worms(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def identify_dead_worms(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     worm_width: int = 10,
     worm_length: int = 100,
     angle_count: int = 32,
@@ -3003,13 +3000,8 @@ def _overlapping_worm_outline(
         local_mask[label_y - y_start, label_x - x_start] = True
         local_outline = find_boundaries(local_mask, mode="inner")
         output[y_start:y_stop, x_start:x_stop][local_outline] = colors[label_id]
-    return with_image_payload_data(
-        source_image,
-        output,
-        metadata=image_payload_metadata(source_image).replace_fields(
-            source_channel_axis=-1
-        ),
-    )
+    return source_image.with_pixels(output,
+        metadata=source_image.metadata.with_axis(ColourSampleAxisSpec(), -1),)
 
 
 def _nonoverlapping_worm_outline(
@@ -3024,11 +3016,8 @@ def _nonoverlapping_worm_outline(
         object_label_dense_array(labels, dtype=np.int32),
         mode="inner",
     )
-    return with_image_payload_data(
-        source_image,
-        outline,
-        metadata=image_payload_metadata(source_image).without_source_channel_axis(),
-    )
+    return source_image.with_pixels(outline,
+        metadata=source_image.metadata.without_axis(ColourAxis),)
 
 
 def _reconstructed_worm_pixels(

@@ -40,7 +40,7 @@ from zmqruntime.viewer_protocol import ViewerTransportEndpoint, ViewerWireField
 
 import openhcs  # noqa: F401
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import AnalysisConsolidationConfig
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
 )
@@ -95,7 +95,7 @@ from openhcs.core.source_metadata import (
     SourceVoxelSpacing,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
@@ -129,6 +129,7 @@ from openhcs.processing.materialization.core import (
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
+from openhcs.core.payload_axes import PayloadAxes
 
 
 def _memory_materialize(spec, data, path, filemanager):
@@ -554,7 +555,7 @@ def test_indexed_image_materialization_streams_each_declared_component_plane(
         data=data,
         metadata=ImagePayloadMetadata(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-            source_channel_axis=-1,
+            axes=PayloadAxes.colour_samples(-1),
             source_image_provenance_planes=(
                 SourceImageProvenancePlanes.from_components(
                     component_metadata=tuple(
@@ -2561,9 +2562,6 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
     from openhcs.processing.materialization.options import MaterializedFilenameIdentity
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
     from openhcs.core.image_file_serialization import TiffImageFileFormat
-    from openhcs.core.runtime_image_values import (
-        image_payload_data, image_payload_mask, image_payload_metadata,
-    )
     from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
     from openhcs.core.source_projection import SourceArtifactProjection, SourcePixelRef
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
@@ -2634,7 +2632,7 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
 
     (output,) = batch.outputs
     assert Path(output.path).name == "A01_s001_w2_z001_t001.tif"
-    assert image_payload_metadata(payload).source_component_metadata.get("z_index") is None
+    assert payload.metadata.source_component_metadata.get("z_index") is None
     assert output.metadata.source_component_metadata.get("z_index") is None
     assert output.metadata.source_provenance.source_plane_count == 3
     np.testing.assert_array_equal(tifffile.imread(output.path), pixels)
@@ -2691,8 +2689,8 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
                 axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=3
             ).selected_plane(index),
         )
-        np.testing.assert_array_equal(image_payload_data(plane), pixels[index])
-        np.testing.assert_array_equal(image_payload_mask(plane), mask[index])
+        np.testing.assert_array_equal(plane.data, pixels[index])
+        np.testing.assert_array_equal(plane.mask, mask[index])
         assert plane.metadata.source_path == paths[index]
         assert plane.metadata.source_component_metadata["z_index"] == index + 1
         assert type(plane.metadata.source_spatial_domain) is SourceSpatialDomain

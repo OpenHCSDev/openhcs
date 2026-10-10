@@ -15,7 +15,6 @@ from openhcs.agent.services.execution_session_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -38,13 +37,13 @@ from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     MainFlowArtifactContractProvider,
 )
-from openhcs.core.function_step_document import FunctionStepDocumentAuthority
+from openhcs.core.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.measurement_feature_queries import measurement_values_for_feature
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.memory import numpy
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.runtime_measurements import (
@@ -92,6 +91,7 @@ from openhcs.processing.custom_functions.runtime_registry import (
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 @dataclass(frozen=True)
@@ -243,9 +243,9 @@ def _document(*, selected=True, two_producers=True, same_source=False):
             MeasureObjectIntensityModule.object_measurement_binding.require_parameter_name()
         ] = ("Cells" if two_producers else "Nuclei",)
     measure = _step(measure_object_intensity, "Measure cells", kwargs)
-    return PipelineDocumentAuthority.from_values(
+    return PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(
-            microscope=Microscope.SOURCE_BINDINGS,
+            dataset_source=SourceBindingsSource,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(_source("DNA", "1"),) if same_source else (
                     _source("DNA", "1"), _source("Actin", "2"),
@@ -325,7 +325,7 @@ def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(
         measurement.processing_config = replace(
             measurement.processing_config, input_source=InputSource.PREVIOUS_STEP,
         )
-    document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
+    document = PipelineDocumentCodec.from_source(PipelineDocumentCodec.render(document))
     bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
     context = bundle.runtime_contexts["A01"]
     plan = context.step_plans[len(document.pipeline_steps)-1]
@@ -367,7 +367,7 @@ def test_label_only_measurement_keeps_stored_cohort(tmp_path):
         MeasureObjectSizeShapeModule.object_measurement_binding.require_parameter_name(): ("Cells",),
         "calculate_advanced": False, "calculate_zernikes": False,
     })
-    document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
+    document = PipelineDocumentCodec.from_source(PipelineDocumentCodec.render(document))
     bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
     context = bundle.runtime_contexts["A01"]
     plan = context.step_plans[len(document.pipeline_steps) - 1]
@@ -395,13 +395,13 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
     _write_plate(tmp_path, same_source=same_source)
     document = _document(same_source=same_source)
     selector = MeasureObjectIntensityModule.object_measurement_binding.require_parameter_name()
-    source = PipelineDocumentAuthority.render(document)
-    reconstructed = PipelineDocumentAuthority.from_source(source)
+    source = PipelineDocumentCodec.render(document)
+    reconstructed = PipelineDocumentCodec.from_source(source)
     measurement = reconstructed.pipeline_steps[-1]
-    step_source = FunctionStepDocumentAuthority.render(
-        FunctionStepDocumentAuthority.from_value(measurement)
+    step_source = FunctionStepDocumentCodec.render(
+        FunctionStepDocumentCodec.from_value(measurement)
     )
-    measurement = FunctionStepDocumentAuthority.from_source(step_source).step
+    measurement = FunctionStepDocumentCodec.from_source(step_source).step
     reconstructed.pipeline_steps[-1] = measurement
     authored = next(normalize_function_pattern(measurement.func).iter_items())
     assert authored.kwargs_dict[selector] == ("Cells",)
@@ -494,7 +494,7 @@ def test_explicit_measurement_rosters_preserve_compiled_source_groups(
             MeasureObjectIntensityModule.object_measurement_binding.require_parameter_name(): ("Nuclei", "Cells"),
         },
     )
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=replace(
             original.pipeline_config,
             source_bindings_config=LazySourceBindingsConfig(
@@ -504,7 +504,7 @@ def test_explicit_measurement_rosters_preserve_compiled_source_groups(
         ),
         pipeline_steps=original.pipeline_steps,
     )
-    document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
+    document = PipelineDocumentCodec.from_source(PipelineDocumentCodec.render(document))
     bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
     context = bundle.runtime_contexts["A01"]
     executor = FunctionStepExecutor(context, 2)
@@ -568,9 +568,9 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(
     tmp_path, valid, registered_count_callable,
 ):
     _write_plate(tmp_path)
-    document = PipelineDocumentAuthority.from_values(
+    document = PipelineDocumentCodec.from_values(
         pipeline_config=PipelineConfig(
-            microscope=Microscope.SOURCE_BINDINGS,
+            dataset_source=SourceBindingsSource,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(_source("DNA", "1"),),
             ),
@@ -580,8 +580,8 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(
             "Count pixels", {},
         )],
     )
-    document = PipelineDocumentAuthority.from_source(
-        PipelineDocumentAuthority.render(document)
+    document = PipelineDocumentCodec.from_source(
+        PipelineDocumentCodec.render(document)
     )
     invocation = next(
         normalize_function_pattern(document.pipeline_steps[0].func).iter_items()

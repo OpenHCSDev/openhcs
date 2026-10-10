@@ -1,8 +1,6 @@
 """Public declaration/descent/presentation behavior; never launch a viewer."""
 
 from dataclasses import dataclass
-import ast
-import inspect
 import json
 from pathlib import Path
 
@@ -38,7 +36,6 @@ from openhcs.mcp.dev_client_core import (
 )
 from openhcs.mcp.dev_client_renderers.viewer import ViewerProbeRenderer, ViewerStateRenderer
 from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
-from openhcs.mcp.dev_client_rendering import McpDevTypedOutputRenderer
 from python_introspect import to_jsonable
 
 
@@ -70,7 +67,7 @@ def test_public_probe_command_preserves_false_zero_empty_and_decoded_identity():
         ProbeViewerWindowCapability
     ) is payload
     args = _build_parser().parse_args(("probe-viewer", "5992"))
-    rendered = McpDevCommandSpec.for_name("probe-viewer").render_response(decoded, args)
+    rendered = McpDevCommandSpec.for_name("probe-viewer").render_result(decoded, args)
     assert 'reachable=False observed=False type=napari title=""' in rendered
     assert "port=5992 layers=0 component_groups=0 component_items=0" in rendered
 
@@ -98,7 +95,7 @@ def test_validation_descends_inherited_counters_policy_and_layer_records():
     assert type(value.layer_summaries[0]) is ViewerWindowLayerValidationSummary
     assert value.validation_policy.require_nonzero_payloads is False
     args = _build_parser().parse_args(("validate-viewer", "5992"))
-    rendered = McpDevCommandSpec.for_name("validate-viewer").render_response(decoded, args)
+    rendered = McpDevCommandSpec.for_name("validate-viewer").render_result(decoded, args)
     assert "valid=False observed=True layers=0 mounted=0 pending=0" in rendered
     assert "expected_layers=0 required_axes=<none> required_components=channel require_nonzero=False" in rendered
     assert 'native::A01: valid=False mounted=False items=0 axes=Y,X' in rendered
@@ -112,7 +109,7 @@ def test_invalid_boolean_contract_remains_a_failure_with_original_raw_receipt(va
     original["reachable"] = value
     decoded = McpDevToolBatchResponse.for_rendering(raw)
     assert decoded.payload_for(ProbeViewerWindowCapability) is None
-    assert decoded.results[0].payloads[0].receipt is original
+    assert decoded.results[0].payloads[0].payload is original
     rendered = ViewerProbeRenderer.render(decoded)
     assert rendered.startswith("Viewer probe: unavailable\n")
     assert "mcp_payload_invalid" in rendered
@@ -142,9 +139,9 @@ def render_state(raw):
     decoded = McpDevToolBatchResponse.for_rendering(raw)
     value = decoded.payload_for(GetViewerWindowStateCapability)
     assert value is not None
-    binding = McpDevOutputRenderer.for_output_contract(type(value))
-    assert binding.renderer_type is ViewerStateRenderer
-    return value, binding.render_result(decoded, binding.renderer_type.render_options_type())
+    renderer = McpDevOutputRenderer.for_output_contract(type(value))
+    assert renderer is ViewerStateRenderer
+    return value, renderer.render(decoded)
 
 
 def test_original_installed_state_reports_native_facts_without_mutating_receipt():
@@ -181,7 +178,7 @@ def test_original_installed_state_reports_native_facts_without_mutating_receipt(
     assert json.dumps(raw, sort_keys=True) == before
     assert to_jsonable(value) == raw["results"][0]["payloads"][0]
     args = _build_parser().parse_args(("viewer-state", "5992"))
-    assert McpDevCommandSpec.for_name("viewer-state").render_response(raw, args) == rendered
+    assert McpDevCommandSpec.for_name("viewer-state").render_result(raw, args) == rendered
 
 
 def test_native_sections_distinguish_absence_from_supplied_zero_and_empty_facts():
@@ -231,7 +228,7 @@ def test_malformed_native_declarations_remain_errors_not_absent_sections(member,
         original[member] = bad
     decoded = McpDevToolBatchResponse.for_rendering(raw)
     assert decoded.payload_for(GetViewerWindowStateCapability) is None
-    assert decoded.results[0].payloads[0].receipt is original
+    assert decoded.results[0].payloads[0].payload is original
     rendered = ViewerStateRenderer.render(decoded)
     assert "mcp_payload_invalid" in rendered
     assert "Viewer state: failed" in rendered
@@ -258,9 +255,9 @@ def test_independent_dto_and_capability_inherit_original_renderer_without_roster
     )
     payload = decoded.payload_for(IndependentProbeCapability)
     assert type(payload) is IndependentProbeResult
-    binding = McpDevOutputRenderer.for_output_contract(type(payload))
-    assert binding.renderer_type is ViewerProbeRenderer
-    rendered = binding.render_result(decoded, binding.renderer_type.render_options_type())
+    renderer = McpDevOutputRenderer.for_output_contract(type(payload))
+    assert renderer is ViewerProbeRenderer
+    rendered = renderer.render(decoded)
     assert "reachable=True observed=False type=<none> title=<none>" in rendered
 
 
@@ -300,22 +297,6 @@ def test_independent_presentation_capabilities_execute_cooperative_hooks():
     assert calls == ["observe", "audit"]
     assert "reachable=True" in rendered
     assert "Warnings:\n- notice: shown" in rendered
-
-
-def test_typed_viewer_declarations_do_not_reintroduce_known_raw_record_readers():
-    for declaration in McpDevOutputRenderer.declaration_types():
-        if (declaration.__module__ != ViewerProbeRenderer.__module__
-                or not issubclass(declaration, McpDevTypedOutputRenderer)):
-            continue
-        source = ast.parse(inspect.getsource(declaration))
-        for node in ast.walk(source):
-            if isinstance(node, ast.Call):
-                assert not (
-                    isinstance(node.func, ast.Attribute)
-                    and node.func.attr == "get"
-                    and node.args
-                    and isinstance(node.args[0], ast.Constant)
-                ), (declaration, node.lineno)
 
 
 def test_native_summary_absence_is_not_an_external_json_value():

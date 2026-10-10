@@ -32,7 +32,6 @@ from openhcs.agent.dto.viewer import (
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.core.runtime_image_values import image_payload_metadata, image_payload_data
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -44,6 +43,7 @@ from openhcs.runtime.viewer_protocol import ViewerPayloadSummary
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
+from openhcs.core.axes import ColourAxis
 
 
 def receipt_state(path, *, summary=None):
@@ -297,7 +297,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     )
     assert producer is not None
     assert producer.identities == state.layers[0].producer_identities
-    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+    from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     source = ViewerStreamingSource(
         plate_path=str(tmp_path),
@@ -317,8 +317,8 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
         component_metadata=components[str(path)],
     )
     source.require_projected_image_window(str(path), image, projection)
-    np.testing.assert_array_equal(image_payload_data(image), expected)
-    metadata = image_payload_metadata(image)
+    np.testing.assert_array_equal(image.data, expected)
+    metadata = image.metadata
     assert metadata.source_dtype == "int64"
     from openhcs.agent.capabilities import GetViewerWindowStateCapability
     from openhcs.mcp.dev_client_core import (
@@ -334,8 +334,8 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     received = decoded.payload_for(GetViewerWindowStateCapability)
     assert isinstance(received.layers[0].payload_summaries[0], ViewerPayloadSummary)
     assert received.layers[0].payload_summaries[0].require_plane_components() == {"channel": (2, 1)}
-    binding = McpDevOutputRenderer.for_output_contract(GetViewerWindowStateCapability.output_contract)
-    compact = binding.render_result(decoded, binding.renderer_type.render_options_type())
+    renderer = McpDevOutputRenderer.for_output_contract(GetViewerWindowStateCapability.output_contract)
+    compact = renderer.render(decoded)
     assert '"aggregate_component_values": {"channel": [2, 1]}' in compact
     assert '"source_spatial_shape_yx": [8, 9]' in compact
     from openhcs.runtime.viewer_component_system import (
@@ -414,7 +414,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
             for member in fields(NapariStreamLayerItem)
             if member.name != "data"
         },
-        data=image_payload_data(image),
+        data=image.data,
     )
     bindings = NapariAggregateAxisBindingBuilder.bindings([item], semantics)
     assert bindings.component_values == {"channel": [2, 1]}
@@ -429,7 +429,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     np.testing.assert_array_equal(displayed[0], expected[1])
     np.testing.assert_array_equal(displayed[1], expected[0])
     assert metadata.source_voxel_spacing == spacing
-    assert metadata.source_channel_axis is None
+    assert metadata.axis_position(ColourAxis) is None
     with pytest.raises(ValueError, match="window conflicts"):
         source.require_projected_image_window(
             str(path), metadata.payload_with(expected[:, :-1]), projection

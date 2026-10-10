@@ -6,13 +6,7 @@ import pytest
 
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-    normalize_image_payload_intensity,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -38,6 +32,8 @@ from openhcs.processing.backends.cellprofiler.worms import (
     untangle_worms_both,
     untangle_worms_with_overlap,
 )
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 def _prepared_contract(func):
@@ -76,7 +72,7 @@ def test_prepared_primary_context_consumers_keep_nominal_payload_and_bare_pixels
     source = ImagePayloadMetadata(
         source_path="/input/rgb.tif",
         source_image_names=("RGB",),
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         source_spatial_domain=SourceSpatialDomain(
             origin_yx=(2, 3), source_shape_yx=(8, 10)
         ),
@@ -86,10 +82,10 @@ def test_prepared_primary_context_consumers_keep_nominal_payload_and_bare_pixels
     projected = contract.raw_main_flow_call_argument(source)
 
     assert projected is source
-    assert image_payload_mask(projected) is mask
-    assert image_payload_metadata(projected).source_spatial_domain.origin_yx == (2, 3)
-    assert image_payload_metadata(projected).source_image_paths == ("/input/rgb.tif",)
-    assert contract.raw_main_flow_call_argument(pixels) is pixels
+    assert projected.mask is mask
+    assert projected.metadata.source_spatial_domain.origin_yx == (2, 3)
+    assert projected.metadata.source_image_paths == ("/input/rgb.tif",)
+    assert contract.raw_main_flow_call_argument(pixels).data is pixels
 
 
 @pytest.mark.parametrize("shape", ((5, 5), (4, 7)))
@@ -100,7 +96,7 @@ def test_prepared_grid_objects_preserve_rgb_mask_calibration_and_crop_domain(sha
     mask[0] = False
     metadata = ImagePayloadMetadata(
         source_path="/input/grid_rgb.tif",
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         source_voxel_spacing=SourceVoxelSpacing((2.0, 0.7, 0.9)),
         source_spatial_domain=SourceSpatialDomain(
             origin_yx=(2, 3), source_shape_yx=(shape[0] + 4, shape[1] + 6),
@@ -124,7 +120,7 @@ def test_prepared_grid_objects_preserve_rgb_mask_calibration_and_crop_domain(sha
     )
 
     assert returned_image is source
-    assert image_payload_mask(returned_image) is mask
+    assert returned_image.mask is mask
     assert objects.source_provenance == metadata.source_provenance
     assert objects.source_spatial_domain.origin_yx == (2, 3)
     assert objects.source_spatial_domain.source_shape_yx == metadata.source_spatial_domain.source_shape_yx
@@ -151,7 +147,7 @@ def test_prepared_align_preserves_named_plane_axis_masks_and_source_identity(col
             component_metadata=({"well": "A01", "channel": "1"}, {"well": "A01", "channel": "2"}),
         ),
         plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
-        source_channel_axis=3 if color else None,
+        axes=PayloadAxes.colour_samples(3 if color else None),
         source_spatial_domain=SourceSpatialDomain(
             origin_yx=(2, 3), source_shape_yx=(14, 17)
         ),
@@ -171,12 +167,12 @@ def test_prepared_align_preserves_named_plane_axis_masks_and_source_identity(col
     assert len(outputs.slices) == 2
     assert measurements.row_count() == 2
     for index, output in enumerate(outputs.slices):
-        np.testing.assert_array_equal(image_payload_data(output), pixels[index])
-        np.testing.assert_array_equal(image_payload_mask(output), masks[index])
-        output_metadata = image_payload_metadata(output)
+        np.testing.assert_array_equal(output.data, pixels[index])
+        np.testing.assert_array_equal(output.mask, masks[index])
+        output_metadata = output.metadata
         assert output_metadata.source_image_paths == (("/input/first.tif", "/input/second.tif")[index],)
         assert output_metadata.source_spatial_domain == metadata.source_spatial_domain
-        assert output_metadata.source_channel_axis == (2 if color else None)
+        assert output_metadata.axis_position(ColourAxis) == (2 if color else None)
 
 
 def test_prepared_crop_preserves_rgb_spatial_mask_and_calibrated_source_domain():
@@ -185,7 +181,7 @@ def test_prepared_crop_preserves_rgb_spatial_mask_and_calibrated_source_domain()
     parent_mask[0] = False
     domain = SourceSpatialDomain(origin_yx=(2, 3), source_shape_yx=(8, 10))
     source = ImagePayloadMetadata(
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         source_image_names=("RGB",),
         source_path="/input/rgb.tif",
         source_spatial_domain=domain,
@@ -207,10 +203,10 @@ def test_prepared_crop_preserves_rgb_spatial_mask_and_calibrated_source_domain()
     expected_pixels = pixels.copy()
     expected_pixels[~expected_crop] = 0
     np.testing.assert_array_equal(cropping, expected_crop)
-    np.testing.assert_array_equal(image_payload_data(output), expected_pixels)
-    np.testing.assert_array_equal(image_payload_mask(output), expected_crop & parent_mask)
-    output_metadata = image_payload_metadata(output)
-    assert output_metadata.source_channel_axis == -1
+    np.testing.assert_array_equal(output.data, expected_pixels)
+    np.testing.assert_array_equal(output.mask, expected_crop & parent_mask)
+    output_metadata = output.metadata
+    assert output_metadata.axis_position(ColourAxis) == -1
     assert output_metadata.source_spatial_domain == domain
     assert output_metadata.source_image_paths == ("/input/rgb.tif",)
     assert measurements.row_count() == 1
@@ -220,15 +216,12 @@ def test_prepared_threshold_keeps_owned_unit_interval_proof_and_mask():
     pixels = np.arange(20, dtype=np.uint8).reshape(4, 5)
     mask = np.ones(pixels.shape, dtype=bool)
     mask[0] = False
-    source = normalize_image_payload_intensity(
-        ImagePayloadMetadata.for_array(pixels).payload_with(pixels, mask),
-        dtype=np.float32,
-    )
+    source = ImagePayloadMetadata.for_array(pixels).payload_with(pixels, mask).normalize_intensity_payload(dtype=np.float32,)
     contract = _prepared_contract(threshold)
 
     projected = contract.raw_main_flow_call_argument(source)
 
     assert projected is source
-    assert image_payload_metadata(projected).unit_interval_intensity_scale == 255
-    assert image_payload_mask(projected) is mask
-    np.testing.assert_array_equal(image_payload_data(projected), pixels.astype(np.float32) / 255)
+    assert projected.metadata.unit_interval_intensity_scale == 255
+    assert projected.mask is mask
+    np.testing.assert_array_equal(projected.data, pixels.astype(np.float32) / 255)

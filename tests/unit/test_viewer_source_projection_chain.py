@@ -10,7 +10,6 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.core.plate_image_inventory import PlateFileKind
-from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
 from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
 from openhcs.core.viewer_streaming_service import (
     FullWindowImageStreamingRequest,
@@ -52,7 +51,7 @@ def test_inventory_stream_preserves_original_nominal_crop_and_spacing(tmp_path: 
             source_projection=projection,
             component_metadata=record.metadata,
         )
-        metadata = image_payload_metadata(payload)
+        metadata = payload.metadata
         assert metadata.source_spatial_domain.origin_yx == (7, 11)
         assert metadata.source_spatial_domain.source_shape_yx == (80, 100)
         assert metadata.source_voxel_spacing.values_zyx == (2, 3)
@@ -74,7 +73,7 @@ def test_inventory_stream_preserves_original_nominal_crop_and_spacing(tmp_path: 
             )
         if record.metadata["channel"] == 1:
             np.testing.assert_array_equal(
-                image_payload_data(payload),
+                payload.data,
                 (10 * np.arange(64)[:, None] + np.arange(64)[None, :]).astype(
                     np.uint16
                 ),

@@ -1236,7 +1236,7 @@ def _official30_public_source(
     source_root: str,
 ) -> str:
     """Convert and render one manifest-resolved official30 case on demand."""
-    from openhcs.core.pipeline_document import PipelineDocumentAuthority
+    from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.interop.cellprofiler.pipeline_import import (
         import_cellprofiler_pipeline,
     )
@@ -1246,8 +1246,8 @@ def _official30_public_source(
         source_root=Path(source_root),
     )
 
-    return PipelineDocumentAuthority.render(
-        PipelineDocumentAuthority.from_values(
+    return PipelineDocumentCodec.render(
+        PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config,
             pipeline_steps=pipeline_steps,
         )

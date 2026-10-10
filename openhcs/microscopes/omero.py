@@ -19,12 +19,13 @@ from polystore import (
 from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
 
-from openhcs.constants.constants import Backend, Microscope
-from openhcs.microscopes.microscope_base import (
-    MicroscopeHandler,
-    MicroscopeSourceSelectionRole,
+from openhcs.constants.constants import Backend
+from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
+from openhcs.core.dataset_sources.source import (
+    DatasetSource,
+    RemoteServiceSource,
 )
-from openhcs.microscopes.microscope_interfaces import (
+from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
     FilenameParseResult,
     MetadataComponentValueSet,
@@ -350,17 +351,12 @@ class OMEROFilenameParser(FilenameParser):
         return well.row_label, f"{well.column_index + 1:02d}"
 
 
-class OMEROHandler(MicroscopeHandler):
+class OMEROHandler(RemoteServiceSource, DatasetSource):
     """OMERO microscope handler - uses OMERO native metadata."""
 
-    _microscope_type = Microscope.OMERO.value
-    _metadata_handler_class = None  # Set after class definition
+    source_name = "omero"
+    metadata_handler_class = OMEROMetadataHandler
 
-    @classmethod
-    def source_selection_role(cls) -> MicroscopeSourceSelectionRole:
-        """Declare OMERO as a remote-service owner, not a disk filename format."""
-
-        return MicroscopeSourceSelectionRole.REMOTE_SERVICE
 
     @classmethod
     def source_selection_guidance(cls) -> str:
@@ -395,14 +391,7 @@ class OMEROHandler(MicroscopeHandler):
         """
         return "Images"
 
-    @property
-    def microscope_type(self) -> str:
-        return self._microscope_type
 
-    @property
-    def metadata_handler_class(self) -> type[MetadataHandler]:
-        """Metadata handler class (for interface enforcement only)."""
-        return OMEROMetadataHandler
 
     @property
     def compatible_backends(self) -> list[Backend]:
@@ -451,8 +440,36 @@ class OMEROHandler(MicroscopeHandler):
             return plate_path
 
 
-# Set metadata handler class after class definition for automatic registration
-from openhcs.microscopes.microscope_base import register_metadata_handler
+class OMEROPlateRoot(DatasetRootRule):
+    """An OMERO plate id, or its ``/omero/plate_<id>`` virtual path."""
 
-OMEROHandler._metadata_handler_class = OMEROMetadataHandler
-register_metadata_handler(OMEROHandler, OMEROMetadataHandler)
+    rule_name = "omero_plate"
+
+    @classmethod
+    def claims(cls, dataset_id: str) -> bool:
+        return dataset_id.isdigit() or dataset_id.startswith("/omero/")
+
+    @classmethod
+    def prepare_storage(cls, dataset_id: str, storage_registry) -> str:
+        from polystore.backend_registry import register_cleanup_callback
+        from polystore.omero_local import OMEROLocalBackend
+
+        from openhcs.runtime.omero_instance_manager import OMEROInstanceManager
+
+        omero_manager = OMEROInstanceManager()
+        if not omero_manager.connect(timeout=60):
+            raise RuntimeError("OMERO server not available")
+        register_cleanup_callback(omero_manager.close)
+        storage_registry[Backend.OMERO_LOCAL.value] = OMEROLocalBackend(
+            omero_conn=omero_manager.conn,
+            lock_dir_name=".openhcs",
+        )
+        if dataset_id.startswith("/omero/"):
+            return dataset_id
+        return f"/omero/plate_{dataset_id}"
+
+    @classmethod
+    def output_base(cls, dataset_root: Path, global_output_folder: str | None) -> Path:
+        """OMERO outputs stay beside the virtual plate path."""
+        del global_output_folder
+        return dataset_root.parent

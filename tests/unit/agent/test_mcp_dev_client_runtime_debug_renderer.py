@@ -17,12 +17,25 @@ from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
     McpDevOutputRenderer,
 )
-from python_introspect import to_jsonable
+from openhcs.mcp.dev_client_core import (
+    McpDevServerIdentity,
+    McpDevToolBatchResponse,
+    McpDevToolResult,
+)
 
 DEBUG_SESSION_ID = "debug-session-renderer"
 
 
-def _runtime_debug_response() -> dict:
+def _batch(result: RuntimeDebugInspectionResult) -> McpDevToolBatchResponse:
+    return McpDevToolBatchResponse(
+        server=McpDevServerIdentity(command="python", module="openhcs.mcp.server"),
+        results=(
+            McpDevToolResult("openhcs_inspect_debug_runtime_values", False, (result,)),
+        ),
+    )
+
+
+def _runtime_debug_response() -> McpDevToolBatchResponse:
     result = RuntimeDebugInspectionResult(
         schema_version="openhcs.agent.v1",
         connection=ExecutionConnectionSpec(port=7787),
@@ -51,19 +64,10 @@ def _runtime_debug_response() -> dict:
             ),
         ),
     )
-    return {
-        "errors": [],
-        "results": [
-            {
-                "tool": "openhcs_inspect_debug_runtime_values",
-                "mcp_error": False,
-                "payloads": [to_jsonable(result)],
-            }
-        ],
-    }
+    return _batch(result)
 
 
-def _runtime_debug_error_response() -> dict:
+def _runtime_debug_error_response() -> McpDevToolBatchResponse:
     result = RuntimeDebugInspectionResult(
         schema_version="openhcs.agent.v1",
         connection=ExecutionConnectionSpec(port=7787),
@@ -76,16 +80,7 @@ def _runtime_debug_error_response() -> dict:
             ),
         ),
     )
-    return {
-        "errors": [],
-        "results": [
-            {
-                "tool": "openhcs_inspect_debug_runtime_values",
-                "mcp_error": False,
-                "payloads": [to_jsonable(result)],
-            }
-        ],
-    }
+    return _batch(result)
 
 
 def test_runtime_debug_renderer_filters_and_bounds_declared_table_rows() -> None:
@@ -107,7 +102,7 @@ def test_runtime_debug_renderer_filters_and_bounds_declared_table_rows() -> None
     assert "contains" not in call.arguments
     assert "limit" not in call.arguments
 
-    rendered = McpDevCommandSpec.for_name("runtime-debug-values").render_response(
+    rendered = McpDevCommandSpec.for_name("runtime-debug-values").render_result(
         _runtime_debug_response(),
         args,
     )
@@ -128,11 +123,11 @@ def test_runtime_debug_renderer_filters_and_bounds_declared_table_rows() -> None
 
 
 def test_runtime_debug_renderer_projects_section_text_without_kind_dispatch() -> None:
-    binding = McpDevOutputRenderer.for_output_contract(RuntimeDebugInspectionResult)
+    renderer = McpDevOutputRenderer.for_output_contract(RuntimeDebugInspectionResult)
 
-    assert binding is not None
-    assert binding.renderer_type.render_options_type is CatalogRenderOptions
-    rendered = binding.render_with_options(
+    assert renderer is not None
+    assert renderer.render_options_type is CatalogRenderOptions
+    rendered = renderer.render(
         _runtime_debug_response(),
         CatalogRenderOptions(contains="failure details", limit=1),
     )
@@ -147,7 +142,7 @@ def test_runtime_debug_renderer_projects_section_text_without_kind_dispatch() ->
 def test_runtime_debug_renderer_preserves_errors_and_raw_json_escape_hatch() -> None:
     parser = _build_parser()
     args = parser.parse_args(("runtime-debug-values", "7787", DEBUG_SESSION_ID))
-    rendered = McpDevCommandSpec.for_name("runtime-debug-values").render_response(
+    rendered = McpDevCommandSpec.for_name("runtime-debug-values").render_result(
         _runtime_debug_error_response(),
         args,
     )
@@ -162,7 +157,7 @@ def test_runtime_debug_renderer_preserves_errors_and_raw_json_escape_hatch() -> 
     json_args = parser.parse_args(
         ("runtime-debug-values", "7787", DEBUG_SESSION_ID, "--json")
     )
-    raw_rendered = McpDevCommandSpec.for_name("runtime-debug-values").render_response(
+    raw_rendered = McpDevCommandSpec.for_name("runtime-debug-values").render_result(
         _runtime_debug_response(),
         json_args,
     )

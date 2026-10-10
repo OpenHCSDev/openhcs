@@ -16,9 +16,9 @@ from openhcs.core.plate_image_inventory import (
     PlateResultFileInventory,
     PlateResultFileRecord,
 )
-from openhcs.microscopes.microscope_interfaces import (
+from openhcs.core.dataset_sources.interfaces import (
     AnalysisResultDirectory,
-    MicroscopeImagePathParser,
+    FilenameParserCapability,
 )
 from openhcs.pyqt_gui.widgets.image_browser import (
     ImageBrowserFilterController,
@@ -148,7 +148,7 @@ class _InventoryMetadataHandler:
         )
 
 
-class _InventoryMicroscopeHandler(MicroscopeImagePathParser):
+class _InventoryMicroscopeHandler(FilenameParserCapability):
     def __init__(self, handler_result_dir: Path) -> None:
         self.metadata_handler = _InventoryMetadataHandler(handler_result_dir)
         self.parser = _InventoryParser()

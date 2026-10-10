@@ -162,22 +162,10 @@ def test_cpu_cell_counter_has_no_false_segmentation_output_toggle() -> None:
 
 
 def test_experimental_analysis_is_not_a_global_pipeline_config() -> None:
-    config_path = PROJECT_ROOT / "openhcs/core/config.py"
-    tree = ast.parse(config_path.read_text(), filename=str(config_path))
-    analysis_config = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.ClassDef) and node.name == "ExperimentalAnalysisConfig"
-    )
-    decorators = {
-        ast.unparse(decorator) for decorator in analysis_config.decorator_list
-    }
+    from openhcs.core.config_sections import GlobalConfigSection
+    from openhcs.domains.microscopy.config import ExperimentalAnalysisConfig
 
-    assert not any(
-        decorator == "global_pipeline_config"
-        or decorator.startswith("global_pipeline_config(")
-        for decorator in decorators
-    )
+    assert not issubclass(ExperimentalAnalysisConfig, GlobalConfigSection)
 
 
 def test_legacy_config_namespace_imports_do_not_recur() -> None:

@@ -196,6 +196,8 @@ from openhcs.runtime.viewer_protocol import (
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import PayloadAxes
 
 if TYPE_CHECKING:
     from openhcs.napari_roi_manager import QRoiManager
@@ -677,7 +679,7 @@ class NapariStreamLayerContext(ViewerComponentAxisSemantics):
                 )
                 if ViewerWireField.IMAGE_METADATA.value in payload.payload
                 else ImagePayloadMetadata(
-                    source_channel_axis=source_channel_axis,
+                    axes=PayloadAxes.colour_samples(source_channel_axis),
                     plane_axis=plane_axis,
                     source_spatial_domain=SourceSpatialDomain.from_viewer_wire_mapping(
                         payload.payload,
@@ -855,7 +857,7 @@ class NapariImagePayloadLayoutRole(str, Enum):
         ):
             return None
         metadata = stream_layer_context.image_metadata
-        has_channel_axis = metadata.source_channel_axis is not None
+        has_channel_axis = metadata.axis_position(ColourAxis) is not None
         has_plane_axis = metadata.plane_axis is not None
         if has_channel_axis:
             return cls.COLOR_STACK if has_plane_axis else cls.COLOR_PLANE
@@ -2473,7 +2475,8 @@ class NapariLayerDisplayPipeline:
         viewer = self.server.require_viewer()
         return self._native_frame_mutation_depth == 0 and all(
             layer.loaded and (
-                not layer.visible or layer._slice_input == layer._make_slice_input(viewer.dims)
+                not layer.visible or layer._slice_input
+                == layer._slicing_state.make_slice_input(viewer.dims)
             )
             for layer in viewer.layers if layer.visible or include_hidden
         )
@@ -3433,7 +3436,7 @@ class NapariResultElementSelections:
         for data_index in indices:
             cls.require_data_index(layer, data_index)
         native_layer = cast(napari.layers.Shapes | napari.layers.Points, layer)
-        displayed = set(native_layer._indices_view)
+        displayed = set(native_layer._view_indices)
         return tuple(index for index in indices if index in displayed)
 
 

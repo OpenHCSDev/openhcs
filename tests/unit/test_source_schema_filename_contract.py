@@ -7,7 +7,7 @@ from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     IncompleteFunctionOutputFilenameIdentityError,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.axes import AxisFamily
 
 
