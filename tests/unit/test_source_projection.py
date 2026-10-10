@@ -9,7 +9,7 @@ from polystore.bioformats_storage import BioFormatsPlaneRef
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
-    ORIGINAL_SOURCE_METADATA_FIELD,
+    DECLARED_SOURCE_METADATA_FIELD,
     SourceMetadataFields,
 )
 from openhcs.core.source_projection import (
@@ -19,7 +19,7 @@ from openhcs.core.source_projection import (
     SourcePlaneProjection,
     SourceProjectionSet,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -215,7 +215,7 @@ def test_source_projection_preserves_provenance_owned_component_remaps(
                 ),
                 source_metadata={
                     component.name: source_value,
-                    ORIGINAL_SOURCE_METADATA_FIELD: {
+                    DECLARED_SOURCE_METADATA_FIELD: {
                         component.name: source_value,
                     },
                 },
@@ -234,7 +234,7 @@ def test_source_projection_preserves_provenance_owned_component_remaps(
 
     assert source_metadata[component.name] == address_value
     assert (
-        dict(SourceMetadataFields.original_items(source_metadata))[component.name]
+        dict(SourceMetadataFields.declared_items(source_metadata))[component.name]
         == source_value
     )
 

@@ -9,20 +9,21 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import InputSource, Microscope
+from openhcs.constants import InputSource
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazyStepMaterializationConfig,
     PipelineConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import crop
 from openhcs.processing.backends.analysis.count_cells_simple import count_cells_simple
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 @pytest.fixture
@@ -44,7 +45,7 @@ def _execute_steps(plate, steps, output_root):
     ensure_global_config_context(
         GlobalPipelineConfig,
         GlobalPipelineConfig(
-            microscope=Microscope.IMAGEXPRESS, num_workers=1, use_threading=True
+            dataset_source=ImageXpressHandler, num_workers=1, use_threading=True
         ),
     )
     queue = SimpleQueue()

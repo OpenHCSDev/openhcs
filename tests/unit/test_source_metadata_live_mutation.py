@@ -4,7 +4,7 @@ import pytest
 
 from openhcs.core.source_binding_selection import DeclaredSourceMetadataRecord
 from openhcs.core.source_matching import (
-    ORIGINAL_SOURCE_METADATA_FIELD,
+    DECLARED_SOURCE_METADATA_FIELD,
     semantic_source_metadata_value,
     source_component_metadata_value,
     source_component_metadata_values,
@@ -35,7 +35,7 @@ def test_metadata_queries_observe_scalar_mutation(readonly_outer):
 )
 def test_literal_queries_observe_nested_original_mutation(view):
     original = {"Well": "LiteralA"}
-    metadata = view({"well": "A01", ORIGINAL_SOURCE_METADATA_FIELD: original})
+    metadata = view({"well": "A01", DECLARED_SOURCE_METADATA_FIELD: original})
 
     assert source_metadata_value(metadata, "Well") == "LiteralA"
     assert semantic_source_metadata_value(metadata, "Well") == "LiteralA"
@@ -54,7 +54,7 @@ def test_live_alias_queries_preserve_priority_cardinality_and_null_fallback():
         "ChannelNumber": "2",
         "channel": "1",
         "Metadata_Channel": "2",
-        ORIGINAL_SOURCE_METADATA_FIELD: original,
+        DECLARED_SOURCE_METADATA_FIELD: original,
     }
     assert source_metadata_value(metadata, "ChannelNumber") == "literal"
     assert source_component_metadata_value(metadata, Microscopy.Channel) == "1"

@@ -6,7 +6,6 @@ from polystore.base import ImageSamplingResult
 from polystore.bioformats_storage import BioFormatsPlaneRef
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
@@ -38,6 +37,7 @@ from openhcs.processing.presets.pipelines.czi_brain_axon_cellbody import (
 )
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.microscopes.bioformats import BioFormatsHandler
 
 
 def _inputs(plate_path: Path, output_root: Path) -> CziBrainAxonCellBodyInputs:
@@ -137,7 +137,7 @@ def test_czi_demo_declares_bounded_three_channel_analysis_and_artifacts(
     inputs = _inputs(tmp_path / "plate", tmp_path / "output")
     pipeline_config, steps = build_czi_brain_axon_cellbody_demo(inputs)
 
-    assert pipeline_config.microscope is Microscope.BIOFORMATS
+    assert pipeline_config.dataset_source is BioFormatsHandler
     assert pipeline_config.well_filter_config.well_filter == "A01"
     assert pipeline_config.path_planning_config.well_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is True

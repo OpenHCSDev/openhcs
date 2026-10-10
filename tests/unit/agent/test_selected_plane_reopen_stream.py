@@ -18,7 +18,6 @@ from openhcs.agent.dto.plate import PlateFileStreamRequest
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.constants import Microscope
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.runtime_image_values import image_payload_metadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
@@ -33,7 +32,7 @@ from openhcs.core.viewer_streaming_service import (
     StreamingService,
 )
 from openhcs.core.virtual_workspace_metadata import AtomicMetadataWriter
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.napari_streaming_handlers import (
     NapariAggregateAxisBindingAuthority,
     NapariImagePayloadAxisLabelPolicy,
@@ -148,7 +147,7 @@ def test_public_declared_saved_image_reaches_strict_receiver(
         SourceSchemaFilenameParser()
     ).metadata_dict(
         SourceProjectionSet((projection,)),
-        microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+        microscope_handler_name="source_bindings",
         source_filename_parser_name="SourceSchemaFilenameParser",
         grid_dimensions=[],
         pixel_size=1.3556,

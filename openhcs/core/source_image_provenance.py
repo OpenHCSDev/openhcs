@@ -61,7 +61,7 @@ SourceImageProvenanceAliasValueT = TypeVar("SourceImageProvenanceAliasValueT")
 SourceImageProvenancePlaneValueT = TypeVar("SourceImageProvenancePlaneValueT")
 
 if TYPE_CHECKING:
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 def normalize_source_path(source_path: str | None) -> str | None:
@@ -1767,26 +1767,24 @@ class SourcePlaneIndexedMetadata:
                 SOURCE_PLANE_COUNT_FIELD: str(self.source_plane_count),
             },
             components=(
-                (self.projected_component(), self.z_index_for_plane(plane_index)),
+                (self.projected_component(), self.stack_value_for_plane(plane_index)),
             ),
         )
         return SourceMetadataFields.readonly_snapshot(metadata)
 
-    def z_index_for_plane(self, plane_index: int) -> int:
-        scalar_z_index = source_component_metadata_value(
-            self.scalar_metadata,
-            self.projected_component(),
-        )
-        if scalar_z_index is None:
+    def stack_value_for_plane(self, plane_index: int) -> int:
+        stack_axis = self.projected_component()
+        scalar_value = source_component_metadata_value(self.scalar_metadata, stack_axis)
+        if scalar_value is None:
             return plane_index + 1
         try:
-            first_z_index = int(scalar_z_index) - self.scalar_plane_index
+            first_value = int(scalar_value) - self.scalar_plane_index
         except ValueError as exc:
             raise ValueError(
-                "Source-plane metadata z_index must be numeric when expanding "
-                f"indexed plane provenance, got {scalar_z_index!r}."
+                f"Source-plane metadata {stack_axis.name} must be numeric when "
+                f"expanding indexed plane provenance, got {scalar_value!r}."
             ) from exc
-        return first_z_index + plane_index
+        return first_value + plane_index
 
     def common_component_metadata(self) -> SourceComponentMetadata | None:
         return common_source_component_metadata(self.component_metadata())

@@ -3557,7 +3557,9 @@ class ArtifactPlan(ABC, metaclass=AutoRegisterMeta):
             and self.group_component is not None
             and None in self.paths_by_group
         ):
-            return grouped_artifact_path(self.paths_by_group[None], group_key)
+            return grouped_artifact_path(
+                self.paths_by_group[None], self.group_component, group_key
+            )
         if None in self.paths_by_group:
             return self.paths_by_group[None]
         if self._missing_group_uses_default_path:
@@ -4175,14 +4177,17 @@ ImageMeasurementSubjectRelation.target_artifact_type = MeasurementsArtifactType
 ArtifactMeasurementSubjectRelation.target_artifact_type = MeasurementsArtifactType
 
 
-def grouped_artifact_path(base_path: str, group_key: str) -> str:
-    """Return the existing grouped artifact path form for a runtime group."""
+def grouped_artifact_path(
+    base_path: str, group_axis: type[Axis], group_key: str
+) -> str:
+    """Insert the group's filename token after the partition value in a path."""
+    token = group_axis.filename_token(group_key)
     path = Path(base_path)
     filename = path.name
     if "_" not in filename:
-        return str(path.with_name(f"{path.stem}_w{group_key}{path.suffix}"))
+        return str(path.with_name(f"{path.stem}_{token}{path.suffix}"))
     axis_id, rest = filename.split("_", 1)
-    return str(path.parent / f"{axis_id}_w{group_key}_{rest}")
+    return str(path.parent / f"{axis_id}_{token}_{rest}")
 
 
 @dataclass(frozen=True)

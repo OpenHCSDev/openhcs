@@ -1,5 +1,5 @@
 """
-Well and channel discovery via OpenHCS MicroscopeHandler API.
+Well and channel discovery via OpenHCS DatasetSource API.
 
 This module provides functions to:
 - Discover all well/channel combinations in a plate
@@ -8,7 +8,7 @@ This module provides functions to:
 Invariants:
 - Discovery returns data structures, never triggers processing
 - All return types are immutable (frozen dataclasses, tuples)
-- Single source of truth: uses MicroscopeHandler API + FilenameParser
+- Single source of truth: uses DatasetSource API + FilenameParser
 - Parsed components preserved for output filename construction
 """
 
@@ -43,16 +43,16 @@ def get_microscope_handler(plate_path: Path):
         plate_path: Path to the plate directory
 
     Returns:
-        MicroscopeHandler instance
+        DatasetSource instance
     """
-    from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
+    from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
     from polystore.filemanager import FileManager
     from polystore.base import storage_registry, ensure_storage_registry
 
     ensure_storage_registry()
     filemanager = FileManager(storage_registry)
 
-    handler = OpenHCSMicroscopeHandler(filemanager=filemanager)
+    handler = OpenHCSDatasetSource(filemanager=filemanager)
     handler.plate_folder = Path(plate_path)
 
     return handler
@@ -67,8 +67,8 @@ def discover_well_channels(
     """
     Discover all well/channel combinations in a plate.
 
-    Uses MicroscopeHandler.metadata_handler for channel names.
-    Uses MicroscopeHandler.parser for component extraction.
+    Uses DatasetSource.metadata_handler for channel names.
+    Uses DatasetSource.parser for component extraction.
 
     Args:
         plate_path: Path to the plate directory

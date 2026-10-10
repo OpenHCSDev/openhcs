@@ -1174,7 +1174,7 @@ class CPATableRowProjection:
                     "CPA source-bound thumbnails require a runtime context."
                 )
             return
-        workspace = self.context.runtime_source_workspace_projection_authority.projection_if_available()
+        workspace = self.context.runtime_source_workspace_projections.projection_if_available()
         if workspace is None:
             if settings.write_image_thumbnails and any(
                 binding.alias in settings.thumbnail_image_names
@@ -1319,7 +1319,7 @@ class CPATableRowProjection:
             raise RuntimeError(
                 "Virtual workspace source resolution requires a runtime FileManager."
             )
-        projection = self.context.runtime_source_workspace_projection_authority.projection_if_available()
+        projection = self.context.runtime_source_workspace_projections.projection_if_available()
         if projection is None:
             return Path(source_path).resolve(strict=False)
         return Path(

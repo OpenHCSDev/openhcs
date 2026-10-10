@@ -8,7 +8,6 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import Microscope
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -21,6 +20,7 @@ from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingU
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.processors.numpy_processor import gaussian_blur
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 def test_htd_spacing_survives_gaussian_compile_execute_and_persist(tmp_path):
@@ -40,7 +40,7 @@ def test_htd_spacing_survives_gaussian_compile_execute_and_persist(tmp_path):
         ensure_global_config_context(
             GlobalPipelineConfig,
             GlobalPipelineConfig(
-                microscope=Microscope.IMAGEXPRESS, num_workers=1, use_threading=True
+                dataset_source=ImageXpressHandler, num_workers=1, use_threading=True
             ),
         )
         orchestrator = PipelineOrchestrator(

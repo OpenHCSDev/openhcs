@@ -14,7 +14,6 @@ from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core import source_bindings as source_bindings_module
 from openhcs.core.artifacts import (
@@ -77,7 +76,7 @@ from openhcs.core.source_matching import (
     SourceImageSetIdentityPolicy,
 )
 from openhcs.core.source_metadata import (
-    ORIGINAL_SOURCE_METADATA_FIELD,
+    DECLARED_SOURCE_METADATA_FIELD,
     SourceFilterPathMetadata,
     SourceVoxelSpacing,
 )
@@ -88,9 +87,11 @@ from openhcs.core.source_projection import (
 )
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.choice import AutoDetectedSource
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 
 
 def test_component_selector_coerces_existing_component_vocabulary():
@@ -461,7 +462,7 @@ def test_compiled_source_bindings_include_realized_original_metadata_schema():
         config,
         realized_source_metadata=(
             {
-                ORIGINAL_SOURCE_METADATA_FIELD: {
+                DECLARED_SOURCE_METADATA_FIELD: {
                     "Dose": "0.25",
                     "Compound": "DMSO",
                     "Replicate": 1,
@@ -469,7 +470,7 @@ def test_compiled_source_bindings_include_realized_original_metadata_schema():
                 }
             },
             {
-                ORIGINAL_SOURCE_METADATA_FIELD: {
+                DECLARED_SOURCE_METADATA_FIELD: {
                     "Dose": "0.50",
                     "Compound": "Drug",
                     "Replicate": 2,
@@ -662,15 +663,15 @@ def test_source_lineage_projection_preserves_declaration_order() -> None:
 def test_saved_resolved_pipeline_config_preserves_scalar_override():
     ensure_global_config_context(
         GlobalPipelineConfig,
-        GlobalPipelineConfig(microscope=Microscope.AUTO, num_workers=7),
+        GlobalPipelineConfig(dataset_source=AutoDetectedSource, num_workers=7),
     )
 
     merged = ObjectState(
-        PipelineConfig(microscope=Microscope.OPENHCS)
+        PipelineConfig(dataset_source=OpenHCSDatasetSource)
     ).to_saved_resolved_object()
 
     assert isinstance(merged, GlobalPipelineConfig)
-    assert merged.microscope is Microscope.OPENHCS
+    assert merged.dataset_source is OpenHCSDatasetSource
     assert merged.num_workers == 7
 
 
@@ -678,48 +679,40 @@ def test_orchestrator_microscope_init_uses_saved_resolved_pipeline_config(
     tmp_path,
     monkeypatch,
 ):
-    from openhcs.core.orchestrator import orchestrator as orchestrator_module
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-
-    class DummyHandler:
-        microscope_type = "dummy"
 
     ensure_global_config_context(
         GlobalPipelineConfig,
-        GlobalPipelineConfig(microscope=Microscope.AUTO),
+        GlobalPipelineConfig(dataset_source=AutoDetectedSource),
     )
     captured_kwargs = {}
 
-    def fake_create_microscope_handler(**kwargs):
-        captured_kwargs.update(kwargs)
-        return DummyHandler()
+    def fake_open(cls, root, **kwargs):
+        captured_kwargs.update(kwargs, choice=cls)
+        return SimpleNamespace()
 
-    monkeypatch.setattr(
-        orchestrator_module,
-        "create_microscope_handler",
-        fake_create_microscope_handler,
-    )
+    monkeypatch.setattr(OpenHCSDatasetSource, "open", classmethod(fake_open))
 
     orchestrator = PipelineOrchestrator(
         tmp_path,
-        pipeline_config=PipelineConfig(microscope=Microscope.OPENHCS),
+        pipeline_config=PipelineConfig(dataset_source=OpenHCSDatasetSource),
     )
     orchestrator.initialize_microscope_handler()
 
-    assert captured_kwargs["microscope_type"] == Microscope.OPENHCS.value
+    assert captured_kwargs["choice"] is OpenHCSDatasetSource
 
 
 def test_admitted_request_config_survives_next_live_global_context(
     tmp_path, monkeypatch,
 ):
-    from openhcs.core.orchestrator import orchestrator as orchestrator_module
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.pipeline.compiler import AxisCompilationRequest
+    from openhcs.core.post_execute import PostExecuteHook
     from openhcs.core.pipeline.materialization_flag_planner import (
         MaterializationFlagPlanner,
     )
 
-    authored = PipelineConfig(microscope=Microscope.OPENHCS)
+    authored = PipelineConfig(dataset_source=OpenHCSDatasetSource)
     ensure_global_config_context(
         GlobalPipelineConfig,
         GlobalPipelineConfig(num_workers=2, auto_add_output_plate_to_plate_manager=True),
@@ -731,15 +724,19 @@ def test_admitted_request_config_survives_next_live_global_context(
     )
     received = {}
     monkeypatch.setattr(
-        orchestrator_module, "create_microscope_handler",
-        lambda **kwargs: received.update(kwargs) or SimpleNamespace(),
+        OpenHCSDatasetSource,
+        "open",
+        classmethod(
+            lambda cls, root, **kwargs: received.update(kwargs, choice=cls)
+            or SimpleNamespace()
+        ),
     )
     orchestrator = PipelineOrchestrator(
         tmp_path, pipeline_config=authored, resolved_config=admitted,
     )
     orchestrator.initialize_microscope_handler(admitted)
     assert received["source_bindings_config"] is admitted.source_bindings_config
-    assert received["microscope_type"] == Microscope.OPENHCS.value
+    assert received["choice"] is OpenHCSDatasetSource
     assert orchestrator.get_effective_config().num_workers == 4
 
     orchestrator._initialized = True
@@ -760,11 +757,11 @@ def test_admitted_request_config_survives_next_live_global_context(
         is_zmq_execution=True,
     )
     context = request.context_for("A01")
-    assert context.auto_add_output_plate_to_plate_manager is True
+    assert context.post_execute_hooks == PostExecuteHook.bind_all(admitted)
     assert context.tiff_config is admitted.tiff_config
 
     # The next authored request admits current global and local changes.
-    orchestrator.pipeline_config = PipelineConfig(microscope=Microscope.OPENHCS, num_workers=3)
+    orchestrator.pipeline_config = PipelineConfig(dataset_source=OpenHCSDatasetSource, num_workers=3)
     next_request = orchestrator.get_effective_config()
     assert next_request.num_workers == 3
     assert next_request.auto_add_output_plate_to_plate_manager is False
@@ -1676,7 +1673,7 @@ def test_rule_metadata_preserves_original_source_metadata_mapping():
     metadata = context.metadata_for_path(path)
 
     assert metadata is not None
-    assert metadata[ORIGINAL_SOURCE_METADATA_FIELD] == {
+    assert metadata[DECLARED_SOURCE_METADATA_FIELD] == {
         "Plate": "monolayer",
         "Site": "1",
     }

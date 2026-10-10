@@ -37,9 +37,7 @@ from zmqruntime.config import TransportMode
 from skimage.draw import disk, line
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants import Microscope
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
@@ -50,6 +48,7 @@ from openhcs.core.config import (
     PipelineConfig,
     VFSConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import ObjectLabelsArtifactType
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -76,6 +75,7 @@ from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 def _write_known_neurite_images(plate_dir):
@@ -123,7 +123,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
     vfs_config = VFSConfig(materialization_backend=MaterializationBackend.DISK)
     global_config = GlobalPipelineConfig(
         num_workers=1,
-        microscope=Microscope.IMAGEXPRESS,
+        dataset_source=ImageXpressHandler,
         use_threading=True,
         path_planning_config=PathPlanningConfig(output_dir_suffix=suffix),
         vfs_config=vfs_config,

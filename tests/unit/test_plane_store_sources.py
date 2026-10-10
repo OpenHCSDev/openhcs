@@ -42,12 +42,10 @@ from openhcs.core.steps.function_io import (
     update_metadata_for_zarr_conversion,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
-from openhcs.microscopes.bioformats_adapter import (
-    OmeZarrStoreAdapter,
-    SourcePlaneStoreAdapter,
-)
-from openhcs.microscopes.microscope_base import create_microscope_handler
-from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
+from openhcs.microscopes.bioformats_adapter import OmeZarrStoreAdapter
+from openhcs.core.dataset_sources.plane_stores import SourcePlaneStoreAdapter
+from openhcs.core.dataset_sources.choice import DatasetSourceChoice
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
 from openhcs.core.axes import AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
@@ -324,12 +322,7 @@ def test_mixed_plane_stores_bind_and_load_through_virtual_workspace(
         )
     )
     filemanager = _filemanager()
-    handler = create_microscope_handler(
-        "auto",
-        plate_folder=tmp_path,
-        filemanager=filemanager,
-        source_bindings_config=source_bindings,
-    )
+    handler = DatasetSourceChoice.named("auto").open(tmp_path, filemanager=filemanager, source_bindings_config=source_bindings)
     assert isinstance(handler, BioFormatsHandler)
     assert handler.parser.extract_component_coordinates("plain.tif") == (
         "S",
@@ -529,7 +522,7 @@ def test_mixed_plane_stores_materialize_and_reopen_with_source_identity(
     } == {Backend.ZARR.value}
 
     reopened = PipelineOrchestrator(plate_path=tmp_path).initialize()
-    assert isinstance(reopened.microscope_handler, OpenHCSMicroscopeHandler)
+    assert isinstance(reopened.microscope_handler, OpenHCSDatasetSource)
     assert reopened.input_dir == tmp_path / "zarr"
     assert (
         reopened.microscope_handler.get_primary_backend(

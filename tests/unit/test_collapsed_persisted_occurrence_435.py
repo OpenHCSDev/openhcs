@@ -12,7 +12,7 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
@@ -41,7 +41,7 @@ from openhcs.core.steps.function_artifact_materialization import ArtifactMateria
 from openhcs.core.steps.function_outputs import (
     PrimaryImageMetadataTarget,
 )
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
@@ -63,7 +63,7 @@ def _actual_saved_occurrence(tmp_path, scenario):
         }
     )
     context = context_stub(filemanager, parser=SourceSchemaFilenameParser())
-    context.microscope_handler.microscope_type = Microscope.OPENHCS.value
+    context.microscope_handler.source_name = "openhcsdata"
     context.runtime_value_store = RuntimeValueStore()
     context.metadata_cache = {}
     context.tiff_config = None

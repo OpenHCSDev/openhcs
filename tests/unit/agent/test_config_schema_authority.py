@@ -20,6 +20,7 @@ from openhcs.core.config import (
 from openhcs.core.source_bindings import NamedSourceBinding
 from openhcs.core.steps.abstract import AbstractStep
 from python_introspect import to_jsonable
+from openhcs.core.dataset_sources.choice import AutoDetectedSource
 
 
 def _field_by_path(schema, path: str):
@@ -45,7 +46,7 @@ def test_pipeline_schema_projects_effective_default_and_owner_provenance():
     assert _field_by_path(root, "materialization_results_path").default_repr == (
         "Path('results')"
     )
-    assert _field_by_path(root, "microscope").default_repr == "Microscope.AUTO"
+    assert _field_by_path(root, "dataset_source").default_repr == repr(AutoDetectedSource)
     assert _field_by_path(root, "num_workers").default_origin == "inherited_default"
     assert _field_by_path(root, "num_workers").inheritable is True
     assert _field_by_path(root, "num_workers").declaring_type == _type_repr(

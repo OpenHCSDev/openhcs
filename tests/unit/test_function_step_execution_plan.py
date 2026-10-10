@@ -56,7 +56,7 @@ class ContextStub:
         self.filemanager = object()
         self.microscope_handler = SimpleNamespace(
             parser=SimpleNamespace(parse_filename=lambda _filename: None),
-            microscope_type="test",
+            source_name="test",
         )
 
 

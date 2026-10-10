@@ -26,7 +26,7 @@ from pathlib import Path
 
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.constants import Microscope
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from openhcs.constants.input_source import InputSource
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.config import (
@@ -126,7 +126,7 @@ def build_neuroncyto_ii_crossover_demo(
         ),
     )
     pipeline_config = PipelineConfig(
-        microscope=Microscope.SOURCE_BINDINGS,
+        dataset_source=SourceBindingsSource,
         well_filter_config=LazyWellFilterConfig(well_filter=inputs.image_id),
         path_planning_config=LazyPathPlanningConfig(
             well_filter=0,

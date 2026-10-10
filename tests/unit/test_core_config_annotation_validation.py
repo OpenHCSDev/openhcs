@@ -12,8 +12,8 @@ from openhcs.core.config import (
     LazyNapariStreamingConfig,
     NapariDisplayConfig,
     NapariStreamingConfig,
-    PlateMetadataConfig,
 )
+from openhcs.domains.microscopy.config import PlateMetadataConfig
 from python_introspect import AnnotationValidationError
 
 

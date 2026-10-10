@@ -44,9 +44,7 @@ if TYPE_CHECKING:
         VirtualWorkspaceSourceProjectionEntries,
     )
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.core.orchestrator.analysis_consolidation import (
-        RuntimeAnalysisConsolidationInputs,
-    )
+    from openhcs.core.post_execute import HookObservations
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,7 +57,8 @@ class StepExecutionObservation:
     ]
 
     runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
-    analysis_inputs: "RuntimeAnalysisConsolidationInputs | None" = None
+    hook_observations: "HookObservations" = field(default_factory=dict)
+    """What each post-execute hook observed, keyed by hook name."""
     image_numbers_by_export_path: Mapping[Path, Mapping[str, tuple[int, ...]]] = field(
         default_factory=dict
     )
@@ -99,7 +98,7 @@ class StepExecutionObservation:
         return not (
             self.materialized_locations_by_address
             or self.runtime_export_paths
-            or self.analysis_inputs is not None
+            or self.hook_observations
             or self.image_numbers_by_export_path
             or self.source_projection_entries_by_target
         )
@@ -120,13 +119,11 @@ class StepExecutionObservation:
     def combine(
         cls, observations: Iterable["StepExecutionObservation"]
     ) -> "StepExecutionObservation":
-        from openhcs.core.orchestrator.analysis_consolidation import (
-            RuntimeAnalysisConsolidationInputs,
-        )
+        from openhcs.core.post_execute import PostExecuteHook
 
         locations = {}
         paths = []
-        analysis_inputs = []
+        hook_observations = []
         image_numbers = {}
         source_projections = {}
         for observation in observations:
@@ -141,7 +138,7 @@ class StepExecutionObservation:
                     }.values()
                 )
             paths.extend(observation.runtime_export_paths)
-            analysis_inputs.append(observation.analysis_inputs)
+            hook_observations.append(observation.hook_observations)
             for path, numbers in observation.image_numbers_by_export_path.items():
                 if path in image_numbers and image_numbers[path] != numbers:
                     raise ValueError(
@@ -160,7 +157,7 @@ class StepExecutionObservation:
         return cls(
             MappingProxyType(locations),
             tuple(dict.fromkeys(paths)),
-            RuntimeAnalysisConsolidationInputs.combine(analysis_inputs),
+            PostExecuteHook.combine_all(hook_observations),
             MappingProxyType(image_numbers),
             MappingProxyType(
                 {

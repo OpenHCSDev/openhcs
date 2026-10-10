@@ -9,7 +9,6 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import ArtifactViewerStreaming
@@ -19,7 +18,7 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.source_bindings import source_bindings_defaults_to_base
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
@@ -43,6 +42,7 @@ from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 def _inputs(plate_path: Path, output_root: Path) -> NeuronCytoIICrossoverInputs:
@@ -62,7 +62,7 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
     inputs = _inputs(tmp_path / "CrossOvers_Images", tmp_path / "output")
     pipeline_config, steps = build_neuroncyto_ii_crossover_demo(inputs)
 
-    assert pipeline_config.microscope is Microscope.SOURCE_BINDINGS
+    assert pipeline_config.dataset_source is SourceBindingsSource
     assert pipeline_config.well_filter_config.well_filter == "Image15"
     assert pipeline_config.path_planning_config.well_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is True
@@ -297,7 +297,7 @@ def test_neuroncyto_declared_identity_replaces_loose_tiff_store_coordinates(
 
     handler.initialize_workspace(plate_path, filemanager)
 
-    projection = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+    projection = WorkspaceSourceProjections.from_plate_metadata(
         plate_path=plate_path,
         metadata_handler=handler.metadata_handler,
         filemanager=filemanager,

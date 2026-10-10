@@ -1,5 +1,5 @@
 from benchmark.datasets.registry import BBBC021_SINGLE_PLATE, dataset_specs
-from openhcs.constants.constants import Microscope
+from openhcs.core.dataset_sources.source import DatasetSource
 
 
 def test_bbbc021_dataset_spec_exposes_reference_cppipe_urls() -> None:
@@ -10,10 +10,6 @@ def test_bbbc021_dataset_spec_exposes_reference_cppipe_urls() -> None:
 
 
 def test_dataset_ingestion_types_are_registered_microscope_declarations() -> None:
-    registered_types = {
-        microscope.value
-        for microscope in Microscope
-        if microscope is not Microscope.AUTO
-    }
+    registered_types = set(DatasetSource.__registry__)
 
     assert {spec.microscope_type for spec in dataset_specs()} <= registered_types

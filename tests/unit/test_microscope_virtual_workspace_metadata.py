@@ -269,7 +269,7 @@ def test_workspace_registration_reuses_owner_and_refreshes_changed_mapping(tmp_p
     from polystore.filemanager import FileManager
     from openhcs.constants import Backend
     from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
-    from openhcs.microscopes.microscope_base import MicroscopeHandler
+    from openhcs.core.dataset_sources.source import DatasetSource
 
     metadata_path = METADATA_CONFIG.metadata_path(tmp_path)
     document = {FIELDS.SUBDIRECTORIES: {".": {FIELDS.WORKSPACE_MAPPING: {
@@ -277,11 +277,11 @@ def test_workspace_registration_reuses_owner_and_refreshes_changed_mapping(tmp_p
     }}}}
     metadata_path.write_text(json.dumps(document))
     manager = FileManager({})
-    MicroscopeHandler._register_virtual_workspace_backend(tmp_path, manager)
+    DatasetSource._register_virtual_workspace_backend(tmp_path, manager)
     owner = manager.registry[Backend.VIRTUAL_WORKSPACE.value]
     alias = tmp_path / "plate-alias"
     alias.symlink_to(tmp_path, target_is_directory=True)
-    MicroscopeHandler._register_virtual_workspace_backend(alias, manager)
+    DatasetSource._register_virtual_workspace_backend(alias, manager)
     assert manager.registry[Backend.VIRTUAL_WORKSPACE.value] is owner
     assert owner._resolve_ref("image.tif").backend_address == "first.tif"
 
@@ -291,7 +291,7 @@ def test_workspace_registration_reuses_owner_and_refreshes_changed_mapping(tmp_p
     prior_mtime = metadata_path.stat().st_mtime
     metadata_path.write_text(json.dumps(document))
     os.utime(metadata_path, (prior_mtime + 1, prior_mtime + 1))
-    MicroscopeHandler._register_virtual_workspace_backend(tmp_path, manager)
+    DatasetSource._register_virtual_workspace_backend(tmp_path, manager)
     assert manager.registry[Backend.VIRTUAL_WORKSPACE.value] is owner
     assert owner._resolve_ref("image.tif").backend_address == "second.tif"
 
@@ -308,7 +308,7 @@ def test_workspace_registration_replaces_different_plate_or_metadata_contract(tm
     from polystore.virtual_workspace import VirtualWorkspaceBackend
     from openhcs.constants import Backend
     from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
-    from openhcs.microscopes.microscope_base import MicroscopeHandler
+    from openhcs.core.dataset_sources.source import DatasetSource
 
     manager = FileManager({})
     owners = []
@@ -319,7 +319,7 @@ def test_workspace_registration_replaces_different_plate_or_metadata_contract(tm
             "image.tif": SourcePixelRef("disk", f"{name}.tif").to_workspace_mapping(),
         }}}}
         METADATA_CONFIG.metadata_path(plate).write_text(json.dumps(document))
-        MicroscopeHandler._register_virtual_workspace_backend(plate, manager)
+        DatasetSource._register_virtual_workspace_backend(plate, manager)
         owner = manager.registry[Backend.VIRTUAL_WORKSPACE.value]
         assert owner._resolve_ref("image.tif").backend_address == f"{name}.tif"
         owners.append(owner)
@@ -328,6 +328,6 @@ def test_workspace_registration_replaces_different_plate_or_metadata_contract(tm
     alternative.metadata_path(plate).write_text(json.dumps(document))
     foreign_owner = VirtualWorkspaceBackend(plate, metadata_config=alternative)
     manager.register_backend(Backend.VIRTUAL_WORKSPACE.value, foreign_owner)
-    MicroscopeHandler._register_virtual_workspace_backend(plate, manager)
+    DatasetSource._register_virtual_workspace_backend(plate, manager)
     assert manager.registry[Backend.VIRTUAL_WORKSPACE.value] is not foreign_owner
     assert manager.registry[Backend.VIRTUAL_WORKSPACE.value].metadata_config == METADATA_CONFIG

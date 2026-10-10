@@ -19,14 +19,14 @@ from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.source_workspace_projection import (
-    RuntimeVirtualWorkspaceSourceProjectionAuthority,
+    RuntimeWorkspaceSourceProjections,
     VirtualWorkspacePathLookup,
-    VirtualWorkspaceSourceProjectionAuthority,
+    WorkspaceSourceProjections,
 )
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_outputs import PrimaryImageMetadataTarget
 from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
-from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -61,7 +61,7 @@ def _context(plate_root: Path, count: int) -> ProcessingContext:
     context.microscope_handler = SimpleNamespace(
         parser=SourceSchemaFilenameParser(),
         metadata_handler=SimpleNamespace(source_workspace_metadata_document=lambda _p: None),
-        source_admission_config=lambda: None,
+        source_bindings_still_required=lambda: None,
     )
     context.freeze()
     return context
@@ -118,8 +118,8 @@ def test_completed_projection_facts_survive_error_or_cancel_and_omit(tmp_path, m
 
 def test_same_plate_reader_uses_completed_facts_before_durable_publication(tmp_path):
     context = _context(tmp_path, 1)
-    authority = context.runtime_source_workspace_projection_authority
-    assert isinstance(authority, RuntimeVirtualWorkspaceSourceProjectionAuthority)
+    authority = context.runtime_source_workspace_projections
+    assert isinstance(authority, RuntimeWorkspaceSourceProjections)
     assert authority.projection_if_available() is None
     context.record_completed_step_outputs(_facts(tmp_path))
     projection = authority.projection_or_empty()
@@ -127,7 +127,7 @@ def test_same_plate_reader_uses_completed_facts_before_durable_publication(tmp_p
     assert projection.source_projection_for(lookup).image_metadata.source_dtype == "uint16"
     assert projection.source_metadata_for(lookup)["source_alias"] == "saved"
     # A direct durable reader retains its published-boundary contract.
-    direct = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+    direct = WorkspaceSourceProjections.from_plate_metadata(
         plate_path=tmp_path, metadata_handler=context.microscope_handler.metadata_handler,
         filemanager=context.filemanager,
     )
@@ -139,7 +139,7 @@ def test_same_plate_reader_uses_completed_facts_before_durable_publication(tmp_p
 def test_runtime_overlay_excludes_another_output_plate_and_other_context(tmp_path):
     context = _context(tmp_path, 1)
     context.record_completed_step_outputs(_facts(tmp_path / "other-plate"))
-    authority = context.runtime_source_workspace_projection_authority
+    authority = context.runtime_source_workspace_projections
     assert authority.projection_if_available() is None
     other = _context(tmp_path, 1)
     other.microscope_handler = context.microscope_handler
@@ -160,7 +160,7 @@ def test_runtime_axis_query_is_explicit_and_full_plate_outputs_remain_available(
         )),
     }))
     context.record_completed_step_outputs(outputs)
-    authority = context.runtime_source_workspace_projection_authority
+    authority = context.runtime_source_workspace_projections
     full = authority.projection_or_empty()
     axis = authority.projection_or_empty(axis_id="A01")
     assert set(full.pipeline_start_files()) == {str(tmp_path / "images/A01.tif"), str(tmp_path / "images/A02.tif")}
@@ -169,6 +169,6 @@ def test_runtime_axis_query_is_explicit_and_full_plate_outputs_remain_available(
     other = _context(tmp_path, 1)
     other.filemanager = context.filemanager
     other.microscope_handler = context.microscope_handler
-    assert other.runtime_source_workspace_projection_authority.projection_if_available() is None
+    assert other.runtime_source_workspace_projections.projection_if_available() is None
     context.reset_completed_step_outputs()
     assert authority.projection_if_available(axis_id="A01") is None

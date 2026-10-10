@@ -73,7 +73,7 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_source_binding_cache import RuntimeSourceResolutionSnapshot
     from polystore.filemanager import FileManager
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 SourceCandidatePath = str
@@ -1672,7 +1672,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                 f"Source-bound artifact {ref!r} requires main-flow source provenance."
             )
 
-        projection = request.context.runtime_source_workspace_projection_authority.projection_if_available(
+        projection = request.context.runtime_source_workspace_projections.projection_if_available(
             axis_id=request.axis_scope.axis_id,
         )
         if projection is None:

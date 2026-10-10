@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from openhcs.constants.constants import Backend
-from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from tests.unit.bioformats_fixture import bioformats_filemanager
 
 
@@ -37,7 +37,7 @@ def test_openhcs_zarr_reload_restores_registered_bioformats_parser(
         encoding="utf-8",
     )
     filemanager = bioformats_filemanager()
-    handler = OpenHCSMicroscopeHandler(filemanager)
+    handler = OpenHCSDatasetSource(filemanager)
 
     input_dir = handler.initialize_workspace(tmp_path, filemanager)
 

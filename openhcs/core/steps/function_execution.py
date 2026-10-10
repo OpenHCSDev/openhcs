@@ -60,7 +60,7 @@ from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 from openhcs.core.axes import AxisFamily
 
 if TYPE_CHECKING:
-    from openhcs.microscopes.microscope_interfaces import FilenameParser
+    from openhcs.core.dataset_sources.interfaces import FilenameParser
 
 
 logger = logging.getLogger(__name__)
@@ -524,7 +524,7 @@ class FunctionStepExecutor:
     def source_pattern_context(self) -> SourcePatternResolutionContext:
         """Return source-path context used to filter source-bound anchors."""
 
-        projection = self.context.runtime_source_workspace_projection_authority.projection_or_empty(
+        projection = self.context.runtime_source_workspace_projections.projection_or_empty(
             axis_id=self.plan.axis_id,
         )
         return self.context.runtime_source_binding_context_cache.source_pattern_context(
@@ -807,7 +807,7 @@ class FunctionStepExecutor:
         axis_filter = {f"{axis_name}_filter": [plan.axis_id]}
         source_files = step_output_manifest(self.context).producer_paths_for(plan)
         if source_files is None:
-            source_projection = self.context.runtime_source_workspace_projection_authority.projection_if_available()
+            source_projection = self.context.runtime_source_workspace_projections.projection_if_available()
             if (
                 plan.main_input_dependency.kind
                 is StepInputDependencyKind.PIPELINE_START

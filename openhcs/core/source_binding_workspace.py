@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, ClassVar, cast
 from metaclass_registry import AutoRegisterMeta
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import Backend, Microscope
+from openhcs.constants.constants import Backend
 from openhcs.core.image_shapes import ArrayShape
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
@@ -41,14 +41,14 @@ from openhcs.core.source_matching import (
     with_source_component_metadata,
 )
 from openhcs.core.source_metadata import (
-    ORIGINAL_SOURCE_METADATA_FIELD,
-    OriginalSourceMetadata,
+    DECLARED_SOURCE_METADATA_FIELD,
+    DeclaredSourceMetadata,
     SourceFilterPathMetadata,
     SourceMetadataMapping,
     SourceMetadataFields,
     SourceMetadataScalar,
     SourceVoxelSpacing,
-    SourceComponentProjectionStrategy,
+    SourceAxisProjection,
 )
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
@@ -97,7 +97,7 @@ class _SourceSet:
 
         metadata = dict(self.metadata)
         metadata.update(imported_metadata)
-        OriginalSourceMetadata.from_mapping(imported_metadata).overlay_into(
+        DeclaredSourceMetadata.from_mapping(imported_metadata).overlay_into(
             metadata,
             path=path,
         )
@@ -632,7 +632,7 @@ class SourceBindingWorkspaceProjector:
                 f"SourceBindingsConfig, got {type(self.source_bindings).__name__}."
             )
 
-    def admit_prepared_projection(
+    def accept_prepared_projection(
         self, projection: "VirtualWorkspaceSourceProjection"
     ) -> "VirtualWorkspaceSourceProjection":
         """Admit retained sources without rebuilding their paths or provenance."""
@@ -704,10 +704,10 @@ class SourceBindingWorkspaceProjector:
     ) -> SourceProjectionSet:
         """Return projections for one already-resolved candidate universe."""
 
-        from openhcs.microscopes.bioformats_adapter import SourcePlaneStoreAdapter
+        from openhcs.core.dataset_sources.plane_stores import SourceMetadataEnricher
 
         candidates = tuple(
-            SourcePlaneStoreAdapter.enrich_source_candidate(
+            SourceMetadataEnricher.enrich_source_candidate(
                 candidate,
                 physical_path=(
                     Path(physical_path)
@@ -857,9 +857,13 @@ class SourceBindingWorkspaceProjector:
             candidates,
             filemanager=filemanager,
         )
+        from openhcs.core.dataset_sources.source import DeclaredFileSource
+
         primary_metadata = projection_set.metadata_dict(
             parser=self.parser,
-            microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
+            microscope_handler_name=(
+                DeclaredFileSource.require_registered_source().source_name
+            ),
             source_filename_parser_name=type(self.parser).__name__,
             grid_dimensions=SourceTileLayout.metadata_grid_dimensions(projection_set),
             pixel_size=SourceVoxelSpacing.metadata_pixel_size(
@@ -1061,10 +1065,7 @@ class SourceBindingWorkspaceProjector:
             for selector in binding.selector.components
         }
         for component, value in selector_assignments.items():
-            current = SourceComponentProjectionStrategy.metadata_component(
-                component,
-                metadata,
-            )
+            current = SourceMetadataFields.component_value(metadata, component)
             if current is not None and not source_metadata_values_equal(current, value):
                 raise ValueError(
                     f"Source candidate {candidate.relative_path!r} has conflicting "
@@ -1072,15 +1073,12 @@ class SourceBindingWorkspaceProjector:
                 )
             metadata = with_source_component_metadata(metadata, component, value)
         for identity in binding.component_identity:
-            current = SourceComponentProjectionStrategy.metadata_component(
-                identity.component,
-                metadata,
-            )
+            current = SourceMetadataFields.component_value(metadata, identity.component)
             if current is not None and not source_metadata_values_equal(
                 current,
                 identity.value,
             ):
-                OriginalSourceMetadata.from_mapping(
+                DeclaredSourceMetadata.from_mapping(
                     {identity.component.name: current}
                 ).merge_into(
                     metadata,
@@ -1211,7 +1209,7 @@ class SourceBindingWorkspaceProjector:
                             axis,
                             well
                             if issubclass(axis, PartitionAxis)
-                            else SourceComponentProjectionStrategy.project_bound_component(
+                            else SourceAxisProjection.project_bound(
                                 axis,
                                 set_metadata=source_set.metadata,
                                 set_index=source_set.index,
@@ -1245,7 +1243,7 @@ class SourceBindingWorkspaceProjector:
     def _source_set_well(self, source_set: _SourceSet) -> str:
         fields = self.source_bindings.grouping_metadata_fields
         if not fields:
-            return SourceComponentProjectionStrategy.project_component(
+            return SourceAxisProjection.project(
                 AxisFamily.active().partition_axis(),
                 source_set.metadata,
                 source_set.index,
@@ -1263,15 +1261,12 @@ class SourceBindingWorkspaceProjector:
 
         partition_axis = AxisFamily.active().partition_axis()
         fields_are_partition_identity = all(
-            SourceComponentProjectionStrategy.component_for_metadata_field(field)
+            source_metadata_component(field)
             is partition_axis
             for field in fields
         )
         if fields_are_partition_identity:
-            partition_value = SourceComponentProjectionStrategy.metadata_component(
-                partition_axis,
-                group_metadata,
-            )
+            partition_value = SourceMetadataFields.component_value(group_metadata, partition_axis)
             if partition_value is None:
                 raise ValueError(
                     f"Source grouping fields declared {partition_axis.name} identity "
@@ -1317,7 +1312,7 @@ class SourceBindingWorkspaceProjector:
                 or OpenHCSPlaneAddress.from_component_values(
                     (
                         component,
-                        SourceComponentProjectionStrategy.project_component(
+                        SourceAxisProjection.project(
                             component,
                             candidate.metadata,
                             index,
@@ -1386,15 +1381,15 @@ def _workspace_source_metadata(
     metadata = dict(candidate.metadata)
     if source_set_metadata is not None:
         source_set_original_metadata = source_set_metadata.get(
-            ORIGINAL_SOURCE_METADATA_FIELD
+            DECLARED_SOURCE_METADATA_FIELD
         )
         metadata.update(
             (field_name, value)
             for field_name, value in source_set_metadata.items()
-            if field_name != ORIGINAL_SOURCE_METADATA_FIELD
+            if field_name != DECLARED_SOURCE_METADATA_FIELD
         )
         if source_set_original_metadata is not None:
-            OriginalSourceMetadata.from_reserved_value(
+            DeclaredSourceMetadata.from_reserved_value(
                 source_set_original_metadata,
                 path=candidate.relative_path,
             ).overlay_into(metadata, path=candidate.relative_path)
@@ -1435,10 +1430,7 @@ def _projected_candidate_components(
             value
             for candidate in candidates
             if (
-                value := SourceComponentProjectionStrategy.metadata_component(
-                    component,
-                    candidate.metadata,
-                )
+                value := SourceMetadataFields.component_value(candidate.metadata, component)
             )
             is not None
         }
@@ -1468,7 +1460,7 @@ def _source_set_match_value(
     component = source_metadata_component(field)
     if component is None:
         return None
-    return SourceComponentProjectionStrategy.metadata_component(component, metadata)
+    return SourceMetadataFields.component_value(metadata, component)
 
 
 def _relative_source_path(source_root: Path, source_path: Path) -> str:

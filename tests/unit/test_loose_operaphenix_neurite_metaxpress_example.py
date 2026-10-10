@@ -9,7 +9,6 @@ from objectstate.lazy_factory import ensure_global_config_context
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.constants import Microscope
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.function_patterns import get_core_callable
@@ -33,6 +32,7 @@ from openhcs.processing.presets.pipelines.loose_operaphenix_neurite_outgrowth_me
 )
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
 
 def _inputs(plate_path: Path, output_root: Path) -> LooseOperaPhenixNeuriteInputs:
@@ -74,7 +74,7 @@ def test_compact_example_uses_owned_channel_order_and_one_function_step(
         1,
         2,
     ]
-    assert pipeline_config.microscope is Microscope.SOURCE_BINDINGS
+    assert pipeline_config.dataset_source is SourceBindingsSource
     assert pipeline_config.well_filter_config.well_filter == "B03"
     assert pipeline_config.path_planning_config.well_filter == 0
     assert [

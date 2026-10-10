@@ -2,7 +2,7 @@
 
 This example is for selected Opera Phenix TIFFs that were copied without the
 plate's ``Index.xml``. A complete Opera Phenix plate should use
-``Microscope.OPERAPHENIX`` instead of reconstructing its identities here.
+``OperaPhenixHandler`` instead of reconstructing its identities here.
 
 Edit ``example_inputs`` for the local plate, exact filenames, axis identities,
 output directory, and viewer port. Set ``map2=None`` for a two-channel workflow
@@ -23,7 +23,7 @@ from pathlib import Path
 
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.constants.constants import Microscope
+from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from openhcs.constants.input_source import InputSource
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
@@ -191,7 +191,7 @@ def build_loose_operaphenix_neurite_config(
         _exact_image_binding(source, inputs) for source in inputs.channel_stack
     )
     return PipelineConfig(
-        microscope=Microscope.SOURCE_BINDINGS,
+        dataset_source=SourceBindingsSource,
         well_filter_config=LazyWellFilterConfig(well_filter=inputs.well),
         path_planning_config=LazyPathPlanningConfig(
             well_filter=0,

@@ -33,7 +33,6 @@ from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.constants.constants import Backend
 from openhcs.core.config import (
-    AnalysisConsolidationConfig,
     CompilationDebugConfig,
     GlobalPipelineConfig,
     MaterializationBackend,
@@ -42,6 +41,7 @@ from openhcs.core.config import (
     VFSConfig,
     WellFilterConfig,
 )
+from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.pipeline_document_fields import PipelineDocumentField

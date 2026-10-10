@@ -47,20 +47,6 @@ from arraybridge.types import (
 from polystore.constants import Backend
 
 
-class Microscope(Enum):
-    AUTO = "auto"
-    OPENHCS = "openhcsdata"
-    IMAGEXPRESS = "imagexpress"
-    OPERAPHENIX = "opera_phenix"
-    OMERO = "omero"  # Added for OMERO virtual filesystem backend
-    BIOFORMATS = "bioformats"
-    SOURCE_BINDINGS = "source_bindings"
-
-
-# Documentation URL
-DOCUMENTATION_URL = "https://openhcs.readthedocs.io/en/latest/"
-
-
 class OrchestratorState(Enum):
     """Simple orchestrator state tracking - no complex state machine."""
 
@@ -126,7 +112,6 @@ class OrchestratorState(Enum):
 
 
 # I/O-related constants
-DEFAULT_IMAGE_EXTENSION = ".tif"
 _TIFF_IMAGE_EXTENSIONS: Set[str] = {".tif", ".tiff"}
 _RASTER_IMAGE_EXTENSIONS: Set[str] = {
     ".bmp",
@@ -137,11 +122,6 @@ _RASTER_IMAGE_EXTENSIONS: Set[str] = {
 }
 DEFAULT_IMAGE_EXTENSIONS: Set[str] = set(_TIFF_IMAGE_EXTENSIONS)
 LOADABLE_IMAGE_EXTENSIONS: Set[str] = _TIFF_IMAGE_EXTENSIONS | _RASTER_IMAGE_EXTENSIONS
-DEFAULT_SITE_PADDING = 3
-DEFAULT_RECURSIVE_PATTERN_SEARCH = False
-
-
-DEFAULT_MICROSCOPE: Microscope = Microscope.AUTO
 
 
 class FileFormat(Enum):
@@ -164,17 +144,3 @@ FORCE_DISK_WRITE = "force_disk_write"
 READ_BACKEND = "read_backend"
 WRITE_BACKEND = "write_backend"
 
-# Default values
-DEFAULT_TILE_OVERLAP = 10.0
-DEFAULT_MAX_SHIFT = 50
-DEFAULT_MARGIN_RATIO = 0.1
-DEFAULT_PIXEL_SIZE = 1.0
-DEFAULT_ASSEMBLER_LOG_LEVEL = "INFO"
-DEFAULT_INTERPOLATION_MODE = "nearest"
-DEFAULT_INTERPOLATION_ORDER = 1
-DEFAULT_CPU_THREAD_COUNT = 4
-DEFAULT_PATCH_SIZE = 128
-DEFAULT_SEARCH_RADIUS = 20
-# Consolidated definition for CPU thread count
-
-DEFAULT_NUM_WORKERS = 1
