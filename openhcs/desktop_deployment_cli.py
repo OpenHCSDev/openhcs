@@ -1,6 +1,6 @@
-"""Command adapter for the installer-managed desktop deployment authority."""
+"""Command-line entry point for the installer-managed desktop deployment."""
 
-from openhcs.desktop_deployment import main
+from openhcs.desktop.deployment import main
 
 if __name__ == "__main__":
     raise SystemExit(main())

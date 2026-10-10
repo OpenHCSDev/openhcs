@@ -31,16 +31,15 @@ from pyqt_reactive.services.window_navigation import (
 from python_introspect import dataclass_from_mapping, to_jsonable
 
 from openhcs import __version__ as OPENHCS_VERSION
-from openhcs.desktop_deployment import (
+from openhcs.desktop.deployment import (
     DESKTOP_RESTART_EXECUTABLE_ENVIRONMENT_VARIABLE,
-    DesktopDeploymentAuthority,
+    DesktopDeployment,
     DesktopDeploymentContext,
     DesktopDeploymentError,
 )
-from openhcs.desktop_installation import DESKTOP_INSTALL_PROFILE
+from openhcs.desktop.installation import DESKTOP_INSTALL_PROFILE
 from openhcs.mcp.bootstrap import MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE
-from openhcs.pyqt_gui.services.desktop_update_worker import DesktopUpdatePlan
-from openhcs.pyqt_gui.services.history_migration import DesktopHistoryUpgrade
+from openhcs.desktop.update_worker import DesktopUpdatePlan
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
@@ -276,7 +275,7 @@ class DesktopRuntimeEnvironment:
                 self.installation_pointer,
                 environment_root=self.environment_root,
             )
-            candidate = DesktopDeploymentAuthority.current().update_candidate(context)
+            candidate = DesktopDeployment.current().update_candidate(context)
         except DesktopDeploymentError as exc:
             raise DesktopUpdateError(str(exc)) from exc
         try:
@@ -385,7 +384,7 @@ class DesktopRestartUiState:
 
 @dataclass(frozen=True, slots=True)
 class DesktopRestartSession:
-    """Canonical plate-manager source plus ObjectState history for one restart."""
+    """Plate-manager source plus ObjectState history for one restart."""
 
     directory: Path
 
@@ -471,7 +470,7 @@ class DesktopRestartSession:
         from objectstate.object_state import ObjectStateRegistry
 
         from openhcs.pyqt_gui.config import save_ui_config_sync
-        from openhcs.pyqt_gui.services.desktop_update_worker import (
+        from openhcs.desktop.update_worker import (
             DesktopUpdateProgressTheme,
         )
         from openhcs.pyqt_gui.widgets.plate_manager import (
@@ -495,10 +494,10 @@ class DesktopRestartSession:
             session.purpose_document.write_text(purpose.value, encoding="utf-8")
             if purpose.requires_update_assets:
                 shutil.copyfile(
-                    Path(__file__).with_name("desktop_update_worker.py"),
+                    Path(__file__).with_name("update_worker.py"),
                     session.worker_document,
                 )
-                color_scheme = main_window.window_services.get_current_color_scheme()
+                color_scheme = main_window.service_adapter.get_current_color_scheme()
                 DesktopUpdateProgressTheme(
                     window_bg=color_scheme.to_hex(color_scheme.window_bg),
                     panel_bg=color_scheme.to_hex(color_scheme.panel_bg),
@@ -601,7 +600,7 @@ class ConsumedDesktopRestartSession(DesktopRestartSession):
     """Restart data that is no longer eligible for automatic restore."""
 
     def _restore_declarations_and_history(self, code_workflow, payload) -> None:
-        """Restore history around the captured declaration authority.
+        """Restore history around the captured declarations.
 
         ObjectState history addresses child states by occurrence token.  A fresh
         process must first materialize those scopes, but their newly derived
@@ -612,9 +611,7 @@ class ConsumedDesktopRestartSession(DesktopRestartSession):
         """
 
         code_workflow.apply_payload(payload)
-        ObjectStateRegistry.load_history_from_file(
-            str(self.history_document), migration=DesktopHistoryUpgrade()
-        )
+        ObjectStateRegistry.load_history_from_file(str(self.history_document))
         with ObjectStateRegistry.atomic_success("restore captured session declaration"):
             code_workflow.apply_payload(payload)
 
@@ -767,7 +764,7 @@ def parse_latest_release(
     installed_version: str,
     system_name: str,
 ) -> DesktopUpdate:
-    """Parse the official latest-release projection into a safe handoff."""
+    """Parse the official latest-release response into a safe handoff."""
 
     if not isinstance(payload, dict):
         raise DesktopUpdateError("The release service returned an invalid response.")

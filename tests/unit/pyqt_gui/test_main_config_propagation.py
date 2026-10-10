@@ -81,7 +81,7 @@ def test_on_config_changed_propagates_to_embedded_widgets() -> None:
 
     main_like = type("MainLike", (), {})()
     main_like.runtime_context = PyQtGuiRuntimeContext(get_default_ui_config())
-    main_like.config_services = service_adapter
+    main_like.service_adapter = service_adapter
     main_like.lifecycle_workflow = lifecycle_workflow
     main_like.set_pipeline_runtime_config = lambda config: setattr(
         main_like,
@@ -179,7 +179,7 @@ def test_set_ui_config_propagates_one_exact_object_to_live_consumers() -> None:
     main_like = type("MainLike", (), {})()
     main_like.runtime_context = PyQtGuiRuntimeContext(current)
     scheduled_operations = []
-    main_like.window_services = SimpleNamespace(
+    main_like.service_adapter = SimpleNamespace(
         widget_gui_config=current,
         execute_async_operation=scheduled_operations.append,
     )
@@ -201,7 +201,7 @@ def test_set_ui_config_propagates_one_exact_object_to_live_consumers() -> None:
     OpenHCSMainWindow.set_ui_config(main_like, updated)
 
     assert main_like.runtime_context.ui_config is updated
-    assert main_like.window_services.widget_gui_config is updated
+    assert main_like.service_adapter.widget_gui_config is updated
     assert main_like.system_monitor.config is updated.performance_monitor
     assert main_like.plate_manager_widget.config is updated
     assert main_like.zmq_manager_widget.config is updated.zmq
@@ -227,7 +227,7 @@ def test_set_ui_config_applies_changed_logging_declaration(monkeypatch) -> None:
     )
     main_like = SimpleNamespace(
         runtime_context=PyQtGuiRuntimeContext(current),
-        window_services=SimpleNamespace(widget_gui_config=current),
+        service_adapter=SimpleNamespace(widget_gui_config=current),
         ui_config_changed=SimpleNamespace(emit=lambda _config: None),
         _apply_ui_config_consumers=lambda _config: None,
     )
@@ -324,7 +324,7 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
     global_propagation = Recorder()
     global_like = SimpleNamespace(
         runtime_context=PyQtGuiRuntimeContext(ui_config),
-        config_services=SimpleNamespace(set_global_config=global_publication.record),
+        service_adapter=SimpleNamespace(set_global_config=global_publication.record),
         lifecycle_workflow=SimpleNamespace(propagate_config=global_propagation.record),
     )
     global_like.set_pipeline_runtime_config = MethodType(
@@ -396,7 +396,7 @@ def test_set_ui_config_restores_previous_consumers_before_rejecting_update() -> 
     applied = []
     main_like = type("MainLike", (), {})()
     main_like.runtime_context = PyQtGuiRuntimeContext(current)
-    main_like.window_services = SimpleNamespace(widget_gui_config=current)
+    main_like.service_adapter = SimpleNamespace(widget_gui_config=current)
     main_like.ui_config_changed = Signal()
 
     def apply_consumers(config) -> None:
@@ -411,7 +411,7 @@ def test_set_ui_config_restores_previous_consumers_before_rejecting_update() -> 
 
     assert applied == [updated, current]
     assert main_like.runtime_context.ui_config is current
-    assert main_like.window_services.widget_gui_config is current
+    assert main_like.service_adapter.widget_gui_config is current
     assert main_like.ui_config_changed.values == []
 
 

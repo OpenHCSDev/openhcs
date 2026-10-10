@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from openhcs.pyqt_gui.services import desktop_restart_worker
+from openhcs.desktop import restart_worker as desktop_restart_worker
 
 
 def _arguments(tmp_path: Path) -> list[str]:

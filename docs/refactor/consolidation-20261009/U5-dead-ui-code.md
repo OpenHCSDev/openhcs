@@ -49,7 +49,7 @@ Restart-session ObjectState histories are runtime state: no converter, pre-versi
 
 ## Tests
 
-Delete `tests/unit/test_pattern_data_manager.py` and `tests/unit/pyqt_gui/test_desktop_history_upgrade.py`. Update fakes that implement deleted methods and the imports of moved modules. Add an offscreen GUI smoke test: launch `OpenHCSPyQtApp` and its main window in a subprocess with isolated XDG directories, close and reopen the plate manager and pipeline editor docks, quit, and assert that no process carrying the run's marker environment variable survives.
+Delete `tests/unit/test_pattern_data_manager.py` and `tests/unit/pyqt_gui/test_desktop_history_upgrade.py`. Update fakes that implement deleted methods and the imports of moved modules. Move the desktop tests to `tests/unit/desktop/`. Add an offscreen GUI smoke test (`tests/pyqt_gui/test_main_window_offscreen_smoke.py`): launch `OpenHCSPyQtApp` and its main window in a subprocess with an isolated home, XDG directories and execution port; open the plate manager and the pipeline editor as their own windows through the pane float button (the panes are permanent docks with no close button) and close each back into its dock; close the main window; assert the event loop's exit status and that no process carrying the run's marker environment variable survives.
 
 ## New-case experiments
 
@@ -67,5 +67,6 @@ Every row above is resolved, the guards pass, the CI workflow and scripts import
 | `PyQtServiceAdapter.get_current_color_scheme` | called by pyqt-reactive `abstract_manager_widget.py:685` and 13 product sites | U3 (library protocol) |
 | `objectstate.history_migration.HistoryMigration` and the `migration=` parameter of `import_history_from_dict`/`load_history_from_file` | no consumer left after U5 | U3 (ObjectState lockstep) |
 | pyqt-reactive `PatternDataManager.extract_func_and_kwargs` returns `(None, {})` for a three-member tuple; the deleted OpenHCS copy raised `TypeError` | `pattern_data_manager.py:120` in the library | U3 |
+| Tearing down the `QApplication` after the main window closes (PyQt's exit handler or interpreter finalization) segfaults with no Python frame in about one run in five, at `7b3bb889d` (before U5) as after. The smoke test therefore exits with `os._exit` after the event loop returns | measured with the smoke driver: 1 of 6 runs at the pre-U5 head, 1 of 4 after; 10 of 10 clean with `os._exit` | U3 (generic Qt lifecycle) |
 | `PlateManagerCodeDocumentAuthority` (15 files) | rule-1b name imported by `desktop/update.py`, defined in `ui/shared/plate_manager_code_document.py` | U1 |
 | `AgentRuntimePlatformAuthority` (12 files) | rule-1b name imported by `desktop/deployment.py`, defined in `agent/runtime_platform.py` | not assigned; the session lead names an owner |

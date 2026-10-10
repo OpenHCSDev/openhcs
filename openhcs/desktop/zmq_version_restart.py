@@ -12,8 +12,8 @@ from pyqt_reactive.services.async_operation_executor import (
 )
 
 from openhcs.core.execution_state import ManagerExecutionState
-from openhcs.pyqt_gui.services.desktop_restart import DesktopSessionRestart
-from openhcs.pyqt_gui.services.desktop_update import DesktopUpdateError
+from openhcs.desktop.restart import DesktopSessionRestart
+from openhcs.desktop.update import DesktopUpdateError
 
 if TYPE_CHECKING:
     from zmqruntime import EndpointApplicationCompatibility

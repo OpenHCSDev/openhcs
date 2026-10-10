@@ -1275,8 +1275,6 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
 
         return orchestrator_state
 
-    # action_delete_plate() REMOVED - now uses ABC's action_delete() template with deletion_workflow
-
     def _validate_plates_for_operation(
         self,
         plates: list[PlateManagerRow],
@@ -2344,8 +2342,6 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
 
     # ========== UI Helper Methods ==========
 
-    # update_item_list() REMOVED - uses ABC template with list update hooks
-
     def get_selected_orchestrator(self):
         """
         Get the orchestrator for the currently selected plate.
@@ -2530,14 +2526,9 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
                 )
                 count += 1
 
-        # REMOVED: Thread-local modification - dual-axis resolver handles orchestrator context automatically
-
         logger.info(f"Applied new global config to {count} orchestrators")
 
         # SIMPLIFIED: Dual-axis resolver handles placeholder updates automatically
-
-    # REMOVED: _refresh_all_parameter_form_placeholders and _refresh_widget_parameter_forms
-    # SIMPLIFIED: Dual-axis resolver handles placeholder updates automatically
 
     # ========== Helper Methods ==========
 
