@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
+import os
 import threading
 import time
 from abc import ABC, abstractmethod
@@ -115,7 +116,13 @@ from openhcs.core.execution_state import (
     ExecutionCompletionPayload,
     ManagerExecutionState,
 )
-from openhcs.core.input_workspace import InputWorkspacePreparationResult
+from openhcs.core.input_workspace import (
+    InputWorkspacePreparationResult,
+    derived_workspace_root,
+    mirror_input_workspace,
+)
+from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
+from openhcs.core.xdg_paths import get_openhcs_data_dir
 from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.pipeline_import import PipelineImporter
 from openhcs.core.orchestrator.orchestrator import (
@@ -195,9 +202,20 @@ class DatasetAccess(ABC):
     @abstractmethod
     def require_readable(self, root: Path) -> Path: ...
 
-    @abstractmethod
-    def require_initializable(self, root: Path) -> Path:
-        """Initialization writes dataset metadata next to the data."""
+    def initializes_in_place(self, root: Path) -> bool:
+        """Whether initialization may write dataset metadata into ``root``.
+
+        When it may not (a read-only source, or one outside the writable
+        roots), the session initializes a workspace mirrored from the source.
+        """
+
+        return all(
+            os.access(directory, os.W_OK)
+            for directory in {
+                Path(root),
+                *(path.parent for path in METADATA_CONFIG.managed_paths(root)),
+            }
+        )
 
     @abstractmethod
     def require_writable(self, path: Path) -> Path: ...
@@ -207,9 +225,6 @@ class UnrestrictedDatasetAccess(DatasetAccess):
     """A desktop session reads and writes wherever its user can."""
 
     def require_readable(self, root: Path) -> Path:
-        return root
-
-    def require_initializable(self, root: Path) -> Path:
         return root
 
     def require_writable(self, path: Path) -> Path:
@@ -280,9 +295,16 @@ class Session:
         main_thread: MainThread,
         progress_interval_seconds: float = 1 / 30,
         dataset_access: DatasetAccess = UnrestrictedDatasetAccess(),
+        workspace_root: Path | None = None,
     ) -> None:
         self.main_thread = main_thread
         self.dataset_access = dataset_access
+        self.workspace_root = (
+            get_openhcs_data_dir(create=False) / "workspaces"
+            if workspace_root is None
+            else Path(workspace_root)
+        )
+        """Where workspaces for sources the session may not write are made."""
         self.renderer: Renderer = NoRenderer()
         self.event_log = SessionEventLog()
         self.global_config = global_config
@@ -964,13 +986,22 @@ class Session:
 
     # -- initialize -----------------------------------------------------------
 
+    def mirrored_workspace(self, source_root: Path) -> InputWorkspacePreparationResult:
+        """A fresh workspace over a source the session must not write into."""
+
+        workspace = mirror_input_workspace(
+            source_root, derived_workspace_root(source_root, self.workspace_root)
+        )
+        logger.info("Initializing %s in workspace %s", source_root, workspace)
+        return InputWorkspacePreparationResult(
+            original_source_root=source_root,
+            execution_plate_path=workspace,
+        )
+
     async def initialize_datasets(self, scope_ids: tuple[str, ...]) -> None:
         ensure_global_config_context(GlobalPipelineConfig, self.global_config)
         for scope_id in scope_ids:
             self.require_work_allowed(scope_id)
-            self.dataset_access.require_initializable(
-                DatasetScope.parse(scope_id).initialized_root
-            )
         self.init_pending.update(scope_ids)
         self.refresh()
         self.publish(ProgressStarted(len(scope_ids)))
@@ -995,6 +1026,10 @@ class Session:
                 def run() -> InputWorkspacePreparationResult | None:
                     ensure_global_config_context(GlobalPipelineConfig, self.global_config)
                     workspace = scope.prepare_input_workspace()
+                    if workspace is None and not self.dataset_access.initializes_in_place(
+                        scope.root
+                    ):
+                        workspace = self.mirrored_workspace(scope.root)
                     if workspace is not None:
                         orchestrator.bind_input_workspace(workspace)
                     orchestrator.initialize()

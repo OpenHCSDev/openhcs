@@ -177,7 +177,20 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         )
 
         parser.add_argument("--plate", type=Path, required=True)
-        parser.add_argument("--execution-plate", type=Path)
+        parser.add_argument(
+            "--execution-plate",
+            type=Path,
+            help="A separately prepared execution plate; the run initializes it.",
+        )
+        parser.add_argument(
+            "--workspace-root",
+            type=Path,
+            help=(
+                "Where the run's execution workspace is made when no "
+                "--execution-plate is given (default: OUTPUT_DIR/workspace). "
+                "The source --plate is never written."
+            ),
+        )
         parser.add_argument("--pipeline-source-file", type=Path, required=True)
         parser.add_argument("--output-dir", type=Path, required=True)
         parser.add_argument("--run-id", required=True)
@@ -222,6 +235,10 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         from openhcs.agent.session_access import AgentPathDatasetAccess
         from openhcs.authoring.session.session import CallerThread, Session
         from openhcs.core.config import GlobalPipelineConfig
+        from openhcs.core.input_workspace import (
+            derived_workspace_root,
+            mirror_input_workspace,
+        )
         from openhcs.runtime.zmq_config import OpenHCSZMQConfig
         from openhcs.runtime.zmq_execution_signature import (
             ZMQRuntimeObservationExportScope,
@@ -229,14 +246,22 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         from python_introspect import to_jsonable
 
         output_dir = args.output_dir.expanduser().resolve()
+        workspace_parent = (
+            output_dir / "workspace"
+            if args.workspace_root is None
+            else args.workspace_root.expanduser().resolve()
+        )
+        # The source plate is readable only: a measured run never writes it.
+        prepared = () if args.execution_plate is None else (args.execution_plate,)
         policy = AgentPathPolicy.with_roots(
             readable_roots=(
                 args.plate,
-                args.execution_plate or args.plate,
+                *prepared,
                 args.pipeline_source_file,
                 output_dir,
+                workspace_parent,
             ),
-            writable_roots=(args.execution_plate or args.plate, output_dir),
+            writable_roots=(*prepared, output_dir, workspace_parent),
         )
         plate = policy.assert_readable(args.plate)
         execution_plate = (
@@ -262,6 +287,11 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             wait_timeout_ms=args.wait_timeout_ms,
         )
         output_dir.mkdir(parents=True, exist_ok=True)
+        if execution_plate is None:
+            execution_plate = mirror_input_workspace(
+                plate, derived_workspace_root(plate, workspace_parent)
+            )
+            print(f"Execution workspace: {execution_plate}", file=sys.stderr)
 
         transport = OpenHCSZMQConfig(
             client_host=args.host,
@@ -273,6 +303,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             global_config=GlobalPipelineConfig(),
             main_thread=CallerThread(),
             dataset_access=AgentPathDatasetAccess(policy),
+            workspace_root=workspace_parent,
         )
         measured = SessionMeasuredRun(session)
         try:

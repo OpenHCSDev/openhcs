@@ -1,14 +1,17 @@
-"""A measured CLI run ends cleanly when its wait timeout passes or on Ctrl-C.
+"""The measured benchmark CLI as a session client, on a real execution server.
 
-Both runs go through the session on a real, ephemeral execution server: the
-timeout is on the run request, Ctrl-C invokes StopExecution. Either way the
-command exits with the batch cancelled and no execution server left running.
+A run ends cleanly when its wait timeout passes (the timeout is on the run
+request) or on Ctrl-C (StopExecution): the batch is cancelled and no execution
+server is left running. A run never writes into its source plate: it executes
+on a workspace mirrored from it, so a read-only source stays byte-identical.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -17,6 +20,9 @@ from pathlib import Path
 
 import psutil
 import pytest
+
+from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
+from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
 
 from openhcs.core.config import PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -59,11 +65,32 @@ def _measured_inputs(tmp_path: Path) -> tuple[Path, Path]:
     return plate, source
 
 
+def _source_state(root: Path) -> dict[str, tuple]:
+    """Every entry's content digest, mtime and mode, relative to ``root``."""
+
+    state: dict[str, tuple] = {}
+    for path in sorted(root.rglob("*")):
+        stat = path.lstat()
+        digest = (
+            hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+        )
+        state[str(path.relative_to(root))] = (digest, stat.st_mtime_ns, stat.st_mode)
+    return state
+
+
+def _set_writable(root: Path, writable: bool) -> None:
+    for path in (root, *root.rglob("*")):
+        mode = path.stat().st_mode
+        path.chmod(mode | 0o200 if writable else mode & ~0o222)
+
+
 def _port(offset: int) -> int:
     return 26000 + offset + os.getpid() % 10000
 
 
-def _command(plate: Path, source: Path, output_dir: Path, port: int, wait_ms: int):
+def _command(
+    plate: Path, source: Path, output_dir: Path, port: int, wait_ms: int
+) -> tuple[str, ...]:
     return (
         sys.executable,
         "-c",
@@ -169,4 +196,37 @@ def test_ctrl_c_stops_the_run_and_its_server(tmp_path: Path) -> None:
 
     assert process.returncode == 130, stderr[-4000:]
     assert _final_row(stderr)["terminal_status"] == "cancelled"
+    _assert_no_server_left(port)
+
+
+def test_read_only_source_plate_completes_and_stays_byte_identical(
+    tmp_path: Path,
+) -> None:
+    generated, source = _measured_inputs(tmp_path)
+    plate = tmp_path / "evidence_source"
+    shutil.copytree(generated, plate)
+    _set_writable(plate, False)
+    before = _source_state(plate)
+    output_dir = tmp_path / "evidence"
+    port = _port(2)
+    try:
+        completed = subprocess.run(
+            _command(plate, source, output_dir, port, wait_ms=int(RUN_DEADLINE_SECONDS * 1000)),
+            cwd=REPOSITORY_ROOT,
+            env=_environment(tmp_path),
+            capture_output=True,
+            text=True,
+            timeout=RUN_DEADLINE_SECONDS,
+        )
+        after = _source_state(plate)
+    finally:
+        _set_writable(plate, True)
+
+    assert completed.returncode == 0, completed.stderr[-4000:]
+    receipt = MeasuredPipelineRunReceipt.read(
+        MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
+    )
+    assert receipt.plate_id == str(plate)
+    assert Path(receipt.execution_plate_id).is_relative_to(output_dir / "workspace")
+    assert after == before
     _assert_no_server_left(port)

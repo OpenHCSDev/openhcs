@@ -229,3 +229,49 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
         manager.cleanup()
         session.close()
         dispatcher.close()
+
+
+def test_read_only_dataset_initializes_in_a_mirrored_workspace(tmp_path: Path) -> None:
+    """Initialization never writes into a source it may not write."""
+
+    from openhcs.authoring.session.operations.datasets import AddDatasets
+    from openhcs.authoring.session.session import Session
+    from openhcs.core.config import GlobalPipelineConfig
+
+    from tests.integration.test_measured_cli_session import (
+        _set_writable,
+        _source_state,
+    )
+
+    root, _source = _synthetic_dataset(tmp_path)
+    _set_writable(root, False)
+    before = _source_state(root)
+    workspaces = tmp_path / "workspaces"
+    session = Session(
+        transport_config=OpenHCSZMQConfig(default_port=_port(2), persistent=False),
+        global_config=GlobalPipelineConfig(),
+        main_thread=CallerThread(),
+        workspace_root=workspaces,
+    )
+    try:
+        assert session.invoke(AddDatasets, AddDatasets.request(roots=(str(root),))).accepted
+        (scope_id,) = session.dataset_scope_ids()
+        started = session.invoke(
+            InitializeDatasets, InitializeDatasets.request(scope_ids=(scope_id,))
+        )
+        assert started.accepted, started.errors
+        deadline = time.monotonic() + STAGE_TIMEOUT_SECONDS
+        while not session.is_initialized(scope_id) or scope_id in session.init_pending:
+            failures = [
+                record.event
+                for record in session.events_after(0)
+                if type(record.event).__name__ == "InitializationFailed"
+            ]
+            assert not failures, failures
+            assert time.monotonic() < deadline
+            time.sleep(0.05)
+        assert session.orchestrator(scope_id).plate_path.is_relative_to(workspaces)
+        assert _source_state(root) == before
+    finally:
+        session.close()
+        _set_writable(root, True)
