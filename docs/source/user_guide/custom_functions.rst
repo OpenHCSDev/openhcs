@@ -12,9 +12,7 @@ function in the OpenHCS function catalog.
 .. code-block:: python
 
    from openhcs.core.memory.decorators import numpy
-   from openhcs.processing.backends.lib_registry.unified_registry import (
-       ProcessingContract,
-   )
+   from openhcs.core.processing_contracts import Pure2DContract
 
    @numpy(contract=Pure2DContract)
    def subtract_background(image, *, offset=100):

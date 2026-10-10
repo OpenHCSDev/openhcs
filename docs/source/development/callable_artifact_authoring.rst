@@ -140,9 +140,7 @@ The dataclass owns the row schema, including the empty-row case.
    from openhcs.core.runtime_measurements import (
        RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner,
    )
-   from openhcs.processing.backends.lib_registry.unified_registry import (
-       ProcessingContract,
-   )
+   from openhcs.core.processing_contracts import Pure2DContract
    from openhcs.processing.materialization import (
        CsvOptions, MaterializationSpec, ROIOptions,
    )
@@ -437,9 +435,7 @@ as its own custom-function source:
    from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType
    from openhcs.core.pipeline.function_contracts import artifact_inputs
    from openhcs.core.runtime_object_labels import ObjectLabelValue
-   from openhcs.processing.backends.lib_registry.unified_registry import (
-       ProcessingContract,
-   )
+   from openhcs.core.processing_contracts import Pure2DContract
 
    STORED_LABELS = ArtifactSpec.input(
        "fixture_labels", ObjectLabelsArtifactType, parameter_name="objects",

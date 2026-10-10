@@ -63,9 +63,7 @@ A minimal declaration uses an ordinary registered callable:
        PipelineConfig,
    )
    from openhcs.core.steps.function_step import FunctionStep
-   from openhcs.processing.backends.lib_registry.unified_registry import (
-       ProcessingContract,
-   )
+   from openhcs.core.processing_contracts import Pure2DContract
 
    @numpy(contract=Pure2DContract)
    def rescale(image, *, gain: float = 1.0):
