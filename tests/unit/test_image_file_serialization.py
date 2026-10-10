@@ -28,6 +28,7 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.payload_axes import PayloadAxes
 
 
 def test_content_digest_is_lazy_shared_and_bounded(tmp_path, monkeypatch) -> None:
@@ -428,7 +429,7 @@ def test_no_channel_declaration_does_not_inspect_payload(monkeypatch) -> None:
 
     monkeypatch.setattr(
         image_file_serialization,
-        "image_payload_data",
+        "array_geometry",
         lambda _payload: pytest.fail("No-axis guard must precede payload inspection"),
     )
     assert SourceImagePixelSemantics().validated_channel_axis(object()) is None
@@ -699,7 +700,7 @@ def test_intrinsic_tiff_write_uses_declared_axes_not_rgb_shaped_dimensions(
     pixels = np.arange(np.prod(shape), dtype=np.uint16).reshape(shape)
     metadata = ImagePayloadMetadata(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-        source_channel_axis=channel_axis,
+        axes=PayloadAxes.colour_samples(channel_axis),
         source_spatial_domain=VolumeSourceSpatialDomain(source_depth=3),
     )
     path = tmp_path / "volume.tif"
@@ -729,7 +730,7 @@ def test_runtime_plane_tiff_write_retains_scalar_frames_and_declared_channels(
     pixels = np.arange(np.prod(shape), dtype=dtype).reshape(shape)
     metadata = ImagePayloadMetadata(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-        source_channel_axis=channel_axis,
+        axes=PayloadAxes.colour_samples(channel_axis),
     )
     path = tmp_path / "artifact.labels.tif"
     configured = TiffConfig(compression=TiffCompression.DEFLATE, compression_level=1)

@@ -23,11 +23,7 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
@@ -64,6 +60,7 @@ from openhcs.processing.backends.cellprofiler.intensity_distribution import (
 from openhcs.processing.backends.cellprofiler.shape import (
     MeasureObjectSizeShapeModule,
 )
+from openhcs.core.axes import ColourAxis
 
 
 def _module_block(
@@ -129,7 +126,7 @@ def _image_outputs(contract):
 
 def _runtime_images(output: object) -> tuple[np.ndarray, ...]:
     values = output.slices if isinstance(output, AlignedImageStack) else (output,)
-    return tuple(np.asarray(image_payload_data(value)) for value in values)
+    return tuple(np.asarray(value.data) for value in values)
 
 
 def _object_payload() -> ObjectLabelPayload:
@@ -288,7 +285,7 @@ def test_classify_objects_runtime_returns_active_images_in_rule_order(
     )
 
     if not active_indices:
-        np.testing.assert_array_equal(image_payload_data(output), labels)
+        np.testing.assert_array_equal(output.data, labels)
         return
     first_classes = np.where(labels == 1, 1, np.where(labels == 2, 2, 0))
     second_classes = np.where(labels == 1, 2, np.where(labels == 2, 1, 0))
@@ -303,7 +300,7 @@ def test_classify_objects_runtime_returns_active_images_in_rule_order(
     assert len(actual) == len(expected)
     values = output.slices if isinstance(output, AlignedImageStack) else (output,)
     assert all(
-        image_payload_metadata(value).source_channel_axis == -1 for value in values
+        value.metadata.axis_position(ColourAxis) == -1 for value in values
     )
     for actual_image, expected_image in zip(actual, expected, strict=True):
         np.testing.assert_allclose(actual_image, expected_image)
@@ -468,7 +465,7 @@ def test_measure_colocalization_runtime_returns_masks_in_contract_order(
     )
 
     if not groups:
-        np.testing.assert_array_equal(np.squeeze(image_payload_data(output)), dna)
+        np.testing.assert_array_equal(np.squeeze(output.data), dna)
         return
     expected_rna = rna > 0.2 * np.max(rna)
     labels = object_payload.variant_data.labels
@@ -622,13 +619,13 @@ def test_intensity_distribution_runtime_returns_heatmaps_in_contract_order(
     )
 
     if not active_groups:
-        np.testing.assert_array_equal(image_payload_data(output), source)
+        np.testing.assert_array_equal(output.data, source)
         return
     actual = _runtime_images(output)
     assert len(actual) == len(active_groups)
     values = output.slices if isinstance(output, AlignedImageStack) else (output,)
     assert tuple(
-        image_payload_metadata(value).source_channel_axis for value in values
+        value.metadata.axis_position(ColourAxis) for value in values
     ) == tuple(None if group.colormap == "gray" else -1 for group in active_groups)
     assert tuple(image.ndim for image in actual) == tuple(
         2 if group.colormap == "gray" else 3 for group in active_groups

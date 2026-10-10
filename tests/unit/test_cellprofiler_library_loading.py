@@ -167,11 +167,6 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
@@ -190,6 +185,8 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
 )
 from openhcs.core.axes import TimeAxis
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.axes import ColourAxis
 
 
 
@@ -790,10 +787,10 @@ def test_threshold_uses_and_preserves_input_image_mask() -> None:
         payload, predefined_threshold=0.5, dtype_config=DtypeConfig()
     )
     np.testing.assert_array_equal(
-        image_payload_data(binary),
+        binary.data,
         np.array([[False, True, False], [False, True, False]], dtype=np.float32),
     )
-    np.testing.assert_array_equal(image_payload_mask(binary), payload.mask)
+    np.testing.assert_array_equal(binary.mask, payload.mask)
     assert measurements.row_mappings()[0]["final_threshold"] == 0.5
 
 
@@ -849,7 +846,7 @@ def test_smooth_matches_cellprofiler_masked_gaussian():
     expected = gaussian_filter(masked_image, sigma, mode="constant", cval=0) / (
         weights + np.finfo(float).eps
     )
-    assert np.allclose(image_payload_data(result), expected.astype(np.float32))
+    assert np.allclose(result.data, expected.astype(np.float32))
 
 
 def test_smooth_matches_cellprofiler_unmasked_gaussian_edge_normalization():
@@ -871,7 +868,7 @@ def test_smooth_matches_cellprofiler_unmasked_gaussian_edge_normalization():
     expected = gaussian_filter(image, sigma, mode="constant", cval=0) / (
         weights + np.finfo(float).eps
     )
-    assert np.allclose(image_payload_data(result), expected.astype(np.float32))
+    assert np.allclose(result.data, expected.astype(np.float32))
 
 
 @pytest.mark.parametrize("direction", tuple(EdgeDirection))
@@ -914,10 +911,10 @@ def test_enhance_edges_uses_and_preserves_runtime_mask():
         dtype_config=DtypeConfig(),
     )
     assert np.allclose(
-        image_payload_data(result),
+        result.data,
         centrosome_filter.sobel(image, mask).astype(np.float32),
     )
-    assert np.array_equal(image_payload_mask(result), mask)
+    assert np.array_equal(result.mask, mask)
 
 
 def test_closing_preserves_runtime_mask_context():
@@ -935,8 +932,8 @@ def test_closing_preserves_runtime_mask_context():
         size=1,
         dtype_config=DtypeConfig(),
     )
-    assert np.array_equal(image_payload_data(result), skimage_closing(image, disk(1)))
-    assert np.array_equal(image_payload_mask(result), mask)
+    assert np.array_equal(result.data, skimage_closing(image, disk(1)))
+    assert np.array_equal(result.mask, mask)
 
 
 def test_cellprofiler_disk_structuring_element_uses_radius_setting():
@@ -1310,7 +1307,7 @@ def test_runtime_batch_projects_singleton_aligned_axis_before_colocalization() -
     assert batch_request is not None
     assert batch_request.execution_mode is ImagePayloadExecutionMode.FULL_STACK
     assert batch_request.plane_projection is None
-    assert image_payload_data(batch_request.image).shape == (2, 2, 2)
+    assert batch_request.image.data.shape == (2, 2, 2)
     context = ColocalizationCostesThresholdBatch().image_pair_context(batch_request)
     np.testing.assert_array_equal(context.first_image, np.ones((2, 2)))
     np.testing.assert_array_equal(context.second_image, np.zeros((2, 2)))
@@ -1747,8 +1744,8 @@ def test_measure_colocalization_respects_masked_payload_pixels():
     )
     assert measurements.columns["correlation"][0] == -1.0
     assert isinstance(output, MaskedImagePayload)
-    assert np.array_equal(image_payload_data(output), image[0:1])
-    assert np.array_equal(image_payload_mask(output), mask[np.newaxis, ...])
+    assert np.array_equal(output.data, image[0:1])
+    assert np.array_equal(output.mask, mask[np.newaxis, ...])
 
 
 def test_measure_colocalization_records_cellprofiler_emitted_slope_only():
@@ -3268,7 +3265,7 @@ def test_measure_object_neighbors_returns_retained_count_image():
         dtype_config=DtypeConfig(),
     )
     assert count_image.shape == (7, 7, 3)
-    assert image_payload_metadata(count_image).source_channel_axis == -1
+    assert count_image.metadata.axis_position(ColourAxis) == -1
     np.testing.assert_array_equal(count_image[labels == 0], 0)
     assert np.any(count_image[labels > 0] > 0)
     assert relationship.source_ids == (1, 2)
@@ -3521,8 +3518,8 @@ def test_image_math_reduces_multi_volume_bundle_across_source_axis():
         dtype_config=DtypeConfig(),
     )
 
-    assert image_payload_data(result).shape == (3, 4, 5)
-    np.testing.assert_allclose(image_payload_data(result), 6.0)
+    assert result.data.shape == (3, 4, 5)
+    np.testing.assert_allclose(result.data, 6.0)
 
 
 def test_image_math_uses_only_the_declared_source_binding_axis():
@@ -3550,7 +3547,7 @@ def test_image_math_uses_only_the_declared_source_binding_axis():
         dtype_config=DtypeConfig(),
     )
 
-    np.testing.assert_allclose(image_payload_data(result), 6.0)
+    np.testing.assert_allclose(result.data, 6.0)
 
 
 def _declared_source_image_bundle(
@@ -3586,7 +3583,7 @@ def test_correct_illumination_apply_preserves_source_image_metadata() -> None:
     )
     assert result.metadata.intensity_scale == 65535.0
     assert result.metadata.source_dtype == "uint16"
-    np.testing.assert_allclose(image_payload_data(result), np.ones((2, 2)))
+    np.testing.assert_allclose(result.data, np.ones((2, 2)))
 
 
 def test_correct_illumination_apply_projects_runtime_slice_artifact_stack() -> None:
@@ -3617,7 +3614,7 @@ def test_correct_illumination_apply_projects_runtime_slice_artifact_stack() -> N
         dtype_config=DtypeConfig(),
     )
     np.testing.assert_allclose(
-        image_payload_data(result),
+        result.data,
         np.stack(
             (
                 np.full((2, 2), 0.6, dtype=np.float32),
@@ -3818,7 +3815,7 @@ def test_correct_illumination_gaussian_normalizes_implicit_mask_at_borders():
     expected = gaussian_filter(image, sigma, mode="constant", cval=0) / (
         weights + np.finfo(float).eps
     )
-    np.testing.assert_allclose(image_payload_data(illumination), expected)
+    np.testing.assert_allclose(illumination.data, expected)
 
 
 def test_correct_illumination_automatic_filter_size_matches_cellprofiler_source():
@@ -3877,9 +3874,9 @@ def test_correct_illumination_background_respects_image_mask():
         rescale_option=IlluminationRescaleOption.NO,
         dtype_config=DtypeConfig(),
     )
-    np.testing.assert_array_equal(image_payload_mask(illumination), mask)
+    np.testing.assert_array_equal(illumination.mask, mask)
     np.testing.assert_array_equal(
-        image_payload_data(illumination),
+        illumination.data,
         np.array([[0.01, 0.0], [0.01, 0.01]], dtype=np.float32),
     )
 
@@ -4342,7 +4339,7 @@ def test_unified_registry_injects_semantic_controls_for_flexible_contracts():
 def test_unmix_colors_returns_one_output_per_stain_row():
     image = np.full((8, 9, 3), 0.5, dtype=np.float32)
     outputs = unmix_colors(
-        ImagePayloadMetadata(source_channel_axis=-1).payload_with(image, None),
+        ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)).payload_with(image, None),
         stain_names=(StainType.HEMATOXYLIN, StainType.EOSIN, StainType.CUSTOM),
         custom_absorbances=((0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.1, 0.2, 0.3)),
         dtype_config=DtypeConfig(),
@@ -4351,14 +4348,14 @@ def test_unmix_colors_returns_one_output_per_stain_row():
     assert [output.shape for output in outputs.slices] == [(8, 9), (8, 9), (8, 9)]
     assert all((output.dtype == np.float32 for output in outputs.slices))
     assert all(
-        image_payload_metadata(output).source_channel_axis is None
+        output.metadata.axis_position(ColourAxis) is None
         for output in outputs.slices
     )
     assert unmix_colors.__processing_contract__ is ProcessingContract.FLEXIBLE
 
 
 def test_flip_and_rotate_preserves_declared_color_channel_axis() -> None:
-    image = ImagePayloadMetadata(source_channel_axis=-1).payload_with(
+    image = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)).payload_with(
         np.arange(8 * 9 * 3, dtype=np.float32).reshape((8, 9, 3)),
         None,
     )
@@ -4370,11 +4367,11 @@ def test_flip_and_rotate_preserves_declared_color_channel_axis() -> None:
     )
 
     assert output.shape == (8, 9, 3)
-    assert image_payload_metadata(output).source_channel_axis == -1
+    assert output.metadata.axis_position(ColourAxis) == -1
 
 
 def test_binary_mask_output_preserves_declared_color_channel_axis() -> None:
-    image = ImagePayloadMetadata(source_channel_axis=-1).payload_with(
+    image = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)).payload_with(
         np.linspace(0.0, 1.0, 8 * 9 * 3, dtype=np.float32).reshape((8, 9, 3)),
         None,
     )
@@ -4382,12 +4379,12 @@ def test_binary_mask_output_preserves_declared_color_channel_axis() -> None:
     output = mask_image_with_binary(image, dtype_config=DtypeConfig())
 
     assert output.shape == (8, 9, 3)
-    assert image_payload_metadata(output).source_channel_axis == -1
+    assert output.metadata.axis_position(ColourAxis) == -1
 
 
 def test_crop_preserves_hwc_color_image_domain() -> None:
     image = np.arange(8 * 9 * 3, dtype=np.uint8).reshape(8, 9, 3)
-    image_payload = ImagePayloadMetadata(source_channel_axis=-1).payload_with(
+    image_payload = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)).payload_with(
         image, None
     )
     cropped, mask, measurements = crop(
@@ -4580,9 +4577,9 @@ def test_mask_image_applies_2d_object_mask_to_projected_image_plane():
     )
     assert masked.shape == image.shape
     assert isinstance(masked, MaskedImagePayload)
-    assert np.count_nonzero(image_payload_data(masked)) == 9
-    assert np.all(image_payload_data(masked)[labels == 0] == 0)
-    assert np.array_equal(image_payload_mask(masked), labels > 0)
+    assert np.count_nonzero(masked.data) == 9
+    assert np.all(masked.data[labels == 0] == 0)
+    assert np.array_equal(masked.mask, labels > 0)
 
 
 def test_mask_image_accepts_object_label_payload_mask():
@@ -4599,8 +4596,8 @@ def test_mask_image_accepts_object_label_payload_mask():
         dtype_config=DtypeConfig(),
     )
     assert isinstance(masked, MaskedImagePayload)
-    assert np.count_nonzero(image_payload_data(masked)) == 9
-    np.testing.assert_array_equal(image_payload_mask(masked), labels > 0)
+    assert np.count_nonzero(masked.data) == 9
+    np.testing.assert_array_equal(masked.mask, labels > 0)
 
 
 def test_mask_image_accepts_source_backed_projected_image_plane():
@@ -4616,8 +4613,8 @@ def test_mask_image_accepts_source_backed_projected_image_plane():
         dtype_config=DtypeConfig(),
     )
     assert masked.shape == (5, 6)
-    assert np.count_nonzero(image_payload_data(masked)) == 9
-    assert np.array_equal(image_payload_mask(masked), labels > 0)
+    assert np.count_nonzero(masked.data) == 9
+    assert np.array_equal(masked.mask, labels > 0)
 
 
 def test_mask_image_uses_aligned_mask_stack_planes():
@@ -4658,8 +4655,8 @@ def test_mask_image_uses_aligned_mask_stack_planes():
         )
         for index in range(2)
     )
-    assert np.count_nonzero(image_payload_data(masked_planes[0])) == 4
-    assert np.count_nonzero(image_payload_data(masked_planes[1])) == 9
+    assert np.count_nonzero(masked_planes[0].data) == 4
+    assert np.count_nonzero(masked_planes[1].data) == 9
 
 
 def test_mask_image_rejects_unprojected_object_label_stack():
@@ -4823,8 +4820,8 @@ def test_mask_image_combines_existing_image_mask_with_mask_input():
     )
     expected_mask = existing_mask & (mask > 0)
     assert isinstance(masked, MaskedImagePayload)
-    assert np.array_equal(image_payload_mask(masked), expected_mask)
-    assert np.count_nonzero(image_payload_data(masked)) == int(expected_mask.sum())
+    assert np.array_equal(masked.mask, expected_mask)
+    assert np.count_nonzero(masked.data) == int(expected_mask.sum())
 
 
 def test_align_returns_two_registered_images_and_shift_measurements():
@@ -4847,10 +4844,10 @@ def test_align_returns_two_registered_images_and_shift_measurements():
     )
     assert isinstance(aligned_images, AlignedImageStack)
     aligned_first, aligned_second = aligned_images.slices
-    assert image_payload_data(aligned_first).shape == first.shape
-    assert image_payload_data(aligned_second).shape == second.shape
-    assert image_payload_mask(aligned_first) is None
-    assert image_payload_mask(aligned_second) is not None
+    assert aligned_first.data.shape == first.shape
+    assert aligned_second.data.shape == second.shape
+    assert aligned_first.mask is None
+    assert aligned_second.mask is not None
     assert measurements.rows[0] == AlignShiftMeasurement(
         slice_index=0, output_index=0, x_shift=0, y_shift=0
     )
@@ -4902,9 +4899,9 @@ def test_align_applies_similar_shift_to_additional_images():
     )
     assert isinstance(aligned_images, AlignedImageStack)
     aligned_first, aligned_second, aligned_additional = aligned_images.slices
-    assert image_payload_data(aligned_first).shape == first.shape
-    assert image_payload_data(aligned_second).shape == second.shape
-    assert image_payload_data(aligned_additional).shape == additional.shape
+    assert aligned_first.data.shape == first.shape
+    assert aligned_second.data.shape == second.shape
+    assert aligned_additional.data.shape == additional.shape
     assert len(measurements) == 3
     assert measurements.rows[2].output_index == 2
     assert measurements.rows[2].x_shift == measurements.rows[1].x_shift
@@ -4929,7 +4926,7 @@ def test_overlay_outlines_runs_mixed_image_and_object_rows():
     assert output.shape == (8, 8, 3)
     assert output[..., 0].max() > 0
     assert output[..., 1].max() > 0
-    assert image_payload_metadata(output).source_channel_axis == -1
+    assert output.metadata.axis_position(ColourAxis) == -1
     assert overlay_outlines.__processing_contract__ is ProcessingContract.FLEXIBLE
 
 
@@ -5044,7 +5041,7 @@ def test_overlay_outlines_renders_exact_projected_empty_label_plane():
         dtype_config=DtypeConfig(),
     )
     assert output.shape == (8, 8, 3)
-    assert float(image_payload_data(output).max()) == 0.0
+    assert float(output.data.max()) == 0.0
 
 
 @pytest.mark.parametrize(

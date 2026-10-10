@@ -36,7 +36,7 @@ from openhcs.core.runtime_slice_projection import (
     RuntimeProjectionData,
     RuntimeProjectedPayloadItem,
     RuntimeProjectionSourceIdentityRequest,
-    RuntimeProjectionSourceIdentityRequirement,
+    RequiredSourceComponentMetadata,
 )
 
 from openhcs.core.source_image_provenance import (
@@ -62,6 +62,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerObjectDisplayConfigInput,
 )
 from openhcs.core.axes import Axis, AxisFamily
+from openhcs.core.axes import ColourAxis
 
 StreamComponentMetadata = SourceComponentMetadata | None
 ComponentDisplayName: TypeAlias = str | int | float | bool | None
@@ -101,7 +102,7 @@ class StreamImagePayloadMetadataProjector:
             axis_size=metadata.source_provenance.source_plane_count,
         )
         source_identity = (
-            RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA
+            RequiredSourceComponentMetadata
         )
         return source_identity.project_payload_items(
             RuntimeProjectionSourceIdentityRequest(
@@ -184,10 +185,9 @@ class StreamImagePayloadMetadataProjector:
         item_fields[ViewerWireField.IMAGE_METADATA.value] = (
             metadata.to_viewer_image_metadata()
         )
-        if metadata.source_channel_axis is not None:
-            item_fields[ViewerWireField.SOURCE_CHANNEL_AXIS.value] = (
-                metadata.source_channel_axis
-            )
+        colour_axis_position = metadata.axis_position(ColourAxis)
+        if colour_axis_position is not None:
+            item_fields[ViewerWireField.SOURCE_CHANNEL_AXIS.value] = colour_axis_position
         if metadata.plane_axis is None:
             return item_fields
 

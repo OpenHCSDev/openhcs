@@ -25,12 +25,7 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.pipeline.function_contracts import special_inputs
 from openhcs.core.runtime_measurements import RuntimeMeasurementFeature
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
@@ -54,6 +49,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_float,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -624,9 +620,9 @@ class CropRequest:
     def execute(
         self,
     ) -> tuple[np.ndarray, np.ndarray, DataclassMeasurementColumnarRows]:
-        input_pixels = image_payload_data(self.image)
-        input_image_mask = image_payload_mask(self.image)
-        input_metadata = image_payload_metadata(self.image)
+        input_pixels = self.image.data
+        input_image_mask = self.image.mask
+        input_metadata = self.image.metadata
         orig_image_pixels = np.asarray(input_pixels)
         input_mask_plane = None
         orig_image_mask = (
@@ -635,7 +631,7 @@ class CropRequest:
             else np.asarray(input_image_mask, dtype=bool)
         )
         if self.mask_plane is not None:
-            input_mask_plane = image_payload_data(self.mask_plane)
+            input_mask_plane = ImagePayload.of(self.mask_plane).data
         request = CropMaskRequest(
             orig_image_pixels=orig_image_pixels,
             mask_plane=input_mask_plane,
@@ -858,7 +854,7 @@ def crop_output_metadata(
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 @special_inputs("topology_inputs")
 def crop(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     topology_inputs: tuple[np.ndarray | ObjectLabelValue, ...] = (),
     crop_shape: CropModule.Shape = CropModule.Shape.RECTANGLE,
     cropping_method: CropModule.Method = CropModule.Method.COORDINATES,

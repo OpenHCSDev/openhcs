@@ -20,12 +20,7 @@ from openhcs.core.function_patterns import (
     MainFlowInputProjection,
 )
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
@@ -323,14 +318,14 @@ def test_record_binding_reads_current_pixels_and_mutable_kwargs_without_holder_a
     request.kwargs["after_call"].append(2)
     request.current_image[:] = 0.5
     value = request.declared_artifact_value(spec)
-    assert image_payload_data(value) is request.current_image
+    assert value.data is request.current_image
     assert copied.kwargs["after_call"] == [1, 2]
-    np.testing.assert_array_equal(image_payload_data(value), 0.5)
+    np.testing.assert_array_equal(value.data, 0.5)
     request.current_image[:] = 0.75
     source = request.artifact_source_payload(request.active_input_edges[0])
-    assert image_payload_data(source) is request.current_image
-    np.testing.assert_array_equal(image_payload_data(source), 0.75)
-    assert image_payload_metadata(source).source_image_names == (spec.name,)
+    assert source.data is request.current_image
+    np.testing.assert_array_equal(source.data, 0.75)
+    assert source.metadata.source_image_names == (spec.name,)
 
 
 def test_record_source_binds_current_image_once_and_preserves_intensity_mask_lineage(
@@ -361,12 +356,12 @@ def test_record_source_binds_current_image_once_and_preserves_intensity_mask_lin
         binding_inputs.clear()
         source = request.artifact_source_payload(request.active_input_edges[0])
         assert binding_inputs == [payload]
-        assert image_payload_data(source).dtype == np.float32
+        assert source.data.dtype == np.float32
         np.testing.assert_allclose(
-            image_payload_data(source), np.float32(pixel_value) / 65535,
+            source.data, np.float32(pixel_value) / 65535,
         )
-        assert image_payload_mask(source) is mask
-        metadata = image_payload_metadata(source)
+        assert source.mask is mask
+        metadata = source.metadata
         assert metadata.source_image_names == (spec.name,)
         assert metadata.source_image_provenance_planes.paths == ("/input/actual.tif",)
         assert set(metadata.source_provenance.represented_source_image_names) == {
@@ -407,7 +402,7 @@ def test_record_endpoint_identity_does_not_change_reference_broadcast_selection(
     assert request.artifact_value(edge) is request.current_image
     assert request.input_edge_for_spec(equivalent) is edge
     broadcast = request.stack_broadcast_source_value(equivalent.ref())
-    assert image_payload_data(broadcast) is request.current_image
+    assert broadcast.data is request.current_image
 
 
 def test_record_input_selection_effects_remain_at_each_read_epoch(monkeypatch) -> None:
@@ -435,8 +430,8 @@ def test_record_input_selection_effects_remain_at_each_read_epoch(monkeypatch) -
         events.clear()
         actual = request.declared_artifact_value(spec)
         assert tuple(events) == expected_events
-        assert image_payload_data(actual) is image_payload_data(original)
-        assert image_payload_metadata(actual) == image_payload_metadata(original)
+        assert actual.data is original.data
+        assert actual.metadata == original.metadata
 
     # Consumed context must admit declarations too: a selected edge remaining
     # in the map cannot excuse a live selector removing its declaration.

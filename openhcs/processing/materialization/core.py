@@ -45,8 +45,6 @@ from openhcs.core.runtime_array_values import runtime_array_operand
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
-    image_payload_data,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -55,7 +53,7 @@ from openhcs.core.runtime_slice_projection import (
     RuntimeProjectedPayloadItem,
     RuntimeProjectionPlaneMetadata,
     RuntimeProjectionSourceIdentityRequest,
-    RuntimeProjectionSourceIdentityRequirement,
+    OptionalSourceIdentity,
 )
 from openhcs.core.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
 from openhcs.core.runtime_tabular_values import (
@@ -104,6 +102,7 @@ from openhcs.processing.materialization.options import (
     TiffStackOptions,
 )
 from openhcs.core.axes import Axis
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
@@ -204,7 +203,7 @@ class RawBackendKwargs(BackendCallKwargs, Mapping[str, MaterializationValue]):
             for indices, config in ImageFileFormat.storage_write_batches(
                 tuple(
                     (
-                        output.metadata.attach_to(output.content)
+                        ImagePayload.of(output.content).with_metadata(output.metadata)
                         if output.metadata is not None
                         and ImageFileFormat.is_image_path(output.path)
                         else output.content
@@ -1216,7 +1215,7 @@ class MaterializationInputItem(RuntimeProjectedPayloadItem):
 
     @property
     def data(self) -> MaterializationValue:
-        return runtime_array_operand(image_payload_data(self.value))
+        return runtime_array_operand(self.value.data)
 
     @property
     def runtime_plane(self) -> RuntimeProjectionPlaneMetadata | None:
@@ -1281,9 +1280,7 @@ class SourcePlaneProjectionContract:
                 plane_count_source
                 for payload in payloads
                 for plane_count_source in (
-                    image_payload_metadata(
-                        payload
-                    ).source_provenance.plane_count_sources
+                    payload.metadata.source_provenance.plane_count_sources
                 )
             )
         )
@@ -1966,7 +1963,7 @@ class MaterializationInput:
                 )
                 for source_payload in source_payloads
                 for item in (
-                    RuntimeProjectionSourceIdentityRequirement.OPTIONAL
+                    OptionalSourceIdentity
                 ).project_payload_items(
                     RuntimeProjectionSourceIdentityRequest(
                         value=source_payload,
@@ -2012,7 +2009,7 @@ class MaterializationInput:
                         runtime_plane_metadata=item.runtime_plane_metadata,
                     )
                     for item in (
-                        RuntimeProjectionSourceIdentityRequirement.OPTIONAL
+                        OptionalSourceIdentity
                     ).project_payload_items(
                         RuntimeProjectionSourceIdentityRequest(
                             value=image.value,
@@ -3210,7 +3207,7 @@ def _image_relative_output_path(
     if options.relative_path_template is None:
         return context.paths(options).primary_output_path(options)
 
-    metadata = image_payload_metadata(data)
+    metadata = data.metadata
     source_identity = metadata.source_provenance.scalar_source_identity
     component_metadata = source_identity.component_metadata
 

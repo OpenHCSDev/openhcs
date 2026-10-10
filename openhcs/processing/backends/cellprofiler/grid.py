@@ -84,6 +84,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.core.axes import Axis
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.core.artifacts import ArtifactSpec
@@ -1506,7 +1507,7 @@ def draw_grid_overlay(
 @numpy(contract=ProcessingContract.PURE_2D)
 @special_inputs("topology_inputs")
 def identify_objects_in_grid(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     topology_inputs: tuple[SpatialGrid | ObjectLabelValue, ...],
     grid_rows: int = 8,
     grid_columns: int = 12,

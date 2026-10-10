@@ -115,10 +115,7 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_slice_projection import (
     RuntimeSliceProjectionDeclarationError,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
@@ -691,7 +688,7 @@ def test_outputless_chain_uses_declared_owner_instead_of_selected_output_count(
         assert isinstance(result, NoMainFlowOutput)
     else:
         assert not isinstance(result, NoMainFlowOutput)
-        np.testing.assert_array_equal(image_payload_data(result), image)
+        np.testing.assert_array_equal(result.data, image)
 
 
 def test_execute_chain_emits_debug_invocation_events():
@@ -787,8 +784,8 @@ def test_before_invocation_observes_exact_bound_call_boundary():
     )
 
     np.testing.assert_array_equal(
-        image_payload_data(result),
-        image_payload_data(main_image),
+        result.data,
+        main_image.data,
     )
     assert [event.event_type for event in sink.events] == [
         DebugEventType.BEFORE_INVOCATION,

@@ -82,16 +82,11 @@ from openhcs.core.runtime_batch_contracts import (
     runtime_batch_executors_from_callable,
 )
 from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadataCarrier,
+    ImagePayload,
     ImageMetadataPayload,
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     MaskedImagePayload,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-    image_payload_slice_context,
-    with_image_payload_data,
 )
 from openhcs.core.runtime_object_label_aggregation import (
     ObjectLabelPure2DSliceAggregator,
@@ -399,11 +394,11 @@ def contextualize_main_image_output(source_image: Any, result: Any) -> Any:
     if not isinstance(result, np.ndarray):
         return result
     if (
-        image_payload_mask(source_image) is None
-        and not image_payload_metadata(source_image).has_values
+        source_image.mask is None
+        and not source_image.metadata.has_values
     ):
         return result
-    return with_image_payload_data(source_image, result)
+    return source_image.with_pixels(result)
 
 
 class Pure2DRegisteredStrategyFamily(ABC):
@@ -541,13 +536,13 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
     value_type = None
 
     def is_single_plane_value(self, value: Any) -> bool:
-        return image_payload_metadata(value).plane_axis is None
+        return value.metadata.plane_axis is None
 
     def slice_value(self, value: Any, memory_type: str) -> tuple[Any, ...]:
-        data = image_payload_data(value)
+        data = value.data
         if self.is_single_plane_value(value):
             return (value,)
-        metadata = image_payload_metadata(value)
+        metadata = value.metadata
         slices = unstack_runtime_slices(
             data,
             memory_type,
@@ -555,7 +550,7 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
             expected_count=metadata.source_provenance.source_plane_count or None,
         )
         return tuple(
-            image_payload_slice_context(value, slice_data, slice_index)
+            value.slice_payload(slice_data, slice_index)
             for slice_index, slice_data in enumerate(slices)
         )
 
@@ -795,7 +790,7 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
 ):
     """Stack image payload slices and reattach composed runtime image context."""
 
-    value_type = ImagePayloadMetadataCarrier
+    value_type = ImagePayload
     include_in_family = True
 
     def _accepts_mixed_value(self, value: Any) -> bool:
@@ -1201,7 +1196,7 @@ class VolumetricToSliceProcessingContract(VariableComponentStackProcessingContra
     def main_flow_output_source_payload(self, source_payload: Any) -> Any:
         """Consume the declared leading plane axis while preserving provenance."""
 
-        metadata = image_payload_metadata(source_payload)
+        metadata = source_payload.metadata
         if not metadata.has_values:
             return source_payload
         if metadata.plane_axis is None:
@@ -1832,7 +1827,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 ).call()
             )
             return contextualize_main_image_output(image, result)
-        input_metadata = image_payload_metadata(image)
+        input_metadata = image.metadata
         plane_axis = input_metadata.plane_axis
         if plane_axis is None:
             raise ValueError(

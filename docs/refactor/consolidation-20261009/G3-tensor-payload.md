@@ -20,73 +20,82 @@ Measured at this head (production = Python under `openhcs/`):
 - **Hand-written loops.** `for … in range(x.slice_count)` 32 times (11 in `artifacts.py`, 5 in `aligned_image_payload.py`).
 - **Fixed spatial names.** `ObjectCoreMeasurementFeature.CENTER_X/Y/Z` with three generated strategy leaves restating axis offsets −1/−2/−3 (`core/runtime_measurements.py:990-1090`); `SparseIJVLabelRows.YX_LABEL_FIELDS` spells `y`/`x` (`core/runtime_sparse_labels.py:24-28`).
 
-## Target
+## Target (as built)
 
 ```python
-# core/payload_axes.py
-class AxisSpec(ABC):                       # one declared tensor dimension
-    name: str; roles: tuple[type[AxisRole], ...]
-class FamilyAxisSpec(AxisSpec):  axis: type[Axis]       # a G1 family axis; roles from the axis
-class SpatialAxisSpec(AxisSpec): name                   # named by the SourceSpatialDomain rank
-class ColourSampleAxisSpec(AxisSpec)                     # colour samples inside one source image (ColourAxis)
-class RuntimePlaneAxisSpec(AxisSpec): plane_axis        # the leading runtime plane axis
-class UndeclaredAxisSpec(AxisSpec)                       # dimension nothing declared
-@dataclass(frozen=True) class PositionedAxis: spec; position   # rank-relative position
-class PayloadAxes: declared: tuple[PositionedAxis, ...]  # replaces source_channel_axis
-    with_axis / without_role / index_of(role, ndim) / shifted_for_leading_axis(±1) / resolve(ndim, spatial_rank)
+# core/payload_axes.py — the declared dimensions of a tensor payload
+class SpatialAxis(AxisRole)                                  # role of a spatial dimension
+class AxisSpec(ABC): name; roles; has_role(role)             # one declared dimension
+class FamilyAxisSpec(AxisSpec):       axis: type[Axis]       # a G1 family axis; roles from its MRO
+class ColourSampleAxisSpec(AxisSpec)                          # colour samples of one source image (ColourAxis)
+class SpatialAxisSpec(AxisSpec):      axis_name              # named by the spatial domain
+class RuntimePlaneAxisSpec(AxisSpec): plane_axis_name        # the leading runtime plane axis
+class UndeclaredAxisSpec(AxisSpec)
+class PositionedAxis: spec; position                          # rank-relative (negative counts from the end)
+class PayloadAxes: declared                                   # replaces source_channel_axis
+    with_axis / without_role / position_of(role) / index_of(role, ndim) / indices(ndim)
+    after_leading_axis_removed() / common_after_stacking(...) / colour_samples(position)
 
-# core/runtime_image_values.py
-class ImagePayload(RuntimeSliceProjectableValue, ABC):   # was ImagePayloadMetadataCarrier
-    data; metadata; mask; geometry; memory_type; axes (per-dimension AxisSpec tuple)
-    with_metadata(m); alignment_slices(); map_slices(fn); runtime_slice_count()
-    @classmethod of(value) -> ImagePayload                 # the one bare-or-payload decision
-class PlainImagePayload(ImagePayload)                     # a bare array, empty metadata
-class ImageMetadataPayload, MaskedImagePayload            # unchanged members
-# ImagePayloadSliceStack (Aligned/Produced/ImageOutputBundle) and ObjectLabelValue are members.
+# core/runtime_image_values.py — the tensor payload family (A1)
+class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyPlacedValue):
+    data; metadata; mask; geometry; memory_type; axes          # axes: one AxisSpec per dimension
+    of(value)                                                  # wrap a bare array once
+    with_metadata / with_pixels / mask_for_data / slice_payload / intensity_scale / copied
+    alignment_slices / map_slices / runtime_slice_count / value_for_slice / aligned_value
+    project_declared_source / contextualize_image_output / fill_output_source_context /
+    object_label_output / main_output_slices / output_stack_copy / plane_axis_for_output_context
+class PlainImagePayload(ImagePayload)    # bare pixels: no metadata, no mask; undeclared-output defaults
+class ImageMetadataPayload, MaskedImagePayload
+# ImagePayloadSliceStack (AlignedImageStack, ProducedImageStack, ImageOutputBundle) and
+# ObjectLabelValue are members and override what differs.
 ```
 
-- **Decided once.** `payload_with` always returns an `ImagePayload`. The value is wrapped once at each boundary where a bare array can enter: the primary argument of a processing function whose annotation is `ImagePayload` (the OpenHCS memory decorator, so direct and runtime calls share it), the function return in `steps/function_runtime.py`, and image loading. Functions that want arrays annotate an array type and receive `payload.data`. **Deleted:** `image_payload_data`, `image_payload_metadata`, `image_payload_mask`, `image_payload_geometry`, `normalize_image_payload_intensity`'s switch, every `isinstance(…, ImagePayloadMetadataCarrier)`, `RuntimeArrayData` as a primary-image annotation.
-- **Slices on members.** `ImagePayload.alignment_slices()` replaces `payload_slices_for_alignment`, `flatten_aligned_image_payload_slices` and `payload_slice_count`; `RuntimeSliceAlignedValueSet` gains `values`/`map_slices`, replacing the hand-written loops.
-- **One slice mechanism.** Every owned runtime value implements `RuntimeSliceProjectableValue` (`runtime_slice_count`, `value_for_slice`, `full_stack_value`, `aligned_value`, `identity_projected_value`). `RuntimeSliceProjection` handles only foreign values at the boundary (sequences recurse, other foreign values pass through). **Deleted:** `RuntimeSliceProjectionStrategy` and its 16 leaves, `ImageOutputSourceContextStrategy` and `ObjectLabelOutputValueContextStrategy` families (their cases become methods on the source/output members).
-- **Declared axes.** `ImagePayloadMetadata.axes: PayloadAxes` replaces `source_channel_axis`; any number of declared axes with roles; kernel code asks by role (`ColourAxis`). `ImagePayload.axes` resolves one `AxisSpec` per dimension.
-- **N-d spatial rank family.** `SourceSpatialDomain` members are keyed by `spatial_rank` and declare `axis_names`: rank 0 (no spatial axes), rank 1 (`x`), rank 2 (`y, x`, the planar instance) and rank 3 (`z, y, x`). Spatial `AxisSpec`s, `ImageMaskDomain` spatial axes, the object-label adapter, `CENTER_*` features and IJV columns derive their names and positions from it. Crop placement (`origin_yx`, `source_shape_yx`) stays planar: it is the viewer wire's shape (G6).
-- **Domain-declared defaults.** The active `AxisFamily` declares `payload_spatial_domain` (microscopy: planar). An undeclared array of rank *r* resolves to `(undeclared × (r − k), spatial × k)` for that domain's rank *k*: the default-axes-by-rank table is derived, not written. `ImageShapeRole` and the `is_*` helpers are deleted (dead).
-- **Function runtime.** The three output switches become calls on the output payload (`output_slices`, `plane_axis_for_output_context`, `copy_output_stack`).
-- **artifacts.py (minimum for K2).** Loops over `RuntimeSliceAlignedValueSet` call `values`/`map_slices`; image `isinstance` checks call payload methods. The remaining `isinstance` kind checks on owned value types are recorded for K2.
+- **Decided where values enter.** `payload_with` always returns an `ImagePayload`. A bare array becomes a payload exactly where it enters: a processing function's primary argument when it is annotated `ImagePayload` (`image_payload_boundary` in the OpenHCS memory decorator, innermost, so direct, runtime and slice-by-slice calls all pass through it; composed raw leaves in `neurite_outgrowth.py` use the same boundary), a function's returned image (`owned_runtime_value` in `execute_chain`, the image and label kinds' contextualization and the CellProfiler main-flow output; `ImagePayload.of` on volumetric-to-slice results), memory-store values before storage writes, loaders (`SourceFileUniverse.load_images`, `ImagePayloadSourceMetadataContext`, `NamedSourceBinding.apply_loaded_payload`, workspace projection), the image file codec, and stack/label-builder construction. The 51 processing-function parameters annotated `RuntimeArrayData` that read payload fields now annotate `ImagePayload`. **Deleted:** `image_payload_data`, `image_payload_metadata`, `image_payload_mask`, `image_payload_geometry`, `with_image_payload_data`, `image_payload_slice_context`, `image_payload_mask_for_slice`, `image_mask_for_data_domain`, `image_payload_intensity_scale`, `normalize_image_payload_intensity`, `ImagePayloadMetadataCarrier` and every `isinstance` against it (486 accessor calls and 18 checks).
+- **Slices on members.** `alignment_slices`/`output_slices`/`map_slices` live on the slice family (`ImagePayload`, `ImagePayloadSliceStack`, `ObjectLabelValue`, `RuntimeSliceAlignedValueSet`). **Deleted:** `payload_slices_for_alignment`, `flatten_aligned_image_payload_slices`, `payload_slice_count`. `RuntimeSliceAlignedValueSet` gains `values`/`map_slices`; its index accessor is `value_at`. The hand-written slice loops in `artifacts.py` (10), `runtime_slice_alignment`, `interop/.../invocation.py`, `measurement_image_alignment.py`, `function_runtime.py` and the four batch copies of `execute_one(i) for i in range(slice_count)` (now `RuntimePure2DSliceBatchRequest.execute_each()`) are gone.
+- **One slice mechanism.** `RuntimeSliceProjectableValue` owns `runtime_slice_count`, `value_for_slice`, `identity_projected_value`, `full_stack_value`, `aligned_value`, `declared_plane_axis`, `alignment_slices`, `output_slices`, `map_slices`; `RuntimeSliceIndexedValue`, `RuntimeSliceInvariantValue` and `RuntimeSliceIdentityProjectableValue` are its capability subclasses. Image payloads, slice stacks, object labels, aligned value sets, columnar rows, measurement tables, sparse IJV rows, relationships and spatial graphs are members. `RuntimeSliceProjection` handles only foreign values (tuples/lists recurse, arrays and primitives pass through, anything else is rejected). **Deleted:** `RuntimeSliceProjectionStrategy` and its 16 leaves; `ImageOutputSourceContextStrategy` (4 leaves) and `ObjectLabelOutputValueContextStrategy` (5 leaves), now methods on the source and output members; the `singledispatch` `project_declared_source_identity` (3 registrations), now `project_declared_source` on the members; the `SourceSpatialDomainAdapter` type-keyed registry, now `SpatiallyPlacedValue.spatial_adapter`; the `RuntimeProjectionSourceIdentityRequirement` enum and its strategy table, now `OptionalSourceIdentity` / `RequiredSourceComponentMetadata`.
+- **Declared axes.** `ImagePayloadMetadata.axes: PayloadAxes` replaces `source_channel_axis` (122 lines); kernel code asks by role (`axis_index(ColourAxis, data)`), any number of axes may be declared, composition shifts all of them, and mask domains accept masks without any declared axis. `ImagePayload.axes` resolves one `AxisSpec` per dimension.
+- **N-d spatial rank family.** `SourceSpatialDomain` members are keyed by `spatial_rank` and declare `axis_names`: `PointSourceSpatialDomain` (0), `LineSourceSpatialDomain` (1, `x`), the planar `SourceSpatialDomain` (2, `y x`) and `VolumeSourceSpatialDomain` (3, `z y x`). Spatial axis specs, planar placement axes, the object-label adapter, `CENTER_*` (the location features are derived from the volume domain's names, the three generated strategy leaves are deleted) and the IJV columns (from the planar domain's names) derive from it. Crop placement (`origin_yx`, `source_shape_yx`) stays planar.
+- **Domain-declared defaults.** `AxisFamily.payload_spatial_rank` is required on every family (microscopy: 2). The default `SourceSpatialDomain` of payload metadata, the rank checks that used to read `ndim < 3` (`dense_shape_carries_axis`, runtime-slice counts, source-binding projection, selected-plane outputs) and `spatial_axes_yx` derive from it: an undeclared array of rank *r* is `r − k` undeclared axes followed by the `k` spatial axes of the family's domain. `ImageShapeRole`, its five leaves, the 14 `is_*` helpers and `image_spatial_axis_indices` are deleted (dead).
+- **Function runtime.** The three output switches are payload methods (`declares_whole_image_output`, `main_output_slices`, `owns_output_surfaces`, `output_stack_copy`, `plane_axis_for_output_context`).
+- **artifacts.py (minimum for K2).** Image and label kinds call payload methods; `materialization_image_metadata` is a kind method (`ImagePayloadArtifactKind` capability for images and labels); the slice loops are gone.
 
 ## Persisted state
 
 | Store | Class | At cutover |
 |---|---|---|
-| Worker bundles, compiled plans, metadata caches, viewer image metadata on the wire | runtime | reset (`source_channel_axis` key becomes `axes`) |
+| Worker bundles, compiled plans, metadata caches, viewer image metadata | runtime | reset (`source_channel_axis` becomes `axes`; spatial domains always carry `spatial_dimensions`) |
 
 No durable format stores payload metadata.
 
 ## Guards
 
 `tests/unit/test_g3_tensor_payload_guards.py` (AST over `openhcs/`):
-- No definition or call of `image_payload_data`, `image_payload_metadata`, `image_payload_mask`, `image_payload_geometry`, `payload_slices_for_alignment`, `flatten_aligned_image_payload_slices`, `payload_slice_count`.
-- No name `ImagePayloadMetadataCarrier`, `RuntimeSliceProjectionStrategy`, `ImageOutputSourceContextStrategy`, `ObjectLabelOutputValueContextStrategy`, `ImageShapeRole`, `source_channel_axis`.
-- No `for … in range(<expr>.slice_count)` in the owned modules and `artifacts.py`.
-- No string literal `"center_x"`/`"center_y"`/`"center_z"` or IJV `"y"`/`"x"` field spellings in `core/runtime_measurements.py`/`core/runtime_sparse_labels.py`.
+- No definition, call or import of the deleted accessors and helpers.
+- No name `ImagePayloadMetadataCarrier`, `RuntimeSliceProjectionStrategy`, `ImageOutputSourceContextStrategy`, `ObjectLabelOutputValueContextStrategy`, `ObjectLocationCoordinateProjectionStrategy`, `ImageShapeRole`, `ArrayShape`.
+- `ImagePayloadMetadata` has no `source_channel_axis` field; no `normalized_source_channel_axis`/`without_source_channel_axis`/`is_declared_source_channel_*`/`channel_axis_without_leading_plane`/`non_channel_axes` attribute anywhere.
+- No `range(<x>.slice_count)` in the G3 modules, `artifacts.py` or `function_runtime.py` (only `RuntimeSliceAlignedValueSet.values` defines it).
+- Location features and IJV columns equal the spatial domains' names; no `"center_x"`/`"y"`/`"x"` literals in their modules.
 
 ## Tests
 
-- One family test over the `ImagePayload` members (data/metadata/mask/alignment slices/runtime slicing).
-- Witness: extend `tests/unit/test_axis_family_witness.py` with a 1-D time-series family whose payloads (declared time axis, rank-0 spatial domain) are stacked, sliced, projected and composed by the payload layer with zero kernel edits.
-- Tests of deleted helpers are deleted; tests that called the accessors use payload attributes.
-- The 30-workflow CellProfiler parity check (baseline 29/30; `cp_tutorial_3d_monolayer` fails on a `.pkl` serializer error).
+- Witness (`tests/unit/test_axis_family_witness.py`): a `Telemetry` family (station, window, sensor, time; `payload_spatial_rank = 0`) declares 1-D time-series payloads; they resolve declared axes by role, have no spatial axes, stack onto a runtime-slice axis, slice back, round-trip through the metadata codec and take masks without their declared axes, with no kernel edits. `RemoteSensing` declares its spatial rank.
+- Strategy-registry structure tests are deleted (`test_aligned_image_payload_registry.py` 10, two static deletion gates enforcing the old registries); behaviour tests are rewritten onto the family (`.data`, `ImagePayload.of`, `project_declared_source`, `contextualize_image_output`, `object_label_output`).
+- 30-workflow CellProfiler parity (baseline 29/30; `cp_tutorial_3d_monolayer` fails on a `.pkl` serializer error).
 
 ## New-case experiments
 
-- A new payload kind: today it needs a `RuntimeSliceProjectionStrategy` leaf, a branch in `payload_slices_for_alignment`, and accessor support. After: one `ImagePayload` subclass.
-- A new declared axis on a payload (a time axis on a signal): today impossible (one `source_channel_axis` slot). After: one `PositionedAxis(FamilyAxisSpec(axis), position)`.
-- A non-planar domain: today every payload defaults to 2-D YX. After: the family declares `payload_spatial_domain`.
+- A new payload kind: before, a `RuntimeSliceProjectionStrategy` leaf, a branch in `payload_slices_for_alignment`, an adapter registration, an output-context strategy and accessor support. After: one `ImagePayload` (or `RuntimeSliceProjectableValue`) subclass overriding what differs.
+- A new declared axis on a payload (a time axis on a signal): before impossible (one `source_channel_axis` slot). After: one `PositionedAxis(FamilyAxisSpec(axis), position)`.
+- A non-planar domain: before every payload was 2-D YX. After: the family declares `payload_spatial_rank` (the witness declares 0).
 
 ## Done when
 
-The accessor functions, the carrier name, both strategy families, the copied switch and the loops are gone; `source_channel_axis` is replaced by declared axes; `SourceSpatialDomain` is a rank family with axis names consumed by masks, labels, `CENTER_*` and IJV; the guards and the witness pass; the touched tests and the parity check are green at baseline.
+The accessor functions, the carrier name, the strategy and adapter tables, the copied switch and the loops are gone; `source_channel_axis` is replaced by declared axes; `SourceSpatialDomain` is a rank family whose names feed masks, labels, `CENTER_*` and IJV; the guards and the witness pass; the touched tests and the parity check are green at baseline.
 
 ## Handoff (recorded for later surfaces)
 
-Filled in at delivery.
+- **Plane modes are still an enum (former K1 item, unassigned).** `RuntimePlaneAxis` (`RUNTIME_SLICE`/`SOURCE_BINDING`) with its `EnumKeyedStrategyMixin` strategy family, and `ImagePayloadMetadataCompositionMode` (`STACK`/`BUNDLE`), which restates it one-to-one, should become one plane-axis family. 96 member references in 35 files, including the Fiji/Napari wire decode (G6). Needs an owner.
+- **K2:** `ImageArtifactType.contextualize_output` still type-switches its *output* (`SourceProjectedImageOutput`, `RuntimeSliceAlignedValueSet`); `RuntimeProjectedPayloadItem` (materialization and stream items, every kind) decides image metadata with one `isinstance(…, ImagePayload)`; the remaining `isinstance` checks on owned kinds in `artifacts.py`.
+- **G5:** `PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS` (`callable_contract.py`) is an enum naming the colour axis; it should be a role requirement. `Pure2DInputSlicer` and the PURE_2D auxiliary aggregators in `unified_registry.py` are type-keyed tables over payload types; `ImagePayloadPure2DAuxiliaryOutputAggregator` now also receives `PlainImagePayload` outputs.
+- **G6:** viewer modules read `metadata.axis_position(ColourAxis)` where they read `source_channel_axis` (mechanical lines in `runtime/napari_viewer_server.py`, `runtime/napari_streaming_handlers.py` and `core/viewer_streaming_service.py`, which also reads `.data/.metadata/.mask`); the wire still carries `SOURCE_CHANNEL_AXIS` and planar `origin_yx`/`source_shape_yx` (zmqruntime), and should carry declared axes and N-d placement.
+- **G4:** source loaders call `ImagePayload.of` at entry; the `NamedSourceBinding.source_channel_axis` config field and the image format's `pixel_semantics.channel_axis` are file-level declarations converted with `PayloadAxes.colour_samples`.

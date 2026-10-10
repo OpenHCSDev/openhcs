@@ -8,7 +8,6 @@ from openhcs.core.aligned_image_payload import (
     ImagePayloadExecutionMode,
     compose_aligned_image_payload,
     pack_aligned_image_outputs,
-    payload_slices_for_alignment,
     stack_image_payloads,
 )
 from openhcs.core.memory import (
@@ -29,12 +28,8 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     MaskedImagePayload,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_mask_for_slice,
-    image_payload_metadata,
-    image_payload_slice_context,
 )
+from openhcs.core.payload_axes import PayloadAxes
 
 
 @pytest.mark.parametrize(
@@ -74,7 +69,7 @@ def test_explicit_runtime_slice_stack_rejects_mismatched_slice_shapes() -> None:
 def test_bare_ndarray_does_not_declare_runtime_alignment() -> None:
     array = np.zeros((3, 4, 5), dtype=np.uint16)
 
-    assert payload_slices_for_alignment(array) == (array,)
+    assert RuntimeSliceProjection.alignment_slices(array) == (array,)
 
 
 def test_aligned_image_stack_nominally_declares_runtime_alignment() -> None:
@@ -84,7 +79,9 @@ def test_aligned_image_stack_nominally_declares_runtime_alignment() -> None:
     )
     payload = AlignedImageStack(slices)
 
-    assert payload_slices_for_alignment(payload) == slices
+    assert tuple(
+        member.data for member in RuntimeSliceProjection.alignment_slices(payload)
+    ) == slices
 
 
 def test_runtime_plane_projection_requires_matching_payload_axis() -> None:
@@ -108,9 +105,9 @@ def test_runtime_plane_projection_requires_matching_payload_axis() -> None:
         ),
     )
 
-    np.testing.assert_array_equal(image_payload_data(selected), data[1])
-    np.testing.assert_array_equal(image_payload_mask(selected), mask[1])
-    assert image_payload_metadata(selected).plane_axis is None
+    np.testing.assert_array_equal(selected.data, data[1])
+    np.testing.assert_array_equal(selected.mask, mask[1])
+    assert selected.metadata.plane_axis is None
 
 
 def test_source_binding_slice_projection_preserves_shared_spatial_mask() -> None:
@@ -150,8 +147,8 @@ def test_scalar_and_batch_projection_preserve_distinct_mask_contracts() -> None:
     batch = ImagePayloadSliceProjector(mask=plane_masks, metadata=metadata)
     outputs = batch.payloads_for_slices(tuple(data))
     for index, output in enumerate(outputs):
-        assert image_payload_mask(output).dtype == np.dtype(bool)
-        np.testing.assert_array_equal(image_payload_mask(output), plane_masks[index])
+        assert output.mask.dtype == np.dtype(bool)
+        np.testing.assert_array_equal(output.mask, plane_masks[index])
     assert batch.mask_for_slice(data[1], 1).dtype == plane_masks.dtype
 
 
@@ -161,7 +158,7 @@ def test_batch_projection_checks_mask_cardinality_before_child_axis_errors(
 ) -> None:
     metadata = ImagePayloadMetadata(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-        source_channel_axis=0,
+        axes=PayloadAxes.colour_samples(0),
     )
     projector = ImagePayloadSliceProjector(
         mask=np.ones(mask_shape, dtype=bool), metadata=metadata
@@ -184,11 +181,9 @@ def test_scalar_mask_projection_requires_metadata_owner_to_declare_plane_axis(
         if entry == "payload":
             projector.payload_for_slice(data, 0)
         elif entry == "mask":
-            image_payload_mask_for_slice(
-                mask=mask, metadata=metadata, data_slice=data, plane_index=0
-            )
+            projector.mask_for_slice(data, 0)
         else:
-            image_payload_slice_context(metadata.payload_with(data, mask), data, 0)
+            metadata.payload_with(data, mask).slice_payload(data, 0)
 
     assert ImagePayloadSliceProjector(mask=None, metadata=metadata).mask_for_slice(
         data, 0
@@ -209,20 +204,18 @@ def test_slice_projection_keeps_fresh_source_metadata_across_calls(batch: bool) 
     def project():
         if batch:
             return projector.payloads_for_slices(tuple(data))[1]
-        return image_payload_slice_context(
-            payload, data[1], 1, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
-        )
+        return payload.slice_payload(data[1], 1, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
 
     first = project()
     metadata.source_component_metadata = {"well": "B02"}
     second = project()
 
-    assert image_payload_metadata(first).source_component_metadata["well"] == "A01"
-    assert image_payload_metadata(second).source_component_metadata["well"] == "B02"
-    assert image_payload_metadata(first).plane_axis is None
-    assert image_payload_metadata(second).plane_axis is None
-    np.testing.assert_array_equal(image_payload_mask(first), masks[1])
-    np.testing.assert_array_equal(image_payload_mask(second), masks[1])
+    assert first.metadata.source_component_metadata["well"] == "A01"
+    assert second.metadata.source_component_metadata["well"] == "B02"
+    assert first.metadata.plane_axis is None
+    assert second.metadata.plane_axis is None
+    np.testing.assert_array_equal(first.mask, masks[1])
+    np.testing.assert_array_equal(second.mask, masks[1])
 
 
 def test_source_binding_runtime_projection_preserves_shared_spatial_mask() -> None:
@@ -243,8 +236,8 @@ def test_source_binding_runtime_projection_preserves_shared_spatial_mask() -> No
         ),
     )
 
-    np.testing.assert_array_equal(image_payload_data(projected), data[1])
-    np.testing.assert_array_equal(image_payload_mask(projected), mask)
+    np.testing.assert_array_equal(projected.data, data[1])
+    np.testing.assert_array_equal(projected.mask, mask)
 
 
 def test_runtime_plane_projection_does_not_infer_undeclared_ndarray_axis() -> None:
@@ -266,7 +259,7 @@ def test_channel_free_mask_requires_declared_channel_axis() -> None:
     payload = MaskedImagePayload(
         data=np.zeros((4, 5, 2), dtype=np.float32),
         mask=np.ones((4, 5), dtype=bool),
-        metadata=ImagePayloadMetadata(source_channel_axis=-1),
+        metadata=ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)),
     )
 
     assert payload.mask.shape == (4, 5)
@@ -285,10 +278,10 @@ def test_image_bundle_composition_declares_source_binding_axis() -> None:
     composition = compose_aligned_image_payload("ImageMath", (first, second))
 
     assert composition.execution_mode is ImagePayloadExecutionMode.FULL_STACK
-    assert image_payload_metadata(composition.payload).plane_axis is (
+    assert composition.payload.metadata.plane_axis is (
         RuntimePlaneAxis.SOURCE_BINDING
     )
-    assert image_payload_data(composition.payload).shape == (2, 4, 5)
+    assert composition.payload.data.shape == (2, 4, 5)
 
 
 def test_single_runtime_slice_payload_is_not_repacked_as_source_binding() -> None:
@@ -300,7 +293,7 @@ def test_single_runtime_slice_payload_is_not_repacked_as_source_binding() -> Non
 
     assert composition.execution_mode is ImagePayloadExecutionMode.NATURAL
     assert composition.payload is payload
-    assert image_payload_metadata(composition.payload).plane_axis is (
+    assert composition.payload.metadata.plane_axis is (
         RuntimePlaneAxis.RUNTIME_SLICE
     )
 
@@ -400,7 +393,7 @@ def test_declared_output_contexts_preserve_aligned_multi_image_payloads() -> Non
         ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
     )
     assert isinstance(composition.payload, ImageOutputBundle)
-    assert composition.payload.slices == payloads
+    assert tuple(member.data for member in composition.payload.slices) == payloads
     assert composition.payload.slice_contexts == contexts
 
 
@@ -413,9 +406,7 @@ def test_named_main_flow_context_attaches_exact_derived_image_identity() -> None
         "CorrectedDNA"
     ).contextualize_image_payload(payload)
 
-    assert image_payload_metadata(
-        contextualized
-    ).source_provenance.represented_source_image_names == (
+    assert contextualized.metadata.source_provenance.represented_source_image_names == (
         "CorrectedDNA",
         "OrigDNA",
     )
@@ -439,7 +430,7 @@ def test_named_outputs_are_contextualized_when_packed_for_chained_execution() ->
 
     assert isinstance(packed, ImageOutputBundle)
     assert tuple(
-        image_payload_metadata(payload).source_provenance.represented_source_image_names
+        payload.metadata.source_provenance.represented_source_image_names
         for payload in packed.slices
     ) == (
         ("AlignedDNA", "OrigDNA"),
@@ -468,7 +459,7 @@ def test_named_outputs_keep_active_identity_when_restacked_for_adjacent_step() -
         packed.slices,
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
-    provenance = image_payload_metadata(restacked).source_provenance
+    provenance = restacked.metadata.source_provenance
 
     assert provenance.source_image_names == ("AlignedDNA", "AlignedProtein")
     assert provenance.represented_source_image_names == (
@@ -489,9 +480,7 @@ def test_single_named_output_is_contextualized_before_unwrapping() -> None:
         slice_contexts=(AlignedImageSliceContext.main_flow("CorrectedDNA"),),
     )
 
-    assert image_payload_metadata(
-        packed
-    ).source_provenance.represented_source_image_names == (
+    assert packed.metadata.source_provenance.represented_source_image_names == (
         "CorrectedDNA",
         "OrigDNA",
     )

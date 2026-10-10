@@ -18,10 +18,7 @@ from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_metadata import DurableSourceMetadata, SourceMetadataValue
 
@@ -101,7 +98,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
     ) -> RuntimeArrayData:
         """Attach this exact produced-output identity to a reloaded payload."""
 
-        metadata = self.image_metadata or image_payload_metadata(payload)
+        metadata = self.image_metadata or payload.metadata
         return metadata.with_source_component_metadata(
             self.component_metadata(metadata.source_component_metadata)
         ).attach_to(payload)

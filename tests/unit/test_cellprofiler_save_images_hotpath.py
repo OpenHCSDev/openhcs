@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.processing.backends.cellprofiler.save_images import SaveImagesBitDepth
 
 
@@ -32,7 +31,7 @@ def test_save_images_uint16_integer_conversion_matches_reference(
     payload: np.ndarray,
 ) -> None:
     converted = SaveImagesBitDepth.UINT16.convert(payload)
-    converted_data = np.asarray(image_payload_data(converted))
+    converted_data = np.asarray(converted.data)
 
     assert converted_data.dtype == np.uint16
     np.testing.assert_array_equal(

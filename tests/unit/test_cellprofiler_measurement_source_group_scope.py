@@ -25,7 +25,6 @@ from openhcs.core.function_patterns import (
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.runtime_image_values import image_payload_metadata
 from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -140,4 +139,4 @@ def test_measurement_source_alignment_uses_selected_output_group_scope() -> None
 
     metadata = request.measurement_source_metadata((first, second))
 
-    assert metadata == image_payload_metadata(first_value)
+    assert metadata == first_value.metadata

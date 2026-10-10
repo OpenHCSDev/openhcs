@@ -30,6 +30,8 @@ from openhcs.domains.microscopy.axes import Microscopy
 
 
 class RemoteSensing(AxisFamily):
+    payload_spatial_rank = 2
+
     class Tile(Axis, TileAxis, DefaultVariable, OrdinalValued):
         name = "tile"
         filename_prefix = "f"
@@ -165,3 +167,129 @@ def test_family_declaration_enforces_role_cardinality() -> None:
     # A rejected declaration must not leak into other axes' role checks.
     assert not issubclass(Microscopy.Channel, TileAxis)
     assert not issubclass(RemoteSensing.Band, PartitionAxis)
+
+
+# ---------------------------------------------------------------------------
+# A non-image family flows through the tensor payload layer
+# ---------------------------------------------------------------------------
+
+
+class Telemetry(AxisFamily):
+    """Sensor stations recording 1-D time series; values have no spatial axes."""
+
+    payload_spatial_rank = 0
+
+    class Window(Axis, TileAxis, DefaultVariable, OrdinalValued):
+        name = "window"
+
+    class Sensor(Axis, ColourAxis, DefaultGroupBy, OrdinalValued):
+        name = "sensor"
+
+    class Time(Axis, TimeAxis, OrdinalValued):
+        name = "time"
+
+    class Station(Axis, PartitionAxis, LabelValued):
+        name = "station"
+
+
+@pytest.fixture
+def telemetry() -> Iterator[type[Telemetry]]:
+    Telemetry.activate()
+    try:
+        yield Telemetry
+    finally:
+        Microscopy.activate()
+
+
+def _signal(offset: float):
+    import numpy as np
+
+    from openhcs.core.payload_axes import FamilyAxisSpec, PayloadAxes
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
+
+    metadata = ImagePayloadMetadata(
+        source_dtype="float32",
+        axes=PayloadAxes.of(
+            (FamilyAxisSpec(Telemetry.Sensor), 0),
+            (FamilyAxisSpec(Telemetry.Time), -1),
+        ),
+    )
+    samples = np.arange(12, dtype=np.float32).reshape(3, 4) + offset
+    return metadata.payload_with(samples)
+
+
+def test_time_series_payloads_declare_their_axes(telemetry) -> None:
+    import numpy as np
+
+    from openhcs.core.payload_axes import (
+        FamilyAxisSpec,
+        SpatialAxis,
+        UndeclaredAxisSpec,
+    )
+    from openhcs.core.runtime_image_values import ImagePayload
+    from openhcs.core.source_spatial_domain import PointSourceSpatialDomain
+
+    signal = _signal(0.0)
+    assert signal.axes == (
+        FamilyAxisSpec(Telemetry.Sensor),
+        FamilyAxisSpec(Telemetry.Time),
+    )
+    assert signal.metadata.axis_index(TimeAxis, signal) == 1
+    assert signal.metadata.axis_index(ColourAxis, signal) == 0
+    assert type(signal.metadata.source_spatial_domain) is PointSourceSpatialDomain
+    assert signal.metadata.spatial_axes(signal) == ()
+    assert signal.metadata.spatial_axes_yx(signal) is None
+    assert not any(spec.has_role(SpatialAxis) for spec in signal.axes)
+
+    # The family declares no spatial axes, so nothing in a bare array is spatial.
+    bare = ImagePayload.of(np.zeros(5, dtype=np.float32))
+    assert bare.axes == (UndeclaredAxisSpec(),)
+
+
+def test_time_series_stack_slices_and_projects_without_kernel_edits(telemetry) -> None:
+    import numpy as np
+
+    from openhcs.core.aligned_image_payload import stack_image_payloads
+    from openhcs.core.payload_axes import FamilyAxisSpec, RuntimePlaneAxisSpec
+    from openhcs.core.runtime_image_values import (
+        ImagePayloadMetadata,
+        ImagePayloadMetadataCompositionMode,
+        MaskedImagePayload,
+    )
+    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+    signals = (_signal(0.0), _signal(100.0))
+    stack = stack_image_payloads(
+        signals, metadata_mode=ImagePayloadMetadataCompositionMode.STACK
+    )
+    assert stack.geometry.shape == (2, 3, 4)
+    assert stack.axes == (
+        RuntimePlaneAxisSpec(RuntimePlaneAxis.RUNTIME_SLICE.value),
+        FamilyAxisSpec(Telemetry.Sensor),
+        FamilyAxisSpec(Telemetry.Time),
+    )
+    assert RuntimeSliceProjection.slice_count_from_values((stack,)) == 2
+
+    slices = stack.alignment_slices()
+    assert len(slices) == 2
+    for original, projected in zip(signals, slices, strict=True):
+        np.testing.assert_array_equal(np.asarray(projected.data), original.data)
+        assert projected.axes == original.axes
+        assert projected.metadata.plane_axis is None
+
+    restored = ImagePayloadMetadata.from_mapping(
+        {"axes": stack.metadata.axes.to_mapping(), "source_dtype": "float32"}
+    )
+    assert restored.axes == stack.metadata.axes
+
+    # A mask may omit the declared non-spatial axes and broadcasts over them.
+    masked = MaskedImagePayload(
+        data=signals[0].data,
+        mask=np.ones((3, 4), dtype=bool),
+        metadata=signals[0].metadata,
+    )
+    assert masked.metadata.mask_domain(masked).accepts((3, 4))
+    without_time = masked.metadata.without_axis(TimeAxis)
+    assert without_time.axis_index(TimeAxis, masked) is None
+    assert without_time.axis_index(ColourAxis, masked) == 0

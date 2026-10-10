@@ -38,11 +38,6 @@ from metaclass_registry.strategies import (
     RegisteredLeafClassSpec,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
@@ -307,6 +302,7 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
 from openhcs.processing.backends.cellprofiler.watershed import (
     cellprofiler_legacy_watershed,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 logger = logging.getLogger(__name__)
 runtime_profiler = RuntimeProfiler(logger)
@@ -1184,16 +1180,16 @@ def _execute_identify_secondary_objects(
     morphology = MorphologyBackendStrategy.for_callable(
         identify_secondary_objects, backend_provider=morphology_backend_provider
     )
-    input_mask = image_payload_mask(image)
+    input_mask = image.mask
     if input_mask is not None:
         input_mask = np.asarray(input_mask, dtype=bool)
         if input_mask.ndim != 2:
             raise ValueError(
                 "IdentifySecondaryObjects requires a runtime-projected 2-D image mask."
             )
-    raw_image_data = image_payload_data(image)
+    raw_image_data = image.data
     proven_unit_interval_scale = unit_interval_scale_for_threshold_selection(
-        np.asarray(raw_image_data), image_payload_metadata(image)
+        np.asarray(raw_image_data), image.metadata
     )
     inputs = SecondaryInputNormalization(
         raw_image_data, primary_labels
@@ -1324,7 +1320,7 @@ def _execute_identify_secondary_objects(
 @numpy(contract=ProcessingContract.PURE_2D)
 @special_inputs("primary_labels")
 def identify_secondary_objects(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     primary_labels: ObjectLabelValue,
     method: SecondaryMethod = SecondaryMethod.PROPAGATION,
     threshold_scope: CellProfilerThresholdScope = CellProfilerThresholdScope.GLOBAL,
@@ -1394,7 +1390,7 @@ def identify_secondary_objects(
 @numpy(contract=ProcessingContract.PURE_2D)
 @special_inputs("primary_labels")
 def identify_secondary_objects_with_replacement_primary(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     primary_labels: ObjectLabelValue,
     method: SecondaryMethod = SecondaryMethod.PROPAGATION,
     threshold_scope: CellProfilerThresholdScope = CellProfilerThresholdScope.GLOBAL,

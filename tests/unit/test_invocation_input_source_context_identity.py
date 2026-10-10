@@ -29,11 +29,7 @@ from openhcs.core.function_patterns import (
 from openhcs.core.invocation_artifacts import unnamed_main_flow_artifact_name
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.source_bindings import (
@@ -152,7 +148,7 @@ def test_implicit_native_main_flow_consumes_complete_payload_not_source_alias() 
     assert (edge.main_flow_projection is not None) is True
     assert edge.main_flow_projection is MainFlowInputProjection.COMPLETE_PAYLOAD
     assert request is source_payload
-    assert image_payload_metadata(request).source_image_names == ("Hoechst",)
+    assert request.metadata.source_image_names == ("Hoechst",)
 
 
 def test_multiple_main_flow_images_keep_declared_source_projection() -> None:
@@ -242,12 +238,12 @@ def test_primary_workspace_role_does_not_override_compiled_input_ownership(
     source_request = request.artifact_value(edges_by_ref[plate_template.ref()])
     main_flow_request = request.artifact_value(edges_by_ref[combined_image.ref()])
 
-    np.testing.assert_array_equal(image_payload_data(source_request), 7.0)
-    np.testing.assert_array_equal(image_payload_data(main_flow_request), 11.0)
-    assert image_payload_metadata(source_request).source_image_names == (
+    np.testing.assert_array_equal(source_request.data, 7.0)
+    np.testing.assert_array_equal(main_flow_request.data, 11.0)
+    assert source_request.metadata.source_image_names == (
         plate_template.name,
     )
-    assert image_payload_metadata(main_flow_request).source_image_names == (
+    assert main_flow_request.metadata.source_image_names == (
         combined_image.name,
     )
 
@@ -297,8 +293,8 @@ def test_storage_backed_input_keeps_exact_runtime_authority() -> None:
 
     runtime_request = request.artifact_value(edge)
 
-    np.testing.assert_array_equal(image_payload_data(runtime_request), 13.0)
-    assert image_payload_metadata(runtime_request).source_image_names == (
+    np.testing.assert_array_equal(runtime_request.data, 13.0)
+    assert runtime_request.metadata.source_image_names == (
         combined_image.name,
     )
 
@@ -351,7 +347,7 @@ def test_compiled_producer_edge_overrides_matching_source_binding() -> None:
 
     runtime_request = request.artifact_value(edge)
 
-    np.testing.assert_array_equal(image_payload_data(runtime_request), 19.0)
-    assert image_payload_metadata(runtime_request).source_image_names == (
+    np.testing.assert_array_equal(runtime_request.data, 19.0)
+    assert runtime_request.metadata.source_image_names == (
         combined_image.name,
     )

@@ -30,7 +30,6 @@ from metaclass_registry import RegistryFamily
 from metaclass_registry import RegistryKeyAttribute
 from openhcs.core.alias_property import AliasProperty
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from metaclass_registry.strategies import GeneratedLeafClassSpec
 from metaclass_registry.strategies import str_enum_member_with_payload
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
@@ -40,6 +39,10 @@ import math
 import numpy as np
 import re
 from openhcs.core.axes import AxisFamily
+from openhcs.core.source_spatial_domain import (
+    SourceSpatialDomain,
+    VolumeSourceSpatialDomain,
+)
 
 
 @dataclass(slots=True, kw_only=True)
@@ -102,6 +105,47 @@ class MeasurementTable(
             )
         self.rows.validate_fields()
         self.validate_runtime_slice_axis()
+
+    def runtime_slice_row_domain(self) -> tuple[int, ...] | None:
+        """Return the runtime-slice indices these rows carry, if they carry the axis."""
+        return MeasurementTable.shared_row_axis_domain(
+            self.name, (self,), MeasurementRowAxisField.SLICE_INDEX
+        )
+
+    def runtime_slice_count(self) -> int | None:
+        if self.runtime_slice_row_domain() is None:
+            return None
+        if self.source_provenance.source_plane_count > 0:
+            return self.source_provenance.source_plane_count
+        if self.source_provenance.addressable:
+            return None
+        from openhcs.core.runtime_slice_projection import (
+            RuntimeSliceProjectionDeclarationError,
+        )
+
+        raise RuntimeSliceProjectionDeclarationError(
+            "Runtime-slice measurement table requires declared source-plane "
+            "provenance; row fields and row ordering cannot declare its axis."
+        )
+
+    def value_for_slice(self, context: Any) -> "MeasurementTable":
+        """Select the rows of one runtime slice."""
+        from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+
+        if (
+            context.axis is not RuntimePlaneAxis.RUNTIME_SLICE
+            or self.runtime_slice_row_domain() is None
+        ):
+            return self
+        from openhcs.core.runtime_artifact_queries import (
+            MeasurementTableAxisProjection,
+        )
+
+        return MeasurementTableAxisProjection(
+            axis=MeasurementRowAxisField.SLICE_INDEX,
+            value=context.require_plane_index(),
+            table=self,
+        ).apply()
 
     def validate_runtime_slice_axis(self) -> None:
         """Require non-negative values on the canonical runtime slice axis."""
@@ -987,14 +1031,26 @@ class MeasurementStatistic(str, Enum):
     MEAN = "mean"
 
 
-class ObjectCoreMeasurementFeature(RuntimeMeasurementFeature):
-    """Core object-measurement feature families."""
+LOCATION_SPATIAL_DOMAIN = VolumeSourceSpatialDomain
+"""The spatial domain object locations are reported in (its axis names)."""
 
-    OBJECT_COUNT = "object_count"
-    OBJECT_NUMBER = "object_number"
-    CENTER_X = "center_x"
-    CENTER_Y = "center_y"
-    CENTER_Z = "center_z"
+
+ObjectCoreMeasurementFeature = RuntimeMeasurementFeature(
+    "ObjectCoreMeasurementFeature",
+    {
+        "OBJECT_COUNT": "object_count",
+        "OBJECT_NUMBER": "object_number",
+        **{
+            f"CENTER_{axis_name.upper()}": f"center_{axis_name}"
+            for axis_name in reversed(LOCATION_SPATIAL_DOMAIN.axis_names)
+        },
+    },
+    module=__name__,
+    qualname="ObjectCoreMeasurementFeature",
+)
+ObjectCoreMeasurementFeature.__doc__ = (
+    "Core object-measurement features; one center per location axis."
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1006,107 +1062,42 @@ class ObjectLocationCoordinateValues:
     axis_present: bool = True
 
 
-class ObjectLocationCoordinateProjectionStrategy(
-    EnumKeyedStrategyMixin[ObjectCoreMeasurementFeature],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Project dense-label coordinates for one nominal object-location feature."""
-
-    __registry_family__ = RegistryFamily(RegistryKeyAttribute.STRATEGY_LABEL)
-    __enum_member_attr__ = "axis_feature"
-    axis_feature: ClassVar[ObjectCoreMeasurementFeature]
-    strategy_label: ClassVar[str | None] = None
-
-    @abstractmethod
-    def coordinate_values(
-        self, axis_centers: Sequence[Any], counts: Any
-    ) -> ObjectLocationCoordinateValues:
-        """Return dense label-indexed coordinate values for this feature."""
-
-    @staticmethod
-    def missing_for_absent_labels(values: Any, counts: Any) -> Any:
-        import numpy as np
-
-        result = np.asarray(values, dtype=float).copy()
-        result[counts == 0] = np.nan
-        return result
-
-
-class AxisBackedObjectLocationCoordinateProjectionStrategy(
-    ObjectLocationCoordinateProjectionStrategy
-):
-    """Base for coordinates backed by a concrete dense-array axis when present."""
-
-    required_ndim: ClassVar[int]
-    axis_offset: ClassVar[int]
-    absent_axis_missing_for_unlabeled_objects: ClassVar[bool] = True
-
-    def coordinate_values(
-        self, axis_centers: Sequence[Any], counts: Any
-    ) -> ObjectLocationCoordinateValues:
-        import numpy as np
-
-        if len(axis_centers) >= type(self).required_ndim:
-            return ObjectLocationCoordinateValues(
-                axis_centers[type(self).axis_offset], include_missing=False
-            )
-        values = np.zeros(len(counts))
-        if type(self).absent_axis_missing_for_unlabeled_objects:
-            values = self.missing_for_absent_labels(values, counts)
-        return ObjectLocationCoordinateValues(
-            values, include_missing=False, axis_present=False
-        )
-
-
-for _coordinate_projection_spec in (
-    GeneratedLeafClassSpec(
-        class_name="CenterXObjectLocationCoordinateProjectionStrategy",
-        base_type=AxisBackedObjectLocationCoordinateProjectionStrategy,
-        attributes={
-            "axis_feature": ObjectCoreMeasurementFeature.CENTER_X,
-            "required_ndim": 1,
-            "axis_offset": -1,
-        },
-    ),
-    GeneratedLeafClassSpec(
-        class_name="CenterYObjectLocationCoordinateProjectionStrategy",
-        base_type=AxisBackedObjectLocationCoordinateProjectionStrategy,
-        attributes={
-            "axis_feature": ObjectCoreMeasurementFeature.CENTER_Y,
-            "required_ndim": 2,
-            "axis_offset": -2,
-        },
-    ),
-    GeneratedLeafClassSpec(
-        class_name="CenterZObjectLocationCoordinateProjectionStrategy",
-        base_type=AxisBackedObjectLocationCoordinateProjectionStrategy,
-        attributes={
-            "axis_feature": ObjectCoreMeasurementFeature.CENTER_Z,
-            "required_ndim": 3,
-            "axis_offset": -3,
-            "absent_axis_missing_for_unlabeled_objects": False,
-        },
-    ),
-):
-    _coordinate_projection_spec.declare_in(globals())
+def object_location_features() -> tuple[ObjectCoreMeasurementFeature, ...]:
+    """Return the center features, last array axis first."""
+    return tuple(
+        ObjectCoreMeasurementFeature(f"center_{axis_name}")
+        for axis_name in reversed(LOCATION_SPATIAL_DOMAIN.axis_names)
+    )
 
 
 def object_location_coordinate_arrays(
     axis_centers: Sequence[Any], counts: Any
 ) -> tuple[tuple[str, ObjectLocationCoordinateValues], ...]:
-    """Return nominal object-location coordinate arrays in core feature order."""
-    return tuple(
-        (
-            strategy_type.axis_feature.value,
-            strategy_type().coordinate_values(axis_centers, counts),
-        )
-        for strategy_type in (
-            ObjectLocationCoordinateProjectionStrategy.registered_strategy_types()
-        )
-    )
+    """Return one dense label-indexed center per location axis.
 
+    ``axis_centers`` holds one center array per label-array axis. A location
+    axis the labels do not have reports zero; for a planar axis an unlabeled
+    object's center is missing instead.
+    """
+    import numpy as np
 
+    coordinates: list[tuple[str, ObjectLocationCoordinateValues]] = []
+    for offset, feature in enumerate(object_location_features(), start=1):
+        if len(axis_centers) >= offset:
+            values = ObjectLocationCoordinateValues(
+                axis_centers[-offset], include_missing=False
+            )
+        else:
+            absent = np.zeros(len(counts))
+            axis_name = LOCATION_SPATIAL_DOMAIN.axis_names[-offset]
+            if axis_name in SourceSpatialDomain.axis_names:
+                absent = np.asarray(absent, dtype=float).copy()
+                absent[counts == 0] = np.nan
+            values = ObjectLocationCoordinateValues(
+                absent, include_missing=False, axis_present=False
+            )
+        coordinates.append((feature.value, values))
+    return tuple(coordinates)
 @dataclass(frozen=True, slots=True)
 class ObjectMeasurementValueRow:
     """Nominal long-form object measurement row."""

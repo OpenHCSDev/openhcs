@@ -18,6 +18,8 @@ from openhcs.core.axes import (
 class Microscopy(AxisFamily):
     """Plate axes in canonical filename order; wells run in parallel."""
 
+    payload_spatial_rank = 2
+
     class Site(Axis, TileAxis, DefaultVariable, OrdinalValued):
         name = "site"
         filename_prefix = "s"
@@ -36,7 +38,6 @@ class Microscopy(AxisFamily):
         name = "timepoint"
         filename_prefix = "t"
         filename_padding = 3
-
 
     class Well(Axis, PartitionAxis, LabelValued):
         name = "well"

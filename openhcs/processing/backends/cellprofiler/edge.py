@@ -54,12 +54,6 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
 from openhcs.core.memory.decorators import numpy as numpy_decorator
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProvider,
     BackendProviderInput,
@@ -75,6 +69,7 @@ from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 class EdgeMethod(Enum):
@@ -509,7 +504,7 @@ def _native_kirsch(image: np.ndarray) -> np.ndarray:
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def enhance_edges(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     method: EdgeMethod = EdgeMethod.SOBEL,
     direction: EdgeDirection = EdgeDirection.ALL,
     edge_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -527,8 +522,8 @@ def enhance_edges(
             f"low_threshold value of {low_threshold} is outside of the [0-1] range.",
             stacklevel=2,
         )
-    pixel_data = np.asarray(image_payload_data(image), dtype=np.float32)
-    payload_mask = image_payload_mask(image)
+    pixel_data = np.asarray(image.data, dtype=np.float32)
+    payload_mask = image.mask
     operation_mask = (
         np.ones(pixel_data.shape[:2], dtype=bool)
         if payload_mask is None
@@ -556,12 +551,9 @@ def enhance_edges(
     output = (
         EdgeEnhancementStrategy.for_request(request).enhance(request).astype(np.float32)
     )
-    return with_image_payload_data(
-        image,
-        output,
+    return image.with_pixels(output,
         mask=operation_mask if payload_mask is not None else None,
-        metadata=image_payload_metadata(image).without_unit_interval_intensity_scale(),
-    )
+        metadata=image.metadata.without_unit_interval_intensity_scale(),)
 
 
 @njit(cache=True)

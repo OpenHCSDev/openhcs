@@ -4,11 +4,7 @@ import numpy as np
 import pytest
 
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType, MeasurementsArtifactType
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )
@@ -20,18 +16,18 @@ def test_integer_call_mutation_does_not_replace_post_call_source():
     source = ImagePayloadMetadata(source_image_names=("Original",)).payload_with(pixels)
     strategy = CellProfilerOutputRecorder.for_artifact_type(spec.artifact_type)
     raw = strategy.raw_runtime_input_value(spec, source)
-    assert image_payload_data(raw) is pixels
-    assert image_payload_metadata(raw) is not image_payload_metadata(source)
+    assert raw.data is pixels
+    assert raw.metadata is not source.metadata
     bound = strategy.runtime_input_value(spec, source)
-    assert not np.shares_memory(image_payload_data(bound), pixels)
-    image_payload_data(bound)[:] = -1
-    image_payload_metadata(bound).source_image_names = ("ChangedByCallable",)
+    assert not np.shares_memory(bound.data, pixels)
+    bound.data[:] = -1
+    bound.metadata.source_image_names = ("ChangedByCallable",)
 
     post_call = strategy.runtime_input_value(spec, source)
-    np.testing.assert_array_equal(image_payload_data(post_call), pixels.astype(np.float32) / 255)
-    assert image_payload_metadata(post_call).source_image_names == (spec.name,)
-    assert image_payload_metadata(source).source_image_names == ("Original",)
-    assert image_payload_data(source) is pixels
+    np.testing.assert_array_equal(post_call.data, pixels.astype(np.float32) / 255)
+    assert post_call.metadata.source_image_names == (spec.name,)
+    assert source.metadata.source_image_names == ("Original",)
+    assert source.data is pixels
 
 
 def test_raw_source_derivation_preserves_live_nested_source_mapping():
@@ -41,13 +37,13 @@ def test_raw_source_derivation_preserves_live_nested_source_mapping():
     ).payload_with(np.zeros((2, 3), dtype=np.uint8))
     strategy = CellProfilerOutputRecorder.for_artifact_type(spec.artifact_type)
     first = strategy.raw_runtime_input_value(spec, source)
-    nested = image_payload_metadata(source).source_component_metadata["nested"]
-    assert image_payload_metadata(first) is not image_payload_metadata(source)
-    assert image_payload_metadata(first).source_component_metadata["nested"] is nested
-    image_payload_metadata(source).source_component_metadata["nested"]["selected"] = "after"
+    nested = source.metadata.source_component_metadata["nested"]
+    assert first.metadata is not source.metadata
+    assert first.metadata.source_component_metadata["nested"] is nested
+    source.metadata.source_component_metadata["nested"]["selected"] = "after"
     second = strategy.raw_runtime_input_value(spec, source)
-    assert image_payload_metadata(first).source_component_metadata["nested"]["selected"] == "after"
-    assert image_payload_metadata(second).source_component_metadata["nested"]["selected"] == "after"
+    assert first.metadata.source_component_metadata["nested"]["selected"] == "after"
+    assert second.metadata.source_component_metadata["nested"]["selected"] == "after"
 
 
 def test_measurement_type_errors_remain_at_value_consumption():

@@ -14,11 +14,8 @@ from metaclass_registry import AutoRegisterMeta
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend, Microscope
-from openhcs.core.image_shapes import ArrayShape
+from openhcs.core.runtime_array_values import array_geometry
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-)
 from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataTable,
@@ -1119,8 +1116,8 @@ class SourceBindingWorkspaceProjector:
             base_path=source_root,
         )
         payload = filemanager.load(address, candidate.source_ref.backend)
-        shape = ArrayShape.shape_for(image_payload_data(payload))
-        if shape is None or len(shape) < len(components) + 2:
+        shape = array_geometry(payload).shape
+        if len(shape) < len(components) + 2:
             raise ValueError(
                 f"Source {candidate.relative_path!r} shape {shape!r} cannot expose "
                 f"{len(components)} declared source stack axes."

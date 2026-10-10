@@ -19,7 +19,7 @@ from openhcs.core.callable_contract import (
     CallableMetadata,
     FunctionStepExecutionScope,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -87,7 +87,7 @@ def test_matcher_contextualizes_declared_axis_before_resolving_complete_abi() ->
     assert returned[1] is trailing
     assert resolved[measurements.ref()] is trailing
     for index, spec in enumerate((first, second)):
-        selected = image_payload_data(resolved[spec.ref()])
+        selected = resolved[spec.ref()].data
         np.testing.assert_array_equal(selected, data[index])
         assert np.shares_memory(selected, data)
     assert contract.contextualize_returned_canonical_output(returned) is returned

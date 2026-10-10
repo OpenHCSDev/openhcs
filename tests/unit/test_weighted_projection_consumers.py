@@ -14,6 +14,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     _weighted_projection_numba,
     create_composite,
 )
+from openhcs.core.payload_axes import PayloadAxes
 
 
 @pytest.mark.parametrize("dtype", [np.float32, np.float64, np.float16, np.int16])
@@ -54,7 +55,7 @@ def test_color_retains_selected_order_duplicates_and_negative_indices(shape, str
         for channel, weight in zip(channels, weights, strict=True):
             expected += pixels[..., channel].astype(np.float64) * weight
     payload = ImagePayloadMetadata(
-        source_channel_axis=3, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axes=PayloadAxes.colour_samples(3), plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(pixels)
     actual = combine_color_to_gray(payload, channels, contributions)
     np.testing.assert_array_equal(actual, expected)
@@ -63,7 +64,7 @@ def test_color_retains_selected_order_duplicates_and_negative_indices(shape, str
 def test_nonfinite_products_are_not_reassociated():
     pixels = np.array([[[[np.inf, -np.inf, np.nan], [1.0, 2.0, 3.0]]]], np.float32)
     payload = ImagePayloadMetadata(
-        source_channel_axis=3, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axes=PayloadAxes.colour_samples(3), plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(pixels)
     with np.errstate(invalid="ignore"):
         actual = combine_color_to_gray(payload, (0, 1, 2), (0.0, 1.0, 1.0))
@@ -72,7 +73,7 @@ def test_nonfinite_products_are_not_reassociated():
 
 def test_empty_spatial_domain_still_validates_channel_indices():
     payload = ImagePayloadMetadata(
-        source_channel_axis=3, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axes=PayloadAxes.colour_samples(3), plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.empty((1, 0, 2, 3), np.float32))
     with pytest.raises(IndexError):
         combine_color_to_gray(payload, (3,), (1.0,))
@@ -81,7 +82,7 @@ def test_empty_spatial_domain_still_validates_channel_indices():
 @pytest.mark.parametrize("channels", [(), (0, 1, 2)])
 def test_zero_sum_outputs_retain_positive_zero(channels):
     payload = ImagePayloadMetadata(
-        source_channel_axis=3, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axes=PayloadAxes.colour_samples(3), plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.full((2, 2, 2, 3), -0.0, np.float32))
     actual = combine_color_to_gray(payload, channels, (1.0,) * len(channels))
     np.testing.assert_array_equal(actual, np.zeros((2, 2, 2), np.float64))
@@ -102,7 +103,7 @@ def test_registry_preparation_covers_accelerated_consumer_signatures():
     inspect.unwrap(create_composite)(np.ones((3, 4, 6), np.float64), [1, 2, 3])
     pixels = np.ones((2, 4, 6, 3), np.float32)[:, :, ::-1]
     payload = ImagePayloadMetadata(
-        source_channel_axis=3, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axes=PayloadAxes.colour_samples(3), plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(pixels)
     combine_color_to_gray(payload, (0, 1, 2), (1, 2, 3))
     pixels.flags.writeable = False
@@ -110,7 +111,7 @@ def test_registry_preparation_covers_accelerated_consumer_signatures():
     np.testing.assert_array_equal(readonly, np.ones((2, 4, 6)))
     degenerate = np.ones((1, 1, 6, 3), np.float64)
     degenerate_payload = ImagePayloadMetadata(
-        source_channel_axis=3, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axes=PayloadAxes.colour_samples(3), plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(degenerate)
     combine_color_to_gray(degenerate_payload, (0, 1, 2), (1, 2, 3))
     degenerate.flags.writeable = False

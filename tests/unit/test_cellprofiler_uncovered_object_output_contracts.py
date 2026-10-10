@@ -33,10 +33,7 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -261,7 +258,7 @@ def test_image_conversion_preserves_source_pixels_and_metadata(
     assert tuple(rows.iter_row_mappings()) == (
         {"slice_index": 0, "object_count": 2, "mean_area": 9.0, "total_area": 18},
     )
-    source_metadata = image_payload_metadata(image)
+    source_metadata = image.metadata
     assert objects.source_provenance == source_metadata.source_provenance
     assert objects.parent_image_source_voxel_spacing == source_metadata.source_voxel_spacing
     assert objects.source_spatial_domain.source_shape_yx == pixels.shape
@@ -323,9 +320,7 @@ def test_identify_dead_worms_projects_exact_native_measurement_features() -> Non
                     plane_projection=SimpleNamespace(plane_index=None)
                 )
             ),
-            measurement_source_metadata=lambda _specs: image_payload_metadata(
-                label_payload
-            ),
+            measurement_source_metadata=lambda _specs: label_payload.metadata,
             source=SimpleNamespace(source_image_name="CellMask"),
         )
     )

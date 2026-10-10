@@ -6,10 +6,7 @@ import numpy as np
 import pytest
 
 from openhcs.core.aligned_image_payload import ImagePayloadBundleContext
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.processing.backends.cellprofiler.image_math import (
     ImageMathOperation,
     ImageMathOperationStrategy,
@@ -93,7 +90,7 @@ def test_image_math_in_place_reduction_is_bit_exact_to_allocating_reference(
     )
 
     expected = _allocating_reference(operation, operands)
-    assert np.array_equal(image_payload_data(result), expected)
+    assert np.array_equal(result.data, expected)
 
 
 @pytest.mark.parametrize(

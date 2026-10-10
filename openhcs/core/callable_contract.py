@@ -496,9 +496,15 @@ class CallableMetadata:
         )
 
     def raw_main_flow_call_argument(self, source_payload: Any, signature: inspect.Signature) -> Any:
-        """Admit a declared nominal carrier at the canonical image boundary."""
-        from openhcs.core.runtime_image_values import image_payload_data
+        """Pass the main-flow value as the primary parameter declares it.
 
+        A bare array enters the payload family here; a parameter that does not
+        declare the payload's type receives the payload's array.
+        """
+
+        from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
+
+        source_payload = owned_runtime_value(source_payload)
         primary_name = self.primary_input_name(signature.parameters)
         annotation = None if primary_name is None else signature.parameters[primary_name].annotation
         if (
@@ -509,7 +515,7 @@ class CallableMetadata:
         return source_payload if any(
             isinstance(source_payload, argument_type)
             for argument_type in self._nominal_argument_types(annotation)
-        ) else image_payload_data(source_payload)
+        ) or not isinstance(source_payload, ImagePayload) else source_payload.data
 
     def canonical_signature_for(self, func: Any) -> inspect.Signature:
         """Use the prepared semantic ABI; unprepared authoring remains live."""
@@ -1040,7 +1046,6 @@ class CallableContract(ArtifactPlanKeySelector):
             AlignedImageStack,
             pack_aligned_image_outputs,
         )
-        from openhcs.core.runtime_image_values import image_payload_metadata
         from openhcs.core.runtime_output_matching import split_runtime_output
         from openhcs.core.runtime_slice_projection import (
             RuntimeSliceProjection,
@@ -1076,7 +1081,7 @@ class CallableContract(ArtifactPlanKeySelector):
                     "outputs but its compiled plane projection declares "
                     f"{projection.axis_size} value(s)."
                 )
-            output_axis = image_payload_metadata(canonical_output).plane_axis
+            output_axis = canonical_output.metadata.plane_axis
             if output_axis is not projection.axis:
                 raise RuntimeSliceProjectionDeclarationError(
                     f"{function_name} declares {len(canonical_specs)} canonical "

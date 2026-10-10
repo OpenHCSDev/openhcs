@@ -705,12 +705,7 @@ from openhcs.core.runtime_relationships import (
     object_label_parent_child_payload,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-    with_image_payload_data,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_labels import (
     object_label_value_with_dense_labels,
 )
@@ -751,6 +746,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
     SliceBySliceRuntimeParameter,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 HolePredicate = Callable[[int, bool], bool]
 ConnectivityStructureBuilder = Callable[[int], np.ndarray]
@@ -1514,19 +1510,17 @@ def _morph_image_payload(
     size: int,
     operation: Callable[[np.ndarray, np.ndarray], np.ndarray],
 ) -> np.ndarray:
-    pixel_data = image_payload_data(image)
+    image = ImagePayload.of(image)
+    pixel_data = image.data
     result = _morph_image_pixels(pixel_data, structuring_element, size, operation)
-    return with_image_payload_data(
-        image,
-        result.astype(pixel_data.dtype, copy=False),
-        metadata=image_payload_metadata(image).without_unit_interval_intensity_scale(),
-    )
+    return image.with_pixels(result.astype(pixel_data.dtype, copy=False),
+        metadata=image.metadata.without_unit_interval_intensity_scale(),)
 
 
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.FLEXIBLE)
 def closing(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     structuring_element: StructuringElementInput = StructuringElement.DISK,
     size: StructuringElementSize = 3,
     morphology_backend_provider: BackendProviderInput = CellProfilerBackendProvider.NATIVE,
@@ -1548,7 +1542,7 @@ def closing(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.FLEXIBLE)
 def opening(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     structuring_element: StructuringElementInput = StructuringElement.DISK,
     size: StructuringElementSize = 3,
     morphology_backend_provider: BackendProviderInput = CellProfilerBackendProvider.NATIVE,

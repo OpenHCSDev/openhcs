@@ -55,13 +55,7 @@ from openhcs.core.invocation_artifacts import (
     InvocationContractProvider,
     callable_contract_artifact_declarations,
 )
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-    project_image_mask_to_data_domain,
-    with_image_payload_data,
-)
+from openhcs.core.runtime_image_values import project_image_mask_to_data_domain
 
 FunctionPatternCallable: TypeAlias = Callable | FunctionReference
 FunctionPatternSyntax: TypeAlias = Callable | tuple | list | dict
@@ -681,7 +675,7 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     def convert_input(self, payload: object, source_memory_type: str) -> object:
         """Place the active predecessor's image on the compiled input domain."""
         if self._input_memory_type is None:
-            image_payload_data(payload)
+            payload.data
             self.contract.require_memory_types()
         if isinstance(payload, ImagePayloadStackComposition):
             return payload.compose(
@@ -690,17 +684,14 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
             )
         source = MemoryType(source_memory_type)
         if source is self._input_memory_type and not source.is_gpu:
-            mask = image_payload_mask(payload)
+            mask = payload.mask
             if project_image_mask_to_data_domain(
-                mask, payload, metadata=image_payload_metadata(payload)
+                mask, payload, metadata=payload.metadata
             ) is mask:
                 return payload
-        return with_image_payload_data(
-            payload,
-            source.convert_to(
-                image_payload_data(payload), self._input_memory_type, self.input_device_id
-            ),
-        )
+        return payload.with_pixels(source.convert_to(
+                payload.data, self._input_memory_type, self.input_device_id
+            ),)
 
     def main_flow_call_argument(self, source_payload: object) -> object:
         """Apply the captured processing declaration to current request pixels."""

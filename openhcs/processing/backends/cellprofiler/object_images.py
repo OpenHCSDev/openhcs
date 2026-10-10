@@ -26,11 +26,7 @@ from openhcs.core.pipeline.function_contracts import (
 from python_introspect import public_names_from_objects
 from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-    with_image_payload_data,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
@@ -68,6 +64,7 @@ from openhcs.processing.backends.analysis.region_properties import (
 from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 class ImageMode(Enum):
@@ -298,7 +295,7 @@ class Uint16ImageModeRenderer(ImageModeRenderer):
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def convert_image_to_objects(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     cast_to_bool: bool = False,
     preserve_label: bool = False,
     background: int = 0,
@@ -376,7 +373,7 @@ def convert_objects_to_image(
     rendered = ImageModeRenderer.for_enum_member(image_mode).render(
         label_array, colormap_value=colormap_value
     )
-    label_metadata = image_payload_metadata(labels)
+    label_metadata = labels.metadata
     output_metadata = (
         ImagePayloadMetadata(intensity_scale=1.0).with_source_context_from(
             label_metadata
@@ -384,11 +381,8 @@ def convert_objects_to_image(
         if image_mode is ImageMode.UINT16
         else label_metadata
     )
-    return with_image_payload_data(
-        labels,
-        rendered,
-        metadata=output_metadata,
-    )
+    return labels.with_pixels(rendered,
+        metadata=output_metadata,)
 
 
 class ConvertImageToObjectsModule(

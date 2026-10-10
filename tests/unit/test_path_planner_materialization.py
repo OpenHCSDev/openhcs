@@ -38,7 +38,7 @@ from openhcs.core.component_group_scope import (
 )
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.memory import numpy
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_artifact_values import RuntimeValue
@@ -170,7 +170,7 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
         source_memory_type=MEMORY_TYPE_NUMPY,
         declared_source_bindings=scope.execution_plan.source_binding_plan,
     ).execute()
-    np.testing.assert_array_equal(image_payload_data(result), source)
+    np.testing.assert_array_equal(result.data, source)
     return result
 
 

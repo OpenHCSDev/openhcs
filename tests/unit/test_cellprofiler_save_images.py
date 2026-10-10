@@ -38,8 +38,6 @@ from openhcs.core.pipeline.artifact_planning import (
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_plane_projection import (
@@ -52,9 +50,6 @@ from openhcs.core.source_bindings import (
     StepSourceBindingsConfig,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.steps.function_runtime import (
-    project_declared_source_identity,
-)
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
@@ -85,6 +80,7 @@ from openhcs.processing.materialization import (
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.payload_axes import PayloadAxes
 
 
 def _module(**settings: str) -> ModuleBlock:
@@ -484,7 +480,7 @@ def test_save_images_converts_and_materializes_through_registered_image_formats(
 
     np.testing.assert_array_equal(returned_main, main)
     assert np.shares_memory(returned_main, main)
-    assert np.asarray(image_payload_data(converted)).dtype == np.dtype(expected_dtype)
+    assert np.asarray(converted.data).dtype == np.dtype(expected_dtype)
 
     filemanager = FileManager({"memory": MemoryStorageBackend()})
     primary_path = materialize(
@@ -920,7 +916,7 @@ def test_image_output_context_projects_declared_group_lineage_source() -> None:
     source_slices = RuntimeSliceAlignedValues(
         tuple(
             ImagePayloadMetadata(
-                source_channel_axis=-1,
+                axes=PayloadAxes.colour_samples(-1),
                 source_image_names=("OrigRed", "OrigGreen", "OrigBlue"),
                 source_image_provenance_planes=(
                     SourceImageProvenancePlanes.from_components(
@@ -958,10 +954,7 @@ def test_image_output_context_projects_declared_group_lineage_source() -> None:
     )
 
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
-        project_declared_source_identity(
-            source_slices,
-            output_plan.source_context_source(),
-        ),
+        (source_slices).project_declared_source((output_plan.source_context_source()).name),
         np.zeros((3, 2, 2, 3), dtype=np.uint8),
         output_plan,
         RuntimePlaneAxisValueProjection.preserve(
@@ -970,9 +963,7 @@ def test_image_output_context_projects_declared_group_lineage_source() -> None:
         ),
     )
 
-    assert image_payload_metadata(
-        contextualized
-    ).source_image_provenance_planes.paths == tuple(
+    assert contextualized.metadata.source_image_provenance_planes.paths == tuple(
         f"/source/site{site}_D.tif" for site in range(1, 4)
     )
 
@@ -982,7 +973,7 @@ def test_declared_group_lineage_source_overrides_complete_output_identity() -> N
     source_slices = RuntimeSliceAlignedValues(
         tuple(
             ImagePayloadMetadata(
-                source_channel_axis=-1,
+                axes=PayloadAxes.colour_samples(-1),
                 source_image_names=aliases,
                 source_image_provenance_planes=(
                     SourceImageProvenancePlanes.from_components(
@@ -1004,7 +995,7 @@ def test_declared_group_lineage_source_overrides_complete_output_identity() -> N
         )
     )
     complete_output = ImagePayloadMetadata(
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         source_image_names=tuple(alias for _site in range(1, 4) for alias in aliases),
         source_image_provenance_planes=(
@@ -1038,10 +1029,7 @@ def test_declared_group_lineage_source_overrides_complete_output_identity() -> N
     )
 
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
-        project_declared_source_identity(
-            source_slices,
-            output_plan.source_context_source(),
-        ),
+        (source_slices).project_declared_source((output_plan.source_context_source()).name),
         complete_output,
         output_plan,
         RuntimePlaneAxisValueProjection.preserve(
@@ -1050,9 +1038,7 @@ def test_declared_group_lineage_source_overrides_complete_output_identity() -> N
         ),
     )
 
-    assert image_payload_metadata(
-        contextualized
-    ).source_image_provenance_planes.paths == tuple(
+    assert contextualized.metadata.source_image_provenance_planes.paths == tuple(
         f"/source/site{site}_B.tif" for site in range(1, 4)
     )
 
@@ -1095,7 +1081,7 @@ def test_planned_image_output_restores_axis_without_duplicate_provenance() -> No
         ),
     )
 
-    contextualized_metadata = image_payload_metadata(contextualized)
+    contextualized_metadata = contextualized.metadata
     assert contextualized_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert contextualized_metadata.source_image_provenance_planes.paths == (
         metadata.source_image_provenance_planes.paths
@@ -1134,10 +1120,7 @@ def test_image_output_context_removes_selected_source_runtime_axis() -> None:
     )
 
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
-        project_declared_source_identity(
-            source_payload,
-            output_plan.source_context_source(),
-        ),
+        (source_payload).project_declared_source((output_plan.source_context_source()).name),
         np.zeros((2, 2, 3), dtype=np.uint8),
         output_plan,
         RuntimePlaneAxisValueProjection.preserve(
@@ -1146,7 +1129,7 @@ def test_image_output_context_removes_selected_source_runtime_axis() -> None:
         ),
     )
 
-    metadata = image_payload_metadata(contextualized)
+    metadata = contextualized.metadata
     assert metadata.plane_axis is None
     assert metadata.source_path == "/source/blue.tif"
 
@@ -1174,10 +1157,7 @@ def test_image_output_context_preserves_repeated_declared_source_planes() -> Non
     )
 
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
-        project_declared_source_identity(
-            source_payload,
-            output_plan.source_context_source(),
-        ),
+        (source_payload).project_declared_source((output_plan.source_context_source()).name),
         np.zeros((2, 2, 2), dtype=np.uint8),
         output_plan,
         RuntimePlaneAxisValueProjection.preserve(
@@ -1186,9 +1166,7 @@ def test_image_output_context_preserves_repeated_declared_source_planes() -> Non
         ),
     )
 
-    assert image_payload_metadata(
-        contextualized
-    ).source_image_provenance_planes.paths == (
+    assert contextualized.metadata.source_image_provenance_planes.paths == (
         "/source/site1.tif",
         "/source/site2.tif",
     )
@@ -1220,7 +1198,7 @@ def test_image_output_context_accepts_exact_loaded_derived_artifact() -> None:
         None,
     )
 
-    metadata = image_payload_metadata(contextualized)
+    metadata = contextualized.metadata
     assert metadata.source_image_provenance_planes.paths == ("/source/original.tif",)
     assert metadata.source_image_names == ("OutlinedNatural",)
 
@@ -1249,9 +1227,9 @@ def test_save_images_bit_depth_conversion_preserves_image_metadata() -> None:
 
     converted = SaveImagesBitDepth.UINT16.convert(payload)
 
-    assert image_payload_metadata(converted) == metadata
-    assert np.asarray(image_payload_data(converted)).dtype == np.uint16
+    assert converted.metadata == metadata
+    assert np.asarray(converted.data).dtype == np.uint16
     np.testing.assert_array_equal(
-        image_payload_data(converted),
+        converted.data,
         np.asarray(((0, 65535), (16384, 49151)), dtype=np.uint16),
     )

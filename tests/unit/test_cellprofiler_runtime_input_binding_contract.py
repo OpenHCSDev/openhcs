@@ -25,7 +25,7 @@ from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneProjection,
@@ -211,7 +211,7 @@ def test_declared_input_occurrence_owns_callable_parameter_binding() -> None:
     ).bind_parameters()
 
     assert tuple(bound) == ("mask",)
-    np.testing.assert_array_equal(image_payload_data(bound["mask"]), 1.0)
+    np.testing.assert_array_equal(bound["mask"].data, 1.0)
 
 
 def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> None:
@@ -318,7 +318,7 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
     ).bind_parameters()
 
     np.testing.assert_array_equal(
-        image_payload_data(stack_bound["mask"]), image_payload_data(mask_payload)
+        stack_bound["mask"].data, mask_payload.data
     )
 
     selected_stack_adapter = cellprofiler_runtime_adapter_for_test(
@@ -341,7 +341,7 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
     ).bind_parameters()
 
     np.testing.assert_array_equal(
-        image_payload_data(selected_stack_bound["mask"]),
+        selected_stack_bound["mask"].data,
         2,
     )
 
@@ -374,7 +374,7 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
             current_image=source_payload,
         ).bind_parameters()
 
-        np.testing.assert_array_equal(image_payload_data(bound["mask"]), index + 1)
+        np.testing.assert_array_equal(bound["mask"].data, index + 1)
 
 
 def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> None:
@@ -470,7 +470,7 @@ def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> 
         current_image=source_stack,
     ).bind_parameters()
 
-    np.testing.assert_array_equal(image_payload_data(bound["mask"]), 1.0)
+    np.testing.assert_array_equal(bound["mask"].data, 1.0)
 
 
 def _artifact_availability_adapter(

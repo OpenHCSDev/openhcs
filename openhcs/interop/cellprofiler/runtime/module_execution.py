@@ -43,7 +43,6 @@ from openhcs.core.runtime_adapters import (
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    image_payload_metadata,
     preserved_image_plane_projection,
 )
 from openhcs.core.runtime_measurements import MeasurementTable
@@ -705,7 +704,7 @@ class CellProfilerModuleExecutor:
         )
         plane_projection = (
             preserved_image_plane_projection(payload, adapter, source_aliases)
-            if image_payload_metadata(payload).plane_axis is not None
+            if payload.metadata.plane_axis is not None
             else None
         )
         return CellProfilerMeasurementImage(
@@ -1291,7 +1290,7 @@ class CellProfilerModuleExecutor:
             if (
                 runtime_projection is not None
                 and runtime_projection.plane_index is not None
-                and image_payload_metadata(current_image_payload).plane_axis
+                and current_image_payload.metadata.plane_axis
                 is runtime_projection.axis
             ):
                 current_image_payload = cast(

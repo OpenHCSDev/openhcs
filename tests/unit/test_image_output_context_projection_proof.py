@@ -7,12 +7,7 @@ from openhcs.core.artifacts import (
     GroupLineageSourceRelation,
     ImageArtifactType,
 )
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-    with_image_payload_data,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -20,6 +15,8 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import PayloadAxes
 
 
 
@@ -53,12 +50,9 @@ def _scalar_rgb_output():
             "timepoint": "1",
         },
         source_image_names=(source_spec.name,),
-        source_channel_axis=2,
+        axes=PayloadAxes.colour_samples(2),
     ).payload_with(np.ones((4, 5, 3), dtype=np.float32), None)
-    output = with_image_payload_data(
-        source,
-        np.ones((4, 5, 3), dtype=np.uint8),
-    )
+    output = source.with_pixels(np.ones((4, 5, 3), dtype=np.uint8),)
     output_plan = ArtifactOutputPlan(
         name="SavedColorNeighbors",
         path="/memory/SavedColorNeighbors.png",
@@ -87,7 +81,7 @@ def test_projected_variable_stack_proves_source_ownership_once(
         ),
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
     output = (
-        image_payload_metadata(source)
+        source.metadata
         .replace_fields(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         )
@@ -118,9 +112,9 @@ def test_projected_variable_stack_proves_source_ownership_once(
     assert projection.axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert projection.axis_size == 2
     np.testing.assert_array_equal(
-        image_payload_data(result), image_payload_data(output)
+        result.data, output.data
     )
-    assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_derived_2d_image_does_not_inherit_input_runtime_plane_axis() -> None:
@@ -149,16 +143,16 @@ def test_derived_2d_image_does_not_inherit_input_runtime_plane_axis() -> None:
 
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
-        image_payload_metadata(source)
+        source.metadata
         .collapse_leading_plane_axis()
         .payload_with(np.ones((4, 5), dtype=np.float32), None),
         output_plan,
         RuntimePlaneProjection.stack(2),
     )
 
-    assert image_payload_data(result).shape == (4, 5)
-    assert image_payload_metadata(result).plane_axis is None
-    assert image_payload_metadata(result).source_image_provenance_planes.count == 2
+    assert result.data.shape == (4, 5)
+    assert result.metadata.plane_axis is None
+    assert result.metadata.source_image_provenance_planes.count == 2
 
 
 def test_bare_full_stack_image_inherits_source_runtime_plane_axis() -> None:
@@ -182,8 +176,8 @@ def test_bare_full_stack_image_inherits_source_runtime_plane_axis() -> None:
         RuntimePlaneProjection.stack(2),
     )
 
-    assert image_payload_data(result).shape == (2, 4, 5)
-    assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.data.shape == (2, 4, 5)
+    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_derived_image_preserves_explicit_output_runtime_plane_axis() -> None:
@@ -210,8 +204,8 @@ def test_derived_image_preserves_explicit_output_runtime_plane_axis() -> None:
         RuntimePlaneProjection.stack(2),
     )
 
-    assert image_payload_data(result).shape == (2, 4, 5)
-    assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.data.shape == (2, 4, 5)
+    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_projected_crop_preserves_complete_spatial_domain_after_plane_composition() -> (
@@ -267,8 +261,8 @@ def test_projected_crop_preserves_complete_spatial_domain_after_plane_compositio
     )
 
     assert result is output
-    assert image_payload_metadata(result).source_spatial_domain == (
-        image_payload_metadata(cropped_planes[0]).source_spatial_domain
+    assert result.metadata.source_spatial_domain == (
+        cropped_planes[0].metadata.source_spatial_domain
     )
 
 
@@ -291,8 +285,8 @@ def test_projected_scalar_rgb_proves_complete_identity_once(
     assert projection.axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert projection.axis_size == 1
     assert result is output
-    assert image_payload_metadata(result).plane_axis is None
-    assert image_payload_metadata(result).normalized_source_channel_axis(result) == 2
+    assert result.metadata.plane_axis is None
+    assert result.metadata.axis_index(ColourAxis, result) == 2
 
 
 def test_owned_variable_output_without_projector_returns_after_one_proof(

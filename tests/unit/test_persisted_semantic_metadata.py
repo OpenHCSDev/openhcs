@@ -14,7 +14,6 @@ from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
-    image_payload_metadata,
 )
 from openhcs.core.source_binding_selection import SourcePatternResolutionContext
 from openhcs.core.source_image_provenance import (
@@ -211,7 +210,7 @@ def test_legacy_projection_replay_uses_complete_top_level_source_metadata() -> N
         VirtualWorkspacePathLookup.from_paths(VIRTUAL_PATH, VIRTUAL_PATH), payload
     )
 
-    assert image_payload_metadata(projected).source_component_metadata["site"] == "1"
+    assert projected.metadata.source_component_metadata["site"] == "1"
 
 
 def test_site_collapsed_serialize_read_project_roundtrip_keeps_semantics() -> None:
@@ -238,7 +237,7 @@ def test_site_collapsed_serialize_read_project_roundtrip_keeps_semantics() -> No
     projected = workspace.project_unbound_payload(
         VirtualWorkspacePathLookup.from_paths(VIRTUAL_PATH, VIRTUAL_PATH), payload
     )
-    metadata = image_payload_metadata(projected)
+    metadata = projected.metadata
 
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",

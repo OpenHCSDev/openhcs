@@ -6,7 +6,6 @@ from _thread import LockType
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from dataclasses import InitVar, dataclass, field, fields, replace
-from enum import Enum
 from threading import Lock
 from typing import Any, ClassVar, Mapping, TYPE_CHECKING
 
@@ -20,7 +19,6 @@ from openhcs.core.image_payload_execution_mode import (
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ArtifactSpecRef
 from openhcs.core.memory import (
-    MEMORY_TYPE_NUMPY,
     MemoryType,
     convert_memory,
     detect_memory_type,
@@ -28,20 +26,15 @@ from openhcs.core.memory import (
     runtime_slice_stack_geometry,
 )
 from openhcs.core.runtime_image_values import (
+    ImagePayload,
     ImagePayloadMetadata,
     ImagePayloadSliceProjector,
-    ImagePayloadMetadataCarrier,
     ImagePayloadMetadataCompositionMode,
     ImageMaskDomain,
-    image_payload_data,
-    image_payload_geometry,
-    image_payload_mask,
-    image_payload_metadata,
     project_image_mask_to_data_domain,
     preserved_image_plane_projection,
-    with_image_payload_data,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData, RuntimeArrayPayload
+from openhcs.core.runtime_array_values import RuntimeArrayData, array_geometry
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
@@ -52,11 +45,11 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
 from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
     SourceSpatialDomainAdapter,
 )
+from openhcs.core.axes import ColourAxis
 
 if TYPE_CHECKING:
     from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -71,29 +64,26 @@ if TYPE_CHECKING:
 class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
     """Source-domain adapter for image payload data and masks."""
 
-    value_type = ImagePayloadMetadataCarrier
-    value_type_label = "image_payload"
     value: Any
     source_domain: SourceSpatialDomain
     domain = AliasProperty[SourceSpatialDomain]("source_domain")
 
     @property
     def array(self) -> Any:
-        return image_payload_data(self.value)
+        return self.value.data
+
+    @property
+    def metadata(self) -> ImagePayloadMetadata:
+        """Return the image metadata that declares this value's axes."""
+        return self.value.metadata
 
     @classmethod
-    def for_value(
-        cls,
-        value: Any,
-        *,
-        source_shape_override_yx: tuple[int, int] | None = None,
-    ) -> "ImagePayloadSourceSpatialDomainAdapter | None":
-        if not isinstance(value, ImagePayloadMetadataCarrier):
-            return None
+    def for_payload(cls, value: ImagePayload) -> "ImagePayloadSourceSpatialDomainAdapter":
+        """Place an image payload in the source domain its metadata declares."""
         return cls(
             value,
             cls.domain_from_metadata(
-                image_payload_metadata(value),
+                value.metadata,
                 value_name="Image payload",
             ),
         )
@@ -118,7 +108,7 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
 
     @property
     def spatial_axes_yx(self) -> tuple[int, int]:
-        axes = image_payload_metadata(self.value).spatial_axes_yx(self.value)
+        axes = self.metadata.spatial_axes_yx(self.value)
         if axes is None:
             raise ValueError(
                 "Source-spatial image payload metadata does not declare two "
@@ -128,7 +118,7 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
 
     @property
     def spatial_shape_yx(self) -> tuple[int, int]:
-        shape = image_payload_metadata(self.value).spatial_shape_yx(self.value)
+        shape = self.metadata.spatial_shape_yx(self.value)
         if shape is None:
             raise ValueError(
                 "Source-spatial image payloads require at least two dimensions, "
@@ -176,7 +166,7 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
         payload: RuntimeArrayData,
         source_domain: SourceSpatialDomain,
     ) -> RuntimeArrayData:
-        metadata = image_payload_metadata(payload)
+        metadata = payload.metadata
         source_extent = source_domain.with_origin_yx(None)
         source_metadata = metadata.with_materialized_source_domain(source_extent)
         data = cls(
@@ -199,10 +189,10 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
         metadata: ImagePayloadMetadata,
         source_domain: SourceSpatialDomain,
     ) -> RuntimeArrayData | None:
-        mask = image_payload_mask(payload)
+        mask = payload.mask
         if mask is None:
             return None
-        return NumPyImagePayloadSourceSpatialDomainAdapter(
+        return BareArraySourceSpatialDomainAdapter(
             mask,
             cls.domain_from_metadata(
                 metadata,
@@ -224,17 +214,15 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
             source_shape_yx=target.payload_domain.source_shape_yx,
         )
         metadata = replace(
-            image_payload_metadata(materialized),
+            materialized.metadata,
             source_spatial_domain=target_domain,
             physical_border_edges_yx=target_domain.physical_border_edges_for_shape(
                 target.payload_domain.spatial_shape_yx
             ),
         )
-        materialized_mask = image_payload_mask(materialized)
-        return with_image_payload_data(
-            materialized,
-            target.extract_source_array(
-                image_payload_data(materialized),
+        materialized_mask = materialized.mask
+        return materialized.with_pixels(target.extract_source_array(
+                materialized.data,
                 spatial_axes_yx=self.spatial_axes_yx,
             ),
             mask=(
@@ -245,27 +233,21 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
                     spatial_axes_yx=self.spatial_axes_yx,
                 )
             ),
-            metadata=metadata,
-        )
+            metadata=metadata,)
 
 
-class NumPyImagePayloadSourceSpatialDomainAdapter(
+class BareArraySourceSpatialDomainAdapter(
     ImagePayloadSourceSpatialDomainAdapter
 ):
-    """Source-domain adapter for raw NumPy image arrays."""
-
-    value_type = np.ndarray
-    value_type_label = "numpy_image"
+    """Source-domain adapter for bare pixels, which declare no placement."""
 
     @classmethod
-    def for_value(
+    def for_array(
         cls,
         value: Any,
         *,
         source_shape_override_yx: tuple[int, int] | None = None,
-    ) -> "NumPyImagePayloadSourceSpatialDomainAdapter | None":
-        if not isinstance(value, np.ndarray):
-            return None
+    ) -> "BareArraySourceSpatialDomainAdapter":
         return cls(
             value,
             SourceSpatialDomain(
@@ -281,14 +263,9 @@ class NumPyImagePayloadSourceSpatialDomainAdapter(
         return self.value
 
     @property
-    def spatial_shape_yx(self) -> tuple[int, int]:
-        shape = ImagePayloadMetadata().spatial_shape_yx(self.value)
-        if shape is None:
-            raise ValueError(
-                "NumPy source-spatial image payloads require at least two "
-                f"dimensions, got shape {tuple(np.shape(self.value))!r}."
-            )
-        return shape
+    def metadata(self) -> ImagePayloadMetadata:
+        """Bare arrays declare nothing; the active family's defaults apply."""
+        return ImagePayloadMetadata()
 
     def value_in_payload_domain(
         self,
@@ -305,21 +282,8 @@ class NumPyImagePayloadSourceSpatialDomainAdapter(
 class ObjectLabelPayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
     """Source-domain adapter for object-label payload values."""
 
-    value_type = ObjectLabelValue
-    value_type_label = "object_label_payload"
     value: ObjectLabelValue
     source_shape_override_yx: tuple[int, int] | None = None
-
-    @classmethod
-    def for_value(
-        cls,
-        value: Any,
-        *,
-        source_shape_override_yx: tuple[int, int] | None = None,
-    ) -> "ObjectLabelPayloadSourceSpatialDomainAdapter | None":
-        if not isinstance(value, ObjectLabelValue):
-            return None
-        return cls(value, source_shape_override_yx=source_shape_override_yx)
 
     @property
     def array(self) -> Any:
@@ -334,12 +298,13 @@ class ObjectLabelPayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
     @property
     def spatial_axes_yx(self) -> tuple[int, int]:
         array = np.asarray(self.array)
-        if array.ndim < 2:
+        axes = self.value.metadata.spatial_axes_yx(array)
+        if axes is None:
             raise ValueError(
-                "Object-label source-spatial payloads require at least two "
-                f"dimensions, got shape {array.shape!r}."
+                "Object-label source-spatial payloads require two declared "
+                f"spatial axes, got shape {array.shape!r}."
             )
-        return array.ndim - 2, array.ndim - 1
+        return axes
 
     def dense_variant(self, labels: object) -> object:
         """Materialize one label variant through its nominal object-label carrier."""
@@ -380,15 +345,15 @@ class AlignedImageStackKwargResolver:
     reference_payload: Any | None = None
 
     def resolve(self, value: Any) -> Any:
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionStrategy
+        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
-        return RuntimeSliceProjectionStrategy.aligned_kwarg_value(value, self)
+        return RuntimeSliceProjection.aligned_value(value, self)
 
     def resolve_source_spatial_value(self, value: Any) -> Any:
         """Project a nominal value into the declared reference payload domain."""
         if self.reference_payload is None:
             return value
-        metadata = image_payload_metadata(self.reference_payload)
+        metadata = self.reference_payload.metadata
         source_shape = metadata.source_spatial_domain.source_shape_yx
         if source_shape is None:
             return value
@@ -436,16 +401,15 @@ class ImagePayloadStackComposition(ABC):
     ) -> RuntimeArrayData:
         """Compose a selected admissible input cohort in its declared image domain."""
         if len(payloads) == 1 and (
-            image_payload_metadata(payloads[0]).persists_whole_image()
+            payloads[0].metadata.persists_whole_image()
             or (
                 producer_records
                 and len(producer_records) == 1
                 and producer_records[0].main_flow_plane_axis
-                is image_payload_metadata(payloads[0]).plane_axis
+                is payloads[0].metadata.plane_axis
             )
         ):
-            main_data_stack = ImagePayloadStackComposition.copy_whole_image(
-                payloads[0],
+            main_data_stack = payloads[0].copied(
                 memory_type=execution_plan.input_memory_type,
                 device_id=execution_plan.device_id_for(execution_plan.input_memory_type),
             )
@@ -482,38 +446,6 @@ class ImagePayloadStackComposition(ABC):
         return main_data_stack
 
     @staticmethod
-    def copy_whole_image(
-        value: RuntimeArrayData,
-        *,
-        memory_type: str,
-        device_id: int | None,
-    ) -> RuntimeArrayData:
-        """Copy pixels, mask and metadata without adding a composition axis."""
-        if isinstance(value, ImagePayloadStackComposition):
-            return value.copy_input_cohort(
-                memory_type=memory_type, device_id=device_id,
-            )
-        copied_data = stack_runtime_slices(
-            (image_payload_data(value),), memory_type, device_id,
-        )[0]
-        mask = image_payload_mask(value)
-        copied_mask = (
-            None if mask is None
-            else stack_runtime_slices((mask,), memory_type, device_id)[0]
-        )
-        return image_payload_metadata(value).replace_fields().payload_with(
-            copied_data, copied_mask,
-        )
-
-    def copy_input_cohort(
-        self, *, memory_type: str, device_id: int | None,
-    ) -> RuntimeArrayData:
-        """Copy the dense image domain owned by this composition."""
-        return self.copy_whole_image(
-            self.compose(), memory_type=memory_type, device_id=device_id,
-        )
-
-    @staticmethod
     def with_saved_output_context(
         stack_payload: RuntimeArrayData,
         payloads: Sequence[RuntimeArrayData],
@@ -522,27 +454,26 @@ class ImagePayloadStackComposition(ABC):
         single_output_plane_axis: RuntimePlaneAxis | None,
     ) -> RuntimeArrayData:
         """Attach saved member context without replacing the independent buffer."""
-        data = image_payload_data(stack_payload)
-        current_intensity = image_payload_metadata(stack_payload)
+        data = stack_payload.data
+        current_intensity = stack_payload.metadata
         if (
             len(payloads) == 1
             and single_output_plane_axis is metadata[0].plane_axis
-            and np.shape(data) == np.shape(image_payload_data(payloads[0]))
+            and np.shape(data) == np.shape(payloads[0].data)
         ):
             return metadata[0].with_current_intensity_from(current_intensity).payload_with(
-                data, image_payload_mask(stack_payload),
+                data, stack_payload.mask,
             )
         if np.shape(data)[:1] != (len(payloads),):
             raise ValueError(
                 "Output stack must match its declared output slice count: "
                 f"stack shape {np.shape(data)!r}, slice count {len(payloads)}."
             )
+        stack_plane_axis = stack_payload.metadata.plane_axis
         mode = (
-            ImagePayloadMetadataCompositionMode.for_plane_axis(
-                image_payload_metadata(stack_payload).plane_axis,
-            )
-            if isinstance(stack_payload, ImagePayloadMetadataCarrier)
-            else ImagePayloadMetadataCompositionMode.STACK
+            ImagePayloadMetadataCompositionMode.STACK
+            if stack_plane_axis is None
+            else ImagePayloadMetadataCompositionMode.for_plane_axis(stack_plane_axis)
         )
         output_metadata = ImagePayloadMetadata.compose(
             tuple(payloads), mode=mode, source_metadata=tuple(
@@ -558,7 +489,7 @@ class ImagePayloadStackComposition(ABC):
         self, payloads: Sequence[Any] | None = None,
     ) -> tuple[ImagePayloadMetadata, ...]:
         return tuple(
-            self.composition_payload_metadata(image_payload_metadata(payload))
+            self.composition_payload_metadata(payload.metadata)
             for payload in (self.composition_payloads if payloads is None else payloads)
         )
 
@@ -573,7 +504,7 @@ class ImagePayloadStackComposition(ABC):
         payloads: tuple[RuntimeArrayData, ...], *,
         memory_type: str | None = None, device_id: int | None = None,
     ) -> tuple[str, int | None]:
-        """Resolve one composition destination through the original memory owner."""
+        """Resolve where a composition is placed: explicitly, else beside its first payload."""
         if memory_type is not None:
             return memory_type, device_id
         memory_type = detect_memory_type(payloads[0])
@@ -582,14 +513,14 @@ class ImagePayloadStackComposition(ABC):
     def compose(
         self, *, memory_type: str | None = None, device_id: int | None = None,
     ) -> Any:
-        # Resolve the destination from the original carrier before reconciliation.
+        # Resolve the destination from the input payloads before reconciling intensity.
         memory_type, device_id = self.composition_memory_domain(
-            tuple(image_payload_data(payload) for payload in self.composition_payloads),
+            tuple(payload.data for payload in self.composition_payloads),
             memory_type=memory_type, device_id=device_id,
         )
         payloads = ImagePayloadMetadata.intensity_coherent_payloads(self.composition_payloads)
         composed = self.compose_unmasked(
-            tuple(image_payload_data(payload) for payload in payloads),
+            tuple(payload.data for payload in payloads),
             memory_type=memory_type, device_id=device_id,
         )
         metadata = ImagePayloadMetadata.compose(
@@ -622,11 +553,12 @@ class ImagePayloadStackComposition(ABC):
 class ImagePayloadStackContext(ImagePayloadStackComposition):
     """Explicit dense stack inputs; the ancestor owns composition."""
 
-    payloads: Sequence[RuntimeArrayData]
+    payloads: Sequence[ImagePayload]
     metadata_mode: ImagePayloadMetadataCompositionMode
 
     def __post_init__(self) -> None:
-        self.payloads = tuple(self.payloads)
+        # Stack members arrive as payloads or as bare producer arrays.
+        self.payloads = tuple(ImagePayload.of(payload) for payload in self.payloads)
         if not self.payloads:
             raise ValueError("Cannot stack an empty image payload sequence.")
 
@@ -659,7 +591,7 @@ def _stack_image_payload_mask(
     *,
     output_mask_domain: ImageMaskDomain | None = None,
 ) -> RuntimeArrayData | None:
-    masks = tuple(image_payload_mask(payload) for payload in image_payloads)
+    masks = tuple(payload.mask for payload in image_payloads)
     if not any(mask is not None for mask in masks):
         return None
     payloads = tuple(image_payloads)
@@ -686,7 +618,7 @@ def _stack_image_payload_mask(
         stacked_mask_shape
     ):
         resolved_masks = tuple(
-            image_payload_metadata(payload)
+            payload.metadata
             .mask_domain(slice_domain)
             .broadcast_to_data(mask)
             for payload, slice_domain, mask in zip(
@@ -705,7 +637,7 @@ def _complete_image_payload_mask(
     payload_data: RuntimeArrayData,
     mask: RuntimeArrayData | None,
 ) -> RuntimeArrayData:
-    mask_domain = image_payload_metadata(payload).mask_domain(payload_data)
+    mask_domain = payload.metadata.mask_domain(payload_data)
     if mask is not None:
         if not mask_domain.accepts(tuple(np.shape(mask))):
             raise ValueError(
@@ -714,11 +646,10 @@ def _complete_image_payload_mask(
                 f"{tuple(np.shape(payload_data))!r}."
             )
         return project_image_mask_to_data_domain(
-            mask, payload_data, metadata=image_payload_metadata(payload),
+            mask, payload_data, metadata=payload.metadata,
         )
-    data = image_payload_data(payload_data)
-    return MemoryType(detect_memory_type(data)).ones_like(
-        data, shape=mask_domain.default_mask_shape(), dtype=bool,
+    return MemoryType(detect_memory_type(payload_data)).ones_like(
+        payload_data, shape=mask_domain.default_mask_shape(), dtype=bool,
     )
 
 
@@ -729,10 +660,10 @@ def unstack_image_payload_context(
     default_plane_axis: RuntimePlaneAxis | None = None,
 ) -> list[Any]:
     """Attach one source plane of payload context to each unstacked image slice."""
-    mask = image_payload_mask(payload)
-    metadata = image_payload_metadata(payload)
+    mask = payload.mask
+    metadata = payload.metadata
     if mask is None and not metadata.has_values:
-        return list(slices)
+        return [metadata.payload_with(image_slice) for image_slice in slices]
     if metadata.plane_axis is None and default_plane_axis is not None:
         metadata = replace(metadata, plane_axis=default_plane_axis)
     projector = ImagePayloadSliceProjector(mask=mask, metadata=metadata)
@@ -749,9 +680,7 @@ class ImagePayloadComposition:
     @property
     def plane_axis(self) -> RuntimePlaneAxis | None:
         """Return the invocation axis, distinct from a bundle's inner source axis."""
-        if isinstance(self.payload, AlignedImageStack):
-            return RuntimePlaneAxis.RUNTIME_SLICE
-        return image_payload_metadata(self.payload).plane_axis
+        return self.payload.invocation_plane_axis
 
     def preserved_plane_projection(
         self,
@@ -786,7 +715,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
                 index,
                 metadata.plane_axis,
                 metadata.source_image_names,
-                tuple(np.shape(image_payload_data(payload))),
+                tuple(np.shape(payload.data)),
             )
             for index, (payload, metadata) in enumerate(
                 zip(self.payloads, self.source_metadata, strict=True)
@@ -805,11 +734,11 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
 
     @property
     def data_payloads(self) -> tuple[RuntimeArrayData, ...]:
-        return tuple(image_payload_data(payload) for payload in self.payloads)
+        return tuple(payload.data for payload in self.payloads)
 
     @property
     def masks(self) -> tuple[RuntimeArrayData | None, ...]:
-        return tuple(image_payload_mask(payload) for payload in self.payloads)
+        return tuple(payload.mask for payload in self.payloads)
 
     @property
     def present_masks(self) -> tuple[RuntimeArrayData, ...]:
@@ -853,7 +782,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
                 strict=True,
             )
         )
-        shapes = tuple(image_payload_geometry(mask).shape for mask in resolved_masks)
+        shapes = tuple(array_geometry(mask).shape for mask in resolved_masks)
         if any(shape != shapes[0] for shape in shapes[1:]):
             resolved_masks = tuple(
                 metadata.for_leading_source_plane(index)
@@ -861,12 +790,12 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
                 .broadcast_to_data(mask)
                 for index, mask in enumerate(resolved_masks)
             )
-        memory_type = detect_memory_type(image_payload_data(composed))
+        memory_type = detect_memory_type(composed)
         memory_type_owner = MemoryType(memory_type)
         stacked = stack_runtime_slices(
             resolved_masks,
             memory_type,
-            memory_type_owner.device_id_of(image_payload_data(composed)),
+            memory_type_owner.device_id_of(composed),
         )
         return memory_type_owner.astype(stacked, bool)
 
@@ -880,7 +809,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
                 "Image bundle mask intersection requires one exact declared "
                 f"spatial mask shape; got {mask_shapes!r}."
             )
-        data = image_payload_data(composed)
+        data = composed
         memory_type = MemoryType(detect_memory_type(data))
         device_id = memory_type.device_id_of(data)
         prepared = tuple(
@@ -908,7 +837,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
             payloads, memory_type=memory_type, device_id=device_id,
         )
         channel_axes = tuple(
-            metadata.normalized_source_channel_axis(payload)
+            metadata.axis_index(ColourAxis, payload)
             for payload, metadata in zip(
                 payloads,
                 self.source_metadata,
@@ -1115,14 +1044,14 @@ class AlignedImageSliceContext:
 
         if self.is_anonymous_main_flow:
             return payload
-        metadata = image_payload_metadata(payload)
+        metadata = payload.metadata
         return metadata.with_source_provenance(
             metadata.source_provenance.with_derived_source_image_names(
                 (self.output_key,)
             )
         ).payload_with(
-            image_payload_data(payload),
-            image_payload_mask(payload),
+            payload.data,
+            payload.mask,
         )
 
     def matches_artifact_ref(self, artifact_ref: ArtifactSpecRef) -> bool:
@@ -1149,9 +1078,7 @@ class AlignedImageSliceContext:
 
 
 @dataclass(slots=True)
-class ImagePayloadSliceStack(
-    ImagePayloadStackComposition, RuntimeArrayPayload, ImagePayloadMetadataCarrier,
-):
+class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
     """Shared slice storage, projection, and publication for image stacks."""
 
     slices: tuple[Any, ...]
@@ -1164,7 +1091,7 @@ class ImagePayloadSliceStack(
         memory_type: str,
         plane_axis: RuntimePlaneAxis,
     ) -> "ProducedImageStack":
-        """Admit a produced literal image stack without allocating its pixels."""
+        """Wrap produced image slices as a stack without allocating its pixels."""
         return ProducedImageStack(
             tuple(slices), memory_type=memory_type, plane_axis=plane_axis,
         )
@@ -1180,7 +1107,7 @@ class ImagePayloadSliceStack(
     @property
     def shape(self) -> tuple[int, ...]:
         return runtime_slice_stack_geometry(
-            tuple(image_payload_geometry(payload) for payload in self.composition_payloads)
+            tuple(array_geometry(payload) for payload in self.composition_payloads)
         ).shape
 
     @property
@@ -1189,7 +1116,7 @@ class ImagePayloadSliceStack(
 
     @property
     def dtype(self) -> Any:
-        return image_payload_data(self.compose()).dtype
+        return self.compose().data.dtype
 
     def __array__(self, dtype: Any | None = None, copy: bool | None = None) -> Any:
         data = np.asarray(self.array_payload_data(), dtype=dtype)
@@ -1201,20 +1128,23 @@ class ImagePayloadSliceStack(
     def __len__(self) -> int:
         return len(self.slices)
 
-    def image_data(self) -> Any:
-        return self.array_payload_data()
+    @property
+    def data(self) -> Any:
+        return self.compose().data
 
-    def image_geometry(self) -> ArrayGeometry:
+    @property
+    def geometry(self) -> ArrayGeometry:
         return ArrayGeometry(self.shape)
 
-    def image_mask(self) -> Any | None:
-        return image_payload_mask(self.compose())
+    @property
+    def mask(self) -> Any | None:
+        return self.compose().mask
 
     def array_payload_data(self) -> Any:
-        return image_payload_data(self.compose())
+        return self.compose().data
 
     def with_data(self, data: Any) -> Any:
-        return self.metadata.payload_with(data, image_payload_mask(self.compose()))
+        return self.metadata.payload_with(data, self.compose().mask)
 
     @property
     def composition_payloads(self) -> tuple[Any, ...]:
@@ -1225,9 +1155,39 @@ class ImagePayloadSliceStack(
         """Declare the outer runtime axis retained by projected output members."""
         return self.composition_metadata_mode
 
-    @property
     def runtime_slice_count(self) -> int | None:
         return len(self.slices)
+
+    def alignment_slices(self) -> tuple[Any, ...]:
+        return self.slices
+
+    def map_slices(self, transform: Any) -> "ImagePayloadSliceStack":
+        return self.with_slices(tuple(transform(image_slice) for image_slice in self.slices))
+
+    def output_slices(self) -> tuple[Any, ...]:
+        return tuple(output for output, _context in self.projected_output_slices())
+
+    def full_stack_value(self) -> Any:
+        return self.compose()
+
+    def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
+        if context.axis is self.composition_metadata_mode.plane_axis:
+            return self.aligned_slice(
+                context.require_plane_index(),
+                context.axis_size,
+            )
+        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+        projected_slices = tuple(
+            RuntimeSliceProjection.value_for_slice(image_slice, context)
+            for image_slice in self.slices
+        )
+        if all(
+            projected is image_slice
+            for projected, image_slice in zip(projected_slices, self.slices, strict=True)
+        ):
+            return self
+        return self.with_slices(projected_slices)
 
     def plane_axis_for_output_context(
         self, context: AlignedImageSliceContext,
@@ -1235,8 +1195,31 @@ class ImagePayloadSliceStack(
         """An explicitly aligned stack declares its outer runtime-slice domain."""
         return RuntimePlaneAxis.RUNTIME_SLICE
 
+    @property
+    def owns_output_surfaces(self) -> bool:
+        """Each slice is a separately declared output surface."""
+        return True
+
+    def main_output_slices(
+        self, unstack: Any,
+    ) -> tuple[tuple[Any, AlignedImageSliceContext | None], ...]:
+        del unstack
+        return tuple(self.projected_output_slices())
+
+    def output_stack_copy(
+        self,
+        projected_outputs: Sequence[tuple[Any, AlignedImageSliceContext | None]],
+        *,
+        memory_type: str,
+        device_id: int | None,
+    ) -> RuntimeArrayData | None:
+        return self.copy_projected_output_stack(
+            projected_outputs, memory_type=memory_type, device_id=device_id,
+        )
+
     def __post_init__(self) -> None:
-        self.slices = tuple(self.slices)
+        # Producers hand over bare arrays and payloads alike; members are payloads.
+        self.slices = tuple(ImagePayload.of(image_slice) for image_slice in self.slices)
         self.slice_contexts = tuple(self.slice_contexts)
         if not self.slices:
             raise ValueError(f"{type(self).__name__}.slices cannot be empty.")
@@ -1271,15 +1254,13 @@ class ImagePayloadSliceStack(
 
         return type(self)(tuple(slices), self.slice_contexts)
 
-    def copy_input_cohort(
+    def copied(
         self, *, memory_type: str, device_id: int | None,
     ) -> "ImagePayloadSliceStack":
-        """Retain aligned member domains while admitting independent buffers."""
+        """Retain aligned member domains while copying them into independent buffers."""
         return self.with_slices(
             tuple(
-                self.copy_whole_image(
-                    payload, memory_type=memory_type, device_id=device_id,
-                )
+                payload.copied(memory_type=memory_type, device_id=device_id)
                 for payload in self.slices
             )
         )
@@ -1290,10 +1271,10 @@ class ImagePayloadSliceStack(
         """Project each output once together with its declaration-owned context."""
         contexts = self.slice_contexts or (None,) * len(self.slices)
         for payload, context in zip(self.slices, contexts, strict=True):
-            if image_payload_metadata(payload).persists_whole_image():
+            if payload.metadata.persists_whole_image():
                 yield payload, context
             else:
-                for output_slice in payload_slices_for_alignment(payload):
+                for output_slice in payload.alignment_slices():
                     yield output_slice, context
 
     def copy_projected_output_stack(
@@ -1307,10 +1288,8 @@ class ImagePayloadSliceStack(
         payloads = tuple(payload for payload, _context in projected_outputs)
         metadata_mode = self.projected_output_composition_mode
         if metadata_mode is None:
-            return self.copy_whole_image(
-                payloads[0], memory_type=memory_type, device_id=device_id,
-            )
-        data = tuple(image_payload_data(payload) for payload in payloads)
+            return payloads[0].copied(memory_type=memory_type, device_id=device_id)
+        data = tuple(payload.data for payload in payloads)
         declared_axes = {
             self.plane_axis_for_output_context(context)
             for _payload, context in projected_outputs
@@ -1328,21 +1307,21 @@ class ImagePayloadSliceStack(
 
     def output_values_for_artifact_specs(
         self,
-        canonical_specs: tuple[ArtifactSpec, ...],
+        declared_specs: tuple[ArtifactSpec, ...],
     ) -> dict[ArtifactSpecRef, Any]:
         """Bind one complete declared main-flow roster to exact slice contexts."""
 
         if not self.slice_contexts:
             raise ValueError(
-                "Multiple canonical output specs require exact AlignedImageStack "
+                "Multiple declared output specs require exact AlignedImageStack "
                 "slice contexts; positional slice order is not artifact identity."
             )
 
         specs_by_context = {
-            (spec.name, spec.artifact_type.value): spec for spec in canonical_specs
+            (spec.name, spec.artifact_type.value): spec for spec in declared_specs
         }
-        if len(specs_by_context) != len(canonical_specs):
-            raise ValueError("Canonical output ABI contains duplicate named contexts.")
+        if len(specs_by_context) != len(declared_specs):
+            raise ValueError("Declared output specs contain duplicate named contexts.")
         resolved: dict[ArtifactSpecRef, Any] = {}
         for payload, context in zip(
             self.slices,
@@ -1351,29 +1330,29 @@ class ImagePayloadSliceStack(
         ):
             if context.output_kind != AlignedImageSliceContext.MAIN_FLOW_OUTPUT_KIND:
                 raise ValueError(
-                    "Canonical AlignedImageStack contains a non-main-flow slice "
+                    "Declared-output AlignedImageStack contains a non-main-flow slice "
                     f"context: {context!r}."
                 )
             context_key = (context.output_key, context.artifact_kind)
             spec = specs_by_context.get(context_key)
             if spec is None:
                 raise ValueError(
-                    "Canonical AlignedImageStack context is not declared by the "
+                    "Declared-output AlignedImageStack context is not declared by the "
                     f"callable ABI: {context!r}."
                 )
             ref = spec.ref()
             if ref in resolved:
                 raise ValueError(
-                    "Canonical AlignedImageStack contains duplicate context for "
+                    "Declared-output AlignedImageStack contains duplicate context for "
                     f"{ref!r}."
                 )
             resolved[ref] = payload
         missing = tuple(
-            spec.ref() for spec in canonical_specs if spec.ref() not in resolved
+            spec.ref() for spec in declared_specs if spec.ref() not in resolved
         )
         if missing:
             raise ValueError(
-                "Canonical AlignedImageStack does not carry every declared output: "
+                "Declared-output AlignedImageStack does not carry every declared output: "
                 f"{missing!r}."
             )
         return resolved
@@ -1411,6 +1390,34 @@ class AlignedImageStack(ImagePayloadSliceStack):
     def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
         return ImagePayloadMetadataCompositionMode.STACK
 
+    @property
+    def invocation_plane_axis(self) -> RuntimePlaneAxis:
+        """An aligned stack is invoked once per outer runtime slice."""
+        return RuntimePlaneAxis.RUNTIME_SLICE
+
+    @property
+    def keeps_own_source_context(self) -> bool:
+        """Each aligned member already carries its own source context."""
+        return True
+
+    def contextualize_image_output(
+        self,
+        output: ImagePayload,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> ImagePayload:
+        """Aligned multi-source inputs are their outputs' source context already."""
+        del plane_projection
+        return output
+
+    def aligned_value(self, resolver: AlignedImageStackKwargResolver) -> Any:
+        """Bind this stack's slice for the resolver's outer aligned slice."""
+        return resolver.resolve(
+            self.aligned_slice(
+                resolver.projection_axis.require_plane_index(),
+                resolver.projection_axis.axis_size,
+            )
+        )
+
     def composition_payload_metadata(
         self, metadata: ImagePayloadMetadata
     ) -> ImagePayloadMetadata:
@@ -1423,12 +1430,12 @@ class AlignedImageStack(ImagePayloadSliceStack):
 
 @dataclass(slots=True, kw_only=True)
 class ProducedImageStack(ImagePayloadSliceStack):
-    """Borrowed produced image slices with one canonical dense realization.
+    """Borrowed produced image slices, composed once into one dense buffer.
 
     Produced pixels retain their literal values and heterogeneous numeric dtype
     promotion, unlike input bundles which reconcile intensity domains. Producer
     references may change pixels before realization, matching borrowed PURE3D
-    publication. After realization scalar views refer to the canonical buffer.
+    publication. After composition the slices are views of that buffer.
     """
 
     memory_type: str
@@ -1444,9 +1451,9 @@ class ProducedImageStack(ImagePayloadSliceStack):
         super(ProducedImageStack, self).__post_init__()
         MemoryType(self.memory_type)
         data_geometry = runtime_slice_stack_geometry(
-            tuple(image_payload_data(payload) for payload in self.slices)
+            tuple(payload.data for payload in self.slices)
         )
-        masks = tuple(image_payload_mask(payload) for payload in self.slices)
+        masks = tuple(payload.mask for payload in self.slices)
         present_masks = tuple(mask for mask in masks if mask is not None)
         if present_masks and len(present_masks) != len(masks):
             raise ValueError("Cannot aggregate a mix of masked and unmasked image payloads.")
@@ -1463,7 +1470,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
             self._shared_image_mask(present_masks, data_geometry) if present_masks else None
         )
         mask_geometry = (
-            image_payload_geometry(shared_mask)
+            array_geometry(shared_mask)
             if shared_mask is not None else (
                 runtime_slice_stack_geometry(present_masks) if present_masks else None
             )
@@ -1488,8 +1495,8 @@ class ProducedImageStack(ImagePayloadSliceStack):
     def dtype(self) -> Any:
         return np.result_type(
             *(
-                MemoryType(detect_memory_type(image_payload_data(payload)))
-                .canonical_dtype_name(image_payload_data(payload).dtype)
+                MemoryType(detect_memory_type(payload.data))
+                .canonical_dtype_name(payload.data.dtype)
                 for payload in self.slices
             )
         )
@@ -1499,7 +1506,6 @@ class ProducedImageStack(ImagePayloadSliceStack):
     ) -> RuntimePlaneAxis:
         return self.plane_axis
 
-    @property
     def runtime_slice_count(self) -> int | None:
         if self.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
             return len(self.slices)
@@ -1507,20 +1513,17 @@ class ProducedImageStack(ImagePayloadSliceStack):
 
         return RuntimeSliceProjection.slice_count_from_values(self.slices)
 
-    def image_memory_type(self) -> str:
-        return self.memory_type
-
     def with_metadata(self, metadata: ImagePayloadMetadata) -> Any:
         if (
             self._composed_payload is not None
             or metadata.plane_axis is not self.plane_axis
-            or metadata.source_channel_axis != self._metadata.source_channel_axis
+            or metadata.axes != self._metadata.axes
             or metadata.source_spatial_domain != self._metadata.source_spatial_domain
         ):
             return super(ProducedImageStack, self).with_metadata(metadata)
         slices = tuple(
             metadata.for_leading_source_plane(index).payload_with(
-                image_payload_data(payload), image_payload_mask(payload),
+                payload.data, payload.mask,
             )
             for index, payload in enumerate(self.slices)
         )
@@ -1544,24 +1547,25 @@ class ProducedImageStack(ImagePayloadSliceStack):
         first = masks[0]
         if all(mask is first for mask in masks) and self._metadata.mask_domain(
             data_geometry
-        ).accepts(image_payload_geometry(first).shape):
+        ).accepts(array_geometry(first).shape):
             return first
         return None
 
-    def image_mask(self) -> Any | None:
+    @property
+    def mask(self) -> Any | None:
         if self._composed_payload is not None:
-            return image_payload_mask(self._composed_payload)
-        masks = tuple(image_payload_mask(payload) for payload in self.slices)
+            return self._composed_payload.mask
+        masks = tuple(payload.mask for payload in self.slices)
         if masks[0] is None:
             return None
-        shared = self._shared_image_mask(masks, self.image_geometry())
-        return shared if shared is not None else image_payload_mask(self.compose())
+        shared = self._shared_image_mask(masks, self.geometry)
+        return shared if shared is not None else self.compose().mask
 
     def _materialized_image_mask(self) -> Any | None:
-        masks = tuple(image_payload_mask(payload) for payload in self.slices)
+        masks = tuple(payload.mask for payload in self.slices)
         if masks[0] is None:
             return None
-        shared = self._shared_image_mask(masks, self.image_geometry())
+        shared = self._shared_image_mask(masks, self.geometry)
         return shared if shared is not None else stack_runtime_slices(
             masks, self.memory_type, 0,
         )
@@ -1586,8 +1590,8 @@ class ProducedImageStack(ImagePayloadSliceStack):
             self._retain_composed_slices()
 
     def _retain_composed_slices(self) -> None:
-        data = image_payload_data(self._composed_payload)
-        mask = image_payload_mask(self._composed_payload)
+        data = self._composed_payload.data
+        mask = self._composed_payload.mask
         projector = ImagePayloadSliceProjector(mask, self._metadata)
         self.slices = tuple(
             projector.payload_for_slice(data[index], index)
@@ -1600,23 +1604,23 @@ class ProducedImageStack(ImagePayloadSliceStack):
             memory_type=self.memory_type, plane_axis=self.plane_axis,
         )
 
-    def copy_input_cohort(
+    def copied(
         self, *, memory_type: str, device_id: int | None,
     ) -> "ProducedImageStack":
-        """Snapshot literal produced pixels directly into canonical storage.
+        """Snapshot produced pixels directly into one dense buffer.
 
         Input isolation and dense realization share one allocation. Copying
         each borrowed member first would make placement stack those independent
         copies into a second buffer, including a second copy of every mask.
         """
         data = stack_runtime_slices(
-            tuple(image_payload_data(payload) for payload in self.slices),
+            tuple(payload.data for payload in self.slices),
             memory_type, device_id,
         )
-        masks = tuple(image_payload_mask(payload) for payload in self.slices)
+        masks = tuple(payload.mask for payload in self.slices)
         mask = None
         if masks[0] is not None:
-            shared = self._shared_image_mask(masks, self.image_geometry())
+            shared = self._shared_image_mask(masks, self.geometry)
             mask = (
                 stack_runtime_slices(masks, memory_type, device_id)
                 if shared is None else stack_runtime_slices(
@@ -1638,7 +1642,7 @@ class ProducedImageStack(ImagePayloadSliceStack):
         with self._realization_lock:
             if self._composed_payload is None:
                 data = stack_runtime_slices(
-                    tuple(image_payload_data(payload) for payload in self.slices),
+                    tuple(payload.data for payload in self.slices),
                     self.memory_type, 0,
                 )
                 self._composed_payload = self._metadata.payload_with(
@@ -1648,11 +1652,11 @@ class ProducedImageStack(ImagePayloadSliceStack):
         if memory_type is None:
             return self._composed_payload
         target = MemoryType(memory_type)
-        data = image_payload_data(self._composed_payload)
+        data = self._composed_payload.data
         source = MemoryType(detect_memory_type(data))
         if source is target and source.device_id_of(data) == device_id:
             return self._composed_payload
-        mask = image_payload_mask(self._composed_payload)
+        mask = self._composed_payload.mask
         return self._metadata.payload_with(
             source.convert_to(data, target, device_id),
             None if mask is None else MemoryType(detect_memory_type(mask)).convert_to(
@@ -1680,7 +1684,7 @@ class ImageOutputBundle(AlignedImageStack):
     def projected_output_composition_mode(self) -> ImagePayloadMetadataCompositionMode | None:
         """Flatten declared inner runtime planes, retaining other named image domains."""
         if any(
-            image_payload_metadata(payload).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+            payload.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
             for payload in self.slices
         ):
             return ImagePayloadMetadataCompositionMode.STACK
@@ -1691,23 +1695,53 @@ class ImageOutputBundle(AlignedImageStack):
     def plane_axis_for_output_context(
         self, context: AlignedImageSliceContext,
     ) -> RuntimePlaneAxis | None:
-        """Resolve a named output's original inner domain before leaf projection."""
+        """Resolve a named output's own inner plane axis before slice projection."""
         payloads = tuple(
             payload for payload, declared_context in zip(self.slices, self.slice_contexts, strict=True)
             if declared_context == context
         )
         if len(payloads) != 1:
             raise ValueError(
-                "Named image output context requires exactly one original payload: "
+                "Named image output context requires exactly one payload: "
                 f"{context!r}; found {len(payloads)}."
             )
-        return image_payload_metadata(payloads[0]).plane_axis
+        return payloads[0].metadata.plane_axis
 
     def composition_payload_metadata(
         self, metadata: ImagePayloadMetadata
     ) -> ImagePayloadMetadata:
         """Named output surfaces remain source-binding planes, not runtime slices."""
         return metadata
+
+    def inner_runtime_slice_count(self) -> int | None:
+        """Return the runtime-slice count the named outputs themselves declare."""
+        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+        return RuntimeSliceProjection.slice_count_from_values(self.slices)
+
+    def runtime_slice_count(self) -> int | None:
+        inner_slice_count = self.inner_runtime_slice_count()
+        return len(self.slices) if inner_slice_count is None else inner_slice_count
+
+    def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
+        """Project each named output through its shared declared runtime axis."""
+        if (
+            context.axis is RuntimePlaneAxis.RUNTIME_SLICE
+            and self.inner_runtime_slice_count() is None
+        ):
+            return self.aligned_slice(context.require_plane_index(), context.axis_size)
+        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+        projected_outputs = tuple(
+            RuntimeSliceProjection.value_for_slice(output, context)
+            for output in self.slices
+        )
+        if all(
+            projected is output
+            for projected, output in zip(projected_outputs, self.slices, strict=True)
+        ):
+            return self
+        return self.with_slices(projected_outputs)
 
     def __post_init__(self) -> None:
         super(ImageOutputBundle, self).__post_init__()
@@ -1724,15 +1758,15 @@ def pack_aligned_image_outputs(
     *,
     slice_contexts: Sequence[AlignedImageSliceContext] = (),
 ) -> Any:
-    """Pack one or more image outputs into the single canonical return slot."""
+    """Pack one or more image outputs into the callable's single return value."""
 
     packed = tuple(outputs)
     if not packed:
-        raise ValueError("Canonical image output packing requires at least one output.")
+        raise ValueError("Image output packing requires at least one output.")
     contexts = tuple(slice_contexts)
     if contexts and len(contexts) != len(packed):
         raise ValueError(
-            "Canonical image output contexts must match output count; "
+            "Image output contexts must match output count; "
             f"got {len(contexts)} context(s) for {len(packed)} output(s)."
         )
     if contexts:
@@ -1947,60 +1981,6 @@ def compose_aligned_image_payload(
     )
 
 
-def payload_slices_for_alignment(payload: Any) -> tuple[Any, ...]:
-    """Return slices declared by a nominal runtime-alignment owner."""
-    if isinstance(payload, ImagePayloadSliceStack):
-        return payload.slices
-    if isinstance(payload, RuntimeSliceAlignedValueSet):
-        return tuple(
-            payload.value_for_slice(index) for index in range(payload.slice_count)
-        )
-    if isinstance(payload, ImagePayloadMetadataCarrier):
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-
-        slice_count = RuntimeSliceProjection.slice_count_from_values((payload,))
-        if slice_count is None:
-            return (payload,)
-        return tuple(
-            RuntimeSliceProjection.value_for_slice(
-                payload,
-                RuntimePlaneAxisValueProjection.from_selected_plane(
-                    axis=RuntimePlaneAxis.RUNTIME_SLICE,
-                    plane_index=index,
-                    axis_size=slice_count,
-                ),
-            )
-            for index in range(slice_count)
-        )
-    if isinstance(payload, ObjectLabelValue):
-        slice_count = payload.runtime_slice_plane_count()
-        if slice_count is None:
-            return (payload,)
-        from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-
-        return tuple(
-            RuntimeSliceProjection.value_for_slice(
-                payload,
-                RuntimePlaneAxisValueProjection.from_selected_plane(
-                    axis=RuntimePlaneAxis.RUNTIME_SLICE,
-                    plane_index=index,
-                    axis_size=slice_count,
-                ),
-            )
-            for index in range(slice_count)
-        )
-    return (payload,)
-
-
-def flatten_aligned_image_payload_slices(payload: Any) -> tuple[Any, ...]:
-    """Derive scalar image payloads from the nominal aligned-output owner."""
-    if isinstance(payload, ImagePayloadSliceStack):
-        return tuple(
-            output_slice for output_slice, _context in payload.projected_output_slices()
-        )
-    return payload_slices_for_alignment(payload)
-
-
 def aligned_image_stack_kwargs(
     kwargs: Mapping[str, Any],
     slice_index: int,
@@ -2017,8 +1997,3 @@ def aligned_image_stack_kwargs(
         reference_payload=reference_payload,
     )
     return {name: resolver.resolve(value) for name, value in kwargs.items()}
-
-
-def payload_slice_count(payload: Any) -> int:
-    """Return the number of aligned slices represented by one payload."""
-    return len(payload_slices_for_alignment(payload))

@@ -31,12 +31,6 @@ from openhcs.core.aligned_image_payload import (
     ImageOutputBundle,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadataCarrier,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
@@ -298,11 +292,8 @@ class ImageOutputRecorder(CellProfilerOutputRecorder):
     def raw_runtime_input_value(
         self, spec: ArtifactSpec, value: RuntimeCallableArgument
     ) -> RuntimeCallableArgument:
-        payload = (
-            value if isinstance(value, ImagePayloadMetadataCarrier)
-            else RuntimeSliceProjection.full_stack_value(value)
-        )
-        metadata = image_payload_metadata(payload)
+        payload = value
+        metadata = payload.metadata
         metadata = metadata.with_source_provenance(
             metadata.source_provenance.with_derived_source_image_names(
                 (spec.name,)
@@ -329,7 +320,7 @@ class ImageOutputRecorder(CellProfilerOutputRecorder):
         value: RuntimeCallableArgument,
     ) -> str | None:
         return single_source_name(
-            image_payload_metadata(value).source_provenance.represented_source_image_names
+            value.metadata.source_provenance.represented_source_image_names
         )
 
     def published_main_flow_output(
@@ -392,10 +383,10 @@ class ObjectLabelsOutputRecorder(CellProfilerOutputRecorder):
 
         if isinstance(value, ObjectLabelSet):
             return value
-        metadata = image_payload_metadata(value)
+        metadata = value.metadata
         return SourceImageObjectLabelBuildRequest(
             image=value,
-            labels=image_payload_data(value),
+            labels=value.data,
             plane_projection=RuntimePlaneAxisValueProjection.from_source_declaration(
                 metadata.plane_axis, metadata.source_provenance,
             ),
@@ -553,7 +544,7 @@ class RelationshipsOutputRecorder(CellProfilerOutputRecorder):
                 f"ObjectRelationshipDeclaration, got {len(relations)}."
             )
         _relationship_spec, declaration = relations[0]
-        source_metadata = image_payload_metadata(request.source.payload)
+        source_metadata = request.source.payload.metadata
         request.adapter.add_relationship(
             ObjectRelationship.from_payload(
                 name=request.spec.name,

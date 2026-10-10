@@ -26,10 +26,7 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
@@ -540,7 +537,7 @@ class RuntimeArtifactMaterialization:
     def payload_source_identity(
         data: MaterializationValue,
     ) -> SourceImageIdentity | None:
-        metadata = image_payload_metadata(data)
+        metadata = data.metadata
         source_identity = metadata.source_provenance.scalar_source_identity
         if source_identity.addressable:
             return source_identity
@@ -714,7 +711,7 @@ class RuntimeArtifactMaterialization:
             return ImagePayloadMetadata(
                 source_provenance=record.data.source_provenance,
             )
-        return image_payload_metadata(record.data)
+        return record.data.metadata
 
     @classmethod
     def record_metadata_with_runtime_scope(

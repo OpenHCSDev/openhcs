@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from openhcs.core.config import DtypeConfig
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerOtsuMethod,
     CellProfilerThresholdMethod,
@@ -171,7 +170,7 @@ def test_full_stack_global_threshold_matches_its_declared_method_exactly(
     )
 
     np.testing.assert_array_equal(
-        image_payload_data(output),
+        output.data,
         (image >= expected_threshold).astype(np.float32),
     )
     assert rows.columns["final_threshold"] == (expected_threshold,)
@@ -198,6 +197,6 @@ def test_adaptive_threshold_applies_the_exact_masked_threshold_image() -> None:
     )
 
     np.testing.assert_array_equal(
-        image_payload_data(output),
+        output.data,
         ((image >= thresholds) & mask).astype(np.float32),
     )

@@ -212,7 +212,9 @@ class RuntimeArtifactPartitionBatchRequest:
             RuntimeInvocationKwargPolicyStrategy,
         )
 
-        raw_callable = contract.resolve_raw_runtime_callable()
+        from openhcs.core.memory.decorators import image_payload_boundary
+
+        raw_callable = image_payload_boundary(contract.resolve_raw_runtime_callable())
         kwargs = RuntimeInvocationKwargPolicyStrategy.for_policy(
             RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED
         ).accepted_kwargs(
@@ -283,6 +285,10 @@ class RuntimePure2DSliceBatchRequest(
     def execute_one(self, slice_index: int) -> RuntimeSliceResultT:
         """Execute one slice through the runtime-owned invocation path."""
         return self.execute_one_with_kwargs(slice_index, self.kwargs)
+
+    def execute_each(self) -> list[RuntimeSliceResultT]:
+        """Execute every slice of this batch, one invocation per slice."""
+        return [self.execute_one(slice_index) for slice_index in range(self.slice_count)]
 
     def execute_one_with_kwargs(
         self,
@@ -409,10 +415,7 @@ class SerialPure2DSliceBatchExecutor(Pure2DSliceBatchExecutor):
             RuntimeKwargValueT,
         ],
     ) -> list[RuntimeSliceResultT]:
-        return [
-            request.execute_one(slice_index)
-            for slice_index in range(request.slice_count)
-        ]
+        return request.execute_each()
 
 
 def runtime_batch_executors_from_callable(

@@ -8,9 +8,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerWireField
 
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata, image_payload_data, image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_slice_projection import RuntimeProjectionSourceIdentityRequest
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
@@ -132,11 +130,11 @@ def test_public_rescale_preserves_one_source_plane_through_stream_binding(method
     NapariAggregateAxisBindingAuthority.bindings((native_item,), ViewerComponentAxisSemanticsAuthority.empty())
     assert contract.artifact_inputs.names() == ("Bright",)
     assert request.image_count == 1
-    assert image_payload_data(result).shape == (4, 5)
-    assert image_payload_metadata(result).source_spatial_domain == metadata.source_spatial_domain
-    assert image_payload_metadata(result).source_image_paths == metadata.source_image_paths
-    assert image_payload_metadata(result).source_voxel_spacing == metadata.source_voxel_spacing
-    assert SourceVoxelSpacing.common_physical_pixel_size((image_payload_metadata(result).source_voxel_spacing,)) is None
+    assert result.data.shape == (4, 5)
+    assert result.metadata.source_spatial_domain == metadata.source_spatial_domain
+    assert result.metadata.source_image_paths == metadata.source_image_paths
+    assert result.metadata.source_voxel_spacing == metadata.source_voxel_spacing
+    assert SourceVoxelSpacing.common_physical_pixel_size((result.metadata.source_voxel_spacing,)) is None
     assert item.require_source_component_metadata() == metadata.source_component_metadata
     expected = pixels / (2.0 if method is RescaleMethod.DIVIDE_BY_VALUE else 20.0)
     np.testing.assert_array_equal(item.data, expected)

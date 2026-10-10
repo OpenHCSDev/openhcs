@@ -18,7 +18,7 @@ from openhcs.core.runtime_artifact_values import ArtifactKey, RuntimeValue
 from openhcs.core.runtime_exports import (
     RuntimeExportExpectation, RuntimeExportObservation, runtime_export_failures,
 )
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_metadata
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject, MeasurementTable
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_stores import (
@@ -64,7 +64,7 @@ class ProjectionAudit:
 class ReducedDeclaration(SourceProjectedImageOutput):
     def resolve_source_context(self, source, projection):
         assert projection.axis_size == source.shape[0]
-        return image_payload_metadata(source).collapse_leading_plane_axis().payload_with(self.data)
+        return source.metadata.collapse_leading_plane_axis().payload_with(self.data)
 
 
 @dataclass(frozen=True)
@@ -84,9 +84,9 @@ def test_mixed_acquired_and_reduced_batch_uses_distinct_original_display_scopes(
         RuntimePlaneAxisValueProjection.preserve(axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2),
     )
     assert declaration.calls == ["before", "after"]
-    acquired_metadata = image_payload_metadata(source).for_leading_source_plane(0)
+    acquired_metadata = source.metadata.for_leading_source_plane(0)
     acquired = Output("acquired.tif", np.asarray(source)[0], acquired_metadata)
-    aggregate = Output("reduced.tif", np.asarray(reduced), image_payload_metadata(reduced))
+    aggregate = Output("reduced.tif", np.asarray(reduced), reduced.metadata)
     adapter = _viewer_stream_backend_kwargs()
     batches = adapter.filemanager_batches((acquired, aggregate))
     assert len(batches) == 2
@@ -109,7 +109,7 @@ def test_mixed_acquired_and_reduced_batch_uses_distinct_original_display_scopes(
 
 @pytest.mark.parametrize("sites", ((), (None,), (1,), (1, 1), (1, None), (None, None)))
 def test_absence_one_equal_or_incomplete_contributors_cannot_exempt_acquired_plane(sites):
-    metadata = image_payload_metadata(_source(sites)).collapse_leading_plane_axis()
+    metadata = _source(sites).metadata.collapse_leading_plane_axis()
     components = {
         "well": "A01", "channel": 2, "z_index": 1, "timepoint": 1,
     }
@@ -133,7 +133,7 @@ def test_absence_one_equal_or_incomplete_contributors_cannot_exempt_acquired_pla
 
 
 def test_present_scalar_override_remains_required_despite_varied_contributors():
-    metadata = image_payload_metadata(_source((1, 3))).collapse_leading_plane_axis()
+    metadata = (_source((1, 3))).metadata.collapse_leading_plane_axis()
     metadata = metadata.replace_fields(source_component_metadata={
         "well": "A01", "site": 7, "channel": 2, "z_index": 1, "timepoint": 1,
     })

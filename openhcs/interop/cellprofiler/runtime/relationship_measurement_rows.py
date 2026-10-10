@@ -36,9 +36,6 @@ from openhcs.core.runtime_relationships import (
     DirectParentReferenceFeatureDeclaration,
     DirectParentReferenceMeasurementFeature,
 )
-from openhcs.core.runtime_image_values import (
-    image_payload_metadata,
-)
 from openhcs.interop.cellprofiler.measurement_lookup import (
     CellProfilerMeasurementFeature,
 )
@@ -165,9 +162,7 @@ class RelationshipMeasurementRows:
                         name=spec.name,
                         declaration=declaration,
                         payload=payload,
-                        source_provenance=image_payload_metadata(
-                            self.request.source.payload
-                        ).source_provenance,
+                        source_provenance=self.request.source.payload.metadata.source_provenance,
                     ),
                 )
             case RuntimeSliceAlignedValues(slices=slices):

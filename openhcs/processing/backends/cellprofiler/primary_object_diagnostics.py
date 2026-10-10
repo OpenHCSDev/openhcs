@@ -24,9 +24,6 @@ from openhcs.core.projected_image_output import SelectedPlaneImageOutput
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariant
 from openhcs.processing.materialization import (
@@ -44,10 +41,10 @@ class DiagnosticPlaneSource:
 
     @classmethod
     def from_image(cls, image: object) -> "DiagnosticPlaneSource":
-        source_mask = image_payload_mask(image)
+        source_mask = image.mask
         return cls(
-            image_payload_metadata(image),
-            np.ones(np.asarray(image_payload_data(image)).shape, dtype=bool)
+            image.metadata,
+            np.ones(np.asarray(image.data).shape, dtype=bool)
             if source_mask is None else np.asarray(source_mask, dtype=bool),
         )
 
@@ -81,7 +78,7 @@ class SelectedDiagnosticPlaneImageOutput(SelectedPlaneImageOutput):
 
     def resolve_source_context(self, source, projection):
         selected = super().resolve_source_context(source, projection)
-        source_metadata = image_payload_metadata(source)
+        source_metadata = source.metadata
         source_shape = source_metadata.spatial_shape_yx(source)
         if source_shape != tuple(selected.shape[-2:]):
             raise ValueError("Diagnostic plane must preserve the source spatial shape.")
@@ -92,7 +89,7 @@ class SelectedDiagnosticPlaneImageOutput(SelectedPlaneImageOutput):
             ),
             diagnostic.validity_mask,
         )
-        return diagnostic.plane(image_payload_data(selected))
+        return diagnostic.plane(selected.data)
 
 
 class DeclumpingEvidence(ABC):

@@ -10,11 +10,6 @@ import numpy as np
 
 from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.core.runtime_object_labels import (
     ObjectLabelMeasurementSource,
     ObjectLabelValue,
@@ -120,7 +115,7 @@ class MeasurementImageLabelAlignmentRequest:
     @property
     def image_data(self) -> RuntimeArrayData | AlignedImageStack:
         """Return image data derived from the measurement image payload."""
-        return image_payload_data(self.image)
+        return self.image.data
 
     @property
     def reference_domain(self) -> MeasurementImageReferenceDomain:
@@ -161,9 +156,7 @@ class MeasurementImageLabelAlignmentRequest:
                         image_slice,
                         replace(
                             projection,
-                            source_aliases=image_payload_metadata(
-                                image_slice
-                            ).source_image_names,
+                            source_aliases=image_slice.metadata.source_image_names,
                         ),
                     )
                     for image_slice in image.slices
@@ -174,7 +167,7 @@ class MeasurementImageLabelAlignmentRequest:
                 image,
                 replace(
                     projection,
-                    source_aliases=image_payload_metadata(image).source_image_names,
+                    source_aliases=image.metadata.source_image_names,
                 ),
             )
         return replace(
@@ -240,7 +233,7 @@ class MeasurementImageLabelAlignmentRequest:
             return self
         source = self.source
         image = self.image
-        image_metadata = image_payload_metadata(image)
+        image_metadata = image.metadata
         if (
             not isinstance(image, AlignedImageStack)
             and image_metadata.plane_axis is projection.axis
@@ -409,13 +402,10 @@ class MeasurementImageLabelAlignmentRequest:
                 "Object-label reference alignment requires an image source domain "
                 "adapter."
             )
-        return with_image_payload_data(
-            request.image,
-            label_domain_adapter.extract_source_array(
+        return request.image.with_pixels(label_domain_adapter.extract_source_array(
                 request.image_array,
                 spatial_axes_yx=image_domain_adapter.spatial_axes_yx,
-            ),
-        )
+            ),)
 
     @classmethod
     def validate_alignment(
@@ -454,9 +444,7 @@ class MeasurementImageLabelAlignmentRequest:
                     "Runtime-slice-aligned labels must match the aligned image "
                     f"count: {labels.slice_count} != {slice_count}."
                 )
-            label_slices = tuple(
-                labels.value_for_slice(index) for index in range(slice_count)
-            )
+            label_slices = labels.values
         else:
             if (
                 label_payload is None
@@ -496,7 +484,7 @@ class MeasurementImageLabelAlignmentRequest:
         label_payload: ObjectLabelValue | None = None,
     ) -> None:
         """Require exact dense shapes after nominal source-domain projection."""
-        image_data = image_payload_data(image)
+        image_data = image.data
         label_data = (
             object_label_dense_array(labels)
             if isinstance(labels, ObjectLabelValue)
@@ -517,7 +505,7 @@ class MeasurementImageLabelAlignmentRequest:
             raise ValueError(
                 "Measurement image alignment produced incompatible declared domains: "
                 f"image shape {image_data.shape!r}, label shape {label_data.shape!r}; "
-                f"image plane axis={image_payload_metadata(image).plane_axis!r}; "
+                f"image plane axis={image.metadata.plane_axis!r}; "
                 f"label type={type(label_payload).__name__ if label_payload is not None else type(labels).__name__}; "
                 f"label scope={None if label_domain is None else label_domain.scope!r}; "
                 f"label plane axis={None if label_payload is None else label_payload.plane_axis!r}; "
@@ -690,7 +678,7 @@ class PreparedMeasurementObjectLabels:
                 source_payload,
                 source_projected_labels,
             )
-        metadata = image_payload_metadata(request.image)
+        metadata = request.image.metadata
         payload_domain = source_payload.object_label_source_spatial_domain()
         source_spatial_domain = (
             metadata.object_label_source_spatial_domain()

@@ -36,12 +36,7 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -95,7 +90,7 @@ def test_morphological_skeleton_executes_one_planar_runtime_image() -> None:
     )
 
     assert callable_contract.processing_contract is ProcessingContract.PURE_2D
-    assert image_payload_data(result).shape == image.shape
+    assert result.data.shape == image.shape
 
 
 def test_registered_morph_distance_projects_raw_abi_and_retains_source_context() -> None:
@@ -134,9 +129,9 @@ def test_registered_morph_distance_projects_raw_abi_and_retains_source_context()
         ),
     )
 
-    np.testing.assert_array_equal(image_payload_data(result), expected[None])
-    np.testing.assert_array_equal(image_payload_mask(result), mask)
-    metadata = image_payload_metadata(result)
+    np.testing.assert_array_equal(result.data, expected[None])
+    np.testing.assert_array_equal(result.mask, mask)
+    metadata = result.metadata
     assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert metadata.source_image_names == ("SavedLabels",)
     assert metadata.source_image_provenance_planes.paths == ("/tmp/saved-labels.tif",)
@@ -159,8 +154,8 @@ def test_raw_slice_abi_retains_declared_payloads_and_projects_kwargs(
     def payload_raw(image: ArrayPayload, *, labels: np.ndarray) -> ArrayPayload:
         assert isinstance(image, ArrayPayload)
         seen.append((image, labels))
-        return image_payload_metadata(image).payload_with(
-            image_payload_data(image) + labels, image_payload_mask(image),
+        return image.metadata.payload_with(
+            image.data + labels, image.mask,
         )
 
     raw = payload_raw if payload_annotation else array_raw
@@ -190,11 +185,11 @@ def test_raw_slice_abi_retains_declared_payloads_and_projects_kwargs(
         1, 2,
     )
 
-    assert seen[0][0] is (source if payload_annotation else image_payload_data(source))
+    assert seen[0][0] is (source if payload_annotation else source.data)
     assert seen[0][1] is selected_labels
-    np.testing.assert_array_equal(image_payload_data(result), np.full((3, 4), 6))
-    np.testing.assert_array_equal(image_payload_mask(result), image_payload_mask(source))
-    assert image_payload_metadata(result).source_image_names == ("DNA",)
+    np.testing.assert_array_equal(result.data, np.full((3, 4), 6))
+    np.testing.assert_array_equal(result.mask, source.mask)
+    assert result.metadata.source_image_names == ("DNA",)
 
 
 def test_raw_slice_abi_does_not_relax_output_mask_shape_validation() -> None:
@@ -260,8 +255,8 @@ def test_raw_abi_projection_matches_declared_argument_in_single_and_full_stack_m
         contract, raw, source, {}, execution_mode=execution_mode,
     )
 
-    assert seen == [source if payload_annotation else image_payload_data(source)]
-    assert seen[0] is (source if payload_annotation else image_payload_data(source))
+    assert seen == [source if payload_annotation else source.data]
+    assert seen[0] is (source if payload_annotation else source.data)
     assert result is seen[0]
 
 
@@ -295,7 +290,7 @@ def test_canonical_argument_projection_uses_declared_nominal_annotation(
     source = ImagePayloadMetadata(source_image_names=("DNA",)).payload_with(
         np.ones((3, 4)), None,
     )
-    expected = source if retains_payload else image_payload_data(source)
+    expected = source if retains_payload else source.data
 
     assert contract.raw_main_flow_call_argument(source) is expected
     assert contract.runtime_main_flow_call_argument(source) is expected
@@ -327,7 +322,7 @@ def test_raw_slice_argument_retains_buffer_identity_for_inplace_array_callable()
     )
     result = executor.execute_pure_2d_slice(contract, inplace, source, {}, 0, 1)
 
-    assert image_payload_data(result) is pixels
+    assert result.data is pixels
     assert pixels[0, 0] == 7
 
 
@@ -338,7 +333,7 @@ def test_prepared_raw_abi_performs_no_introspection_until_explicit_refresh(
 
     def raw(image: np.ndarray) -> np.ndarray:
         seen.append(isinstance(image, ArrayPayload))
-        return image_payload_data(image)
+        return image.data
 
     contract = _compiled_contract(
         raw, ProcessingContract.PURE_2D,
@@ -377,7 +372,7 @@ def test_prepared_raw_abi_performs_no_introspection_until_explicit_refresh(
             execution_mode=ImagePayloadExecutionMode.NATURAL,
             plane_projection=projection,
         )
-        np.testing.assert_array_equal(image_payload_data(result), image_payload_data(source))
+        np.testing.assert_array_equal(result.data, source.data)
 
     assert seen == [False] * 12 + [True] * 12
     assert hints == [(raw, {"include_extras": True})] * 2
@@ -452,7 +447,7 @@ def test_raw_abi_child_preserves_cooperative_executor_constructor_contract() -> 
     assert len(constructed) == 2
     assert raw_calls == [constructed[1]] * 2
     assert not hasattr(executor, "_raw_argument_types")
-    np.testing.assert_array_equal(image_payload_data(result), image_payload_data(source))
+    np.testing.assert_array_equal(result.data, source.data)
 
     def foreign_raw(image: ArrayPayload) -> ArrayPayload:
         assert isinstance(image, ArrayPayload)
@@ -487,7 +482,7 @@ def test_actual_prepared_executor_planes_make_no_signature_or_hint_queries(monke
         contract,raw,source,{},execution_mode=ImagePayloadExecutionMode.NATURAL,
         plane_projection=projection,
     )
-    np.testing.assert_array_equal(image_payload_data(result),np.full((12,3,4),2))
+    np.testing.assert_array_equal(result.data,np.full((12,3,4),2))
     assert calls == [(3,4)]*12
 
 
@@ -520,7 +515,7 @@ def test_authored_distinct_raw_abi_batch_has_no_runtime_queries_and_filters_cont
         contract,wrapper,source,{"injected":True},
         execution_mode=ImagePayloadExecutionMode.NATURAL,plane_projection=projection,
     )
-    np.testing.assert_array_equal(image_payload_data(result),np.full((12,3,4),2))
+    np.testing.assert_array_equal(result.data,np.full((12,3,4),2))
     assert calls == [(3,4)]*12
 
 
@@ -536,7 +531,7 @@ def test_compiled_slice_execution_resolves_raw_target_once_and_preserves_request
 
     @callable_request(ScaleRequest)
     def request_bound(request: ScaleRequest) -> object:
-        data = image_payload_data(request.image)
+        data = request.image.data
         seen.append(data.shape)
         return data * request.scale
 
@@ -585,7 +580,7 @@ def test_compiled_slice_execution_resolves_raw_target_once_and_preserves_request
     assert seen == [(4, 5)] * 3
     assert isinstance(result, RuntimeSliceAlignedValues)
     np.testing.assert_array_equal(
-        np.stack(tuple(image_payload_data(value) for value in result.slices)),
+        np.stack(tuple(value.data for value in result.slices)),
         np.full((3, 4, 5), 4.0),
     )
 
@@ -775,7 +770,7 @@ def test_declared_unaligned_input_joins_runtime_slices_before_pure_2d_execution(
     calls: list[tuple[int, ...]] = []
 
     def dispatch_probe(image: object) -> np.ndarray:
-        data = np.asarray(image_payload_data(image))
+        data = np.asarray(image.data)
         calls.append(data.shape)
         return data[0] - data[1]
 
@@ -832,7 +827,7 @@ def test_declared_unaligned_input_joins_runtime_slices_before_pure_2d_execution(
 
     assert calls == [(2, 2, 3), (2, 2, 3)]
     np.testing.assert_array_equal(
-        image_payload_data(result),
+        result.data,
         np.stack(
             (
                 np.full((2, 3), 8, dtype=np.float32),
@@ -1058,8 +1053,8 @@ def test_declared_output_axis_contextualizes_multiple_canonical_outputs(
         "First",
         "Second",
     )
-    np.testing.assert_array_equal(image_payload_data(outputs.slices[0]), source + 1)
-    np.testing.assert_array_equal(image_payload_data(outputs.slices[1]), source + 2)
+    np.testing.assert_array_equal(outputs.slices[0].data, source + 1)
+    np.testing.assert_array_equal(outputs.slices[1].data, source + 2)
     assert returned_trailing == trailing
 
 
@@ -1184,7 +1179,7 @@ def test_aligned_stack_transposes_multiple_canonical_outputs_across_runtime_slic
     assert len(aligned_outputs.slices) == 3
     for output_index, output in enumerate(aligned_outputs.slices):
         expected = tuple(value + output_index for value in runtime_slices)
-        np.testing.assert_array_equal(image_payload_data(output), np.stack(expected))
+        np.testing.assert_array_equal(output.data, np.stack(expected))
 
 
 def test_aligned_stack_preserves_one_scalar_output_per_declared_surface() -> None:
@@ -1220,7 +1215,7 @@ def test_aligned_stack_preserves_one_scalar_output_per_declared_surface() -> Non
     assert isinstance(result, AlignedImageStack)
     assert len(result.slices) == 2
     for output, source in zip(result.slices, input_surfaces, strict=True):
-        np.testing.assert_array_equal(image_payload_data(output), source + 1)
+        np.testing.assert_array_equal(output.data, source + 1)
 
 
 def test_aligned_stack_aggregates_one_canonical_output_for_one_runtime_slice() -> None:
@@ -1249,7 +1244,7 @@ def test_aligned_stack_aggregates_one_canonical_output_for_one_runtime_slice() -
 
     assert not isinstance(result, AlignedImageStack)
     np.testing.assert_array_equal(
-        image_payload_data(result),
+        result.data,
         np.full((1, 2, 3), 5, dtype=np.float32),
     )
 
@@ -1282,7 +1277,7 @@ def test_aligned_stack_unwraps_one_declared_surface_after_slice_transpose() -> N
 
     assert not isinstance(result, AlignedImageStack)
     np.testing.assert_array_equal(
-        image_payload_data(result),
+        result.data,
         np.stack(tuple(value + 1 for value in runtime_slices)),
     )
 

@@ -70,7 +70,6 @@ def test_selected_response_keeps_source_frame_without_acquisition_intensity_scal
     from openhcs.core.runtime_plane_projection import (
         RuntimePlaneAxis, RuntimePlaneAxisValueProjection,
     )
-    from openhcs.core.runtime_image_values import normalize_image_payload_intensity
 
     source = _source()
     stack = source.metadata.replace_fields(
@@ -84,7 +83,7 @@ def test_selected_response_keeps_source_frame_without_acquisition_intensity_scal
     output = SelectedDiagnosticPlaneImageOutput(pixels, (0,))
     resolved = output.resolve_source_context(stack, projection)
     np.testing.assert_array_equal(resolved.data, pixels[0])
-    np.testing.assert_array_equal(normalize_image_payload_intensity(resolved), pixels[0])
+    np.testing.assert_array_equal(resolved.normalize_intensity_payload(), pixels[0])
     assert resolved.metadata.source_path == source.metadata.source_path
     assert resolved.metadata.source_spatial_domain == source.metadata.source_spatial_domain
     assert resolved.metadata.source_dtype == "float32"
@@ -239,7 +238,7 @@ def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identi
     reloaded = pickle.loads(pickle.dumps(value))
     assert np.shares_memory(reloaded.slices[0].data, reloaded.compose().data)
     assert np.shares_memory(reloaded.slices[0].mask, reloaded.compose().mask)
-    independent = value.copy_input_cohort(memory_type="numpy", device_id=None)
+    independent = value.copied(memory_type="numpy", device_id=None)
     assert not np.shares_memory(independent.slices[0].data, composed.data)
     assert not np.shares_memory(independent.slices[0].mask, composed.mask)
 
@@ -268,7 +267,7 @@ def test_produced_input_snapshot_owns_canonical_pixels_and_masks(shared_mask, sp
     )
     expected = np.stack(pixels)
     expected_mask = first_mask.copy() if shared_mask and spatial_mask else np.stack(masks)
-    copied = source.copy_input_cohort(memory_type="numpy", device_id=None)
+    copied = source.copied(memory_type="numpy", device_id=None)
     assert source._composed_payload is None
     canonical = copied.compose()
     assert copied.compose() is canonical

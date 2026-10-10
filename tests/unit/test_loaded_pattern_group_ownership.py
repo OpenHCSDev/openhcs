@@ -12,12 +12,7 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.runtime_profile import RuntimeProfileLogger
@@ -122,7 +117,7 @@ def test_complete_loaded_owner_has_one_frozen_ten_field_contract_and_pickle():
     assert restored.execution_plan.step_scope_id == "loaded-cohort"
     assert restored.fixed_component_values == loaded.fixed_component_values
     np.testing.assert_array_equal(
-        image_payload_data(restored.main_data_stack), image_payload_data(payload)
+        restored.main_data_stack.data, payload.data
     )
 
 
@@ -135,7 +130,7 @@ def test_initial_coordinates_stay_captured_while_plan_selectors_follow_mutation(
         (Microscopy.Timepoint, "2"),
     )
     paths.append("later-mutation.tif")
-    image_payload_data(payload)[:] = -1
+    payload.data[:] = -1
     assert loaded.runtime_plane_count == 2
     assert len(loaded.matching_files) == 3
     request.execution_plan.axis_id = "B02"
@@ -177,7 +172,7 @@ def test_chain_shares_cohort_but_advances_only_current_image_and_memory(monkeypa
         )
         if len(seen) == 1:
             paths.append("during-call.tif")
-            image_payload_data(payload)[:] = -3
+            payload.data[:] = -3
             return first_output
         return second_output
 
@@ -437,11 +432,11 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
         ),
     )
     payload = (
-        image_payload_metadata(payload)
+        payload.metadata
         .replace_fields(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         )
-        .payload_with(image_payload_data(payload), np.ones((2, 3, 4), dtype=bool))
+        .payload_with(payload.data, np.ones((2, 3, 4), dtype=bool))
     )
     value = RuntimeValue.from_spec(
         source,
@@ -465,7 +460,6 @@ def test_stored_primary_admission_owns_independent_buffer_and_live_primary_bindi
     monkeypatch,
 ):
     from openhcs.constants.constants import Backend
-    from openhcs.core.runtime_image_values import image_payload_mask
     from openhcs.interop.cellprofiler.runtime.artifact_binding import (
         RuntimeInputBindingRequest,
     )
@@ -485,10 +479,10 @@ def test_stored_primary_admission_owns_independent_buffer_and_live_primary_bindi
     paths, admitted = request.load_input_stack()
     assert paths == ["/memory/canonical"]
     assert not np.shares_memory(
-        image_payload_data(admitted), image_payload_data(canonical.data)
+        admitted.data, canonical.data.data
     )
     assert not np.shares_memory(
-        image_payload_mask(admitted), image_payload_mask(canonical.data)
+        admitted.mask, canonical.data.mask
     )
     loaded = PatternGroupData.from_loaded_group(request, paths, admitted)
     assert loaded.runtime_plane_count == 2
@@ -499,7 +493,7 @@ def test_stored_primary_admission_owns_independent_buffer_and_live_primary_bindi
     )
     replacement = replace(
         canonical,
-        data=image_payload_metadata(canonical.data).payload_with(
+        data=canonical.data.metadata.payload_with(
             np.full((2, 3, 4), 31, dtype=np.float32),
             np.zeros((2, 3, 4), dtype=bool),
         ),
@@ -509,8 +503,8 @@ def test_stored_primary_admission_owns_independent_buffer_and_live_primary_bindi
         path=paths[0],
         backend=Backend.MEMORY.value,
     )
-    image_payload_data(admitted)[:] = 17
-    image_payload_mask(admitted)[:] = False
+    admitted.data[:] = 17
+    admitted.mask[:] = False
     invocation = request.compiled_group.invocations[0]
     edge = invocation.artifact_input_edges[0]
     adapter = cellprofiler_runtime_adapter_for_test(
@@ -523,12 +517,12 @@ def test_stored_primary_admission_owns_independent_buffer_and_live_primary_bindi
         adapter=adapter, kwargs={}, current_image=admitted
     ).artifact_value(edge)
     assert bound is admitted
-    np.testing.assert_array_equal(image_payload_data(bound), 17)
-    np.testing.assert_array_equal(image_payload_data(replacement.data), 31)
+    np.testing.assert_array_equal(bound.data, 17)
+    np.testing.assert_array_equal(replacement.data.data, 31)
     _, next_admitted = request.load_input_stack()
-    np.testing.assert_array_equal(image_payload_data(next_admitted), 31)
+    np.testing.assert_array_equal(next_admitted.data, 31)
     assert not np.shares_memory(
-        image_payload_data(next_admitted), image_payload_data(replacement.data)
+        next_admitted.data, replacement.data.data
     )
     assert loaded.runtime_plane_count == 2
 
@@ -698,7 +692,7 @@ def test_artifact_loaded_coordinates_keep_producer_authority_over_original_sourc
     )
     request = replace(request, fixed_component_values=exact_coordinates)
     assert (
-        image_payload_metadata(canonical.data)
+        canonical.data.metadata
         .source_provenance.with_common_scalar_identity_from_planes()
         .source_component_metadata["channel"]
         == "1"
@@ -809,9 +803,9 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     request.execution_plan.source_binding_plan = CompiledSourceBindingPlan(bindings=(binding,))
     request.execution_plan.compiled_function_pattern = pattern
     request = replace(request, compiled_group=pattern.default_group)
-    payload = image_payload_metadata(payload).replace_fields(
+    payload = payload.metadata.replace_fields(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-    ).payload_with(image_payload_data(payload), np.ones((2, 3, 4), dtype=bool))
+    ).payload_with(payload.data, np.ones((2, 3, 4), dtype=bool))
     payload = binding.apply_loaded_payload(payload, source_context=None)
     loaded = PatternGroupData.from_loaded_group(request, paths, payload)
     invocation = loaded.compiled_group.invocations[0]
@@ -830,13 +824,13 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
 
     monkeypatch.setattr(type(adapter), "source_artifact_payload", forbidden_original_read)
     value = edge.resolve_unstored_payload(executor, payload, request=adapter)
-    expected = image_payload_data(payload)
+    expected = payload.data
     if plane_index is not None:
         expected = expected[plane_index]
-    np.testing.assert_array_equal(image_payload_data(value), expected)
-    np.testing.assert_array_equal(image_payload_mask(value), np.ones(expected.shape, dtype=bool))
-    assert image_payload_metadata(value).source_provenance.has_values
-    assert image_payload_metadata(value).plane_axis is (
+    np.testing.assert_array_equal(value.data, expected)
+    np.testing.assert_array_equal(value.mask, np.ones(expected.shape, dtype=bool))
+    assert value.metadata.source_provenance.has_values
+    assert value.metadata.plane_axis is (
         RuntimePlaneAxis.RUNTIME_SLICE if plane_index is None else None
     )
 
@@ -854,7 +848,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     later = replace(executor, invocation=later_invocation,
                     artifact_inputs={later_edge.key: later_edge})
     later_adapter = later.runtime_adapter_request(payload)
-    image_payload_data(payload)[...] = -10
+    payload.data[...] = -10
     original = object()
     monkeypatch.setattr(type(adapter), "source_artifact_payload", lambda *args: original)
     assert later_edge.resolve_unstored_payload(later, payload, request=later_adapter) is original
@@ -892,9 +886,9 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
     held = SourceUniverseRequest.admit_source_artifact_cohort(
         scalar, source_binding_plan=plan, member_count=1,
     )
-    np.testing.assert_array_equal(image_payload_data(held), image_payload_data(original))
-    np.testing.assert_array_equal(image_payload_mask(held), image_payload_mask(original))
-    assert image_payload_metadata(held) == image_payload_metadata(original)
+    np.testing.assert_array_equal(held.data, original.data)
+    np.testing.assert_array_equal(held.mask, original.mask)
+    assert held.metadata == original.metadata
     composition = ImagePayloadConsumption.COMPOSED.compose_image_payload(
         "two original sources", (held, held),
     )
@@ -914,12 +908,12 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
     retained = SourceUniverseRequest.admit_source_artifact_cohort(
         original, source_binding_plan=plan, member_count=1,
     )
-    assert np.shares_memory(image_payload_data(retained), image_payload_data(original))
+    assert np.shares_memory(retained.data, original.data)
     volume = ImagePayloadMetadata(
         source_spatial_domain=VolumeSourceSpatialDomain(source_depth=2),
     ).payload_with(np.stack((pixels, pixels)), None)
     admitted_volume = SourceUniverseRequest.admit_source_artifact_cohort(
         volume, source_binding_plan=plan, member_count=1,
     )
-    assert image_payload_data(admitted_volume).shape == (2, 3, 4)
-    assert image_payload_metadata(admitted_volume).plane_axis is None
+    assert admitted_volume.data.shape == (2, 3, 4)
+    assert admitted_volume.metadata.plane_axis is None

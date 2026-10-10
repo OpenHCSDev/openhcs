@@ -27,10 +27,7 @@ from openhcs.core.projected_image_output import (
     SourcePlaneSelectionImageOutput,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -167,14 +164,12 @@ def test_public_selected_checkpoint_materializes_and_streams_without_storage_axe
         assert (
             request.source.metadata.component_metadata_for_item(path, 0)["channel"] == 2
         )
-        assert image_payload_metadata(payload).source_image_names == ("FITC",)
+        assert payload.metadata.source_image_names == ("FITC",)
         assert (
-            image_payload_metadata(payload).source_path
+            payload.metadata.source_path
             == "/input/A01_s001_w2_z001_t001.tif"
         )
-        assert image_payload_metadata(
-            payload
-        ).source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
+        assert payload.metadata.source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
     finally:
         viewer.cleanup()
 
@@ -192,7 +187,7 @@ def test_selection_contract_keeps_exact_source_order_without_channel_inference(
             axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
         ),
     )
-    metadata = image_payload_metadata(payload)
+    metadata = payload.metadata
     if len(indices) == 1:
         assert payload.shape == (7, 8)
         assert metadata.plane_axis is None
@@ -242,8 +237,8 @@ def test_independent_leaf_and_capabilities_execute_cooperative_selection_hooks()
         ),
     )
     assert calls == ["observe", "reverse", "declaration"]
-    assert image_payload_metadata(payload).source_image_names == ("FITC", "DAPI")
-    assert image_payload_metadata(payload).retained_plane_component_values() == {
+    assert payload.metadata.source_image_names == ("FITC", "DAPI")
+    assert payload.metadata.retained_plane_component_values() == {
         "channel": ("2", "1")
     }
     np.testing.assert_array_equal(np.asarray(payload), selected.data)
@@ -278,9 +273,9 @@ def test_new_diagnostic_leaf_composes_cooperative_hooks_without_consumer_edits()
     )
     assert calls == ["before", "selection", "after"]
     np.testing.assert_array_equal(np.asarray(payload), pixels[0])
-    assert image_payload_metadata(payload).source_image_names == ("FITC",)
-    assert image_payload_metadata(payload).intensity_scale is None
-    assert image_payload_metadata(payload).source_dtype == "float32"
+    assert payload.metadata.source_image_names == ("FITC",)
+    assert payload.metadata.intensity_scale is None
+    assert payload.metadata.source_dtype == "float32"
 
 
 def test_all_public_declared_outputs_persist_with_selected_qa_streams(
@@ -314,7 +309,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
         edges=(),
         coordinate_spacing=SourceVoxelSpacing((1.3556, 1.3556)),
         source_plane_index=1,
-        source_provenance=image_payload_metadata(selected).source_provenance,
+        source_provenance=selected.metadata.source_provenance,
     )
     values = (
         DataclassMeasurementColumnarRows((summary,), row_type=NeuriteOutgrowthSummary),

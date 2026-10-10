@@ -35,7 +35,6 @@ from openhcs.core.runtime_batch_contracts import (
     RuntimeBatchInvocationRequest,
     measurement_image_batch_executor,
 )
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
@@ -558,7 +557,7 @@ class GranularityBatchInvocation:
     ) -> "GranularityBatchInvocation | None":
         if "labels" not in request.kwargs:
             return None
-        image = np.asarray(image_payload_data(request.image))
+        image = np.asarray(request.image.data)
         labels = object_label_dense_array(request.kwargs["labels"], dtype=np.int32)
         object_range = np.unique(labels[labels > 0]).astype(np.int32, copy=False)
         return cls(

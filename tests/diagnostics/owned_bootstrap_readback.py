@@ -11,7 +11,6 @@ from openhcs.agent.dto.execution import ArtifactPlanInspection
 from openhcs.core.artifacts import ArtifactType, ImageArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
 from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.source_matching import source_component_metadata_value
 from openhcs.core.source_bindings import SourceProjectionRole
@@ -109,8 +108,8 @@ def verify_volume_publication(owned: Path, image_path: Path, pixels: np.ndarray,
             return matched
 
         image = record(image_name).data
-        np.testing.assert_array_equal(image_payload_data(image), expected)
-        assert addresses(image_payload_metadata(image)) == expected_addresses
+        np.testing.assert_array_equal(image.data, expected)
+        assert addresses(image.metadata) == expected_addresses
         flow = summary.main_flow_materialization
         assert flow is not None and flow.backend == 'disk'
         output_dir = Path(flow.output_dir)
@@ -136,7 +135,7 @@ def verify_volume_publication(owned: Path, image_path: Path, pixels: np.ndarray,
         labels = record('volume_fixture_labels_v2').data
         rows = record('volume_fixture_rows_v2').data
         np.testing.assert_array_equal(object_label_dense_array(labels), expected.astype(np.int32))
-        assert addresses(image_payload_metadata(labels)) == expected_addresses
+        assert addresses(labels.metadata) == expected_addresses
         assert rows.subject.object_name == plans['volume_fixture_labels_v2'].name
         assert rows.subject.id_field == 'object_label'
         expected_rows = tuple((local, 11+source, (source+2)**2)

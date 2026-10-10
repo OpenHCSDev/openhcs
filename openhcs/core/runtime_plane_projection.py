@@ -7,40 +7,118 @@ from dataclasses import dataclass
 from enum import Enum
 from metaclass_registry import AutoRegisterMeta
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from collections.abc import Sequence
-from typing import ClassVar
+from collections.abc import Callable, Sequence
+from typing import Any, ClassVar
 from typing import Self
 from typing import TYPE_CHECKING
 
+from openhcs.core.axes import AxisFamily
+
 if TYPE_CHECKING:
+    from openhcs.core.aligned_image_payload import AlignedImageStackKwargResolver
     from openhcs.core.source_image_provenance import SourceImageProvenance
 
 
 class RuntimeSliceProjectableValue(ABC):
-    """Nominal contract for values that own runtime-slice row projection."""
+    """A runtime value that owns how it splits into runtime slices.
+
+    Every owned runtime value family joins this ABC; ``RuntimeSliceProjection``
+    only handles foreign values (arrays, containers, primitives) itself.
+    """
+
+    def runtime_slice_count(self) -> int | None:
+        """Return the declared runtime-slice count, or None without that axis."""
+        return None
+
+    @property
+    def declared_plane_axis(self) -> "RuntimePlaneAxis | None":
+        """Return the leading plane axis this value declares, if any."""
+        return None
+
+    @abstractmethod
+    def value_for_slice(
+        self, context: "RuntimePlaneAxisValueProjection"
+    ) -> object:
+        """Return the value for one selected plane of ``context``'s axis."""
+
+    def identity_projected_value(
+        self, context: "RuntimePlaneAxisValueProjection"
+    ) -> object:
+        """Return the value stamped with one execution slice's identity."""
+        del context
+        return self
+
+    def full_stack_value(self) -> object:
+        """Return the value a whole-stack callable receives."""
+        return self
+
+    def aligned_value(self, resolver: "AlignedImageStackKwargResolver") -> object:
+        """Return the value bound beside one slice of an aligned image stack."""
+        del resolver
+        return self
+
+    def alignment_slices(self) -> tuple[object, ...]:
+        """Return this value split into the slices of an aligned invocation."""
+        return (self,)
+
+    def output_slices(self) -> tuple[object, ...]:
+        """Return the scalar values this value publishes as outputs."""
+        return self.alignment_slices()
+
+    def map_slices(self, transform: Callable[[Any], Any]) -> Any:
+        """Apply ``transform`` to each separately stored member, keeping alignment.
+
+        A value without separately stored members is transformed as a whole.
+        """
+        return transform(self)
+
+
+class RuntimeSliceIndexedValue(RuntimeSliceProjectableValue):
+    """A value whose runtime-slice projection selects one slice index."""
 
     @abstractmethod
     def project_runtime_slice(self, slice_index: int) -> object:
         """Return the value represented by one runtime-slice index."""
 
+    def value_for_slice(self, context: "RuntimePlaneAxisValueProjection") -> object:
+        if context.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+            return self
+        return self.project_runtime_slice(context.require_plane_index())
+
+    def aligned_value(self, resolver: "AlignedImageStackKwargResolver") -> object:
+        return self.value_for_slice(resolver.projection_axis)
+
 
 class RuntimeSliceInvariantValue(RuntimeSliceProjectableValue):
-    """Nominal contract for values unchanged by runtime-slice projection."""
+    """A value unchanged by runtime-slice projection."""
 
-    def project_runtime_slice(self, slice_index: int) -> Self:
-        """Preserve this value for every runtime slice."""
-        del slice_index
+    def value_for_slice(self, context: "RuntimePlaneAxisValueProjection") -> Self:
+        del context
         return self
 
 
-class RuntimeSliceIdentityProjectableValue(ABC):
-    """Nominal contract for values that can be stamped with execution-slice identity."""
+class RuntimeSliceIdentityProjectableValue(RuntimeSliceProjectableValue):
+    """A value that is stamped with the execution slice it was produced in."""
 
     @abstractmethod
     def with_runtime_slice_identity(
         self, *, slice_index: int, slice_count: int
     ) -> Self:
         """Return the value with execution-slice identity applied."""
+
+    def value_for_slice(self, context: "RuntimePlaneAxisValueProjection") -> object:
+        del context
+        return self
+
+    def identity_projected_value(
+        self, context: "RuntimePlaneAxisValueProjection"
+    ) -> object:
+        if context.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+            return self
+        return self.with_runtime_slice_identity(
+            slice_index=context.require_plane_index(),
+            slice_count=context.axis_size,
+        )
 
 
 class RuntimePlaneAxis(str, Enum):
@@ -214,7 +292,7 @@ class RuntimePlaneProjection(RuntimePlaneAxisProjector):
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimePlaneAxisValueProjection(RuntimeSliceProjectableValue):
+class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     """Projection of values that explicitly carry a declared runtime plane axis."""
 
     axis: RuntimePlaneAxis
@@ -259,7 +337,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceProjectableValue):
         """Construct the retained axis declared by an exact source-image value.
 
         A missing axis declares no plane projection, even when provenance has
-        multiple contributors. Cardinality and aliases come from that original
+        multiple contributors. Cardinality and aliases come from that source
         source declaration; array rank never supplies spatial meaning.
         """
         if axis is None:
@@ -401,7 +479,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceProjectableValue):
         *,
         value_name: str,
     ) -> RuntimePlaneAxisValueProjection:
-        """Admit an optional invocation projection as a complete input axis."""
+        """Require an optional invocation projection to be a complete input axis."""
 
         if projection is None:
             raise ValueError(f"{value_name} requires a complete input stack projection.")
@@ -411,7 +489,8 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceProjectableValue):
         """Return whether a dense shape carries this declared leading axis."""
 
         shape = tuple(int(size) for size in shape)
-        return len(shape) >= 3 and shape[0] == self.axis_size
+        spatial_rank = AxisFamily.active().payload_spatial_rank
+        return len(shape) > spatial_rank and shape[0] == self.axis_size
 
     def validate_shape(self, shape: Sequence[int], *, value_name: str) -> None:
         """Validate a dense shape against this declared runtime axis."""

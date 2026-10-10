@@ -33,6 +33,7 @@ from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.payload_axes import PayloadAxes
 
 Z_STACK = SourceImageSetIdentityPolicy(frozenset({Microscopy.ZIndex}))
 EXACT = RuntimeEquivalencePolicy(image_abs_tolerance=0, image_rel_tolerance=0)
@@ -373,7 +374,7 @@ def test_channel_slice_precedes_invalid_declared_axis_and_uses_modulo():
             raise RuntimeError("pixel slice failure")
 
     pixels = FailingPixels()
-    metadata = ImagePayloadMetadata(source_channel_axis=99)
+    metadata = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(99))
     with pytest.raises(RuntimeError, match="pixel slice failure"):
         metadata.project_channel_payload(pixels, pixels, 1, channel_axis=9)
     assert events == [(slice(1, 2), slice(None), slice(None))]

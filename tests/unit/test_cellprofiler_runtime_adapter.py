@@ -63,11 +63,7 @@ from openhcs.core.runtime_artifact_queries import (
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
     RuntimeMeasurementFeatureOwner,
@@ -182,6 +178,7 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.runtime_image_values import ImagePayload
 
 AXIS_ID = "A01"
 DNA_IMAGE = "DNA"
@@ -1446,11 +1443,11 @@ def test_cellprofiler_adapter_does_not_select_relationship_from_current_source_p
 
     assert isinstance(relationship, RuntimeSliceAlignedValues)
     assert tuple(
-        tuple(relationship.value_for_slice(index).payload.source_ids)
+        tuple(relationship.value_at(index).payload.source_ids)
         for index in range(relationship.slice_count)
     ) == ((1,), (2,))
     assert tuple(
-        tuple(relationship.value_for_slice(index).payload.target_ids)
+        tuple(relationship.value_at(index).payload.target_ids)
         for index in range(relationship.slice_count)
     ) == ((1,), (2,))
 
@@ -1540,7 +1537,7 @@ def test_cellprofiler_adapter_aligns_grouped_relationships_to_runtime_slices():
 
     assert isinstance(relationships, RuntimeSliceAlignedValues)
     assert tuple(
-        tuple(relationships.value_for_slice(index).payload.source_ids)
+        tuple(relationships.value_at(index).payload.source_ids)
         for index in range(relationships.slice_count)
     ) == ((1,), (2,))
 
@@ -1618,9 +1615,9 @@ def test_cellprofiler_adapter_does_not_source_scope_default_image_records():
         DNA_IMAGE,
     )
 
-    assert image_payload_data(image).shape == (2, 2, 2)
-    np.testing.assert_array_equal(image_payload_data(image)[0], np.full((2, 2), 1.0))
-    np.testing.assert_array_equal(image_payload_data(image)[1], np.full((2, 2), 2.0))
+    assert image.data.shape == (2, 2, 2)
+    np.testing.assert_array_equal(image.data[0], np.full((2, 2), 1.0))
+    np.testing.assert_array_equal(image.data[1], np.full((2, 2), 2.0))
 
 
 def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups():
@@ -1717,9 +1714,9 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
         image_name,
     )
 
-    assert image_payload_data(image).shape == (2, 2, 2)
-    np.testing.assert_array_equal(image_payload_data(image)[0], np.full((2, 2), 1.0))
-    np.testing.assert_array_equal(image_payload_data(image)[1], np.full((2, 2), 2.0))
+    assert image.data.shape == (2, 2, 2)
+    np.testing.assert_array_equal(image.data[0], np.full((2, 2), 1.0))
+    np.testing.assert_array_equal(image.data[1], np.full((2, 2), 2.0))
 
 
 def test_cellprofiler_adapter_keeps_multisource_current_image_grouped_when_files_are_narrow():
@@ -1808,11 +1805,11 @@ def test_cellprofiler_adapter_keeps_multisource_current_image_grouped_when_files
     image = consumer.get_image(
         image_name,
     )
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
 
-    assert image_payload_data(image).shape == (2, 2, 2)
-    np.testing.assert_array_equal(image_payload_data(image)[0], np.full((2, 2), 1.0))
-    np.testing.assert_array_equal(image_payload_data(image)[1], np.full((2, 2), 2.0))
+    assert image.data.shape == (2, 2, 2)
+    np.testing.assert_array_equal(image.data[0], np.full((2, 2), 1.0))
+    np.testing.assert_array_equal(image.data[1], np.full((2, 2), 2.0))
     assert metadata.source_image_provenance_planes.paths == source_paths
 
 
@@ -1904,9 +1901,9 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
         image_name,
     )
 
-    assert image_payload_data(image).shape == (2, 2, 2)
-    np.testing.assert_array_equal(image_payload_data(image)[0], np.full((2, 2), 1.0))
-    np.testing.assert_array_equal(image_payload_data(image)[1], np.full((2, 2), 2.0))
+    assert image.data.shape == (2, 2, 2)
+    np.testing.assert_array_equal(image.data[0], np.full((2, 2), 1.0))
+    np.testing.assert_array_equal(image.data[1], np.full((2, 2), 2.0))
 
 
 def test_cellprofiler_adapter_records_output_in_declared_invocation_group():
@@ -2059,11 +2056,11 @@ def test_cellprofiler_adapter_projects_source_bound_runtime_image_to_group_plane
     )
 
     image = consumer.get_image(image_name)
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
 
-    assert image_payload_data(image).shape == (2, 3)
+    assert image.data.shape == (2, 3)
     np.testing.assert_array_equal(
-        image_payload_data(image),
+        image.data,
         np.full((2, 3), 2.0, dtype=np.float32),
     )
     assert metadata.source_path == source_paths[1]
@@ -2158,11 +2155,11 @@ def test_cellprofiler_adapter_deduplicates_grouped_runtime_image_input_locations
     )
 
     image = consumer.get_image(image_name)
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
 
-    assert image_payload_data(image).shape == (2, 3)
+    assert image.data.shape == (2, 3)
     np.testing.assert_array_equal(
-        image_payload_data(image),
+        image.data,
         np.full((2, 3), 2.0, dtype=np.float32),
     )
     assert metadata.source_path == source_paths[1]
@@ -2232,7 +2229,7 @@ def test_cellprofiler_adapter_uses_identity_record_for_collapsed_grouped_input()
     image = consumer.get_image(image_name)
 
     np.testing.assert_array_equal(
-        image_payload_data(image),
+        image.data,
         np.full((2, 3), 7.0, dtype=np.float32),
     )
 
@@ -2318,13 +2315,13 @@ def test_cellprofiler_adapter_uses_grouped_input_when_consumer_group_is_differen
 
     image = consumer.get_image(image_name)
 
-    assert image_payload_data(image).shape == (2, 2, 3)
+    assert image.data.shape == (2, 2, 3)
     np.testing.assert_array_equal(
-        image_payload_data(image)[0],
+        image.data[0],
         np.full((2, 3), 1.0, dtype=np.float32),
     )
     np.testing.assert_array_equal(
-        image_payload_data(image)[1],
+        image.data[1],
         np.full((2, 3), 2.0, dtype=np.float32),
     )
 
@@ -2422,15 +2419,15 @@ def test_cellprofiler_adapter_does_not_project_channel_stack_for_site_group():
     )
 
     image = consumer.get_image(image_name)
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
 
-    assert image_payload_data(image).shape == (2, 2, 3)
+    assert image.data.shape == (2, 2, 3)
     np.testing.assert_array_equal(
-        image_payload_data(image)[0],
+        image.data[0],
         np.full((2, 3), 1.0, dtype=np.float32),
     )
     np.testing.assert_array_equal(
-        image_payload_data(image)[1],
+        image.data[1],
         np.full((2, 3), 2.0, dtype=np.float32),
     )
     assert metadata.source_image_provenance_planes.paths == source_paths
@@ -2532,11 +2529,11 @@ def test_cellprofiler_adapter_projects_stack_without_replacing_artifact_provenan
     image = consumer.get_image(
         image_name,
     )
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
 
-    assert image_payload_data(image).shape == (2, 3)
+    assert image.data.shape == (2, 3)
     np.testing.assert_array_equal(
-        image_payload_data(image),
+        image.data,
         np.full((2, 3), 2.0, dtype=np.float32),
     )
     assert metadata.source_path == "/plate/Images/A01_s1_w1.tif"
@@ -2633,10 +2630,10 @@ def test_cellprofiler_adapter_does_not_select_image_record_from_current_source_s
     image = consumer.get_image(
         image_name,
     )
-    metadata = image_payload_metadata(image)
+    metadata = image.metadata
 
     np.testing.assert_array_equal(
-        image_payload_data(image),
+        image.data,
         np.stack(
             (
                 np.full((2, 3), 1.0, dtype=np.float32),
@@ -3631,9 +3628,9 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
 
     image = consumer.get_image(DNA_IMAGE)
 
-    assert image_payload_data(image).shape == (2, 2, 3)
-    np.testing.assert_array_equal(image_payload_data(image)[0], np.full((2, 3), 1.0))
-    np.testing.assert_array_equal(image_payload_data(image)[1], np.full((2, 3), 2.0))
+    assert image.data.shape == (2, 2, 3)
+    np.testing.assert_array_equal(image.data[0], np.full((2, 3), 1.0))
+    np.testing.assert_array_equal(image.data[1], np.full((2, 3), 2.0))
 
 
 def test_cellprofiler_adapter_relationships_validate_declared_inputs_by_location():
@@ -4010,15 +4007,15 @@ def test_cellprofiler_adapter_adds_and_reads_slice_aligned_spatial_grids():
     assert isinstance(stored, RuntimeSliceAlignedValues)
     assert stored.slice_count == 2
     assert [
-        stored.value_for_slice(index).name for index in range(stored.slice_count)
+        stored.value_at(index).name for index in range(stored.slice_count)
     ] == ["Grid", "Grid"]
     assert [
-        stored.value_for_slice(index).x_origin for index in range(stored.slice_count)
+        stored.value_at(index).x_origin for index in range(stored.slice_count)
     ] == [1.0, 2.0]
     saved_grids = filemanager.saved[("memory", "/memory/Grid.pkl")]
     assert isinstance(saved_grids, RuntimeSliceAlignedValues)
     assert [
-        saved_grids.value_for_slice(index).x_origin
+        saved_grids.value_at(index).x_origin
         for index in range(saved_grids.slice_count)
     ] == [
         1.0,
@@ -5952,7 +5949,7 @@ def test_cellprofiler_module_executor_records_and_publishes_object_output(
 
     @declared_processing_contract(ProcessingContract.PURE_2D)
     def identify_primary_objects(image_arg, *, min_diameter):
-        np.testing.assert_array_equal(image_payload_data(image_arg), image)
+        np.testing.assert_array_equal(image_arg.data, image)
         assert min_diameter == 8
         return ObjectLabelPayload(
             variant_data=ObjectLabelVariantData(labels=labels),
@@ -6105,10 +6102,10 @@ def test_cellprofiler_module_executor_reads_objects_for_measurements(
 
     @declared_processing_contract(ProcessingContract.FLEXIBLE)
     def measure_object_size_shape(
-        image_arg, *, labels: ObjectLabelValue
+        image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
         np.testing.assert_array_equal(
-            image_payload_data(image_arg), image_payload_data(image)
+            image_arg.data, image.data
         )
         np.testing.assert_array_equal(object_label_dense_array(labels), labels_array)
         return image_arg, rows
@@ -6181,9 +6178,9 @@ def test_cellprofiler_object_only_measurement_uses_label_domain_reference_image(
     @object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
     @declared_processing_contract(ProcessingContract.PURE_2D)
     def measure_object_size_shape(
-        image_arg, *, labels: ObjectLabelValue
+        image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
-        image_pixels = np.asarray(image_payload_data(image_arg))
+        image_pixels = np.asarray(image_arg.data)
         seen.append((image_pixels.copy(), object_label_dense_array(labels).copy()))
         return image_arg, rows
 
@@ -6264,9 +6261,9 @@ def test_cellprofiler_object_only_pure_2d_module_executes_label_runtime_slices(
     @runtime_bound_parameters(SliceIndexRuntimeParameter)
     @declared_processing_contract(ProcessingContract.PURE_2D)
     def measure_object_size_shape(
-        image_arg, *, labels: ObjectLabelValue, slice_index: int | None = None
+        image_arg: ImagePayload, *, labels: ObjectLabelValue, slice_index: int | None = None
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
-        image_pixels = np.asarray(image_payload_data(image_arg))
+        image_pixels = np.asarray(image_arg.data)
         label_pixels = object_label_dense_array(labels)
         seen.append((tuple(image_pixels.shape), int(label_pixels.max())))
         assert slice_index is not None
@@ -6356,7 +6353,7 @@ def test_cellprofiler_object_only_full_stack_measurement_preserves_label_runtime
     @object_label_input_execution_mode(ObjectLabelInputExecutionMode.FULL_STACK)
     @declared_processing_contract(ProcessingContract.FLEXIBLE)
     def measure_object_size_shape(
-        image_arg, *, labels: ObjectLabelValue
+        image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
         seen.append(tuple(object_label_dense_array(labels).shape))
         return image_arg, DataclassMeasurementColumnarRows(
@@ -6442,9 +6439,9 @@ def test_cellprofiler_module_executor_measures_each_declared_image_for_single_ob
 
     @declared_processing_contract(ProcessingContract.PURE_2D)
     def measure_object_intensity(
-        image_arg, *, labels: ObjectLabelValue
+        image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
-        image_pixels = image_payload_data(image_arg)
+        image_pixels = image_arg.data
         label_pixels = object_label_dense_array(labels)
         seen.append((float(image_pixels.mean()), int(label_pixels.max())))
         return image_pixels, DataclassMeasurementColumnarRows(
@@ -6537,9 +6534,9 @@ def test_cellprofiler_module_executor_keeps_coupled_measurement_images_composed(
     @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
     @composed_image_payload
     def measure_colocalization(
-        image_arg, *, labels: ObjectLabelValue
+        image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, ColumnarRows]:
-        image_pixels = image_payload_data(image_arg)
+        image_pixels = image_arg.data
         label_pixels = object_label_dense_array(labels)
         seen.append((image_pixels.shape, label_pixels.shape))
         return image_pixels[0], ObjectColocalizationMetricArrays.empty(1).rows_for(
@@ -6638,7 +6635,7 @@ def test_cellprofiler_module_executor_combines_multi_object_measurements(
 
     @declared_processing_contract(ProcessingContract.PURE_2D)
     def measure_object_size_shape(
-        image_arg, *, labels: ObjectLabelValue
+        image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
         if labels.name == NUCLEI:
             return image_arg, DataclassMeasurementColumnarRows(
@@ -9264,9 +9261,9 @@ def test_object_only_measurements_use_each_object_owned_reference_image(
 
     @declared_processing_contract(ProcessingContract.PURE_2D)
     def measure_object_size_shape(
-        image_arg, *, labels: ObjectLabelValue
+        image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
-        image_pixels = np.asarray(image_payload_data(image_arg))
+        image_pixels = np.asarray(image_arg.data)
         label_pixels = object_label_dense_array(labels)
         seen_images.append((image_pixels.copy(), label_pixels.copy()))
         return image_arg, DataclassMeasurementColumnarRows(
@@ -9369,9 +9366,9 @@ def test_cellprofiler_module_executor_measures_each_declared_image_and_object(
 
     @declared_processing_contract(ProcessingContract.FLEXIBLE)
     def measure_object_intensity(
-        image_arg, *, labels: ObjectLabelValue
+        image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
-        image_pixels = image_payload_data(image_arg)
+        image_pixels = image_arg.data
         label_pixels = object_label_dense_array(labels)
         seen.append((float(image_pixels.mean()), int(label_pixels.max())))
         return image_pixels, DataclassMeasurementColumnarRows(
@@ -9572,7 +9569,7 @@ def test_cellprofiler_object_only_executor_does_not_iterate_image_stack(
         primary_labels: ObjectLabelValue,
         secondary_labels: ObjectLabelValue,
     ):
-        image_pixels = np.asarray(image_payload_data(image_arg))
+        image_pixels = np.asarray(image_arg.data)
         primary_pixels = object_label_dense_array(primary_labels)
         secondary_pixels = object_label_dense_array(secondary_labels)
         seen_images.append(image_pixels.shape)
@@ -9684,7 +9681,7 @@ def test_cellprofiler_module_executor_records_relationship_and_measurement_outpu
         calculate_per_parent_means: bool = False,
     ):
         np.testing.assert_array_equal(
-            image_payload_data(image_arg), image_payload_data(image)
+            image_arg.data, image.data
         )
         np.testing.assert_array_equal(object_label_dense_array(parent_labels), cells)
         np.testing.assert_array_equal(object_label_dense_array(child_labels), nuclei)

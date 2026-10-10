@@ -12,12 +12,7 @@ from enum import Enum
 from openhcs.core.memory import numpy
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -96,6 +91,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
 )
+from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -125,7 +121,7 @@ class ExcessObjectHandling(CellProfilerEnumAttributeMixin, Enum):
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def identify_primary_objects(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     min_diameter: int = 10,
     max_diameter: int = 40,
     exclude_size: bool = True,
@@ -252,20 +248,20 @@ def identify_primary_objects(
         function="identify_primary_objects",
     )
     phase_started_at = time.perf_counter()
-    input_mask_payload = image_payload_mask(image)
+    input_mask_payload = image.mask
     input_mask = (
         None
         if input_mask_payload is None
         else np.asarray(input_mask_payload, dtype=bool)
     )
     input_metadata = (
-        image_payload_metadata(image)
+        image.metadata
         if respect_source_border_metadata
         else ImagePayloadMetadata()
     )
-    raw_image_data = np.asarray(image_payload_data(image))
+    raw_image_data = np.asarray(image.data)
     proven_unit_interval_scale = unit_interval_scale_for_threshold_selection(
-        raw_image_data, image_payload_metadata(image)
+        raw_image_data, image.metadata
     )
     img = normalize_cellprofiler_image(image)
     effective_threshold_smoothing = threshold_smoothing_scale
@@ -323,9 +319,9 @@ def identify_primary_objects(
             if input_mask is not None
             else None
         ),
-        image_sources=image_payload_metadata(image).source_image_names,
-        image_source_path=image_payload_metadata(image).source_path,
-        image_source_components=image_payload_metadata(image).source_component_metadata,
+        image_sources=image.metadata.source_image_names,
+        image_source_path=image.metadata.source_path,
+        image_source_components=image.metadata.source_component_metadata,
     )
     if fill_holes.before_declump_requested(use_advanced_settings=use_advanced_settings):
         phase_started_at = time.perf_counter()

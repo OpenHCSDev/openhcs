@@ -45,9 +45,6 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
 )
 from openhcs.interop.cellprofiler.module_settings import (
     BoundModuleSettings,
@@ -88,6 +85,7 @@ from openhcs.processing.backends.cellprofiler.alignment_mutual_information_offse
     mutual_information_offset_unmasked_numba,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 class _AlignShiftFieldRole(str, Enum):
@@ -762,8 +760,8 @@ class AlignExecution:
         self,
     ) -> tuple[AlignedImageStack, DataclassMeasurementColumnarRows]:
         """Return aligned image payloads followed by shift measurements."""
-        input_data = np.asarray(image_payload_data(self.image))
-        input_metadata = image_payload_metadata(self.image)
+        input_data = np.asarray(self.image.data)
+        input_metadata = self.image.metadata
         if input_metadata.plane_axis is None:
             raise ValueError("Align requires a declared input image plane axis.")
         plane_count = input_metadata.source_provenance.source_plane_count
@@ -784,10 +782,10 @@ class AlignExecution:
             for index in range(plane_count)
         )
         images = tuple(
-            np.asarray(image_payload_data(payload)) for payload in image_payloads
+            np.asarray(payload.data) for payload in image_payloads
         )
         first_image, second_image = images[:2]
-        metadata = tuple(image_payload_metadata(payload) for payload in image_payloads)
+        metadata = tuple(payload.metadata for payload in image_payloads)
         masks = tuple(
             self.spatial_mask(payload, image, plane_metadata)
             for payload, image, plane_metadata in zip(
@@ -921,7 +919,7 @@ class AlignExecution:
         metadata: ImagePayloadMetadata,
     ) -> np.ndarray:
         """Return 2-D registration pixels from declared channel semantics."""
-        channel_axis = metadata.normalized_source_channel_axis(image)
+        channel_axis = metadata.axis_index(ColourAxis, image)
         if channel_axis is None:
             if image.ndim != 2:
                 raise ValueError(
@@ -942,11 +940,11 @@ class AlignExecution:
         metadata: ImagePayloadMetadata,
     ) -> np.ndarray | None:
         """Return a 2-D mask using the image plane's declared channel axis."""
-        mask = image_payload_mask(payload)
+        mask = payload.mask
         if mask is None:
             return None
         mask_array = metadata.mask_domain(image).broadcast_to_data(mask)
-        channel_axis = metadata.normalized_source_channel_axis(image)
+        channel_axis = metadata.axis_index(ColourAxis, image)
         if channel_axis is not None:
             mask_array = np.all(mask_array, axis=channel_axis)
         if mask_array.ndim != 2:
@@ -1078,7 +1076,7 @@ def prepare_align() -> None:
 @required_axis_roles(ColourAxis)
 @numpy(contract=ProcessingContract.PURE_3D)
 def align(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     *,
     method: AlignModule.Method = AlignModule.Method.MUTUAL_INFORMATION,
     crop_mode: AlignModule.CropMode = AlignModule.CropMode.KEEP_SIZE,

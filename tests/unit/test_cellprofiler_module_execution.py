@@ -25,8 +25,6 @@ from openhcs.core.aligned_image_payload import (
     aligned_image_stack_kwargs,
     compose_aligned_image_payload,
     pack_aligned_image_outputs,
-    payload_slice_count,
-    payload_slices_for_alignment,
 )
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -92,9 +90,6 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     MaskedImagePayload,
-    image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_measurements import (
@@ -403,6 +398,8 @@ from tests.unit.cellprofiler_runtime_test_support import (
 )
 from openhcs.core.axes import Axis, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import PayloadAxes
 
 
 def _compiled_callable_contract(
@@ -476,7 +473,7 @@ def test_compiled_image_request_does_not_repeat_authored_callable_preparation(
     )
 
     assert image_request.source_aliases == (source_spec.name,)
-    np.testing.assert_array_equal(image_payload_data(image_request.payload), image)
+    np.testing.assert_array_equal(image_request.payload.data, image)
 
 def test_default_invocation_keeps_compiled_source_bindings_outside_anchor_group() -> (
     None
@@ -1390,8 +1387,8 @@ def test_runtime_binding_uses_full_compiled_special_input_contract() -> None:
 
     assert tuple(bound) == ("topology_inputs",)
     topology_inputs = bound["topology_inputs"]
-    np.testing.assert_array_equal(image_payload_data(topology_inputs[0]), 1.0)
-    np.testing.assert_array_equal(image_payload_data(topology_inputs[1]), 1.0)
+    np.testing.assert_array_equal(topology_inputs[0].data, 1.0)
+    np.testing.assert_array_equal(topology_inputs[1].data, 1.0)
 
 
 def test_image_artifact_resolution_uses_declared_artifact_alias(
@@ -1410,7 +1407,7 @@ def test_image_artifact_resolution_uses_declared_artifact_alias(
         spec=spec, value=source
     )
 
-    metadata = image_payload_metadata(payload)
+    metadata = payload.metadata
     assert metadata.source_image_names == ("IllumStain1",)
     assert metadata.source_image_provenance_planes.paths == ("/input/A01_s001_w1.tif",)
     assert (
@@ -1475,8 +1472,8 @@ def test_main_flow_image_artifact_selects_declared_alias_plane() -> None:
         ).artifact_value_for_spec(first_spec)
     )
 
-    np.testing.assert_array_equal(image_payload_data(payload), np.zeros((4, 5)))
-    assert image_payload_metadata(payload).source_image_names == ("Stain1",)
+    np.testing.assert_array_equal(payload.data, np.zeros((4, 5)))
+    assert payload.metadata.source_image_names == ("Stain1",)
 
 
 def test_single_main_flow_image_artifact_selects_declared_source_binding_plane() -> (
@@ -1524,8 +1521,8 @@ def test_single_main_flow_image_artifact_selects_declared_source_binding_plane()
         ).artifact_value_for_spec(spec)
     )
 
-    np.testing.assert_array_equal(image_payload_data(payload), np.zeros((4, 5)))
-    assert image_payload_metadata(payload).source_image_names == ("OrigStain1",)
+    np.testing.assert_array_equal(payload.data, np.zeros((4, 5)))
+    assert payload.metadata.source_image_names == ("OrigStain1",)
 
 
 def test_main_flow_image_artifact_projects_named_provenance_plane() -> None:
@@ -1575,8 +1572,8 @@ def test_main_flow_image_artifact_projects_named_provenance_plane() -> None:
         ).artifact_value_for_spec(first_spec)
     )
 
-    np.testing.assert_array_equal(image_payload_data(payload), np.zeros((4, 5)))
-    assert image_payload_metadata(payload).source_image_names == ("Stain1",)
+    np.testing.assert_array_equal(payload.data, np.zeros((4, 5)))
+    assert payload.metadata.source_image_names == ("Stain1",)
 
 
 def test_main_flow_image_artifact_preserves_declared_runtime_slice_stack() -> None:
@@ -1621,9 +1618,9 @@ def test_main_flow_image_artifact_preserves_declared_runtime_slice_stack() -> No
     )
 
     np.testing.assert_array_equal(
-        image_payload_data(payload), image_payload_data(current_image)
+        payload.data, current_image.data
     )
-    assert image_payload_metadata(payload).source_image_names == ("Stain1",)
+    assert payload.metadata.source_image_names == ("Stain1",)
 
 
 def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d(
@@ -1708,8 +1705,8 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d(
         primary_image=image_request.payload,
     )
 
-    assert image_payload_data(image_request.payload).shape == (4, 5)
-    assert image_payload_data(runtime_kwargs["illumination_function"]).shape == (4, 5)
+    assert image_request.payload.data.shape == (4, 5)
+    assert runtime_kwargs["illumination_function"].data.shape == (4, 5)
 
 
 def test_composed_measurement_images_keep_declared_aliases_and_resolved_payload() -> None:
@@ -1850,9 +1847,9 @@ def test_repeated_broadcast_inputs_consume_their_declared_source_group_axes() ->
             slice_count=2,
             reference_payload=image_request.payload.slices[index],
         )
-        assert image_payload_data(resolved["illumination_function"]).shape == (4, 5)
+        assert resolved["illumination_function"].data.shape == (4, 5)
         np.testing.assert_array_equal(
-            image_payload_data(resolved["illumination_function"]),
+            resolved["illumination_function"].data,
             index + 1,
         )
 
@@ -1890,9 +1887,9 @@ def test_single_main_flow_image_preserves_runtime_slice_axis() -> None:
         ).artifact_value_for_spec(spec)
     )
 
-    assert image_payload_data(payload).shape == (1, 4, 5)
-    assert image_payload_metadata(payload).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert image_payload_metadata(payload).source_image_names == ("CropRed",)
+    assert payload.data.shape == (1, 4, 5)
+    assert payload.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert payload.metadata.source_image_names == ("CropRed",)
 
 
 def test_object_artifact_source_payload_uses_native_object_provenance() -> None:
@@ -1909,7 +1906,7 @@ def test_object_artifact_source_payload_uses_native_object_provenance() -> None:
     payload = ObjectLabelsArtifactType.source_image_payload_from_runtime_value(objects)
 
     assert payload is objects
-    assert image_payload_metadata(payload).source_image_provenance_planes.paths == (
+    assert payload.metadata.source_image_provenance_planes.paths == (
         "/input/A01_s001_w1.tif",
     )
 
@@ -1955,7 +1952,7 @@ def test_object_input_does_not_replace_preserved_canonical_main_flow_image() -> 
         axis_size=1,
     )
     np.testing.assert_array_equal(
-        image_payload_data(image_request.payload),
+        image_request.payload.data,
         np.full((1, 2, 2), 7, dtype=np.float32),
     )
 
@@ -1997,12 +1994,12 @@ def test_object_input_does_not_replace_selected_canonical_main_flow_plane() -> N
     )
 
     assert image_request.plane_projection is None
-    assert np.shape(image_payload_data(image_request.payload)) == (2, 2)
+    assert np.shape(image_request.payload.data) == (2, 2)
     np.testing.assert_array_equal(
-        image_payload_data(image_request.payload),
+        image_request.payload.data,
         np.full((2, 2), 9, dtype=np.float32),
     )
-    assert image_payload_metadata(image_request.payload).plane_axis is None
+    assert image_request.payload.metadata.plane_axis is None
 
 
 def test_singleton_object_measurement_collapses_singleton_plane_context() -> None:
@@ -2047,7 +2044,7 @@ def test_singleton_object_measurement_collapses_singleton_plane_context() -> Non
     )
 
     assert aligned_image.plane_projection is None
-    assert np.shape(image_payload_data(aligned_image.payload)) == (2, 2)
+    assert np.shape(aligned_image.payload.data) == (2, 2)
     assert RuntimeSliceProjection.preserved_context_for_value(executable_labels) is None
 
 
@@ -2615,9 +2612,7 @@ def test_track_objects_retained_image_uses_tracked_object_source_payload() -> No
     assert isinstance(source_payload, ObjectLabelSet)
     assert source_payload.name == tracked_objects.name
     np.testing.assert_array_equal(source_payload.labels, tracked_objects.labels)
-    assert image_payload_metadata(
-        source_payload
-    ).source_image_provenance_planes.paths == (
+    assert source_payload.metadata.source_image_provenance_planes.paths == (
         "gray0.tif",
         "gray1.tif",
         "gray2.tif",
@@ -2896,13 +2891,11 @@ def test_watershed_output_source_policy_uses_declared_image_as_parent() -> None:
     source_context = policy.source_context(request)
 
     np.testing.assert_array_equal(
-        image_payload_data(source_context.source_payload),
-        image_payload_data(image_payload),
+        source_context.source_payload.data,
+        image_payload.data,
     )
     assert source_context.parent_image_payload is source_context.source_payload
-    assert image_payload_metadata(
-        source_context.source_payload
-    ).source_voxel_spacing == SourceVoxelSpacing((2.0, 1.0, 1.0))
+    assert source_context.source_payload.metadata.source_voxel_spacing == SourceVoxelSpacing((2.0, 1.0, 1.0))
 
 
 def test_object_label_recorder_suppresses_parent_spacing_when_policy_declares_no_parent_image() -> (
@@ -3603,7 +3596,7 @@ def test_single_image_replacement_returns_exact_named_bundle() -> None:
     assert tuple(context.output_key for context in result.slice_contexts) == (
         output.name,
     )
-    np.testing.assert_array_equal(image_payload_data(result.slices[0]), rgb_image)
+    np.testing.assert_array_equal(result.slices[0].data, rgb_image)
 
 
 def test_image_sidecar_is_not_packed_into_replacement_main_flow() -> None:
@@ -3654,7 +3647,7 @@ def test_image_sidecar_is_not_packed_into_replacement_main_flow() -> None:
         output.name,
     )
     np.testing.assert_array_equal(
-        image_payload_data(result.slices[0]),
+        result.slices[0].data,
         cropped_image,
     )
 
@@ -4695,8 +4688,8 @@ def test_calculate_math_object_operands_preserve_label_slice_domain() -> None:
 
     assert isinstance(value, CellProfilerSliceAlignedValues)
     assert value.slice_count == 2
-    np.testing.assert_array_equal(value.value_for_slice(0), [1.0, 2.0])
-    np.testing.assert_array_equal(value.value_for_slice(1), [3.0, 4.0])
+    np.testing.assert_array_equal(value.value_at(0), [1.0, 2.0])
+    np.testing.assert_array_equal(value.value_at(1), [3.0, 4.0])
 
 
 def test_calculate_math_count_operand_preserves_label_slice_domain() -> None:
@@ -4779,8 +4772,8 @@ def test_calculate_math_binds_operand_object_identity_from_artifact_contract() -
     )
 
     assert isinstance(value, CellProfilerSliceAlignedValues)
-    np.testing.assert_array_equal(value.value_for_slice(0), [1.0, 2.0])
-    np.testing.assert_array_equal(value.value_for_slice(1), [3.0, 4.0])
+    np.testing.assert_array_equal(value.value_at(0), [1.0, 2.0])
+    np.testing.assert_array_equal(value.value_at(1), [3.0, 4.0])
     assert "operand1_object_name" not in request.kwargs
 
 
@@ -4814,7 +4807,7 @@ def test_cellprofiler_measurement_vector_preserves_singleton_slice_alignment() -
 
     assert isinstance(value, CellProfilerSliceAlignedValues)
     assert value.slice_count == 1
-    np.testing.assert_array_equal(value.value_for_slice(0), [1.0, 2.0])
+    np.testing.assert_array_equal(value.value_at(0), [1.0, 2.0])
 
 
 def test_cellprofiler_measurement_vector_without_plane_domain_is_not_slice_aligned() -> (
@@ -5003,7 +4996,7 @@ def test_object_row_binding_honors_authoritative_singleton_runtime_projection(
         )
         assert object_label_dense_array(projected["object_labels"][0]).shape == (2, 2)
         np.testing.assert_array_equal(projected["measurement_values"], (0.25,))
-        assert image_payload_data(image).shape == (1, 2, 2)
+        assert image.data.shape == (1, 2, 2)
 
 
 def test_object_row_binding_preserves_nominal_parameter_abi_without_domain() -> None:
@@ -5384,9 +5377,9 @@ def test_cellprofiler_contract_executor_applies_pure_2d_after_input_resolution()
     )
 
     assert calls == [(4, 5), (4, 5)]
-    assert image_payload_data(result).shape == stack.shape
+    assert result.data.shape == stack.shape
     np.testing.assert_array_equal(
-        image_payload_data(result),
+        result.data,
         np.ones_like(stack.data),
     )
 
@@ -5405,7 +5398,7 @@ def test_cellprofiler_contract_executor_preserves_declared_two_channel_color_pla
     )
     image = ImageMetadataPayload(
         np.zeros((4, 5, 2), dtype=np.float32),
-        ImagePayloadMetadata(source_channel_axis=-1),
+        ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)),
     )
     image.data[..., 0] = 7.0
 
@@ -5419,7 +5412,7 @@ def test_cellprofiler_contract_executor_preserves_declared_two_channel_color_pla
 
     assert calls == [(4, 5, 2)]
     np.testing.assert_array_equal(
-        image_payload_data(result),
+        result.data,
         np.full((4, 5), 7.0),
     )
 
@@ -5439,7 +5432,7 @@ def test_cellprofiler_contract_executor_slices_declared_two_channel_color_stack(
     stack = ImageMetadataPayload(
         np.zeros((2, 4, 5, 2), dtype=np.float32),
         ImagePayloadMetadata(
-            source_channel_axis=-1,
+            axes=PayloadAxes.colour_samples(-1),
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 component_metadata=(
@@ -5466,7 +5459,7 @@ def test_cellprofiler_contract_executor_slices_declared_two_channel_color_stack(
 
     assert calls == [(4, 5, 2), (4, 5, 2)]
     np.testing.assert_array_equal(
-        image_payload_data(result),
+        result.data,
         np.stack(
             (
                 np.full((4, 5), 3.0, dtype=np.float32),
@@ -5518,8 +5511,8 @@ def test_cellprofiler_contract_executor_preserves_inner_volume_dimensions():
     )
 
     assert calls == [((3, 4, 5), (3, 4, 5), index) for index in range(2)]
-    assert image_payload_data(result).shape == image.shape
-    np.testing.assert_array_equal(image_payload_data(result), label_data)
+    assert result.data.shape == image.shape
+    np.testing.assert_array_equal(result.data, label_data)
 
 
 def test_cellprofiler_contract_executor_rejects_kwarg_only_runtime_axis():
@@ -5620,7 +5613,7 @@ def test_cellprofiler_contract_executor_projects_declared_runtime_slice_label_kw
     )
 
     assert calls == [((4, 5), (4, 5), 0) for _ in range(3)]
-    assert image_payload_data(result_image).shape == image.shape
+    assert result_image.data.shape == image.shape
     np.testing.assert_array_equal(object_label_dense_array(result_labels), label_data)
 
 
@@ -5650,9 +5643,9 @@ def test_cellprofiler_contract_executor_stacks_singleton_plane_outputs():
         execution_mode=ImagePayloadExecutionMode.NATURAL,
     )
 
-    assert image_payload_data(result).shape == (2, 1, 4, 5)
+    assert result.data.shape == (2, 1, 4, 5)
     np.testing.assert_array_equal(
-        image_payload_data(result),
+        result.data,
         np.ones((2, 1, 4, 5), dtype=np.uint16),
     )
 
@@ -5684,9 +5677,9 @@ def test_cellprofiler_contract_executor_stacks_singleton_color_outputs():
         execution_mode=ImagePayloadExecutionMode.NATURAL,
     )
 
-    assert image_payload_data(result).shape == (2, 1, 4, 5, 3)
+    assert result.data.shape == (2, 1, 4, 5, 3)
     np.testing.assert_array_equal(
-        image_payload_data(result),
+        result.data,
         np.ones((2, 1, 4, 5, 3), dtype=np.uint16),
     )
 
@@ -5718,9 +5711,9 @@ def test_cellprofiler_contract_executor_stacks_singleton_volume_outputs():
         execution_mode=ImagePayloadExecutionMode.NATURAL,
     )
 
-    assert image_payload_data(result).shape == (3, 1, 2, 4, 5)
+    assert result.data.shape == (3, 1, 2, 4, 5)
     np.testing.assert_array_equal(
-        image_payload_data(result)[:, 0, 1],
+        result.data[:, 0, 1],
         np.ones((3, 4, 5), dtype=np.uint16),
     )
 
@@ -5996,7 +5989,7 @@ def test_measurement_table_preserves_declared_object_and_source_axes() -> None:
         rows=rows,
         object_name=None,
         source_image_name="DNA",
-        source_metadata=image_payload_metadata(cells),
+        source_metadata=cells.metadata,
     )
 
     assert table.subject == MeasurementSubject(
@@ -6822,7 +6815,7 @@ def test_multi_image_photometry_consumes_each_named_current_source(aliases):
     )
     for source in measurement_images:
         prepared = source.prepare_object_labels(labels, plane_projector=runtime)
-        image = image_payload_data(prepared.aligned_image)
+        image = prepared.aligned_image.data
         np.testing.assert_allclose(image, images[source.source_image_name] / 255.0)
         arrays = object_intensity_backend().measure_prepared(
             image, ObjectIntensityPreparedLabels.from_source(prepared.completion_payload, prepared.measurement_labels),
@@ -7712,7 +7705,7 @@ def test_cellprofiler_contract_executor_stacks_color_slice_outputs():
     )
 
     assert calls == [(4, 5), (4, 5)]
-    assert image_payload_data(result).shape == (2, 4, 5, 3)
+    assert result.data.shape == (2, 4, 5, 3)
 
 
 def test_gray_to_color_consumes_channel_stack_as_single_rgb_image() -> None:
@@ -7770,11 +7763,11 @@ def test_gray_to_color_inherits_first_declared_input_mask() -> None:
         rescale_intensity=False,
     )
 
-    assert image_payload_data(result).shape == (4, 5, 3)
-    np.testing.assert_array_equal(image_payload_mask(result), first_mask)
-    metadata = image_payload_metadata(result)
+    assert result.data.shape == (4, 5, 3)
+    np.testing.assert_array_equal(result.mask, first_mask)
+    metadata = result.metadata
     assert metadata.plane_axis is None
-    assert metadata.source_channel_axis == -1
+    assert metadata.axis_position(ColourAxis) == -1
     assert metadata.source_image_provenance_planes.paths == (
         "/input/red.tif",
         "/input/green.tif",
@@ -7785,7 +7778,7 @@ def test_color_to_gray_combines_openhcs_color_stack() -> None:
     image = ImageMetadataPayload(
         np.zeros((2, 4, 5, 3), dtype=np.float32),
         ImagePayloadMetadata(
-            source_channel_axis=-1,
+            axes=PayloadAxes.colour_samples(-1),
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         ),
     )
@@ -7826,7 +7819,7 @@ def test_color_to_gray_combine_removes_declared_source_channel_axis() -> None:
         metadata=ImagePayloadMetadata(
             source_path="/input/A01_s001.tif",
             source_component_metadata={"site": "1"},
-            source_channel_axis=-1,
+            axes=PayloadAxes.colour_samples(-1),
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         ),
     )
@@ -7845,16 +7838,16 @@ def test_color_to_gray_combine_removes_declared_source_channel_axis() -> None:
 
     assert isinstance(result, ImageMetadataPayload)
     assert result.data.shape == (2, 4, 5)
-    metadata = image_payload_metadata(result)
+    metadata = result.metadata
     assert dict(metadata.source_component_metadata) == {"site": "1"}
-    assert metadata.source_channel_axis is None
+    assert metadata.axis_position(ColourAxis) is None
     assert metadata.source_image_provenance_planes.count == 0
 
 
 def test_color_to_gray_splits_openhcs_color_slice_by_selected_channels() -> None:
     image = ImageMetadataPayload(
         np.zeros((4, 5, 3), dtype=np.float32),
-        ImagePayloadMetadata(source_channel_axis=-1),
+        ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)),
     )
     image.data[..., 0] = 1.0
     image.data[..., 1] = 2.0
@@ -7883,7 +7876,7 @@ def test_color_to_gray_rgb_split_preserves_color_source_metadata() -> None:
             source_path="/input/A01_s001_color.tif",
             source_component_metadata={"well": "A01", "site": "1"},
             source_image_names=("OrigColor",),
-            source_channel_axis=-1,
+            axes=PayloadAxes.colour_samples(-1),
         ),
     )
     image.data[..., 1] = 2.0
@@ -7896,7 +7889,7 @@ def test_color_to_gray_rgb_split_preserves_color_source_metadata() -> None:
         dtype_config=DtypeConfig(),
     )
 
-    metadata = image_payload_metadata(green)
+    metadata = green.metadata
     assert metadata.source_path == "/input/A01_s001_color.tif"
     assert metadata.source_component_metadata == {
         "well": "A01",
@@ -7910,7 +7903,7 @@ def test_color_to_gray_rgb_split_preserves_color_source_metadata() -> None:
 def test_color_to_gray_splits_channel_last_non_rgb_slice() -> None:
     image = ImageMetadataPayload(
         np.zeros((4, 5, 2), dtype=np.float32),
-        ImagePayloadMetadata(source_channel_axis=-1),
+        ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)),
     )
     image.data[..., 0] = 7.0
     image.data[..., 1] = 11.0
@@ -7942,7 +7935,7 @@ def test_color_to_gray_preserves_masked_image_payload() -> None:
         MaskedImagePayload(
             data=image,
             mask=mask,
-            metadata=ImagePayloadMetadata(source_channel_axis=-1),
+            metadata=ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)),
         ),
         mode=ColorToGrayMode.SPLIT,
         image_type=ImageChannelType.RGB,
@@ -7958,18 +7951,18 @@ def test_color_to_gray_preserves_masked_image_payload() -> None:
 def test_aligned_payload_treats_hwc_color_as_one_slice() -> None:
     color_slice = np.zeros((4, 5, 3), dtype=np.float32)
 
-    slices = payload_slices_for_alignment(color_slice)
+    slices = RuntimeSliceProjection.alignment_slices(color_slice)
 
     assert len(slices) == 1
     assert slices[0] is color_slice
-    assert payload_slice_count(color_slice) == 1
+    assert len(RuntimeSliceProjection.alignment_slices(color_slice)) == 1
 
 
 def test_aligned_payload_slices_runtime_slice_aligned_values() -> None:
     first = np.zeros((4, 5), dtype=np.int32)
     second = np.ones((4, 5), dtype=np.int32)
 
-    slices = payload_slices_for_alignment(RuntimeSliceAlignedValues((first, second)))
+    slices = RuntimeSliceProjection.alignment_slices(RuntimeSliceAlignedValues((first, second)))
 
     assert slices[0] is first
     assert slices[1] is second
@@ -7990,7 +7983,7 @@ def test_aligned_payload_slices_explicit_masked_image_owner() -> None:
             for index in range(2)
         )
     )
-    slices = payload_slices_for_alignment(aligned)
+    slices = RuntimeSliceProjection.alignment_slices(aligned)
 
     assert len(slices) == 2
     assert all(
@@ -8009,7 +8002,7 @@ def test_aligned_payload_keeps_unowned_source_tagged_grayscale_stack_whole() -> 
         ),
     )
 
-    slices = payload_slices_for_alignment(payload)
+    slices = RuntimeSliceProjection.alignment_slices(payload)
 
     assert len(slices) == 1
     assert slices[0] is payload
@@ -8021,11 +8014,11 @@ def test_aligned_payload_keeps_unowned_source_tagged_color_stack_whole() -> None
         data=stack,
         metadata=ImagePayloadMetadata(
             source_path="/tmp/source.tif",
-            source_channel_axis=-1,
+            axes=PayloadAxes.colour_samples(-1),
         ),
     )
 
-    slices = payload_slices_for_alignment(payload)
+    slices = RuntimeSliceProjection.alignment_slices(payload)
 
     assert len(slices) == 1
     assert slices[0] is payload
@@ -8037,7 +8030,7 @@ def test_aligned_payload_keeps_unowned_masked_volume_stack_whole() -> None:
     mask[0] = True
 
     payload = MaskedImagePayload(data=stack, mask=mask)
-    slices = payload_slices_for_alignment(payload)
+    slices = RuntimeSliceProjection.alignment_slices(payload)
 
     assert len(slices) == 1
     assert slices[0] is payload
@@ -8053,7 +8046,7 @@ def test_aligned_payload_keeps_unowned_image_metadata_whole() -> None:
         ),
     )
 
-    slices = payload_slices_for_alignment(payload)
+    slices = RuntimeSliceProjection.alignment_slices(payload)
 
     assert len(slices) == 1
     assert slices[0] is payload
@@ -8094,11 +8087,11 @@ def test_cellprofiler_auxiliary_payload_stack_preserves_metadata() -> None:
     assert isinstance(stacked, ProducedImageStack)
     stacked = RuntimeSliceProjection.full_stack_value(stacked)
     assert isinstance(stacked, ImageMetadataPayload)
-    assert image_payload_data(stacked).shape == (2, 1, 4, 5)
+    assert stacked.data.shape == (2, 1, 4, 5)
     assert (
-        image_payload_metadata(stacked).for_source_plane(0).intensity_scale == 65535.0
+        stacked.metadata.for_source_plane(0).intensity_scale == 65535.0
     )
-    assert image_payload_metadata(stacked).for_source_plane(1).source_dtype == "uint8"
+    assert stacked.metadata.for_source_plane(1).source_dtype == "uint8"
 
 
 def test_cellprofiler_image_aggregation_uses_nominal_image_payload_type() -> None:
@@ -8108,8 +8101,8 @@ def test_cellprofiler_image_aggregation_uses_nominal_image_payload_type() -> Non
     )
 
     aggregated = RuntimeSliceProjection.full_stack_value(aggregated)
-    assert image_payload_data(aggregated).shape == (1, 4, 5)
-    assert image_payload_metadata(aggregated).plane_axis is (
+    assert aggregated.data.shape == (1, 4, 5)
+    assert aggregated.metadata.plane_axis is (
         RuntimePlaneAxis.RUNTIME_SLICE
     )
 
@@ -8142,11 +8135,11 @@ def test_cellprofiler_aligned_main_output_aggregation_transposes_surfaces(owner)
     assert type(aggregated) is owner
     assert len(aggregated.slices) == 2
     np.testing.assert_array_equal(
-        image_payload_data(RuntimeSliceProjection.full_stack_value(aggregated.slices[0]))[:, 0, 0],
+        RuntimeSliceProjection.full_stack_value(aggregated.slices[0]).data[:, 0, 0],
         np.asarray((1.0, 2.0)),
     )
     np.testing.assert_array_equal(
-        image_payload_data(RuntimeSliceProjection.full_stack_value(aggregated.slices[1]))[:, 0, 0],
+        RuntimeSliceProjection.full_stack_value(aggregated.slices[1]).data[:, 0, 0],
         np.asarray((10.0, 20.0)),
     )
 
@@ -8506,9 +8499,9 @@ def test_illumination_apply_projects_broadcast_input_to_selected_primary_site(
         plane_projection=invocation.plane_projection,
     )
 
-    assert image_payload_data(result).shape == original_pixels.shape
-    np.testing.assert_allclose(image_payload_data(result), expected_value)
-    assert image_payload_metadata(result).source_component_metadata == {
+    assert result.data.shape == original_pixels.shape
+    np.testing.assert_allclose(result.data, expected_value)
+    assert result.metadata.source_component_metadata == {
         "well": "A01",
         "site": selected_site,
         "channel": "5",
@@ -8594,7 +8587,7 @@ def test_illumination_apply_image_output_uses_original_input_source_payload() ->
         )
     )
 
-    recorded_metadata = image_payload_metadata(runtime.images["Mito"])
+    recorded_metadata = runtime.images["Mito"].metadata
     assert recorded_metadata.source_image_provenance_planes.paths == source_paths
     assert (
         recorded_metadata.source_image_provenance_planes.component_metadata
@@ -8697,8 +8690,8 @@ def test_image_output_projection_uses_exact_invocation_projection(
     )
 
     recorded = runtime.images[output_spec.name]
-    np.testing.assert_array_equal(image_payload_data(recorded), output_value)
-    metadata = image_payload_metadata(recorded)
+    np.testing.assert_array_equal(recorded.data, output_value)
+    metadata = recorded.metadata
     assert metadata.plane_axis is expected_plane_axis
     assert metadata.source_image_names == (output_spec.name,)
     if expected_plane_axis is None:
@@ -8788,8 +8781,8 @@ def test_declared_output_source_uses_projected_object_input_value() -> None:
     CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType).record(request)
 
     recorded = runtime.images[output_spec.name]
-    assert image_payload_data(recorded).shape == (2, 3, 3)
-    assert image_payload_metadata(recorded).plane_axis is None
+    assert recorded.data.shape == (2, 3, 3)
+    assert recorded.metadata.plane_axis is None
 
 
 def test_image_output_recording_projects_masked_singleton_rgb_payload() -> None:
@@ -8820,7 +8813,7 @@ def test_image_output_recording_projects_masked_singleton_rgb_payload() -> None:
     )
     output_payload = ImagePayloadMetadata(
         source_spatial_domain=spatial_domain,
-        source_channel_axis=3,
+        axes=PayloadAxes.colour_samples(3),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(
         np.zeros((1, 4, 5, 3), dtype=np.float32),
@@ -8865,11 +8858,11 @@ def test_image_output_recording_projects_masked_singleton_rgb_payload() -> None:
 
     recorded = runtime.images[output_spec.name]
     assert isinstance(recorded, MaskedImagePayload)
-    assert image_payload_data(recorded).shape == (4, 5, 3)
-    np.testing.assert_array_equal(image_payload_mask(recorded), mask)
-    metadata = image_payload_metadata(recorded)
+    assert recorded.data.shape == (4, 5, 3)
+    np.testing.assert_array_equal(recorded.mask, mask)
+    metadata = recorded.metadata
     assert metadata.plane_axis is None
-    assert metadata.normalized_source_channel_axis(recorded) == 2
+    assert metadata.axis_index(ColourAxis, recorded) == 2
 
 
 def test_illumination_apply_image_output_preserves_declared_stack_value() -> None:
@@ -8940,10 +8933,10 @@ def test_illumination_apply_image_output_preserves_declared_stack_value() -> Non
 
     recorded = runtime.images["Mito"]
     np.testing.assert_allclose(
-        image_payload_data(recorded),
-        image_payload_data(duplicate_output),
+        recorded.data,
+        duplicate_output.data,
     )
-    recorded_metadata = image_payload_metadata(recorded)
+    recorded_metadata = recorded.metadata
     assert recorded_metadata.source_path == source_path
     assert recorded_metadata.source_component_metadata == source_metadata
     assert recorded_metadata.source_image_provenance_planes.paths == (
@@ -9015,10 +9008,10 @@ def test_illumination_apply_image_output_preserves_singleton_volume_value() -> N
 
     recorded = runtime.images["Mito"]
     np.testing.assert_allclose(
-        image_payload_data(recorded),
-        image_payload_data(singleton_output),
+        recorded.data,
+        singleton_output.data,
     )
-    recorded_metadata = image_payload_metadata(recorded)
+    recorded_metadata = recorded.metadata
     assert recorded_metadata.source_path == source_path
     assert recorded_metadata.source_component_metadata == source_metadata
     assert recorded_metadata.source_image_names == ("Mito",)
@@ -9071,7 +9064,7 @@ def test_cellprofiler_contract_executor_slices_aligned_runtime_kwargs():
     )
 
     assert calls == [((4, 5), (4, 5)), ((4, 5), (4, 5))]
-    assert image_payload_data(result_image).shape == stack.shape
+    assert result_image.data.shape == stack.shape
     assert object_label_dense_array(result_labels).shape == stack.shape
 
 
@@ -9125,7 +9118,7 @@ def test_cellprofiler_contract_executor_aggregates_object_label_payload_auxiliar
         ),
     )
 
-    assert image_payload_data(result_image).shape == stack.shape
+    assert result_image.data.shape == stack.shape
     assert isinstance(result_payload, ObjectLabelPayload)
     assert result_payload.labels.shape == stack.shape
     np.testing.assert_array_equal(result_payload.labels[0], np.full((4, 5), 1))
@@ -9142,9 +9135,9 @@ def test_cellprofiler_contract_executor_aggregates_object_label_payload_auxiliar
 
 def test_cellprofiler_contract_executor_preserves_site_metadata_for_object_label_auxiliary():
     def segment(image: object):
-        object_id = int(image_payload_metadata(image).source_component_metadata["site"])
+        object_id = int(image.metadata.source_component_metadata["site"])
         labels = np.full(
-            image_payload_data(image).shape,
+            image.data.shape,
             object_id,
             dtype=np.int32,
         )
@@ -9195,7 +9188,7 @@ def test_cellprofiler_contract_executor_preserves_site_metadata_for_object_label
         ),
     )
 
-    assert image_payload_data(result_image).shape == (2, 4, 5)
+    assert result_image.data.shape == (2, 4, 5)
     assert isinstance(result_payload, ObjectLabelPayload)
     assert result_payload.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert result_payload.source_image_provenance_planes.paths == (
@@ -9216,10 +9209,10 @@ def test_cellprofiler_contract_executor_preserves_site_metadata_for_object_label
 def test_aligned_stack_object_label_auxiliary_aggregates_on_runtime_slice_axis():
     def segment(image: object):
         site_index = int(
-            image_payload_metadata(image).source_component_metadata["site"]
+            image.metadata.source_component_metadata["site"]
         )
         labels = np.full(
-            image_payload_data(image).shape,
+            image.data.shape,
             site_index,
             dtype=np.int32,
         )
@@ -9268,7 +9261,7 @@ def test_aligned_stack_object_label_auxiliary_aggregates_on_runtime_slice_axis()
         ),
     )
 
-    assert image_payload_data(result_image).shape == (2, 4, 5)
+    assert result_image.data.shape == (2, 4, 5)
     assert isinstance(result_payload, ObjectLabelSet)
     assert result_payload.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert result_payload.source_image_names == ("OrigBlue", "OrigBlue")
@@ -9734,9 +9727,7 @@ def test_pattern_group_runtime_unstacks_aligned_image_stack_output():
         output, memory_type="numpy", device_id=None,
     )
     assert [payload for payload, _context in output] == [dna_payload, rna_payload]
-    assert image_payload_metadata(
-        stack_payload
-    ).source_plane_intensity_scales == (65535, 65535)
+    assert stack_payload.metadata.source_plane_intensity_scales == (65535, 65535)
 
 
 def test_pattern_group_runtime_does_not_invent_nested_axes_from_image_rank():
@@ -9788,16 +9779,16 @@ def test_pattern_group_runtime_does_not_invent_nested_axes_from_image_rank():
     output_slices = tuple(payload for payload, _context in projected)
 
     assert len(output_slices) == 2
-    np.testing.assert_array_equal(image_payload_data(output_slices[0]), first_site.data)
+    np.testing.assert_array_equal(output_slices[0].data, first_site.data)
     np.testing.assert_array_equal(
-        image_payload_data(output_slices[1]), second_site.data
+        output_slices[1].data, second_site.data
     )
     assert [
-        image_payload_metadata(payload).source_image_provenance_planes
+        payload.metadata.source_image_provenance_planes
         for payload in output_slices
     ] == [
-        image_payload_metadata(first_site).source_image_provenance_planes,
-        image_payload_metadata(second_site).source_image_provenance_planes,
+        first_site.metadata.source_image_provenance_planes,
+        second_site.metadata.source_image_provenance_planes,
     ]
 
 
@@ -9856,7 +9847,7 @@ def test_invocation_request_keeps_original_aliases_when_labels_change_image_doma
     assert invocation.source_aliases is original.source_aliases
     assert invocation.source_image_name is None
     assert invocation.image_count == 1
-    assert image_payload_data(invocation.payload).shape == (2, 3)
+    assert invocation.payload.data.shape == (2, 3)
     assert invocation.kwargs["secondary_labels"] is larger
     assert invocation.kwargs["primary_labels"] is smaller
     assert invocation.kwargs["marker"] is marker
@@ -9894,8 +9885,8 @@ def test_cellprofiler_main_flow_output_preserves_input_source_planes():
         ),
     )
 
-    metadata = image_payload_metadata(result)
-    assert image_payload_data(result).shape == (2, 4, 5)
+    metadata = result.metadata
+    assert result.data.shape == (2, 4, 5)
     assert metadata.source_image_provenance_planes.paths == (
         "/input/A01_s001_w3_z001_t001.TIF",
         "/input/A01_s002_w3_z001_t001.TIF",
@@ -9937,7 +9928,7 @@ def test_cellprofiler_main_flow_output_replaces_scalar_output_source_on_stack():
         ),
     )
 
-    metadata = image_payload_metadata(result)
+    metadata = result.metadata
     assert metadata.source_image_provenance_planes.paths == (
         "/input/A01_s001_w3_z001_t001.TIF",
         "/input/A01_s002_w3_z001_t001.TIF",
@@ -10005,7 +9996,7 @@ def test_cellprofiler_contract_executor_projects_batch_relationship_auxiliary():
         ),
     )
 
-    assert image_payload_data(result_image).shape == stack.shape
+    assert result_image.data.shape == stack.shape
     assert relationship == DirectedObjectRelationshipPayload(
         source_ids=(1, 2),
         target_ids=(10, 11),
@@ -10056,7 +10047,7 @@ def test_cellprofiler_contract_executor_aggregates_volume_label_auxiliary():
         ),
     )
 
-    assert image_payload_data(result_image).shape == (2, 3, 4, 5)
+    assert result_image.data.shape == (2, 3, 4, 5)
     assert isinstance(result_labels, ObjectLabelValue)
     assert object_label_dense_array(result_labels).shape == (2, 3, 4, 5)
 
@@ -10233,9 +10224,9 @@ def test_cellprofiler_contract_executor_broadcasts_2d_labels_to_image_stack():
     )
 
     assert calls == [((4, 5), (4, 5), 10), ((4, 5), (4, 5), 20)]
-    assert image_payload_data(result).shape == image.shape
+    assert result.data.shape == image.shape
     np.testing.assert_array_equal(
-        image_payload_data(result),
+        result.data,
         image.data + labels[np.newaxis, ...],
     )
 
@@ -11190,7 +11181,7 @@ def test_enhance_or_suppress_features_matches_white_tophat_reference():
         image,
         footprint=skimage.morphology.disk(4),
     ).astype(np.float32)
-    np.testing.assert_allclose(image_payload_data(result), expected)
+    np.testing.assert_allclose(result.data, expected)
 
 
 def test_enhance_or_suppress_features_fast_speckles_uses_cellprofiler_disk():
@@ -11212,7 +11203,7 @@ def test_enhance_or_suppress_features_fast_speckles_uses_cellprofiler_disk():
         ndi.minimum_filter(image, footprint=footprint),
         footprint=footprint,
     )
-    np.testing.assert_allclose(image_payload_data(result), expected.astype(np.float32))
+    np.testing.assert_allclose(result.data, expected.astype(np.float32))
 
 
 def test_enhance_or_suppress_features_tubeness_matches_hessian_reference():
@@ -11258,7 +11249,7 @@ def test_enhance_or_suppress_features_tubeness_matches_hessian_reference():
         np.float32
     )
     np.testing.assert_allclose(
-        image_payload_data(result), expected, rtol=1e-6, atol=1e-7
+        result.data, expected, rtol=1e-6, atol=1e-7
     )
 
 
@@ -11356,8 +11347,8 @@ def test_compose_image_payload_broadcasts_only_from_declared_stack_owner():
     )
     assert isinstance(composition.payload, AlignedImageStack)
     assert len(composition.payload.slices) == 2
-    first_pair = image_payload_data(composition.payload.slices[0])
-    second_pair = image_payload_data(composition.payload.slices[1])
+    first_pair = composition.payload.slices[0].data
+    second_pair = composition.payload.slices[1].data
     np.testing.assert_array_equal(first_pair[0], np.full((4, 5), 11))
     np.testing.assert_array_equal(second_pair[0], np.full((4, 5), 22))
     np.testing.assert_array_equal(first_pair[1], np.full((4, 5), 3))
@@ -11382,9 +11373,9 @@ def test_compose_image_payload_does_not_invent_pairwise_alignment_from_shape():
     )
 
     assert composition.execution_mode is ImagePayloadExecutionMode.FULL_STACK
-    assert image_payload_data(composition.payload).shape == (2, 2, 2, 4, 5)
-    np.testing.assert_array_equal(image_payload_data(composition.payload)[0], first)
-    np.testing.assert_array_equal(image_payload_data(composition.payload)[1], second)
+    assert composition.payload.data.shape == (2, 2, 2, 4, 5)
+    np.testing.assert_array_equal(composition.payload.data[0], first)
+    np.testing.assert_array_equal(composition.payload.data[1], second)
 
 
 def test_compose_image_bundle_promotes_grayscale_into_color_bundle():
@@ -11392,7 +11383,7 @@ def test_compose_image_bundle_promotes_grayscale_into_color_bundle():
     color_data = np.zeros((4, 5, 3), dtype=np.float32)
     color_data[:, :, 0] = 1
     color = ImagePayloadMetadata(
-        source_channel_axis=-1,
+        axes=PayloadAxes.colour_samples(-1),
         source_spatial_domain=spatial_domain,
     ).payload_with(color_data, None)
     grayscale = ImagePayloadMetadata(source_spatial_domain=spatial_domain).payload_with(
@@ -11506,8 +11497,8 @@ def test_tile_preserves_color_stack_output_shape():
     output = tile(image, rows=1, columns=2, dtype_config=DtypeConfig())
 
     assert output.shape == (3, 8, 3)
-    assert image_payload_metadata(output).source_channel_axis == -1
-    assert image_payload_metadata(output).source_spatial_domain == SourceSpatialDomain(
+    assert output.metadata.axis_position(ColourAxis) == -1
+    assert output.metadata.source_spatial_domain == SourceSpatialDomain(
         origin_yx=(0, 0),
         source_shape_yx=(3, 8),
     )
@@ -11521,8 +11512,8 @@ def test_tile_declares_grayscale_montage_without_channel_axis() -> None:
     output = tile(image, rows=1, columns=2, dtype_config=DtypeConfig())
 
     assert output.shape == (3, 8)
-    assert image_payload_metadata(output).source_channel_axis is None
-    assert image_payload_metadata(output).source_spatial_domain == SourceSpatialDomain(
+    assert output.metadata.axis_position(ColourAxis) is None
+    assert output.metadata.source_spatial_domain == SourceSpatialDomain(
         origin_yx=(0, 0),
         source_shape_yx=(3, 8),
     )
@@ -12709,9 +12700,9 @@ def test_object_only_measurement_carrier_preserves_payload_stack_context() -> No
     )
 
     assert carrier.payload is payload
-    assert image_payload_data(carrier.payload).shape == (4, 6, 6)
-    assert image_payload_metadata(carrier.payload).source_dtype == "float32"
-    assert image_payload_metadata(carrier.payload).source_path == "/inputs/site-1.tif"
+    assert carrier.payload.data.shape == (4, 6, 6)
+    assert carrier.payload.metadata.source_dtype == "float32"
+    assert carrier.payload.metadata.source_path == "/inputs/site-1.tif"
 
 
 def test_object_only_measurement_carrier_preserves_aligned_stack() -> None:
@@ -12766,9 +12757,9 @@ def test_literal_measurement_stack_preserves_pixels_in_object_reference_domain(
         execution_mode=execution_mode,
     )
     prepared = carrier.prepare_object_labels(labels)
-    np.testing.assert_array_equal(image_payload_data(prepared.aligned_image), pixels)
-    np.testing.assert_array_equal(image_payload_mask(prepared.aligned_image), mask)
-    assert image_payload_metadata(prepared.aligned_image).source_path == metadata.source_path
+    np.testing.assert_array_equal(prepared.aligned_image.data, pixels)
+    np.testing.assert_array_equal(prepared.aligned_image.mask, mask)
+    assert prepared.aligned_image.metadata.source_path == metadata.source_path
     np.testing.assert_array_equal(prepared.measurement_labels, labels.labels)
 
 
@@ -13877,7 +13868,7 @@ def test_object_lineage_measurement_table_preserves_current_payload_metadata() -
         MeasurementSparseColumnarRows.from_rows((), fields=()),
     )
 
-    assert source_metadata == image_payload_metadata(carrier)
+    assert source_metadata == carrier.metadata
 
 
 def test_relationship_rows_do_not_slice_payload_scoped_3d_lineage_by_z_plane() -> None:
@@ -14629,7 +14620,7 @@ def test_spatial_grid_output_recorder_accepts_pure_2d_grid_sequence() -> None:
     recorded = runtime.spatial_grids["Grid"]
     assert isinstance(recorded, RuntimeSliceAlignedValues)
     assert [
-        recorded.value_for_slice(slice_index).x_origin for slice_index in range(2)
+        recorded.value_at(slice_index).x_origin for slice_index in range(2)
     ] == [1.0, 2.0]
 
 
@@ -15570,8 +15561,8 @@ def test_image_payload_pure_2d_slicer_preserves_declared_volume_planes() -> None
     )
 
     assert len(slices) == 2
-    np.testing.assert_array_equal(image_payload_data(slices[0]), pairwise[0])
-    np.testing.assert_array_equal(image_payload_data(slices[1]), pairwise[1])
+    np.testing.assert_array_equal(slices[0].data, pairwise[0])
+    np.testing.assert_array_equal(slices[1].data, pairwise[1])
 
 
 def test_numpy_pure_2d_slicer_does_not_invent_a_stack_axis() -> None:
@@ -15596,8 +15587,8 @@ def test_image_payload_pure_2d_slicer_projects_declared_single_volume_mask() -> 
     )
 
     assert len(slices) == 1
-    np.testing.assert_array_equal(image_payload_data(slices[0]), data[0])
-    np.testing.assert_array_equal(image_payload_mask(slices[0]), mask[0])
+    np.testing.assert_array_equal(slices[0].data, data[0])
+    np.testing.assert_array_equal(slices[0].mask, mask[0])
 
 
 def test_image_payload_pure_2d_slicer_projects_declared_volume_masks() -> None:
@@ -15614,8 +15605,8 @@ def test_image_payload_pure_2d_slicer_projects_declared_volume_masks() -> None:
     )
 
     assert len(slices) == 2
-    np.testing.assert_array_equal(image_payload_data(slices[1]), data[1])
-    np.testing.assert_array_equal(image_payload_mask(slices[1]), mask[1])
+    np.testing.assert_array_equal(slices[1].data, data[1])
+    np.testing.assert_array_equal(slices[1].mask, mask[1])
 
 
 def test_image_payload_slice_projector_rejects_out_of_range_mask_axis() -> None:
@@ -15822,9 +15813,9 @@ def test_measurement_domain_source_axis_projection_preserves_image_payload_conte
     )
 
     assert isinstance(aligned, MaskedImagePayload)
-    np.testing.assert_array_equal(image_payload_data(aligned), data[1])
-    np.testing.assert_array_equal(image_payload_mask(aligned), mask[1])
-    metadata = image_payload_metadata(aligned)
+    np.testing.assert_array_equal(aligned.data, data[1])
+    np.testing.assert_array_equal(aligned.mask, mask[1])
+    metadata = aligned.metadata
     assert metadata.source_path == "/input/origMemb.tif"
     assert metadata.source_provenance.source_plane_count == 0
     assert metadata.source_provenance.represented_source_image_names == ("origMemb",)
@@ -18206,7 +18197,7 @@ def test_convert_objects_to_image_contract_preserves_volume_label_payload() -> N
         execution_mode=ImagePayloadExecutionMode.NATURAL,
     )
 
-    np.testing.assert_array_equal(image_payload_data(result), labels)
+    np.testing.assert_array_equal(result.data, labels)
 
 
 def _convert_objects_source_planes(
@@ -18274,7 +18265,7 @@ def test_convert_objects_to_image_uses_declared_label_source_for_runtime_plane_d
         RuntimePlaneProjection.stack(3),
     )
 
-    metadata = image_payload_metadata(result)
+    metadata = result.metadata
     assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert metadata.source_provenance == label_payload.source_provenance
     assert metadata.source_spatial_domain == label_spatial_domain
@@ -18341,8 +18332,8 @@ def test_object_label_singleton_volume_output_declares_runtime_plane_axis() -> N
         RuntimePlaneProjection.stack(1),
     )
 
-    assert image_payload_data(result).shape == (1, 5, 7)
-    assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.data.shape == (1, 5, 7)
+    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_object_label_scalar_image_output_does_not_invent_runtime_plane_axis() -> None:
@@ -18373,8 +18364,8 @@ def test_object_label_scalar_image_output_does_not_invent_runtime_plane_axis() -
         RuntimePlaneProjection.stack(1),
     )
 
-    assert image_payload_data(result).shape == (5, 7)
-    assert image_payload_metadata(result).plane_axis is None
+    assert result.data.shape == (5, 7)
+    assert result.metadata.plane_axis is None
 
 
 def test_object_measurement_execution_policy_uses_full_stack_for_single_runtime_slice_volume() -> (

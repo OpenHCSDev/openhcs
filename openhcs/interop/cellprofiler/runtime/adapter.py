@@ -30,7 +30,6 @@ from openhcs.core.runtime_artifact_values import (
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    image_payload_metadata,
     preserved_image_plane_projection,
 )
 from openhcs.core.runtime_measurements import (
@@ -293,7 +292,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
         edge = self._artifact_input(name, ImageArtifactType)
         data = edge.composed_value(records)
         projected: RuntimeArrayData = data
-        source_metadata = image_payload_metadata(projected)
+        source_metadata = projected.metadata
         if source_metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING:
             source_projection = preserved_image_plane_projection(
                 projected,

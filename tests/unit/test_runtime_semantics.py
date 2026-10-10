@@ -43,8 +43,6 @@ from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
     MaskedImagePayload,
-    image_payload_data,
-    image_payload_metadata,
     preserve_declared_image_payload_axis,
 )
 from openhcs.core.runtime_object_labels import (
@@ -325,9 +323,9 @@ def test_compose_one_image_bundle_preserves_shared_crop_domain() -> None:
 
     bundle = ImagePayloadBundleContext.from_payloads((first, second)).compose()
 
-    assert image_payload_data(bundle).shape[-2:] == (5, 5)
-    assert image_payload_metadata(bundle).spatial_origin_yx == (1, 2)
-    assert image_payload_metadata(bundle).source_spatial_shape_yx == (8, 9)
+    assert bundle.data.shape[-2:] == (5, 5)
+    assert bundle.metadata.spatial_origin_yx == (1, 2)
+    assert bundle.metadata.source_spatial_shape_yx == (8, 9)
 
 
 def test_aligned_image_stack_exposes_slice_source_spatial_domain() -> None:
@@ -359,7 +357,7 @@ def test_aligned_image_stack_kwarg_resolver_selects_nominal_stack_slice() -> Non
         reference_payload=second,
     ).resolve(stack)
 
-    assert resolved is second
+    assert resolved.data is second
 
 
 def test_aligned_image_stack_kwarg_resolver_requires_exact_cardinality() -> None:

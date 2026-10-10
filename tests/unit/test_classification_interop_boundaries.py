@@ -37,7 +37,6 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
@@ -177,13 +176,13 @@ def test_scalar_retained_image_survives_compilation_and_real_runtime_binding():
         request.current_image, **kwargs, **bound
     )
     assert bound["retained_image_name"] == "engineering_class_rgb"
-    assert image_payload_data(output).shape == (8, 8, 3)
+    assert output.data.shape == (8, 8, 3)
     assert (
         len(rows) == 1
     )  # Original ClassificationResult owns one aggregate row per rule.
     assert rows.rows[0].total_objects == 2
     np.testing.assert_array_equal(
-        image_payload_data(output),
+        output.data,
         classification_rgb_image(_object_payload().variant_data.labels),
     )
     np.testing.assert_array_equal(bound["measurement_values"], (9.0, 300.0))
@@ -329,7 +328,7 @@ def test_independent_custom_feature_compiles_and_binds_real_rows_to_original_sca
     )
     np.testing.assert_array_equal(bound["measurement_values"], (9, 300))
     np.testing.assert_array_equal(
-        image_payload_data(image),
+        image.data,
         classification_rgb_image(_object_payload().variant_data.labels),
     )
     assert result.rows[0].total_objects == 2

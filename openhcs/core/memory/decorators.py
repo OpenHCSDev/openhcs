@@ -8,6 +8,7 @@ and callable preparation contracts compose predictably.
 from __future__ import annotations
 
 from collections.abc import Callable
+import functools
 import inspect
 from typing import Any
 
@@ -35,7 +36,7 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
             kwargs["contract"] = contract
 
         if args and callable(args[0]) and len(args) == 1:
-            wrapped = decorator(args[0], **kwargs)
+            wrapped = decorator(image_payload_boundary(args[0]), **kwargs)
             _attach_openhcs_metadata(
                 wrapped,
                 prepare=prepare,
@@ -46,7 +47,7 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
         arraybridge_decorator = decorator(*args, **kwargs)
 
         def decorate(target: Any) -> Any:
-            wrapped = arraybridge_decorator(target)
+            wrapped = arraybridge_decorator(image_payload_boundary(target))
             _attach_openhcs_metadata(
                 wrapped,
                 prepare=prepare,
@@ -60,6 +61,46 @@ def _with_openhcs_metadata(decorator: Callable[..., Any]) -> Callable[..., Any]:
     openhcs_decorator.__doc__ = getattr(decorator, "__doc__", None)
     openhcs_decorator.__module__ = __name__
     return openhcs_decorator
+
+
+def _declares_image_payload(annotation: Any) -> bool:
+    """Whether a parameter annotation asks for an ``ImagePayload``."""
+    from python_introspect import is_union_type, resolve_annotated
+    from typing import get_args
+
+    from openhcs.core.runtime_image_values import ImagePayload
+
+    annotation = resolve_annotated(annotation)
+    if is_union_type(annotation):
+        return any(_declares_image_payload(member) for member in get_args(annotation))
+    return isinstance(annotation, type) and issubclass(annotation, ImagePayload)
+
+
+@functools.cache
+def image_payload_boundary(wrapped: Any) -> Any:
+    """Wrap a bare primary image once when the callable declares ``ImagePayload``.
+
+    This is where a processing function's primary argument turns from a bare
+    array into a payload: inside the memory decorator, and on the raw runtime
+    body wherever a caller resolves it past the decorator.
+    """
+    raw_signature = inspect.signature(inspect.unwrap(wrapped), eval_str=True)
+    parameters = tuple(raw_signature.parameters.values())
+    if not parameters or not _declares_image_payload(parameters[0].annotation):
+        return wrapped
+    from openhcs.core.runtime_image_values import ImagePayload
+
+    image_parameter = parameters[0].name
+
+    @functools.wraps(wrapped)
+    def image_payload_callable(*args: Any, **kwargs: Any) -> Any:
+        if args:
+            args = (ImagePayload.of(args[0]), *args[1:])
+        elif image_parameter in kwargs:
+            kwargs[image_parameter] = ImagePayload.of(kwargs[image_parameter])
+        return wrapped(*args, **kwargs)
+
+    return image_payload_callable
 
 
 def _declared_processing_contract_name(contract: Any) -> str | None:

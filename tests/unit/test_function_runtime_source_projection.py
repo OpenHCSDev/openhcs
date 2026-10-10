@@ -20,7 +20,6 @@ from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
-    payload_slices_for_alignment,
     stack_image_payloads,
 )
 from openhcs.core.artifacts import (
@@ -61,8 +60,6 @@ from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
-    image_payload_data,
-    image_payload_metadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
@@ -119,6 +116,8 @@ from openhcs.core.steps.function_output_manifest import (
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.axes import ColourAxis
 
 
 def _anchor_executor(
@@ -422,12 +421,12 @@ def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance
         for virtual_path in subdirectory["image_files"]
     ) == ("Raw", "Illum")
     assert tuple(
-        image_payload_metadata(payload).source_image_names
+        payload.metadata.source_image_names
         for payload in projected_payloads
     ) == (("Raw",), ("Illum",))
     assert all(
         "source_alias"
-        not in (image_payload_metadata(payload).source_component_metadata or {})
+        not in (payload.metadata.source_component_metadata or {})
         for payload in projected_payloads
     )
 
@@ -436,8 +435,8 @@ def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance
         metadata_mode=projection.payload_composition_mode(lookups),
     )
 
-    assert image_payload_metadata(stack).source_image_names == ("Raw", "Illum")
-    assert image_payload_metadata(stack).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert stack.metadata.source_image_names == ("Raw", "Illum")
+    assert stack.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
 
 
 def test_workspace_replay_preserves_collapsed_semantic_identity(
@@ -496,7 +495,7 @@ def test_workspace_replay_preserves_collapsed_semantic_identity(
         ).payload_with(np.zeros((4, 5), dtype=np.float32)),
     )
 
-    replayed_metadata = image_payload_metadata(projected)
+    replayed_metadata = projected.metadata
     semantic_components = replayed_metadata.source_component_metadata
     assert semantic_components is not None
     assert "site" not in semantic_components
@@ -584,7 +583,7 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
         ),
     )
 
-    metadata = image_payload_metadata(payload)
+    metadata = payload.metadata
     assert metadata.intensity_scale == 4095.0
     assert metadata.source_dtype == "uint16"
     assert metadata.source_image_names == ("OrigBlue",)
@@ -598,7 +597,6 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
     from polystore.filemanager import FileManager
 
     from openhcs.constants.constants import Backend
-    from openhcs.core.runtime_image_values import image_payload_mask
     from openhcs.core.runtime_source_binding_cache import (
         RuntimeSourceBindingContextCache,
     )
@@ -656,20 +654,20 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
         None,
     )
 
-    metadata = image_payload_metadata(loaded)
+    metadata = loaded.metadata
     assert metadata.intensity_scale == 4095.0
     assert metadata.source_dtype == "uint16"
     assert metadata.source_path == str(source_path)
     assert metadata.source_component_metadata["site"] == 2
     assert metadata.source_component_metadata["z_index"] == 3
     assert metadata.source_component_metadata["timepoint"] == 4
-    assert image_payload_data(loaded) is pixels
-    assert image_payload_mask(loaded) is mask
-    np.testing.assert_array_equal(image_payload_data(loaded), [[0, 4095]])
+    assert loaded.data is pixels
+    assert loaded.mask is mask
+    np.testing.assert_array_equal(loaded.data, [[0, 4095]])
     pixels[0, 0] = 17
     mask[0, 0] = False
-    assert image_payload_data(loaded)[0, 0] == 17
-    assert not image_payload_mask(loaded)[0, 0]
+    assert loaded.data[0, 0] == 17
+    assert not loaded.mask[0, 0]
 
 
 def test_virtual_workspace_source_filters_use_persisted_candidate_identity(
@@ -831,8 +829,8 @@ def test_stack_payload_context_promotes_single_channel_slice_metadata() -> None:
     ).payload_with(np.ones((4, 5), dtype=np.float32), None)
     stack = np.stack(
         (
-            image_payload_data(first),
-            image_payload_data(second),
+            first.data,
+            second.data,
         )
     )
 
@@ -840,7 +838,7 @@ def test_stack_payload_context_promotes_single_channel_slice_metadata() -> None:
         (first, second),
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
-    metadata = image_payload_metadata(payload)
+    metadata = payload.metadata
 
     assert metadata.source_image_provenance_planes.paths == (
         "/input/A01_s001_w1_z001_t001.tif",
@@ -879,7 +877,7 @@ def test_bundle_payload_context_preserves_source_binding_plane_metadata(
     ).payload_with(np.ones((4, 5), dtype=np.float32), None)
 
     bundle = ImagePayloadBundleContext.from_payloads((first, second)).compose()
-    metadata = image_payload_metadata(bundle)
+    metadata = bundle.metadata
 
     assert metadata.source_image_provenance_planes.paths == (
         "/input/A01_s001_w1_z001_t001.tif",
@@ -911,7 +909,7 @@ def test_payload_slices_do_not_infer_alignment_from_source_provenance() -> None:
     )
     payload = metadata.payload_with(np.zeros((2, 4, 5), dtype=np.float32))
 
-    slices = payload_slices_for_alignment(payload)
+    slices = RuntimeSliceProjection.alignment_slices(payload)
 
     assert len(slices) == 1
     assert slices[0] is payload
@@ -3872,7 +3870,7 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
         projection,
     )
 
-    assert image_payload_metadata(projected).source_component_metadata == {
+    assert projected.metadata.source_component_metadata == {
         Microscopy.Site.name: 2,
         Microscopy.Channel.name: 1,
         Microscopy.ZIndex.name: 3,
@@ -3880,9 +3878,7 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
         Microscopy.Well.name: "A01",
         SourceFilterSubject.EXTENSION.value: ".tif",
     }
-    assert image_payload_metadata(
-        projected
-    ).source_provenance.represented_source_image_names == ("OrigDNA",)
+    assert projected.metadata.source_provenance.represented_source_image_names == ("OrigDNA",)
 
 
 def test_step_output_load_filter_skips_source_binding_filter() -> None:
@@ -4087,13 +4083,13 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
 
     loaded = runtime.load_input_stack()
 
-    data = image_payload_data(loaded[1])
-    metadata = image_payload_metadata(loaded[1])
+    data = loaded[1].data
+    metadata = loaded[1].metadata
     assert data.shape == (2, 4, 5, 3)
     np.testing.assert_array_equal(data[1], np.full((4, 5, 3), 7, dtype=np.float32))
     assert metadata.source_image_names == aliases
     assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-    assert metadata.source_channel_axis == 3
+    assert metadata.axis_position(ColourAxis) == 3
     assert metadata.source_component_metadata["specimen"] == "sample"
 
 
@@ -4217,7 +4213,7 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
 
     loaded = runtime.load_input_stack()
 
-    provenance_planes = image_payload_metadata(loaded[1]).source_image_provenance_planes
+    provenance_planes = loaded[1].metadata.source_image_provenance_planes
     assert provenance_planes.count == 2
     assert provenance_planes.contributor_count == 0
     plane_metadata = provenance_planes.component_metadata
@@ -5341,9 +5337,9 @@ def test_function_output_path_rejects_variation_outside_identity_components(
         ),
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
-    assert image_payload_metadata(payload).source_provenance.source_plane_count == 2
+    assert payload.metadata.source_provenance.source_plane_count == 2
     assert (
-        image_payload_metadata(payload).source_image_provenance_planes.contributor_count
+        payload.metadata.source_image_provenance_planes.contributor_count
         == 0
     )
 
@@ -5558,7 +5554,7 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
         expected += "_Corrected"
     assert Path(filemanager.saved_paths[0]).name == expected + ".tif"
     assert (
-        image_payload_metadata(filemanager.saved_payloads[0]).source_component_metadata[
+        filemanager.saved_payloads[0].metadata.source_component_metadata[
             "site"
         ]
         == "1"
@@ -5566,12 +5562,8 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
     assert records[0].component_values["site"] == 1
     if named_topology != "anonymous":
         assert records[0].output_context == named_context
-        assert image_payload_metadata(
-            filemanager.saved_payloads[0]
-        ).source_image_names == ("Corrected",)
-    assert image_payload_data(filemanager.saved_payloads[0]) is image_payload_data(
-        payload
-    )
+        assert filemanager.saved_payloads[0].metadata.source_image_names == ("Corrected",)
+    assert filemanager.saved_payloads[0].data is payload.data
 
 
 @pytest.fixture
@@ -5858,7 +5850,6 @@ def test_producer_loader_validates_ambiguity_before_cache(
 
 def test_whole_volume_checkpoint_load_preserves_depth_and_independent_buffers():
     from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
-    from openhcs.core.runtime_image_values import image_payload_mask
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
 
     pixels = np.arange(3 * 4 * 5, dtype=np.float32).reshape(3, 4, 5)
@@ -5882,11 +5873,11 @@ def test_whole_volume_checkpoint_load_preserves_depth_and_independent_buffers():
         source_projection=None,
         workspace_source_lookups=(),
     )
-    assert image_payload_data(loaded).shape == pixels.shape
+    assert loaded.data.shape == pixels.shape
     assert loaded.metadata.source_spatial_domain.source_depth == 3
-    assert not np.shares_memory(image_payload_data(loaded), pixels)
-    assert not np.shares_memory(image_payload_mask(loaded), mask)
+    assert not np.shares_memory(loaded.data, pixels)
+    assert not np.shares_memory(loaded.mask, mask)
     pixels[:] = -1
     mask[:] = False
-    assert np.all(image_payload_data(loaded) >= 0)
-    assert np.any(image_payload_mask(loaded))
+    assert np.all(loaded.data >= 0)
+    assert np.any(loaded.mask)

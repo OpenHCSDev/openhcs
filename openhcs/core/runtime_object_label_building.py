@@ -21,13 +21,14 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.runtime_array_values import array_geometry
 
 
 @dataclass(frozen=True, slots=True)
 class SourceImageObjectLabelBuildRequest:
     """Build object-label runtime values from one source-image context."""
 
-    image: object
+    image: runtime_image_values.ImagePayload
     labels: object
     domain_scope: ObjectLabelDomainScope | None = None
     plane_projection: RuntimePlaneAxisValueProjection | None = None
@@ -37,9 +38,15 @@ class SourceImageObjectLabelBuildRequest:
     small_removed_labels: object | None = None
     parent_image_source_voxel_spacing: SourceVoxelSpacing | None = None
 
+    def __post_init__(self) -> None:
+        # Builders receive the source image as a payload or as bare pixels.
+        object.__setattr__(
+            self, "image", runtime_image_values.ImagePayload.of(self.image)
+        )
+
     @property
     def metadata(self) -> runtime_image_values.ImagePayloadMetadata:
-        return runtime_image_values.image_payload_metadata(self.image)
+        return self.image.metadata
 
     def payload(
         self,
@@ -151,7 +158,7 @@ class SourceImageObjectLabelBuildRequest:
             value_name="Source-image object labels",
         )
         projection.validate_shape(
-            runtime_image_values.image_payload_geometry(self.image).shape,
+            array_geometry(self.image).shape,
             value_name="Object-label source image",
         )
         source_shape_yx = metadata.spatial_shape_yx(self.image)

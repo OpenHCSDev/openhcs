@@ -11,6 +11,7 @@ from typing import ClassVar, Self, TYPE_CHECKING
 import numpy as np
 
 from openhcs.core.artifacts import NamedArtifactPayload
+from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingFields
 from openhcs.core.source_image_provenance import (
     SourceImageProvenanceFields,
@@ -191,7 +192,12 @@ class SpatialGraphEdge:
 
 
 @dataclass(slots=True)
-class SpatialGraph(SourceImageProvenanceFields, SourceVoxelSpacingFields, NamedArtifactPayload):
+class SpatialGraph(
+    SourceImageProvenanceFields,
+    SourceVoxelSpacingFields,
+    NamedArtifactPayload,
+    RuntimeSliceInvariantValue,
+):
     """Named spatial graph with direct node references and path geometry."""
 
     SWC_TYPE_FEATURE: ClassVar[str] = "swc_type"

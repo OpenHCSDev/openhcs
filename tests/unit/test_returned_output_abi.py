@@ -21,7 +21,6 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.callable_contract import CallableContract, CallableMetadata
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
-from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_output_matching import (
     split_runtime_output,
@@ -263,8 +262,8 @@ def test_generic_function_save_records_canonical_and_trailing_outputs() -> None:
     )
 
     assert isinstance(result, ImageOutputBundle)
-    np.testing.assert_array_equal(image_payload_data(result.slices[0]), first_value)
-    np.testing.assert_array_equal(image_payload_data(result.slices[1]), second_value)
+    np.testing.assert_array_equal(result.slices[0].data, first_value)
+    np.testing.assert_array_equal(result.slices[1].data, second_value)
     for spec, expected in (
         (first, first_value),
         (second, second_value),
@@ -273,6 +272,6 @@ def test_generic_function_save_records_canonical_and_trailing_outputs() -> None:
         records = context.runtime_value_store.find(name=spec.name, axis_id="A01")
         assert len(records) == 1
         np.testing.assert_array_equal(
-            image_payload_data(records[0].data),
+            records[0].data.data,
             expected,
         )

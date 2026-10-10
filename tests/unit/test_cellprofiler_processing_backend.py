@@ -747,14 +747,13 @@ def test_cellprofiler_uint8_source_normalization_matches_native_pixel_domain() -
     from openhcs.core.runtime_image_values import (
         ImagePayloadMetadata,
         MaskedImagePayload,
-        normalize_image_payload_intensity,
     )
     from openhcs.interop.cellprofiler.image_normalization import (
         normalize_cellprofiler_image_payload,
     )
 
     image = np.asarray([[7, 98, 128, 254, 255]], dtype=np.uint8)
-    core_normalized = np.asarray(normalize_image_payload_intensity(image))
+    core_normalized = np.asarray(image.normalize_intensity_payload())
     pathless_normalized = np.asarray(normalize_cellprofiler_image_payload(image))
     jpg_payload = MaskedImagePayload(
         data=image,
@@ -793,14 +792,13 @@ def test_cellprofiler_uint8_normalization_is_source_format_blind(
     from openhcs.core.runtime_image_values import (
         ImagePayloadMetadata,
         MaskedImagePayload,
-        normalize_image_payload_intensity,
     )
     from openhcs.interop.cellprofiler.image_normalization import (
         normalize_cellprofiler_image_payload,
     )
 
     image = np.asarray([[7, 98, 128, 254, 255]], dtype=np.uint8)
-    numpy_domain = np.asarray(normalize_image_payload_intensity(image))
+    numpy_domain = np.asarray(image.normalize_intensity_payload())
     metadata = ImagePayloadMetadata.for_array(
         image,
         source_path="virtual/source.png",
@@ -1375,30 +1373,21 @@ def test_default_shape_maximum_position_preserves_cellprofiler_tie_semantics() -
 
 
 def test_medianfilter_preserves_unit_interval_scale_metadata() -> None:
-    from openhcs.core.runtime_image_values import (
-        ImagePayloadMetadata,
-        image_payload_data,
-        image_payload_metadata,
-        normalize_image_payload_intensity,
-    )
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.processing.backends.cellprofiler.median_filter import medianfilter
 
     raw = np.arange(25, dtype=np.uint16).reshape(5, 5)
     payload = ImagePayloadMetadata.for_array(raw).payload_with(raw, None)
-    normalized = normalize_image_payload_intensity(payload, dtype=np.float32)
+    normalized = payload.normalize_intensity_payload(dtype=np.float32)
 
     filtered = medianfilter.__wrapped__(normalized, window_size=3)
 
-    assert image_payload_metadata(filtered).unit_interval_intensity_scale == 65535
-    assert image_payload_data(filtered).dtype == np.float32
+    assert filtered.metadata.unit_interval_intensity_scale == 65535
+    assert filtered.data.dtype == np.float32
 
 
 def test_rescale_intensity_identity_preserves_unit_interval_scale_metadata() -> None:
-    from openhcs.core.runtime_image_values import (
-        ImagePayloadMetadata,
-        image_payload_metadata,
-        normalize_image_payload_intensity,
-    )
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.processing.backends.cellprofiler.intensity import (
         AutomaticHigh,
         AutomaticLow,
@@ -1408,7 +1397,7 @@ def test_rescale_intensity_identity_preserves_unit_interval_scale_metadata() -> 
 
     raw = np.array([[0, 65535], [32768, 1]], dtype=np.uint16)
     payload = ImagePayloadMetadata.for_array(raw).payload_with(raw, None)
-    normalized = normalize_image_payload_intensity(payload, dtype=np.float32)
+    normalized = payload.normalize_intensity_payload(dtype=np.float32)
 
     rescaled = rescale_intensity.__wrapped__(
         normalized,
@@ -1421,15 +1410,11 @@ def test_rescale_intensity_identity_preserves_unit_interval_scale_metadata() -> 
         dest_high=1.0,
     )
 
-    assert image_payload_metadata(rescaled).unit_interval_intensity_scale == 65535
+    assert rescaled.metadata.unit_interval_intensity_scale == 65535
 
 
 def test_rescale_intensity_nonidentity_clears_unit_interval_scale_metadata() -> None:
-    from openhcs.core.runtime_image_values import (
-        ImagePayloadMetadata,
-        image_payload_metadata,
-        normalize_image_payload_intensity,
-    )
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.processing.backends.cellprofiler.intensity import (
         AutomaticHigh,
         AutomaticLow,
@@ -1439,7 +1424,7 @@ def test_rescale_intensity_nonidentity_clears_unit_interval_scale_metadata() -> 
 
     raw = np.array([[0, 65535], [32768, 1]], dtype=np.uint16)
     payload = ImagePayloadMetadata.for_array(raw).payload_with(raw, None)
-    normalized = normalize_image_payload_intensity(payload, dtype=np.float32)
+    normalized = payload.normalize_intensity_payload(dtype=np.float32)
 
     rescaled = rescale_intensity.__wrapped__(
         normalized,
@@ -1452,15 +1437,11 @@ def test_rescale_intensity_nonidentity_clears_unit_interval_scale_metadata() -> 
         dest_high=0.5,
     )
 
-    assert image_payload_metadata(rescaled).unit_interval_intensity_scale is None
+    assert rescaled.metadata.unit_interval_intensity_scale is None
 
 
 def test_resize_nearest_preserves_unit_interval_scale_metadata() -> None:
-    from openhcs.core.runtime_image_values import (
-        ImagePayloadMetadata,
-        image_payload_metadata,
-        normalize_image_payload_intensity,
-    )
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.processing.backends.cellprofiler.image_geometry import (
         InterpolationMethod,
         ResizeMethod,
@@ -1469,7 +1450,7 @@ def test_resize_nearest_preserves_unit_interval_scale_metadata() -> None:
 
     raw = np.arange(2 * 4 * 4, dtype=np.uint16).reshape((2, 4, 4))
     payload = ImagePayloadMetadata.for_array(raw).payload_with(raw, None)
-    normalized = normalize_image_payload_intensity(payload, dtype=np.float32)
+    normalized = payload.normalize_intensity_payload(dtype=np.float32)
 
     resized = resize_volumetric.__wrapped__(
         normalized,
@@ -1480,15 +1461,11 @@ def test_resize_nearest_preserves_unit_interval_scale_metadata() -> None:
         interpolation=InterpolationMethod.NEAREST_NEIGHBOR,
     )
 
-    assert image_payload_metadata(resized).unit_interval_intensity_scale == 65535
+    assert resized.metadata.unit_interval_intensity_scale == 65535
 
 
 def test_resize_interpolation_clears_unit_interval_scale_metadata() -> None:
-    from openhcs.core.runtime_image_values import (
-        ImagePayloadMetadata,
-        image_payload_metadata,
-        normalize_image_payload_intensity,
-    )
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.processing.backends.cellprofiler.image_geometry import (
         InterpolationMethod,
         ResizeMethod,
@@ -1497,7 +1474,7 @@ def test_resize_interpolation_clears_unit_interval_scale_metadata() -> None:
 
     raw = np.arange(2 * 4 * 4, dtype=np.uint16).reshape((2, 4, 4))
     payload = ImagePayloadMetadata.for_array(raw).payload_with(raw, None)
-    normalized = normalize_image_payload_intensity(payload, dtype=np.float32)
+    normalized = payload.normalize_intensity_payload(dtype=np.float32)
 
     resized = resize_volumetric.__wrapped__(
         normalized,
@@ -1508,7 +1485,7 @@ def test_resize_interpolation_clears_unit_interval_scale_metadata() -> None:
         interpolation=InterpolationMethod.BILINEAR,
     )
 
-    assert image_payload_metadata(resized).unit_interval_intensity_scale is None
+    assert resized.metadata.unit_interval_intensity_scale is None
 
 
 def test_cellprofiler_backend_provider_rejects_raw_strings() -> None:

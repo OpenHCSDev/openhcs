@@ -48,11 +48,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelStorageStrategy,
     object_label_dense_array,
 )
-from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_metadata,
-    with_image_payload_data,
-)
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.processing.backends.cellprofiler._backend import (
@@ -156,6 +151,9 @@ from openhcs.processing.backends.cellprofiler.image_geometry import (
     align_label_plane_to_shape,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.core.axes import ColourAxis
+from openhcs.core.payload_axes import ColourSampleAxisSpec, PayloadAxes
+from openhcs.core.runtime_image_values import ImagePayload
 
 
 class OverlayOutlinesModule(
@@ -874,7 +872,7 @@ class OverlayOutlineExecutionContext:
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
 @special_inputs("object_labels")
 def overlay_outlines(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     *,
     blank_image: bool = False,
     display_mode: OutlineDisplayMode = OutlineDisplayMode.COLOR,
@@ -902,23 +900,20 @@ def overlay_outlines(
         image, blank_image=context.blank_image, image_row_count=context.image_row_count
     )
     output = context.render(image_sources)
-    return with_image_payload_data(
-        image,
-        output,
+    return image.with_pixels(output,
         metadata=replace(
-            image_payload_metadata(image),
-            source_channel_axis=(
+            image.metadata,
+            axes=PayloadAxes.colour_samples(
                 -1 if context.display_mode is OutlineDisplayMode.COLOR else None
             ),
-        ),
-    )
+        ),)
 
 
 @numpy(contract=ProcessingContract.FLEXIBLE)
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
 @special_inputs("labels")
 def overlay_objects(
-    image: RuntimeArrayData,
+    image: ImagePayload,
     labels: ObjectLabelValue,
     opacity: float = 0.3,
     max_label: int | None = None,
@@ -940,8 +935,8 @@ def overlay_objects(
     if not isinstance(labels, ObjectLabelValue):
         raise TypeError("OverlayObjects requires a runtime-projected ObjectLabelValue.")
     label_data = object_label_dense_array(labels, dtype=np.int32)
-    image_data = np.asarray(image_payload_data(image))
-    channel_axis = image_payload_metadata(image).normalized_source_channel_axis(image)
+    image_data = np.asarray(image.data)
+    channel_axis = image.metadata.axis_index(ColourAxis, image)
     grayscale = (
         np.mean(image_data, axis=channel_axis)
         if channel_axis is not None
@@ -956,11 +951,8 @@ def overlay_objects(
         seed=seed,
         colormap_value=colormap,
     )
-    return with_image_payload_data(
-        image,
-        overlay,
-        metadata=replace(image_payload_metadata(image), source_channel_axis=-1),
-    )
+    return image.with_pixels(overlay,
+        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),)
 
 
 def _runtime_rows(
@@ -1105,8 +1097,9 @@ def _draw_outline_image(
 
 
 def _outline_image_mask(outline_image: RuntimeArrayData) -> np.ndarray:
-    mask = np.asarray(image_payload_data(outline_image)) > 0
-    channel_axis = image_payload_metadata(outline_image).normalized_source_channel_axis(
+    outline_image = ImagePayload.of(outline_image)
+    mask = np.asarray(outline_image.data) > 0
+    channel_axis = outline_image.metadata.axis_index(ColourAxis, 
         outline_image
     )
     if channel_axis is not None:

@@ -11,10 +11,7 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.core.artifacts import ImageArtifactType
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_binding_selection import DeclaredSourceMetadataRecord
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
@@ -148,11 +145,11 @@ def test_workspace_alias_projection_and_artifact_naming_preserve_owned_metadata(
     projected = VirtualWorkspaceImagePayloadProjection(
         source_metadata=source, source_alias="DNA"
     ).apply(payload)
-    metadata = image_payload_metadata(projected)
+    metadata = projected.metadata
     assert isinstance(metadata.source_component_metadata, DurableSourceMetadata)
     assert SOURCE_BINDING_ALIAS_METADATA_FIELD not in metadata.source_component_metadata
     named = ImageArtifactType.normalize_runtime_payload("DerivedDNA", projected)
-    named_metadata = image_payload_metadata(named)
+    named_metadata = named.metadata
     assert (
         named_metadata.source_component_metadata is metadata.source_component_metadata
     )
