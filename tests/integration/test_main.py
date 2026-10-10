@@ -64,7 +64,6 @@ from arraybridge.decorators import DtypeConversion
 # Test utilities and fixtures
 from tests.integration.helpers.fixture_utils import (
     backend_config,
-    base_test_dir,
     data_type_config,
     execution_mode,
     microscope_config,
@@ -229,12 +228,15 @@ def _fiji_enabled() -> bool:
 
 
 @pytest.fixture
-def test_function_dir(base_test_dir, microscope_config, request):
-    """Create test directory for a specific test function."""
-    test_name = request.node.originalname or request.node.name.split("[")[0]
-    test_dir = base_test_dir / f"{test_name}[{microscope_config['format']}]"
-    test_dir.mkdir(parents=True, exist_ok=True)
-    yield test_dir
+def test_function_dir(tmp_path, microscope_config):
+    """Give every parametrization a fresh plate directory.
+
+    A shared directory let one run's converted input (a second ``main``
+    subdirectory) and saved outputs leak into the next parametrization.
+    """
+    test_dir = tmp_path / microscope_config["format"]
+    test_dir.mkdir()
+    return test_dir
 
 
 def create_test_pipeline(
