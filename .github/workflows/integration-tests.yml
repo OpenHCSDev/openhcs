@@ -2443,6 +2443,30 @@ jobs:
             --extras "dev,dev-gui,cellprofiler-compat,$desktop_extras" \
             --requirement pytest-split==0.11.0
 
+      # The test session forbids ImageJ downloads (tests/conftest.py); the
+      # Bio-Formats source tests read the declared Fiji bundle from this cache.
+      - name: Cache managed Java and ImageJ artifacts
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/polystore/imagej
+            ~/.cache/cjdk
+            ~/.jgo
+            ~/.m2/repository
+          key: ${{ runner.os }}-openhcs-fiji-${{ hashFiles('pyproject.toml', 'external/PolyStore/src/polystore/imagej_distribution.py') }}
+
+      - name: Prewarm managed Fiji runtime
+        run: |
+          source test_wheel/bin/activate
+          python - <<'PY'
+          import imagej
+          import scyjava as sj
+          from polystore.imagej_runtime import FIJI_IMAGEJ_RUNTIME
+
+          ij = FIJI_IMAGEJ_RUNTIME.initialize(imagej, sj, mode="headless")
+          FIJI_IMAGEJ_RUNTIME.shutdown(ij, sj)
+          PY
+
       - name: Smoke installed measured MCP protocol
         run: |
           source test_wheel/bin/activate
