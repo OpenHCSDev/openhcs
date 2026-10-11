@@ -889,14 +889,16 @@ class CallableContract(ArtifactPlanKeySelector):
     def __post_init__(self) -> None:
         """Capture the declared positional ABI once, before any returned values."""
         outputs = ArtifactSpecCollection(self.metadata.artifact_outputs)
+        # Return slots are positional; one artifact may fill several slots
+        # (IdentifyTertiaryObjects with larger == smaller objects) only when
+        # every slot declares the same spec.
         by_ref: dict[ArtifactSpecRef, ArtifactSpec] = {}
         for spec in outputs:
-            ref = spec.ref()
-            if ref in by_ref:
+            if by_ref.setdefault(spec.ref(), spec) != spec:
                 raise ValueError(
-                    f"Callable output ABI contains duplicate artifact ref {ref!r}."
+                    "Callable output ABI declares conflicting specs for artifact "
+                    f"ref {spec.ref()!r}."
                 )
-            by_ref[ref] = spec
         canonical_count = 0
         if self.execution_scope is FunctionStepExecutionScope.PLATE:
             canonical_count = min(1, len(outputs))
@@ -910,7 +912,7 @@ class CallableContract(ArtifactPlanKeySelector):
                     ):
                         break
                     canonical_count += 1
-        refs = tuple(by_ref)
+        refs = tuple(spec.ref() for spec in outputs)
         object.__setattr__(
             self,
             "artifact_outputs",
