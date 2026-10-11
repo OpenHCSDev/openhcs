@@ -15,7 +15,7 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.config import DtypeConfig
+from openhcs.core.config import DtypeConfig, StepSourceBindingsConfig
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
@@ -27,7 +27,6 @@ from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outpu
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
-from openhcs.core.source_bindings import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.processing.backends.cellprofiler.primary_objects import (

@@ -352,13 +352,7 @@ class FunctionStepExecutor:
                 compiled_group,
                 component_value=component_value,
             )
-            if bindings is None:
-                return ()
-            return policy.select(
-                pattern_list,
-                bindings=bindings.binding_declarations,
-                source_context=source_context,
-            )
+            return bindings.select_anchors(pattern_list, policy, source_context)
 
         return self.apply(
             "step_filter_source_anchors",
@@ -396,7 +390,6 @@ class FunctionStepExecutor:
             requires_cross_group_resolution = (
                 execution_scope.component is not None
                 and target_key is not None
-                and bindings is not None
                 and bindings.requires_cross_group_candidate_resolution(
                     execution_scope.component,
                     str(target_key),
@@ -407,16 +400,8 @@ class FunctionStepExecutor:
                 if local_candidates is None or requires_cross_group_resolution
                 else local_candidates
             )
-            selected_groups[target_key] = (
-                ()
-                if bindings is None
-                else tuple(
-                    policy.select(
-                        candidates,
-                        bindings=bindings.binding_declarations,
-                        source_context=source_context,
-                    )
-                )
+            selected_groups[target_key] = bindings.select_anchors(
+                candidates, policy, source_context
             )
 
         filtered = selected_groups
@@ -438,8 +423,8 @@ class FunctionStepExecutor:
         compiled_group: CompiledFunctionGroup,
         *,
         component_value: FunctionGroupKey,
-    ) -> CompiledSourceBindingPlan | None:
-        """Return component-compatible main-flow declarations, if any."""
+    ) -> CompiledSourceBindingPlan:
+        """Return component-compatible main-flow declarations (possibly none)."""
 
         main_flow_refs = compiled_group.main_flow_input_refs_for_component(
             self.plan.execution_group_scope,

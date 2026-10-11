@@ -23,9 +23,8 @@ from PyQt6.QtCore import pyqtSignal, QTimer
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.abstract import AbstractStep
 from python_introspect import SignatureAnalyzer
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config import PipelineConfig, SourceBindingsConfig
 from openhcs.core.source_binding_context import SourceBindingContext
-from openhcs.core.source_bindings import SourceBindingsConfig
 from openhcs.pyqt_gui.widgets.source_bindings_editor import SourceBindingsEditorWidget
 from pyqt_reactive.forms.parameter_form_manager import (
     ParameterFormManager,

@@ -252,11 +252,8 @@ class SourceSemanticsArchitectureTopic(ArchitectureTopicProjection):
     )
 
     def symbol_specs(self) -> tuple[InternalApiSymbolSpec, ...]:
-        from openhcs.core.source_bindings import (
-            MetadataExtractionRule,
-            SourceBindingsConfig,
-            StepSourceBindingsConfig,
-        )
+        from openhcs.core.source_bindings import MetadataExtractionRule
+        from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
         from openhcs.core.source_binding_workspace import (
             SourceBindingWorkspaceProjector,
         )

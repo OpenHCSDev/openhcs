@@ -230,7 +230,7 @@ def _execute_function_core(request: CoreExecutionRequest):
         step_name="test",
         axis_id=request.context.axis_id,
         input_memory_type=MEMORY_TYPE_NUMPY,
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         variable_components=(),
         execution_group_scope=request.execution_group_scope,
         compiled_function_pattern=compiled_pattern,
@@ -2888,7 +2888,7 @@ def test_function_runtime_stacks_and_unstacks_explicit_runtime_slices():
 def _declared_source_executor(
     spec: ArtifactSpec,
     *,
-    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan.empty(),
+    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
     main_flow_projection: MainFlowInputProjection = (
         MainFlowInputProjection.DECLARED_SOURCE_IMAGE
     ),

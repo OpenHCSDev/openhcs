@@ -32,7 +32,11 @@ from benchmark.datasets.acquire import (
 from benchmark.datasets.registry import get_dataset_spec
 from benchmark.validation.layouts import ValidationCorpusLayoutStrategy
 from benchmark.validation.references import ValidationReferenceStrategy
-from openhcs.core.config import LazySourceBindingsConfig, PipelineConfig
+from openhcs.core.config import (
+    LazySourceBindingsConfig,
+    PipelineConfig,
+    SourceBindingsConfig,
+)
 from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
@@ -43,10 +47,9 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
+    PairByOrder,
     SourceBindingOrigin,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
@@ -540,10 +543,9 @@ def source_bindings_for_validation(
         )
         for channel in validation.channels
     )
-    match_plan = None
+    match_plan = PairByOrder()
     if len(bindings) > 1:
-        match_plan = SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
+        match_plan = PairByMetadata(
             dimensions=tuple(
                 SourceBindingMatchDimension(
                     fields=tuple(

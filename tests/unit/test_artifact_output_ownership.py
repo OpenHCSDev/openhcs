@@ -345,10 +345,8 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.source_bindings import (
-        NamedSourceBinding,
-        StepSourceBindingsConfig,
-    )
+    from openhcs.core.source_bindings import NamedSourceBinding
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,

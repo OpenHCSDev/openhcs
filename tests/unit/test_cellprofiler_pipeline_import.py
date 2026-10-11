@@ -22,7 +22,12 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.config import PipelineConfig, ProcessingConfig
+from openhcs.core.config import (
+    PipelineConfig,
+    ProcessingConfig,
+    SourceBindingsConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
@@ -36,10 +41,8 @@ from openhcs.core.pipeline.artifact_planning import (
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingsConfig,
+    PairByOrder,
     SourceProjectionRole,
-    StepSourceBindingsConfig,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.vfs_protocol import FileManagerLike
@@ -1711,9 +1714,7 @@ ImageMath:[module_num:2|enabled:True]
     )
 
     match_plan = pipeline_config.source_bindings_config.match_plan
-    assert match_plan is not None
-    assert match_plan.method is SourceBindingMatchMethod.ORDER
-    assert match_plan.dimensions == ()
+    assert match_plan == PairByOrder()
 
 
 def test_save_images_target_preserves_cross_group_source_and_main_flow() -> None:

@@ -216,7 +216,7 @@ class PatternGroupExecutionScope:
     def main_flow_source_binding_plan(self) -> CompiledSourceBindingPlan:
         """Return bindings that anchor and load this group's main-flow stack."""
         declared_plan = self.execution_plan.source_binding_plan
-        selected = declared_plan.for_main_flow_scope(
+        return declared_plan.for_main_flow_scope(
             component=self.execution_plan.execution_group_scope.component,
             group_key=self.component_key,
             main_flow_refs=self.compiled_group.main_flow_input_refs_for_component(
@@ -225,7 +225,6 @@ class PatternGroupExecutionScope:
                 source_bindings=declared_plan,
             ),
         )
-        return declared_plan.for_artifact_refs(()) if selected is None else selected
 
     def active_main_flow_source_binding_plan(
         self,

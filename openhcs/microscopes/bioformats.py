@@ -11,10 +11,7 @@ from polystore.ome_zarr_storage import OmeZarrStorageBackend
 
 from openhcs.constants.constants import Backend
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.source_bindings import (
-    SourceBindingsConfig,
-    source_bindings_defaults_to_base,
-)
+from openhcs.core.config import SourceBindingsConfig, source_bindings_defaults_to_base
 from openhcs.core.source_projection import SourcePlaneDataset
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.virtual_workspace_metadata import (

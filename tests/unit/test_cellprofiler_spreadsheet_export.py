@@ -66,11 +66,8 @@ from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_bindings import (
-    ComponentSelector,
-    NamedSourceBinding,
-    SourceBindingsConfig,
-)
+from openhcs.core.source_bindings import ComponentSelector, NamedSourceBinding
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_metadata import DECLARED_SOURCE_METADATA_FIELD
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,

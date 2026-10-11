@@ -28,7 +28,7 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerArtifactStage,
     PathPlannerGroupScope,
 )
-from openhcs.core.source_bindings import EMPTY_SOURCE_BINDINGS
+from openhcs.core.config import EMPTY_SOURCE_BINDINGS
 from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsModule
 from tests.unit.test_cellprofiler_relationship_contracts import _contract, _module
 from openhcs.domains.microscopy.axes import Microscopy

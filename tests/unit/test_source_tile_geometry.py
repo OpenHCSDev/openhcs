@@ -21,11 +21,8 @@ from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayload
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.source_bindings import (
-    MetadataExtractionRule,
-    MetadataSource,
-    SourceBindingsConfig,
-)
+from openhcs.core.source_bindings import MetadataExtractionRule, MetadataSource
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_matching import source_component_metadata_value
 from openhcs.core.source_metadata import SourceVoxelSpacing

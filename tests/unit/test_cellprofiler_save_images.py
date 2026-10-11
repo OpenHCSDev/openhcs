@@ -44,11 +44,8 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.source_bindings import (
-    NamedSourceBinding,
-    SourceProjectionRole,
-    StepSourceBindingsConfig,
-)
+from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,

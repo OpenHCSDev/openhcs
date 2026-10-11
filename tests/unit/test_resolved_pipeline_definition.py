@@ -2,12 +2,15 @@ from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 import pytest
 
 from openhcs.constants.input_source import InputSource
-from openhcs.core.config import ProcessingConfig, StepMaterializationConfig
+from openhcs.core.config import (
+    ProcessingConfig,
+    StepMaterializationConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceSelector,
-    StepSourceBindingsConfig,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.function_patterns import normalize_function_pattern

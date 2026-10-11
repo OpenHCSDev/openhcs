@@ -1311,7 +1311,7 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         source_bindings_config=None,
     ) -> "OpenHCSDatasetSource":
         """Keep the prepared source while applying the declared source bindings."""
-        from openhcs.core.source_bindings import source_bindings_defaults_to_base
+        from openhcs.core.config import source_bindings_defaults_to_base
 
         handler = super().create(
             filemanager=filemanager, pattern_format=pattern_format,

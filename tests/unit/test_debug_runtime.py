@@ -339,7 +339,7 @@ class DebugRuntimeFixture:
             step_name="debuggable",
             axis_id=DebugRuntimeFixture.AXIS_ID,
             input_memory_type=MEMORY_TYPE_NUMPY,
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
             variable_components=(),
             execution_group_scope=ComponentGroupScope.ungrouped(),
             compiled_function_pattern=SimpleNamespace(is_grouped=False),

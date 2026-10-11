@@ -57,7 +57,7 @@ from openhcs.authoring.session.session import Session
 from openhcs.pyqt_gui.session_rendering import QtSessionEventRelay
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from openhcs.core.source_binding_context import SourceBindingContext
-from openhcs.core.source_bindings import SourceBindingsConfig
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
 from python_introspect import SignatureAnalyzer

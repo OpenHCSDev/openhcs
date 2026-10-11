@@ -10,7 +10,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import ClassVar, Mapping, Sequence, TYPE_CHECKING
 
-from metaclass_registry import AutoRegisterMeta
+from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
+from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 
 from openhcs.constants.constants import Backend
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
@@ -18,10 +19,10 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     MetadataExtractionRule,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
+    PairByOrder,
+    SourceSetPairing,
     SourceSetRole,
-    SourceProjectionRole,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
@@ -42,7 +43,6 @@ from openhcs.core.source_matching import (
     semantic_source_metadata_value,
     source_component_metadata_items,
     source_component_metadata_value,
-    source_component_metadata_values,
     source_filters_match,
     source_metadata_value,
     source_metadata_values_equal,
@@ -50,11 +50,11 @@ from openhcs.core.source_matching import (
 from openhcs.core.source_path_identity import (
     source_path_identity,
     source_path_identity_key,
+    source_path_posix,
     source_paths_equal,
 )
 from openhcs.core.source_projection import SourceProjection
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
 )
 from openhcs.core.aligned_image_payload import stack_image_payloads
@@ -82,8 +82,11 @@ SourceCandidatePath = str
 def _cached_source_candidate_pattern_keys(pattern_path: str) -> tuple[str, ...]:
     """Return candidate source path spellings used for selector matching."""
 
-    path = Path(pattern_path)
-    return tuple(dict.fromkeys((pattern_path, path.as_posix(), path.name)))
+    return tuple(
+        dict.fromkeys(
+            (pattern_path, source_path_posix(pattern_path), Path(pattern_path).name)
+        )
+    )
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -708,14 +711,16 @@ class SourceBindingMatchResolution:
         return self.status is SourceBindingMatchResolutionStatus.DEFERRED_TO_RUNTIME
 
 
-class SourceBoundAnchorPatternPolicy(ABC, metaclass=AutoRegisterMeta):
-    """Nominal policy for choosing execution anchors from source-bound inputs."""
+class SourceBoundAnchorPatternPolicy(
+    NominalTypeKeyedStrategyMixin, ABC, metaclass=AutoRegisterMeta
+):
+    """Choose execution anchors from source-bound inputs by the declared pairing."""
 
-    __registry_key__ = "policy_key"
-    __skip_if_no_key__ = True
-    policy_key: ClassVar[str | None] = None
+    value_type: ClassVar[type[SourceSetPairing] | None] = None
+    value_type_label: ClassVar[str | None] = None
+    __registry_family__ = RegistryFamily(RegistryKeyAttribute.VALUE_TYPE_LABEL)
 
-    def __init__(self, match_plan: SourceBindingMatchPlan | None = None) -> None:
+    def __init__(self, match_plan: SourceSetPairing) -> None:
         self._match_plan = match_plan
 
     @classmethod
@@ -723,13 +728,13 @@ class SourceBoundAnchorPatternPolicy(ABC, metaclass=AutoRegisterMeta):
         cls,
         plan: CompiledSourceBindingPlan,
     ) -> "SourceBoundAnchorPatternPolicy":
-        if plan.match_plan is None:
-            return DefaultSourceBoundAnchorPatternPolicy()
-        policy_type = cls.__registry__.get(
-            plan.match_plan.method.value,
-            DefaultSourceBoundAnchorPatternPolicy,
-        )
-        return policy_type(plan.match_plan)
+        policy_types = cls.strategy_types_for_nominal_value(plan.match_plan)
+        if not policy_types:
+            raise TypeError(
+                "No source-bound anchor policy is registered for "
+                f"{type(plan.match_plan).__name__}."
+            )
+        return policy_types[0](plan.match_plan)
 
     @abstractmethod
     def select(
@@ -858,28 +863,8 @@ class SourceBoundAnchorPatternPolicy(ABC, metaclass=AutoRegisterMeta):
         )
 
 
-class DefaultSourceBoundAnchorPatternPolicy(SourceBoundAnchorPatternPolicy):
-    """Keep every selector-compatible source anchor."""
-
-    def select(
-        self,
-        pattern_list: Sequence[SourceCandidatePath],
-        *,
-        bindings: Sequence[NamedSourceBinding],
-        source_context: SourcePatternResolutionContext,
-    ) -> list[SourceCandidatePath]:
-        selection = self._source_compatible_anchor_selection(
-            pattern_list,
-            bindings=bindings,
-            source_context=source_context,
-        )
-        return list(selection.patterns)
-
-
 class MatchedImageSetAnchorPatternPolicy(SourceBoundAnchorPatternPolicy):
     """Collapse multi-alias source anchors to one representative per image set."""
-
-    policy_key = None
 
     def select(
         self,
@@ -938,7 +923,7 @@ class MatchedImageSetAnchorPatternPolicy(SourceBoundAnchorPatternPolicy):
 class OrderMatchedImageSetAnchorPatternPolicy(MatchedImageSetAnchorPatternPolicy):
     """Source aliases are paired by order within one logical image set."""
 
-    policy_key = SourceBindingMatchMethod.ORDER.value
+    value_type = PairByOrder
 
     def _deduplicate_matched_image_sets(
         self,
@@ -969,7 +954,7 @@ class OrderMatchedImageSetAnchorPatternPolicy(MatchedImageSetAnchorPatternPolicy
 class MetadataMatchedImageSetAnchorPatternPolicy(MatchedImageSetAnchorPatternPolicy):
     """Source aliases are paired by declared metadata dimensions."""
 
-    policy_key = SourceBindingMatchMethod.METADATA.value
+    value_type = PairByMetadata
 
     def _deduplicate_matched_image_sets(
         self,
@@ -978,7 +963,7 @@ class MetadataMatchedImageSetAnchorPatternPolicy(MatchedImageSetAnchorPatternPol
         selector_bindings: Sequence[NamedSourceBinding],
         source_context: SourcePatternResolutionContext,
     ) -> list[SourceCandidatePath]:
-        if self._match_plan is None or not self._match_plan.dimensions:
+        if not self._match_plan.dimensions:
             raise ValueError(
                 "METADATA source binding requires explicit match dimensions "
                 "to collapse source-bound execution anchors."
@@ -1049,8 +1034,6 @@ class MetadataMatchedImageSetAnchorPatternPolicy(MatchedImageSetAnchorPatternPol
         binding: NamedSourceBinding,
         allow_missing: bool = False,
     ) -> tuple[str, ...] | None:
-        if self._match_plan is None:
-            raise ValueError("METADATA source binding policy has no match plan.")
         values: list[str] = []
         for dimension in self._match_plan.dimensions:
             field = dimension.field_for_alias(binding.alias)
@@ -1164,7 +1147,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
     """Resolve all declared source aliases for one matched image-set anchor."""
 
     bindings: tuple[NamedSourceBinding, ...]
-    match_plan: SourceBindingMatchPlan | None
+    match_plan: SourceSetPairing
     identity_policy: SourceImageSetIdentityPolicy
 
     @property
@@ -1182,7 +1165,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
         cls,
         *,
         bindings: Sequence[NamedSourceBinding],
-        match_plan: SourceBindingMatchPlan | None,
+        match_plan: SourceSetPairing,
         source_context: SourcePatternResolutionContext,
         identity_policy: SourceImageSetIdentityPolicy,
     ) -> "SourceBindingMatchedImageSet":
@@ -1221,11 +1204,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
                 binding=resolution_bindings[0],
                 source_universe=source_universe,
             )
-        if (
-            self.match_plan is None
-            or self.match_plan.method is not SourceBindingMatchMethod.METADATA
-            or not self.match_plan.dimensions
-        ):
+        if not self.match_plan.dimensions:
             selected = self._complete_alias_set(anchors, resolution_bindings)
             if selected is not None:
                 return selected

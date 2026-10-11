@@ -34,11 +34,8 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
 from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.core.source_bindings import (
-    NamedSourceBinding,
-    SourceProjectionRole,
-    StepSourceBindingsConfig,
-)
+from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.processing.backends.cellprofiler import (
