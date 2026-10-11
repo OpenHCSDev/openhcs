@@ -15,7 +15,6 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )

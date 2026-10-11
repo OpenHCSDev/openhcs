@@ -45,7 +45,6 @@ from openhcs.runtime.zmq_execution_client import (
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.context_support import (
     compiled_context,
-    executing_context,
 )
 
 
@@ -398,7 +397,6 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
         CompiledRuntimeEnvironmentPlan,
     )
     from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.function_patterns import compile_function_pattern, normalize_function_pattern
     from openhcs.core.orchestrator.execution_result import (
         RuntimeExecutionTransportSerialization,

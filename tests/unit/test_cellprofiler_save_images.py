@@ -20,7 +20,6 @@ from openhcs.core.artifacts.relations import (
 )
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
     compile_function_pattern,

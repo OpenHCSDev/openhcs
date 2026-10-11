@@ -1,11 +1,9 @@
-from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,

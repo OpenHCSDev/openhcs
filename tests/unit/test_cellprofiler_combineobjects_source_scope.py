@@ -24,7 +24,6 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline.path_planner import (
     PathPlannerExecutionGroups,
-    ComponentGroupScope,
 )
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole

@@ -16,7 +16,6 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.callable_contract import (
     CallableContract,
-    CallableDeclaration,
     FunctionStepExecutionScope,
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata

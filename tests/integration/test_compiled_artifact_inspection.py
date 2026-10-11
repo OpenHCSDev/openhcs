@@ -26,7 +26,6 @@ from openhcs.core.callable_contract import CallableContract
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
     CompiledFunctionGroup,

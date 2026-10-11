@@ -15,7 +15,6 @@ from openhcs.core.callable_contract import (
     prepare_processing_callable,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority

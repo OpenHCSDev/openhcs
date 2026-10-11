@@ -170,7 +170,6 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         assert selected.require_source_projection_for(lookup) is full.require_source_projection_for(lookup)
         assert selected.source_metadata_for(lookup) == full.source_metadata_for(lookup)
     assert len(full.pipeline_start_files()) == 18
-    from openhcs.core.context.processing_context import ProcessingContext
     context = executing_context(filemanager=filemanager, axis_id="A01")
     context = with_facts(context, dataset_root=workspace)
     context = with_facts(context, microscope_handler=handler)

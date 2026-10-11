@@ -13,7 +13,6 @@ from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import MetadataArtifactType
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     UngroupedScope,
 )
 from openhcs.core.function_patterns import (

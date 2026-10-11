@@ -17,10 +17,8 @@ from openhcs.core.aligned_image_payload import (
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     UngroupedScope,
 )
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.steps.function_output_manifest import step_output_manifest

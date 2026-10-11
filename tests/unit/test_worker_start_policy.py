@@ -4,7 +4,6 @@ import pytest
 
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import MultiprocessingStartMethod
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.worker_start_policy import (
     WorkerStartPlatform,
     WorkerStartExecutionFacts,

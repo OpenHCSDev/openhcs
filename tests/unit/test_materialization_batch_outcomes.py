@@ -13,7 +13,6 @@ from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.function_patterns import compile_function_pattern

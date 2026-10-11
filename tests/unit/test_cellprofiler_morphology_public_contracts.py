@@ -25,7 +25,6 @@ from openhcs.core.config import (
     PipelineConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,

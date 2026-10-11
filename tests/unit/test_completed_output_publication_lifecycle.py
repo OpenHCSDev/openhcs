@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from pathlib import Path
 from dataclasses import replace
 import pickle
-from types import MappingProxyType, SimpleNamespace
+from types import MappingProxyType
 import weakref
 
 import numpy as np

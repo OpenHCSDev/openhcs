@@ -6,7 +6,6 @@ from types import MappingProxyType
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_binding_selection import (
     DeclaredSourceMetadataRecord,

@@ -25,7 +25,6 @@ from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
 )
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
@@ -416,12 +415,12 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
 ) -> None:
     cleaned = []
 
-    pixels = np.zeros((16, 16), dtype=np.uint16)
-    pixel_reference = weakref.ref(pixels)
+    held = [np.zeros((16, 16), dtype=np.uint16)]
+    pixel_reference = weakref.ref(held[0])
 
     def fail_step(_pipeline, context, *_args, **_kwargs):
         context.runtime_image_stack_cache.store(
-            ("image",), memory_type="numpy", stack=pixels
+            ("image",), memory_type="numpy", stack=held[0]
         )
         raise RuntimeError("step failure")
 
@@ -469,7 +468,7 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
         )
 
     assert cleaned == [(MemoryType.CUPY, 2)]
-    del pixels
+    held.clear()
     assert pixel_reference() is None
 
 

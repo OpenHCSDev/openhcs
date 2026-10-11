@@ -6,7 +6,6 @@ from types import SimpleNamespace
 
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 import json
 

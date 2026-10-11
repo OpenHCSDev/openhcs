@@ -506,7 +506,7 @@ def validate_dataset_scoped_contexts(
 
 
 def execute_dataset_scoped_steps(
-    compiled_contexts: Mapping[str, ExecutingContext],
+    executing_contexts: Mapping[str, ExecutingContext],
     *,
     progress_queue: ProgressQueue,
     progress_context: ProgressExecutionContext,
@@ -517,15 +517,15 @@ def execute_dataset_scoped_steps(
 
     observation_cursors = {
         context_key: context.runtime_value_store.observation_cursor()
-        for context_key, context in compiled_contexts.items()
+        for context_key, context in executing_contexts.items()
     }
-    dataset_step_indexes = validate_dataset_scoped_contexts(compiled_contexts)
-    total_steps = max(next(iter(compiled_contexts.values())).step_plans) + 1
-    records_by_axis = _runtime_record_snapshot(compiled_contexts)
-    observations_by_context = {key: [] for key in compiled_contexts}
+    dataset_step_indexes = validate_dataset_scoped_contexts(executing_contexts)
+    total_steps = max(next(iter(executing_contexts.values())).step_plans) + 1
+    records_by_axis = _runtime_record_snapshot(executing_contexts)
+    observations_by_context = {key: [] for key in executing_contexts}
     for step_index in dataset_step_indexes:
         owner_context, owner_plan = _dataset_output_owner(
-            compiled_contexts,
+            executing_contexts,
             step_index,
         )
         with (
@@ -554,7 +554,7 @@ def execute_dataset_scoped_steps(
                     output_plan.require_single_group_key()
                 )
                 batch = _dataset_artifact_batch(
-                    compiled_contexts=compiled_contexts,
+                    executing_contexts=executing_contexts,
                     step_index=step_index,
                     invocation_position=invocation_position,
                     contract=contract,
@@ -631,7 +631,7 @@ def execute_dataset_scoped_steps(
             )
             owner_context_key = next(
                 key
-                for key, context in compiled_contexts.items()
+                for key, context in executing_contexts.items()
                 if context is owner_context
             )
             observation = StepExecutionObservation.combine(
@@ -670,7 +670,7 @@ def execute_dataset_scoped_steps(
                     observations_by_context[context_key]
                 ),
             )
-            for context_key, context in compiled_contexts.items()
+            for context_key, context in executing_contexts.items()
             if (
                 records := context.runtime_value_store.observed_values_after(
                     observation_cursors[context_key]
@@ -824,13 +824,13 @@ def _validate_dataset_invocation(
 
 
 def _runtime_record_snapshot(
-    compiled_contexts: Mapping[str, ExecutingContext],
+    executing_contexts: Mapping[str, ExecutingContext],
 ) -> Mapping[str, tuple[StoredRuntimeValue, ...]]:
     records: OrderedDict[
         str,
         OrderedDict[tuple[object, RuntimeArtifactLocation], StoredRuntimeValue],
     ] = OrderedDict()
-    for context in compiled_contexts.values():
+    for context in executing_contexts.values():
         for record in context.runtime_value_store.values():
             axis_id = record.key.scope.axis_id
             records.setdefault(axis_id, OrderedDict()).setdefault(
@@ -846,12 +846,12 @@ def _runtime_record_snapshot(
 
 
 def _dataset_output_owner(
-    compiled_contexts: Mapping[str, ExecutingContext],
+    executing_contexts: Mapping[str, ExecutingContext],
     step_index: int,
 ) -> tuple[ExecutingContext, CompiledStepPlan]:
     owners = tuple(
         (context, context.step_plans[step_index])
-        for context in compiled_contexts.values()
+        for context in executing_contexts.values()
         if context.step_plans[step_index].owns_runtime_outputs
     )
     if len(owners) != 1:
@@ -864,7 +864,7 @@ def _dataset_output_owner(
 
 def _dataset_artifact_batch(
     *,
-    compiled_contexts: Mapping[str, ExecutingContext],
+    executing_contexts: Mapping[str, ExecutingContext],
     step_index: int,
     invocation_position: int,
     contract: CallableContract,
@@ -876,12 +876,12 @@ def _dataset_artifact_batch(
         str,
         OrderedDict[tuple[object, RuntimeArtifactLocation], StoredRuntimeValue],
     ] = OrderedDict()
-    for context in compiled_contexts.values():
+    for context in executing_contexts.values():
         selected.setdefault(context.require_axis_id(), OrderedDict())
 
     for input_spec in contract.artifact_inputs:
         selected_for_spec = 0
-        for context in compiled_contexts.values():
+        for context in executing_contexts.values():
             axis_id = context.require_axis_id()
             step_plan = context.step_plans[step_index]
             invocation = step_plan.compiled_function_pattern.default_group.invocations[

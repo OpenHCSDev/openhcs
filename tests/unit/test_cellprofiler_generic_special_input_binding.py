@@ -14,7 +14,6 @@ from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.artifacts.relations import InputStackBroadcastSourceRelation
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     UngroupedScope,
 )
 from openhcs.core.component_set import ComponentSet

@@ -21,7 +21,6 @@ from openhcs.core.artifacts.kinds import (
     RelationshipsArtifactType,
 )
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )

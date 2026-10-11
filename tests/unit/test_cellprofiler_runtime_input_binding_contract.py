@@ -22,7 +22,6 @@ from openhcs.core.artifacts.kinds import (
 )
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     RuntimeExecutionAxisScope,
     UngroupedScope,
 )

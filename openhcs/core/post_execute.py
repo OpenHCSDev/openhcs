@@ -85,7 +85,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def run(
         self,
-        compiled_contexts: Mapping[str, "ExecutingContext"],
+        executed_contexts: Mapping[str, "ExecutingContext"],
         observation: object | None,
     ) -> None:
         """Do this hook's work after every partition succeeded."""
@@ -135,7 +135,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     @staticmethod
     def run_all(
-        compiled_contexts: Mapping[str, "ExecutingContext"],
+        executed_contexts: Mapping[str, "ExecutingContext"],
         execution_results: Mapping[str, "ExecutionResult"],
         dataset_runtime_observation: "RuntimeExecutionObservation",
     ) -> None:
@@ -149,7 +149,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
             for context_observation in runtime_observation.contexts
         )
         for context_observation in context_observations:
-            if context_observation.context_key not in compiled_contexts:
+            if context_observation.context_key not in executed_contexts:
                 raise KeyError(
                     "Runtime observation references unknown compiled context "
                     f"{context_observation.context_key!r}."
@@ -158,9 +158,9 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
             context_observation.outputs.hook_observations
             for context_observation in context_observations
         )
-        first_context = next(iter(compiled_contexts.values()))
+        first_context = next(iter(executed_contexts.values()))
         for hook in first_context.post_execute_hooks:
-            hook.run(compiled_contexts, observations.get(hook.hook_name))
+            hook.run(executed_contexts, observations.get(hook.hook_name))
 
 
 def _observations(

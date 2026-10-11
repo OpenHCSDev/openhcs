@@ -15,7 +15,6 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline.path_planner import ComponentGroupScope
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_step import FunctionStep

@@ -17,7 +17,6 @@ from openhcs.core.config import (
     PipelineConfig,
     StepSourceBindingsConfig,
 )
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.sidecars import MaterializedImageCopy

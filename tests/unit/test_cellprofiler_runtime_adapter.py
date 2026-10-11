@@ -8,7 +8,6 @@ from typing import Annotated, ClassVar
 import numpy as np
 import pytest
 
-from openhcs.constants.input_source import InputSource
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,

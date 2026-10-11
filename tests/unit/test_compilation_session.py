@@ -63,9 +63,6 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
 )
 from openhcs.core.axes import Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
-from tests.context_support import (
-    executing_context,
-)
 
 
 def _identity(image):

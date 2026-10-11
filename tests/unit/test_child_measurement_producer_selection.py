@@ -24,7 +24,6 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.core.pipeline.path_planner import (
     PathPlannerArtifactStage,
-    ComponentGroupScope,
 )
 from openhcs.core.config import EMPTY_SOURCE_BINDINGS
 from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsModule

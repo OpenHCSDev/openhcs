@@ -14,7 +14,6 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamSourceComponentMetadataItems,
     StreamViewerComponentMetadataProjector,
 )
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.orchestrator.worker_lanes import (
     WorkerAssignmentPlan,

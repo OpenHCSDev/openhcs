@@ -43,7 +43,6 @@ from openhcs.core.component_group_scope import (
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.memory import numpy
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.config import (
@@ -92,7 +91,6 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerComponentScopes,
     PathPlannerArtifactStage,
     PathPlannerExecutionGroups,
-    ComponentGroupScope,
     PathPlannerMaterializationStage,
     PathPlannerPathAuthority,
     PathPlannerStepAssemblyStage,
@@ -113,7 +111,6 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.step_dependencies import StepInputDependencyKind
-from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionScope,
@@ -1167,7 +1164,6 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
         LazyProcessingConfig,
         PipelineConfig,
     )
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.function_patterns import normalize_function_pattern
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.interop.cellprofiler.compile_time_contracts import (

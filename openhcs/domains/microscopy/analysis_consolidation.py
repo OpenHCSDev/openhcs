@@ -273,7 +273,7 @@ class AnalysisConsolidationHook(PostExecuteHook):
 
     def run(
         self,
-        compiled_contexts: Mapping[str, ExecutingContext],
+        executed_contexts: Mapping[str, ExecutingContext],
         observation: RuntimeAnalysisConsolidationInputs | None,
     ) -> None:
         if not self.analysis_consolidation_config.enabled:
@@ -281,7 +281,7 @@ class AnalysisConsolidationHook(PostExecuteHook):
             return
         if observation is None:
             return
-        first_context = next(iter(compiled_contexts.values()))
+        first_context = next(iter(executed_contexts.values()))
         if first_context.output_dataset_root is None:
             raise ValueError(
                 "Analysis consolidation requires the compiled output plate root."

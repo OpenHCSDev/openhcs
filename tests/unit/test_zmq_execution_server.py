@@ -652,7 +652,6 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
         CompiledExecutionBundle,
         CompiledRuntimeEnvironmentPlan,
     )
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource

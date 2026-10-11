@@ -19,7 +19,6 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import (
     CompilingContext,
-    ProcessingContext,
 )
 from openhcs.core.function_patterns import (
     MainFlowInputProjection,
@@ -44,9 +43,6 @@ from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.processing.backends.cellprofiler.color import color_to_gray
 from openhcs.processing.backends.cellprofiler.crop import crop
 from openhcs.domains.microscopy.axes import Microscopy
-from tests.context_support import (
-    executing_context,
-)
 
 
 class _CarrierTestSession(SimpleNamespace):

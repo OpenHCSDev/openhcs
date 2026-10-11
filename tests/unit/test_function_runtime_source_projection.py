@@ -2167,7 +2167,6 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     from openhcs.core.progress import set_progress_queue
     from openhcs.core.config import LazyStepSourceBindingsConfig
     from openhcs.core.steps.function_runtime import (
-        PatternGroupExecutionScope,
         PatternGroupExecutionRequest,
     )
     from openhcs.core.steps.function_step import FunctionStep
@@ -2400,7 +2399,6 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         RuntimePlaneProjection,
     )
     from openhcs.core.steps.function_runtime import (
-        PatternGroupData,
         FunctionCoreExecutor,
     )
 
@@ -2476,9 +2474,6 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
 ) -> None:
     from openhcs.core.artifacts.payloads import NoMainFlowOutput
     from openhcs.core.steps import function_runtime
-    from openhcs.core.steps.function_runtime import (
-        PatternGroupData,
-    )
 
     source_binding_plan = CompiledSourceBindingPlan(
         bindings=tuple(
@@ -2618,9 +2613,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
 def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -> None:
     from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
     from openhcs.core.steps.function_runtime import (
-        PatternGroupExecutionScope,
         FunctionCoreExecutor,
-        PatternGroupData,
     )
 
     bindings = CompiledSourceBindingPlan(
@@ -2701,9 +2694,6 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
 ) -> None:
     from openhcs.core.function_patterns import CompiledFunctionGroup
     from openhcs.core.steps import function_runtime
-    from openhcs.core.steps.function_runtime import (
-        PatternGroupData,
-    )
 
     first_spec = ArtifactSpec.output("FirstLabels", ObjectLabelsArtifactType)
     second_spec = ArtifactSpec.output("SecondLabels", ObjectLabelsArtifactType)
@@ -3362,7 +3352,6 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
 
 def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> None:
     from openhcs.core.steps.function_runtime import (
-        PatternGroupData,
         PatternGroupExecutionRequest,
     )
 
@@ -3550,8 +3539,6 @@ def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
 def test_component_output_selection_keeps_distinct_axes_with_equal_keys() -> None:
     from openhcs.core.steps.function_runtime import (
         PatternGroupExecutionScope,
-        FunctionCoreExecutor,
-        PatternGroupData,
     )
 
     channel_1 = ArtifactOutputPlan(
@@ -3584,11 +3571,6 @@ def test_component_output_selection_keeps_distinct_axes_with_equal_keys() -> Non
 
 
 def test_component_artifact_plans_reject_malformed_exact_plan_maps() -> None:
-    from openhcs.core.steps.function_runtime import (
-        PatternGroupExecutionScope,
-        FunctionCoreExecutor,
-        PatternGroupData,
-    )
 
     input_plan = ArtifactInputPlan(
         name="InputImage",
@@ -3786,7 +3768,6 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
 def test_alias_only_workspace_filter_excludes_unselected_source_and_orders_stack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from openhcs.core.steps import function_runtime
 
     declarations = (
         NamedSourceBinding(alias="Hoechst"),
@@ -3867,7 +3848,6 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
 ) -> None:
     """Ordinary workspace sources retain fixed coordinates without bindings."""
 
-    from openhcs.core.steps import function_runtime
 
     virtual_path = "A01_s002_w1_z003_t004.tif"
     full_virtual_path = str(tmp_path / virtual_path)
@@ -5619,7 +5599,6 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
     from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
     from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
     from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.component_group_scope import ComponentGroupScope
     from openhcs.core.function_patterns import compile_function_pattern
     from openhcs.core.aligned_image_payload import AlignedImageStack
 

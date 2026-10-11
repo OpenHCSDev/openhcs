@@ -24,7 +24,6 @@ from openhcs.core.artifacts.kinds import (
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs

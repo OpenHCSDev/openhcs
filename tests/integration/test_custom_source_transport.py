@@ -455,7 +455,6 @@ def _compiled_custom_contexts(payload, runtime):
     from openhcs.constants.constants import Backend
     from openhcs.core.compiled_execution import CompiledExecutionBundle
     from openhcs.core.compiled_step_plan import CompiledStepPlan
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.function_patterns import (
         compile_function_pattern, normalize_function_pattern,
     )

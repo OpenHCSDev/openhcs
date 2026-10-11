@@ -607,7 +607,7 @@ def test_plate_artifact_batch_keeps_optional_source_declaration_without_record()
         MeasurementsArtifactType,
     }
     batch = _dataset_artifact_batch(
-        compiled_contexts={"A01": context},
+        executing_contexts={"A01": context},
         step_index=1,
         invocation_position=0,
         contract=CallableContract.from_callable(export),
@@ -716,7 +716,7 @@ def test_plate_retention_uses_exact_edges_instead_of_requested_types(
     retained_store.merge_observed_values(retained)
     batches = tuple(
         _dataset_artifact_batch(
-            compiled_contexts={"A01": context},
+            executing_contexts={"A01": context},
             step_index=1,
             invocation_position=0,
             contract=CallableContract.from_callable(export),
@@ -765,7 +765,7 @@ def test_plate_retention_defers_required_missing_admission_to_parent() -> None:
     assert MergeDatasetInputRecords.retain_records((), context) == ()
     with pytest.raises(ValueError, match="missing required input"):
         _dataset_artifact_batch(
-            compiled_contexts={"A01": context},
+            executing_contexts={"A01": context},
             step_index=1,
             invocation_position=0,
             contract=CallableContract.from_callable(export),

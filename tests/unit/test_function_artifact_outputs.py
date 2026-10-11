@@ -10,7 +10,6 @@ from tests.artifact_graphs import admitted_graph
 from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.artifacts.kinds import (
-    ArtifactType,
     ImageArtifactType,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
@@ -1773,7 +1772,6 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
             artifact_kind=ImageArtifactType.value,
         ),
     )
-    from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
 
     stack_payload = (scalar_output).copied(memory_type=MEMORY_TYPE_NUMPY,
         device_id=None,)

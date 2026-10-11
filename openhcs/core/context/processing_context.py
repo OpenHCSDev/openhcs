@@ -131,10 +131,6 @@ class CompilingContext(ProcessingContext):
         self.pipeline_sequential_combinations = None
         self.current_sequential_combination = None
 
-    def inject_plan(self, step_id: int, plan: CompiledStepPlan) -> None:
-        """Add one step's compiled plan."""
-        self.step_plans[step_id] = plan
-
     def freeze(self) -> "CompiledContext":
         """Return the immutable compiled context once every fact is set."""
 
@@ -210,10 +206,6 @@ class ExecutingContext(CompiledContext):
         if name in self._compiled_facts:
             CompiledContext.__setattr__(self, name, value)
         object.__setattr__(self, name, value)
-
-    def compiled(self) -> CompiledContext:
-        """Return the compiled facts this execution runs."""
-        return CompiledContext(self.compiled_facts())
 
     @property
     def runtime_source_workspace_projections(

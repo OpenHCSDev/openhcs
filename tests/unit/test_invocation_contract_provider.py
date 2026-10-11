@@ -667,7 +667,6 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
         LazyProcessingConfig,
         PipelineConfig,
     )
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.source_bindings import NamedSourceBinding
     from openhcs.core.config import StepSourceBindingsConfig
@@ -759,7 +758,6 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
 ):
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
@@ -827,7 +825,6 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
 def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> None:
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
@@ -1116,7 +1113,6 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
         LazyProcessingConfig,
         PipelineConfig,
     )
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.source_bindings import NamedSourceBinding
     from openhcs.core.config import StepSourceBindingsConfig
@@ -1235,7 +1231,6 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
     )
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
     from openhcs.core.config import StepSourceBindingsConfig
@@ -1357,7 +1352,6 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
         LazyProcessingConfig,
         PipelineConfig,
     )
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (

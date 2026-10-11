@@ -107,7 +107,7 @@ def test_outcome_export_rejects_missing_and_uncompiled_axes(tmp_path: Path) -> N
 
 def test_value_export_rejects_an_uncompiled_execution_axis() -> None:
     exported = ZMQRuntimeExecutionObservationExport.from_execution(
-        compiled_contexts={},
+        executed_contexts={},
         execution_results={"A01": ExecutionSucceeded("A01")},
         output_roots=(),
         runtime_observations=(),
@@ -121,7 +121,7 @@ def test_runtime_observation_export_never_overwrites_existing_file(
 ) -> None:
     observation_path = tmp_path / "observation.pkl.gz"
     ZMQRuntimeExecutionObservationExport.from_execution(
-        compiled_contexts={},
+        executed_contexts={},
         execution_results={},
         output_roots=(),
         execution_id="first-job",
@@ -130,7 +130,7 @@ def test_runtime_observation_export_never_overwrites_existing_file(
     retained_bytes = observation_path.read_bytes()
     with pytest.raises(FileExistsError):
         ZMQRuntimeExecutionObservationExport.from_execution(
-            compiled_contexts={},
+            executed_contexts={},
             execution_results={},
             output_roots=(),
             execution_id="other-job",

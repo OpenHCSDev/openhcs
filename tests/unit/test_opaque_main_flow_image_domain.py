@@ -10,7 +10,6 @@ from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     UngroupedScope,
 )
 from openhcs.core.function_patterns import MainFlowInputProjection, compile_function_pattern
@@ -20,9 +19,7 @@ from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle, AlignedImageSliceContext, ImagePayloadStackComposition
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes

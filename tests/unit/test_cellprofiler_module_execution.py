@@ -43,9 +43,7 @@ from openhcs.core.artifacts.kinds import (
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.callable_contract import (
     CallableContract,
-    CallableDeclaration,
     ImagePayloadConsumption,
-    attach_callable_contract_metadata,
     runtime_image_execution_mode,
 )
 from openhcs.core.component_group_scope import (
@@ -161,7 +159,6 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.core.steps.function_runtime import (
@@ -300,7 +297,6 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     MaskObjectsModule,
     closing,
     erode_image,
-    mask_objects,
     resize_objects_3d,
 )
 from openhcs.processing.backends.cellprofiler.neighbors import (
@@ -377,7 +373,6 @@ from openhcs.processing.backends.cellprofiler.worms import (
 )
 from openhcs.core.processing_contracts import (
     FlexibleContract,
-    ProcessingContract,
     Pure2DAuxiliaryOutputAggregator,
     Pure2DContract,
     Pure2DInputSlicer,

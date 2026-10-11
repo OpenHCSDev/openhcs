@@ -13,7 +13,7 @@ from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.alias_property import AliasProperty
 
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
-from openhcs.core.callable_contract import CallableContract, CallableDeclaration
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     UngroupedScope,

@@ -11,11 +11,9 @@ import pytest
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import (
-    ComponentGroupScope,
     DynamicGroupScope,
     UngroupedScope,
 )
-from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
