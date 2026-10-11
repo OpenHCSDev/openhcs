@@ -55,11 +55,11 @@ owned worker processes. A callable already in progress reaches its next safe
 boundary before stopping. Cancellation never becomes success or failure when
 late worker completion or an exception reaches the server, and every path still
 runs cleanup.
-Worker ``AXIS_COMPLETED`` events close only the axis-scoped portion. Terminal
+Worker ``AxisCompletedProgressPhase`` events close only the axis-scoped portion. Terminal
 dataset-scoped steps, post-execute hooks such as the microscopy domain's output
 consolidation, viewer settlement, and final state projection remain
 parent-owned; :doc:`progress_runtime_projection_system` defines the
-separate final ``SUCCESS`` boundary.
+separate final ``SuccessProgressPhase`` boundary.
 
 Invariants
 ----------

@@ -11,7 +11,9 @@ Ownership catalog
 
 ObjectState
   Owns lazy configuration types, context resolution, ObjectState editing,
-  snapshots, provenance, undo, and generic projection/composition. OpenHCS owns
+  snapshots, provenance, undo, generic projection/composition, the
+  ``ScopeKey`` scope grammar, field inspection, and the Python-source
+  formatting of lazy configurations (``objectstate.codegen``). OpenHCS owns
   its configuration hierarchy, compiler resolution boundary, and UI/code use.
   See :external+objectstate:doc:`ObjectState documentation <index>`.
 
@@ -46,15 +48,17 @@ PolyStore
 
 pyqt-reactive
   Owns generic reactive forms, widget protocols and strategies, managers,
-  previews, reusable services, live Qt-window discovery and infrastructure, and
-  Qt-rendered window snapshots. OpenHCS owns concrete workflows, Plate Manager,
+  previews, reusable services, live Qt-window discovery and infrastructure,
+  Qt-rendered window snapshots, editable tables, grid selection, time-travel
+  widgets and navigation, configuration windows, and dock and shortcut layout.
+  OpenHCS owns concrete workflows, Plate Manager,
   pipeline editors, application window identity and authorisation, and domain
   transport adapters. See
   :external+pyqt-reactive:doc:`pyqt-reactive documentation <index>`.
 
 python-introspect
   Owns callable/signature analysis, wrapped-target resolution, parameter
-  metadata, callable-declaration projection, analyzer extensions, the
+  metadata, field labels, callable-declaration projection, analyzer extensions, the
   ``to_jsonable`` encoder paired with the ``dataclass_from_mapping`` decoder,
   and declared public-API and lazy-export helpers. OpenHCS
   owns domain exclusions, callable contracts, and step-editor consumption. See
@@ -71,7 +75,8 @@ ZMQRuntime
   <https://github.com/OpenHCSDev/zmqruntime>`_.
 
 pycodify
-  Owns Python-source serialization, formatter registration, import construction,
+  Owns Python-source serialization, formatter registration, qualified-name
+  import construction, value-owned source literals, absolute-path factoring,
   and collision handling. OpenHCS owns formatters and round-trip policies for its
   domain declarations. See the
   `pycodify repository <https://github.com/OpenHCSDev/pycodify>`_.

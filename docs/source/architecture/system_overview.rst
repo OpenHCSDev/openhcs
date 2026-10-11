@@ -101,12 +101,15 @@ OpenHCS owns domain wiring: microscopy sources, pipeline declarations, compiler
 plans, processing contracts, artifacts, runtime values, and integrations. The
 extracted packages own their generic mechanisms:
 
-- ObjectState: lazy configuration and edit/snapshot machinery
+- ObjectState: lazy configuration, edit/snapshot machinery, the scope-key
+  grammar (``ScopeKey``), and lazy-configuration source formatting
+  (``objectstate.codegen``)
 - ArrayBridge: memory types, callable memory-role metadata, conversion, child
   import environments, and framework-local device/execution mechanics
 - PolyStore: storage, formats, ROI, and virtual-workspace primitives
 - metaclass-registry: generic nominal registration and logging-safe discovery
-- pyqt-reactive: generic reactive forms and widgets
+- pyqt-reactive: generic reactive forms and widgets, configuration windows,
+  editable tables, grid selection, and time-travel views
 - python-introspect: callable/signature analysis, declaration projection, and
   the JSON codec (``to_jsonable``/``dataclass_from_mapping``)
 - ZMQRuntime: generic process and transport protocols

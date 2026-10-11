@@ -7,7 +7,7 @@ Grouping and output terminology (transition)
    output-slot names, artifact declarations, and VFS paths. Those are independent
    systems in the current architecture.
 
-Use these canonical pages:
+Use these pages:
 
 - :doc:`processing_semantics` for ``variable_components``, ``group_by``,
   dictionary pattern fan-out, and ``ProcessingContract``;

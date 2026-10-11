@@ -12,7 +12,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "c3a2bea22aa6872940125f4aaac72c9eac72084fefc6c2cefdb54b5273361e4a",
+        "sha256": "b5d4d752704b886da20d860743b81dc3d2ce3a3c402208246fadc1c6cb71f597",
         "role": "Declares the published README, Python range, package dependencies, optional extras, console commands, and project links."
       },
       {
@@ -27,22 +27,22 @@
       },
       {
         "path": "openhcs/core/pipeline_document.py",
-        "sha256": "8c554c8275c665f308eb098955bda517aa804eeb34418b5e0f41d412650ce7b5",
+        "sha256": "9a77a08367f901594859c8b6cae9609c9230a551f4f4e9ec6ea6cd2ed233c0f4",
         "role": "Owns the validated Python pipeline document shared by visual, code, and agent authoring."
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
+        "sha256": "4a33908fb42874e6d57eeea3f5305793ddbda41d13356f0a78501af38dcdfeb4",
         "role": "Owns compile-time resolution across selected axes, compile progress emission, and construction of the execution bundle."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
+        "sha256": "0f9cc4819b53d55b7e9446429b8c8ac1ff1a59f4902020ea1658495ce01d464c",
         "role": "Declares ResolvedPipelineDefinition and CompilationSession named in the compilation diagram."
       },
       {
         "path": "openhcs/core/progress/types.py",
-        "sha256": "beabbfeb8a6ed727b4bb09f6155de60c4e8b89e71e7ed053bb85574aa1675419",
+        "sha256": "c46e825cd32801caae9fc107e0759976da054eadc56adc0d13354b3a8b7db209",
         "role": "Declares set_progress_queue, which compilation requires before it emits progress events."
       },
       {
@@ -52,7 +52,7 @@
       },
       {
         "path": "openhcs/core/dataset_sources/source.py",
-        "sha256": "097fde4d2b74031eacf53a88e79f499417e8c1c97ba0753e8a9df831b307efa6",
+        "sha256": "350bf5691a03522e9f54b1d8ab712c6beba1683aac4fa5159ea4e80c6041530d",
         "role": "Declares the auto-registered DatasetSource family that the ImageXpress, Opera Phenix, Bio-Formats, OMERO and OpenHCS-format sources join."
       },
       {
@@ -77,7 +77,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "3439d96f3fbfcb104a53019dc150049021d9a8132bd27096f1ccf510eefbe37b",
+        "sha256": "b96f33b866fe6c9f8118ca70fcb7dff8e6a02cb29d79df67230a5e8b97df8002",
         "role": "Declares import_cellprofiler_pipeline and its returned FunctionStep list and PipelineConfig."
       },
       {
@@ -111,16 +111,10 @@
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],
-    "findings": [
-      "The Python example compiled without installing a progress queue; compilation now emits typed progress events and raises ProgressError when none is installed.",
-      "The run-measured paragraph said the command submits through ordinary headless job control; it now runs through the OpenHCS session and mirrors the never-written source plate into an execution workspace (EVIDENCE/workspace or --workspace-root).",
-      "The finalizer paragraph described an ordinary headless job and server completion record; the finalizer now takes the submission and server record from the OpenHCS session.",
-      "The metaclass-registry row and source table named microscope handlers; sources are now the DatasetSource family.",
-      "Authority openhcs/desktop_installation.py was deleted (moved to openhcs/desktop/installation.py), and openhcs/constants/constants.py no longer declares microscope sources or axes.",
-      "The compile-time validation card and the compilation diagram named step snapshots/StepSnapshot, which were deleted; compilation resolves a ResolvedPipelineDefinition and runs per-context CompilationSession objects."
-    ],
-    "disposition": "revise",
+    "findings": [],
+    "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read README.md in full and compared it against the changed authorities: pyproject.toml (zmqruntime 0.6.2, pycodify 0.2, objectstate 2.1.1, python-introspect 0.2.7, pyqt-reactive 0.5 floors), openhcs/core/pipeline_document.py (renders through pycodify.generate_python_source), openhcs/core/pipeline/compiler.py and compilation_session.py (ScopeKey ids, progress classes, disabled-function stripping removed), openhcs/core/progress/types.py (K6: ProgressPhase/ProgressStatus enums became class families; set_progress_queue unchanged and still exported from openhcs.core.progress), openhcs/core/dataset_sources/source.py (SourceBindingsConfig import moved) and pipeline_import.py (K4 import moves). The README states no dependency version or phase name; the CellProfiler example's imports (ensure_global_config_context, set_progress_queue, import_cellprofiler_pipeline with source_root, PipelineOrchestrator.initialize/compile_pipelines) and the compilation diagram's class names all still resolve, so no claim changed.",
       "On 2026-10-11 (B6 final), compared README.md against B6's later changes to tests/integration/test_cellprofiler_official30_zmq.py, benchmark/cellprofiler_benchmark_cli.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared README.md against B6's later changes to openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/progress/types.py, openhcs/core/artifacts.py, openhcs/core/dataset_sources/source.py, openhcs/processing/backends/lib_registry/unified_registry.py, openhcs/core/viewer_streaming_service.py, openhcs/interop/cellprofiler/pipeline_import.py, benchmark/cellprofiler_benchmark_cli.py, tests/unit/test_benchmark_control.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared README.md against the later B6 changes to pyproject.toml, openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/progress/types.py, openhcs/core/artifacts.py, openhcs/core/dataset_sources/source.py, openhcs/processing/backends/lib_registry/unified_registry.py, openhcs/core/viewer_streaming_service.py, openhcs/agent/capabilities.py, openhcs/interop/cellprofiler/pipeline_import.py, tests/integration/test_cellprofiler_official30_zmq.py, benchmark/cellprofiler_benchmark_cli.py, tests/unit/test_benchmark_control.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",

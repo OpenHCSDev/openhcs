@@ -19,7 +19,7 @@ The model in one diagram
                      |
                      | resolve configuration once
                      v
-         snapshots + compilation sessions
+   resolved pipeline + compilation sessions
                      |
                      | validate sources, artifacts,
                      | memory, scope, and workers
@@ -43,7 +43,8 @@ produce the same declarations.
 Sources
 -------
 
-Microscope handlers interpret plate layouts and metadata. Source bindings give
+Dataset sources (one ``DatasetSource`` per format) interpret plate layouts and
+metadata. Source bindings give
 semantic aliases to selected images and metadata. The compiler resolves those
 bindings against an explicit source universe and virtual-workspace projection;
 runtime adapters do not rescan directories or reinterpret filenames.

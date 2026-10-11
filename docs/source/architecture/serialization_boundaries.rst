@@ -8,8 +8,11 @@ Python source
 -------------
 
 pycodify owns generic executable-Python generation, import construction,
-formatter registration, collision handling, and clean versus explicit output.
-OpenHCS owns formatters and round-trip policy for its domain declarations. Code
+formatter registration, collision handling, absolute-path factoring, and clean
+versus explicit output; a value that owns its source spelling subclasses
+pycodify's ``PythonSourceLiteral``. ``objectstate.codegen`` owns source
+formatting for lazy configuration dataclasses. OpenHCS owns formatters and
+round-trip policy for its domain declarations. Code
 documents are user-editable source and must pass the normal validation boundary
 before application.
 

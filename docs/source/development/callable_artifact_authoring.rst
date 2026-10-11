@@ -10,8 +10,10 @@ Callable contract
 
 The contract can carry input, output, and execution memory types, artifact
 inputs and outputs, runtime-bound parameters, required axis roles, allowed
-group-by roles, processing contract, execution scope, runtime adapter,
-preparation hook, and a callable request binding. The execution memory role is
+group-by roles, processing contract, execution scope, runtime adapter, the
+signatures a preparation hook produced, and a callable request binding. The
+hook itself stays on the callable (``processing_prepare``); it is not part of
+the transported contract. The execution memory role is
 the framework whose device scope must be active while the callable runs; it may
 differ from an input or output conversion boundary. Use the existing decorators
 and declaration helpers; do not teach compiler phases to inspect backend names.

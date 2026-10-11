@@ -23,8 +23,9 @@ Strategy selection
 ------------------
 
 Existing families select source universes, matching behavior, component
-projection, and workspace projection, for example ``SourceUniverseRequest``
-and ``SourceFilterMatcher``. Add a concrete subclass to the correct family root
+projection, and workspace projection, for example ``SourceUniverseRequest``,
+``SourceFilterMatcher``, and the ``SourceSetPairing`` family (``PairByOrder``,
+``PairByMetadata``) that decides how matched sources form source sets. Add a concrete subclass to the correct family root
 and declare its registry key. Generic consumers should continue to use the
 root registry or its strategy mixin.
 

@@ -271,9 +271,9 @@ relation from their selected image inputs; a custom callable's input names and
 Check the compiled image and artifact scopes before the first execution, then
 read back each requested source's own values and label/object identity. Stack
 assembly, image-set context and intensity-unit conversion are separate
-decisions: fixing one does not prove the others. A failed receipt remains
-preserved; validate a separately recorded declaration repair rather than replay
-an uncertain operation.
+decisions: fixing one does not prove the others. Keep the record of a failed
+run; validate a separately recorded declaration repair rather than replay an
+uncertain operation.
 
 Executable code-mode declarations
 ---------------------------------

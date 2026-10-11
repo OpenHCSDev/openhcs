@@ -149,8 +149,9 @@ first reconciles every live consumer and only then publishes the runtime-context
 value and ``ui_config_changed`` signal. The system monitor applies
 ``performance_monitor`` through its idempotent update owner. Plate Manager
 passes the execution transport declaration and progress-update interval to the
-session it renders. The main-window shortcut lifecycle validates the complete key
-set before rebinding its concrete QActions and time-travel event filter. ZMQ
+session it renders. pyqt-reactive's ``ShortcutLifecycle`` validates the complete
+key set before rebinding the main window's QActions and its application shortcut
+filter, which carries the time-travel commands. ZMQ
 Manager rebuilds its scan inputs from the current transport declaration and the
 bridge's actual running binding, never from an unstarted configured port.
 The logging lifecycle rebuilds its owned console and rotating-file handlers from
@@ -188,7 +189,9 @@ boundary before the ordinary XDG path is chosen; it does not add another
 configuration value or persistence implementation.
 
 The two-tab configuration window is one transaction, not two independent Save
-callbacks. It validates all materialized forms and runs mutation guards before
+callbacks. pyqt-reactive's ``ConfigWindow`` owns that transaction;
+``OpenHCSConfigWindow`` only supplies the OpenHCS configuration-document format
+and window identities. It validates all materialized forms and runs mutation guards before
 reconstruction. It then checkpoints every affected ObjectState plus the
 independent saved/live global contexts, commits all states, and invokes explicit
 reversible persistence/live participants. A participant or saved-state failure

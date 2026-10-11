@@ -18,7 +18,10 @@ declare:
 - a ``ProcessingContract`` subclass;
 - runtime adapter and image execution mode;
 - axis- or plate-level execution scope;
-- compiler preparation hooks.
+- the signatures a compiler preparation hook produced.
+
+The preparation hook itself is attached to the callable
+(``processing_prepare``), not carried in the contract.
 
 Image transport
 ---------------

@@ -68,9 +68,10 @@ Declaration vocabulary
   A regex over file or folder names with named capture groups. The captured
   values become typed source metadata used for matching and grouping.
 
-``SourceBindingMatchPlan``
-  The explicit order- or metadata-based rule for pairing multiple aliases into
-  one logical source set.
+``SourceSetPairing``
+  The rule for pairing multiple aliases into one logical source set:
+  ``PairByOrder`` (the default when no method is declared) or
+  ``PairByMetadata`` over shared metadata keys.
 
 Compilation
 -----------

@@ -53,16 +53,19 @@ Extracted foundations
 
 The submodules under ``external/`` own reusable behavior:
 
-- ObjectState — lazy config and state/provenance
+- ObjectState — lazy config, state/provenance, scope keys, and Python source
+  for lazy dataclasses
 - ArrayBridge — array conversion, callable memory metadata, child import
   environments, and framework-local device and execution mechanics
 - PolyStore — storage, formats, ROI, and virtual workspace
 - metaclass-registry — generic nominal registry mechanics and logging-safe
   discovery imports
-- pyqt-reactive — generic forms/widgets/services
+- pyqt-reactive — generic forms, widgets (editable tables, grid selector,
+  time travel), windows, and services
 - python-introspect — callable/signature analysis and declaration projection
 - ZMQRuntime — generic execution and transport protocols
-- pycodify — Python-source serialization
+- pycodify — Python-source serialization, including document-level path
+  factoring
 
 The root ``pyproject.toml`` declares their published distributions. Development
 checkouts install the submodules explicitly; see

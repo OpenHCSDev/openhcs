@@ -16,8 +16,9 @@ OpenHCS Implementation Path
 
 OpenHCS-specific modules:
 
-- ``openhcs.core.progress.types`` owns the registered channel, phase, and status
-  semantics carried by ``ProgressEvent``.
+- ``openhcs.core.progress.types`` owns the ``ProgressStream``, ``ProgressPhase``,
+  and ``ProgressStatus`` class families carried by ``ProgressEvent``; each phase
+  owns its stream and terminal semantics.
 - ``openhcs.core.progress.registry`` owns OpenHCS semantic keying over the generic
   registry.
 - ``openhcs.core.progress.projection`` and
@@ -31,7 +32,7 @@ Consumption path:
 
 1. Emit typed ``ProgressEvent`` values from compile/execute flows.
 2. Route events through explicit queue wiring via ``set_progress_queue(...)``.
-3. Register events in ``ProgressRegistry`` with semantic channel keying.
+3. Register events in ``ProgressRegistry`` keyed by subject, axis, and stream.
 4. Reconcile typed server-heartbeat running/queued entries by execution and
    subject identity in ``ExecutionRuntimeProjection``.
 5. Build runtime and execution-tree projections for status derivation.
@@ -45,7 +46,7 @@ OpenHCS Invariants
 ------------------
 
 - The execution tree path is ``subject -> worker -> partition -> step``.
-- ``PATTERN_GROUP`` is step-detail only and does not set partition pipeline
+- ``PatternGroupProgressPhase`` is step-detail only and does not set partition pipeline
   percent.
 - Subject/server status is derived from projection snapshots, not mutable cache.
 - Event retention is monotonic per semantic key. Stale or duplicate timestamps
@@ -67,10 +68,11 @@ Debugger ownership
 Debugger execution uses the normal progress transport but does not reduce its
 retained state to status text:
 
-- ``DebugCommandDeclarationBase`` owns command semantics, while the registered
-  execution and stop strategies implement command-specific runtime behavior.
-- ``DebugBoundaryEventDeclarationBase`` owns the progress status, boundary
-  outcome, timeline state, and artifact-reporting policy for each boundary event.
+- Each ``DebugCommandType`` subclass is one command and owns what it does to a
+  paused worker; the execution and stop strategy families, keyed by command
+  class, implement command-specific bounded-run behaviour.
+- Each ``DebugBoundary`` subclass is one boundary event and owns its progress
+  status and whether it reports output artifacts or carries an exception.
 - ``DebugCursor`` and ``DebugSession`` retain the exact invocation and controller
   identity. ``DebugSnapshot`` retains boundary evidence, and ``DebugArtifactRef``
   plus ``DebugArtifactIdentity`` retain typed artifact provenance.
@@ -88,7 +90,7 @@ Debugger projection path
 ``ProgressEvent``. ``RuntimeProjectionBuilder`` then builds the normal execution
 projection and the debugger projection from the same immutable event snapshot.
 ``DebugRuntimeProjectionBuilder`` filters events by debug session, resolves their
-snapshots, and derives current, last, and timeline frames while retaining the
+snapshots, and derives the current and last frames while retaining the
 normal execution projection beside them.
 
 The runtime projection is not the session-state machine. Given the selected
@@ -132,22 +134,22 @@ command declarations, debugger snapshots, or debugger session phase state.
 Axis completion is not plate completion
 ---------------------------------------
 
-Workers execute only axis-scoped steps. ``AXIS_COMPLETED`` reports the number
-of completed axis positions and deliberately stops at the first terminal
-plate-scoped step. It is a successful terminal event for that worker/axis
-channel, but it does not assert that the plate execution has finished.
+Workers execute only axis-scoped steps. ``AxisCompletedProgressPhase`` reports
+the number of completed axis positions and deliberately stops at the first
+terminal plate-scoped step. It is a successful terminal event for that
+worker/axis key, but it does not assert that the plate execution has finished.
 
 After every worker result succeeds, the parent merges runtime records and calls
 ``execute_dataset_scoped_steps()``, which runs each terminal plate-scoped step
 once. The parent
 then materializes those outputs, runs analysis consolidation, settles viewer
 state, and projects the orchestrator result. Only after those stages succeed
-does it emit the pipeline ``SUCCESS`` event at 100 percent. Failure,
-cancellation, viewer settlement, or terminal-step errors therefore cannot be
-hidden behind an earlier worker ``AXIS_COMPLETED`` event.
+does it emit the pipeline ``SuccessProgressPhase`` event at 100 percent.
+Failure, cancellation, viewer settlement, or terminal-step errors therefore
+cannot be hidden behind an earlier worker ``AxisCompletedProgressPhase`` event.
 
-Canonical Abstraction Docs
---------------------------
+Abstraction Docs
+----------------
 
 See the published ``zmqruntime`` owner documentation for abstraction internals:
 

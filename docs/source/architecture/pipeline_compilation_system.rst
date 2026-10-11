@@ -41,7 +41,7 @@ wrapper identity rather than create a second callable projection.
 
 Native module families may declare both their owned callable names and the
 catalogue module that exposes them. Catalogue discovery projects those nominal
-claims, rejects duplicate canonical names, and does not maintain a parallel
+claims, rejects duplicate callable names, and does not maintain a parallel
 module-to-function list.
 
 An execution endpoint prepares the registered catalogue before it reports

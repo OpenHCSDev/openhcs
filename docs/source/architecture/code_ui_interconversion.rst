@@ -161,8 +161,10 @@ Round-trip fidelity means:
 
 Function parameter order is projected by python-introspect from the function
 signature for both clean and full code views. The OpenHCS formatter supplies
-its semantic equality rule and whether signature defaults should be omitted;
-extra keywords retain their supplied order after the declared parameters.
+ObjectState's semantic equality rule and whether signature defaults should be
+omitted; extra keywords retain their supplied order after the declared
+parameters. ObjectState's code generation decides which lazy configuration
+fields a clean view emits.
 
 When a nested function ObjectState exists, pyqt-reactive projects its current
 values into the function pattern, including groups whose panes are not visible.
