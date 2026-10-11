@@ -81,7 +81,9 @@ def _source_state(root: Path) -> dict[str, tuple]:
 # Everyone may not create, change or delete entries; inherited by the tree.
 # Write rights are named one by one: the generic W also denies SYNCHRONIZE,
 # which every open (reads included) requests.
-WINDOWS_READ_ONLY_ACE = "*S-1-1-0:(OI)(CI)(WD,AD,WEA,WA,D,DC)"
+# Deny adding files and folders to the root itself. An inherited deny over the
+# tree (OI)(CI) also refused reading the source files on the CI runner.
+WINDOWS_READ_ONLY_ACE = "*S-1-1-0:(WD,AD)"
 
 if sys.platform == "win32":
     # A console's Ctrl+C cannot be sent to one process; Ctrl+Break can, to a
@@ -97,7 +99,8 @@ def _set_writable(root: Path, writable: bool) -> None:
     """Make ``root`` and its tree writable again, or genuinely not writable.
 
     Windows ignores the read-only attribute on directories (and os.access
-    ignores ACLs), so there an inherited deny ACE is what refuses writes.
+    ignores ACLs), so there a deny ACE on the root refuses creating files in it;
+    the before/after source state still catches any write below it.
     """
 
     if sys.platform == "win32":
