@@ -507,7 +507,10 @@ class DeclaredReturnSlots(DeclaredTuple):
     """Positions in the output ABI; checked against the outputs by the contract."""
 
     def normalize(self, value: Any, *, owner: str) -> Any:
-        if not all(type(position) is int and position >= 0 for position in value):
+        if not all(
+            isinstance(position, int) and not isinstance(position, bool) and position >= 0
+            for position in value
+        ):
             raise TypeError(f"{owner} must contain non-negative slot positions.")
         return value
 
@@ -674,6 +677,36 @@ class CallableDeclaration:
             name: kind.read(namespace.get(attribute), owner=f"{owner!r}.{attribute}")
             for name, attribute, kind in _declared_fields(cls)
         })
+
+    def bound_to_callable(
+        self, func: Callable[..., object], *, context_declared: bool,
+    ) -> "CallableDeclaration":
+        """Resolve what the callable's signature decides for this declaration."""
+        signature = self.callable_signature(func)
+        if self.runtime_adapter is not None:
+            self.runtime_adapter.validate_callable_signature(func)
+        stack_requirement = self.variable_component_stack_requirement
+        return dataclasses.replace(
+            self,
+            artifact_inputs=_artifact_inputs_bound_to_signature(
+                self.artifact_inputs, signature,
+            ),
+            artifact_parameters=(
+                *(name for name in signature.parameters if name in self.artifact_parameters),
+                *(name for name in self.artifact_parameters
+                  if name not in signature.parameters),
+            ),
+            runtime_context_parameter=(
+                self.runtime_context_parameter
+                if context_declared
+                else _signature_context_parameter(signature)
+            ),
+            # Signature defaults are captured before the callable becomes a reference.
+            bound_stack_requirement=(
+                None if stack_requirement is None
+                else stack_requirement.bind_to_callable(func)
+            ),
+        )
 
     def field_values(self) -> dict[str, object]:
         """Return the declared fields by name."""
@@ -890,14 +923,15 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
         self,
     ) -> tuple[Callable[..., "CallableContract"], tuple[Any, ...]]:
         """Serialize immutable mapping-backed executors across worker queues."""
-        values = {
-            declared.name: getattr(self, declared.name)
-            for declared in fields(self)
-            if declared.init
-        }
-        if self.runtime_batch_executors is not None:
-            values["runtime_batch_executors"] = dict(self.runtime_batch_executors)
-        return (_rebuild_callable_contract, (type(self), values))
+        executors = (
+            None if self.runtime_batch_executors is None
+            else dict(self.runtime_batch_executors)
+        )
+        return (
+            _rebuild_callable_contract,
+            (type(self), self.field_values(), self.func, self.function_name,
+             self.module_name, executors),
+        )
 
     @classmethod
     def from_callable(
@@ -911,32 +945,16 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
         declaration = CallableDeclaration.from_namespace(
             projection.namespace, projection.name,
         )
-        changes: dict[str, object] = {}
         if callable(projection.func):
-            signature = CallableDeclaration.callable_signature(projection.func)
-            if declaration.runtime_adapter is not None:
-                declaration.runtime_adapter.validate_callable_signature(projection.func)
-            changes["artifact_inputs"] = _artifact_inputs_bound_to_signature(
-                declaration.artifact_inputs, signature,
+            declaration = declaration.bound_to_callable(
+                projection.func,
+                context_declared=(
+                    FunctionContractAttribute.runtime_context_parameter
+                    in projection.namespace
+                ),
             )
-            changes["artifact_parameters"] = (
-                *(name for name in signature.parameters
-                  if name in declaration.artifact_parameters),
-                *(name for name in declaration.artifact_parameters
-                  if name not in signature.parameters),
-            )
-            if FunctionContractAttribute.runtime_context_parameter not in projection.namespace:
-                changes["runtime_context_parameter"] = _signature_context_parameter(
-                    signature
-                )
-            stack_requirement = declaration.variable_component_stack_requirement
-            if stack_requirement is not None:
-                # Signature defaults are captured before the callable becomes a reference.
-                changes["bound_stack_requirement"] = stack_requirement.bind_to_callable(
-                    projection.func
-                )
         return cls(
-            **{**declaration.field_values(), **changes},
+            **declaration.field_values(),
             func=func,
             function_name=projection.name,
             module_name=projection.module_name,
@@ -1689,13 +1707,22 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
 
 def _rebuild_callable_contract(
     contract_type: type[CallableContract],
-    values: dict[str, Any],
+    declaration_values: dict[str, Any],
+    func: Callable[..., object] | "FunctionReference",
+    function_name: str,
+    module_name: str | None,
+    executors: dict[object, object] | None,
 ) -> CallableContract:
     """Rebuild a CallableContract with immutable batch executors."""
-    executors = values.get("runtime_batch_executors")
-    if executors is not None:
-        values = {**values, "runtime_batch_executors": MappingProxyType(executors)}
-    return contract_type(**values)
+    return contract_type(
+        **declaration_values,
+        func=func,
+        function_name=function_name,
+        module_name=module_name,
+        runtime_batch_executors=(
+            None if executors is None else MappingProxyType(executors)
+        ),
+    )
 
 
 @dataclass(frozen=True, slots=True)

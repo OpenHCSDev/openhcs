@@ -40,7 +40,20 @@ if TYPE_CHECKING:
     from openhcs.core.pipeline.artifact_planning import ArtifactProducer
 
 
-class CellProfilerModuleArtifactContracts:
+class UniqueReturnSlots:
+    """A module whose callable fills each declared output from one return slot."""
+
+    @classmethod
+    def repeated_return_slots(
+        cls,
+        artifact_inputs: ArtifactSpecCollection,
+    ) -> tuple[int, ...]:
+        """Return slots that refill an output an earlier slot declares (none)."""
+        del cls, artifact_inputs
+        return ()
+
+
+class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
     @classmethod
     def finalize_module_blocks_for_invocation(
         cls,
@@ -959,15 +972,6 @@ class CellProfilerModuleArtifactContracts:
             step_context,
         )
         return artifact_inputs.specs
-
-    @classmethod
-    def repeated_return_slots(
-        cls,
-        artifact_inputs: ArtifactSpecCollection,
-    ) -> tuple[int, ...]:
-        """Return slots that refill an output an earlier slot declares (none)."""
-        del cls, artifact_inputs
-        return ()
 
     @classmethod
     def finalize_artifact_contract_outputs(

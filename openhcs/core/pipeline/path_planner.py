@@ -29,7 +29,6 @@ from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     CompiledFunctionPattern,
-    NormalizedFunctionPattern,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     MainFlowInputProjection,
@@ -1009,11 +1008,8 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         ],
         execution_group_scope: PathPlannerGroupScope,
         declarations: ArtifactGraph,
-    ) -> CompiledFunctionPattern | None:
+    ) -> CompiledFunctionPattern:
         """Build the executable function-pattern graph for a FunctionStep."""
-        if not declarations.pattern:
-            return None
-
         step_context = self.planner.artifact_context
         step_values = vars(step)
         pipeline_values = vars(self.planner.session.global_config)
@@ -2110,18 +2106,18 @@ class PathPlannerStepAssemblyStage:
             contract_source_bindings,
         )
 
-        compiled_pattern = self.planner.artifacts.build_step_compiled_function_pattern(
-            step,
-            step_index,
-            artifact_maps.inputs,
-            artifact_maps.outputs,
-            artifact_maps.relation_source_scopes,
-            artifact_maps.group_scope,
-            (
-                self.planner.artifacts.inject_metadata(declarations)
-                if isinstance(step, FunctionStep)
-                else declarations
-            ),
+        compiled_pattern = (
+            self.planner.artifacts.build_step_compiled_function_pattern(
+                step,
+                step_index,
+                artifact_maps.inputs,
+                artifact_maps.outputs,
+                artifact_maps.relation_source_scopes,
+                artifact_maps.group_scope,
+                self.planner.artifacts.inject_metadata(declarations),
+            )
+            if isinstance(step, FunctionStep)
+            else None
         )
         self.update_core_step_plan(
             step,
