@@ -73,3 +73,19 @@ Re-measured at `7f41c419c`:
 ## Done when
 
 The guards pass; the tertiary probe passes; the touched tests pass; the structural ratchet and NRA R1 show no regressions; the 30-workflow CellProfiler parity check is 30/30.
+
+## Outcome and corrections
+
+Production (Python under `openhcs/`) −1593 +882; tests −859 +1077 (the graph argument of 218 test compiles; one fixture module, `tests/artifact_graphs.py`; 5 guards). Guards 5/5. The tertiary probe passes, and so does the accidental-repeat rejection (`test_active_outputs_do_not_restore_declaration_occurrences_from_one_plan`).
+
+Corrections to the plan above:
+
+- **Optionals: 15 at this head, 14 after.** `prepare` left the declaration. The other 14 each mean "not declared" and are validated by their declared kind. The two signature snapshots were not merged into one `PreparedSignatures`: they stay `prepared_canonical_signature` and `prepared_runtime_signature`, published under their two existing namespace keys.
+- **Validation runs at admission, not extraction.** CellProfiler import (`pipeline_import._lower_module_batch`) and `compile_time_contracts` build intermediate graphs that are never admitted, so `extract_artifact_declarations` cannot validate. `ArtifactGraph.validate_invocation_declarations` is called by pipeline admission (`ResolvedPipelineDefinition`) and by the test fixture. Extraction does consume compile-time kwargs once, so compilation needs no step context.
+- **The compile entry takes only the graph.** `build_step_compiled_function_pattern` lost its `is_function_step` and `func_pattern` parameters. `inject_metadata` takes and returns the graph.
+- **Two walkers stay, rebuilt on the authored-pattern walker.** `reference_function_spec` and `FunctionStepTransportAuthority.normalize_function_spec` are now one `AuthoredFunctionPattern.map_leaves` call each, so they no longer walk the pattern themselves. The guard checks that nothing outside the walker branches on pattern containers.
+- **The stack requirement is derived.** The field holding it is `bound_stack_requirement`, bound to the callable's signature defaults before it becomes a reference. `variable_component_stack_requirement` returns that, or the processing contract's requirement, so a registry reference that only gains its contract still has a requirement.
+- **`runtime_context_parameter` is a decision.** Its kind (`DeclaredDecision`) always writes the value, `None` included, so a namespace reader never re-derives "no context" from the signature.
+- **The contract's runtime-bound names** are `runtime_bound_parameter_names`; the field holding the declaration types is `runtime_bound_parameter_types`.
+- **Repeated return slots.** `artifact_outputs` is the positional slot list and keeps the repeat. `artifact_specs`, which drives plan selection, excludes the repeated slot. Resolving returned values keeps the earlier slot's value.
+- **An accumulator conflict now fails earlier.** Two invocations declaring one output with conflicting sidecar roles are rejected when the graph is extracted, as pipeline admission always did, instead of at coalescing.
