@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
@@ -13,6 +14,12 @@ DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH = Path(
     "docs/source/development/mcp_knowledge_base_manifest.json"
 )
 PACKAGED_KNOWLEDGE_BASE_ROOT = Path("resources/knowledge")
+# Windows without long-path support rejects installed paths of 260 characters
+# or more. The installer places the knowledge root at
+# <install root>/env-XXXXXXXX/Lib/site-packages/openhcs/agent/resources/knowledge,
+# so every resource path relative to that root must stay within this budget.
+PACKAGED_KNOWLEDGE_PATH_BUDGET = 120
+_PORTABLE_CASE_NAME = re.compile(r"[A-Za-z0-9_](?:[A-Za-z0-9_ .-]*[A-Za-z0-9_])?")
 
 
 class KnowledgeBaseManifestField(str, Enum):
@@ -145,21 +152,21 @@ class ComparisonManifestSnapshot:
         return manifest
 
     def native_source_relative_path(self, case: Mapping[str, object]) -> Path:
-        """Derive one placement from its original manifest/root/path identity."""
+        """Place one native recipe by its manifest-unique case name.
+
+        Upstream root/path layouts are deep; keying by case name keeps every
+        installed resource within ``PACKAGED_KNOWLEDGE_PATH_BUDGET``.
+        """
         path = Path(str(case["cppipe_path"]))
-        root = Path(str(case.get("cppipe_path_root", "unrooted")))
-        if (
-            path.is_absolute()
-            or root.is_absolute()
-            or ".." in path.parts
-            or ".." in root.parts
-            or path.suffix != ".cppipe"
-        ):
+        name = str(case["name"])
+        if path.is_absolute() or ".." in path.parts or path.suffix != ".cppipe":
             raise ValueError("Native knowledge source must be a relative .cppipe path.")
-        return (
-            self.path.relative_to(self.source_root).with_suffix(".sources")
-            / root
-            / path
+        if not _PORTABLE_CASE_NAME.fullmatch(name):
+            raise ValueError(
+                f"Native knowledge case name {name!r} is not a portable file name."
+            )
+        return self.path.relative_to(self.source_root).with_suffix(".sources") / (
+            f"{name}.cppipe"
         )
 
     def native_source_path(self, case: Mapping[str, object]) -> Path:

@@ -32,6 +32,7 @@ ComparisonManifestSnapshot = _MANIFEST_SCHEMA.ComparisonManifestSnapshot
 ManifestRootAcquisitionKind = _UPSTREAM_SOURCES.ManifestRootAcquisitionKind
 ManifestRootAcquisitionSpec = _UPSTREAM_SOURCES.ManifestRootAcquisitionSpec
 KNOWLEDGE_MANIFEST_RELATIVE_PATH = _MANIFEST_SCHEMA.DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH
+PACKAGED_KNOWLEDGE_PATH_BUDGET = _MANIFEST_SCHEMA.PACKAGED_KNOWLEDGE_PATH_BUDGET
 PACKAGED_KNOWLEDGE_ROOT_RELATIVE_PATH = (
     Path("openhcs/agent") / _MANIFEST_SCHEMA.PACKAGED_KNOWLEDGE_BASE_ROOT
 )
@@ -191,6 +192,35 @@ def project_knowledge_assets(
         )
 
 
+def knowledge_asset_projections(
+    project_root: Path,
+    recipe_type: type[ComparisonManifestSnapshot] = ComparisonManifestSnapshot,
+) -> dict[Path, Path]:
+    """Packaged resource path -> canonical source, within the path budget."""
+    projections = knowledge_source_projections(
+        project_root / KNOWLEDGE_MANIFEST_RELATIVE_PATH,
+        source_root=project_root,
+        recipe_type=recipe_type,
+    )
+    plugin_manifest = project_root / AGENT_PLUGIN_MANIFEST_PATH
+    if plugin_manifest.is_file():
+        skill_sources = AgentSkillBundle.from_manifest(plugin_manifest).source_paths()
+        projections.update(
+            {source.relative_to(project_root): source for source in skill_sources}
+        )
+    over_budget = tuple(
+        relative.as_posix()
+        for relative in projections
+        if len(relative.as_posix()) > PACKAGED_KNOWLEDGE_PATH_BUDGET
+    )
+    if over_budget:
+        raise ValueError(
+            f"MCP knowledge resource paths exceed {PACKAGED_KNOWLEDGE_PATH_BUDGET} "
+            f"characters: {over_budget}"
+        )
+    return projections
+
+
 def _project_knowledge_assets(
     project_root: Path,
     destination_root: Path,
@@ -207,17 +237,7 @@ def _project_knowledge_assets(
         raise ValueError(
             f"MCP knowledge destination must not own the project root: {destination}"
         )
-    projections = knowledge_source_projections(
-        root / KNOWLEDGE_MANIFEST_RELATIVE_PATH,
-        source_root=root,
-        recipe_type=native_sources.recipe_type(),
-    )
-    plugin_manifest = root / AGENT_PLUGIN_MANIFEST_PATH
-    if plugin_manifest.is_file():
-        skill_sources = AgentSkillBundle.from_manifest(plugin_manifest).source_paths()
-        projections.update(
-            {source.relative_to(root): source for source in skill_sources}
-        )
+    projections = knowledge_asset_projections(root, native_sources.recipe_type())
     native_sources.materialize()
     missing = tuple(source for source in projections.values() if not source.is_file())
     if missing:
