@@ -47,7 +47,9 @@ from openhcs.core.config import (
     PipelineConfig,
     PartitionFilterConfig,
 )
-from openhcs.core.orchestrator.execution_result import ExecutionResult
+from openhcs.core.orchestrator.execution_result import (
+    ExecutionSucceeded,
+)
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourcePlaneProjection,
@@ -1398,7 +1400,7 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
                         f"W{index:03d}" for index in range(1, well_count + 1)
                     ),
                     execution_results={
-                        f"W{index:03d}": ExecutionResult.success(f"W{index:03d}")
+                        f"W{index:03d}": ExecutionSucceeded(f"W{index:03d}")
                         for index in range(1, well_count + 1)
                     },
                     output_roots=(tmp_path / "output",),

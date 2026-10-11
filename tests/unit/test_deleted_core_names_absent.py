@@ -8,7 +8,7 @@ from pathlib import Path
 
 import openhcs
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.orchestrator.execution_result import ExecutionStatus
+import openhcs.core.orchestrator.execution_result as execution_result
 from openhcs.core.pipeline import function_contracts
 
 OPENHCS_ROOT = Path(openhcs.__file__).parent
@@ -94,5 +94,5 @@ def test_deleted_core_names_stay_absent_from_openhcs() -> None:
 
 def test_deleted_core_members_stay_absent() -> None:
     assert "step_type" not in {field.name for field in fields(CompiledStepPlan)}
-    assert "PENDING" not in ExecutionStatus.__members__
+    assert not hasattr(execution_result, "ExecutionStatus")
     assert not hasattr(function_contracts, "validate_artifact_input_parameter_bindings")

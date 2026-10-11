@@ -41,6 +41,7 @@ from openhcs.core.post_execute import PostExecuteHook
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
+    ReturnAllRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
     RuntimeObservationMode,
@@ -144,7 +145,7 @@ class BundleExecutionResults(dict[str, ExecutionResult]):
     def require_success(self) -> None:
         """Reject failed axes at terminal boundaries without dropping their outputs."""
         failures = [
-            f"{axis_id}: {result.status.value}: {result.error_message or 'no error detail'}"
+            f"{axis_id}: {result.describe()}"
             for axis_id, result in self.items()
             if not result.is_success()
         ]
@@ -168,7 +169,7 @@ class BundleExecutionRequest(ProgressExecutionContext):
     visualizer: ExecutionVisualizerABC | None
     log_file_base: Optional[str]
     progress_queue: ProgressQueue
-    runtime_observation_mode: RuntimeObservationMode
+    runtime_observation_mode: type[RuntimeObservationMode]
     debug_execution_policy: DebugExecutionPolicy
     prepared_worker_runner: PreparedForkWorkerLaneRunner | None = None
 
@@ -283,7 +284,7 @@ def execute_bundle_request(
                         }
                     )
                     if any(
-                        result.is_cancelled() for result in execution_results.values()
+                        result.stops_lane for result in execution_results.values()
                     ):
                         raise ExecutionCancelledError(
                             "Execution cancelled during worker execution"
@@ -393,12 +394,12 @@ def validate_bundle_execution(
     dataset_step_indexes = validate_dataset_scoped_contexts(compiled_contexts)
     if (
         dataset_step_indexes
-        and request.runtime_observation_mode is RuntimeObservationMode.OMIT
+        and not request.runtime_observation_mode.collects_records
     ):
         raise ValueError(
-            "Dataset-scoped FunctionSteps require RuntimeObservationMode."
-            "MERGE_INTO_PARENT so compiled artifact inputs are available after "
-            "worker execution."
+            "Dataset-scoped FunctionSteps require a runtime observation mode "
+            "that returns records, so compiled artifact inputs are available "
+            "after worker execution."
         )
     runtime_environment = request.execution_bundle.runtime_environment
     return ValidatedBundleExecution(
@@ -654,7 +655,7 @@ def execute_dataset_scoped_steps(
                 context_key=context_key,
                 context=context,
                 records=records,
-                runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+                runtime_observation_mode=ReturnAllRecords,
                 outputs=StepExecutionObservation.combine(
                     observations_by_context[context_key]
                 ),

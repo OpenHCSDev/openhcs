@@ -45,9 +45,12 @@ from openhcs.core.orchestrator.bundle_execution import (
     wait_until_visualizers_ready,
 )
 from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
+    ExecutionCancelled,
+    ExecutionFailed,
+    ExecutionSucceeded,
+    ReturnAllRecords,
+    ReturnNoRecords,
     RuntimeExecutionObservation,
-    RuntimeObservationMode,
 )
 from openhcs.core.orchestrator.worker_execution import (
     ForkInheritedWorkerExecutorResources,
@@ -99,7 +102,7 @@ def test_fork_resources_reuse_lane_processes_for_ordered_plate_partitions(monkey
         worker_execution_module,
         "execute_worker_lane",
         lambda *, lane_axis_contexts, **_kwargs: {
-            axis: ExecutionResult.success(axis) for axis, _ in lane_axis_contexts
+            axis: ExecutionSucceeded(axis) for axis, _ in lane_axis_contexts
         },
     )
     ForkInheritedWorkerExecutionState.install(
@@ -120,7 +123,7 @@ def test_fork_resources_reuse_lane_processes_for_ordered_plate_partitions(monkey
             worker_assignments={"worker_0": ["A01"], "worker_1": ["A02"]},
             lane_axis_contexts={"worker_0": [("A01", [])], "worker_1": [("A02", [])]},
         ),
-        runtime_observation_mode=RuntimeObservationMode.OMIT,
+        runtime_observation_mode=ReturnNoRecords,
     )
     processes = []
     try:
@@ -156,7 +159,7 @@ def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure)
         worker_execution_module,
         "execute_worker_lane",
         lambda *, lane_axis_contexts, **_kwargs: {
-            axis: ExecutionResult.success(axis) for axis, _ in lane_axis_contexts
+            axis: ExecutionSucceeded(axis) for axis, _ in lane_axis_contexts
         },
     )
     ForkInheritedWorkerExecutionState.install(
@@ -177,7 +180,7 @@ def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure)
             worker_assignments={"worker_0": ["A01"], "worker_1": ["A02"]},
             lane_axis_contexts={"worker_0": [("A01", [])], "worker_1": [("A02", [])]},
         ),
-        runtime_observation_mode=RuntimeObservationMode.OMIT,
+        runtime_observation_mode=ReturnNoRecords,
     )
     processes = []
     try:
@@ -250,7 +253,7 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
         visualizer=None,
         log_file_base=None,
         progress_queue=progress_queue or SimpleNamespace(put=lambda _event: None),
-        runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+        runtime_observation_mode=ReturnAllRecords,
         debug_execution_policy=NoOpDebugExecutionPolicy(),
     )
 
@@ -270,7 +273,7 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
             )
 
         def run_worker_lanes(self, **_kwargs):
-            return {"A01": ExecutionResult.success("A01")}
+            return {"A01": ExecutionSucceeded("A01")}
 
         def shutdown_executor(self):
             return None
@@ -387,7 +390,7 @@ def test_compiled_plate_execution_request_uses_bundle_as_runtime_authority():
         visualizer=None,
         log_file_base=None,
         progress_queue="queue",
-        runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+        runtime_observation_mode=ReturnAllRecords,
         debug_execution_policy=NoOpDebugExecutionPolicy(),
     )
     orchestrator = SimpleNamespace(
@@ -424,7 +427,7 @@ def test_plate_scope_rejects_omitted_runtime_observations(monkeypatch):
         visualizer=None,
         log_file_base=None,
         progress_queue="queue",
-        runtime_observation_mode=RuntimeObservationMode.OMIT,
+        runtime_observation_mode=ReturnNoRecords,
         debug_execution_policy=NoOpDebugExecutionPolicy(),
     )
     monkeypatch.setattr(
@@ -433,7 +436,7 @@ def test_plate_scope_rejects_omitted_runtime_observations(monkeypatch):
         lambda _contexts: (1,),
     )
 
-    with pytest.raises(ValueError, match="MERGE_INTO_PARENT"):
+    with pytest.raises(ValueError, match="runtime observation mode that returns records"):
         validate_bundle_execution(
             SimpleNamespace(is_initialized=lambda: True),
             request,
@@ -767,7 +770,7 @@ def test_fork_child_termination_cannot_run_inherited_parent_cleanup(
             writer,
             (reader,),
             worker_execution_module.ExecuteInheritedLane(
-                [], lane, RuntimeObservationMode.OMIT
+                [], lane, ReturnNoRecords
             ),
         ),
     )
@@ -816,7 +819,7 @@ def test_pooled_worker_lane_runner_submits_and_collects_lane_results(monkeypatch
     ):
         assert release_axis_resources is True
         axis_id = lane_context.owned_partition_values[0]
-        return {axis_id: ExecutionResult.success(axis_id)}
+        return {axis_id: ExecutionSucceeded(axis_id)}
 
     monkeypatch.setattr(
         worker_execution_module.concurrent.futures,
@@ -837,7 +840,7 @@ def test_pooled_worker_lane_runner_submits_and_collects_lane_results(monkeypatch
             worker_assignments={"worker_0": ["A01"]},
             lane_axis_contexts={"worker_0": [("A01", [("A01", object())])]},
         ),
-        runtime_observation_mode=RuntimeObservationMode.OMIT,
+        runtime_observation_mode=ReturnNoRecords,
     )
 
     results = PooledWorkerLaneRunner(FakeExecutor(), cancellation=None).run(
@@ -846,7 +849,7 @@ def test_pooled_worker_lane_runner_submits_and_collects_lane_results(monkeypatch
         parent_contexts={},
     )
 
-    assert results == {"A01": ExecutionResult.success("A01")}
+    assert results == {"A01": ExecutionSucceeded("A01")}
 
 
 def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
@@ -865,7 +868,7 @@ def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
         axis_id = axis_contexts[0][1].axis_id
         visited.append(axis_id)
         cancellation.request()
-        return ExecutionResult.success(axis_id)
+        return ExecutionSucceeded(axis_id)
 
     monkeypatch.setattr(
         worker_execution_module,
@@ -888,13 +891,13 @@ def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
         pipeline_definition=[],
         lane_axis_contexts=lane_axis_contexts,
         lane_context=lane_context,
-        runtime_observation_mode=RuntimeObservationMode.OMIT,
+        runtime_observation_mode=ReturnNoRecords,
         cancellation=cancellation,
     )
 
     assert visited == ["A01"]
     assert results["A01"].is_success()
-    assert results["B01"].is_cancelled()
+    assert type(results["B01"]) is ExecutionCancelled
     assert "before axis B01" in results["B01"].error_message
 
 
@@ -941,7 +944,7 @@ def test_pooled_worker_lane_runner_submits_stripped_pipeline_shells(monkeypatch)
     ):
         assert release_axis_resources is True
         submitted_pipeline.extend(pipeline_definition)
-        return {"A01": ExecutionResult.success("A01")}
+        return {"A01": ExecutionSucceeded("A01")}
 
     monkeypatch.setattr(
         worker_execution_module.concurrent.futures,
@@ -962,7 +965,7 @@ def test_pooled_worker_lane_runner_submits_stripped_pipeline_shells(monkeypatch)
             worker_assignments={"worker_0": ["A01"]},
             lane_axis_contexts={"worker_0": [("A01", [("A01", object())])]},
         ),
-        runtime_observation_mode=RuntimeObservationMode.OMIT,
+        runtime_observation_mode=ReturnNoRecords,
     )
 
     PooledWorkerLaneRunner(FakeExecutor(), cancellation=None).run(
@@ -998,7 +1001,7 @@ def test_fork_inherited_runner_executes_single_lane_without_self_merge(monkeypat
     ):
         executed.append((pipeline_definition, lane_axis_contexts))
         return {
-            "A01": ExecutionResult.success(
+            "A01": ExecutionSucceeded(
                 "A01",
                 runtime_observation=MergeForbiddenObservation(),
             )
@@ -1030,7 +1033,7 @@ def test_fork_inherited_runner_executes_single_lane_without_self_merge(monkeypat
                 worker_assignments={"worker_0": ["A01"]},
                 lane_axis_contexts={"worker_0": [("A01", ["A01"])]},
             ),
-            runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+            runtime_observation_mode=ReturnAllRecords,
         )
 
         results = ForkInheritedWorkerLaneRunner(ForbiddenMultiprocessingContext()).run(
@@ -1071,7 +1074,7 @@ def test_pooled_worker_lane_runner_emits_error_before_reraising(monkeypatch):
             worker_assignments={"worker_0": ["A01"]},
             lane_axis_contexts={"worker_0": [("A01", [("A01", object())])]},
         ),
-        runtime_observation_mode=RuntimeObservationMode.OMIT,
+        runtime_observation_mode=ReturnNoRecords,
     )
 
     with pytest.raises(RuntimeError, match="lane exploded"):
@@ -1137,13 +1140,13 @@ def test_execution_state_projector_maps_success_and_failure():
 
     project_execution_state(
         orchestrator,
-        BundleExecutionResults({"A01": ExecutionResult.success("A01")}),
+        BundleExecutionResults({"A01": ExecutionSucceeded("A01")}),
     )
     assert orchestrator._state is orchestrator_module.OrchestratorState.COMPLETED
 
     project_execution_state(
         orchestrator,
-        BundleExecutionResults({"A01": ExecutionResult.error("A01")}),
+        BundleExecutionResults({"A01": ExecutionFailed("A01", error_message="failed")}),
     )
     assert orchestrator._state is orchestrator_module.OrchestratorState.EXEC_FAILED
 
@@ -1393,7 +1396,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
     )
 
     assert isinstance(results, BundleExecutionResults)
-    assert results == {"A01": ExecutionResult.success("A01")}
+    assert results == {"A01": ExecutionSucceeded("A01")}
     assert results.extras.viewer_states_by_port == {5563: response}
     layer = results.extras.viewer_states_by_port[5563].payload["layers"][0]
     assert layer["route_key"] == "step-2:objects"

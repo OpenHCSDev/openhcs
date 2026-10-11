@@ -6,13 +6,21 @@ following OpenHCS standards for explicit contracts and type safety.
 """
 
 import copyreg
-from dataclasses import dataclass, field
-from enum import Enum
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field, replace
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Mapping, Optional
+from typing import TYPE_CHECKING, ClassVar, Mapping
 
 from openhcs.constants.constants import Backend
 from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.progress.types import (
+    AxisErrorProgressPhase,
+    CancelledProgressPhase,
+    CancelledProgressStatus,
+    ErrorProgressStatus,
+    ProgressPhase,
+    ProgressStatus,
+)
 from openhcs.core.runtime_stores import RuntimeArtifactQuery, StoredRuntimeValue
 from openhcs.core.steps.abstract import StepExecutionObservation
 
@@ -46,14 +54,6 @@ class RuntimeExecutionTransportSerialization:
 RuntimeExecutionTransportSerialization.register()
 
 
-class ExecutionStatus(Enum):
-    """Status of pipeline execution for an axis or combination."""
-
-    SUCCESS = "success"
-    ERROR = "error"
-    CANCELLED = "cancelled"
-
-
 @dataclass(frozen=True)
 class RuntimeContextObservation:
     """Runtime records produced for one compiled execution context."""
@@ -69,7 +69,7 @@ class RuntimeContextObservation:
         context_key: str,
         context: ProcessingContext,
         records: tuple[StoredRuntimeValue, ...],
-        runtime_observation_mode: "RuntimeObservationMode",
+        runtime_observation_mode: type["RuntimeObservationMode"],
         outputs: StepExecutionObservation,
     ) -> "RuntimeContextObservation":
         """Retain requested records beside the completed output projections."""
@@ -110,52 +110,66 @@ class RuntimeExecutionObservation:
             context.record_completed_step_outputs(context_observation.outputs)
 
 
-class RuntimeObservationMode(Enum):
-    """Controls whether worker runtime records are returned to the parent."""
+class RuntimeObservationMode(ABC):
+    """Which worker runtime records an execution returns to the parent."""
 
-    MERGE_INTO_PARENT = "merge_into_parent"
-    MERGE_DATASET_INPUTS = "merge_dataset_inputs"
-    OMIT = "omit"
-
-    @property
-    def collects_records(self) -> bool:
-        return self is not RuntimeObservationMode.OMIT
-
-    @classmethod
-    def from_parent_requirement(cls, required: bool) -> "RuntimeObservationMode":
-        """Select the mode implied by compiled parent-side execution needs."""
-
-        return cls.MERGE_INTO_PARENT if required else cls.OMIT
+    collects_records: ClassVar[bool] = True
+    returns_every_record: ClassVar[bool] = False
 
     @classmethod
     def for_compiled_bundle(
         cls, bundle: "CompiledExecutionBundle"
-    ) -> "RuntimeObservationMode":
+    ) -> type["RuntimeObservationMode"]:
         """Consolidation carries rendered tables; only dataset-scoped inputs need records."""
 
         if bundle.requires_parent_runtime_observation:
-            return cls.MERGE_DATASET_INPUTS
-        return cls.OMIT
+            return ReturnDatasetInputRecords
+        return ReturnNoRecords
 
+    @classmethod
     def including_parent_requirement(
-        self,
+        cls,
         required: bool,
-    ) -> "RuntimeObservationMode":
+    ) -> type["RuntimeObservationMode"]:
         """Return this mode strengthened by an additional retention requirement."""
 
-        return type(self).MERGE_INTO_PARENT if required else self
+        return ReturnAllRecords if required else cls
 
+    @classmethod
+    @abstractmethod
     def retain_records(
-        self,
+        cls,
         records: tuple[StoredRuntimeValue, ...],
         context: ProcessingContext,
     ) -> tuple[StoredRuntimeValue, ...]:
         """Keep records consumed by the selected parent-side execution route."""
 
-        if self is RuntimeObservationMode.OMIT:
-            return ()
-        if self is RuntimeObservationMode.MERGE_INTO_PARENT:
-            return records
+
+class ReturnNoRecords(RuntimeObservationMode):
+    """Return no runtime records; the parent needs none."""
+
+    collects_records = False
+
+    @classmethod
+    def retain_records(cls, records, context):
+        return ()
+
+
+class ReturnAllRecords(RuntimeObservationMode):
+    """Return every runtime record to the parent."""
+
+    returns_every_record = True
+
+    @classmethod
+    def retain_records(cls, records, context):
+        return records
+
+
+class ReturnDatasetInputRecords(RuntimeObservationMode):
+    """Return only the records dataset-scoped steps consume in the parent."""
+
+    @classmethod
+    def retain_records(cls, records, context):
         selected_addresses = set()
         for plan in context.step_plans.values():
             if not plan.execution_scope.requires_parent_runtime_observation:
@@ -187,87 +201,74 @@ class RuntimeObservationMode(Enum):
 
 
 @dataclass(frozen=True)
-class ExecutionResult:
-    """
-    Typed result of pipeline execution for a single axis.
+class ExecutionResult(ABC):
+    """Outcome of executing one axis value's compiled contexts."""
 
-    Replaces dict-based results to provide compile-time type safety
-    and explicit contracts.
+    stops_lane: ClassVar[bool] = False
 
-    Attributes:
-        status: Execution status (success, error, etc.)
-        axis_id: Identifier for the axis that was executed
-        failed_combination: Optional key of the combination that failed (for sequential mode)
-        error_message: Optional error message if status is ERROR
-    """
-
-    status: ExecutionStatus
     axis_id: str
-    failed_combination: Optional[str] = None
-    error_message: Optional[str] = None
     runtime_observation: RuntimeExecutionObservation = field(
         default_factory=RuntimeExecutionObservation
     )
 
     def is_success(self) -> bool:
-        """Check if execution was successful."""
-        return self.status == ExecutionStatus.SUCCESS
+        return False
 
-    def is_error(self) -> bool:
-        """Check if execution failed."""
-        return self.status == ExecutionStatus.ERROR
+    def describe(self) -> str:
+        """Return this outcome as one line of text."""
+        return type(self).__name__
 
-    def is_cancelled(self) -> bool:
-        return self.status == ExecutionStatus.CANCELLED
+    def without_runtime_observation(self) -> "ExecutionResult":
+        """Return this outcome without the worker runtime records it carries."""
+        return replace(self, runtime_observation=RuntimeExecutionObservation())
 
-    @classmethod
-    def success(
-        cls,
-        axis_id: str,
-        runtime_observation: RuntimeExecutionObservation | None = None,
-    ) -> "ExecutionResult":
-        """Create a successful execution result."""
-        return cls(
-            status=ExecutionStatus.SUCCESS,
-            axis_id=axis_id,
-            runtime_observation=runtime_observation or RuntimeExecutionObservation(),
+
+@dataclass(frozen=True)
+class ExecutionSucceeded(ExecutionResult):
+    """Every compiled context of the axis ran to completion."""
+
+    def is_success(self) -> bool:
+        return True
+
+
+@dataclass(frozen=True, kw_only=True)
+class ExecutionStopped(ExecutionResult):
+    """Execution of the axis ended before completion."""
+
+    progress_phase: ClassVar[type[ProgressPhase]]
+    progress_status: ClassVar[type[ProgressStatus]]
+
+    error_message: str
+    failed_combination: str | None = None
+
+    def describe(self) -> str:
+        return f"{type(self).__name__}: {self.error_message}"
+
+    def at_combination(
+        self,
+        context_key: str,
+        runtime_observation: RuntimeExecutionObservation,
+    ) -> "ExecutionStopped":
+        """Attribute this stop to one compiled context with the axis's records."""
+        return replace(
+            self,
+            failed_combination=context_key,
+            runtime_observation=runtime_observation,
         )
 
-    @classmethod
-    def error(
-        cls,
-        axis_id: str,
-        failed_combination: Optional[str] = None,
-        error_message: Optional[str] = None,
-        runtime_observation: RuntimeExecutionObservation | None = None,
-    ) -> "ExecutionResult":
-        """Create an error execution result."""
-        return cls(
-            status=ExecutionStatus.ERROR,
-            axis_id=axis_id,
-            failed_combination=failed_combination,
-            error_message=error_message,
-            runtime_observation=(
-                RuntimeExecutionObservation()
-                if runtime_observation is None else runtime_observation
-            ),
-        )
 
-    @classmethod
-    def cancelled(
-        cls,
-        axis_id: str,
-        *,
-        error_message: str,
-        runtime_observation: RuntimeExecutionObservation | None = None,
-    ) -> "ExecutionResult":
-        """Return completed outputs from a cooperative cancellation boundary."""
-        return cls(
-            status=ExecutionStatus.CANCELLED,
-            axis_id=axis_id,
-            error_message=error_message,
-            runtime_observation=(
-                RuntimeExecutionObservation()
-                if runtime_observation is None else runtime_observation
-            ),
-        )
+@dataclass(frozen=True, kw_only=True)
+class ExecutionFailed(ExecutionStopped):
+    """A step raised while executing the axis."""
+
+    progress_phase = AxisErrorProgressPhase
+    progress_status = ErrorProgressStatus
+
+
+@dataclass(frozen=True, kw_only=True)
+class ExecutionCancelled(ExecutionStopped):
+    """Execution was cancelled cooperatively."""
+
+    stops_lane = True
+    progress_phase = CancelledProgressPhase
+    progress_status = CancelledProgressStatus

@@ -68,7 +68,7 @@ class ZMQAuxiliaryExecutionParams:
     def runtime_observation_mode_for(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> RuntimeObservationMode:
+    ) -> type[RuntimeObservationMode]:
         """Resolve retention from compiled needs plus an explicit export request."""
 
         return RuntimeObservationMode.for_compiled_bundle(

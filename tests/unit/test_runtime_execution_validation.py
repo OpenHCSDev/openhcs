@@ -29,7 +29,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
+    ExecutionSucceeded,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
 )
@@ -234,7 +234,7 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
 
     export = ZMQRuntimeExecutionObservationExport.from_execution(
         compiled_contexts={"A01": context},
-        execution_results={"A01": ExecutionResult.success("A01")},
+        execution_results={"A01": ExecutionSucceeded("A01")},
         output_roots=(tmp_path,),
         runtime_observations=runtime_observations,
     )
@@ -561,7 +561,7 @@ def test_zmq_observation_compresses_and_preserves_exact_runtime_records(
     )
     export = ZMQRuntimeExecutionObservationExport.from_execution(
         compiled_contexts={"A01": context},
-        execution_results={"A01": ExecutionResult.success("A01")},
+        execution_results={"A01": ExecutionSucceeded("A01")},
         output_roots=(tmp_path,),
         runtime_observations=(),
     )

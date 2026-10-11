@@ -11,7 +11,7 @@ import pickle
 import signal
 import threading
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Sequence
 
 from openhcs.core.compiled_execution import (
@@ -30,7 +30,11 @@ from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.native_threading import configure_native_thread_count
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.orchestrator.execution_result import (
+    ExecutionCancelled,
+    ExecutionFailed,
     ExecutionResult,
+    ExecutionSucceeded,
+    ReturnAllRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
     RuntimeObservationMode,
@@ -71,8 +75,6 @@ from openhcs.core.progress.types import (
     AxisCompletedProgressPhase,
     AxisErrorProgressPhase,
     AxisStartedProgressPhase,
-    CancelledProgressPhase,
-    CancelledProgressStatus,
     ErrorProgressStatus,
     StartedProgressStatus,
     StepCompletedProgressPhase,
@@ -690,7 +692,7 @@ class ExecuteInheritedLane(AnsweredWorkerCommand):
 
     lane_axis_context_keys: list[tuple[str, list[str]]]
     lane_context: WorkerLaneExecutionContext
-    runtime_observation_mode: RuntimeObservationMode
+    runtime_observation_mode: type[RuntimeObservationMode]
 
     def run(self, connection: Any) -> Dict[str, ExecutionResult]:
         execution_bundle = ForkInheritedWorkerExecutionState.require_current()
@@ -1286,7 +1288,7 @@ def _execute_axis_with_sequential_combinations(
     pipeline_definition: List[AbstractStep],
     axis_contexts: TransportAxisContexts,
     lane_context: WorkerLaneExecutionContext,
-    runtime_observation_mode: RuntimeObservationMode,
+    runtime_observation_mode: type[RuntimeObservationMode],
     cancellation: ExecutionCancellationSignal | None = None,
     release_axis_resources: bool = True,
 ) -> ExecutionResult:
@@ -1318,7 +1320,7 @@ def _execute_axis_with_sequential_combinations(
             try:
                 cancellation.raise_if_requested(f"before context {context_key}")
             except ExecutionCancelledError as exc:
-                return ExecutionResult.cancelled(
+                return ExecutionCancelled(
                     axis_id=axis_id,
                     error_message=str(exc),
                     runtime_observation=RuntimeExecutionObservation(
@@ -1366,27 +1368,16 @@ def _execute_axis_with_sequential_combinations(
             lane_context.emit(
                 axis_id=axis_id,
                 step_name=PIPELINE_PROGRESS_STEP_NAME,
-                phase=(
-                    CancelledProgressPhase
-                    if result.is_cancelled()
-                    else AxisErrorProgressPhase
-                ),
-                status=(
-                    CancelledProgressStatus
-                    if result.is_cancelled()
-                    else ErrorProgressStatus
-                ),
+                phase=result.progress_phase,
+                status=result.progress_status,
                 completed=0,
                 total=total_steps,
                 percent=0.0,
                 message=result.error_message,
             )
-            return replace(
-                result,
-                failed_combination=context_key,
-                runtime_observation=RuntimeExecutionObservation(
-                    contexts=tuple(runtime_observations),
-                ),
+            return result.at_combination(
+                context_key,
+                RuntimeExecutionObservation(contexts=tuple(runtime_observations)),
             )
 
     lane_context.emit(
@@ -1398,7 +1389,7 @@ def _execute_axis_with_sequential_combinations(
         total=total_steps,
         percent=(completed_axis_steps / total_steps) * 100.0,
     )
-    return ExecutionResult.success(
+    return ExecutionSucceeded(
         axis_id=axis_id,
         runtime_observation=RuntimeExecutionObservation(
             contexts=tuple(runtime_observations),
@@ -1463,7 +1454,7 @@ def _execute_single_axis_static(
     *,
     context_key: str,
     cancellation: ExecutionCancellationSignal | None = None,
-    runtime_observation_mode: RuntimeObservationMode = RuntimeObservationMode.MERGE_INTO_PARENT,
+    runtime_observation_mode: type[RuntimeObservationMode] = ReturnAllRecords,
 ) -> ExecutionResult:
     """Execute one frozen axis context against the compiled pipeline."""
 
@@ -1487,7 +1478,7 @@ def _execute_single_axis_static(
     # original retention contract. Ordinary execution can retire dead inputs
     # only after the step's output/progress consumers have completed.
     release_consumed = (
-        runtime_observation_mode is not RuntimeObservationMode.MERGE_INTO_PARENT
+        not runtime_observation_mode.returns_every_record
         and isinstance(lane_context.debug_execution_policy, NoOpDebugExecutionPolicy)
         and not any(
             plan.visualize or plan.streaming_configs
@@ -1603,7 +1594,7 @@ def _execute_single_axis_static(
                 )
 
     except ExecutionCancelledError as exc:
-        return ExecutionResult.cancelled(
+        return ExecutionCancelled(
             axis_id=axis_id,
             error_message=str(exc),
             runtime_observation=RuntimeExecutionObservation.from_completed_outputs(
@@ -1614,7 +1605,7 @@ def _execute_single_axis_static(
         logger.exception(
             "Axis %s failed while retaining completed output facts", axis_id
         )
-        return ExecutionResult.error(
+        return ExecutionFailed(
             axis_id=axis_id,
             failed_combination=context_key,
             error_message=str(exc),
@@ -1623,7 +1614,7 @@ def _execute_single_axis_static(
             ),
         )
 
-    return ExecutionResult.success(
+    return ExecutionSucceeded(
         axis_id=axis_id,
         runtime_observation=RuntimeExecutionObservation.from_completed_outputs(
             {context_key: frozen_context}
@@ -1635,7 +1626,7 @@ def execute_worker_lane(
     pipeline_definition: List[AbstractStep],
     lane_axis_contexts: WorkerLaneAxisContexts,
     lane_context: WorkerLaneExecutionContext,
-    runtime_observation_mode: RuntimeObservationMode,
+    runtime_observation_mode: type[RuntimeObservationMode],
     cancellation: ExecutionCancellationSignal | None = None,
     release_axis_resources: bool = True,
 ) -> Dict[str, ExecutionResult]:
@@ -1654,7 +1645,7 @@ def execute_worker_lane(
                 try:
                     cancellation.raise_if_requested(f"before axis {axis_id}")
                 except ExecutionCancelledError as exc:
-                    lane_results[axis_id] = ExecutionResult.cancelled(
+                    lane_results[axis_id] = ExecutionCancelled(
                         axis_id=axis_id,
                         error_message=str(exc),
                     )
@@ -1667,6 +1658,6 @@ def execute_worker_lane(
                 cancellation=cancellation,
                 release_axis_resources=release_axis_resources,
             )
-            if lane_results[axis_id].is_cancelled():
+            if lane_results[axis_id].stops_lane:
                 break
         return lane_results

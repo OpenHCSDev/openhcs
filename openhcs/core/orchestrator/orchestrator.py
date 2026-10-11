@@ -762,7 +762,7 @@ class PipelineOrchestrator:
         max_workers: Optional[int] = None,
         visualizer: ExecutionVisualizerABC | None = None,
         log_file_base: Optional[str] = None,
-        runtime_observation_mode: RuntimeObservationMode | None = None,
+        runtime_observation_mode: type[RuntimeObservationMode] | None = None,
         debug_execution_policy: DebugExecutionPolicy = NoOpDebugExecutionPolicy(),
         prepared_worker_runner: "PreparedForkWorkerLaneRunner | None" = None,
     ) -> Dict[str, ExecutionResult]:

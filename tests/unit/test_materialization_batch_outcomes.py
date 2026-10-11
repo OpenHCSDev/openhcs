@@ -22,7 +22,7 @@ from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionResults,
 )
 from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
+    ExecutionSucceeded,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
     RuntimeObservationMode,
@@ -163,7 +163,7 @@ class FrozenWorkerContext(ProcessingContext):
         self.released = True
 
 
-@pytest.mark.parametrize("mode", tuple(RuntimeObservationMode))
+@pytest.mark.parametrize("mode", tuple(RuntimeObservationMode.__subclasses__()))
 def test_worker_exports_actual_step_outcomes_after_resource_release(
     tmp_path, monkeypatch, mode
 ):
@@ -219,7 +219,7 @@ def test_parent_and_worker_exports_share_existing_observation_authority(tmp_path
         contexts=(RuntimeContextObservation("A01", (), StepExecutionObservation({}, (plate_path,))),)
     )
     results = BundleExecutionResults(
-        {"A01": ExecutionResult.success("A01", runtime_observation=worker)},
+        {"A01": ExecutionSucceeded("A01", runtime_observation=worker)},
         extras=BundleExecutionExtras(
             viewer_states_by_port={}, runtime_observation=parent
         ),

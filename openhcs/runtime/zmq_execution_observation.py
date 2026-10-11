@@ -12,7 +12,6 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeExecutionObservation,
-    ExecutionStatus,
 )
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionExpectation,
@@ -25,7 +24,7 @@ from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.runtime.environment_provenance import RuntimeEnvironmentSnapshot
 
 ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION = 8
-ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 4
+ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION = 5
 
 
 def _axis_membership_failures(
@@ -49,28 +48,11 @@ def _axis_membership_failures(
 
 
 @dataclass(frozen=True, slots=True)
-class ZMQExecutionAxisOutcome:
-    """Small per-axis result retained without worker runtime values."""
-
-    status: ExecutionStatus
-    failed_combination: str | None = None
-    error_message: str | None = None
-
-    @classmethod
-    def from_result(cls, result: ExecutionResult) -> ZMQExecutionAxisOutcome:
-        return cls(
-            status=result.status,
-            failed_combination=result.failed_combination,
-            error_message=result.error_message,
-        )
-
-
-@dataclass(frozen=True, slots=True)
 class ZMQRuntimeExecutionOutcomeExport:
     """Ordinary execution outcome without parent-side runtime-value retention."""
 
     schema_version: int
-    outcomes_by_axis: Mapping[str, ZMQExecutionAxisOutcome]
+    outcomes_by_axis: Mapping[str, ExecutionResult]
     output_roots: tuple[Path, ...]
     compiled_axis_ids: tuple[str, ...]
     server_environment: RuntimeEnvironmentSnapshot | None = None
@@ -91,7 +73,7 @@ class ZMQRuntimeExecutionOutcomeExport:
         return cls(
             schema_version=ZMQ_RUNTIME_OUTCOME_EXPORT_SCHEMA_VERSION,
             outcomes_by_axis={
-                str(axis_id): ZMQExecutionAxisOutcome.from_result(result)
+                str(axis_id): result.without_runtime_observation()
                 for axis_id, result in execution_results.items()
             },
             output_roots=tuple(Path(root) for root in output_roots),
@@ -130,7 +112,7 @@ class ZMQRuntimeExecutionOutcomeExport:
     @property
     def successful_axis_count(self) -> int:
         return sum(
-            outcome.status is ExecutionStatus.SUCCESS
+            outcome.is_success()
             for outcome in self.outcomes_by_axis.values()
         )
 
@@ -140,9 +122,9 @@ class ZMQRuntimeExecutionOutcomeExport:
             self.outcomes_by_axis,
         )
         unsuccessful = {
-            axis_id: outcome.status.value
+            axis_id: outcome.describe()
             for axis_id, outcome in self.outcomes_by_axis.items()
-            if outcome.status is not ExecutionStatus.SUCCESS
+            if not outcome.is_success()
         }
         failures = list(membership_failures)
         if unsuccessful:

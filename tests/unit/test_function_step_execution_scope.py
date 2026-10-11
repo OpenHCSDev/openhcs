@@ -45,7 +45,11 @@ from openhcs.core.orchestrator.bundle_execution import (
     execute_dataset_scoped_steps,
     validate_dataset_scoped_contexts,
 )
-from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.orchestrator.execution_result import (
+    ReturnAllRecords,
+    ReturnDatasetInputRecords,
+    ReturnNoRecords,
+)
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
@@ -684,7 +688,7 @@ def test_plate_retention_uses_exact_edges_instead_of_requested_types(
         count=3,
     )
     observations = context.runtime_value_store.observed_values
-    retained = RuntimeObservationMode.MERGE_DATASET_INPUTS.retain_records(
+    retained = ReturnDatasetInputRecords.retain_records(
         observations,
         context,
     )
@@ -692,13 +696,13 @@ def test_plate_retention_uses_exact_edges_instead_of_requested_types(
         (["raw"] if stored_image else []) + ["Measurements", "Measurements"]
     )
     assert (
-        RuntimeObservationMode.MERGE_INTO_PARENT.retain_records(
+        ReturnAllRecords.retain_records(
             observations,
             context,
         )
         is observations
     )
-    assert RuntimeObservationMode.OMIT.retain_records(observations, context) == ()
+    assert ReturnNoRecords.retain_records(observations, context) == ()
 
     full_store = type(context.runtime_value_store)()
     full_store.merge_observed_values(observations)
@@ -752,7 +756,7 @@ def test_plate_retention_defers_required_missing_admission_to_parent() -> None:
         metadata_writer=True,
     )
     context = _plate_context("A01", (plan,))
-    assert RuntimeObservationMode.MERGE_DATASET_INPUTS.retain_records((), context) == ()
+    assert ReturnDatasetInputRecords.retain_records((), context) == ()
     with pytest.raises(ValueError, match="missing required input"):
         _dataset_artifact_batch(
             compiled_contexts={"A01": context},

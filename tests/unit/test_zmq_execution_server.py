@@ -27,10 +27,13 @@ from openhcs.core.orchestrator.bundle_execution import (
     BundleExecutionResults,
 )
 from openhcs.core.orchestrator.execution_result import (
-    ExecutionResult,
+    ExecutionFailed,
+    ExecutionSucceeded,
+    ReturnAllRecords,
+    ReturnDatasetInputRecords,
+    ReturnNoRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
-    RuntimeObservationMode,
 )
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.runtime.zmq_execution_observation import (
@@ -108,11 +111,11 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
     server._lifecycle.enqueue(record)
     results = BundleExecutionResults(
         {
-            "A01": ExecutionResult.success("A01"),
+            "A01": ExecutionSucceeded("A01"),
             "A02": (
-                ExecutionResult.error("A02", error_message="producer lineage missing")
+                ExecutionFailed("A02", error_message="producer lineage missing")
                 if failed
-                else ExecutionResult.success("A02")
+                else ExecutionSucceeded("A02")
             ),
         }
     )
@@ -131,7 +134,7 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
         compile_only=False,
         execution_id=record.execution_id,
         auxiliary_params=SimpleNamespace(
-            runtime_observation_mode_for=lambda bundle: RuntimeObservationMode.OMIT
+            runtime_observation_mode_for=lambda bundle: ReturnNoRecords
         ),
     )
     monkeypatch.setattr(
@@ -158,7 +161,7 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
     assert exported == [results]
     assert results["A01"].is_success()
     if failed:
-        assert "A02: error: producer lineage missing" in terminal[MessageFields.ERROR]
+        assert "A02: ExecutionFailed: producer lineage missing" in terminal[MessageFields.ERROR]
     else:
         assert terminal[MessageFields.RESULTS_SUMMARY][MessageFields.PARTITION_VALUES] == [
             "A01",
@@ -222,26 +225,26 @@ def test_terminal_notification_contains_openhcs_summary_before_cleanup(
 @pytest.mark.parametrize(
     ("compiled_mode", "export_path", "expected_mode"),
     (
-        (RuntimeObservationMode.OMIT, None, RuntimeObservationMode.OMIT),
+        (ReturnNoRecords, None, ReturnNoRecords),
         (
-            RuntimeObservationMode.OMIT,
+            ReturnNoRecords,
             "/tmp/runtime-observation.pkl",
-            RuntimeObservationMode.MERGE_INTO_PARENT,
+            ReturnAllRecords,
         ),
         (
-            RuntimeObservationMode.MERGE_DATASET_INPUTS,
+            ReturnDatasetInputRecords,
             None,
-            RuntimeObservationMode.MERGE_DATASET_INPUTS,
+            ReturnDatasetInputRecords,
         ),
         (
-            RuntimeObservationMode.MERGE_DATASET_INPUTS,
+            ReturnDatasetInputRecords,
             "/tmp/runtime-observation.pkl",
-            RuntimeObservationMode.MERGE_INTO_PARENT,
+            ReturnAllRecords,
         ),
         (
-            RuntimeObservationMode.MERGE_INTO_PARENT,
+            ReturnAllRecords,
             None,
-            RuntimeObservationMode.MERGE_DATASET_INPUTS,
+            ReturnDatasetInputRecords,
         ),
     ),
 )
@@ -273,7 +276,7 @@ def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> 
 
     assert (
         params.runtime_observation_mode_for(execution_bundle)
-        is RuntimeObservationMode.OMIT
+        is ReturnNoRecords
     )
     assert ZMQAuxiliaryExecutionParams.from_transport(params.to_transport()) == params
 
@@ -325,7 +328,7 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         compilation=compilation,
         execution_results=BundleExecutionResults(
             {
-                "A01": ExecutionResult.success(
+                "A01": ExecutionSucceeded(
                     "A01",
                     runtime_observation=RuntimeExecutionObservation(
                         contexts=(

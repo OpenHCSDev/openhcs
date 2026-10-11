@@ -16,7 +16,11 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.orchestrator.cancellation import ExecutionCancellationSignal
 from openhcs.core.orchestrator import worker_execution
-from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.orchestrator.execution_result import (
+    ExecutionCancelled,
+    ExecutionFailed,
+    ReturnNoRecords,
+)
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
@@ -106,10 +110,10 @@ def test_completed_projection_facts_survive_error_or_cancel_and_omit(tmp_path, m
 
     context = _context(tmp_path, 2)
     result = worker_execution._execute_axis_with_sequential_combinations(
-        [Save(), Fail()], [("A01", context)], _lane(), RuntimeObservationMode.OMIT,
+        [Save(), Fail()], [("A01", context)], _lane(), ReturnNoRecords,
         cancellation=signal, release_axis_resources=False,
     )
-    assert result.is_cancelled() if cancel else result.is_error()
+    assert type(result) is (ExecutionCancelled if cancel else ExecutionFailed)
     assert not context.runtime_value_store.observed_values
     assert pixel_refs[0]() is None
     assert len(result.runtime_observation.contexts) == 1

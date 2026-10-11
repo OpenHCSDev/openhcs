@@ -20,7 +20,9 @@ from benchmark.contracts.run_artifacts import (
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.orchestrator.execution_result import ExecutionResult
+from openhcs.core.orchestrator.execution_result import (
+    ExecutionSucceeded,
+)
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
@@ -467,7 +469,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     observation_path = tmp_path / "outcomes.pkl.gz"
     ZMQRuntimeExecutionOutcomeExport.from_execution(
         compiled_axis_ids=("A01",),
-        execution_results={"A01": ExecutionResult.success("A01")},
+        execution_results={"A01": ExecutionSucceeded("A01")},
         output_roots=(tmp_path / "output",),
         execution_id="execution-1",
     ).write(observation_path)
@@ -541,7 +543,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     observation_path.unlink()
     ZMQRuntimeExecutionOutcomeExport.from_execution(
         compiled_axis_ids=("A01",),
-        execution_results={"A01": ExecutionResult.success("A01")},
+        execution_results={"A01": ExecutionSucceeded("A01")},
         output_roots=(tmp_path / "output",),
         execution_id="execution-1",
     ).write(observation_path)

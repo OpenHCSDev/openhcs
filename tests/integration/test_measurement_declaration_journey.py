@@ -41,7 +41,9 @@ from openhcs.core.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.measurement_feature_queries import measurement_values_for_feature
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.memory import numpy
-from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.orchestrator.execution_result import (
+    ReturnAllRecords,
+)
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.pipeline.function_contracts import artifact_outputs
@@ -283,7 +285,7 @@ def _execute(path, document, bundle):
     return orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
         max_workers=1,
-        runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+        runtime_observation_mode=ReturnAllRecords,
         progress_queue=AgentProgressQueue(),
         progress_context=ProgressExecutionContext(
             execution_id="measurement-contract-synthetic",
