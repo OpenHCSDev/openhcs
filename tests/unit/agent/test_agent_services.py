@@ -51,9 +51,7 @@ from openhcs.agent.dto.viewer import (
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services import function_catalog_service as function_catalog_module
-from openhcs.agent.services import (
-    artifact_plan_inspection_service as artifact_plan_module,
-)
+from openhcs.agent.services import artifact_plan_inspection_service as artifact_plan_module
 from openhcs.agent.services import viewer_window_service as viewer_window_service_module
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.artifact_plan_inspection_service import (
@@ -104,10 +102,7 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import (
-    ProgressExecutionContext,
-    ProgressIdentity,
-    ProgressPhase,
-    ProgressStatus,
+    ProgressExecutionContext, ProgressIdentity, ProgressPhase, ProgressStatus,
 )
 from openhcs.core.source_bindings import (
     LazySourceBindingsConfig,
@@ -317,13 +312,9 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
     def emit_progress(request):
         request.progress_queue.put(
             ProgressExecutionContext("inspection", str(request.plate)).event(
-                axis_id="A01",
-                step_name="compilation",
-                phase=ProgressPhase.COMPILE,
-                status=ProgressStatus.RUNNING,
-                percent=0.0,
-                completed=0,
-                total=1,
+                axis_id="A01", step_name="compilation",
+                phase=ProgressPhase.COMPILE, status=ProgressStatus.RUNNING,
+                percent=0.0, completed=0, total=1,
             )
         )
 
@@ -1293,8 +1284,7 @@ def test_function_catalog_resolves_detail_by_callable_import_path(monkeypatch):
     selected = _Metadata(tags=[])
     unrelated = _Metadata.from_function(sample_large_signature_function, "Unrelated")
     monkeypatch.setattr(
-        catalog,
-        "_all_metadata",
+        catalog, "_all_metadata",
         lambda **_kwargs: {
             "test:aaa_unrelated": unrelated,
             "test:sample_processing_function": selected,
@@ -1619,10 +1609,7 @@ def test_function_catalog_reuses_projection_until_registry_mapping_changes(monke
         == repeated.items[0].signature
         == "sample_processing_function(sigma=1.0)"
     )
-    assert (
-        catalog.search(query="sample", compact_signatures=True).items[0]
-        is first.items[0]
-    )
+    assert catalog.search(query="sample", compact_signatures=True).items[0] is first.items[0]
     assert (
         catalog.get("test:sample_processing_function").entry.signature
         == "sample_processing_function(sigma=2.0)"
@@ -2925,8 +2912,9 @@ def test_artifact_plan_inspection_inspects_pipeline_source_artifact_plan(
             plate_path=str(tmp_path),
             pipeline_source=_pipeline_document_source(),
             global_config_id=None,
-            axis_filter=("A01",),
-        ),
+            axis_filter=("A01",
+        )
+    ),
     )
 
     assert compile_gateway.requests[0].plate == tmp_path.resolve()
@@ -2941,10 +2929,7 @@ def test_artifact_plan_inspection_inspects_pipeline_source_artifact_plan(
     assert events[0].phase is ProgressPhase.COMPILE
     assert events[0].status is ProgressStatus.RUNNING
     assert events[0].identity == ProgressIdentity(
-        "inspection",
-        str(tmp_path.resolve()),
-        "A01",
-        "compilation",
+        "inspection", str(tmp_path.resolve()), "A01", "compilation",
     )
     assert inspection.errors == ()
     assert inspection.axis_count == 1
@@ -2964,9 +2949,9 @@ def test_artifact_plan_inspection_inspects_pipeline_source_artifact_plan(
     )
     assert inspection.steps[0].viewer_streaming[0].viewer_type is ViewerType.NAPARI
     assert inspection.steps[0].viewer_streaming[0].effective_config["enabled"] is True
-    assert inspection.steps[0].viewer_streaming[0].effective_config[
-        "partition_filter"
-    ] == ["A01"]
+    assert inspection.steps[0].viewer_streaming[0].effective_config["partition_filter"] == [
+        "A01"
+    ]
     assert inspection.steps[0].artifact_inputs[0].name == "positions"
     assert inspection.steps[0].artifact_inputs[0].kind == "special"
     assert inspection.steps[0].artifact_inputs[0].source_step_id == 0
@@ -3064,12 +3049,12 @@ def test_compile_inspection_rejects_read_only_plate_before_initialization(
 
     with pytest.raises(AgentPathPolicyError, match="Writable path is outside"):
         service.inspect(
-            PipelineSourceArtifactPlanInspectionRequest(
-                plate_path=str(plate),
-                pipeline_source=_pipeline_document_source(),
-                global_config_id=None,
-            )
+        PipelineSourceArtifactPlanInspectionRequest(
+            plate_path=str(plate),
+            pipeline_source=_pipeline_document_source(),
+            global_config_id=None,
         )
+    )
 
     assert gateway.requests == []
     assert {path.name: path.read_bytes() for path in plate.iterdir()} == before

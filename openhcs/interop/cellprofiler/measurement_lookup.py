@@ -81,6 +81,7 @@ class ChildCountFeatureDeclaration(RuntimeMeasurementFeatureDeclaration):
         return f"{cls.prefix}{name}{cls.suffix}"
 
 
+
 class CellProfilerMeasurementFeatureKind(Enum):
     """CellProfiler measurement feature families with structured semantics."""
 

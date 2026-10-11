@@ -111,8 +111,10 @@ def enhance_or_suppress_features(
             dic_decay=dic_decay,
         )
     )
-    return image.metadata.without_unit_interval_intensity_scale().payload_with(
-        np.asarray(result, dtype=np.float32), image.mask
+    return (
+        image.metadata
+        .without_unit_interval_intensity_scale()
+        .payload_with(np.asarray(result, dtype=np.float32), image.mask)
     )
 
 
@@ -310,8 +312,7 @@ class SpecklesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
                 enhance_or_suppress_features,
                 backend_provider=OpencvBackendProvider,
             ).grayscale_opening(
-                masked,
-                footprint,
+                masked, footprint,
             )
             result = masked - opened
         else:

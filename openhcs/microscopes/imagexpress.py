@@ -35,7 +35,9 @@ class ImageXpressTimePointPaths(FilenameParserCapability):
 
     _timepoint_folder_pattern = re.compile(r"TimePoint[_-]?(\d+)", re.IGNORECASE)
 
-    def image_path_components(self, path: Path) -> tuple[tuple[type[Axis], int], ...]:
+    def image_path_components(
+        self, path: Path
+    ) -> tuple[tuple[type[Axis], int], ...]:
         return (
             *super().image_path_components(path),
             *self.indexed_folder_components(
@@ -51,7 +53,9 @@ class ImageXpressZStepPaths(FilenameParserCapability):
 
     _zstep_folder_pattern = re.compile(r"ZStep[_-]?(\d+)", re.IGNORECASE)
 
-    def image_path_components(self, path: Path) -> tuple[tuple[type[Axis], int], ...]:
+    def image_path_components(
+        self, path: Path
+    ) -> tuple[tuple[type[Axis], int], ...]:
         return (
             *super().image_path_components(path),
             *self.indexed_folder_components(
@@ -457,6 +461,8 @@ class ImageXpressHandler(
         are flattened starting from the plate root, and virtual paths have no prefix.
         """
         return "."
+
+
 
     @property
     def compatible_backends(self) -> List[Backend]:

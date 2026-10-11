@@ -119,8 +119,7 @@ def test_every_wire_operation_is_one_mcp_tool_deriving_its_contracts() -> None:
     capabilities = tuple(
         capability
         for capability in agent_capability_declarations()
-        if issubclass(capability, UiBridgeCapability)
-        and "operation" in vars(capability)
+        if issubclass(capability, UiBridgeCapability) and "operation" in vars(capability)
     )
     named = [capability.operation for capability in capabilities]
     assert len(named) == len(set(named))

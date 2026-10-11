@@ -30,6 +30,7 @@ from openhcs.core.synthetic_plate_generation import (
     SyntheticPlateFormat,
 )
 
+
 COMPONENT_FILTERS_DESCRIPTION = (
     "Accepted values per axis name of the active axis family, for example "
     '{"well": ["A01", "B02"]}; a file matches when every named axis holds one '
@@ -177,9 +178,7 @@ class SelectedPlateFileFilterOptions(SelectedPlateTargetOptions):
     path_contains: str | None = None
     component_filters: ComponentFilters = field(
         default=ComponentFilters(),
-        metadata={
-            AGENT_PARAMETER_DESCRIPTION_METADATA_KEY: COMPONENT_FILTERS_DESCRIPTION
-        },
+        metadata={AGENT_PARAMETER_DESCRIPTION_METADATA_KEY: COMPONENT_FILTERS_DESCRIPTION},
     )
     limit: int = 1
 
@@ -350,9 +349,7 @@ class PlateFileQueryRequest(DatasetTarget):
     path_contains: str | None = None
     component_filters: ComponentFilters = field(
         default=ComponentFilters(),
-        metadata={
-            AGENT_PARAMETER_DESCRIPTION_METADATA_KEY: COMPONENT_FILTERS_DESCRIPTION
-        },
+        metadata={AGENT_PARAMETER_DESCRIPTION_METADATA_KEY: COMPONENT_FILTERS_DESCRIPTION},
     )
     offset: int = 0
     limit: int = 50
@@ -422,9 +419,7 @@ class PlateFileStreamRequest(DatasetTarget):
     path_contains: str | None = None
     component_filters: ComponentFilters = field(
         default=ComponentFilters(),
-        metadata={
-            AGENT_PARAMETER_DESCRIPTION_METADATA_KEY: COMPONENT_FILTERS_DESCRIPTION
-        },
+        metadata={AGENT_PARAMETER_DESCRIPTION_METADATA_KEY: COMPONENT_FILTERS_DESCRIPTION},
     )
     limit: int = 1
     viewer_config_key: str = NapariViewer.config_key
@@ -836,9 +831,7 @@ class SyntheticPlateGenerationRequest:
     shared_cell_fraction: float = (
         SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.shared_cell_fraction
     )
-    partition_values: tuple[str, ...] = (
-        SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.partition_values
-    )
+    partition_values: tuple[str, ...] = SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.partition_values
     format: SyntheticPlateFormat = (
         SYNTHETIC_PLATE_GENERATION_PROFILE.default_request.format
     )

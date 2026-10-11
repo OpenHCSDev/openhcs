@@ -121,7 +121,8 @@ def test_capability_transport_defaults_to_local_stdio():
 
 def test_capability_exposition_owns_its_json_projection():
     capability = next(
-        capability for capability in get_capability_registry().capabilities
+        capability
+        for capability in get_capability_registry().capabilities
     )
     exposition = capability.exposition
 
@@ -293,15 +294,9 @@ def test_custom_function_registration_is_a_desktop_authoring_mutation():
     }
     registration = full_capabilities["openhcs_register_custom_function"]
 
-    assert (
-        registration.exposition.workflow_group
-        is CapabilityWorkflowGroup.FUNCTION_AUTHORING
-    )
+    assert registration.exposition.workflow_group is CapabilityWorkflowGroup.FUNCTION_AUTHORING
     assert registration.exposition.workflow_stage is CapabilityWorkflowStage.AUTHORING
-    assert (
-        registration.exposition.target_context
-        is CapabilityTargetContext.FUNCTION_REGISTRY
-    )
+    assert registration.exposition.target_context is CapabilityTargetContext.FUNCTION_REGISTRY
     assert registration.exposition.visibility is CapabilityVisibility.STANDARD
     assert registration.exposition.role is CapabilityRole.PRIMARY
     assert registration.mutating is True
@@ -349,12 +344,7 @@ def _declaration_error(**attributes) -> Exception:
             type(
                 "RejectedDeclaration",
                 (UiBridgeCapability,),
-                {
-                    "name": name,
-                    "title": "Rejected",
-                    "description": "",
-                    "service": "test",
-                }
+                {"name": name, "title": "Rejected", "description": "", "service": "test"}
                 | attributes,
             )
     finally:
@@ -417,9 +407,9 @@ def test_similar_mcp_tool_names_are_disambiguated_by_target_context_and_role():
     assert capabilities["openhcs_sample_plate_image"].exposition.target_context is (
         CapabilityTargetContext.PLATE_PATH
     )
-    assert capabilities[
-        "openhcs_ui_sample_selected_plate_image"
-    ].exposition.target_context is (CapabilityTargetContext.UI_SELECTED_PLATE)
+    assert capabilities["openhcs_ui_sample_selected_plate_image"].exposition.target_context is (
+        CapabilityTargetContext.UI_SELECTED_PLATE
+    )
     assert capabilities["openhcs_ui_sample_selected_plate_image"].exposition.role is (
         CapabilityRole.MODE_VARIANT
     )
@@ -430,25 +420,20 @@ def test_similar_mcp_tool_names_are_disambiguated_by_target_context_and_role():
         CapabilityTargetContext.HEADLESS_SESSION
     )
     assert (
-        capabilities[
-            "openhcs_get_runtime_server_execution_status"
-        ].exposition.target_context
+        capabilities["openhcs_get_runtime_server_execution_status"].exposition.target_context
         is CapabilityTargetContext.RUNTIME_SERVER
     )
-    assert capabilities[
-        "openhcs_ui_get_operation_status"
-    ].exposition.target_context is (CapabilityTargetContext.UI_BRIDGE)
-    assert capabilities[
-        "openhcs_ui_wait_for_operation_receipt"
-    ].exposition.target_context is (CapabilityTargetContext.UI_BRIDGE)
+    assert capabilities["openhcs_ui_get_operation_status"].exposition.target_context is (
+        CapabilityTargetContext.UI_BRIDGE
+    )
+    assert capabilities["openhcs_ui_wait_for_operation_receipt"].exposition.target_context is (
+        CapabilityTargetContext.UI_BRIDGE
+    )
     assert (
         capabilities["openhcs_ui_wait_for_operation_receipt"].exposition.role
         is CapabilityRole.PRIMARY
     )
-    assert (
-        capabilities["openhcs_ui_invoke_action"].exposition.role
-        is CapabilityRole.PRIMARY
-    )
+    assert capabilities["openhcs_ui_invoke_action"].exposition.role is CapabilityRole.PRIMARY
     assert capabilities["openhcs_ui_invoke_widget_action"].exposition.role is (
         CapabilityRole.FALLBACK
     )
@@ -461,9 +446,9 @@ def test_similar_mcp_tool_names_are_disambiguated_by_target_context_and_role():
     assert capabilities["openhcs_validate_pipeline"].exposition.workflow_stage is (
         CapabilityWorkflowStage.VALIDATION
     )
-    assert capabilities[
-        "openhcs_ui_mutate_object_state_field"
-    ].exposition.visibility is (CapabilityVisibility.EXPERT)
+    assert capabilities["openhcs_ui_mutate_object_state_field"].exposition.visibility is (
+        CapabilityVisibility.EXPERT
+    )
 
 
 def test_ui_bridge_capabilities_declare_runtime_security_and_data_exposure():
@@ -561,9 +546,7 @@ def test_requestless_ui_bridge_capability_passes_connection_as_connection():
 
     connection = object()
     invocation = agent_capabilities.ui_bridge_status.invocation
-    context = SimpleNamespace(
-        ui_bridge_service=RecordingUiBridgeService(gateway=object())
-    )
+    context = SimpleNamespace(ui_bridge_service=RecordingUiBridgeService(gateway=object()))
 
     assert invocation.execute(context, connection) == "served"
     assert seen == [(invocation.operation, None, connection)]

@@ -1,5 +1,4 @@
 """Completed persisted facts survive cleanup, failure and deferred publication."""
-
 import openhcs.core.progress.types as progress_types
 from types import SimpleNamespace
 from pathlib import Path
@@ -28,64 +27,39 @@ from openhcs.core.source_workspace_projection import (
 )
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_outputs import PrimaryImageMetadataTarget
-from openhcs.core.virtual_workspace_metadata import (
-    VirtualWorkspaceSourceProjectionEntries,
-)
+from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.domains.microscopy.axes import Microscopy
 
 
 def _facts(plate_root: Path) -> StepExecutionObservation:
     target = PrimaryImageMetadataTarget(
-        output_dir=plate_root / "images",
-        backend="disk",
-        dataset_root=str(plate_root),
-        sub_dir="images",
-        results_dir=None,
+        output_dir=plate_root / "images", backend="disk", dataset_root=str(plate_root),
+        sub_dir="images", results_dir=None,
     )
     projection = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress(
-            (
-                (Microscopy.Well, "A01"),
-                (Microscopy.Site, 1),
-                (Microscopy.Channel, 0),
-                (Microscopy.ZIndex, 1),
-                (Microscopy.Timepoint, 1),
-            )
-        ),
-        ref=SourcePixelRef("disk", "images/saved.tif"),
-        source_alias="saved",
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 0), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+        ref=SourcePixelRef("disk", "images/saved.tif"), source_alias="saved",
         image_metadata=ImagePayloadMetadata(source_dtype="uint16"),
     )
     return StepExecutionObservation(
-        MappingProxyType({}),
-        source_projection_entries_by_target=MappingProxyType(
-            {
-                target: VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
-                    ((projection, "images/saved.tif"),)
-                )
-            }
-        ),
+        MappingProxyType({}), source_projection_entries_by_target=MappingProxyType({
+            target: VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+                ((projection, "images/saved.tif"),)
+            )
+        }),
     )
 
 
 def _context(plate_root: Path, count: int) -> ProcessingContext:
     context = ProcessingContext(
-        axis_id="A01",
-        filemanager=SimpleNamespace(exists=lambda *_args: False),
-        step_plans={
-            index: SimpleNamespace(
-                compiled_function_pattern=None,
-                execution_scope=FunctionStepExecutionScope.AXIS,
-                step_name=str(index),
-                visualize=False,
-                streaming_configs={},
-                artifact_outputs={},
-                future_artifact_inputs=None,
-                requires_main_flow_checkpoint=lambda _plans: False,
-            )
-            for index in range(count)
-        },
+        axis_id="A01", filemanager=SimpleNamespace(exists=lambda *_args: False),
+        step_plans={index: SimpleNamespace(
+            compiled_function_pattern=None, execution_scope=FunctionStepExecutionScope.AXIS,
+            step_name=str(index), visualize=False, streaming_configs={},
+            artifact_outputs={}, future_artifact_inputs=None,
+            requires_main_flow_checkpoint=lambda _plans: False,
+        ) for index in range(count)},
     )
     context.dataset_root = plate_root
     context.microscope_handler = SimpleNamespace(
@@ -102,21 +76,15 @@ def _context(plate_root: Path, count: int) -> ProcessingContext:
 
 def _lane() -> WorkerLaneExecutionContext:
     return WorkerLaneExecutionContext(
-        execution_id="output-facts",
-        subject_id="plate",
-        worker_slot="worker_0",
+        execution_id="output-facts", subject_id="plate", worker_slot="worker_0",
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         worker_assignments={"worker_0": ["A01"]},
     )
 
 
 @pytest.mark.parametrize("cancel", [False, True])
-def test_completed_projection_facts_survive_error_or_cancel_and_omit(
-    tmp_path, monkeypatch, cancel
-):
-    monkeypatch.setattr(
-        progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None)
-    )
+def test_completed_projection_facts_survive_error_or_cancel_and_omit(tmp_path, monkeypatch, cancel):
+    monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
     facts = _facts(tmp_path)
     signal = ExecutionCancellationSignal()
     pixel_refs = []
@@ -126,9 +94,7 @@ def test_completed_projection_facts_survive_error_or_cancel_and_omit(
             pixels = np.ones((8, 8), dtype=np.float32)
             pixel_refs.append(weakref.ref(pixels))
             context.runtime_image_stack_cache.store(
-                ("temporary-image",),
-                memory_type="numpy",
-                stack=pixels,
+                ("temporary-image",), memory_type="numpy", stack=pixels,
             )
             if cancel:
                 signal.request()
@@ -140,12 +106,8 @@ def test_completed_projection_facts_survive_error_or_cancel_and_omit(
 
     context = _context(tmp_path, 2)
     result = worker_execution._execute_axis_with_sequential_combinations(
-        [Save(), Fail()],
-        [("A01", context)],
-        _lane(),
-        RuntimeObservationMode.OMIT,
-        cancellation=signal,
-        release_axis_resources=False,
+        [Save(), Fail()], [("A01", context)], _lane(), RuntimeObservationMode.OMIT,
+        cancellation=signal, release_axis_resources=False,
     )
     assert result.is_cancelled() if cancel else result.is_error()
     assert not context.runtime_value_store.observed_values
@@ -153,23 +115,12 @@ def test_completed_projection_facts_survive_error_or_cancel_and_omit(
     assert len(result.runtime_observation.contexts) == 1
     observation = result.runtime_observation.contexts[0]
     assert not observation.records
-    assert (
-        observation.outputs.source_projection_entries_by_target
-        == facts.source_projection_entries_by_target
-    )
+    assert observation.outputs.source_projection_entries_by_target == facts.source_projection_entries_by_target
     restored = pickle.loads(pickle.dumps(result))
-    assert (
-        restored.runtime_observation.contexts[
-            0
-        ].outputs.source_projection_entries_by_target
-        == facts.source_projection_entries_by_target
-    )
+    assert restored.runtime_observation.contexts[0].outputs.source_projection_entries_by_target == facts.source_projection_entries_by_target
     parent = ProcessingContext(axis_id="A01")
     restored.runtime_observation.merge_into({"A01": parent})
-    assert (
-        parent.completed_step_outputs.source_projection_entries_by_target
-        == facts.source_projection_entries_by_target
-    )
+    assert parent.completed_step_outputs.source_projection_entries_by_target == facts.source_projection_entries_by_target
 
 
 def test_same_plate_reader_uses_completed_facts_before_durable_publication(tmp_path):
@@ -179,17 +130,12 @@ def test_same_plate_reader_uses_completed_facts_before_durable_publication(tmp_p
     assert authority.projection_if_available() is None
     context.record_completed_step_outputs(_facts(tmp_path))
     projection = authority.projection_or_empty()
-    lookup = VirtualWorkspacePathLookup.from_paths(
-        "images/saved.tif", str(tmp_path / "images/saved.tif")
-    )
-    assert (
-        projection.source_projection_for(lookup).image_metadata.source_dtype == "uint16"
-    )
+    lookup = VirtualWorkspacePathLookup.from_paths("images/saved.tif", str(tmp_path / "images/saved.tif"))
+    assert projection.source_projection_for(lookup).image_metadata.source_dtype == "uint16"
     assert projection.source_metadata_for(lookup)["source_alias"] == "saved"
     # A direct durable reader retains its published-boundary contract.
     direct = WorkspaceSourceProjections.from_dataset_metadata(
-        dataset_root=tmp_path,
-        metadata_handler=context.microscope_handler.metadata_handler,
+        dataset_root=tmp_path, metadata_handler=context.microscope_handler.metadata_handler,
         filemanager=context.filemanager,
     )
     assert direct.projection_if_available() is None
@@ -209,46 +155,22 @@ def test_runtime_overlay_excludes_another_output_plate_and_other_context(tmp_pat
     assert not authority.is_bound_to_context(other)
 
 
-def test_runtime_axis_query_is_explicit_and_full_plate_outputs_remain_available(
-    tmp_path,
-):
+def test_runtime_axis_query_is_explicit_and_full_plate_outputs_remain_available(tmp_path):
     context = _context(tmp_path, 1)
     first = _facts(tmp_path)
     target, entries = next(iter(first.source_projection_entries_by_target.items()))
     projection, _ = entries.projection_paths[0]
-    second = replace(
-        projection,
-        address=OpenHCSPlaneAddress(
-            (
-                (Microscopy.Well, "A02"),
-                (Microscopy.Site, 1),
-                (Microscopy.Channel, 0),
-                (Microscopy.ZIndex, 1),
-                (Microscopy.Timepoint, 1),
-            )
-        ),
-    )
-    outputs = replace(
-        first,
-        source_projection_entries_by_target=MappingProxyType(
-            {
-                target: VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
-                    (
-                        (projection, "images/A01.tif"),
-                        (second, "images/A02.tif"),
-                    )
-                ),
-            }
-        ),
-    )
+    second = replace(projection, address=OpenHCSPlaneAddress(((Microscopy.Well, "A02"), (Microscopy.Site, 1), (Microscopy.Channel, 0), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))))
+    outputs = replace(first, source_projection_entries_by_target=MappingProxyType({
+        target: VirtualWorkspaceSourceProjectionEntries.from_projection_paths((
+            (projection, "images/A01.tif"), (second, "images/A02.tif"),
+        )),
+    }))
     context.record_completed_step_outputs(outputs)
     authority = context.runtime_source_workspace_projections
     full = authority.projection_or_empty()
     axis = authority.projection_or_empty(axis_id="A01")
-    assert set(full.pipeline_start_files()) == {
-        str(tmp_path / "images/A01.tif"),
-        str(tmp_path / "images/A02.tif"),
-    }
+    assert set(full.pipeline_start_files()) == {str(tmp_path / "images/A01.tif"), str(tmp_path / "images/A02.tif")}
     assert axis.pipeline_start_files() == (str(tmp_path / "images/A01.tif"),)
     # Another context shares declaration admission, never the completed facts.
     other = _context(tmp_path, 1)

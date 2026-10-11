@@ -145,11 +145,7 @@ def test_headless_mcp_journey_adds_compiles_and_runs_a_dataset(tmp_path: Path) -
                 {"after_sequence": 0, "timeout_seconds": 0.0},
             )["events"]
         }
-        assert {
-            "DatasetsChanged",
-            "CompiledStateChanged",
-            "DatasetExecutionFinished",
-        } <= kinds
+        assert {"DatasetsChanged", "CompiledStateChanged", "DatasetExecutionFinished"} <= kinds
     finally:
         context.session.close()
 
@@ -176,9 +172,7 @@ def test_read_only_dataset_initializes_in_a_mirrored_workspace(tmp_path: Path) -
         workspace_root=workspaces,
     )
     try:
-        assert session.invoke(
-            AddDatasets, AddDatasets.request(roots=(str(root),))
-        ).accepted
+        assert session.invoke(AddDatasets, AddDatasets.request(roots=(str(root),))).accepted
         (scope_id,) = session.dataset_scope_ids()
         started = session.invoke(
             InitializeDatasets, InitializeDatasets.request(scope_ids=(scope_id,))

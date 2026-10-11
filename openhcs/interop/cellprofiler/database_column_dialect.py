@@ -513,9 +513,7 @@ class CellProfilerDatabaseColumnDialect:
     ) -> MeasurementSubject:
         """Invert an exact CPA image-table declaration into its subject."""
 
-        subject = MeasurementSubject(
-            MeasurementScope.SAMPLE, CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE]
-        )
+        subject = MeasurementSubject(MeasurementScope.SAMPLE, CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE])
         expected_table = self.image_table_name()
         expected_image_id = self.image_id_field().name
         if (

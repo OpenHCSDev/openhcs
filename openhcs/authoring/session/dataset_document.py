@@ -46,9 +46,7 @@ class DatasetDocumentScope(ABC, metaclass=AutoRegisterMeta):
         default: SelectedAllSelectionMode = SelectedAllSelectionMode.SELECTED,
     ) -> "DatasetDocumentScope":
         mode = SelectedAllSelectionMode(carrier.resolved_selection_mode(default))
-        return cls.__registry__[mode](
-            selected_scope_ids=tuple(carrier.selected_scope_ids)
-        )
+        return cls.__registry__[mode](selected_scope_ids=tuple(carrier.selected_scope_ids))
 
     def require_payload_scope(self, scope_ids: tuple[str, ...]) -> None:
         if self.selected_scope_ids and frozenset(scope_ids) != frozenset(
@@ -116,9 +114,7 @@ def authored_pipeline_config(scope_id: str) -> PipelineConfig:
 
     state = ObjectStateRegistry.get_by_scope(scope_id)
     if state is None or ObjectStateRegistry.get_object(scope_id) is None:
-        raise ValueError(
-            f"Dataset {scope_id!r} has no registered orchestrator ObjectState."
-        )
+        raise ValueError(f"Dataset {scope_id!r} has no registered orchestrator ObjectState.")
     config = state.to_object(update_delegate=False)
     if not isinstance(config, PipelineConfig):
         raise TypeError("A dataset ObjectState must rebuild a PipelineConfig.")

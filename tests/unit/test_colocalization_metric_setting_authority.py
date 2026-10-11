@@ -153,7 +153,7 @@ def test_recorded_source_pair_features_exclude_disabled_metrics(disabled, famili
             for name in enabled.columns
             if not any(
                 name.startswith(
-                    f"Correlation_{(family if family == 'RWC' else family.title())}_"
+                    f"Correlation_{(family if family == "RWC" else family.title())}_"
                 )
                 for family in families
             )

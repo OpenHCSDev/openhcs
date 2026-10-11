@@ -97,9 +97,7 @@ def _admits_plain_image_payload(annotation: Any) -> bool:
 
     annotation = resolve_annotated(annotation)
     if is_union_type(annotation):
-        return any(
-            _admits_plain_image_payload(member) for member in get_args(annotation)
-        )
+        return any(_admits_plain_image_payload(member) for member in get_args(annotation))
     return annotation is ImagePayload
 
 
@@ -162,9 +160,7 @@ def image_payload_boundary(wrapped: Any) -> Any:
         result = wrapped(*args, **kwargs)
         # Bare pixels in, bare pixels out: a caller that passed an array (an
         # array library, slice-by-slice stacking) gets arrays back.
-        if primary in positions.values() and not isinstance(
-            primary_value, ImagePayload
-        ):
+        if primary in positions.values() and not isinstance(primary_value, ImagePayload):
             return as_bare(result)
         return result
 
@@ -235,9 +231,7 @@ def _signature_with_resolved_raw_annotations(wrapped: Any) -> inspect.Signature:
 
 
 def _strip_unowned_semantic_controls(wrapped: Any, contract: Any) -> None:
-    allowed_semantic_control_names = (
-        contract.injected_semantic_control_parameter_names()
-    )
+    allowed_semantic_control_names = contract.injected_semantic_control_parameter_names()
     semantic_control_names = {
         parameter_type.require_parameter_name()
         for parameter_type in contract.semantic_control_parameter_types()

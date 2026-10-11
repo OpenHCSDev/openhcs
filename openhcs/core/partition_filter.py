@@ -66,9 +66,7 @@ class PartitionValueList(PartitionFilter):
 
     def matches(self, available_values: Sequence[str], *, strict: bool) -> Set[str]:
         available_keys = {_identity_key(value) for value in available_values}
-        unknown = [
-            value for value in self.values if _identity_key(value) not in available_keys
-        ]
+        unknown = [value for value in self.values if _identity_key(value) not in available_keys]
         if unknown and strict:
             raise ValueError(
                 f"Invalid partition values specified: {unknown}. "
@@ -77,9 +75,7 @@ class PartitionValueList(PartitionFilter):
         if unknown:
             logger.warning(f"Ignoring unknown partition values in filter: {unknown}")
         requested = {_identity_key(value) for value in self.values}
-        return {
-            value for value in available_values if _identity_key(value) in requested
-        }
+        return {value for value in available_values if _identity_key(value) in requested}
 
 
 @dataclass(frozen=True)
@@ -140,9 +136,7 @@ class PartitionPattern(PartitionFilter):
         if pattern.startswith(self.ROW_PREFIX):
             return self._row(pattern[len(self.ROW_PREFIX) :].strip(), available_values)
         if pattern.startswith(self.COL_PREFIX):
-            return self._column(
-                pattern[len(self.COL_PREFIX) :].strip(), available_values
-            )
+            return self._column(pattern[len(self.COL_PREFIX) :].strip(), available_values)
         if self.RANGE_SEPARATOR in pattern:
             return self._range(pattern, available_values)
         return {pattern}
@@ -154,9 +148,7 @@ class PartitionPattern(PartitionFilter):
         # Opera Phenix format fallback (A → R01C*, B → R02C*)
         if not result and len(row) == 1 and row.isalpha():
             row_pattern = f"R{ord(row.upper()) - ord('A') + 1:02d}C"
-            result = {
-                value for value in available_values if value.startswith(row_pattern)
-            }
+            result = {value for value in available_values if value.startswith(row_pattern)}
         return result
 
     @staticmethod
@@ -172,9 +164,7 @@ class PartitionPattern(PartitionFilter):
             digits = "".join(char for char in reversed(value) if char.isdigit())
             return int(digits[::-1]) if digits else 0
 
-        result = {
-            value for value in available_values if numeric_suffix(value) in col_range
-        }
+        result = {value for value in available_values if numeric_suffix(value) in col_range}
         # Opera Phenix format fallback (C01, C02, etc.)
         if not result:
             patterns = {f"C{col:02d}" for col in col_range}
@@ -223,8 +213,7 @@ class PartitionFilterProcessor:
         result = [
             value
             for value in available_values
-            if (_identity_key(value) in matched_keys)
-            is partition_filter_mode.keeps_matches
+            if (_identity_key(value) in matched_keys) is partition_filter_mode.keeps_matches
         ]
         logger.debug(
             "Partition filter %r (%s) over %s selects %s",

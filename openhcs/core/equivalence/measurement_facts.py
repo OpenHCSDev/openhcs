@@ -80,7 +80,9 @@ class RuntimeDirectionalPairMeasurementDerivationContract:
     @property
     def regression_slope_feature(self) -> str | None:
         """Return the dialect-declared pair regression-slope family."""
-        return self.policy.measurement_dialect.pair_regression_slope_feature_name()
+        return (
+            self.policy.measurement_dialect.pair_regression_slope_feature_name()
+        )
 
     @property
     def correlation_feature(self) -> str | None:
@@ -367,7 +369,8 @@ class RuntimeMeasurementFactProjectionContract:
     ) -> RuntimeMeasurementFacts:
         """Filter unobserved padding groups and collapse same-row aliases."""
         return cls.dedupe_alias_facts(
-            (record.key, record.value) for record in cls.observed_records(records)
+            (record.key, record.value)
+            for record in cls.observed_records(records)
         )
 
     @classmethod

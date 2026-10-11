@@ -375,7 +375,10 @@ class CropModule(
             ImageArtifactType,
         )
         (topology_input,) = topology_inputs
-        if shape is cls.Shape.CROPPING and topology_input.sidecar_role is not CropMask:
+        if (
+            shape is cls.Shape.CROPPING
+            and topology_input.sidecar_role is not CropMask
+        ):
             raise ValueError(
                 f"Crop({module.module_num}) requires one exact crop-mask sidecar, "
                 f"got {topology_input!r}."

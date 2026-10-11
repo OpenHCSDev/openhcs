@@ -84,9 +84,7 @@ class ZMQAuxiliaryExecutionParams:
 
         params: dict[str, Any] = {}
         if self.partition_values is not None:
-            params[ZMQAuxiliaryParamField.PARTITION_VALUES.value] = list(
-                self.partition_values
-            )
+            params[ZMQAuxiliaryParamField.PARTITION_VALUES.value] = list(self.partition_values)
         if self.debug_execution_config is not None:
             params.update(self.debug_execution_config.to_config_params())
         if self.runtime_observation_export_path is not None:

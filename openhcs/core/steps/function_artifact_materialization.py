@@ -177,38 +177,27 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
                 pipeline_position=plan.pipeline_position,
                 output_plan=materialization.output_plan,
             )
-            batch = replace(
-                batch,
-                context=replace(
-                    batch.context,
-                    backend_kwargs=BackendKwargsAuthority.normalize(
-                        self.backend_kwargs(
-                            materialization=materialization,
-                            outputs=batch.outputs,
-                            persistent_backend_kwargs=persistent_backend_kwargs,
-                            streaming_viewer_surfaces=streaming_viewer_surfaces,
-                            fallback_source_identity=(
-                                materialization.filename_source_identity
-                                if materialization.spec.uses_filename_source_identity(
-                                    data
-                                )
-                                else materialization.source_identity
-                            ),
-                            producer_identity=(
-                                plan.producer_identity_for_artifact(
-                                    materialization.output_plan
-                                )
-                            ),
-                            context=context,
-                            filemanager=filemanager,
-                            images_dir=images_dir,
-                            stream_output_paths=tuple(
-                                output.path for output in batch.outputs
-                            ),
-                        )
+            batch = replace(batch, context=replace(
+                batch.context,
+                backend_kwargs=BackendKwargsAuthority.normalize(self.backend_kwargs(
+                    materialization=materialization,
+                    outputs=batch.outputs,
+                    persistent_backend_kwargs=persistent_backend_kwargs,
+                    streaming_viewer_surfaces=streaming_viewer_surfaces,
+                    fallback_source_identity=(
+                        materialization.filename_source_identity
+                        if materialization.spec.uses_filename_source_identity(data)
+                        else materialization.source_identity
                     ),
-                ),
-            )
+                    producer_identity=(
+                        plan.producer_identity_for_artifact(materialization.output_plan)
+                    ),
+                    context=context,
+                    filemanager=filemanager,
+                    images_dir=images_dir,
+                    stream_output_paths=tuple(output.path for output in batch.outputs),
+                )),
+            ))
             saved_materializations.append(
                 MaterializedRuntimeArtifact(
                     outputs_by_backend=MappingProxyType(
@@ -234,9 +223,7 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
         )
         return (
             {
-                config.viewer_family.backend.value: config.streaming_viewer_surface(
-                    context
-                )
+                config.viewer_family.backend.value: config.streaming_viewer_surface(context)
                 for config in plan.streaming_configs.values()
                 if step_axis_allows_config(
                     context.step_axis_filters,
@@ -320,11 +307,8 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
         for backend, viewer_surface in streamable_viewer_surfaces.items():
             backend_instance = filemanager._get_backend(backend)
             source_metadata_items = materialization.stream_source_metadata_items(
-                tuple(
-                    output
-                    for output in outputs
-                    if backend_instance.accepts_payload(output.content, output.path)
-                ),
+                tuple(output for output in outputs
+                      if backend_instance.accepts_payload(output.content, output.path)),
                 fallback_source_identity,
             )
             stream_backend_kwargs = StreamComponentMessageExtraAuthority.from_context(
@@ -1252,7 +1236,8 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             return StepExecutionObservation.empty()
         address = RuntimeArtifactAddress.from_record(self.materialization.record)
         locations = tuple(
-            RuntimeArtifactLocation.from_output(output, backend) for output in outputs
+            RuntimeArtifactLocation.from_output(output, backend)
+            for output in outputs
         )
         paths = (
             tuple(Path(output.path) for output in outputs)

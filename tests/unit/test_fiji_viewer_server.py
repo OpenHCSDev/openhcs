@@ -61,7 +61,6 @@ from openhcs.runtime.viewer_protocol import (
 )
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 
-
 def fiji_control_server(*, settlement=None, ij=None, process_launch=None):
     """A Fiji server with only the state its control actions read."""
 
@@ -90,11 +89,8 @@ PRODUCER_IDENTITY = {
     "artifact_kind": None,
 }
 
-ACK_ROUTE = AckReturnRoute(
-    "tcp://127.0.0.1:8111",
-    "00000000-0000-0000-0000-000000000001",
-    ProcessIdentity.current(),
-)
+ACK_ROUTE = AckReturnRoute("tcp://127.0.0.1:8111", "00000000-0000-0000-0000-000000000001",
+                          ProcessIdentity.current())
 
 
 def _component_value_domain(payload: dict) -> ViewerComponentValueDomainPayload:
@@ -227,6 +223,14 @@ def test_fiji_server_stop_closes_transport_before_owned_jvm(monkeypatch) -> None
     assert server.ij is None
 
 
+
+
+
+
+
+
+
+
 def test_fiji_settlement_tracks_queued_and_bounded_native_work() -> None:
     settlement = FijiBatchSettlementState()
 
@@ -320,6 +324,8 @@ def test_fiji_window_registry_closes_replaced_hyperstack() -> None:
 
     assert old_image_plus.closed is True
     assert registry.open_hyperstack("A14") is new_image_plus
+
+
 
 
 def test_fiji_macro_control_executes_inside_managed_imagej_runtime(tmp_path) -> None:
@@ -650,9 +656,7 @@ def test_fiji_payload_local_plane_axis_rejects_malformed_declarations() -> None:
     }
 
     with pytest.raises(ValueError, match="exactly one component declaration"):
-        FijiPayloadLocalPlaneExpander(STREAM_AXES).expand_item(
-            FijiWireItem.from_payload(payload)
-        )
+        FijiPayloadLocalPlaneExpander(STREAM_AXES).expand_item(FijiWireItem.from_payload(payload))
 
     payload_without_axis = dict(payload)
     payload_without_axis["plane_component_values"] = {"site": [1, 2]}

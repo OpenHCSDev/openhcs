@@ -438,9 +438,7 @@ def test_workspace_import_replaces_steps_keeps_public_functions_and_applies_conf
     )
     with caller_session() as session:
         session.add_dataset_roots((root,))
-        session.set_pipeline(
-            scope_id, [FunctionStep(func=percentile_normalize, name="Existing")]
-        )
+        session.set_pipeline(scope_id, [FunctionStep(func=percentile_normalize, name="Existing")])
 
         session.import_workspace_pipeline(scope_id, _workspace([crop], pipeline_config))
 
@@ -535,9 +533,7 @@ def test_workspace_import_never_writes_into_the_displayed_dataset(tmp_path) -> N
         assert _names(gui.pipeline_editor.displayed_steps) == ["StartOnly"]
 
 
-@pytest.mark.parametrize(
-    "state", (OrchestratorState.READY, OrchestratorState.EXECUTING)
-)
+@pytest.mark.parametrize("state", (OrchestratorState.READY, OrchestratorState.EXECUTING))
 def test_source_binding_context_projects_the_current_orchestrator_config(
     tmp_path, state
 ) -> None:
@@ -591,9 +587,7 @@ def test_source_binding_context_projects_the_current_orchestrator_config(
 def test_compile_needs_an_initialized_dataset(tmp_path) -> None:
     with caller_session() as session:
         (scope_id,) = add_datasets(session, tmp_path, "plate")
-        session.set_pipeline(
-            scope_id, [FunctionStep(func=percentile_normalize, name="Defined")]
-        )
+        session.set_pipeline(scope_id, [FunctionStep(func=percentile_normalize, name="Defined")])
 
         error = CompileDatasets.available(
             session, CompileDatasets.request_for_selection(session, (scope_id,))
@@ -670,9 +664,7 @@ def test_embedded_manager_navigation_selects_the_exact_live_row(tmp_path) -> Non
             ):
                 result = navigate(item_id, field_path)
                 assert result.focused and not result.navigated
-                assert (
-                    result.errors[0].code == "ui_window_navigation_target_unsupported"
-                )
+                assert result.errors[0].code == "ui_window_navigation_target_unsupported"
                 assert gui.session.current_scope_id == paths[0]
             assert selected == list(reversed(paths))
 
@@ -711,9 +703,7 @@ def test_restart_restores_a_missing_dataset_without_initializing_it(tmp_path) ->
     payload = PlateManagerCodeDocumentAuthority.from_values(
         plate_paths=(scope_id,),
         global_pipeline_config=GlobalPipelineConfig(),
-        per_plate_configs={
-            scope_id: PipelineConfig(dataset_source=OpenHCSDatasetSource)
-        },
+        per_plate_configs={scope_id: PipelineConfig(dataset_source=OpenHCSDatasetSource)},
         pipeline_data={scope_id: []},
     )
     restart.session_document.write_text(
@@ -1036,9 +1026,7 @@ def test_adopting_a_global_config_preserves_a_dirty_dataset_override(tmp_path) -
         session.adopt_global_config(global_state.to_object(update_delegate=False))
         gui.settle()
 
-        assert (
-            object.__getattribute__(orchestrator.pipeline_config, "num_workers") is None
-        )
+        assert object.__getattribute__(orchestrator.pipeline_config, "num_workers") is None
         assert dataset_state.parameters["num_workers"] == 3
         assert dataset_state._saved_parameters["num_workers"] is None
         assert dataset_state.get_resolved_value("num_workers") == 3
@@ -1164,9 +1152,7 @@ def test_code_document_keeps_an_authored_dataset_override(tmp_path) -> None:
 
 
 def test_code_document_reads_the_global_config_from_object_state() -> None:
-    initial = GlobalPipelineConfig(
-        partition_filter_config=PartitionFilterConfig(partition_filter="A01")
-    )
+    initial = GlobalPipelineConfig(partition_filter_config=PartitionFilterConfig(partition_filter="A01"))
     with caller_session(global_config=initial) as session:
         global_state = _global_state(session)
         global_state.update_parameter("partition_filter_config.partition_filter", "A02")
@@ -1183,9 +1169,7 @@ def test_code_document_reads_the_global_config_from_object_state() -> None:
             == "A02"
         )
         assert (
-            object.__getattribute__(
-                session.global_config.partition_filter_config, "partition_filter"
-            )
+            object.__getattribute__(session.global_config.partition_filter_config, "partition_filter")
             == "A01"
         )
 
@@ -1220,9 +1204,7 @@ def test_a_pipeline_change_clears_stale_compilation_and_terminal_tracking(
                 global_pipeline_config=live_global_config(session),
                 per_plate_configs={scope_id: authored_pipeline_config(scope_id)},
                 pipeline_data={
-                    scope_id: [
-                        FunctionStep(func=percentile_normalize, name="Replacement")
-                    ]
+                    scope_id: [FunctionStep(func=percentile_normalize, name="Replacement")]
                 },
             ),
             AllDatasetDocumentScope(),
@@ -1248,9 +1230,7 @@ def _failed(execution_id: str, detail: str) -> ExecutionCompletionPayload:
 def _executing_dataset(gui, tmp_path) -> str:
     session = gui.session
     (scope_id,) = add_datasets(session, tmp_path, "plate")
-    session.set_pipeline(
-        scope_id, [FunctionStep(func=percentile_normalize, name="Failing")]
-    )
+    session.set_pipeline(scope_id, [FunctionStep(func=percentile_normalize, name="Failing")])
     orchestrator = session.orchestrator(scope_id)
     orchestrator._initialized = True
     orchestrator._state = OrchestratorState.EXECUTING
@@ -1324,9 +1304,7 @@ def test_a_failure_is_presented_only_after_the_run_finalizes(tmp_path) -> None:
         replacement = PipelineDocumentCodec.render(
             PipelineDocumentCodec.from_values(
                 pipeline_config=PipelineConfig(),
-                pipeline_steps=[
-                    FunctionStep(func=percentile_normalize, name="Replacement")
-                ],
+                pipeline_steps=[FunctionStep(func=percentile_normalize, name="Replacement")],
             )
         )
 
@@ -1349,19 +1327,14 @@ def test_a_failure_is_presented_only_after_the_run_finalizes(tmp_path) -> None:
             )
 
         try:
-            assert apply(
-                replacement.replace("Replacement", "Edited during run")
-            ).applied
+            assert apply(replacement.replace("Replacement", "Edited during run")).applied
             assert session.batch.is_active(scope_id)
             assert session.batch.execution_id(scope_id) == "execution-1"
             assert _names(session.pipeline_steps(scope_id)) == ["Edited during run"]
 
             worker = threading.Thread(
                 target=session.finish_dataset_execution,
-                args=(
-                    _failed("execution-1", "expected asynchronous failure"),
-                    scope_id,
-                ),
+                args=(_failed("execution-1", "expected asynchronous failure"), scope_id),
             )
             worker.start()
             worker.join(timeout=5)
@@ -1467,14 +1440,10 @@ def test_a_produced_output_dataset_selects_prepared_replay_once(
 
         assert output_root in session.dataset_scope_ids()
         orchestrator = session.orchestrator(output_root)
-        assert (
-            orchestrator.get_effective_config().dataset_source is OpenHCSDatasetSource
-        )
+        assert orchestrator.get_effective_config().dataset_source is OpenHCSDatasetSource
 
         orchestrator.apply_pipeline_config(
-            replace_raw(
-                orchestrator.pipeline_config, dataset_source=SourceBindingsSource
-            )
+            replace_raw(orchestrator.pipeline_config, dataset_source=SourceBindingsSource)
         )
         _running(session, source, "produced-again")
         session.finish_dataset_execution(
@@ -1490,9 +1459,7 @@ def test_a_produced_output_dataset_selects_prepared_replay_once(
         )
 
         assert session.orchestrator(output_root) is orchestrator
-        assert (
-            orchestrator.get_effective_config().dataset_source is SourceBindingsSource
-        )
+        assert orchestrator.get_effective_config().dataset_source is SourceBindingsSource
 
 
 def test_a_standard_run_retires_only_its_targets_debug_summaries(

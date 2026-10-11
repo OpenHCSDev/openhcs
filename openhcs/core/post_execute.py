@@ -93,9 +93,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
     # -- the family as the kernel uses it -------------------------------------
 
     @staticmethod
-    def bind_all(
-        global_config: "GlobalPipelineConfig",
-    ) -> tuple["PostExecuteHook", ...]:
+    def bind_all(global_config: "GlobalPipelineConfig") -> tuple["PostExecuteHook", ...]:
         return tuple(
             hook_type.bind(global_config)
             for hook_type in PostExecuteHook.__registry__.values()

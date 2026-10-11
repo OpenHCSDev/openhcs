@@ -11,11 +11,7 @@ from dataclasses import (
 )
 from typing import cast
 
-from openhcs.core.aligned_image_payload import (
-    AlignedImageSliceContext,
-    AlignedImageStack,
-    ImageOutputBundle,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle)
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
@@ -1293,7 +1289,8 @@ class CellProfilerModuleExecutor:
             if (
                 runtime_projection is not None
                 and runtime_projection.plane_index is not None
-                and current_image_payload.metadata.plane_axis is runtime_projection.axis
+                and current_image_payload.metadata.plane_axis
+                is runtime_projection.axis
             ):
                 current_image_payload = cast(
                     RuntimeCallableArgument,
@@ -1322,7 +1319,9 @@ class CellProfilerModuleExecutor:
         image_input_specs = ArtifactSpecCollection(image_inputs)
         payloads = []
         source_names: list[str | None] = []
-        image_strategy = CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
+        image_strategy = CellProfilerOutputRecorder.for_artifact_type(
+            ImageArtifactType
+        )
         input_binding = replace(input_binding, current_image=current_runtime_payload)
         primary_input_edges = []
         for spec in image_inputs:
@@ -1331,23 +1330,20 @@ class CellProfilerModuleExecutor:
             if (
                 scope is not None
                 and edge.storage_plan is None
-                and adapter.request.source_binding_plan.declares_artifact_ref(
-                    spec.ref()
-                )
+                and adapter.request.source_binding_plan.declares_artifact_ref(spec.ref())
             ):
                 value = edge.resolve_unstored_payload(
-                    scope,
-                    current_runtime_payload,
-                    request=replace(
-                        adapter.request, source_payload=current_runtime_payload
-                    ),
+                    scope, current_runtime_payload,
+                    request=replace(adapter.request, source_payload=current_runtime_payload),
                 )
             else:
                 value = input_binding.artifact_value(edge)
             primary_input_edges.append(edge)
             payload = image_strategy.runtime_input_value(spec, value)
             payloads.append(payload)
-            source_names.append(image_strategy.source_image_name_from_value(payload))
+            source_names.append(
+                image_strategy.source_image_name_from_value(payload)
+            )
         parameter_image_inputs = input_binding.image_inputs
         broadcast_sources = tuple(
             sources[0]
@@ -1358,26 +1354,24 @@ class CellProfilerModuleExecutor:
         align_primary_images = len(image_inputs) > 1 and broadcast_sources == tuple(
             spec.ref() for spec in image_inputs
         )
-        composition = (
-            self.callable_contract.image_payload_consumption.compose_image_payload(
-                f"{module_type.require_module_name()} image inputs "
-                f"{tuple(spec.name for spec in image_inputs)!r}",
-                tuple(payloads),
-                slice_contexts=(
-                    tuple(
-                        AlignedImageSliceContext.main_flow(
-                            output_key=spec.name,
-                            artifact_kind=spec.artifact_type.value,
-                        )
-                        for spec in image_inputs
+        composition = self.callable_contract.image_payload_consumption.compose_image_payload(
+            f"{module_type.require_module_name()} image inputs "
+            f"{tuple(spec.name for spec in image_inputs)!r}",
+            tuple(payloads),
+            slice_contexts=(
+                tuple(
+                    AlignedImageSliceContext.main_flow(
+                        output_key=spec.name,
+                        artifact_kind=spec.artifact_type.value,
                     )
-                    if align_primary_images
-                    else ()
-                ),
-                stack_broadcast_source_indices=(
-                    image_input_specs.stack_broadcast_source_indices()
-                ),
-            )
+                    for spec in image_inputs
+                )
+                if align_primary_images
+                else ()
+            ),
+            stack_broadcast_source_indices=(
+                image_input_specs.stack_broadcast_source_indices()
+            ),
         )
         return CellProfilerImageRequest(
             input_binding_request=binding_request,
@@ -1526,8 +1520,7 @@ class CellProfilerModuleExecutor:
         invocation_kwargs = object_label_input_execution_mode_from_callable(
             self.raw_func
         ).invocation_kwargs(
-            runtime_kwargs,
-            execution_mode=execution_mode,
+            runtime_kwargs, execution_mode=execution_mode,
             image_projection=image_request.plane_projection,
             runtime_projection=runtime_projection,
             semantic_controls=_execution_mode_semantic_control_kwargs(

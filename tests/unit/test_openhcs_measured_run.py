@@ -23,10 +23,7 @@ from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.orchestrator.execution_result import ExecutionResult
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_execution_client import (
-    OpenHCSExecutionSubmission,
-    ZMQExecutionRequestBuilder,
-)
+from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
@@ -240,10 +237,7 @@ def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
             }
 
         def submit_pipeline(self, submission):
-            assert (
-                submission.compile_control.compile_artifact_id
-                == f"compile-{self.run_number}"
-            )
+            assert submission.compile_control.compile_artifact_id == f"compile-{self.run_number}"
             observer({"phase": "axis_started", "timestamp": 11.0})
             return {
                 "status": "accepted",

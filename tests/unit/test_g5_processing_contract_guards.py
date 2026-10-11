@@ -182,9 +182,7 @@ def _docstring_ids(tree: ast.AST) -> set[int]:
     ids = set()
     for node in ast.walk(tree):
         if (
-            isinstance(
-                node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
-            )
+            isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
             and node.body
             and isinstance(node.body[0], ast.Expr)
             and isinstance(node.body[0].value, ast.Constant)

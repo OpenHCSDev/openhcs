@@ -134,9 +134,7 @@ class BioFormatsMetadataHandler(MetadataHandler):
         """Retain the dataset's numeric view without asserting physical units."""
         return self.source_dataset(dataset_root).pixel_size
 
-    def source_voxel_spacing(
-        self, dataset_root: Union[str, Path]
-    ) -> SourceVoxelSpacing:
+    def source_voxel_spacing(self, dataset_root: Union[str, Path]) -> SourceVoxelSpacing:
         return SourceVoxelSpacing.common(self._source_voxel_spacings(dataset_root))
 
     def _source_voxel_spacings(
@@ -237,6 +235,8 @@ class BioFormatsHandler(BroadStoreSource, DatasetSource):
     @property
     def root_dir(self) -> str:
         return FIELDS.DEFAULT_SUBDIRECTORY
+
+
 
     @property
     def compatible_backends(self) -> List[Backend]:

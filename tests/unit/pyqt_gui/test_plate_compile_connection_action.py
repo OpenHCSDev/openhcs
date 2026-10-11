@@ -59,9 +59,9 @@ def test_endpoint_phase_resolves_the_compile_slot(monkeypatch, phase, expected):
 def test_connect_needs_no_dataset_and_startup_is_never_available(tmp_path):
     with caller_session() as session:
         (scope_id,) = add_datasets(session, tmp_path, "plate")
-        session.orchestrator(scope_id)._state = session.orchestrator(
-            scope_id
-        )._state.READY
+        session.orchestrator(scope_id)._state = (
+            session.orchestrator(scope_id)._state.READY
+        )
         session.set_pipeline(scope_id, [FunctionStep(name="Step")])
         assert ConnectServer.available(session, ConnectServer.request()) is None
         for selection in ((), (scope_id,)):

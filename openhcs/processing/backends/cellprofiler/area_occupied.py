@@ -27,13 +27,7 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline.function_contracts import (
-    composed_image_payload,
-    object_label_input_execution_mode,
-    resolved_callable_parameter,
-    runtime_bound_parameters,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (composed_image_payload, object_label_input_execution_mode, resolved_callable_parameter, runtime_bound_parameters, special_inputs)
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
 from openhcs.core.runtime_measurements import (
@@ -174,15 +168,12 @@ class AreaOccupiedRuntimeInputPolicy(
 
     @classmethod
     def primary_image_inputs(
-        cls,
-        contract: CallableContract,
-        declared_inputs: tuple[ArtifactSpec, ...],
+        cls, contract: CallableContract, declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
         """Binary operands retain their declared main-image domain."""
         del cls, contract
         return tuple(
-            spec
-            for spec in declared_inputs
+            spec for spec in declared_inputs
             if spec.artifact_type is ImageArtifactType
             and spec.parameter_name is None
             and not spec.stack_broadcast_sources()
@@ -190,8 +181,7 @@ class AreaOccupiedRuntimeInputPolicy(
 
     @classmethod
     def primary_image_domain_specs(
-        cls,
-        domain_inputs: tuple[ArtifactSpec, ...],
+        cls, domain_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
         """Each object operand owns its independent source-qualified row."""
         if not domain_inputs:
@@ -200,28 +190,21 @@ class AreaOccupiedRuntimeInputPolicy(
 
     @classmethod
     def invocation_domain_inputs(
-        cls,
-        contract: CallableContract,
-        declared_inputs: tuple[ArtifactSpec, ...],
+        cls, contract: CallableContract, declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
         image_inputs = cls.primary_image_inputs(contract, declared_inputs)
-        return image_inputs or super().invocation_domain_inputs(
-            contract, declared_inputs
-        )
+        return image_inputs or super().invocation_domain_inputs(contract, declared_inputs)
 
     @classmethod
     def project_invocation_image_request(
-        cls,
-        *,
-        image_request: CellProfilerImageRequest,
+        cls, *, image_request: CellProfilerImageRequest,
         runtime_kwargs: RuntimeCallableKwargs,
     ) -> CellProfilerImageRequest:
         rows = runtime_kwargs[AreaOccupiedRowsRuntimeParameter.require_parameter_name()]
         if any(row.operand is OperandChoice.BINARY_IMAGE for row in rows):
             return image_request
         return super().project_invocation_image_request(
-            image_request=image_request,
-            runtime_kwargs=runtime_kwargs,
+            image_request=image_request, runtime_kwargs=runtime_kwargs,
         )
 
     @classmethod
@@ -909,8 +892,7 @@ def _binary_images_from_payload(
     )
     return tuple(
         np.asarray(
-            (
-                RuntimeSliceProjection.value_for_slice(
+            (RuntimeSliceProjection.value_for_slice(
                     image,
                     RuntimePlaneAxisValueProjection.from_selected_plane(
                         axis=RuntimePlaneAxis.SOURCE_BINDING,
@@ -918,8 +900,7 @@ def _binary_images_from_payload(
                         axis_size=projection.axis_size,
                         source_aliases=projection.source_aliases,
                     ),
-                )
-            ).data
+                )).data
         )
         for index in range(projection.axis_size)
     )

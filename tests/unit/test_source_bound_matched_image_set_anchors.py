@@ -39,8 +39,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
 from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjection,
-    WorkspaceSourceProjections,
+    VirtualWorkspaceSourceProjection, WorkspaceSourceProjections,
 )
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_execution import (
@@ -77,8 +76,7 @@ def _anchor_executor(
     )
     executor.context.runtime_source_workspace_projections = (
         WorkspaceSourceProjections.from_context(
-            executor.context,
-            cache=source_workspace_projection_cache,
+            executor.context, cache=source_workspace_projection_cache,
         )
     )
     if output_manifest is not None:
@@ -507,15 +505,7 @@ def test_alias_only_step_binding_uses_virtual_projection_for_template_anchor(
     aliases = ("Hoechst", "SMI312")
     projections = {
         path: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(
-                (
-                    (Microscopy.Well, "A01"),
-                    (Microscopy.Site, "1"),
-                    (Microscopy.Channel, channel),
-                    (Microscopy.ZIndex, "1"),
-                    (Microscopy.Timepoint, "1"),
-                )
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, channel), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
             ref=SourcePixelRef("disk", f"/source/{path}"),
             source_alias=alias,
         )
@@ -627,15 +617,7 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
     aliases = ("OrigStain1", "OrigStain2") * 2
     projections = {
         path: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(
-                (
-                    (Microscopy.Well, "A01"),
-                    (Microscopy.Site, str(site)),
-                    (Microscopy.Channel, str(channel)),
-                    (Microscopy.ZIndex, "1"),
-                    (Microscopy.Timepoint, "1"),
-                )
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, str(site)), (Microscopy.Channel, str(channel)), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
             ref=SourcePixelRef("disk", f"/source/{path}"),
             source_alias=alias,
         )
@@ -758,15 +740,7 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
     )
     projections = {
         path: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(
-                (
-                    (Microscopy.Well, "A01"),
-                    (Microscopy.Site, str(site)),
-                    (Microscopy.Channel, str(channel)),
-                    (Microscopy.ZIndex, "1"),
-                    (Microscopy.Timepoint, "1"),
-                )
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, str(site)), (Microscopy.Channel, str(channel)), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
             ref=SourcePixelRef("disk", f"/source/{path}"),
             source_alias=f"OrigStain{channel}",
         )

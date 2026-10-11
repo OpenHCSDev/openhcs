@@ -15,13 +15,7 @@ import re
 import string
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence, Sized
-from dataclasses import (
-    dataclass,
-    field,
-    fields as dataclass_fields,
-    is_dataclass,
-    replace,
-)
+from dataclasses import dataclass, field, fields as dataclass_fields, is_dataclass, replace
 from functools import lru_cache, singledispatch
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from types import MappingProxyType
@@ -347,29 +341,21 @@ class Output:
         return self.source_identity
 
     def stream_source_metadata_items(
-        self,
-        fallback_source_identity: SourceImageIdentity | None,
+        self, fallback_source_identity: SourceImageIdentity | None,
     ) -> StreamSourceComponentMetadataItems:
         """Observe sources from the actual rendered output's declared planes."""
         if self.metadata is not None:
             return StreamSourceComponentMetadataItems.from_image_metadata(
-                self.metadata,
-                fallback_source_identity=fallback_source_identity,
+                self.metadata, fallback_source_identity=fallback_source_identity,
             )
         return StreamSourceComponentMetadataItems.from_values(
-            (
-                (
-                    fallback_source_identity.component_metadata
-                    if fallback_source_identity is not None
-                    else None
-                ),
-            )
+            (fallback_source_identity.component_metadata
+             if fallback_source_identity is not None else None,)
         )
 
     def viewer_item_fields(self) -> dict[str, ViewerWireValue]:
         return StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
-            self.metadata,
-            self.variable_components,
+            self.metadata, self.variable_components,
         )
 
     @property
@@ -436,9 +422,7 @@ class ROIOutput(Output):
 
         if self.metadata is None:
             return None
-        return ROIArchiveSourceMetadata.source_component_domain(
-            self.content, self.metadata
-        )
+        return ROIArchiveSourceMetadata.source_component_domain(self.content, self.metadata)
 
     @property
     def viewer_source_identity(self) -> SourceImageIdentity | None:
@@ -452,8 +436,7 @@ class ROIOutput(Output):
         )
 
     def stream_source_metadata_items(
-        self,
-        fallback_source_identity: SourceImageIdentity | None,
+        self, fallback_source_identity: SourceImageIdentity | None,
     ) -> StreamSourceComponentMetadataItems:
         domain = self.source_component_domain
         if domain is None:
@@ -464,9 +447,7 @@ class ROIOutput(Output):
         from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 
         return ROIArchiveSourceMetadata.stream_item_fields(
-            self.content,
-            self.metadata,
-            super().viewer_item_fields(),
+            self.content, self.metadata, super().viewer_item_fields(),
         )
 
 
@@ -484,7 +465,6 @@ class PointROIOutput(ROIOutput):
         if domain is None:
             raise ValueError("Point ROI output requires fractional-Z metadata.")
         return domain
-
 
 @dataclass(frozen=True)
 class TextOutput(Output):
@@ -505,9 +485,7 @@ class Utf8TextOutput(Output):
     """Text output stored as UTF-8 bytes for file-bundle compatibility."""
 
     content: bytes
-    table_shape_info: tuple[tuple[str, ...], int] | None = field(
-        default=None, compare=False
-    )
+    table_shape_info: tuple[tuple[str, ...], int] | None = field(default=None, compare=False)
 
     def table_shape(self) -> tuple[tuple[str, ...], int] | None:
         return self.table_shape_info
@@ -532,7 +510,6 @@ class Utf8TextOutput(Output):
 
     def require_text_content(self) -> str:
         return self.content.decode("utf-8")
-
 
 @dataclass(frozen=True)
 class ColumnarCsvOutput(Output):
@@ -1987,7 +1964,9 @@ class MaterializationInput:
                     runtime_plane_metadata=item.runtime_plane_metadata,
                 )
                 for source_payload in source_payloads
-                for item in (OptionalSourceIdentity).project_payload_items(
+                for item in (
+                    OptionalSourceIdentity
+                ).project_payload_items(
                     RuntimeProjectionSourceIdentityRequest(
                         value=source_payload,
                         source_description="materialization payload",
@@ -2031,7 +2010,9 @@ class MaterializationInput:
                         source_description=item.source_description,
                         runtime_plane_metadata=item.runtime_plane_metadata,
                     )
-                    for item in (OptionalSourceIdentity).project_payload_items(
+                    for item in (
+                        OptionalSourceIdentity
+                    ).project_payload_items(
                         RuntimeProjectionSourceIdentityRequest(
                             value=image.value,
                             source_description=image.source_description,
@@ -2283,14 +2264,10 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         if output_fields is None:
             return self.values.to_kwargs()
         component_metadata, item_fields, display_config = output_fields
-        return (
-            self._stream_kwargs(display_config, item_fields)
-            .with_single_item_source(
-                component_metadata,
-                item_fields,
-            )
-            .to_kwargs()
-        )
+        return self._stream_kwargs(display_config, item_fields).with_single_item_source(
+            component_metadata,
+            item_fields,
+        ).to_kwargs()
 
     def _stream_kwargs(
         self,
@@ -2299,9 +2276,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
     ) -> ViewerStreamBackendKwargs:
         """Apply one source-owned display scope to the original typed request."""
         request = self.values.with_item_fields(item_fields).stream_request
-        return ViewerStreamBackendKwargs(
-            replace(request, display_config=display_config)
-        )
+        return ViewerStreamBackendKwargs(replace(request, display_config=display_config))
 
     def filemanager_batches(
         self,
@@ -2323,11 +2298,8 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 continue
             component_metadata, item_fields, display_config = output_fields
             group = next(
-                (
-                    candidate
-                    for candidate in grouped
-                    if candidate[0] == item_fields and candidate[1] == display_config
-                ),
+                (candidate for candidate in grouped
+                 if candidate[0] == item_fields and candidate[1] == display_config),
                 None,
             )
             if group is None:
@@ -2351,9 +2323,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 raise ValueError(
                     "Viewer materialization batch requires unique output paths."
                 )
-            stream_request = self._stream_kwargs(
-                display_config, item_fields
-            ).stream_request
+            stream_request = self._stream_kwargs(display_config, item_fields).stream_request
             stream_request = replace(
                 stream_request,
                 source=replace(
@@ -2398,13 +2368,9 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                     fallback_identity_path=output.path,
                 )
                 if identity is None:
-                    raise ValueError(
-                        "Projected viewer output requires a filename identity."
-                    )
+                    raise ValueError("Projected viewer output requires a filename identity.")
                 identity = replace(identity, extension=output_path.suffix)
-                filename = identity.with_filename_qualifier(output_path.stem).filename(
-                    parser
-                )
+                filename = identity.with_filename_qualifier(output_path.stem).filename(parser)
                 result.append(
                     replace(
                         output,
@@ -2418,14 +2384,11 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
     def _output_fields(
         self,
         output: Output,
-    ) -> (
-        tuple[
-            dict[str, MaterializationValue],
-            dict[str, ViewerWireValue],
-            ViewerDisplayConfigABC,
-        ]
-        | None
-    ):
+    ) -> tuple[
+        dict[str, MaterializationValue],
+        dict[str, ViewerWireValue],
+        ViewerDisplayConfigABC,
+    ] | None:
         source_identity = output.viewer_source_identity
         if source_identity is not None:
             source_identity = source_identity.with_parsed_path_components(
@@ -2555,9 +2518,7 @@ class MaterializationContext:
     materialization_spec: MaterializationSpec | None = None
 
     def named_source_filename(
-        self,
-        metadata: ImagePayloadMetadata,
-        extension: str,
+        self, metadata: ImagePayloadMetadata, extension: str,
     ) -> str | None:
         """Name a retained image from the actual rendering purpose and role."""
         if self.materialization_spec is None:
@@ -2565,17 +2526,12 @@ class MaterializationContext:
         qualifier = self.materialization_spec.filename_qualifier(self.output_plan)
         if qualifier is None:
             return None
-        parser = SourceStemAuthoritySelection.from_processing_context(
-            self.context
-        ).required_parser()
+        parser = SourceStemAuthoritySelection.from_processing_context(self.context).required_parser()
         identity = FunctionOutputIdentity.from_filename_metadata(parser, metadata)
         if identity is None:
-            raise ValueError(
-                "Retained image output has no addressable source filename identity."
-            )
+            raise ValueError("Retained image output has no addressable source filename identity.")
         identity = self.materialization_spec.filename_identity_for_output(
-            replace(identity, extension=extension),
-            self.output_plan,
+            replace(identity, extension=extension), self.output_plan,
         )
         return identity.filename(parser)
 
@@ -3360,22 +3316,16 @@ def write_image_file(
     for sequence_index, item in enumerate(projected_items, start=1):
         if options.relative_path_template is not None:
             path = _image_relative_output_path(
-                item.value,
-                options,
-                context,
-                sequence_index=sequence_index,
+                item.value, options, context, sequence_index=sequence_index,
             )
         elif preserves_planned_path:
             path = paths.primary_output_path(options)
         else:
-            filename = context.named_source_filename(
-                item.metadata, options.primary_output_suffix
-            )
+            filename = context.named_source_filename(item.metadata, options.primary_output_suffix)
             if filename is None:
                 filename = (
                     source_stem_authority.required_source_stem(
-                        item.metadata,
-                        context.artifact_filename_identity,
+                        item.metadata, context.artifact_filename_identity,
                     )
                     + options.primary_output_suffix
                 )
@@ -4706,6 +4656,7 @@ class PreslicedTiffStackSliceMetadataPolicy(UnknownTiffStackSliceMetadataPolicy)
                 component
                 for component in request.variable_components
                 if component.name in selected_variable_components
+
             ),
             request.artifact_source_identity,
         )

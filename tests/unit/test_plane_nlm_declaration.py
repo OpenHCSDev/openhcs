@@ -26,9 +26,7 @@ from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
-from openhcs.processing.backends.lib_registry.scikit_image_registry import (
-    SkimageRegistry,
-)
+from openhcs.processing.backends.lib_registry.scikit_image_registry import SkimageRegistry
 from openhcs.processing.custom_functions.runtime_registry import project_custom_function
 from openhcs.core.processing_contracts import (
     FlexibleContract,
@@ -38,13 +36,10 @@ from openhcs.processing.backends.processors.numpy_processor import (
     non_local_means_denoise_planes,
 )
 
+
 NLM_KWARGS = dict(
-    patch_size=3,
-    patch_distance=2,
-    h=0.075,
-    fast_mode=True,
-    sigma=0.0,
-    preserve_range=True,
+    patch_size=3, patch_distance=2, h=0.075,
+    fast_mode=True, sigma=0.0, preserve_range=True,
 )
 
 
@@ -52,17 +47,15 @@ def _source(plane_count):
     rng = np.random.default_rng(458)
     pixels = rng.uniform(0.1, 0.9, (plane_count, 16, 20)).astype(np.float32)
     provenance = SourceImageProvenancePlanes.from_components(
-        paths=tuple(
-            f"/synthetic/A01_s{site + 1}_w1.tif" for site in range(plane_count)
-        ),
+        paths=tuple(f"/synthetic/A01_s{site + 1}_w1.tif" for site in range(plane_count)),
         component_metadata=tuple(
             {"well": "A01", "site": str(site + 1), "channel": "1"}
             for site in range(plane_count)
         ),
     )
-    provenance = SourceImageProvenancePlanes(
-        tuple(replace(plane, source_image_name="C1") for plane in provenance.planes)
-    )
+    provenance = SourceImageProvenancePlanes(tuple(
+        replace(plane, source_image_name="C1") for plane in provenance.planes
+    ))
     metadata = ImagePayloadMetadata(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         source_image_names=("C1",) * plane_count,
@@ -70,8 +63,7 @@ def _source(plane_count):
         source_plane_dtypes=("float32",) * plane_count,
         source_voxel_spacing=SourceVoxelSpacing((0.5, 0.75)),
         source_spatial_domain=SourceSpatialDomain(
-            origin_yx=(0, 0),
-            source_shape_yx=(16, 20),
+            origin_yx=(0, 0), source_shape_yx=(16, 20),
         ),
     )
     return metadata.payload_with(pixels)
@@ -91,17 +83,13 @@ def _registered(metadata=None):
 @pytest.mark.parametrize("plane_count", (1, 3))
 @pytest.mark.parametrize("fast_mode", (True, False))
 def test_real_nlm_kernel_receives_only_planes_and_restores_context(
-    monkeypatch,
-    plane_count,
-    fast_mode,
+    monkeypatch, plane_count, fast_mode,
 ):
     source = _source(plane_count)
     before = source.data.copy()
     original = restoration.denoise_nl_means
     kwargs = dict(NLM_KWARGS, fast_mode=fast_mode)
-    expected = np.stack(
-        [original(plane, channel_axis=None, **kwargs) for plane in before]
-    )
+    expected = np.stack([original(plane, channel_axis=None, **kwargs) for plane in before])
     seen = []
 
     def observed_kernel(image, **kernel_kwargs):
@@ -110,11 +98,7 @@ def test_real_nlm_kernel_receives_only_planes_and_restores_context(
 
     monkeypatch.setattr(restoration, "denoise_nl_means", observed_kernel)
     result = _registered().func(source, **kwargs)
-    assert (
-        seen
-        == [((16, 20), np.dtype("float32"), 1280, dict(kwargs, channel_axis=None))]
-        * plane_count
-    )
+    assert seen == [((16, 20), np.dtype("float32"), 1280, dict(kwargs, channel_axis=None))] * plane_count
     np.testing.assert_array_equal(result.data, expected)
     np.testing.assert_array_equal(source.data, before)
     assert result.data.dtype == expected.dtype == np.dtype("float32")
@@ -124,10 +108,7 @@ def test_real_nlm_kernel_receives_only_planes_and_restores_context(
     assert current.plane_axis is prior.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert current.source_voxel_spacing == prior.source_voxel_spacing
     assert current.source_spatial_domain == prior.source_spatial_domain
-    assert (
-        current.source_image_provenance_planes.identity
-        == prior.source_image_provenance_planes.identity
-    )
+    assert current.source_image_provenance_planes.identity == prior.source_image_provenance_planes.identity
     assert current.source_image_names == prior.source_image_names
 
 
@@ -164,10 +145,7 @@ def test_original_volumetric_nlm_still_receives_the_whole_volume(monkeypatch):
 def test_declared_catalog_identity_and_public_kwargs_are_original_projections():
     metadata = _registered()
     function_id = f"{metadata.registry.library_name}:{metadata.name}"
-    assert (
-        function_id
-        == "openhcs:processors_numpy_processor_non_local_means_denoise_planes"
-    )
+    assert function_id == "openhcs:processors_numpy_processor_non_local_means_denoise_planes"
     assert metadata.original_name == "non_local_means_denoise_planes"
     assert "slice_by_slice" not in inspect.signature(metadata.func).parameters
     _validate_callable_kwargs(function_id, metadata.func, NLM_KWARGS)
@@ -181,14 +159,9 @@ def test_nominal_transport_resolves_original_declaration_without_global_catalog(
     metadata = _registered()
     reference = FunctionReferenceTransportAuthority.function_reference(metadata.func)
     assert isinstance(reference, RegistryFunctionReference)
-    assert (
-        reference.composite_key
-        == "openhcs:processors_numpy_processor_non_local_means_denoise_planes"
-    )
+    assert reference.composite_key == "openhcs:processors_numpy_processor_non_local_means_denoise_planes"
     resolved = reference.resolve()
-    assert (
-        CallableContract.from_callable(resolved).processing_contract is Pure2DContract
-    )
+    assert CallableContract.from_callable(resolved).processing_contract is Pure2DContract
     result = resolved(_source(1), **NLM_KWARGS)
     assert result.data.shape == (1, 16, 20)
 
@@ -197,16 +170,12 @@ def test_new_independent_declaration_executes_same_consumer_without_edits():
     seen = []
 
     @numpy_contract(contract=Pure2DContract)
-    def independent_plane_offset(
-        image: np.ndarray, *, offset: float = 0.25
-    ) -> np.ndarray:
+    def independent_plane_offset(image: np.ndarray, *, offset: float = 0.25) -> np.ndarray:
         seen.append(image.shape)
         return image + offset
 
     source = _source(3)
-    result = _registered(project_custom_function(independent_plane_offset)).func(
-        source, offset=0.5
-    )
+    result = _registered(project_custom_function(independent_plane_offset)).func(source, offset=0.5)
     assert seen == [(16, 20)] * 3
     np.testing.assert_array_equal(result.data, source.data + 0.5)
     assert result.metadata.source_image_provenance_planes.identity == (

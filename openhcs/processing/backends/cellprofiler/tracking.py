@@ -38,11 +38,7 @@ from openhcs.core.measurement_row_materialization import (
     measurement_row_has_object_identity,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline.function_contracts import (
-    object_label_input_execution_mode,
-    required_axis_roles,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, required_axis_roles, special_inputs)
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import RuntimeArrayData
@@ -300,9 +296,7 @@ class TrackObjectsModule(
             return row_policy.annotate_record_rows(
                 rows,
                 object_name=self.object_name,
-                source_image_name=CELLPROFILER_SCOPE_NAMES[
-                    MeasurementScope.SAMPLE
-                ].casefold(),
+                source_image_name=CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE].casefold(),
             )
 
     @classmethod
@@ -655,10 +649,8 @@ class CellProfilerRendererAgg(RendererAgg):
 
     def _text_bitmap(self, text, properties):
         pixels, facts = rasterize(
-            font_manager.findfont(properties),
-            properties.get_size_in_points(),
-            self.dpi,
-            text,
+            font_manager.findfont(properties), properties.get_size_in_points(),
+            self.dpi, text,
         )
         return np.frombuffer(pixels, dtype=np.uint8).reshape(facts[1], facts[0]), facts
 
@@ -704,15 +696,11 @@ class TrackingImageDisplayStrategy(
         """Draw one label plane with CellProfiler's stable ID palette."""
         if labels.ndim != 2:
             raise ValueError("Tracked-image rendering requires a 2-D label plane.")
-        if len(object_numbers) != len(centers[0]) or len(object_numbers) != len(
-            centers[1]
-        ):
-            raise ValueError(
-                "Tracked-image IDs and centers must share one label domain."
-            )
+        if len(object_numbers) != len(centers[0]) or len(object_numbers) != len(centers[1]):
+            raise ValueError("Tracked-image IDs and centers must share one label domain.")
         indexer = np.zeros(len(object_numbers) + 1, dtype=int)
         indexer[1:] = object_numbers
-        powers = 2 ** np.mgrid[0:8, 0 : len(indexer)][0]
+        powers = 2 ** np.mgrid[0:8, 0:len(indexer)][0]
         bits = (indexer & powers).astype(bool)
         indexer = np.sum(bits.transpose() * (2 ** np.arange(7, -1, -1)), axis=1)
         figure = Figure()
@@ -926,9 +914,7 @@ class TrackObjectsResult(RuntimeOutputBundle):
                 )
             )
             normalized = normalize_cellprofiler_image_payload(rendered)
-            metadata = normalized.metadata.with_axis(
-                ColourSampleAxisSpec(), -1
-            ).with_source_context_from(labels.metadata)
+            metadata = normalized.metadata.with_axis(ColourSampleAxisSpec(), -1).with_source_context_from(labels.metadata)
             output_image = metadata.payload_with(normalized.data, None)
         return cls(
             output_image=output_image,
@@ -988,6 +974,7 @@ class ObjectTrackingBackendStrategy(
 ):
     """TrackObjects primitives keyed by OpenHCS memory type/provider."""
 
+
     @abstractmethod
     def label_centers(self, labels: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Return y/x centers for dense positive labels."""
@@ -1042,9 +1029,7 @@ class NumbaNumpyObjectTrackingBackendStrategy(ObjectTrackingBackendStrategy):
         label_count = int(labels_array.max()) if labels_array.size else 0
         if label_count == 0:
             return (np.array([], dtype=np.float64), np.array([], dtype=np.float64))
-        centers = dense_label_centers_2d_numba(
-            np.ascontiguousarray(labels_array), label_count
-        )
+        centers = dense_label_centers_2d_numba(np.ascontiguousarray(labels_array), label_count)
         return (centers[1:, 0], centers[1:, 1])
 
     def track_by_overlap(
@@ -1697,9 +1682,7 @@ def _track_by_overlap_numba(
 def _track_by_distance_numba(
     frame: TrackingKernelFrame, pixel_radius: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
-    current_centers = dense_label_centers_2d_numba(
-        frame.current_labels, frame.current_count
-    )
+    current_centers = dense_label_centers_2d_numba(frame.current_labels, frame.current_count)
     old_centers = dense_label_centers_2d_numba(frame.old_labels, frame.old_count)
     new_labels = np.zeros(frame.current_count, dtype=np.int64)
     parent_object_numbers = np.zeros(frame.current_count, dtype=np.int64)

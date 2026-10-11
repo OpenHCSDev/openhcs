@@ -127,10 +127,7 @@ class AutoDetectedSource(DatasetSourceChoice):
         filemanager: "FileManager",
         source_bindings: "SourceBindingsConfig | None",
     ) -> "type[DatasetSource]":
-        from openhcs.core.dataset_sources.source import (
-            DatasetSource,
-            DeclaredFileSource,
-        )
+        from openhcs.core.dataset_sources.source import DatasetSource, DeclaredFileSource
 
         detected = DatasetSource.detect_source_type(root, filemanager, source_bindings)
         if detected is not None:

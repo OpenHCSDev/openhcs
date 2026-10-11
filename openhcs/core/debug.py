@@ -275,7 +275,11 @@ class DebugPausedWorkerStatus:
         return {
             "debug_session_id": self.debug_session_id,
             "state": self.state.value,
-            "cursor": (None if self.cursor is None else to_jsonable(self.cursor)),
+            "cursor": (
+                None
+                if self.cursor is None
+                else to_jsonable(self.cursor)
+            ),
         }
 
     @classmethod

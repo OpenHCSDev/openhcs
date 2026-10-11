@@ -68,6 +68,7 @@ from openhcs.core.axes import (
     Ungrouped,
 )
 
+
 _CELLPROFILER_BACKEND_PACKAGE = "openhcs.processing.backends.cellprofiler"
 _CELLPROFILER_MODULE_REGISTRY = LazyDiscoveryDict(enable_cache=False)
 if TYPE_CHECKING:
@@ -437,12 +438,8 @@ class CellProfilerModule(
             )
         modules = tuple(modules)
         cls.discover_source_declarations(
-            frozenset(
-                _module_lookup_key(module.name) for module in modules if module.enabled
-            ),
-            ("module_name", "aliases"),
-            _module_lookup_key,
-            _declared_lookup_keys,
+            frozenset(_module_lookup_key(module.name) for module in modules if module.enabled),
+            ("module_name", "aliases"), _module_lookup_key, _declared_lookup_keys,
         )
         for module in modules:
             if not module.enabled:
@@ -597,8 +594,7 @@ class CellProfilerModule(
         implementation = cls._require_declared_callable(function_name)
         cls.prepare_declared_callable(implementation)
         cls._validate_callable_parameter_exclusions(
-            implementation,
-            CallableContract.from_callable(implementation),
+            implementation, CallableContract.from_callable(implementation),
         )
         return implementation
 
@@ -661,9 +657,7 @@ class CellProfilerModule(
         """Return the registered module class for a canonical name or alias."""
         lookup_key = _module_lookup_key(module_name)
         matches = cls.discover_source_declarations(
-            frozenset((lookup_key,)),
-            ("module_name", "aliases"),
-            _module_lookup_key,
+            frozenset((lookup_key,)), ("module_name", "aliases"), _module_lookup_key,
             _declared_lookup_keys,
         )
         return matches[0] if matches else None
@@ -955,8 +949,7 @@ class CellProfilerModule(
         ):
             return InputSource.PREVIOUS_STEP
         if any(
-            step_context.source_bindings.binding_for_artifact_ref(spec.ref())
-            is not None
+            step_context.source_bindings.binding_for_artifact_ref(spec.ref()) is not None
             for spec in callable_contract.artifact_inputs
         ):
             return InputSource.PIPELINE_START
@@ -1005,6 +998,7 @@ class CellProfilerModule(
             if grouping_axes and step_context is not None:
                 (grouping_component,) = grouping_axes
                 source_anchor_group_keys = step_context.source_bindings.component_group_keys_for_artifact_specs(
+
                     grouping_component,
                     cls.processing_group_scope_inputs(callable_contract),
                     step_context.available_artifacts,

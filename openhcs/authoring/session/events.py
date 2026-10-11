@@ -324,6 +324,4 @@ class SessionEventLog:
                 lambda: self._next_sequence - 1 > sequence,
                 timeout=timeout_seconds,
             )
-            return tuple(
-                record for record in self._records if record.sequence > sequence
-            )
+            return tuple(record for record in self._records if record.sequence > sequence)

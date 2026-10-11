@@ -253,7 +253,9 @@ def _derive_evidence(
             receipt_paths.append(receipt.payload_path)
             successful_results.extend(command_results)
     tool_names = tuple(result.tool for result in successful_results)
-    declarations = tuple(get_agent_capability(tool_name) for tool_name in tool_names)
+    declarations = tuple(
+        get_agent_capability(tool_name) for tool_name in tool_names
+    )
     requirements: set[DslRequirement] = set()
     explanations: dict[DslRequirement, str] = {}
 

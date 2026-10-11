@@ -84,10 +84,7 @@ def test_pipeline_round_trips_through_python_file(tmp_path: Path) -> None:
             assert (function, {key: kwargs[key] for key in _normalize(2.0)[1]}) == (
                 _normalize(2.0)
             )
-            assert [step.name for step in editor.displayed_steps] == [
-                "Normalize",
-                "Crop",
-            ]
+            assert [step.name for step in editor.displayed_steps] == ["Normalize", "Crop"]
             assert editor.code_document_source(clean=True) == target.read_text(
                 encoding="utf-8"
             )
@@ -164,7 +161,8 @@ def test_gui_persistence_modules_do_not_pickle() -> None:
         for path in sorted(tree.rglob("*.py")):
             if path in TRANSPORT_MODULES:
                 assert not any(
-                    use.endswith((".dump", ".load")) for use in _pickle_uses(path)
+                    use.endswith((".dump", ".load"))
+                    for use in _pickle_uses(path)
                 ), f"{path} may pickle in memory for ZMQ only"
                 continue
             offenders.extend(_pickle_uses(path))
@@ -172,7 +170,7 @@ def test_gui_persistence_modules_do_not_pickle() -> None:
 
 
 def test_gui_offers_no_pickle_file_formats() -> None:
-    retired = ("*.func", "*.pipeline", "*.step", '.func"', '.pipeline"', '.step"')
+    retired = ("*.func", "*.pipeline", "*.step", ".func\"", ".pipeline\"", ".step\"")
     offenders = [
         f"{path}: {marker}"
         for tree in PERSISTENCE_TREES

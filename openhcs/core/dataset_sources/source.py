@@ -189,7 +189,8 @@ class DatasetSource(
         return next(
             base
             for base in cls.__mro__
-            if isinstance(base, type) and SourceSelectionRole in base.__bases__
+            if isinstance(base, type)
+            and SourceSelectionRole in base.__bases__
         )
 
     @classmethod
@@ -311,9 +312,7 @@ class DatasetSource(
         """Storage backends this source can read, in priority order."""
 
     @abstractmethod
-    def initialize_workspace(
-        self, dataset_root: Path, filemanager: FileManager
-    ) -> Path:
+    def initialize_workspace(self, dataset_root: Path, filemanager: FileManager) -> Path:
         """Prepare the dataset for reading and return its image directory."""
 
     def get_required_backend(self) -> Optional["MaterializationBackend"]:

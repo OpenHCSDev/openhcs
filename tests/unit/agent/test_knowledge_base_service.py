@@ -128,7 +128,8 @@ def test_search_prefers_declared_document_matches_over_equal_body_matches(tmp_pa
     (docs / "notes.md").write_text(
         "# Setup notes\n\n"
         + "\n".join(
-            f"## Note {index}\n\nThis body mentions a recipe.\n" for index in range(8)
+            f"## Note {index}\n\nThis body mentions a recipe.\n"
+            for index in range(8)
         ),
         encoding="utf-8",
     )

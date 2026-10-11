@@ -235,9 +235,7 @@ def test_callable_compilation_resolves_authored_and_default_declared_paths() -> 
 
     captured = CallableContract.from_callable(_path_callable).with_prepared_signature()
     restored = pickle.loads(pickle.dumps(captured))
-    assert (
-        restored.metadata.canonical_signature == captured.metadata.canonical_signature
-    )
+    assert restored.metadata.canonical_signature == captured.metadata.canonical_signature
     assert restored.declared_path_parameters == captured.declared_path_parameters
     assert restored.resolve_declared_paths({}, resolver) == {"template_path": expected}
 
@@ -246,28 +244,19 @@ def test_path_declarations_follow_live_or_captured_signature_epoch() -> None:
     def operation(image, *, path=None):
         return image
 
-    operation.__signature__ = inspect.Signature(
-        (
-            inspect.Parameter("image", inspect.Parameter.POSITIONAL_OR_KEYWORD),
-            inspect.Parameter(
-                "path",
-                inspect.Parameter.KEYWORD_ONLY,
-                annotation=PlateInputFile,
-                default=None,
-            ),
-        )
-    )
+    operation.__signature__ = inspect.Signature((
+        inspect.Parameter("image", inspect.Parameter.POSITIONAL_OR_KEYWORD),
+        inspect.Parameter("path", inspect.Parameter.KEYWORD_ONLY,
+                          annotation=PlateInputFile, default=None),
+    ))
     live = CallableContract.from_callable(operation)
     captured = live.with_prepared_signature()
     layout = captured.declared_path_parameters
-    operation.__signature__ = operation.__signature__.replace(
-        parameters=(
-            inspect.Parameter("image", inspect.Parameter.POSITIONAL_OR_KEYWORD),
-            inspect.Parameter(
-                "path", inspect.Parameter.KEYWORD_ONLY, annotation=str, default=None
-            ),
-        )
-    )
+    operation.__signature__ = operation.__signature__.replace(parameters=(
+        inspect.Parameter("image", inspect.Parameter.POSITIONAL_OR_KEYWORD),
+        inspect.Parameter("path", inspect.Parameter.KEYWORD_ONLY,
+                          annotation=str, default=None),
+    ))
     assert captured.declared_path_parameters is layout
     assert isinstance(layout["path"], PlateInputFileDeclaration)
     assert not live.declared_path_parameters

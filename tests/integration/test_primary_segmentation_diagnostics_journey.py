@@ -83,8 +83,7 @@ def test_real_registered_ipo_returns_same_run_stage_pixels(mode):
         diagnostics.unedited_objects.data, objects.variant_labels(UneditedLabels)
     )
     np.testing.assert_array_equal(
-        diagnostics.small_removed_objects.data,
-        objects.variant_labels(SmallRemovedLabels),
+        diagnostics.small_removed_objects.data, objects.variant_labels(SmallRemovedLabels)
     )
     assert measurements.row_count() > 0
     if mode in ("empty", "disabled", "watershed-disabled"):
@@ -252,7 +251,9 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         ),
         pipeline_steps=[primary, secondary],
     )
-    document = PipelineDocumentCodec.from_source(PipelineDocumentCodec.render(document))
+    document = PipelineDocumentCodec.from_source(
+        PipelineDocumentCodec.render(document)
+    )
     bundle = (
         InProcessCompileInspectionGateway()
         .compile(
@@ -353,8 +354,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         persisted.append(record.data)
     diagnostics = PrimaryObjectDiagnosticPlanes(*persisted)
     np.testing.assert_array_equal(
-        diagnostics.unedited_objects.data,
-        primary_record.data.variant_labels(UneditedLabels),
+        diagnostics.unedited_objects.data, primary_record.data.variant_labels(UneditedLabels)
     )
     np.testing.assert_array_equal(
         diagnostics.small_removed_objects.data,

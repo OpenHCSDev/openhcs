@@ -63,7 +63,6 @@ from openhcs.core.plate_image_inventory import (
 )
 from openhcs.core.axes import Axis, AxisFamily
 from openhcs.core.dataset_sources.choice import AutoDetectedSource, DatasetSourceChoice
-
 if TYPE_CHECKING:
     from openhcs.core.components.parser_metaprogramming import (
         FilenameParseResult,
@@ -169,7 +168,10 @@ class PlateInspectionHandlerCandidateProjection:
 
         if DatasetSourceChoice.named(requested_source_format) is not AutoDetectedSource:
             return ()
-        if type(selected_handler).source_selection_role() is not BroadStoreSource:
+        if (
+            type(selected_handler).source_selection_role()
+            is not BroadStoreSource
+        ):
             return ()
 
         try:
@@ -186,7 +188,10 @@ class PlateInspectionHandlerCandidateProjection:
 
         candidates: list[PlateInspectionHandlerCandidate] = []
         for handler_type in DatasetSource.__registry__.values():
-            if handler_type.source_selection_role() is not FormatSpecificSource:
+            if (
+                handler_type.source_selection_role()
+                is not FormatSpecificSource
+            ):
                 continue
             candidate = cls._candidate(
                 handler_type=handler_type,
@@ -472,9 +477,7 @@ class PlateInspectionMutableParsedComponents:
     """Mutable accumulator before parsed component values are frozen."""
 
     values: dict[type[Axis], set[str]] = field(
-        default_factory=lambda: {
-            component: set() for component in AxisFamily.active().axes
-        }
+        default_factory=lambda: {component: set() for component in AxisFamily.active().axes}
     )
 
     def add_parsed_filename_values(self, parsed: "FilenameParseResult") -> None:
@@ -870,8 +873,7 @@ class PlateInspectionWorkflowAdvicePolicy:
             selection_message = type(handler).source_selection_guidance()
             initialization_message = (
                 f"initialize with explicit source_format={ingestion_owner!r}"
-                if DatasetSourceChoice.named(requested_source_format)
-                is not AutoDetectedSource
+                if DatasetSourceChoice.named(requested_source_format) is not AutoDetectedSource
                 else "initialize with auto-detection"
             )
             message = (
@@ -1205,8 +1207,7 @@ class PlateInspectionService:
         parser = self._parser(
             handler,
             warnings,
-            warn=query_kind is not PlateFileKind.RESULT
-            or bool(request.component_filters),
+            warn=query_kind is not PlateFileKind.RESULT or bool(request.component_filters),
         )
         file_inventory = self._plate_file_inventory_for_query(
             handler,
@@ -1400,9 +1401,7 @@ class PlateInspectionService:
                 record,
                 record.sample(
                     filemanager,
-                    plate_path=handler.metadata_handler.source_workspace_root(
-                        plate_path
-                    ),
+                    plate_path=handler.metadata_handler.source_workspace_root(plate_path),
                     request=ImageSamplingRequest(
                         origin_yx=(request.y, request.x),
                         shape_yx=(request.height, request.width),
@@ -1574,7 +1573,10 @@ class PlateInspectionService:
             )
 
         filemanager = self._filemanager_factory.create()
-        if request.detects_source_format and request.pattern_format is None:
+        if (
+            request.detects_source_format
+            and request.pattern_format is None
+        ):
             result_only = self._result_only_inspection(
                 request=request,
                 available_types=available_types,

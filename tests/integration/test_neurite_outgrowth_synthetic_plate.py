@@ -221,7 +221,9 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         progress_events = []
         while True:
             try:
-                progress_events.append(progress_queue.get_nowait())
+                progress_events.append(
+                    progress_queue.get_nowait()
+                )
             except queue.Empty:
                 break
         live_payloads = tuple(
@@ -313,8 +315,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         # Checkpoints are the declared outputs between the label artifacts and
         # the trailing morphology table; the callable's output family owns them.
         checkpoint_names = tuple(
-            spec.name
-            for spec in CellProfilerNeuriteEngineProfile.artifact_outputs()[6:-1]
+            spec.name for spec in CellProfilerNeuriteEngineProfile.artifact_outputs()[6:-1]
         )
         for artifact_name, expected_checkpoint in zip(
             checkpoint_names,
@@ -330,9 +331,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                     retained,
                     np.asarray(expected_checkpoint)[0],
                 )
-        assert len({path.name for path in checkpoint_paths}) == 2 * len(
-            checkpoint_names
-        )
+        assert len({path.name for path in checkpoint_paths}) == 2 * len(checkpoint_names)
 
         assert compiled_plan.output_dataset_root is not None
         output_dataset_root = Path(compiled_plan.output_dataset_root)

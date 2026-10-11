@@ -213,13 +213,7 @@ def test_read_only_source_plate_completes_and_stays_byte_identical(
     port = _port(2)
     try:
         completed = subprocess.run(
-            _command(
-                plate,
-                source,
-                output_dir,
-                port,
-                wait_ms=int(RUN_DEADLINE_SECONDS * 1000),
-            ),
+            _command(plate, source, output_dir, port, wait_ms=int(RUN_DEADLINE_SECONDS * 1000)),
             cwd=REPOSITORY_ROOT,
             env=_environment(tmp_path),
             capture_output=True,

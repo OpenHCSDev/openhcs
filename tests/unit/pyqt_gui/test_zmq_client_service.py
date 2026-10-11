@@ -93,9 +93,7 @@ class SlowFakeExecutionClient:
         )
 
 
-def test_async_connect_cancellation_retires_same_attempt_and_releases_ownership(
-    monkeypatch,
-):
+def test_async_connect_cancellation_retires_same_attempt_and_releases_ownership(monkeypatch):
     import openhcs.runtime.zmq_execution_client as client_module
 
     SlowFakeExecutionClient.instances = []
@@ -181,7 +179,6 @@ def test_disconnect_sync_cancels_an_in_progress_connection_attempt(
             class BlockingConnectionAttempt(EndpointConnectionAttempt):
                 def __init__(self):
                     pass
-
                 def cancel(self) -> None:
                     BlockingExecutionClient.attempt_cancelled.set()
 

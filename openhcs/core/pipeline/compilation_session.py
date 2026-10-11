@@ -250,9 +250,9 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
                 step,
                 index,
                 execution_scope=FunctionStepExecutionScope.require_uniform(
-                    ()
-                    if graph.pattern is None
-                    else (item.contract for item in graph.pattern.iter_items())
+                    () if graph.pattern is None else (
+                        item.contract for item in graph.pattern.iter_items()
+                    )
                 ),
                 source_bindings=step.source_bindings,
                 context=context,
@@ -339,12 +339,9 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
                 or context.group_by is Ungrouped
             ):
                 continue
-            if (
-                FunctionStepExecutionScope.require_uniform(
-                    item.contract for item in pattern.iter_items()
-                )
-                is FunctionStepExecutionScope.PLATE
-            ):
+            if FunctionStepExecutionScope.require_uniform(
+                item.contract for item in pattern.iter_items()
+            ) is FunctionStepExecutionScope.PLATE:
                 continue
             result = validator.validate_dict_pattern_keys(
                 pattern,

@@ -48,11 +48,7 @@ def selected_declaration_catalog(monkeypatch):
     """Use existing declaration metadata, not a native catalog preparation."""
     metadata = (
         RegistryService.declared_metadata_for_callable(func)
-        for func in (
-            count_cells_simple,
-            measure_colocalization_objects,
-            measure_object_size_shape,
-        )
+        for func in (count_cells_simple, measure_colocalization_objects, measure_object_size_shape)
     )
     monkeypatch.setattr(RegistryService, "_metadata_cache", dict(metadata))
 
@@ -127,19 +123,15 @@ def test_function_reference_formats_from_declared_identity_without_resolution(
     assert "remote_backend.filters" not in source
 
 
-def test_module_export_registry_reference_uses_direct_import_without_resolution(
-    monkeypatch,
-):
+def test_module_export_registry_reference_uses_direct_import_without_resolution(monkeypatch):
     reference = ModuleExportRegistryFunctionReference(
         import_identity=CallableImportIdentity(
-            module_name="declared.functions",
-            function_name="exported_filter",
+            module_name="declared.functions", function_name="exported_filter",
         ),
         composite_key="registry:exported_filter",
     )
     monkeypatch.setattr(
-        RegistryFunctionReference,
-        "resolve",
+        RegistryFunctionReference, "resolve",
         lambda self: (_ for _ in ()).throw(AssertionError("must not resolve")),
     )
     source = _source(reference)
@@ -175,9 +167,7 @@ def test_clean_pipeline_config_keeps_explicit_nested_lazy_config_values():
 
 
 def test_clean_pipeline_config_keeps_explicit_empty_nested_lazy_config():
-    source = _source(
-        PipelineConfig(partition_filter_config=LazyPartitionFilterConfig())
-    )
+    source = _source(PipelineConfig(partition_filter_config=LazyPartitionFilterConfig()))
 
     assert "partition_filter_config=LazyPartitionFilterConfig()" in source
 
@@ -207,9 +197,7 @@ def test_clean_function_step_omits_objectstate_reconstructed_empty_lazy_configs(
         clean_mode=True,
     )
 
-    reference = FunctionReferenceTransportAuthority.function_reference(
-        count_cells_simple
-    )
+    reference = FunctionReferenceTransportAuthority.function_reference(count_cells_simple)
     assert f"func={reference.source_literal()}" in source
     assert "name='count_cells'" in source
     assert "dtype_config=" not in source

@@ -160,11 +160,9 @@ def test_run_and_debug_reserve_before_connect_and_release_on_connection_failure(
         session.compile_pending.add(unrelated)
         errors = []
         session.subscribe(
-            lambda record: (
-                errors.append(record.event)
-                if type(record.event).__name__ == "ErrorReported"
-                else None
-            )
+            lambda record: errors.append(record.event)
+            if type(record.event).__name__ == "ErrorReported"
+            else None
         )
 
         async def connect():
@@ -187,7 +185,9 @@ def test_run_and_debug_reserve_before_connect_and_release_on_connection_failure(
 
 
 @pytest.mark.parametrize("fails", (False, True))
-def test_compiling_another_dataset_keeps_the_active_batch(tmp_path, monkeypatch, fails):
+def test_compiling_another_dataset_keeps_the_active_batch(
+    tmp_path, monkeypatch, fails
+):
     with caller_session() as session:
         running, other = add_datasets(session, tmp_path, "running", "other")
         _ready(session, running, other)
@@ -250,11 +250,9 @@ def test_compile_publishes_its_inspection_and_clears_the_previous_one(
         _ready(session, scope_id)
         compiled_states = []
         session.subscribe(
-            lambda record: (
-                compiled_states.append(record.event.compiled)
-                if isinstance(record.event, CompiledStateChanged)
-                else None
-            )
+            lambda record: compiled_states.append(record.event.compiled)
+            if isinstance(record.event, CompiledStateChanged)
+            else None
         )
 
         def during_compile(_scope_id):
@@ -328,11 +326,9 @@ def test_failed_compile_reports_the_dataset(tmp_path, monkeypatch):
         _ready(session, scope_id)
         failures = []
         session.subscribe(
-            lambda record: (
-                failures.append(record.event)
-                if isinstance(record.event, CompilationFailed)
-                else None
-            )
+            lambda record: failures.append(record.event)
+            if isinstance(record.event, CompilationFailed)
+            else None
         )
         StandInServer(session, monkeypatch, failing={scope_id})
         asyncio.run(session.compile_datasets((scope_id,)))
@@ -490,19 +486,16 @@ def _debug_progress_event(*, snapshot_id: str | None, event_type=None):
         callable_name="IdentifyPrimaryObjects",
         axis_id="A01",
     )
-    return (
-        event,
-        DebugProgressEventRequest(
-            debug_session_id="debug-1",
-            debug_event=event,
-            progress_context=ProgressExecutionContext("exec-1", "plate-1"),
-            **(
-                {}
-                if snapshot_id is None
-                else {"snapshot_id": snapshot_id, "snapshot_store_ref": "/tmp/debug"}
-            ),
-        ).to_progress_event(),
-    )
+    return event, DebugProgressEventRequest(
+        debug_session_id="debug-1",
+        debug_event=event,
+        progress_context=ProgressExecutionContext("exec-1", "plate-1"),
+        **(
+            {}
+            if snapshot_id is None
+            else {"snapshot_id": snapshot_id, "snapshot_store_ref": "/tmp/debug"}
+        ),
+    ).to_progress_event()
 
 
 def _events_of(session, kind):
@@ -594,9 +587,7 @@ def test_runtime_artifact_progress_is_published():
                 artifact_type=MeasurementsArtifactType,
                 scope=RuntimeExecutionAxisScope(axis_id="A01"),
             ),
-            location=RuntimeArtifactLocation(
-                path="/memory/result.pkl", backend="memory"
-            ),
+            location=RuntimeArtifactLocation(path="/memory/result.pkl", backend="memory"),
             value_type="ndarray",
         )
         event = _progress_event(
@@ -620,9 +611,7 @@ def test_progress_the_registry_rejects_publishes_nothing(monkeypatch):
                 artifact_type=MeasurementsArtifactType,
                 scope=RuntimeExecutionAxisScope(axis_id="A01"),
             ),
-            location=RuntimeArtifactLocation(
-                path="/memory/result.pkl", backend="memory"
-            ),
+            location=RuntimeArtifactLocation(path="/memory/result.pkl", backend="memory"),
         )
         session.progress.on_progress(
             _progress_event(
@@ -638,6 +627,7 @@ def test_server_queue_snapshot_projects_queued_executions(monkeypatch):
     from zmqruntime.messages import QueuedExecutionInfo
 
     from openhcs.core.progress.projection import QueuedSubjectRuntimeState
+
 
     with caller_session() as session:
         monkeypatch.setattr(

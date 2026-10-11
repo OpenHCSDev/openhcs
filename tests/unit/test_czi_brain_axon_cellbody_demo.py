@@ -75,15 +75,7 @@ def _candidate(
             Microscopy.Site.name: site_label,
             Microscopy.Channel.name: channel_label,
         },
-        declared_address=OpenHCSPlaneAddress(
-            (
-                (Microscopy.Well, "."),
-                (Microscopy.Site, site),
-                (Microscopy.Channel, channel),
-                (Microscopy.ZIndex, "1"),
-                (Microscopy.Timepoint, "1"),
-            )
-        ),
+        declared_address=OpenHCSPlaneAddress(((Microscopy.Well, "."), (Microscopy.Site, site), (Microscopy.Channel, channel), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
         dataset_identity=identity,
         store_identity=SourcePlaneStoreIdentity(
             container_paths=(source_path,),
@@ -173,17 +165,25 @@ def test_czi_demo_declares_bounded_three_channel_analysis_and_artifacts(
     assert get_core_callable(steps[2].func) is tophat
     assert get_core_callable(steps[3].func) is skan_axon_skeletonize_and_analyze
 
-    assert steps[0].processing_config.variable_components == [Microscopy.Channel]
+    assert steps[0].processing_config.variable_components == [
+        Microscopy.Channel
+    ]
     assert steps[0].processing_config.input_source is InputSource.PIPELINE_START
-    assert steps[1].processing_config.variable_components == [Microscopy.Channel]
+    assert steps[1].processing_config.variable_components == [
+        Microscopy.Channel
+    ]
     assert steps[1].processing_config.input_source is InputSource.PREVIOUS_STEP
     assert steps[2].processing_config.group_by is Ungrouped
-    assert steps[2].processing_config.variable_components == [Microscopy.Channel]
+    assert steps[2].processing_config.variable_components == [
+        Microscopy.Channel
+    ]
     assert steps[2].processing_config.input_source is InputSource.PIPELINE_START
     assert steps[2].source_bindings.enabled is True
     assert [binding.alias for binding in steps[2].source_bindings.bindings] == ["Axon"]
     assert steps[3].processing_config.group_by is Ungrouped
-    assert steps[3].processing_config.variable_components == [Microscopy.Channel]
+    assert steps[3].processing_config.variable_components == [
+        Microscopy.Channel
+    ]
     assert steps[3].processing_config.input_source is InputSource.PREVIOUS_STEP
 
     count_kwargs = steps[1].func[1]

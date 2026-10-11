@@ -12,11 +12,7 @@ from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.callable_contract import (
-    CallableContract,
-    CallableMetadata,
-    KeywordRuntimeParameter,
-)
+from openhcs.core.callable_contract import CallableContract, CallableMetadata, KeywordRuntimeParameter
 from openhcs.core.function_reference import FunctionReference
 from openhcs.core.runtime_adapters import RuntimeImageExecutionContext
 from openhcs.core.runtime_plane_projection import (
@@ -52,17 +48,11 @@ class RuntimePlaneAxisValueProjectionParameter(KeywordRuntimeParameter):
 
 
 def runtime_callable_defaults(
-    func: Callable[..., object],
-    *,
-    signature: inspect.Signature | None = None,
+    func: Callable[..., object], *, signature: inspect.Signature | None = None,
 ) -> Mapping[str, object]:
     """Return callable defaults visible to runtime batch executors."""
     try:
-        callable_signature = (
-            CallableMetadata.callable_signature(func)
-            if signature is None
-            else signature
-        )
+        callable_signature = CallableMetadata.callable_signature(func) if signature is None else signature
     except (TypeError, ValueError) as exc:
         raise TypeError(
             f"Runtime batch function {func!r} must expose an inspectable signature."
@@ -105,9 +95,7 @@ class RuntimeBatchInvocationRequest(RuntimeImageExecutionContext):
         )
 
     def batch_executor_request(
-        self,
-        *,
-        processing_contract: "type[ProcessingContract]",
+        self, *, processing_contract: "type[ProcessingContract]",
     ) -> "RuntimeBatchInvocationRequest | None":
         """Return a request projected into the batch executor's image domain.
 
@@ -240,9 +228,7 @@ class RuntimePure2DSliceBatchRequest(
 
     def execute_each(self) -> list[RuntimeSliceResultT]:
         """Execute every slice of this batch, one invocation per slice."""
-        return [
-            self.execute_one(slice_index) for slice_index in range(self.slice_count)
-        ]
+        return [self.execute_one(slice_index) for slice_index in range(self.slice_count)]
 
     def execute_one_with_kwargs(
         self,
@@ -311,7 +297,9 @@ class RuntimeBatchCallableFamily:
                 if isinstance(self.raw_processing_function, FunctionReference)
                 else self.raw_processing_function
             )
-            inherited = runtime_batch_executors_from_callable(raw_callable)
+            inherited = runtime_batch_executors_from_callable(
+                raw_callable
+            )
             for domain, executor in inherited.items():
                 if domain not in batch_executors:
                     batch_executors[domain] = executor
@@ -323,15 +311,10 @@ class Pure2DSliceBatchExecutor(RuntimeBatchExecutor):
 
     @classmethod
     def from_executors(
-        cls,
-        executors: Mapping[RuntimeBatchExecutionDomain, Callable] | None,
+        cls, executors: Mapping[RuntimeBatchExecutionDomain, Callable] | None,
     ) -> Callable:
         """Honor a declared pure-2D executor before the nominal serial default."""
-        declared = (
-            None
-            if executors is None
-            else executors.get(RuntimeBatchExecutionDomain.PURE_2D_SLICES)
-        )
+        declared = None if executors is None else executors.get(RuntimeBatchExecutionDomain.PURE_2D_SLICES)
         return declared if callable(declared) else cls.default_executor()
 
     @classmethod

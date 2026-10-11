@@ -462,9 +462,7 @@ class FijiPayloadLocalPlaneExpander:
     ) -> None:
         if component not in item.metadata:
             return
-        normalized = ViewerComponentMetadataNormalizer(
-            self.declared_axes
-        ).normalize_value(
+        normalized = ViewerComponentMetadataNormalizer(self.declared_axes).normalize_value(
             component,
             item.metadata[component],
         )
@@ -1004,7 +1002,8 @@ class FijiWindowCoordinateResolution:
             return False
         return (
             len(self.coordinates.c.values) > len(self.stored.c)
-            or len(self.coordinates.z.values) > len(self.stored.z)
+            or len(self.coordinates.z.values)
+            > len(self.stored.z)
             or len(self.coordinates.t.values) > len(self.stored.t)
         )
 
@@ -1251,9 +1250,7 @@ class FijiBatchWireParser:
         display_config_payload = fields.required_mapping(
             ViewerBatchWireField.DISPLAY_CONFIG
         )
-        display_config = FijiDisplaySettings.from_display_payload(
-            display_config_payload
-        )
+        display_config = FijiDisplaySettings.from_display_payload(display_config_payload)
         component_axis_semantics = fields.component_axis_semantics(
             ViewerMappingDisplayConfigInput(display_config_payload),
             context="Fiji component value domain",
@@ -2504,7 +2501,9 @@ class FijiViewerServer(ViewerServerPort, OpenHCSViewerServerABC):
                 logger.info(
                     f"🏷️  FIJI SERVER: Setting labels for {len(coordinates.c.values)} channels"
                 )
-                for idx, channel_tuple in enumerate(coordinates.c.values, start=1):
+                for idx, channel_tuple in enumerate(
+                    coordinates.c.values, start=1
+                ):
                     label = coordinates.c.label_for_value(
                         channel_tuple,
                         component_names_metadata,
@@ -2612,7 +2611,11 @@ class FijiViewerServer(ViewerServerPort, OpenHCSViewerServerABC):
             logger.info(f"🏷️  FIJI SERVER: Setting dimension labels for {window_key}")
 
             # For single-channel images, add channel name to window title since no slider appears
-            if nChannels == 1 and coordinates.c.components and coordinates.c.values:
+            if (
+                nChannels == 1
+                and coordinates.c.components
+                and coordinates.c.values
+            ):
                 first_comp = coordinates.c.components[0]
                 first_value_tuple = coordinates.c.values[0]
                 channel_name = component_names_metadata.display_name(
@@ -2818,7 +2821,9 @@ class FijiRoiPayloadHandler(FijiPayloadHandler):
 
             logger.info(f"🔬 FIJI SERVER: ROI metadata: {metadata}")
             logger.info(f"🔬 FIJI SERVER: Channel axis: {request.coordinates.c}")
-            logger.info(f"🔬 FIJI SERVER: Slice axis: {request.coordinates.z}")
+            logger.info(
+                f"🔬 FIJI SERVER: Slice axis: {request.coordinates.z}"
+            )
             logger.info(f"🔬 FIJI SERVER: Frame axis: {request.coordinates.t}")
 
             c_value, z_value, t_value = request.coordinates.imagej_position(metadata)

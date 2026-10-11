@@ -18,10 +18,7 @@ from openhcs.core.memory import numpy as numpy_decorator
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.pipeline.function_contracts import (
-    object_label_input_execution_mode,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
 from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
@@ -385,10 +382,8 @@ def convert_objects_to_image(
         if image_mode is ImageMode.UINT16
         else label_metadata
     )
-    return labels.with_pixels(
-        rendered,
-        metadata=output_metadata,
-    )
+    return labels.with_pixels(rendered,
+        metadata=output_metadata,)
 
 
 class ConvertImageToObjectsModule(

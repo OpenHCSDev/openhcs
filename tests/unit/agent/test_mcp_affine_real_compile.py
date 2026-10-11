@@ -11,8 +11,7 @@ from openhcs.agent.capabilities import InspectPipelineSourceArtifactPlanCapabili
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.artifact_plan_inspection_service import (
-    ArtifactPlanInspectionService,
-    InProcessCompileInspectionGateway,
+    ArtifactPlanInspectionService, InProcessCompileInspectionGateway,
 )
 from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.mcp.execution import McpTransportExecutor
@@ -20,26 +19,16 @@ from openhcs.mcp.server import build_server
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
 
-def test_real_generated_source_inspection_keeps_original_compiler_on_main(
-    monkeypatch, tmp_path: Path
-):
+def test_real_generated_source_inspection_keeps_original_compiler_on_main(monkeypatch, tmp_path: Path):
     def forbidden_catalog(*args, **kwargs):
         raise AssertionError("Declared compilation must not prepare unrelated catalogs")
 
-    monkeypatch.setattr(
-        RegistryService, "get_all_functions_with_metadata", forbidden_catalog
-    )
+    monkeypatch.setattr(RegistryService, "get_all_functions_with_metadata", forbidden_catalog)
     plate = tmp_path / "staged-source"
     SyntheticMicroscopyGenerator(
-        output_dir=str(plate),
-        grid_size=(1, 1),
-        tile_size=(64, 64),
-        wavelengths=1,
-        z_stack_levels=1,
-        wells=["A01"],
-        num_cells=3,
-        random_seed=123,
-        include_all_components=True,
+        output_dir=str(plate), grid_size=(1, 1), tile_size=(64, 64),
+        wavelengths=1, z_stack_levels=1, wells=["A01"], num_cells=3,
+        random_seed=123, include_all_components=True,
     ).generate_dataset()
     # This is a declared-module source fixture, not a catalog-cold/render proof.
     # The installed cold canonical journey remains parent-owned.
@@ -73,29 +62,18 @@ pipeline_steps = [FunctionStep(func=(reducenoise, {
 
     config = ConfigService()
     service = ArtifactPlanInspectionService(
-        path_policy=AgentPathPolicy.with_roots(
-            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
-        ),
+        path_policy=AgentPathPolicy.with_roots(readable_roots=(tmp_path,), writable_roots=(tmp_path,)),
         config_service=config,
         compile_inspection_gateway=AffineCompileGateway(),
     )
     executor = McpTransportExecutor()
-    built = build_server(
-        SimpleNamespace(artifact_plan_service=service),
-        main_thread_dispatcher=executor.dispatcher,
-    )
-    tool = built._tool_manager.get_tool(
-        InspectPipelineSourceArtifactPlanCapability.name
-    )
+    built = build_server(SimpleNamespace(artifact_plan_service=service), main_thread_dispatcher=executor.dispatcher)
+    tool = built._tool_manager.get_tool(InspectPipelineSourceArtifactPlanCapability.name)
 
     async def exercise():
         token = identity.set("exact-source-request")
         try:
-            return await tool.fn(
-                mcp_context=ProgressContext(),
-                plate_path=str(plate),
-                pipeline_source=source,
-            )
+            return await tool.fn(mcp_context=ProgressContext(), plate_path=str(plate), pipeline_source=source)
         finally:
             identity.reset(token)
 
@@ -118,10 +96,8 @@ pipeline_steps = [FunctionStep(func=(reducenoise, {
             "Projecting compiled source workspace",
             "Source inspection compilation and source projection completed",
         )
-        positions = [
-            next(index for index, message in enumerate(messages) if stage in message)
-            for stage in stages
-        ]
+        positions = [next(index for index, message in enumerate(messages) if stage in message)
+                     for stage in stages]
         assert positions == sorted(positions), messages
         assert len(calls[0].progress_queue.events) == 1
         assert calls[0].progress_queue.events[0].axis_id == "A01"

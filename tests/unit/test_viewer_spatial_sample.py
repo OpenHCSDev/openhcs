@@ -97,9 +97,7 @@ def test_raw_array_slices_keep_trailing_dimension_contract_in_same_native_projec
     rgb = np.stack((gray, gray + 1000, gray + 2000), axis=-1)
     items = server.component_groups.items_for("source")
     items[0] = replace(
-        items[0],
-        data=rgb,
-        image_metadata=ImagePayloadMetadata(axes=PayloadAxes.colour_samples(2)),
+        items[0], data=rgb, image_metadata=ImagePayloadMetadata(axes=PayloadAxes.colour_samples(2))
     )
     projection = NapariViewerPayloadProjection(
         server=server,

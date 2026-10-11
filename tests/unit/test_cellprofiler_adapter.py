@@ -207,8 +207,7 @@ def test_native_cellprofiler_imported_metadata_places_files_by_path_columns(
     with csv_path.open("a", encoding="utf-8") as handle:
         handle.write("unselected.tif,20585/\n")
     universe = NativeCellProfilerSelectedSourceUniverse(
-        (image_path, csv_path),
-        placements=placements,
+        (image_path, csv_path), placements=placements,
         imported_metadata_paths=(csv_path,),
     )
     staged = universe.materialize_flat_input_dir(tmp_path / "staged")

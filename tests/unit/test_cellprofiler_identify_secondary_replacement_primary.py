@@ -229,10 +229,7 @@ def test_replacement_primary_runtime_emits_typed_labels_and_relationships() -> N
     primary_labels = SourceImageObjectLabelBuildRequest(
         image=image,
         labels=primary_array,
-        variants={
-            UneditedLabels: primary_array.copy(),
-            SmallRemovedLabels: primary_array.copy(),
-        },
+        variants={UneditedLabels: primary_array.copy(), SmallRemovedLabels: primary_array.copy()},
         declared_object_ids=(1, 2),
     ).payload()
 
@@ -302,9 +299,7 @@ def test_replacement_primary_runtime_emits_typed_labels_and_relationships() -> N
     variantless_replacement = variantless_result[-1]
     assert isinstance(variantless_replacement, ObjectLabelValue)
     assert variantless_replacement.variant_data.variant_labels(UneditedLabels) is None
-    assert (
-        variantless_replacement.variant_data.variant_labels(SmallRemovedLabels) is None
-    )
+    assert variantless_replacement.variant_data.variant_labels(SmallRemovedLabels) is None
     assert (
         variantless_replacement.source_provenance
         == primary_without_variants.source_provenance

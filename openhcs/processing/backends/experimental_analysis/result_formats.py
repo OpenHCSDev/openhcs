@@ -11,9 +11,7 @@ from metaclass_registry import AutoRegisterMeta
 import pandas as pd
 
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.processing.backends.experimental_analysis.layout_rows import (
-    ExperimentalAnalysisScope,
-)
+from openhcs.processing.backends.experimental_analysis.layout_rows import ExperimentalAnalysisScope
 
 PlateDictionary = dict[str, dict[str, dict[str, Any]]]
 

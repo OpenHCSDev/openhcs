@@ -50,8 +50,7 @@ def _anchor_executor(
     )
     executor.context.runtime_source_workspace_projections = (
         WorkspaceSourceProjections.from_context(
-            executor.context,
-            cache=source_workspace_projection_cache,
+            executor.context, cache=source_workspace_projection_cache,
         )
     )
     if output_manifest is not None:

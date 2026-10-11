@@ -575,9 +575,7 @@ class PipelineOrchestrator:
 
         source_role = self.microscope_handler.source_selection_role()
         if not source_role.requires_local_directory:
-            logger.debug(
-                "Skipping local metadata creation for %s", source_role.role_name
-            )
+            logger.debug("Skipping local metadata creation for %s", source_role.role_name)
             return
 
         # For datasets with a virtual workspace, metadata is already created by _build_virtual_mapping()
@@ -668,7 +666,9 @@ class PipelineOrchestrator:
         # Extract cached metadata from service and convert to dict format expected by OpenHCSMetadataGenerator
         metadata_dict = {}
         for component in AxisFamily.active().axes:
-            cached_metadata = self.metadata_cache.get_cached_metadata(component)
+            cached_metadata = self.metadata_cache.get_cached_metadata(
+                component
+            )
             if cached_metadata:
                 metadata_dict[component] = cached_metadata
         context.metadata_cache = metadata_dict
@@ -903,7 +903,9 @@ class PipelineOrchestrator:
         if components is None:
             components = list(AxisFamily.active().axes)
 
-        logger.info(f"Caching component keys for: {[comp.name for comp in components]}")
+        logger.info(
+            f"Caching component keys for: {[comp.name for comp in components]}"
+        )
 
         try:
             axis_values = self.microscope_handler.axis_values(

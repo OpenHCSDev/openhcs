@@ -163,11 +163,8 @@ def test_saved_two_channel_planes_keep_runtime_axis_not_contributor_axis(
 def receive_projection_entries(writer, metadata_path, subdirectory, entries):
     target = RuntimeArtifactMetadataTarget(
         output_dir=Path(metadata_path).parent / subdirectory,
-        dataset_root=str(Path(metadata_path).parent),
-        sub_dir=subdirectory,
-        backend="disk",
-        results_dir=None,
-        create_openhcs_metadata=False,
+        dataset_root=str(Path(metadata_path).parent), sub_dir=subdirectory,
+        backend="disk", results_dir=None, create_openhcs_metadata=False,
     )
     writer.reconcile_completed_dataset(
         metadata_path, {}, produced_entries_by_target={target: entries}
@@ -182,20 +179,11 @@ def test_atomic_perwell_projection_merge_preserves_all_records(tmp_path):
     def merge(well):
         virtual_path = f"{well}.tif"
         projection = SourcePlaneProjection(
-            OpenHCSPlaneAddress(
-                (
-                    (Microscopy.Well, well),
-                    (Microscopy.Site, 1),
-                    (Microscopy.Channel, 1),
-                    (Microscopy.ZIndex, 1),
-                    (Microscopy.Timepoint, 1),
-                )
-            ),
+            OpenHCSPlaneAddress(((Microscopy.Well, well), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             SourcePixelRef("disk", virtual_path),
             image_metadata=metadata_fixture(),
         )
-        receive_projection_entries(
-            writer,
+        receive_projection_entries(writer,
             path,
             ".",
             VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
@@ -217,15 +205,7 @@ def calibrated_projection(well, path, pixel_size):
     source_metadata = {}
     spacing.merge_into(source_metadata, path=path)
     return SourcePlaneProjection(
-        OpenHCSPlaneAddress(
-            (
-                (Microscopy.Well, well),
-                (Microscopy.Site, 1),
-                (Microscopy.Channel, 1),
-                (Microscopy.ZIndex, 1),
-                (Microscopy.Timepoint, 1),
-            )
-        ),
+        OpenHCSPlaneAddress(((Microscopy.Well, well), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
         SourcePixelRef("disk", path),
         source_metadata=source_metadata,
         image_metadata=metadata_fixture().replace_fields(source_voxel_spacing=spacing),
@@ -267,10 +247,8 @@ def test_atomic_projection_merge_refreshes_geometry_from_current_document(
         writer.merge_subdirectory_metadata(path, {"images": second_fields})
         expected_pixel_size = 2.0
     else:
-        receive_projection_entries(
-            writer,
-            path,
-            "images",
+        receive_projection_entries(writer,
+            path, "images",
             VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
                 ((second, "images/second.tif"),)
             ),
@@ -292,11 +270,9 @@ def test_final_publication_prunes_geometry_and_preserves_other_directories(tmp_p
         (deleted, "images/deleted.tif"),
         (elsewhere, "other/retained.tif"),
     )
-    receive_projection_entries(
-        writer,
-        path,
-        "images",
-        VirtualWorkspaceSourceProjectionEntries.from_projection_paths(projection_paths),
+    receive_projection_entries(writer,
+        path, "images",
+        VirtualWorkspaceSourceProjectionEntries.from_projection_paths(projection_paths)
     )
     before = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
     assert before[FIELDS.PIXEL_SIZE] == 1.0
@@ -413,8 +389,7 @@ def test_invalid_unreplaced_projection_aborts_typed_transaction(tmp_path, publis
     path = tmp_path / "openhcs_metadata.json"
     writer = AtomicMetadataWriter()
     writer.replace_subdirectory_metadata(
-        path,
-        "images",
+        path, "images",
         {FIELDS.SOURCE_PROJECTION: [{"virtual_path": "images/broken.tif"}]},
     )
     replacement = calibrated_projection("A02", "images/new.tif", 0.5)
@@ -463,10 +438,9 @@ def test_typed_transaction_retains_wire_fields_and_derives_workspace_views(
         assert "legacy.tif" not in subdir[FIELDS.WORKSPACE_MAPPING]
         assert "legacy.tif" not in subdir[FIELDS.SOURCE_METADATA]
         assert subdir[FIELDS.SOURCE_METADATA]["images/original.tif"]["well"] == "A01"
-        assert (
-            "manual_override"
-            not in subdir[FIELDS.SOURCE_METADATA]["images/original.tif"]
-        )
+        assert "manual_override" not in subdir[FIELDS.SOURCE_METADATA][
+            "images/original.tif"
+        ]
         assert "well" not in subdir[FIELDS.SOURCE_PROJECTION][0]["source_metadata"]
         publish_projection_inventory(
             writer, path, None, ("images/original.tif", "images/new.tif")
@@ -545,14 +519,7 @@ def test_native_header_reload_preserves_declared_crop_and_alias(tmp_path, origin
     context = ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path), {}))
     from openhcs.core.source_bindings import NamedSourceBinding
 
-    current = (
-        NamedSourceBinding(alias="neurite")
-        .apply_loaded_payload(
-            reloaded,
-            context,
-        )
-        .metadata
-    )
+    current = NamedSourceBinding(alias="neurite").apply_loaded_payload( reloaded, context, ).metadata
     assert current.source_dtype == "float32"
     assert current.source_spatial_domain == metadata.source_spatial_domain
     assert current.source_image_names == ("neurite",)
@@ -578,12 +545,10 @@ def test_native_mosaic_replaces_incompatible_old_tile_domain_without_losing_sour
     reloaded = ImageMetadataPayload(
         image_format.read(path), image_format.persisted_metadata(path, payload)
     )
-    current = (
-        NamedSourceBinding(alias="neurite").apply_loaded_payload(
+    current = (NamedSourceBinding(alias="neurite").apply_loaded_payload(
             reloaded,
             ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path), {})),
-        )
-    ).metadata
+        )).metadata
     assert current.source_spatial_domain.origin_yx == (0, 0)
     assert current.source_spatial_domain.source_shape_yx == (10, 16)
     assert current.source_image_names == ("neurite",)

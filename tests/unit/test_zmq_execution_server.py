@@ -161,9 +161,7 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
     if failed:
         assert "A02: error: producer lineage missing" in terminal[MessageFields.ERROR]
     else:
-        assert terminal[MessageFields.RESULTS_SUMMARY][
-            MessageFields.PARTITION_VALUES
-        ] == [
+        assert terminal[MessageFields.RESULTS_SUMMARY][MessageFields.PARTITION_VALUES] == [
             "A01",
             "A02",
         ]
@@ -335,9 +333,7 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
                             RuntimeContextObservation(
                                 "context",
                                 (),
-                                outputs=StepExecutionObservation(
-                                    {}, (declared_output,)
-                                ),
+                                outputs=StepExecutionObservation({}, (declared_output,)),
                             ),
                         )
                     ),
@@ -541,9 +537,7 @@ def test_zmq_server_admits_all_progress_through_generic_terminal_watermark() -> 
         step_name="ExportToDatabase",
         phase=ProgressPhase.RUNNING,
         status=ProgressStatus.RUNNING,
-        completed=32,
-        total=33,
-        percent=(32 / 33) * 100.0,
+        completed=32, total=33, percent=(32 / 33) * 100.0,
     )
     server._enqueue_progress(parent)
     worker_queue.put(parent)
@@ -563,11 +557,7 @@ def test_zmq_server_admits_all_progress_through_generic_terminal_watermark() -> 
     subscriber = ProgressStreamSubscriber(lambda: None, client._record_progress)
     for payload in published:
         assert subscriber._dispatch_message(json.dumps(payload))
-    assert [payload[MessageFields.PROGRESS_SEQUENCE] for payload in received] == [
-        1,
-        2,
-        3,
-    ]
+    assert [payload[MessageFields.PROGRESS_SEQUENCE] for payload in received] == [1, 2, 3]
     assert client.progress_observation(record.execution_id).sequence == 3
     assert record.to_dict()[MessageFields.PROGRESS_SEQUENCE] == 3
     assert record.progress_event == published[-1]
@@ -610,7 +600,8 @@ def test_zmq_server_records_the_compilation_output_plate_value_without_rebuildin
         ExecutionOutputSummary.EXECUTION_RECORD_KEY: output_dataset
     }
     assert (
-        record.get_extra(ExecutionOutputSummary.EXECUTION_RECORD_KEY) is output_dataset
+        record.get_extra(ExecutionOutputSummary.EXECUTION_RECORD_KEY)
+        is output_dataset
     )
 
 
@@ -645,8 +636,7 @@ def test_zmq_server_stop_releases_process_resources_when_transport_stop_fails(
 
 
 def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_gate(
-    tmp_path,
-    monkeypatch,
+    tmp_path, monkeypatch,
 ):
     import json
     from polystore.base import reset_memory_backend
@@ -716,9 +706,7 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
     def reject_configuration_work(*args, **kwargs):
         raise AssertionError("Compiled adoption must use the admitted domain")
 
-    monkeypatch.setattr(
-        PipelineOrchestrator, "get_effective_config", reject_configuration_work
-    )
+    monkeypatch.setattr(PipelineOrchestrator, "get_effective_config", reject_configuration_work)
     monkeypatch.setattr(
         "openhcs.core.orchestrator.orchestrator.ZarrStorageBackend",
         reject_configuration_work,
@@ -782,9 +770,7 @@ def test_compiled_axis_selection_uses_admitted_axes_and_debug_policy():
     ) == ["A02"]
 
 
-def test_compiled_request_keeps_config_scope_without_resolving_configuration(
-    monkeypatch,
-):
+def test_compiled_request_keeps_config_scope_without_resolving_configuration(monkeypatch):
     server = ZMQExecutionServer(port=5555)
     global_config = GlobalPipelineConfig(
         processing_config=ProcessingConfig(group_by=Microscopy.Channel)
@@ -814,45 +800,35 @@ def test_compiled_request_keeps_config_scope_without_resolving_configuration(
     monkeypatch.setattr(
         zmq_execution_server_module,
         "ZMQOrchestratorEnvironmentRequest",
-        lambda **kwargs: SimpleNamespace(
-            prepare=lambda: SimpleNamespace(
-                debug_execution_policy=policy,
-                debug_execution_config=None,
-                dataset_root=context.subject_id,
-            )
-        ),
+        lambda **kwargs: SimpleNamespace(prepare=lambda: SimpleNamespace(
+            debug_execution_policy=policy,
+            debug_execution_config=None,
+            dataset_root=context.subject_id,
+        )),
     )
 
     def reject_resolution(*args, **kwargs):
         raise AssertionError("Compiled request must not resolve the saved config again")
 
     monkeypatch.setattr(
-        zmq_execution_server_module.ObjectState,
-        "resolve_saved_object",
-        reject_resolution,
+        zmq_execution_server_module.ObjectState, "resolve_saved_object", reject_resolution
     )
     initialized = []
     monkeypatch.setattr(
-        server,
-        "_initialize_orchestrator",
+        server, "_initialize_orchestrator",
         lambda *args, **kwargs: initialized.append(kwargs) or object(),
     )
     compilations = []
     monkeypatch.setattr(
-        server,
-        "_resolve_compilation",
+        server, "_resolve_compilation",
         lambda **kwargs: compilations.append(kwargs) or object(),
     )
     monkeypatch.setattr(server, "_record_compilation_outputs", lambda *args: None)
     marker = object()
-    monkeypatch.setattr(
-        server, "_finish_compilation_or_execute", lambda **kwargs: marker
-    )
+    monkeypatch.setattr(server, "_finish_compilation_or_execute", lambda **kwargs: marker)
     assert server._execute_with_orchestrator(context) is marker
     assert initialized[0]["execution_bundle"] is bundle
     assert initialized[0]["resolved_config"] is None
     assert compilations[0]["resolved_config"] is None
     assert compilations[0]["partition_values"] == ["A01"]
-    assert (
-        get_current_global_config(GlobalPipelineConfig, use_live=False) is global_config
-    )
+    assert get_current_global_config(GlobalPipelineConfig, use_live=False) is global_config

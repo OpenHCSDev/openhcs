@@ -147,9 +147,7 @@ def test_dispatcher_notifies_source_root_without_self_flash(qapp) -> None:
         QTimer.singleShot(240, loop.quit)
         loop.exec()
 
-        assert manager.state.updated == [
-            ("step_partition_filter_config.partition_filter", "B02")
-        ]
+        assert manager.state.updated == [("step_partition_filter_config.partition_filter", "B02")]
         assert manager.synced == ["partition_filter"]
         assert manager.flash_requests == []
         assert manager.live_refreshes == 1
@@ -293,20 +291,14 @@ def test_chrome_sync_refreshes_widgets_by_exact_objectstate_path() -> None:
     partition_filter.form_tree = form_tree
     path_planning.form_tree = form_tree
 
-    root.chrome_sync.refresh_widgets_for_paths(
-        {"partition_filter_config.partition_filter"}
-    )
+    root.chrome_sync.refresh_widgets_for_paths({"partition_filter_config.partition_filter"})
 
-    assert widget_service.calls == [
-        ("partition_filter_config", "partition_filter", "A01", False)
-    ]
+    assert widget_service.calls == [("partition_filter_config", "partition_filter", "A01", False)]
     assert partition_filter.widgets["partition_filter"].values == ["A01"]
     assert path_planning.widgets["partition_filter"].values == []
     assert placeholder_service.calls == []
 
-    root.chrome_sync.refresh_widgets_for_paths(
-        {"path_planning_config.partition_filter"}
-    )
+    root.chrome_sync.refresh_widgets_for_paths({"path_planning_config.partition_filter"})
 
     assert widget_service.calls[-1] == (
         "path_planning_config",
@@ -385,15 +377,9 @@ def test_resolved_change_refreshes_widget_values_outside_time_travel(qapp) -> No
         manager.deleteLater()
         qapp.processEvents()
 
-    assert manager.chrome_sync.widget_paths == [
-        {"partition_filter_config.partition_filter"}
-    ]
-    assert manager.chrome_sync.state_paths == [
-        {"partition_filter_config.partition_filter"}
-    ]
-    assert manager.flash_registrations == [
-        ("partition_filter_config.partition_filter", False)
-    ]
+    assert manager.chrome_sync.widget_paths == [{"partition_filter_config.partition_filter"}]
+    assert manager.chrome_sync.state_paths == [{"partition_filter_config.partition_filter"}]
+    assert manager.flash_registrations == [("partition_filter_config.partition_filter", False)]
     assert manager.flash_batches == [("partition_filter_config.partition_filter",)]
 
 

@@ -18,24 +18,16 @@ from openhcs.core.config import (
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ObjectLabelsArtifactType,
-    MeasurementsArtifactType,
+    ArtifactSpec, ObjectLabelsArtifactType, MeasurementsArtifactType,
     ArtifactMeasurementSubjectRelation,
 )
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.pipeline.function_contracts import (
-    artifact_inputs,
-    artifact_outputs,
-    object_label_input_execution_mode,
-)
+from openhcs.core.pipeline.function_contracts import (artifact_inputs, artifact_outputs, object_label_input_execution_mode)
 from openhcs.core.memory import numpy as numpy_decorator
-from openhcs.core.runtime_object_label_building import (
-    SourceImageObjectLabelBuildRequest,
-)
+from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.processing_contracts import (
     Pure2DContract,
@@ -67,29 +59,22 @@ from openhcs.core.pipeline.function_contracts import (
 @numpy_decorator(contract=Pure2DContract)
 def tiny_objects(image: np.ndarray) -> ObjectLabelValue:
     return SourceImageObjectLabelBuildRequest(
-        image=image,
-        labels=(np.asarray(image) > 0).astype(np.int32),
-        declared_object_count=1,
-        declared_object_ids=(1,),
+        image=image, labels=(np.asarray(image) > 0).astype(np.int32),
+        declared_object_count=1, declared_object_ids=(1,),
     ).payload()
 
 
-@artifact_inputs(
-    ArtifactSpec.input("objects", ObjectLabelsArtifactType, parameter_name="labels")
-)
+@artifact_inputs(ArtifactSpec.input("objects", ObjectLabelsArtifactType, parameter_name="labels"))
 @numpy_decorator(contract=Pure3DContract)
 @object_label_input_execution_mode(FullStackLabels)
 def render_labels(image: np.ndarray, labels: ObjectLabelValue) -> np.ndarray:
     return convert_objects_to_image(image, labels, image_mode=ImageMode.UINT16)
 
 
-@artifact_outputs(
-    ArtifactSpec.output(
-        "counts",
-        MeasurementsArtifactType,
-        relations=(ArtifactMeasurementSubjectRelation(),),
-    )
-)
+@artifact_outputs(ArtifactSpec.output(
+    "counts", MeasurementsArtifactType,
+    relations=(ArtifactMeasurementSubjectRelation(),),
+))
 @numpy_decorator(contract=Pure2DContract)
 def tiny_counts(image: np.ndarray):
     return image, MeasurementSparseColumnarRows.from_rows(
@@ -114,21 +99,10 @@ def _plate(root: Path, site_count: int = 1) -> Path:
     for site in range(1, site_count + 1):
         path = root / f"A01_s{site:03d}_w1_z001_t001.tif"
         tifffile.imwrite(path, pixels)
-        address = OpenHCSPlaneAddress(
-            (
-                (Microscopy.Well, "A01"),
-                (Microscopy.Site, site),
-                (Microscopy.Channel, 1),
-                (Microscopy.ZIndex, 1),
-                (Microscopy.Timepoint, 1),
-            )
-        )
+        address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, site), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1)))
         metadata = ImagePayloadMetadata(
             source_path=str(path),
-            source_component_metadata={
-                **address.as_component_metadata(),
-                "extension": ".tif",
-            },
+            source_component_metadata={**address.as_component_metadata(), "extension": ".tif"},
             source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65)),
         )
         projection = SourcePlaneProjection(
@@ -139,9 +113,7 @@ def _plate(root: Path, site_count: int = 1) -> Path:
         )
         projections.append(projection)
         projection_paths.append((projection, path.name))
-    document = SourceProjectionMetadataSerializer(
-        SourceSchemaFilenameParser()
-    ).metadata_dict(
+    document = SourceProjectionMetadataSerializer(SourceSchemaFilenameParser()).metadata_dict(
         SourceProjectionSet(tuple(projections)),
         microscope_handler_name="openhcsdata",
         source_filename_parser_name="SourceSchemaFilenameParser",
@@ -150,9 +122,7 @@ def _plate(root: Path, site_count: int = 1) -> Path:
         main=True,
         projection_paths=tuple(projection_paths),
     )
-    (root / "openhcs_metadata.json").write_text(
-        json.dumps({"subdirectories": {".": document}})
-    )
+    (root / "openhcs_metadata.json").write_text(json.dumps({"subdirectories": {".": document}}))
     return root
 
 
@@ -160,9 +130,7 @@ def _compile(root: Path, results: Path, main_filter=0):
     plate = _plate(root / "source")
     config = PipelineConfig(
         materialization_results_path=results,
-        path_planning_config=LazyPathPlanningConfig(
-            output_dir_suffix="_out", partition_filter=main_filter
-        ),
+        path_planning_config=LazyPathPlanningConfig(output_dir_suffix="_out", partition_filter=main_filter),
         processing_config=LazyProcessingConfig(
             group_by=Microscopy.Channel,
             variable_components=[Microscopy.Site],
@@ -177,9 +145,7 @@ def _compile(root: Path, results: Path, main_filter=0):
             func=render_labels,
             name="render",
             step_materialization_config=LazyStepMaterializationConfig(
-                enabled=True,
-                output_dir_suffix="_out",
-                sub_dir="converted",
+                enabled=True, output_dir_suffix="_out", sub_dir="converted",
             ),
         ),
         FunctionStep(func=tiny_counts, name="counts"),
@@ -188,17 +154,13 @@ def _compile(root: Path, results: Path, main_filter=0):
 
 
 def test_public_planning_rejects_external_results_root(tmp_path):
-    with pytest.raises(
-        ValueError, match="materialization_results_path.*output plate root"
-    ):
+    with pytest.raises(ValueError, match="materialization_results_path.*output plate root"):
         _compile(tmp_path, tmp_path / "external-results")
 
 
 @pytest.mark.parametrize("absolute", (False, True))
 @pytest.mark.parametrize("main_filter", (0, 1))
-def test_converted_checkpoint_has_typed_address_on_final_reconciliation(
-    tmp_path, absolute, main_filter
-):
+def test_converted_checkpoint_has_typed_address_on_final_reconciliation(tmp_path, absolute, main_filter):
     results = tmp_path / "source_out" / "results" if absolute else Path("results")
     orchestrator, steps, bundle = _compile(tmp_path, results, main_filter)
     for context in bundle.runtime_contexts.values():
@@ -221,27 +183,11 @@ def test_converted_checkpoint_has_typed_address_on_final_reconciliation(
     assert entry["image_files"] == [projection["virtual_path"]]
     # Reopen the durable typed projection. Zero automatic main-flow output must
     # not invent a default main when independently saved targets coexist.
-    reopened_metadata = (
-        orchestrator.microscope_handler.metadata_handler.load_metadata_document(
-            saved.parent
-        )
-    )
-    reopened = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
-        saved.parent, reopened_metadata
-    )
+    reopened_metadata = orchestrator.microscope_handler.metadata_handler.load_metadata_document(saved.parent)
+    reopened = VirtualWorkspaceSourceProjection.from_openhcs_metadata(saved.parent, reopened_metadata)
     retained = reopened.source_projections_by_virtual_path[projection["virtual_path"]]
-    assert retained.address == OpenHCSPlaneAddress(
-        (
-            (Microscopy.Well, "A01"),
-            (Microscopy.Site, 1),
-            (Microscopy.Channel, 1),
-            (Microscopy.ZIndex, 1),
-            (Microscopy.Timepoint, 1),
-        )
-    )
-    assert retained.image_metadata.source_voxel_spacing == SourceVoxelSpacing(
-        (0.65, 0.65)
-    )
+    assert retained.address == OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1)))
+    assert retained.image_metadata.source_voxel_spacing == SourceVoxelSpacing((0.65, 0.65))
     assert retained.image_metadata.source_path == projected_metadata.source_path
     if main_filter:
         reopened_plate = PipelineOrchestrator(saved.parent).initialize()
@@ -259,9 +205,7 @@ def test_converted_checkpoint_has_typed_address_on_final_reconciliation(
 
 
 def test_planning_rejects_relative_results_escape(tmp_path):
-    with pytest.raises(
-        ValueError, match="materialization_results_path.*output plate root"
-    ):
+    with pytest.raises(ValueError, match="materialization_results_path.*output plate root"):
         _compile(tmp_path, Path("../external-results"))
 
 
@@ -273,9 +217,7 @@ def test_planning_preserves_symlinked_plate_identity(tmp_path):
     _orchestrator, _steps, bundle = _compile(alias, Path("results"))
     for context in bundle.runtime_contexts.values():
         for plan in context.step_plans.values():
-            assert Path(plan.analysis_results_dir).is_relative_to(
-                plan.output_dataset_root
-            )
+            assert Path(plan.analysis_results_dir).is_relative_to(plan.output_dataset_root)
 
 
 def test_planning_rejects_symlinked_results_escape(tmp_path):
@@ -284,9 +226,7 @@ def test_planning_rejects_symlinked_results_escape(tmp_path):
     output = tmp_path / "source_out"
     output.mkdir()
     (output / "results").symlink_to(outside, target_is_directory=True)
-    with pytest.raises(
-        ValueError, match="materialization_results_path.*output plate root"
-    ):
+    with pytest.raises(ValueError, match="materialization_results_path.*output plate root"):
         _compile(tmp_path, Path("results"))
 
 
@@ -294,13 +234,10 @@ def test_new_unnamed_replacement_and_table_passthrough_contracts():
     def another_image(image):
         return image + 1
 
-    @artifact_outputs(
-        ArtifactSpec.output(
-            "counts",
-            MeasurementsArtifactType,
-            relations=(ArtifactMeasurementSubjectRelation(),),
-        )
-    )
+    @artifact_outputs(ArtifactSpec.output(
+        "counts", MeasurementsArtifactType,
+        relations=(ArtifactMeasurementSubjectRelation(),),
+    ))
     def table_only(image):
         return image
 

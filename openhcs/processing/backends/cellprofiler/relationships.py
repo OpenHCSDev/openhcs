@@ -881,6 +881,7 @@ class ObjectRelationshipBackendStrategy(
 ):
     """Object relationship operations keyed by OpenHCS memory type/provider."""
 
+
     @abstractmethod
     def relate_children_to_parents(
         self, parent_labels: np.ndarray, child_labels: np.ndarray, child_count: int
@@ -1621,9 +1622,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
         identity_policy = (
             self.request.adapter.request.context.source_image_set_identity_policy
         )
-        child_axis = child_labels.metadata.source_provenance.image_set_axis(
-            identity_policy
-        )
+        child_axis = child_labels.metadata.source_provenance.image_set_axis(identity_policy)
         if not child_axis:
             raise ValueError(
                 f"RelateObjects child measurements for {child_spec.name!r} require "

@@ -20,11 +20,7 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     InProcessCompileInspectionGateway,
 )
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
-    ImageArtifactType,
-    MainFlowStackOutputSpec,
-    SpecialArtifactType,
-)
+from openhcs.core.artifacts import ImageArtifactType, MainFlowStackOutputSpec, SpecialArtifactType
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
@@ -61,8 +57,7 @@ from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSo
 @artifact_outputs(
     MainFlowStackOutputSpec.output("PassThrough", ImageArtifactType),
     MainFlowStackOutputSpec.output(
-        "VolumeScalar609",
-        SpecialArtifactType,
+        "VolumeScalar609", SpecialArtifactType,
         materialization=MaterializationSpec(CsvOptions()),
     ),
 )
@@ -72,9 +67,7 @@ def volume_scalar_609(image: np.ndarray):
 
 
 @pytest.mark.parametrize("group_by", [Ungrouped, Microscopy.Channel])
-def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(
-    tmp_path, group_by
-):
+def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path, group_by):
     source = tmp_path / "input"
     source.mkdir()
     pixels = np.arange(140, dtype=np.uint16).reshape(4, 5, 7)
@@ -90,58 +83,35 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(
             pipeline_config=PipelineConfig(
                 dataset_source=SourceBindingsSource,
                 source_bindings_config=LazySourceBindingsConfig(
-                    metadata_rules=(
-                        MetadataExtractionRule(
-                            source=MetadataSource.FILE_NAME,
-                            pattern=r"(?P<well>A[0-9]+)_s(?P<site>[0-9]+)_w(?P<channel>[0-9]+)_z(?P<z_index>[0-9]+)_t(?P<timepoint>[0-9]+)",
-                        ),
-                    ),
-                    bindings=(
-                        NamedSourceBinding(
-                            alias="Fixture",
-                            selector=SourceSelector(),
-                            component_identity=(
-                                ComponentSelector(Microscopy.Channel, "1"),
-                            ),
-                        ),
-                    ),
+                    metadata_rules=(MetadataExtractionRule(
+                        source=MetadataSource.FILE_NAME,
+                        pattern=r"(?P<well>A[0-9]+)_s(?P<site>[0-9]+)_w(?P<channel>[0-9]+)_z(?P<z_index>[0-9]+)_t(?P<timepoint>[0-9]+)",
+                    ),),
+                    bindings=(NamedSourceBinding(
+                        alias="Fixture", selector=SourceSelector(),
+                        component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
+                    ),),
                 ),
             ),
-            pipeline_steps=[
-                FunctionStep(
-                    func=registered,
-                    name="Actual volume scalar",
-                    processing_config=LazyProcessingConfig(
-                        variable_components=[Microscopy.ZIndex],
-                        group_by=group_by,
-                        input_source=InputSource.PIPELINE_START,
-                    ),
-                )
-            ],
+            pipeline_steps=[FunctionStep(
+                func=registered, name="Actual volume scalar",
+                processing_config=LazyProcessingConfig(
+                    variable_components=[Microscopy.ZIndex],
+                    group_by=group_by,
+                    input_source=InputSource.PIPELINE_START,
+                ),
+            )],
         )
-        bundle = (
-            InProcessCompileInspectionGateway()
-            .compile(
-                CompileInspectionInput(
-                    plate=source,
-                    pipeline_document=document,
-                    axis_filter=("A01",),
-                    global_pipeline_config=GlobalPipelineConfig(
-                        num_workers=1, use_threading=True
-                    ),
-                    progress_queue=AgentProgressQueue(),
-                )
-            )
-            .execution_bundle
-        )
+        bundle = InProcessCompileInspectionGateway().compile(CompileInspectionInput(
+            plate=source, pipeline_document=document, axis_filter=("A01",),
+            global_pipeline_config=GlobalPipelineConfig(num_workers=1, use_threading=True),
+            progress_queue=AgentProgressQueue(),
+        )).execution_bundle
         context = bundle.runtime_contexts["A01"]
         assert tuple(context.step_plans[0].variable_components) == (Microscopy.ZIndex,)
-        orchestrator = PipelineOrchestrator(
-            source, pipeline_config=document.pipeline_config
-        ).initialize()
+        orchestrator = PipelineOrchestrator(source, pipeline_config=document.pipeline_config).initialize()
         outcomes = orchestrator.execute_compiled_bundle(
-            execution_bundle=bundle,
-            max_workers=1,
+            execution_bundle=bundle, max_workers=1,
             runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
             progress_queue=AgentProgressQueue(),
             progress_context=ProgressExecutionContext(
@@ -156,9 +126,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(
         assert int(row["volume_sum"]) == int(pixels.sum())
         assert int(row["voxel_count"]) == pixels.size
         assert "_z" not in csv_path.name
-        saved = tuple(
-            Path(context.step_plans[0].artifact_images_dir).glob("*PassThrough.tif")
-        )
+        saved = tuple(Path(context.step_plans[0].artifact_images_dir).glob("*PassThrough.tif"))
         assert len(saved) == 4
         for image in saved:
             z_index = int(image.name.split("_z", 1)[1].split("_", 1)[0])

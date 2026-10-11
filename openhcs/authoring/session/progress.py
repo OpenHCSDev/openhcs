@@ -193,9 +193,7 @@ class ExecutionProgress:
                     session.live_measurements.add_notification(live)
                     session.publish(LiveMeasurementAvailable(live))
             try:
-                artifact = RuntimeArtifactAvailableNotification.from_progress_event(
-                    event
-                )
+                artifact = RuntimeArtifactAvailableNotification.from_progress_event(event)
             except RuntimeArtifactPayloadError as error:
                 logger.warning(
                     "Malformed runtime artifact progress context for "
@@ -231,3 +229,4 @@ class ExecutionProgress:
                 f"Expected ExecutionServerInfo, got {type(parsed).__name__}"
             )
         return parsed
+

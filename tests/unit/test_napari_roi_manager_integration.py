@@ -143,9 +143,7 @@ def test_installed_manager_binds_and_selects_native_shapes_without_copying(
         name="Native ROIs",
     )
 
-    class ResultSelectionController(
-        napari_viewer_server.NapariResultSelectionController
-    ):
+    class ResultSelectionController(napari_viewer_server.NapariResultSelectionController):
         @staticmethod
         def bind(_layer) -> None:
             return None
@@ -191,17 +189,10 @@ def test_installed_manager_binds_and_selects_native_shapes_without_copying(
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize(
-    "destroy",
-    [
-        "napari_close",
-        "manager",
-        "immediate_manager",
-        "window",
-        "manager_then_dock",
-        "manager_then_window",
-    ],
-)
+@pytest.mark.parametrize("destroy", [
+    "napari_close", "manager", "immediate_manager", "window",
+    "manager_then_dock", "manager_then_window",
+])
 def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy):
     napari = pytest.importorskip("napari")
     module = pytest.importorskip("openhcs.runtime.napari_viewer_server")
@@ -221,16 +212,12 @@ def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy)
     controller = server.result_selection_controller
     layer = viewer.add_shapes(
         [np.array([[0, 0], [0, 4], [4, 4]], dtype=float)],
-        shape_type="polygon",
-        features={"name": ["first"]},
-        name="First result",
+        shape_type="polygon", features={"name": ["first"]}, name="First result",
     )
     server.layer_route_state.set_layer("first", layer)
     server.bind_result_selection_layer(layer)
     original = server.require_result_selection_surface()
-    toolbars = viewer.window._qt_window.findChildren(
-        QToolBar, "openhcs_roi_selection_toolbar"
-    )
+    toolbars = viewer.window._qt_window.findChildren(QToolBar, "openhcs_roi_selection_toolbar")
     assert len(toolbars) == 1
     assert len(controller._selection_observers) == 1
     original.manager.hide()
@@ -267,9 +254,7 @@ def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy)
 
     next_layer = viewer.add_shapes(
         [np.array([[8, 8], [8, 12], [12, 12]], dtype=float)],
-        shape_type="polygon",
-        features={"name": ["next"]},
-        name="Next streamed result",
+        shape_type="polygon", features={"name": ["next"]}, name="Next streamed result",
     )
     server.layer_route_state.set_layer("next", next_layer)
     server.bind_result_selection_layer(next_layer)
@@ -278,14 +263,7 @@ def test_result_surface_native_destruction_releases_and_remounts(qtbot, destroy)
     assert replacement.manager._layer is next_layer
     assert replacement.manager._roilist.rowCount() == 1
     assert len(controller._selection_observers) == 1
-    assert (
-        len(
-            viewer.window._qt_window.findChildren(
-                QToolBar, "openhcs_roi_selection_toolbar"
-            )
-        )
-        == 1
-    )
+    assert len(viewer.window._qt_window.findChildren(QToolBar, "openhcs_roi_selection_toolbar")) == 1
     get_settings().appearance.highlight.highlight_thickness = 5
     controller._notify_selection_observers()
     viewer.close()

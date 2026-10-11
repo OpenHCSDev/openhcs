@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from openhcs.interop.cellprofiler.measurement_dialect import (
-    CellProfilerEquivalencePolicy,
-)
+from openhcs.interop.cellprofiler.measurement_dialect import CellProfilerEquivalencePolicy
 
 from openhcs.core.measurement_dialect import PlainMeasurementDialect
 
@@ -1498,9 +1496,7 @@ def test_runtime_execution_equivalence_detects_artifact_count_mismatch(
         RuntimeExportObservation.from_output_root(tmp_path / "candidate"),
     )
 
-    report = runtime_artifact_execution_equivalence(
-        reference, candidate, policy=RuntimeEquivalencePolicy()
-    )
+    report = runtime_artifact_execution_equivalence(reference, candidate, policy=RuntimeEquivalencePolicy())
 
     assert report.failure_messages() == (
         "runtime artifact counts differ: "
@@ -11457,7 +11453,7 @@ def test_exported_relationships_consume_declared_object_identity(
     snapshot = RuntimeMeasurementSnapshot.from_output_snapshot(
         RuntimeOutputSnapshot(tables=(parents, children)), policy=policy
     )
-    (relationship,) = snapshot.correlated_relationships.values()
+    relationship, = snapshot.correlated_relationships.values()
     assert relationship.source_keys == (ObjectInstanceKey(7, 0),)
     assert relationship.target_keys == (ObjectInstanceKey(11, 0),)
 

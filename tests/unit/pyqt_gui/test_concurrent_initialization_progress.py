@@ -15,9 +15,7 @@ def test_init_signals_and_completion_preserve_running_progress():
     app = QApplication.instance() or QApplication([])
     projection = ExecutionRuntimeProjection()
     plate = SubjectRuntimeProjection(
-        identity=SubjectRuntimeIdentity(
-            subject_id="/running", execution_id="owned-run"
-        ),
+        identity=SubjectRuntimeIdentity(subject_id="/running", execution_id="owned-run"),
         state=ExecutingSubjectRuntimeState,
         percent=43,
         axis_progress=(),

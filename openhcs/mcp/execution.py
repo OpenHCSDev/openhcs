@@ -85,9 +85,7 @@ class McpTransportExecutor(AsyncOperationExecutor):
 
     def __init__(self) -> None:
         if threading.current_thread() is not threading.main_thread():
-            raise RuntimeError(
-                "MCP transport must be started on the process main thread."
-            )
+            raise RuntimeError("MCP transport must be started on the process main thread.")
         existing_application = QCoreApplication.instance()
         # A process holds one Qt application; one this transport created is
         # its own and goes with it, so a later GUI can create a QApplication.
@@ -126,9 +124,7 @@ class McpTransportExecutor(AsyncOperationExecutor):
         leaving it to interpreter finalization is not an MCP lifecycle.
         """
         if threading.current_thread() is not threading.main_thread():
-            raise RuntimeError(
-                "MCP transport must be closed on the process main thread."
-            )
+            raise RuntimeError("MCP transport must be closed on the process main thread.")
         if self._closed:
             return
         try:

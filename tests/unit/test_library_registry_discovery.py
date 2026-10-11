@@ -109,11 +109,7 @@ def test_native_catalog_excludes_modules_whose_distribution_markers_exclude_here
 
 @pytest.mark.parametrize(
     "platform_system, platform_machine, excluded",
-    [
-        ("Darwin", "x86_64", True),
-        ("Darwin", "arm64", False),
-        ("Linux", "x86_64", False),
-    ],
+    [("Darwin", "x86_64", True), ("Darwin", "arm64", False), ("Linux", "x86_64", False)],
 )
 def test_basicpy_catalog_module_follows_the_package_basicpy_marker(
     monkeypatch, platform_system, platform_machine, excluded

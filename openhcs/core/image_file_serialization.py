@@ -158,9 +158,7 @@ class ImageFileSourceMetadata:
         """Require complete format-declared dtype and physical image dimensions."""
 
         if self.image_shape_yx is None or self.source_dtype is None:
-            raise ValueError(
-                "Image-file header does not declare image dtype and YX geometry."
-            )
+            raise ValueError("Image-file header does not declare image dtype and YX geometry.")
         height, width = self.image_shape_yx
         return self.source_dtype, height, width
 
@@ -417,7 +415,9 @@ class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegister
         payload = ImagePayload.of(payload)
         return header.project_image_metadata(
             payload.metadata,
-            values_preserved=self.preserves_pixel_values(payload.data.dtype),
+            values_preserved=self.preserves_pixel_values(
+                payload.data.dtype
+            ),
         )
 
     def requires_plane_store_decoder(self, path: Path) -> bool:

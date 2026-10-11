@@ -425,16 +425,9 @@ def test_registered_nine_site_paired_positions_use_owned_scalar_projection():
             return super().for_source_plane(plane_index)
 
     geometries = tuple(
-        SourceTileGeometry(
-            column * 6 - 1.25,
-            row * 4 + 0.5,
-            row=row,
-            column=column,
-            width_pixels=6,
-            height_pixels=4,
-        )
-        for row in range(3)
-        for column in range(3)
+        SourceTileGeometry(column * 6 - 1.25, row * 4 + 0.5,
+            row=row, column=column, width_pixels=6, height_pixels=4)
+        for row in range(3) for column in range(3)
     )
     function = OpenHCSRegistry.metadata_for_declared_callable(
         acquisition_tile_positions
@@ -443,10 +436,8 @@ def test_registered_nine_site_paired_positions_use_owned_scalar_projection():
     raw_assemble = CallableContract.from_callable(
         assemble_stack_cpu
     ).resolve_raw_runtime_callable()
-    for channel, order in (
-        ("1", (8, 0, 4, 3, 1, 7, 2, 6, 5)),
-        ("2", (5, 2, 6, 1, 3, 4, 7, 0, 8)),
-    ):
+    for channel, order in (("1", (8, 0, 4, 3, 1, 7, 2, 6, 5)),
+                           ("2", (5, 2, 6, 1, 3, 4, 7, 0, 8))):
         original = _metadata(geometries, order, channel)
         metadata = ProjectionAuditMetadata(
             source_provenance=original.source_provenance,
@@ -454,20 +445,16 @@ def test_registered_nine_site_paired_positions_use_owned_scalar_projection():
             source_voxel_spacing=SourceVoxelSpacing((0.25, 0.5)),
         )
         pixels = np.stack([np.full((4, 6), site + 1, np.uint16) for site in order])
-        result, positions = function(
-            ImageMetadataPayload(pixels, metadata), source_metadata=metadata
-        )
+        result, positions = function(ImageMetadataPayload(pixels, metadata),
+                                     source_metadata=metadata)
         np.testing.assert_array_equal(result, pixels)
-        assert positions == [
-            (geometries[site].x_pixels, geometries[site].y_pixels) for site in order
-        ]
+        assert positions == [(geometries[site].x_pixels, geometries[site].y_pixels)
+                             for site in order]
         assert result.metadata.source_voxel_spacing == metadata.source_voxel_spacing
         assert result.metadata.source_provenance == metadata.source_provenance
         assert calls == list(range(9))
         calls.clear()
-        assembled.append(
-            raw_assemble(pixels, positions, blend_method=TileBlendMethod.NONE)
-        )
+        assembled.append(raw_assemble(pixels, positions, blend_method=TileBlendMethod.NONE))
     assert assembled[0].shape == assembled[1].shape == (13, 19)
 
 
@@ -614,7 +601,9 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
             assert any(
                 edge.spec.name == "positions" for edge in consumer.artifact_input_edges
             )
-            assert context.step_plans[2].variable_components == [Microscopy.Channel]
+            assert context.step_plans[2].variable_components == [
+                Microscopy.Channel
+            ]
         result = orchestrator.execute_compiled_bundle(
             execution_bundle=compilation,
             progress_queue=progress,
@@ -673,7 +662,9 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                         (0.25, 0.5)
                     )
                     assert metadata.plane_axis is None
-            replay_config = PreparedWorkspaceSource.pipeline_config_for_source(config)
+            replay_config = PreparedWorkspaceSource.pipeline_config_for_source(
+                config
+            )
             reopened = PipelineOrchestrator(
                 output_dataset, pipeline_config=replay_config
             ).initialize()

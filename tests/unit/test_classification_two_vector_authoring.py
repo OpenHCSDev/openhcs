@@ -11,11 +11,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.agent.dto.pipeline import (
-    FunctionSpecRef,
-    FunctionStepAddRequest,
-    FunctionStepSpec,
-)
+from openhcs.agent.dto.pipeline import FunctionSpecRef, FunctionStepAddRequest, FunctionStepSpec
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -80,9 +76,9 @@ def test_original_mode_projections_have_no_case_dispatch(projection):
         for node in ast.walk(tree)
         if isinstance(node, (ast.If, ast.IfExp, ast.Match, ast.Compare, ast.Dict))
     )
-    assert (
-        not forbidden
-    ), f"{projection} still decides case behavior: {[type(node).__name__ for node in forbidden]}"
+    assert not forbidden, (
+        f"{projection} still decides case behavior: {[type(node).__name__ for node in forbidden]}"
+    )
     member_names = frozenset(ClassificationMethod.__members__)
     assert not any(
         isinstance(node, ast.Attribute) and node.attr in member_names
@@ -300,9 +296,7 @@ def test_original_parsed_pair_runtime_binds_only_its_declared_signature():
 
 
 @pytest.mark.parametrize("clean", (False, True))
-def test_original_public_016_json_kwargs_reach_strict_020_callable_abi(
-    clean, monkeypatch
-):
+def test_original_public_016_json_kwargs_reach_strict_020_callable_abi(clean, monkeypatch):
     """Exact live request's kwargs, without plate/native/registration replay."""
     function_id, metadata = RegistryService.declared_metadata_for_callable(
         classify_objects_two_measurements
@@ -311,7 +305,7 @@ def test_original_public_016_json_kwargs_reach_strict_020_callable_abi(
     monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})
     author = PipelineAuthoringService(function_catalog=SelectedDeclarations())
     ref = author.create_pipeline()
-    kwargs = json.loads("""{
+    kwargs = json.loads('''{
         "select_the_object_to_be_classified": "engineering_cells",
         "measurement1_feature": "pixel_count",
         "measurement2_feature": "calibration_um",
@@ -319,39 +313,22 @@ def test_original_public_016_json_kwargs_reach_strict_020_callable_abi(
         "threshold2_method": "custom", "threshold2_value": 2.0,
         "low_low_name": "low_low", "high_low_name": "high_low",
         "low_high_name": "low_high", "high_high_name": "high_high"
-    }""")
-    author.add_function_step_from_request(
-        FunctionStepAddRequest.from_fields(
-            pipeline_id=ref.pipeline_id,
-            function_id=function_id,
-            name="engineering_pair_classification",
-            kwargs=kwargs,
-        )
-    )
+    }''')
+    author.add_function_step_from_request(FunctionStepAddRequest.from_fields(
+        pipeline_id=ref.pipeline_id, function_id=function_id,
+        name="engineering_pair_classification", kwargs=kwargs,
+    ))
     assert author.validate(ref).valid
-    document = PipelineDocumentCodec.from_source(
-        author.render_source(ref, clean=clean).source
-    )
-    invocation = next(
-        normalize_function_pattern(document.pipeline_steps[0].func).iter_items()
-    )
+    document = PipelineDocumentCodec.from_source(author.render_source(ref, clean=clean).source)
+    invocation = next(normalize_function_pattern(document.pipeline_steps[0].func).iter_items())
     values = invocation.kwargs_dict
     assert values["threshold1_method"] is ClassificationThresholdMethod.CUSTOM
     assert values["threshold2_method"] is ClassificationThresholdMethod.CUSTOM
     assert (values["threshold1_value"], values["threshold2_value"]) == (100.0, 2.0)
-    assert (values["measurement1_feature"], values["measurement2_feature"]) == (
-        "pixel_count",
-        "calibration_um",
-    )
+    assert (values["measurement1_feature"], values["measurement2_feature"]) == ("pixel_count", "calibration_um")
     assert values["select_the_object_to_be_classified"] == "engineering_cells"
-    executable = {
-        name: value
-        for name, value in values.items()
-        if name != "select_the_object_to_be_classified"
-    }
-    assert invocation.contract.validate_public_kwargs(executable) == tuple(
-        executable.items()
-    )
+    executable = {name: value for name, value in values.items() if name != "select_the_object_to_be_classified"}
+    assert invocation.contract.validate_public_kwargs(executable) == tuple(executable.items())
 
 
 @pytest.mark.parametrize(
@@ -594,12 +571,10 @@ def test_paired_author_validate_render_parse_compile_and_original_runtime(
     author = PipelineAuthoringService(function_catalog=SelectedDeclarations())
     authored_kwargs = paired_kwargs()
     if json_kwargs:
-        authored_kwargs = json.loads(
-            json.dumps(
-                authored_kwargs,
-                default=lambda member: member.value,
-            )
-        )
+        authored_kwargs = json.loads(json.dumps(
+            authored_kwargs,
+            default=lambda member: member.value,
+        ))
     ref = author.create_pipeline(
         steps=(
             FunctionStepSpec(
@@ -614,14 +589,8 @@ def test_paired_author_validate_render_parse_compile_and_original_runtime(
     invocation = next(
         normalize_function_pattern(restored.pipeline_steps[0].func).iter_items()
     )
-    assert (
-        invocation.kwargs_dict["threshold1_method"]
-        is ClassificationThresholdMethod.CUSTOM
-    )
-    assert (
-        invocation.kwargs_dict["threshold2_method"]
-        is ClassificationThresholdMethod.CUSTOM
-    )
+    assert invocation.kwargs_dict["threshold1_method"] is ClassificationThresholdMethod.CUSTOM
+    assert invocation.kwargs_dict["threshold2_method"] is ClassificationThresholdMethod.CUSTOM
     contract = _public_function_step_contract(
         ClassifyObjectsSingleMeasurementModule,
         invocation.contract.func,

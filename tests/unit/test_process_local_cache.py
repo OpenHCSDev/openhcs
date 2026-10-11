@@ -40,10 +40,7 @@ def test_process_local_domains_join_family_cleanup_and_store_queries_do_not():
     assert len({id(cache) for cache in caches}) == len(process_local)
     assert all(cache.max_entries == 16 for cache in caches[: len(numerical)])
     for cache_type in process_local:
-        assert (
-            ProcessLocalBoundedCache.__registry__[cache_type.process_cache_key]
-            is cache_type
-        )
+        assert ProcessLocalBoundedCache.__registry__[cache_type.process_cache_key] is cache_type
 
     owner = object()
     for cache in caches[:-1]:

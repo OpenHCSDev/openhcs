@@ -570,7 +570,8 @@ def test_official30_fiji_variants_project_registered_viewer_configs() -> None:
 
     for viewers in _OFFICIAL30_FIJI_VIEWER_VARIANTS:
         ports_by_viewer = {
-            viewer: 20_000 + index * 100 for index, viewer in enumerate(viewers)
+            viewer: 20_000 + index * 100
+            for index, viewer in enumerate(viewers)
         }
         configs = _registered_streaming_config_kwargs(
             viewers,

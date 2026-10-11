@@ -218,9 +218,7 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         return cls._view(
             metadata,
             "provenance_identity_items",
-            lambda: tuple(
-                (key, repr(value)) for key, value in cls.identity_items(metadata)
-            ),
+            lambda: tuple((key, repr(value)) for key, value in cls.identity_items(metadata)),
         )
 
     @staticmethod
@@ -258,12 +256,10 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
                 value_types = types_by_name.setdefault(name, set())
                 if value is not None:
                     value_types.add(type(value))
-        return MappingProxyType(
-            {
-                name: next(iter(value_types)) if len(value_types) == 1 else None
-                for name, value_types in types_by_name.items()
-            }
-        )
+        return MappingProxyType({
+            name: next(iter(value_types)) if len(value_types) == 1 else None
+            for name, value_types in types_by_name.items()
+        })
 
     @classmethod
     def component_value(
@@ -302,13 +298,11 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         cls, metadata: SourceMetadataMapping, component: type[Axis]
     ) -> tuple[str, ...]:
         """Read only the requested component from the current field admission."""
-        return tuple(
-            dict.fromkeys(
-                str(value)
-                for owner, value in cls._ordered_component_fields(metadata)
-                if owner is component
-            )
-        )
+        return tuple(dict.fromkeys(
+            str(value)
+            for owner, value in cls._ordered_component_fields(metadata)
+            if owner is component
+        ))
 
     @classmethod
     def component_domains(
@@ -544,8 +538,7 @@ class OwnedSourceMetadataFields(SourceMetadataFields):
     @property
     def _accepted_components_complete(self) -> bool:
         return self._cacheable and all(
-            self._views.get(component) is not None
-            for component in AxisFamily.active().axes
+            self._views.get(component) is not None for component in AxisFamily.active().axes
         )
 
     def _literal_value(self, key: str) -> SourceMetadataScalar:
@@ -863,9 +856,7 @@ class SourceVoxelSpacingUnit(StrEnum):
         name: str,
         physical_projection: Callable[["SourceVoxelSpacing"], float | None],
         native_unit: str,
-        physical_coordinates: Callable[
-            ["SourceVoxelSpacing"], tuple[float, ...] | None
-        ],
+        physical_coordinates: Callable[["SourceVoxelSpacing"], tuple[float, ...] | None],
     ):
         member = str.__new__(cls, name)
         member._value_ = name
@@ -877,9 +868,7 @@ class SourceVoxelSpacingUnit(StrEnum):
     def physical_pixel_size(self, spacing: "SourceVoxelSpacing") -> float | None:
         return self._physical_projection(spacing)
 
-    def physical_coordinates(
-        self, spacing: "SourceVoxelSpacing"
-    ) -> tuple[float, ...] | None:
+    def physical_coordinates(self, spacing: "SourceVoxelSpacing") -> tuple[float, ...] | None:
         """Project coordinates only when this declaration establishes physical units."""
         return self._physical_coordinates(spacing)
 
@@ -1131,7 +1120,9 @@ def source_metadata_component(field: str) -> type[Axis] | None:
 
 
 @lru_cache(maxsize=1024)
-def _axis_for_metadata_field(family: type[AxisFamily], field: str) -> type[Axis] | None:
+def _axis_for_metadata_field(
+    family: type[AxisFamily], field: str
+) -> type[Axis] | None:
     normalized = source_metadata_field_identity(field)
     owners = tuple(
         axis

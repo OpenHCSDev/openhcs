@@ -141,29 +141,21 @@ class CustomFunctionRegistrationHandle(FunctionCatalogOperationHandle):
     @classmethod
     def from_request(cls, request: CustomFunctionRegistrationRequest) -> Self:
         return cls(
-            connection=request.connection,
-            server_identity=request.require_selected_server_identity(),
-            content_sha256=CustomFunctionSource.content_digest(
-                request.source_code.encode("utf-8")
-            ),
-            function_name=request.function_name,
-            persist=request.persist,
+            connection=request.connection, server_identity=request.require_selected_server_identity(),
+            content_sha256=CustomFunctionSource.content_digest(request.source_code.encode("utf-8")),
+            function_name=request.function_name, persist=request.persist,
             storage_dir=request.storage_dir,
         )
 
     def require_named_source(self) -> CustomFunctionSource:
         if self.function_name is None:
-            raise ValueError(
-                "Persisted registration observation requires its admitted name."
-            )
+            raise ValueError("Persisted registration observation requires its admitted name.")
         return CustomFunctionSource(self.function_name, self.content_sha256)
 
     def require_storage_dir(self) -> Path:
         """Decode this handle's admitted source store once for native/path owners."""
         if self.storage_dir is None:
-            raise ValueError(
-                "Persisted registration observation requires its admitted store."
-            )
+            raise ValueError("Persisted registration observation requires its admitted store.")
         return Path(self.storage_dir)
 
 
@@ -190,15 +182,10 @@ class CustomFunctionRegistrationObservation(AgentResultEnvelope):
     outcome: CustomFunctionRegistrationObservationOutcome = field(init=False)
 
     def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "outcome",
-            CustomFunctionRegistrationObservationOutcome.from_proofs(
-                published=bool(self.published_sources),
-                persisted=self.persisted_source is not None,
-                persist=self.handle.persist,
-            ),
-        )
+        object.__setattr__(self, "outcome", CustomFunctionRegistrationObservationOutcome.from_proofs(
+            published=bool(self.published_sources), persisted=self.persisted_source is not None,
+            persist=self.handle.persist,
+        ))
 
 
 class FunctionCatalogPreparationOutcome(str, Enum):
@@ -287,39 +274,25 @@ class CustomFunctionRegistrationRequest(FunctionCatalogControlRequestABC):
     connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
     function_name: str | None = None
     storage_dir: str | None = None
-    admission_policy: AgentPathPolicy | None = field(
-        default=None, repr=False, compare=False
-    )
+    admission_policy: AgentPathPolicy | None = field(default=None, repr=False, compare=False)
     server_identity: ProcessIdentity | None = None
 
     message_type = FunctionCatalogControlMessageType.REGISTER_CUSTOM
 
     @classmethod
     def from_fields(
-        cls,
-        *,
-        source_code: str,
-        persist: bool = True,
-        compact_signature: bool = True,
-        function_name: str | None = None,
-        storage_dir: str | None = None,
-        host: str = ExecutionConnectionSpec().host,
-        port: int | None = None,
-        transport_mode: TransportMode | None = None,
+        cls, *, source_code: str, persist: bool = True,
+        compact_signature: bool = True, function_name: str | None = None,
+        storage_dir: str | None = None, host: str = ExecutionConnectionSpec().host,
+        port: int | None = None, transport_mode: TransportMode | None = None,
         persistent: bool = ExecutionConnectionSpec().persistent,
     ) -> Self:
         """Public boundary: callers cannot supply their own write authority."""
         return cls(
-            source_code=source_code,
-            persist=persist,
-            compact_signature=compact_signature,
-            function_name=function_name,
-            storage_dir=storage_dir,
+            source_code=source_code, persist=persist, compact_signature=compact_signature,
+            function_name=function_name, storage_dir=storage_dir,
             connection=ExecutionConnectionSpec(
-                host=host,
-                port=port,
-                transport_mode=transport_mode,
-                persistent=persistent,
+                host=host, port=port, transport_mode=transport_mode, persistent=persistent,
             ),
         )
 
@@ -330,16 +303,12 @@ class CustomFunctionRegistrationRequest(FunctionCatalogControlRequestABC):
         self.connection.require_port("Custom function registration")
         if self.persist:
             if self.function_name is None or self.storage_dir is None:
-                raise ValueError(
-                    "Persisted registration requires function_name and the endpoint's storage_dir."
-                )
+                raise ValueError("Persisted registration requires function_name and the endpoint's storage_dir.")
             root = Path(self.storage_dir).expanduser()
             if not root.is_absolute():
                 raise ValueError("Custom function storage_dir must be absolute.")
             policy.assert_writable(root)
-            policy.assert_writable(
-                CustomFunctionManager.source_path_for_name(root, self.function_name)
-            )
+            policy.assert_writable(CustomFunctionManager.source_path_for_name(root, self.function_name))
         return replace(self, admission_policy=policy)
 
     def require_selected_server_identity(self) -> ProcessIdentity:
@@ -392,15 +361,12 @@ class CustomFunctionRegistrationDestination:
 
         expected_root = Path(request.storage_dir).expanduser()
         expected_file = CustomFunctionManager.source_path_for_name(
-            expected_root,
-            request.function_name,
+            expected_root, request.function_name,
         )
         if (
-            Path(self.storage_dir).resolve(strict=False)
-            != expected_root.resolve(strict=False)
+            Path(self.storage_dir).resolve(strict=False) != expected_root.resolve(strict=False)
             or self.source_file_path is None
-            or Path(self.source_file_path).resolve(strict=False)
-            != expected_file.resolve(strict=False)
+            or Path(self.source_file_path).resolve(strict=False) != expected_file.resolve(strict=False)
         ):
             raise ValueError(
                 f"Selected endpoint owns custom storage {self.storage_dir}, "
@@ -409,15 +375,11 @@ class CustomFunctionRegistrationDestination:
             )
 
     def require_result(
-        self,
-        request: CustomFunctionRegistrationRequest,
+        self, request: CustomFunctionRegistrationRequest,
         result: CustomFunctionRegistrationResult,
     ) -> None:
         """Require the returned mutation receipt to identify the admitted owner."""
-        if (
-            result.server_identity != self.server_identity
-            or result.connection != request.connection
-        ):
+        if result.server_identity != self.server_identity or result.connection != request.connection:
             raise ValueError("Registration returned a different execution owner.")
         if result.persisted != request.persist:
             raise ValueError("Registration returned a different persistence policy.")
@@ -425,9 +387,7 @@ class CustomFunctionRegistrationDestination:
             result.storage_dir != self.storage_dir
             or result.source_file_paths != (self.source_file_path,)
         ):
-            raise ValueError(
-                "Registration returned a different persistence destination."
-            )
+            raise ValueError("Registration returned a different persistence destination.")
 
 
 class FunctionParameterSource(str, Enum):
@@ -787,32 +747,20 @@ class CustomFunctionRegistrationResult(AgentResultEnvelope):
 
     @classmethod
     def uncertain(
-        cls,
-        request: CustomFunctionRegistrationRequest,
-        error: Exception,
+        cls, request: CustomFunctionRegistrationRequest, error: Exception,
     ) -> Self:
         """Preserve the actual cause and same-owner read-only recovery identity."""
         handle = CustomFunctionRegistrationHandle.from_request(request)
-        cause = (
-            error.to_agent_error()
-            if isinstance(error, AgentFacingErrorMixin)
-            else AgentError.from_exception(
-                "custom_function_registration_uncertain",
-                error,
-                hint="Preserve the original request. Observe this handle; do not replay registration. Absence is not proof of no mutation.",
-            )
+        cause = error.to_agent_error() if isinstance(error, AgentFacingErrorMixin) else AgentError.from_exception(
+            "custom_function_registration_uncertain", error,
+            hint="Preserve the original request. Observe this handle; do not replay registration. Absence is not proof of no mutation.",
         )
         return cls(
-            schema_version=SCHEMA_VERSION,
-            persisted=request.persist,
-            storage_dir=request.storage_dir,
-            connection=request.connection,
-            server_identity=request.server_identity,
-            observation_handle=handle,
+            schema_version=SCHEMA_VERSION, persisted=request.persist,
+            storage_dir=request.storage_dir, connection=request.connection,
+            server_identity=request.server_identity, observation_handle=handle,
             errors=(cause,),
-            next_steps=(
-                "Observe this observation_handle with openhcs_get_custom_function_registration_status; do not replay source.",
-            ),
+            next_steps=("Observe this observation_handle with openhcs_get_custom_function_registration_status; do not replay source.",),
         )
 
 

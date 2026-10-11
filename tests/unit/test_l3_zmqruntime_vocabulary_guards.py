@@ -35,20 +35,14 @@ def test_messages_inherit_their_codec_from_the_declared_bases() -> None:
         for node in tree.body
         if isinstance(node, ast.ClassDef) and node.name not in bases
         for member in node.body
-        if isinstance(member, ast.FunctionDef)
-        and member.name in {"to_dict", "from_dict"}
+        if isinstance(member, ast.FunctionDef) and member.name in {"to_dict", "from_dict"}
     ]
     assert offenders == []
 
 
 def test_launch_policy_lives_in_zmqruntime() -> None:
     assert not (
-        REPO
-        / "external"
-        / "pyqt-reactive"
-        / "src"
-        / "pyqt_reactive"
-        / "process_launch.py"
+        REPO / "external" / "pyqt-reactive" / "src" / "pyqt_reactive" / "process_launch.py"
     ).exists()
     importers = [
         str(path.relative_to(REPO))

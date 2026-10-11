@@ -90,9 +90,7 @@ class SessionJourney:
     timeout_seconds: float
     results: list[McpDevToolResult]
 
-    async def call(
-        self, capability, arguments: dict[str, JsonValue]
-    ) -> McpDevToolResult:
+    async def call(self, capability, arguments: dict[str, JsonValue]) -> McpDevToolResult:
         result = await call_mcp_tool(
             self.session,
             McpDevToolCall(capability.name, McpToolArguments.from_payload(arguments)),
@@ -165,7 +163,7 @@ class SessionJourney:
         added = await self.call(agent_capabilities.add_datasets, {"roots": [root]})
         if _rejected(added):
             return
-        scope_id, *_rest = added.first_decoded_payload().target_scope_ids
+        (scope_id, *_rest) = added.first_decoded_payload().target_scope_ids
         piped = await self.call(
             agent_capabilities.set_dataset_pipeline,
             {"scope_id": scope_id, "pipeline_source": pipeline_source},

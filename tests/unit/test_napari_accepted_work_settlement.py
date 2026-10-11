@@ -105,9 +105,7 @@ def wire_batch(item):
     return json.dumps(
         {
             "type": "batch",
-            "images": [
-                {**row, "producer_identity": producer.to_payload()} for row in items
-            ],
+            "images": [{**row, "producer_identity": producer.to_payload()} for row in items],
             "display_config": ViewerBatchDisplayPayload(
                 component_modes=config.component_modes(),
                 component_order=config.COMPONENT_ORDER,
@@ -184,13 +182,9 @@ def test_saved_roi_reopen_reports_pre_route_failure_and_recovers(
     # A new accepted batch starts the next existing settlement cycle. The
     # previous failed cycle must not become a permanent unrelated failure.
     assert wire_receiver(image_item())["status"] == "success"
-    admitted = ViewerSettleProgress.from_response(
-        ViewerControlResponse(
-            NapariControlAction.for_message_type("settle").transport_thread_response(
-                receiver, {}
-            )
-        )
-    )
+    admitted = ViewerSettleProgress.from_response(ViewerControlResponse(
+        NapariControlAction.for_message_type("settle").transport_thread_response(receiver, {})
+    ))
     assert admitted.phase is ViewerSettlePhase.RUNNING
     assert admitted.total_update_count == 0
     receiver.process_accepted_stream_messages()
@@ -211,23 +205,15 @@ def test_previous_complete_cannot_settle_new_accepted_work(receiver):
         == "success"
     )
     assert not receiver.accepted_stream_batches.empty()
-    admitted = ViewerSettleProgress.from_response(
-        ViewerControlResponse(
-            NapariControlAction.for_message_type("settle").transport_thread_response(
-                receiver, {}
-            )
-        )
-    )
+    admitted = ViewerSettleProgress.from_response(ViewerControlResponse(
+        NapariControlAction.for_message_type("settle").transport_thread_response(receiver, {})
+    ))
     assert admitted.phase is ViewerSettlePhase.RUNNING
     assert admitted.total_update_count == 0
 
 
 def test_initial_settlement_is_observable_before_qt_intake_and_completes(
-    native_opengl,
-    receiver,
-    wire_receiver,
-    qtbot,
-    tmp_path,
+    native_opengl, receiver, wire_receiver, qtbot, tmp_path,
 ):
     """Use actual transport, native layers and Qt service, without delayed mocks."""
     from qtpy.QtCore import QTimer
@@ -253,22 +239,11 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
         items = []
         for path in sorted(Path(directory).glob("*_rois.roi.zip")):
             parts = path.name.split("_")
-            metadata = {
-                **image_item()["metadata"],
-                "well": parts[0],
-                "site": int(parts[1][1:]),
-                "channel": int(parts[2][1:]),
-            }
-            items.append(
-                {
-                    "path": str(path),
-                    "data_type": "shapes",
-                    "shapes": NapariROIConverter.rois_to_shapes(
-                        load_rois_from_zip(path)
-                    ),
-                    "metadata": metadata,
-                }
-            )
+            metadata = {**image_item()["metadata"], "well": parts[0],
+                        "site": int(parts[1][1:]), "channel": int(parts[2][1:])}
+            items.append({"path": str(path), "data_type": "shapes",
+                          "shapes": NapariROIConverter.rois_to_shapes(load_rois_from_zip(path)),
+                          "metadata": metadata})
         assert items
         item = items
     assert wire_receiver(item)["status"] == "success"
@@ -281,14 +256,10 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
     control.setsockopt(zmq.RCVTIMEO, 2000)
     receiver.control_transport_pump.start()
     control_port = get_control_port(receiver.port, receiver.config)
-    control.connect(
-        get_zmq_transport_url(
-            control_port,
-            host="localhost",
-            mode=receiver.transport_mode,
-            config=receiver.config,
-        )
-    )
+    control.connect(get_zmq_transport_url(
+        control_port, host="localhost", mode=receiver.transport_mode,
+        config=receiver.config,
+    ))
     service = QTimer()
     service.timeout.connect(receiver.process_accepted_stream_messages)
     service.timeout.connect(receiver.process_messages)
@@ -296,104 +267,69 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
         filemanager=FileManager({}),
         runtime_config=StreamingViewerRuntimeConfig(
             transport_endpoint=ViewerTransportEndpoint(
-                port=receiver.port,
-                host="localhost",
-                transport_mode=receiver.transport_mode,
-            ),
-            persistent=False,
-            viewer_family=NapariViewer,
+                port=receiver.port, host="localhost", transport_mode=receiver.transport_mode,
+            ), persistent=False, viewer_family=NapariViewer,
         ),
     )
     client.lifecycle_state.mark_connected_external()
     observations = []
     client_worker = ThreadPoolExecutor(max_workers=1)
-    late_observer = (
-        os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_LATE_OBSERVER") == "true"
-    )
+    late_observer = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_LATE_OBSERVER") == "true"
     client_started = []
     delivery = None
     control_observation = []
-    inspect_pending_control = (
-        os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_CONTROL") == "true"
-    )
+    inspect_pending_control = os.environ.get("OPENHCS_SETTLEMENT_QUALIFICATION_CONTROL") == "true"
 
     def deliver():
         if late_observer or inspect_pending_control:
             deadline = time.monotonic() + 90
             while True:
                 progress = receiver.layer_route_state.existing_settlement_progress()
-                if (
-                    progress is not None
-                    and progress.active_route is not None
-                    and progress.active_route_work_unit_active
-                    and (
-                        (inspect_pending_control and receiver.layer_route_state.layers)
-                        or (late_observer and "channel_2" in progress.active_route)
-                    )
-                ):
+                if (progress is not None and progress.active_route is not None
+                        and progress.active_route_work_unit_active
+                        and ((inspect_pending_control and receiver.layer_route_state.layers)
+                             or (late_observer and "channel_2" in progress.active_route))):
                     break
                 if late_observer and time.monotonic() >= deadline:
                     raise AssertionError("No real channel-2 native work was observed.")
                 time.sleep(0.001)
         if inspect_pending_control:
             from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
-
-            route = next(
-                key for key in receiver.layer_route_state.layers if "channel_1" in key
-            )
+            route = next(key for key in receiver.layer_route_state.layers if "channel_1" in key)
             native_layer = receiver.layer_route_state.layers[route]
             started = time.perf_counter()
             try:
                 reply = ViewerControlMessageRequest(
-                    client.runtime_endpoint,
-                    "navigate",
-                    ViewerNavigationControlOptions(route_key=route, visible=False),
-                    timeout=0.1,
+                    client.runtime_endpoint, "navigate",
+                    ViewerNavigationControlOptions(route_key=route, visible=False), timeout=0.1,
                 ).send()
                 assert not reply.succeeded()
             except zmq.Again:
                 pass  # The caller's original observation budget expired.
             expired_after = time.perf_counter() - started
             started = time.perf_counter()
-            progress = ViewerSettleProgress.from_response(
-                ViewerControlMessageRequest(
-                    client.runtime_endpoint,
-                    "settle",
-                    timeout=2,
-                ).send()
-            )
-            control_observation.append(
-                (native_layer, expired_after, time.perf_counter() - started, progress)
-            )
+            progress = ViewerSettleProgress.from_response(ViewerControlMessageRequest(
+                client.runtime_endpoint, "settle", timeout=2,
+            ).send())
+            control_observation.append((native_layer, expired_after, time.perf_counter() - started, progress))
             assert progress.phase is ViewerSettlePhase.RUNNING
         client_started.append(time.perf_counter())
         return client.settle_viewer_state(
-            progress_callback=lambda progress: observations.append(
-                (time.perf_counter(), progress)
-            ),
+            progress_callback=lambda progress: observations.append((time.perf_counter(), progress)),
         )
 
     def observe():
-        control.send(
-            pickle.dumps(
-                ViewerControlMessageRequest(
-                    client.runtime_endpoint,
-                    "settle",
-                    timeout=2,
-                ).to_wire_mapping()
-            )
-        )
-        return ViewerSettleProgress.from_response(
-            ViewerControlResponse(pickle.loads(control.recv()))
-        )
+        control.send(pickle.dumps(ViewerControlMessageRequest(
+            client.runtime_endpoint, "settle", timeout=2,
+        ).to_wire_mapping()))
+        return ViewerSettleProgress.from_response(ViewerControlResponse(
+            pickle.loads(control.recv())
+        ))
 
     try:
         started = time.perf_counter()
-        first = (
-            receiver.layer_route_state.existing_settlement_progress()
-            if late_observer
-            else observe()
-        )
+        first = (receiver.layer_route_state.existing_settlement_progress()
+                 if late_observer else observe())
         elapsed = time.perf_counter() - started
         assert first.phase is ViewerSettlePhase.RUNNING
         assert first.completed_update_count == first.total_update_count == 0
@@ -428,46 +364,28 @@ def test_initial_settlement_is_observable_before_qt_intake_and_completes(
         assert receiver.accepted_stream_batches.empty()
         assert receiver.viewer.layers
         if inspect_pending_control:
-            native_layer, expired_after, settlement_reply_seconds, pending = (
-                control_observation[0]
-            )
-            assert (
-                not native_layer.visible
-            )  # Expiry did not cancel the real Qt mutation.
-            print(
-                f"native control expired after {expired_after:.3f}s; subsequent settlement "
-                f"reply {settlement_reply_seconds:.3f}s; pending={pending}; "
-                "original navigation applied after observation expiry"
-            )
-        assert (
-            final.processed_intake_item_count
-            == (len(item) if isinstance(item, list) else 1) + 1
-        )
-        awaiting = [
-            (t, p)
-            for t, p in observations
-            if p.phase is ViewerSettlePhase.RUNNING and p.total_update_count == 0
-        ]
+            native_layer, expired_after, settlement_reply_seconds, pending = control_observation[0]
+            assert not native_layer.visible  # Expiry did not cancel the real Qt mutation.
+            print(f"native control expired after {expired_after:.3f}s; subsequent settlement "
+                  f"reply {settlement_reply_seconds:.3f}s; pending={pending}; "
+                  "original navigation applied after observation expiry")
+        assert final.processed_intake_item_count == (len(item) if isinstance(item, list) else 1) + 1
+        awaiting = [(t, p) for t, p in observations
+                    if p.phase is ViewerSettlePhase.RUNNING and p.total_update_count == 0]
         awaiting_seconds = (awaiting[-1][0] - awaiting[0][0]) if awaiting else 0
         receiver.viewer.screenshot(path=str(tmp_path / "native-settlement.png"))
-        first_reply_seconds = (
-            observations[0][0] - client_started[0] if late_observer else elapsed
-        )
-        print(
-            f"native first settlement {first_reply_seconds:.4f}s; pending intake admitted; "
-            f"terminal {final.completed_update_count}/{final.total_update_count}; "
-            f"native layers {len(receiver.viewer.layers)}; archive={archive}; "
-            f"intake items={final.processed_intake_item_count}; "
-            f"client delivery={time.perf_counter() - started_delivery:.3f}s; "
-            f"unbound observations={len(awaiting)} over {awaiting_seconds:.3f}s; "
-            f"first={awaiting[0][1] if awaiting else None}; "
-            f"last={awaiting[-1][1] if awaiting else None}"
-        )
+        first_reply_seconds = observations[0][0] - client_started[0] if late_observer else elapsed
+        print(f"native first settlement {first_reply_seconds:.4f}s; pending intake admitted; "
+              f"terminal {final.completed_update_count}/{final.total_update_count}; "
+              f"native layers {len(receiver.viewer.layers)}; archive={archive}; "
+              f"intake items={final.processed_intake_item_count}; "
+              f"client delivery={time.perf_counter() - started_delivery:.3f}s; "
+              f"unbound observations={len(awaiting)} over {awaiting_seconds:.3f}s; "
+              f"first={awaiting[0][1] if awaiting else None}; "
+              f"last={awaiting[-1][1] if awaiting else None}")
         if late_observer:
             assert observations[0][1].active_route_work_unit_active
-            assert (
-                awaiting_seconds > 30
-            ), f"Actual unbound work was only {awaiting_seconds:.3f}s"
+            assert awaiting_seconds > 30, f"Actual unbound work was only {awaiting_seconds:.3f}s"
     finally:
         # Preserve Qt service until the original observation reaches terminal;
         # never block its callback owner on the observer thread's join.

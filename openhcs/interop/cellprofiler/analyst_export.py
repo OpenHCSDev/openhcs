@@ -737,10 +737,7 @@ class CPATableRowProjection:
                     scope=scope,
                     table=table,
                 )
-        default_subject = (
-            table.subject.name
-            or CELLPROFILER_MEASUREMENT_DIALECT.scope_name(table.subject.scope)
-        )
+        default_subject = table.subject.name or CELLPROFILER_MEASUREMENT_DIALECT.scope_name(table.subject.scope)
         if (
             table.subject.scope is MeasurementScope.RUN
             and measurement_table_row_layout_from_fields(table.rows.fields)
@@ -1180,9 +1177,7 @@ class CPATableRowProjection:
                     "CPA source-bound thumbnails require a runtime context."
                 )
             return
-        workspace = (
-            self.context.runtime_source_workspace_projections.projection_if_available()
-        )
+        workspace = self.context.runtime_source_workspace_projections.projection_if_available()
         if workspace is None:
             if settings.write_image_thumbnails and any(
                 binding.alias in settings.thumbnail_image_names
@@ -1327,9 +1322,7 @@ class CPATableRowProjection:
             raise RuntimeError(
                 "Virtual workspace source resolution requires a runtime FileManager."
             )
-        projection = (
-            self.context.runtime_source_workspace_projections.projection_if_available()
-        )
+        projection = self.context.runtime_source_workspace_projections.projection_if_available()
         if projection is None:
             return Path(source_path).resolve(strict=False)
         return Path(
@@ -1423,10 +1416,7 @@ class CellProfilerAnalystProjectionBuilder:
             ),
             self.context,
         )
-        image_subject = MeasurementSubject(
-            MeasurementScope.SAMPLE,
-            CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.SAMPLE),
-        )
+        image_subject = MeasurementSubject(MeasurementScope.SAMPLE, CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.SAMPLE))
         image_rows_by_number: dict[
             int,
             dict[str, Any],
@@ -1767,12 +1757,7 @@ class CellProfilerAnalystProjectionBuilder:
                 table_name=projection.dialect.image_table_name(),
                 rows=tuple(image_rows.values()),
                 columns=image_columns,
-                subject=MeasurementSubject(
-                    MeasurementScope.SAMPLE,
-                    CELLPROFILER_MEASUREMENT_DIALECT.scope_name(
-                        MeasurementScope.SAMPLE
-                    ),
-                ),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.SAMPLE)),
             ),
             experiment_table=CellProfilerProjectedTable(
                 table_name=projection.dialect.object_table_name("Experiment"),

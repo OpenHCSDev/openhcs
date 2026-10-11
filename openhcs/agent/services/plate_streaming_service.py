@@ -148,9 +148,7 @@ class PlateStreamingService:
             requested_source_format=request.source_format,
             detected_source_format=context.source_format,
             handler_class=type(context.handler).__name__,
-            parser_class=(
-                None if context.parser is None else type(context.parser).__name__
-            ),
+            parser_class=None if context.parser is None else type(context.parser).__name__,
             viewer_config_key=request.viewer_config_key,
             connection=connection,
             requested_paths=request.file_paths,
@@ -166,15 +164,9 @@ class PlateStreamingService:
                 transport_mode=config.transport_mode,
                 persistent=config.persistent,
             )
-            result = replace(
-                result,
-                viewer_type=config.viewer_family.viewer_type(),
-                connection=connection,
-            )
+            result = replace(result, viewer_type=config.viewer_family.viewer_type(), connection=connection)
             if request.result_directory is not None:
-                if request.kind is not PlateFileKind.RESULT or bool(
-                    request.component_filters
-                ):
+                if request.kind is not PlateFileKind.RESULT or bool(request.component_filters):
                     raise ValueError(
                         "Explicit result-directory streaming requires kind='result' "
                         "and no acquisition-component filter."
@@ -312,15 +304,11 @@ class PlateStreamingService:
                         require_source_metadata=request.result_directory is not None,
                     )
                 )
-            self._report_progress(
-                "Selected artifacts published and viewer settlement completed"
-            )
+            self._report_progress("Selected artifacts published and viewer settlement completed")
         except Exception as exc:
             return replace(
                 result,
-                viewer_type=(
-                    None if config is None else config.viewer_family.viewer_type()
-                ),
+                viewer_type=None if config is None else config.viewer_family.viewer_type(),
                 connection=connection,
                 errors=(self._stream_error(exc, plate_path=request.plate_path),),
             )
@@ -339,8 +327,7 @@ class PlateStreamingService:
     def _report_progress(message: str) -> None:
         """Use the original request-local relay, without a viewer observer/store."""
         EndpointStartupStatus(
-            EndpointStartupPhase.PREPARING_CAPABILITIES,
-            message,
+            EndpointStartupPhase.PREPARING_CAPABILITIES, message,
         ).publish()
 
     def _record_stream_status(self, messages: list[str], message: str) -> None:
@@ -421,8 +408,7 @@ class PlateStreamingService:
             producers.append(producer)
             plane_domain = ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
                 record.summary.require_plane_components(),
-                declared_axes=_active_declared_axes(),
-                context="image receipt plane coordinates",
+                declared_axes=_active_declared_axes(), context="image receipt plane coordinates",
             )
             planes = SourceImageProvenancePlanes.from_component_domain(
                 path=image_path,

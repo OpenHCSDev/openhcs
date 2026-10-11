@@ -288,9 +288,7 @@ def test_native_reference_lookup_separates_public_partition_filter_scope(
     )
 
     assert (
-        native_cellprofiler_partition_filter_scope_slug(
-            global_config.partition_filter_config
-        )
+        native_cellprofiler_partition_filter_scope_slug(global_config.partition_filter_config)
         == "wells_include_first1"
     )
     assert location.output_dir == (

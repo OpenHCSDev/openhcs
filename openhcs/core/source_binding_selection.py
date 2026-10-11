@@ -69,9 +69,7 @@ from openhcs.core.runtime_image_values import image_metadata_of
 
 if TYPE_CHECKING:
     from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-    from openhcs.core.runtime_source_binding_cache import (
-        RuntimeSourceResolutionSnapshot,
-    )
+    from openhcs.core.runtime_source_binding_cache import RuntimeSourceResolutionSnapshot
     from polystore.filemanager import FileManager
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.dataset_sources.interfaces import FilenameParser
@@ -290,8 +288,7 @@ class SourcePatternResolutionContext:
                     for path, declared in self.source_projections_by_virtual_path.items()
                     if declared is projection
                 )
-                if projection is not None
-                else (exact_virtual_path,)
+                if projection is not None else (exact_virtual_path,)
             )
         else:
             virtual_matches = tuple(
@@ -386,8 +383,7 @@ class SourcePatternResolutionContext:
                 projection = self.source_projections_by_virtual_path.get(position)
                 positions.append(
                     projection_positions[id(projection)]
-                    if projection is not None
-                    else position
+                    if projection is not None else position
                 )
         return tuple(dict.fromkeys(positions))
 
@@ -562,9 +558,7 @@ class SourceBindingCandidateMatcher:
         if not selector.components and not selector.metadata:
             return True
 
-        return selector.metadata_candidates_match(
-            source_context.candidate_metadata(candidate)
-        )
+        return selector.metadata_candidates_match(source_context.candidate_metadata(candidate))
 
     @classmethod
     def compatible_candidates(
@@ -1135,8 +1129,7 @@ class SourceIdentityResolutionContext(SourcePatternResolutionContext):
 
         if self.resolution_snapshot is not None:
             return self.resolution_snapshot.matching_candidates_for_source_identities(
-                identities,
-                candidates,
+                identities, candidates,
             )
 
         candidates = self.declared_positions_for_candidates(candidates)
@@ -1239,9 +1232,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
             if not resolution_bindings:
                 # No alias selects files: the candidate matcher keeps every anchor.
                 return SourceBindingCandidateMatcher.compatible_candidates(
-                    anchors,
-                    bindings=(),
-                    source_context=self,
+                    anchors, bindings=(), source_context=self,
                 )
             return tuple(
                 dict.fromkeys(
@@ -1558,60 +1549,43 @@ class SourceFileUniverse:
         if self.backend is Backend.MEMORY:
             return [
                 ImagePayload.of(value)
-                for value in filemanager.load_batch(
-                    list(self.files), self.backend.value
-                )
+                for value in filemanager.load_batch(list(self.files), self.backend.value)
             ]
-        missing = tuple(
-            dict.fromkeys(
-                path
-                for path in self.files
-                if not filemanager.exists(path, Backend.MEMORY.value)
-            )
-        )
+        missing = tuple(dict.fromkeys(
+            path for path in self.files
+            if not filemanager.exists(path, Backend.MEMORY.value)
+        ))
         loaded_by_path = {}
         if missing:
             pixels = filemanager.load_batch(
-                list(missing),
-                self.backend.value,
-                **(
-                    {"zarr_config": zarr_config} if self.backend is Backend.ZARR else {}
-                ),
+                list(missing), self.backend.value,
+                **({"zarr_config": zarr_config} if self.backend is Backend.ZARR else {}),
             )
             loaded_by_path.update(
-                (
-                    path,
-                    ImagePayloadSourceMetadataContext(
-                        SourceImageIdentity(path),
-                        read_backend=self.backend.value,
-                        filemanager=filemanager,
-                    ).payload(image),
-                )
+                (path, ImagePayloadSourceMetadataContext(
+                    SourceImageIdentity(path),
+                    read_backend=self.backend.value,
+                    filemanager=filemanager,
+                ).payload(image))
                 for path, image in zip(missing, pixels, strict=True)
             )
             for parent in dict.fromkeys(str(Path(path).parent) for path in missing):
                 filemanager.ensure_directory(parent, Backend.MEMORY.value)
             filemanager.save_batch(
-                list(loaded_by_path.values()),
-                list(loaded_by_path),
-                Backend.MEMORY.value,
+                list(loaded_by_path.values()), list(loaded_by_path), Backend.MEMORY.value,
             )
-        retained = tuple(
-            dict.fromkeys(path for path in self.files if path not in loaded_by_path)
-        )
+        retained = tuple(dict.fromkeys(
+            path for path in self.files if path not in loaded_by_path
+        ))
         if retained:
-            loaded_by_path.update(
-                zip(
-                    retained,
-                    (
-                        ImagePayload.of(value)
-                        for value in filemanager.load_batch(
-                            list(retained), Backend.MEMORY.value
-                        )
-                    ),
-                    strict=True,
-                )
-            )
+            loaded_by_path.update(zip(
+                retained,
+                (
+                    ImagePayload.of(value)
+                    for value in filemanager.load_batch(list(retained), Backend.MEMORY.value)
+                ),
+                strict=True,
+            ))
         return [loaded_by_path[path] for path in self.files]
 
 
@@ -1692,9 +1666,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
 
     @classmethod
     def source_artifact_payload(
-        cls,
-        request: RuntimeAdapterRequest,
-        binding: NamedSourceBinding,
+        cls, request: RuntimeAdapterRequest, binding: NamedSourceBinding,
     ) -> object:
         """Resolve original source pixels in this origin's workspace universe."""
 
@@ -1756,9 +1728,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
             )
 
         projected_payloads = projection.load_binding_payloads(
-            members,
-            binding=binding,
-            filemanager=request.context.filemanager,
+            members, binding=binding, filemanager=request.context.filemanager,
         )
         payload = (
             projected_payloads[0]
@@ -1804,8 +1774,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
             )
             metadata = payload.metadata
         domain = source_binding_plan.source_spatial_domain.with_source_cohort(
-            metadata.source_spatial_domain,
-            depth=member_count,
+            metadata.source_spatial_domain, depth=member_count,
         )
         return metadata.replace_fields(source_spatial_domain=domain).attach_to(payload)
 
@@ -1962,17 +1931,13 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
 
     @classmethod
     def source_artifact_payload(
-        cls,
-        request: RuntimeAdapterRequest,
-        binding: NamedSourceBinding,
+        cls, request: RuntimeAdapterRequest, binding: NamedSourceBinding,
     ) -> object:
         """Resolve primary planes from current pixels; companions from source."""
         if not binding.requires_current_pixels:
             return SourceUniverseRequest.source_artifact_payload(request, binding)
         if request.source_payload is None:
-            raise ValueError(
-                f"STEP_INPUT binding {binding.alias!r} requires current pixels."
-            )
+            raise ValueError(f"STEP_INPUT binding {binding.alias!r} requires current pixels.")
         return binding.project_step_input_payload(request.source_payload)
 
     def source_universe(self) -> SourceFileUniverse:

@@ -378,10 +378,8 @@ def measure_object_skeleton_with_branchpoint_image(
         fill_small_holes=fill_small_holes,
         maximum_hole_size=maximum_hole_size,
     )
-    branchpoint_payload = image.with_pixels(
-        result.branchpoint_image,
-        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),
-    )
+    branchpoint_payload = image.with_pixels(result.branchpoint_image,
+        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),)
     branchpoint_image = pack_aligned_image_outputs(
         (branchpoint_payload,),
         slice_contexts=(

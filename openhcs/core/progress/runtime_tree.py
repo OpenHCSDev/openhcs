@@ -122,9 +122,7 @@ class ExplicitPercentRuntimeTreeNode:
         return node_percent
 
 
-class SubjectProgressTreeNode(
-    MeanPercentRuntimeTreeNode, RuntimeTreeNodeDeclarationBase
-):
+class SubjectProgressTreeNode(MeanPercentRuntimeTreeNode, RuntimeTreeNodeDeclarationBase):
     node_kind = "subject"
     sort_order = 0
 
@@ -273,9 +271,7 @@ class RuntimeExecutionTopology:
             dict[str, tuple[str, ...]],
         ] = {}
         step_name_sequences: dict[tuple[str, str], tuple[str, ...]] = {}
-        events_by_subject: dict[tuple[str, str], list[ProgressEvent]] = defaultdict(
-            list
-        )
+        events_by_subject: dict[tuple[str, str], list[ProgressEvent]] = defaultdict(list)
 
         for execution_id, events in executions.items():
             for event in sorted(events, key=lambda candidate: candidate.timestamp):
@@ -640,10 +636,7 @@ class RuntimeTreeStatusProjector:
         elif self.all_leaves_queued(node):
             node.status = "⏳ Queued"
         self.apply_node_info_text(node)
-        if (
-            subject_projection is not None
-            and subject_projection.queue_position is not None
-        ):
+        if subject_projection is not None and subject_projection.queue_position is not None:
             node.info = f"{node.percent:.1f}% (q#{subject_projection.queue_position})"
 
     def aggregate_percent_recursive(self, node: RuntimeTreeNode) -> float:
@@ -791,9 +784,7 @@ class RuntimeTreeProjectionBuilder:
         topology: RuntimeExecutionTopology,
         get_subject_name: Callable[[str, str | None], str],
     ) -> List[RuntimeTreeNode]:
-        events_by_subject: Dict[tuple[str, str], List[ProgressEvent]] = defaultdict(
-            list
-        )
+        events_by_subject: Dict[tuple[str, str], List[ProgressEvent]] = defaultdict(list)
         for exec_id, events_list in executions.items():
             for event in events_list:
                 events_by_subject[(exec_id, event.subject_id)].append(event)
@@ -811,8 +802,7 @@ class RuntimeTreeProjectionBuilder:
                 worker_assignments=topology.worker_assignments,
             )
             missing_execution_topology = (
-                is_executing
-                and (exec_id, subject_id) not in topology.worker_assignments
+                is_executing and (exec_id, subject_id) not in topology.worker_assignments
             )
             if missing_execution_topology:
                 children = []
@@ -862,9 +852,7 @@ class RuntimeTreeProjectionBuilder:
                 subject_node,
                 subject_projection=subject_projection,
             )
-            nodes_by_identity[SubjectRuntimeIdentity(exec_id, subject_id)] = (
-                subject_node
-            )
+            nodes_by_identity[SubjectRuntimeIdentity(exec_id, subject_id)] = subject_node
 
         visible_nodes: list[RuntimeTreeNode] = []
         for subject_projection in runtime_projection.by_subject_latest.values():
@@ -972,9 +960,7 @@ class RuntimeTreeProjectionBuilder:
             for event in channels[ProgressChannel.COMPILE]
             if event.axis_id
         }
-        known_axis_ids = list(
-            known_partition_values.get((execution_id, subject_id), [])
-        )
+        known_axis_ids = list(known_partition_values.get((execution_id, subject_id), []))
         axis_ids = known_axis_ids if known_axis_ids else sorted(compile_by_axis.keys())
         extra_axis_ids = [
             axis_id for axis_id in compile_by_axis if axis_id not in axis_ids

@@ -500,6 +500,7 @@ class AlignmentBackendStrategy(
 ):
     """Alignment operations keyed by OpenHCS memory type/provider."""
 
+
     @abstractmethod
     def mutual_information_offset(
         self,
@@ -782,7 +783,9 @@ class AlignExecution:
             )
             for index in range(plane_count)
         )
-        images = tuple(np.asarray(payload.data) for payload in image_payloads)
+        images = tuple(
+            np.asarray(payload.data) for payload in image_payloads
+        )
         first_image, second_image = images[:2]
         metadata = tuple(payload.metadata for payload in image_payloads)
         masks = tuple(

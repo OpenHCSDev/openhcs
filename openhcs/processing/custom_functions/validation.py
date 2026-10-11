@@ -188,25 +188,18 @@ def validate_code(code: str) -> ValidationResult:
 
 def validate_function(func: Callable) -> ValidationResult:
     """Validate the selected declaration using its original scope contract."""
-    from openhcs.processing.backends.lib_registry.openhcs_registry import (
-        OpenHCSRegistry,
-    )
+    from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 
     errors: list[str] = []
     try:
         contract = OpenHCSRegistry.declared_callable_contract(func)
         if contract is None:
-            raise ValueError(
-                f"Function {func.__name__!r} is not an admitted OpenHCS declaration."
-            )
+            raise ValueError(f"Function {func.__name__!r} is not an admitted OpenHCS declaration.")
         if contract.execution_scope is FunctionStepExecutionScope.PLATE:
-            from openhcs.core.pipeline.funcstep_contract_validator import (
-                FuncStepContractValidator,
-            )
+            from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 
             FuncStepContractValidator.validate_dataset_callable_contracts(
-                (contract,),
-                func.__name__,
+                (contract,), func.__name__,
             )
         else:
             params = tuple(inspect.signature(func).parameters)
@@ -217,8 +210,5 @@ def validate_function(func: Callable) -> ValidationResult:
     except (TypeError, ValueError) as exc:
         errors.append(str(exc))
     return ValidationResult(
-        is_valid=not errors,
-        errors=errors,
-        warnings=[],
-        function_names=[func.__name__],
+        is_valid=not errors, errors=errors, warnings=[], function_names=[func.__name__],
     )

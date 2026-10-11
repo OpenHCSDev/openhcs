@@ -731,7 +731,10 @@ def test_fixed_return_slots_follow_nominal_contract_output_order() -> None:
         f"{diagnostic_prefix}__{stage}"
         for stage in PrimaryObjectDiagnosticPlanes._fields
     )
-    assert all(spec.sidecar_role is QaCheckpoint for spec in diagnostic_outputs)
+    assert all(
+        spec.sidecar_role is QaCheckpoint
+        for spec in diagnostic_outputs
+    )
 
 
 def test_contract_order_owns_guided_grid_and_tertiary_input_mapping() -> None:
@@ -827,13 +830,7 @@ def test_object_colocalization_rank_provider_is_runtime_bound() -> None:
     parameter = parameters["rank_provider"]
 
     assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
-    assert CallableContract.from_callable(
-        measure_colocalization_objects
-    ).runtime_bound_parameters == (
-        "rank_provider",
-        "threshold_mask_outputs",
-        "costes_threshold_batch",
-    )
+    assert CallableContract.from_callable(measure_colocalization_objects).runtime_bound_parameters == ("rank_provider", "threshold_mask_outputs", "costes_threshold_batch")
     contract = CallableContract.from_callable(measure_colocalization_objects)
     assert contract.config_bound_parameter_names == ("dtype_config",)
     assert parameters["dtype_config"].annotation is LazyDtypeConfig

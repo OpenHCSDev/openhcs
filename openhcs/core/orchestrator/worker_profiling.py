@@ -72,7 +72,12 @@ class CProfileWorkerProfilingPolicy(WorkerProfilingPolicy):
             yield
         finally:
             profiler.disable()
-            profiler.dump_stats(str(self.output_dir / self.profile_filename(lane)))
+            profiler.dump_stats(
+                str(
+                    self.output_dir
+                    / self.profile_filename(lane)
+                )
+            )
 
     @abstractmethod
     def configure_profile_event_scope(self) -> None:

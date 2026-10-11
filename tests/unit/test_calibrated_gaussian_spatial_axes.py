@@ -13,14 +13,9 @@ from openhcs.core.runtime_image_values import (
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_spatial_domain import (
-    SourceSpatialDomain,
-    VolumeSourceSpatialDomain,
-)
+from openhcs.core.source_spatial_domain import SourceSpatialDomain, VolumeSourceSpatialDomain
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
-    CellProfilerFunctionContractExecutor,
-)
+from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.gaussian_filter import gaussian_filter
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
@@ -31,25 +26,16 @@ from openhcs.core.image_payload_execution_mode import (
 
 def _execute(source):
     contract = CallableContract.from_callable(gaussian_filter).with_prepared_signature()
-    contract = replace(
-        contract,
-        metadata=replace(
-            contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
-    )
+    contract = replace(contract, metadata=replace(
+        contract.metadata, runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
+    ))
     return CellProfilerFunctionContractExecutor().execute(
-        contract,
-        contract.resolve_canonical_raw_callable(),
-        source,
-        {"sigma": 1.5},
+        contract, contract.resolve_canonical_raw_callable(), source, {"sigma": 1.5},
         execution_mode=FullStackExecution,
     )
 
 
-def _source(
-    pixels, *, domain=None, spacing=(0.5, 0.75), channel_axis=None, cohort=False
-):
+def _source(pixels, *, domain=None, spacing=(0.5, 0.75), channel_axis=None, cohort=False):
     metadata = ImagePayloadMetadata(
         source_path="/synthetic/original.tif",
         source_image_names=("Original",),
@@ -82,18 +68,12 @@ def test_anisotropic_physical_z_matches_library_without_site_blur(cohort):
     volume[2, 4, 5] = 1
     pixels = np.stack((volume, np.zeros_like(volume))) if cohort else volume
     source = _source(
-        pixels,
-        domain=VolumeSourceSpatialDomain(source_depth=5),
-        spacing=(2, 0.5, 0.75),
-        cohort=cohort,
+        pixels, domain=VolumeSourceSpatialDomain(source_depth=5),
+        spacing=(2, 0.5, 0.75), cohort=cohort,
     )
     result = _execute(source)
     expected_volume = gaussian(volume, sigma=(0.75, 3, 2))
-    expected = (
-        np.stack((expected_volume, np.zeros_like(volume)))
-        if cohort
-        else expected_volume
-    )
+    expected = np.stack((expected_volume, np.zeros_like(volume))) if cohort else expected_volume
     np.testing.assert_allclose(result.data, expected)
     assert result.metadata == source.metadata
     assert np.any(result.data[0, 1] if cohort else result.data[1])
@@ -105,9 +85,9 @@ def test_declared_channel_axis_is_not_smoothed(channel_axis):
     channels[0, 4, 5] = 1
     pixels = np.moveaxis(channels, 0, channel_axis)
     result = _execute(_source(pixels, channel_axis=channel_axis))
-    expected = np.moveaxis(
-        np.stack([gaussian(plane, sigma=(3, 2)) for plane in channels]), 0, channel_axis
-    )
+    expected = np.moveaxis(np.stack([
+        gaussian(plane, sigma=(3, 2)) for plane in channels
+    ]), 0, channel_axis)
     np.testing.assert_allclose(result.data, expected)
 
 
@@ -115,11 +95,8 @@ def test_physical_volume_with_channels_and_independent_sites():
     pixels = np.zeros((2, 5, 9, 11, 2), dtype=np.float32)
     pixels[0, 2, 4, 5, 0] = 1
     source = _source(
-        pixels,
-        domain=VolumeSourceSpatialDomain(source_depth=5),
-        spacing=(2, 0.5, 0.75),
-        channel_axis=-1,
-        cohort=True,
+        pixels, domain=VolumeSourceSpatialDomain(source_depth=5),
+        spacing=(2, 0.5, 0.75), channel_axis=-1, cohort=True,
     )
     result = _execute(source)
     expected = np.zeros_like(pixels)
@@ -129,9 +106,7 @@ def test_physical_volume_with_channels_and_independent_sites():
 
 
 def test_missing_physical_z_spacing_still_rejects():
-    source = _source(
-        np.zeros((3, 9, 11)), domain=VolumeSourceSpatialDomain(source_depth=3)
-    )
+    source = _source(np.zeros((3, 9, 11)), domain=VolumeSourceSpatialDomain(source_depth=3))
     with pytest.raises(ValueError, match="Cannot project"):
         _execute(source)
 
@@ -140,9 +115,7 @@ def test_invalid_channel_and_spatial_rank_still_reject():
     with pytest.raises(ValueError, match="invalid for payload rank"):
         _execute(_source(np.zeros((9, 11)), channel_axis=4))
     with pytest.raises(ValueError, match="spatial rank"):
-        _execute(
-            _source(np.zeros((9, 11)), domain=VolumeSourceSpatialDomain(source_depth=3))
-        )
+        _execute(_source(np.zeros((9, 11)), domain=VolumeSourceSpatialDomain(source_depth=3)))
 
 
 @pytest.mark.parametrize(
@@ -155,10 +128,7 @@ def test_invalid_channel_and_spatial_rank_still_reject():
     ),
 )
 def test_optional_yx_and_strict_intrinsic_share_undeclared_axes(
-    shape,
-    channel_axis,
-    undeclared_axes,
-    yx,
+    shape, channel_axis, undeclared_axes, yx,
 ):
     metadata = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(channel_axis))
     pixels = np.zeros(shape)
@@ -181,17 +151,11 @@ def test_yx_does_not_inherit_strict_volume_rank_requirement():
 
 def test_axis_capability_is_inherited_without_metadata_overrides():
     for name in (
-        "undeclared_axes",
-        "axis_position",
-        "axis_index",
-        "spatial_axes_yx",
-        "declares_colour_samples_plane",
-        "declares_colour_samples_stack",
+        "undeclared_axes", "axis_position", "axis_index", "spatial_axes_yx",
+        "declares_colour_samples_plane", "declares_colour_samples_stack",
     ):
         assert name not in ImagePayloadMetadata.__dict__
-        assert getattr(ImagePayloadMetadata, name) is getattr(
-            ImagePayloadAxisFields, name
-        )
+        assert getattr(ImagePayloadMetadata, name) is getattr(ImagePayloadAxisFields, name)
     metadata = ImagePayloadMetadata()
     assert metadata.axis_position(ColourAxis) is None
     assert metadata.plane_axis is None
@@ -218,8 +182,7 @@ def test_original_cohort_composition_keeps_every_source_plane(physical_volume):
             source_path=f"/synthetic/plane{index}.tif",
             source_image_names=("Original",),
             source_component_metadata={
-                "well": "A01",
-                "site": 1 if physical_volume else index + 1,
+                "well": "A01", "site": 1 if physical_volume else index + 1,
                 "z_index": index if physical_volume else 0,
             },
             source_voxel_spacing=SourceVoxelSpacing(
@@ -234,15 +197,13 @@ def test_original_cohort_composition_keeps_every_source_plane(physical_volume):
     if physical_volume:
         metadata = metadata.replace_fields(
             source_spatial_domain=VolumeSourceSpatialDomain().with_source_cohort(
-                metadata.source_spatial_domain,
-                depth=len(planes),
+                metadata.source_spatial_domain, depth=len(planes),
             )
         )
     pixels = np.stack([plane.data for plane in planes])
     result = _execute(metadata.payload_with(pixels, None))
     expected = (
-        gaussian(pixels, sigma=(0.75, 3, 2))
-        if physical_volume
+        gaussian(pixels, sigma=(0.75, 3, 2)) if physical_volume
         else np.stack([gaussian(plane, sigma=(3, 2)) for plane in pixels])
     )
     np.testing.assert_allclose(result.data, expected)

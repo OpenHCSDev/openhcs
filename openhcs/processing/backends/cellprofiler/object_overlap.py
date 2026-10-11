@@ -15,10 +15,7 @@ from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,
 )
-from openhcs.core.pipeline.function_contracts import (
-    object_label_input_execution_mode,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,

@@ -147,10 +147,16 @@ def test_callable_contract_preserves_payload_axis_requirement() -> None:
 
     contract = CallableContract.from_callable(process)
 
-    assert contract.payload_axis_requirement == PayloadAxisRequirement(ColourAxis)
-    assert contract.metadata.as_namespace()[
-        FunctionContractAttribute.payload_axis_requirement
-    ] == PayloadAxisRequirement(ColourAxis)
+    assert (
+        contract.payload_axis_requirement
+        == PayloadAxisRequirement(ColourAxis)
+    )
+    assert (
+        contract.metadata.as_namespace()[
+            FunctionContractAttribute.payload_axis_requirement
+        ]
+        == PayloadAxisRequirement(ColourAxis)
+    )
 
 
 def test_callable_metadata_rejects_string_payload_axis_requirement() -> None:
@@ -176,7 +182,9 @@ def test_callable_metadata_reader_returns_declared_requirement_kinds() -> None:
             FunctionContractAttribute.payload_axis_requirement: (
                 PayloadAxisRequirement(ColourAxis)
             ),
-            FunctionContractAttribute.payload_axis_transition: (PreservedPayloadAxes()),
+            FunctionContractAttribute.payload_axis_transition: (
+                PreservedPayloadAxes()
+            ),
         },
         "process",
     )
@@ -201,7 +209,10 @@ def test_callable_contract_preserves_declared_payload_axis_transition() -> None:
 
     contract = CallableContract.from_callable(crop_like)
 
-    assert contract.payload_axis_transition == PreservedPayloadAxes()
+    assert (
+        contract.payload_axis_transition
+        == PreservedPayloadAxes()
+    )
     assert (
         contract.metadata.as_namespace()[
             FunctionContractAttribute.payload_axis_transition
@@ -255,15 +266,9 @@ def test_callable_contract_validates_nominal_enum_values_from_resolved_annotatio
     with pytest.raises(TypeError, match="project.method must be ProjectionMethod"):
         contract.validate_public_kwargs({"method": "max"})
 
-    assert contract.decode_public_kwargs({"method": "max"}) == {
-        "method": ProjectionMethod.MAX
-    }
-    assert contract.decode_public_kwargs({"method": "MAX"}) == {
-        "method": ProjectionMethod.MAX
-    }
-    assert contract.decode_public_kwargs({"method": ProjectionMethod.MAX}) == {
-        "method": ProjectionMethod.MAX
-    }
+    assert contract.decode_public_kwargs({"method": "max"}) == {"method": ProjectionMethod.MAX}
+    assert contract.decode_public_kwargs({"method": "MAX"}) == {"method": ProjectionMethod.MAX}
+    assert contract.decode_public_kwargs({"method": ProjectionMethod.MAX}) == {"method": ProjectionMethod.MAX}
     with pytest.raises(TypeError, match="project.method must be ProjectionMethod"):
         contract.decode_public_kwargs({"method": None})
     with pytest.raises(ValueError, match="not a valid"):
@@ -293,18 +298,14 @@ def test_callable_contract_still_rejects_injected_runtime_values() -> None:
         contract.validate_public_kwargs({"slice_index": 3})
 
 
-def test_callable_contract_reads_wrapper_declared_config_parameters(
-    monkeypatch,
-) -> None:
+def test_callable_contract_reads_wrapper_declared_config_parameters(monkeypatch) -> None:
     @numpy(contract=Pure3DContract)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
     declared_parameter = contract.canonical_signature.parameters["dtype_config"]
-    assert isinstance(
-        signature(process).parameters["dtype_config"].default, LazyDtypeConfig
-    )
+    assert isinstance(signature(process).parameters["dtype_config"].default, LazyDtypeConfig)
 
     def forbidden_config_value(*args, **kwargs):
         raise AssertionError("Config schema discovery constructed a value")
@@ -332,29 +333,19 @@ def test_callable_contract_reads_wrapper_declared_config_parameters(
     assert graph.config_parameters_for_step("process") is parameters
 
 
-def test_config_parameter_schema_refreshes_from_replaced_pipeline_declaration(
-    monkeypatch,
-):
+def test_config_parameter_schema_refreshes_from_replaced_pipeline_declaration(monkeypatch):
     def forbidden_default():
         raise AssertionError("Config field discovery evaluated a default factory")
 
     original_default = object()
     parameter = Parameter(
-        "custom_config",
-        Parameter.KEYWORD_ONLY,
-        annotation=LazyDtypeConfig,
-        default=original_default,
+        "custom_config", Parameter.KEYWORD_ONLY,
+        annotation=LazyDtypeConfig, default=original_default,
     )
     for declared_type, admitted in ((LazyDtypeConfig, True), (int, False)):
         replacement = make_dataclass(
             "PipelineConfig",
-            [
-                (
-                    "custom_config",
-                    declared_type,
-                    field(default_factory=forbidden_default),
-                )
-            ],
+            [("custom_config", declared_type, field(default_factory=forbidden_default))],
         )
         monkeypatch.setattr(config_module, "PipelineConfig", replacement)
         resolved = config_module.runtime_config_parameter(parameter)
@@ -440,13 +431,16 @@ def test_callable_contract_metadata_preserves_explicit_nominal_processing_contra
     def process(image):
         return image
 
-    vars(process)[FunctionContractAttribute.processing_contract] = FlexibleContract
+    vars(process)[
+        FunctionContractAttribute.processing_contract
+    ] = FlexibleContract
 
     attach_callable_contract_metadata(process, processing_contract=Pure2DContract)
 
     contract = CallableContract.from_callable(process)
     assert (
-        vars(process)[FunctionContractAttribute.processing_contract] is FlexibleContract
+        vars(process)[FunctionContractAttribute.processing_contract]
+        is FlexibleContract
     )
     assert contract.processing_contract is FlexibleContract
 
@@ -607,18 +601,14 @@ def test_function_reference_preserves_batching_through_compiler_and_transport(
     restored = pickle.loads(pickle.dumps(contract))
     assert restored.func == reference
     expected_metadata = reference.metadata.with_prepared_signatures(func, func)
-    assert (
-        restored.metadata.canonical_signature == expected_metadata.canonical_signature
-    )
+    assert restored.metadata.canonical_signature == expected_metadata.canonical_signature
     assert restored.metadata == expected_metadata
-    assert (
-        restored.runtime_batch_executor(RuntimeBatchExecutionDomain.PURE_2D_SLICES)
-        is _batch_executor
-    )
-    assert (
-        restored.runtime_batch_executor(RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES)
-        is _measurement_batch_executor
-    )
+    assert restored.runtime_batch_executor(
+        RuntimeBatchExecutionDomain.PURE_2D_SLICES
+    ) is _batch_executor
+    assert restored.runtime_batch_executor(
+        RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES
+    ) is _measurement_batch_executor
 
 
 def test_reference_batch_family_preserves_wrapper_precedence_and_raw_inheritance(
@@ -637,14 +627,12 @@ def test_reference_batch_family_preserves_wrapper_precedence_and_raw_inheritance
     )
 
     contract = normalize_function_pattern(reference).groups[0].items[0].contract
-    assert (
-        contract.runtime_batch_executor(RuntimeBatchExecutionDomain.PURE_2D_SLICES)
-        is _override_batch_executor
-    )
-    assert (
-        contract.runtime_batch_executor(RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES)
-        is _measurement_batch_executor
-    )
+    assert contract.runtime_batch_executor(
+        RuntimeBatchExecutionDomain.PURE_2D_SLICES
+    ) is _override_batch_executor
+    assert contract.runtime_batch_executor(
+        RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES
+    ) is _measurement_batch_executor
 
 
 def test_registry_reference_preserves_real_intensity_batch_declarations() -> None:

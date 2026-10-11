@@ -311,10 +311,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def _canonical_metadata_claims(
-        cls,
-        function_id: str,
-        *,
-        prepare_catalog: bool = True,
+        cls, function_id: str, *, prepare_catalog: bool = True,
     ) -> Iterator[FunctionMetadata]:
         """Supply catalog-owned claims; independent capabilities compose via super."""
 
@@ -322,8 +319,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
 
         catalog = (
             RegistryService.get_all_functions_with_metadata()
-            if prepare_catalog
-            else RegistryService.cached_metadata_snapshot()
+            if prepare_catalog else RegistryService.cached_metadata_snapshot()
         )
         metadata = catalog.get(function_id)
         if metadata is not None:
@@ -554,9 +550,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
             }
 
             return contract.execute(
-                LibraryContractCall(func, args),
-                image,
-                filtered_kwargs,
+                LibraryContractCall(func, args), image, filtered_kwargs,
             )
 
         wrapper.__signature__ = public_sig.replace(parameters=new_params)

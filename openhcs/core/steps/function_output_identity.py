@@ -712,8 +712,7 @@ class FunctionOutputIdentity:
         identity_cache: FunctionOutputIdentityCache,
     ) -> FunctionOutputIdentity:
         if identity.extension is not None and all(
-            component.name in identity.component_values
-            for component in AxisFamily.active().axes
+            component.name in identity.component_values for component in AxisFamily.active().axes
         ):
             return identity
         for path, source in candidates:
@@ -930,9 +929,7 @@ class FunctionOutputIdentity:
             - identity_component_values
         )
         ordered_keys = tuple(
-            component.name
-            for component in AxisFamily.active().axes
-            if component.name in keys
+            component.name for component in AxisFamily.active().axes if component.name in keys
         )
         extra_keys = tuple(sorted(keys - frozenset(ordered_keys)))
         return (*ordered_keys, *extra_keys)

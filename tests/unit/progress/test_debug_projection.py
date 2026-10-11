@@ -78,9 +78,7 @@ def test_debug_progress_record_fails_loudly_for_malformed_debug_context() -> Non
     with pytest.raises(ValueError, match="missing required field"):
         DebugProgressRecord.from_progress_event(
             _event(
-                context={
-                    DebugProgressContext.context_key: {"debug_session_id": "debug-1"}
-                }
+                context={DebugProgressContext.context_key: {"debug_session_id": "debug-1"}}
             )
         )
 

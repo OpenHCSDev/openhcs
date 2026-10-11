@@ -52,9 +52,7 @@ def _python_files(*roots: str) -> list[Path]:
     for root in roots:
         base = REPO_ROOT / root
         files.extend(
-            path
-            for path in base.rglob("*.py")
-            if "benchmark/results" not in path.as_posix()
+            path for path in base.rglob("*.py") if "benchmark/results" not in path.as_posix()
         )
     return files
 
@@ -79,9 +77,7 @@ def _identifiers(tree: ast.AST) -> set[str]:
 
 def test_deleted_component_enums_and_factory_do_not_exist() -> None:
     offenders = {
-        _relative(path): sorted(
-            DELETED_NAMES & _identifiers(ast.parse(path.read_text()))
-        )
+        _relative(path): sorted(DELETED_NAMES & _identifiers(ast.parse(path.read_text())))
         for path in _python_files("openhcs", "tests", "benchmark", "scripts")
         if path.name != Path(__file__).name
     }
@@ -94,10 +90,7 @@ def test_kernel_modules_name_no_microscopy_member() -> None:
     offenders: dict[str, list[str]] = {}
     for path in _python_files("openhcs"):
         relative = _relative(path)
-        if (
-            relative.startswith(DOMAIN_MODULE_PREFIXES)
-            or relative == DOMAIN_ENTRY_POINT
-        ):
+        if relative.startswith(DOMAIN_MODULE_PREFIXES) or relative == DOMAIN_ENTRY_POINT:
             continue
         tree = ast.parse(path.read_text())
         found: set[str] = set()
@@ -153,17 +146,13 @@ EXTERNAL_SPELLINGS = frozenset(
 )
 
 
-def _member_spellings_in(
-    tree: ast.AST, spellings: frozenset[str]
-) -> set[tuple[str, str]]:
+def _member_spellings_in(tree: ast.AST, spellings: frozenset[str]) -> set[tuple[str, str]]:
     """(enclosing class qualname, spelling) for literals, attributes and class fields."""
 
     docstrings = {
         id(node.body[0].value)
         for node in ast.walk(tree)
-        if isinstance(
-            node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
-        )
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
         and node.body
         and isinstance(node.body[0], ast.Expr)
         and isinstance(node.body[0].value, ast.Constant)
@@ -179,11 +168,9 @@ def _member_spellings_in(
                     targets = (
                         [statement.target]
                         if isinstance(statement, ast.AnnAssign)
-                        else (
-                            statement.targets
-                            if isinstance(statement, ast.Assign)
-                            else []
-                        )
+                        else statement.targets
+                        if isinstance(statement, ast.Assign)
+                        else []
                     )
                     found.update(
                         (child_scope, f"field {target.id}")
@@ -217,9 +204,7 @@ def test_kernel_modules_spell_no_microscopy_member() -> None:
             continue
         found.update(
             (relative, scope, spelling)
-            for scope, spelling in _member_spellings_in(
-                ast.parse(path.read_text()), spellings
-            )
+            for scope, spelling in _member_spellings_in(ast.parse(path.read_text()), spellings)
         )
     assert found == EXTERNAL_SPELLINGS
 
@@ -342,10 +327,7 @@ KERNEL_DOMAIN_REFERENCES = frozenset(
         ("openhcs/core/config.py", "PlateOutputDirectory"),
         ("openhcs/core/config.py", "PlateOutputFile"),
         ("openhcs/core/dataset_sources/openhcs_format.py", "PLATE_NAME"),
-        (
-            "openhcs/core/dataset_sources/openhcs_format.py",
-            "get_plate_acquisition_datetime",
-        ),
+        ("openhcs/core/dataset_sources/openhcs_format.py", "get_plate_acquisition_datetime"),
         ("openhcs/core/dataset_sources/openhcs_format.py", "get_plate_name"),
         ("openhcs/core/dataset_sources/source.py", "plate_root"),
         ("openhcs/core/debug_session_projection.py", "NO_PLATE"),
@@ -392,23 +374,11 @@ KERNEL_DOMAIN_REFERENCES = frozenset(
         ("openhcs/core/source_tile_geometry.py", "sites"),
         ("openhcs/core/steps/stream_component_semantics.py", "plate_path"),
         ("openhcs/core/streaming_config_factory.py", "plate_path"),
-        (
-            "openhcs/core/synthetic_plate_generation.py",
-            "SYNTHETIC_PLATE_GENERATION_PROFILE",
-        ),
+        ("openhcs/core/synthetic_plate_generation.py", "SYNTHETIC_PLATE_GENERATION_PROFILE"),
         ("openhcs/core/synthetic_plate_generation.py", "SyntheticPlateFormat"),
-        (
-            "openhcs/core/synthetic_plate_generation.py",
-            "SyntheticPlateGenerationBounds",
-        ),
-        (
-            "openhcs/core/synthetic_plate_generation.py",
-            "SyntheticPlateGenerationParameters",
-        ),
-        (
-            "openhcs/core/synthetic_plate_generation.py",
-            "SyntheticPlateGenerationProfile",
-        ),
+        ("openhcs/core/synthetic_plate_generation.py", "SyntheticPlateGenerationBounds"),
+        ("openhcs/core/synthetic_plate_generation.py", "SyntheticPlateGenerationParameters"),
+        ("openhcs/core/synthetic_plate_generation.py", "SyntheticPlateGenerationProfile"),
         ("openhcs/core/vfs_protocol.py", "PlateInputDirectory"),
         ("openhcs/core/vfs_protocol.py", "PlateInputDirectoryDeclaration"),
         ("openhcs/core/vfs_protocol.py", "PlateInputFile"),
@@ -458,9 +428,7 @@ def test_kernel_domain_references_only_shrink() -> None:
         for name in _names_and_identifier_literals(ast.parse(path.read_text()))
         if _identifier_words(name) & domain_words
     }
-    assert (
-        sorted(found - KERNEL_DOMAIN_REFERENCES) == []
-    ), "new domain word in the kernel"
+    assert sorted(found - KERNEL_DOMAIN_REFERENCES) == [], "new domain word in the kernel"
     assert sorted(KERNEL_DOMAIN_REFERENCES - found) == [], "removed: shrink the pin"
     assert len(KERNEL_DOMAIN_REFERENCES) <= KERNEL_DOMAIN_REFERENCE_CEILING
 
@@ -499,3 +467,4 @@ def test_renamed_dataset_names_do_not_exist() -> None:
         if path.name != Path(__file__).name
     }
     assert {path: names for path, names in offenders.items() if names} == {}
+

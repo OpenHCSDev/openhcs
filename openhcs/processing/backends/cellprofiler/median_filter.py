@@ -129,6 +129,7 @@ class MedianFilterBackendStrategy(
 ):
     """Median filtering operations keyed by OpenHCS memory type/provider."""
 
+
     @abstractmethod
     def filter(
         self,
@@ -291,10 +292,8 @@ class NumpyMedianFilterBackendStrategy(MedianFilterBackendStrategy):
             return None
         radius = int(window_size) // 2
         padded = np.pad(
-            image,
-            ((radius, radius), (radius, radius), (radius, radius + 7)),
-            mode="constant",
-            constant_values=0,
+            image, ((radius, radius), (radius, radius), (radius, radius + 7)),
+            mode="constant", constant_values=0,
         )
         depth, height, width = image.shape
         output_width = ((width + 7) // 8) * 8

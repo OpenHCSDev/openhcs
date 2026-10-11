@@ -605,7 +605,9 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
                     module_name,
                 )
                 continue
-            excluded = _module_distributions_excluded_by_package_metadata(module_name)
+            excluded = _module_distributions_excluded_by_package_metadata(
+                module_name
+            )
             if excluded:
                 logger.info(
                     "Skipping OpenHCS module %s - package requirements exclude %s "
@@ -942,11 +944,9 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         """Reconstruct cached metadata through the declaration's one wrapper."""
 
         return _registered_wrapper(
-            self,
-            func,
-            lambda: super(OpenHCSRegistry, self).reconstruct_cached_callable(
+            self, func, lambda: super(OpenHCSRegistry, self).reconstruct_cached_callable(
                 func, contract
-            ),
+            )
         )
 
     def _processing_contract_for_function(

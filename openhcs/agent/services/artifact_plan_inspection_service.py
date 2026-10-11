@@ -93,8 +93,7 @@ class CompileInspectionGatewayABC(ABC):
             result = self._compile(request)
         except Exception:
             EndpointStartupStatus(
-                EndpointStartupPhase.FAILED,
-                "Source inspection compiler failed",
+                EndpointStartupPhase.FAILED, "Source inspection compiler failed",
             ).publish()
             raise
         EndpointStartupStatus(

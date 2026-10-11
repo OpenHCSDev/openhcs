@@ -67,10 +67,7 @@ def test_component_filters_validate_against_the_family_and_match_generically() -
     assert filters.matches({"well": "B02", "channel": 1, "site": 3})
     assert not filters.matches({"well": "C03", "channel": 1})
     assert not filters.matches({"channel": 1})
-    assert (
-        ComponentFilters.from_assignments(["well=A01", "well=B02", "channel=1"])
-        == filters
-    )
+    assert ComponentFilters.from_assignments(["well=A01", "well=B02", "channel=1"]) == filters
     assert ComponentFilters().matches({})
     with pytest.raises(ValueError, match="unknown axes"):
         ComponentFilters.from_mapping({"plot": "1"})

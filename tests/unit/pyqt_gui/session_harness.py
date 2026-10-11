@@ -79,9 +79,7 @@ def caller_session(**kwargs) -> Iterator[Session]:
     if persisted is not None:
         write_dataset_scope_ids(list(persisted))
     session = Session(
-        transport_config=OpenHCSZMQConfig(
-            default_port=session_port(), persistent=False
-        ),
+        transport_config=OpenHCSZMQConfig(default_port=session_port(), persistent=False),
         global_config=global_config,
         main_thread=kwargs.pop("main_thread", CallerThread()),
         **kwargs,

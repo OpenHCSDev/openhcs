@@ -115,7 +115,9 @@ def test_recursive_json_alias_keeps_declaration_namespace_in_new_descendant():
 @pytest.fixture
 def gamma_metadata(monkeypatch):
     registry = SkimageRegistry()
-    wrapped = registry.reconstruct_cached_callable(adjust_gamma, FlexibleContract)
+    wrapped = registry.reconstruct_cached_callable(
+        adjust_gamma, FlexibleContract
+    )
     metadata = FunctionMetadata(
         name="exposure.adjust_gamma",
         func=wrapped,

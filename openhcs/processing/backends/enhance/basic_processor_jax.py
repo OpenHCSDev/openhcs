@@ -61,6 +61,7 @@ DARKFIELD_OUTPUT = _fitted_field_output("basic_darkfield")
 @numpy_func(contract=Pure3DContract, dtype_config_default=DtypeConfig())
 @allowed_group_by_roles(ColourAxis)
 @required_axis_roles(FittedIlluminationFieldOutput.observation_role)
+
 @artifact_outputs(CORRECTED_OUTPUT, FLATFIELD_OUTPUT, DARKFIELD_OUTPUT)
 def basic_flatfield_correction_jax(
     image: np.ndarray,

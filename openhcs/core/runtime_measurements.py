@@ -1098,8 +1098,6 @@ def object_location_coordinate_arrays(
             )
         coordinates.append((feature.value, values))
     return tuple(coordinates)
-
-
 @dataclass(frozen=True, slots=True)
 class ObjectMeasurementValueRow:
     """Nominal long-form object measurement row."""
@@ -1763,8 +1761,7 @@ class ObjectFeatureValueTable:
                 value_index = value_indexes.get(object_id)
                 row[feature_name] = (
                     missing_values[object_id].scalar
-                    if value_index is None
-                    else python_values[value_index]
+                    if value_index is None else python_values[value_index]
                 )
             self.complete_row(row)
             rows.append(row)
@@ -1841,9 +1838,7 @@ class ObjectFeatureValueTable:
         del row
 
     def feature_missing_values_for_objects(
-        self,
-        feature_name: str,
-        object_ids: tuple[int, ...],
+        self, feature_name: str, object_ids: tuple[int, ...],
     ) -> Mapping[int, ObjectFeatureMissingValue]:
         """Project one column's missing-value policy onto its absent objects."""
         missing_value = self.feature_missing_values.get(
@@ -1919,3 +1914,5 @@ class MeasurementSubject:
                 self.id_field or "",
             )
         )
+
+

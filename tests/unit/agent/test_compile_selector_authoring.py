@@ -302,7 +302,9 @@ def test_new_declaration_composes_independent_settings_without_consumer_edits(
         assert len(kwargs) == 2
         service, ref = draft(new_authoring_callable, kwargs)
         assert service.validate(ref).valid
-        restored = PipelineDocumentCodec.from_source(service.render_source(ref).source)
+        restored = PipelineDocumentCodec.from_source(
+            service.render_source(ref).source
+        )
         invocation = next(
             normalize_function_pattern(restored.pipeline_steps[0].func).iter_items()
         )

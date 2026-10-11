@@ -284,6 +284,7 @@ def test_callable_ownership_uses_complete_import_identity() -> None:
     assert CellProfilerModule.for_callable_contract(numpy_contract) is None
 
 
+
 @pytest.mark.parametrize("mutation", ("replacement", "unowned_exclusion"))
 def test_compiled_callable_owner_keeps_current_declaration_admission(
     monkeypatch: pytest.MonkeyPatch,
@@ -311,7 +312,6 @@ def test_compiled_callable_owner_keeps_current_declaration_admission(
                 CellProfilerModule.require_callable_contract_owner(contract)
         finally:
             set_parameter_exclusions(raw, original)
-
 
 def test_duplicate_function_ownership_fails_during_module_declaration() -> None:
     existing_owner = CellProfilerModule.require_module("Crop")

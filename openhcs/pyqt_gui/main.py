@@ -1311,9 +1311,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.show_pipeline_editor()
         for scope_id in self.session.add_dataset_roots((output_dir,)):
             self.session.load_pipeline_file(scope_id, pipeline_path)
-        logger.info(
-            "Added synthetic dataset and loaded its test pipeline: %s", output_dir
-        )
+        logger.info("Added synthetic dataset and loaded its test pipeline: %s", output_dir)
 
     def _on_consolidate_results(self):
         """Open file dialog to select results directory and consolidate analysis results."""

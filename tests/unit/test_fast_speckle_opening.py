@@ -25,13 +25,11 @@ def reflected_opening_reference(image, footprint):
     """Explicit reflect-index oracle, independent of either native filter."""
     padding = tuple((size // 2, size // 2) for size in footprint.shape)
     erode_windows = np.lib.stride_tricks.sliding_window_view(
-        np.pad(image, padding, mode="symmetric"),
-        footprint.shape,
+        np.pad(image, padding, mode="symmetric"), footprint.shape,
     )
     eroded = erode_windows[..., footprint.astype(bool)].min(axis=-1)
     dilate_windows = np.lib.stride_tricks.sliding_window_view(
-        np.pad(eroded, padding, mode="symmetric"),
-        footprint.shape,
+        np.pad(eroded, padding, mode="symmetric"), footprint.shape,
     )
     return dilate_windows[..., footprint.astype(bool)].max(axis=-1)
 
@@ -45,18 +43,13 @@ def test_declared_fast_speckles_matches_original_disk_opening(shape, dtype, radi
     image[-1, -1] = -5
     footprint = morphology.disk(max(1, round(radius)))
     expected = image - ndimage.maximum_filter(
-        ndimage.minimum_filter(image, footprint=footprint),
-        footprint=footprint,
+        ndimage.minimum_filter(image, footprint=footprint), footprint=footprint,
     )
     actual = enhance_or_suppress_features(
-        image,
-        radius=radius,
-        speckle_accuracy=SpeckleAccuracy.FAST,
+        image, radius=radius, speckle_accuracy=SpeckleAccuracy.FAST,
         dtype_config=DtypeConfig(),
     )
-    np.testing.assert_array_equal(
-        ImagePayload.of(actual).data, expected.astype(np.float32)
-    )
+    np.testing.assert_array_equal(ImagePayload.of(actual).data, expected.astype(np.float32))
     assert ImagePayload.of(actual).data.dtype == np.float32
 
 
@@ -73,15 +66,11 @@ def test_speckle_mask_background_and_metadata_remain_owned(accuracy, masked):
     masked_image = np.where(mask, image, 0)
     footprint = morphology.disk(5)
     expected = masked_image - ndimage.maximum_filter(
-        ndimage.minimum_filter(masked_image, footprint=footprint),
-        footprint=footprint,
+        ndimage.minimum_filter(masked_image, footprint=footprint), footprint=footprint,
     )
     expected[~mask] = image[~mask]
     actual = enhance_or_suppress_features(
-        original,
-        radius=5,
-        speckle_accuracy=accuracy,
-        dtype_config=DtypeConfig(),
+        original, radius=5, speckle_accuracy=accuracy, dtype_config=DtypeConfig(),
     )
     np.testing.assert_array_equal(ImagePayload.of(actual).data, expected)
     np.testing.assert_array_equal(actual.mask, mask)
@@ -91,22 +80,15 @@ def test_speckle_mask_background_and_metadata_remain_owned(accuracy, masked):
 
 def test_fast_speckles_registered_callable_keeps_independent_planes():
     image = np.random.default_rng(616).uniform(0, 1, (2, 17, 23)).astype(np.float32)
-    expected = np.stack(
-        [
-            plane
-            - ndimage.maximum_filter(
-                ndimage.minimum_filter(plane, footprint=morphology.disk(5)),
-                footprint=morphology.disk(5),
-            )
-            for plane in image
-        ]
-    )
+    expected = np.stack([
+        plane - ndimage.maximum_filter(
+            ndimage.minimum_filter(plane, footprint=morphology.disk(5)),
+            footprint=morphology.disk(5),
+        ) for plane in image
+    ])
     actual = enhance_or_suppress_features(image, radius=5, dtype_config=DtypeConfig())
     np.testing.assert_array_equal(ImagePayload.of(actual).data, expected)
-    assert (
-        CallableContract.from_callable(enhance_or_suppress_features).processing_contract
-        is Pure2DContract
-    )
+    assert CallableContract.from_callable(enhance_or_suppress_features).processing_contract is Pure2DContract
 
 
 @pytest.mark.parametrize("shape,radius", [((1, 9), 150), ((5, 7), 12), ((17, 23), 5)])
@@ -117,12 +99,8 @@ def test_fast_speckles_matches_reflected_opening_math(shape, radius, dtype):
     image[-1, -1] = -5
     before = image.copy()
     expected = image - reflected_opening_reference(image, morphology.disk(radius))
-    actual = enhance_or_suppress_features(
-        image, radius=radius, dtype_config=DtypeConfig()
-    )
-    np.testing.assert_array_equal(
-        ImagePayload.of(actual).data, expected.astype(np.float32)
-    )
+    actual = enhance_or_suppress_features(image, radius=radius, dtype_config=DtypeConfig())
+    np.testing.assert_array_equal(ImagePayload.of(actual).data, expected.astype(np.float32))
     np.testing.assert_array_equal(image, before)
 
 
@@ -136,8 +114,7 @@ def test_fast_oversized_opening_preserves_constant_negative_plane():
 def test_speckle_module_keeps_original_feature_size_binding():
     bound = BoundModuleSettings({"feature_size": 11})
     actual = EnhanceOrSuppressFeaturesModule.postprocess_bound_settings(
-        ModuleBlock("EnhanceOrSuppressFeatures", 1),
-        bound,
+        ModuleBlock("EnhanceOrSuppressFeatures", 1), bound,
     )
     assert actual.kwargs == {"radius": 5.5}
     assert actual.unmapped_kwargs == bound.unmapped_kwargs

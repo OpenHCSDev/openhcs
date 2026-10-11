@@ -223,9 +223,7 @@ class CellProfilerMeasurementDialect(MeasurementDialect):
         )
 
     def parent_reference_object_name(self, feature_name: str) -> str | None:
-        identity = DirectParentReferenceFeatureDeclaration.from_feature_name(
-            feature_name
-        )
+        identity = DirectParentReferenceFeatureDeclaration.from_feature_name(feature_name)
         return None if identity is None else identity.parent_object_name
 
     def child_count_feature_name(self, child_object_name: str) -> str:

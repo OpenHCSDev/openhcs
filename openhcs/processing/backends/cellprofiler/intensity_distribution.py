@@ -37,16 +37,10 @@ from openhcs.core.measurement_row_materialization import (
     ObjectMeasurementColumnarRows,
 )
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline.function_contracts import (
-    object_label_input_execution_mode,
-    runtime_bound_parameters,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, runtime_bound_parameters, special_inputs)
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.measurement_dialect import (
-    RuntimeMeasurementQualifierSuffixMatchStrategy,
-)
+from openhcs.core.measurement_dialect import RuntimeMeasurementQualifierSuffixMatchStrategy
 from metaclass_registry.strategies import enum_member_with_payload
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
@@ -965,7 +959,9 @@ runtime_profiler = RuntimeProfiler(logger)
 
 @dataclass
 class RadialLabelGeometryCache(
-    ProcessLocalBoundedCache["RadialLabelGeometryCacheKey", "RadialLabelGeometry"]
+    ProcessLocalBoundedCache[
+        "RadialLabelGeometryCacheKey", "RadialLabelGeometry"
+    ]
 ):
     """Process-local numerical geometry with shared bounded storage."""
 
@@ -2636,10 +2632,8 @@ def _intensity_distribution_heatmap(
         heatmap[rows, columns] = values
     colormap_name = group.colormap
     if colormap_name == "gray":
-        return image.with_pixels(
-            heatmap,
-            metadata=image.metadata.without_axis(ColourAxis),
-        )
+        return image.with_pixels(heatmap,
+            metadata=image.metadata.without_axis(ColourAxis),)
     if colormap_name == "Default":
         colormap_name = "viridis"
     import matplotlib
@@ -2649,10 +2643,8 @@ def _intensity_distribution_heatmap(
         :, :, :3
     ]
     rgb[labels == 0] = 0
-    return image.with_pixels(
-        rgb,
-        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),
-    )
+    return image.with_pixels(rgb,
+        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),)
 
 
 def intensity_distribution_object_domain(labels: object) -> tuple[int, ...]:

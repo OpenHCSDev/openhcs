@@ -683,10 +683,7 @@ from openhcs.core.memory.decorators import numpy as numpy_decorator
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.pipeline.function_contracts import (
-    object_label_input_execution_mode,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from python_introspect import public_names_from_objects
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.processing.backends.cellprofiler.morphology_connected_components_numba import (
@@ -1520,10 +1517,8 @@ def _morph_image_payload(
     image = ImagePayload.of(image)
     pixel_data = image.data
     result = _morph_image_pixels(pixel_data, structuring_element, size, operation)
-    return image.with_pixels(
-        result.astype(pixel_data.dtype, copy=False),
-        metadata=image.metadata.without_unit_interval_intensity_scale(),
-    )
+    return image.with_pixels(result.astype(pixel_data.dtype, copy=False),
+        metadata=image.metadata.without_unit_interval_intensity_scale(),)
 
 
 @runtime_image_execution_mode(FullStackExecution)
@@ -1885,6 +1880,7 @@ class MorphologyBackendStrategy(
 ):
     """Nominal morphology operations keyed by OpenHCS memory type."""
 
+
     @classmethod
     def for_memory_type(
         cls,
@@ -2117,9 +2113,7 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
         return self._grayscale_morphology(image, footprint, first_pass_is_dilation=True)
 
     def grayscale_opening(self, image: np.ndarray, footprint: np.ndarray) -> np.ndarray:
-        return self._grayscale_morphology(
-            image, footprint, first_pass_is_dilation=False
-        )
+        return self._grayscale_morphology(image, footprint, first_pass_is_dilation=False)
 
     def _grayscale_morphology(
         self,
@@ -2352,8 +2346,7 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
                     for writable_mask in (False, True):
                         smoothing_mask = (
                             np.ones(mask.shape, dtype=np.bool_)
-                            if full_mask
-                            else mask.copy()
+                            if full_mask else mask.copy()
                         )
                         smoothing_mask.flags.writeable = writable_mask
                         self.smooth_image_for_declumping(image, smoothing_mask, 1.0)
@@ -3077,7 +3070,10 @@ def _scipy_connected_components(
 @njit(cache=True, inline="always")
 def _labeled_hole_node_at_numba(source, background, offset, y, x):
     background_node = background[y, x]
-    return source[y, x] if background_node == 0 else background_node + offset + 1
+    return (
+        source[y, x]
+        if background_node == 0 else background_node + offset + 1
+    )
 
 
 @njit(cache=True)
@@ -3093,15 +3089,11 @@ def _labeled_hole_graph_numba(source, background, offset, node_count):
             if node != 0 and (y == 0 or y + 1 == height or x == 0 or x + 1 == width):
                 boundary_nodes.add(node)
             if y + 1 < height:
-                other = _labeled_hole_node_at_numba(
-                    source, background, offset, y + 1, x
-                )
+                other = _labeled_hole_node_at_numba(source, background, offset, y + 1, x)
                 if node != other:
                     edges.add(min(node, other) * node_count + max(node, other))
             if x + 1 < width:
-                other = _labeled_hole_node_at_numba(
-                    source, background, offset, y, x + 1
-                )
+                other = _labeled_hole_node_at_numba(source, background, offset, y, x + 1)
                 if node != other:
                     edges.add(min(node, other) * node_count + max(node, other))
     encoded = np.empty(len(edges), dtype=np.int64)
@@ -3245,16 +3237,11 @@ def _cellprofiler_fill_labeled_holes_2d(
         np.empty(captured_source.shape)[mask_array]
     output_mask = (
         np.empty((0, 0), dtype=np.bool_)
-        if mask_array is None
-        else np.ascontiguousarray(mask_array)
+        if mask_array is None else np.ascontiguousarray(mask_array)
     )
     output = _write_labeled_holes_numba(
-        captured_source,
-        background_labels,
-        foreground_label_count,
-        lookup,
-        output_mask,
-        mask_array is not None,
+        captured_source, background_labels, foreground_label_count, lookup,
+        output_mask, mask_array is not None,
     )
     return output.astype(source.dtype, copy=False)
 
@@ -3671,7 +3658,9 @@ class FootprintOffsetTable:
                 spans.append((y, x, x))
         return tuple(spans)
 
-    def grayscale_extremum(self, image: np.ndarray, *, maximum: bool) -> np.ndarray:
+    def grayscale_extremum(
+        self, image: np.ndarray, *, maximum: bool
+    ) -> np.ndarray:
         """Reduce the exact union of spans, sharing each horizontal window."""
         from scipy.ndimage import maximum_filter1d, minimum_filter1d
 
@@ -6621,7 +6610,9 @@ def erode_objects(
     runtime_profiler.log(
         "erode_objects_lineage", time.perf_counter() - phase_started_at
     )
-    runtime_profiler.log("erode_objects_total", time.perf_counter() - total_started_at)
+    runtime_profiler.log(
+        "erode_objects_total", time.perf_counter() - total_started_at
+    )
     return (
         image,
         DataclassMeasurementColumnarRows((stats,), row_type=ErosionStats),

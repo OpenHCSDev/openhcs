@@ -48,9 +48,7 @@ class ZMQOrchestratorEnvironmentRequest(ZMQExecutionIdentity):
         from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
 
         dataset_root = str(
-            self.subject_id
-            if self.execution_subject_id is None
-            else self.execution_subject_id
+            self.subject_id if self.execution_subject_id is None else self.execution_subject_id
         )
         return DatasetRootRule.for_dataset(dataset_root).prepare_storage(
             dataset_root, storage_registry

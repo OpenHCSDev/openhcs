@@ -109,13 +109,9 @@ class RegistryService:
         """Ask the original registry declaration to resolve one public identity."""
 
         registry_name, separator, name = function_id.partition(":")
-        registry_type = (
-            LIBRARY_REGISTRIES.get(registry_name) if separator and name else None
-        )
-        claims = (
-            ()
-            if registry_type is None
-            else tuple(registry_type._canonical_metadata_claims(function_id))
+        registry_type = LIBRARY_REGISTRIES.get(registry_name) if separator and name else None
+        claims = () if registry_type is None else tuple(
+            registry_type._canonical_metadata_claims(function_id)
         )
         for metadata in claims:
             if metadata.composite_key != function_id:
@@ -132,9 +128,7 @@ class RegistryService:
             or inspect.unwrap(metadata.func) is not inspect.unwrap(first.func)
             for metadata in claims[1:]
         ):
-            raise ValueError(
-                f"Canonical function {function_id!r} has ambiguous owners."
-            )
+            raise ValueError(f"Canonical function {function_id!r} has ambiguous owners.")
         return first
 
     @classmethod
@@ -193,15 +187,11 @@ class RegistryService:
             cls._metadata_cache = cls._metadata_from_instances(
                 cls._available_registry_instances()
             )
-        callables = tuple(
-            dict.fromkeys(
-                target
-                for metadata in cls._metadata_cache.values()
-                for target in CallableProjection.from_callable(
-                    metadata.func
-                ).prepare_targets()
-            )
-        )
+        callables = tuple(dict.fromkeys(
+            target
+            for metadata in cls._metadata_cache.values()
+            for target in CallableProjection.from_callable(metadata.func).prepare_targets()
+        ))
         emit_status("Preparing registered kernel caches")
         PreparationCacheBatch.from_callables(callables).populate_child_caches(
             max_workers=os.cpu_count() or 1,

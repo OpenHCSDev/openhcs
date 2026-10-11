@@ -71,10 +71,7 @@ def render(payload, options=None) -> str:
 
 def snapshot(index: int, label: str = "edit") -> UiSnapshotRef:
     return replace(
-        sample_dto(UiSnapshotRef),
-        index=index,
-        label=label,
-        branch="main",
+        sample_dto(UiSnapshotRef), index=index, label=label, branch="main",
         snapshot_id=f"snapshot-{index}",
     )
 
@@ -115,11 +112,9 @@ def test_bridge_status_and_unavailable_bridge():
         server=SERVER,
         results=(McpDevToolResult(tool="t", mcp_error=True, payloads=()),),
     )
-    assert (
-        McpDevOutputRenderer.for_output_contract(UiBridgeStatus)
-        .render(failed)
-        .startswith("UI bridge: unavailable\nErrors:")
-    )
+    assert McpDevOutputRenderer.for_output_contract(UiBridgeStatus).render(
+        failed
+    ).startswith("UI bridge: unavailable\nErrors:")
 
 
 def window(window_id: str, title: str, kind: str, visible: bool) -> UiWindowSummary:
@@ -152,28 +147,21 @@ def test_window_catalog_flags_only_visible_stray_top_level_windows():
         'Attention: 1 visible top-level window(s): qt_top_level:1 title="Error"'
         in rendered
     )
-    assert "- plate_manager [embedded] visible=True" in rendered
+    assert '- plate_manager [embedded] visible=True' in rendered
 
 
 def test_ui_smoke_composes_each_tool_payload():
     from openhcs.agent.capabilities import agent_capabilities
 
     def result(capability, payload):
-        return McpDevToolResult(
-            tool=capability.name, mcp_error=False, payloads=(payload,)
-        )
+        return McpDevToolResult(tool=capability.name, mcp_error=False, payloads=(payload,))
 
     health = replace(
         sample_dto(McpServerHealthResult),
-        status="ok",
-        restart_required=False,
-        stale_source_paths=(),
-        warnings=(),
+        status="ok", restart_required=False, stale_source_paths=(), warnings=(),
     )
     bridges = replace(sample_dto(UiBridgeCatalog), warnings=())
-    status = replace(
-        sample_dto(UiBridgeStatus), reachable=True, descriptor_status="ok", warnings=()
-    )
+    status = replace(sample_dto(UiBridgeStatus), reachable=True, descriptor_status="ok", warnings=())
     response = McpDevToolBatchResponse(
         server=SERVER,
         results=(
@@ -223,15 +211,9 @@ def test_catalogs_filter_and_truncate_with_contains_and_limit():
 def plate_row(name: str, selected: bool, **values) -> DatasetRowState:
     return replace(
         sample_dto(DatasetRowState),
-        name=name,
-        selected=selected,
-        orchestrator_state="compiled",
-        status_prefix="",
-        terminal_status=None,
-        root=f"/{name}",
-        output_root=None,
-        source_root=None,
-        **values,
+        name=name, selected=selected, orchestrator_state="compiled",
+        status_prefix="", terminal_status=None, root=f"/{name}",
+        output_root=None, source_root=None, **values,
     )
 
 
@@ -263,21 +245,15 @@ def test_state_surface_documents_render_through_their_surface_state():
         sample_dto(UiPipelineEditorState),
         summary=surface_summary(
             PipelineEditorStateSurfaceIdentityDeclaration.require_value(),
-            current_selection_count=1,
-            total_scope_count=2,
+            current_selection_count=1, total_scope_count=2,
         ),
         current_snapshot=snapshot(4, "edit pipeline"),
         selected_scope_ids=("/tmp/plate-a::functionstep_1",),
         steps=(
             replace(
                 sample_dto(PipelineStepState),
-                index=0,
-                name="normalize",
-                dirty=True,
-                default_diff=False,
-                function_names=("normalize",),
-                function_ids=(),
-                debug_pause=False,
+                index=0, name="normalize", dirty=True, default_diff=False,
+                function_names=("normalize",), function_ids=(), debug_pause=False,
                 step_scope_id=None,
             ),
         ),
@@ -286,9 +262,7 @@ def test_state_surface_documents_render_through_their_surface_state():
     rendered = render(document_for(editor))
     assert 'Snapshot: 4 "edit pipeline"' in rendered
     assert "Selected scopes: /tmp/plate-a::functionstep_1" in rendered
-    assert (
-        "- 0. [*] normalize: enabled=True, selected=True, funcs=normalize" in rendered
-    )
+    assert "- 0. [*] normalize: enabled=True, selected=True, funcs=normalize" in rendered
     assert "ids=" not in rendered
 
 
@@ -314,9 +288,7 @@ def test_unregistered_or_unreadable_surface_points_to_the_catalog():
         summary=surface_summary("plate_manager", readable=False),
         payload={},
         warnings=(),
-        errors=(
-            AgentError(code="ui_state_surface_unreadable", message="Not readable."),
-        ),
+        errors=(AgentError(code="ui_state_surface_unreadable", message="Not readable."),),
     )
     rendered = render(document)
     assert "Surface: plate_manager" in rendered
@@ -327,68 +299,38 @@ def test_unregistered_or_unreadable_surface_points_to_the_catalog():
 
 def tree_node(class_name: str, *children, **values) -> UiWidgetTreeNode:
     defaults = dict(
-        object_name="",
-        text=None,
-        title=None,
-        current_text=None,
-        visible=True,
-        enabled=True,
-        clickable=True,
-        actionable=False,
-        action_kinds=(),
+        object_name="", text=None, title=None, current_text=None, visible=True,
+        enabled=True, clickable=True, actionable=False, action_kinds=(),
     )
     return replace(
         sample_dto(UiWidgetTreeNode),
-        class_name=class_name,
-        children=children,
-        **(defaults | values),
+        class_name=class_name, children=children, **(defaults | values),
     )
 
 
 def test_widget_tree_outline_shows_addressable_paths_and_hides_technical_nodes():
     root = tree_node(
         "PipelineEditorWidget",
-        tree_node(
-            "QPushButton",
-            text="Edit",
-            path_id="1.0.2",
-            action_kinds=("button",),
-            enabled=False,
-            clickable=False,
-        ),
-        tree_node(
-            "QPushButton",
-            text="Generate",
-            path_id="1.0.3",
-            action_kinds=("button",),
-            visible=False,
-        ),
+        tree_node("QPushButton", text="Edit", path_id="1.0.2", action_kinds=("button",),
+                  enabled=False, clickable=False),
+        tree_node("QPushButton", text="Generate", path_id="1.0.3",
+                  action_kinds=("button",), visible=False),
         tree_node("QScrollBar"),
         tree_node("QLineEdit", path_id="1.0.4", actionable=True, text="Gamma"),
         tree_node("QLabel", current_text="long " * 40),
     )
     action = replace(
         sample_dto(UiWidgetActionSummary),
-        path_id="1.0.4",
-        object_state_scope_id="/plate::step",
-        field_path="gamma",
+        path_id="1.0.4", object_state_scope_id="/plate::step", field_path="gamma",
         semantic_markers=("*",),
     )
     result = replace(
         sample_dto(UiWidgetTreeResult),
-        root=root,
-        actionable_widgets=(action,),
-        tree_truncated=False,
-        actionable_widgets_truncated=False,
-        warnings=(),
-        summary=replace(
-            sample_dto(UiWindowSummary),
-            title="Pipeline Editor",
-            dirty=False,
-            dirty_field_count=0,
-            signature_diff=True,
-            semantic_markers=(),
-        ),
+        root=root, actionable_widgets=(action,), tree_truncated=False,
+        actionable_widgets_truncated=False, warnings=(),
+        summary=replace(sample_dto(UiWindowSummary), title="Pipeline Editor",
+                        dirty=False, dirty_field_count=0, signature_diff=True,
+                        semantic_markers=()),
     )
     rendered = render(result)
     assert "Window: Pipeline Editor" in rendered
@@ -415,29 +357,22 @@ def test_widget_tree_outline_shows_addressable_paths_and_hides_technical_nodes()
 
 def test_code_document_bounds_its_source():
     document = replace(
-        sample_dto(UiCodeDocument),
-        source="pattern = (some_func," + "x" * 50,
-        current_snapshot=snapshot(10),
-        warnings=(),
+        sample_dto(UiCodeDocument), source="pattern = (some_func," + "x" * 50,
+        current_snapshot=snapshot(10), warnings=(),
     )
     rendered = render(document, CodeDocumentRenderOptions(max_source_chars=20))
     assert "Revision: token=" in rendered and "snapshot=main@10 head=" in rendered
     assert "Source:\npattern = (some_func" in rendered
     assert "...<truncated 51 chars>" in rendered
-    assert "Source:" not in render(
-        document, CodeDocumentRenderOptions(include_source=False)
-    )
+    assert "Source:" not in render(document, CodeDocumentRenderOptions(include_source=False))
 
 
 def test_code_document_apply_shows_revisions_and_snapshots():
     applied = replace(
         sample_dto(UiCodeDocumentApplyResult),
-        base_revision_token="rev-123",
-        current_revision_token="rev-456",
-        new_revision_token="rev-456",
-        current_snapshot=snapshot(10),
-        undo_snapshot=None,
-        warnings=(),
+        base_revision_token="rev-123", current_revision_token="rev-456",
+        new_revision_token="rev-456", current_snapshot=snapshot(10),
+        undo_snapshot=None, warnings=(),
     )
     rendered = render(applied)
     assert "Revision: base=rev-123 current=rev-456 new=rev-456" in rendered
@@ -458,20 +393,13 @@ def test_action_catalog_filters_actions_and_warnings_by_widget():
         sample_dto(UiActionCatalog),
         actions=(
             ui_action(
-                "plate_manager",
-                "compile_datasets",
-                enabled=False,
-                disabled_error=AgentError(
-                    code="no_plate", message="No plate.", hint="Add a plate."
-                ),
+                "plate_manager", "compile_datasets", enabled=False,
+                disabled_error=AgentError(code="no_plate", message="No plate.", hint="Add a plate."),
             ),
             ui_action("image_browser", "open_file"),
         ),
         warnings=(
-            AgentWarning(
-                code="plate_path_setup_uses_code_document",
-                message="Use plate_manager code.",
-            ),
+            AgentWarning(code="plate_path_setup_uses_code_document", message="Use plate_manager code."),
             AgentWarning(code="unrelated", message="Something else."),
         ),
     )
@@ -499,9 +427,7 @@ def test_action_catalog_filters_actions_and_warnings_by_widget():
 def test_disabled_actions_do_not_make_the_call_fail():
     catalog = replace(
         sample_dto(UiActionCatalog),
-        actions=(
-            ui_action("w", "a", disabled_error=AgentError(code="off", message="Off.")),
-        ),
+        actions=(ui_action("w", "a", disabled_error=AgentError(code="off", message="Off.")),),
     )
     result = McpDevToolResult(tool="t", mcp_error=False, payloads=(catalog,))
     assert not result.has_errors()
@@ -512,12 +438,8 @@ def test_tool_list_filters_groups_and_flattens():
         server=SERVER,
         tool_count=3,
         tools=(
-            McpDevToolMetadata(
-                "openhcs_get_viewer_window_state", "Read bounded viewer state.", {}
-            ),
-            McpDevToolMetadata(
-                "openhcs_validate_viewer_window_state", "Validate viewer.", {}
-            ),
+            McpDevToolMetadata("openhcs_get_viewer_window_state", "Read bounded viewer state.", {}),
+            McpDevToolMetadata("openhcs_validate_viewer_window_state", "Validate viewer.", {}),
             McpDevToolMetadata("openhcs_health_check", "Health.", {}),
         ),
     )
@@ -531,6 +453,4 @@ def test_tool_list_filters_groups_and_flattens():
     assert "[Viewer Review]" not in flat
     projected = ToolListRenderer.project_response(tools, contains="viewer", limit=1)
     assert projected["matched_tool_count"] == 2
-    assert [tool["name"] for tool in projected["tools"]] == [
-        "openhcs_get_viewer_window_state"
-    ]
+    assert [tool["name"] for tool in projected["tools"]] == ["openhcs_get_viewer_window_state"]

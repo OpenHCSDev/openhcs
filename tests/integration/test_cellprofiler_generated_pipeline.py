@@ -184,9 +184,7 @@ def _execute_imported_cppipe_via_zmq(
             if partition_filter is None
             else LazyPartitionFilterConfig(
                 partition_filter=(
-                    partition_filter
-                    if isinstance(partition_filter, int)
-                    else list(partition_filter)
+                    partition_filter if isinstance(partition_filter, int) else list(partition_filter)
                 )
             )
         ),

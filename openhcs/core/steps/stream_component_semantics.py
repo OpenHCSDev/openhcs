@@ -98,7 +98,9 @@ class StreamImagePayloadMetadataProjector:
             axis=metadata.plane_axis,
             axis_size=metadata.source_provenance.source_plane_count,
         )
-        source_identity = RequiredSourceComponentMetadata
+        source_identity = (
+            RequiredSourceComponentMetadata
+        )
         return source_identity.project_payload_items(
             RuntimeProjectionSourceIdentityRequest(
                 value=metadata.attach_to(payload),
@@ -182,9 +184,7 @@ class StreamImagePayloadMetadataProjector:
         )
         colour_axis_position = metadata.axis_position(ColourAxis)
         if colour_axis_position is not None:
-            item_fields[ViewerWireField.SOURCE_CHANNEL_AXIS.value] = (
-                colour_axis_position
-            )
+            item_fields[ViewerWireField.SOURCE_CHANNEL_AXIS.value] = colour_axis_position
         if metadata.plane_axis is None:
             return item_fields
 
@@ -729,6 +729,7 @@ class StreamExecutionAxisDomainProvider(StreamComponentDomainProvider):
     @classmethod
     def supports(cls, component: str) -> bool:
         return component == AxisFamily.active().partition_axis().name
+
 
     def domain_metadata_items(self) -> StreamComponentDomainMetadataItems:
         return tuple({self.component: value} for value in self.execution_axis_values)

@@ -2648,6 +2648,8 @@ def test_object_state_exact_field_paths_include_path_type_and_description() -> N
     )
 
 
+
+
 def test_managed_window_save_action_returns_before_deferred_save_runs() -> None:
     app = QtApplicationAuthority.app()
     dispatcher = QueuedPostDispatcher()
@@ -2695,17 +2697,13 @@ def test_managed_window_save_action_returns_before_deferred_save_runs() -> None:
         assert len(action.target_scope_ids) == 2
         assert len(dispatcher.callbacks) == 1
         assert (
-            bridge.get_operation_status(
-                UiBridgeOperationStatusRequest(result.receipt.bridge_operation_id)
-            ).status
+            bridge.get_operation_status(UiBridgeOperationStatusRequest(result.receipt.bridge_operation_id)).status
             == "running"
         )
 
         dispatcher.run_next()
 
-        operation = bridge.get_operation_status(
-            UiBridgeOperationStatusRequest(result.receipt.bridge_operation_id)
-        )
+        operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(result.receipt.bridge_operation_id))
         assert window.save_count == 1
         assert window.saved_close_window is False
         assert operation.status == "completed"
@@ -3114,18 +3112,11 @@ def test_apply_document_returns_running_operation_before_queued_ui_apply_runs() 
     assert result.receipt.accepted is True
     assert result.receipt.bridge_operation_id == result.operation_id
     assert operations.pre_count == 0
-    assert (
-        bridge.get_operation_status(
-            UiBridgeOperationStatusRequest(result.operation_id)
-        ).status
-        == "running"
-    )
+    assert bridge.get_operation_status(UiBridgeOperationStatusRequest(result.operation_id)).status == "running"
 
     dispatcher.run_next()
 
-    operation = bridge.get_operation_status(
-        UiBridgeOperationStatusRequest(result.operation_id)
-    )
+    operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(result.operation_id))
     assert operations.pre_count == 1
     assert operations.post_count == 1
     assert operation.status == "completed"
@@ -3158,18 +3149,11 @@ def test_queued_apply_document_error_updates_operation_status() -> None:
     assert result.applied is False
     assert result.operation_id is not None
     assert result.receipt.accepted is True
-    assert (
-        bridge.get_operation_status(
-            UiBridgeOperationStatusRequest(result.operation_id)
-        ).status
-        == "running"
-    )
+    assert bridge.get_operation_status(UiBridgeOperationStatusRequest(result.operation_id)).status == "running"
 
     dispatcher.run_next()
 
-    operation = bridge.get_operation_status(
-        UiBridgeOperationStatusRequest(result.operation_id)
-    )
+    operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(result.operation_id))
     assert operation.status == "completed"
     assert operation.outcome == "not_applied"
     assert operation.errors
@@ -3451,15 +3435,15 @@ def test_two_ipc_ui_bridges_route_each_descriptor_to_its_exact_instance(
         service = UiBridgeService()
         first_status = service.invoke(
             UiBridgeStatusOperation,
-            connection=service.connection_from_args(
+            connection=            service.connection_from_args(
                 descriptor_file_path=first_binding.descriptor_file_path
-            ),
+            )
         )
         second_status = service.invoke(
             UiBridgeStatusOperation,
-            connection=service.connection_from_args(
+            connection=            service.connection_from_args(
                 descriptor_file_path=second_binding.descriptor_file_path
-            ),
+            )
         )
 
         assert first_status.reachable is True
@@ -3910,7 +3894,9 @@ def test_selected_plate_document_does_not_fall_back_to_all_rows() -> None:
     assert newly_selected_document.summary.current_selection_count == 1
     assert newly_selected_state.selected_scope_ids == (second,)
     assert newly_selected_state.summary.current_selection_count == 1
-    assert [row["scope_id"] for row in newly_selected_state.payload["rows"]] == [second]
+    assert [
+        row["scope_id"] for row in newly_selected_state.payload["rows"]
+    ] == [second]
     assert newly_selected_state.payload["rows"][0]["selected"] is True
     assert (
         newly_selected_state.current_revision_token
@@ -4049,8 +4035,7 @@ def test_plate_manager_intermediate_plate_keeps_both_path_relations(
     tmp_path: Path, reverse_rows: bool
 ) -> None:
     roots = tuple(
-        str(tmp_path / name)
-        for name in ("raw", "raw_stitched", "raw_stitched_analysis")
+        str(tmp_path / name) for name in ("raw", "raw_stitched", "raw_stitched_analysis")
     )
     ordered = roots[::-1] if reverse_rows else roots
     with dataset_gui(*ordered, selected=(1,)) as (gui, _scope_ids):
@@ -4224,19 +4209,12 @@ def test_selected_workflow_returns_before_the_queued_operation_runs(
         )
         assert started == []
         assert len(dispatcher.callbacks) == 1
-        assert (
-            bridge.get_operation_status(
-                UiBridgeOperationStatusRequest(operation_id)
-            ).status
-            == "running"
-        )
+        assert bridge.get_operation_status(UiBridgeOperationStatusRequest(operation_id)).status == "running"
 
         dispatcher.run_next()
 
         assert started == [((DATASET_SCOPE_ID,),)]
-        operation = bridge.get_operation_status(
-            UiBridgeOperationStatusRequest(operation_id)
-        )
+        operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(operation_id))
         assert operation.status == "completed"
         assert operation.outcome == "accepted"
 
@@ -4478,7 +4456,9 @@ def test_pipeline_editor_state_surface_projects_steps_and_selection(
         assert state.payload["steps"][0]["function_ids"] == ["test:function_0"]
         assert state.payload["steps"][1]["function_ids"] == ["test:function_1"]
         assert selected_state.payload["steps"][0]["name"] == "step_two"
-        assert selected_state.payload["steps"][0]["function_ids"] == ["test:function_1"]
+        assert selected_state.payload["steps"][0]["function_ids"] == [
+            "test:function_1"
+        ]
         assert selected_state.unchanged is False
 
 
@@ -4486,7 +4466,9 @@ def _debug_actions(bridge):
     return _actions(bridge, PipelineDebugToolbarWidgetIdentity.require_value())
 
 
-def test_pipeline_debug_toolbar_actions_are_exposed_from_toolbar_declarations() -> None:
+def test_pipeline_debug_toolbar_actions_are_exposed_from_toolbar_declarations() -> (
+    None
+):
     with pipeline_gui() as gui:
         actions = _debug_actions(_pipeline_editor_bridge(gui.pipeline_editor))
 
@@ -4574,9 +4556,7 @@ def test_pipeline_debug_toolbar_runtime_values_action_requires_debug_session(
         )
         bridge = _pipeline_editor_bridge(gui.pipeline_editor)
         widget_id = PipelineDebugToolbarWidgetIdentity.require_value()
-        action = _debug_actions(bridge)[
-            DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value
-        ]
+        action = _debug_actions(bridge)[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]
 
         result = bridge.invoke_action(
             UiActionInvokeRequest(
@@ -4749,6 +4729,5 @@ def test_pipeline_debug_session_terminal_summary_retires_the_inspected_session()
         assert actions[DebugCommandType.RESTART.value]["enabled"] is False
         assert actions[DebugCommandType.STOP.value]["enabled"] is False
         assert (
-            actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"]
-            is False
+            actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is False
         )

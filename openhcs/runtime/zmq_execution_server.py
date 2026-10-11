@@ -302,10 +302,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             # by a worker lane. They carry topology but never a worker claim.
             if event.axis_id:
                 self._require_worker_claim(event, assignments)
-            elif (
-                event.worker_slot is not None
-                or event.owned_partition_values is not None
-            ):
+            elif event.worker_slot is not None or event.owned_partition_values is not None:
                 raise ValueError(
                     f"Execution-level progress cannot carry a worker claim: {event}"
                 )
@@ -399,9 +396,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         execution_id: str,
         request_payload: ZMQExecutionRequestPayload,
     ):
-        logger.info(
-            "[%s] Starting subject %s", execution_id, request_payload.subject_id
-        )
+        logger.info("[%s] Starting subject %s", execution_id, request_payload.subject_id)
 
         request_payload.compile_control.validate()
         self._cleanup_compiled_artifacts()
@@ -650,9 +645,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
 
         if execution_bundle is None:
             if resolved_config is None:
-                raise ValueError(
-                    "Fresh initialization requires resolved configuration."
-                )
+                raise ValueError("Fresh initialization requires resolved configuration.")
             orchestrator = PipelineOrchestrator(
                 dataset_root=Path(dataset_root),
                 pipeline_config=pipeline_config,
@@ -703,7 +696,9 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             execution_bundle.axis_ids
             if execution_bundle is not None
             else tuple(
-                orchestrator.get_component_keys(AxisFamily.active().partition_axis())
+                orchestrator.get_component_keys(
+                    AxisFamily.active().partition_axis()
+                )
             )
         )
         return debug_execution_policy.axis_filter_for_available(available_axis_ids)

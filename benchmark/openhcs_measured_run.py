@@ -370,7 +370,9 @@ def retain_measured_openhcs_completion(
 
     if expected_axis_count is not None and expected_axis_count < 1:
         raise ValueError("Expected axis count must be positive when declared.")
-    auxiliary_params = ZMQAuxiliaryExecutionParams.from_transport(request.config_params)
+    auxiliary_params = ZMQAuxiliaryExecutionParams.from_transport(
+        request.config_params
+    )
     observation_export_path = auxiliary_params.runtime_observation_export_path
     if observation_export_path is None:
         raise ValueError("Measured OpenHCS runs require runtime observation export.")

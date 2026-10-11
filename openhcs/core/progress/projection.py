@@ -184,7 +184,9 @@ class ExecutingSubjectRuntimeState(SubjectRuntimeState):
         return state is ExecutingSubjectRuntimeState
 
 
-class CompleteSubjectRuntimeState(TerminalSubjectRuntimeState, SubjectRuntimeState):
+class CompleteSubjectRuntimeState(
+    TerminalSubjectRuntimeState, SubjectRuntimeState
+):
     state_name = "complete"
     default_channel = ProgressChannel.PIPELINE
     status_label = "✅ Complete"
@@ -192,7 +194,9 @@ class CompleteSubjectRuntimeState(TerminalSubjectRuntimeState, SubjectRuntimeSta
     count_sort_order = 40
 
 
-class FailedSubjectRuntimeState(TerminalSubjectRuntimeState, SubjectRuntimeState):
+class FailedSubjectRuntimeState(
+    TerminalSubjectRuntimeState, SubjectRuntimeState
+):
     state_name = "failed"
     status_label = "❌ Failed"
     count_label = "❌ {count} failed"
@@ -382,7 +386,9 @@ class ExecutionRuntimeProjection:
     def count_status_labels(self) -> Tuple[str, ...]:
         labels: List[str] = []
         for declaration in SubjectRuntimeState.counted_declarations():
-            label = declaration.count_status_label(self.count_for_state(declaration))
+            label = declaration.count_status_label(
+                self.count_for_state(declaration)
+            )
             if label:
                 labels.append(label)
         return tuple(labels)
@@ -412,9 +418,7 @@ class ExecutionRuntimeProjection:
         self, subject_id: str, execution_id: Optional[str] = None
     ) -> Optional[SubjectRuntimeProjection]:
         if execution_id is not None:
-            return self.by_identity.get(
-                SubjectRuntimeIdentity(execution_id, subject_id)
-            )
+            return self.by_identity.get(SubjectRuntimeIdentity(execution_id, subject_id))
         return self.by_subject_latest.get(subject_id)
 
     def reconcile_server_executions(
@@ -482,7 +486,8 @@ class ExecutionRuntimeProjection:
 
     def recalculate_summary(self) -> None:
         self.state_counts = {
-            declaration: 0 for declaration in SubjectRuntimeState.__registry__.values()
+            declaration: 0
+            for declaration in SubjectRuntimeState.__registry__.values()
         }
         for subject in self.by_subject_latest.values():
             self.state_counts[subject.state] += 1

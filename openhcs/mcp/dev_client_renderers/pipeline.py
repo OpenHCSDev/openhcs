@@ -132,7 +132,9 @@ class PipelineDraftStepRenderer:
             lines.append(f"Ref: uri={created.uri}")
         if validated is not None and validated.errors:
             lines.append("Validate errors:")
-        lines.extend(diagnostic_lines(decoded.diagnostic_errors()))
+        lines.extend(
+            diagnostic_lines(decoded.diagnostic_errors())
+        )
         if validated is not None:
             if validated.warnings:
                 lines.append("Validate warnings:")
@@ -319,7 +321,9 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
         mode = (
             "disabled"
             if materialization.disabled
-            else "runtime-resolved" if materialization.runtime_resolved else "explicit"
+            else "runtime-resolved"
+            if materialization.runtime_resolved
+            else "explicit"
         )
         parts = [mode, f"persistent={materialization.persistent_enabled}"]
         parts.extend(

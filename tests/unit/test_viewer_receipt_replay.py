@@ -49,17 +49,15 @@ from tests.unit.viewer_axes_fixture import STREAM_AXES
 from openhcs.core.axes import ColourAxis
 
 
+
 def _plate_context(plate_path, filemanager) -> PlateInspectionContext:
     """A plate whose metadata owner anchors workspace addresses at the plate."""
     return PlateInspectionContext(
         plate_path=plate_path,
         filemanager=filemanager,
-        handler=SimpleNamespace(
-            metadata_handler=SimpleNamespace(source_workspace_root=Path)
-        ),
+        handler=SimpleNamespace(metadata_handler=SimpleNamespace(source_workspace_root=Path)),
         parser=None,
     )
-
 
 def receipt_state(path, *, summary=None):
     fixed = {
@@ -68,22 +66,16 @@ def receipt_state(path, *, summary=None):
         if component is not Microscopy.Channel
     }
     fixed[Microscopy.Well.name] = "1"
-    summary = (
-        summary
-        if summary is not None
-        else ViewerPayloadSummary.from_wire_mapping(
-            dict(
-                path=str(path),
-                data_type="image",
-                components=fixed,
-                aggregate_component_values={"channel": [2, 1]},
-                shape=[2, 8, 9],
-                source_spatial_shape_yx=[8, 9],
-                spatial_origin_yx=[0, 0],
-                dtype="int32",
-            )
-        )
-    )
+    summary = summary if summary is not None else ViewerPayloadSummary.from_wire_mapping(dict(
+        path=str(path),
+        data_type="image",
+        components=fixed,
+        aggregate_component_values={"channel": [2, 1]},
+        shape=[2, 8, 9],
+        source_spatial_shape_yx=[8, 9],
+        spatial_origin_yx=[0, 0],
+        dtype="int32",
+    ))
     layer = ViewerWindowLayerState(
         route_key="native_historical_labels",
         title="Labels",
@@ -129,7 +121,9 @@ def test_receipt_codec_and_exact_path_admission(tmp_path):
         )
 
 
-@pytest.mark.parametrize("change", ["transform", "truncated", "window", "producer"])
+@pytest.mark.parametrize(
+    "change", ["transform", "truncated", "window", "producer"]
+)
 def test_receipt_incomplete_or_conflicting_facts_refuse(tmp_path, change):
     state = receipt_state(tmp_path / "aggregate.labels.tif")
     layer = state.layers[0]
@@ -148,16 +142,10 @@ def test_receipt_incomplete_or_conflicting_facts_refuse(tmp_path, change):
         )
 
 
-@pytest.mark.parametrize(
-    "field,value",
-    [
-        ("spatial_origin_yx", [False, 0]),
-        ("shape", [True, 8, 9]),
-    ],
-)
-def test_receipt_boolean_spatial_facts_refuse_at_original_typed_ingress(
-    tmp_path, field, value
-):
+@pytest.mark.parametrize("field,value", [
+    ("spatial_origin_yx", [False, 0]), ("shape", [True, 8, 9]),
+])
+def test_receipt_boolean_spatial_facts_refuse_at_original_typed_ingress(tmp_path, field, value):
     wire = to_jsonable(receipt_state(tmp_path / "aggregate.labels.tif"))
     wire["layers"][0]["payload_summaries"][0][field] = value
     with pytest.raises(TypeError):
@@ -186,34 +174,28 @@ def test_observed_and_declared_wire_domains_have_distinct_order_contracts():
     )
 
     observed = ViewerComponentValueDomainPayload.from_wire_mapping(
-        {"channel": ["2", 1, 2]},
-        context="observed",
+        {"channel": ["2", 1, 2]}, context="observed",
         declared_axes=STREAM_AXES,
     )
     assert observed.to_wire_mapping() == {"channel": [1, 2]}
     declared = ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-        {"channel": ["2", 1]},
-        context="declared",
+        {"channel": ["2", 1]}, context="declared",
         declared_axes=STREAM_AXES,
     )
     assert declared.to_wire_mapping() == {"channel": [2, 1]}
     with pytest.raises(ValueError, match="unique after normalization"):
         ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-            {"channel": ["01", 1]},
-            context="malformed declared",
+            {"channel": ["01", 1]}, context="malformed declared",
             declared_axes=STREAM_AXES,
         )
 
 
 @pytest.mark.parametrize("historical_dtype", [None, "int32"])
-@pytest.mark.parametrize(
-    "spacing",
-    (
-        SourceVoxelSpacing(),
-        SourceVoxelSpacing((2.0, 0.65, 0.65)),
-        SourceVoxelSpacing((2.0, 1.0, 0.75), SourceVoxelSpacingUnit.RELATIVE),
-    ),
-)
+@pytest.mark.parametrize("spacing", (
+    SourceVoxelSpacing(),
+    SourceVoxelSpacing((2.0, 0.65, 0.65)),
+    SourceVoxelSpacing((2.0, 1.0, 0.75), SourceVoxelSpacingUnit.RELATIVE),
+))
 def test_native_persisted_aggregate_source_projection_preserves_order(
     tmp_path, historical_dtype, spacing
 ):
@@ -224,14 +206,11 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.source_spatial_domain import SourceSpatialDomain
     from openhcs.runtime.napari_streaming_handlers import (
-        NapariAggregateAxisBindingBuilder,
-        NapariStreamLayerAddress,
-        NapariStreamLayerItem,
+        NapariAggregateAxisBindingBuilder, NapariStreamLayerAddress, NapariStreamLayerItem,
     )
     from openhcs.runtime.napari_viewer_server import NapariViewerStateProjection
     from openhcs.runtime.viewer_component_system import (
-        ViewerComponentAxisSemanticsFactory,
-        ViewerComponentValueDomainPayload,
+        ViewerComponentAxisSemanticsFactory, ViewerComponentValueDomainPayload,
         ViewerMappingDisplayConfigInput,
     )
 
@@ -241,43 +220,32 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
         producer=fixture.layers[0].producer_identities[0],
         address=NapariStreamLayerAddress(
             components=fixture.layers[0].payload_summaries[0].components,
-            path=str(path),
-            stream_layer_data_type=StreamingDataType.IMAGE,
+            path=str(path), stream_layer_data_type=StreamingDataType.IMAGE,
         ),
         image_metadata=ImagePayloadMetadata(
             source_voxel_spacing=spacing,
             source_spatial_domain=SourceSpatialDomain(
-                origin_yx=(0, 0),
-                source_shape_yx=(8, 9),
+                origin_yx=(0, 0), source_shape_yx=(8, 9),
             ),
         ),
         plane_component_domain=ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-            {"channel": [2, 1]},
-            context="synthetic native receipt",
+            {"channel": [2, 1]}, context="synthetic native receipt",
             declared_axes=STREAM_AXES,
         ),
     )
     native_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerMappingDisplayConfigInput(
-            {
-                "component_modes": {"channel": "stack"},
-                "component_order": ["channel"],
-                "declared_axes": STREAM_AXES.to_wire(),
-            }
+            {"component_modes": {"channel": "stack"}, "component_order": ["channel"], "declared_axes": STREAM_AXES.to_wire()}
         ),
         ViewerComponentValueDomainPayload.from_wire_mapping(
-            {"channel": [1, 2]},
-            context="synthetic observed receipt domain",
+            {"channel": [1, 2]}, context="synthetic observed receipt domain",
             declared_axes=STREAM_AXES,
         ),
     )
     summary = NapariViewerStateProjection.payload_summary(
-        native_item,
-        native_item.address.components,
-        expected,
+        native_item, native_item.address.components, expected,
         aggregate_axis_bindings=NapariAggregateAxisBindingBuilder.bindings(
-            [native_item],
-            native_semantics,
+            [native_item], native_semantics,
         ),
     )
     assert summary.full_image_plane_count == 2
@@ -304,16 +272,14 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     state = replace(
         state,
         viewer_ndim=len(presentation.axis_labels),
-        layers=(
-            replace(
-                state.layers[0],
-                axis_labels=presentation.axis_labels,
-                native_transform=ViewerNativeLayerTransform(
-                    scale=coordinate_kwargs["scale"],
-                    translate=coordinate_kwargs["translate"],
-                ),
+        layers=(replace(
+            state.layers[0],
+            axis_labels=presentation.axis_labels,
+            native_transform=ViewerNativeLayerTransform(
+                scale=coordinate_kwargs["scale"],
+                translate=coordinate_kwargs["translate"],
             ),
-        ),
+        ),),
     )
     assert summary.voxel_spacing == spacing
     data = json.dumps(to_jsonable(state), sort_keys=True).encode()
@@ -369,29 +335,19 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     assert metadata.source_dtype == "int64"
     from openhcs.agent.capabilities import GetViewerWindowStateCapability
     from openhcs.mcp.dev_client_core import (
-        McpDevServerIdentity,
-        McpDevToolBatchResponse,
-        McpDevToolResult,
+        McpDevServerIdentity, McpDevToolBatchResponse, McpDevToolResult,
     )
     from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
 
-    public_wire = to_jsonable(
-        McpDevToolBatchResponse(
-            server=McpDevServerIdentity(command="source-only", module="openhcs.mcp"),
-            results=(
-                McpDevToolResult(GetViewerWindowStateCapability.name, False, (state,)),
-            ),
-        )
-    )
+    public_wire = to_jsonable(McpDevToolBatchResponse(
+        server=McpDevServerIdentity(command="source-only", module="openhcs.mcp"),
+        results=(McpDevToolResult(GetViewerWindowStateCapability.name, False, (state,)),),
+    ))
     decoded = McpDevToolBatchResponse.for_rendering(public_wire)
     received = decoded.payload_for(GetViewerWindowStateCapability)
     assert isinstance(received.layers[0].payload_summaries[0], ViewerPayloadSummary)
-    assert received.layers[0].payload_summaries[0].require_plane_components() == {
-        "channel": (2, 1)
-    }
-    renderer = McpDevOutputRenderer.for_output_contract(
-        GetViewerWindowStateCapability.output_contract
-    )
+    assert received.layers[0].payload_summaries[0].require_plane_components() == {"channel": (2, 1)}
+    renderer = McpDevOutputRenderer.for_output_contract(GetViewerWindowStateCapability.output_contract)
     compact = renderer.render(decoded)
     assert '"aggregate_component_values": {"channel": [2, 1]}' in compact
     assert '"source_spatial_shape_yx": [8, 9]' in compact
@@ -400,8 +356,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     )
 
     domain = ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-        metadata.retained_plane_component_values(),
-        context="native receipt domain",
+        metadata.retained_plane_component_values(), context="native receipt domain",
         declared_axes=STREAM_AXES,
     )
     assert domain.to_wire_mapping() == {"channel": [2, 1]}
@@ -433,17 +388,12 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
     from zmqruntime.viewer_protocol import ViewerWirePayload
 
     observed = ViewerComponentValueDomainPayload.from_wire_mapping(
-        {"channel": [1, 2]},
-        context="observed stack domain",
+        {"channel": [1, 2]}, context="observed stack domain",
         declared_axes=STREAM_AXES,
     )
     semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
         ViewerMappingDisplayConfigInput(
-            {
-                "component_modes": {"channel": "stack"},
-                "component_order": ["channel"],
-                "declared_axes": STREAM_AXES.to_wire(),
-            }
+            {"component_modes": {"channel": "stack"}, "component_order": ["channel"], "declared_axes": STREAM_AXES.to_wire()}
         ),
         observed,
     )
@@ -509,13 +459,8 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
         )
 
 
-@pytest.mark.parametrize(
-    "refusal",
-    ["unowned", "missing_domain", "null_domain", "empty_axis", "ambiguous_domain"],
-)
-def test_receipt_projection_refuses_unowned_or_invalid_declared_source(
-    tmp_path, refusal
-):
+@pytest.mark.parametrize("refusal", ["unowned", "missing_domain", "null_domain", "empty_axis", "ambiguous_domain"])
+def test_receipt_projection_refuses_unowned_or_invalid_declared_source(tmp_path, refusal):
     path = tmp_path / "aggregate.labels.tif"
     state = receipt_state(path)
     wire = to_jsonable(state)
@@ -545,13 +490,8 @@ def test_receipt_projection_refuses_unowned_or_invalid_declared_source(
     )
     service = PlateStreamingService(inspection, object())
     context = _plate_context(tmp_path, FileManager({"disk": DiskStorageBackend()}))
-    source_ref = (
-        None
-        if refusal == "unowned"
-        else SourcePixelRef(
-            backend="disk",
-            backend_address=str(path),
-        )
+    source_ref = None if refusal == "unowned" else SourcePixelRef(
+        backend="disk", backend_address=str(path),
     )
     expected_message = {
         "unowned": "inventory source reference",
@@ -563,11 +503,7 @@ def test_receipt_projection_refuses_unowned_or_invalid_declared_source(
     with pytest.raises(ValueError, match=expected_message):
         service._receipt_source_projection(
             PlateFileStreamRequest(plate_path=str(tmp_path), source_receipt=resource),
-            (
-                PlateFileRecord(
-                    kind=PlateFileKind.IMAGE, key=str(path), source_ref=source_ref
-                ),
-            ),
+            (PlateFileRecord(kind=PlateFileKind.IMAGE, key=str(path), source_ref=source_ref),),
             context,
         )
 
@@ -622,15 +558,11 @@ def test_standalone_mcp_streaming_uses_declared_receipt_and_explicit_bridge(tmp_
     assert admitted_connection.descriptor_file_path == str(tmp_path / "exact-ui.json")
 
 
-@pytest.mark.parametrize(
-    "change", ("scale", "missing_axes", "duplicate_axes", "translation", "crop")
-)
+@pytest.mark.parametrize("change", ("scale", "missing_axes", "duplicate_axes", "translation", "crop"))
 def test_calibrated_receipt_rejects_conflicting_native_placement(tmp_path, change):
     spacing = SourceVoxelSpacing((2.0, 0.65, 0.65))
     state = receipt_state(tmp_path / "aggregate.labels.tif")
-    summary = replace(
-        state.layers[0].payload_summaries[0], source_voxel_spacing=spacing
-    )
+    summary = replace(state.layers[0].payload_summaries[0], source_voxel_spacing=spacing)
     axes = ("channel", "z_index", "timepoint", "site", "well", "y", "x")
     transform = ViewerNativeLayerTransform(
         scale=spacing.layer_coordinate_kwargs(axes)["scale"], translate=(0,) * 7
@@ -645,16 +577,9 @@ def test_calibrated_receipt_rejects_conflicting_native_placement(tmp_path, chang
         axes = ("z_index", "z_index", "timepoint", "site", "well", "y", "x")
     else:
         summary = replace(summary, spatial_origin_yx=(1, 0))
-    state = replace(
-        state,
-        layers=(
-            replace(
-                state.layers[0],
-                axis_labels=axes,
-                payload_summaries=(summary,),
-                native_transform=transform,
-            ),
-        ),
-    )
+    state = replace(state, layers=(replace(
+        state.layers[0], axis_labels=axes,
+        payload_summaries=(summary,), native_transform=transform,
+    ),))
     with pytest.raises(ValueError):
         state.image_payload_binding_for(str(tmp_path / "aggregate.labels.tif"))

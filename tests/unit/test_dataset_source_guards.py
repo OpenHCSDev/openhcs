@@ -98,9 +98,7 @@ def test_kernel_imports_no_domain_package() -> None:
 
 def test_deleted_source_names_do_not_exist() -> None:
     offenders = {
-        _relative(path): sorted(
-            DELETED_NAMES & _identifiers(ast.parse(path.read_text()))
-        )
+        _relative(path): sorted(DELETED_NAMES & _identifiers(ast.parse(path.read_text())))
         for root in ("openhcs", "tests", "benchmark", "scripts")
         for path in (REPO_ROOT / root).rglob("*.py")
         if "benchmark/results" not in path.as_posix()
@@ -115,7 +113,9 @@ def test_kernel_spells_no_domain_root_or_filename_token() -> None:
         for path in _kernel_files()
         for node in ast.walk(ast.parse(path.read_text()))
         if isinstance(node, (ast.Constant, ast.JoinedStr))
-        and any(token in ast.unparse(node) for token in ('"/omero/', "'/omero/", "_w{"))
+        and any(
+            token in ast.unparse(node) for token in ('"/omero/', "'/omero/", "_w{")
+        )
     }
     assert offenders == set()
 

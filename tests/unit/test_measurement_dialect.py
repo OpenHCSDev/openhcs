@@ -64,26 +64,26 @@ def survey() -> Iterator[type[Survey]]:
 
 def test_a_family_without_its_own_dialect_writes_kernel_names() -> None:
     assert type(MeasurementDialect.for_family(Microscopy)) is PlainMeasurementDialect
-    assert _render_csv_rows(
-        ({"slice_index": 0, "count": 3},), ("slice_index", "count")
-    ) == ("slice_index,count\r\n0,3\r\n")
+    assert _render_csv_rows(({"slice_index": 0, "count": 3},), ("slice_index", "count")) == (
+        "slice_index,count\r\n0,3\r\n"
+    )
 
 
 def test_the_active_family_names_written_rows_through_its_dialect(survey) -> None:
     assert type(MeasurementDialect.for_active_family()) is SurveyDialect
-    assert _render_csv_rows(
-        ({"slice_index": 0, "count": 3},), ("slice_index", "count")
-    ) == ("scan_index,count\r\n0,3\r\n")
+    assert _render_csv_rows(({"slice_index": 0, "count": 3},), ("slice_index", "count")) == (
+        "scan_index,count\r\n0,3\r\n"
+    )
 
 
 def test_each_dialect_spells_the_unqualified_sample() -> None:
     names = MeasurementDialect.unqualified_sample_names()
     assert {"", "sample", "image", "scan"} <= names
     for name in ("sample", "Image", "scan"):
-        assert (
-            MeasurementSubject(MeasurementScope.SAMPLE, name).source_image_name is None
-        )
-    assert MeasurementSubject(MeasurementScope.SAMPLE, "DNA").source_image_name == "DNA"
+        assert MeasurementSubject(MeasurementScope.SAMPLE, name).source_image_name is None
+    assert (
+        MeasurementSubject(MeasurementScope.SAMPLE, "DNA").source_image_name == "DNA"
+    )
 
 
 def test_cellprofiler_spells_scopes_and_sample_numbers_in_its_own_dialect() -> None:

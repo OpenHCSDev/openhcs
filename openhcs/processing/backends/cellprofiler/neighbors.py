@@ -322,21 +322,17 @@ class NeighborRetainedImageRequest:
         output_metadata = bare_image.metadata.with_axis(ColourSampleAxisSpec(), -1)
         if self.retain_neighbor_count_image:
             retained.append(
-                bare_image.with_pixels(
-                    self.colored_metric_image(
+                bare_image.with_pixels(self.colored_metric_image(
                         neighbor_count_image, self.neighbor_count_colormap
                     ),
-                    metadata=output_metadata,
-                )
+                    metadata=output_metadata,)
             )
         if self.retain_percent_touching_image:
             retained.append(
-                bare_image.with_pixels(
-                    self.colored_metric_image(
+                bare_image.with_pixels(self.colored_metric_image(
                         percent_touching_image, self.percent_touching_colormap
                     ),
-                    metadata=output_metadata,
-                )
+                    metadata=output_metadata,)
             )
         return tuple(retained)
 
@@ -447,6 +443,7 @@ class NeighborTopologyBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Neighbor topology operations keyed by OpenHCS memory type/provider."""
+
 
     @abstractmethod
     def measure_topology(

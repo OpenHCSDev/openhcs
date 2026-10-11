@@ -1247,3 +1247,4 @@ class FuncStepContractValidator:
                 f"group_by axes with role {allowed_names}; resolved "
                 f"{resolved_group_by.name}."
             )
+

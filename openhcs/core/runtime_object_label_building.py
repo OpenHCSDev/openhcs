@@ -150,8 +150,7 @@ class SourceImageObjectLabelBuildRequest:
             return None
         metadata = self.metadata
         projection.validate_source_declaration(
-            metadata.plane_axis,
-            metadata.source_provenance,
+            metadata.plane_axis, metadata.source_provenance,
         )
         label_array = np.asarray(self.labels)
         projection.validate_shape(

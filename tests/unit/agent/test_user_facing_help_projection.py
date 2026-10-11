@@ -296,9 +296,7 @@ def test_preprocessing_guidance_projects_from_callable_owners(monkeypatch) -> No
         normalized_shared_text = " ".join(shared_text.split())
 
         # Catalog prose is the semantic declaration's, not the memory wrapper's.
-        raw = CallableContract.from_callable(
-            metadata.func
-        ).resolve_raw_runtime_callable()
+        raw = CallableContract.from_callable(metadata.func).resolve_raw_runtime_callable()
         assert detail.doc == inspect.getdoc(raw)
         assert detail.entry.summary == shared_help.summary
         for phrase in expected_phrases[metadata.func]:

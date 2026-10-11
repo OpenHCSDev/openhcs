@@ -64,9 +64,7 @@ def presentation():
     semantics = ViewerComponentAxisSemanticsFactory.empty()
     return NapariAxisPresentation(
         entries=semantics.entries,
-        layout=ViewerComponentLayout.from_parts(
-            component_modes={}, component_order=(), declared_axes=STREAM_AXES
-        ),
+        layout=ViewerComponentLayout.from_parts(component_modes={}, component_order=(), declared_axes=STREAM_AXES),
         route_key="paired",
         projection=ViewerLayerAxisProjection(
             projected_axis_components=(),
@@ -310,7 +308,7 @@ def test_native_display_handlers_apply_shared_calibration_after_wire_roundtrip()
 
 
 def test_two_dimensional_calibration_does_not_calibrate_component_z_axis():
-
+    
     axis = replace(
         presentation(),
         layout=ViewerComponentLayout.from_parts(
@@ -581,25 +579,14 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     spacing = SourceVoxelSpacing((1.3556, 1.3556))
     domain = SourceSpatialDomain((7, 11), (20, 30), 0, "Retained crop")
     for channel in (1, 2):
-        address = OpenHCSPlaneAddress(
-            (
-                (Microscopy.Well, well),
-                (Microscopy.Site, 1),
-                (Microscopy.Channel, channel),
-                (Microscopy.ZIndex, 1),
-                (Microscopy.Timepoint, 1),
-            )
-        )
+        address = OpenHCSPlaneAddress(((Microscopy.Well, well), (Microscopy.Site, 1), (Microscopy.Channel, channel), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1)))
         component_metadata = {
             component.name: value
             for component, value in address.component_values().items()
         }
         contributors = tuple(
             SourceImageProvenanceContributor(
-                SourceImageIdentity(
-                    str(tmp_path / f"synthetic-site{site}-channel{channel}.tif"),
-                    {**component_metadata, "site": site},
-                ),
+                SourceImageIdentity(str(tmp_path / f"synthetic-site{site}-channel{channel}.tif"), {**component_metadata, "site": site}),
                 source_image_name="neurite" if channel == 1 else "nucleus",
             )
             for site in range(1, 10)
@@ -610,9 +597,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
             source_provenance=SourceImageProvenance(
                 source_component_metadata=component_metadata,
                 source_image_names=("neurite" if channel == 1 else "nucleus",),
-                source_image_provenance_planes=SourceImageProvenancePlanes(
-                    contributors
-                ),
+                source_image_provenance_planes=SourceImageProvenancePlanes(contributors),
             ),
         )
         path = tmp_path / f"stored-channel{channel}.tif"

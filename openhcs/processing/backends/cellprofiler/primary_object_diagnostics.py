@@ -19,9 +19,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     SourceStackLineageSourceRelation,
 )
-from openhcs.core.measurement_row_materialization import (
-    DataclassMeasurementColumnarRows,
-)
+from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.projected_image_output import SelectedPlaneImageOutput
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -38,7 +36,6 @@ from openhcs.processing.materialization import (
     MaterializedFilenameIdentity,
 )
 
-
 @dataclass(frozen=True, slots=True)
 class DiagnosticPlaneSource:
     """Decode source identity and validity once, sharing one mask across stages."""
@@ -51,11 +48,8 @@ class DiagnosticPlaneSource:
         source_mask = image.mask
         return cls(
             image.metadata,
-            (
-                np.ones(np.asarray(image.data).shape, dtype=bool)
-                if source_mask is None
-                else np.asarray(source_mask, dtype=bool)
-            ),
+            np.ones(np.asarray(image.data).shape, dtype=bool)
+            if source_mask is None else np.asarray(source_mask, dtype=bool),
         )
 
     def plane(
@@ -144,9 +138,7 @@ class UnexecutedDeclumpingEvidence(DeclumpingEvidence):
         shape = source.validity_mask.shape
         invalid = np.zeros(shape, dtype=bool)
         return (
-            source.plane(
-                np.full(shape, np.nan, dtype=np.float32), validity_mask=invalid
-            ),
+            source.plane(np.full(shape, np.nan, dtype=np.float32), validity_mask=invalid),
             source.plane(np.zeros(shape, dtype=bool), validity_mask=invalid),
             source.plane(np.zeros(shape, dtype=np.int32), validity_mask=invalid),
         )

@@ -70,16 +70,9 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
 )
-from openhcs.core.source_matching import (
-    SourceImageSetIdentityCompatibility,
-    SourceImageSetIdentityPolicy,
-)
-from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    RuntimeInputBindingRequest,
-)
-from tests.unit.cellprofiler_runtime_test_support import (
-    cellprofiler_runtime_adapter_for_test,
-)
+from openhcs.core.source_matching import SourceImageSetIdentityCompatibility, SourceImageSetIdentityPolicy
+from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBindingRequest
+from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 from openhcs.core.axes import Axis, AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -220,7 +213,10 @@ def test_store_transport_excludes_derived_caches_and_retains_records():
     restored = pickle.loads(serialized_without_cache)
     assert restored.revision == store.revision
     assert len(restored) == len(store) == 1
-    assert restored.observed_values[0].data.row_mappings() == value.data.row_mappings()
+    assert (
+        restored.observed_values[0].data.row_mappings()
+        == value.data.row_mappings()
+    )
     assert (
         restored.query_cache(RuntimeObjectLabelMeasurementQueryCache).cached_value(
             query
@@ -933,9 +929,7 @@ def test_runtime_artifact_input_projection_transposes_producer_stack_axis() -> N
                 group_plan,
                 payload,
                 execution_scope=RuntimeExecutionAxisScope.from_raw(
-                    "A01",
-                    component=Microscopy.Channel,
-                    value=channel,
+                    "A01", component=Microscopy.Channel, value=channel,
                 ),
             ),
             path=group_plan.path,
@@ -992,15 +986,11 @@ def test_artifact_candidate_scopes_preserve_projected_site_time_correlation() ->
     path = "/memory/processed_pixels.pkl"
     variables = (Microscopy.Site, Microscopy.Timepoint)
     output_plan = ArtifactOutputPlan(
-        name="image",
-        path=path,
-        artifact_type=ImageArtifactType,
+        name="image", path=path, artifact_type=ImageArtifactType,
         variable_components=variables,
     )
     storage_plan = ArtifactInputPlan(
-        name="image",
-        path=path,
-        artifact_type=ImageArtifactType,
+        name="image", path=path, artifact_type=ImageArtifactType,
         variable_components=variables,
     )
     payload = ImagePayloadMetadata(
@@ -1017,11 +1007,8 @@ def test_artifact_candidate_scopes_preserve_projected_site_time_correlation() ->
         np.asarray([[[True, False], [False, True]], [[False, True], [True, False]]]),
     )
     store = RuntimeValueStore()
-    store.record(
-        RuntimeValue.normalize(output_plan, payload, axis_id="A01"),
-        path=path,
-        backend="memory",
-    )
+    store.record(RuntimeValue.normalize(output_plan, payload, axis_id="A01"),
+                 path=path, backend="memory")
     edge = _runtime_input_edge(
         storage_plan,
         invocation_scope=ComponentGroupScope.dynamic(Microscopy.Site),
@@ -1033,15 +1020,11 @@ def test_artifact_candidate_scopes_preserve_projected_site_time_correlation() ->
         consumer_variable_components=(),
     )
     runtime_input = RuntimeArtifactInput(
-        edge_plan=edge,
-        backend="memory",
-        axis_scope=RuntimeExecutionAxisScope.from_raw(
-            "A01", component=None, value=None
-        ),
+        edge_plan=edge, backend="memory",
+        axis_scope=RuntimeExecutionAxisScope.from_raw("A01", component=None, value=None),
     )
     candidates = runtime_input.candidate_execution_scopes(
-        store,
-        ComponentGroupScope.dynamic(Microscopy.Site),
+        store, ComponentGroupScope.dynamic(Microscopy.Site),
         variable_components=ComponentSet(),
     )
     (coordinates,) = tuple(candidates)
@@ -1053,51 +1036,30 @@ def test_artifact_candidate_scopes_preserve_projected_site_time_correlation() ->
     np.testing.assert_array_equal(selected.mask, payload.mask[0])
 
 
-def test_artifact_candidate_scopes_keep_actual_producer_group_as_fixed_context() -> (
-    None
-):
+def test_artifact_candidate_scopes_keep_actual_producer_group_as_fixed_context() -> None:
     path = "/memory/produced_pixels.pkl"
     output_plan = ArtifactOutputPlan(
-        name="image",
-        path=path,
-        artifact_type=ImageArtifactType,
-        group_component=Microscopy.Channel,
-        group_keys=("1",),
+        name="image", path=path, artifact_type=ImageArtifactType,
+        group_component=Microscopy.Channel, group_keys=("1",),
     )
     storage_plan = ArtifactInputPlan(
-        name="image",
-        path=path,
-        artifact_type=ImageArtifactType,
-        group_component=Microscopy.Channel,
-        group_keys=("1",),
+        name="image", path=path, artifact_type=ImageArtifactType,
+        group_component=Microscopy.Channel, group_keys=("1",),
     )
     payload = ImagePayloadMetadata(
         source_path="/source/old_filename_w9.tif",
-        source_component_metadata={
-            "site": "2",
-            "timepoint": "3",
-            "channel": "1",
-            "z_index": "1",
-        },
+        source_component_metadata={"site": "2", "timepoint": "3", "channel": "1", "z_index": "1"},
     ).payload_with(np.full((2, 2), 17.0), None)
     store = RuntimeValueStore()
     record = store.record(
         RuntimeValue.normalize_for_execution_scope(
-            output_plan,
-            payload,
+            output_plan, payload,
             execution_scope=RuntimeExecutionAxisScope.from_raw(
-                "A01",
-                component=Microscopy.Channel,
-                value="1",
-                fixed_component_values=(
-                    (Microscopy.Site, "2"),
-                    (Microscopy.Timepoint, "3"),
-                    (Microscopy.ZIndex, "1"),
-                ),
+                "A01", component=Microscopy.Channel, value="1",
+                fixed_component_values=((Microscopy.Site, "2"), (Microscopy.Timepoint, "3"), (Microscopy.ZIndex, "1")),
             ),
         ),
-        path=path,
-        backend="memory",
+        path=path, backend="memory",
     )
     runtime_input = RuntimeArtifactInput(
         edge_plan=_runtime_input_edge(
@@ -1107,22 +1069,17 @@ def test_artifact_candidate_scopes_keep_actual_producer_group_as_fixed_context()
             component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
             consumer_variable_components=(),
         ),
-        axis_scope=RuntimeExecutionAxisScope.from_raw(
-            "A01", component=None, value=None
-        ),
+        axis_scope=RuntimeExecutionAxisScope.from_raw("A01", component=None, value=None),
         backend="memory",
     )
     candidates = runtime_input.candidate_execution_scopes(
-        store,
-        ComponentGroupScope.dynamic(Microscopy.Site),
+        store, ComponentGroupScope.dynamic(Microscopy.Site),
         variable_components=ComponentSet(),
     )
     (coordinates,) = tuple(candidates)
     assert coordinates.value_text == "2"
     assert dict(coordinates.fixed_component_values) == {
-        Microscopy.Channel: "1",
-        Microscopy.Timepoint: "3",
-        Microscopy.ZIndex: "1",
+        Microscopy.Channel: "1", Microscopy.Timepoint: "3", Microscopy.ZIndex: "1",
     }
     selected = replace(runtime_input, axis_scope=coordinates).records(store)
     assert len(selected) == 1
@@ -1130,39 +1087,26 @@ def test_artifact_candidate_scopes_keep_actual_producer_group_as_fixed_context()
 
     second_payload = ImagePayloadMetadata(
         source_path="/source/another_original.tif",
-        source_component_metadata={
-            "site": "2",
-            "timepoint": "3",
-            "channel": "1",
-            "z_index": "2",
-        },
+        source_component_metadata={"site": "2", "timepoint": "3", "channel": "1", "z_index": "2"},
     ).payload_with(np.full((2, 2), 29.0), None)
     second_record = store.record(
         RuntimeValue.normalize_for_execution_scope(
-            output_plan,
-            second_payload,
+            output_plan, second_payload,
             execution_scope=RuntimeExecutionAxisScope.from_raw(
-                "A01",
-                component=Microscopy.Channel,
-                value="1",
-                fixed_component_values=(
-                    (Microscopy.Site, "2"),
-                    (Microscopy.Timepoint, "3"),
-                    (Microscopy.ZIndex, "2"),
-                ),
+                "A01", component=Microscopy.Channel, value="1",
+                fixed_component_values=((Microscopy.Site, "2"), (Microscopy.Timepoint, "3"), (Microscopy.ZIndex, "2")),
             ),
         ),
-        path=path,
-        backend="memory",
+        path=path, backend="memory",
     )
     candidates = runtime_input.candidate_execution_scopes(
-        store,
-        ComponentGroupScope.dynamic(Microscopy.Site),
+        store, ComponentGroupScope.dynamic(Microscopy.Site),
         variable_components=ComponentSet(),
     )
     assert len(candidates) == 2
     selected_records = tuple(
-        replace(runtime_input, axis_scope=scope).records(store) for scope in candidates
+        replace(runtime_input, axis_scope=scope).records(store)
+        for scope in candidates
     )
     assert selected_records == ((record,), (second_record,))
 
@@ -1590,7 +1534,9 @@ def test_runtime_artifact_input_projection_uses_compiled_group_for_plane_scope()
     )
     resolved = runtime_input.resolve_value(store)
 
-    np.testing.assert_array_equal(resolved.data, payload.data)
+    np.testing.assert_array_equal(
+        resolved.data, payload.data
+    )
 
 
 def test_runtime_value_store_observation_cursor_returns_delta_only():
@@ -1790,9 +1736,7 @@ def _ungrouped_runtime_artifact_input(
     )
 
 
-def _paired_channel_label_input(
-    *, producer_axis="A01", producer_values=(), producer_path=None
-):
+def _paired_channel_label_input(*, producer_axis="A01", producer_values=(), producer_path=None):
     """One exact DNA producer consumed in its paired actin image-set context."""
 
     fixed_values = {
@@ -1817,9 +1761,7 @@ def _paired_channel_label_input(
         output_plan,
         ObjectLabelSet(
             name=storage_plan.name,
-            variant_data=ObjectLabelVariantData(
-                labels=np.ones((2, 2), dtype=np.uint16)
-            ),
+            variant_data=ObjectLabelVariantData(labels=np.ones((2, 2), dtype=np.uint16)),
         ),
         execution_scope=RuntimeExecutionAxisScope.from_raw(
             producer_axis,
@@ -1842,12 +1784,10 @@ def _paired_channel_label_input(
         ),
     )
     source_bindings = CompiledSourceBindingPlan(
-        bindings=(
-            NamedSourceBinding(
-                alias="Actin",
-                component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
-            ),
-        ),
+        bindings=(NamedSourceBinding(
+            alias="Actin",
+            component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
+        ),),
     )
     runtime_input = _ungrouped_runtime_artifact_input(
         storage_plan,
@@ -1859,13 +1799,9 @@ def _paired_channel_label_input(
             source=source_bindings.binding_declarations[0].input_spec().ref()
         )
     )
-    return (
-        store,
-        record,
-        replace(
-            runtime_input,
-            edge_plan=replace(runtime_input.edge_plan, spec=declared_spec),
-        ),
+    return store, record, replace(
+        runtime_input,
+        edge_plan=replace(runtime_input.edge_plan, spec=declared_spec),
     )
 
 
@@ -1899,17 +1835,12 @@ def _grouped_label_input_with_distinct_consumer_channel():
         output_plan,
         ObjectLabelSet(
             name="Cells",
-            variant_data=ObjectLabelVariantData(
-                labels=np.ones((2, 2), dtype=np.uint16)
-            ),
+            variant_data=ObjectLabelVariantData(labels=np.ones((2, 2), dtype=np.uint16)),
         ),
         execution_scope=RuntimeExecutionAxisScope.from_raw(
-            "W001",
-            component=Microscopy.Channel,
-            value="0",
+            "W001", component=Microscopy.Channel, value="0",
             fixed_component_values=(
-                (Microscopy.Site, "1"),
-                (Microscopy.Timepoint, "1"),
+                (Microscopy.Site, "1"), (Microscopy.Timepoint, "1"),
             ),
         ),
     )
@@ -1924,12 +1855,9 @@ def _grouped_label_input_with_distinct_consumer_channel():
             consumer_variable_components=(Microscopy.ZIndex,),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(
-            "W001",
-            component=None,
-            value=None,
+            "W001", component=None, value=None,
             fixed_component_values=(
-                (Microscopy.Site, "1"),
-                (Microscopy.Channel, "2"),
+                (Microscopy.Site, "1"), (Microscopy.Channel, "2"),
                 (Microscopy.Timepoint, "1"),
             ),
         ),
@@ -1944,32 +1872,27 @@ def test_exact_producer_group_does_not_constrain_consumer_source_channel():
     assert runtime_input.records(store) == (record,)
     assert runtime_input.resolve_value(store) is record.data
     candidates = runtime_input.candidate_execution_scopes(
-        store,
-        ComponentGroupScope.ungrouped(),
+        store, ComponentGroupScope.ungrouped(),
         variable_components=ComponentSet((Microscopy.ZIndex,)),
     )
     (scope,) = candidates
     # Discovery still owns the producer's semantic channel, rather than adopting
     # a later consumer's independently selected source-image channel.
     assert dict(scope.fixed_component_values) == {
-        Microscopy.Site: "1",
-        Microscopy.Channel: "0",
+        Microscopy.Site: "1", Microscopy.Channel: "0",
         Microscopy.Timepoint: "1",
     }
 
 
 @pytest.mark.parametrize("component", [Microscopy.Site, Microscopy.Timepoint])
 def test_exact_producer_group_preserves_shared_fixed_context_constraints(component):
-    store, _record, runtime_input = (
-        _grouped_label_input_with_distinct_consumer_channel()
-    )
+    store, _record, runtime_input = _grouped_label_input_with_distinct_consumer_channel()
     fixed_values = dict(runtime_input.axis_scope.fixed_component_values)
     fixed_values[component] = "2"
     wrong_context = replace(
         runtime_input,
         axis_scope=replace(
-            runtime_input.axis_scope,
-            fixed_component_values=tuple(fixed_values.items()),
+            runtime_input.axis_scope, fixed_component_values=tuple(fixed_values.items()),
         ),
     )
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
@@ -1978,9 +1901,7 @@ def test_exact_producer_group_preserves_shared_fixed_context_constraints(compone
 
 @pytest.mark.parametrize("mismatch", ["group", "well", "path", "fixed-z"])
 def test_exact_producer_group_rejects_other_producer_or_fixed_plane(mismatch):
-    _store, record, runtime_input = (
-        _grouped_label_input_with_distinct_consumer_channel()
-    )
+    _store, record, runtime_input = _grouped_label_input_with_distinct_consumer_channel()
     scope = record.key.scope
     path = record.location.path
     if mismatch == "group":
@@ -1991,13 +1912,8 @@ def test_exact_producer_group_rejects_other_producer_or_fixed_plane(mismatch):
         path = "/memory/other/Cells_channel_0.pkl"
     else:
         scope = RuntimeExecutionAxisScope.from_raw(
-            scope.axis_id,
-            component=scope.component,
-            value=scope.value,
-            fixed_component_values=(
-                *scope.fixed_component_values,
-                (Microscopy.ZIndex, "2"),
-            ),
+            scope.axis_id, component=scope.component, value=scope.value,
+            fixed_component_values=(*scope.fixed_component_values, (Microscopy.ZIndex, "2")),
         )
         runtime_input = replace(
             runtime_input,
@@ -2014,32 +1930,25 @@ def test_exact_producer_group_rejects_other_producer_or_fixed_plane(mismatch):
     store = RuntimeValueStore()
     store.record(
         replace(record, key=replace(record.key, scope=scope)),
-        path=path,
-        backend=record.location.backend,
+        path=path, backend=record.location.backend,
     )
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
         runtime_input.records(store)
 
 
 def test_different_producer_group_axis_preserves_fixed_source_channel_constraint():
-    _store, record, runtime_input = (
-        _grouped_label_input_with_distinct_consumer_channel()
-    )
+    _store, record, runtime_input = _grouped_label_input_with_distinct_consumer_channel()
     # SITE is now the selected producer group. CHANNEL remains a genuine fixed
     # image context and cannot use the selected-group exemption.
     scope = RuntimeExecutionAxisScope.from_raw(
-        "W001",
-        component=Microscopy.Site,
-        value="1",
+        "W001", component=Microscopy.Site, value="1",
         fixed_component_values=(
-            (Microscopy.Channel, "0"),
-            (Microscopy.Timepoint, "1"),
+            (Microscopy.Channel, "0"), (Microscopy.Timepoint, "1"),
         ),
     )
     storage_plan = replace(
         runtime_input.edge_plan.storage_plan,
-        group_component=Microscopy.Site,
-        group_keys=("1",),
+        group_component=Microscopy.Site, group_keys=("1",),
         paths_by_group={"1": record.location.path},
     )
     runtime_input = replace(
@@ -2056,8 +1965,7 @@ def test_different_producer_group_axis_preserves_fixed_source_channel_constraint
     store = RuntimeValueStore()
     store.record(
         replace(record, key=replace(record.key, scope=scope)),
-        path=record.location.path,
-        backend=record.location.backend,
+        path=record.location.path, backend=record.location.backend,
     )
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
         runtime_input.records(store)
@@ -2097,18 +2005,14 @@ def test_paired_channel_declaration_reaches_both_adapter_input_consumers():
     assert projected.axis_scope is adapter.request.axis_scope
     assert projected.source_binding_plan is runtime_input.source_binding_plan
     assert projected.records(store) == (record,)
-    assert adapter.artifact_input_records("Nuclei", ObjectLabelsArtifactType) == (
-        record,
-    )
+    assert adapter.artifact_input_records("Nuclei", ObjectLabelsArtifactType) == (record,)
     request = RuntimeInputBindingRequest(
         adapter=adapter, kwargs={}, current_image=np.zeros((2, 2))
     )
     assert request.artifact_value(edge) is record.data
 
 
-@pytest.mark.parametrize(
-    "component", [Microscopy.Site, Microscopy.ZIndex, Microscopy.Timepoint]
-)
+@pytest.mark.parametrize("component", [Microscopy.Site, Microscopy.ZIndex, Microscopy.Timepoint])
 def test_paired_channel_input_rejects_other_context_coordinate(component):
     store, _record, runtime_input = _paired_channel_label_input(
         producer_values=((component, "2"),),
@@ -2118,19 +2022,13 @@ def test_paired_channel_input_rejects_other_context_coordinate(component):
         runtime_input.records(store)
 
 
-@pytest.mark.parametrize(
-    "producer_axis,producer_path",
-    [
-        ("B01", None),
-        ("A01", "/memory/other_producer/Nuclei.pkl"),
-    ],
-)
-def test_paired_channel_input_rejects_other_well_or_producer(
-    producer_axis, producer_path
-):
+@pytest.mark.parametrize("producer_axis,producer_path", [
+    ("B01", None),
+    ("A01", "/memory/other_producer/Nuclei.pkl"),
+])
+def test_paired_channel_input_rejects_other_well_or_producer(producer_axis, producer_path):
     store, _record, runtime_input = _paired_channel_label_input(
-        producer_axis=producer_axis,
-        producer_path=producer_path,
+        producer_axis=producer_axis, producer_path=producer_path,
     )
 
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
@@ -2140,8 +2038,7 @@ def test_paired_channel_input_rejects_other_well_or_producer(
 def test_cross_channel_input_without_source_declaration_remains_exact():
     store, _record, runtime_input = _paired_channel_label_input()
     strict_input = replace(
-        runtime_input,
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        runtime_input, source_binding_plan=CompiledSourceBindingPlan.empty(),
     )
 
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
@@ -2170,11 +2067,9 @@ def test_context_relation_to_another_source_does_not_borrow_visible_plane_member
             runtime_input.edge_plan,
             spec=replace(
                 runtime_input.edge_plan.spec,
-                relations=(
-                    InputGroupLineageSourceRelation(
-                        ArtifactSpec.input("UnrelatedImage", ImageArtifactType).ref()
-                    ),
-                ),
+                relations=(InputGroupLineageSourceRelation(
+                    ArtifactSpec.input("UnrelatedImage", ImageArtifactType).ref()
+                ),),
             ),
         ),
     )
@@ -2194,9 +2089,7 @@ def test_stored_producer_context_retains_its_declared_source_membership():
             spec=replace(edge.spec, relations=()),
             storage_plan=replace(
                 edge.storage_plan,
-                relations=(
-                    SourceStackLineageSourceRelation(binding.input_spec().ref()),
-                ),
+                relations=(SourceStackLineageSourceRelation(binding.input_spec().ref()),),
             ),
         ),
     )
@@ -2215,19 +2108,12 @@ def test_explicit_consumer_context_does_not_borrow_stored_producer_membership():
         runtime_input,
         edge_plan=replace(
             edge,
-            spec=replace(
-                edge.spec,
-                relations=(
-                    InputGroupLineageSourceRelation(
-                        ArtifactSpec.input("UnrelatedImage", ImageArtifactType).ref(),
-                    ),
-                ),
-            ),
+            spec=replace(edge.spec, relations=(InputGroupLineageSourceRelation(
+                ArtifactSpec.input("UnrelatedImage", ImageArtifactType).ref(),
+            ),)),
             storage_plan=replace(
                 edge.storage_plan,
-                relations=(
-                    SourceStackLineageSourceRelation(binding.input_spec().ref()),
-                ),
+                relations=(SourceStackLineageSourceRelation(binding.input_spec().ref()),),
             ),
         ),
     )
@@ -2247,22 +2133,16 @@ def test_paired_channel_projection_rejects_a_different_producer_site_plane():
         ),
     )
     store.replace(
-        replace(record, data=payload),
-        path=record.location.path,
-        backend=record.location.backend,
+        replace(record, data=payload), path=record.location.path, backend=record.location.backend
     )
     projected_input = replace(
         runtime_input,
         edge_plan=replace(
             edge,
-            storage_plan=replace(
-                edge.storage_plan, variable_components=(Microscopy.Site,)
-            ),
+            storage_plan=replace(edge.storage_plan, variable_components=(Microscopy.Site,)),
             projection=replace(
                 edge.projection,
-                component_scopes=(
-                    ComponentGroupScope(("1",), component=Microscopy.Site),
-                ),
+                component_scopes=(ComponentGroupScope(("1",), component=Microscopy.Site),),
             ),
         ),
     )
@@ -2276,11 +2156,7 @@ def test_paired_channel_input_rejects_ambiguous_address_matched_contexts():
     _other_store, other_record, _other_input = _paired_channel_label_input(
         producer_values=((Microscopy.Channel, "3"),),
     )
-    store.record(
-        other_record,
-        path=other_record.location.path,
-        backend=other_record.location.backend,
-    )
+    store.record(other_record, path=other_record.location.path, backend=other_record.location.backend)
 
     with pytest.raises(RuntimeError, match="Ambiguous RuntimeValueStore records"):
         runtime_input.records(store)
@@ -2294,27 +2170,23 @@ def test_runtime_artifact_input_preserves_same_scope_semantic_partitions():
     )
 
 
-@pytest.mark.parametrize(
-    "producer_values,consumer_values",
-    [
-        pytest.param((), (), id="exact-unscoped"),
-        pytest.param((), ((Microscopy.ZIndex, "1"),), id="consumer-only"),
-        pytest.param(((Microscopy.Timepoint, "1"),), (), id="producer-only"),
-        pytest.param(
-            ((Microscopy.Timepoint, "1"),),
-            ((Microscopy.ZIndex, "1"),),
-            id="disjoint-partial",
-        ),
-        pytest.param(
-            ((Microscopy.Timepoint, "1"),),
-            ((Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")),
-            id="shared-partial",
-        ),
-    ],
-)
+@pytest.mark.parametrize("producer_values,consumer_values", [
+    pytest.param((), (), id="exact-unscoped"),
+    pytest.param((), ((Microscopy.ZIndex, "1"),), id="consumer-only"),
+    pytest.param(((Microscopy.Timepoint, "1"),), (), id="producer-only"),
+    pytest.param(
+        ((Microscopy.Timepoint, "1"),),
+        ((Microscopy.ZIndex, "1"),),
+        id="disjoint-partial",
+    ),
+    pytest.param(
+        ((Microscopy.Timepoint, "1"),),
+        ((Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")),
+        id="shared-partial",
+    ),
+])
 def test_runtime_artifact_input_accepts_exact_unscoped_and_partial_coordinates(
-    producer_values,
-    consumer_values,
+    producer_values, consumer_values,
 ):
     store = RuntimeValueStore()
     storage_plan = ArtifactInputPlan(
@@ -2358,30 +2230,23 @@ def test_runtime_artifact_input_accepts_exact_unscoped_and_partial_coordinates(
     ).records(store) == (record,)
 
 
-@pytest.mark.parametrize(
-    "producer_values,consumer_values",
-    [
-        pytest.param((), (), id="empty-projected-context"),
-        pytest.param(((Microscopy.Timepoint, "1"),), (), id="producer-only"),
-        pytest.param((), ((Microscopy.ZIndex, "1"),), id="consumer-only"),
-        pytest.param(
-            ((Microscopy.Timepoint, "1"),),
-            ((Microscopy.ZIndex, "1"),),
-            id="disjoint-partial",
-        ),
-    ],
-)
+@pytest.mark.parametrize("producer_values,consumer_values", [
+    pytest.param((), (), id="empty-projected-context"),
+    pytest.param(((Microscopy.Timepoint, "1"),), (), id="producer-only"),
+    pytest.param((), ((Microscopy.ZIndex, "1"),), id="consumer-only"),
+    pytest.param(
+        ((Microscopy.Timepoint, "1"),),
+        ((Microscopy.ZIndex, "1"),),
+        id="disjoint-partial",
+    ),
+])
 def test_exact_input_admits_no_shared_projected_context_constraints(
-    producer_values,
-    consumer_values,
+    producer_values, consumer_values,
 ):
     _store, original, original_input = _paired_channel_label_input()
     storage_plan = original_input.edge_plan.storage_plan
     producer_scope = RuntimeExecutionAxisScope.from_raw(
-        "A01",
-        component=None,
-        value=None,
-        fixed_component_values=producer_values,
+        "A01", component=None, value=None, fixed_component_values=producer_values,
     )
     store = RuntimeValueStore()
     record = store.record(
@@ -2390,24 +2255,17 @@ def test_exact_input_admits_no_shared_projected_context_constraints(
             data=original.data,
             materialization_source_metadata=original.materialization_source_metadata,
         ),
-        path=original.location.path,
-        backend=original.location.backend,
+        path=original.location.path, backend=original.location.backend,
     )
     source = NamedSourceBinding(
         alias="Reference",
-        component_identity=(
-            ComponentSelector(AxisFamily.active().partition_axis(), "A01"),
-        ),
+        component_identity=(ComponentSelector(AxisFamily.active().partition_axis(), "A01"),),
     )
     consumer_scope = RuntimeExecutionAxisScope.from_raw(
-        "A01",
-        component=None,
-        value=None,
-        fixed_component_values=consumer_values,
+        "A01", component=None, value=None, fixed_component_values=consumer_values,
     )
     runtime_input = _ungrouped_runtime_artifact_input(
-        storage_plan,
-        axis_scope=consumer_scope,
+        storage_plan, axis_scope=consumer_scope,
         source_binding_plan=CompiledSourceBindingPlan(bindings=(source,)),
     )
     runtime_input = replace(
@@ -2423,12 +2281,8 @@ def test_exact_input_admits_no_shared_projected_context_constraints(
     # Plane-identity compatibility still requires evidence of a shared identity.
     # Exact artifact admission instead has a proven producer/address and only
     # checks the additional coordinates constrained on both sides.
-    assert runtime_input.edge_plan.spec.source_context_sources() == (
-        source.input_spec().ref(),
-    )
-    policy = SourceImageSetIdentityPolicy.from_source_bindings(
-        runtime_input.source_binding_plan
-    )
+    assert runtime_input.edge_plan.spec.source_context_sources() == (source.input_spec().ref(),)
+    policy = SourceImageSetIdentityPolicy.from_source_bindings(runtime_input.source_binding_plan)
     components = ComponentSet.collect(
         (component for component, _value in producer_scope.source_component_values),
         (component for component, _value in consumer_scope.source_component_values),
@@ -2439,8 +2293,7 @@ def test_exact_input_admits_no_shared_projected_context_constraints(
     ).matches()
     assert runtime_input.records(store) == (record,)
     wrong_well = replace(
-        runtime_input,
-        axis_scope=replace(consumer_scope, axis_id="B01"),
+        runtime_input, axis_scope=replace(consumer_scope, axis_id="B01"),
     )
     wrong_producer = replace(
         runtime_input,
@@ -2557,14 +2410,14 @@ def test_runtime_value_store_merges_observed_records_from_worker_boundary():
 def test_runtime_measurement_observation_axis_accepts_table_record_once():
     value = _runtime_value()
     record = StoredRuntimeValue(
-        key=value.key,
-        data=value.data,
-        materialization_source_metadata=value.materialization_source_metadata,
-        location=RuntimeArtifactLocation(
+                 key=value.key,
+                 data=value.data,
+                 materialization_source_metadata=value.materialization_source_metadata,
+                 location=RuntimeArtifactLocation(
             path="/memory/measurements.pkl",
             backend="memory",
         ),
-    )
+             )
     axis = RuntimeMeasurementObservationAxis("A01")
 
     axis.accept_measurement_table(record, PlainMeasurementDialect.shared())
@@ -2601,10 +2454,7 @@ def test_dynamic_input_query_distinguishes_compiled_paths_with_same_backend():
                 path=record.location.path,
                 artifact_type=MeasurementsArtifactType,
                 group_component=Microscopy.Channel,
-                paths_by_group={
-                    None: record.location.path,
-                    "DAPI": record.location.path,
-                },
+                paths_by_group={None: record.location.path, "DAPI": record.location.path},
             ),
             axis_id="A01",
             backend="memory",
@@ -2732,7 +2582,9 @@ def test_store_transport_excludes_all_derived_lookup_caches():
         {"object_id": (1,)}, fields=(FieldSpec("object_id", int),)
     )
     record = store.record(value, path="/memory/measurements.pkl", backend="memory")
-    latest = store.replace(value, path="/later/measurements.pkl", backend="memory")
+    latest = store.replace(
+        value, path="/later/measurements.pkl", backend="memory"
+    )
     original_transport = pickle.dumps(store, protocol=5)
     query = RuntimeArtifactQuery.from_input_plan(
         ArtifactInputPlan(
@@ -2774,9 +2626,7 @@ def test_unified_store_cache_keeps_both_query_domains_and_empty_results():
     from metaclass_registry.caches import BoundedCache
 
     store = RuntimeValueStore()
-    record = store.record(
-        _runtime_value(), path="/memory/measurements.pkl", backend="memory"
-    )
+    record = store.record(_runtime_value(), path="/memory/measurements.pkl", backend="memory")
     query = RuntimeArtifactQuery.from_input_plan(
         ArtifactInputPlan(
             name="measurements",
@@ -2844,8 +2694,7 @@ def test_changed_stored_measurement_subject_requires_a_transient_value():
     store = RuntimeValueStore()
     record = store.record(value, path="/memory/measurements.pkl", backend="memory")
     plan = ArtifactOutputPlan(
-        name=value.name,
-        artifact_type=value.artifact_type,
+        name=value.name, artifact_type=value.artifact_type,
         path="/memory/measurements.pkl",
     )
     record.data.subject = MeasurementSubject(MeasurementScope.SAMPLE, "NextImage")
@@ -2858,13 +2707,6 @@ def test_changed_stored_measurement_subject_requires_a_transient_value():
     assert store.get(record.key) is record
     assert record.location.path == "/memory/measurements.pkl"
     assert admitted.data is record.data
-    assert (
-        type(
-            StoredRuntimeValue.from_output_plan(
-                plan,
-                admitted.data,
-                execution_scope=record.key.scope,
-            )
-        )
-        is RuntimeValue
-    )
+    assert type(StoredRuntimeValue.from_output_plan(
+        plan, admitted.data, execution_scope=record.key.scope,
+    )) is RuntimeValue

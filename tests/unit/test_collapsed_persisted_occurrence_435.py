@@ -37,9 +37,7 @@ from openhcs.core.source_projection import (
 )
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
-from openhcs.core.steps.function_artifact_materialization import (
-    ArtifactMaterializationTargetPlan,
-)
+from openhcs.core.steps.function_artifact_materialization import ArtifactMaterializationTargetPlan
 from openhcs.core.steps.function_outputs import (
     PrimaryImageMetadataTarget,
 )

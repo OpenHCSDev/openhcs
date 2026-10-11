@@ -152,7 +152,9 @@ class RuntimeArtifactDynamicComponentTarget(RuntimeArtifactQueryTarget):
             raise ValueError(
                 "RuntimeArtifactDynamicComponentTarget.backend cannot be empty."
             )
-        object.__setattr__(self, "input_plan", self.input_plan.runtime_query_snapshot())
+        object.__setattr__(
+            self, "input_plan", self.input_plan.runtime_query_snapshot()
+        )
 
     def matches(self, record: "StoredRuntimeValue") -> bool:
         scope = record.key.scope
@@ -364,9 +366,7 @@ class RuntimeArtifactInput:
         producer_scope = storage_plan.producer_group_scope()
         selection_scope = projection.producer_selection_scope
         return (
-            projection.selects_declared_complete_producer(
-                self.edge_plan.spec, storage_plan
-            )
+            projection.selects_declared_complete_producer(self.edge_plan.spec, storage_plan)
             or storage_plan.composes_producer_groups(
                 ComponentSet.of(projection.consumer_variable_components)
             )
@@ -399,9 +399,7 @@ class RuntimeArtifactInput:
         identity_policy = self._source_context_identity_policy()
         candidates = tuple(
             record
-            for group_key in (
-                (None,) if producer_scope.is_dynamic else producer_scope.keys
-            )
+            for group_key in ((None,) if producer_scope.is_dynamic else producer_scope.keys)
             for record in store.find_matching(
                 RuntimeArtifactQuery.from_input_plan(
                     storage_plan,
@@ -416,9 +414,8 @@ class RuntimeArtifactInput:
             record_scope = record.key.scope
             if record_scope.component is not producer_scope.component:
                 continue
-            if (
-                not selects_complete_producer
-                and not selection_scope.contains_runtime_key(record_scope.value_text)
+            if not selects_complete_producer and not selection_scope.contains_runtime_key(
+                record_scope.value_text
             ):
                 continue
             record_coordinates = dict(record_scope.source_component_values)
@@ -426,13 +423,10 @@ class RuntimeArtifactInput:
                 record_coordinates.pop(producer_scope.component, None)
             if projected_components:
                 provenance = record.data.metadata.source_provenance
-                plane_metadata = (
-                    provenance.source_image_provenance_planes.runtime_component_metadata
-                )
+                plane_metadata = provenance.source_image_provenance_planes.runtime_component_metadata
                 metadata_rows = plane_metadata or (
                     (provenance.source_component_metadata,)
-                    if provenance.source_component_metadata is not None
-                    else ()
+                    if provenance.source_component_metadata is not None else ()
                 )
             else:
                 metadata_rows = (None,)
@@ -444,8 +438,7 @@ class RuntimeArtifactInput:
                     component_scope = projection.component_scope(component)
                     if component_scope.is_dynamic:
                         component_value = semantic_source_metadata_value(
-                            metadata,
-                            component.name,
+                            metadata, component.name,
                         )
                         if component_value is None:
                             break
@@ -453,19 +446,12 @@ class RuntimeArtifactInput:
                     else:
                         component_value = component_scope.select_runtime_key(None)
                     if not SourceAxisMetadataScope.constraint_matches_metadata(
-                        metadata,
-                        component.name,
-                        component_value,
+                        metadata, component.name, component_value,
                     ):
                         break
                     existing_value = coordinates.get(component)
-                    if (
-                        existing_value is not None
-                        and not SourceAxisMetadataScope.constraint_matches_metadata(
-                            metadata,
-                            component.name,
-                            existing_value,
-                        )
+                    if existing_value is not None and not SourceAxisMetadataScope.constraint_matches_metadata(
+                        metadata, component.name, existing_value,
                     ):
                         break
                     coordinates.setdefault(component, component_value)
@@ -483,10 +469,7 @@ class RuntimeArtifactInput:
                         ):
                             continue
                         fixed_group_value = coordinates.get(execution_scope.component)
-                        if (
-                            fixed_group_value is not None
-                            and fixed_group_value != component_key
-                        ):
+                        if fixed_group_value is not None and fixed_group_value != component_key:
                             continue
                         fixed_values = tuple(
                             (component, value)
@@ -771,7 +754,8 @@ class RuntimeArtifactInput:
         )
         identity_policy = self._source_context_identity_policy()
         context_components = (
-            context_components.intersection(record_scope.source_components)
+            context_components
+            .intersection(record_scope.source_components)
             .intersection(self.axis_scope.source_components)
             .intersection(ComponentSet(identity_policy.identity_components()))
         )
@@ -782,12 +766,10 @@ class RuntimeArtifactInput:
             return True
         return SourceImageSetIdentityCompatibility(
             record_scope.source_image_set_identity(
-                identity_policy,
-                components=context_components,
+                identity_policy, components=context_components,
             ),
             self.axis_scope.source_image_set_identity(
-                identity_policy,
-                components=context_components,
+                identity_policy, components=context_components,
             ),
         ).matches()
 
@@ -1006,9 +988,8 @@ class RuntimeArtifactAddress:
                 artifact_type=ArtifactType.coerce(str(key["artifact_type"])),
                 scope=RuntimeExecutionAxisScope.from_raw(
                     str(scope["axis_id"]),
-                    component=(
-                        None if component is None else family.named(str(component))
-                    ),
+                    component=None if component is None else family.named(str(component)),
+
                     value=None if value is None else str(value),
                     fixed_component_values=tuple(fixed_values),
                 ),
@@ -1276,9 +1257,7 @@ class RuntimeValueStore:
     @property
     def observed_values(self) -> tuple[StoredRuntimeValue, ...]:
         """Return retained runtime artifact writes in their original order."""
-        return tuple(
-            record for record in self._observation_records if record is not None
-        )
+        return tuple(record for record in self._observation_records if record is not None)
 
     def observation_cursor(self) -> RuntimeStoreObservationCursor:
         """Return a cursor for future observation-delta queries."""
@@ -1299,8 +1278,7 @@ class RuntimeValueStore:
                 f"{len(self._observation_records)}."
             )
         return tuple(
-            record
-            for record in self._observation_records[cursor.index :]
+            record for record in self._observation_records[cursor.index :]
             if record is not None
         )
 
@@ -1318,9 +1296,7 @@ class RuntimeValueStore:
         their observation history. Empty stream slots mark retired writes, not
         fabricated runtime values.
         """
-        retained_addresses = {
-            (record.key, record.location) for record in retained_records
-        }
+        retained_addresses = {(record.key, record.location) for record in retained_records}
         retained_inputs = {
             (ref.artifact_type, ref.name)
             for ref in retained_refs
@@ -1328,10 +1304,10 @@ class RuntimeValueStore:
         }
 
         def retained(record: StoredRuntimeValue) -> bool:
-            return (record.key.artifact_type, record.key.name) in retained_inputs or (
-                record.key,
-                record.location,
-            ) in retained_addresses
+            return (
+                (record.key.artifact_type, record.key.name) in retained_inputs
+                or (record.key, record.location) in retained_addresses
+            )
 
         retired = tuple(
             record for record in self.observed_values if not retained(record)
@@ -1339,15 +1315,11 @@ class RuntimeValueStore:
         if not retired:
             return
         live_locations = {
-            record.location
-            for record in self._records_by_location.values()
+            record.location for record in self._records_by_location.values()
             if retained(record)
         }
         for location in dict.fromkeys(record.location for record in retired):
-            if (
-                location not in live_locations
-                and location.backend == Backend.MEMORY.value
-            ):
+            if location not in live_locations and location.backend == Backend.MEMORY.value:
                 if filemanager.exists(location.path, location.backend):
                     filemanager.delete(location.path, location.backend)
         for address, record in tuple(self._records_by_location.items()):

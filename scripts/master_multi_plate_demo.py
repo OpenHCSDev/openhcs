@@ -152,7 +152,9 @@ def compiled_presentation_contract(
                 "Declared visual step has no compiled viewer stream."
             )
 
-        artifact_output_kind = CompiledStepPlan.ARTIFACT_OUTPUT_KIND
+        artifact_output_kind = (
+            CompiledStepPlan.ARTIFACT_OUTPUT_KIND
+        )
         target_outputs = [
             output
             for output in (target_step.get("artifact_outputs") or ())

@@ -49,10 +49,7 @@ class DeclaredInspectionMetadata(BioFormatsMetadataHandler):
         return replace(
             dataset,
             candidates=tuple(
-                replace(
-                    candidate,
-                    metadata={**candidate.metadata, "inspection_witness": "declared"},
-                )
+                replace(candidate, metadata={**candidate.metadata, "inspection_witness": "declared"})
                 for candidate in dataset.candidates
             ),
         )
@@ -65,9 +62,7 @@ def _fixture(root: Path, channels: int):
     manifest_path = root / "bioformats_spw.json"
     manifest = json.loads(manifest_path.read_text())
     image = manifest["images"][0]
-    image["channel_names"] = [
-        f"engineering-{channel}" for channel in range(1, channels + 1)
-    ]
+    image["channel_names"] = [f"engineering-{channel}" for channel in range(1, channels + 1)]
     image["pixels"]["size_c"] = channels
     image["pixels"]["planes"] = [
         {"c": channel, "z": 1, "t": 1, "index": channel - 1}
@@ -111,15 +106,11 @@ def _sample(service, root, image_path, *, source_format="bioformats"):
 
 
 @pytest.mark.parametrize("channels", (3, 4))
-def test_original_physical_candidates_are_sampleable_before_projection(
-    tmp_path, channels
-):
+def test_original_physical_candidates_are_sampleable_before_projection(tmp_path, channels):
     stack, service, _ = _fixture(tmp_path, channels)
     query = _query(service, tmp_path)
     assert query.total_count == channels
-    record = next(
-        record for record in query.records if int(record.metadata["channel"]) == 3
-    )
+    record = next(record for record in query.records if int(record.metadata["channel"]) == 3)
     sample = _sample(service, tmp_path, record.virtual_path)
     assert int(sample.source_metadata["channel"]) == 3
     assert sample.sample_values == stack[0, 0, 2, 2:4, 3:5].tolist()
@@ -138,16 +129,14 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
         )
     )
     filemanager = factory.create()
-    BioFormatsHandler(
-        filemanager, source_bindings_config=bindings
-    ).initialize_workspace(tmp_path, filemanager)
+    BioFormatsHandler(filemanager, source_bindings_config=bindings).initialize_workspace(
+        tmp_path, filemanager
+    )
     metadata_path = tmp_path / "openhcs_metadata.json"
     before = metadata_path.read_bytes()
     persisted = json.loads(before)["subdirectories"]["."]
     assert len(persisted["image_files"]) == 1
-    assert {
-        int(value["channel"]) for value in persisted["source_metadata"].values()
-    } == {1}
+    assert {int(value["channel"]) for value in persisted["source_metadata"].values()} == {1}
     try:
         # Ordinary auto/workspace routing must keep the persisted C1 selection.
         selected = _query(service, tmp_path, source_format="auto")
@@ -160,18 +149,14 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
         assert sample.sample_values == stack[0, 0, 0, 2:4, 3:5].tolist()
 
         query = _query(service, tmp_path)
-        observed_channels = {
-            int(record.metadata["channel"]) for record in query.records
-        }
+        observed_channels = {int(record.metadata["channel"]) for record in query.records}
         # No invented C3 path, receipt, source-ref override, or projection mutation.
         assert 3 in observed_channels, (
             "Explicit physical-source inspection hides C3 after C1 preparation: "
             f"observed_channels={sorted(observed_channels)}, total_count={query.total_count}"
         )
         assert observed_channels == set(range(1, channels + 1))
-        record = next(
-            record for record in query.records if int(record.metadata["channel"]) == 3
-        )
+        record = next(record for record in query.records if int(record.metadata["channel"]) == 3)
         physical = _sample(service, tmp_path, record.virtual_path)
         assert int(physical.source_metadata["channel"]) == 3
         assert physical.sample_values == stack[0, 0, 2, 2:4, 3:5].tolist()
@@ -202,9 +187,7 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
         from openhcs.core.viewer_streaming_service import ViewerStreamingSource
 
         context, errors, _ = service.open_context(
-            PlatePathInspectionRequest(
-                plate_path=str(tmp_path), source_format="bioformats"
-            )
+            PlatePathInspectionRequest(plate_path=str(tmp_path), source_format="bioformats")
         )
         assert errors == ()
         inventory, warnings = service.file_inventory(context, kind=PlateFileKind.IMAGE)
@@ -258,14 +241,7 @@ def test_independent_metadata_hook_flows_through_unchanged_inventory_consumer(tm
     inventory = service._image_inventory(handler, tmp_path, filemanager, warnings)
     assert warnings == []
     assert len(inventory.records) == 4
-    assert {record.metadata["inspection_witness"] for record in inventory.records} == {
-        "declared"
-    }
-    assert {int(record.metadata["channel"]) for record in inventory.records} == {
-        1,
-        2,
-        3,
-        4,
-    }
+    assert {record.metadata["inspection_witness"] for record in inventory.records} == {"declared"}
+    assert {int(record.metadata["channel"]) for record in inventory.records} == {1, 2, 3, 4}
     assert all(record.source_ref is not None for record in inventory.records)
     assert not (tmp_path / "openhcs_metadata.json").exists()

@@ -62,9 +62,7 @@ def test_zarr_conversion_keys_store_outputs_by_plate_relative_virtual_path(tmp_p
     orchestrator = PipelineOrchestrator(
         plate,
         pipeline_config=PipelineConfig(
-            vfs_config=LazyVFSConfig(
-                materialization_backend=MaterializationBackend.ZARR
-            )
+            vfs_config=LazyVFSConfig(materialization_backend=MaterializationBackend.ZARR)
         ),
     ).initialize()
     wells = orchestrator.get_component_keys(AxisFamily.active().partition_axis())
@@ -98,6 +96,6 @@ def test_zarr_conversion_keys_store_outputs_by_plate_relative_virtual_path(tmp_p
     }
     assert {Path(path).name for path in converted["image_files"]} == source_files
     assert all(path.startswith("zarr/") for path in converted["image_files"])
-    assert {record["ref"]["backend"] for record in converted["source_projection"]} == {
-        Backend.ZARR.value
-    }
+    assert {
+        record["ref"]["backend"] for record in converted["source_projection"]
+    } == {Backend.ZARR.value}

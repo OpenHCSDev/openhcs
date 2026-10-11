@@ -85,48 +85,25 @@ def batch(capability, value):
     )
 
 
-@pytest.mark.parametrize(
-    "registered_count, code",
-    (
-        (0, "custom_function_registration_uncertain"),
-        (1, "custom_function_local_projection_failed"),
-    ),
-)
-def test_registration_renderer_retains_typed_error_receipt_and_handle(
-    registered_count, code
-):
+@pytest.mark.parametrize("registered_count, code", (
+    (0, "custom_function_registration_uncertain"),
+    (1, "custom_function_local_projection_failed"),
+))
+def test_registration_renderer_retains_typed_error_receipt_and_handle(registered_count, code):
     from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
-    from openhcs.agent.dto.functions import (
-        CustomFunctionRegistrationHandle,
-        CustomFunctionRegistrationResult,
-    )
-    from openhcs.mcp.dev_client_renderers.knowledge import (
-        CustomFunctionRegistrationRenderer,
-    )
+    from openhcs.agent.dto.functions import CustomFunctionRegistrationHandle, CustomFunctionRegistrationResult
+    from openhcs.mcp.dev_client_renderers.knowledge import CustomFunctionRegistrationRenderer
     from zmqruntime.messages import ProcessIdentity
 
     handle = CustomFunctionRegistrationHandle(
-        ExecutionConnectionSpec(port=15993),
-        ProcessIdentity.current(),
-        "a" * 64,
-        "engineering_registration",
-        False,
-        None,
+        ExecutionConnectionSpec(port=15993), ProcessIdentity.current(),
+        "a" * 64, "engineering_registration", False, None,
     )
     original = CustomFunctionRegistrationResult(
-        schema_version=SCHEMA_VERSION,
-        registered_count=registered_count,
-        connection=handle.connection,
-        server_identity=handle.server_identity,
+        schema_version=SCHEMA_VERSION, registered_count=registered_count,
+        connection=handle.connection, server_identity=handle.server_identity,
         observation_handle=handle,
-        errors=(
-            AgentError(
-                code=code,
-                message="original cause",
-                hint="Do not replay.",
-                exception_type="ValueError",
-            ),
-        ),
+        errors=(AgentError(code=code, message="original cause", hint="Do not replay.", exception_type="ValueError"),),
     )
     response = batch(agent_capabilities.register_custom_function, original)
     decoded = McpDevToolBatchResponse.for_rendering(to_jsonable(response))
@@ -138,44 +115,24 @@ def test_registration_renderer_retains_typed_error_receipt_and_handle(
     assert text.count(f"{code}: original cause") == 1
     assert "Do not replay." in text
     marker = "Read-only observation handle: "
-    rendered_handle = next(
-        line.removeprefix(marker)
-        for line in text.splitlines()
-        if line.startswith(marker)
-    )
+    rendered_handle = next(line.removeprefix(marker) for line in text.splitlines() if line.startswith(marker))
     assert json.loads(rendered_handle) == to_jsonable(handle)
 
 
 def test_registration_renderer_uses_declared_success_entries_without_mapping_reads():
-    from openhcs.agent.dto.functions import (
-        CustomFunctionRegistrationResult,
-        FunctionCatalogEntry,
-    )
-    from openhcs.mcp.dev_client_renderers.knowledge import (
-        CustomFunctionRegistrationRenderer,
-    )
+    from openhcs.agent.dto.functions import CustomFunctionRegistrationResult, FunctionCatalogEntry
+    from openhcs.mcp.dev_client_renderers.knowledge import CustomFunctionRegistrationRenderer
 
     entry = FunctionCatalogEntry(
-        function_id="openhcs:engineering_registration",
-        import_path="openhcs.processing.custom_functions.engineering_registration",
-        name="engineering_registration",
-        module="openhcs.processing.custom_functions",
-        library="openhcs",
-        signature="engineering_registration(image)",
-        summary="Original declared summary",
-        backend_tags=("numpy",),
+        function_id="openhcs:engineering_registration", import_path="openhcs.processing.custom_functions.engineering_registration",
+        name="engineering_registration", module="openhcs.processing.custom_functions", library="openhcs",
+        signature="engineering_registration(image)", summary="Original declared summary", backend_tags=("numpy",),
     )
     original = CustomFunctionRegistrationResult(
-        schema_version=SCHEMA_VERSION,
-        registered_count=1,
-        persisted=False,
-        storage_dir="/engineering",
-        source_file_paths=("/engineering/original.py",),
-        functions=(entry,),
+        schema_version=SCHEMA_VERSION, registered_count=1, persisted=False,
+        storage_dir="/engineering", source_file_paths=("/engineering/original.py",), functions=(entry,),
     )
-    text = CustomFunctionRegistrationRenderer.render(
-        to_jsonable(batch(agent_capabilities.register_custom_function, original))
-    )
+    text = CustomFunctionRegistrationRenderer.render(to_jsonable(batch(agent_capabilities.register_custom_function, original)))
     assert "registered=1 persisted=False storage=/engineering" in text
     assert "Files: /engineering/original.py" in text
     assert f"{entry.function_id}: {entry.signature} tags=numpy" in text
@@ -378,47 +335,29 @@ def test_nested_artifact_contract_and_receipt_survive_compact_limits():
 
 def _dataset_row(**changes) -> DatasetRowState:
     values = dict(
-        scope_id="/plate",
-        name="plate",
-        root="/plate",
-        pipeline_path=None,
-        selected=True,
-        initialized=False,
-        compiled=False,
-        init_pending=False,
-        compile_pending=False,
-        execution_active=False,
-        status_prefix="",
-        orchestrator_state=None,
-        execution_id=None,
-        terminal_status=None,
-        runtime_state=None,
-        runtime_percent=None,
-        queue_position=None,
+        scope_id="/plate", name="plate", root="/plate", pipeline_path=None,
+        selected=True, initialized=False, compiled=False, init_pending=False,
+        compile_pending=False, execution_active=False, status_prefix="",
+        orchestrator_state=None, execution_id=None, terminal_status=None,
+        runtime_state=None, runtime_percent=None, queue_position=None,
     )
     values.update(changes)
     return DatasetRowState(**values)
 
 
 def _datasets(row: DatasetRowState) -> DatasetListState:
-    return DatasetListState(
-        rows=(row,), selected_scope_ids=(row.scope_id,), execution_state="idle"
-    )
+    return DatasetListState(rows=(row,), selected_scope_ids=(row.scope_id,), execution_state="idle")
 
 
 @pytest.mark.parametrize("waited", [True, False])
 def test_execute_journey_follows_session_stages_and_renders_each_result(waited):
     def result(operation_id, status, **changes):
-        return SessionOperationResult(
-            operation_id=operation_id, status=status, **changes
-        )
+        return SessionOperationResult(operation_id=operation_id, status=status, **changes)
 
     initialized = _dataset_row(initialized=True)
     compiled = _dataset_row(initialized=True, compiled=True)
     failed = _dataset_row(
-        initialized=True,
-        compiled=True,
-        terminal_status="failed",
+        initialized=True, compiled=True, terminal_status="failed",
         orchestrator_state="exec_failed",
     )
     receipts = [
@@ -453,15 +392,11 @@ def test_execute_journey_follows_session_stages_and_renders_each_result(waited):
         agent_capabilities.initialize_datasets.name,
     ]
     assert peer.calls[0][1]["port"] == 15993
-    assert peer.calls[2][1] == {
-        "scope_id": "/plate",
-        "pipeline_source": "pipeline_steps = []",
-    }
+    assert peer.calls[2][1] == {"scope_id": "/plate", "pipeline_source": "pipeline_steps = []"}
     assert all(
         arguments == {"scope_ids": ["/plate"]}
         for name, arguments, _timeout in peer.calls
-        if name
-        in (
+        if name in (
             agent_capabilities.initialize_datasets.name,
             agent_capabilities.compile_datasets.name,
             agent_capabilities.run_datasets.name,
@@ -568,8 +503,7 @@ def test_single_declaration_extension_uses_output_mro_without_consumer_edits():
     value = McpDevToolResult._decode_payload(
         to_jsonable(
             ExtendedInspection(schema_version=SCHEMA_VERSION, plate_path="extended")
-        ),
-        (ExtendedInspection,),
+        ), (ExtendedInspection,)
     )
     assert type(value) is ExtendedInspection and value.extension_fact == "retained"
     assert "plate=extended" in renderer.render_payload_value(
@@ -779,9 +713,7 @@ def test_generic_call_preserves_pending_workflow_native_receipt(monkeypatch, cap
         == 0
     )
     rendered = capsys.readouterr().out
-    assert (
-        "run_datasets" in rendered and "accepted" in rendered and "scope-1" in rendered
-    )
+    assert "run_datasets" in rendered and "accepted" in rendered and "scope-1" in rendered
     assert json.loads(rendered) == to_jsonable(response)
 
 

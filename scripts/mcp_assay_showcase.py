@@ -534,7 +534,9 @@ def _primary_object_source(plate_path: Path, output_path: Path) -> str:
     header = _common_source_header(
         plate_path,
         output_path,
-        processing_imports=("from openhcs.domains.microscopy.axes import Microscopy"),
+        processing_imports=(
+            "from openhcs.domains.microscopy.axes import Microscopy"
+        ),
         extra_imports=(
             """from openhcs.processing.backends.analysis.cell_counting_cpu import (
     DetectionMethod,

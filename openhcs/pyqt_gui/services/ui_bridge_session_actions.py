@@ -68,9 +68,7 @@ class SessionOperationActionProvider(UiActionProviderABC):
         )
         return UiActionSummary(
             schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=self.identity.widget_id, action_id=action_id
-            ),
+            identity=UiActionIdentity(widget_id=self.identity.widget_id, action_id=action_id),
             title=operation.button_label(self._session),
             enabled=error is None,
             disabled_error=error,
@@ -94,11 +92,7 @@ class SessionOperationActionProvider(UiActionProviderABC):
         )
         if session_request is None:
             return UiActionDispatch(
-                errors=(
-                    AgentError(
-                        code="ui_action_cancelled", message="The user cancelled."
-                    ),
-                )
+                errors=(AgentError(code="ui_action_cancelled", message="The user cancelled."),)
             )
         result = self._session.invoke(operation, session_request)
         return UiActionDispatch(

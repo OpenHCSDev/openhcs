@@ -389,15 +389,13 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         == FakeZMQExecutionClient.submitted[1].pipeline_code
     )
     assert all(
-        submission.global_config_code
-        == ConfigDocumentAuthority.render(
+        submission.global_config_code == ConfigDocumentAuthority.render(
             global_config, expected_config_type=GlobalPipelineConfig
         )
         for submission in FakeZMQExecutionClient.submitted
     )
     assert [
-        submission.compile_control.compile_only
-        for submission in FakeZMQExecutionClient.submitted
+        submission.compile_control.compile_only for submission in FakeZMQExecutionClient.submitted
     ] == [
         True,
         False,

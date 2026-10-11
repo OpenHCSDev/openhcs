@@ -700,10 +700,7 @@ def test_stream_images_routes_aggregate_channel_through_payload_plane_axis(
             "A49",
             component=None,
             value=None,
-            fixed_component_values=(
-                (Microscopy.ZIndex, "1"),
-                (Microscopy.Timepoint, "1"),
-            ),
+            fixed_component_values=((Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")),
         ),
     )
     workspace_projection = VirtualWorkspaceSourceProjection(
@@ -1273,13 +1270,11 @@ def lifecycle_manager(monkeypatch):
         ManagedViewerLifecycleMixin, "wait_for_ready", lambda self, timeout: True
     )
     monkeypatch.setattr(
-        ManagedViewerLifecycleMixin,
-        "force_stop",
+        ManagedViewerLifecycleMixin, "force_stop",
         lambda self: self.lifecycle_state.mark_stopped(),
     )
     monkeypatch.setattr(
-        ManagedViewerLifecycleMixin,
-        "start",
+        ManagedViewerLifecycleMixin, "start",
         lambda self: (_ for _ in ()).throw(AssertionError("must not restart")),
     )
     manager = ViewerStateManager.get_instance()
@@ -1288,8 +1283,7 @@ def lifecycle_manager(monkeypatch):
 
 
 def test_streaming_viewer_lifecycle_attaches_existing_viewer_without_restart(
-    monkeypatch,
-    lifecycle_manager,
+    monkeypatch, lifecycle_manager,
 ) -> None:
     monkeypatch.setattr(
         NapariStreamVisualizer,
@@ -1402,25 +1396,19 @@ def test_streaming_viewer_lifecycle_reports_bounded_launch_log(
 def test_streaming_viewer_lifecycle_admits_new_launch_inside_managed_acquisition(
     monkeypatch, lifecycle_manager, config_type, owns_process, requested_host, reusable
 ) -> None:
-    active_config = config_type(
-        enabled=True, port=5563, persistent=True, listen_host="*"
-    )
+    active_config = config_type(enabled=True, port=5563, persistent=True, listen_host="*")
     existing_viewer = active_config.create_visualizer(FakeFileManager())
     existing_viewer.lifecycle_state.mark_connected_external()
     monkeypatch.setattr(
-        ManagedViewerLifecycleMixin,
-        "owned_viewer_process_is_alive",
+        ManagedViewerLifecycleMixin, "owned_viewer_process_is_alive",
         lambda self: owns_process,
     )
     monkeypatch.setattr(
-        ViewerControlMessageRequest,
-        "send",
-        lambda self: ViewerControlResponse(
-            {
-                "status": "success",
-                "process_launch": active_config.viewer_process_launch_config().to_wire_mapping(),
-            }
-        ),
+        ViewerControlMessageRequest, "send",
+        lambda self: ViewerControlResponse({
+            "status": "success",
+            "process_launch": active_config.viewer_process_launch_config().to_wire_mapping(),
+        }),
     )
     lifecycle_manager.get_or_create_viewer(
         active_config.viewer_family.wire_value, 5563, lambda: existing_viewer
@@ -1437,24 +1425,14 @@ def test_streaming_viewer_lifecycle_admits_new_launch_inside_managed_acquisition
         enabled=True, port=5563, persistent=True, listen_host=requested_host
     )
     if reusable:
-        assert (
-            StreamingViewerLifecycle.get_or_create_visualizer(
-                filemanager=FakeFileManager(),
-                config=requested,
-                fresh=False,
-            )
-            is existing_viewer
-        )
+        assert StreamingViewerLifecycle.get_or_create_visualizer(
+            filemanager=FakeFileManager(), config=requested, fresh=False,
+        ) is existing_viewer
     else:
-        with pytest.raises(
-            RuntimeError, match="does not match the requested process launch"
-        ):
+        with pytest.raises(RuntimeError, match="does not match the requested process launch"):
             StreamingViewerLifecycle.get_or_create_visualizer(
-                filemanager=FakeFileManager(),
-                config=requested,
-                fresh=False,
+                filemanager=FakeFileManager(), config=requested, fresh=False,
             )
-    assert (
-        lifecycle_manager.get_viewer(active_config.viewer_family.wire_value, 5563)
-        is existing_viewer
-    )
+    assert lifecycle_manager.get_viewer(
+        active_config.viewer_family.wire_value, 5563
+    ) is existing_viewer

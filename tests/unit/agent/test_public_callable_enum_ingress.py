@@ -55,14 +55,10 @@ class IndependentProjectionRequest:
 @numpy
 @callable_request(IndependentProjectionRequest)
 def independent_request_projection(request: IndependentProjectionRequest):
-    return (
-        request.image if request.mode is None else request.mode.project(request.image)
-    )
+    return request.image if request.mode is None else request.mode.project(request.image)
 
 
-@pytest.fixture(
-    params=(independent_declared_projection, independent_request_projection)
-)
+@pytest.fixture(params=(independent_declared_projection, independent_request_projection))
 def author(monkeypatch, request):
     # Declarations outside the registry's modules are custom functions.
     metadata = project_custom_function(request.param)
@@ -71,9 +67,7 @@ def author(monkeypatch, request):
     monkeypatch.setattr(RegistryService, "_metadata_cache", {function_id: metadata})
     monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})
     try:
-        yield PipelineAuthoringService(
-            function_catalog=SelectedDeclarations()
-        ), function_id
+        yield PipelineAuthoringService(function_catalog=SelectedDeclarations()), function_id
     finally:
         CustomFunctionRuntimeRegistry.remove(request.param.__name__)
 
@@ -83,21 +77,13 @@ def author(monkeypatch, request):
 def test_new_callable_json_roundtrip_exercises_cooperative_member(author, clean, mode):
     service, function_id = author
     ref = service.create_pipeline()
-    service.add_function_step_from_request(
-        FunctionStepAddRequest.from_fields(
-            pipeline_id=ref.pipeline_id,
-            function_id=function_id,
-            kwargs={"mode": mode},
-        )
-    )
+    service.add_function_step_from_request(FunctionStepAddRequest.from_fields(
+        pipeline_id=ref.pipeline_id, function_id=function_id, kwargs={"mode": mode},
+    ))
     validation = service.validate(ref)
     assert validation.valid, validation.errors
-    document = PipelineDocumentCodec.from_source(
-        service.render_source(ref, clean=clean).source
-    )
-    invocation = next(
-        normalize_function_pattern(document.pipeline_steps[0].func).iter_items()
-    )
+    document = PipelineDocumentCodec.from_source(service.render_source(ref, clean=clean).source)
+    invocation = next(normalize_function_pattern(document.pipeline_steps[0].func).iter_items())
     expected = None if mode is None else IndependentProjection.DOUBLE_WITH_OFFSET
     if mode is None:
         # Clean source legitimately omits a parameter equal to its declared default.
@@ -105,38 +91,24 @@ def test_new_callable_json_roundtrip_exercises_cooperative_member(author, clean,
     else:
         assert invocation.kwargs_dict == {"mode": expected}
     contract = invocation.contract
-    assert contract.validate_public_kwargs(invocation.kwargs_dict) == tuple(
-        invocation.kwargs_dict.items()
-    )
+    assert contract.validate_public_kwargs(invocation.kwargs_dict) == tuple(invocation.kwargs_dict.items())
     # Execute both actual hooks through the decoded original enum member's MRO.
     assert contract.resolve_raw_runtime_callable()(5, **invocation.kwargs_dict) == (
         5 if mode is None else 13
     )
-    assert IndependentProjection.__mro__.index(
-        _OffsetCapability
-    ) < IndependentProjection.__mro__.index(_ScaleBehavior)
+    assert IndependentProjection.__mro__.index(_OffsetCapability) < IndependentProjection.__mro__.index(_ScaleBehavior)
 
 
-@pytest.mark.parametrize(
-    "kwargs",
-    (
-        {"mode": "not_declared"},
-        {"mode": True},
-        {"unknown": "double_with_offset"},
-        {"dtype_config": {}},
-        {"image": 5},
-    ),
-)
+@pytest.mark.parametrize("kwargs", (
+    {"mode": "not_declared"}, {"mode": True}, {"unknown": "double_with_offset"},
+    {"dtype_config": {}}, {"image": 5},
+))
 def test_public_ingress_rejects_unknown_and_runtime_owned_kwargs(author, kwargs):
     service, function_id = author
     ref = service.create_pipeline()
-    service.add_function_step_from_request(
-        FunctionStepAddRequest.from_fields(
-            pipeline_id=ref.pipeline_id,
-            function_id=function_id,
-            kwargs=kwargs,
-        )
-    )
+    service.add_function_step_from_request(FunctionStepAddRequest.from_fields(
+        pipeline_id=ref.pipeline_id, function_id=function_id, kwargs=kwargs,
+    ))
     assert not service.validate(ref).valid
     with pytest.raises((TypeError, ValueError)):
         service.render_source(ref)

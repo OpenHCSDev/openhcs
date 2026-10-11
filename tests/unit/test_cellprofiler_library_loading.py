@@ -11,10 +11,7 @@ import pytest
 import skimage.morphology
 import skimage.segmentation
 from python_introspect import declared_enum_type
-from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
-    ImagePayloadBundleContext,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageStack, ImagePayloadBundleContext)
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler.alignment import (
@@ -202,6 +199,7 @@ from openhcs.core.image_payload_execution_mode import (
 )
 
 
+
 def test_module_registry_resolves_every_declared_function():
     for module_type in CellProfilerModule.__registry__.values():
         if not module_type.emits_function_step():
@@ -263,14 +261,16 @@ def test_measure_colocalization_declares_composed_stack_execution() -> None:
 
 def test_track_objects_callable_requires_timepoint():
     track_objects = CellProfilerModule.__registry__["TrackObjects"].require_callable()
-    assert CallableContract.from_callable(track_objects).required_axis_roles == (
-        TimeAxis,
-    )
+    assert CallableContract.from_callable(
+        track_objects
+    ).required_axis_roles == (TimeAxis,)
 
 
 def test_correct_illumination_apply_inherits_resolved_stack_grouping() -> None:
     assert (
-        CallableContract.from_callable(correct_illumination_apply).required_axis_roles
+        CallableContract.from_callable(
+            correct_illumination_apply
+        ).required_axis_roles
         == ()
     )
     assert (
@@ -280,7 +280,9 @@ def test_correct_illumination_apply_inherits_resolved_stack_grouping() -> None:
 
 
 def test_mask_objects_has_no_unconditional_image_stack_axis() -> None:
-    assert CallableContract.from_callable(mask_objects).required_axis_roles == ()
+    assert (
+        CallableContract.from_callable(mask_objects).required_axis_roles == ()
+    )
 
 
 def test_all_cellprofiler_module_aliases_canonicalize():
@@ -900,9 +902,7 @@ def test_edge_direction_round_trips_through_compiled_worker_transport(direction)
     assert EdgeDirection(direction.value) is direction
     restored = pickle.loads(pickle.dumps(direction, protocol=pickle.HIGHEST_PROTOCOL))
     assert restored is direction
-    assert (
-        restored.includes_horizontal_response == direction.includes_horizontal_response
-    )
+    assert restored.includes_horizontal_response == direction.includes_horizontal_response
     assert restored.includes_vertical_response == direction.includes_vertical_response
 
 
@@ -2103,9 +2103,7 @@ def test_watershed_xy_downsample_factors_preserve_leading_axes():
     assert watershed_xy_downsample_factors(2, 2) == (2.0, 2.0)
     assert watershed_xy_downsample_factors(3, 2) == (1.0, 2.0, 2.0)
     assert watershed_xy_downsample_factors(4, 2) == (1.0, 1.0, 2.0, 2.0)
-    from openhcs.processing.backends.cellprofiler.morphology import (
-        MorphologyBackendStrategy,
-    )
+    from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
 
     labels = MorphologyBackendStrategy.for_memory_type().label_equal_values(
         np.ones((2, 3, 4, 5), dtype=bool)
@@ -3708,7 +3706,10 @@ def test_absorbed_processing_contract_metadata_does_not_act_as_validator():
     image = np.ones((8, 8), dtype=np.float32)
     result = correct_illumination_calculate(image, dtype_config=DtypeConfig())
     assert result.shape == image.shape
-    assert correct_illumination_calculate.__processing_contract__ is FlexibleContract
+    assert (
+        correct_illumination_calculate.__processing_contract__
+        is FlexibleContract
+    )
     assert opening.__processing_contract__ is FlexibleContract
 
 
@@ -4362,9 +4363,7 @@ def test_unified_registry_injects_semantic_controls_for_flexible_contracts():
 def test_unmix_colors_returns_one_output_per_stain_row():
     image = np.full((8, 9, 3), 0.5, dtype=np.float32)
     outputs = unmix_colors(
-        ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)).payload_with(
-            image, None
-        ),
+        ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)).payload_with(image, None),
         stain_names=(StainType.HEMATOXYLIN, StainType.EOSIN, StainType.CUSTOM),
         custom_absorbances=((0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.1, 0.2, 0.3)),
         dtype_config=DtypeConfig(),
@@ -4373,7 +4372,8 @@ def test_unmix_colors_returns_one_output_per_stain_row():
     assert [output.shape for output in outputs.slices] == [(8, 9), (8, 9), (8, 9)]
     assert all((output.dtype == np.float32 for output in outputs.slices))
     assert all(
-        output.metadata.axis_position(ColourAxis) is None for output in outputs.slices
+        output.metadata.axis_position(ColourAxis) is None
+        for output in outputs.slices
     )
     assert unmix_colors.__processing_contract__ is FlexibleContract
 
@@ -4408,9 +4408,9 @@ def test_binary_mask_output_preserves_declared_color_channel_axis() -> None:
 
 def test_crop_preserves_hwc_color_image_domain() -> None:
     image = np.arange(8 * 9 * 3, dtype=np.uint8).reshape(8, 9, 3)
-    image_payload = ImagePayloadMetadata(
-        axes=PayloadAxes.colour_samples(-1)
-    ).payload_with(image, None)
+    image_payload = ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)).payload_with(
+        image, None
+    )
     cropped, mask, measurements = crop(
         image_payload,
         removal_method=CropModule.RemovalMethod.ALL,
@@ -4539,7 +4539,10 @@ def test_measure_image_area_occupied_runs_mixed_rows():
         "DNA",
         "Nuclei",
     ]
-    assert measure_image_area_occupied.__processing_contract__ is FlexibleContract
+    assert (
+        measure_image_area_occupied.__processing_contract__
+        is FlexibleContract
+    )
 
 
 def test_measure_image_area_occupied_uses_runtime_slice_for_every_operand_row():
@@ -5076,10 +5079,7 @@ def test_overlay_outlines_renders_exact_projected_empty_label_plane():
     ),
 )
 def test_measurement_batch_admission_uses_declared_processing_domain(
-    contract,
-    mode,
-    slice_by_slice,
-    admitted,
+    contract, mode, slice_by_slice, admitted,
 ) -> None:
     image = np.stack((np.ones((2, 3)), np.full((2, 3), 2.0)))
     request = RuntimeBatchInvocationRequest(

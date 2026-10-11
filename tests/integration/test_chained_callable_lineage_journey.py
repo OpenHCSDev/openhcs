@@ -43,9 +43,7 @@ from openhcs.processing.custom_functions.runtime_registry import (
 from polystore.roi import load_rois_from_zip
 
 # Reuse the public reference's authoritative code block, not a copied callable.
-from tests.unit.agent.test_callable_artifact_reference import (
-    reference_namespace,
-)  # noqa: F401
+from tests.unit.agent.test_callable_artifact_reference import reference_namespace  # noqa: F401
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 
@@ -63,9 +61,7 @@ def registered_reference_callable(reference_namespace):
 
 
 def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
-    tmp_path,
-    reference_namespace,
-    registered_reference_callable,
+    tmp_path, reference_namespace, registered_reference_callable,
 ):
     assert reference_namespace["inspect_label_fixture"] is registered_reference_callable
     plate = tmp_path / "plate"
@@ -75,15 +71,13 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
     tifffile.imwrite(plate / "A01_s001_label-fixture.tif", fixture)
     source = NamedSourceBinding(
         alias="label-fixture",
-        selector=SourceSelector(
-            filters=(
-                SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.CONTAINS,
-                    value="label-fixture",
-                ),
-            )
-        ),
+        selector=SourceSelector(filters=(
+            SourceFilterClause(
+                subject=SourceFilterSubject.FILE,
+                match_type=SourceFilterMatchType.CONTAINS,
+                value="label-fixture",
+            ),
+        )),
         component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     )
     document = PipelineDocumentCodec.from_values(
@@ -105,29 +99,24 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
             for index in range(2)
         ],
     )
-    document = PipelineDocumentCodec.from_source(PipelineDocumentCodec.render(document))
-    bundle = (
-        InProcessCompileInspectionGateway()
-        .compile(
-            CompileInspectionInput(
-                plate=plate,
-                pipeline_document=document,
-                axis_filter=("A01",),
-                global_pipeline_config=GlobalPipelineConfig(
-                    num_workers=1, use_threading=True
-                ),
-                progress_queue=AgentProgressQueue(),
-            )
-        )
-        .execution_bundle
+    document = PipelineDocumentCodec.from_source(
+        PipelineDocumentCodec.render(document)
     )
+    bundle = InProcessCompileInspectionGateway().compile(
+        CompileInspectionInput(
+            plate=plate,
+            pipeline_document=document,
+            axis_filter=("A01",),
+            global_pipeline_config=GlobalPipelineConfig(num_workers=1, use_threading=True),
+            progress_queue=AgentProgressQueue(),
+        )
+    ).execution_bundle
     context = bundle.runtime_contexts["A01"]
     first, second = (context.step_plans[index] for index in range(2))
     first_invocation = next(first.compiled_function_pattern.iter_invocations())
     second_invocation = next(second.compiled_function_pattern.iter_invocations())
     [first_image] = (
-        plan
-        for plan in first_invocation.artifact_output_plans
+        plan for plan in first_invocation.artifact_output_plans
         if plan.artifact_type is ImageArtifactType
     )
     incoming_ref = first_image.ref().for_plan_type(ArtifactInputPlan)
@@ -143,8 +132,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
     assert edge.projection is None
 
     orchestrator = PipelineOrchestrator(
-        plate,
-        pipeline_config=document.pipeline_config,
+        plate, pipeline_config=document.pipeline_config,
     ).initialize()
     results = orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
@@ -164,9 +152,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
         for plan in (image_plan, labels_plan, rows_plan):
             [record] = context.runtime_value_store.find_matching(
                 RuntimeArtifactQuery.from_output_plan(
-                    plan,
-                    axis_id="A01",
-                    backend="memory",
+                    plan, axis_id="A01", backend="memory",
                     group_key=plan.group_scope().select_runtime_key(
                         invocation.key.group_key
                     ),
@@ -175,9 +161,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
             records.append(record)
         image, labels, rows = (record.data for record in records)
         np.testing.assert_array_equal(np.squeeze(image.data), fixture)
-        np.testing.assert_array_equal(
-            np.squeeze(object_label_dense_array(labels)), fixture
-        )
+        np.testing.assert_array_equal(np.squeeze(object_label_dense_array(labels)), fixture)
         assert rows.subject.object_name == labels_plan.name
         assert rows.subject.id_field == "object_label"
         assert tuple(rows.rows.column_values("object_label")) == (1,)
@@ -191,13 +175,9 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
             [persisted] = DictReader(stream)
         assert persisted["object_label"] == "1"
         assert persisted["pixel_count"] == "16"
-        [roi_path] = analysis.glob(
-            f"*_{labels_plan.name}_step{step_plan.step_index}*.zip"
-        )
+        [roi_path] = analysis.glob(f"*_{labels_plan.name}_step{step_plan.step_index}*.zip")
         assert len(load_rois_from_zip(roi_path)) == 1
         saved_images = tuple(step_plan.materialized_output.output_dir.glob("*.tif"))
         assert saved_images
         for image_path in saved_images:
-            np.testing.assert_array_equal(
-                np.squeeze(tifffile.imread(image_path)), fixture
-            )
+            np.testing.assert_array_equal(np.squeeze(tifffile.imread(image_path)), fixture)

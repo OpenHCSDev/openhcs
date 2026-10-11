@@ -67,35 +67,25 @@ def _schema() -> ConfigSchema:
                 enum_values=("channel", "z_index"),
             ),
         ),
-        registries=(
-            ConfigRegistrySchema(owner_type="PipelineConfig", registered_types=()),
-        ),
-        types=(
-            ConfigTypeSchema(
-                type_repr="LazyPartitionFilterConfig", description="Wells."
-            ),
-        ),
+        registries=(ConfigRegistrySchema(owner_type="PipelineConfig", registered_types=()),),
+        types=(ConfigTypeSchema(type_repr="LazyPartitionFilterConfig", description="Wells."),),
     )
 
 
-def test_config_schema_renderer_is_registered_for_the_contract_and_its_subtypes() -> (
-    None
-):
+def test_config_schema_renderer_is_registered_for_the_contract_and_its_subtypes() -> None:
     @dataclass(frozen=True, slots=True)
     class AnnotatedConfigSchema(ConfigSchema):
         annotation: str = "new declaration"
 
-    assert (
-        McpDevOutputRenderer.for_output_contract(ConfigSchema) is ConfigSchemaRenderer
-    )
+    assert McpDevOutputRenderer.for_output_contract(ConfigSchema) is ConfigSchemaRenderer
     assert (
         McpDevOutputRenderer.for_output_contract(AnnotatedConfigSchema)
         is ConfigSchemaRenderer
     )
     assert ConfigSchemaRenderer.render_options_type is CatalogRenderOptions
-    annotated = AnnotatedConfigSchema(
-        **{name: getattr(_schema(), name) for name in ConfigSchema.__dataclass_fields__}
-    )
+    annotated = AnnotatedConfigSchema(**{
+        name: getattr(_schema(), name) for name in ConfigSchema.__dataclass_fields__
+    })
     assert "flags=optional,lazy,inheritable" in ConfigSchemaRenderer.render(
         _batch(annotated)
     )
@@ -192,14 +182,8 @@ def test_config_schema_command_reads_render_options_from_its_renderer() -> None:
     parser = _build_parser()
     args = parser.parse_args(
         (
-            "config-schema",
-            "pipeline",
-            "--path-prefix",
-            "fiji_streaming_config",
-            "--contains",
-            "lazy",
-            "--limit",
-            "1",
+            "config-schema", "pipeline", "--path-prefix", "fiji_streaming_config",
+            "--contains", "lazy", "--limit", "1",
         )
     )
     call = _calls_from_args(args)[0]

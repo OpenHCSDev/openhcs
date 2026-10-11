@@ -261,7 +261,9 @@ def identify_primary_objects(
         else np.asarray(input_mask_payload, dtype=bool)
     )
     input_metadata = (
-        image.metadata if respect_source_border_metadata else ImagePayloadMetadata()
+        image.metadata
+        if respect_source_border_metadata
+        else ImagePayloadMetadata()
     )
     raw_image_data = np.asarray(image.data)
     proven_unit_interval_scale = unit_interval_scale_for_threshold_selection(
@@ -664,16 +666,10 @@ class IdentifyPrimaryObjectsModule(
             artifact_inputs.specs,
         )
         if len(source) != 1:
-            raise ValueError(
-                "IdentifyPrimaryObjects diagnostics require one source image."
-            )
-        objects = ArtifactSpecCollection(outputs).of_artifact_type(
-            ObjectLabelsArtifactType
-        )
+            raise ValueError("IdentifyPrimaryObjects diagnostics require one source image.")
+        objects = ArtifactSpecCollection(outputs).of_artifact_type(ObjectLabelsArtifactType)
         if len(objects) != 1:
-            raise ValueError(
-                "IdentifyPrimaryObjects diagnostics require one object output."
-            )
+            raise ValueError("IdentifyPrimaryObjects diagnostics require one object output.")
         return (
             *outputs,
             *PrimaryObjectDiagnosticPlanes.artifact_specs(

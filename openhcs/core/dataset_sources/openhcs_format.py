@@ -103,11 +103,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         self._metadata_dict_dataset_root_cache: Optional[Path] = None
 
     def _metadata_field(
-        self,
-        dataset_root: Union[str, Path],
-        field: str,
-        *,
-        merge: bool = False,
+        self, dataset_root: Union[str, Path], field: str, *, merge: bool = False,
     ) -> Any:
         """Resolve only the requested fact within the declared projection scope.
 
@@ -116,16 +112,14 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         silently choose one projection's geometry or execution input.
         """
         subdirectories = self._metadata_subdirectories(
-            self.load_metadata_document(dataset_root),
-            dataset_root,
+            self.load_metadata_document(dataset_root), dataset_root,
         )
         try:
             selected = self._main_subdirectory_name(subdirectories, dataset_root)
         except MetadataNotFoundError:
             values = {name: data.get(field) for name, data in subdirectories.items()}
             resolver = (
-                self._merge_subdirectory_mapping
-                if merge
+                self._merge_subdirectory_mapping if merge
                 else self._consistent_subdirectory_value
             )
             return resolver(values, dataset_root, field)
@@ -308,9 +302,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
             self._source_voxel_spacings(dataset_root)
         )
 
-    def source_voxel_spacing(
-        self, dataset_root: Union[str, Path]
-    ) -> SourceVoxelSpacing:
+    def source_voxel_spacing(self, dataset_root: Union[str, Path]) -> SourceVoxelSpacing:
         """Preserve the stored source frame, including unknown/relative units."""
         return SourceVoxelSpacing.common(self._source_voxel_spacings(dataset_root))
 
@@ -321,8 +313,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         return tuple(
             SourceVoxelSpacing.from_source_metadata(source)
             for source in (
-                self._metadata_field(dataset_root, FIELDS.SOURCE_METADATA, merge=True)
-                or {}
+                self._metadata_field(dataset_root, FIELDS.SOURCE_METADATA, merge=True) or {}
             ).values()
         )
 
@@ -337,9 +328,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
 
     def get_source_filename_parser_name(self, dataset_root: Union[str, Path]) -> str:
         """Get source filename parser name from OpenHCS metadata."""
-        parser_name = self._metadata_field(
-            dataset_root, FIELDS.SOURCE_FILENAME_PARSER_NAME
-        )
+        parser_name = self._metadata_field(dataset_root, FIELDS.SOURCE_FILENAME_PARSER_NAME)
         if not (isinstance(parser_name, str) and parser_name):
             raise ValueError(
                 f"'{FIELDS.SOURCE_FILENAME_PARSER_NAME}' must be a non-empty string in {self.METADATA_FILENAME}"
@@ -408,9 +397,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
             )
         document = OpenHCSMetadataSubdirectories.from_path(metadata_path)
         accepted_entries = {
-            name: VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
-                subdirectory
-            )
+            name: VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
             for name, subdirectory in document.items()
         }
         return self.reconciliation_directories_from_document(
@@ -441,9 +428,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
             is not None
         )
         subdirectories = self._metadata_subdirectories(
-            document.metadata,
-            dataset_root,
-            workspace_root=dataset_root,
+            document.metadata, dataset_root, workspace_root=dataset_root,
         )
         source_projection = None
         if document.has_workspace_mapping():
@@ -644,13 +629,13 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
 
         root = (
             self.source_workspace_root(dataset_root)
-            if workspace_root is None
-            else workspace_root
+            if workspace_root is None else workspace_root
         ).absolute()
         requested = Path(dataset_root).absolute()
         if requested != root:
             matches = tuple(
-                name for name in subdirectories if requested.is_relative_to(root / name)
+                name for name in subdirectories
+                if requested.is_relative_to(root / name)
             )
             if not matches:
                 raise MetadataNotFoundError(
@@ -747,9 +732,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         self, dataset_root: Union[str, Path]
     ) -> Optional[str]:
         """Get plate acquisition datetime if available."""
-        return self._get_optional_metadata_str(
-            dataset_root, FIELDS.ACQUISITION_DATETIME
-        )
+        return self._get_optional_metadata_str(dataset_root, FIELDS.ACQUISITION_DATETIME)
 
     def get_plate_name(self, dataset_root: Union[str, Path]) -> Optional[str]:
         """Get plate name if available."""
@@ -778,14 +761,9 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         Raises:
             MetadataNotFoundError: If metadata file cannot be found or parsed
         """
-        available_backends = (
-            self._metadata_field(
-                input_dir,
-                FIELDS.AVAILABLE_BACKENDS,
-                merge=True,
-            )
-            or {}
-        )
+        available_backends = self._metadata_field(
+            input_dir, FIELDS.AVAILABLE_BACKENDS, merge=True,
+        ) or {}
 
         if not isinstance(available_backends, dict):
             logger.warning(
@@ -882,9 +860,7 @@ class OpenHCSMetadata:
     def collection_fields() -> tuple[str, ...]:
         """Persisted value-label keys, one per declared axis."""
 
-        return tuple(
-            axis.metadata_collection_field for axis in AxisFamily.active().axes
-        )
+        return tuple(axis.metadata_collection_field for axis in AxisFamily.active().axes)
 
     @staticmethod
     def labels_by_field(
@@ -936,10 +912,7 @@ class OpenHCSMetadata:
             pixel_size=pixel_size,
             image_files=image_files,
             axis_value_labels=cls.labels_by_field(
-                {
-                    component: serialized_values(component)
-                    for component in AxisFamily.active().axes
-                }
+                {component: serialized_values(component) for component in AxisFamily.active().axes}
             ),
             available_backends=available_backends,
             source_diagnostics=source_diagnostics,
@@ -963,10 +936,7 @@ def _openhcs_metadata_from_subdirectory(
 ) -> OpenHCSMetadata:
     missing_fields = tuple(
         field
-        for field in (
-            *_OPENHCS_METADATA_REQUIRED_FIELDS,
-            *OpenHCSMetadata.collection_fields(),
-        )
+        for field in (*_OPENHCS_METADATA_REQUIRED_FIELDS, *OpenHCSMetadata.collection_fields())
         if field not in subdirectory_data
     )
     if missing_fields:
@@ -1337,23 +1307,18 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
 
     @classmethod
     def create(
-        cls,
-        *,
-        filemanager: FileManager,
-        pattern_format: Optional[str] = None,
+        cls, *, filemanager: FileManager, pattern_format: Optional[str] = None,
         source_bindings_config=None,
     ) -> "OpenHCSDatasetSource":
         """Keep the prepared source while applying the declared source bindings."""
         from openhcs.core.source_bindings import source_bindings_defaults_to_base
 
         handler = super().create(
-            filemanager=filemanager,
-            pattern_format=pattern_format,
+            filemanager=filemanager, pattern_format=pattern_format,
             source_bindings_config=source_bindings_config,
         )
         handler._source_bindings_config = (
-            None
-            if source_bindings_config is None
+            None if source_bindings_config is None
             else source_bindings_defaults_to_base(source_bindings_config)
         )
         return handler
@@ -1361,6 +1326,7 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
     def source_bindings_still_required(self):
         """Expose the original prepared-workspace declaration to runtime readers."""
         return self._source_bindings_config
+
 
     @classmethod
     def source_selection_guidance(cls) -> str:
@@ -1489,6 +1455,8 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         # Return empty string as placeholder (not used for virtual workspace)
         return ""
 
+
+
     @property
     def compatible_backends(self) -> List[Backend]:
         """
@@ -1581,9 +1549,7 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         # 3. Fall back to first available backend (usually disk)
         return next(iter(available_backends_dict.keys()))
 
-    def initialize_workspace(
-        self, dataset_root: Path, filemanager: FileManager
-    ) -> Path:
+    def initialize_workspace(self, dataset_root: Path, filemanager: FileManager) -> Path:
         """
         OpenHCS format doesn't need workspace - determines the correct input subdirectory from metadata.
 
@@ -1604,9 +1570,7 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         # The caller's declared projection selects facts; storage stays root-relative.
         self.dataset_root = dataset_root
         if self._source_bindings_config is not None:
-            from openhcs.core.source_workspace_projection import (
-                WorkspaceSourceProjections,
-            )
+            from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 
             projection = WorkspaceSourceProjections.from_dataset_metadata(
                 dataset_root=dataset_root,
@@ -1614,13 +1578,8 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
                 filemanager=filemanager,
                 source_bindings=self._source_bindings_config,
             ).projection_if_available()
-            if (
-                projection is None
-                and self._source_bindings_config.source_filter_declarations
-            ):
-                raise ValueError(
-                    "Prepared source filtering requires a typed workspace projection."
-                )
+            if projection is None and self._source_bindings_config.source_filter_declarations:
+                raise ValueError("Prepared source filtering requires a typed workspace projection.")
         logger.debug("OpenHCSHandler: dataset_root set to %s", self.dataset_root)
 
         # Determine the main subdirectory from metadata - fail-loud on errors
@@ -1654,9 +1613,7 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         self,
         dataset_root: Path,
     ) -> Mapping[str, object]:
-        metadata = self.metadata_handler.source_workspace_metadata_document(
-            dataset_root
-        )
+        metadata = self.metadata_handler.source_workspace_metadata_document(dataset_root)
         if not isinstance(metadata, Mapping):
             raise ValueError("OpenHCS source-workspace metadata must be a mapping.")
         subdirectories = metadata.get(FIELDS.SUBDIRECTORIES)
@@ -1692,14 +1649,10 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
 
     @classmethod
     def register_workspace_backends(
-        cls,
-        dataset_root: Union[str, Path],
-        filemanager: FileManager,
+        cls, dataset_root: Union[str, Path], filemanager: FileManager,
     ) -> None:
         """Register storage at its metadata root, not the selected projection child."""
-        workspace_root = OpenHCSMetadataHandler(filemanager).source_workspace_root(
-            dataset_root
-        )
+        workspace_root = OpenHCSMetadataHandler(filemanager).source_workspace_root(dataset_root)
         super().register_workspace_backends(workspace_root, filemanager)
 
     def post_workspace(

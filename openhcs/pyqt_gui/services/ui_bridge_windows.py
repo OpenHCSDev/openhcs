@@ -2885,6 +2885,7 @@ class ManagedWindowActionProvider(UiActionProviderABC):
         return action.is_supported(window.managed_window_action_capabilities())
 
 
+
 @dataclass(frozen=True, slots=True)
 class MainWindowBridgeProviderSet(UiBridgeProviderSetABC):
     """Provider set for main-window generic UI projections."""

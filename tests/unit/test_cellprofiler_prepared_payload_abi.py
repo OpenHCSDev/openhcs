@@ -7,19 +7,14 @@ from scipy import ndimage
 
 from openhcs.core.function_patterns import NormalizedFunctionGroup
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_label_building import (
-    SourceImageObjectLabelBuildRequest,
-)
+from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
-from openhcs.processing.backends.cellprofiler.color import (
-    ColorToGrayMode,
-    color_to_gray,
-)
+from openhcs.processing.backends.cellprofiler.color import ColorToGrayMode, color_to_gray
 from openhcs.processing.backends.cellprofiler.median_filter import medianfilter
 from openhcs.processing.backends.cellprofiler.secondary import (
     SecondaryMethod,
@@ -67,18 +62,12 @@ def test_prepared_color_to_gray_preserves_channel_mask_and_spatial_domain():
     ).payload_with(pixels, mask)
 
     result = _execute_prepared(
-        color_to_gray,
-        source,
-        {
-            "mode": ColorToGrayMode.COMBINE,
-            "channel_indices": (0, 2),
-            "contributions": (1.0, 3.0),
-        },
+        color_to_gray, source,
+        {"mode": ColorToGrayMode.COMBINE,
+         "channel_indices": (0, 2), "contributions": (1.0, 3.0)},
     )
 
-    np.testing.assert_array_equal(
-        result.data, (pixels[..., 0] + 3 * pixels[..., 2]) / 4
-    )
+    np.testing.assert_array_equal(result.data, (pixels[..., 0] + 3 * pixels[..., 2]) / 4)
     np.testing.assert_array_equal(result.mask, mask)
     metadata = result.metadata
     assert metadata.axis_position(ColourAxis) is None
@@ -90,19 +79,10 @@ def test_prepared_medianfilter_keeps_original_intensity_scale_and_mask():
     pixels = np.arange(25, dtype=np.uint16).reshape(5, 5)
     mask = np.ones(pixels.shape, dtype=bool)
     mask[0] = False
-    source = (
-        ImagePayloadMetadata.for_array(pixels)
-        .payload_with(pixels, mask)
-        .normalize_intensity_payload(
-            dtype=np.float32,
-        )
-    )
+    source = ImagePayloadMetadata.for_array(pixels).payload_with(pixels, mask).normalize_intensity_payload(dtype=np.float32,)
 
     result = _execute_prepared(
-        medianfilter,
-        source,
-        {"window_size": 3},
-        FullStackExecution,
+        medianfilter, source, {"window_size": 3}, FullStackExecution,
     )
 
     np.testing.assert_array_equal(
@@ -118,34 +98,24 @@ def test_prepared_secondary_object_output_keeps_actual_source_spatial_domain():
     pixels = np.zeros((9, 9), dtype=np.float32)
     domain = SourceSpatialDomain(origin_yx=(3, 4), source_shape_yx=(15, 16))
     source = ImagePayloadMetadata(
-        source_image_names=("DNA",),
-        source_path="/input/dna.tif",
+        source_image_names=("DNA",), source_path="/input/dna.tif",
         source_spatial_domain=domain,
     ).payload_with(pixels, None)
     seed_pixels = np.zeros(pixels.shape, dtype=np.int32)
     seed_pixels[4, 4] = 1
     seeds = SourceImageObjectLabelBuildRequest(
-        image=source,
-        labels=seed_pixels,
-        declared_object_ids=(1,),
+        image=source, labels=seed_pixels, declared_object_ids=(1,),
     ).payload()
 
     result = _execute_prepared(
-        identify_secondary_objects,
-        source,
-        {
-            "primary_labels": seeds,
-            "method": SecondaryMethod.DISTANCE_N,
-            "distance_to_dilate": 1,
-            "fill_holes": False,
-        },
+        identify_secondary_objects, source,
+        {"primary_labels": seeds, "method": SecondaryMethod.DISTANCE_N,
+         "distance_to_dilate": 1, "fill_holes": False},
     )
 
     _image, _rows, relationship, objects = result
     expected = ndimage.distance_transform_edt(seed_pixels == 0) <= 1
-    np.testing.assert_array_equal(
-        object_label_dense_array(objects), expected.astype(np.int32)
-    )
+    np.testing.assert_array_equal(object_label_dense_array(objects), expected.astype(np.int32))
     assert objects.source_spatial_domain.origin_yx == domain.origin_yx
     assert objects.source_spatial_domain.source_shape_yx == domain.source_shape_yx
     assert objects.source_provenance == source.metadata.source_provenance

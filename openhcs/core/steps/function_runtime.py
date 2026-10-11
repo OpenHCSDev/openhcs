@@ -264,10 +264,7 @@ class PatternGroupExecutionScope:
         source_refs = self.invocation_source_artifact_refs
         if source_refs:
             return declared_plan.for_artifact_refs(source_refs)
-        if (
-            self.compiled_group.runtime_domain
-            is RuntimeInvocationDomain.ARTIFACT_MANAGED
-        ):
+        if self.compiled_group.runtime_domain is RuntimeInvocationDomain.ARTIFACT_MANAGED:
             # The compiler has already traced stored artifact lineage to its
             # source bindings. A produced name is not itself a raw alias.
             return declared_plan
@@ -347,9 +344,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         payload: RuntimeArrayData,
     ) -> RuntimeFixedComponentValues:
         """Capture the source-selected cohort's common fixed coordinates."""
-        source_provenance = (
-            payload.metadata.source_provenance.with_common_scalar_identity_from_planes()
-        )
+        source_provenance = payload.metadata.source_provenance.with_common_scalar_identity_from_planes()
         common_source_metadata = source_provenance.source_component_metadata or {}
         variable_components = ComponentSet.of(
             self.execution_plan.variable_components or ()
@@ -418,9 +413,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
     def run(self) -> None:
         start_time = time.time() if logger.isEnabledFor(logging.DEBUG) else None
         plan = self.execution_plan
-        logger.debug(
-            "Processing pattern %s for axis %s", self.pattern_repr, plan.axis_id
-        )
+        logger.debug("Processing pattern %s for axis %s", self.pattern_repr, plan.axis_id)
 
         try:
             load_started_at = time.perf_counter()
@@ -508,9 +501,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 )
         except Exception as e:
             logger.error(
-                "Error processing pattern group %s: %s",
-                self.pattern_repr,
-                e,
+                "Error processing pattern group %s: %s", self.pattern_repr, e,
                 exc_info=True,
             )
             raise ValueError(
@@ -783,6 +774,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             parser,
             matching_files,
             group_component,
+
             component_value,
         )
         if not filtered:
@@ -1082,9 +1074,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         return tuple(zip(output_payloads, slice_contexts, strict=True))
 
     def _unstack_main_output(
-        self,
-        processed_data: Any,
-        expected_count: int,
+        self, processed_data: Any, expected_count: int,
     ) -> tuple[Any, ...]:
         """Split undeclared main-output pixels along their leading runtime-slice axis."""
         try:
@@ -1245,9 +1235,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 output_identity,
                 output_context=output_context,
                 image_metadata=output_metadata,
-                main_flow_plane_axis=processed_stack.plane_axis_for_output_context(
-                    output_context
-                ),
+                main_flow_plane_axis=processed_stack.plane_axis_for_output_context(output_context),
             )
 
             if output_directory_exists and context.filemanager.exists(
@@ -1607,6 +1595,10 @@ def _save_artifact_value(
     return runtime_value.data
 
 
+
+
+
+
 @dataclass(frozen=True, slots=True)
 class FunctionCoreExecutor:
     """Execute one scoped callable invocation and route declared artifact I/O."""
@@ -1729,24 +1721,21 @@ class FunctionCoreExecutor:
             or request.artifact_inputs.get(edge.key) is not edge
             or edge.storage_plan is not None
             or edge.main_flow_projection is None
-            or self.group_data.main_flow_source_binding_plan.binding_for_artifact_ref(
-                ref
-            )
+            or self.group_data.main_flow_source_binding_plan.binding_for_artifact_ref(ref)
             != binding
         ):
             return None
         payload = self.invocation.convert_input(
-            self.group_data.main_data_stack,
-            self.source_memory_type,
+            self.group_data.main_data_stack, self.source_memory_type,
         )
         if edge.main_flow_projection is MainFlowInputProjection.DECLARED_SOURCE_IMAGE:
             payload = payload.project_declared_source(ref.name)
         elif edge.main_flow_projection is not MainFlowInputProjection.COMPLETE_PAYLOAD:
             return None
         metadata = payload.metadata
-        if not metadata.persists_whole_image() and metadata.plane_axis not in (
-            None,
-            RuntimePlaneAxis.RUNTIME_SLICE,
+        if (
+            not metadata.persists_whole_image()
+            and metadata.plane_axis not in (None, RuntimePlaneAxis.RUNTIME_SLICE)
         ):
             # A remaining binding axis does not prove this source's ordered
             # physical members. Resolve it through its declared origin owner.
@@ -1758,9 +1747,7 @@ class FunctionCoreExecutor:
             member_count=member_count if member_count is not None else 1,
         )
         projection = RuntimePlaneAxisValueProjection.from_projector(
-            request.plane_projection,
-            RuntimePlaneAxis.RUNTIME_SLICE,
-            (),
+            request.plane_projection, RuntimePlaneAxis.RUNTIME_SLICE, (),
         )
         if projection is not None and projection.plane_index is not None:
             payload = RuntimeSliceProjection.value_for_slice(payload, projection)
@@ -1783,8 +1770,7 @@ class FunctionCoreExecutor:
         stored_payload = loaded_artifact_payloads.get(source_ref)
         source_binding_plan = (
             self.group_data.source_binding_plan
-            if request is None
-            else request.source_binding_plan
+            if request is None else request.source_binding_plan
         )
         source_binding = source_binding_plan.binding_for_artifact_ref(source_ref)
         main_flow_edges = tuple(
@@ -1815,8 +1801,7 @@ class FunctionCoreExecutor:
                 RuntimePayload,
                 (
                     self.runtime_adapter_request(primary_source_payload)
-                    if request is None
-                    else request
+                    if request is None else request
                 ).source_artifact_payload(source_ref),
             )
         if len(main_flow_edges) != 1:

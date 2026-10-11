@@ -168,8 +168,7 @@ class AtomicMetadataWriter:
             )
             published_entries = (
                 VirtualWorkspaceSourceProjectionEntries(MappingProxyType({}))
-                if projection_entries is None
-                else projection_entries
+                if projection_entries is None else projection_entries
             ).publish_into_subdirectory(
                 subdirectory,
                 saved_image_paths=saved_paths,
@@ -225,22 +224,16 @@ class AtomicMetadataWriter:
         ] = MappingProxyType({}),
     ) -> None:
         """Admit and reconcile all targets from one locked plate document."""
-        if (
-            not produced_entries_by_target
-            and not Path(metadata_path).is_file()
-            and not any(
-                target.contains_outputs(context)
-                for target, context in target_contexts.items()
-            )
+        if not produced_entries_by_target and not Path(metadata_path).is_file() and not any(
+            target.contains_outputs(context)
+            for target, context in target_contexts.items()
         ):
             return
 
         def update(data):
             data = self._ensure_subdirectories_structure(data)
             subdirectories = data[METADATA_CONFIG.SUBDIRECTORIES_KEY]
-            updates_by_directory: dict[
-                str, list[VirtualWorkspaceSourceProjectionEntries]
-            ] = {}
+            updates_by_directory: dict[str, list[VirtualWorkspaceSourceProjectionEntries]] = {}
             for target, entries in produced_entries_by_target.items():
                 updates_by_directory.setdefault(target.sub_dir, []).append(entries)
             admitted = {}
@@ -252,11 +245,7 @@ class AtomicMetadataWriter:
             document = OpenHCSMetadataSubdirectories(data)
             for name, subdirectory in document.items():
                 if name not in admitted:
-                    admitted[name] = (
-                        VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
-                            subdirectory
-                        )
-                    )
+                    admitted[name] = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
             for name in updates_by_directory:
                 self._update_projection_geometry(
                     subdirectories[name], admitted[name].entries.values()
@@ -275,9 +264,7 @@ class AtomicMetadataWriter:
                         metadata_document=data,
                         accepted_entries=admitted.get(
                             target.sub_dir,
-                            VirtualWorkspaceSourceProjectionEntries(
-                                MappingProxyType({})
-                            ),
+                            VirtualWorkspaceSourceProjectionEntries(MappingProxyType({})),
                         ),
                     )
             return data
@@ -329,6 +316,8 @@ def get_metadata_path(dataset_root: str | Path) -> Path:
     """Return the canonical metadata path for one OpenHCS plate root."""
 
     return METADATA_CONFIG.metadata_path(dataset_root)
+
+
 
 
 @dataclass(frozen=True)
@@ -494,7 +483,9 @@ class VirtualWorkspaceSourceProjectionEntries:
         projection_paths: Sequence[tuple[SourceProjection, str]],
     ) -> "VirtualWorkspaceSourceProjectionEntries":
         """Admit a producer's typed updates in persisted path order."""
-        SourceProjectionSet(tuple(projection for projection, _path in projection_paths))
+        SourceProjectionSet(
+            tuple(projection for projection, _path in projection_paths)
+        )
         return cls(
             MappingProxyType(
                 {path: projection for projection, path in projection_paths}
@@ -531,8 +522,7 @@ class VirtualWorkspaceSourceProjectionEntries:
         for path, record in records.items():
             virtual_path, projection = (
                 (path, self.entries[path])
-                if path in self.entries
-                else self._projection_record(record)
+                if path in self.entries else self._projection_record(record)
             )
             if virtual_path in entries:
                 raise RuntimeError(
@@ -587,8 +577,7 @@ class VirtualWorkspaceSourceProjectionEntries:
         records = self._records_by_path(subdirectory)
         admitted = (
             self._accept_retained_records(records)
-            if accepted_entries is None
-            else accepted_entries
+            if accepted_entries is None else accepted_entries
         )
         saved_set = frozenset(saved_image_paths)
         missing = saved_set.difference(admitted.entries)
@@ -619,8 +608,7 @@ class VirtualWorkspaceSourceProjectionEntries:
             normalized_path = self._required_text(record, "virtual_path")
             if normalized_path in retained.entries:
                 retained_records[normalized_path] = (
-                    record
-                    if path == normalized_path
+                    record if path == normalized_path
                     else {**record, "virtual_path": normalized_path}
                 )
         retained_records.update(
@@ -701,17 +689,12 @@ class VirtualWorkspaceSourceProjectionEntries:
         source_metadata = cls._optional_metadata(record, "source_metadata")
         component_labels = cls._optional_component_labels(record)
         source_alias = cls._optional_text(record, "source_alias")
-        image_metadata_value = record.get(
-            SourcePlaneProjection.image_metadata_wire_field()
-        )
-        if image_metadata_value is not None and not isinstance(
-            image_metadata_value, Mapping
-        ):
+        image_metadata_value = record.get(SourcePlaneProjection.image_metadata_wire_field())
+        if image_metadata_value is not None and not isinstance(image_metadata_value, Mapping):
             raise TypeError("Persisted image metadata must be a mapping.")
         image_metadata = (
-            None
-            if image_metadata_value is None
-            else ImagePayloadMetadata.from_mapping(image_metadata_value)
+            None if image_metadata_value is None else
+            ImagePayloadMetadata.from_mapping(image_metadata_value)
         )
         if projection_role is SourceProjectionRole.PRIMARY_PLANE:
             projection: SourceProjection = SourcePlaneProjection(
@@ -908,6 +891,7 @@ class VirtualWorkspaceChannelLabels:
                 )
             entries.update({str(key): str(value) for key, value in labels.items()})
         return cls(MappingProxyType(entries))
+
 
     def label_for(self, channel_value: SourceMetadataScalar) -> str | None:
         return self.entries.get(str(channel_value))

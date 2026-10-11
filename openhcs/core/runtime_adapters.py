@@ -262,8 +262,7 @@ class RuntimeAdapterSpec:
     runtime_callable_factory: RuntimeCallableFactory | None = None
 
     def invocation_domain_inputs(
-        self,
-        contract: "CallableContract",
+        self, contract: "CallableContract",
     ) -> ArtifactSpecCollection:
         """Use declared context inputs when the callable has no raw image ABI."""
         if contract.accepts_implicit_main_flow_input:

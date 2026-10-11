@@ -430,8 +430,14 @@ def test_registered_handler_selection_roles_are_owned_polymorphically() -> None:
     from openhcs.microscopes.imagexpress import ImageXpressHandler
     from openhcs.microscopes.opera_phenix import OperaPhenixHandler
 
-    assert BioFormatsHandler.source_selection_role() is BroadStoreSource
-    assert SourceBindingsSource.source_selection_role() is DeclaredFileSource
+    assert (
+        BioFormatsHandler.source_selection_role()
+        is BroadStoreSource
+    )
+    assert (
+        SourceBindingsSource.source_selection_role()
+        is DeclaredFileSource
+    )
     assert "structured or rich container" in (
         BioFormatsHandler.source_selection_guidance()
     )
@@ -1248,8 +1254,7 @@ def test_plate_inspection_reads_no_main_openhcs_output_subdirectories(
                             for image_name in image_names
                         ],
                         "source_metadata": _calibrated_source_metadata(
-                            f"checkpoints_step1/{image_name}"
-                            for image_name in image_names
+                            f"checkpoints_step1/{image_name}" for image_name in image_names
                         ),
                         "results_dir": "checkpoints_step1_results",
                     },
@@ -1260,8 +1265,7 @@ def test_plate_inspection_reads_no_main_openhcs_output_subdirectories(
                             for image_name in image_names
                         ],
                         "source_metadata": _calibrated_source_metadata(
-                            f"checkpoints_step2/{image_name}"
-                            for image_name in image_names
+                            f"checkpoints_step2/{image_name}" for image_name in image_names
                         ),
                         "results_dir": "checkpoints_step2_results",
                     },

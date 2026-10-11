@@ -86,19 +86,13 @@ def test_worker_connections_carry_declared_messages() -> None:
                 and isinstance(node.func, ast.Attribute)
                 and node.func.attr == "send"
                 and node.args
-                and isinstance(
-                    node.args[0], (ast.Tuple, ast.Constant, ast.List, ast.Dict)
-                )
+                and isinstance(node.args[0], (ast.Tuple, ast.Constant, ast.List, ast.Dict))
             ):
                 offenders.append(f"{path.name}:{node.lineno}")
-            if (
-                isinstance(node, ast.Compare)
-                and any(
-                    isinstance(operand, ast.Constant) and isinstance(operand.value, str)
-                    for operand in (node.left, *node.comparators)
-                )
-                and re.search(r"kind|operation|command|message", ast.unparse(node))
-            ):
+            if isinstance(node, ast.Compare) and any(
+                isinstance(operand, ast.Constant) and isinstance(operand.value, str)
+                for operand in (node.left, *node.comparators)
+            ) and re.search(r"kind|operation|command|message", ast.unparse(node)):
                 offenders.append(f"{path.name}:{node.lineno}")
     assert offenders == []
 

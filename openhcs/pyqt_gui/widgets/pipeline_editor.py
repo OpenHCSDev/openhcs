@@ -468,9 +468,7 @@ class PipelineEditorWidget(
                 pipeline_config=(
                     authored_pipeline_config(scope_id) if scope_id else PipelineConfig()
                 ),
-                pipeline_steps=(
-                    self.session.pipeline_steps(scope_id) if scope_id else []
-                ),
+                pipeline_steps=self.session.pipeline_steps(scope_id) if scope_id else [],
             ),
             clean_mode=clean,
         )
@@ -525,9 +523,7 @@ class PipelineEditorWidget(
             return ()
         return tuple(self.step_scope_id(step) for step in self.get_selected_items())
 
-    def get_item_insert_index(
-        self, item: FunctionStep, scope_key: str
-    ) -> Optional[int]:
+    def get_item_insert_index(self, item: FunctionStep, scope_key: str) -> Optional[int]:
         del item
         token = scope_key.rsplit("::", 1)[-1]
         parts = token.rsplit("_", 1)
@@ -544,9 +540,7 @@ class PipelineEditorWidget(
         return self.step_scope_id(item)
 
     @override
-    def _format_item_content(
-        self, item: FunctionStep, index: int, context: None
-    ) -> str:
+    def _format_item_content(self, item: FunctionStep, index: int, context: None) -> str:
         display_text, _ = self.format_item_for_display(item, context, step_index=index)
         return display_text
 
@@ -585,9 +579,7 @@ class PipelineEditorWidget(
     @override
     def prepare_list_update(self) -> None:
         if self.current_plate:
-            ScopeTokenService.seed_from_objects(
-                self.current_plate, self.displayed_steps
-            )
+            ScopeTokenService.seed_from_objects(self.current_plate, self.displayed_steps)
         return None
 
     @override
@@ -619,9 +611,7 @@ class PipelineEditorWidget(
             == PipelineScopeIdentity.from_plate_scope(self.current_plate).scope_id
             for scope_id, _state in (dirty_states or ())
         ):
-            GuiEventBusBroadcaster(self.event_bus).pipeline_changed(
-                self.displayed_steps
-            )
+            GuiEventBusBroadcaster(self.event_bus).pipeline_changed(self.displayed_steps)
 
     # -- context for step editors ---------------------------------------------
 
@@ -683,9 +673,7 @@ class PipelineEditorWidget(
             function_invocation_badge_provider=(
                 None
                 if step_index is None
-                else self.function_presentation.badge_provider(
-                    step, step_index=step_index
-                )
+                else self.function_presentation.badge_provider(step, step_index=step_index)
             ),
             compiled_artifact_inspection_provider=self.session.compiled_inspection,
             before_mutation=(
@@ -736,9 +724,7 @@ class PipelineEditorWidget(
             self.status_message.emit("No dataset selected")
             return
         selected_rows = [index.row() for index in self.item_list.selectedIndexes()]
-        insert_after = (
-            max(selected_rows) if selected_rows else len(self.displayed_steps) - 1
-        )
+        insert_after = max(selected_rows) if selected_rows else len(self.displayed_steps) - 1
         pasted = [copy.deepcopy(step) for step in self._clipboard_steps]
         self.session.insert_steps(self.current_plate, insert_after + 1, pasted)
         self.status_message.emit(

@@ -73,13 +73,8 @@ def test_real_global_config():
     print(f"Reconstructed successfully: {type(reconstructed) == type(config)}")
 
     # Verify a few nested configs are correct
-    if (
-        hasattr(config, "partition_filter_config")
-        and config.partition_filter_config is not None
-    ):
-        assert type(reconstructed.partition_filter_config) == type(
-            config.partition_filter_config
-        )
+    if hasattr(config, "partition_filter_config") and config.partition_filter_config is not None:
+        assert type(reconstructed.partition_filter_config) == type(config.partition_filter_config)
         print(f"✓ partition_filter_config type matches")
 
     if (

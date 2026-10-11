@@ -78,9 +78,7 @@ class RuntimeAnalysisConsolidationInputs:
             return None
         backend = plan.runtime_artifact_materialization.require_persistent_backend()
         return cls._from_table_contents(
-            config,
-            plan,
-            saved.materialization,
+            config, plan, saved.materialization,
             (
                 (Path(output.path), output.require_text_content())
                 for output in saved.outputs_for_backend(backend)
@@ -105,9 +103,7 @@ class RuntimeAnalysisConsolidationInputs:
             return None
         backend = plan.runtime_artifact_materialization.require_persistent_backend()
         return cls._from_table_contents(
-            config,
-            plan,
-            materialization,
+            config, plan, materialization,
             (
                 (Path(output.path), context.filemanager.load_text(output.path, backend))
                 for output in outputs
@@ -134,12 +130,10 @@ class RuntimeAnalysisConsolidationInputs:
             return None
         backend = plan.runtime_artifact_materialization.require_persistent_backend()
         destination = RuntimeAnalysisSummaryDestination(
-            backend=backend,
-            images_dir=plan.artifact_images_dir,
+            backend=backend, images_dir=plan.artifact_images_dir,
         )
         output_groups: dict[
-            tuple[Path, RuntimeAnalysisSummaryDestination],
-            list[RuntimeAnalysisTableOutput],
+            tuple[Path, RuntimeAnalysisSummaryDestination], list[RuntimeAnalysisTableOutput]
         ] = {}
         for output_path, content in contents:
             output_groups.setdefault((output_path.parent, destination), []).append(
@@ -162,8 +156,7 @@ class RuntimeAnalysisConsolidationInputs:
     ) -> RuntimeAnalysisConsolidationInputs | None:
         """Combine actual rendered projections without revisiting their payloads."""
         output_groups: dict[
-            tuple[Path, RuntimeAnalysisSummaryDestination],
-            list[RuntimeAnalysisTableOutput],
+            tuple[Path, RuntimeAnalysisSummaryDestination], list[RuntimeAnalysisTableOutput]
         ] = {}
         destinations: set[RuntimeAnalysisSummaryDestination] = set()
         seen_paths: set[tuple[str, Path]] = set()
@@ -177,17 +170,15 @@ class RuntimeAnalysisConsolidationInputs:
                     if identity in seen_paths:
                         continue
                     seen_paths.add(identity)
-                    output_groups.setdefault((directory, group.destination), []).append(
-                        output
-                    )
+                    output_groups.setdefault((directory, group.destination), []).append(output)
         return cls._from_groups(output_groups, destinations)
+
 
     @classmethod
     def _from_groups(
         cls,
         output_groups: Mapping[
-            tuple[Path, RuntimeAnalysisSummaryDestination],
-            list[RuntimeAnalysisTableOutput],
+            tuple[Path, RuntimeAnalysisSummaryDestination], list[RuntimeAnalysisTableOutput]
         ],
         destinations: set[RuntimeAnalysisSummaryDestination],
     ) -> RuntimeAnalysisConsolidationInputs | None:
@@ -202,8 +193,7 @@ class RuntimeAnalysisConsolidationInputs:
         return cls(
             groups={
                 directory: RuntimeAnalysisDirectoryInputs(
-                    outputs=tuple(outputs),
-                    destination=destination,
+                    outputs=tuple(outputs), destination=destination,
                 )
                 for (directory, destination), outputs in output_groups.items()
             },

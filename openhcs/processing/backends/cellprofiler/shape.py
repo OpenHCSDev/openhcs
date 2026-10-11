@@ -457,10 +457,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
 from openhcs.core.memory import numpy as numpy_decorator
-from openhcs.core.pipeline.function_contracts import (
-    object_label_input_execution_mode,
-    special_inputs,
-)
+from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     dense_object_label_measurement_row_domain,
@@ -528,20 +525,20 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
                 f"{type(self).__name__} feature {feature_name!r} has no declared "
                 "feature-array domain."
             )
-        if ShapeObjectZernikeDescriptorDeclaration.from_feature_name(
-            feature_name
-        ) is not None or any(
-            feature.value == feature_name
-            and LabelIndexedShapeFeature.matches_feature(feature)
-            for feature in MeasureObjectSizeShapeModule.MeasurementFeature
+        if (
+            ShapeObjectZernikeDescriptorDeclaration.from_feature_name(feature_name)
+            is not None
+            or any(
+                feature.value == feature_name
+                and LabelIndexedShapeFeature.matches_feature(feature)
+                for feature in MeasureObjectSizeShapeModule.MeasurementFeature
+            )
         ):
             return ObjectFeatureArrayDomain.MEASURED_OBJECT_ID
         return ObjectFeatureArrayDomain.ROW_ORDINAL
 
     def feature_missing_values_for_objects(
-        self,
-        feature_name: str,
-        object_ids: tuple[int, ...],
+        self, feature_name: str, object_ids: tuple[int, ...],
     ) -> Mapping[int, ObjectFeatureMissingValue]:
         """Native radius/Feret vectors contain zeros within their material extent."""
         array_domain = self.feature_array_domain(feature_name)
@@ -1263,6 +1260,7 @@ class ShapeMeasurementBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Shape-measurement operations keyed by OpenHCS memory type/provider."""
+
 
     @abstractmethod
     def form_factor_values(

@@ -80,16 +80,9 @@ def resolved_callable_type_hints(func: Callable) -> dict[str, Any]:
     from typing import _strip_annotations
 
     return {
-        **{
-            name: _strip_annotations(parameter.annotation)
-            for name, parameter in signature.parameters.items()
-            if parameter.annotation is not inspect.Parameter.empty
-        },
-        **(
-            {}
-            if signature.return_annotation is inspect.Signature.empty
-            else {"return": _strip_annotations(signature.return_annotation)}
-        ),
+        **{name: _strip_annotations(parameter.annotation) for name, parameter in signature.parameters.items()
+           if parameter.annotation is not inspect.Parameter.empty},
+        **({} if signature.return_annotation is inspect.Signature.empty else {"return": _strip_annotations(signature.return_annotation)}),
     }
 
 
@@ -189,7 +182,9 @@ class ObjectLabelInputExecutionMode(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def semantic_label_payload(cls, source_projected_payload, completion_payload):
         """Return the label payload that represents this measurement domain."""
-        raise TypeError(f"{cls.__name__} declares no object-measurement label domain.")
+        raise TypeError(
+            f"{cls.__name__} declares no object-measurement label domain."
+        )
 
     @classmethod
     def image_execution_mode(

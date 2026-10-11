@@ -7,10 +7,7 @@ compiler/executor path. It is not a headless substitute for the demo.
 
 from __future__ import annotations
 from openhcs.authoring.session.operations import SessionOperation
-from openhcs.authoring.session.operations.datasets import (
-    ShowDatasetImages,
-    ShowLiveResults,
-)
+from openhcs.authoring.session.operations.datasets import ShowDatasetImages, ShowLiveResults
 
 import argparse
 import fcntl
@@ -971,7 +968,9 @@ def managed_window_action_target(
     actions = first_payload(response, UiListActionsCapability.name).get("actions")
     if not isinstance(actions, list):
         raise RehearsalFailure("Managed-window action catalog is unavailable.")
-    summaries = (dataclass_from_mapping(UiActionSummary, row) for row in actions)
+    summaries = (
+        dataclass_from_mapping(UiActionSummary, row) for row in actions
+    )
     matches = [
         row
         for row in summaries
@@ -1102,7 +1101,8 @@ def exact_config_document_source(
     if not isinstance(documents, list):
         raise RehearsalFailure("Code-document catalog is unavailable.")
     summaries = (
-        dataclass_from_mapping(UiCodeDocumentSummary, row) for row in documents
+        dataclass_from_mapping(UiCodeDocumentSummary, row)
+        for row in documents
     )
     matches = [
         document
@@ -2745,7 +2745,8 @@ def visible_window_ids(ctx: RunContext, *, label: str) -> frozenset[str]:
 
 def window_ids_from_catalog(windows: list[Any]) -> frozenset[str]:
     return frozenset(
-        dataclass_from_mapping(UiWindowSummary, window).window_id for window in windows
+        dataclass_from_mapping(UiWindowSummary, window).window_id
+        for window in windows
     )
 
 
@@ -2765,7 +2766,9 @@ def plate_action_summary(
     actions = first_payload(response, UiListActionsCapability.name).get("actions")
     if not isinstance(actions, list):
         raise RehearsalFailure("PlateManager action catalog is unavailable.")
-    summaries = (dataclass_from_mapping(UiActionSummary, row) for row in actions)
+    summaries = (
+        dataclass_from_mapping(UiActionSummary, row) for row in actions
+    )
     matches = [
         row
         for row in summaries
@@ -2777,15 +2780,11 @@ def plate_action_summary(
             f"Expected one exact PlateManager action {action.operation_id!r}, got {len(matches)}."
         )
     if not matches[0].enabled:
-        raise RehearsalFailure(
-            f"PlateManager action {action.operation_id!r} is disabled."
-        )
+        raise RehearsalFailure(f"PlateManager action {action.operation_id!r} is disabled.")
     return matches[0]
 
 
-def invoke_plate_action(
-    ctx: RunContext, action: type[SessionOperation]
-) -> dict[str, Any]:
+def invoke_plate_action(ctx: RunContext, action: type[SessionOperation]) -> dict[str, Any]:
     summary = plate_action_summary(ctx, action)
     response = command_json(
         ctx,
@@ -2863,13 +2862,9 @@ def invoke_action_created_window(
     *,
     phase: str,
 ) -> str:
-    before = visible_window_ids(
-        ctx, label=f"{phase}_{action.operation_id}_windows_before"
-    )
+    before = visible_window_ids(ctx, label=f"{phase}_{action.operation_id}_windows_before")
     invoke_plate_action(ctx, action)
-    after = visible_window_ids(
-        ctx, label=f"{phase}_{action.operation_id}_windows_after"
-    )
+    after = visible_window_ids(ctx, label=f"{phase}_{action.operation_id}_windows_after")
     created = after - before
     if len(created) != 1:
         raise RehearsalFailure(
@@ -4338,9 +4333,7 @@ def run_one(
             ctx,
             BASELINE_SOURCE_BINDING,
         )
-        baseline_init = selected_workflow(
-            ctx, "initialize_datasets", args.workflow_timeout
-        )
+        baseline_init = selected_workflow(ctx, "initialize_datasets", args.workflow_timeout)
         baseline_metadata = canonical_component_metadata(
             ctx,
             phase="baseline",
@@ -4351,9 +4344,7 @@ def run_one(
             ctx,
             EDITED_SOURCE_BINDING,
         )
-        edited_init = selected_workflow(
-            ctx, "initialize_datasets", args.workflow_timeout
-        )
+        edited_init = selected_workflow(ctx, "initialize_datasets", args.workflow_timeout)
         edited_metadata = canonical_component_metadata(
             ctx,
             phase="edited",
@@ -4369,9 +4360,7 @@ def run_one(
             ctx,
             REVERTED_SOURCE_BINDING,
         )
-        reverted_init = selected_workflow(
-            ctx, "initialize_datasets", args.workflow_timeout
-        )
+        reverted_init = selected_workflow(ctx, "initialize_datasets", args.workflow_timeout)
         reverted_metadata = canonical_component_metadata(
             ctx,
             phase="reverted",

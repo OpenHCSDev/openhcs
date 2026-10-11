@@ -96,11 +96,9 @@ def test_main_window_loads_emitted_synthetic_pipeline_document(
         main_window = _MainWindowHarness(session)
         changed = []
         session.subscribe(
-            lambda record: (
-                changed.append(record.event.scope_id)
-                if isinstance(record.event, PipelineChanged)
-                else None
-            )
+            lambda record: changed.append(record.event.scope_id)
+            if isinstance(record.event, PipelineChanged)
+            else None
         )
 
         OpenHCSMainWindow._on_synthetic_plate_generated(
@@ -111,9 +109,7 @@ def test_main_window_loads_emitted_synthetic_pipeline_document(
         assert main_window.plate_manager_shown == 1
         assert main_window.pipeline_editor_shown == 1
         assert session.current_scope_id == scope_id
-        assert (
-            len(session.pipeline_steps(scope_id)) == len(document.pipeline_steps) == 8
-        )
+        assert len(session.pipeline_steps(scope_id)) == len(document.pipeline_steps) == 8
         assert [step.name for step in session.pipeline_steps(scope_id)] == [
             step.name for step in document.pipeline_steps
         ]

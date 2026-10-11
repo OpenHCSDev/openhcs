@@ -42,9 +42,7 @@ def test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity()
         context.bind_execution_runtime(lane)
         assert context.execution_runtime is lane
         assert lane.worker_assignments is assignments.worker_assignments
-        assert lane.owned_partition_values == tuple(
-            assignments.worker_assignments[slot]
-        )
+        assert lane.owned_partition_values == tuple(assignments.worker_assignments[slot])
         provider = StreamExecutionAxisDomainProvider.build_for_component(
             context=context,
             component=AxisFamily.active().partition_axis().name,
@@ -52,7 +50,9 @@ def test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity()
         )
         domains.append(provider.domain_metadata_items())
     assert domains[0] == domains[1]
-    assert {item[AxisFamily.active().partition_axis().name] for item in domains[0]} == {
+    assert {
+        item[AxisFamily.active().partition_axis().name] for item in domains[0]
+    } == {
         "R02C05",
         "R04C04",
         "R04C02",
@@ -215,21 +215,17 @@ def test_retained_stream_domain_includes_exact_planes_not_scalar_address(compone
     )
     scalar = SourceImageIdentity(component_metadata={"well": "A01"})
     observations = StreamSourceComponentMetadataItems.from_image_metadata(
-        metadata,
-        fallback_source_identity=scalar,
+        metadata, fallback_source_identity=scalar,
     )
     assert observations.complete_component_order(("well", component, "timepoint")) == (
-        "well",
-        component,
+        "well", component,
     )
     assert observations.domain_metadata_items(("well", component)) == (
-        {"well": "A01", component: 3},
-        {"well": "A01", component: 1},
+        {"well": "A01", component: 3}, {"well": "A01", component: 1},
     )
     fields = StreamImagePayloadMetadataProjector.item_fields(metadata, (component,))
     route_metadata = StreamViewerComponentMetadataProjector.for_item_fields(
-        ("well", component),
-        fields,
+        ("well", component), fields,
     ).indexed_source_metadata((scalar.component_metadata,))
     # Two plane observations still describe ONE streamed image/route address.
     assert route_metadata.metadata_by_index == ({"well": "A01"},)
@@ -237,12 +233,10 @@ def test_retained_stream_domain_includes_exact_planes_not_scalar_address(compone
 
 def test_collapsed_contributors_do_not_restore_a_stream_pixel_axis():
     metadata = _plane_metadata(
-        RuntimePlaneAxis.RUNTIME_SLICE,
-        ({"site": "3"}, {"site": "1"}),
+        RuntimePlaneAxis.RUNTIME_SLICE, ({"site": "3"}, {"site": "1"}),
     ).collapse_leading_plane_axis()
     observations = StreamSourceComponentMetadataItems.from_image_metadata(
-        metadata,
-        fallback_source_identity=SourceImageIdentity(
+        metadata, fallback_source_identity=SourceImageIdentity(
             component_metadata={"well": "A01"},
         ),
     )

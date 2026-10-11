@@ -56,9 +56,7 @@ def test_no_frame_failure_reaches_original_gateway_before_bound_and_cannot_captu
             pass
 
         def send(self, data, flags):
-            accepted = NapariAcceptedControlRequest.from_wire_mapping(
-                pickle.loads(data)
-            )
+            accepted = NapariAcceptedControlRequest.from_wire_mapping(pickle.loads(data))
             self.message = accepted.message
             server.accepted_control_requests.put(replace(accepted, response=reply))
             server.process_messages()
@@ -112,38 +110,28 @@ def test_no_frame_failure_reaches_original_gateway_before_bound_and_cannot_captu
 
 def test_snapshot_wire_offer_is_admitted_once_and_capture_uses_local_identity(tmp_path):
     from zmqruntime.messages import MessageFields
-    from openhcs.runtime.viewer_protocol import (
-        ViewerControlMessageRequest,
-        ViewerRuntimeEndpoint,
-    )
+    from openhcs.runtime.viewer_protocol import ViewerControlMessageRequest, ViewerRuntimeEndpoint
     from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
     original = ViewerWindowSnapshotRequest.from_fields(
-        connection=ExecutionConnectionSpec(port=5584),
-        output_dir_path=str(tmp_path),
+        connection=ExecutionConnectionSpec(port=5584), output_dir_path=str(tmp_path),
     ).start_operation()
     envelope = ViewerControlMessageRequest(
         endpoint=ViewerRuntimeEndpoint(
             transport=original.connection.transport_endpoint(OPENHCS_ZMQ_CONFIG),
             config=OPENHCS_ZMQ_CONFIG,
         ),
-        message_type="screenshot",
-        payload=original,
+        message_type="screenshot", payload=original,
         operation_deadline=original.operation_deadline,
     )
     wire = pickle.loads(pickle.dumps(envelope.to_wire_mapping()))
     assert wire["payload"].operation_deadline is None
-    assert (
-        0 < wire[MessageFields.OBSERVATION_BUDGET_SECONDS] <= original.timeout_ms / 1000
-    )
+    assert 0 < wire[MessageFields.OBSERVATION_BUDGET_SECONDS] <= original.timeout_ms / 1000
     admitted_at = time.monotonic()
     accepted = NapariAcceptedControlRequest.from_wire_mapping(wire)
     assert accepted.observation_deadline is not original.operation_deadline
     assert accepted.observation_deadline.expires_at >= admitted_at
-    assert (
-        accepted.message["payload"].snapshot_operation_deadline()
-        is accepted.observation_deadline
-    )
+    assert accepted.message["payload"].snapshot_operation_deadline() is accepted.observation_deadline
     assert MessageFields.OBSERVATION_BUDGET_SECONDS not in accepted.message
     # Qt/action consumers receive an admitted object, not a reusable duration.
     with pytest.raises(KeyError):

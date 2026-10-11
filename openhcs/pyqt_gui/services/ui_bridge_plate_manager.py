@@ -116,7 +116,6 @@ PLATE_MANAGER_CODE_DOCUMENT_ID = (
     PlateManagerOrchestratorCodeDocumentIdentity.require_value()
 )
 
-
 class PlateManagerBridgeProviderSet(UiBridgeProviderSetABC):
     """Register all PlateManager surfaces with a UI bridge registry."""
 

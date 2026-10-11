@@ -250,11 +250,7 @@ class SourceImageProvenancePlane(ABC, metaclass=AutoRegisterMeta):
             raise ValueError(f"Unknown provenance plane fields: {sorted(unknown)!r}.")
         kind = values.get(
             "identity_kind",
-            (
-                RuntimeSourceImageProvenancePlane.identity_kind
-                if identities is None
-                else None
-            ),
+            RuntimeSourceImageProvenancePlane.identity_kind if identities is None else None,
         )
         if not isinstance(kind, str) or kind not in cls.__registry__:
             raise ValueError(f"Unknown source-image provenance identity kind {kind!r}.")
@@ -269,9 +265,7 @@ class SourceImageProvenancePlane(ABC, metaclass=AutoRegisterMeta):
             raise TypeError("Source provenance contributors must be a sequence.")
         if identities is None:
             facts = {
-                key: values[key]
-                for key in ("path", "component_metadata")
-                if key in values
+                key: values[key] for key in ("path", "component_metadata") if key in values
             }
         else:
             index = values.get("identity")
@@ -554,14 +548,11 @@ class SourceImageProvenancePlanes:
         else:
             identities = None
             planes = values
-        if not isinstance(planes, Sequence) or isinstance(
-            planes, (str, bytes, bytearray)
-        ):
+        if not isinstance(planes, Sequence) or isinstance(planes, (str, bytes, bytearray)):
             raise TypeError("Source provenance planes must be a sequence.")
         return cls(
             tuple(
-                SourceImageProvenancePlane.from_mapping(item, identities)
-                for item in planes
+                SourceImageProvenancePlane.from_mapping(item, identities) for item in planes
             )
         )
 
@@ -1088,15 +1079,11 @@ class SourceImageProvenance:
             ):
                 continue
             values = frozenset(
-                value
-                for values in contributor_components
-                for value in values[component]
+                value for values in contributor_components for value in values[component]
             )
             if len(values) > 1:
                 reduced.add(component.name)
-        return tuple(
-            component for component in component_order if component not in reduced
-        )
+        return tuple(component for component in component_order if component not in reduced)
 
     def image_set_identities(
         self,
@@ -1121,9 +1108,11 @@ class SourceImageProvenance:
     ) -> tuple[frozenset[SourceImageSetIdentity], ...]:
         """Return one image-set identity entry for every runtime source plane."""
         return tuple(
-            self.source_image_provenance_planes.plane(index)
-            .source_identity.with_missing_from(self.source_identity)
-            .image_set_identities(policy)
+            self.source_image_provenance_planes.plane(
+                index
+            ).source_identity.with_missing_from(
+                self.source_identity
+            ).image_set_identities(policy)
             for index in range(self.source_plane_count)
         )
 

@@ -26,9 +26,7 @@ from openhcs.processing.backends.experimental_analysis.layout_rows import (
     ExperimentalAnalysisScope,
     ExperimentalLayoutRowRole,
 )
-from openhcs.processing.backends.experimental_analysis.result_formats import (
-    ExperimentalResultFormatStrategy,
-)
+from openhcs.processing.backends.experimental_analysis.result_formats import ExperimentalResultFormatStrategy
 
 
 @dataclass(frozen=True, slots=True)

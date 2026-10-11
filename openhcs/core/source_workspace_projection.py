@@ -33,10 +33,7 @@ from openhcs.core.source_matching import (
     source_metadata_values_equal,
 )
 from openhcs.core.source_path_identity import source_path_identity_key
-from openhcs.core.source_projection import (
-    SourceProjection,
-    SourceProjectionMetadataSerializer,
-)
+from openhcs.core.source_projection import SourceProjection, SourceProjectionMetadataSerializer
 from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataPayload,
     OpenHCSMetadataSubdirectories,
@@ -443,20 +440,17 @@ class VirtualWorkspaceSourceProjection:
                     f"Workspace projection for {path!r} does not match compiled "
                     f"source artifact {binding.input_spec().ref()!r}."
                 )
-            projected_payloads.append(
-                binding.apply_loaded_payload(
-                    self.project_payload(lookup, payload),
-                    ImagePayloadSourceMetadataContext(
-                        SourceImageIdentity(
-                            self.logical_path_for(lookup),
-                            self.source_metadata_for(lookup),
-                        ),
-                        projection.ref.backend,
-                        filemanager,
-                        projection.ref.backend_address,
+            projected_payloads.append(binding.apply_loaded_payload(
+                self.project_payload(lookup, payload),
+                ImagePayloadSourceMetadataContext(
+                    SourceImageIdentity(
+                        self.logical_path_for(lookup), self.source_metadata_for(lookup),
                     ),
-                )
-            )
+                    projection.ref.backend,
+                    filemanager,
+                    projection.ref.backend_address,
+                ),
+            ))
         return tuple(projected_payloads)
 
     def validate_runtime_metadata_projection(
@@ -531,21 +525,15 @@ class VirtualWorkspaceSourceProjection:
 
     def component_values(self, component) -> tuple[str, ...]:
         """Derive the execution component domain from admitted source metadata."""
-        return tuple(
-            dict.fromkeys(
-                value
-                for path in self.relative_virtual_paths()
-                for value in source_component_metadata_values(
-                    self.source_metadata_for(
-                        VirtualWorkspacePathLookup.from_paths(
-                            path, self._loadable_virtual_path(path)
-                        )
-                    )
-                    or {},
-                    component,
-                )
+        return tuple(dict.fromkeys(
+            value
+            for path in self.relative_virtual_paths()
+            for value in source_component_metadata_values(
+                self.source_metadata_for(VirtualWorkspacePathLookup.from_paths(
+                    path, self._loadable_virtual_path(path)
+                )) or {}, component,
             )
-        )
+        ))
 
     def filtered_by_axis(
         self,
@@ -574,16 +562,14 @@ class VirtualWorkspaceSourceProjection:
                 )
             )
             values = (
-                ()
-                if metadata is None
+                () if metadata is None
                 else source_component_metadata_values(
                     metadata, AxisFamily.active().partition_axis()
                 )
             )
             selected_axes = (
                 tuple(dict.fromkeys(value for value in values if value in source_refs))
-                if values
-                else tuple(source_refs)
+                if values else tuple(source_refs)
             )
             if not selected_axes:
                 continue
@@ -603,19 +589,17 @@ class VirtualWorkspaceSourceProjection:
                     source_projections[axis_id][virtual_path] = projection
                 source_metadata[axis_id].update(metadata_records)
 
-        return MappingProxyType(
-            {
-                axis_id: VirtualWorkspaceSourceProjection(
-                    source_refs_by_virtual_path=MappingProxyType(refs),
-                    source_metadata_by_path=MappingProxyType(source_metadata[axis_id]),
-                    source_projections_by_virtual_path=MappingProxyType(
-                        source_projections[axis_id]
-                    ),
-                    workspace_root=self.workspace_root,
-                )
-                for axis_id, refs in source_refs.items()
-            }
-        )
+        return MappingProxyType({
+            axis_id: VirtualWorkspaceSourceProjection(
+                source_refs_by_virtual_path=MappingProxyType(refs),
+                source_metadata_by_path=MappingProxyType(source_metadata[axis_id]),
+                source_projections_by_virtual_path=MappingProxyType(
+                    source_projections[axis_id]
+                ),
+                workspace_root=self.workspace_root,
+            )
+            for axis_id, refs in source_refs.items()
+        })
 
     def _path_belongs_to_axis(
         self,
@@ -684,7 +668,9 @@ class VirtualWorkspaceImagePayloadProjection:
         metadata = metadata.replace_fields(
             source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(
                 current_metadata.source_spatial_domain,
-                image_shape_yx=current_metadata.spatial_shape_yx(payload.data),
+                image_shape_yx=current_metadata.spatial_shape_yx(
+                    payload.data
+                ),
             )
         )
         if source_metadata is not None and self.persisted_metadata is None:
@@ -718,18 +704,14 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
     metadata: OpenHCSMetadataPayload
     projection: VirtualWorkspaceSourceProjection | None
     axis_filtered_projections: dict[str, VirtualWorkspaceSourceProjection] = field(
-        default_factory=dict,
-        compare=False,
-        repr=False,
+        default_factory=dict, compare=False, repr=False,
     )
     source_accepted_entries: dict[
-        tuple[SourceFilterClause, ...],
-        VirtualWorkspaceSourceProjectionCacheEntry,
+        tuple[SourceFilterClause, ...], VirtualWorkspaceSourceProjectionCacheEntry,
     ] = field(default_factory=dict, compare=False, repr=False)
 
     def accepted_for(
-        self,
-        source_bindings: SourceBindingsConfig | None,
+        self, source_bindings: SourceBindingsConfig | None,
     ) -> VirtualWorkspaceSourceProjectionCacheEntry:
         """Bind prepared-source admission to its document and declarations."""
         if self.projection is None or source_bindings is None:
@@ -739,57 +721,46 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
             return self
         admitted = self.source_accepted_entries.get(declarations)
         if admitted is None:
-            from openhcs.core.source_binding_workspace import (
-                SourceBindingWorkspaceProjector,
-            )
+            from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 
             admitted = VirtualWorkspaceSourceProjectionCacheEntry(
                 self.metadata,
-                SourceBindingWorkspaceProjector(
-                    source_bindings
-                ).accept_prepared_projection(self.projection),
+                SourceBindingWorkspaceProjector(source_bindings).accept_prepared_projection(
+                    self.projection
+                ),
             )
             self.source_accepted_entries[declarations] = admitted
         return admitted
 
     def entry_for_projection(
-        self,
-        projection: VirtualWorkspaceSourceProjection,
+        self, projection: VirtualWorkspaceSourceProjection,
     ) -> VirtualWorkspaceSourceProjectionCacheEntry | None:
         """Recognize only projections retained by this admitted document."""
         if self.projection is projection:
             return self
-        return next(
-            (
-                entry
-                for entry in self.source_accepted_entries.values()
-                if entry.projection is projection
-            ),
-            None,
-        )
+        return next((
+            entry for entry in self.source_accepted_entries.values()
+            if entry.projection is projection
+        ), None)
 
     def partition_by_axes(
-        self,
-        axis_ids: Sequence[str],
+        self, axis_ids: Sequence[str],
     ) -> Mapping[str, VirtualWorkspaceSourceProjection]:
         """Derive missing axis views together from this retained document."""
         if self.projection is None:
-            raise ValueError(
-                "Axis views require an admitted source workspace projection."
-            )
+            raise ValueError("Axis views require an admitted source workspace projection.")
         selected = tuple(dict.fromkeys(axis_ids))
         missing = tuple(
-            axis_id
-            for axis_id in selected
+            axis_id for axis_id in selected
             if axis_id not in self.axis_filtered_projections
         )
         if missing:
             self.axis_filtered_projections.update(
                 self.projection.partition_by_axes(missing)
             )
-        return MappingProxyType(
-            {axis_id: self.axis_filtered_projections[axis_id] for axis_id in selected}
-        )
+        return MappingProxyType({
+            axis_id: self.axis_filtered_projections[axis_id] for axis_id in selected
+        })
 
 
 @dataclass(slots=True)
@@ -811,11 +782,9 @@ class VirtualWorkspaceSourceProjectionCache:
         dataset_key = str(dataset_root)
         cached = self.projections_by_dataset_root.get(dataset_key)
         if cached is None or cached.metadata is not metadata:
-            projection = (
-                VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
-                    dataset_root,
-                    metadata,
-                )
+            projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
+                dataset_root,
+                metadata,
             )
             cached = VirtualWorkspaceSourceProjectionCacheEntry(metadata, projection)
             self.projections_by_dataset_root[dataset_key] = cached
@@ -846,8 +815,7 @@ class VirtualWorkspaceSourceProjectionCache:
         """Share admitted axis views between compilation and runtime queries."""
         document_entry = self.projections_by_dataset_root.get(projection.workspace_root)
         cached = (
-            None
-            if document_entry is None
+            None if document_entry is None
             else document_entry.entry_for_projection(projection)
         )
         if cached is None:
@@ -872,10 +840,7 @@ class WorkspaceSourceProjections:
     cache: VirtualWorkspaceSourceProjectionCache | None = None
     source_bindings: SourceBindingsConfig | None = None
     _workspace_metadata_handler: "OpenHCSMetadataHandler | None" = field(
-        default=None,
-        init=False,
-        compare=False,
-        repr=False,
+        default=None, init=False, compare=False, repr=False,
     )
 
     @classmethod
@@ -922,10 +887,7 @@ class WorkspaceSourceProjections:
             and self.filemanager is context.filemanager
         ):
             return False
-        return (
-            self.source_bindings
-            == context.microscope_handler.source_bindings_still_required()
-        )
+        return self.source_bindings == context.microscope_handler.source_bindings_still_required()
 
     def metadata_handlers(self) -> tuple["MetadataHandler", ...]:
         """Observe workspace eligibility live while retaining admitted providers."""
@@ -970,32 +932,24 @@ class WorkspaceSourceProjections:
         return self.cache.filtered_by_axis(projection, axis_id=axis_id)
 
     def projection_if_available(
-        self,
-        *,
-        axis_id: str | None = None,
+        self, *, axis_id: str | None = None,
     ) -> VirtualWorkspaceSourceProjection | None:
         workspace_root = self.metadata_handler.source_workspace_root(self.dataset_root)
         for metadata in self.metadata_documents():
             if self.cache is None:
-                projection = (
-                    VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
-                        workspace_root,
-                        metadata,
-                    )
+                projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
+                    workspace_root,
+                    metadata,
                 )
                 if projection is not None and self.source_bindings is not None:
-                    from openhcs.core.source_binding_workspace import (
-                        SourceBindingWorkspaceProjector,
-                    )
+                    from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 
                     projection = SourceBindingWorkspaceProjector(
                         self.source_bindings
                     ).accept_prepared_projection(projection)
             else:
                 projection = self.cache.projection_for(
-                    workspace_root,
-                    metadata,
-                    source_bindings=self.source_bindings,
+                    workspace_root, metadata, source_bindings=self.source_bindings,
                 )
             if projection is None:
                 continue
@@ -1003,9 +957,7 @@ class WorkspaceSourceProjections:
         return None
 
     def projection_or_empty(
-        self,
-        *,
-        axis_id: str | None = None,
+        self, *, axis_id: str | None = None,
     ) -> VirtualWorkspaceSourceProjection:
         projection = self.projection_if_available(axis_id=axis_id)
         if projection is not None:
@@ -1014,7 +966,9 @@ class WorkspaceSourceProjections:
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeWorkspaceSourceProjections(WorkspaceSourceProjections):
+class RuntimeWorkspaceSourceProjections(
+    WorkspaceSourceProjections
+):
     """Read completed same-plate outputs from their execution observation owner."""
 
     context: "ProcessingContext" = field(kw_only=True, compare=False, repr=False)
@@ -1025,9 +979,7 @@ class RuntimeWorkspaceSourceProjections(WorkspaceSourceProjections):
         ).is_bound_to_context(context)
 
     def projection_if_available(
-        self,
-        *,
-        axis_id: str | None = None,
+        self, *, axis_id: str | None = None,
     ) -> VirtualWorkspaceSourceProjection | None:
         projection = super(
             RuntimeWorkspaceSourceProjections, self
@@ -1043,8 +995,7 @@ class RuntimeWorkspaceSourceProjections(WorkspaceSourceProjections):
         )
         if not produced_entries:
             return (
-                None
-                if projection is None
+                None if projection is None
                 else self._projection_for_axis(projection, axis_id=axis_id)
             )
         builder = VirtualWorkspaceSourceProjectionBuilder(self.dataset_root)
@@ -1058,9 +1009,7 @@ class RuntimeWorkspaceSourceProjections(WorkspaceSourceProjections):
                 )
             )
             builder.ingest_source_metadata(
-                VirtualWorkspaceSourceMetadataEntries(
-                    projection.source_metadata_by_path
-                )
+                VirtualWorkspaceSourceMetadataEntries(projection.source_metadata_by_path)
             )
         for entries in produced_entries:
             fields = SourceProjectionMetadataSerializer.workspace_fields(

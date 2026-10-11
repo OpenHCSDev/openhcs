@@ -231,9 +231,7 @@ class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
         from openhcs.constants.constants import OrchestratorState
         from openhcs.core.orchestrator import PipelineOrchestrator
 
-        orchestrator = ObjectStateRegistry.get_object(
-            plate_manager.session.current_scope_id
-        )
+        orchestrator = ObjectStateRegistry.get_object(plate_manager.session.current_scope_id)
         if not isinstance(orchestrator, PipelineOrchestrator):
             return None
         if orchestrator.state is OrchestratorState.CREATED:
@@ -281,6 +279,7 @@ class OpenHCSComponentSelectionProvider(ComponentSelectionProviderABC):
             group_by=group_by,
             group_label=self.grouping_label(group_by),
             metadata_lookup=self.get_component_display_name,
+
             parent=parent,
         )
 

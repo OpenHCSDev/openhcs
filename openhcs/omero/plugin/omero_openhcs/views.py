@@ -70,15 +70,11 @@ class SimpleZMQClient:
 
     def get_server_info(self):
         """Get detailed server info including workers."""
-        return self._send_request(
-            ControlRequestHeader(ControlMessageType.PING).to_dict()
-        )
+        return self._send_request(ControlRequestHeader(ControlMessageType.PING).to_dict())
 
     def get_status(self, execution_id=None):
         """Get execution status."""
-        return self._send_request(
-            StatusRequest(execution_id=execution_id or None).to_dict()
-        )
+        return self._send_request(StatusRequest(execution_id=execution_id or None).to_dict())
 
     def execute_pipeline(self, plate_id, pipeline_code, config_code):
         """Execute pipeline on server."""

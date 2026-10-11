@@ -642,6 +642,4 @@ def create_weight_mask(shape: tuple, margin_ratio: float = 0.1) -> "cle.Array":
     Returns:
         2D pyclesperanto Array of shape (Y, X)
     """
-    return create_linear_weight_mask(
-        *operations.weight_mask_extent(shape), margin_ratio
-    )
+    return create_linear_weight_mask(*operations.weight_mask_extent(shape), margin_ratio)

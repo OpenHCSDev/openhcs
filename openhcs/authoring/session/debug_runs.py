@@ -134,9 +134,7 @@ class DebugRuns:
             )
         )
         self._session.publish(
-            StatusReported(
-                f"Loaded runtime inspection for session {debug_session_id[:8]}"
-            )
+            StatusReported(f"Loaded runtime inspection for session {debug_session_id[:8]}")
         )
         return view_model
 

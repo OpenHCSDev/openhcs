@@ -87,9 +87,9 @@ def test_real_binding_keeps_discovery_read_responsive_during_controlled_cold_io(
                 built.call_tool("openhcs_list_capabilities", {}), 0.5
             )
             assert result is not None
-            assert (
-                not pending.done()
-            ), "Discovery must finish while inspection is still held"
+            assert not pending.done(), (
+                "Discovery must finish while inspection is still held"
+            )
         finally:
             release.set()
             await asyncio.wait_for(pending, 1)

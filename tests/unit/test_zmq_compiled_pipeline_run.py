@@ -57,11 +57,7 @@ class FakeExecutionClient:
             "execution": {
                 "execution_id": execution_id,
                 "subject_id": "/tmp/plate",
-                "status": (
-                    self.compile_status
-                    if execution_id == "compile-1"
-                    else self.execute_status
-                ),
+                "status": self.compile_status if execution_id == "compile-1" else self.execute_status,
                 "start_time": 10.0,
                 "end_time": 12.0,
             },
@@ -110,9 +106,7 @@ def test_compiled_pipeline_run_uses_one_document_and_source_owned_phases():
         "wait:execute-1",
     ]
     assert client.execution_submission.pipeline_code == result.request.pipeline_code
-    assert (
-        client.execution_submission.compile_control.compile_artifact_id == "compile-1"
-    )
+    assert client.execution_submission.compile_control.compile_artifact_id == "compile-1"
     assert observed_phases == [
         (event, phase) for phase in ZMQPipelineRunPhase for event in ("start", "end")
     ]
@@ -123,9 +117,7 @@ def test_compiled_pipeline_run_owns_completion_result_projection():
         def wait_for_completion(self, execution_id, poll_interval=0.5):
             response = super().wait_for_completion(execution_id, poll_interval)
             if execution_id == "execute-1":
-                response["execution"]["results_summary"] = {
-                    "output_dataset_root": "/output/plate"
-                }
+                response["execution"]["results_summary"] = {"output_dataset_root": "/output/plate"}
             return response
 
     run = run_compiled_pipeline(ClientWithResults(), _submission())
@@ -139,9 +131,7 @@ def test_compiled_pipeline_run_accepts_legacy_result_summary_field():
         def wait_for_completion(self, execution_id, poll_interval=0.5):
             response = super().wait_for_completion(execution_id, poll_interval)
             if execution_id == "execute-1":
-                response["execution"]["results_summary"] = {
-                    "output_dataset_root": "/legacy/plate"
-                }
+                response["execution"]["results_summary"] = {"output_dataset_root": "/legacy/plate"}
             return response
 
     run = run_compiled_pipeline(ClientWithLegacyResults(), _submission())
@@ -239,9 +229,7 @@ def test_compiled_pipeline_run_does_not_report_failed_execution_as_complete():
     assert client.events[-1] == "wait:execute-1"
 
 
-def test_compiled_run_retains_its_admitted_wire_and_standalone_request_stays_fresh(
-    monkeypatch,
-):
+def test_compiled_run_retains_its_admitted_wire_and_standalone_request_stays_fresh(monkeypatch):
     submission = _submission()
     rendered = []
     original_render = PipelineDocumentCodec.render
@@ -268,9 +256,7 @@ def test_compiled_run_retains_its_admitted_wire_and_standalone_request_stays_fre
 
     assert len(rendered) == 1
     assert run.request.pipeline_code == client.compile_submission.pipeline_code
-    assert (
-        run.request.global_config_code == client.compile_submission.global_config_code
-    )
+    assert run.request.global_config_code == client.compile_submission.global_config_code
     fresh = ZMQExecutionRequestBuilder.from_task(submission)
     assert fresh.pipeline_code != run.request.pipeline_code
     assert fresh.global_config_code != run.request.global_config_code

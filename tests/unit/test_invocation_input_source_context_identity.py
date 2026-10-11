@@ -94,10 +94,7 @@ def test_compiled_input_edges_own_exact_main_flow_membership() -> None:
 
     assert tuple(edge.spec for edge in edges) == (plate_template, combined_image)
     assert tuple(edge.storage_plan for edge in edges) == (None, None)
-    assert tuple((edge.main_flow_projection is not None) for edge in edges) == (
-        False,
-        True,
-    )
+    assert tuple((edge.main_flow_projection is not None) for edge in edges) == (False, True)
     assert tuple(edge.main_flow_projection for edge in edges) == (
         None,
         MainFlowInputProjection.COMPLETE_PAYLOAD,
@@ -243,8 +240,12 @@ def test_named_source_binding_owns_unstored_input_over_main_flow_projection(
 
     np.testing.assert_array_equal(source_request.data, 7.0)
     np.testing.assert_array_equal(main_flow_request.data, 11.0)
-    assert source_request.metadata.source_image_names == (plate_template.name,)
-    assert main_flow_request.metadata.source_image_names == (combined_image.name,)
+    assert source_request.metadata.source_image_names == (
+        plate_template.name,
+    )
+    assert main_flow_request.metadata.source_image_names == (
+        combined_image.name,
+    )
 
 
 def test_storage_backed_input_keeps_exact_runtime_authority() -> None:
@@ -293,7 +294,9 @@ def test_storage_backed_input_keeps_exact_runtime_authority() -> None:
     runtime_request = request.artifact_value(edge)
 
     np.testing.assert_array_equal(runtime_request.data, 13.0)
-    assert runtime_request.metadata.source_image_names == (combined_image.name,)
+    assert runtime_request.metadata.source_image_names == (
+        combined_image.name,
+    )
 
 
 def test_compiled_producer_edge_overrides_matching_source_binding() -> None:
@@ -345,4 +348,6 @@ def test_compiled_producer_edge_overrides_matching_source_binding() -> None:
     runtime_request = request.artifact_value(edge)
 
     np.testing.assert_array_equal(runtime_request.data, 19.0)
-    assert runtime_request.metadata.source_image_names == (combined_image.name,)
+    assert runtime_request.metadata.source_image_names == (
+        combined_image.name,
+    )

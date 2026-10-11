@@ -129,10 +129,7 @@ def test_endpoint_and_application_status_have_one_visual_owner(
 
         assert window._status_message_label.text() == application_message
         assert window._zmq_status_indicator._label.text() == "ZMQ: Connected"
-        assert window.button_refreshes == [
-            "plate_manager_widget",
-            "pipeline_editor_widget",
-        ]
+        assert window.button_refreshes == ["plate_manager_widget", "pipeline_editor_widget"]
         assert (
             window._zmq_status_indicator.toolTip()
             == "Execution endpoint 7777: Connected"

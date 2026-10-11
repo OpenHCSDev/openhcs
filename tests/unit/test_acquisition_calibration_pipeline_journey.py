@@ -28,7 +28,9 @@ def test_htd_spacing_survives_gaussian_compile_execute_and_persist(tmp_path):
     plate = tmp_path / "plate"
     image_dir = plate / "TimePoint_1"
     image_dir.mkdir(parents=True)
-    (plate / "plate.HTD").write_text('"XSites", 1\n"YSites", 1\n"PixelSizeUM", 0.65')
+    (plate / "plate.HTD").write_text(
+        '"XSites", 1\n"YSites", 1\n"PixelSizeUM", 0.65'
+    )
     pixels = np.random.default_rng(31).integers(0, 1000, (96, 96), dtype=np.uint16)
     filename = "A01_s001_w1_z001_t001.tif"
     tifffile.imwrite(image_dir / filename, pixels)

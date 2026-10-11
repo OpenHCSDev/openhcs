@@ -392,7 +392,8 @@ class SelectedPlateService:
         matched_rows = tuple(
             row
             for row in rows_value
-            if isinstance(row, Mapping) and row.get("scope_id") == selected_scope_id
+            if isinstance(row, Mapping)
+            and row.get("scope_id") == selected_scope_id
         )
         if len(matched_rows) != 1:
             return None, AgentError(

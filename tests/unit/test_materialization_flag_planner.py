@@ -249,9 +249,7 @@ def test_auto_backend_admission_is_shared_and_new_submission_is_fresh():
 
 
 def test_unused_materialization_auto_does_not_query_source():
-    config = _pipeline_config(
-        path_planning_config=PathPlanningConfig(partition_filter=0)
-    )
+    config = _pipeline_config(path_planning_config=PathPlanningConfig(partition_filter=0))
     config.vfs_config = VFSConfig(
         read_backend=Backend.DISK,
         materialization_backend=MaterializationBackend.AUTO,

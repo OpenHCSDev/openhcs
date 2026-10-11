@@ -72,7 +72,6 @@ from openhcs.core.runtime_relationships import (
     ObjectInstanceKey,
 )
 
-
 @lru_cache(maxsize=64)
 def measurement_identity_fields(
     contract: RuntimeMeasurementRowIdentityContract,
@@ -163,9 +162,7 @@ def measurement_row_sample_identity_key(
         for field_name, value in row.items()
         if value is not None and str(value).strip()
     )
-    selected_fields = contract.selected_sample_identity_fields(
-        normalized_present_fields
-    )
+    selected_fields = contract.selected_sample_identity_fields(normalized_present_fields)
     identity_values: list[tuple[str, object]] = []
     for field_name, value in row.items():
         normalized_field_name = normalize_runtime_identifier(field_name)

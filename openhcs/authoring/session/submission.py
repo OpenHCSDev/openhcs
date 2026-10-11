@@ -44,7 +44,6 @@ class SubmittedExecution:
     request: ZMQExecutionRequestBuilder
     endpoint: "PongResponse | None"
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -75,9 +74,7 @@ class ExecutionSubmission:
         execution_id = await self._submit(
             request,
             compile_artifact_id=compile_artifact_id,
-            send=lambda: client.submit_prepared_pipeline(
-                prepared, timeout_ms=timeout_ms
-            ),
+            send=lambda: client.submit_prepared_pipeline(prepared, timeout_ms=timeout_ms),
             label="execution",
         )
         if execution_id is not None:
@@ -135,9 +132,7 @@ class ExecutionSubmission:
 
         error_text = response.require_failure_text(f"{label} submission")
         logger.error("%s submission failed for %s: %s", label, scope_id, error_text)
-        session.publish(
-            ErrorReported(f"Submission failed for {scope_id}: {error_text}")
-        )
+        session.publish(ErrorReported(f"Submission failed for {scope_id}: {error_text}"))
         session.batch.mark_terminal(scope_id, TerminalExecutionStatus.FAILED)
         session.set_dataset_state(scope_id, OrchestratorState.EXEC_FAILED)
         return None

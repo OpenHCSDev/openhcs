@@ -287,7 +287,8 @@ def _declared_crop_candidates(
             for candidate in dataset.candidates
             if candidate.component_labels.get(Microscopy.Site.name)
             == selection.site_label
-            and candidate.component_labels.get(Microscopy.Channel.name) == channel_label
+            and candidate.component_labels.get(Microscopy.Channel.name)
+            == channel_label
             and candidate.declared_address is not None
             and candidate.declared_address.value_for(Microscopy.ZIndex) == "1"
             and candidate.declared_address.value_for(Microscopy.Timepoint) == "1"
@@ -475,7 +476,9 @@ def czi_brain_axon_cellbody_demo_contribution(
         output_spec: ArtifactSpec,
     ) -> StreamProducerIdentity:
         return StreamProducerIdentity.pipeline_output(
-            output_kind=(CompiledStepPlan.ARTIFACT_OUTPUT_KIND),
+            output_kind=(
+                CompiledStepPlan.ARTIFACT_OUTPUT_KIND
+            ),
             output_key=output_spec.name,
             projection_key=output_spec.name,
             step_name=step.name,

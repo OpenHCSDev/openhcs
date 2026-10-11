@@ -68,7 +68,9 @@ class SessionOperationButtons:
     def request_for(self, operation: type[SessionOperation]) -> object | None:
         if issubclass(operation, PromptedOperation):
             return self.session.renderer.prompt(operation)
-        return operation.request_for_selection(self.session, self.selection_scope_ids())
+        return operation.request_for_selection(
+            self.session, self.selection_scope_ids()
+        )
 
     def handle_button_action(self, operation_id: str) -> None:
         commit_focused_widget_edits()

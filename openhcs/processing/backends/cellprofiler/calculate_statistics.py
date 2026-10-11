@@ -419,10 +419,7 @@ def _statistics_feature_series(
     """Enumerate numeric image and averaged-object features from typed tables."""
     series_by_identity: dict[tuple[str, str], dict[int, float]] = {}
     for table in measurement_tables:
-        if table.subject.scope not in {
-            MeasurementScope.SAMPLE,
-            MeasurementScope.OBJECT,
-        }:
+        if table.subject.scope not in {MeasurementScope.SAMPLE, MeasurementScope.OBJECT}:
             continue
         semantics = ColumnarMeasurementTableSchema.from_table(table)
         object_names = (

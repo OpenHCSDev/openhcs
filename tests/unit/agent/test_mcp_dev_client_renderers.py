@@ -53,11 +53,7 @@ def sample_value(hint, depth: int):
             return tuple(sample_value(args[0], depth + 1) for _ in range(2))
         return tuple(sample_value(arg, depth + 1) for arg in args)
     if origin in (list, typing.get_origin(typing.Sequence[int])):
-        return (
-            []
-            if depth >= MAX_DEPTH
-            else [sample_value(typing.get_args(hint)[0], depth + 1)]
-        )
+        return [] if depth >= MAX_DEPTH else [sample_value(typing.get_args(hint)[0], depth + 1)]
     if origin in (dict, typing.get_origin(typing.Mapping[str, int])):
         key_type, value_type = typing.get_args(hint) or (str, str)
         if depth >= MAX_DEPTH:
@@ -76,9 +72,7 @@ def sample_value(hint, depth: int):
             return "sample"
         if is_dataclass(hint):
             return sample_dto(hint, depth + 1)
-    if isinstance(
-        hint, typing.TypeAliasType if hasattr(typing, "TypeAliasType") else ()
-    ):
+    if isinstance(hint, typing.TypeAliasType if hasattr(typing, "TypeAliasType") else ()):
         return sample_value(hint.__value__, depth)
     # Dynamic JSON that no class models: an empty object.
     return {}
@@ -129,11 +123,7 @@ def sample_dto(dto_type: type, depth: int = 0):
 def framed(payload) -> McpDevToolBatchResponse:
     return McpDevToolBatchResponse(
         server=SERVER,
-        results=(
-            McpDevToolResult(
-                tool="openhcs_test_tool", mcp_error=False, payloads=(payload,)
-            ),
-        ),
+        results=(McpDevToolResult(tool="openhcs_test_tool", mcp_error=False, payloads=(payload,)),),
     )
 
 
@@ -166,9 +156,7 @@ def test_every_renderer_presents_its_declared_dto(renderer):
 def test_every_renderer_reports_a_missing_payload_as_unavailable(renderer):
     failed = McpDevToolBatchResponse(
         server=SERVER,
-        results=(
-            McpDevToolResult(tool="openhcs_test_tool", mcp_error=True, payloads=()),
-        ),
+        results=(McpDevToolResult(tool="openhcs_test_tool", mcp_error=True, payloads=()),),
     )
 
     rendered = renderer.render(failed)
@@ -188,9 +176,7 @@ def test_base_appends_payload_warnings_and_declared_errors_once():
         schema_version="v1",
         valid=False,
         errors=(AgentError(code="bad_source", message="Source is invalid."),),
-        warnings=(
-            AgentWarning(code="slow", message="Validation was slow.", hint="wait"),
-        ),
+        warnings=(AgentWarning(code="slow", message="Validation was slow.", hint="wait"),),
     )
 
     rendered = McpDevOutputRenderer.for_output_contract(

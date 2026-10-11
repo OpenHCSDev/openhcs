@@ -551,12 +551,9 @@ def test_pilot_inventories_stream_files_without_read_bytes(
     monkeypatch.setattr(Path, "read_bytes", reject_read_bytes)
     expected = hashlib.sha256(b"microscopy pixels").hexdigest()
 
-    assert (
-        _source_input_inventory(
-            NativeCellProfilerSelectedSourceUniverse((staged / "image.tif",))
-        )[0]["sha256"]
-        == expected
-    )
+    assert _source_input_inventory(
+        NativeCellProfilerSelectedSourceUniverse((staged / "image.tif",))
+    )[0]["sha256"] == expected
     assert _output_inventory(tmp_path, frozenset({source}))[0]["sha256"] == expected
 
 

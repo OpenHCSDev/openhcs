@@ -1,5 +1,5 @@
-from tests.unit.saved_output_dialect import SAVED_OUTPUT_DIALECT
 
+from tests.unit.saved_output_dialect import SAVED_OUTPUT_DIALECT
 """Typed image sets retain physical coverage across volume/plane exports."""
 
 from dataclasses import replace
@@ -38,11 +38,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.payload_axes import PayloadAxes
 
 Z_STACK = SourceImageSetIdentityPolicy(frozenset({Microscopy.ZIndex}))
-EXACT = RuntimeEquivalencePolicy(
-    image_abs_tolerance=0,
-    image_rel_tolerance=0,
-    measurement_dialect=SAVED_OUTPUT_DIALECT,
-)
+EXACT = RuntimeEquivalencePolicy(image_abs_tolerance=0, image_rel_tolerance=0, measurement_dialect=SAVED_OUTPUT_DIALECT)
 
 
 def _write_metadata(root, projections):
@@ -77,15 +73,7 @@ def exported_volume(tmp_path):
     for plane_index, plane in enumerate(volume):
         path = candidate / f"opaque-{plane_index}.tiff"
         imageio.imwrite(path, plane)
-        address = OpenHCSPlaneAddress(
-            (
-                (Microscopy.Well, "A01"),
-                (Microscopy.Site, "1"),
-                (Microscopy.Channel, "2"),
-                (Microscopy.ZIndex, plane_index + 1),
-                (Microscopy.Timepoint, "1"),
-            )
-        )
+        address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "2"), (Microscopy.ZIndex, plane_index + 1), (Microscopy.Timepoint, "1")))
         projections.append(
             SourceArtifactProjection(
                 address=address,

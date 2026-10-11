@@ -11,9 +11,7 @@ from openhcs.agent.dto.execution import PipelineSourceArtifactPlanInspectionRequ
 from openhcs.agent.dto.plate import PlatePathInspectionRequest
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
-from openhcs.agent.services.artifact_plan_inspection_service import (
-    ArtifactPlanInspectionService,
-)
+from openhcs.agent.services.artifact_plan_inspection_service import ArtifactPlanInspectionService
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.core.config import LazyPartitionFilterConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
@@ -81,10 +79,7 @@ def test_every_registered_source_declares_its_identity_role_and_backends() -> No
 )
 @pytest.mark.parametrize("missing", (False, True))
 def test_metadata_detection_uses_each_declared_owner(
-    monkeypatch,
-    tmp_path: Path,
-    handler_type,
-    missing: bool,
+    monkeypatch, tmp_path: Path, handler_type, missing: bool,
 ) -> None:
     from polystore.exceptions import MetadataNotFoundError
 
@@ -139,16 +134,12 @@ def test_config_schema_patch_and_source_share_opera_handler_identity() -> None:
 
 
 def test_handler_factory_uses_exact_declared_identity(tmp_path: Path) -> None:
-    handler = DatasetSourceChoice.named("opera_phenix").open(
-        tmp_path, filemanager=bioformats_filemanager()
-    )
+    handler = DatasetSourceChoice.named("opera_phenix").open(tmp_path, filemanager=bioformats_filemanager())
 
     assert isinstance(handler, OperaPhenixHandler)
     assert handler.source_name == "opera_phenix"
     with pytest.raises(ValueError, match="Unknown dataset source 'OperaPhenix'"):
-        DatasetSourceChoice.named("OperaPhenix").open(
-            tmp_path, filemanager=bioformats_filemanager()
-        )
+        DatasetSourceChoice.named("OperaPhenix").open(tmp_path, filemanager=bioformats_filemanager())
 
 
 def test_source_selection_role_owns_local_availability_contract(
@@ -159,9 +150,13 @@ def test_source_selection_role_owns_local_availability_contract(
     file_path.touch()
 
     with pytest.raises(FileNotFoundError, match=str(missing_path)):
-        FormatSpecificSource.require_available_source(missing_path)
+        FormatSpecificSource.require_available_source(
+            missing_path
+        )
     with pytest.raises(NotADirectoryError, match=str(file_path)):
-        FormatSpecificSource.require_available_source(file_path)
+        FormatSpecificSource.require_available_source(
+            file_path
+        )
 
     RemoteServiceSource.require_available_source(missing_path)
 

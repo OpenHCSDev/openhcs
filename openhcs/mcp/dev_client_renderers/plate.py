@@ -188,9 +188,7 @@ class ResultPreviewPresentation:
         ):
             return "<none>"
         mean = (
-            "<none>"
-            if preview.roi_area_mean is None
-            else f"{preview.roi_area_mean:.3f}"
+            "<none>" if preview.roi_area_mean is None else f"{preview.roi_area_mean:.3f}"
         )
         return (
             f"min={McpDevOutputRenderer.text(preview.roi_area_min)},"
@@ -210,9 +208,7 @@ class ResultPreviewPresentation:
             return []
         lines = [f"  csv columns: {cls._csv_columns_text(columns)}"]
         visible_rows = rows[: cls.MAX_CSV_PREVIEW_ROWS]
-        lines.extend(
-            f"  csv row: {cls._csv_row_text(columns, row)}" for row in visible_rows
-        )
+        lines.extend(f"  csv row: {cls._csv_row_text(columns, row)}" for row in visible_rows)
         omitted_row_count = len(rows) - len(visible_rows)
         if omitted_row_count > 0:
             lines.append(
@@ -592,11 +588,9 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
             (
                 f"unknown-{axis.name}"
                 if axis.name not in counts
-                else (
-                    f"multi-{axis.name}"
-                    if counts[axis.name] > 1
-                    else f"single-{axis.name}"
-                )
+                else f"multi-{axis.name}"
+                if counts[axis.name] > 1
+                else f"single-{axis.name}"
             )
             for axis in AxisFamily.active().variable_axes()
         )

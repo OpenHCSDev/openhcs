@@ -76,9 +76,7 @@ def test_image_browser_inventory_uses_declared_virtual_workspace_address(
 
     ensure_storage_registry()
     filemanager = FileManager(dict(storage_registry))
-    handler = DatasetSourceChoice.named("imagexpress").open(
-        plate, filemanager=filemanager
-    )
+    handler = DatasetSourceChoice.named("imagexpress").open(plate, filemanager=filemanager)
     handler.initialize_workspace(plate, filemanager)
     assert (
         handler.get_primary_backend(plate, filemanager)

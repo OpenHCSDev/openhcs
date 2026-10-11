@@ -257,9 +257,7 @@ class AxisRoleModeDisplayConfig(ViewerDisplayConfigABC):
     def component_modes(self) -> dict[str, str]:
         """The slot of every axis of the active family, by axis name."""
 
-        return {
-            axis.name: self.slot_for_axis(axis) for axis in AxisFamily.active().axes
-        }
+        return {axis.name: self.slot_for_axis(axis) for axis in AxisFamily.active().axes}
 
     def display_payload_extra(self) -> dict[str, ViewerWireValue]:
         """Stream the axis declarations and this viewer's settings."""
@@ -310,9 +308,7 @@ class NapariDisplayConfig(AxisRoleModeDisplayConfig, NapariDisplaySettings):
 
 # Apply the global pipeline config decorator with ui_hidden=True
 # This config is only inherited by NapariStreamingConfig, so hide it from UI
-NapariDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(
-    NapariDisplayConfig
-)
+NapariDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(NapariDisplayConfig)
 
 
 FijiDimensionMode = FijiSlots.choice_enum("FijiDimensionMode", __name__)
@@ -341,9 +337,7 @@ class FijiDisplayConfig(AxisRoleModeDisplayConfig, FijiDisplaySettings):
 
 # Apply the global pipeline config decorator with ui_hidden=True
 # This config is only inherited by FijiStreamingConfig, so hide it from UI
-FijiDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(
-    FijiDisplayConfig
-)
+FijiDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(FijiDisplayConfig)
 
 
 @abbreviation("pfc")
@@ -359,9 +353,9 @@ class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
 
     show_preview_without_partition_filter: ClassVar[bool] = False
 
-    partition_filter: Annotated[
-        Optional[Union[List[str], str, int]], abbreviation("")
-    ] = None
+    partition_filter: Annotated[Optional[Union[List[str], str, int]], abbreviation("")] = (
+        None
+    )
     """Selection matched against the dataset's ordered partition values.
 
     Use a list for exact IDs; a string for one ID, comma-separated IDs,
@@ -371,9 +365,9 @@ class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
     mode selects all.
     """
 
-    partition_filter_mode: Annotated[
-        PartitionFilterMode, abbreviation("filter_mode")
-    ] = PartitionFilterMode.INCLUDE
+    partition_filter_mode: Annotated[PartitionFilterMode, abbreviation("filter_mode")] = (
+        PartitionFilterMode.INCLUDE
+    )
     """Apply ``partition_filter`` as the values to include or the values to exclude.
 
     Include mode rejects unknown explicit values. Exclude mode ignores unknown
@@ -628,9 +622,7 @@ class StepPartitionFilterConfig(PartitionFilterConfig):
 @abbreviation("mat")
 @global_pipeline_config(preview_label="MAT", always_viewable_fields=["sub_dir"])
 @dataclass(frozen=True)
-class StepMaterializationConfig(
-    Enableable, StepPartitionFilterConfig, PathPlanningConfig
-):
+class StepMaterializationConfig(Enableable, StepPartitionFilterConfig, PathPlanningConfig):
     """
     Configuration for persistent copies of a step's ordinary main-flow result.
 
@@ -744,6 +736,11 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
     def port(self) -> TcpPort:
         """Port for streaming communication. Each streamer type has its own default."""
         pass
+
+
+
+
+
 
     @classmethod
     @abstractmethod
@@ -890,6 +887,7 @@ class CompilationDebugConfig(AnnotatedDataclassValidationMixin, Enableable):
     No bundle is written when this path is ``None``. The pickle is diagnostic
     state for reproducing or inspecting compilation, not a normal pipeline result.
     """
+
 
 
 # Inject all accumulated fields at the end of module loading.

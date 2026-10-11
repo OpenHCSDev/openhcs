@@ -31,7 +31,9 @@ class ExecutionOutputSummary:
             self.auto_add_output_dataset,
             bool,
         ):
-            raise TypeError("auto_add_output_dataset must be a bool or None")
+            raise TypeError(
+                "auto_add_output_dataset must be a bool or None"
+            )
 
     @classmethod
     def from_results_summary(

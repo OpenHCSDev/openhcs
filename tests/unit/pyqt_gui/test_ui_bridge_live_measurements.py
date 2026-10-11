@@ -293,9 +293,7 @@ def test_live_measurement_surface_honors_plate_selection_and_populates_overview(
             "value": "1",
         }
         assert section["metrics"][1]["value"] == "3"
-        assert section["items"][0]["label"] == (
-            "Neurite Outgrowth: PerNeuronMeasurements"
-        )
+        assert section["items"][0]["label"] == ("Neurite Outgrowth: PerNeuronMeasurements")
 
         manager.selected = [manager.plates[1]]
         filtered = bridge.get_state_surface(

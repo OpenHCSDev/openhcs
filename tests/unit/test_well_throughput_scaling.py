@@ -605,15 +605,7 @@ def test_repeated_wells_keep_all_declared_projection_fields_coherent(
 ) -> None:
     parser = SourceSchemaFilenameParser()
     original = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress(
-            (
-                (Microscopy.Well, "A01"),
-                (Microscopy.Site, 1),
-                (Microscopy.Channel, 1),
-                (Microscopy.ZIndex, 1),
-                (Microscopy.Timepoint, 1),
-            )
-        ),
+        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
         ref=SourcePixelRef("disk", "/source/blue.tif"),
         source_alias="Blue",
         source_metadata={"Well": "A01", "site": "1", "channel": "1"},
@@ -667,15 +659,7 @@ def test_repeated_wells_use_manifest_source_well_scope(
     serializer = SourceProjectionMetadataSerializer(parser=parser)
     sources = tuple(
         SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(
-                (
-                    (Microscopy.Well, well),
-                    (Microscopy.Site, 1),
-                    (Microscopy.Channel, 1),
-                    (Microscopy.ZIndex, 1),
-                    (Microscopy.Timepoint, 1),
-                )
-            ),
+            address=OpenHCSPlaneAddress(((Microscopy.Well, well), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
             ref=SourcePixelRef("disk", f"/source/{well}.tif"),
             source_metadata={"Well": well},
         )

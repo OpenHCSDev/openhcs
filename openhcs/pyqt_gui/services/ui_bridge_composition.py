@@ -17,6 +17,7 @@ from openhcs.pyqt_gui.services.ui_bridge_registry import (
     UiBridgeSurfaceRegistry,
 )
 
+
 if TYPE_CHECKING:
     from openhcs.authoring.session.session import Session
 

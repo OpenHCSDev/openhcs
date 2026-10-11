@@ -7,12 +7,7 @@ import pytest
 from arraybridge.decorators import PRESERVE_INPUT_DTYPE_CONFIG
 
 import openhcs.processing.backends.cellprofiler  # noqa: F401
-from openhcs.core.aligned_image_payload import (
-    AlignedImageSliceContext,
-    AlignedImageStack,
-    ImageOutputBundle,
-    ImagePayloadComposition,
-)
+from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle, ImagePayloadComposition)
 from openhcs.core.callable_contract import KeywordRuntimeParameter
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
@@ -132,9 +127,7 @@ def test_runtime_slice_projection_rejects_undeclared_value_type() -> None:
         RuntimeSliceProjection.value_for_slice(
             UndeclaredValue(),
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
-                plane_index=0,
-                axis_size=1,
+                axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1,
             ),
         )
 
@@ -207,9 +200,7 @@ def test_object_label_payload_selects_nominal_object_label_projection() -> None:
     projected = RuntimeSliceProjection.value_for_slice(
         payload,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
-            plane_index=0,
-            axis_size=1,
+            axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1,
         ),
     )
     assert projected is payload
@@ -665,7 +656,9 @@ def test_variable_component_projection_requires_declared_plane_provenance() -> N
         RuntimeSliceProjectionDeclarationError,
         match="nominal payload.*RUNTIME_SLICE",
     ):
-        OptionalSourceIdentity.project_payload_items(request)
+        OptionalSourceIdentity.project_payload_items(
+            request
+        )
 
 
 def test_variable_component_projection_validates_declared_cardinality() -> None:
@@ -683,7 +676,9 @@ def test_variable_component_projection_validates_declared_cardinality() -> None:
     )
 
     with pytest.raises(ValueError, match="declared 'runtime_slice' axis of size 2"):
-        OptionalSourceIdentity.project_payload_items(request)
+        OptionalSourceIdentity.project_payload_items(
+            request
+        )
 
 
 def test_variable_component_projection_rejects_expanded_source_provenance() -> None:
@@ -704,7 +699,9 @@ def test_variable_component_projection_rejects_expanded_source_provenance() -> N
         ValueError,
         match="source provenance must exactly match.*9 != 3",
     ):
-        OptionalSourceIdentity.project_payload_items(request)
+        OptionalSourceIdentity.project_payload_items(
+            request
+        )
 
 
 def test_variable_component_projection_uses_declared_plane_axis() -> None:
@@ -713,15 +710,17 @@ def test_variable_component_projection_uses_declared_plane_axis() -> None:
     )
     payload = _declared_plane_metadata(2).payload_with(stack, None)
 
-    projected = OptionalSourceIdentity.project_payload_items(
-        RuntimeProjectionSourceIdentityRequest(
-            value=payload,
-            source_description="declared image stack",
-            variable_components=(Microscopy.Site,),
-            plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
-                axis_size=2,
-            ),
+    projected = (
+        OptionalSourceIdentity.project_payload_items(
+            RuntimeProjectionSourceIdentityRequest(
+                value=payload,
+                source_description="declared image stack",
+                variable_components=(Microscopy.Site,),
+                plane_projection=RuntimePlaneAxisValueProjection.preserve(
+                    axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    axis_size=2,
+                ),
+            )
         )
     )
 
@@ -786,11 +785,13 @@ def test_source_identity_request_projects_explicit_source_binding_label_planes()
         ),
     )
 
-    projected = OptionalSourceIdentity.project_payload_items(
-        RuntimeProjectionSourceIdentityRequest(
-            value=labels,
-            source_description="source-bound labels",
-            plane_projection=labels.declared_plane_projection(),
+    projected = (
+        OptionalSourceIdentity.project_payload_items(
+            RuntimeProjectionSourceIdentityRequest(
+                value=labels,
+                source_description="source-bound labels",
+                plane_projection=labels.declared_plane_projection(),
+            )
         )
     )
 

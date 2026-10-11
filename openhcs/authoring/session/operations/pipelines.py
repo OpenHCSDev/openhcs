@@ -87,9 +87,7 @@ class SelectedStepsOperation(EditablePipelineOperation):
         return None
 
 
-class AddPipelineStep(
-    CurrentDatasetRequestMixin, EditablePipelineOperation, RendererOperation
-):
+class AddPipelineStep(CurrentDatasetRequestMixin, EditablePipelineOperation, RendererOperation):
     operation_id = "add_step"
     label = "Add"
     tooltip = "Add new pipeline step"
