@@ -142,8 +142,8 @@ def test_undeclared_volume_and_explicit_payload_override_are_not_guessed_planar(
         (_source(labels), {"domain_scope": PayloadLabelScope}),
     ):
         value = SourceImageObjectLabelBuildRequest(image=source, labels=labels, **options).payload()
-        assert not value.domain.scope.ids_per_plane
-        assert not value.plane_axis.leads_data
+        assert value.domain.scope.ids_span_payload
+        assert value.plane_axis.unstacked
         assert value.measurement_planes()[0].labels.shape == (2, 6, 7)
     with pytest.raises(ValueError, match="Cannot project 2-D source voxel spacing onto 3-D data"):
         SourceVoxelSpacing((1.3556, 1.3556)).spacing_for_ndim(3)
@@ -251,11 +251,11 @@ def test_produced_volume_global_object_domain_is_independent_of_source_plane_axi
         declared_object_ids=(1, 2),
     ).payload()
 
-    assert not value.domain.scope.ids_per_plane
+    assert value.domain.scope.ids_span_payload
     assert value.domain.declared_object_count == 2
     assert value.domain.declared_object_ids == (1, 2)
     assert value.domain.declared_object_id_domains == ()
-    assert not value.plane_axis.leads_data
+    assert value.plane_axis.unstacked
     assert len(value.measurement_planes()) == 1
     np.testing.assert_array_equal(value.measurement_planes()[0].labels, labels)
     assert value.source_provenance.identity() == source.metadata.source_provenance.identity()
@@ -272,10 +272,10 @@ def test_produced_volume_without_explicit_ids_keeps_one_global_present_id_domain
         labels=labels,
     ).payload()
 
-    assert not value.domain.scope.ids_per_plane
+    assert value.domain.scope.ids_span_payload
     assert value.domain.declared_object_ids == (29, 106)
     assert value.domain.declared_object_id_domains == ()
-    assert not value.plane_axis.leads_data
+    assert value.plane_axis.unstacked
     assert len(value.measurement_planes()) == 1
 
 
@@ -306,7 +306,7 @@ def test_generic_output_context_uses_execution_projection_not_image_storage_axis
     labels[1, 2:4, 3:5] = 106
     source = _source(labels, axis=axis, spacing=(2.0, 1.3556, 1.3556))
     volume = ImagePayload.of(labels).object_label_output(source, None)
-    assert not volume.domain.scope.ids_per_plane
+    assert volume.domain.scope.ids_span_payload
     assert volume.domain.declared_object_ids == (29, 106)
     np.testing.assert_array_equal(volume.measurement_planes()[0].labels, labels)
     projection = RuntimePlaneAxisValueProjection.from_source_declaration(
@@ -329,6 +329,6 @@ def test_saved_ingress_preserves_already_typed_object_domain_and_identity():
     ).label_set(name="saved_labels")
     admitted = _saved_label_input(produced)
     assert admitted is produced
-    assert not admitted.domain.scope.ids_per_plane
+    assert admitted.domain.scope.ids_span_payload
     assert admitted.domain.declared_object_count == 1
     np.testing.assert_array_equal(admitted.measurement_planes()[0].labels, labels)

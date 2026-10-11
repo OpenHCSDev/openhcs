@@ -128,7 +128,7 @@ class SourceImageObjectLabelBuildRequest:
         Saved label-image admission supplies its projection at the ingress owner.
         """
         scope = self.domain_scope
-        if scope is not None and not scope.ids_per_plane:
+        if scope is not None and scope.ids_span_payload:
             if self.plane_projection is not None:
                 raise ValueError(
                     "Payload-scoped object-label output cannot declare a plane "

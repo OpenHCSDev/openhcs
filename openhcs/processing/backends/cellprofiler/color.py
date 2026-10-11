@@ -1601,11 +1601,10 @@ def gray_to_color(
     output = GrayToColorSchemeRunner.for_scheme(scheme).run(request)
     metadata = image.metadata
     if metadata.plane_axis.leads_data:
-        if not metadata.plane_axis.one_plane_per_source_binding:
-            raise ValueError(
-                "GrayToColor image metadata requires a source-binding plane "
-                f"axis, got {metadata.plane_axis!r}."
-            )
+        metadata.plane_axis.require_source_bindings(
+            "GrayToColor image metadata requires a source-binding plane "
+            f"axis, got {metadata.plane_axis!r}."
+        )
         source_plane_count = metadata.source_provenance.source_plane_count
         if source_plane_count < 1:
             raise ValueError(

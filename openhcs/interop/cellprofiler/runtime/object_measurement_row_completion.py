@@ -448,13 +448,12 @@ class ObjectMeasurementRowCompletionSchema:
     ) -> tuple[RuntimeCallableArgument, ...]:
         """Return the axis subset that changes the label-id domain."""
         label_domain = label_payload.object_label_domain()
-        if not label_domain.scope.ids_per_plane:
+        if label_domain.scope.ids_span_payload:
             return ()
         slice_axis_name = MeasurementRowAxisField.SLICE_INDEX.value
-        if not label_payload.plane_axis.one_plane_per_runtime_slice:
-            raise ValueError(
-                "Plane-scoped measurement domains require the runtime-slice axis."
-            )
+        label_payload.plane_axis.require_runtime_slices(
+            "Plane-scoped measurement domains require the runtime-slice axis."
+        )
         if slice_axis_name not in self.axis_fields:
             raise ValueError("Plane-scoped measurement rows must declare slice_index.")
         slice_axis_position = self.axis_fields.index(slice_axis_name)

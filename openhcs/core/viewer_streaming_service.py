@@ -492,7 +492,7 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
         shape = tuple(image.data.shape)
         if (
             len(shape) != 3
-            or not metadata.plane_axis.leads_data
+            or metadata.plane_axis.unstacked
             or shape[0] != metadata.source_plane_metadata_count
             or metadata.source_spatial_domain.origin_yx != (0, 0)
             or tuple(shape[-2:]) != metadata.source_spatial_domain.source_shape_yx

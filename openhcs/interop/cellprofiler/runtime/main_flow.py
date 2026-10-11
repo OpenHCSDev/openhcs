@@ -16,7 +16,7 @@ def cellprofiler_main_flow_output(
     """Preserve the declared OpenHCS plane axis on a CP output image."""
     output_image = owned_runtime_value(output_image)
     output_axis = output_image.metadata.plane_axis
-    if not output_axis.leads_data:
+    if output_axis.unstacked:
         return output_image
     if plane_projection is None:
         raise ValueError(

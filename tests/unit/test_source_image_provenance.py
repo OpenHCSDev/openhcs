@@ -348,7 +348,7 @@ def test_declared_source_projection_drops_axis_for_single_selected_plane() -> No
 
     np.testing.assert_array_equal(projected_payload.data, pixels[2])
     np.testing.assert_array_equal(projected_payload.mask, mask[2])
-    assert not projected.plane_axis.leads_data
+    assert projected.plane_axis.unstacked
     assert projected.intensity_scale == 30.0
     assert projected.source_dtype == "uint8"
     assert projected.source_path == "/input/plane_2.tif"

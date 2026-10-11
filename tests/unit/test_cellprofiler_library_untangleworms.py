@@ -293,8 +293,8 @@ def test_straighten_worms_policy_consumes_declared_singleton_label_plane() -> No
         projected_labels.labels,
         np.array([[0, 1], [0, 0]], dtype=np.int32),
     )
-    assert not projected_labels.plane_axis.leads_data
-    assert not projected_labels.domain.scope.ids_per_plane
+    assert projected_labels.plane_axis.unstacked
+    assert projected_labels.domain.scope.ids_span_payload
 
 
 def test_straighten_worms_callable_rejects_unselected_label_stack() -> None:

@@ -2004,7 +2004,7 @@ def test_object_input_does_not_replace_selected_canonical_main_flow_plane() -> N
         image_request.payload.data,
         np.full((2, 2), 9, dtype=np.float32),
     )
-    assert not image_request.payload.metadata.plane_axis.leads_data
+    assert image_request.payload.metadata.plane_axis.unstacked
 
 
 def test_singleton_object_measurement_collapses_singleton_plane_context() -> None:
@@ -2698,7 +2698,7 @@ def test_contextual_object_label_output_applies_declared_payload_scope() -> None
     )
 
     assert isinstance(payload, ObjectLabelPayload)
-    assert not payload.object_label_domain().scope.ids_per_plane
+    assert payload.object_label_domain().scope.ids_span_payload
     assert payload.source_image_provenance_planes.paths == (
         "/input/A01_s001_w1_z001_t001.TIF",
         "/input/A01_s001_w1_z002_t001.TIF",
@@ -4452,7 +4452,7 @@ def test_object_label_output_domain_scope_uses_declared_group_lineage() -> None:
         kwargs={},
     )
 
-    assert not request.object_label_output_domain_scope().ids_per_plane
+    assert request.object_label_output_domain_scope().ids_span_payload
 
 
 class _CalculateMathObjectOperandAdapter(_FakeCellProfilerRuntime):
@@ -5150,7 +5150,7 @@ def test_image_stack_requirement_does_not_control_scalar_object_input_projection
     bound_labels = request.label_argument_for(object_spec, "labels")
 
     assert isinstance(bound_labels, ObjectLabelValue)
-    assert not bound_labels.plane_axis.leads_data
+    assert bound_labels.plane_axis.unstacked
     assert object_label_dense_array(bound_labels).shape == (2, 2)
 
 
@@ -7765,7 +7765,7 @@ def test_gray_to_color_inherits_first_declared_input_mask() -> None:
     assert result.data.shape == (4, 5, 3)
     np.testing.assert_array_equal(result.mask, first_mask)
     metadata = result.metadata
-    assert not metadata.plane_axis.leads_data
+    assert metadata.plane_axis.unstacked
     assert metadata.axis_position(ColourAxis) == -1
     assert metadata.source_image_provenance_planes.paths == (
         "/input/red.tif",
@@ -8263,7 +8263,7 @@ def test_full_stack_pure_2d_implicit_main_output_aligns_declared_object_labels()
     assert result_image is image
     assert result_measurements == {"count": 1}
     assert isinstance(result_labels, ObjectLabelPayload)
-    assert not result_labels.domain.scope.ids_per_plane
+    assert result_labels.domain.scope.ids_span_payload
     np.testing.assert_array_equal(object_label_dense_array(result_labels), labels)
 
 
@@ -8337,7 +8337,7 @@ def test_full_stack_pure_2d_non_flow_main_keeps_relationship_output_alignment() 
     assert result_measurements == {"count": 1}
     assert result_relationship is relationship
     assert result_labels is labels
-    assert not result_labels.domain.scope.ids_per_plane
+    assert result_labels.domain.scope.ids_span_payload
 
 
 def test_pure_2d_aggregation_uses_generic_columnar_row_owner() -> None:
@@ -8693,7 +8693,7 @@ def test_image_output_projection_uses_exact_invocation_projection(
     metadata = recorded.metadata
     assert metadata.plane_axis is expected_plane_axis
     assert metadata.source_image_names == (output_spec.name,)
-    if not expected_plane_axis.leads_data:
+    if expected_plane_axis.unstacked:
         assert dict(metadata.source_component_metadata or {}) == {
             "well": "A01",
             "site": "1",
@@ -8774,14 +8774,14 @@ def test_declared_output_source_uses_projected_object_input_value() -> None:
     projected_source = MeasureObjectNeighborsModule.source_payload(request)
 
     assert isinstance(projected_source, ObjectLabelSet)
-    assert not projected_source.plane_axis.leads_data
+    assert projected_source.plane_axis.unstacked
     assert object_label_dense_array(projected_source).shape == (2, 3)
 
     CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType).record(request)
 
     recorded = runtime.images[output_spec.name]
     assert recorded.data.shape == (2, 3, 3)
-    assert not recorded.metadata.plane_axis.leads_data
+    assert recorded.metadata.plane_axis.unstacked
 
 
 def test_image_output_recording_projects_masked_singleton_rgb_payload() -> None:
@@ -8860,7 +8860,7 @@ def test_image_output_recording_projects_masked_singleton_rgb_payload() -> None:
     assert recorded.data.shape == (4, 5, 3)
     np.testing.assert_array_equal(recorded.mask, mask)
     metadata = recorded.metadata
-    assert not metadata.plane_axis.leads_data
+    assert metadata.plane_axis.unstacked
     assert metadata.axis_index(ColourAxis, recorded) == 2
 
 
@@ -10649,7 +10649,7 @@ def test_pure_2d_object_label_payload_slice_projects_plane_domain() -> None:
     assert sliced.labels.shape == (2, 2)
     assert sliced.domain.declared_object_ids == (1, 2, 3, 4)
     assert sliced.domain.declared_object_id_domains == ()
-    assert not sliced.domain.scope.ids_per_plane
+    assert sliced.domain.scope.ids_span_payload
 
 
 def test_object_label_endpoint_uses_declared_runtime_slice_axis() -> None:
@@ -10756,7 +10756,7 @@ def test_pure_2d_object_label_set_slice_projects_plane_domain() -> None:
     assert sliced.labels.shape == (2, 2)
     assert sliced.domain.declared_object_ids == (1, 2)
     assert sliced.domain.declared_object_id_domains == ()
-    assert not sliced.domain.scope.ids_per_plane
+    assert sliced.domain.scope.ids_span_payload
 
 
 def test_pure_2d_object_label_payload_slice_projects_grouped_plane_domains() -> None:
@@ -10782,7 +10782,7 @@ def test_pure_2d_object_label_payload_slice_projects_grouped_plane_domains() -> 
     assert sliced.labels.shape == (3, 4, 5)
     assert sliced.domain.declared_object_ids == (4, 5, 6)
     assert sliced.domain.declared_object_id_domains == ()
-    assert not sliced.domain.scope.ids_per_plane
+    assert sliced.domain.scope.ids_span_payload
 
 
 def test_grouped_object_label_planes_project_source_provenance_independently() -> None:
@@ -15880,7 +15880,7 @@ def test_prepared_measurement_labels_project_runtime_slice_payload_with_dense_la
 
     assert isinstance(prepared.source_projected_payload, ObjectLabelPayload)
     assert (
-        not prepared.source_projected_payload.domain.scope.ids_per_plane
+        prepared.source_projected_payload.domain.scope.ids_span_payload
     )
     assert (
         prepared.source_projected_payload.object_label_domain().declared_object_ids
@@ -16088,9 +16088,9 @@ def test_aligned_stack_kwargs_projects_runtime_slice_labels_to_reference_slice_d
         resolved["labels"].labels,
         np.full((2, 2), 2, dtype=np.int32),
     )
-    assert not resolved["labels"].domain.scope.ids_per_plane
+    assert resolved["labels"].domain.scope.ids_span_payload
     assert resolved["labels"].domain.declared_object_ids == (2,)
-    assert not resolved["labels"].plane_axis.leads_data
+    assert resolved["labels"].plane_axis.unstacked
     assert resolved["labels"].source_spatial_domain.origin_yx == (2, 0)
     assert resolved["labels"].source_spatial_domain.source_shape_yx == (4, 4)
 
@@ -16125,9 +16125,9 @@ def test_aligned_stack_kwargs_projects_runtime_slice_labels_without_source_metad
         resolved["labels"].labels,
         np.full((4, 4), 2, dtype=np.int32),
     )
-    assert not resolved["labels"].domain.scope.ids_per_plane
+    assert resolved["labels"].domain.scope.ids_span_payload
     assert resolved["labels"].domain.declared_object_ids == (2,)
-    assert not resolved["labels"].plane_axis.leads_data
+    assert resolved["labels"].plane_axis.unstacked
 
 
 def test_measurement_labels_do_not_infer_broadcast_from_equal_planes() -> None:
@@ -18317,7 +18317,7 @@ def test_object_label_scalar_image_output_does_not_invent_runtime_plane_axis() -
     )
 
     assert result.data.shape == (5, 7)
-    assert not result.metadata.plane_axis.leads_data
+    assert result.metadata.plane_axis.unstacked
 
 
 def test_object_measurement_execution_policy_uses_full_stack_for_single_runtime_slice_volume() -> (

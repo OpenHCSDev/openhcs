@@ -392,7 +392,7 @@ class RuntimeInputBindingRequest:
         payload: ObjectLabelValue,
     ) -> ObjectLabelValue:
         """Project loaded object labels to the invocation's current plane."""
-        if not payload.plane_axis.leads_data:
+        if payload.plane_axis.unstacked:
             return payload
         plane_count = payload.declared_plane_count()
         if plane_count is None:
@@ -480,27 +480,30 @@ class RuntimeInputBindingRequest:
 
     def object_inputs_projected_by_source_binding_axis(self) -> bool:
         """Return whether object inputs are already scoped by source binding."""
-        for spec in self.object_inputs:
-            labels = self.label_payload_for(spec)
-            if not labels.plane_axis.one_plane_per_source_binding:
-                continue
-            aliases = labels.source_aliases
-            if not aliases:
-                raise ValueError(
-                    "Source-binding object labels require explicit source aliases."
-                )
-            declared_projection = labels.declared_plane_projection()
-            if declared_projection is None:
-                raise ValueError(
-                    "Source-binding object labels require a declared plane projection."
-                )
-            source_plane_index = labels.source_alias_plane_index(
-                aliases,
-                declared_projection.axis_size,
+        return any(
+            labels.plane_axis.one_plane_per_source_binding
+            and self.source_binding_labels_select_one_plane(labels)
+            for labels in map(self.label_payload_for, self.object_inputs)
+        )
+
+    @staticmethod
+    def source_binding_labels_select_one_plane(labels: ObjectLabelValue) -> bool:
+        """Return whether source-binding labels resolve their aliases to one plane."""
+        aliases = labels.source_aliases
+        if not aliases:
+            raise ValueError(
+                "Source-binding object labels require explicit source aliases."
             )
-            if source_plane_index is not None:
-                return True
-        return False
+        declared_projection = labels.declared_plane_projection()
+        if declared_projection is None:
+            raise ValueError(
+                "Source-binding object labels require a declared plane projection."
+            )
+        source_plane_index = labels.source_alias_plane_index(
+            aliases,
+            declared_projection.axis_size,
+        )
+        return source_plane_index is not None
 
     def runtime_value(
         self,

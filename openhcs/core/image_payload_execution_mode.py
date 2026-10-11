@@ -124,6 +124,9 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             AlignedImageStack,
             aligned_image_stack_kwargs,
         )
+        from openhcs.core.runtime_plane_projection import (
+            RuntimePlaneAxisValueProjection,
+        )
         from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
         if not isinstance(request.image, AlignedImageStack):
@@ -131,12 +134,11 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 "Aligned runtime batch execution requires AlignedImageStack, got "
                 f"{type(request.image).__name__}."
             )
-        projection = request.plane_projection
-        if projection is None or not projection.axis.one_plane_per_runtime_slice:
-            raise ValueError(
-                "Aligned runtime batch execution requires a compiled runtime-slice "
-                "projection."
-            )
+        projection = RuntimePlaneAxisValueProjection.require_runtime_slice_projection(
+            request.plane_projection,
+            "Aligned runtime batch execution requires a compiled runtime-slice "
+            "projection.",
+        )
         if projection.selects_one_plane:
             raise ValueError(
                 "Aligned runtime batch execution received an image after its "
@@ -204,11 +206,11 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 f"{owner} requires a compiled runtime-slice projection for "
                 "aligned multi-image stack execution."
             )
-        if not projection.axis.one_plane_per_runtime_slice:
-            raise RuntimeSliceProjectionDeclarationError(
-                f"{owner} aligned image execution requires "
-                f"RuntimeSlicePlaneAxis, got {projection.axis!r}."
-            )
+        projection.axis.require_runtime_slices(
+            f"{owner} aligned image execution requires "
+            f"RuntimeSlicePlaneAxis, got {projection.axis!r}.",
+            error=RuntimeSliceProjectionDeclarationError,
+        )
         if projection.selects_one_plane:
             raise RuntimeSliceProjectionDeclarationError(
                 f"{owner} received an AlignedImageStack after the compiled "
@@ -225,8 +227,8 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
             slice_plane_axes = tuple(
                 slice_payload.metadata.plane_axis for slice_payload in image.slices
             )
-            if any(
-                not plane_axis.one_plane_per_source_binding
+            if not all(
+                plane_axis.one_plane_per_source_binding
                 for plane_axis in slice_plane_axes
             ):
                 raise ValueError(

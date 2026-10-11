@@ -475,7 +475,7 @@ class CellProfilerObjectLocationMeasurementRows(ABC):
 
     def label_plane_domains(self) -> tuple[tuple[object, tuple[int, ...]], ...]:
         domain = self.label_payload.object_label_domain()
-        if not domain.scope.ids_per_plane:
+        if domain.scope.ids_span_payload:
             object_ids = domain.explicit_id_domain()
             if object_ids is None:
                 raise ValueError(

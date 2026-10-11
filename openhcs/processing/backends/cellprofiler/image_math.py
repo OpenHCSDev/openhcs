@@ -827,30 +827,30 @@ class ImageMathPreparedOperands:
         image: RuntimeArrayData,
     ) -> tuple[RuntimeArrayData, ...]:
         metadata = image.metadata
-        if not metadata.plane_axis.one_plane_per_source_binding:
-            return (image,)
-        axis_size = metadata.source_provenance.source_plane_count
-        if axis_size <= 0:
-            raise ValueError(
-                "ImageMath SOURCE_BINDING operand payload has no declared source "
-                "plane provenance."
+        if metadata.plane_axis.one_plane_per_source_binding:
+            axis_size = metadata.source_provenance.source_plane_count
+            if axis_size <= 0:
+                raise ValueError(
+                    "ImageMath SOURCE_BINDING operand payload has no declared "
+                    "source plane provenance."
+                )
+            projection = RuntimePlaneAxisValueProjection.preserve(
+                axis=SourceBindingPlaneAxis,
+                axis_size=axis_size,
+                source_aliases=metadata.source_image_names,
             )
-        projection = RuntimePlaneAxisValueProjection.preserve(
-            axis=SourceBindingPlaneAxis,
-            axis_size=axis_size,
-            source_aliases=metadata.source_image_names,
-        )
-        projection.validate_shape(
-            array_geometry(image).shape,
-            value_name="ImageMath operand payload",
-        )
-        return tuple(
-            RuntimeSliceProjection.value_for_slice(
-                image,
-                projection.selected_plane(index),
+            projection.validate_shape(
+                array_geometry(image).shape,
+                value_name="ImageMath operand payload",
             )
-            for index in range(axis_size)
-        )
+            return tuple(
+                RuntimeSliceProjection.value_for_slice(
+                    image,
+                    projection.selected_plane(index),
+                )
+                for index in range(axis_size)
+            )
+        return (image,)
 
     def operand_pixel(self, index: int) -> np.ndarray:
         """Return one logical operand without forcing stacked copies."""

@@ -28,7 +28,7 @@ def test_marker_watershed_3d_defaults_to_thresholded_image_domain() -> None:
     np.testing.assert_array_equal(labels > 0, image)
     assert np.count_nonzero(labels[~image]) == 0
     assert np.unique(labels).tolist() == [0, 1, 2]
-    assert not label_value.domain.scope.ids_per_plane
+    assert label_value.domain.scope.ids_span_payload
     assert label_value.domain.declared_object_ids == (1, 2)
     (stats_row,) = stats.row_mappings()
     assert stats_row["object_count"] == 2

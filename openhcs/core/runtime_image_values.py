@@ -364,7 +364,7 @@ class ImagePayloadAxisFields(ABC):
 
     def require_leading_plane_axis(self, message: str) -> None:
         """Require axis presence before later ordered projection validation."""
-        if not self.plane_axis.leads_data:
+        if self.plane_axis.unstacked:
             raise ValueError(message)
 
     def axis_position(self, role: type[AxisRole]) -> int | None:
@@ -433,7 +433,7 @@ class ImagePayloadAxisFields(ABC):
 
     def declares_colour_samples_plane(self, data: Any) -> bool:
         """Return whether this payload declares one colour-sampled image plane."""
-        return self.axis_index(ColourAxis, data) is not None and not self.plane_axis.leads_data
+        return self.axis_index(ColourAxis, data) is not None and self.plane_axis.unstacked
 
     def declares_colour_samples_stack(self, data: Any) -> bool:
         """Return whether this payload declares a plane stack of colour-sampled images."""
@@ -499,7 +499,7 @@ class ImagePayloadMetadata(
     def singleton_plane_projection(self) -> RuntimePlaneAxisValueProjection | None:
         """Select a declared leading axis only with one exact runtime source plane."""
         plane_count = self.source_provenance.source_plane_count
-        if not self.plane_axis.leads_data or plane_count != 1:
+        if self.plane_axis.unstacked or plane_count != 1:
             return None
         return RuntimePlaneAxisValueProjection.from_selected_plane(
             axis=self.plane_axis,
@@ -555,7 +555,7 @@ class ImagePayloadMetadata(
         axis; artifact storage/grouping axes do not declare that image domain.
         """
 
-        if not self.plane_axis.leads_data:
+        if self.plane_axis.unstacked:
             return {}
         return self.source_provenance.varying_plane_component_values(
             AxisFamily.active().axes
@@ -822,7 +822,7 @@ class ImagePayloadMetadata(
             plane_projection is not None
             and plane_projection.preserves_complete_axis
             and plane_projection.axis_size > 1
-            and not self.plane_axis.leads_data
+            and self.plane_axis.unstacked
         ):
             return False
         if plane_projection is not None and self.plane_axis.leads_data:
@@ -877,7 +877,7 @@ class ImagePayloadMetadata(
         """Keep intrinsic pixels whole, excluding a distinct image-binding axis."""
         return (
             self.source_spatial_domain.persists_whole_image()
-            and not self.plane_axis.one_plane_per_source_binding
+            and self.plane_axis.keeps_image_whole
         )
 
     def for_leading_source_plane(self, plane_index: int) -> "ImagePayloadMetadata":
@@ -1046,7 +1046,7 @@ class ImagePayloadMetadata(
         if not source_plane_selection:
             return self.attach_to(payload)
         complete_source_axis = tuple(range(self.source_provenance.source_plane_count))
-        if not self.plane_axis.leads_data:
+        if self.plane_axis.unstacked:
             if source_plane_selection == complete_source_axis:
                 return self.attach_to(payload)
             channel_axis = self.axis_index(ColourAxis, payload)
@@ -1205,7 +1205,7 @@ class ImagePayloadMetadata(
         )
         axes = self.axes if self.axes.has_values else source.axes
         plane_axis = self.plane_axis
-        if not plane_axis.leads_data:
+        if plane_axis.unstacked:
             plane_axis = source.plane_axis
         elif source.plane_axis.leads_data and source.plane_axis is not plane_axis:
             raise ValueError(
@@ -1514,7 +1514,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
     @property
     def declares_whole_image_output(self) -> bool:
         """Whether a main-flow output publishes this payload as one whole image."""
-        return not self.metadata.plane_axis.leads_data or self.metadata.persists_whole_image()
+        return self.metadata.plane_axis.unstacked or self.metadata.persists_whole_image()
 
     def keeps_whole_as_single_member(
         self, *, declared_plane_axis: type[RuntimePlaneAxis],
@@ -1613,7 +1613,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         """Declare ``plane_projection``'s axis when this dense stack carries it undeclared."""
         metadata = self.metadata
         if (
-            not self.declared_plane_axis.leads_data
+            self.declared_plane_axis.unstacked
             and metadata.source_provenance.source_plane_count == plane_projection.axis_size
             and plane_projection.dense_shape_carries_axis(self.geometry.shape)
         ):
@@ -1683,8 +1683,11 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
     # -- RuntimeSliceProjectableValue -------------------------------------
 
     def runtime_slice_count(self) -> int | None:
-        if not self.metadata.plane_axis.one_plane_per_runtime_slice:
-            return None
+        if self.metadata.plane_axis.one_plane_per_runtime_slice:
+            return self._leading_plane_count()
+        return None
+
+    def _leading_plane_count(self) -> int:
         geometry = self.geometry
         if geometry.ndim <= AxisFamily.active().payload_spatial_rank:
             from openhcs.core.runtime_slice_projection import (
@@ -1888,7 +1891,7 @@ def preserved_image_plane_projection(
     from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
     plane_axis = RuntimeSliceProjection.declared_plane_axis(value)
-    if not plane_axis.leads_data:
+    if plane_axis.unstacked:
         return RuntimeSliceProjection.preserved_context_for_value(value)
     if plane_axis.one_plane_per_runtime_slice:
         invocation_projection = RuntimePlaneAxisValueProjection.from_projector(
@@ -2086,7 +2089,7 @@ class ImagePayloadSliceProjector:
         slices: Sequence[RuntimeArrayData],
     ) -> list[RuntimeArrayData]:
         """Project each child once, keeping strict batch-mask cardinality."""
-        if not self.metadata.plane_axis.leads_data:
+        if self.metadata.plane_axis.unstacked:
             if len(slices) != 1:
                 raise ValueError(
                     "Image payload produced multiple slices without a declared "
@@ -2416,11 +2419,11 @@ class ImageMaskDomain:
     def shared_spatial_mask_shape(self) -> tuple[int, ...] | None:
         """Return a mask domain shared by declared source-binding planes."""
         if (
-            not self.plane_axis.one_plane_per_source_binding
-            or self.placement_axes is None
+            self.plane_axis.one_plane_per_source_binding
+            and self.placement_axes is not None
         ):
-            return None
-        return tuple(self.data_shape[axis] for axis in self.placement_axes)
+            return tuple(self.data_shape[axis] for axis in self.placement_axes)
+        return None
 
     @property
     def undeclared_shape(self) -> tuple[int, ...] | None:

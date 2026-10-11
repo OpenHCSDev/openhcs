@@ -4753,7 +4753,7 @@ def test_relate_objects_preserves_child_object_label_domain_metadata():
     )
     assert isinstance(output, ObjectLabelPayload)
     assert output.domain.declared_object_count == 4
-    assert not output.domain.scope.ids_per_plane
+    assert output.domain.scope.ids_span_payload
     np.testing.assert_array_equal(output.labels, child_plane)
 
 

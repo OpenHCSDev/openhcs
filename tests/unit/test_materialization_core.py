@@ -909,7 +909,7 @@ def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
     )
     rois = load_rois_from_zip(Path(archive))
     metadata = ROIArchiveSourceMetadata.decode(rois)
-    assert not payload.plane_axis.leads_data
+    assert payload.plane_axis.unstacked
     assert metadata.plane_axis is (
         RuntimeSlicePlaneAxis if variable_components else NoPlaneAxis
     )
@@ -1661,7 +1661,7 @@ def test_roi_materialization_preserves_payload_scoped_volume_in_one_archive() ->
     )
 
     rois = fm.load(out, "memory")
-    assert not payload.object_label_domain().scope.ids_per_plane
+    assert payload.object_label_domain().scope.ids_span_payload
     assert out == "/tmp/A01_Nuclei_step3_rois.roi.zip"
     assert [roi.metadata["label"] for roi in rois] == [1, 2]
     assert [roi.metadata["plane_indices"] for roi in rois] == [(0,), (1,)]
@@ -1817,7 +1817,7 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component(
             "well": "A01",
         },
     )
-    assert not payload.object_label_domain().scope.ids_per_plane
+    assert payload.object_label_domain().scope.ids_span_payload
 
     materialize(
         MaterializationSpec(ROIOptions(min_area=0)),

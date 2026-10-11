@@ -912,7 +912,7 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
         {"object_labels": labels}, 0, 1, reference_payload=composition.payload.slices[0],
     )["object_labels"]
     assert projected.shape == (3, 4)
-    assert not projected.plane_axis.leads_data
+    assert projected.plane_axis.unstacked
     # Already held multi-plane cohorts retain their pixel buffer, and literal
     # whole-image volumes retain their intrinsic axes independently of transport.
     retained = SourceUniverseRequest.admit_source_artifact_cohort(
@@ -926,4 +926,4 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
         volume, source_binding_plan=plan, member_count=1,
     )
     assert admitted_volume.data.shape == (2, 3, 4)
-    assert not admitted_volume.metadata.plane_axis.leads_data
+    assert admitted_volume.metadata.plane_axis.unstacked

@@ -260,9 +260,9 @@ def test_slice_aligned_object_measurement_consumes_declared_singleton_plane() ->
 
     assert isinstance(projected, ObjectLabelPayload)
     assert object_label_dense_array(projected).shape == (4, 5)
-    assert not projected.object_label_domain().scope.ids_per_plane
+    assert projected.object_label_domain().scope.ids_span_payload
     assert projected.object_label_domain().declared_object_ids == (7,)
-    assert not projected.plane_axis.leads_data
+    assert projected.plane_axis.unstacked
     assert (
         policy.image_execution_mode(
             projected,

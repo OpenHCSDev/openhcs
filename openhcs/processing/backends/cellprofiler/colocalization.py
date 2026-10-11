@@ -64,7 +64,6 @@ from openhcs.core.runtime_plane_projection import (
     RuntimeSliceInvariantValue,
     RuntimeSliceIndexedValue,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
     cellprofiler_enum_from_literal,
@@ -232,14 +231,9 @@ class ColocalizationThresholdMaskRuntimeOutput(RuntimeSliceIndexedValue):
         """Project the optional object-label domain through its declared axis."""
         if self.object_labels is None:
             return self
-        projection = self.object_labels.declared_plane_projection()
-        if projection is None or not projection.axis.one_plane_per_runtime_slice:
-            return self
-        projected = RuntimeSliceProjection.value_for_slice(
-            self.object_labels,
-            projection.selected_plane(slice_index),
+        return replace(
+            self, object_labels=self.object_labels.for_runtime_slice(slice_index)
         )
-        return replace(self, object_labels=projected)
 
 
 class _ColocalizationThresholdMaskOutputsRuntimeParameter(KeywordRuntimeParameter):
@@ -1662,7 +1656,7 @@ class ColocalizationImagePairContext:
             return np.isfinite(first_pixels) & np.isfinite(second_pixels)
         valid = np.isfinite(first_pixels) & np.isfinite(second_pixels)
         metadata = image.metadata
-        if not metadata.plane_axis.leads_data:
+        if metadata.plane_axis.unstacked:
             raise ValueError(
                 "MeasureColocalization masked image pairs require a declared "
                 "image plane axis."
@@ -2983,18 +2977,17 @@ def _colocalization_source_plane_output(
     """Attach one declared composed-image source plane to a derived output."""
 
     metadata = image.metadata
-    if not metadata.plane_axis.leads_data:
+    if metadata.plane_axis.unstacked:
         return metadata.project_channel_payload(
             image,
             image_data,
             source_channel_index,
             channel_data=output_data,
         )
-    if not metadata.plane_axis.one_plane_per_source_binding:
-        raise ValueError(
-            "MeasureColocalization source channels require the declared "
-            f"source-binding plane axis, got {metadata.plane_axis.name!r}."
-        )
+    metadata.plane_axis.require_source_bindings(
+        "MeasureColocalization source channels require the declared "
+        f"source-binding plane axis, got {metadata.plane_axis.name!r}."
+    )
     source_plane = image.slice_payload(image_data[source_channel_index],
         source_channel_index,)
     return source_plane.with_pixels(output_data)

@@ -1380,7 +1380,7 @@ def test_runtime_artifact_input_keeps_singleton_scalar_selection_unstacked() -> 
     payload = runtime_input.resolve_value(store)
 
     assert payload.data.shape == (2, 2)
-    assert not payload.metadata.plane_axis.leads_data
+    assert payload.metadata.plane_axis.unstacked
 
 
 def test_runtime_artifact_input_projection_selects_compiler_owned_group_for_ungrouped_invocation():

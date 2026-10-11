@@ -136,9 +136,9 @@ class RuntimeSliceIndexedValue(RuntimeSliceProjectableValue):
         """Return the value represented by one runtime-slice index."""
 
     def value_for_slice(self, context: "RuntimePlaneAxisValueProjection") -> object:
-        if not context.axis.one_plane_per_runtime_slice:
-            return self
-        return self.project_runtime_slice(context.require_plane_index())
+        if context.axis.one_plane_per_runtime_slice:
+            return self.project_runtime_slice(context.require_plane_index())
+        return self
 
     def aligned_value(self, resolver: "AlignedImageStackKwargResolver") -> object:
         return self.value_for_slice(resolver.projection_axis)
@@ -168,12 +168,12 @@ class RuntimeSliceIdentityProjectableValue(RuntimeSliceProjectableValue):
     def identity_projected_value(
         self, context: "RuntimePlaneAxisValueProjection"
     ) -> object:
-        if not context.axis.one_plane_per_runtime_slice:
-            return self
-        return self.with_runtime_slice_identity(
-            slice_index=context.require_plane_index(),
-            slice_count=context.axis_size,
-        )
+        if context.axis.one_plane_per_runtime_slice:
+            return self.with_runtime_slice_identity(
+                slice_index=context.require_plane_index(),
+                slice_count=context.axis_size,
+            )
+        return self
 
 
 class RuntimePlaneAxis(ABC, metaclass=AutoRegisterMeta):
@@ -190,10 +190,30 @@ class RuntimePlaneAxis(ABC, metaclass=AutoRegisterMeta):
     name: ClassVar[str | None] = None
     leads_data: ClassVar[bool] = True
     """The data has a leading dimension that counts planes of this axis."""
+    unstacked: ClassVar[bool] = False
+    """The data has no leading plane dimension (the opposite of ``leads_data``)."""
     one_plane_per_runtime_slice: ClassVar[bool] = False
     """Each plane is one runtime slice of the invocation."""
     one_plane_per_source_binding: ClassVar[bool] = False
     """Each plane is one bound source image."""
+    keeps_image_whole: ClassVar[bool] = True
+    """An image with this axis can still be one whole image of its spatial domain."""
+
+    @classmethod
+    def require_runtime_slices(
+        cls, message: str, *, error: type[Exception] = ValueError
+    ) -> None:
+        """Raise ``error(message)`` unless each plane is one runtime slice."""
+        if cls.one_plane_per_runtime_slice:
+            return
+        raise error(message)
+
+    @classmethod
+    def require_source_bindings(cls, message: str) -> None:
+        """Raise ``ValueError(message)`` unless each plane is one bound source image."""
+        if cls.one_plane_per_source_binding:
+            return
+        raise ValueError(message)
 
     @classmethod
     def leading_axes(cls) -> tuple[type[RuntimePlaneAxis], ...]:
@@ -299,7 +319,7 @@ class RuntimeSlicePlaneAxis(RuntimePlaneAxis):
 
     @classmethod
     def keeps_planes_of(cls, plane_axis: type[RuntimePlaneAxis]) -> bool:
-        return plane_axis is cls or not plane_axis.leads_data
+        return plane_axis is cls or plane_axis.unstacked
 
     @classmethod
     def compose_provenance(
@@ -321,6 +341,7 @@ class SourceBindingPlaneAxis(RuntimePlaneAxis):
 
     name = "source_binding"
     one_plane_per_source_binding = True
+    keeps_image_whole = False
 
     @classmethod
     def plane_index(
@@ -368,6 +389,7 @@ class NoPlaneAxis(RuntimePlaneAxis):
 
     name = "none"
     leads_data = False
+    unstacked = True
 
     @classmethod
     def plane_index(
@@ -528,7 +550,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
 
     def __post_init__(self) -> None:
         axis = RuntimePlaneAxis.require_member(self.axis)
-        if not axis.leads_data:
+        if axis.unstacked:
             raise ValueError(
                 "RuntimePlaneAxisValueProjection requires an axis that leads the data."
             )
@@ -590,7 +612,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
         multiple contributors. Cardinality and aliases come from that source
         source declaration; array rank never supplies spatial meaning.
         """
-        if not axis.leads_data:
+        if axis.unstacked:
             return None
         return cls.preserve(
             axis=axis,
@@ -627,7 +649,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
         self, axis: type[RuntimePlaneAxis], source: "SourceImageProvenance",
     ) -> None:
         """Check an explicit projection against retained acquisition declarations."""
-        if not axis.leads_data:
+        if axis.unstacked:
             return
         declared_count = source.source_plane_count
         if self.axis is not axis or (
@@ -712,6 +734,16 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
         return projection
 
     @staticmethod
+    def require_runtime_slice_projection(
+        projection: "RuntimePlaneAxisValueProjection | None", message: str
+    ) -> "RuntimePlaneAxisValueProjection":
+        """Return ``projection`` when it is declared on the runtime-slice axis."""
+        if projection is None:
+            raise ValueError(message)
+        projection.axis.require_runtime_slices(message)
+        return projection
+
+    @staticmethod
     def require_runtime_slice_axis(
         projection: "RuntimePlaneAxisValueProjection | None",
         slice_count: int,
@@ -719,10 +751,9 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue, ABC):
         value_name: str,
     ) -> "RuntimePlaneAxisValueProjection":
         """Require the runtime-slice axis, declared with ``slice_count`` planes."""
-        if projection is None or not projection.axis.one_plane_per_runtime_slice:
-            raise ValueError(
-                f"{value_name} requires an exact runtime slice projection."
-            )
+        projection = RuntimePlaneAxisValueProjection.require_runtime_slice_projection(
+            projection, f"{value_name} requires an exact runtime slice projection."
+        )
         if projection.axis_size != slice_count:
             raise ValueError(
                 f"{value_name} count must exactly match the declared runtime plane "

@@ -25,7 +25,7 @@ def test_image_math_splits_only_declared_source_binding_operand_axis() -> None:
     )
 
     np.testing.assert_allclose(result.data, 0.5)
-    assert not result.metadata.plane_axis.leads_data
+    assert result.metadata.plane_axis.unstacked
 
 
 def test_image_math_preserves_declared_runtime_slice_as_one_operand() -> None:

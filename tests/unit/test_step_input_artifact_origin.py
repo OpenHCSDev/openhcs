@@ -110,7 +110,7 @@ def test_named_step_inputs_select_distinct_current_pixels_independent_of_order(a
         metadata = result.metadata
         assert metadata.source_image_names == (binding.alias,)
         assert metadata.source_path == f"/synthetic/{binding.alias}.tif"
-        assert not metadata.plane_axis.leads_data
+        assert metadata.plane_axis.unstacked
     np.testing.assert_array_equal(payload.data, data)
 
 

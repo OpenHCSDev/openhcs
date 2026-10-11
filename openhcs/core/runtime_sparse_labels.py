@@ -92,9 +92,9 @@ class SparseIJVLabelRows(ColumnarRows):
     def value_for_slice(
         self, context: RuntimePlaneAxisValueProjection
     ) -> "SparseIJVLabelRows":
-        if not context.axis.one_plane_per_runtime_slice:
-            return self
-        return self.slice(context.require_plane_index())
+        if context.axis.one_plane_per_runtime_slice:
+            return self.slice(context.require_plane_index())
+        return self
 
     @property
     def has_slice_index(self) -> bool:

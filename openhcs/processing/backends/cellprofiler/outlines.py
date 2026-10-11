@@ -140,7 +140,7 @@ class OverlayObjectsModule(
         labels = kwargs[cls.input_objects_binding.require_runtime_parameter_name()]
         if (
             isinstance(labels, ObjectLabelValue)
-            and not labels.object_label_domain().scope.ids_per_plane
+            and labels.object_label_domain().scope.ids_span_payload
         ):
             return FullStackExecution
         return default

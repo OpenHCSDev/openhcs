@@ -1134,7 +1134,7 @@ def test_image_output_context_removes_selected_source_runtime_axis() -> None:
     )
 
     metadata = contextualized.metadata
-    assert not metadata.plane_axis.leads_data
+    assert metadata.plane_axis.unstacked
     assert metadata.source_path == "/source/blue.tif"
 
 

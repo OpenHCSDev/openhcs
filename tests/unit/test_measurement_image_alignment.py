@@ -351,7 +351,7 @@ def test_object_reference_projects_declared_single_runtime_slice() -> None:
     )
 
     assert (
-        not prepared.source_projected_payload.domain.scope.ids_per_plane
+        prepared.source_projected_payload.domain.scope.ids_span_payload
     )
     np.testing.assert_array_equal(
         prepared.measurement_labels,
@@ -408,7 +408,7 @@ def test_object_reference_projects_local_singleton_in_wider_runtime_scope() -> N
     )
 
     assert (
-        not prepared.source_projected_payload.domain.scope.ids_per_plane
+        prepared.source_projected_payload.domain.scope.ids_span_payload
     )
     np.testing.assert_array_equal(
         prepared.measurement_labels,

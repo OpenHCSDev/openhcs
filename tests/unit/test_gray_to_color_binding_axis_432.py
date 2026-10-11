@@ -155,7 +155,7 @@ def test_two_processing_roles_share_physical_channel_without_fabrication(aliases
     np.testing.assert_array_equal(result.data[..., 1], capped)
     np.testing.assert_array_equal(inputs[0].data, raw)
     metadata = result.metadata
-    assert not metadata.plane_axis.leads_data
+    assert metadata.plane_axis.unstacked
     assert metadata.axis_position(ColourAxis) == -1
     assert metadata.source_component_metadata["channel"] == "2"
     assert set(metadata.source_image_paths) == {"/synthetic/A01_s1_w2_z1_t1.tif"}
@@ -171,7 +171,7 @@ def test_projected_runtime_plane_needs_a_separate_named_binding_axis():
     projected = RuntimeSliceProjection.value_for_slice(retained, RuntimePlaneAxisValueProjection.from_selected_plane(
         axis=RuntimeSlicePlaneAxis, plane_index=0, axis_size=1,
     ))
-    assert not projected.metadata.plane_axis.leads_data
+    assert projected.metadata.plane_axis.unstacked
     bundle = ImagePayloadBundleContext.from_payloads((projected,)).compose()
     assert bundle.metadata.plane_axis is SourceBindingPlaneAxis
     result = _execute_bound_stack(bundle)

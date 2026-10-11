@@ -142,7 +142,7 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
     for item in metadata["subdirectories"]["checkpoints_results"]["source_projection"]:
         retained = ImagePayloadMetadata.from_mapping(item["image_metadata"])
         assert retained.source_image_provenance_planes.contributor_count == 24
-        assert not retained.plane_axis.leads_data
+        assert retained.plane_axis.unstacked
     # The workspace index exposes both relative and absolute lookup aliases.
     # Verify canonical storage inventory, not the number of lookup keys.
     all_inventory = {

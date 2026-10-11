@@ -185,7 +185,7 @@ class StreamImagePayloadMetadataProjector:
         colour_axis_position = metadata.axis_position(ColourAxis)
         if colour_axis_position is not None:
             item_fields[ViewerWireField.SOURCE_CHANNEL_AXIS.value] = colour_axis_position
-        if not metadata.plane_axis.leads_data:
+        if metadata.plane_axis.unstacked:
             return item_fields
 
         item_fields[ViewerWireField.PLANE_AXIS.value] = metadata.plane_axis.name

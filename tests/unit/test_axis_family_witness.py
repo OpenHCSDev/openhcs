@@ -490,7 +490,7 @@ def test_time_series_stack_slices_and_projects_without_kernel_edits(telemetry) -
     for original, projected in zip(signals, slices, strict=True):
         np.testing.assert_array_equal(np.asarray(projected.data), original.data)
         assert projected.axes == original.axes
-        assert not projected.metadata.plane_axis.leads_data
+        assert projected.metadata.plane_axis.unstacked
 
     restored = ImagePayloadMetadata.from_mapping(
         {"axes": stack.metadata.axes.to_mapping(), "source_dtype": "float32"}

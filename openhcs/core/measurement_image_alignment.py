@@ -178,7 +178,7 @@ class MeasurementImageLabelAlignmentRequest:
         """Project labels only through their declared axis and runtime context."""
         if self.label_payload is None:
             return self
-        if not self.label_payload.object_label_domain().scope.ids_per_plane:
+        if self.label_payload.object_label_domain().scope.ids_span_payload:
             return self
         declared_projection = self.label_payload.declared_plane_projection()
         if declared_projection is None:
@@ -324,7 +324,7 @@ class MeasurementImageLabelAlignmentRequest:
         )
         if (
             label_payload is not None
-            and not label_payload.object_label_domain().scope.ids_per_plane
+            and label_payload.object_label_domain().scope.ids_span_payload
             and image_runtime_projection is not None
             and image_runtime_projection.axis_size == 1
         ):
@@ -366,7 +366,7 @@ class MeasurementImageLabelAlignmentRequest:
                 return request.image
             return label_payload.measurement_reference_image()
         domain = label_payload.object_label_domain()
-        if domain.scope.ids_per_plane and not label_payload.plane_axis.leads_data:
+        if domain.scope.ids_per_plane and label_payload.plane_axis.unstacked:
             raise ValueError(
                 "Object-label reference alignment has no behavior declared for "
                 f"scope={domain.scope!r}, plane_axis={label_payload.plane_axis!r}."

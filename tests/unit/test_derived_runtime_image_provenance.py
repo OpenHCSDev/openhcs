@@ -267,7 +267,7 @@ def test_source_name_projects_one_exact_named_runtime_slice() -> None:
     projected = projected_payload.metadata
 
     assert projected_payload.data.shape == (4, 5)
-    assert not projected.plane_axis.leads_data
+    assert projected.plane_axis.unstacked
     assert projected.source_path == "/input/A01_s2_w1.tif"
     assert projected.source_image_names == ("OrigGreen",)
 
@@ -317,7 +317,7 @@ def test_scalar_contributors_survive_runtime_plane_projection() -> None:
 
     projected = metadata.for_leading_source_plane(0)
 
-    assert not projected.plane_axis.leads_data
+    assert projected.plane_axis.unstacked
     assert projected.source_image_names == ("OrigOverlay",)
     assert projected.source_provenance.represented_source_image_names == (
         "OrigOverlay",

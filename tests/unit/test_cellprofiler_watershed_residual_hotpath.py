@@ -53,7 +53,7 @@ def test_empty_marker_mask_deletes_segmentation_and_labeling(
     assert labels.shape == image.shape
     assert labels.dtype == np.int32
     assert not np.any(labels)
-    assert not label_value.domain.scope.ids_per_plane
+    assert label_value.domain.scope.ids_span_payload
     assert label_value.domain.declared_object_count == 0
     assert label_value.domain.declared_object_ids == ()
     assert label_value.source_provenance == metadata.source_provenance
@@ -146,7 +146,7 @@ def test_nonempty_sparse_high_markers_preserve_connectivity_reference(
     object_count = int(expected_labels.max(initial=0))
     np.testing.assert_array_equal(public_labels, expected_labels)
     assert public_labels.dtype == np.int32
-    assert not label_value.domain.scope.ids_per_plane
+    assert label_value.domain.scope.ids_span_payload
     assert label_value.domain.explicit_id_domain() == tuple(range(1, object_count + 1))
     assert rows.row_mappings() == (
         {

@@ -241,7 +241,7 @@ def test_object_label_domain_project_slice_selects_declared_plane_domain() -> No
 
     assert projected.declared_object_ids == (1, 2, 3, 4)
     assert projected.declared_object_id_domains == ()
-    assert not projected.scope.ids_per_plane
+    assert projected.scope.ids_span_payload
 
 
 def test_object_label_domain_project_slice_rejects_single_domain_broadcast() -> None:

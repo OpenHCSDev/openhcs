@@ -660,18 +660,33 @@ class ObjectLabelValue(
             domain=domain,
         )
 
+    def runtime_slice_projection(self) -> RuntimePlaneAxisValueProjection | None:
+        """Return the declared plane projection when its planes are runtime slices."""
+        projection = self.declared_plane_projection()
+        if projection is not None and projection.axis.one_plane_per_runtime_slice:
+            return projection
+        return None
+
     def runtime_slice_plane_count(self) -> int | None:
         """Return the declared runtime-slice plane count, when present."""
-        projection = self.declared_plane_projection()
-        if projection is None or not projection.axis.one_plane_per_runtime_slice:
-            return None
-        return projection.axis_size
+        projection = self.runtime_slice_projection()
+        return None if projection is None else projection.axis_size
+
+    def for_runtime_slice(self, slice_index: int) -> "ObjectLabelValue":
+        """Return the labels of one runtime slice; other label values are unchanged."""
+        projection = self.runtime_slice_projection()
+        if projection is None:
+            return self
+        return self.value_for_slice(projection.selected_plane(slice_index))
 
     # -- RuntimeSliceProjectableValue -------------------------------------
 
     def runtime_slice_count(self) -> int | None:
-        if not self.plane_axis.one_plane_per_runtime_slice:
-            return None
+        if self.plane_axis.one_plane_per_runtime_slice:
+            return self._declared_runtime_slice_count()
+        return None
+
+    def _declared_runtime_slice_count(self) -> int:
         plane_count = self.declared_plane_count()
         if plane_count is None:
             from openhcs.core.runtime_slice_projection import (
@@ -755,7 +770,7 @@ class ObjectLabelValue(
         return (
             plane_projection is not None
             and plane_projection.preserves_complete_axis
-            and not self.metadata.plane_axis.leads_data
+            and self.metadata.plane_axis.unstacked
             and not self.metadata.persists_whole_image()
             and np.ndim(object_label_dense_array(self)) >= 3
         )
@@ -814,7 +829,7 @@ class ObjectLabelValue(
 
     def declared_plane_count(self) -> int | None:
         """Return this value's validated plane-scoped label cardinality."""
-        if not self.domain.scope.ids_per_plane:
+        if self.domain.scope.ids_span_payload:
             return None
         declared_domains = self.domain.declared_object_id_domains
         if not declared_domains:
@@ -828,9 +843,9 @@ class ObjectLabelValue(
 
     def validate_source_alignment(self, label_name: str) -> None:
         """Validate source-addressable provenance for every declared label plane."""
-        if not self.domain.scope.ids_per_plane:
+        if self.domain.scope.ids_span_payload:
             return
-        if not self.domain.scope.ids_per_plane:
+        if self.domain.scope.ids_span_payload:
             raise TypeError(
                 f"Unsupported object-label domain scope {self.domain.scope!r}."
             )
@@ -1016,7 +1031,7 @@ class ObjectLabelValue(
         source_plane_indices: tuple[int, ...] | None,
     ) -> "ObjectLabelValue":
         """Return this carrier projected onto one runtime slice."""
-        if not self.plane_axis.leads_data:
+        if self.plane_axis.unstacked:
             return self
         source_variants = self.variant_data
         variants = (
@@ -1117,13 +1132,13 @@ class ObjectLabelValue(
         self.representation = ObjectLabelRepresentation(
             self.representation,
         )
-        if not self.domain.scope.ids_per_plane:
+        if self.domain.scope.ids_span_payload:
             if self.plane_axis.leads_data:
                 raise ValueError(
                     f"{value_label} payload-scoped labels cannot declare a plane axis."
                 )
         elif self.domain.scope.ids_per_plane:
-            if not self.plane_axis.leads_data:
+            if self.plane_axis.unstacked:
                 raise ValueError(
                     f"{value_label} plane-scoped labels require a declared plane axis."
                 )
@@ -1436,12 +1451,12 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
         axis_size: int,
     ) -> int | None:
         """Resolve source aliases only when this label set declares that axis."""
-        if not self.plane_axis.one_plane_per_source_binding:
-            return None
-        return self.source_provenance.source_alias_plane_index(
-            source_aliases,
-            axis_size,
-        )
+        if self.plane_axis.one_plane_per_source_binding:
+            return self.source_provenance.source_alias_plane_index(
+                source_aliases,
+                axis_size,
+            )
+        return None
 
     def object_label_semantic_identity(self) -> tuple[tuple[str, Hashable], ...]:
         """Return native object-label identity fields in addition to payload metadata."""
@@ -2243,7 +2258,7 @@ def object_label_domain_for_projected_label_plane(
 ) -> ObjectLabelDomain:
     """Return the payload-domain object IDs carried by one selected plane."""
     domain = source.object_label_domain()
-    if not domain.scope.ids_per_plane:
+    if domain.scope.ids_span_payload:
         return domain
     plane_domain = domain.project_planes((plane_index,))
     return ObjectLabelDomain.declared(

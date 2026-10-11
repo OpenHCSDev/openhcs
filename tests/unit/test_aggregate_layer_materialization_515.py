@@ -310,7 +310,7 @@ def test_single_output_kwargs_cannot_hide_projected_pixels(
     for index, item in enumerate(projected):
         np.testing.assert_array_equal(item.content, pixels[index])
         assert np.shares_memory(item.content, pixels)
-        assert not item.metadata.plane_axis.leads_data
+        assert item.metadata.plane_axis.unstacked
         assert item.source_component_metadata["channel"] == index + 1
     assert metadata.plane_axis is SourceBindingPlaneAxis
     np.testing.assert_array_equal(output.content, pixels[:plane_count])
@@ -381,7 +381,7 @@ def test_existing_projection_owns_source_binding_label_planes(component):
     assert len(items) == 2
     for index, item in enumerate(items):
         np.testing.assert_array_equal(item.data, pixels[index])
-        assert not item.metadata.plane_axis.leads_data
+        assert item.metadata.plane_axis.unstacked
         assert item.require_source_component_metadata()[component.name] == index + 1
         assert item.metadata.source_voxel_spacing.values_zyx == (0.75, 0.75)
         assert np.shares_memory(item.data, labels.data)

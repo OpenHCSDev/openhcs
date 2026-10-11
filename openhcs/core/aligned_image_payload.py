@@ -427,7 +427,7 @@ class ImagePayloadStackComposition(ABC):
                 # runtime axis; distinct output contexts introduce a binding axis.
                 metadata_mode = (
                     SourceBindingPlaneAxis
-                    if not declared_axis.leads_data
+                    if declared_axis.unstacked
                     and len(
                         {record.output_context for record in producer_records}
                     ) > 1
@@ -671,7 +671,7 @@ def unstack_image_payload_context(
     metadata = payload.metadata
     if mask is None and not metadata.has_values:
         return [metadata.payload_with(image_slice) for image_slice in slices]
-    if not metadata.plane_axis.leads_data and default_plane_axis.leads_data:
+    if metadata.plane_axis.unstacked and default_plane_axis.leads_data:
         metadata = replace(metadata, plane_axis=default_plane_axis)
     projector = ImagePayloadSliceProjector(mask=mask, metadata=metadata)
     return projector.payloads_for_slices(slices)
@@ -698,7 +698,7 @@ class ImagePayloadComposition:
         """Return the complete projection owned by the composed payload axis."""
 
         axis = self.plane_axis
-        if not axis.leads_data:
+        if axis.unstacked:
             return None
         return preserved_image_plane_projection(
             self.payload,
@@ -1297,7 +1297,7 @@ class ImagePayloadSliceStack(ImagePayloadStackComposition, ImagePayload):
         """Prepare an independent output buffer in this owner's declared domain."""
         payloads = tuple(payload for payload, _context in projected_outputs)
         metadata_mode = self.projected_output_composition_mode
-        if not metadata_mode.leads_data:
+        if metadata_mode.unstacked:
             return payloads[0].copied(memory_type=memory_type, device_id=device_id)
         data = tuple(payload.data for payload in payloads)
         declared_axes = {
@@ -1414,7 +1414,7 @@ class AlignedImageStack(ImagePayloadSliceStack):
         provenances = tuple(
             (
                 fields.source_provenance.for_source_plane(0)
-                if not fields.plane_axis.leads_data
+                if fields.plane_axis.unstacked
                 and fields.source_provenance.source_plane_count == 1
                 else fields.source_provenance
             )

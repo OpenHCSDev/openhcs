@@ -217,7 +217,7 @@ class SliceAlignedLabels(ObjectLabelInputExecutionMode):
     @classmethod
     def image_execution_mode(cls, labels, default, *, runtime_slice_count=None):
 
-        if not labels.object_label_domain().scope.ids_per_plane:
+        if labels.object_label_domain().scope.ids_span_payload:
             return default.for_payload_scoped_labels(runtime_slice_count)
         return default.for_plane_scoped_labels(labels.declared_plane_projection())
 

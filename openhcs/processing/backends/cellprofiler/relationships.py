@@ -1599,7 +1599,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
 
         plane_domains = core_rows.label_plane_domains()
         payload_scoped = (
-            not child_labels.object_label_domain().scope.ids_per_plane
+            child_labels.object_label_domain().scope.ids_span_payload
         )
         for slice_index, _plane_domain in enumerate(plane_domains):
             object_numbers = self.object_numbers_by_label_id(

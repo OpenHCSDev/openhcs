@@ -472,7 +472,7 @@ class CellProfilerMeasurementImage(
                     )
             else:
                 image_plane_axis = image.metadata.plane_axis
-                if not image_plane_axis.leads_data:
+                if image_plane_axis.unstacked:
                     plane_projection = None
                 elif image_plane_axis is not plane_projection.axis:
                     raise ValueError(

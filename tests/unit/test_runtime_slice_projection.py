@@ -293,7 +293,7 @@ def test_runtime_slice_projection_projects_declared_color_image_stack() -> None:
     )
 
     np.testing.assert_array_equal(projected.data, data[1])
-    assert not projected.metadata.plane_axis.leads_data
+    assert projected.metadata.plane_axis.unstacked
     assert RuntimeSliceProjection.preserved_context_for_value(payload) == (
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimeSlicePlaneAxis,
@@ -426,7 +426,7 @@ def test_image_output_bundle_projects_shared_runtime_axis_not_output_count() -> 
             output.data,
             np.full((2, 3), output_index * 10 + 1, dtype=np.float32),
         )
-        assert not output.metadata.plane_axis.leads_data
+        assert output.metadata.plane_axis.unstacked
 
 
 def test_image_output_bundle_uses_outer_axis_without_inner_declaration() -> None:
@@ -488,8 +488,8 @@ def test_selected_image_projection_stays_consumed_on_derived_output() -> None:
         plane_projection=projection,
     )
 
-    assert not projected.metadata.plane_axis.leads_data
-    assert not derived.metadata.plane_axis.leads_data
+    assert projected.metadata.plane_axis.unstacked
+    assert derived.metadata.plane_axis.unstacked
     assert derived.metadata.source_path == "/tmp/source_1.tif"
 
 
@@ -616,8 +616,8 @@ def test_runtime_slice_projection_projects_declared_object_label_plane() -> None
     )
 
     assert isinstance(projected, ObjectLabelSet)
-    assert not projected.domain.scope.ids_per_plane
-    assert not projected.plane_axis.leads_data
+    assert projected.domain.scope.ids_span_payload
+    assert projected.plane_axis.unstacked
     np.testing.assert_array_equal(projected.labels, label_planes[1])
 
 
@@ -642,7 +642,7 @@ def test_runtime_slice_projection_preserves_image_mask_and_plane_metadata() -> N
     np.testing.assert_array_equal(projected.data, data[1])
     np.testing.assert_array_equal(projected.mask, mask[1])
     assert projected.metadata.source_path == "/tmp/source_1.tif"
-    assert not projected.metadata.plane_axis.leads_data
+    assert projected.metadata.plane_axis.unstacked
 
 
 def test_variable_component_projection_requires_declared_plane_provenance() -> None:
@@ -761,7 +761,7 @@ def test_source_binding_projection_projects_object_labels_through_same_axis() ->
 
     assert isinstance(projected, ObjectLabelSet)
     np.testing.assert_array_equal(projected.labels, planes[1])
-    assert not projected.plane_axis.leads_data
+    assert projected.plane_axis.unstacked
 
 
 def test_source_identity_request_projects_explicit_source_binding_label_planes() -> (

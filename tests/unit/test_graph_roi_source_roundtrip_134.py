@@ -182,7 +182,7 @@ def test_declared_source_plane_survives_graph_writer_zip_and_subject_features(
     )
     assert metadata.source_component_metadata["channel"] == plane + 1
     assert metadata.source_voxel_spacing == graph.source_voxel_spacing
-    assert not metadata.plane_axis.leads_data
+    assert metadata.plane_axis.unstacked
     assert metadata.source_spatial_domain == output.metadata.source_spatial_domain
     assert path.name == "misleading_w99_z999.graph.roi.zip"
     geometry = ROIArchiveSourceMetadata.geometry(restored)

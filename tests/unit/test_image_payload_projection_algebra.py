@@ -62,7 +62,7 @@ def test_physical_projection_agrees_with_separate_semantic_operations(
     assert projected.unit_interval_intensity.scale == (255, 65535)[plane]
     assert projected.source_plane_intensity_scales == ()
     assert projected.source_plane_dtypes == ()
-    assert not projected.plane_axis.leads_data
+    assert projected.plane_axis.unstacked
     projected.source_provenance.source_identity.path = "/tmp/changed.tif"
     assert metadata.source_path == "/tmp/parent.tif"
     assert metadata.source_image_provenance_planes.paths[plane] != "/tmp/changed.tif"

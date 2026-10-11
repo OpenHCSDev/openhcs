@@ -776,10 +776,10 @@ def test_object_label_projected_plane_reduces_domain_to_payload_scope() -> None:
 
     projected = labels.with_projected_plane(labels.labels[1], 1)
 
-    assert not projected.domain.scope.ids_per_plane
+    assert projected.domain.scope.ids_span_payload
     assert projected.domain.declared_object_ids == (2,)
     assert projected.domain.declared_object_id_domains == ()
-    assert not projected.plane_axis.leads_data
+    assert projected.plane_axis.unstacked
     assert projected.source_image_names == ("rawGFP",)
 
 
@@ -791,7 +791,7 @@ def test_object_label_domain_payload_scope_collapses_plane_id_domains() -> None:
 
     payload_domain = domain.with_scope(PayloadLabelScope)
 
-    assert not payload_domain.scope.ids_per_plane
+    assert payload_domain.scope.ids_span_payload
     assert payload_domain.declared_object_ids == (1, 2, 3)
     assert payload_domain.declared_object_id_domains == ()
 
@@ -841,7 +841,7 @@ def test_object_label_projected_plane_promotes_channel_provenance_to_scalar() ->
     ).payload_with(np.zeros((2, 2, 2), dtype=np.float32), None)
     enriched = projected.with_source_image_context(source_image)
 
-    assert not projected.domain.scope.ids_per_plane
+    assert projected.domain.scope.ids_span_payload
     assert projected.domain.declared_object_ids == (2,)
     assert projected.source_path == "/input/A01_s2_w1.tif"
     assert dict(projected.source_component_metadata) == {
@@ -939,7 +939,7 @@ def test_object_label_source_plane_projection_preserves_projected_variants() -> 
 
     np.testing.assert_array_equal(projected.labels, labels[1])
     np.testing.assert_array_equal(projected.variant_labels(SmallRemovedLabels), small_removed[1])
-    assert not projected.domain.scope.ids_per_plane
+    assert projected.domain.scope.ids_span_payload
     assert projected.domain.declared_object_ids == (2, 3)
     assert projected.source_image_names == ("rawGFP",)
 
@@ -1332,7 +1332,7 @@ def test_object_label_payload_builder_uses_nominal_payload_registry() -> None:
     assert rebuilt.labels is transformed_labels
     assert rebuilt.domain.declared_object_count == 1
     assert rebuilt.domain.declared_object_ids == (2,)
-    assert not rebuilt.plane_axis.leads_data
+    assert rebuilt.plane_axis.unstacked
     assert rebuilt.spatial_origin_yx == (3, 5)
     assert rebuilt.source_spatial_shape_yx == (20, 30)
 
@@ -1468,7 +1468,7 @@ def test_collapse_leading_plane_axis_keeps_common_identity_and_contributors() ->
 
     collapsed = metadata.collapse_leading_plane_axis()
 
-    assert not collapsed.plane_axis.leads_data
+    assert collapsed.plane_axis.unstacked
     assert dict(collapsed.source_component_metadata or {}) == {
         "well": "A01",
         "site": "1",
@@ -1786,8 +1786,8 @@ def test_object_label_payload_from_source_image_keeps_ambiguous_3d_domain_payloa
         declared_object_count=4,
     ).payload()
 
-    assert not payload.domain.scope.ids_per_plane
-    assert not payload.plane_axis.leads_data
+    assert payload.domain.scope.ids_span_payload
+    assert payload.plane_axis.unstacked
     assert payload.domain.declared_object_count == 4
     assert payload.domain.declared_object_id_domains == ()
 
@@ -1856,8 +1856,8 @@ def test_object_label_payload_domain_declaration_overrides_source_binding_planes
         declared_object_count=4,
     ).payload()
 
-    assert not payload.domain.scope.ids_per_plane
-    assert not payload.plane_axis.leads_data
+    assert payload.domain.scope.ids_span_payload
+    assert payload.plane_axis.unstacked
     assert payload.domain.declared_object_count == 4
     assert payload.domain.declared_object_id_domains == ()
 
@@ -1872,7 +1872,7 @@ def test_source_image_metadata_does_not_guess_plane_axis_from_paths() -> None:
         ),
     )
 
-    assert not image.metadata.plane_axis.leads_data
+    assert image.metadata.plane_axis.unstacked
 
 
 def test_source_image_metadata_does_not_guess_axis_from_channel_components() -> None:
@@ -1888,7 +1888,7 @@ def test_source_image_metadata_does_not_guess_axis_from_channel_components() -> 
         ),
     )
 
-    assert not image.metadata.plane_axis.leads_data
+    assert image.metadata.plane_axis.unstacked
 
 
 def test_source_image_metadata_preserves_explicit_runtime_slice_axis() -> None:
@@ -2308,7 +2308,7 @@ def test_declared_source_image_projection_selects_pixels_and_metadata_together()
 
     np.testing.assert_array_equal(projected.data, planes[1])
     metadata = projected.metadata
-    assert not metadata.plane_axis.leads_data
+    assert metadata.plane_axis.unstacked
     assert metadata.source_image_names == ("Green",)
     assert metadata.source_path == "green.tif"
 
@@ -2899,7 +2899,7 @@ def test_group_scoped_artifact_consumes_singleton_payload_axis() -> None:
     )
 
     assert value.data.data.shape == (4, 5)
-    assert not value.data.metadata.plane_axis.leads_data
+    assert value.data.metadata.plane_axis.unstacked
 
 
 def test_group_scoped_artifact_rejects_multi_plane_payload_axis() -> None:
@@ -4880,7 +4880,7 @@ def test_pure_2d_slice_index_projector_preserves_explicit_payload_domain() -> No
     )
 
     assert isinstance(projected, ObjectLabelPayload)
-    assert not projected.domain.scope.ids_per_plane
+    assert projected.domain.scope.ids_span_payload
     assert projected.domain.declared_object_count == 9
     assert projected.domain.declared_object_ids == ()
     assert projected.source_image_names == ("rawActin",)

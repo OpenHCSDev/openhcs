@@ -219,7 +219,7 @@ def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
             result_plane.mask, original_masks[index]
         )
         metadata = result_plane.metadata
-        assert not metadata.plane_axis.leads_data
+        assert metadata.plane_axis.unstacked
         assert metadata.axis_position(ColourAxis) is None
         assert (
             metadata.source_voxel_spacing

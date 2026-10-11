@@ -368,7 +368,7 @@ class ObjectLabelMeasurementProjectionStrategy(ABC, metaclass=AutoRegisterMeta):
     ) -> tuple[tuple[int, ...], ...]:
         """Return declared ObjectNumber domains aligned to measurement planes."""
         domain = context.object_labels.domain
-        if not domain.scope.ids_per_plane:
+        if domain.scope.ids_span_payload:
             return context.dense_identity_domains()
         return domain.declared_object_id_domains
 

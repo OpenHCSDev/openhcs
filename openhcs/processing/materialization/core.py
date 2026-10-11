@@ -4175,7 +4175,7 @@ class TiffStackSlicePayloadAuthority:
                 "explicit payload sequence."
             )
         item = materialization_input.items[0]
-        if not item.metadata.plane_axis.leads_data:
+        if item.metadata.plane_axis.unstacked:
             return (item.data,)
         data = np.asarray(item.data)
         if data.ndim < 3 or data.shape[0] <= 0:

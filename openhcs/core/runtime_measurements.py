@@ -126,10 +126,11 @@ class MeasurementTable(
     def value_for_slice(self, context: Any) -> "MeasurementTable":
         """Select the rows of one runtime slice."""
 
-        if (
-            not context.axis.one_plane_per_runtime_slice
-            or self.runtime_slice_row_domain() is None
-        ):
+        selects_slice_rows = (
+            context.axis.one_plane_per_runtime_slice
+            and self.runtime_slice_row_domain() is not None
+        )
+        if not selects_slice_rows:
             return self
         from openhcs.core.runtime_artifact_queries import (
             MeasurementTableAxisProjection,

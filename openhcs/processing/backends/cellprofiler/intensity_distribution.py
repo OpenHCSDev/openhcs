@@ -68,7 +68,6 @@ from openhcs.core.runtime_object_label_domains import (
 from openhcs.core.runtime_plane_projection import (
     RuntimeSliceIndexedValue,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.setting_names import (
@@ -278,14 +277,9 @@ class IntensityDistributionHeatmapRuntimeOutput(RuntimeSliceIndexedValue):
         self, slice_index: int
     ) -> "IntensityDistributionHeatmapRuntimeOutput":
         """Project the heatmap object-label domain through its declared axis."""
-        projection = self.object_labels.declared_plane_projection()
-        if projection is None or not projection.axis.one_plane_per_runtime_slice:
-            return self
-        projected = RuntimeSliceProjection.value_for_slice(
-            self.object_labels,
-            projection.selected_plane(slice_index),
+        return replace(
+            self, object_labels=self.object_labels.for_runtime_slice(slice_index)
         )
-        return replace(self, object_labels=projected)
 
 
 class _IntensityDistributionHeatmapOutputsRuntimeParameter(KeywordRuntimeParameter):

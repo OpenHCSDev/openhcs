@@ -421,7 +421,7 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
     value_type = None
 
     def is_single_plane_value(self, value: Any) -> bool:
-        return not value.metadata.plane_axis.leads_data
+        return value.metadata.plane_axis.unstacked
 
     def slice_value(self, value: Any, memory_type: str) -> tuple[Any, ...]:
         data = value.data
@@ -1297,7 +1297,7 @@ class VolumetricToSliceContract(WholeStackInputContract):
         metadata = as_runtime_value(source_payload).image_metadata
         if not metadata.has_values:
             return source_payload
-        if not metadata.plane_axis.leads_data:
+        if metadata.plane_axis.unstacked:
             raise ValueError(
                 "VOLUMETRIC_TO_SLICE output requires a declared input plane axis."
             )
@@ -1403,7 +1403,7 @@ class LibraryContractCall(ContractCall):
             return None
         input_metadata = image.metadata
         plane_axis = input_metadata.plane_axis
-        if not plane_axis.leads_data:
+        if plane_axis.unstacked:
             raise ValueError(
                 "PURE_2D multi-plane execution requires the input payload to "
                 "declare its runtime plane axis."

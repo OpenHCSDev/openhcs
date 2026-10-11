@@ -42,6 +42,8 @@ class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
     name: ClassVar[str | None] = None
     ids_per_plane: ClassVar[bool]
     """Each label plane declares its own object IDs."""
+    ids_span_payload: ClassVar[bool]
+    """One set of object IDs covers the whole label value."""
 
     @staticmethod
     def require_member(value: object) -> type[ObjectLabelDomainScope]:
@@ -209,6 +211,7 @@ class PayloadLabelScope(ObjectLabelDomainScope):
 
     name = "payload"
     ids_per_plane = False
+    ids_span_payload = True
 
     @classmethod
     def validate_domain(cls, domain: ObjectLabelDomain) -> None:
@@ -346,6 +349,7 @@ class PlaneLabelScope(ObjectLabelDomainScope):
 
     name = "plane"
     ids_per_plane = True
+    ids_span_payload = False
 
     @classmethod
     def validate_domain(cls, domain: ObjectLabelDomain) -> None:
@@ -518,7 +522,7 @@ class PlaneLabelScope(ObjectLabelDomainScope):
         cls,
         plane_axis: type[RuntimePlaneAxis],
     ) -> type[RuntimePlaneAxis]:
-        if not plane_axis.leads_data:
+        if plane_axis.unstacked:
             raise ValueError(
                 "Plane-scoped object labels require a declared runtime plane axis."
             )
@@ -621,7 +625,7 @@ class ObjectLabelDomain:
         """Return this object-label declaration with the requested domain scope."""
         normalized_scope = ObjectLabelDomainScope.require_member(scope)
         if (
-            not normalized_scope.ids_per_plane
+            normalized_scope.ids_span_payload
             and self.scope.ids_per_plane
             and self.declared_object_id_domains
         ):
@@ -656,7 +660,7 @@ class ObjectLabelDomain:
             raise ValueError(
                 f"Object-label slice_index {normalized_index} is outside slice_count {normalized_count}."
             )
-        if not self.scope.ids_per_plane:
+        if self.scope.ids_span_payload:
             raise ValueError(
                 "Runtime-slice projection requires a plane-scoped object-label "
                 f"domain, got {self.scope.name!r}."
@@ -675,7 +679,7 @@ class ObjectLabelDomain:
     def project_planes(self, plane_indices: Iterable[int]) -> "ObjectLabelDomain":
         """Return the object-label domain carried by selected plane indexes."""
         normalized_indices = tuple((int(index) for index in plane_indices))
-        if not self.scope.ids_per_plane:
+        if self.scope.ids_span_payload:
             raise ValueError(
                 "Object-label plane projection requires a plane-scoped domain."
             )
