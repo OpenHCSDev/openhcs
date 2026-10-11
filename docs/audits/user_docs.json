@@ -1002,7 +1002,7 @@
       },
       {
         "path": "openhcs/core/pipeline/function_contracts.py",
-        "sha256": "13bcaf7c7a62654f512d2cc739edccd2deeff35d99970ca493f3e827afbda91a",
+        "sha256": "f5e7c74ea3d2948c75388184263cd9f1f17905f820b180f634dfaa7514e1d526",
         "role": "Declares the @artifact_outputs decorator named by the page."
       },
       {
@@ -1041,6 +1041,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/concepts/storage_system.rst against B6's later changes to openhcs/core/pipeline/function_contracts.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/concepts/storage_system.rst against B6's later changes to openhcs/core/config.py, openhcs/core/runtime_stores.py, openhcs/core/steps/function_artifact_materialization.py, openhcs/core/pipeline/function_contracts.py, tests/unit/test_runtime_value_store.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/concepts/storage_system.rst against the later B6 changes to openhcs/core/config.py, openhcs/core/runtime_stores.py, openhcs/core/steps/function_artifact_materialization.py, openhcs/core/pipeline/function_contracts.py, tests/unit/test_runtime_value_store.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/concepts/storage_system.rst in full and compared it against the changed authorities: the page, openhcs/core/config.py, openhcs/core/runtime_stores.py, function_artifact_materialization.py, PolyStore base/config/disk, ArrayBridge decorators, and the runtime-store and TIFF compression tests; confirmed the three VFSConfig backends and AUTO default, the fieldless ZarrConfig/TiffConfig subtypes, the TIFF NONE/DEFLATE codecs, the @artifact_outputs decorator and RuntimeValueStore replace/observation behaviour, and added openhcs/core/pipeline/function_contracts.py as the decorator owner.",
@@ -1080,7 +1081,7 @@
       },
       {
         "path": "openhcs/mcp/installed_demo.py",
-        "sha256": "5debdb5ba24fbe29f48f065f9b3f473022c17209724e618f2a0b36190fb82913",
+        "sha256": "fc5149e135ce528c7704028434011e347df8b42ffdec8bc2be333d9fc2d0bd37",
         "role": "Implements the installed-package MCP demonstration used by the getting-started verification flow."
       },
       {
@@ -1140,7 +1141,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5017eb98536006a0cec4f34573a35c1a547c3ad89889e276e88a8fb6f992991c",
+        "sha256": "781bd20677f309152ad4041bd7d62d5aca9ea802bd9a0a201a96ad187bb7b05f",
         "role": "Exercises Windows and macOS native installers, staged updates, and cellprofiler-compat installation on Python 3.14."
       },
       {
@@ -1155,6 +1156,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against B6's later changes to openhcs/mcp/installed_demo.py, .github/workflows/integration-tests.yml: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against B6's later changes to tests/unit/test_installed_mcp_demo.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against the later B6 changes to pyproject.toml, tests/unit/test_installed_mcp_demo.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/getting_started/getting_started.rst in full and compared it against the changed authorities: pyproject.toml, openhcs/cli.py, openhcs/mcp/installed_demo.py, render_installer_contract.py, both native installers, smoke_installed_desktop.py, installer tests, integration-tests.yml, test_installed_mcp_demo.py, and the desktop modules moved into openhcs/desktop by 73a2aece2; confirmed the extras, entry points (openhcs, openhcs-mcp-demo), --log-level handling in pyqt_gui/launch.py, the demo's generated plate / neurite preset / nonzero Napari payload check / output_root report, the desktop profile extras and pip/uv override suppression, and sibling-environment update with a preserved previous environment; removed the false Python 3.13 limit on cellprofiler-compat and replaced the moved authorities.",
@@ -1342,7 +1344,7 @@
       },
       {
         "path": "openhcs/authoring/session/views.py",
-        "sha256": "8ce6cac27293ac9105f4d2ebc76d10eebeba1ef90e0e8954c0a117910e17e3b3",
+        "sha256": "c772d515dfa738363ab403a3e19c9e438c17b0748a3a9ed65c44c416f579a378",
         "role": "DatasetListView and PipelineStepsView titles and the operations each pane binds."
       },
       {
@@ -1362,6 +1364,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/basic_interface.rst against B6's later changes to openhcs/authoring/session/views.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/basic_interface.rst against B6's later changes to openhcs/pyqt_gui/main.py, openhcs/pyqt_gui/widgets/pipeline_editor.py, openhcs/agent/services/ui_bridge_service.py, tests/unit/pyqt_gui/test_ui_agent_bridge.py, tests/unit/pyqt_gui/test_pipeline_code_document_transactionality.py, openhcs/pyqt_gui/widgets/shared/services/pipeline_editor_workflows.py, tests/unit/pyqt_gui/test_pipeline_editor_widget.py, openhcs/pyqt_gui/services/ui_bridge_windows.py, tests/unit/pyqt_gui/test_main_config_propagation.py, openhcs/authoring/session/views.py, openhcs/authoring/session/operations/datasets.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/basic_interface.rst against the later B6 changes to openhcs/pyqt_gui/main.py, openhcs/pyqt_gui/widgets/pipeline_editor.py, openhcs/agent/services/ui_bridge_service.py, tests/unit/pyqt_gui/test_ui_agent_bridge.py, tests/unit/pyqt_gui/test_pipeline_code_document_transactionality.py, openhcs/pyqt_gui/widgets/shared/services/pipeline_editor_workflows.py, tests/unit/pyqt_gui/test_pipeline_editor_widget.py, openhcs/pyqt_gui/services/ui_bridge_windows.py, tests/unit/pyqt_gui/test_main_config_propagation.py, openhcs/authoring/session/views.py, openhcs/authoring/session/operations/datasets.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/guide_for_biologists/basic_interface.rst in full and compared it against the changed authorities: pyqt_gui/main.py, plate_manager.py, pipeline_editor.py, ui_bridge_service.py, ui_bridge_windows.py, pipeline_document.py, pipeline_editor_workflows.py, endpoint_function_catalog_service.py, gallery_catalog.py and their tests; confirmed the dock layout, menus (Image Browser, Log Viewer, Global Configuration, Custom Functions, Analysis Consolidation), Connect/Connecting/Compile/Run/Stop rules in the session operations, selected/all dataset code documents, steps-only pipeline documents, background catalogue preparation, the ui-function-selector gallery scenario and unsupported-navigation reporting; renamed the Plate Manager pane to its current Datasets title and pointed agent step 6 at session events.",
@@ -1560,7 +1563,7 @@
       },
       {
         "path": "openhcs/authoring/session/views.py",
-        "sha256": "8ce6cac27293ac9105f4d2ebc76d10eebeba1ef90e0e8954c0a117910e17e3b3",
+        "sha256": "c772d515dfa738363ab403a3e19c9e438c17b0748a3a9ed65c44c416f579a378",
         "role": "DatasetListView title for the desktop pane that UI-owned work populates."
       }
     ],
@@ -1569,6 +1572,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/domain_expert_onboarding.rst against B6's later changes to openhcs/authoring/session/views.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/domain_expert_onboarding.rst against B6's later changes to benchmark/cellprofiler_benchmark_cli.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/domain_expert_onboarding.rst against B6's later changes to openhcs/interop/cellprofiler/pipeline_import.py, benchmark/cellprofiler_benchmark_cli.py, tests/unit/test_benchmark_control.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, openhcs/authoring/session/views.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/guide_for_biologists/domain_expert_onboarding.rst against the later B6 changes to openhcs/agent/capabilities.py, openhcs/interop/cellprofiler/pipeline_import.py, benchmark/cellprofiler_benchmark_cli.py, tests/unit/test_benchmark_control.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, openhcs/authoring/session/views.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -2746,7 +2750,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5017eb98536006a0cec4f34573a35c1a547c3ad89889e276e88a8fb6f992991c",
+        "sha256": "781bd20677f309152ad4041bd7d62d5aca9ea802bd9a0a201a96ad187bb7b05f",
         "role": "Defines the operating-system integration matrix, the Python 3.14 core job, the scoped four-platform Official30 parity lane and its required check, installed-wheel GUI/MCP operation, installer screenshot artifacts, and source-gate coverage artifacts used by CI."
       },
       {
@@ -2881,6 +2885,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/guides/testing_guide.rst against B6's later changes to .github/workflows/integration-tests.yml: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/guides/testing_guide.rst against the later B6 changes to scripts/smoke_installed_gui.py, tests/unit/test_smoke_installed_gui.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/guides/testing_guide.rst in full and compared it against the changed authorities: pytest.ini, integration-tests.yml, resolve_successful_job_baseline.py, test_windows_simple_installer.py, website-pages.yml, test_ci_package_boundaries.py, smoke_installed_desktop.py, test_installed_desktop_smoke.py, smoke_installed_gui.py, xdg_paths.py, tests/integration/conftest.py; confirmed the default discovery options, --it-* flags, artifact names, concurrency, actionlint, code-action probe and log-directory paths, and added the scoped Official30 parity lane and the installed-wheel test runner.",
       "Re-read docs/source/guides/testing_guide.rst in full against repository base bb4218fae and the current shared worktree; challenged its how-to user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -3487,7 +3492,7 @@
       },
       {
         "path": "openhcs/authoring/session/views.py",
-        "sha256": "8ce6cac27293ac9105f4d2ebc76d10eebeba1ef90e0e8954c0a117910e17e3b3",
+        "sha256": "c772d515dfa738363ab403a3e19c9e438c17b0748a3a9ed65c44c416f579a378",
         "role": "Owns the session view titles that the plate-manager and pipeline-editor window identities present."
       },
       {
@@ -3524,6 +3529,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/reference/ui_windows.rst against B6's later changes to openhcs/authoring/session/views.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/reference/ui_windows.rst against B6's later changes to openhcs/authoring/session/views.py, openhcs/pyqt_gui/main.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/reference/ui_windows.rst against the later B6 changes to openhcs/authoring/session/views.py, openhcs/pyqt_gui/main.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/reference/ui_windows.rst in full and compared it against the changed authorities: openhcs/agent/ui_bridge_identities.py, openhcs/pyqt_gui/main.py, openhcs/pyqt_gui/services/main_window_workflows.py, scripts/gallery_catalog.py, tests/unit/test_build_website.py, and tests/unit/test_capture_media_gallery.py; the U1 session refactor moved two window titles onto session views but the inventory, titles, and capture targets are still projected from the registered identity declarations, no OMERO window is registered, and all linked pages exist; added openhcs/authoring/session/views.py as the title owner; no page change was needed.",
@@ -3621,7 +3627,7 @@
       },
       {
         "path": "openhcs/authoring/session/views.py",
-        "sha256": "8ce6cac27293ac9105f4d2ebc76d10eebeba1ef90e0e8954c0a117910e17e3b3",
+        "sha256": "c772d515dfa738363ab403a3e19c9e438c17b0748a3a9ed65c44c416f579a378",
         "role": "Declares the Datasets and Pipeline Editor view titles shown for the two code-document owners."
       },
       {
@@ -3742,6 +3748,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/user_guide/code_ui_editing.rst against B6's later changes to openhcs/authoring/session/views.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/user_guide/code_ui_editing.rst against B6's later changes to openhcs/authoring/session/dataset_document.py, openhcs/authoring/session/views.py, openhcs/pyqt_gui/widgets/pipeline_editor.py, openhcs/pyqt_gui/services/ui_bridge_object_state.py, openhcs/pyqt_gui/services/ui_agent_bridge.py, openhcs/agent/services/ui_bridge_service.py, openhcs/pyqt_gui/widgets/shared/services/pipeline_editor_workflows.py, tests/unit/pyqt_gui/test_ui_agent_bridge.py, tests/unit/pyqt_gui/test_plate_manager_widget.py, tests/unit/pyqt_gui/test_pipeline_editor_widget.py, tests/unit/test_pycodify_formatters.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/user_guide/code_ui_editing.rst against the later B6 changes to openhcs/authoring/session/dataset_document.py, openhcs/authoring/session/views.py, openhcs/pyqt_gui/widgets/pipeline_editor.py, openhcs/pyqt_gui/services/ui_bridge_object_state.py, openhcs/pyqt_gui/services/ui_agent_bridge.py, openhcs/agent/services/ui_bridge_service.py, openhcs/pyqt_gui/widgets/shared/services/pipeline_editor_workflows.py, tests/unit/pyqt_gui/test_ui_agent_bridge.py, tests/unit/pyqt_gui/test_plate_manager_widget.py, tests/unit/pyqt_gui/test_pipeline_editor_widget.py, tests/unit/test_pycodify_formatters.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/user_guide/code_ui_editing.rst in full and compared it against the changed authorities: pipeline_document.py, ui_bridge_object_state.py, ui_bridge_service.py, plate_manager_workflows.py and pipeline_editor_workflows.py, the deleted pipeline_object_state_binding.py (now authoring/session/pipelines.py), step_parameter_editor.py, pycodify_formatters.py, gallery_catalog.py, and the changed tests; checked selected/all document scopes, selected-dataset writability, global-draft protection while work runs, catalogue imports and wildcard rejection, unchanged no-op results, and saved-baseline commit; renamed Plate Manager to the Datasets window.",

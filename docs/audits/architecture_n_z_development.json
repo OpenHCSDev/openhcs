@@ -685,7 +685,7 @@
       },
       {
         "path": "openhcs/authoring/session/views.py",
-        "sha256": "8ce6cac27293ac9105f4d2ebc76d10eebeba1ef90e0e8954c0a117910e17e3b3",
+        "sha256": "c772d515dfa738363ab403a3e19c9e438c17b0748a3a9ed65c44c416f579a378",
         "role": "SessionView family with DatasetListView and PipelineStepsView."
       },
       {
@@ -740,6 +740,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/plate_manager_services.rst against B6's later changes to openhcs/authoring/session/views.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/plate_manager_services.rst against B6's later changes to openhcs/authoring/session/session.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/plate_manager_services.rst against B6's later changes to openhcs/authoring/session/session.py, openhcs/authoring/session/views.py, openhcs/authoring/session/events.py, openhcs/authoring/session/compile_batch.py, openhcs/authoring/session/dataset_document.py, openhcs/pyqt_gui/session_rendering.py, openhcs/mcp/server.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/plate_manager_services.rst against the later B6 changes to openhcs/authoring/session/session.py, openhcs/authoring/session/views.py, openhcs/authoring/session/events.py, openhcs/authoring/session/compile_batch.py, openhcs/authoring/session/dataset_document.py, openhcs/agent/capabilities.py, openhcs/pyqt_gui/session_rendering.py, openhcs/mcp/server.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -1460,7 +1461,7 @@
       },
       {
         "path": "openhcs/core/pipeline/function_contracts.py",
-        "sha256": "13bcaf7c7a62654f512d2cc739edccd2deeff35d99970ca493f3e827afbda91a",
+        "sha256": "f5e7c74ea3d2948c75388184263cd9f1f17905f820b180f634dfaa7514e1d526",
         "role": "special_inputs decorator: records parameter names as runtime-managed callable metadata and excludes them from user parameters; no special_outputs decorator exists."
       },
       {
@@ -1485,6 +1486,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/special_io_system.rst against B6's later changes to openhcs/core/pipeline/function_contracts.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/special_io_system.rst against B6's later changes to openhcs/core/callable_contract.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/runtime_stores.py, openhcs/interop/cellprofiler/module_artifact_contracts.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/special_io_system.rst against the later B6 changes to openhcs/core/callable_contract.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/runtime_stores.py, openhcs/interop/cellprofiler/module_artifact_contracts.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/special_io_system.rst in full, including its unreviewed special_outputs removal, and compared it against the changed authorities: callable_contract.py, pipeline/artifact_planning.py, runtime_stores.py, interop/cellprofiler/module_artifact_contracts.py; confirmed each named class and the special_inputs decorator exist with the roles the page assigns and that no special_outputs declaration remains; fixed the edited sentence.",
@@ -2513,7 +2515,7 @@
       },
       {
         "path": "openhcs/mcp/installed_demo.py",
-        "sha256": "5debdb5ba24fbe29f48f065f9b3f473022c17209724e618f2a0b36190fb82913",
+        "sha256": "fc5149e135ce528c7704028434011e347df8b42ffdec8bc2be333d9fc2d0bd37",
         "role": "Declares the deterministic fixture request (1x1 grid, 192 px tiles, 10% overlap, 1 px stage error, 2 wavelengths, 1 Z, 12 cells, 0.95 shared, A01, ImageXpress, seed 1)."
       },
       {
@@ -2535,6 +2537,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/development/agent_workflow_validation.rst against B6's later changes to openhcs/mcp/installed_demo.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/agent_workflow_validation.rst against B6's later changes to tests/unit/test_installed_mcp_demo.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/agent_workflow_validation.rst against the later B6 changes to tests/unit/test_installed_mcp_demo.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/development/agent_workflow_validation.rst in full and compared it against the changed authorities: openhcs/mcp/client_registration.py, synthetic_plate_service.py, tests/unit/test_installed_mcp_demo.py, openhcs/demo/synthetic_data.py, openhcs/mcp/installed_demo.py; the client skill sync and session-based execute path do not touch the protocol, and the fixture request values, the registry the page names, the time-derived HTD identifier, the ZMQ Server Manager and Live Results windows and the retained baseline record all still match; updated the test's role because its old progress-polling watchdog tests were replaced by the session journey.",
@@ -2606,7 +2609,7 @@
       },
       {
         "path": "openhcs/core/pipeline/function_contracts.py",
-        "sha256": "13bcaf7c7a62654f512d2cc739edccd2deeff35d99970ca493f3e827afbda91a",
+        "sha256": "f5e7c74ea3d2948c75388184263cd9f1f17905f820b180f634dfaa7514e1d526",
         "role": "Declares artifact_inputs, artifact_outputs, special_inputs, execution_scope and runtime_bound_parameters."
       },
       {
@@ -2653,6 +2656,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/development/callable_artifact_authoring.rst against B6's later changes to openhcs/core/pipeline/function_contracts.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/callable_artifact_authoring.rst against B6's later changes to openhcs/core/callable_contract.py, openhcs/core/artifacts.py, openhcs/core/processing_contracts.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/runtime_stores.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/processing/materialization/core.py, openhcs/interop/cellprofiler/module_artifact_contracts.py, tests/unit/test_callable_contract.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/callable_artifact_authoring.rst against the later B6 changes to openhcs/core/callable_contract.py, openhcs/core/artifacts.py, openhcs/core/processing_contracts.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/runtime_stores.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/processing/materialization/core.py, openhcs/interop/cellprofiler/module_artifact_contracts.py, tests/unit/test_callable_contract.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/development/callable_artifact_authoring.rst in full and compared it against the changed authorities: the page, openhcs/core/callable_contract.py, openhcs/core/artifacts.py, module_artifact_contracts.py, tests/unit/test_artifact_spec_collection.py, the ArrayBridge types and decorators, tests/unit/test_callable_contract.py; grepped every API the page names (SettingToKeywordBinding, SelectedPlaneImageOutput, canonical/trailing return specs, RuntimeArtifactBatch.records, PointROIOptions features, the custom-function capability and guide names) and the quoted error texts, confirmed the plate executor's single SpecialArtifactType rule and the empty-Points rejection, corrected the axis-role and processing-contract names, and added processing_contracts.py, function_contracts.py, runtime_stores.py, bundle_execution.py and materialization/core.py as owners while dropping arraybridge/types.py.",
@@ -2995,7 +2999,7 @@
       },
       {
         "path": "tests/conftest.py",
-        "sha256": "82d01adebe952964b61c0cad85024d0b3ba60a4a6dba1a11f6aa715a9f046664",
+        "sha256": "7bf3dc16e833053599ad02eb2e5a0a4744e0754f8008d827afc565a198717e79",
         "role": "Test-harness parsing of OPENHCS_CPU_ONLY, which accepts only 'true' when skipping pytest-qt."
       }
     ],
@@ -3004,6 +3008,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/development/git_worktree_testing.rst against B6's later changes to tests/conftest.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/git_worktree_testing.rst against the later B6 changes to pyproject.toml: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/development/git_worktree_testing.rst in full and compared it against the changed authorities: pyproject.toml (first-party floors moved to zmqruntime 0.6, objectstate 1.3.1, python-introspect 0.2.5, metaclass-registry 0.3, arraybridge 0.4.1, polystore 0.6, pyqt-reactive 0.4; JAX extra now jax[cuda12-local]; openhcs-basicpy added); the page states no version floors. Checked the eight editable installs against .gitmodules, the dev and gui extras, tests/integration/test_main.py, and every --it-* option and value against tests/pytest_integration_options.py; corrected OPENHCS_CPU_ONLY=1 to OPENHCS_CPU_ONLY=true to match tests/conftest.py.",
       "Re-read docs/source/development/git_worktree_testing.rst in full against repository base bb4218fae and the current shared worktree; challenged its how-to user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -3210,7 +3215,7 @@
       },
       {
         "path": "openhcs/agent/dto/session.py",
-        "sha256": "cfad720d060c36c2985d956fbf1f0ca838476ba1521acbdc0c95b4e8c7a746c6",
+        "sha256": "6d954139237672eddae155f3ece1dfefef4d4e4ce20b1934ae388860538627bc",
         "role": "Typed run request fields runtime_observation_export_path, runtime_observation_export_scope and submit_timeout_ms, and event_sequence results."
       },
       {
@@ -3281,6 +3286,7 @@
     ],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/development/mcp_development.rst against B6's later changes to openhcs/agent/dto/session.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_development.rst against B6's later changes to openhcs/authoring/session/session.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_development.rst against B6's later changes to openhcs/mcp/dev_client_core.py, openhcs/agent/services/ui_bridge_service.py, openhcs/mcp/dev_client_commands/ui.py, openhcs/authoring/session/session.py, tests/unit/agent/test_mcp_server.py, openhcs/runtime/zmq_execution_client.py, tests/unit/test_zmq_submission_timeout.py, tests/unit/pyqt_gui/test_ui_agent_bridge.py, openhcs/mcp/server.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_development.rst against the later B6 changes to openhcs/mcp/dev_client_core.py, openhcs/agent/services/ui_bridge_service.py, openhcs/mcp/dev_client_commands/ui.py, openhcs/agent/capabilities.py, openhcs/authoring/session/session.py, tests/unit/agent/test_mcp_server.py, openhcs/runtime/zmq_execution_client.py, tests/unit/test_zmq_submission_timeout.py, tests/unit/pyqt_gui/test_ui_agent_bridge.py, openhcs/mcp/server.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -3451,7 +3457,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5017eb98536006a0cec4f34573a35c1a547c3ad89889e276e88a8fb6f992991c",
+        "sha256": "781bd20677f309152ad4041bd7d62d5aca9ea802bd9a0a201a96ad187bb7b05f",
         "role": "Cross-platform source-candidate and published-dependency readiness, installed-wheel live GUI/MCP operation with retained native screenshots, three-stage native-installer workflow proof, signing-helper parse, and staged-update validation matrix."
       },
       {
@@ -3546,6 +3552,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/development/mcp_release.rst against B6's later changes to .github/workflows/integration-tests.yml: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_release.rst against B6's later changes to tests/unit/test_mcp_release_workflow.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_release.rst against the later B6 changes to tests/unit/test_mcp_release_workflow.py, scripts/smoke_installed_gui.py, tests/unit/test_smoke_installed_gui.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/development/mcp_release.rst in full and compared it against the changed authorities: openhcs/__init__.py (version 0.8.7, microscopy axis-family activation; the version-authority claim holds), .github/workflows/publish.yml and tests/unit/test_mcp_release_workflow.py (new build-native-wheels job, sdist built separately, per-wheel validation, Linux x86_64 smoke selection), .github/workflows/integration-tests.yml (parity-scope gate, Official30 parity on Python 3.12 Linux and 3.14 on all three OSes, run_installed_tests.py coverage), scripts/resolve_successful_job_baseline.py (branch filter removed; ancestor rule unchanged), scripts/smoke_installed_gui.py (typed MCP payloads, ShowDatasetCode), tests/installer/test_windows_simple_installer.py, tests/installer/test_installer_signing.py, tests/unit/test_validate_local_release_floors.py and tests/unit/test_ci_package_boundaries.py. Corrected the single-wheel publication and recovery descriptions and the GUI smoke action name; confirmed the Python 3.14 wheel-candidate lane still excludes the Centrosome oracle and the remaining gate, recovery and signing claims.",
@@ -3672,13 +3679,14 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5017eb98536006a0cec4f34573a35c1a547c3ad89889e276e88a8fb6f992991c",
+        "sha256": "781bd20677f309152ad4041bd7d62d5aca9ea802bd9a0a201a96ad187bb7b05f",
         "role": "Runs explicitly selected live OMERO variants and preserves component and table-service diagnostics on failure."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/development/omero_testing.rst against B6's later changes to .github/workflows/integration-tests.yml: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/omero_testing.rst against the later B6 changes to external/PolyStore/src/polystore/omero_local.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/development/omero_testing.rst in full and compared it against the changed authorities: tests/integration/test_main.py (partition-filter config renames, Microscopy axis family, DatasetSourceChoice, per-test allocated ports, execute_compiled_bundle, subject_id, PipelineDocumentCodec) and .github/workflows/integration-tests.yml (parity-scope gate, run_installed_tests.py coverage). The page names none of the renamed test internals; confirmed the harness still registers OMEROLocalBackend and runs direct and ZMQ modes without opening a browser, the omero-tests-linux lane still builds submodule candidate wheels without a publication dependency and keeps Tables-0 and component diagnostics, and OMEROWellAddress, OMEROPlaneAddress, OMEROPlaneFilenameTemplate and FilenameParseResult exist at their owners.",
       "Re-read docs/source/development/omero_testing.rst in full against repository base bb4218fae and the current shared worktree; challenged its how-to user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",

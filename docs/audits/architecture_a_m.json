@@ -260,7 +260,7 @@
       },
       {
         "path": "openhcs/core/pipeline/function_contracts.py",
-        "sha256": "13bcaf7c7a62654f512d2cc739edccd2deeff35d99970ca493f3e827afbda91a",
+        "sha256": "f5e7c74ea3d2948c75388184263cd9f1f17905f820b180f634dfaa7514e1d526",
         "role": "Defines the special_inputs, artifact_inputs and artifact_outputs decorators."
       },
       {
@@ -290,6 +290,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/artifact_contract_system.rst against B6's later changes to openhcs/core/pipeline/function_contracts.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/artifact_contract_system.rst against B6's later changes to openhcs/core/artifacts.py, openhcs/core/callable_contract.py, openhcs/core/function_patterns.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/pipeline/path_planner.py, tests/unit/test_implicit_main_flow_compilation.py, tests/unit/test_callable_contract.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/artifact_contract_system.rst against the later B6 changes to openhcs/core/artifacts.py, openhcs/core/callable_contract.py, openhcs/core/function_patterns.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/pipeline/path_planner.py, tests/unit/test_implicit_main_flow_compilation.py, tests/unit/test_callable_contract.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/artifact_contract_system.rst in full and compared it against the changed authorities: openhcs/core/artifacts.py, openhcs/core/callable_contract.py, openhcs/core/pipeline/path_planner.py, tests/unit/test_callable_contract.py, tests/unit/test_artifact_input_projection_plan.py; replaced the removed consumes_main_flow flag with main_flow_projection in the occurrence and implicit main-flow sections and the regression description, tidied the special_inputs sentence, and confirmed every other named declaration (ArtifactType families, relation leaves, SourceImageProvenance, ArtifactPlanKeySelector, SelectedPlaneImageOutput, RuntimeValueStore, StepMaterializationConfig) exists with the stated role.",
@@ -1139,7 +1140,7 @@
       },
       {
         "path": "openhcs/authoring/session/views.py",
-        "sha256": "8ce6cac27293ac9105f4d2ebc76d10eebeba1ef90e0e8954c0a117910e17e3b3",
+        "sha256": "c772d515dfa738363ab403a3e19c9e438c17b0748a3a9ed65c44c416f579a378",
         "role": "Declares the SessionView family, each view's title, and the operations its window binds."
       },
       {
@@ -1158,6 +1159,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/declarative_window_system.rst against B6's later changes to openhcs/authoring/session/views.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/declarative_window_system.rst against B6's later changes to openhcs/authoring/session/views.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/declarative_window_system.rst against the later B6 changes to openhcs/authoring/session/views.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/declarative_window_system.rst in full and compared it against the changed authorities: ui_bridge_identities.py, test_build_website.py; confirmed the pyqt-reactive window-manager and scope-window-factory pages and sources exist, traced UiSessionViewWidgetIdentityDeclaration to SessionView.rendered_in, and revised the OpenHCS-retained ownership sentence.",
@@ -2080,7 +2082,7 @@
       },
       {
         "path": "openhcs/mcp/execution.py",
-        "sha256": "e1e3b4c649e8b62e873c10b92f9e27eedb5196e8e4890700929e40ab406c2170",
+        "sha256": "7e94fd4c876944803bdd7d5b93300cda1376326be848ff5636fe2de1b71db096",
         "role": "Runs the MCP SDK loop on a worker thread while a Qt core application and McpMainThreadDispatcher own main-thread calls."
       },
       {
@@ -2245,6 +2247,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/mcp/execution.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/authoring/session/session.py, benchmark/cellprofiler_benchmark_cli.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/mcp/server.py, openhcs/mcp/dev_client_core.py, openhcs/mcp/dev_client_session.py, openhcs/mcp/context.py, openhcs/authoring/session/session.py, openhcs/pyqt_gui/services/ui_bridge_windows.py, benchmark/control_service.py, benchmark/cellprofiler_benchmark_cli.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against the later B6 changes to openhcs/agent/capabilities.py, openhcs/mcp/server.py, openhcs/mcp/execution.py, openhcs/mcp/dev_client_core.py, openhcs/mcp/dev_client_session.py, openhcs/mcp/context.py, openhcs/authoring/session/session.py, openhcs/pyqt_gui/services/ui_bridge_windows.py, benchmark/control_service.py, benchmark/cellprofiler_benchmark_cli.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
