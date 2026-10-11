@@ -76,7 +76,7 @@ The guards pass; the tertiary probe passes; the touched tests pass; the structur
 
 ## Outcome and corrections
 
-Production (Python under `openhcs/`) −1593 +882; tests −859 +1077 (the graph argument of 218 test compiles; one fixture module, `tests/artifact_graphs.py`; 5 guards). Guards 5/5. The tertiary probe passes, and so does the accidental-repeat rejection (`test_active_outputs_do_not_restore_declaration_occurrences_from_one_plan`).
+Production (Python under `openhcs/`) −1603 +919; tests −859 +1077 (the graph argument of 218 test compiles; one fixture module, `tests/artifact_graphs.py`; 5 guards). Guards 5/5. The tertiary probe passes, and so does the accidental-repeat rejection (`test_active_outputs_do_not_restore_declaration_occurrences_from_one_plan`).
 
 Corrections to the plan above:
 
@@ -88,4 +88,5 @@ Corrections to the plan above:
 - **`runtime_context_parameter` is a decision.** Its kind (`DeclaredDecision`) always writes the value, `None` included, so a namespace reader never re-derives "no context" from the signature.
 - **The contract's runtime-bound names** are `runtime_bound_parameter_names`; the field holding the declaration types is `runtime_bound_parameter_types`.
 - **Repeated return slots.** `artifact_outputs` is the positional slot list and keeps the repeat. `artifact_specs`, which drives plan selection, excludes the repeated slot. Resolving returned values keeps the earlier slot's value.
+- **Only FunctionSteps build a compiled pattern.** Plan assembly decides this from the step type; the compile entry no longer probes the graph for a pattern. The unique-return-slot default is the `UniqueReturnSlots` mixin, outside the CellProfiler contracts class.
 - **An accumulator conflict now fails earlier.** Two invocations declaring one output with conflicting sidecar roles are rejected when the graph is extracted, as pipeline admission always did, instead of at coalescing.
