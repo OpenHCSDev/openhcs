@@ -412,9 +412,7 @@ class CellProfilerNeuriteEngineProfile:
             topology,
         )
         crossing_core_mask = topology.crossing_core_mask(outgrowth_skeleton.shape)
-        crossing_span_mask = topology.crossing_span_mask(
-            outgrowth_skeleton.shape, outgrowth_width_px,
-        )
+        crossing_span_mask = topology.crossing_span_mask(outgrowth_skeleton.shape, outgrowth_width_px)
         resolved_crossovers = topology.multi_owner_crossing_count
         owner_skeleton = _repair_signal_supported_skeleton(
             owner_skeleton,
@@ -456,9 +454,7 @@ class CellProfilerNeuriteEngineProfile:
             maximum_root_distance=_TopologyResult.soma_attachment_radius(outgrowth_width_px),
         )
         topology_dropped_trace = (
-            (pre_topology_owner_skeleton > 0)
-            & (neurite_skeleton == 0)
-            & ~crossing_span_mask
+            (pre_topology_owner_skeleton > 0) & (neurite_skeleton == 0) & ~crossing_span_mask
         )
         topology_added_trace = (neurite_skeleton > 0) & (pre_topology_owner_skeleton == 0)
         final_topology_owned_trace_pixels = int(np.count_nonzero(neurite_skeleton))
