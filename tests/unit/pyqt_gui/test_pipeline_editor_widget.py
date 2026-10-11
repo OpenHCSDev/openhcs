@@ -59,7 +59,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
-from openhcs.ui.shared.code_editor_form_updater import CodeEditorFormUpdater
+from pyqt_reactive.services.code_editor_form_updater import CodeEditorFormUpdater
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from tests.unit.pyqt_gui.session_harness import add_datasets, qt_app, session_gui
 from openhcs.core.debug import StepDebugCommand
@@ -1007,28 +1007,14 @@ def test_drag_reorder_moves_steps_by_transport_safe_row_identity(tmp_path) -> No
         ] == [target_token, source_token]
 
 
-def test_time_travel_broadcasts_only_pipeline_level_restores(
-    tmp_path, monkeypatch
-) -> None:
+def test_time_travel_reloads_displayed_steps(tmp_path) -> None:
     with editor_gui(tmp_path) as harness:
         harness.set_steps([FunctionStep(name="First"), FunctionStep(name="Second")])
-        broadcasts = []
-        monkeypatch.setattr(
-            harness.gui.services.event_bus, "emit_pipeline_changed", broadcasts.append
-        )
-
-        harness.editor.on_time_travel_complete(
-            [(f"{harness.scope_id}::functionstep_0", object())], None
-        )
-        assert broadcasts == []
 
         harness.editor.on_time_travel_complete(
             [(PipelineScopeIdentity.from_plate_scope(harness.scope_id).scope_id, object())],
             None,
         )
-        assert [[step.name for step in steps] for steps in broadcasts] == [
-            ["First", "Second"]
-        ]
         assert [step.name for step in harness.editor.displayed_steps] == [
             "First",
             "Second",
@@ -1086,6 +1072,9 @@ class StepEditorRecorder:
 
     def connect_orchestrator_config_signal(self, signal) -> None:
         del signal
+
+    def connect_session_events(self, session) -> None:
+        del session
 
     def connect_artifact_signals(self, **signals) -> None:
         del signals

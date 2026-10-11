@@ -6,6 +6,7 @@ pipeline retains those admission facts; live UI states remain in their registry.
 
 from __future__ import annotations
 
+from objectstate import ScopeKey
 import logging
 from pathlib import Path
 from typing import (
@@ -126,7 +127,7 @@ def _compiler_step_scope_id(
     step_index: int,
 ) -> str:
     """Build a compiler scope id that preserves stable step tokens."""
-    return f"{compilation_scope}::{_step_scope_token(step, step_index)}"
+    return ScopeKey(compilation_scope).child(_step_scope_token(step, step_index))
 
 
 def _compiler_pipeline_scope_id(
@@ -134,7 +135,9 @@ def _compiler_pipeline_scope_id(
     pipeline_definition: Sequence["AbstractStep"],
 ) -> str:
     """Build the compiler declaration scope for one submitted pipeline."""
-    return f"{dataset_root}::pipeline::submission_{id(pipeline_definition):x}"
+    return ScopeKey.of(
+        str(dataset_root), "pipeline", f"submission_{id(pipeline_definition):x}"
+    )
 
 
 MATERIALIZATION_PLAN_REQUIREMENTS = (

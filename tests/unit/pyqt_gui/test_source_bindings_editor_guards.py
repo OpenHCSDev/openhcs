@@ -11,10 +11,7 @@ from pathlib import Path
 import openhcs.core.source_bindings_preview as preview_module
 import openhcs.pyqt_gui.widgets.source_bindings_editor as editor_module
 from openhcs.core.source_bindings import NamedSourceBinding
-from openhcs.pyqt_gui.widgets.source_bindings_editor import (
-    CellEditor,
-    DataclassFieldColumns,
-)
+from pyqt_reactive.widgets.editable_table import CellEditor, DataclassFieldColumns
 
 
 def module_tree(module) -> ast.Module:

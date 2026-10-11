@@ -4,6 +4,7 @@ Registers all OpenHCS-specific scope patterns with the generic WindowFactory.
 Called during application initialization.
 """
 
+from objectstate import ScopeKey
 import logging
 import re
 from typing import TYPE_CHECKING, Optional
@@ -30,7 +31,7 @@ from openhcs.core.steps.function_step import FunctionStep
 logger = logging.getLogger(__name__)
 
 
-ORCHESTRATOR_SCOPE_PATTERN = r"^/(?!.*::).*$"
+ORCHESTRATOR_SCOPE_PATTERN = rf"^/(?!.*{re.escape(ScopeKey.SEPARATOR)}).*$"
 
 
 def pipeline_scope_window_id(scope_id: str) -> str:
@@ -58,11 +59,12 @@ class OpenHCSWindowCreationAuthority:
         from openhcs.core.config import GlobalPipelineConfig
         from openhcs.core.config_cache import save_global_config_sync
         from openhcs.pyqt_gui.config import UIConfig, save_ui_config_sync
-        from openhcs.pyqt_gui.windows.config_window import (
+        from pyqt_reactive.windows.config_window import (
             ConfigSaveParticipant,
-            ConfigWindow,
             ConfigWindowTabSpec,
         )
+
+        from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow
 
         plate_manager = self._plate_manager()
         if plate_manager is None:
@@ -106,7 +108,7 @@ class OpenHCSWindowCreationAuthority:
             main_window.set_ui_config(new_config)
             logger.info("UI config saved via window")
 
-        window = ConfigWindow(
+        window = OpenHCSConfigWindow(
             tabs=(
                 ConfigWindowTabSpec(
                     state=global_state,
@@ -154,10 +156,9 @@ class OpenHCSWindowCreationAuthority:
         from objectstate import ObjectStateRegistry
 
         from openhcs.core.config import PipelineConfig
-        from openhcs.pyqt_gui.windows.config_window import (
-            ConfigWindow,
-            ConfigWindowTabSpec,
-        )
+        from pyqt_reactive.windows.config_window import ConfigWindowTabSpec
+
+        from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow
 
         plate_manager = self._plate_manager()
         if plate_manager is None:
@@ -186,7 +187,7 @@ class OpenHCSWindowCreationAuthority:
             )
             return None
 
-        window = ConfigWindow(
+        window = OpenHCSConfigWindow(
             tabs=(
                 ConfigWindowTabSpec(
                     state=state,
@@ -250,6 +251,7 @@ class OpenHCSWindowCreationAuthority:
             ),
             parent=None,
         )
+        window.connect_session_events(plate_manager.session)
         window.connect_artifact_signals(
             compiled_artifact_signal=(
                 plate_manager.compiled_artifact_inspection_changed

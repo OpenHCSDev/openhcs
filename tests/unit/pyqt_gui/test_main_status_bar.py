@@ -20,9 +20,6 @@ from openhcs.pyqt_gui.services.main_window_workflows import MainWindowEmbeddedWi
 class _MainWindowStatusBarHarness(QMainWindow):
     status_message = pyqtSignal(str)
 
-    def _on_time_travel_complete(self, _dirty_states, _triggering_scope) -> None:
-        pass
-
     def _on_object_state_unregistered(self, _scope_id, _state) -> None:
         pass
 
@@ -182,7 +179,7 @@ def test_reopened_main_window_has_one_live_status_subscription(
     assert [
         callback.__self__
         for callback in ObjectStateRegistry._on_time_travel_complete_callbacks
-    ] == [second]
+    ] == [second.time_travel_navigator]
     assert [
         callback.__self__ for callback in ObjectStateRegistry._on_unregister_callbacks
     ] == [second]

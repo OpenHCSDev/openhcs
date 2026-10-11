@@ -17,7 +17,7 @@ from objectstate.value_semantics import semantic_values_equal
 
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.selection import SelectedAllSelectionMode, SelectedScopeIdsCarrier
-from openhcs.serialization.pycodify_formatters import LazyDataclassFieldEmissionState
+from objectstate import retain_only_authored_paths
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
     PlateManagerOrchestratorCodePayload,
@@ -118,9 +118,7 @@ def authored_pipeline_config(scope_id: str) -> PipelineConfig:
     config = state.to_object(update_delegate=False)
     if not isinstance(config, PipelineConfig):
         raise TypeError("A dataset ObjectState must rebuild a PipelineConfig.")
-    return LazyDataclassFieldEmissionState.retain_only_authored_paths(
-        config, state.signature_diff_fields
-    )
+    return retain_only_authored_paths(config, state.signature_diff_fields)
 
 
 def render_dataset_document(

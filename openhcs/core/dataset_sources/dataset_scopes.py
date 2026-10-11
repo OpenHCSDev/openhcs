@@ -8,6 +8,7 @@ prepares the input workspace that initialization reads.
 
 from __future__ import annotations
 
+from objectstate import ScopeKey
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -57,9 +58,7 @@ class DatasetScope:
     def owns_object_state_scope(self, scope_id: str) -> bool:
         """Whether an ObjectState scope belongs to this dataset."""
 
-        return scope_id == self.scope_id or scope_id.startswith(
-            f"{self.scope_id}{SCOPE_SEGMENT_SEPARATOR}"
-        )
+        return ScopeKey(self.scope_id).contains(scope_id)
 
     def prepare_input_workspace(self) -> "InputWorkspacePreparationResult | None":
         return self.kind.prepare_input_workspace(self)
@@ -195,5 +194,3 @@ class PreparedWorkspaceScope(DatasetScopeKind):
             execution_dataset_root=scope.execution_root,
         )
 
-
-SCOPE_SEGMENT_SEPARATOR = "::"
