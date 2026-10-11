@@ -27,6 +27,7 @@ from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
 from openhcs.processing.backends.lib_registry.scikit_image_registry import SkimageRegistry
+from openhcs.processing.custom_functions.runtime_registry import project_custom_function
 from openhcs.core.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
@@ -68,8 +69,12 @@ def _source(plane_count):
     return metadata.payload_with(pixels)
 
 
-def _registered(func=non_local_means_denoise_planes):
-    metadata = OpenHCSRegistry.metadata_for_declared_callable(func)
+def _registered(metadata=None):
+    metadata = (
+        OpenHCSRegistry.metadata_for_declared_callable(non_local_means_denoise_planes)
+        if metadata is None
+        else metadata
+    )
     assert metadata is not None
     assert metadata.contract is Pure2DContract
     return metadata
@@ -170,7 +175,7 @@ def test_new_independent_declaration_executes_same_consumer_without_edits():
         return image + offset
 
     source = _source(3)
-    result = _registered(independent_plane_offset).func(source, offset=0.5)
+    result = _registered(project_custom_function(independent_plane_offset)).func(source, offset=0.5)
     assert seen == [(16, 20)] * 3
     np.testing.assert_array_equal(result.data, source.data + 0.5)
     assert result.metadata.source_image_provenance_planes.identity == (
@@ -187,7 +192,7 @@ def test_flexible_existing_mro_selects_original_per_plane_behavior():
         seen.append(image.shape)
         return image + 0.5
 
-    wrapped = OpenHCSRegistry.metadata_for_declared_callable(independent_flexible_offset).func
+    wrapped = project_custom_function(independent_flexible_offset).func
     result = wrapped(source, slice_by_slice=True)
     assert seen == [(16, 20)] * 3
     np.testing.assert_array_equal(result.data, source.data + 0.5)

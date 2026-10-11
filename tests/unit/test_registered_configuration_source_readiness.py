@@ -48,15 +48,16 @@ def test_registry_prepares_current_configuration_declarations_before_ready(monke
         events.append("hook")
         lazy_factory.register_lazy_type_mapping(*next(pairs))
 
-    original = SignatureAnalyzer.prepare_dataclass_declaration
+    # Record each declaration the preparation pass actually prepares.
+    original = SignatureAnalyzer._extract_inline_field_docs
 
     def declaration(config_type):
         assert "hook" in events
         events.append(config_type)
-        original(config_type)
+        return original(config_type)
 
     monkeypatch.setattr(CallablePreparation, "prepare", prepare)
-    monkeypatch.setattr(SignatureAnalyzer, "prepare_dataclass_declaration", declaration)
+    monkeypatch.setattr(SignatureAnalyzer, "_extract_inline_field_docs", declaration)
     # The registry admits types that are not dataclasses; readiness filters them.
     lazy_factory.register_lazy_type_mapping(dict, list)
     assert RegistryService.prepare_in_current_process(status_callback=events.append) is metadata

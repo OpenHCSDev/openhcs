@@ -7,19 +7,32 @@ import inspect
 import numpy as np
 import pytest
 
+from openhcs.constants import MemoryType
 from openhcs.processing.backends.enhance import jax_nlm_processor
-from openhcs.processing.backends.enhance import torch_nlm_processor
+from tests.unit.framework_requirements import framework_module, requires_framework
+
+TORCH_NLM = "openhcs.processing.backends.enhance.torch_nlm_processor"
+
+
+def _torch_nlm():
+    return framework_module(MemoryType.TORCH, TORCH_NLM)
 
 
 @pytest.mark.parametrize(
     ("func", "expected_default"),
     (
-        (jax_nlm_processor.non_local_means_denoise_jax, False),
-        (torch_nlm_processor.non_local_means_denoise_torch, True),
+        pytest.param(lambda: jax_nlm_processor.non_local_means_denoise_jax, False, id="jax"),
+        pytest.param(
+            lambda: _torch_nlm().non_local_means_denoise_torch,
+            True,
+            id="torch",
+            marks=requires_framework(MemoryType.TORCH),
+        ),
     ),
 )
 def test_nlm_slice_control_has_one_declaration(func, expected_default) -> None:
     """The decorator exposes the control and the backend does not redeclare it."""
+    func = func()
     decorated_parameter = inspect.signature(func).parameters["slice_by_slice"]
     backend_parameters = inspect.signature(inspect.unwrap(func)).parameters
 
@@ -27,9 +40,11 @@ def test_nlm_slice_control_has_one_declaration(func, expected_default) -> None:
     assert "slice_by_slice" not in backend_parameters
 
 
+@requires_framework(MemoryType.TORCH)
 def test_torch_nlm_dimensionality_members_execute_their_own_leaf(
     monkeypatch,
 ) -> None:
+    torch_nlm_processor = _torch_nlm()
     calls = []
     monkeypatch.setattr(
         torch_nlm_processor,
