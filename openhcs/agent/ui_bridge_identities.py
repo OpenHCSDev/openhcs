@@ -40,6 +40,10 @@ class UiStableWindowIdentityDeclaration(UiBridgeIdentityDeclaration):
         return cls.title
 
     @classmethod
+    def has_title(cls) -> bool:
+        return cls.title is not None
+
+    @classmethod
     def declaration_types(
         cls,
     ) -> tuple[type[UiStableWindowIdentityDeclaration], ...]:
@@ -51,7 +55,7 @@ class UiStableWindowIdentityDeclaration(UiBridgeIdentityDeclaration):
                 for declaration in cls.__registry__.values()
                 if issubclass(declaration, cls)
                 and declaration.value is not None
-                and declaration.title is not None
+                and declaration.has_title()
             )
         )
 
@@ -95,16 +99,28 @@ class UiStateSurfaceIdentityDeclarationBase(UiBridgeIdentityDeclaration):
     """
 
 
-class PlateManagerWidgetIdentity(UiStableWidgetIdentityDeclaration):
+class UiSessionViewWidgetIdentityDeclaration(UiStableWidgetIdentityDeclaration):
+    """Stable window rendering one session view; the view owns its title."""
+
+    @classmethod
+    def require_title(cls) -> str:
+        from openhcs.authoring.session.views import SessionView
+
+        return SessionView.rendered_in(cls).title
+
+    @classmethod
+    def has_title(cls) -> bool:
+        return True
+
+
+class PlateManagerWidgetIdentity(UiSessionViewWidgetIdentityDeclaration):
     value = "plate_manager"
     enum_member_name = "PLATE_MANAGER"
-    title = "Plate Manager"
 
 
-class PipelineEditorWidgetIdentity(UiStableWidgetIdentityDeclaration):
+class PipelineEditorWidgetIdentity(UiSessionViewWidgetIdentityDeclaration):
     value = "pipeline_editor"
     enum_member_name = "PIPELINE_EDITOR"
-    title = "Pipeline Editor"
 
 
 class PipelineDebugToolbarWidgetIdentity(UiWidgetIdentityDeclaration):

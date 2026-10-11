@@ -719,8 +719,7 @@ class OpenHCSMainWindow(QMainWindow):
         system_monitor_action.triggered.connect(self.show_system_monitor)
         view_menu.addAction(system_monitor_action)
 
-        # Plate Manager window
-        plate_action = QAction("&Plate Manager", self)
+        plate_action = QAction(f"&{PlateManagerWidgetIdentity.require_title()}", self)
         plate_action.triggered.connect(self.show_plate_manager)
         view_menu.addAction(plate_action)
         self.shortcut_lifecycle.bind_menu_action(

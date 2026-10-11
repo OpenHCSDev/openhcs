@@ -21,6 +21,11 @@ from openhcs.agent.dto.session import (
     PipelineStepState,
     PipelineStepsState,
 )
+from openhcs.agent.ui_bridge_identities import (
+    PipelineEditorWidgetIdentity,
+    PlateManagerWidgetIdentity,
+    UiSessionViewWidgetIdentityDeclaration,
+)
 from openhcs.authoring.session.dataset_status import PlateStatusPresenter
 from openhcs.authoring.session.datasets import DatasetRow
 from openhcs.authoring.session.operations import SessionOperation
@@ -59,8 +64,18 @@ class SessionView(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
 
     view_id: ClassVar[str | None] = None
+    title: ClassVar[str]
+    window: ClassVar[type[UiSessionViewWidgetIdentityDeclaration]]
+    """The stable UI window that renders this view."""
     state: ClassVar[type]
     operations: ClassVar[tuple[type[SessionOperation], ...]]
+
+    @classmethod
+    def rendered_in(
+        cls, window: type[UiSessionViewWidgetIdentityDeclaration]
+    ) -> type["SessionView"]:
+        (view,) = (view for view in cls.__registry__.values() if view.window is window)
+        return view
 
     @classmethod
     @abstractmethod
@@ -218,6 +233,8 @@ class DatasetActivity:
 
 class DatasetListView(SessionView):
     view_id = "dataset_list"
+    title = "Datasets"
+    window = PlateManagerWidgetIdentity
     state = DatasetListState
     operations = (
         AddDatasets,
@@ -335,6 +352,8 @@ def _function_id(function) -> str | None:
 
 class PipelineStepsView(SessionView):
     view_id = "pipeline_steps"
+    title = "Pipeline Editor"
+    window = PipelineEditorWidgetIdentity
     state = PipelineStepsState
     operations = (
         AddPipelineStep,

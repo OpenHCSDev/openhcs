@@ -114,6 +114,7 @@ class SessionEventSummary:
 class SessionEventBatch:
     events: tuple[SessionEventSummary, ...]
     last_sequence: int
+    errors: tuple[AgentError, ...] = ()
     schema_version: str = SCHEMA_VERSION
 
 

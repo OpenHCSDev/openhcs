@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import ClassVar, Self
 
-from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
+from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
 from openhcs.agent.dto.ui_bridge import (
     UiCodeDocument,
     UiCodeDocumentApplyRequest,
@@ -22,6 +22,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateScopeCatalog,
     UiObjectStateScopeListRequest,
     UiActionCatalog,
+    UiActionInvocationStatus,
     UiActionInvokeRequest,
     UiActionInvokeResult,
     UiActionSummary,
@@ -199,13 +200,29 @@ def state_surface_declaration_for_identity(
     return matches[0]
 
 
+@dataclass(frozen=True, slots=True)
+class UiActionDispatch:
+    """What dispatching one UI action reported."""
+
+    errors: tuple[AgentError, ...] = ()
+    warnings: tuple[AgentWarning, ...] = ()
+    event_sequence: int | None = None
+
+
 class UiActionProviderABC(ABC):
-    """Provider contract for one widget/domain action catalog."""
+    """One widget's action catalog.
+
+    A provider declares its action ids, the summary of each, and how to
+    dispatch one; the catalog, the invocation guards (enabled, confirmation,
+    targets, selection revision, all read from the summary) and the result
+    are this base's.
+    """
 
     identity: "UiActionProviderIdentity"
+    dispatch_error_code: ClassVar[str] = "ui_action_dispatch_failed"
 
     @abstractmethod
-    def catalog(self) -> UiActionCatalog:
+    def action_ids(self) -> tuple[str, ...]:
         raise NotImplementedError
 
     @abstractmethod
@@ -213,8 +230,81 @@ class UiActionProviderABC(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def invoke(self, request: UiActionInvokeRequest) -> UiActionInvokeResult:
+    def dispatch(self, request: UiActionInvokeRequest) -> UiActionDispatch:
         raise NotImplementedError
+
+    def catalog_warnings(self) -> tuple[AgentWarning, ...]:
+        return ()
+
+    def workflow_status_surface_ids(self) -> tuple[str, ...]:
+        return ()
+
+    def catalog(self) -> UiActionCatalog:
+        return UiActionCatalog(
+            schema_version=SCHEMA_VERSION,
+            actions=tuple(self.summary(action_id) for action_id in self.action_ids()),
+            warnings=self.catalog_warnings(),
+        )
+
+    def invoke(self, request: UiActionInvokeRequest) -> UiActionInvokeResult:
+        try:
+            summary = self.summary(request.action_id)
+        except Exception as exc:
+            return self._result(
+                request,
+                None,
+                UiActionDispatch(
+                    errors=(AgentError.from_exception("unknown_ui_action", exc),)
+                ),
+            )
+        error = summary.invocation_guard_error(request)
+        if error is not None:
+            return self._result(request, summary, UiActionDispatch(errors=(error,)))
+        try:
+            dispatched = self.dispatch(request)
+        except Exception as exc:
+            dispatched = UiActionDispatch(
+                errors=(AgentError.from_exception(self.dispatch_error_code, exc),)
+            )
+        return self._result(request, summary, dispatched)
+
+    def _result(
+        self,
+        request: UiActionInvokeRequest,
+        summary: UiActionSummary | None,
+        dispatched: UiActionDispatch,
+    ) -> UiActionInvokeResult:
+        accepted = not dispatched.errors
+        return UiActionInvokeResult(
+            schema_version=SCHEMA_VERSION,
+            identity=UiActionIdentity(
+                widget_id=request.widget_id,
+                action_id=request.action_id,
+            ),
+            status=(
+                UiActionInvocationStatus.ACCEPTED
+                if accepted
+                else UiActionInvocationStatus.REJECTED
+            ).value,
+            receipt=(
+                UiMutationReceipt.accepted_for(request.request_token)
+                if accepted
+                else UiMutationReceipt.rejected_for(request.request_token)
+            ),
+            target_scope_ids=(
+                request.selected_scope_ids
+                or (() if summary is None else summary.target_scope_ids)
+            ),
+            selection_revision_token=(
+                None if summary is None else summary.selection_revision_token
+            ),
+            workflow_status_surface_ids=(
+                self.workflow_status_surface_ids() if accepted else ()
+            ),
+            event_sequence=dispatched.event_sequence,
+            errors=dispatched.errors,
+            warnings=tuple(dispatched.warnings),
+        )
 
 
 class UiWindowProviderABC(UiLiveOverviewContributorABC):

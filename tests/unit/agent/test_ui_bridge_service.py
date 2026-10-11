@@ -44,8 +44,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentValidationResult,
     UiMutationReceipt,
     UiObjectStateFieldHelpQuery,
-    UiObjectStateFieldHelpRequest,
-    UiObjectStateFieldHelpResult,
     UiObjectStateFieldListQuery,
     UiObjectStateFieldMutationRequest,
     UiObjectStateFieldMutationResult,
@@ -95,12 +93,30 @@ from openhcs.agent.dto.ui_bridge import (
 from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
 from openhcs.agent.services.ui_bridge_service import (
     UI_BRIDGE_PROTOCOL_VERSION,
+    UiBridgeApplyDocumentOperation,
+    UiBridgeCloseWindowOperation,
     UiBridgeDescriptorDirectoryAuthority,
     UiBridgeDescriptorReader,
     UiBridgeGatewayABC,
     UiBridgeGatewayResponseError,
+    UiBridgeGetDocumentOperation,
+    UiBridgeGetObjectStateFieldsOperation,
+    UiBridgeGetOperationStatusOperation,
+    UiBridgeGetStateSurfaceOperation,
+    UiBridgeInvokeWidgetActionOperation,
+    UiBridgeListDocumentsOperation,
+    UiBridgeListObjectStateScopesOperation,
+    UiBridgeListStateSurfacesOperation,
+    UiBridgeMutateObjectStateFieldOperation,
     UiBridgeProcessAdvertisedDescriptorCatalog,
+    UiBridgeRestoreSnapshotOperation,
+    UiBridgeSelectedPlateWorkflowOperation,
     UiBridgeService,
+    UiBridgeSnapshotWindowOperation,
+    UiBridgeStatusOperation,
+    UiBridgeValidateDocumentOperation,
+    UiBridgeWaitForOperationReceiptOperation,
+    UiBridgeWidgetTreeOperation,
 )
 from openhcs.agent.services.ui_bridge_transport import UiBridgeControlClient
 from openhcs.runtime.viewer_protocol import ViewerLaunchContextMode
@@ -221,6 +237,12 @@ def _snapshot_ref(
 
 
 class _FakeUiBridgeGateway(UiBridgeGatewayABC):
+    """Canned answers per operation, served through the one generic invoke."""
+
+    def invoke(self, connection, operation, request):
+        answer = getattr(self, operation.name)
+        return answer(connection) if request is None else answer(connection, request)
+
     def __init__(self) -> None:
         self.connections: list[UiBridgeConnectionSpec] = []
         self.restore_requests: list[UiSnapshotRestoreRequest] = []
@@ -552,20 +574,6 @@ class _FakeUiBridgeGateway(UiBridgeGatewayABC):
             scopes=(),
         )
 
-    def describe_object_state_field(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiObjectStateFieldHelpRequest,
-    ) -> UiObjectStateFieldHelpResult:
-        self.connections.append(connection)
-        return UiObjectStateFieldHelpResult(
-            schema_version=SCHEMA_VERSION,
-            address=request,
-            parameter_name=request.field_path.rsplit(".", 1)[-1],
-            summary="field help",
-            description="field docs",
-        )
-
     def mutate_object_state_field(
         self,
         connection: UiBridgeConnectionSpec,
@@ -798,7 +806,7 @@ class _FakeUiBridgeGateway(UiBridgeGatewayABC):
 def test_default_ui_bridge_service_reports_unavailable(monkeypatch, tmp_path):
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR_DIR", str(tmp_path))
 
-    status = UiBridgeService().status()
+    status = UiBridgeService().invoke(UiBridgeStatusOperation)
 
     assert status.reachable is False
     assert status.errors[0].code == "ui_bridge_unavailable"
@@ -816,7 +824,7 @@ def test_descriptor_resolution_uses_token_without_exposing_it(monkeypatch, tmp_p
     gateway = _FakeUiBridgeGateway()
     service = UiBridgeService(gateway=gateway)
 
-    status = service.status()
+    status = service.invoke(UiBridgeStatusOperation)
     payload = to_jsonable(status)
 
     assert status.reachable is True
@@ -905,7 +913,7 @@ def test_descriptor_resolver_rejects_world_readable_file(monkeypatch, tmp_path):
     descriptor.chmod(0o644)
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor))
 
-    status = UiBridgeService().status()
+    status = UiBridgeService().invoke(UiBridgeStatusOperation)
 
     assert status.reachable is False
     assert status.descriptor_status == "stale_ui_bridge_descriptor"
@@ -926,7 +934,7 @@ def test_descriptor_reader_uses_declared_dataclass_fields_as_exact_schema(
     descriptor_path.write_text(json.dumps(payload), encoding="utf-8")
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
 
-    status = UiBridgeService().status()
+    status = UiBridgeService().invoke(UiBridgeStatusOperation)
 
     assert status.reachable is False
     assert status.descriptor_status == "stale_ui_bridge_descriptor"
@@ -947,7 +955,7 @@ def test_descriptor_reader_constructs_transport_enum_from_declared_type(
     descriptor_path.write_text(json.dumps(payload), encoding="utf-8")
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
 
-    status = UiBridgeService().status()
+    status = UiBridgeService().invoke(UiBridgeStatusOperation)
 
     assert status.reachable is False
     assert status.descriptor_status == "stale_ui_bridge_descriptor"
@@ -968,7 +976,7 @@ def test_descriptor_reader_rejects_mismatched_openhcs_application(
     descriptor_path.write_text(json.dumps(payload), encoding="utf-8")
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
 
-    status = UiBridgeService().status()
+    status = UiBridgeService().invoke(UiBridgeStatusOperation)
 
     assert status.reachable is False
     assert status.descriptor_status == "stale_ui_bridge_descriptor"
@@ -1011,7 +1019,7 @@ def test_descriptor_resolver_rejects_dead_process(monkeypatch, tmp_path):
         staticmethod(lambda _pid: None),
     )
 
-    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).status()
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(UiBridgeStatusOperation)
 
     assert status.reachable is False
     assert status.descriptor_status == "stale_ui_bridge_descriptor"
@@ -1073,7 +1081,7 @@ def test_descriptor_resolver_rejects_reused_process_identity(monkeypatch, tmp_pa
         staticmethod(lambda pid: 20.0 if pid == os.getpid() else None),
     )
 
-    status = UiBridgeService().status()
+    status = UiBridgeService().invoke(UiBridgeStatusOperation)
 
     assert status.reachable is False
     assert status.descriptor_status == "stale_ui_bridge_descriptor"
@@ -1100,7 +1108,7 @@ def test_status_rechecks_descriptor_process_liveness_after_gateway_call(
         staticmethod(lambda _pid: next(process_start_times)),
     )
 
-    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).status()
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(UiBridgeStatusOperation)
 
     assert status.reachable is False
     assert status.descriptor_status == "stale_ui_bridge_descriptor"
@@ -1127,7 +1135,7 @@ def test_status_rejects_response_from_non_owner_endpoint(monkeypatch, tmp_path):
     ).write()
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
 
-    status = UiBridgeService(gateway=MismatchedIdentityGateway()).status()
+    status = UiBridgeService(gateway=MismatchedIdentityGateway()).invoke(UiBridgeStatusOperation)
 
     assert status.reachable is False
     assert status.descriptor_status == "ui_bridge_endpoint_identity_mismatch"
@@ -1154,7 +1162,7 @@ def test_descriptor_resolver_reports_ambiguous_live_descriptors(monkeypatch, tmp
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
 
     service = UiBridgeService()
-    status = service.status()
+    status = service.invoke(UiBridgeStatusOperation)
     launch_context = service.viewer_launch_context()
 
     assert status.reachable is False
@@ -1179,8 +1187,9 @@ def test_descriptor_resolver_reports_live_descriptors_for_missing_instance(
     monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", raising=False)
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR_DIR", str(tmp_path))
 
-    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).status(
-        UiBridgeConnectionSpec(bridge_instance_id="stale-bridge")
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(
+        UiBridgeStatusOperation,
+        connection=UiBridgeConnectionSpec(bridge_instance_id="stale-bridge"),
     )
     payload = to_jsonable(status)
 
@@ -1227,7 +1236,7 @@ def test_descriptor_resolution_uses_process_advertised_descriptor(
     )
     gateway = _FakeUiBridgeGateway()
 
-    status = UiBridgeService(gateway=gateway).status()
+    status = UiBridgeService(gateway=gateway).invoke(UiBridgeStatusOperation)
 
     assert status.reachable is True
     assert status.descriptor_status == "ok"
@@ -1260,7 +1269,7 @@ def test_configured_descriptor_directory_includes_process_advertised_descriptor(
         proc_root,
     )
 
-    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).status()
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(UiBridgeStatusOperation)
 
     assert status.reachable is True
     assert status.descriptor_status == "ok"
@@ -1298,7 +1307,7 @@ def test_descriptor_catalog_unions_default_and_process_advertised_live_bridges(
     )
 
     catalog = UiBridgeService().list_bridges()
-    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).status()
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(UiBridgeStatusOperation)
 
     assert [bridge.bridge_instance_id for bridge in catalog.bridges] == [
         "default-bridge",
@@ -1361,24 +1370,28 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
         auth_token="token",
     )
 
-    catalog = service.list_documents(connection)
-    state_catalog = service.list_state_surfaces(connection)
-    document = service.get_document(
+    catalog = service.invoke(UiBridgeListDocumentsOperation, connection=connection)
+    state_catalog = service.invoke(UiBridgeListStateSurfacesOperation, connection=connection)
+    document = service.invoke(
+        UiBridgeGetDocumentOperation,
         UiCodeDocumentRequest(document_id=DOCUMENT_ID),
         connection,
     )
-    state = service.get_state_surface(
+    state = service.invoke(
+        UiBridgeGetStateSurfaceOperation,
         UiStateSurfaceRequest(surface_id=STATE_SURFACE_ID),
         connection,
     )
-    polled_state = service.get_state_surface(
+    polled_state = service.invoke(
+        UiBridgeGetStateSurfaceOperation,
         UiStateSurfaceRequest(
             surface_id=STATE_SURFACE_ID,
             base_revision_token=state.current_revision_token,
         ),
         connection,
     )
-    object_state_scopes = service.list_object_state_scopes(
+    object_state_scopes = service.invoke(
+        UiBridgeListObjectStateScopesOperation,
         UiObjectStateScopeListRequest(
             include_fields=True,
             field_limit=25,
@@ -1386,14 +1399,8 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
         ),
         connection,
     )
-    object_state_field_help = service.describe_object_state_field(
-        UiObjectStateFieldHelpRequest(
-            object_state_scope_id="global_config",
-            field_path="napari_display_config.colormap",
-        ),
-        connection,
-    )
-    object_state_field_mutation = service.mutate_object_state_field(
+    object_state_field_mutation = service.invoke(
+        UiBridgeMutateObjectStateFieldOperation,
         UiObjectStateFieldMutationRequest(
             object_state_scope_id="global_config",
             field_path="napari_display_config.colormap",
@@ -1401,14 +1408,16 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
         ),
         connection,
     )
-    validation = service.validate_document(
+    validation = service.invoke(
+        UiBridgeValidateDocumentOperation,
         UiCodeDocumentValidationRequest(
             document_id=DOCUMENT_ID,
             source=document.source,
         ),
         connection,
     )
-    apply_result = service.apply_document(
+    apply_result = service.invoke(
+        UiBridgeApplyDocumentOperation,
         UiCodeDocumentApplyRequest(
             document_id=DOCUMENT_ID,
             source=document.source,
@@ -1416,18 +1425,21 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
         ),
         connection,
     )
-    close_result = service.close_window(
+    close_result = service.invoke(
+        UiBridgeCloseWindowOperation,
         UiWindowCloseRequest(window_id=WINDOW_ID),
         connection,
     )
-    workflow_result = service.selected_plate_workflow(
+    workflow_result = service.invoke(
+        UiBridgeSelectedPlateWorkflowOperation,
         UiSelectedPlateWorkflowRequest(
             workflow=UiSelectedPlateWorkflowKind.COMPILE,
             selected_scope_ids=(PLATE_SCOPE_ID,),
         ),
         connection,
     )
-    widget_tree = service.widget_tree(
+    widget_tree = service.invoke(
+        UiBridgeWidgetTreeOperation,
         UiWidgetTreeRequest(
             window_id=WINDOW_ID,
             open_policy=UiWindowOpenPolicy(create_if_missing=False),
@@ -1436,7 +1448,8 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
         ),
         connection,
     )
-    widget_action = service.invoke_widget_action(
+    widget_action = service.invoke(
+        UiBridgeInvokeWidgetActionOperation,
         UiWidgetActionInvokeRequest(
             window_id=WINDOW_ID,
             open_policy=UiWindowOpenPolicy(create_if_missing=False),
@@ -1445,7 +1458,11 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
         ),
         connection,
     )
-    operation = service.get_operation_status("op-1", connection)
+    operation = service.invoke(
+        UiBridgeGetOperationStatusOperation,
+        UiBridgeOperationStatusRequest(operation_id="op-1"),
+        connection,
+    )
 
     assert catalog.documents[0].current_selection_count == 1
     assert state_catalog.surfaces[0].surface_id == STATE_SURFACE_ID
@@ -1459,8 +1476,6 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
             field_offset=5,
         )
     ]
-    assert object_state_field_help.parameter_name == "colormap"
-    assert object_state_field_help.description == "field docs"
     assert object_state_field_mutation.mutated is True
     assert object_state_field_mutation.receipt.accepted is True
     assert gateway.field_mutation_requests == [
@@ -1587,7 +1602,7 @@ def test_widget_action_resolves_accepted_receipt_to_terminal_invocation(
         action_kind="button",
     )
 
-    result = service.invoke_widget_action(request, connection)
+    result = service.invoke(UiBridgeInvokeWidgetActionOperation, request, connection)
 
     assert result.invoked is True
     assert result.outcome.value == "invoked"
@@ -1645,7 +1660,8 @@ def test_widget_action_projects_terminal_operation_failure(
         auth_token="token",
     )
 
-    result = service.invoke_widget_action(
+    result = service.invoke(
+        UiBridgeInvokeWidgetActionOperation,
         UiWidgetActionInvokeRequest(
             window_id=WINDOW_ID,
             open_policy=UiWindowOpenPolicy(create_if_missing=False),
@@ -1704,7 +1720,8 @@ def test_list_object_state_scopes_filters_requested_scope_ids(monkeypatch, tmp_p
     gateway = _ScopeFilteringGateway()
     service = UiBridgeService(gateway=gateway)
 
-    result = service.list_object_state_scopes(
+    result = service.invoke(
+        UiBridgeListObjectStateScopesOperation,
         UiObjectStateScopeListRequest(scope_ids=(PLATE_SCOPE_ID,)),
     )
 
@@ -1796,7 +1813,8 @@ def test_get_object_state_fields_projects_query_from_scope_catalog(
     gateway = _FieldProjectionGateway()
     service = UiBridgeService(gateway=gateway)
 
-    result = service.get_object_state_fields(
+    result = service.invoke(
+        UiBridgeGetObjectStateFieldsOperation,
         UiObjectStateFieldListQuery.from_fields(
             scope_ids=("global_config",),
             field_path_contains=("napari_streaming_config",),
@@ -1820,19 +1838,18 @@ def test_unsupported_ui_bridge_operation_error_mentions_restart(monkeypatch, tmp
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR_DIR", str(tmp_path))
 
     class _StaleUiBridgeGateway(_FakeUiBridgeGateway):
-        def describe_object_state_field(
+        def close_window(
             self,
             connection: UiBridgeConnectionSpec,
-            request: UiObjectStateFieldHelpRequest,
-        ) -> UiObjectStateFieldHelpResult:
+            request: UiWindowCloseRequest,
+        ) -> UiWindowCloseResult:
             del connection, request
             raise UiBridgeGatewayResponseError(
                 errors=(
                     AgentError(
                         code="unsupported_ui_bridge_operation",
                         message=(
-                            "Unsupported UI bridge operation: "
-                            "describe_object_state_field"
+                            "Unsupported UI bridge operation: close_window"
                         ),
                         exception_type="UiBridgeUnsupportedOperationError",
                     ),
@@ -1842,11 +1859,9 @@ def test_unsupported_ui_bridge_operation_error_mentions_restart(monkeypatch, tmp
     service = UiBridgeService(gateway=_StaleUiBridgeGateway())
     connection = service.connection_from_args(port=9999, auth_token="token")
 
-    result = service.describe_object_state_field(
-        UiObjectStateFieldHelpRequest(
-            object_state_scope_id="global_config",
-            field_path="napari_display_config.colormap",
-        ),
+    result = service.invoke(
+        UiBridgeCloseWindowOperation,
+        UiWindowCloseRequest(window_id=WINDOW_ID),
         connection,
     )
 
@@ -1863,7 +1878,8 @@ def test_restore_request_rejects_multiple_selectors(monkeypatch, tmp_path):
     gateway = _FakeUiBridgeGateway()
     service = UiBridgeService(gateway=gateway)
 
-    result = service.restore_snapshot(
+    result = service.invoke(
+        UiBridgeRestoreSnapshotOperation,
         UiSnapshotRestoreRequest(snapshot_id="snap-1", index=0)
     )
 
@@ -1878,7 +1894,8 @@ def test_restore_request_preserves_confirmation_and_auto_branch(monkeypatch, tmp
     service = UiBridgeService(gateway=gateway)
     connection = service.connection_from_args(port=9999, auth_token="token")
 
-    result = service.restore_snapshot(
+    result = service.invoke(
+        UiBridgeRestoreSnapshotOperation,
         UiSnapshotRestoreRequest(
             snapshot_id="snap-1",
             confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(False),
@@ -1898,7 +1915,8 @@ def test_snapshot_window_forwards_request_and_resource(monkeypatch, tmp_path):
     service = UiBridgeService(gateway=gateway)
     connection = service.connection_from_args(port=9999, auth_token="token")
 
-    result = service.snapshot_window(
+    result = service.invoke(
+        UiBridgeSnapshotWindowOperation,
         UiWindowSnapshotRequest(
             window_id=WINDOW_ID,
             output_dir_path=str(tmp_path),
@@ -1958,7 +1976,8 @@ def test_wait_for_operation_receipt_uses_gateway_terminal_wait_owner(
     service = UiBridgeService(gateway=gateway)
     connection = service.connection_from_args(port=9999, auth_token="token")
 
-    result = service.wait_for_operation_receipt(
+    result = service.invoke(
+        UiBridgeWaitForOperationReceiptOperation,
         UiBridgeOperationWaitRequest(
             operation_id="op-1",
             timeout_seconds=1.0,
@@ -2005,7 +2024,8 @@ def test_wait_for_operation_receipt_returns_fresh_running_ref_with_timeout_error
     service = UiBridgeService(gateway=gateway)
     connection = service.connection_from_args(port=9999, auth_token="token")
 
-    result = service.wait_for_operation_receipt(
+    result = service.invoke(
+        UiBridgeWaitForOperationReceiptOperation,
         UiBridgeOperationWaitRequest(
             operation_id="op-1",
             timeout_seconds=0.0,

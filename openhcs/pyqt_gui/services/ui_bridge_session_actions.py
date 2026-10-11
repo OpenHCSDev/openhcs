@@ -14,18 +14,15 @@ from objectstate.object_state import ObjectStateRegistry
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
 from openhcs.agent.dto.ui_bridge import (
-    UiActionCatalog,
     UiActionIdentity,
-    UiActionInvocationStatus,
     UiActionInvokeRequest,
-    UiActionInvokeResult,
     UiActionSummary,
-    UiMutationReceipt,
 )
 from openhcs.authoring.session.operations import SessionOperation
 from openhcs.authoring.session.operations.datasets import PromptedOperation
 from openhcs.authoring.session.session import Session
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
+    UiActionDispatch,
     UiActionProviderABC,
     UiActionProviderIdentity,
 )
@@ -54,19 +51,21 @@ class SessionOperationActionProvider(UiActionProviderABC):
         self._related_state_surface_ids = related_state_surface_ids
         self._workflow_status_surface_ids = workflow_status_surface_ids
 
-    def catalog(self) -> UiActionCatalog:
-        return UiActionCatalog(
-            schema_version=SCHEMA_VERSION,
-            actions=tuple(self.summary(slot.operation_id) for slot in self._operations),
-            warnings=tuple(
-                warning for slot in self._operations for warning in slot.warnings
-            ),
-        )
+    def action_ids(self) -> tuple[str, ...]:
+        return tuple(slot.operation_id for slot in self._operations)
+
+    def catalog_warnings(self):
+        return tuple(warning for slot in self._operations for warning in slot.warnings)
+
+    def workflow_status_surface_ids(self) -> tuple[str, ...]:
+        return self._workflow_status_surface_ids
 
     def summary(self, action_id: str) -> UiActionSummary:
         operation = self._operation(action_id)
         selection = self._selection()
-        error = self._availability_error(operation, selection)
+        error = operation.available(
+            self._session, operation.request_for_selection(self._session, selection)
+        )
         return UiActionSummary(
             schema_version=SCHEMA_VERSION,
             identity=UiActionIdentity(widget_id=self.identity.widget_id, action_id=action_id),
@@ -79,61 +78,28 @@ class SessionOperationActionProvider(UiActionProviderABC):
             selection_mode=operation.selection_mode,
             current_selection_count=len(selection),
             target_scope_ids=selection,
-            selection_revision_token=self._selection_revision_token(),
+            selection_revision_token=self._selection_revision_token(selection),
             related_state_surface_ids=self._related_state_surface_ids(action_id),
         )
 
-    def invoke(self, request: UiActionInvokeRequest) -> UiActionInvokeResult:
-        try:
-            operation = self._operation(request.action_id)
-        except Exception as exc:
-            return self._result(request, (AgentError.from_exception("unknown_ui_action", exc),))
-        selection = self._selection()
-        if request.selected_scope_ids and request.selected_scope_ids != selection:
-            return self._result(
-                request,
-                (
-                    AgentError(
-                        code="stale_ui_action_selection",
-                        message="Requested target scopes do not match the current selection.",
-                    ),
-                ),
-            )
-        observed = request.observed_selection_revision_token
-        if observed is not None and observed != self._selection_revision_token():
-            return self._result(
-                request,
-                (
-                    AgentError(
-                        code="stale_ui_action_revision",
-                        message="The selection changed after the action was planned.",
-                    ),
-                ),
-            )
-        error = self._availability_error(operation, selection)
-        if error is None and operation.confirmation_required and request.confirmation_is_required():
-            error = AgentError(
-                code="confirmation_required",
-                message=(
-                    f"{operation.label} mutates state or starts work; set "
-                    "require_confirmation=False to dispatch it."
-                ),
-            )
-        if error is not None:
-            return self._result(request, (error,))
+    def dispatch(self, request: UiActionInvokeRequest) -> UiActionDispatch:
+        operation = self._operation(request.action_id)
         commit_focused_widget_edits()
         session_request = (
             self._session.renderer.prompt(operation)
             if issubclass(operation, PromptedOperation)
-            else operation.request_for_selection(self._session, selection)
+            else operation.request_for_selection(self._session, self._selection())
         )
         if session_request is None:
-            return self._result(
-                request,
-                (AgentError(code="ui_action_cancelled", message="The user cancelled."),),
+            return UiActionDispatch(
+                errors=(AgentError(code="ui_action_cancelled", message="The user cancelled."),)
             )
         result = self._session.invoke(operation, session_request)
-        return self._result(request, result.errors, warnings=result.warnings)
+        return UiActionDispatch(
+            errors=result.errors,
+            warnings=result.warnings,
+            event_sequence=result.event_sequence,
+        )
 
     def _operation(self, action_id: str) -> type[SessionOperation]:
         slot = SessionOperation.named(action_id)
@@ -141,50 +107,6 @@ class SessionOperationActionProvider(UiActionProviderABC):
             raise ValueError(f"{self.identity.widget_id} has no action {action_id!r}.")
         return slot.resolved(self._session)
 
-    def _availability_error(
-        self,
-        operation: type[SessionOperation],
-        selection: tuple[str, ...],
-    ) -> AgentError | None:
-        return operation.available(
-            self._session, operation.request_for_selection(self._session, selection)
-        )
-
-    def _selection_revision_token(self) -> str:
-        parts = (
-            self.identity.widget_id,
-            self._selection(),
-            ObjectStateRegistry.get_token(),
-        )
+    def _selection_revision_token(self, selection: tuple[str, ...]) -> str:
+        parts = (self.identity.widget_id, selection, ObjectStateRegistry.get_token())
         return hashlib.sha256(repr(parts).encode("utf-8")).hexdigest()
-
-    def _result(
-        self,
-        request: UiActionInvokeRequest,
-        errors: tuple[AgentError, ...],
-        *,
-        warnings=(),
-    ) -> UiActionInvokeResult:
-        accepted = not errors
-        return UiActionInvokeResult(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=request.widget_id,
-                action_id=request.action_id,
-            ),
-            status=(
-                UiActionInvocationStatus.ACCEPTED
-                if accepted
-                else UiActionInvocationStatus.REJECTED
-            ).value,
-            receipt=(
-                UiMutationReceipt.accepted_for(request.request_token)
-                if accepted
-                else UiMutationReceipt.rejected_for(request.request_token)
-            ),
-            target_scope_ids=self._selection(),
-            selection_revision_token=self._selection_revision_token(),
-            workflow_status_surface_ids=self._workflow_status_surface_ids,
-            errors=errors,
-            warnings=tuple(warnings),
-        )

@@ -8,7 +8,7 @@ import pickle
 import threading
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar
 
@@ -36,98 +36,24 @@ from zmqruntime.transport import (
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.ui_bridge import (
-    UiActionCatalog,
-    UiActionInvokeResult,
-    UiBranchCatalog,
     UiBridgeConnectionSpec,
     UiBridgeDescriptorFile,
     UiBridgeDescriptorWirePayload,
-    UiBridgeOperationRef,
     UiBridgeRequestEnvelope,
     UiBridgeResponseEnvelope,
-    UiBridgeStatus,
-    UiCodeDocument,
-    UiCodeDocumentApplyResult,
-    UiCodeDocumentCatalog,
-    UiCodeDocumentValidationResult,
-    UiObjectStateFieldHelpResult,
-    UiObjectStateScopeCatalog,
-    UiSelectedPlateWorkflowResult,
-    UiSnapshotCatalog,
-    UiSnapshotRestoreResult,
-    UiStateSurfaceCatalog,
-    UiStateSurfaceDocument,
-    UiWidgetActionInvokeResult,
-    UiWidgetTreeResult,
-    UiWindowCatalog,
-    UiWindowCloseResult,
-    UiWindowFocusResult,
-    UiWindowNavigateResult,
-    UiWindowSnapshotResult,
 )
 from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
 from openhcs.agent.services.ui_bridge_service import (
     UI_BRIDGE_PROTOCOL_VERSION,
-    UiBridgeOperationContract,
-    UiBridgeOperationContractABC,
+    UiBridgeOperation,
 )
 from openhcs.pyqt_gui.config import AgentUiBridgeConfig
-from openhcs.pyqt_gui.services.ui_agent_bridge import (
-    InProcessUiBridgeGateway,
-    UiAgentBridgeService,
-)
+from openhcs.pyqt_gui.services.ui_agent_bridge import UiAgentBridgeService
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 DEFAULT_UI_BRIDGE_START_TIMEOUT_SECONDS = 5.0
 UI_BRIDGE_BROWSER_SERVER_NAME = "OpenHCSUiBridgeServer"
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class UiBridgeBrowserPong(PongResponse):
-    """UI-bridge specialization of the canonical server heartbeat."""
-
-    schema_version: str
-    bridge_protocol_version: str
-    bridge_instance_id: str
-
-    def to_dict(self) -> JsonObject:
-        payload = PongResponse.to_dict(self)
-        payload.update(
-            {
-                "schema_version": self.schema_version,
-                "bridge_protocol_version": self.bridge_protocol_version,
-                "bridge_instance_id": self.bridge_instance_id,
-            }
-        )
-        return payload
-
-
-UiBridgeOperationDispatchResult = (
-    UiBridgeStatus
-    | UiCodeDocumentCatalog
-    | UiCodeDocument
-    | UiCodeDocumentValidationResult
-    | UiCodeDocumentApplyResult
-    | UiStateSurfaceCatalog
-    | UiStateSurfaceDocument
-    | UiActionCatalog
-    | UiActionInvokeResult
-    | UiSelectedPlateWorkflowResult
-    | UiWindowCatalog
-    | UiWindowCloseResult
-    | UiWindowFocusResult
-    | UiWindowNavigateResult
-    | UiWindowSnapshotResult
-    | UiWidgetTreeResult
-    | UiWidgetActionInvokeResult
-    | UiObjectStateFieldHelpResult
-    | UiObjectStateScopeCatalog
-    | UiSnapshotCatalog
-    | UiSnapshotRestoreResult
-    | UiBranchCatalog
-    | UiBridgeOperationRef
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -199,65 +125,6 @@ class UiBridgeEndpointInUseError(RuntimeError):
             f"UI bridge endpoint {self.endpoint.transport_mode.value}://"
             f"{self.endpoint.host}:{self.endpoint.port} is already in use "
             f"(occupied ports: {ports})."
-        )
-
-
-class UiBridgeServerInProcessGateway(InProcessUiBridgeGateway):
-    """In-process gateway with server descriptor details in status responses."""
-
-    def __init__(
-        self,
-        bridge: UiAgentBridgeService,
-        *,
-        binding_supplier: Callable[[], UiBridgeServerBinding],
-    ) -> None:
-        super().__init__(bridge)
-        self._binding_supplier = binding_supplier
-
-    def status(self, connection: UiBridgeConnectionSpec) -> UiBridgeStatus:
-        binding = self._binding_supplier()
-        return replace(
-            super().status(connection),
-            auth_required=True,
-            bridge_instance_id=binding.bridge_instance_id,
-            connection=binding.connection,
-            descriptor_file_path=str(binding.descriptor_file_path),
-            supported_operations=UiBridgeOperationContractABC.supported_operation_names(),
-            provider_catalog_schema_versions=(SCHEMA_VERSION,),
-            bridge_features=UiBridgeOperationContractABC.supported_bridge_features(),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class UiBridgeRequestOperation:
-    """Generic server adapter for a typed UI bridge operation contract."""
-
-    contract: UiBridgeOperationContract
-
-    @classmethod
-    def for_name(cls, operation_name: str) -> "UiBridgeRequestOperation":
-        try:
-            return cls(UiBridgeOperationContractABC.for_name(operation_name))
-        except KeyError as exc:
-            raise UiBridgeUnsupportedOperationError(operation_name) from exc
-
-    @classmethod
-    def supported_operation_names(cls) -> tuple[str, ...]:
-        return UiBridgeOperationContractABC.supported_operation_names()
-
-    @property
-    def requires_auth(self) -> bool:
-        return self.contract.requires_auth
-
-    def execute(
-        self,
-        dispatcher: "UiBridgeRequestDispatcher",
-        request: UiBridgeRequestEnvelope,
-    ) -> UiBridgeOperationDispatchResult:
-        return self.contract.invoke_with_payload(
-            dispatcher.gateway,
-            dispatcher.bridge_connection,
-            dispatcher.contract_payload(self.contract, request),
         )
 
 
@@ -341,17 +208,6 @@ class UiBridgeRequestDispatcher:
     def bridge(self) -> UiAgentBridgeService:
         return self._bridge
 
-    @property
-    def gateway(self) -> UiBridgeServerInProcessGateway:
-        return UiBridgeServerInProcessGateway(
-            self._bridge,
-            binding_supplier=self._binding_supplier,
-        )
-
-    @property
-    def bridge_connection(self) -> UiBridgeConnectionSpec:
-        return self._binding_supplier().connection
-
     def dispatch(self, payload: JsonObject) -> JsonObject:
         try:
             request = dataclass_from_mapping(
@@ -359,9 +215,14 @@ class UiBridgeRequestDispatcher:
                 payload,
             )
             self._validate_request_contract(request)
-            operation = UiBridgeRequestOperation.for_name(request.operation)
+            operation = self._operation(request.operation)
             self._validate_auth(request, operation)
-            result = operation.execute(self, request)
+            result = operation.as_served(
+                self._bridge.invoke(
+                    operation, operation.decode_request(request.payload)
+                ),
+                self._binding_supplier(),
+            )
             response = UiBridgeResponseEnvelope(
                 schema_version=SCHEMA_VERSION,
                 bridge_protocol_version=UI_BRIDGE_PROTOCOL_VERSION,
@@ -387,24 +248,20 @@ class UiBridgeRequestDispatcher:
             request.application
         ).require_match()
 
+    @staticmethod
+    def _operation(operation_name: str) -> type[UiBridgeOperation]:
+        try:
+            return UiBridgeOperation.for_name(operation_name)
+        except KeyError as exc:
+            raise UiBridgeUnsupportedOperationError(operation_name) from exc
+
     def _validate_auth(
         self,
         request: UiBridgeRequestEnvelope,
-        operation: UiBridgeRequestOperation,
+        operation: type[UiBridgeOperation],
     ) -> None:
         if operation.requires_auth and request.auth_token != self._auth_token:
             raise PermissionError("UI bridge auth token is missing or invalid.")
-
-    @staticmethod
-    def request_payload(target_type, request: UiBridgeRequestEnvelope):
-        return dataclass_from_mapping(target_type, request.payload)
-
-    def contract_payload(
-        self,
-        contract: UiBridgeOperationContract,
-        request: UiBridgeRequestEnvelope,
-    ):
-        return contract.decode_request_payload(request.payload)
 
     @staticmethod
     def _result_payload(result) -> JsonObject:
@@ -736,18 +593,15 @@ class UiBridgeControlServer:
     def _browser_pong(
         self,
         connection: ExecutionConnectionSpec,
-    ) -> UiBridgeBrowserPong:
+    ) -> PongResponse:
         control_port = connection.zmq_control_port(self._transport_config)
-        return UiBridgeBrowserPong(
+        return PongResponse(
             port=connection.require_port("UI bridge browser heartbeat"),
             control_port=control_port,
             ready=True,
             server=UI_BRIDGE_BROWSER_SERVER_NAME,
             server_role=ServerRole.GENERIC,
             log_file_path=self._current_log_file_path(),
-            schema_version=SCHEMA_VERSION,
-            bridge_protocol_version=UI_BRIDGE_PROTOCOL_VERSION,
-            bridge_instance_id=self._bridge_instance_id,
             application=OPENHCS_ENDPOINT_APPLICATION,
         )
 

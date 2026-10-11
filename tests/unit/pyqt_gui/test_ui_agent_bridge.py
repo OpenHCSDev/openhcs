@@ -57,6 +57,7 @@ from zmqruntime.config import TransportMode
 
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
+    UiBridgeOperationStatusRequest,
     UiActionInvokeRequest,
     UiBranchSwitchRequest,
     UiBridgeConfirmationRequirement,
@@ -68,7 +69,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentSelectionMode,
     UiCodeDocumentValidationRequest,
     UiObjectStateFieldFilter,
-    UiObjectStateFieldHelpRequest,
     UiObjectStateScopeListRequest,
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowRequest,
@@ -89,6 +89,11 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSummary,
 )
 from openhcs.agent.services.ui_bridge_service import (
+    UiBridgeGetDocumentOperation,
+    UiBridgeGetStateSurfaceOperation,
+    UiBridgeListDocumentsOperation,
+    UiBridgeListStateSurfacesOperation,
+    UiBridgeStatusOperation,
     UI_BRIDGE_PROTOCOL_VERSION,
     UiBridgeConnectionResolution,
     UiBridgeService,
@@ -2644,92 +2649,6 @@ def test_object_state_exact_field_paths_include_path_type_and_description() -> N
     )
 
 
-def test_object_state_field_help_uses_object_state_path_types() -> None:
-    state = ObjectState(GlobalPipelineConfig(), scope_id="")
-    ObjectStateRegistry.register(state, _skip_snapshot=True)
-    bridge = UiAgentBridgeService()
-
-    section = bridge.describe_object_state_field(
-        UiObjectStateFieldHelpRequest(
-            object_state_scope_id=OpenHCSUiWindowId.global_config,
-            field_path="napari_display_config",
-            max_description_chars=500,
-        )
-    )
-    child = bridge.describe_object_state_field(
-        UiObjectStateFieldHelpRequest(
-            object_state_scope_id=OpenHCSUiWindowId.global_config,
-            field_path="napari_display_config.colormap",
-            max_description_chars=500,
-        )
-    )
-    enum_child = bridge.describe_object_state_field(
-        UiObjectStateFieldHelpRequest(
-            object_state_scope_id=OpenHCSUiWindowId.global_config,
-            field_path="processing_config.group_by",
-            max_description_chars=500,
-        )
-    )
-
-    assert section.errors == ()
-    assert section.help_target_type == "openhcs.core.config.NapariDisplayConfig"
-    assert section.parameter_name == "napari_display_config"
-    assert section.description is not None
-    assert section.description == state.parameter_descriptions["napari_display_config"]
-
-    assert child.errors == ()
-    assert child.help_target_type == "openhcs.core.config.NapariDisplayConfig"
-    assert child.parameter_name == "colormap"
-    assert child.summary == "• colormap (str)"
-    assert "colormap registered in the installed Napari viewer" in child.description
-
-    assert enum_child.errors == ()
-    assert enum_child.enum_values == (
-        "site",
-        "channel",
-        "z_index",
-        "timepoint",
-        "none",
-    )
-
-
-def test_object_state_field_help_uses_source_binding_field_docstrings() -> None:
-    state = ObjectState(GlobalPipelineConfig(), scope_id="")
-    ObjectStateRegistry.register(state, _skip_snapshot=True)
-    bridge = UiAgentBridgeService()
-
-    source_defaults = bridge.describe_object_state_field(
-        UiObjectStateFieldHelpRequest(
-            object_state_scope_id=OpenHCSUiWindowId.global_config,
-            field_path="source_bindings_config.metadata_rules",
-            max_description_chars=500,
-        )
-    )
-    step_bindings = bridge.describe_object_state_field(
-        UiObjectStateFieldHelpRequest(
-            object_state_scope_id=OpenHCSUiWindowId.global_config,
-            field_path="step_source_bindings_config.bindings",
-            max_description_chars=500,
-        )
-    )
-
-    assert source_defaults.errors == ()
-    assert (
-        source_defaults.help_target_type
-        == "openhcs.core.source_bindings.SourceBindingsConfig"
-    )
-    assert source_defaults.description == (
-        "Regex/metadata extraction rules that add semantic fields for matching sources."
-    )
-
-    assert step_bindings.errors == ()
-    assert (
-        step_bindings.help_target_type
-        == "openhcs.core.source_bindings.StepSourceBindingsConfig"
-    )
-    assert step_bindings.description == (
-        "Named semantic source bindings available to pipelines and inherited by steps."
-    )
 
 
 def test_managed_window_save_action_returns_before_deferred_save_runs() -> None:
@@ -2779,13 +2698,13 @@ def test_managed_window_save_action_returns_before_deferred_save_runs() -> None:
         assert len(action.target_scope_ids) == 2
         assert len(dispatcher.callbacks) == 1
         assert (
-            bridge.get_operation_status(result.receipt.bridge_operation_id).status
+            bridge.get_operation_status(UiBridgeOperationStatusRequest(result.receipt.bridge_operation_id)).status
             == "running"
         )
 
         dispatcher.run_next()
 
-        operation = bridge.get_operation_status(result.receipt.bridge_operation_id)
+        operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(result.receipt.bridge_operation_id))
         assert window.save_count == 1
         assert window.saved_close_window is False
         assert operation.status == "completed"
@@ -3194,11 +3113,11 @@ def test_apply_document_returns_running_operation_before_queued_ui_apply_runs() 
     assert result.receipt.accepted is True
     assert result.receipt.bridge_operation_id == result.operation_id
     assert operations.pre_count == 0
-    assert bridge.get_operation_status(result.operation_id).status == "running"
+    assert bridge.get_operation_status(UiBridgeOperationStatusRequest(result.operation_id)).status == "running"
 
     dispatcher.run_next()
 
-    operation = bridge.get_operation_status(result.operation_id)
+    operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(result.operation_id))
     assert operations.pre_count == 1
     assert operations.post_count == 1
     assert operation.status == "completed"
@@ -3231,11 +3150,11 @@ def test_queued_apply_document_error_updates_operation_status() -> None:
     assert result.applied is False
     assert result.operation_id is not None
     assert result.receipt.accepted is True
-    assert bridge.get_operation_status(result.operation_id).status == "running"
+    assert bridge.get_operation_status(UiBridgeOperationStatusRequest(result.operation_id)).status == "running"
 
     dispatcher.run_next()
 
-    operation = bridge.get_operation_status(result.operation_id)
+    operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(result.operation_id))
     assert operation.status == "completed"
     assert operation.outcome == "not_applied"
     assert operation.errors
@@ -3437,17 +3356,21 @@ def test_ui_bridge_control_server_round_trips_documents_through_descriptor(
             descriptor_file_path=binding.descriptor_file_path
         )
 
-        status = service.status(connection)
-        catalog = service.list_documents(connection)
-        state_catalog = service.list_state_surfaces(connection)
-        document = service.get_document(
+        status = service.invoke(UiBridgeStatusOperation, connection=connection)
+        catalog = service.invoke(UiBridgeListDocumentsOperation, connection=connection)
+        state_catalog = service.invoke(
+            UiBridgeListStateSurfacesOperation, connection=connection
+        )
+        document = service.invoke(
+            UiBridgeGetDocumentOperation,
             UiCodeDocumentRequest(
                 document_id=DOCUMENT_ID,
                 selection_mode=ALL_SELECTION_MODE,
             ),
             connection,
         )
-        state = service.get_state_surface(
+        state = service.invoke(
+            UiBridgeGetStateSurfaceOperation,
             UiStateSurfaceRequest(
                 surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
                 selection_mode=ALL_SELECTION_MODE,
@@ -3511,13 +3434,15 @@ def test_two_ipc_ui_bridges_route_each_descriptor_to_its_exact_instance(
     try:
         second_binding = second_server.start()
         service = UiBridgeService()
-        first_status = service.status(
-            service.connection_from_args(
+        first_status = service.invoke(
+            UiBridgeStatusOperation,
+            connection=            service.connection_from_args(
                 descriptor_file_path=first_binding.descriptor_file_path
             )
         )
-        second_status = service.status(
-            service.connection_from_args(
+        second_status = service.invoke(
+            UiBridgeStatusOperation,
+            connection=            service.connection_from_args(
                 descriptor_file_path=second_binding.descriptor_file_path
             )
         )
@@ -3554,7 +3479,7 @@ def test_ui_bridge_control_server_preserves_bad_auth_error(tmp_path: Path) -> No
             descriptor_resolver=_StaticUiBridgeDescriptorResolver(bad_connection)
         )
 
-        catalog = service.list_documents()
+        catalog = service.invoke(UiBridgeListDocumentsOperation)
 
         assert catalog.documents == ()
         assert catalog.errors[0].code == "ui_bridge_auth_failed"
@@ -4285,12 +4210,12 @@ def test_selected_workflow_returns_before_the_queued_operation_runs(
         )
         assert started == []
         assert len(dispatcher.callbacks) == 1
-        assert bridge.get_operation_status(operation_id).status == "running"
+        assert bridge.get_operation_status(UiBridgeOperationStatusRequest(operation_id)).status == "running"
 
         dispatcher.run_next()
 
         assert started == [((DATASET_SCOPE_ID,),)]
-        operation = bridge.get_operation_status(operation_id)
+        operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(operation_id))
         assert operation.status == "completed"
         assert operation.outcome == "accepted"
 
