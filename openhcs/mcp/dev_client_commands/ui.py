@@ -968,7 +968,7 @@ class ObjectStateFieldsCommandSpec(CapabilityBackedCommandSpec):
             field_path_contains=tuple(args.contains),
             include_system_scopes=args.include_system_scopes,
             include_clean_fields=(
-                args.field_filter == UiObjectStateFieldFilter.ALL.value
+                UiObjectStateFieldFilter.named(args.field_filter).keeps_every_field
             ),
             include_container_fields=args.include_container_fields,
             field_filter=args.field_filter,

@@ -17,7 +17,6 @@ from openhcs.agent.dto.functions import (
     FunctionCatalogEntry,
     FunctionCatalogPage,
     FunctionDetail,
-    FunctionParameterSource,
     FunctionParameterSpec,
 )
 from openhcs.agent.dto.knowledge import (
@@ -372,12 +371,12 @@ class FunctionDetailRenderer(McpDevOutputRenderer):
         agent_parameters = tuple(
             parameter
             for parameter in payload.parameters
-            if parameter.supplied_by is FunctionParameterSource.AGENT
+            if parameter.supplied_by.agent_supplied
         )
         runtime_parameters = tuple(
             parameter
             for parameter in payload.parameters
-            if parameter.supplied_by is not FunctionParameterSource.AGENT
+            if not parameter.supplied_by.agent_supplied
         )
         artifact_outputs = (
             ()

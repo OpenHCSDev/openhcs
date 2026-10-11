@@ -69,7 +69,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentRequest,
     UiCodeDocumentSelectionMode,
     UiCodeDocumentValidationRequest,
-    UiObjectStateFieldFilter,
+    DirtyFields,
     UiObjectStateScopeListRequest,
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowRequest,
@@ -2608,7 +2608,7 @@ def test_object_state_scope_fields_filter_before_pagination() -> None:
         UiObjectStateScopeListRequest(
             include_system_scopes=True,
             include_fields=True,
-            field_filter=UiObjectStateFieldFilter.DIRTY,
+            field_filter=DirtyFields,
             field_limit=1,
         )
     )

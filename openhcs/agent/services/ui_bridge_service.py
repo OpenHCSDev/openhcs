@@ -32,6 +32,8 @@ from zmqruntime.config import (
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
 from openhcs.agent.dto.session import SessionEventBatch, SessionEventsRequest
 from openhcs.agent.dto.ui_bridge import (
+    OperationRunning,
+    OperationUnavailable,
     UI_BRIDGE_UNKNOWN_WIDGET,
     UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
     UiActionCatalog,
@@ -370,7 +372,7 @@ class UiBridgeOperationStatusQuery(UiBridgeOperation):
                 operation_id=request.operation_id,
                 route=UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
             ),
-            status=UiBridgeOperationStatus.UNAVAILABLE.value,
+            status=OperationUnavailable.name,
             started_at_unix=0.0,
             errors=errors,
         )
@@ -811,7 +813,7 @@ class UiBridgeWaitForOperationReceiptOperation(UiBridgeOperationStatusQuery):
                 service, connection, status_request
             )
             try:
-                status = UiBridgeOperationStatus(operation.status)
+                status = UiBridgeOperationStatus.named(operation.status)
             except ValueError:
                 return replace(
                     operation,
@@ -947,7 +949,7 @@ class UiBridgeApplyDocumentOperation(UiCodeDocumentOperation):
             document_id=request.document_id,
             applied=False,
             base_revision_token=request.base_revision_token,
-            outcome=UiBridgeOperationStatus.RUNNING.value,
+            outcome=OperationRunning.name,
             operation_id=bridge_operation.identity.operation_id,
             receipt=UiMutationReceipt.accepted_for(
                 request.request_token,

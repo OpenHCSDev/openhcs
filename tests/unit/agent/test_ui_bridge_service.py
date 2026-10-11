@@ -15,6 +15,12 @@ from zmqruntime import EndpointApplication, EndpointApplicationCompatibilityErro
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentResourceRef
 from openhcs.agent.dto.ui_bridge import (
+    SemanticFields,
+    OperationCompleted,
+    OperationFailed,
+    OperationNotFound,
+    OperationRunning,
+    OperationUnavailable,
     UiActionCatalog,
     UiActionIdentity,
     UiActionInvocationStatus,
@@ -22,7 +28,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiActionInvokeResult,
     UiBranchCatalog,
     UiBranchSwitchRequest,
-    UiBridgeOperationStatus,
     UiBridgeConfirmationRequirement,
     UiBridgeConnectionSpec,
     UiBridgeOperationIdentity,
@@ -1581,7 +1586,7 @@ def test_widget_action_resolves_accepted_receipt_to_terminal_invocation(
                 operation_id=request.operation_id,
                 route=UiBridgeOperationRoute(operation_name="invoke_widget_action"),
             ),
-            status=UiBridgeOperationStatus.COMPLETED.value,
+            status=OperationCompleted.name,
             started_at_unix=1.0,
             completed_at_unix=2.0,
             outcome="invoked",
@@ -1645,7 +1650,7 @@ def test_widget_action_projects_terminal_operation_failure(
                 operation_id=request.operation_id,
                 route=UiBridgeOperationRoute(operation_name="invoke_widget_action"),
             ),
-            status=UiBridgeOperationStatus.FAILED.value,
+            status=OperationFailed.name,
             started_at_unix=1.0,
             completed_at_unix=2.0,
             outcome="error",
@@ -1823,7 +1828,7 @@ def test_get_object_state_fields_projects_query_from_scope_catalog(
         )
     )
 
-    assert result.field_filter == "semantic"
+    assert result.field_filter is SemanticFields
     assert result.matched_field_count == 1
     assert result.returned_field_count == 1
     assert result.scopes[0].fields[0].field_path == "napari_streaming_config.enabled"
@@ -2073,24 +2078,24 @@ def test_ui_bridge_operation_status_owns_completion_selection():
     }
 
     assert (
-        UiBridgeOperationStatus.RUNNING.select_completion(**choices)
+        OperationRunning.select_completion(**choices)
         is choices["active"]
     )
     assert (
-        UiBridgeOperationStatus.COMPLETED.select_completion(**choices)
+        OperationCompleted.select_completion(**choices)
         is choices["succeeded"]
     )
     for status in (
-        UiBridgeOperationStatus.FAILED,
-        UiBridgeOperationStatus.NOT_FOUND,
-        UiBridgeOperationStatus.UNAVAILABLE,
+        OperationFailed,
+        OperationNotFound,
+        OperationUnavailable,
     ):
         assert status.select_completion(**choices) is choices["failed"]
 
-    assert UiBridgeOperationStatus.RUNNING.is_terminal is False
-    assert UiBridgeOperationStatus.COMPLETED.is_terminal is True
-    assert UiBridgeOperationStatus.RUNNING.live_overview_severity == "info"
-    assert UiBridgeOperationStatus.FAILED.live_overview_severity == "error"
+    assert OperationRunning.is_terminal is False
+    assert OperationCompleted.is_terminal is True
+    assert OperationRunning.live_overview_severity == "info"
+    assert OperationFailed.live_overview_severity == "error"
 
 
 def test_ui_requests_own_mcp_tool_argument_projection():

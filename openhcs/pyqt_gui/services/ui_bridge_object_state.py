@@ -29,6 +29,7 @@ from python_introspect import (
 
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
+    UiCatalogPageMetadata,
     UiCodeDocument,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentApplyResult,
@@ -36,12 +37,10 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentSummary,
     UiCodeDocumentValidationRequest,
     UiCodeDocumentValidationResult,
-    UiCatalogPageMetadata,
     UiMutationReceipt,
-    UiObjectStateFieldFilter,
-    UiObjectStateFieldProvenance,
     UiObjectStateFieldMutationRequest,
     UiObjectStateFieldMutationResult,
+    UiObjectStateFieldProvenance,
     UiObjectStateFieldSemanticCarrier,
     UiObjectStateFieldSummary,
     UiObjectStateScopeCatalog,
@@ -50,9 +49,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiObjectStateScopeSummary,
     UiObjectStateValuePreview,
     UiSemanticAddress,
-)
-from openhcs.agent.services.object_state_field_projection import (
-    ObjectStateFieldFilterDeclaration,
 )
 from objectstate import ObjectState, ObjectStateRegistry
 from objectstate.inspection import FieldInspection, type_name, type_qualname
@@ -425,12 +421,11 @@ class ObjectStateScopeProjectionService:
             )
         else:
             all_field_paths = tuple(sorted(state.parameters.keys()))
-        if request.field_filter is not UiObjectStateFieldFilter.ALL:
+        if not request.field_filter.keeps_every_field:
             all_field_paths = tuple(
                 field_path
                 for field_path in all_field_paths
-                if ObjectStateFieldFilterDeclaration.matches_filter(
-                    request.field_filter,
+                if request.field_filter.matches(
                     self._field_summary(
                         state,
                         field_path,

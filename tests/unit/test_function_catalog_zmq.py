@@ -48,6 +48,8 @@ from openhcs.agent.dto.functions import (
     FunctionReferenceControlRequest,
     FunctionReferenceControlResponse,
     FunctionSearchRequest,
+    SuppliedByAgent,
+    SuppliedFromPrimaryInput,
     catalog_page,
 )
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
@@ -64,9 +66,9 @@ from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
 
 
 def test_function_parameter_source_owns_runtime_presentation() -> None:
-    assert FunctionParameterSource.AGENT.runtime_description is None
+    assert SuppliedByAgent.runtime_description is None
     assert "FunctionStep input image payload" in (
-        FunctionParameterSource.PRIMARY_INPUT.runtime_description or ""
+        SuppliedFromPrimaryInput.runtime_description or ""
     )
 
 

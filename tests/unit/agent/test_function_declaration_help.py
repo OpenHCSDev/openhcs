@@ -178,7 +178,10 @@ def test_policy_consumer_executes_cooperative_hooks_once_in_declared_mro():
     from pyqt_reactive.services.parameter_help_service import (
         dataclass_type_from_annotation,
     )
-    from openhcs.agent.dto.functions import FunctionParameterSource
+    from openhcs.agent.dto.functions import (
+        SuppliedByAgent,
+        SuppliedFromPrimaryInput,
+    )
 
     policy = AuditedPolicy()
     specs = policy.parameter_specs(independent_probe)
@@ -190,8 +193,8 @@ def test_policy_consumer_executes_cooperative_hooks_once_in_declared_mro():
         dataclass_type_from_annotation(policy.annotations[controls_index])
         is IndependentControls
     )
-    assert policy.suppliers[controls_index] is FunctionParameterSource.AGENT
-    assert policy.suppliers[0] is FunctionParameterSource.PRIMARY_INPUT
+    assert policy.suppliers[controls_index] is SuppliedByAgent
+    assert policy.suppliers[0] is SuppliedFromPrimaryInput
     assert "Acquisition duration in seconds" in specs[controls_index].description
     assert "Search radius in millimeters" in specs[controls_index].description
 

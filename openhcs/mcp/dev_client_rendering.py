@@ -16,7 +16,7 @@ from enum import Enum
 from typing import ClassVar, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import JsonValue
+from python_introspect import JsonValue, to_jsonable
 
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
@@ -350,8 +350,8 @@ class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
     def text(value: object, *, absent_text: str = "<none>") -> str:
         if value is None:
             return absent_text
-        if isinstance(value, Enum):
-            return str(value.value)
+        if isinstance(value, Enum | AutoRegisterMeta):
+            return str(to_jsonable(value))
         return str(value)
 
     @staticmethod

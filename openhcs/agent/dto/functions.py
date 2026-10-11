@@ -11,6 +11,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, ClassVar, Generic, Self, TypeVar, cast
 
+from metaclass_registry import AutoRegisterMeta
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import MessageFields, ProcessIdentity, ResponseType
 from zmqruntime.startup import EndpointStartupStatus
@@ -390,48 +391,57 @@ class CustomFunctionRegistrationDestination:
             raise ValueError("Registration returned a different persistence destination.")
 
 
-class FunctionParameterSource(str, Enum):
-    """Nominal source of one callable parameter in agent-facing docs."""
+class FunctionParameterSource(ABC, metaclass=AutoRegisterMeta):
+    """Who supplies one callable parameter, as agent-facing docs describe it.
 
-    _runtime_description: str | None
+    Each source is a subclass; ``name`` is its spelling on the wire.
+    """
 
-    def __new__(
-        cls,
-        value: str,
-        runtime_description: str | None,
-    ) -> FunctionParameterSource:
-        member = str.__new__(cls, value)
-        member._value_ = value
-        member._runtime_description = runtime_description
-        return member
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
 
-    AGENT = ("agent", None)
-    PRIMARY_INPUT = (
-        "runtime_primary_input",
+    name: ClassVar[str | None] = None
+    agent_supplied: ClassVar[bool] = False
+    """The agent passes this parameter as a FunctionStep kwarg."""
+    runtime_description: ClassVar[str | None] = None
+    """Why the agent must not pass a runtime-supplied parameter."""
+
+
+class SuppliedByAgent(FunctionParameterSource):
+    name = "agent"
+    agent_supplied = True
+
+
+class SuppliedFromPrimaryInput(FunctionParameterSource):
+    name = "runtime_primary_input"
+    runtime_description = (
         "Supplied by OpenHCS from the FunctionStep input image payload; do not "
-        "pass this as a function kwarg.",
+        "pass this as a function kwarg."
     )
-    ARTIFACT_INPUT = (
-        "runtime_artifact_input",
+
+
+class SuppliedFromArtifactInput(FunctionParameterSource):
+    name = "runtime_artifact_input"
+    runtime_description = (
         "Supplied by OpenHCS from a declared artifact input during pipeline "
-        "execution; do not pass this as a function kwarg.",
+        "execution; do not pass this as a function kwarg."
     )
-    RUNTIME_PARAMETER = (
-        "runtime_parameter",
+
+
+class SuppliedByRuntime(FunctionParameterSource):
+    name = "runtime_parameter"
+    runtime_description = (
         "Supplied by OpenHCS runtime execution infrastructure; do not pass this "
-        "as a function kwarg.",
+        "as a function kwarg."
     )
-    RUNTIME_ADAPTER = (
-        "runtime_adapter",
+
+
+class SuppliedAsRuntimeAdapter(FunctionParameterSource):
+    name = "runtime_adapter"
+    runtime_description = (
         "Supplied by OpenHCS as a runtime adapter object; do not pass this as a "
-        "function kwarg.",
+        "function kwarg."
     )
-
-    @property
-    def runtime_description(self) -> str | None:
-        """Explain the runtime-owned source directly from its declaration."""
-
-        return self._runtime_description
 
 
 @dataclass(frozen=True, slots=True)
@@ -465,17 +475,20 @@ class FunctionParameterSpec:
     annotation: str | None
     default_repr: str | None
     required: bool
-    supplied_by: FunctionParameterSource = FunctionParameterSource.AGENT
+    supplied_by: type[FunctionParameterSource] = SuppliedByAgent
     description: str | None = None
     enum_import_path: str | None = None
     enum_members: tuple[str, ...] = ()
     enum_values: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        if not isinstance(self.supplied_by, FunctionParameterSource):
+        if not (
+            isinstance(self.supplied_by, type)
+            and issubclass(self.supplied_by, FunctionParameterSource)
+        ):
             raise TypeError(
-                "FunctionParameterSpec.supplied_by requires "
-                f"FunctionParameterSource, got {type(self.supplied_by).__name__}."
+                "FunctionParameterSpec.supplied_by requires a "
+                f"FunctionParameterSource class, got {self.supplied_by!r}."
             )
 
 

@@ -41,6 +41,12 @@ from openhcs.agent.capabilities import (
 from openhcs.agent.dto.common import AgentCliRequest, AgentError, AgentResultEnvelope
 from openhcs.agent.dto.mcp import McpBoundaryFailure, McpToolErrorResult
 from openhcs.agent.dto.ui_bridge import (
+    AllFields,
+    DefaultDiffFields,
+    DirtyFields,
+    InheritedFields,
+    RawResolvedFields,
+    SemanticFields,
     UiActionInvocationStatus,
     UiBridgeOperationRef,
     UiBridgeOperationStatus,
@@ -2172,17 +2178,17 @@ def code_document_source_from_args(args: argparse.Namespace) -> str:
 
 def add_object_state_field_filter_options(parser: argparse.ArgumentParser) -> None:
     filter_group = parser.add_mutually_exclusive_group()
-    parser.set_defaults(field_filter=UiObjectStateFieldFilter.ALL.value)
+    parser.set_defaults(field_filter=AllFields.name)
     filter_group.add_argument(
         "--field-filter",
-        choices=tuple(field_filter.value for field_filter in UiObjectStateFieldFilter),
+        choices=tuple(UiObjectStateFieldFilter.__registry__),
         help="Return fields matching one ObjectState semantic filter.",
     )
     filter_group.add_argument(
         "--dirty-only",
         dest="field_filter",
         action="store_const",
-        const=UiObjectStateFieldFilter.DIRTY.value,
+        const=DirtyFields.name,
         help="Only return unsaved ObjectState fields marked with * semantics.",
     )
     filter_group.add_argument(
@@ -2190,7 +2196,7 @@ def add_object_state_field_filter_options(parser: argparse.ArgumentParser) -> No
         "--semantic-only",
         dest="field_filter",
         action="store_const",
-        const=UiObjectStateFieldFilter.SEMANTIC.value,
+        const=SemanticFields.name,
         help=(
             "Only return dirty, default-diff, inherited, or raw/resolved-none "
             "semantic fields."
@@ -2200,21 +2206,21 @@ def add_object_state_field_filter_options(parser: argparse.ArgumentParser) -> No
         "--default-diff-only",
         dest="field_filter",
         action="store_const",
-        const=UiObjectStateFieldFilter.DEFAULT_DIFF.value,
+        const=DefaultDiffFields.name,
         help="Only return fields that differ from constructor/default code mode.",
     )
     filter_group.add_argument(
         "--inherited-only",
         dest="field_filter",
         action="store_const",
-        const=UiObjectStateFieldFilter.INHERITED.value,
+        const=InheritedFields.name,
         help="Only return inherited/resolved ObjectState fields.",
     )
     filter_group.add_argument(
         "--raw-resolved-only",
         dest="field_filter",
         action="store_const",
-        const=UiObjectStateFieldFilter.RAW_RESOLVED.value,
+        const=RawResolvedFields.name,
         help="Only return fields whose raw None/resolved None state differs.",
     )
 
@@ -2362,7 +2368,7 @@ def workflow_operation_receipt_skip_reason(
     if operation is None or operation.errors:
         return WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
     try:
-        status = UiBridgeOperationStatus(operation.status)
+        status = UiBridgeOperationStatus.named(operation.status)
     except ValueError:
         return WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
     return status.select_completion(

@@ -19,7 +19,6 @@ from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
 from openhcs.agent.dto.functions import (
     FunctionArtifactSpec,
     FunctionDetail,
-    FunctionParameterSource,
 )
 from openhcs.agent.dto.ui_bridge import (
     UiBridgeConnectionSpec,
@@ -382,14 +381,14 @@ class ObjectStateFieldHelpService:
             ),
             None,
         )
-        if parameter is None or parameter.supplied_by is FunctionParameterSource.AGENT:
+        if parameter is None or parameter.supplied_by.agent_supplied:
             return None
 
         pieces = [
             (
                 "Function parameter contract: "
                 f"{parameter.name} is supplied by OpenHCS "
-                f"({parameter.supplied_by.value}); do not pass it as a "
+                f"({parameter.supplied_by.name}); do not pass it as a "
                 "FunctionStep kwarg."
             )
         ]
@@ -618,7 +617,7 @@ def _active_kwarg_context_lines(
     parameter_by_name = {
         parameter.name: parameter
         for parameter in detail.parameters
-        if parameter.supplied_by is FunctionParameterSource.AGENT
+        if parameter.supplied_by.agent_supplied
     }
     lines = ["  active kwargs:"]
     for name in active_kwarg_names:
@@ -641,9 +640,9 @@ def _active_kwarg_context_lines(
 
 def _runtime_parameter_context_lines(detail: FunctionDetail) -> list[str]:
     return [
-        f"{parameter.name} ({parameter.supplied_by.value})"
+        f"{parameter.name} ({parameter.supplied_by.name})"
         for parameter in detail.parameters
-        if parameter.supplied_by is not FunctionParameterSource.AGENT
+        if not parameter.supplied_by.agent_supplied
     ]
 
 

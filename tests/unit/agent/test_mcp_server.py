@@ -62,7 +62,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentSummary,
     UiCatalogPageMetadata,
     UiMutationReceipt,
-    UiObjectStateFieldFilter,
+    SemanticFields,
     UiObjectStateFieldHelpRequest,
     UiObjectStateFieldMutationResult,
     UiObjectStateFieldProvenance,
@@ -2284,7 +2284,7 @@ def test_mcp_list_object_state_scopes_filters_scope_ids(monkeypatch):
             assert connection == "ui-connection"
             assert request.scope_ids == ("/tmp/plate",)
             assert request.include_fields is True
-            assert request.field_filter is UiObjectStateFieldFilter.SEMANTIC
+            assert request.field_filter is SemanticFields
             return request.filtered_catalog(
                 UiObjectStateScopeCatalog(
                     schema_version=SCHEMA_VERSION,
