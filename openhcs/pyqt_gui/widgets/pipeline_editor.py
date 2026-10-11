@@ -5,6 +5,7 @@ widget displays the step objects it last read from the session and re-reads
 them on every pipeline event; every change goes through the session.
 """
 
+from objectstate import ScopeKey
 import copy
 import logging
 import os
@@ -525,7 +526,7 @@ class PipelineEditorWidget(
 
     def get_item_insert_index(self, item: FunctionStep, scope_key: str) -> Optional[int]:
         del item
-        token = scope_key.rsplit("::", 1)[-1]
+        token = ScopeKey(scope_key).last
         parts = token.rsplit("_", 1)
         if len(parts) == 2 and parts[1].isdigit():
             return min(int(parts[1]), len(self.displayed_steps))

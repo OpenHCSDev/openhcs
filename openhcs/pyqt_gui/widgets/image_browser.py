@@ -5,6 +5,7 @@ Displays a table of all image files from plate metadata and allows users to
 view them in Napari with configurable display settings.
 """
 
+from objectstate import ScopeKey
 import logging
 import subprocess
 import time
@@ -47,7 +48,6 @@ from openhcs.core.plate_image_inventory import (
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
-from openhcs.core.dataset_sources.dataset_scopes import SCOPE_SEGMENT_SEPARATOR
 from openhcs.core.axes import AxisFamily
 from openhcs.pyqt_gui.widgets.shared.plate_view_widget import (
     PlateViewWidget,
@@ -793,8 +793,8 @@ class ImageBrowserWidget(QWidget):
             state_parent_scope = self._state_scope_parent_id or str(
                 orchestrator.dataset_root
             )
-            self.scope_id = SCOPE_SEGMENT_SEPARATOR.join(
-                (state_parent_scope, OpenHCSUiWindowId.image_browser)
+            self.scope_id = ScopeKey(state_parent_scope).child(
+                OpenHCSUiWindowId.image_browser
             )
         parent_state = (
             ObjectStateRegistry.get_by_scope(str(orchestrator.dataset_root))

@@ -4,6 +4,7 @@ Registers all OpenHCS-specific scope patterns with the generic WindowFactory.
 Called during application initialization.
 """
 
+from objectstate import ScopeKey
 import logging
 import re
 from typing import TYPE_CHECKING, Optional
@@ -30,7 +31,7 @@ from openhcs.core.steps.function_step import FunctionStep
 logger = logging.getLogger(__name__)
 
 
-ORCHESTRATOR_SCOPE_PATTERN = r"^/(?!.*::).*$"
+ORCHESTRATOR_SCOPE_PATTERN = rf"^/(?!.*{re.escape(ScopeKey.SEPARATOR)}).*$"
 
 
 def pipeline_scope_window_id(scope_id: str) -> str:
