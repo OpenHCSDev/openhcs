@@ -1051,15 +1051,17 @@ def wait_until_visualizers_ready(
     """Wait for all streaming visualizers to report readiness."""
 
     max_wait = 30.0
+
+    def not_ready_ports() -> list[int]:
+        running_ports = {v.port for v in visualizers if v.is_running}
+        return [v.port for v in visualizers if v.port not in running_ports]
     start_time = time.time()
 
     while time.time() - start_time < max_wait:
         orchestrator._execution_cancellation.raise_if_requested(
             "while waiting for streaming viewers"
         )
-        running_ports = {v.port for v in visualizers if v.is_running}
-        not_ready = [v.port for v in visualizers if v.port not in running_ports]
-        if not not_ready:
+        if not not_ready_ports():
             progress_queue.put(
                 progress_context.event(
                     axis_id="",
@@ -1075,7 +1077,7 @@ def wait_until_visualizers_ready(
             return
         time.sleep(0.2)
 
-    message = f"Timeout waiting for streaming viewers. Not ready: {not_ready}"
+    message = f"Timeout waiting for streaming viewers. Not ready: {not_ready_ports()}"
     logger.error(f"🔬 ORCHESTRATOR: {message}")
     progress_queue.put(
         progress_context.event(
