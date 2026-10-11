@@ -18,6 +18,8 @@ from dataclasses import (
 from pathlib import Path
 from typing import Any
 
+from objectstate import replace_raw
+
 from benchmark.adapters.cppipe_source import (
     CPPipeSourceRequest,
     CPPipeSourceResolution,
@@ -307,7 +309,6 @@ class OpenHCSAdapter(ToolAdapter):
         request: OpenHCSRunRequest,
         *,
         output_suffix: str,
-        output_dataset_root: Path,
         compilation_debug_config: CompilationDebugConfig,
     ) -> GlobalPipelineConfig:
         """Select benchmark output paths without replacing declared path policy."""
@@ -329,7 +330,6 @@ class OpenHCSAdapter(ToolAdapter):
             ),
             compilation_debug_config=compilation_debug_config,
             materialize_runtime_artifacts=request.materialize_runtime_artifacts,
-            materialization_results_path=output_dataset_root / "results",
         )
 
     def _run_converted_cppipe_pipeline(
@@ -360,9 +360,6 @@ class OpenHCSAdapter(ToolAdapter):
             ) from exc
 
         output_suffix = f"_{request.pipeline_name}_converted_cppipe"
-        output_dataset_root = (
-            request.output_dir / f"{request.dataset_path.name}{output_suffix}"
-        )
         generated_source_path = request.output_dir / f"{cppipe_path.stem}_openhcs.py"
         source_workspace_path = (
             request.output_dir
@@ -416,7 +413,9 @@ class OpenHCSAdapter(ToolAdapter):
                 "UI/ZMQ FunctionStep source before execution."
             )
         if compilation_debug_config.enabled:
-            pipeline_config = replace(
+            # replace_raw keeps the imported config's unset fields inheriting
+            # from the global config; dataclasses.replace would freeze them.
+            pipeline_config = replace_raw(
                 pipeline_config,
                 compilation_debug_config=LazyCompilationDebugConfig(
                     enabled=compilation_debug_config.enabled,
@@ -429,7 +428,6 @@ class OpenHCSAdapter(ToolAdapter):
         global_config = self._execution_global_config(
             request,
             output_suffix=output_suffix,
-            output_dataset_root=output_dataset_root,
             compilation_debug_config=compilation_debug_config,
         )
         ensure_global_config_context(GlobalPipelineConfig, global_config)
@@ -542,7 +540,6 @@ class OpenHCSAdapter(ToolAdapter):
                     raise ToolExecutionError(equivalence_failure_message)
 
         metric_results = self._metric_results(request.metrics)
-        output_dataset_root.mkdir(parents=True, exist_ok=True)
         execution_output_root.mkdir(parents=True, exist_ok=True)
 
         provenance = {
