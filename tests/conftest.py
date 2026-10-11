@@ -68,6 +68,17 @@ def pytest_sessionstart(session):
 CPU_ONLY_MODE = OpenHCSProcessEnvironment.cpu_only_mode()
 if not CPU_ONLY_MODE:
     pytest_plugins = ["pytestqt"]
+
+    @pytest.fixture(scope="session", autouse=True)
+    def session_qapplication(qapp):
+        """Create the session's one QApplication before any test runs.
+
+        A process holds one Qt application. In-process MCP transports adopt
+        an existing one and otherwise create a QCoreApplication, after which
+        no test in the session could create a widget.
+        """
+        yield qapp
+
 else:
     pytest_plugins = []
 

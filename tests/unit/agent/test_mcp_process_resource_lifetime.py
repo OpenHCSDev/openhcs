@@ -282,19 +282,3 @@ def test_resident_connection_close_preserves_resource_until_process_owner_close(
     assert calls == ["process resource closed"]
     transport.execution.close()
     assert calls == ["process resource closed"]
-
-
-def test_transport_releases_only_the_qt_application_it_created():
-    from PyQt6.QtCore import QCoreApplication
-
-    existing = QCoreApplication.instance()
-    executor = McpTransportExecutor()
-    application = QCoreApplication.instance()
-    executor.close()
-
-    if existing is None:
-        # A later GUI in this process must be able to create its QApplication.
-        assert QCoreApplication.instance() is None
-    else:
-        assert application is existing
-        assert QCoreApplication.instance() is existing
