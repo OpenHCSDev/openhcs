@@ -54,3 +54,12 @@
 ## Done when
 
 The guards pass. `test_registered_object_output_boundaries.py` passes in full. The empty-label family test passes. Official30 parity is 30/30. The structural ratchet and nra-r1 show no regressions.
+
+## As built
+
+- **Bug:** fixed as targeted. `test_registered_object_output_boundaries.py` passes in full (10/10). The new `tests/unit/test_object_measurement_empty_labels.py` covers AreaShape (dense 2-D, dense 3-D, sparse IJV), intensity (2-D, 3-D), texture, granularity and neighbours (2-D). For each, declaring an empty label leaves every other label's row exactly unchanged. On main the AreaShape cases fail; the others already held. Rewritten to label-correct values: `test_cellprofiler_shape_hotpath.py::test_sparse_shape_vectors_land_on_their_measured_labels`, two `test_cellprofiler_module_execution.py` shape tests and three `test_runtime_values.py` shape-table tests.
+- **Native reference:** `benchmark/equivalence/native_shape_rows.py`, applied in `benchmark/adapters/openhcs.py` where the reference snapshot is read.
+- **Row vocabulary:** `core/measurement_row_qualifiers.py`. `RowQualifierFormat` members are classes; a qualifier holds `value_format: type[RowQualifierFormat]`.
+- **Moved to `benchmark/equivalence/`:** `measurement_rows.py`, `measurement_facts.py`, the plane-alignment strategies, and `RuntimeScopedMeasurementTable`'s comparison methods (now functions in `runtime.py`; its `object_instance_key` was forwarding and is deleted). The ratchet counts moved code as new, so the move also splits the wide-row methods out of `RuntimeRowProjectionContext` (718 lines) into a mixin, deletes a scalar copy of the cell payload (`measurement_qualifier_cache_value`), and rewrites 10 foreign absence probes.
+- **Production** (Python under `openhcs/`): −3,804 +453. About 2.8k of the removed lines moved to `benchmark/`.
+- **Not done here:** `CellProfilerSpatialGridMeasurementFeature` (`interop/cellprofiler/measurement_dialect.py:45`) is an enum used as a two-column spelling table for CellProfiler's DefinedGrid names. It is boundary vocabulary and has no behaviour to move, so it stays.
