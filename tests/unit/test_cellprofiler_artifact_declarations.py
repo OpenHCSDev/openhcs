@@ -13,7 +13,7 @@ import pytest
 from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.artifacts.relations import (
@@ -56,6 +56,7 @@ from openhcs.core.pipeline.artifact_planning import (
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
+    SourceArtifactRole,
     SourceProjectionRole,
 )
 from openhcs.core.steps.function_step import FunctionStep
@@ -68,7 +69,9 @@ from openhcs.interop.cellprofiler.pipeline_import import (
 )
 from openhcs.processing.backends.cellprofiler.grid import (
     DefineGridManualModule,
+    AutomaticGrid,
     DefineGridVariant,
+    ManualGrid,
 )
 from openhcs.processing.backends.cellprofiler.classification import (
     ClassifyObjectsSingleMeasurementModule,
@@ -745,10 +748,12 @@ def test_declarations_carry_cross_step_object_and_measurement_flow() -> None:
 
 
 @pytest.mark.parametrize("in_main_flow", (True, False))
-@pytest.mark.parametrize("projection_role", tuple(SourceProjectionRole))
+@pytest.mark.parametrize(
+    "projection_role", tuple(SourceProjectionRole.__registry__.values())
+)
 def test_source_bound_input_is_declared_once_regardless_of_main_flow_membership(
     in_main_flow: bool,
-    projection_role: SourceProjectionRole,
+    projection_role: type[SourceProjectionRole],
 ) -> None:
     source_image = ArtifactSpec.input("OrigBlue", ImageArtifactType)
     module = _module(
@@ -885,14 +890,14 @@ def test_group_artifact_context_reseeds_main_flow_from_exact_primary_bindings() 
     illumination = NamedSourceBinding(
         alias="Illumination",
         artifact_kind=ImageArtifactType,
-        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        projection_role=SourceArtifactRole,
         component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
     )
     bindings = (dna, rna, illumination)
     context = ArtifactDeclarationStepContext(
         source_bindings=StepSourceBindingsConfig(enabled=True, bindings=bindings),
         group_by=Microscopy.Channel,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     ).with_source_declarations(binding.input_spec() for binding in bindings)
 
     scoped = CellProfilerModule._artifact_context_for_group(context, group_key="2")
@@ -964,7 +969,7 @@ def test_measure_image_quality_all_loaded_uses_only_primary_plane_bindings() -> 
         NamedSourceBinding(
             alias="Illumination",
             artifact_kind=ImageArtifactType,
-            projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+            projection_role=SourceArtifactRole,
         ),
     )
     source_specs = tuple(binding.input_spec() for binding in bindings)
@@ -987,7 +992,7 @@ def test_measure_image_quality_all_loaded_uses_only_primary_plane_bindings() -> 
                 enabled=True,
                 bindings=bindings,
             ),
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
             available_artifacts=ArtifactSpecCollection(source_specs),
             main_flow_artifacts=ArtifactSpecCollection(source_specs),
         ),
@@ -1592,19 +1597,19 @@ def test_relate_objects_measurements_depend_on_declared_relationship_output() ->
     (
         (
             DefineGridManualModule.DefinitionMethod.manual,
-            DefineGridVariant.MANUAL,
+            ManualGrid,
             ("Brightfield", ImageArtifactType),
         ),
         (
             DefineGridManualModule.DefinitionMethod.automatic,
-            DefineGridVariant.AUTOMATIC,
+            AutomaticGrid,
             ("Guides", ObjectLabelsArtifactType),
         ),
     ),
 )
 def test_define_grid_declares_its_exact_geometry_source(
     definition_method: DefineGridManualModule.DefinitionMethod,
-    variant: DefineGridVariant,
+    variant: type[DefineGridVariant],
     expected_source: tuple[str, type],
 ) -> None:
     current_image = ArtifactSpec.input("Brightfield", ImageArtifactType)
@@ -1622,7 +1627,7 @@ def test_define_grid_declares_its_exact_geometry_source(
     contract = DefineGridManualModule.callable_contract(
         module=module,
         invocation_key=FunctionInvocationKey(
-            function_name=variant.value,
+            function_name=variant.function_name,
             group_key=DEFAULT_GROUP_KEY,
             position=0,
         ),
@@ -1962,7 +1967,7 @@ def test_declaration_resolves_exact_source_binding_without_cursor_artifact() -> 
                     NamedSourceBinding(
                         alias="Nuclei",
                         artifact_kind=ObjectLabelsArtifactType,
-                        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                        projection_role=SourceArtifactRole,
                     ),
                 ),
             ),

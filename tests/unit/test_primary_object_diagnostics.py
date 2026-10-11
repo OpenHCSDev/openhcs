@@ -29,7 +29,7 @@ from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import 
 )
 from openhcs.processing.materialization import (
     ImageFileOptions,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
 )
 from openhcs.core.artifacts.plans import MAIN_FLOW
 
@@ -164,7 +164,7 @@ def test_diagnostic_contract_has_source_producer_stage_identity_not_new_objects(
         assert spec.materialization.outputs == (
             ImageFileOptions(
                 filename_suffix=".tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             ),
         )
         assert spec.source_context_sources() == (source.ref(),)

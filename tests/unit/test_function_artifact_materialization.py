@@ -169,7 +169,8 @@ from openhcs.processing.materialization.core import (
 )
 from openhcs.processing.materialization.options import (
     ImageFileOptions,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
+    NameBySourceIdentity,
 )
 from openhcs.core.axes import AxisFamily, Ungrouped
 from openhcs.domains.microscopy.axes import Microscopy
@@ -956,7 +957,7 @@ def test_materialize_artifact_outputs_uses_output_plan_axes_for_source_named_run
     materialization = MaterializationSpec(
         ImageFileOptions(
             filename_suffix="_saved.tif",
-            filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+            filename_identity=NameBySourceIdentity,
         )
     )
     output_plan = ArtifactOutputPlan(
@@ -1963,7 +1964,7 @@ def test_terminal_persistence_is_reported_without_becoming_declared_export() -> 
         (
             TextOptions(
                 filename_suffix=".csv",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             ),
             "count,intensity\n2,1.25\n",
         ),
@@ -2256,7 +2257,7 @@ def test_artifact_name_materialization_ignores_incomplete_source_identity() -> N
         materialization=MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             )
         ),
     )
@@ -4031,7 +4032,7 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
     selected_image = ArtifactSpec.input("NucleiImage", ImageArtifactType)
     options = ImageFileOptions(
         filename_suffix="_NucleiLabels.tif",
-        filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+        filename_identity=NameBySourceIdentity,
     )
     output_plan = ArtifactOutputPlan(
         name="SavedNuclei",
@@ -4092,7 +4093,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
         materialization=MaterializationSpec(
             ImageFileOptions(
                 filename_suffix="_NucleiLabels.tif",
-                filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+                filename_identity=NameBySourceIdentity,
             )
         ),
         variable_components=(Microscopy.ZIndex,),

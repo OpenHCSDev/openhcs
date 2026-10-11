@@ -9,7 +9,13 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
-from openhcs.constants.constants import Backend, OrchestratorState
+from openhcs.constants.constants import (
+    Backend,
+    OrchestratorCreated,
+    OrchestratorInitFailed,
+    OrchestratorReady,
+    OrchestratorState,
+)
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config import GlobalPipelineConfig, source_bindings_defaults_to_base
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
@@ -81,7 +87,7 @@ class PipelineOrchestrator:
     __objectstate_delegate__ = "pipeline_config"
     _dataset_root: Optional[Path] = None
     _dataset_root_frozen: bool = False
-    state: AliasProperty[OrchestratorState] = AliasProperty("_state")
+    state: AliasProperty[type[OrchestratorState]] = AliasProperty("_state")
 
     def __init__(
         self,
@@ -219,7 +225,7 @@ class PipelineOrchestrator:
         self._microscope_handler_rebuild_type: type[DatasetSource] | None = None
         self.default_pipeline_definition: Optional[List[AbstractStep]] = None
         self._initialized: bool = False
-        self._state: OrchestratorState = OrchestratorState.CREATED
+        self._state: type[OrchestratorState] = OrchestratorCreated
 
         # Progress callback for real-time execution updates
         self.progress_callback = progress_callback
@@ -359,7 +365,7 @@ class PipelineOrchestrator:
     ) -> None:
         """Bind a caller-prepared generic input workspace before initialization."""
 
-        if self._initialized or self.state is not OrchestratorState.CREATED:
+        if self._initialized or self.state is not OrchestratorCreated:
             raise RuntimeError(
                 "An input workspace can only be bound before initialization."
             )
@@ -395,7 +401,7 @@ class PipelineOrchestrator:
     ) -> None:
         """Bind CREATED orchestrator execution to its prepared input workspace."""
 
-        if self._initialized or self.state is not OrchestratorState.CREATED:
+        if self._initialized or self.state is not OrchestratorCreated:
             raise RuntimeError(
                 "Prepared input workspace can only rebind a CREATED orchestrator."
             )
@@ -476,7 +482,7 @@ class PipelineOrchestrator:
 
             # Mark as initialized BEFORE caching to avoid chicken-and-egg problem
             self._initialized = True
-            self._state = OrchestratorState.READY
+            self._state = OrchestratorReady
 
             # Auto-cache component keys and metadata for instant access
             logger.info("Caching component keys and metadata...")
@@ -493,7 +499,7 @@ class PipelineOrchestrator:
             )
             return self
         except Exception as e:
-            self._state = OrchestratorState.INIT_FAILED
+            self._state = OrchestratorInitFailed
             logger.error(f"Failed to initialize orchestrator: {e}")
             raise
 
@@ -502,7 +508,7 @@ class PipelineOrchestrator:
         execution_bundle: CompiledExecutionBundle,
     ) -> "PipelineOrchestrator":
         """Bind an admitted compiled source domain to this fresh runtime owner."""
-        if self._initialized or self.state is not OrchestratorState.CREATED:
+        if self._initialized or self.state is not OrchestratorCreated:
             raise RuntimeError(
                 "Compiled execution can only be adopted before initialization."
             )
@@ -553,7 +559,7 @@ class PipelineOrchestrator:
             execution_bundle.axis_ids
         )
         self._initialized = True
-        self._state = OrchestratorState.READY
+        self._state = OrchestratorReady
         return self
 
     def is_initialized(self) -> bool:
@@ -1030,7 +1036,7 @@ class PipelineOrchestrator:
         self.microscope_handler = None
         self.input_dir = None
         self._initialized = False
-        self._state = OrchestratorState.CREATED
+        self._state = OrchestratorCreated
         self._component_keys_cache.clear()
         self.metadata_cache.clear_cache()
 

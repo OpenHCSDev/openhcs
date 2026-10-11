@@ -88,7 +88,7 @@ def test_fiji_lifecycle_actions_answer_through_the_server_port() -> None:
 
     assert process["type"] == "process_launch_ack"
     assert ViewerProcessLaunchConfig.from_wire_mapping(process["process_launch"]) == launch
-    assert ViewerSettleProgress.from_response(ViewerControlResponse(settle)) == (
+    assert ViewerSettleProgress.from_dict(settle) == (
         ViewerSettleProgress.complete()
     )
     assert shutdown["type"] == "shutdown_ack"

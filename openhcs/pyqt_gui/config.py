@@ -34,7 +34,7 @@ from zmqruntime.config import (
 from zmqruntime.transport import get_default_transport_mode
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
-from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+from openhcs.agent.runtime_platform import AgentRuntimePlatform
 from openhcs.agent.services.ui_bridge_service import (
     UiBridgeDescriptorDirectoryAuthority,
 )
@@ -64,9 +64,13 @@ class GuiLogLevel(str, Enum):
 
     @property
     def logging_level(self) -> int:
-        if self is GuiLogLevel.SILENT:
-            return logging.CRITICAL + 1
-        return getattr(logging, self.value)
+        """The stdlib level; ``SILENT`` is one above ``CRITICAL``."""
+        return getattr(logging, self.value, logging.CRITICAL + 1)
+
+    @property
+    def emits_records(self) -> bool:
+        """Whether any record reaches a handler at this level."""
+        return self.logging_level <= logging.CRITICAL
 
     @classmethod
     def choices(cls) -> tuple[str, ...]:
@@ -306,7 +310,7 @@ class AgentUiBridgeConfig(ExecutionConnectionSpec):
 
     def descriptor_path_for(self, bridge_instance_id: str) -> Path:
         if self.descriptor_file_path is not None:
-            return AgentRuntimePlatformAuthority.resolved_path(
+            return AgentRuntimePlatform.resolved_path(
                 self.descriptor_file_path
             )
         return (
@@ -316,7 +320,7 @@ class AgentUiBridgeConfig(ExecutionConnectionSpec):
 
     def descriptor_directory_or_default(self) -> Path:
         if self.descriptor_directory_path is not None:
-            return AgentRuntimePlatformAuthority.resolved_path(
+            return AgentRuntimePlatform.resolved_path(
                 self.descriptor_directory_path
             )
         return UiBridgeDescriptorDirectoryAuthority.default_descriptor_dir()

@@ -21,10 +21,12 @@ from openhcs.core.source_bindings import (
     ImagePlaneSource,
     MetadataSelector,
     NamedSourceBinding,
+    SourceDirectory,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextContains,
+    TextEquals,
 )
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.microscopes.bioformats_adapter import BioFormatsJavaAdapter
@@ -39,7 +41,7 @@ from openhcs.core.dataset_sources.choice import AutoDetectedSource
 
 def _file_filter(name):
     return SourceFilterClause(
-        SourceFilterSubject.FILE, SourceFilterMatchType.EQUALS, name
+        SourceFileName, TextEquals, name
     )
 
 
@@ -259,13 +261,13 @@ def test_explicit_source_and_metadata_only_discovery_stay_declared(tmp_path):
 def test_discovery_reuses_directory_or_group_filter_semantics(tmp_path):
     filters = (
         SourceFilterClause(
-            SourceFilterSubject.DIRECTORY, SourceFilterMatchType.CONTAINS, "selected"
+            SourceDirectory, TextContains, "selected"
         ),
         SourceFilterClause(
-            SourceFilterSubject.FILE, SourceFilterMatchType.EQUALS, "a.czi", any_group=0
+            SourceFileName, TextEquals, "a.czi", any_group=0
         ),
         SourceFilterClause(
-            SourceFilterSubject.FILE, SourceFilterMatchType.EQUALS, "b.czi", any_group=0
+            SourceFileName, TextEquals, "b.czi", any_group=0
         ),
     )
     config = SourceBindingsConfig(source_filters=filters)

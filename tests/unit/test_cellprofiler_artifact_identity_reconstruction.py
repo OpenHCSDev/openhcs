@@ -32,7 +32,7 @@ from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactS
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
-    SourceProjectionRole,
+    SourceArtifactRole,
 )
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
@@ -179,7 +179,7 @@ def test_authored_identity_remains_visible_through_compiled_artifact_graph() -> 
             NamedSourceBinding(
                 "Cells",
                 artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
                 component_identity=(object_scope,),
             ),
         ),

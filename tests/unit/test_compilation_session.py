@@ -9,7 +9,7 @@ from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
@@ -17,7 +17,7 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.config import (
     GlobalPipelineConfig,
-    MaterializationBackend,
+    MaterializeToDisk, MaterializeToZarr,
     LazyNapariStreamingConfig,
     LazyProcessingConfig,
     LazySourceBindingsConfig,
@@ -49,13 +49,18 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
     ComponentSelector,
+    FromFileName,
     MetadataExtractionRule,
-    MetadataSource,
     NamedSourceBinding,
     PairByOrder,
     SourceSelector,
 )
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import (
+    PipelineStartInput,
+    StepInputDependency,
+    StepOutputInput,
+    UnresolvedStepInput,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     neurite_outgrowth_metaxpress,
@@ -100,7 +105,7 @@ def test_shared_declaration_checks_full_plate_group_domain_with_held_config(
 
 
 @pytest.mark.parametrize(
-    "backend", [MaterializationBackend.DISK, MaterializationBackend.ZARR]
+    "backend", [MaterializeToDisk, MaterializeToZarr]
 )
 def test_zarr_store_planning_queries_whole_plate_only_for_zarr(backend):
     config = GlobalPipelineConfig()
@@ -127,7 +132,7 @@ def test_zarr_store_planning_queries_whole_plate_only_for_zarr(backend):
     )
     PipelineCompiler.declare_zarr_stores(session)
     assert plans[0].zarr_config is None
-    if backend is MaterializationBackend.ZARR:
+    if backend is MaterializeToZarr:
         assert plans[1].zarr_config == {
             "all_wells": ("A01", "A02"), "needs_initialization": True
         }
@@ -267,7 +272,7 @@ def _resolved_step(
     step: FunctionStep,
     variable_components=(Microscopy.Site,),
     source_bindings=EMPTY_SOURCE_BINDINGS,
-    input_source: InputSource = InputSource.PREVIOUS_STEP,
+    input_source: InputSource = ReadPreviousStep,
 ) -> AbstractStep:
     step.source_bindings = source_bindings
     step.processing_config = ProcessingConfig(
@@ -302,7 +307,7 @@ def _compile_source_plans_for_contract(
     session: CompilationSession,
     snapshot: AbstractStep,
     func,
-    main_input_dependency: StepInputDependency = StepInputDependency.pipeline_start(),
+    main_input_dependency: StepInputDependency = PipelineStartInput(),
 ):
     execution_bindings = snapshot.source_bindings.compiled_plan_for_contracts((CallableContract.from_callable(func),), main_input_dependency, ArtifactDeclarationStepContext.empty().available_artifacts)
     fields = snapshot.source_bindings.metadata_fields_for_literal_types(
@@ -386,7 +391,7 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
     )
 
     first_graph = session.pipeline.artifact_graphs[0]
-    assert first_graph.main_input_dependency == StepInputDependency.pipeline_start()
+    assert first_graph.main_input_dependency == PipelineStartInput()
     assert first_graph.source_binding_plan.bindings == (
         session.pipeline.steps[0].source_bindings.bindings[0],
     )
@@ -512,7 +517,7 @@ def test_compiler_keeps_variable_components_as_stack_source():
 def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
     ObjectStateRegistry.clear()
     metadata_rule = MetadataExtractionRule(
-        source=MetadataSource.FILE_NAME,
+        source=FromFileName,
         pattern=r"(?P<well>[A-H]\d{2})\.tif",
     )
     match_plan = PairByOrder()
@@ -664,7 +669,7 @@ def test_path_planner_activates_declared_source_binding_for_pipeline_start():
     snapshot = _resolved_step(
         step,
         source_bindings=StepSourceBindingsConfig(bindings=(binding,)),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     session = CompilationSession.from_context(
         context=_context(),
@@ -703,7 +708,7 @@ def test_plate_export_contract_construction_projects_inputs_to_runtime_batch(mon
             enabled=True,
             bindings=(binding,),
         ),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     session = CompilationSession.from_context(
         context=_context(),
@@ -758,7 +763,7 @@ def test_plate_export_contract_construction_projects_inputs_to_runtime_batch(mon
     )
 
     assert plan is not None
-    assert dependency_before_provider == StepInputDependency.unresolved()
+    assert dependency_before_provider == UnresolvedStepInput()
     assert session.plan(0).main_input_dependency == dependency_before_provider
     assert plan.contract.artifact_inputs.names() == ("DNA",)
 
@@ -769,7 +774,7 @@ def test_path_planner_preserves_pipeline_start_bindings_for_implicit_main_flow()
     snapshot = _resolved_step(
         step,
         source_bindings=StepSourceBindingsConfig(bindings=(binding,)),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     session = CompilationSession.from_context(
         context=_context(),
@@ -816,7 +821,7 @@ def test_path_planner_step_output_projects_only_exact_source_artifacts() -> None
             session,
             snapshot,
             _previous_step_and_external_source,
-            StepInputDependency.step_output(
+            StepOutputInput(
                 source_step_index=0,
                 source_step_scope_id="plate::functionstep_0",
             ),
@@ -854,7 +859,7 @@ def test_path_planner_preserves_metaxpress_primary_source_order(
             enabled=True,
             bindings=selected_bindings,
         ),
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     pipeline_config = PipelineConfig(
         source_bindings_config=LazySourceBindingsConfig(bindings=pipeline_bindings)

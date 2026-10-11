@@ -62,7 +62,7 @@ from openhcs.core.virtual_workspace_metadata import (
 )
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
-from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
+from openhcs.runtime.zmq_execution_signature import ExportRuntimeOutcomes
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -1458,7 +1458,7 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     assert pipeline_config.materialize_runtime_artifacts is False
     assert submissions[0].global_pipeline_config.materialize_runtime_artifacts is False
     assert submissions[0].config_params["runtime_observation_export_scope"] == (
-        ZMQRuntimeObservationExportScope.OUTCOMES.value
+        ExportRuntimeOutcomes.name
     )
 
 

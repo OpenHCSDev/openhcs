@@ -19,6 +19,7 @@ from openhcs.core.orchestrator import (
     bundle_execution as compiled_plate_execution_module,
 )
 from openhcs.core.orchestrator import orchestrator as orchestrator_module
+from openhcs.constants.constants import OrchestratorCompleted, OrchestratorExecFailed
 from openhcs.core.orchestrator import worker_execution as worker_execution_module
 from openhcs.domains.microscopy import (
     analysis_consolidation as analysis_consolidation_module,
@@ -72,7 +73,7 @@ from openhcs.core.progress import ProgressExecutionContext
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponse,
     ViewerPersistenceMode,
-    ViewerSettlePhase,
+    SettlementRunning,
     ViewerSettleProgress,
 )
 from openhcs.core.progress.types import (
@@ -1145,13 +1146,13 @@ def test_execution_state_projector_maps_success_and_failure():
         orchestrator,
         BundleExecutionResults({"A01": ExecutionSucceeded("A01")}),
     )
-    assert orchestrator._state is orchestrator_module.OrchestratorState.COMPLETED
+    assert orchestrator._state is OrchestratorCompleted
 
     project_execution_state(
         orchestrator,
         BundleExecutionResults({"A01": ExecutionFailed("A01", error_message="failed")}),
     )
-    assert orchestrator._state is orchestrator_module.OrchestratorState.EXEC_FAILED
+    assert orchestrator._state is OrchestratorExecFailed
 
 
 @pytest.mark.parametrize(
@@ -1367,7 +1368,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
             if progress_callback is not None:
                 progress_callback(
                     ViewerSettleProgress(
-                        ViewerSettlePhase.RUNNING,
+                        SettlementRunning,
                         1,
                         2,
                         "large-rois",
@@ -1418,7 +1419,7 @@ def test_viewer_settlement_progress_throttles_unchanged_active_observations(
     monkeypatch,
 ):
     active = ViewerSettleProgress(
-        ViewerSettlePhase.RUNNING,
+        SettlementRunning,
         1,
         2,
         "large-rois",

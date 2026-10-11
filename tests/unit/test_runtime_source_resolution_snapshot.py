@@ -13,8 +13,8 @@ from openhcs.core.source_binding_selection import (
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_bindings import (
+    FromFileName,
     MetadataExtractionRule,
-    MetadataSource,
     PairByOrder,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
@@ -183,7 +183,7 @@ def test_snapshot_replacement_tracks_projection_parser_semantics_and_rules():
     assert replaced_parser.metadata_for_path(PATH)["site"] == 1
     rules = (
         MetadataExtractionRule(
-            source=MetadataSource.FILE_NAME, pattern=r"(?P<Plate>A01)"
+            source=FromFileName, pattern=r"(?P<Plate>A01)"
         ),
     )
     changed_rules = snapshot(cache, source_projection, parser, rules)
@@ -349,7 +349,7 @@ def test_durable_workspace_mapping_still_runs_selector_parser_and_rule_fallbacks
         source_metadata_by_path={PATH: metadata},
         metadata_rules=(
             MetadataExtractionRule(
-                source=MetadataSource.FILE_NAME, pattern=r"(?P<Plate>A01)"
+                source=FromFileName, pattern=r"(?P<Plate>A01)"
             ),
         ),
     )

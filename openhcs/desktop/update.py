@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from enum import Enum
 from importlib.metadata import PackageNotFoundError, distribution
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -27,6 +27,7 @@ from PyQt6.QtWidgets import QMessageBox
 from python_introspect import dataclass_from_mapping, to_jsonable
 from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 
+from openhcs.core.selection import AllItems
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.desktop.deployment import (
     DESKTOP_RESTART_EXECUTABLE_ENVIRONMENT_VARIABLE,
@@ -42,7 +43,6 @@ from openhcs.authoring.session.dataset_document import (
     apply_dataset_document,
     render_dataset_document,
 )
-from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
@@ -71,11 +71,23 @@ class DesktopUpdateError(RuntimeError):
     """Raised when official release metadata cannot produce a safe update."""
 
 
-class DesktopUpdateCheckOrigin(Enum):
+class DesktopUpdateCheckOrigin(ABC):
     """User-visible context that requested one release check."""
 
-    EXPLICIT = "explicit"
-    STARTUP = "startup"
+    quiet: ClassVar[bool]
+    """Only an available update is shown; "up to date" and failures are logged."""
+
+
+class ExplicitUpdateCheck(DesktopUpdateCheckOrigin):
+    """The user asked for the check."""
+
+    quiet = False
+
+
+class StartupUpdateCheck(DesktopUpdateCheckOrigin):
+    """The application checked on its own after startup."""
+
+    quiet = True
 
 
 class DesktopRestartPurpose(Enum):
@@ -471,7 +483,7 @@ class DesktopRestartSession:
         context = render_dataset_document(
             main_window.session,
             tuple(main_window.session.dataset_scope_ids()),
-            selection_mode=SelectedAllSelectionMode.ALL,
+            selection_mode=AllItems,
         )
         session = cls.pending()
         session.directory.mkdir(parents=True)
@@ -658,7 +670,7 @@ class DesktopUpdateCheckResult:
     """Successful update check plus the context that requested it."""
 
     update: DesktopUpdate
-    origin: DesktopUpdateCheckOrigin
+    origin: type[DesktopUpdateCheckOrigin]
 
 
 @dataclass(frozen=True, slots=True)
@@ -666,7 +678,7 @@ class DesktopUpdateCheckFailure:
     """Failed update check plus the context that requested it."""
 
     message: str
-    origin: DesktopUpdateCheckOrigin
+    origin: type[DesktopUpdateCheckOrigin]
 
 
 class DesktopUpdateDialogPresenter:
@@ -825,19 +837,14 @@ class DesktopUpdateService(QObject):
         self._network_manager = network_manager or QNetworkAccessManager(self)
         self._url_opener = url_opener or QDesktopServices.openUrl
         self._active_reply: QNetworkReply | None = None
-        self._active_origin: DesktopUpdateCheckOrigin | None = None
+        self._active_origin: type[DesktopUpdateCheckOrigin] | None = None
 
     def check_for_updates(
         self,
-        origin: DesktopUpdateCheckOrigin = DesktopUpdateCheckOrigin.EXPLICIT,
+        origin: type[DesktopUpdateCheckOrigin] = ExplicitUpdateCheck,
     ) -> bool:
         """Start a nonblocking check, returning false if one is already active."""
 
-        if not isinstance(origin, DesktopUpdateCheckOrigin):
-            raise TypeError(
-                "DesktopUpdateService.check_for_updates requires "
-                f"DesktopUpdateCheckOrigin; got {type(origin).__name__}."
-            )
         if self._active_reply is not None:
             return False
 

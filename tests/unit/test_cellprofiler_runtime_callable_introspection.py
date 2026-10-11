@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -123,7 +123,7 @@ def test_imported_function_step_values_remain_signature_diffs_in_object_state():
             debug_pause=True,
             processing_config=LazyProcessingConfig(
                 variable_components=[Microscopy.Site],
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
         ),
         scope_id="plate::functionstep_0",
@@ -140,7 +140,7 @@ def test_imported_function_step_values_remain_signature_diffs_in_object_state():
     ]
     assert state.signature_default("processing_config.variable_components") is None
     assert (
-        state.parameters["processing_config.input_source"] is InputSource.PIPELINE_START
+        state.parameters["processing_config.input_source"].reads_pipeline_start
     )
     assert state.signature_default("processing_config.input_source") is None
     assert {
@@ -167,7 +167,7 @@ def test_step_invocation_contract_provider_validates_public_cellprofiler_config(
         ),
         name="MaskObjects",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
@@ -206,7 +206,7 @@ def test_public_compile_time_provider_binds_cellprofiler_runtime_from_step_decla
         ),
         name="CorrectIlluminationCalculate",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=source_bindings,
     )
@@ -218,7 +218,7 @@ def test_public_compile_time_provider_binds_cellprofiler_runtime_from_step_decla
     step_context = ArtifactDeclarationStepContext(
         step_index=0,
         source_bindings=source_bindings,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
 
     compiled = compile_function_pattern(
@@ -278,7 +278,7 @@ def test_adapter_free_cellprofiler_module_keeps_raw_runtime_callable() -> None:
         ),
         name="SaveImages",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=source_bindings,
     )
@@ -292,7 +292,7 @@ def test_adapter_free_cellprofiler_module_keeps_raw_runtime_callable() -> None:
         ArtifactDeclarationStepContext(
             step_index=0,
             source_bindings=source_bindings,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
     )
 
@@ -331,7 +331,7 @@ def test_public_compile_time_provider_uses_step_order_for_repeated_modules():
             ),
             name="CorrectIlluminationCalculate",
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
             source_bindings=source_bindings,
         ),
@@ -345,7 +345,7 @@ def test_public_compile_time_provider_uses_step_order_for_repeated_modules():
             ),
             name="CorrectIlluminationCalculate",
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
             source_bindings=source_bindings,
         ),
@@ -359,7 +359,7 @@ def test_public_compile_time_provider_uses_step_order_for_repeated_modules():
     step_context = ArtifactDeclarationStepContext(
         step_index=1,
         source_bindings=source_bindings,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
 
     compiled = compile_function_pattern(
@@ -396,7 +396,7 @@ def test_cellprofiler_compile_time_contract_provider_derives_single_source_input
         ),
         name="CorrectIlluminationCalculate",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=source_bindings,
     )
@@ -445,7 +445,7 @@ def test_cellprofiler_compile_time_contract_provider_scopes_grouped_source_bindi
         },
         name="CorrectIlluminationCalculate",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=source_bindings,
     )
@@ -501,7 +501,7 @@ def test_compile_time_provider_derives_group_contracts_from_public_pattern_after
                 },
                 name="CorrectIlluminationCalculate",
                 processing_config=LazyProcessingConfig(
-                    input_source=InputSource.PIPELINE_START,
+                    input_source=ReadPipelineStart,
                 ),
                 source_bindings=source_bindings,
             )
@@ -519,7 +519,7 @@ def test_compile_time_provider_derives_group_contracts_from_public_pattern_after
     step_context = ArtifactDeclarationStepContext(
         step_index=0,
         source_bindings=source_bindings,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     compiled = compile_function_pattern(
         admitted_graph(

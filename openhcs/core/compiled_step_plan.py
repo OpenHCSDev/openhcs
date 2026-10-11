@@ -30,7 +30,7 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
 )
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import StepInputDependency, UnresolvedStepInput
 from openhcs.core.axes import Axis
 
 if TYPE_CHECKING:
@@ -279,7 +279,7 @@ class CompiledStepPlan:
         default_factory=SequentialRuntimeFilterPlan.disabled
     )
     main_input_dependency: StepInputDependency = field(
-        default_factory=StepInputDependency.unresolved
+        default_factory=UnresolvedStepInput
     )
     source_binding_plan: CompiledSourceBindingPlan = field(
         default_factory=CompiledSourceBindingPlan

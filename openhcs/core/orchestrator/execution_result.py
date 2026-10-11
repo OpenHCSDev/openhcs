@@ -116,12 +116,18 @@ class RuntimeExecutionObservation:
 
 
 class RuntimeObservationMode(ABC):
-    """Which worker runtime records an execution returns to the parent."""
+    """Which worker runtime records are returned to the parent; each mode keeps its own."""
 
-    @classmethod
+    @staticmethod
+    def from_parent_requirement(required: bool) -> "type[RuntimeObservationMode]":
+        """Select the mode implied by compiled parent-side execution needs."""
+
+        return MergeAllRuntimeRecords if required else OmitRuntimeRecords
+
+    @staticmethod
     def for_compiled_bundle(
-        cls, bundle: "CompiledExecutionBundle"
-    ) -> type[RuntimeObservationMode]:
+        bundle: "CompiledExecutionBundle",
+    ) -> "type[RuntimeObservationMode]":
         """Consolidation carries rendered tables; only dataset-scoped inputs need records."""
 
         if bundle.requires_parent_runtime_observation:
@@ -132,42 +138,36 @@ class RuntimeObservationMode(ABC):
     def including_parent_requirement(
         cls,
         required: bool,
-    ) -> type[RuntimeObservationMode]:
+    ) -> "type[RuntimeObservationMode]":
         """Return this mode strengthened by an additional retention requirement."""
 
         return MergeAllRuntimeRecords if required else cls
 
-    @classmethod
+    @staticmethod
     @abstractmethod
     def retain_records(
-        cls,
         records: tuple[StoredRuntimeValue, ...],
         context: ProcessingContext,
     ) -> tuple[StoredRuntimeValue, ...]:
         """Keep records consumed by the selected parent-side execution route."""
 
 
-class OmitRuntimeRecords(RuntimeObservationMode):
-    """Return no runtime records; the parent needs none."""
-
-    @classmethod
-    def retain_records(cls, records, context):
-        return ()
-
-
 class MergeAllRuntimeRecords(RuntimeObservationMode):
-    """Return every runtime record to the parent."""
+    """Return every worker record to the parent.
 
-    @classmethod
-    def retain_records(cls, records, context):
+    Workers keep each record to the end, so consumed inputs are never released.
+    """
+
+    @staticmethod
+    def retain_records(records, context):
         return records
 
 
 class MergeDatasetInputRecords(RuntimeObservationMode):
-    """Return only the records dataset-scoped steps consume in the parent."""
+    """Return only the records dataset-scoped steps read as inputs."""
 
-    @classmethod
-    def retain_records(cls, records, context):
+    @staticmethod
+    def retain_records(records, context):
         selected_addresses = set()
         for plan in context.step_plans.values():
             if not plan.execution_scope.requires_parent_runtime_observation:
@@ -196,6 +196,14 @@ class MergeDatasetInputRecords(RuntimeObservationMode):
             for record in records
             if (record.key, record.location) in selected_addresses
         )
+
+
+class OmitRuntimeRecords(RuntimeObservationMode):
+    """Return no worker records."""
+
+    @staticmethod
+    def retain_records(records, context):
+        return ()
 
 
 @dataclass(frozen=True)

@@ -22,7 +22,8 @@ from typing import (
 import dill as pickle
 
 from openhcs.constants.constants import (
-    OrchestratorState,
+    OrchestratorCompileFailed,
+    OrchestratorCompiled,
     READ_BACKEND,
     WRITE_BACKEND,
     Backend,
@@ -43,7 +44,7 @@ from openhcs.core.context.processing_context import (
 )
 from openhcs.core.config import (
     GlobalPipelineConfig,
-    MaterializationBackend,
+    MaterializeToZarr,
     StreamingConfig,
     VFSConfig,
     PartitionFilterConfig,
@@ -94,7 +95,7 @@ from openhcs.core.image_file_serialization import (
 )
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
-    SourceProjectionRole,
+    PrimaryPlaneRole,
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.partition_filter import PartitionFilterProcessor
@@ -276,7 +277,7 @@ class PipelineCompiler:
             return
 
         vfs_config = session.global_config.vfs_config
-        if vfs_config.materialization_backend != MaterializationBackend.ZARR:
+        if vfs_config.materialization_backend is not MaterializeToZarr:
             return
 
         available_backends = context.microscope_handler.available_backends(
@@ -301,7 +302,7 @@ class PipelineCompiler:
         zarr_subdir = "zarr" if uses_virtual_workspace else original_subdir
         context.step_plans[0].input_conversion = InputConversionPlan(
             output_dir=dataset_root / zarr_subdir,
-            backend=MaterializationBackend.ZARR.value,
+            backend=MaterializeToZarr.backend.value,
             uses_virtual_workspace=uses_virtual_workspace,
             original_subdir=original_subdir,
         )
@@ -497,7 +498,7 @@ class PipelineCompiler:
         if (
             not session.step_count
             or session.global_config.vfs_config.materialization_backend
-            != MaterializationBackend.ZARR
+            is not MaterializeToZarr
         ):
             return
         last_step_index = session.step_count - 1
@@ -576,7 +577,7 @@ class PipelineCompiler:
         if persistent_step_indexes:
             persistent_backend = (
                 materialization_planner.resolve_backend(
-                    session.global_config.vfs_config.materialization_backend,
+                    session.global_config.vfs_config.materialization_backend.backend,
                 )
             )
         for step_index, step_plan in session.plans.items():
@@ -1360,7 +1361,7 @@ class PipelineCompiler:
                 for projection in (
                     workspace_projection.source_projections_by_virtual_path.values()
                 )
-                if projection.projection_role is SourceProjectionRole.PRIMARY_PLANE
+                if projection.projection_role is PrimaryPlaneRole
             )
         if not selected:
             failures.append(
@@ -1442,7 +1443,7 @@ class PipelineCompiler:
         PipelineCompiler._log_path_planning_summary(compiled_contexts)
         logger.info("Stripping attributes from pipeline definition steps.")
         StepAttributeStripper.strip_step_attributes(pipeline_definition, {})
-        orchestrator._state = OrchestratorState.COMPILED
+        orchestrator._state = OrchestratorCompiled
         logger.info(
             f"Execution config: {effective_config.num_workers} workers configured for pipeline execution"
         )
@@ -1660,7 +1661,7 @@ class PipelineCompiler:
             )
             return execution_bundle
         except Exception as e:
-            orchestrator._state = OrchestratorState.COMPILE_FAILED
+            orchestrator._state = OrchestratorCompileFailed
             logger.error(f"Failed to compile pipelines: {e}")
             raise
 

@@ -19,7 +19,7 @@ from typing import (
     Optional,
 )
 
-from openhcs.constants.constants import Backend, OrchestratorState
+from openhcs.constants.constants import Backend, OrchestratorCompleted, OrchestratorExecFailed, OrchestratorExecuting, OrchestratorReady
 from openhcs.core.artifacts.kinds import SpecialArtifactType
 from openhcs.core.callable_contract import (
     CallableContract,
@@ -42,10 +42,10 @@ from openhcs.core.post_execute import PostExecuteHook
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
-    MergeAllRuntimeRecords,
-    OmitRuntimeRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
+    MergeAllRuntimeRecords,
+    OmitRuntimeRecords,
     RuntimeObservationMode,
 )
 from openhcs.core.orchestrator.worker_execution import (
@@ -245,7 +245,7 @@ def execute_bundle_request(
         for context_key, context in validated.compiled_contexts.items()
     }
     try:
-        orchestrator._state = OrchestratorState.EXECUTING
+        orchestrator._state = OrchestratorExecuting
         logger.info(
             f"Starting execution for {len(validated.compiled_contexts)} axis values "
             f"with max_workers={validated.actual_max_workers}."
@@ -370,11 +370,11 @@ def execute_bundle_request(
             executed_contexts=executing_contexts,
         )
     except ExecutionCancelledError:
-        orchestrator._state = OrchestratorState.READY
+        orchestrator._state = OrchestratorReady
         logger.info("Compiled bundle execution cancelled")
         raise
     except Exception as exc:
-        orchestrator._state = OrchestratorState.EXEC_FAILED
+        orchestrator._state = OrchestratorExecFailed
         logger.error(f"Failed to execute compiled bundle: {exc}")
         raise
     finally:
@@ -1170,7 +1170,7 @@ class ViewerSettlementProgressObserver:
             percent=percent,
             context={
                 "viewer_port": self.viewer_port,
-                **progress.to_wire_mapping(),
+                **progress.to_dict(),
             },
         )
 
@@ -1256,6 +1256,6 @@ def project_execution_state(
     """Project worker-lane results back into orchestrator lifecycle state."""
 
     if execution_results.is_success():
-        orchestrator._state = OrchestratorState.COMPLETED
+        orchestrator._state = OrchestratorCompleted
     else:
-        orchestrator._state = OrchestratorState.EXEC_FAILED
+        orchestrator._state = OrchestratorExecFailed

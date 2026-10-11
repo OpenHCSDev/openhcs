@@ -50,7 +50,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQExecutionConfigTransport,
     ZMQExecutionIdentity,
     ZMQExecutionRequestPayload,
-    ZMQRuntimeObservationExportScope,
+    ExportRuntimeOutcomes,
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (
@@ -272,7 +272,7 @@ def test_zmq_auxiliary_params_strengthen_compiled_observation_requirement(
 def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> None:
     params = ZMQAuxiliaryExecutionParams(
         runtime_observation_export_path=Path("/tmp/outcomes.pkl.gz"),
-        runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+        runtime_observation_export_scope=ExportRuntimeOutcomes,
     )
     execution_bundle = SimpleNamespace(
         requires_parent_runtime_observation=False,
@@ -288,7 +288,7 @@ def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> 
 def test_outcome_export_requires_a_path() -> None:
     with pytest.raises(ValueError, match="requires an export path"):
         ZMQAuxiliaryExecutionParams(
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES
+            runtime_observation_export_scope=ExportRuntimeOutcomes
         )
 
 
@@ -309,7 +309,7 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         execution_id=record.execution_id,
         auxiliary_params=ZMQAuxiliaryExecutionParams(
             runtime_observation_export_path=export_path,
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+            runtime_observation_export_scope=ExportRuntimeOutcomes,
         ),
     )
     compilation = SimpleNamespace(

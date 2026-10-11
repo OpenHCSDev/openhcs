@@ -15,6 +15,7 @@ from typing import ClassVar
 from python_introspect import JsonValue
 
 from openhcs.agent.capabilities import agent_capabilities
+from openhcs.constants.constants import OrchestratorCompileFailed, OrchestratorInitFailed
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.session import DatasetListState, DatasetRowState
 from openhcs.mcp.dev_client_core import (
@@ -48,7 +49,7 @@ class InitializeStage(DatasetStage):
     @classmethod
     def finished(cls, row: DatasetRowState) -> bool:
         return not row.init_pending and (
-            row.initialized or row.orchestrator_state == "init_failed"
+            row.initialized or row.orchestrator_state == OrchestratorInitFailed.name
         )
 
     @classmethod
@@ -62,7 +63,7 @@ class CompileStage(DatasetStage):
     @classmethod
     def finished(cls, row: DatasetRowState) -> bool:
         return not row.compile_pending and (
-            row.compiled or row.orchestrator_state == "compile_failed"
+            row.compiled or row.orchestrator_state == OrchestratorCompileFailed.name
         )
 
     @classmethod

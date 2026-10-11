@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import ClassVar
 
+from metaclass_registry import AutoRegisterMeta
 from zmqruntime.config import TransportMode
 
 from openhcs.agent.dto.common import (
@@ -86,12 +90,77 @@ class PlateInspectionIssueCode(str, Enum):
     PROBABLE_NATIVE_HANDLER = "plate_probable_native_handler"
 
 
-class SelectedPlateFileQueryTarget(str, Enum):
-    """Plate root used when querying files from a selected PlateManager row."""
+class SelectedPlateFileQueryTarget(ABC, metaclass=AutoRegisterMeta):
+    """Plate root used when querying files from a selected PlateManager row.
 
-    SELECTED = "selected"
-    OUTPUT = "output"
-    SOURCE = "source"
+    Each target is a subclass; ``name`` is its spelling in tool arguments.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str | None] = None
+    is_selected_row_root: ClassVar[bool] = False
+    """The query reads the selected row's own root, not a related plate."""
+
+    @staticmethod
+    def named(name: str) -> type[SelectedPlateFileQueryTarget]:
+        target = SelectedPlateFileQueryTarget.__registry__.get(name)
+        if target is None:
+            raise ValueError(
+                f"Unknown selected-plate target {name!r}; expected one of "
+                f"{tuple(SelectedPlateFileQueryTarget.__registry__)!r}."
+            )
+        return target
+
+    @classmethod
+    @abstractmethod
+    def plate_root(
+        cls,
+        selected_row: Mapping[str, JsonValue],
+        plate_root: str,
+        state_surface_id: str,
+    ) -> tuple[str | None, AgentError | None]:
+        """Return the plate root this target reads from one selected row."""
+
+
+class SelectedRowRoot(SelectedPlateFileQueryTarget):
+    name = "selected"
+    is_selected_row_root = True
+
+    @classmethod
+    def plate_root(cls, selected_row, plate_root, state_surface_id):
+        return plate_root, None
+
+
+class OutputPlateRoot(SelectedPlateFileQueryTarget):
+    name = "output"
+
+    @classmethod
+    def plate_root(cls, selected_row, plate_root, state_surface_id):
+        output_root = selected_row.get("output_root")
+        if isinstance(output_root, str) and output_root:
+            return output_root, None
+        return None, AgentError(
+            code="ui_selected_plate_output_root_unavailable",
+            message="The selected PlateManager row does not expose an output_root.",
+            hint=(
+                "Call openhcs_ui_get_state_surface(surface_id="
+                f"{state_surface_id!r}) to inspect source/output plate "
+                "relationships."
+            ),
+        )
+
+
+class SourcePlateRoot(SelectedPlateFileQueryTarget):
+    name = "source"
+
+    @classmethod
+    def plate_root(cls, selected_row, plate_root, state_surface_id):
+        source_root = selected_row.get("source_root")
+        if isinstance(source_root, str) and source_root:
+            return source_root, None
+        return plate_root, None
 
 
 class PlateWorkspacePreparationOperation(str, Enum):
@@ -163,11 +232,11 @@ class SelectedPlateTargetOptions(DatasetTarget):
     """Shared target controls for PlateManager-selected plate operations."""
 
     pattern_format: str | None = None
-    target: SelectedPlateFileQueryTarget = SelectedPlateFileQueryTarget.SELECTED
+    target: type[SelectedPlateFileQueryTarget] = SelectedRowRoot
 
     @staticmethod
-    def target_from_value(value: str) -> SelectedPlateFileQueryTarget:
-        return SelectedPlateFileQueryTarget(value)
+    def target_from_value(value: str) -> type[SelectedPlateFileQueryTarget]:
+        return SelectedPlateFileQueryTarget.named(value)
 
 
 @dataclass(frozen=True, slots=True)
@@ -512,7 +581,7 @@ class SelectedPlateImageInspectionRequest(SelectedPlateTargetOptions):
         *,
         source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
-        target: str = SelectedPlateFileQueryTarget.SELECTED.value,
+        target: str = SelectedRowRoot.name,
         max_sample_files: int = PlateInspectionDefaults.DEFAULT_MAX_SAMPLE_FILES,
         max_component_values: int = PlateInspectionDefaults.DEFAULT_MAX_COMPONENT_VALUES,
         max_parse_failure_samples: int = (
@@ -534,7 +603,7 @@ class SelectedPlateImageInspectionRequest(SelectedPlateTargetOptions):
         return {
             "source_format": self.source_format,
             "pattern_format": self.pattern_format,
-            "target": self.target.value,
+            "target": self.target.name,
             "max_sample_files": self.max_sample_files,
             "max_component_values": self.max_component_values,
             "max_parse_failure_samples": self.max_parse_failure_samples,
@@ -575,7 +644,7 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
         source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
-        target: str = SelectedPlateFileQueryTarget.SELECTED.value,
+        target: str = SelectedRowRoot.name,
         path_contains: str | None = None,
         component_filters: dict[str, list[str]] | None = None,
         offset: int = 0,
@@ -603,7 +672,7 @@ class SelectedPlateFileQueryRequest(SelectedPlateFileFilterOptions):
             "source_format": self.source_format,
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
-            "target": self.target.value,
+            "target": self.target.name,
             "path_contains": self.path_contains,
             "component_filters": self.component_filters.as_mapping(),
             "offset": self.offset,
@@ -657,7 +726,7 @@ class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
         image_path: str | None = None,
         source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
-        target: str = SelectedPlateFileQueryTarget.SELECTED.value,
+        target: str = SelectedRowRoot.name,
         y: int = 0,
         x: int = 0,
         height: int = 32,
@@ -689,7 +758,7 @@ class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
             "image_path": self.image_path,
             "source_format": self.source_format,
             "pattern_format": self.pattern_format,
-            "target": self.target.value,
+            "target": self.target.name,
             "y": self.y,
             "x": self.x,
             "height": self.height,
@@ -740,7 +809,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
         source_format: str = AutoDetectedSource.source_name,
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
-        target: str = SelectedPlateFileQueryTarget.SELECTED.value,
+        target: str = SelectedRowRoot.name,
         path_contains: str | None = None,
         component_filters: dict[str, list[str]] | None = None,
         limit: int = 1,
@@ -776,7 +845,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
             "source_format": self.source_format,
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
-            "target": self.target.value,
+            "target": self.target.name,
             "path_contains": self.path_contains,
             "component_filters": self.component_filters.as_mapping(),
             "limit": self.limit,
@@ -1239,7 +1308,7 @@ class SelectedPlateImageInspectionResult(AgentResultEnvelope):
     """Image inspection for the single plate currently selected in the UI."""
 
     selected_plate: JsonObject = field(default_factory=dict)
-    target: SelectedPlateFileQueryTarget = SelectedPlateFileQueryTarget.SELECTED
+    target: type[SelectedPlateFileQueryTarget] = SelectedRowRoot
     inspection: PlatePathInspectionResult | None = None
 
 
@@ -1248,7 +1317,7 @@ class SelectedPlateFileQueryResult(AgentResultEnvelope):
     """File query for the single plate currently selected in the UI."""
 
     selected_plate: JsonObject = field(default_factory=dict)
-    target: SelectedPlateFileQueryTarget = SelectedPlateFileQueryTarget.SELECTED
+    target: type[SelectedPlateFileQueryTarget] = SelectedRowRoot
     query: PlateFileQueryResult | None = None
 
 
@@ -1257,7 +1326,7 @@ class SelectedPlateImageSampleResult(AgentResultEnvelope):
     """Bounded image sample for the single plate currently selected in the UI."""
 
     selected_plate: JsonObject = field(default_factory=dict)
-    target: SelectedPlateFileQueryTarget = SelectedPlateFileQueryTarget.SELECTED
+    target: type[SelectedPlateFileQueryTarget] = SelectedRowRoot
     image_path: str | None = None
     auto_selected_image_path: bool = False
     sample: PlateImageSampleResult | None = None
@@ -1268,5 +1337,5 @@ class SelectedPlateFileStreamResult(AgentResultEnvelope):
     """Streaming result for the single plate currently selected in the UI."""
 
     selected_plate: JsonObject = field(default_factory=dict)
-    target: SelectedPlateFileQueryTarget = SelectedPlateFileQueryTarget.SELECTED
+    target: type[SelectedPlateFileQueryTarget] = SelectedRowRoot
     stream: PlateFileStreamResult | None = None

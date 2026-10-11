@@ -1,4 +1,5 @@
 from openhcs.agent.dto.session import DatasetRowState
+from openhcs.mcp.dev_client_core import PollCompleted, PollFailed, PollTimedOut
 import asyncio
 import importlib.util
 import inspect
@@ -62,7 +63,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentSummary,
     UiCatalogPageMetadata,
     UiMutationReceipt,
-    UiObjectStateFieldFilter,
+    SemanticFields,
     UiObjectStateFieldHelpRequest,
     UiObjectStateFieldMutationResult,
     UiObjectStateFieldProvenance,
@@ -2284,7 +2285,7 @@ def test_mcp_list_object_state_scopes_filters_scope_ids(monkeypatch):
             assert connection == "ui-connection"
             assert request.scope_ids == ("/tmp/plate",)
             assert request.include_fields is True
-            assert request.field_filter is UiObjectStateFieldFilter.SEMANTIC
+            assert request.field_filter is SemanticFields
             return request.filtered_catalog(
                 UiObjectStateScopeCatalog(
                     schema_version=SCHEMA_VERSION,
@@ -6076,7 +6077,7 @@ def test_mcp_dev_client_workflow_poll_reports_failed_terminal_rows():
             target_scope_ids=("scope-a",),
             policy=run_policy,
         )
-        is dev_client.WorkflowPollSummaryStatus.FAILED
+        is PollFailed
     )
     assert (
         dev_client.workflow_poll_terminal_status(
@@ -6084,7 +6085,7 @@ def test_mcp_dev_client_workflow_poll_reports_failed_terminal_rows():
             target_scope_ids=("scope-a",),
             policy=compile_policy,
         )
-        is dev_client.WorkflowPollSummaryStatus.FAILED
+        is PollFailed
     )
 
 
@@ -6355,7 +6356,7 @@ def test_mcp_dev_client_selected_workflow_completed_rejection_stops_polling(
         "openhcs_ui_selected_plate_workflow",
         "openhcs_ui_wait_for_operation_receipt",
     ]
-    assert response.results[-1].payloads[0].status is dev_client.WorkflowPollSummaryStatus.FAILED
+    assert response.results[-1].payloads[0].status is PollFailed
     from openhcs.mcp.dev_client_core import WorkflowPollSkipReason
     assert response.results[-1].payloads[0].skip_reason is WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
 
@@ -6433,7 +6434,7 @@ def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
     ]
     summary = response.results[-1]
     assert summary.mcp_error is True
-    assert summary.payloads[0].status is dev_client.WorkflowPollSummaryStatus.TIMEOUT
+    assert summary.payloads[0].status is PollTimedOut
     assert summary.payloads[0].poll_count == 1
 
 
@@ -6514,7 +6515,7 @@ def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state
     ]
     summary = response.results[-1]
     assert summary.mcp_error is False
-    assert summary.payloads[0].status is dev_client.WorkflowPollSummaryStatus.COMPLETED
+    assert summary.payloads[0].status is PollCompleted
     assert summary.payloads[0].poll_count == 1
 
 
@@ -7115,7 +7116,7 @@ def test_mcp_dev_client_workflow_poll_timeout_summary_is_error():
 
     summary = dev_client.workflow_poll_summary_result(
         workflow="compile_datasets",
-        status=dev_client.WorkflowPollSummaryStatus.TIMEOUT,
+        status=PollTimedOut,
         poll_requested=True,
         poll_completed=False,
         poll_count=2,
@@ -8484,12 +8485,12 @@ def test_mcp_dev_client_launches_fresh_current_source_server():
 def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatch):
     import openhcs.mcp.dev_client as dev_client
     from openhcs.agent.path_policy import AgentPathPolicy
-    from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+    from openhcs.agent.runtime_platform import AgentRuntimePlatform
     from openhcs.agent.ui_bridge_environment import UiBridgeDescriptorEnvironment
     from openhcs.core.native_threading import native_thread_count_environment_keys
     from openhcs.utils.environment import OpenHCSProcessEnvironment
 
-    platform_authority = AgentRuntimePlatformAuthority.current()
+    platform_authority = AgentRuntimePlatform.current()
     for key in platform_authority.graphical_session_environment_keys():
         monkeypatch.delenv(key, raising=False)
     for key in AgentPathPolicy.environment_keys():
@@ -8560,13 +8561,11 @@ def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatc
 def test_mcp_dev_client_server_spec_preserves_windows_host_environment(monkeypatch):
     import openhcs.mcp.dev_client as dev_client
     from openhcs.agent.runtime_platform import (
-        AgentRuntimePlatformAuthority,
-        AgentRuntimePlatformKey,
+        AgentRuntimePlatform,
+        WindowsRuntimePlatform,
     )
 
-    windows_authority = AgentRuntimePlatformAuthority.for_enum_member(
-        AgentRuntimePlatformKey.WINDOWS
-    )
+    windows_authority = WindowsRuntimePlatform()
     expected_keys = {
         "HOME",
         "LOGNAME",
@@ -8587,7 +8586,7 @@ def test_mcp_dev_client_server_spec_preserves_windows_host_environment(monkeypat
     }
     assert set(windows_authority.child_process_environment_keys()) == expected_keys
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "current",
         classmethod(lambda cls: windows_authority),
     )

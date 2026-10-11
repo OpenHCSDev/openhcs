@@ -206,6 +206,7 @@ class StreamingViewerLifecycle:
         from zmqruntime.queue_tracker import GlobalQueueTrackerRegistry
 
         from openhcs.runtime.viewer_protocol import (
+            ViewerConnectedExternal,
             ViewerGraphicalSessionUnavailableError,
             ViewerLaunchContext,
             ViewerProcessLaunchReuseCheck,
@@ -237,7 +238,7 @@ class StreamingViewerLifecycle:
                 launch_context=resolved_launch_context,
             )
             if not fresh and created_viewer.existing_viewer_is_ready():
-                created_viewer.lifecycle_state.mark_connected_external()
+                created_viewer.lifecycle = ViewerConnectedExternal
             return created_viewer
 
         try:

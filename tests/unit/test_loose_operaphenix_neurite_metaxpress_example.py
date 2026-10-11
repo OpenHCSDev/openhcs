@@ -9,7 +9,6 @@ from objectstate.lazy_factory import ensure_global_config_context
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.constants.input_source import InputSource
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -92,7 +91,7 @@ def test_compact_example_uses_owned_channel_order_and_one_function_step(
     assert AuthoredFunctionPattern.first_callable(step.func) is neurite_outgrowth_metaxpress
     assert step.processing_config.variable_components == [Microscopy.Channel]
     assert step.processing_config.group_by is Ungrouped
-    assert step.processing_config.input_source is InputSource.PIPELINE_START
+    assert step.processing_config.input_source.reads_pipeline_start
     assert step.napari_streaming_config.enabled is True
     assert step.napari_streaming_config.partition_filter is None
     assert step.napari_streaming_config.port == 5999

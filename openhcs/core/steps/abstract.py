@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Iterable, get_type_hints
 
 from objectstate import get_base_type_for_lazy, semantic_values_equal
 
-from openhcs.constants.input_source import InputSource as InputSource
 
 # Import LazyStepMaterializationConfig for type hints
 from openhcs.core.config import (
@@ -204,11 +203,11 @@ class AbstractStep(abc.ABC):
 
     ``processing_config.input_source`` controls the ordinary main-flow source:
 
-    - InputSource.PREVIOUS_STEP (default): Standard pipeline chaining where the step
+    - ReadPreviousStep (default): Standard pipeline chaining where the step
       consumes the previous step's main-flow result. This maintains normal
       sequential data flow.
 
-    - InputSource.PIPELINE_START: The step consumes pipeline-start main flow,
+    - ReadPipelineStart: The step consumes pipeline-start main flow,
       bypassing previous step results. This replaces the @chain_breaker decorator
       functionality and is used for position generation and quality control.
 
@@ -224,7 +223,7 @@ class AbstractStep(abc.ABC):
         func=my_processing_function,
         name="process_images",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PREVIOUS_STEP,
+            input_source=ReadPreviousStep,
         ),
     )
     ```
@@ -235,7 +234,7 @@ class AbstractStep(abc.ABC):
         func=ashlar_compute_tile_positions_gpu,
         name="compute_positions",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
     )
     ```

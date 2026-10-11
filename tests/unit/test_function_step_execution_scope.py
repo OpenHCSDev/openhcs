@@ -83,10 +83,7 @@ from openhcs.core.runtime_stores import (
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.step_dependencies import (
-    StepInputDependency,
-    StepInputDependencyKind,
-)
+from openhcs.core.step_dependencies import NoMainFlowInput
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import FileBundleOptions, MaterializationSpec
@@ -220,12 +217,9 @@ def test_compiled_step_plan_does_not_store_execution_scope() -> None:
 
 
 def test_plate_dependency_has_no_main_flow() -> None:
-    assert StepInputDependencyKind.NO_MAIN_FLOW.value == "no_main_flow"
-    dependency = StepInputDependency.no_main_flow()
+    dependency = NoMainFlowInput()
 
-    assert dependency.kind is StepInputDependencyKind.NO_MAIN_FLOW
-    assert dependency.source_step_index is None
-    assert dependency.source_step_scope_id is None
+    assert dependency.predecessor_step_index() is None
     assert dependency.is_resolved
 
 
@@ -252,7 +246,7 @@ def test_plate_scope_drives_no_main_flow_paths() -> None:
     )
     input_dir, resolved_output_dir = planner.steps.step_io_dirs(dependency, 1)
 
-    assert dependency == StepInputDependency.no_main_flow()
+    assert dependency == NoMainFlowInput()
     assert input_dir == output_dir
     assert resolved_output_dir == output_dir
 
@@ -272,7 +266,7 @@ def test_path_validation_accepts_explicit_no_main_flow_dependency(
             step_index=1,
             step_name="export",
             axis_id="A01",
-            main_input_dependency=StepInputDependency.no_main_flow(),
+            main_input_dependency=NoMainFlowInput(),
         )
     }
     validation = PathPlannerValidationStage(planner)
@@ -428,7 +422,7 @@ def _plate_step_plan(
         analysis_results_dir="/plate/analysis",
         pipeline_position=step_index + 1,
         variable_components=(),
-        main_input_dependency=StepInputDependency.no_main_flow(),
+        main_input_dependency=NoMainFlowInput(),
         artifact_inputs=input_plans,
         artifact_outputs=output_plans,
         compiled_function_pattern=compiled_pattern,

@@ -29,7 +29,7 @@ from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQ
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
-    ZMQRuntimeObservationExportScope,
+    ExportRuntimeOutcomes,
 )
 
 
@@ -482,7 +482,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     ).with_auxiliary_params(
         ZMQAuxiliaryExecutionParams(
             runtime_observation_export_path=observation_path,
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+            runtime_observation_export_scope=ExportRuntimeOutcomes,
         )
     )
     endpoint = measured_run.measured_endpoint_provenance(
@@ -566,7 +566,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     assert completion.receipt.observed_axis_count == 1
     assert (
         completion.receipt.observation_export_scope
-        is ZMQRuntimeObservationExportScope.OUTCOMES
+        is ExportRuntimeOutcomes
     )
     assert (
         MeasuredPipelineRunReceipt.read(

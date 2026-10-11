@@ -14,7 +14,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Mapping, Optional
 
-from openhcs.constants.input_source import InputSource
 from openhcs.core.axis_filter import StepAxisFilterSet
 from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
 from openhcs.core.artifacts.plans import (
@@ -75,7 +74,8 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.step_dependencies import (
     StepInputDependency,
-    StepInputDependencyKind,
+    StepOutputInput,
+    UnresolvedStepInput,
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
@@ -434,7 +434,7 @@ class PathPlannerExecutionGroups:
                     resolved_config=self.planner.session.global_config,
                 )
             )
-            if step.processing_config.input_source is InputSource.PIPELINE_START
+            if step.processing_config.input_source.reads_pipeline_start
             else ()
         )
         if source_keys:
@@ -1646,7 +1646,7 @@ class PathPlannerMaterializationStage:
 
         return InputConversionPlan(
             output_dir=output_dir,
-            backend=self.planner.vfs.materialization_backend.value,
+            backend=self.planner.vfs.materialization_backend.backend.value,
             uses_virtual_workspace=False,
             original_subdir=input_dir.name,
         )
@@ -1669,7 +1669,7 @@ class PathPlannerMaterializationStage:
         )
         self.planner.plans[step_index].materialized_output = MaterializedOutputPlan(
             output_dir=materialized_output_dir,
-            backend=self.planner.vfs.materialization_backend.value,
+            backend=self.planner.vfs.materialization_backend.backend.value,
             dataset_root=str(materialized_dataset_root),
             sub_dir=materialization_config.sub_dir,
             analysis_results_dir=str(
@@ -1701,18 +1701,11 @@ class PathPlannerValidationStage:
         for i in range(1, self.planner.session.step_count):
             curr = self.planner.session.pipeline.steps[i]
             dependency = self.planner.plans[i].main_input_dependency
-            if dependency.kind in (
-                StepInputDependencyKind.NO_MAIN_FLOW,
-                StepInputDependencyKind.PIPELINE_START,
-            ):
-                continue
-            if dependency.kind is not StepInputDependencyKind.STEP_OUTPUT:
+            if isinstance(dependency, UnresolvedStepInput):
                 raise ValueError(f"Step {curr.name} has unresolved main input dependency.")
+            if not isinstance(dependency, StepOutputInput):
+                continue
             source_step_index = dependency.source_step_index
-            if source_step_index is None:
-                raise ValueError(
-                    f"Step {curr.name} main input dependency is missing source_step_index."
-                )
             curr_in = self.planner.plans[i].input_dir
             source_out = self.planner.plans[source_step_index].output_dir
             if curr_in != source_out:
@@ -2016,9 +2009,7 @@ class PathPlannerStepAssemblyStage:
         main_input_dependency: StepInputDependency,
     ) -> PathPlannerComponentScopes:
         """Return component scopes visible on a step's main-flow input branch."""
-        if main_input_dependency.kind is StepInputDependencyKind.PIPELINE_START:
-            return PathPlannerComponentScopes.empty()
-        source_step_index = main_input_dependency.source_step_index
+        source_step_index = main_input_dependency.predecessor_step_index()
         if source_step_index is None:
             return PathPlannerComponentScopes.empty()
         return self.planner.main_flow_component_scopes.get(
@@ -2102,40 +2093,24 @@ class PathPlannerStepAssemblyStage:
     ) -> tuple[Path, Path]:
         """Resolve read/write directories for one step."""
         plan = self.planner.plans.get(step_index)
-        reads_from_pipeline_start = (
-            main_input_dependency.kind is StepInputDependencyKind.PIPELINE_START
-        )
-        has_no_main_flow = (
-            main_input_dependency.kind is StepInputDependencyKind.NO_MAIN_FLOW
-        )
-
         if plan is not None and plan.input_dir is not None:
             input_dir = Path(plan.input_dir)
-        elif reads_from_pipeline_start:
-            input_dir = self.planner.initial_input
-        elif has_no_main_flow:
-            input_dir = self.planner.paths.build_output_path()
         else:
-            source_step_index = main_input_dependency.source_step_index
-            if source_step_index is None:
-                raise ValueError(
-                    f"Step {step_index} main input dependency is missing source_step_index."
-                )
-            input_dir = Path(self.planner.plans[source_step_index].output_dir)
+            input_dir = main_input_dependency.default_input_dir(self.planner)
 
         if plan is not None and plan.output_dir is not None:
             output_dir = Path(plan.output_dir)
-        elif reads_from_pipeline_start or has_no_main_flow:
-            output_dir = self.planner.paths.build_output_path()
         else:
-            output_dir = input_dir
+            output_dir = main_input_dependency.default_output_dir(
+                self.planner, input_dir
+            )
 
         return input_dir, output_dir
 
     @staticmethod
     def input_source(step: AbstractStep) -> str:
         """Get input source string."""
-        if step.processing_config.input_source == InputSource.PIPELINE_START:
+        if step.processing_config.input_source.reads_pipeline_start:
             return "PIPELINE_START"
         return "PREVIOUS_STEP"
 

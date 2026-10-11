@@ -31,7 +31,7 @@ from polystore.base import (
 from polystore.filemanager import FileManager
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.config import (
     LazyNapariStreamingConfig,
@@ -171,7 +171,7 @@ def build_czi_brain_axon_cellbody_demo(
             processing_config=LazyProcessingConfig(
                 variable_components=[Microscopy.Channel],
                 group_by=Ungrouped,
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
         ),
         FunctionStep(
@@ -197,7 +197,7 @@ def build_czi_brain_axon_cellbody_demo(
             processing_config=LazyProcessingConfig(
                 variable_components=[Microscopy.Channel],
                 group_by=Ungrouped,
-                input_source=InputSource.PREVIOUS_STEP,
+                input_source=ReadPreviousStep,
             ),
             napari_streaming_config=_analysis_stream(
                 inputs,
@@ -218,7 +218,7 @@ def build_czi_brain_axon_cellbody_demo(
             processing_config=LazyProcessingConfig(
                 variable_components=[Microscopy.Channel],
                 group_by=Ungrouped,
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
             source_bindings=LazyStepSourceBindingsConfig(
                 enabled=True,
@@ -246,7 +246,7 @@ def build_czi_brain_axon_cellbody_demo(
             processing_config=LazyProcessingConfig(
                 variable_components=[Microscopy.Channel],
                 group_by=Ungrouped,
-                input_source=InputSource.PREVIOUS_STEP,
+                input_source=ReadPreviousStep,
             ),
             napari_streaming_config=_analysis_stream(
                 inputs,

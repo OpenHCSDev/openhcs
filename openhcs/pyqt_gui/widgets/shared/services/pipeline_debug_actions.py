@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
 from typing import TYPE_CHECKING, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
@@ -26,9 +25,7 @@ from openhcs.core.debug import (
 
 if TYPE_CHECKING:
     from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
-    from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
-        PipelineDebugSessionContext,
-    )
+    from openhcs.core.debug_session_projection import DebugSessionProjectionContext
     from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
         PipelineEditorDebugWorkflow,
     )
@@ -46,19 +43,51 @@ class DebugActionDisabledReason:
         return AgentError(code=self.code, message=self.message, hint=self.hint)
 
 
-class DebugActionPlacement(Enum):
-    """Toolbar placement declared by one debug action."""
+class DebugToolbarPlacement(ABC, metaclass=AutoRegisterMeta):
+    """Where the debug toolbar shows an action; ``name`` is its UI-bridge spelling."""
 
-    PRIMARY = "primary"
-    INSPECTOR = "inspector"
-    SESSION = "session"
-    HIDDEN = "hidden"
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[DebugToolbarPlacement]]] = {}
+
+    name: ClassVar[str | None] = None
+    shown: ClassVar[bool] = True
+    """Actions placed here get a toolbar button."""
+    panel_order: ClassVar[int] = 0
+    """Position of this placement's button panel in the toolbar."""
+
+    @classmethod
+    def panels(cls) -> tuple[type[DebugToolbarPlacement], ...]:
+        """The placements the toolbar renders as button panels, in order."""
+
+        return tuple(
+            sorted(
+                (placement for placement in cls.__registry__.values() if placement.shown),
+                key=lambda placement: placement.panel_order,
+            )
+        )
 
 
-class DebugToolbarAuxiliaryAction(str, Enum):
-    """Non-command debug toolbar actions."""
+class PrimaryPanel(DebugToolbarPlacement):
+    name = "primary"
+    panel_order = 0
 
-    RUNTIME_VALUES = "runtime_values"
+
+class SessionPanel(DebugToolbarPlacement):
+    name = "session"
+    panel_order = 1
+
+
+class InspectorPanel(DebugToolbarPlacement):
+    name = "inspector"
+    panel_order = 2
+
+
+class OffToolbar(DebugToolbarPlacement):
+    """Actions invoked through the editor or the UI bridge, without a button."""
+
+    name = "hidden"
+    shown = False
 
 
 class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
@@ -66,15 +95,16 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
 
     __registry__: ClassVar[
         dict[
-            type[DebugCommandType] | DebugToolbarAuxiliaryAction,
-            type["PipelineDebugActionDeclarationBase"],
+            type[DebugCommandType] | str,
+            type[PipelineDebugActionDeclarationBase],
         ]
     ] = {}
     __registry_key__ = "identity"
     __skip_if_no_key__ = True
 
-    identity: ClassVar[type[DebugCommandType] | DebugToolbarAuxiliaryAction | None] = None
-    toolbar_placement: ClassVar[DebugActionPlacement] = DebugActionPlacement.HIDDEN
+    identity: ClassVar[type[DebugCommandType] | str | None] = None
+    """The debug command this action sends, or an auxiliary action's id."""
+    toolbar_placement: ClassVar[type[DebugToolbarPlacement]] = OffToolbar
     toolbar_order: ClassVar[int] = 0
     label: ClassVar[str]
     tooltip: ClassVar[str]
@@ -89,7 +119,7 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         return to_jsonable(cls.require_identity())
 
     @classmethod
-    def require_identity(cls) -> type[DebugCommandType] | DebugToolbarAuxiliaryAction:
+    def require_identity(cls) -> type[DebugCommandType] | str:
         if cls.identity is None:
             raise ValueError(
                 f"{cls.__name__} does not declare a debug action identity."
@@ -98,10 +128,10 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def is_toolbar_action(cls) -> bool:
-        return cls.toolbar_placement is not DebugActionPlacement.HIDDEN
+        return cls.toolbar_placement.shown
 
     @classmethod
-    def toolbar_actions(cls) -> tuple[type["PipelineDebugActionDeclarationBase"], ...]:
+    def toolbar_actions(cls) -> tuple[type[PipelineDebugActionDeclarationBase], ...]:
         return tuple(
             sorted(
                 (
@@ -110,7 +140,7 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
                     if declaration.is_toolbar_action()
                 ),
                 key=lambda declaration: (
-                    declaration.toolbar_placement.value,
+                    declaration.toolbar_placement.panel_order,
                     declaration.toolbar_order,
                     declaration.action_id(),
                 ),
@@ -120,7 +150,7 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def for_action_id(
         cls, action_id: str
-    ) -> type["PipelineDebugActionDeclarationBase"]:
+    ) -> type[PipelineDebugActionDeclarationBase]:
         for declaration in cls.__registry__.values():
             if declaration.action_id() == action_id:
                 return declaration
@@ -130,7 +160,7 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     def for_command_type(
         cls,
         command_type: type[DebugCommandType],
-    ) -> type["PipelineDebugCommandActionDeclaration"]:
+    ) -> type[PipelineDebugCommandActionDeclaration]:
         declaration = cls.__registry__.get(command_type)
         if declaration is None:
             raise ValueError(f"Unhandled debug command route: {command_type.name}")
@@ -141,19 +171,19 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         return declaration
 
     @classmethod
-    def label_for(cls, context: "PipelineDebugSessionContext") -> str:
+    def label_for(cls, context: "DebugSessionProjectionContext") -> str:
         del context
         return cls.label
 
     @classmethod
-    def tooltip_for(cls, context: "PipelineDebugSessionContext") -> str:
+    def tooltip_for(cls, context: "DebugSessionProjectionContext") -> str:
         del context
         return cls.tooltip
 
     @classmethod
     def availability_override(
         cls,
-        context: "PipelineDebugSessionContext",
+        context: "DebugSessionProjectionContext",
     ) -> DebugActionDisabledReason | None:
         del context
         return None
@@ -190,18 +220,9 @@ class PipelineDebugCommandActionDeclaration(PipelineDebugActionDeclarationBase):
 class PipelineDebugAuxiliaryActionDeclaration(PipelineDebugActionDeclarationBase):
     """Debug action owned by the toolbar but not represented by DebugCommandType."""
 
-    identity: ClassVar[DebugToolbarAuxiliaryAction | None] = None
+    identity: ClassVar[str | None] = None
     side_effects: ClassVar[tuple[str, ...]] = ("opens_debug_runtime_inspector",)
     confirmation_required: ClassVar[bool] = False
-
-    @classmethod
-    def auxiliary_action_type(cls) -> DebugToolbarAuxiliaryAction:
-        identity = cls.require_identity()
-        if not isinstance(identity, DebugToolbarAuxiliaryAction):
-            raise TypeError(
-                f"{cls.__name__} is not backed by DebugToolbarAuxiliaryAction."
-            )
-        return identity
 
     @classmethod
     def invoke(cls, workflow: "PipelineEditorDebugWorkflow") -> None:
@@ -224,13 +245,13 @@ class ToggleDebugModeAction(PipelineDebugCommandActionDeclaration):
 
 class StartOrContinueDebugAction(PipelineDebugCommandActionDeclaration):
     identity = RunDebugCommand
-    toolbar_placement = DebugActionPlacement.PRIMARY
+    toolbar_placement = PrimaryPanel
     toolbar_order = 10
     label = "Debug"
     tooltip = "Start or continue debug execution for the selected plate"
 
     @classmethod
-    def label_for(cls, context: "PipelineDebugSessionContext") -> str:
+    def label_for(cls, context: "DebugSessionProjectionContext") -> str:
         if context.active_session is not None:
             return "Continue"
         target = context.target
@@ -241,7 +262,7 @@ class StartOrContinueDebugAction(PipelineDebugCommandActionDeclaration):
 
 class StepDebugAction(PipelineDebugCommandActionDeclaration):
     identity = StepDebugCommand
-    toolbar_placement = DebugActionPlacement.PRIMARY
+    toolbar_placement = PrimaryPanel
     toolbar_order = 20
     label = "Step"
     tooltip = "Run one debug step"
@@ -249,7 +270,7 @@ class StepDebugAction(PipelineDebugCommandActionDeclaration):
 
 class RunToPauseDebugAction(PipelineDebugCommandActionDeclaration):
     identity = RunToPauseDebugCommand
-    toolbar_placement = DebugActionPlacement.PRIMARY
+    toolbar_placement = PrimaryPanel
     toolbar_order = 30
     label = "Run to Pause"
     tooltip = "Run until the next pause marker"
@@ -257,7 +278,7 @@ class RunToPauseDebugAction(PipelineDebugCommandActionDeclaration):
     @classmethod
     def availability_override(
         cls,
-        context: "PipelineDebugSessionContext",
+        context: "DebugSessionProjectionContext",
     ) -> DebugActionDisabledReason | None:
         if not context.pause_boundaries.has_pause_boundaries:
             return DebugActionDisabledReason(
@@ -273,7 +294,7 @@ class RunToPauseDebugAction(PipelineDebugCommandActionDeclaration):
 
 class RestartDebugAction(PipelineDebugCommandActionDeclaration):
     identity = RestartDebugCommand
-    toolbar_placement = DebugActionPlacement.SESSION
+    toolbar_placement = SessionPanel
     toolbar_order = 40
     label = "Restart"
     tooltip = "Restart the current debug session"
@@ -281,8 +302,8 @@ class RestartDebugAction(PipelineDebugCommandActionDeclaration):
 
 
 class InspectRuntimeValuesAction(PipelineDebugAuxiliaryActionDeclaration):
-    identity = DebugToolbarAuxiliaryAction.RUNTIME_VALUES
-    toolbar_placement = DebugActionPlacement.INSPECTOR
+    identity = "runtime_values"
+    toolbar_placement = InspectorPanel
     toolbar_order = 10
     label = "Inspect Runtime"
     tooltip = "Inspect live runtime values for the paused debug worker"
@@ -291,7 +312,7 @@ class InspectRuntimeValuesAction(PipelineDebugAuxiliaryActionDeclaration):
 
 class ChooseSourceGroupDebugAction(PipelineDebugCommandActionDeclaration):
     identity = ChooseSourceGroupDebugCommand
-    toolbar_placement = DebugActionPlacement.SESSION
+    toolbar_placement = SessionPanel
     toolbar_order = 10
     label = "Choose source group"
     tooltip = "Choose a well/image set for debug execution"
@@ -299,7 +320,7 @@ class ChooseSourceGroupDebugAction(PipelineDebugCommandActionDeclaration):
 
 class StopDebugSessionAction(PipelineDebugCommandActionDeclaration):
     identity = StopDebugCommand
-    toolbar_placement = DebugActionPlacement.SESSION
+    toolbar_placement = SessionPanel
     toolbar_order = 20
     label = "Stop debug session"
     tooltip = "Stop the active debug execution"
@@ -320,8 +341,7 @@ class RandomSourceGroupDebugAction(PipelineDebugCommandActionDeclaration):
 __all__ = (
     "ChooseSourceGroupDebugAction",
     "DebugActionDisabledReason",
-    "DebugActionPlacement",
-    "DebugToolbarAuxiliaryAction",
+    "DebugToolbarPlacement",
     "InspectRuntimeValuesAction",
     "PipelineDebugActionDeclarationBase",
     "PipelineDebugAuxiliaryActionDeclaration",

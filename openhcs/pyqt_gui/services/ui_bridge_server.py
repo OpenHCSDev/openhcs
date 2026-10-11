@@ -42,7 +42,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiBridgeRequestEnvelope,
     UiBridgeResponseEnvelope,
 )
-from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+from openhcs.agent.runtime_platform import AgentRuntimePlatform
 from openhcs.agent.services.ui_bridge_service import (
     UI_BRIDGE_PROTOCOL_VERSION,
     UiBridgeOperation,
@@ -525,7 +525,7 @@ class UiBridgeControlServer:
             raise UiBridgeEndpointInUseError(endpoint, occupied_ports)
 
     def _write_descriptor_file(self, descriptor: UiBridgeDescriptorFile) -> Path:
-        path = AgentRuntimePlatformAuthority.resolved_path(
+        path = AgentRuntimePlatform.resolved_path(
             descriptor.descriptor_file_path
         )
         path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
@@ -539,7 +539,7 @@ class UiBridgeControlServer:
             + "\n",
             encoding="utf-8",
         )
-        if AgentRuntimePlatformAuthority.current().supports_posix_permissions():
+        if AgentRuntimePlatform.current().supports_posix_permissions():
             path.chmod(0o600)
         return path
 

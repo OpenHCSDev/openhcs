@@ -35,7 +35,10 @@ from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.source_bindings import (
+    NamedSourceBinding,
+    SourceArtifactRole,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.runtime_object_labels import ObjectLabelValue
@@ -78,7 +81,7 @@ def _objects(name: str) -> NamedSourceBinding:
     return NamedSourceBinding(
         alias=name,
         artifact_kind=ObjectLabelsArtifactType,
-        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        projection_role=SourceArtifactRole,
     )
 
 

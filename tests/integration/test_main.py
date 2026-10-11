@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Union
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import (
     GlobalPipelineConfig,
     MaterializationBackend,
@@ -27,7 +27,7 @@ from openhcs.core.config import (
     Backend,
     ZarrConfig,
 )
-from openhcs.runtime.viewer_display import NapariVariableSizeHandling
+from openhcs.runtime.viewer_display import PadToMaxSize
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
 from openhcs.core.config import (
     LazyStepMaterializationConfig,
@@ -317,7 +317,7 @@ def create_test_pipeline(
                 )
             ],
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START
+                input_source=ReadPipelineStart
             ),
         ),
         Step(name="CPU Assembly", func=assemble_stack_cpu),
@@ -360,7 +360,7 @@ def create_test_pipeline(
             ),
             napari_streaming_config=LazyNapariStreamingConfig(
                 port=ports.napari[2],
-                variable_size_handling=NapariVariableSizeHandling.PAD_TO_MAX,
+                variable_size_handling=PadToMaxSize,
                 enabled=enable_napari,
             ),
             fiji_streaming_config=LazyFijiStreamingConfig(
@@ -464,9 +464,9 @@ def _create_pipeline_config(test_config: TestConfig) -> GlobalPipelineConfig:
     # For OMERO tests, use omero_local backend for materialization
     # For other tests, use the configured backend
     if test_config.is_omero:
-        materialization_backend = MaterializationBackend("omero_local")
+        materialization_backend = MaterializationBackend.__registry__["omero_local"]
     else:
-        materialization_backend = MaterializationBackend(test_config.backend_config)
+        materialization_backend = MaterializationBackend.__registry__[test_config.backend_config]
 
     return GlobalPipelineConfig(
         num_workers=CONSTANTS.DEFAULT_WORKERS,
@@ -525,9 +525,9 @@ def _initialize_orchestrator(
     # For OMERO tests, use omero_local backend for materialization
     # For other tests, use the configured backend
     if test_config.is_omero:
-        materialization_backend = MaterializationBackend("omero_local")
+        materialization_backend = MaterializationBackend.__registry__["omero_local"]
     else:
-        materialization_backend = MaterializationBackend(test_config.backend_config)
+        materialization_backend = MaterializationBackend.__registry__[test_config.backend_config]
 
     # Create PipelineConfig with lazy configs for proper hierarchical inheritance
     pipeline_config = PipelineConfig(
@@ -784,9 +784,9 @@ def _execute_pipeline_with_mode(
         # For OMERO tests, use omero_local backend for materialization
         # For other tests, use the configured backend
         if test_config.is_omero:
-            materialization_backend = MaterializationBackend("omero_local")
+            materialization_backend = MaterializationBackend.__registry__["omero_local"]
         else:
-            materialization_backend = MaterializationBackend(test_config.backend_config)
+            materialization_backend = MaterializationBackend.__registry__[test_config.backend_config]
 
         # Create pipeline config with lazy configs
         from openhcs.core.config import (

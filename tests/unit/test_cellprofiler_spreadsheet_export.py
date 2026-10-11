@@ -70,7 +70,8 @@ from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
 from openhcs.interop.cellprofiler.module_settings import (
-    ModuleSettingCoverageStatus,
+    SettingBound,
+    SettingIgnored,
 )
 from openhcs.interop.cellprofiler.worm_measurements import (
     WormControlPointAxis,
@@ -255,8 +256,8 @@ def test_export_to_spreadsheet_binds_scalars_and_repeated_file_rows() -> None:
     )
     assert not bound.unmapped_kwargs
     assert {record.status for record in bound.setting_coverage} <= {
-        ModuleSettingCoverageStatus.BOUND,
-        ModuleSettingCoverageStatus.IGNORED,
+        SettingBound,
+        SettingIgnored,
     }
 
 

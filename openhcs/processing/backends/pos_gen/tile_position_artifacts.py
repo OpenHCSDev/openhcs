@@ -10,13 +10,13 @@ from openhcs.core.artifacts.kinds import SpecialArtifactType
 from openhcs.processing.materialization import (
     JsonOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
 )
 
 TILE_POSITIONS_OUTPUT = ArtifactSpec.output(
     "positions",
     SpecialArtifactType,
     materialization=MaterializationSpec(
-        JsonOptions(filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME)
+        JsonOptions(filename_identity=NameByArtifactName)
     ),
 )

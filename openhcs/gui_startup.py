@@ -16,12 +16,11 @@ import sys
 import traceback
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass
-from enum import Enum
 from importlib import import_module
 from threading import Event, Lock, Thread
-from typing import IO
+from typing import IO, ClassVar
 
+from metaclass_registry import AutoRegisterMeta
 from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 
 _STARTUP_WINDOW_CHILD_ARGUMENT = "--startup-window-child"
@@ -62,55 +61,53 @@ class _StartupEventPresentationABC(ABC):
         """Close a non-failure window after its parent stream ends."""
 
 
-@dataclass(frozen=True, slots=True)
-class _StartupEventSemantics:
-    """Wire identity and leaf presentation owned by one event kind."""
+class _StartupEvent(ABC, metaclass=AutoRegisterMeta):
+    """A parent-to-window startup event; each kind presents itself.
 
-    wire_kind: str
-    present: Callable[[_StartupEventPresentationABC, dict[str, object]], None]
+    ``wire_kind`` is the kind's spelling in the JSON-lines stream.
+    """
 
+    __registry_key__ = "wire_kind"
+    __skip_if_no_key__ = True
 
-class _StartupEventKind(Enum):
-    """Closed parent-to-window events carrying their presentation behavior."""
+    wire_kind: ClassVar[str | None] = None
 
-    OUTPUT = _StartupEventSemantics(
-        "output",
-        lambda presenter, event: presenter.present_output(
-            str(event.get("message", ""))
-        ),
-    )
-    FAILURE = _StartupEventSemantics(
-        "failure",
-        lambda presenter, event: presenter.present_failure(
-            str(event.get("message", "")),
-            str(event.get("detail", "")),
-        ),
-    )
-    READY = _StartupEventSemantics(
-        "ready",
-        lambda presenter, _event: presenter.present_ready(),
-    )
-
-    @property
-    def wire_kind(self) -> str:
-        return self.value.wire_kind
-
+    @staticmethod
+    @abstractmethod
     def present(
-        self,
-        presenter: _StartupEventPresentationABC,
-        event: dict[str, object],
+        presenter: _StartupEventPresentationABC, event: dict[str, object]
     ) -> None:
-        self.value.present(presenter, event)
-
-    @classmethod
-    def from_wire_kind(cls, value: object) -> _StartupEventKind | None:
-        return next((member for member in cls if member.wire_kind == value), None)
+        """Present one decoded event of this kind."""
 
 
-class _StartupWindowSignal(str, Enum):
-    """Closed child-to-parent startup-window signals."""
+class _OutputStartupEvent(_StartupEvent):
+    wire_kind = "output"
 
-    PAINTED = "painted"
+    @staticmethod
+    def present(presenter, event) -> None:
+        presenter.present_output(str(event.get("message", "")))
+
+
+class _FailureStartupEvent(_StartupEvent):
+    wire_kind = "failure"
+
+    @staticmethod
+    def present(presenter, event) -> None:
+        presenter.present_failure(
+            str(event.get("message", "")), str(event.get("detail", ""))
+        )
+
+
+class _ReadyStartupEvent(_StartupEvent):
+    wire_kind = "ready"
+
+    @staticmethod
+    def present(presenter, _event) -> None:
+        presenter.present_ready()
+
+
+_PAINTED_EVENT_KIND = "painted"
+"""Wire ``kind`` of the child's one startup-window signal: its first paint."""
 
 
 def _present_startup_event(
@@ -119,7 +116,7 @@ def _present_startup_event(
 ) -> bool:
     """Present one recognized wire event through its declaration owner."""
 
-    kind = _StartupEventKind.from_wire_kind(event.get("kind"))
+    kind = _StartupEvent.__registry__.get(event.get("kind"))
     if kind is None:
         return False
     kind.present(presenter, event)
@@ -180,7 +177,7 @@ class GuiStartupProgressController(GuiStartupProgressReporterABC):
     def output(self, message: str, *, stream_name: str) -> None:
         """Mirror one real terminal line into the startup window."""
         self._send(
-            _StartupEventKind.OUTPUT,
+            _OutputStartupEvent,
             message=message,
             stream_name=stream_name,
         )
@@ -197,14 +194,14 @@ class GuiStartupProgressController(GuiStartupProgressReporterABC):
         # native Windows surface until the actual main-window readiness event.
         _signal_native_startup_handoff()
         self._run_finish_callbacks()
-        self._send(_StartupEventKind.READY)
+        self._send(_ReadyStartupEvent)
         self._finish_stream()
 
     def fail(self, message: str, detail: str = "") -> None:
         self._failed = True
         self._run_finish_callbacks()
         self._send(
-            _StartupEventKind.FAILURE,
+            _FailureStartupEvent,
             message=message,
             detail=detail,
         )
@@ -238,7 +235,7 @@ class GuiStartupProgressController(GuiStartupProgressReporterABC):
                         event = json.loads(line)
                     except (json.JSONDecodeError, TypeError):
                         continue
-                    if event.get("kind") == _StartupWindowSignal.PAINTED.value:
+                    if event.get("kind") == _PAINTED_EVENT_KIND:
                         painted.set()
                         _signal_native_startup_handoff()
                         return
@@ -259,7 +256,7 @@ class GuiStartupProgressController(GuiStartupProgressReporterABC):
         observation_complete.wait(timeout=_STARTUP_FIRST_PAINT_TIMEOUT_SECONDS)
         return painted.is_set()
 
-    def _send(self, kind: _StartupEventKind, **payload: str) -> None:
+    def _send(self, kind: type[_StartupEvent], **payload: str) -> None:
         with self._lock:
             if self._closed or self._stream is None:
                 return
@@ -596,7 +593,7 @@ def _run_startup_window_child() -> int:
                 return
             try:
                 sys.stdout.write(
-                    json.dumps({"kind": _StartupWindowSignal.PAINTED.value}) + "\n"
+                    json.dumps({"kind": _PAINTED_EVENT_KIND}) + "\n"
                 )
                 sys.stdout.flush()
             except (BrokenPipeError, OSError, ValueError):

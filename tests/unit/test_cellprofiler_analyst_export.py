@@ -55,7 +55,7 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
-    SourceProjectionRole,
+    SourceArtifactRole,
 )
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
@@ -908,7 +908,7 @@ def _borrowed_source_export_fixture(
         bindings=(
             NamedSourceBinding(alias="DNA"),
             NamedSourceBinding(
-                alias="IllumDNA", projection_role=SourceProjectionRole.SOURCE_ARTIFACT
+                alias="IllumDNA", projection_role=SourceArtifactRole
             ),
         )
     )
@@ -1642,7 +1642,7 @@ def test_module_contract_selects_ordered_tables_and_cpa_images_and_declares_bund
                 bindings=(
                     NamedSourceBinding(
                         alias="DNA",
-                        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                        projection_role=SourceArtifactRole,
                     ),
                 ),
             ),

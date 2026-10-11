@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
-from enum import Enum
+from dataclasses import dataclass, field, fields
 from typing import TYPE_CHECKING, ClassVar
 
 from objectstate import DataclassFieldAccess, get_base_config_type
@@ -22,6 +21,7 @@ from polystore.streaming.viewer_transport import (
     ViewerDisplayConfigABC,
 )
 from zmqruntime.config import TransportMode, ZMQConfig
+from zmqruntime.messages import WireMessage
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
 from openhcs.core.streaming_config_declarations import ViewerFamily
@@ -77,16 +77,12 @@ class StreamingViewerSurface:
         )
 
 
-class ViewerProcessLaunchField(str, Enum):
-    """Wire fields projected from the viewer process-launch declaration."""
-
-    QT_FONT_DPI = "qt_font_dpi"
-    LISTEN_HOST = "listen_host"
-
-
 @dataclass(frozen=True, slots=True)
-class ViewerProcessLaunchConfig:
-    """Process-global settings that must exist before viewer construction."""
+class ViewerProcessLaunchConfig(WireMessage):
+    """Process-global settings that must exist before viewer construction.
+
+    Its declared fields are its wire spelling on the viewer control boundary.
+    """
 
     qt_font_dpi: int | None = None
     listen_host: str = "127.0.0.1"
@@ -96,16 +92,12 @@ class ViewerProcessLaunchConfig:
             raise TypeError("Viewer listen host must be a string.")
         if not self.listen_host.strip():
             raise ValueError("Viewer listen host must not be blank.")
+        if isinstance(self.qt_font_dpi, bool) or not isinstance(
+            self.qt_font_dpi, int | None
+        ):
+            raise TypeError("Viewer Qt font DPI must be an integer or None.")
         if self.qt_font_dpi is not None and self.qt_font_dpi <= 0:
             raise ValueError("Viewer Qt font DPI must be positive when provided.")
-
-    def to_wire_mapping(self) -> dict[str, str | int | None]:
-        """Project the launch declaration onto the viewer control boundary."""
-
-        return {
-            ViewerProcessLaunchField.QT_FONT_DPI.value: self.qt_font_dpi,
-            ViewerProcessLaunchField.LISTEN_HOST.value: self.listen_host,
-        }
 
     def matches_existing_viewer(
         self,
@@ -128,17 +120,12 @@ class ViewerProcessLaunchConfig:
         cls,
         payload: Mapping[str, object],
     ) -> "ViewerProcessLaunchConfig":
-        """Rehydrate an exact launch declaration from viewer state."""
+        """Rehydrate an exact launch declaration: every declared field is required."""
 
-        value = payload[ViewerProcessLaunchField.QT_FONT_DPI.value]
-        if value is not None and (
-            not isinstance(value, int) or isinstance(value, bool)
-        ):
-            raise TypeError("Viewer Qt font DPI must be an integer or None.")
-        return cls(
-            qt_font_dpi=value,
-            listen_host=payload[ViewerProcessLaunchField.LISTEN_HOST.value],
-        )
+        missing = tuple(name.name for name in fields(cls) if name.name not in payload)
+        if missing:
+            raise KeyError(f"Viewer process-launch declaration is missing {missing!r}.")
+        return cls.from_dict(payload)
 
 
 @dataclass(frozen=True, slots=True)

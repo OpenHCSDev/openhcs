@@ -41,7 +41,10 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.source_bindings import (
+    NamedSourceBinding,
+    SourceArtifactRole,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.compile_time_contracts import (
     CellProfilerInvocationContractProviderFactory,
@@ -69,7 +72,7 @@ def _neighbor_step() -> FunctionStep:
             NamedSourceBinding(
                 alias="Cells",
                 artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
             ),
         ),
     )

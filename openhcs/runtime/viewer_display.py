@@ -7,16 +7,20 @@ axes. Each viewer owns a :class:`ViewerSlotFamily`: the native slots it can put
 an axis into, and which roles default to which slot.
 """
 
-from abc import ABC
+import logging
+from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field, fields, replace
 from enum import Enum
 from functools import cache
-from typing import ClassVar
+from typing import Annotated, ClassVar
 
+from metaclass_registry import AutoRegisterMeta
 from python_introspect import (
     AnnotatedDataclassValidationMixin,
+    RegisteredClassChoices,
     dataclass_from_mapping,
+    to_jsonable,
 )
 from zmqruntime.config import NonBlankString
 from zmqruntime.viewer_protocol import ViewerWireMapping, ViewerWirePayload, ViewerWireValue
@@ -30,6 +34,8 @@ from openhcs.core.axes import (
     StackAxis,
     TimeAxis,
 )
+
+logger = logging.getLogger(__name__)
 
 DECLARED_AXES_FIELD = "declared_axes"
 """Display-config wire field carrying the stream's axis declarations."""
@@ -335,7 +341,7 @@ class ViewerDisplaySettings(AnnotatedDataclassValidationMixin):
             ViewerDisplaySettings._viewer_settings.append(cls)
 
     @classmethod
-    def settings_type(cls) -> type["ViewerDisplaySettings"]:
+    def settings_type(cls) -> "type[ViewerDisplaySettings]":
         """The viewer settings class this class is or inherits."""
 
         return next(
@@ -358,18 +364,124 @@ class ViewerDisplaySettings(AnnotatedDataclassValidationMixin):
     def settings_wire_mapping(self) -> ViewerWireMapping:
         return ViewerWirePayload.mapping(
             {
-                declared.name: getattr(self, declared.name)
+                declared.name: to_jsonable(getattr(self, declared.name))
                 for declared in fields(self.settings_type())
             },
             context=f"{type(self).__name__} display settings",
         )
 
 
-class NapariVariableSizeHandling(Enum):
-    """How to handle images with different sizes in the same layer."""
+class NapariVariableSizeHandling(ABC, metaclass=AutoRegisterMeta):
+    """How to handle images with different sizes in the same layer.
 
-    SEPARATE_LAYERS = "separate_layers"
-    PAD_TO_MAX = "pad_to_max"
+    Each way is a subclass; ``name`` is its spelling in forms and on the wire.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: "ClassVar[dict[str, type[NapariVariableSizeHandling]]]" = {}
+
+    name: ClassVar[str | None] = None
+
+    @classmethod
+    def routing_context(cls, context):
+        """Return the effective route context for one streamed payload."""
+
+        return context
+
+    @classmethod
+    @abstractmethod
+    def materialize_layer_items(cls, layer_items: list, *, route_key: str) -> list:
+        """Return image items that can share one native Napari layer."""
+
+
+class SeparateLayers(NapariVariableSizeHandling):
+    """Give each partition-axis value its own route and keep native shapes."""
+
+    name = "separate_layers"
+
+    @classmethod
+    def routing_context(cls, context):
+        from polystore.streaming_constants import StreamingDataType
+
+        from openhcs.core.axes import PartitionAxis
+        from openhcs.runtime.viewer_component_system import ViewerComponentCoordinates
+
+        if context.address.stream_layer_data_type is not StreamingDataType.IMAGE:
+            return context
+        partition_components = context.layout.names_with_role(PartitionAxis)
+        for component in partition_components:
+            ViewerComponentCoordinates.required_value(
+                context.address.components,
+                component,
+                context="Napari separate-layer routing",
+            )
+        layered = context.layout.components_in(NapariSlots.Layer)
+        if all(component in layered for component in partition_components):
+            return context
+        return replace(
+            context,
+            layout=context.layout.with_modes(
+                {
+                    **context.layout.component_modes,
+                    **{
+                        component: NapariSlots.Layer.wire_value
+                        for component in partition_components
+                    },
+                }
+            ),
+        )
+
+    @classmethod
+    def materialize_layer_items(cls, layer_items: list, *, route_key: str) -> list:
+        shapes = {item.data.shape for item in layer_items}
+        if len(shapes) > 1:
+            raise ValueError(
+                "Napari separate-layer route "
+                f"{route_key!r} still contains mixed image shapes: "
+                f"{sorted(shapes)!r}."
+            )
+        return layer_items
+
+
+class PadToMaxSize(NapariVariableSizeHandling):
+    """Keep one component route and pad its images to a common shape."""
+
+    name = "pad_to_max"
+
+    @classmethod
+    def materialize_layer_items(cls, layer_items: list, *, route_key: str) -> list:
+        import numpy as np
+
+        shapes = {item.data.shape for item in layer_items}
+        if len(shapes) <= 1:
+            return layer_items
+        logger.info(
+            "🔬 NAPARI PROCESS: Images in layer %s have different shapes - "
+            "padding to max size",
+            route_key,
+        )
+        max_shape = tuple(
+            max(shape[axis] for shape in shapes)
+            for axis in range(len(layer_items[0].data.shape))
+        )
+        for item_index, item in enumerate(layer_items):
+            if item.data.shape == max_shape:
+                continue
+            pad_width = tuple(
+                (0, maximum - current)
+                for current, maximum in zip(item.data.shape, max_shape, strict=True)
+            )
+            layer_items[item_index] = replace(
+                item,
+                data=np.pad(item.data, pad_width, mode="constant", constant_values=0),
+            )
+            logger.debug(
+                "🔬 NAPARI PROCESS: Padded image from %s to %s",
+                item.data.shape,
+                max_shape,
+            )
+        return layer_items
 
 
 @dataclass(frozen=True)
@@ -386,8 +498,11 @@ class NapariDisplaySettings(ViewerDisplaySettings):
             )
         },
     )
-    variable_size_handling: NapariVariableSizeHandling = field(
-        default=NapariVariableSizeHandling.PAD_TO_MAX,
+    variable_size_handling: Annotated[
+        type[NapariVariableSizeHandling],
+        RegisteredClassChoices(NapariVariableSizeHandling),
+    ] = field(
+        default=PadToMaxSize,
         metadata={
             "description": (
                 "How Napari handles streamed images with different spatial "

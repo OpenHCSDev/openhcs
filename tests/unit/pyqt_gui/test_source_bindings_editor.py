@@ -14,24 +14,30 @@ from PyQt6.QtWidgets import (
     QStyle,
     QWidget,
 )
-from python_introspect import is_enableable
+from metaclass_registry import AutoRegisterMeta
+from python_introspect import is_enableable, to_jsonable
 
 from openhcs.core.source_bindings import (
+    BroadcastSource,
     ComponentSelector,
+    FromFileName,
+    FromPipelineStart,
     MetadataExtractionRule,
-    MetadataSource,
     MetadataSelector,
+    NamedSourceBinding,
+    PairByMetadata,
+    PathIsImage,
+    SourceArtifactRole,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    PairByMetadata,
+    SourceDirectory,
+    SourceExtension,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
-    SourceBindingOrigin,
-    SourceProjectionRole,
-    SourceSetRole,
-    NamedSourceBinding,
+    TextContains,
+    TextDoesNotContainRegex,
+    TextEquals,
 )
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -165,8 +171,8 @@ def table_cell_text(table, row: int, column: int) -> str:
         return widget.line_edit.text()
     if isinstance(widget, QComboBox):
         value = widget.currentData()
-        if isinstance(value, Enum):
-            return str(value.value)
+        if isinstance(value, (Enum, AutoRegisterMeta)):
+            return str(to_jsonable(value))
         return widget.currentText().strip()
     item = table.item(row, column)
     if item is None:
@@ -266,8 +272,8 @@ def test_source_bindings_editor_renders_pipeline_source_filter_table() -> None:
         SourceBindingsConfig(
             source_filters=(
                 SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.CONTAINS,
+                    SourceFileName,
+                    TextContains,
                     "DNA",
                 ),
             ),
@@ -308,8 +314,8 @@ def test_source_bindings_editor_edits_pipeline_source_filters() -> None:
 
     assert widget.get_value().source_filters == (
         SourceFilterClause(
-            SourceFilterSubject.EXTENSION,
-            SourceFilterMatchType.EQUALS,
+            SourceExtension,
+            TextEquals,
             ".tif",
         ),
     )
@@ -321,8 +327,8 @@ def test_source_bindings_source_filter_dropdown_ignores_wheel() -> None:
 
     widget.add_source_filter_row(
         SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "DNA",
         )
     )
@@ -332,7 +338,7 @@ def test_source_bindings_source_filter_dropdown_ignores_wheel() -> None:
         column_index(SourceFilterClause, "match_type"),
     )
     assert isinstance(combo, NoScrollComboBox)
-    assert combo.currentData() is SourceFilterMatchType.CONTAINS
+    assert combo.currentData() is TextContains
 
     wheel_event = QWheelEvent(
         QPointF(5, 5),
@@ -346,11 +352,11 @@ def test_source_bindings_source_filter_dropdown_ignores_wheel() -> None:
     )
     QApplication.sendEvent(combo, wheel_event)
 
-    assert combo.currentData() is SourceFilterMatchType.CONTAINS
+    assert combo.currentData() is TextContains
     assert widget.get_value().source_filters == (
         SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "DNA",
         ),
     )
@@ -366,8 +372,8 @@ def test_source_bindings_editor_accepts_lazy_pipeline_source_bindings() -> None:
     assert get_base_type_for_lazy(type(edited)) is SourceBindingsConfig
     assert edited.source_filters == (
         SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.IS_IMAGE,
+            SourceFileName,
+            PathIsImage,
         ),
     )
 
@@ -426,8 +432,8 @@ def test_inline_source_bindings_root_reset_all_resets_child_fields() -> None:
         assert isinstance(widget, SourceBindingsEditorWidget)
         widget.add_source_filter_row(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             )
         )
@@ -502,12 +508,12 @@ def test_pipeline_source_bindings_table_edits_recreate_container_and_children() 
         ),
     )
     expected_filter = SourceFilterClause(
-        SourceFilterSubject.FILE,
-        SourceFilterMatchType.CONTAINS,
+        SourceFileName,
+        TextContains,
         "DNA",
     )
     expected_rule = MetadataExtractionRule(
-        source=MetadataSource.FILE_NAME,
+        source=FromFileName,
         pattern=r"(?P<well>A\d{2})_(?P<channel>DNA)\.tif",
     )
     expected_match_plan = PairByMetadata(dimensions=(
@@ -775,8 +781,8 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
         assert isinstance(step_widget, SourceBindingsEditorWidget)
 
         first_filter = SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "DNA",
         )
         pipeline_widget.add_source_filter_row(first_filter)
@@ -812,8 +818,8 @@ def test_pipeline_step_source_filter_time_travel_refreshes_open_step_editor() ->
         QApplication.processEvents()
 
         second_filter = SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.EQUALS,
+            SourceFileName,
+            TextEquals,
             "DNA",
         )
         assert plate_state.parameters["step_source_bindings_config.source_filters"] == (
@@ -1191,8 +1197,8 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
             "step_source_bindings_config.source_filters"
         ) == (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             ),
         )
@@ -1273,8 +1279,8 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
 def test_source_bindings_enableable_only_updates_skip_table_rebuild() -> None:
     QtApplicationHarness.app()
     inherited_filter = SourceFilterClause(
-        SourceFilterSubject.FILE,
-        SourceFilterMatchType.CONTAINS,
+        SourceFileName,
+        TextContains,
         "DNA",
     )
     widget = SourceBindingsEditorWidget.from_bindings(
@@ -1390,8 +1396,8 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
         assert isinstance(step_widget, SourceBindingsEditorWidget)
 
         inherited_filter = SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "DNA",
         )
         source_widget.add_source_filter_row(inherited_filter)
@@ -1423,8 +1429,8 @@ def test_source_bindings_table_child_reset_restores_inherited_placeholder_rows()
             QApplication.processEvents()
 
         local_filter = SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "RNA",
         )
         assert state.parameters["step_source_bindings_config.source_filters"] == (
@@ -1514,8 +1520,8 @@ def test_source_bindings_inherited_table_combo_activation_materializes_child() -
         assert isinstance(step_widget, SourceBindingsEditorWidget)
 
         inherited_filter = SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "DNA",
         )
         source_widget.add_source_filter_row(inherited_filter)
@@ -1606,8 +1612,8 @@ def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -
         assert isinstance(step_widget, SourceBindingsEditorWidget)
 
         inherited_filter = SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "DNA",
         )
         source_widget.add_source_filter_row(inherited_filter)
@@ -1627,8 +1633,8 @@ def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -
             QApplication.processEvents()
 
         edited_filter = SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "RNA",
         )
         assert state.parameters["step_source_bindings_config.source_filters"] == (
@@ -1694,8 +1700,8 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
         assert isinstance(step_widget, SourceBindingsEditorWidget)
 
         inherited_filter = SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "DNA",
         )
         source_widget.add_source_filter_row(inherited_filter)
@@ -1715,8 +1721,8 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
             QApplication.processEvents()
 
         materialized_filter = SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "RNA",
         )
         assert state.parameters["step_source_bindings_config.source_filters"] == (
@@ -1756,8 +1762,8 @@ def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None
             QApplication.processEvents()
 
         edited_filter = SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "RNA2",
         )
         assert state.parameters["step_source_bindings_config.source_filters"] == (
@@ -2117,12 +2123,12 @@ def test_source_bindings_editor_uses_resolved_placeholder_tables() -> None:
     QtApplicationHarness.app()
     inherited_binding = NamedSourceBinding(alias="InheritedDNA")
     inherited_rule = MetadataExtractionRule(
-        source=MetadataSource.FILE_NAME,
+        source=FromFileName,
         pattern=r"(?P<well>A\d{2})_(?P<channel>DNA)\.tif",
     )
     inherited_filter = SourceFilterClause(
-        SourceFilterSubject.FILE,
-        SourceFilterMatchType.CONTAINS,
+        SourceFileName,
+        TextContains,
         "DNA",
     )
     local_raw = LazyStepSourceBindingsConfig()
@@ -2151,7 +2157,7 @@ def test_source_bindings_editor_uses_resolved_placeholder_tables() -> None:
         column_index(SourceFilterClause, "match_type"),
     )
     assert isinstance(match_type_widget, QComboBox)
-    assert match_type_widget.currentData() is SourceFilterMatchType.CONTAINS
+    assert match_type_widget.currentData() is TextContains
     assert match_type_widget.currentText() == "contains"
     assert PlaceholderConfig.text_color_name() in match_type_widget.styleSheet()
 
@@ -2167,8 +2173,8 @@ def test_source_bindings_editor_uses_resolved_placeholder_tables() -> None:
 def test_source_bindings_table_row_value_read_does_not_emit_item_changed() -> None:
     QtApplicationHarness.app()
     inherited_filter = SourceFilterClause(
-        SourceFilterSubject.FILE,
-        SourceFilterMatchType.CONTAINS,
+        SourceFileName,
+        TextContains,
         "DNA",
     )
     widget = SourceBindingsEditorWidget.from_bindings(
@@ -2190,7 +2196,7 @@ def test_source_bindings_table_row_value_read_does_not_emit_item_changed() -> No
     widget.source_filters_table.itemChanged.connect(emitted.append)
 
     assert widget.source_filters_controller.row_values() == (
-        (SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "DNA", ""),
+        (SourceFileName, TextContains, "DNA", ""),
     )
     assert emitted == []
 
@@ -2200,8 +2206,8 @@ def test_source_bindings_editor_editing_inherited_table_makes_lazy_child_concret
 ):
     QtApplicationHarness.app()
     inherited_filter = SourceFilterClause(
-        SourceFilterSubject.FILE,
-        SourceFilterMatchType.CONTAINS,
+        SourceFileName,
+        TextContains,
         "DNA",
     )
     local_raw = LazyStepSourceBindingsConfig()
@@ -2229,8 +2235,8 @@ def test_source_bindings_editor_editing_inherited_table_makes_lazy_child_concret
     assert DataclassFieldAccess.raw_value(edited, "bindings") is None
     assert DataclassFieldAccess.raw_value(edited, "source_filters") == (
         SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "RNA",
         ),
     )
@@ -2263,16 +2269,16 @@ def test_source_bindings_child_reset_restores_lazy_inheritance_slot() -> None:
 
         widget.add_source_filter_row(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             )
         )
         QApplication.processEvents()
         assert state.parameters["source_bindings.source_filters"] == (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             ),
         )
@@ -2304,8 +2310,8 @@ def test_source_bindings_child_reset_noops_for_already_inherited_table_preview()
     ObjectStateRegistry.clear()
     ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
     inherited_filter = SourceFilterClause(
-        SourceFilterSubject.FILE,
-        SourceFilterMatchType.CONTAINS,
+        SourceFileName,
+        TextContains,
         "DNA",
     )
     plate_state = ObjectState(PipelineConfig(), scope_id="plate")
@@ -2397,7 +2403,7 @@ def test_source_bindings_editor_preserves_unedited_lazy_inheritance_slots() -> N
     QtApplicationHarness.app()
     inherited_binding = NamedSourceBinding(alias="InheritedDNA")
     inherited_rule = MetadataExtractionRule(
-        source=MetadataSource.FILE_NAME,
+        source=FromFileName,
         pattern=r"(?P<well>A\d{2})_(?P<channel>DNA)\.tif",
     )
     local_raw = LazyStepSourceBindingsConfig()
@@ -2415,7 +2421,7 @@ def test_source_bindings_editor_preserves_unedited_lazy_inheritance_slots() -> N
 
     widget.add_metadata_rule_row(
         MetadataExtractionRule(
-            source=MetadataSource.FILE_NAME,
+            source=FromFileName,
             pattern=r"(?P<site>s\d+)",
         )
     )
@@ -2426,7 +2432,7 @@ def test_source_bindings_editor_preserves_unedited_lazy_inheritance_slots() -> N
     assert edited.metadata_rules == (
         inherited_rule,
         MetadataExtractionRule(
-            source=MetadataSource.FILE_NAME,
+            source=FromFileName,
             pattern=r"(?P<site>s\d+)",
         ),
     )
@@ -2537,8 +2543,8 @@ def test_source_filters_fit_complete_rows_and_bar_inside_scoped_section() -> Non
     app = QtApplicationHarness.app()
     filters = tuple(
         SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.IS_IMAGE,
+            SourceFileName,
+            PathIsImage,
             f"source-{index}",
         )
         for index in range(3)
@@ -2608,7 +2614,7 @@ def test_step_metadata_rule_cells_show_inherited_and_local_edit_markers() -> Non
     ObjectStateRegistry.clear()
     ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
     inherited_rule = MetadataExtractionRule(
-        source=MetadataSource.FILE_NAME,
+        source=FromFileName,
         pattern=r"(?P<well>A\d{2})_(?P<channel>DNA)\.tif",
     )
     state = ObjectState(
@@ -2675,7 +2681,7 @@ def test_step_metadata_rule_cells_show_inherited_and_local_edit_markers() -> Non
         )
         assert state.parameters["step_source_bindings_config.metadata_rules"] == (
             MetadataExtractionRule(
-                source=MetadataSource.FILE_NAME,
+                source=FromFileName,
                 pattern=local_pattern,
             ),
         )
@@ -2948,8 +2954,8 @@ def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> Non
 
         widget.add_source_filter_row(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.EQUALS,
+                SourceFileName,
+                TextEquals,
                 "DNA",
             )
         )
@@ -2983,8 +2989,8 @@ def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> Non
         QApplication.processEvents()
         assert state.parameters["source_bindings.source_filters"] == (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.EQUALS,
+                SourceFileName,
+                TextEquals,
                 "DNA",
             ),
         )
@@ -2993,7 +2999,7 @@ def test_inline_step_source_bindings_time_travel_preserves_dirty_marker() -> Non
             column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
-        assert match_type_widget.currentData() is SourceFilterMatchType.EQUALS
+        assert match_type_widget.currentData() is TextEquals
         assert match_type_widget.currentText() == "*_equals"
         assert match_type_widget.property("objectstate_dirty") is True
         assert "source_bindings.source_filters" in state.dirty_fields
@@ -3008,8 +3014,8 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
     saved_filter = SourceFilterClause(
-        SourceFilterSubject.FILE,
-        SourceFilterMatchType.EQUALS,
+        SourceFileName,
+        TextEquals,
         "DNA",
     )
     step = FunctionStep(
@@ -3071,8 +3077,8 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
         QApplication.processEvents()
         assert state.parameters["source_bindings.source_filters"] == (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             ),
         )
@@ -3082,7 +3088,7 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
             column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
-        assert match_type_widget.currentData() is SourceFilterMatchType.CONTAINS
+        assert match_type_widget.currentData() is TextContains
         assert match_type_widget.currentText() == "*_contains"
         assert match_type_widget.property("objectstate_dirty") is True
 
@@ -3151,8 +3157,8 @@ def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> Non
 
         widget.add_source_filter_row(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.EQUALS,
+                SourceFileName,
+                TextEquals,
                 "DNA",
             )
         )
@@ -3178,8 +3184,8 @@ def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> Non
         assert queued == [expected_path]
         assert state.parameters["source_bindings_config.source_filters"] == (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             ),
         )
@@ -3189,7 +3195,7 @@ def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> Non
             0, column_index(SourceFilterClause, "match_type")
         )
         assert isinstance(combo, QComboBox)
-        assert combo.currentData() is SourceFilterMatchType.CONTAINS
+        assert combo.currentData() is TextContains
         combo.setCurrentIndex(combo.currentIndex())
         QApplication.processEvents()
         assert queued == []
@@ -3312,12 +3318,12 @@ def test_inline_source_bindings_initial_source_filter_cells_show_signature_diff(
         source_bindings=LazyStepSourceBindingsConfig(
             source_filters=(
                 SourceFilterClause(
-                    SourceFilterSubject.EXTENSION,
-                    SourceFilterMatchType.IS_IMAGE,
+                    SourceExtension,
+                    PathIsImage,
                 ),
                 SourceFilterClause(
-                    SourceFilterSubject.DIRECTORY,
-                    SourceFilterMatchType.DOES_NOT_CONTAIN_REGEX,
+                    SourceDirectory,
+                    TextDoesNotContainRegex,
                     value=r"[\\/]\.",
                 ),
             ),
@@ -3400,8 +3406,8 @@ def test_inline_source_bindings_structural_path_flash_targets_table_cell() -> No
         assert isinstance(widget, SourceBindingsEditorWidget)
         widget.add_source_filter_row(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             )
         )
@@ -3479,8 +3485,8 @@ def test_inline_source_bindings_structural_provenance_navigation_flashes_table_c
         for value in ("DNA", "RNA", "Protein"):
             widget.add_source_filter_row(
                 SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.CONTAINS,
+                    SourceFileName,
+                    TextContains,
                     value,
                 )
             )
@@ -3589,8 +3595,8 @@ def test_source_bindings_cell_flash_element_masks_cell_and_child_label() -> None
         assert isinstance(widget, SourceBindingsEditorWidget)
         widget.add_source_filter_row(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             )
         )
@@ -3654,8 +3660,8 @@ def test_source_bindings_child_section_flash_masks_changed_child_section() -> No
         assert isinstance(widget, SourceBindingsEditorWidget)
         widget.add_source_filter_row(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             )
         )
@@ -3727,8 +3733,8 @@ def test_source_bindings_owner_flash_masks_descendant_fields() -> None:
         assert isinstance(widget, SourceBindingsEditorWidget)
         widget.add_source_filter_row(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             )
         )
@@ -3800,8 +3806,8 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
 
         widget.add_source_filter_row(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.EQUALS,
+                SourceFileName,
+                TextEquals,
                 "DNA",
             )
         )
@@ -3836,7 +3842,7 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
             column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
-        assert match_type_widget.currentData() is SourceFilterMatchType.CONTAINS
+        assert match_type_widget.currentData() is TextContains
         assert match_type_widget.currentText() == "*_contains"
         assert match_type_widget.property("objectstate_dirty") is True
         assert (
@@ -3848,8 +3854,8 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
         QApplication.processEvents()
         assert state.parameters["source_bindings_config.source_filters"] == (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.EQUALS,
+                SourceFileName,
+                TextEquals,
                 "DNA",
             ),
         )
@@ -3866,7 +3872,7 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
             column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
-        assert match_type_widget.currentData() is SourceFilterMatchType.EQUALS
+        assert match_type_widget.currentData() is TextEquals
         assert match_type_widget.currentText() == "*_equals"
         assert match_type_widget.property("objectstate_dirty") is True
         assert (
@@ -3878,8 +3884,8 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
         QApplication.processEvents()
         assert state.parameters["source_bindings_config.source_filters"] == (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             ),
         )
@@ -3896,7 +3902,7 @@ def test_source_bindings_dropdown_time_travel_restores_widget_value() -> None:
             column_index(SourceFilterClause, "match_type"),
         )
         assert isinstance(match_type_widget, QComboBox)
-        assert match_type_widget.currentData() is SourceFilterMatchType.CONTAINS
+        assert match_type_widget.currentData() is TextContains
         assert match_type_widget.currentText() == "*_contains"
         assert match_type_widget.property("objectstate_dirty") is True
         assert (
@@ -3935,8 +3941,8 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
 
         widget.add_source_filter_row(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             )
         )
@@ -3975,8 +3981,8 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
         QApplication.processEvents()
         assert state.parameters["source_bindings_config.source_filters"] == (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             ),
         )
@@ -3997,8 +4003,8 @@ def test_source_bindings_text_time_travel_restores_widget_value() -> None:
         QApplication.processEvents()
         assert state.parameters["source_bindings_config.source_filters"] == (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "RNA",
             ),
         )
@@ -4046,8 +4052,8 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
 
         first_filters = (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.EQUALS,
+                SourceFileName,
+                TextEquals,
                 "DNA",
             ),
         )
@@ -4090,8 +4096,8 @@ def test_source_bindings_child_state_update_refreshes_widget_value() -> None:
 
         second_filters = (
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "RNA",
             ),
         )
@@ -4305,8 +4311,8 @@ def test_source_bindings_editor_set_value_resets_stale_preview_table() -> None:
     raw_config = StepSourceBindingsConfig(
         source_filters=(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             ),
         ),
@@ -4314,8 +4320,8 @@ def test_source_bindings_editor_set_value_resets_stale_preview_table() -> None:
     preview_config = StepSourceBindingsConfig(
         source_filters=(
             SourceFilterClause(
-                SourceFilterSubject.EXTENSION,
-                SourceFilterMatchType.CONTAINS,
+                SourceExtension,
+                TextContains,
                 ".tif",
             ),
         ),
@@ -4353,12 +4359,12 @@ def test_source_bindings_editor_renders_preview_context(tmp_path) -> None:
         bindings=(
             NamedSourceBinding(
                 alias="DNA",
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.CONTAINS,
+                            SourceFileName,
+                            TextContains,
                             "DNA",
                         ),
                     ),
@@ -4408,8 +4414,8 @@ def test_source_bindings_editor_preserves_selector_on_basic_edits() -> None:
         metadata=(MetadataSelector("Well", "A01"),),
         filters=(
             SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
+                SourceFileName,
+                TextContains,
                 "DNA",
             ),
         ),
@@ -4435,7 +4441,7 @@ def test_source_bindings_editor_preserves_binding_identity_on_basic_edits() -> N
     binding = NamedSourceBinding(
         alias="DNA",
         component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
-        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        projection_role=SourceArtifactRole,
     )
     widget = SourceBindingsEditorWidget.from_bindings(
         StepSourceBindingsConfig(bindings=(binding,))
@@ -4448,7 +4454,7 @@ def test_source_bindings_editor_preserves_binding_identity_on_basic_edits() -> N
     edited = widget.get_value().bindings[0]
     assert edited.alias == "OrigDNA"
     assert edited.component_identity == (ComponentSelector(Microscopy.Channel, "1"),)
-    assert edited.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+    assert edited.projection_role is SourceArtifactRole
 
 
 def test_source_bindings_editor_edits_binding_identity_columns() -> None:
@@ -4467,13 +4473,13 @@ def test_source_bindings_editor_edits_binding_identity_columns() -> None:
         table,
         0,
         "source_set_role",
-        SourceSetRole.BROADCAST.value,
+        BroadcastSource.name,
     )
     set_binding_cell_text(
         table,
         0,
         "projection_role",
-        SourceProjectionRole.SOURCE_ARTIFACT.value,
+        SourceArtifactRole.name,
     )
     widget._apply_step_bindings(dialog.bindings())
 
@@ -4482,8 +4488,8 @@ def test_source_bindings_editor_edits_binding_identity_columns() -> None:
         ComponentSelector(Microscopy.Channel, "2"),
         ComponentSelector(Microscopy.Site, "1"),
     )
-    assert binding.source_set_role is SourceSetRole.BROADCAST
-    assert binding.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+    assert binding.source_set_role is BroadcastSource
+    assert binding.projection_role is SourceArtifactRole
 
 
 def test_source_bindings_editor_edits_selector_columns() -> None:
@@ -4506,7 +4512,7 @@ def test_source_bindings_editor_edits_selector_columns() -> None:
     set_editable_cell_text(
         table,
         *binding_cell_position(0, "filters"),
-        (SourceFilterClause(SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "DNA"),),
+        (SourceFilterClause(SourceFileName, TextContains, "DNA"),),
     )
     set_binding_cell_text(table, 0, "inherit_current_scope", False)
     widget._apply_step_bindings(dialog.bindings())
@@ -4519,8 +4525,8 @@ def test_source_bindings_editor_edits_selector_columns() -> None:
     assert selector.metadata == (MetadataSelector("Well", "A01"),)
     assert selector.filters == (
         SourceFilterClause(
-            SourceFilterSubject.FILE,
-            SourceFilterMatchType.CONTAINS,
+            SourceFileName,
+            TextContains,
             "DNA",
         ),
     )
@@ -4535,13 +4541,13 @@ def test_source_bindings_editor_uses_free_form_selector_pickers(tmp_path) -> Non
         bindings=(
             NamedSourceBinding(
                 alias="DNA",
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
                 selector=SourceSelector(),
             ),
         ),
         metadata_rules=(
             MetadataExtractionRule(
-                source=MetadataSource.FILE_NAME,
+                source=FromFileName,
                 pattern=r"(?P<Well>A\d{2})_(?P<Channel>DNA)\.tif",
             ),
         ),
@@ -4611,18 +4617,18 @@ def test_source_bindings_editor_edits_metadata_rules() -> None:
         widget.metadata_rules_table,
         0,
         column_index(MetadataExtractionRule, "filters"),
-        (SourceFilterClause(SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "DNA"),),
+        (SourceFilterClause(SourceFileName, TextContains, "DNA"),),
     )
 
     rules = widget.get_value().metadata_rules
     assert rules == (
         MetadataExtractionRule(
-            source=MetadataSource.FILE_NAME,
+            source=FromFileName,
             pattern=r"(?P<well>A\d{2})_(?P<channel>DNA)\.tif",
             filters=(
                 SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.CONTAINS,
+                    SourceFileName,
+                    TextContains,
                     "DNA",
                 ),
             ),
@@ -4685,5 +4691,5 @@ def test_source_bindings_editor_enum_columns_use_typed_combos() -> None:
 
     binding = widget.get_value().bindings[0]
     assert binding.artifact_kind.value == "object_labels"
-    assert binding.origin is SourceBindingOrigin.PIPELINE_START
-    assert binding.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+    assert binding.origin is FromPipelineStart
+    assert binding.projection_role is SourceArtifactRole

@@ -273,7 +273,7 @@ def report_measured_pipeline_run(
                 f"- Compile artifact: `{receipt.compile_artifact_id or 'none; server job may include compilation'}`",
                 f"- Output roots: {len(receipt.output_roots)}",
                 "- Output files: not inspected; use output/equivalence evidence for output claims",
-                f"- Runtime observation scope: `{receipt.observation_export_scope.value}`",
+                f"- Runtime observation scope: `{receipt.observation_export_scope.name}`",
                 f"- Execution axes: {receipt.observed_axis_count if receipt.observed_axis_count is not None else 'not recorded'}"
                 + (
                     f" / {receipt.expected_axis_count} expected"

@@ -112,13 +112,13 @@ from openhcs.core.runtime_tabular_values import (
 )
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
+    FromPipelineStart,
     NamedSourceBinding,
-    SourceBindingOrigin,
+    SourceArtifactRole,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceProjectionRole,
     SourceSelector,
+    TextContains,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
@@ -682,13 +682,13 @@ def _pipeline_start_contains_binding(alias):
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.CONTAINS,
+                    SourceFileName,
+                    TextContains,
                     alias,
                 ),
             )
         ),
-        origin=SourceBindingOrigin.PIPELINE_START,
+        origin=FromPipelineStart,
     )
 
 
@@ -4023,7 +4023,7 @@ def test_cellprofiler_adapter_allows_measurements_for_source_bound_objects():
             NamedSourceBinding(
                 alias=NUCLEI,
                 artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
             ),
         )
     )

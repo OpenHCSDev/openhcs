@@ -1,7 +1,7 @@
 # Edit this pipeline and save to apply changes
 
 # Automatically collected imports
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import LazyNapariStreamingConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.assemblers.assemble_stack_cupy import (
@@ -61,7 +61,7 @@ pipeline_steps.append(step_4)
 step_5 = FunctionStep(
     func=[stack_percentile_normalize_torch_processor, tophat],
     name="preprocess2",
-    input_source=InputSource.PIPELINE_START,
+    input_source=ReadPipelineStart,
 )
 pipeline_steps.append(step_5)
 

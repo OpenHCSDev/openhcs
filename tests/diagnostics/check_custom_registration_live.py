@@ -34,8 +34,7 @@ def child_server(role: str, audit: Path, native_argv: list[str]) -> None:
 
     from openhcs.agent.dto.functions import (
         CustomFunctionRegistrationControlResponse,
-        FunctionCatalogControlField,
-        FunctionCatalogControlMessageType,
+        CustomFunctionRegistrationDestinationRequest,
     )
     from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
     from openhcs.runtime.zmq_execution_server_launcher import main
@@ -65,14 +64,14 @@ def child_server(role: str, audit: Path, native_argv: list[str]) -> None:
                     + "\n"
                 )
             if role == "unsupported" and message[MessageFields.TYPE] == (
-                FunctionCatalogControlMessageType.CUSTOM_REGISTRATION_DESTINATION.value
+                CustomFunctionRegistrationDestinationRequest.wire_type
             ):
                 return ControlErrorResponse(
                     message="Unsupported destination proof fixture"
                 ).to_dict()
             response = super().handle_control_message(message)
-            if role == "owned" and FunctionCatalogControlField.RESULT.value in response:
-                result = response[FunctionCatalogControlField.RESULT.value]
+            if role == "owned" and CustomFunctionRegistrationControlResponse.result_key in response:
+                result = response[CustomFunctionRegistrationControlResponse.result_key]
                 if (
                     isinstance(
                         result, CustomFunctionRegistrationControlResponse.value_type
@@ -556,7 +555,7 @@ def run(args) -> None:
                 .splitlines()
             ]
             assert all(
-                row.get("type") != CustomFunctionRegistrationRequest.message_type.value
+                row.get("type") != CustomFunctionRegistrationRequest.wire_type
                 for row in rows
             )
         receipt["protected_sentinel"] = {
@@ -605,7 +604,7 @@ def run(args) -> None:
             for row in (receipt_dir / "owned-control.jsonl").read_text().splitlines()
         ]
         assert all(
-            row.get("type") != CustomFunctionRegistrationRequest.message_type.value
+            row.get("type") != CustomFunctionRegistrationRequest.wire_type
             for row in audit_before_mutation
         )
         receipt["zero_source_dispatch_before_ready"] = True
@@ -640,7 +639,7 @@ def run(args) -> None:
             LazyPathPlanningConfig,
             LazyStepMaterializationConfig,
             LazyVFSConfig,
-            MaterializationBackend,
+            MaterializeToDisk,
             PipelineConfig,
         )
         from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -655,7 +654,7 @@ def run(args) -> None:
                     global_output_folder=owned / "outputs"
                 ),
                 vfs_config=LazyVFSConfig(
-                    materialization_backend=MaterializationBackend.DISK
+                    materialization_backend=MaterializeToDisk
                 ),
             ),
             pipeline_steps=[
@@ -757,7 +756,7 @@ def run(args) -> None:
         ]
         assert (
             sum(
-                row.get("type") == CustomFunctionRegistrationRequest.message_type.value
+                row.get("type") == CustomFunctionRegistrationRequest.wire_type
                 for row in audit_rows
             )
             == 2

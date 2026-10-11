@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, fields, is_dataclass
-from enum import Enum
 from functools import cache
 from pathlib import Path
 from typing import Any, Self, get_args, get_origin, get_type_hints
@@ -15,32 +14,37 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
 
 
-class PlateManagerCodeNamespaceField(str, Enum):
-    """Exact public assignments in a PlateManager code document."""
-
-    PLATE_PATHS = "plate_paths"
-    GLOBAL_CONFIG = "global_config"
-    PER_PLATE_CONFIGS = "per_plate_configs"
-    PIPELINE_DATA = "pipeline_data"
-
-    @classmethod
-    def allowed_assignment_names(cls) -> frozenset[str]:
-        return frozenset(field.value for field in cls)
-
-
 class PlateManagerCodeNamespace(dict):
     """Nominal execution namespace for PlateManager documents."""
 
-    @classmethod
-    def from_mapping(cls, namespace: Mapping[str, object]) -> Self:
-        code_namespace = cls()
-        code_namespace.update(namespace)
-        return code_namespace
 
-    def require(self, field: PlateManagerCodeNamespaceField) -> object:
-        if field.value not in self:
-            raise ValueError(f"PlateManager code document must define {field.value!r}.")
-        return self[field.value]
+@dataclass(frozen=True, slots=True)
+class PlateManagerDocumentAssignments:
+    """The public assignments of a PlateManager code document, one field each.
+
+    The field names are the assigned names; nothing else may be assigned.
+    """
+
+    plate_paths: object
+    global_config: object
+    per_plate_configs: object
+    pipeline_data: object
+
+    @classmethod
+    def names(cls) -> tuple[str, ...]:
+        return tuple(declared.name for declared in fields(cls))
+
+    @classmethod
+    def from_namespace(cls, namespace: Mapping[str, object]) -> Self:
+        for name in cls.names():
+            if name not in namespace:
+                raise ValueError(f"PlateManager code document must define {name!r}.")
+        return cls(**{name: namespace[name] for name in cls.names()})
+
+    def to_namespace(self) -> PlateManagerCodeNamespace:
+        return PlateManagerCodeNamespace(
+            {name: getattr(self, name) for name in self.names()}
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,38 +83,30 @@ class PlateManagerCodeDocumentAuthority:
         per_plate_configs: Mapping[str | Path, PipelineConfig],
         pipeline_data: Mapping[str | Path, Sequence[FunctionStep]],
     ) -> PlateManagerOrchestratorCodePayload:
-        namespace = PlateManagerCodeNamespace(
-            {
-                PlateManagerCodeNamespaceField.PLATE_PATHS.value: list(plate_paths),
-                PlateManagerCodeNamespaceField.GLOBAL_CONFIG.value: (
-                    global_pipeline_config
-                ),
-                PlateManagerCodeNamespaceField.PER_PLATE_CONFIGS.value: dict(
-                    per_plate_configs
-                ),
-                PlateManagerCodeNamespaceField.PIPELINE_DATA.value: {
-                    path: list(steps) for path, steps in pipeline_data.items()
-                },
-            }
+        return cls._payload(
+            PlateManagerDocumentAssignments(
+                plate_paths=list(plate_paths),
+                global_config=global_pipeline_config,
+                per_plate_configs=dict(per_plate_configs),
+                pipeline_data={path: list(steps) for path, steps in pipeline_data.items()},
+            )
         )
-        return cls.from_namespace(namespace)
 
     @classmethod
     def from_namespace(
         cls,
         namespace: Mapping[str, object],
     ) -> PlateManagerOrchestratorCodePayload:
-        values = PlateManagerCodeNamespace.from_mapping(namespace)
-        plate_paths_value = values.require(PlateManagerCodeNamespaceField.PLATE_PATHS)
-        global_config_value = values.require(
-            PlateManagerCodeNamespaceField.GLOBAL_CONFIG
-        )
-        per_plate_configs_value = values.require(
-            PlateManagerCodeNamespaceField.PER_PLATE_CONFIGS
-        )
-        pipeline_data_value = values.require(
-            PlateManagerCodeNamespaceField.PIPELINE_DATA
-        )
+        return cls._payload(PlateManagerDocumentAssignments.from_namespace(namespace))
+
+    @classmethod
+    def _payload(
+        cls, assignments: PlateManagerDocumentAssignments
+    ) -> PlateManagerOrchestratorCodePayload:
+        plate_paths_value = assignments.plate_paths
+        global_config_value = assignments.global_config
+        per_plate_configs_value = assignments.per_plate_configs
+        pipeline_data_value = assignments.pipeline_data
 
         if not isinstance(plate_paths_value, list):
             raise TypeError("plate_paths must be a list of strings or Paths.")
@@ -179,23 +175,14 @@ class PlateManagerCodeDocumentAuthority:
             per_plate_configs=payload.per_plate_configs,
             pipeline_data=payload.pipeline_data,
         )
-        return PlateManagerCodeNamespace(
-            {
-                PlateManagerCodeNamespaceField.PLATE_PATHS.value: list(
-                    normalized.plate_paths
-                ),
-                PlateManagerCodeNamespaceField.GLOBAL_CONFIG.value: (
-                    normalized.global_pipeline_config
-                ),
-                PlateManagerCodeNamespaceField.PER_PLATE_CONFIGS.value: dict(
-                    normalized.per_plate_configs
-                ),
-                PlateManagerCodeNamespaceField.PIPELINE_DATA.value: {
-                    path: list(steps)
-                    for path, steps in normalized.pipeline_data.items()
-                },
-            }
-        )
+        return PlateManagerDocumentAssignments(
+            plate_paths=list(normalized.plate_paths),
+            global_config=normalized.global_pipeline_config,
+            per_plate_configs=dict(normalized.per_plate_configs),
+            pipeline_data={
+                path: list(steps) for path, steps in normalized.pipeline_data.items()
+            },
+        ).to_namespace()
 
     @classmethod
     def render(
@@ -217,38 +204,26 @@ class PlateManagerCodeDocumentAuthority:
             scope_id: DatasetScope.parse(scope_id).code_value()
             for scope_id in normalized.plate_paths
         }
-        body = CodeBlock.from_items(
-            (
-                Assignment(
-                    PlateManagerCodeNamespaceField.PLATE_PATHS.value,
-                    [
-                        code_value_by_scope[scope_id]
-                        for scope_id in normalized.plate_paths
-                    ],
-                ),
-                BlankLine(),
-                Assignment(
-                    PlateManagerCodeNamespaceField.GLOBAL_CONFIG.value,
-                    normalized.global_pipeline_config,
-                ),
-                BlankLine(),
-                Assignment(
-                    PlateManagerCodeNamespaceField.PER_PLATE_CONFIGS.value,
-                    {
-                        code_value_by_scope[scope_id]: config
-                        for scope_id, config in normalized.per_plate_configs.items()
-                    },
-                ),
-                BlankLine(),
-                Assignment(
-                    PlateManagerCodeNamespaceField.PIPELINE_DATA.value,
-                    {
-                        code_value_by_scope[scope_id]: steps
-                        for scope_id, steps in normalized.pipeline_data.items()
-                    },
-                ),
-            )
+        document = PlateManagerDocumentAssignments(
+            plate_paths=[
+                code_value_by_scope[scope_id] for scope_id in normalized.plate_paths
+            ],
+            global_config=normalized.global_pipeline_config,
+            per_plate_configs={
+                code_value_by_scope[scope_id]: config
+                for scope_id, config in normalized.per_plate_configs.items()
+            },
+            pipeline_data={
+                code_value_by_scope[scope_id]: steps
+                for scope_id, steps in normalized.pipeline_data.items()
+            },
         )
+        items = []
+        for name in document.names():
+            if items:
+                items.append(BlankLine())
+            items.append(Assignment(name, getattr(document, name)))
+        body = CodeBlock.from_items(tuple(items))
         return generate_python_source(
             body,
             header=cls.HEADER,

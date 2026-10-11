@@ -659,7 +659,7 @@ def test_invocation_contract_plan_rejects_unwritten_consumed_kwarg_with_context(
 
 
 def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() -> None:
-    from openhcs.constants.input_source import InputSource
+    from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import (
@@ -691,7 +691,7 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
         ),
         name="ColorToGray",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
@@ -862,7 +862,7 @@ def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> N
 
 
 def test_cellprofiler_invocation_contract_uses_one_complete_step_context() -> None:
-    from openhcs.constants.input_source import InputSource
+    from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
     from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.source_bindings import ComponentSelector, NamedSourceBinding
@@ -897,7 +897,7 @@ def test_cellprofiler_invocation_contract_uses_one_complete_step_context() -> No
         step_index=3,
         source_bindings=source_bindings,
         group_by=Microscopy.Channel,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
         available_artifacts=source_artifacts,
         main_flow_artifacts=source_artifacts,
     )
@@ -1024,7 +1024,7 @@ def test_grouped_contracts_project_prior_main_flow_by_producer_ownership() -> No
 def test_cellprofiler_invocation_contract_accepts_main_flow_input_without_binding() -> (
     None
 ):
-    from openhcs.constants.input_source import InputSource
+    from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
     from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.config import StepSourceBindingsConfig
@@ -1053,7 +1053,7 @@ def test_cellprofiler_invocation_contract_accepts_main_flow_input_without_bindin
         step_name="ColorToGray",
         step_index=7,
         source_bindings=source_bindings,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
         available_artifacts=available_artifacts,
         main_flow_artifacts=available_artifacts,
     )
@@ -1071,7 +1071,7 @@ def test_cellprofiler_invocation_contract_accepts_main_flow_input_without_bindin
 def test_align_omission_probe_rejects_insufficient_static_source_without_throwing() -> (
     None
 ):
-    from openhcs.constants.input_source import InputSource
+    from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
     from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.source_bindings import NamedSourceBinding
@@ -1094,7 +1094,7 @@ def test_align_omission_probe_rejects_insufficient_static_source_without_throwin
             step_name="Align",
             step_index=4,
             source_bindings=source_bindings,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
             available_artifacts=source_artifacts,
             main_flow_artifacts=source_artifacts,
         ),
@@ -1105,7 +1105,7 @@ def test_align_omission_probe_rejects_insufficient_static_source_without_throwin
 
 
 def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None:
-    from openhcs.constants.input_source import InputSource
+    from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import (
@@ -1126,7 +1126,7 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
         func=align,
         name="Align",
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
@@ -1167,7 +1167,7 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
 
 
 def test_cellprofiler_invocation_contract_allows_source_binding_supersets() -> None:
-    from openhcs.constants.input_source import InputSource
+    from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
     from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.source_bindings import NamedSourceBinding
@@ -1204,7 +1204,7 @@ def test_cellprofiler_invocation_contract_allows_source_binding_supersets() -> N
         step_name="ColorToGray",
         step_index=8,
         source_bindings=source_bindings,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
         available_artifacts=available_artifacts,
         main_flow_artifacts=available_artifacts,
     )
@@ -1232,7 +1232,7 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+    from openhcs.core.source_bindings import NamedSourceBinding, SourceArtifactRole
     from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
@@ -1256,7 +1256,7 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
                 NamedSourceBinding(
                     alias="Nuclei",
                     artifact_kind=ObjectLabelsArtifactType,
-                    projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                    projection_role=SourceArtifactRole,
                 ),
             ),
         ),
@@ -1345,7 +1345,7 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
 
 
 def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
-    from openhcs.constants.input_source import InputSource
+    from openhcs.constants.input_source import ReadPipelineStart
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import (
         GlobalPipelineConfig,
@@ -1417,7 +1417,7 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
             func=(color_to_gray, {"mode": ColorToGrayMode.COMBINE}),
             name="ColorToGray",
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START
+                input_source=ReadPipelineStart
             ),
         )
     )

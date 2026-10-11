@@ -479,7 +479,7 @@ class PlateFileStreamCommandOptions:
                 request_type,
                 "target",
                 "--target",
-                choices=tuple(target.value for target in SelectedPlateFileQueryTarget),
+                choices=tuple(SelectedPlateFileQueryTarget.__registry__),
                 help="Plate root to stream from the selected PlateManager row.",
             )
         parser.add_argument("--path-contains")
@@ -604,7 +604,7 @@ class SelectedPlateImagesCommandSpec(SingleToolCommandSpec):
             SelectedPlateImageInspectionRequest,
             "target",
             "--target",
-            choices=tuple(target.value for target in SelectedPlateFileQueryTarget),
+            choices=tuple(SelectedPlateFileQueryTarget.__registry__),
             help="Plate root to inspect from the selected PlateManager row.",
         )
         add_request_field_option(
@@ -685,7 +685,7 @@ class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
             SelectedPlateFileQueryRequest,
             "target",
             "--target",
-            choices=tuple(target.value for target in SelectedPlateFileQueryTarget),
+            choices=tuple(SelectedPlateFileQueryTarget.__registry__),
             help="Plate root to query from the selected PlateManager row.",
         )
         add_request_field_option(
@@ -792,7 +792,7 @@ class SelectedPlateSampleCommandSpec(SingleToolCommandSpec):
             SelectedPlateImageSampleRequest,
             "target",
             "--target",
-            choices=tuple(target.value for target in SelectedPlateFileQueryTarget),
+            choices=tuple(SelectedPlateFileQueryTarget.__registry__),
             help="Plate root to sample from the selected PlateManager row.",
         )
         add_request_field_option(parser, SelectedPlateImageSampleRequest, "y", "--y")

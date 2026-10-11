@@ -6,8 +6,11 @@ from pathlib import Path
 import pytest
 from polystore.bioformats_storage import BioFormatsPlaneRef
 
+from openhcs.core.source_bindings import (
+    PrimaryPlaneRole,
+    SourceArtifactRole,
+)
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
     DECLARED_SOURCE_METADATA_FIELD,
     SourceMetadataFields,
@@ -44,20 +47,20 @@ def test_projection_nominal_owners_declare_projection_semantics() -> None:
         artifact_kind=ObjectLabelsArtifactType,
     )
 
-    assert plane.projection_role is SourceProjectionRole.PRIMARY_PLANE
+    assert plane.projection_role is PrimaryPlaneRole
     assert plane.source_alias == "DNA"
     assert plane.artifact_kind is ImageArtifactType
-    assert plane.identity_key == (SourceProjectionRole.PRIMARY_PLANE, address)
+    assert plane.identity_key == (PrimaryPlaneRole, address)
     assert plane.payload_composition_alias == "DNA"
     assert plane.virtual_workspace_path("plane.tif", execution_anchor=False) == (
         "plane.tif"
     )
 
-    assert artifact.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+    assert artifact.projection_role is SourceArtifactRole
     assert artifact.source_alias == "Nuclei"
     assert artifact.artifact_kind is ObjectLabelsArtifactType
     assert artifact.identity_key == (
-        SourceProjectionRole.SOURCE_ARTIFACT,
+        SourceArtifactRole,
         address,
         "Nuclei",
     )

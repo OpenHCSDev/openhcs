@@ -32,7 +32,10 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
 from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.source_bindings import (
+    NamedSourceBinding,
+    SourceArtifactRole,
+)
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
@@ -55,7 +58,7 @@ def _source_binding(alias: str, artifact_type) -> NamedSourceBinding:
     return NamedSourceBinding(
         alias,
         artifact_kind=artifact_type,
-        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        projection_role=SourceArtifactRole,
     )
 
 

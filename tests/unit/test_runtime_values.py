@@ -109,7 +109,10 @@ from openhcs.core.runtime_spatial_grid import (
 from openhcs.core.runtime_tabular_values import (
     ColumnarRows,
 )
-from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.source_bindings import (
+    NamedSourceBinding,
+    SourceArtifactRole,
+)
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenancePlanes,
@@ -2354,7 +2357,7 @@ def test_object_label_source_image_semantics_treats_rgb_image_as_label_plane() -
     payload = NamedSourceBinding(
         alias="Objects",
         artifact_kind=ObjectLabelsArtifactType,
-        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        projection_role=SourceArtifactRole,
         source_channel_axis=-1,
         source_channel_counts=frozenset((3, 4)),
     ).apply_loaded_payload(

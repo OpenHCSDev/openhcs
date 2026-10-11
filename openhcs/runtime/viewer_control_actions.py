@@ -32,7 +32,6 @@ from zmqruntime.viewer_protocol import (
 from openhcs.runtime.viewer_protocol import (
     OpenHCSViewerControlMessageType,
     ViewerControlField,
-    ViewerSettlePhase,
     ViewerSettleProgress,
 )
 
@@ -242,7 +241,7 @@ class ProcessLaunchControlAction(LifecycleControlAction):
             response_type=self.response_type,
             fields={
                 ViewerControlField.PROCESS_LAUNCH.value: (
-                    server.process_launch.to_wire_mapping()
+                    server.process_launch.to_dict()
                 )
             },
         )
@@ -277,7 +276,7 @@ class SettleControlAction(LifecycleControlAction):
                 message=unavailable,
             )
         progress = progress_of()
-        failed = progress.phase is ViewerSettlePhase.FAILED
+        failed = progress.phase.failed
         name = server.viewer_display_name
         return control_reply(
             ViewerProtocolStatus.ERROR if failed else ViewerProtocolStatus.SUCCESS,
@@ -290,7 +289,7 @@ class SettleControlAction(LifecycleControlAction):
                     f"{progress.completed_update_count}/{progress.total_update_count}."
                 )
             ),
-            fields=progress.to_wire_mapping(),
+            fields=progress.to_dict(),
         )
 
 

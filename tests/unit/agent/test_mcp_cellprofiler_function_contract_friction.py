@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from openhcs.agent.dto.functions import FunctionParameterSource
+from openhcs.agent.dto.functions import SuppliedFromArtifactInput
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.processing.backends.cellprofiler.feature_enhancement import (
     enhance_or_suppress_features,
@@ -157,7 +157,7 @@ def test_function_detail_classifies_normalized_artifact_fed_parameter(monkeypatc
 
     assert "seed_labels" not in detail.entry.signature
     assert (
-        parameters["seed_labels"].supplied_by is FunctionParameterSource.ARTIFACT_INPUT
+        parameters["seed_labels"].supplied_by is SuppliedFromArtifactInput
     )
     assert parameters["seed_labels"].required is False
     assert "do not pass this as a function kwarg" in (
@@ -191,7 +191,7 @@ def test_catalog_exposes_declared_exact_object_selector_and_authoring_guidance(
     assert "one-element tuple selects one producer" in contract.source_binding_rule
     assert "do not pass labels" in contract.source_binding_rule
     parameters = {parameter.name: parameter for parameter in detail.parameters}
-    assert parameters["labels"].supplied_by is FunctionParameterSource.ARTIFACT_INPUT
+    assert parameters["labels"].supplied_by is SuppliedFromArtifactInput
 
 
 def test_catalog_projects_registered_and_new_binding_declarations_without_a_roster():

@@ -32,12 +32,9 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.orchestrator import worker_execution
 from openhcs.core.orchestrator.execution_result import (
     ExecutionSucceeded,
-    MergeAllRuntimeRecords,
-    MergeDatasetInputRecords,
-    OmitRuntimeRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
-    RuntimeObservationMode,
+    RuntimeObservationMode, MergeAllRuntimeRecords, MergeDatasetInputRecords, OmitRuntimeRecords,
 )
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.runtime_artifact_values import RuntimeValue
