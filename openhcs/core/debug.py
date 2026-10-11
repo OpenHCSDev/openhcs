@@ -17,7 +17,7 @@ from uuid import uuid4
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import dataclass_from_mapping, project_dataclass, to_jsonable
-from zmqruntime.messages import TypedWireMessage
+from zmqruntime.messages import ResponseType, TypedWireMessage, WireView
 import numpy as np
 
 from openhcs.core.artifacts import (
@@ -693,19 +693,26 @@ class DebugSnapshot(DebugBoundaryState):
 
 
 @dataclass(frozen=True, slots=True)
-class DebugControlResponse:
+class DebugControlReplyStatus(WireView):
+    """The envelope every debug control reply carries beside its fields."""
+
+    status: ResponseType
+    error: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class DebugControlResponse(WireView):
     """A successful debug control response: ``status: ok`` beside its fields."""
 
     def to_control_response(self) -> dict[str, Any]:
-        return {"status": "ok", **to_jsonable(self)}
+        return {"status": ResponseType.OK.value, **self.to_dict()}
 
     @classmethod
     def from_control_response(cls, payload: Mapping[str, Any]) -> Self:
-        if payload.get("status") != "ok":
-            raise RuntimeError(str(payload.get("error") or payload))
-        return dataclass_from_mapping(
-            cls, {key: value for key, value in payload.items() if key != "status"}
-        )
+        reply = DebugControlReplyStatus.from_dict(payload)
+        if reply.status is not ResponseType.OK:
+            raise RuntimeError(reply.error or str(dict(payload)))
+        return cls.from_dict(payload)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
