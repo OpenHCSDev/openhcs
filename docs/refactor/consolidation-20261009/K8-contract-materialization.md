@@ -81,7 +81,7 @@ A new result file kind (say `.parquet`): before, an enum member, an entry in the
 
 The package is in `openhcs/core/`, nothing names the old path, the three converters are gone, `FileFormat` is a family, the guards pass, parity is 30/30, and the ratchet and nra-r1 show no regression.
 
-## Progress
+## Outcome
 
-- Done: all items above; touched tests; guards.
-- Next: parity under flock on the final tree; ratchet and nra-r1; mark the PR ready.
+- Guards 3/3. Official30 parity passed on the final execution-path tree. Touched and importing unit files: 4,279 passed; the 9 failures are the same 9 on `origin/main` (`44980dfe2`).
+- **Ratchet and nra-r1 exit 1 for the move alone.** Both key counts by file path, so the moved files' unchanged counts appear as new under `core/materialization/` and vanish under `processing/materialization/` (ratchet: 12 boolean-chain terms, 34+1 absence probes, 1 string dispatch with 3 arms, 2 type switches with 6 arms; nra: 3 redundant type checks; each number identical on both sides). No other key increased; `ImageBrowserWidget` god-class excess fell by 1.
