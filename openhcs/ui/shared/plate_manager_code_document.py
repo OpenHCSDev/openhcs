@@ -205,10 +205,7 @@ class PlateManagerCodeDocumentAuthority:
         clean_mode: bool = True,
     ) -> str:
         import openhcs.serialization.pycodify_formatters  # noqa: F401
-        from pycodify import Assignment, BlankLine, CodeBlock
-        from openhcs.serialization.source_path_factoring import (
-            OpenHCSPythonSourceDocument,
-        )
+        from pycodify import Assignment, BlankLine, CodeBlock, generate_python_source
 
         normalized = cls.from_values(
             plate_paths=payload.plate_paths,
@@ -252,11 +249,11 @@ class PlateManagerCodeDocumentAuthority:
                 ),
             )
         )
-        return OpenHCSPythonSourceDocument(
+        return generate_python_source(
             body,
             header=cls.HEADER,
             clean_mode=clean_mode,
-        ).render()
+        )
 
     @staticmethod
     def _scope_id(value: object, *, field_name: str) -> str:

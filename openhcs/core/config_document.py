@@ -162,19 +162,16 @@ class ConfigDocumentAuthority:
     ) -> str:
         """Render a validated config object as reviewable Python source."""
 
-        from pycodify import Assignment
+        from pycodify import Assignment, generate_python_source
 
         import openhcs.serialization.pycodify_formatters  # noqa: F401
-        from openhcs.serialization.source_path_factoring import (
-            OpenHCSPythonSourceDocument,
-        )
 
         cls._require_config_type(config, expected_config_type)
-        return OpenHCSPythonSourceDocument(
+        return generate_python_source(
             Assignment(ConfigDocumentField.CONFIG.value, config),
             header=cls.HEADER,
             clean_mode=clean_mode,
-        ).render()
+        )
 
     @staticmethod
     def _require_config_type(

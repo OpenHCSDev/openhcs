@@ -69,17 +69,13 @@ class OpenHCSCodegenProvider(CodegenProviderABC):
         header: str,
         clean_mode: bool,
     ) -> str:
-        from pycodify import Assignment
+        from pycodify import Assignment, generate_python_source
 
-        from openhcs.serialization.source_path_factoring import (
-            OpenHCSPythonSourceDocument,
-        )
-
-        return OpenHCSPythonSourceDocument(
+        return generate_python_source(
             Assignment(assignment_name, value),
             header=header,
             clean_mode=clean_mode,
-        ).render()
+        )
 
     def normalize_source(
         self,
