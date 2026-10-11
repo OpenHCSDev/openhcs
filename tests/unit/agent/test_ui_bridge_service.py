@@ -91,7 +91,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
     UiWindowSummary,
 )
-from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+from openhcs.agent.runtime_platform import AgentRuntimePlatform
 from openhcs.agent.services.ui_bridge_service import (
     UI_BRIDGE_PROTOCOL_VERSION,
     UiBridgeApplyDocumentOperation,
@@ -880,7 +880,7 @@ def test_ui_bridge_service_resolves_projected_graphical_viewer_launch_context(
 
     monkeypatch.setattr(
         "openhcs.agent.runtime_platform."
-        "LinuxAgentRuntimePlatformAuthority._process_environment",
+        "LinuxRuntimePlatform._process_environment",
         lambda self, pid: (
             {
                 "DISPLAY": ":19",
@@ -1015,7 +1015,7 @@ def test_descriptor_resolver_rejects_dead_process(monkeypatch, tmp_path):
     ).write()
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "process_started_at_unix",
         staticmethod(lambda _pid: None),
     )
@@ -1054,7 +1054,7 @@ def test_descriptor_catalog_removes_dead_process_before_application_compatibilit
         classmethod(lambda cls: ()),
     )
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "process_started_at_unix",
         staticmethod(lambda _pid: None),
     )
@@ -1077,7 +1077,7 @@ def test_descriptor_resolver_rejects_reused_process_identity(monkeypatch, tmp_pa
     descriptor_path.write_text(json.dumps(payload), encoding="utf-8")
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "process_started_at_unix",
         staticmethod(lambda pid: 20.0 if pid == os.getpid() else None),
     )
@@ -1104,7 +1104,7 @@ def test_status_rechecks_descriptor_process_liveness_after_gateway_call(
     process_start_times = iter((descriptor_started_at - 1.0, None))
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "process_started_at_unix",
         staticmethod(lambda _pid: next(process_start_times)),
     )

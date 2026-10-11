@@ -54,7 +54,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiStateSurfaceRequest,
 )
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+from openhcs.agent.runtime_platform import AgentRuntimePlatform
 from openhcs.agent.ui_bridge_environment import UiBridgeDescriptorEnvironment
 from openhcs.constants.constants import OrchestratorState
 from openhcs.core.execution_state import (
@@ -309,7 +309,7 @@ class McpDevServerSpec:
     def environment(self) -> dict[str, str]:
         """Environment entries inherited by the fresh MCP subprocess."""
         return (
-            AgentRuntimePlatformAuthority.current().project_child_process_environment(
+            AgentRuntimePlatform.current().project_child_process_environment(
                 os.environ,
                 include_graphical_session=True,
                 additional_keys=(

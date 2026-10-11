@@ -99,7 +99,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
-from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+from openhcs.agent.runtime_platform import AgentRuntimePlatform
 from openhcs.agent.services.object_state_field_projection import (
     ObjectStateFieldListProjector,
 )
@@ -1046,9 +1046,9 @@ class UiBridgeDescriptorDirectoryAuthority:
             UiBridgeDescriptorEnvironment.descriptor_directory_path_key
         )
         if configured:
-            return (AgentRuntimePlatformAuthority.resolved_path(configured),)
+            return (AgentRuntimePlatform.resolved_path(configured),)
 
-        return AgentRuntimePlatformAuthority.current().application_runtime_dirs(
+        return AgentRuntimePlatform.current().application_runtime_dirs(
             "OpenHCS",
             "ui-bridge",
         )
@@ -1509,7 +1509,7 @@ class UiBridgeDescriptorReader:
         stat_result = path.stat()
         if not stat.S_ISREG(stat_result.st_mode):
             raise PermissionError("UI bridge descriptor must be a regular file.")
-        platform_authority = AgentRuntimePlatformAuthority.current()
+        platform_authority = AgentRuntimePlatform.current()
         if not platform_authority.supports_posix_permissions():
             return
         uid = platform_authority.current_user_id()
@@ -1533,7 +1533,7 @@ class UiBridgeDescriptorReader:
 
     @staticmethod
     def _validate_descriptor_process(descriptor: UiBridgeDescriptorFile) -> None:
-        process_started_at_unix = AgentRuntimePlatformAuthority.process_started_at_unix(
+        process_started_at_unix = AgentRuntimePlatform.process_started_at_unix(
             descriptor.pid
         )
         if process_started_at_unix is None:
@@ -1556,7 +1556,7 @@ class UiBridgeDescriptorCatalog:
         configured = environ.get(UiBridgeDescriptorEnvironment.descriptor_file_path_key)
         if not configured:
             return None
-        return AgentRuntimePlatformAuthority.resolved_path(configured)
+        return AgentRuntimePlatform.resolved_path(configured)
 
     @classmethod
     def live_descriptors(cls) -> tuple[UiBridgeDescriptorFile, ...]:
@@ -1599,7 +1599,7 @@ class UiBridgeDescriptorCatalog:
         )
 
         for path in dict.fromkeys(
-            AgentRuntimePlatformAuthority.resolved_path(path)
+            AgentRuntimePlatform.resolved_path(path)
             for path in descriptor_paths
         ):
             result = UiBridgeDescriptorReader.read(path)
@@ -1671,7 +1671,7 @@ class UiBridgeDescriptorResolver:
     ) -> UiBridgeConnectionResolution:
         if connection.descriptor_file_path is not None:
             return self._resolve_explicit_file(
-                AgentRuntimePlatformAuthority.resolved_path(
+                AgentRuntimePlatform.resolved_path(
                     connection.descriptor_file_path
                 ),
                 connection,
@@ -1834,7 +1834,7 @@ class UiBridgeService:
         connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
     ) -> ViewerLaunchContext:
         """Resolve one typed detached-viewer context from UI or current process."""
-        platform_authority = AgentRuntimePlatformAuthority.current()
+        platform_authority = AgentRuntimePlatform.current()
         resolution = self._descriptor_resolver.resolve(connection)
         if resolution.ok and resolution.process_id is not None:
             environment = platform_authority.graphical_process_environment(

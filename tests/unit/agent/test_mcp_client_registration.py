@@ -7,7 +7,12 @@ import subprocess
 import pytest
 import tomlkit
 
-from openhcs.agent.runtime_platform import AgentRuntimePlatformKey
+from openhcs.agent.runtime_platform import (
+    AgentRuntimePlatform,
+    LinuxRuntimePlatform,
+    MacOSRuntimePlatform,
+    WindowsRuntimePlatform,
+)
 from openhcs.mcp import client_registration
 from openhcs.mcp.client_registration import (
     CLIENT_REGISTRATION_SCHEMA_VERSION,
@@ -31,7 +36,7 @@ from openhcs.mcp.client_registration import (
 def _environment(
     home: Path,
     *,
-    platform_key: AgentRuntimePlatformKey = AgentRuntimePlatformKey.LINUX,
+    platform: type[AgentRuntimePlatform] = LinuxRuntimePlatform,
     environ: dict[str, str] | None = None,
     executables: dict[str, str] | None = None,
     process_runner=None,
@@ -51,7 +56,7 @@ def _environment(
     return ClientRegistrationEnvironment(
         home=home,
         environ=environ or {},
-        platform_key=platform_key,
+        platform=platform,
         executable_resolver=resolve,
         process_runner=process_runner or default_runner,
     )
@@ -429,15 +434,15 @@ def test_detected_failure_preserves_success_and_does_not_fail_required_contract(
 
 
 @pytest.mark.parametrize(
-    ("platform_key", "environ", "expected_relative"),
+    ("platform", "environ", "expected_relative"),
     (
         (
-            AgentRuntimePlatformKey.WINDOWS,
+            WindowsRuntimePlatform,
             {"APPDATA": "APP_DATA"},
             Path("APP_DATA/Claude/claude_desktop_config.json"),
         ),
         (
-            AgentRuntimePlatformKey.MACOS,
+            MacOSRuntimePlatform,
             {},
             Path("Library/Application Support/Claude/claude_desktop_config.json"),
         ),
@@ -445,7 +450,7 @@ def test_detected_failure_preserves_success_and_does_not_fail_required_contract(
 )
 def test_claude_config_path_is_owned_by_platform_specific_leaf_hook(
     tmp_path: Path,
-    platform_key: AgentRuntimePlatformKey,
+    platform: type[AgentRuntimePlatform],
     environ: dict[str, str],
     expected_relative: Path,
 ) -> None:
@@ -453,7 +458,7 @@ def test_claude_config_path_is_owned_by_platform_specific_leaf_hook(
         environ = {"APPDATA": str(tmp_path / environ["APPDATA"])}
     environment = _environment(
         tmp_path,
-        platform_key=platform_key,
+        platform=platform,
         environ=environ,
     )
 
@@ -470,7 +475,7 @@ def test_claude_windows_leaf_owns_desktop_installation_forms(
     program_files = tmp_path / "ProgramFiles"
     environment = _environment(
         tmp_path,
-        platform_key=AgentRuntimePlatformKey.WINDOWS,
+        platform=WindowsRuntimePlatform,
         environ={
             "LOCALAPPDATA": str(local_app_data),
             "PROGRAMFILES": str(program_files),
@@ -491,7 +496,7 @@ def test_claude_windows_leaf_owns_desktop_installation_forms(
 def test_claude_desktop_is_explicitly_unsupported_on_linux(tmp_path: Path) -> None:
     environment = _environment(
         tmp_path,
-        platform_key=AgentRuntimePlatformKey.LINUX,
+        platform=LinuxRuntimePlatform,
     )
 
     assert ClaudeDesktopClientRegistrationTarget.config_path(environment) is None
@@ -504,7 +509,7 @@ def test_claude_code_cli_alone_does_not_detect_claude_desktop(
 ) -> None:
     environment = _environment(
         tmp_path,
-        platform_key=AgentRuntimePlatformKey.MACOS,
+        platform=MacOSRuntimePlatform,
         executables={"claude": str(tmp_path / ".local" / "bin" / "claude")},
     )
 

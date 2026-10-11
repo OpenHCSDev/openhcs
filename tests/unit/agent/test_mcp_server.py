@@ -8484,12 +8484,12 @@ def test_mcp_dev_client_launches_fresh_current_source_server():
 def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatch):
     import openhcs.mcp.dev_client as dev_client
     from openhcs.agent.path_policy import AgentPathPolicy
-    from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+    from openhcs.agent.runtime_platform import AgentRuntimePlatform
     from openhcs.agent.ui_bridge_environment import UiBridgeDescriptorEnvironment
     from openhcs.core.native_threading import native_thread_count_environment_keys
     from openhcs.utils.environment import OpenHCSProcessEnvironment
 
-    platform_authority = AgentRuntimePlatformAuthority.current()
+    platform_authority = AgentRuntimePlatform.current()
     for key in platform_authority.graphical_session_environment_keys():
         monkeypatch.delenv(key, raising=False)
     for key in AgentPathPolicy.environment_keys():
@@ -8560,13 +8560,11 @@ def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatc
 def test_mcp_dev_client_server_spec_preserves_windows_host_environment(monkeypatch):
     import openhcs.mcp.dev_client as dev_client
     from openhcs.agent.runtime_platform import (
-        AgentRuntimePlatformAuthority,
-        AgentRuntimePlatformKey,
+        AgentRuntimePlatform,
+        WindowsRuntimePlatform,
     )
 
-    windows_authority = AgentRuntimePlatformAuthority.for_enum_member(
-        AgentRuntimePlatformKey.WINDOWS
-    )
+    windows_authority = WindowsRuntimePlatform()
     expected_keys = {
         "HOME",
         "LOGNAME",
@@ -8587,7 +8585,7 @@ def test_mcp_dev_client_server_spec_preserves_windows_host_environment(monkeypat
     }
     assert set(windows_authority.child_process_environment_keys()) == expected_keys
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "current",
         classmethod(lambda cls: windows_authority),
     )

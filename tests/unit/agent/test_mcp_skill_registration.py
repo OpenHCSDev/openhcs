@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from openhcs.agent import skill_sync
-from openhcs.agent.runtime_platform import AgentRuntimePlatformKey
+from openhcs.agent.runtime_platform import LinuxRuntimePlatform
 from openhcs.agent.skill_bundle import AgentSkillBundle
 from openhcs.agent.skill_sync import SkillSyncReceipt, sync_skills
 from openhcs.mcp import client_registration
@@ -43,7 +43,7 @@ def environment(tmp_path):
     return ClientRegistrationEnvironment(
         home=tmp_path / "home",
         environ={"CODEX_HOME": str(tmp_path / "custom-codex")},
-        platform_key=AgentRuntimePlatformKey.LINUX,
+        platform=LinuxRuntimePlatform,
         executable_resolver=lambda _: None,
         process_runner=no_process,
     )

@@ -21,11 +21,14 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 import tomlkit
-from metaclass_registry import AutoRegisterMeta
-from python_introspect import to_jsonable
+from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 from tomlkit.items import InlineTable
 
-from openhcs.agent.runtime_platform import AgentRuntimePlatformKey
+from openhcs.agent.runtime_platform import (
+    AgentRuntimePlatform,
+    MacOSRuntimePlatform,
+    WindowsRuntimePlatform,
+)
 from openhcs.agent.skill_bundle import path_is_redirected
 from openhcs.agent.skill_sync import (
     SkillSyncPartialFailure,
@@ -34,7 +37,7 @@ from openhcs.agent.skill_sync import (
     installed_skill_bundle,
     sync_skills,
 )
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 
 CLIENT_REGISTRATION_SCHEMA_VERSION = "openhcs.mcp.client-registration.v1"
 OPENHCS_MCP_SERVER_NAME = "openhcs"
@@ -106,7 +109,7 @@ class ClientRegistrationEnvironment:
 
     home: Path
     environ: Mapping[str, str]
-    platform_key: AgentRuntimePlatformKey
+    platform: type[AgentRuntimePlatform]
     executable_resolver: ExecutableResolver
     process_runner: ProcessRunner
 
@@ -116,7 +119,7 @@ class ClientRegistrationEnvironment:
         return cls(
             home=Path.home(),
             environ=dict(os.environ),
-            platform_key=AgentRuntimePlatformKey.current(),
+            platform=AgentRuntimePlatform.current_type(),
             executable_resolver=shutil.which,
             process_runner=subprocess.run,
         )
@@ -131,14 +134,15 @@ class ClientRegistrationEnvironment:
 
 
 class ClaudeDesktopPlatformSemanticsABC(
-    EnumKeyedStrategyMixin[AgentRuntimePlatformKey],
+    NominalTypeKeyedStrategyMixin,
     ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Registered owner of Claude Desktop paths for one supported platform."""
 
-    __enum_member_attr__ = "platform_key"
-    platform_key: ClassVar[AgentRuntimePlatformKey]
+    value_type: ClassVar[type[AgentRuntimePlatform] | None] = None
+    value_type_label: ClassVar[str | None] = None
+    __registry_family__ = RegistryFamily(RegistryKeyAttribute.VALUE_TYPE_LABEL)
 
     @abstractmethod
     def config_path(self, environment: ClientRegistrationEnvironment) -> Path:
@@ -164,7 +168,7 @@ class ClaudeDesktopPlatformSemanticsABC(
 class WindowsClaudeDesktopPlatformSemantics(ClaudeDesktopPlatformSemanticsABC):
     """Claude Desktop configuration and installation paths on Windows."""
 
-    platform_key = AgentRuntimePlatformKey.WINDOWS
+    value_type = WindowsRuntimePlatform
 
     def config_path(self, environment: ClientRegistrationEnvironment) -> Path:
         app_data = environment.environ.get("APPDATA")
@@ -218,7 +222,7 @@ class WindowsClaudeDesktopPlatformSemantics(ClaudeDesktopPlatformSemanticsABC):
 class MacOSClaudeDesktopPlatformSemantics(ClaudeDesktopPlatformSemanticsABC):
     """Claude Desktop configuration and installation paths on macOS."""
 
-    platform_key = AgentRuntimePlatformKey.MACOS
+    value_type = MacOSRuntimePlatform
 
     def config_path(self, environment: ClientRegistrationEnvironment) -> Path:
         return (
@@ -358,6 +362,8 @@ class ClientRegistrationReport:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a JSON-native installer payload."""
+        from python_introspect import to_jsonable
+
         return dict(to_jsonable(self))
 
 
@@ -553,12 +559,10 @@ class ClaudeDesktopClientRegistrationTarget(McpClientRegistrationTarget):
     def _platform_semantics(
         environment: ClientRegistrationEnvironment,
     ) -> ClaudeDesktopPlatformSemanticsABC | None:
-        try:
-            return ClaudeDesktopPlatformSemanticsABC.for_enum_member(
-                environment.platform_key
-            )
-        except KeyError:
-            return None
+        semantics = ClaudeDesktopPlatformSemanticsABC.strategy_types_for_nominal_type(
+            environment.platform
+        )
+        return semantics[0]() if semantics else None
 
     @classmethod
     def config_path(

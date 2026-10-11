@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from openhcs.agent.exceptions import AgentFacingErrorMixin
-from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+from openhcs.agent.runtime_platform import AgentRuntimePlatform
 
 
 class AgentPathLocationAuthority:
@@ -27,11 +27,11 @@ class AgentPathLocationAuthority:
 
     @staticmethod
     def temporary_root() -> Path:
-        return AgentRuntimePlatformAuthority.current().temporary_root()
+        return AgentRuntimePlatform.current().temporary_root()
 
     @staticmethod
     def user_data_root() -> Path:
-        return AgentRuntimePlatformAuthority.current().application_data_root("OpenHCS")
+        return AgentRuntimePlatform.current().application_data_root("OpenHCS")
 
     @classmethod
     def default_output_root(cls) -> Path:
