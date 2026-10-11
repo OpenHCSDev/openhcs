@@ -5,10 +5,6 @@ from __future__ import annotations
 from typing import Optional
 
 from openhcs.constants.constants import OrchestratorState
-from openhcs.core.debug_session_projection import (
-    DebugSessionPhase,
-    DebugSessionPhaseDeclarationBase,
-)
 from openhcs.core.progress.projection import SubjectRuntimeProjection
 from openhcs.core.execution_state import (
     TerminalExecutionStatus,
@@ -17,14 +13,6 @@ from openhcs.core.execution_state import (
 
 class PlateStatusPresenter:
     """Render deterministic plate status text from execution + orchestrator signals."""
-
-    @classmethod
-    def build_debug_status_prefix(
-        cls,
-        *,
-        debug_phase: DebugSessionPhase,
-    ) -> str:
-        return DebugSessionPhaseDeclarationBase.for_phase(debug_phase).status_prefix
 
     @classmethod
     def build_status_prefix(

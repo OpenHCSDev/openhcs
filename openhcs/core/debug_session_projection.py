@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import ABC
 from dataclasses import dataclass
-from enum import Enum
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
@@ -26,20 +25,6 @@ class DebugSessionTargetState:
     initialized: bool
     compiled: bool
     terminal_status: str | None = None
-
-
-class DebugSessionPhase(str, Enum):
-    """Closed debugger phase serialized by UI/MCP adapters."""
-
-    NO_PLATE = "no_plate"
-    NEEDS_INITIALIZATION = "needs_initialization"
-    NEEDS_COMPILE = "needs_compile"
-    PENDING_EXECUTION = "pending_execution"
-    ACTIVE_SESSION = "active_session"
-    TERMINAL_COMPLETE = "terminal_complete"
-    TERMINAL_FAILED = "terminal_failed"
-    TERMINAL_CANCELLED = "terminal_cancelled"
-    READY = "ready"
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,20 +70,18 @@ class DebugSessionProjectionContext:
         return None
 
     @property
-    def phase(self) -> DebugSessionPhase:
-        return DebugSessionPhaseDeclarationBase.for_context(self).require_phase()
+    def phase(self) -> type[DebugSessionPhase]:
+        return DebugSessionPhase.for_context(self)
 
 
-class DebugSessionPhaseDeclarationBase(ABC, metaclass=AutoRegisterMeta):
-    """Nominal core declaration for one debugger session phase."""
+class DebugSessionPhase(ABC, metaclass=AutoRegisterMeta):
+    """One debugger session phase; ``name`` is its spelling for UI and MCP."""
 
-    __registry_key__ = "phase"
+    __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[
-        dict[DebugSessionPhase, type["DebugSessionPhaseDeclarationBase"]]
-    ] = {}
+    __registry__: ClassVar[dict[str, type["DebugSessionPhase"]]] = {}
 
-    phase: ClassVar[DebugSessionPhase | None] = None
+    name: ClassVar[str | None] = None
     priority: ClassVar[int]
     title: ClassVar[str]
     detail: ClassVar[str]
@@ -106,27 +89,14 @@ class DebugSessionPhaseDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     is_terminal: ClassVar[bool] = False
 
     @classmethod
-    def require_phase(cls) -> DebugSessionPhase:
-        if cls.phase is None:
-            raise TypeError(f"{cls.__name__} does not declare a debug session phase.")
-        return cls.phase
-
-    @classmethod
     def matches(cls, context: DebugSessionProjectionContext) -> bool:
         raise NotImplementedError
-
-    @classmethod
-    def for_phase(
-        cls,
-        phase: DebugSessionPhase,
-    ) -> type["DebugSessionPhaseDeclarationBase"]:
-        return cls.__registry__[phase]
 
     @classmethod
     def for_context(
         cls,
         context: DebugSessionProjectionContext,
-    ) -> type["DebugSessionPhaseDeclarationBase"]:
+    ) -> type["DebugSessionPhase"]:
         for declaration in sorted(
             cls.__registry__.values(),
             key=lambda candidate: candidate.priority,
@@ -136,8 +106,8 @@ class DebugSessionPhaseDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         raise ValueError("No debugger session phase matched the projection context.")
 
 
-class NoPlateDebugSessionPhase(DebugSessionPhaseDeclarationBase):
-    phase = DebugSessionPhase.NO_PLATE
+class NoPlateDebugSessionPhase(DebugSessionPhase):
+    name = "no_plate"
     priority = 0
     title = "No Plate"
     detail = "Select a plate to debug."
@@ -147,8 +117,8 @@ class NoPlateDebugSessionPhase(DebugSessionPhaseDeclarationBase):
         return context.target is None
 
 
-class NeedsInitializationDebugSessionPhase(DebugSessionPhaseDeclarationBase):
-    phase = DebugSessionPhase.NEEDS_INITIALIZATION
+class NeedsInitializationDebugSessionPhase(DebugSessionPhase):
+    name = "needs_initialization"
     priority = 10
     title = "Needs Init"
     detail = "Initialize the selected plate before debugging."
@@ -158,8 +128,8 @@ class NeedsInitializationDebugSessionPhase(DebugSessionPhaseDeclarationBase):
         return context.target is not None and not context.target.initialized
 
 
-class NeedsCompileDebugSessionPhase(DebugSessionPhaseDeclarationBase):
-    phase = DebugSessionPhase.NEEDS_COMPILE
+class NeedsCompileDebugSessionPhase(DebugSessionPhase):
+    name = "needs_compile"
     priority = 20
     title = "Needs Compile"
     detail = "Compile the selected plate before debugging."
@@ -173,8 +143,8 @@ class NeedsCompileDebugSessionPhase(DebugSessionPhaseDeclarationBase):
         )
 
 
-class PendingExecutionDebugSessionPhase(DebugSessionPhaseDeclarationBase):
-    phase = DebugSessionPhase.PENDING_EXECUTION
+class PendingExecutionDebugSessionPhase(DebugSessionPhase):
+    name = "pending_execution"
     priority = 30
     title = "Debug Starting"
     detail = "Debug execution is queued or starting."
@@ -191,8 +161,8 @@ class PendingExecutionDebugSessionPhase(DebugSessionPhaseDeclarationBase):
         )
 
 
-class ActiveDebugSessionPhase(DebugSessionPhaseDeclarationBase):
-    phase = DebugSessionPhase.ACTIVE_SESSION
+class ActiveDebugSessionPhase(DebugSessionPhase):
+    name = "active_session"
     priority = 40
     title = "Debug Active"
     detail = "Debug session has an active cursor or paused worker."
@@ -208,7 +178,7 @@ class ActiveDebugSessionPhase(DebugSessionPhaseDeclarationBase):
         )
 
 
-class TerminalDebugSessionPhase(DebugSessionPhaseDeclarationBase):
+class TerminalDebugSessionPhase(DebugSessionPhase):
     """Shared terminal debugger phase matching a terminal execution status."""
 
     terminal_status: ClassVar[TerminalExecutionStatus | None] = None
@@ -237,7 +207,7 @@ class TerminalDebugSessionPhase(DebugSessionPhaseDeclarationBase):
 
 
 class TerminalCompleteDebugSessionPhase(TerminalDebugSessionPhase):
-    phase = DebugSessionPhase.TERMINAL_COMPLETE
+    name = "terminal_complete"
     priority = 50
     title = "Debug Complete"
     detail = "Last debug command completed."
@@ -246,7 +216,7 @@ class TerminalCompleteDebugSessionPhase(TerminalDebugSessionPhase):
 
 
 class TerminalFailedDebugSessionPhase(TerminalDebugSessionPhase):
-    phase = DebugSessionPhase.TERMINAL_FAILED
+    name = "terminal_failed"
     priority = 51
     title = "Debug Failed"
     detail = "Last debug command failed."
@@ -255,7 +225,7 @@ class TerminalFailedDebugSessionPhase(TerminalDebugSessionPhase):
 
 
 class TerminalCancelledDebugSessionPhase(TerminalDebugSessionPhase):
-    phase = DebugSessionPhase.TERMINAL_CANCELLED
+    name = "terminal_cancelled"
     priority = 52
     title = "Debug Cancelled"
     detail = "Last debug command was cancelled."
@@ -263,8 +233,8 @@ class TerminalCancelledDebugSessionPhase(TerminalDebugSessionPhase):
     terminal_status = TerminalExecutionStatus.CANCELLED
 
 
-class ReadyDebugSessionPhase(DebugSessionPhaseDeclarationBase):
-    phase = DebugSessionPhase.READY
+class ReadyDebugSessionPhase(DebugSessionPhase):
+    name = "ready"
     priority = 100
     title = "Ready"
     detail = "Debug controls are ready."

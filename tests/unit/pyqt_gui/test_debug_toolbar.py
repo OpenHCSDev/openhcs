@@ -29,10 +29,11 @@ from openhcs.core.progress import ProgressEvent
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
-from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
-    PipelineDebugPauseBoundaryState,
-    PipelineDebugSessionContext,
-    PipelineDebugTargetState,
+from openhcs.core.debug_session_projection import (
+    DebugPauseBoundaryState,
+    DebugSessionProjectionContext,
+    DebugSessionTargetState,
+    TerminalCompleteDebugSessionPhase,
 )
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     PipelineDebugActionDeclarationBase,
@@ -87,9 +88,9 @@ def debug_toolbar_context(
     terminal_summary: DebugTerminalSummary | None = None,
     manager_execution_state: ManagerExecutionState = ManagerExecutionState.IDLE,
     pause_step_indices: tuple[int, ...] = (1,),
-) -> PipelineDebugSessionContext:
-    return PipelineDebugSessionContext(
-        target=PipelineDebugTargetState(
+) -> DebugSessionProjectionContext:
+    return DebugSessionProjectionContext(
+        target=DebugSessionTargetState(
             current_plate_scope_id="plate",
             pipeline_scope_id="plate::pipeline",
             initialized=initialized,
@@ -97,7 +98,7 @@ def debug_toolbar_context(
         ),
         session=session,
         terminal_summary=terminal_summary,
-        pause_boundaries=PipelineDebugPauseBoundaryState(pause_step_indices),
+        pause_boundaries=DebugPauseBoundaryState(pause_step_indices),
         manager_execution_state=manager_execution_state,
     )
 
@@ -536,7 +537,7 @@ def test_debug_context_prefers_terminal_state_over_a_stale_inspected_session(
         context = harness.editor.debug_session_context()
 
         assert context.active_session is None
-        assert context.phase.value == "terminal_complete"
+        assert context.phase is TerminalCompleteDebugSessionPhase
         assert context.terminal_summary is summary
 
 

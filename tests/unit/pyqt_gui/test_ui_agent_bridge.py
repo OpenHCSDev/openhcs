@@ -208,7 +208,7 @@ from openhcs.pyqt_gui.session_rendering import GuiRenderer
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
-    DebugToolbarAuxiliaryAction,
+    InspectRuntimeValuesAction,
     PipelineDebugActionDeclarationBase,
     StepDebugAction,
 )
@@ -4489,7 +4489,7 @@ def test_pipeline_debug_toolbar_actions_are_exposed_from_toolbar_declarations() 
         for action_id in (
             RestartDebugCommand.name,
             StopDebugCommand.name,
-            DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value,
+            InspectRuntimeValuesAction.action_id(),
         ):
             assert actions[action_id].enabled is False
             assert actions[action_id].disabled_error.code == "debug_session_required"
@@ -4562,12 +4562,12 @@ def test_pipeline_debug_toolbar_runtime_values_action_requires_debug_session(
         )
         bridge = _pipeline_editor_bridge(gui.pipeline_editor)
         widget_id = PipelineDebugToolbarWidgetIdentity.require_value()
-        action = _debug_actions(bridge)[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]
+        action = _debug_actions(bridge)[InspectRuntimeValuesAction.action_id()]
 
         result = bridge.invoke_action(
             UiActionInvokeRequest(
                 widget_id=widget_id,
-                action_id=DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value,
+                action_id=InspectRuntimeValuesAction.action_id(),
                 selected_scope_ids=action.target_scope_ids,
                 observed_selection_revision_token=action.selection_revision_token,
                 confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(
@@ -4622,7 +4622,7 @@ def test_pipeline_debug_session_state_surface_projects_context_and_actions() -> 
         assert state.payload["cursor"]["step_scope_id"] == "plate-1::functionstep_1"
         assert actions[RestartDebugCommand.name]["enabled"] is True
         assert (
-            actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is True
+            actions[InspectRuntimeValuesAction.action_id()]["enabled"] is True
         )
         assert actions[StepDebugCommand.name]["label"] == StepDebugAction.label
 
@@ -4735,5 +4735,5 @@ def test_pipeline_debug_session_terminal_summary_retires_the_inspected_session()
         assert actions[RestartDebugCommand.name]["enabled"] is False
         assert actions[StopDebugCommand.name]["enabled"] is False
         assert (
-            actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is False
+            actions[InspectRuntimeValuesAction.action_id()]["enabled"] is False
         )

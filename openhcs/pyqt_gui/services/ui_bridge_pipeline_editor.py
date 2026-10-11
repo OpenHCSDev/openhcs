@@ -310,7 +310,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
             manager_execution_state=context.manager_execution_state.value,
             initialized=False if target is None else target.initialized,
             compiled=False if target is None else target.compiled,
-            phase=DebugToolbarActionProjector.phase(context).value,
+            phase=context.phase.name,
             active_session_id=None if session is None else session.debug_session_id,
             execution_id=None if session is None else session.execution_id,
             axis_id=None if session is None else session.axis_id,
@@ -375,7 +375,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
         return UiDebugActionState(
             action_id=model.action_id,
             label=model.label,
-            placement=model.placement.value,
+            placement=model.placement.name,
             enabled=model.enabled,
             side_effects=model.side_effects,
             confirmation_required=model.confirmation_required,
