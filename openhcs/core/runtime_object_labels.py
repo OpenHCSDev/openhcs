@@ -1458,6 +1458,23 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
             )
         return None
 
+    def source_aliases_select_one_plane(self) -> bool:
+        """Return whether source-binding labels resolve their own aliases to one plane."""
+        aliases = self.source_aliases
+        if not aliases:
+            raise ValueError(
+                "Source-binding object labels require explicit source aliases."
+            )
+        declared_projection = self.declared_plane_projection()
+        if declared_projection is None:
+            raise ValueError(
+                "Source-binding object labels require a declared plane projection."
+            )
+        return (
+            self.source_alias_plane_index(aliases, declared_projection.axis_size)
+            is not None
+        )
+
     def object_label_semantic_identity(self) -> tuple[tuple[str, Hashable], ...]:
         """Return native object-label identity fields in addition to payload metadata."""
         return (

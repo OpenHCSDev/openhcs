@@ -169,12 +169,43 @@ def test_every_plane_axis_answers_the_family_questions() -> None:
     for name, axis in RuntimePlaneAxis.__registry__.items():
         assert RuntimePlaneAxis.named(name) is axis
         assert axis.axis_when_stacked().leads_data
+        assert axis.unstacked == (not axis.leads_data)
         assert (
             axis.one_plane_per_runtime_slice + axis.one_plane_per_source_binding
             == axis.leads_data
         )
     for scope in ObjectLabelDomainScope.__registry__.values():
-        assert isinstance(scope.ids_per_plane, bool)
+        assert scope.ids_span_payload == (not scope.ids_per_plane)
+
+
+FAMILY_FLAGS = {
+    "leads_data",
+    "unstacked",
+    "one_plane_per_runtime_slice",
+    "one_plane_per_source_binding",
+    "keeps_image_whole",
+    "ids_per_plane",
+    "ids_span_payload",
+    "preserves_complete_axis",
+    "selects_one_plane",
+}
+
+
+def test_family_flags_are_read_positively() -> None:
+    """Each question has a positive spelling or a ``require_*`` method; none is negated."""
+    found = sorted(
+        f"{module}:{node.lineno}"
+        for module, tree in _trees().items()
+        for node in ast.walk(tree)
+        if isinstance(node, ast.UnaryOp)
+        and isinstance(node.op, ast.Not)
+        and isinstance(node.operand, ast.Attribute)
+        and node.operand.attr in FAMILY_FLAGS
+        and not (
+            isinstance(node.operand.value, ast.Name) and node.operand.value.id == "self"
+        )
+    )
+    assert not found, "\n".join(found)
 
 
 def test_image_metadata_and_array_data_are_runtime_value_methods() -> None:
