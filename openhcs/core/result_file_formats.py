@@ -10,16 +10,18 @@ from __future__ import annotations
 
 from abc import ABC
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Protocol
+from typing import ClassVar, Protocol
 
 from metaclass_registry import AutoRegisterMeta
 
-if TYPE_CHECKING:
-    from openhcs.core.plate_image_inventory import (
-        PlateResultFilePreview,
-        PlateResultFilePreviewReader,
-        PlateResultFileRecord,
-    )
+class ResultFilePreviewReader(Protocol):
+    """The previews a reader can build; each kind picks one."""
+
+    def text_preview(self, record, *, max_lines: int, max_bytes: int): ...
+
+    def csv_preview(self, record, *, max_lines: int, max_bytes: int): ...
+
+    def roi_preview(self, record, *, max_examples: int, max_bytes: int): ...
 
 
 class ResultFileOpener(Protocol):
@@ -57,12 +59,12 @@ class ResultFileFormat(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def preview(
         cls,
-        reader: type[PlateResultFilePreviewReader],
-        record: PlateResultFileRecord,
+        reader: ResultFilePreviewReader,
+        record,
         *,
         max_lines: int,
         max_bytes: int,
-    ) -> PlateResultFilePreview | None:
+    ):
         """Build this kind's bounded preview; kinds without one return None."""
         return None
 

@@ -144,6 +144,9 @@ class _InventoryMetadataHandler:
     def source_dataset(self, _plate_path: Path):
         return None
 
+    def source_workspace_root(self, plate_path: Path) -> Path:
+        return plate_path
+
     def analysis_result_directories(self, _plate_path: Path):
         return (
             AnalysisResultDirectory(
