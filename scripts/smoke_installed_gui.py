@@ -1,7 +1,6 @@
 """Operate an installed OpenHCS GUI through MCP outside the source checkout."""
 
 from __future__ import annotations
-from openhcs.authoring.session.operations.datasets import ShowDatasetCode
 
 import argparse
 import faulthandler
@@ -565,6 +564,7 @@ def run_installed_live_mcp_smoke(
         MainWindowWidgetIdentity,
         PlateManagerWidgetIdentity,
     )
+    from openhcs.authoring.session.operations.datasets import ShowDatasetCode
     from openhcs.mcp.dev_client import McpDevClient
     from openhcs.mcp.dev_client_commanding import CapabilityBackedCommandSpec
     from openhcs.mcp.dev_client_commands.ui import (
