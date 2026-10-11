@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pickle
-import tempfile
 import threading
 from dataclasses import replace
 from pathlib import Path
@@ -477,13 +476,10 @@ def test_ui_bridge_answers_zmq_browser_control_ping(tmp_path) -> None:
     assert response["application"] == OPENHCS_ENDPOINT_APPLICATION.to_dict()
 
 
-def test_second_ipc_ui_bridge_cannot_replace_live_endpoint_pair(tmp_path) -> None:
-    # IPC socket paths must fit sun_path; a deep tmp_path does not.
-    with tempfile.TemporaryDirectory(prefix="ohcs-ipc-") as ipc_dir:
-        _exercise_second_ipc_ui_bridge(tmp_path, Path(ipc_dir))
-
-
-def _exercise_second_ipc_ui_bridge(tmp_path, ipc_dir) -> None:
+def test_second_ipc_ui_bridge_cannot_replace_live_endpoint_pair(
+    tmp_path, unix_socket_dir
+) -> None:
+    ipc_dir = unix_socket_dir
     transport_config = replace(
         OPENHCS_ZMQ_CONFIG,
         ipc_socket_dir=str(ipc_dir),

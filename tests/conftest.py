@@ -92,6 +92,17 @@ def cleanup_test_runtime_resources():
         cleanup_backend_connections(include_process_resources=True)
 
 
+@pytest.fixture
+def unix_socket_dir():
+    """A short private directory for AF_UNIX/IPC sockets.
+
+    ``sun_path`` holds about 104-108 bytes, so a socket under a deep
+    ``tmp_path`` (long ``--basetemp`` or ``TMPDIR``) cannot bind.
+    """
+    with tempfile.TemporaryDirectory(prefix="ohcs-sock-") as directory:
+        yield Path(directory)
+
+
 @pytest.fixture(autouse=True)
 def visible_source_root(monkeypatch):
     """Private, visible root for benchmark visible-source aliases.

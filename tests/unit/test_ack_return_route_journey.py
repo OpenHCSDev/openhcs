@@ -1,8 +1,6 @@
 """Continuous synthetic save/REP/copy/deferred-ACK journey, with no GUI or JVM."""
 
 import sys
-import tempfile
-from pathlib import Path
 from subprocess import Popen, TimeoutExpired
 from multiprocessing import Pipe
 from multiprocessing.connection import Connection
@@ -86,13 +84,8 @@ def receive(pipe):
 
 
 @pytest.mark.parametrize("mode", [TransportMode.TCP, TransportMode.IPC])
-def test_two_native_stream_producers_keep_deferred_ack_ownership(mode):
-    # IPC socket paths must fit sun_path; a deep tmp_path does not.
-    with tempfile.TemporaryDirectory(prefix="ohcs-ack-") as directory:
-        _exercise_two_stream_producers(mode, Path(directory))
-
-
-def _exercise_two_stream_producers(mode, directory):
+def test_two_native_stream_producers_keep_deferred_ack_ownership(mode, unix_socket_dir):
+    directory = unix_socket_dir
     config = ZMQConfig(default_port=48000, ipc_socket_dir=str(directory))
     pair = DataControlPortPairAuthority.acquire(config, transport_mode=mode)
     server = NapariViewerServer(NapariViewerServerRequest(
