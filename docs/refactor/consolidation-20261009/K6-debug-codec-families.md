@@ -23,7 +23,7 @@ Re-measured at `84e7a2904`. L2 already deleted `serialization/json.py` and `Debu
 
 ## Target
 
-- **One encoder, one decoder.** python-introspect 0.2.6 decodes a field annotated `type[F]`, where `F` is an `AutoRegisterMeta` family, from the registry key `to_jsonable` writes (`registered_class_from_key`, dispatched on the family's metaclass so a family with its own boundary spelling, the axis family, registers its decoder; the default reads the registry and checks membership). It also supplies `RegisteredClassChoices(family)`, the form-choice view of a registry. Every record above is encoded by `to_jsonable` and decoded by `dataclass_from_mapping`; field copies are `dataclasses.replace` or `project_dataclass`.
+- **One encoder, one decoder.** python-introspect 0.2.7 decodes a field annotated `type[F]`, where `F` is an `AutoRegisterMeta` family, from the registry key `to_jsonable` writes (`registered_class_from_key`, dispatched on the family's metaclass so a family with its own boundary spelling, the axis family, registers its decoder; the default reads the registry and checks membership). It also supplies `RegisteredClassChoices(family)`, the form-choice view of a registry. Every record above is encoded by `to_jsonable` and decoded by `dataclass_from_mapping`; field copies are `dataclasses.replace` or `project_dataclass`.
 - **Debug view.** Cell text is one function over `to_jsonable`'s output (`debug_view_models.debug_view_cell_text`); both private copies and the two re-wrappers are deleted. The section and table declarations key by a plain `name` (the wire spelling); `DebugViewSection.kind`/`DebugViewTable.projection` carry that name, and callers name the declaration class directly.
 - **Debug records.** The control requests are the wire messages (`TypedWireMessage`, `wire_type` is the control message type): the four `*ControlPayload` classes and `DebugControlMessageType` are deleted, and `zmq_control` keys its handlers by the request class's `wire_type`. `DebugSnapshot`, `DebugArtifactRef`, `DebugArtifactIdentity`, `DebugPausedWorkerStatus`, `DebugExecutionConfig`, the responses and the view model lose their hand codecs.
 - **Kinds are families.**
@@ -59,7 +59,7 @@ Re-measured at `84e7a2904`. L2 already deleted `serialization/json.py` and `Debu
 
 ## Done when
 
-The guards pass; the library PRs (python-introspect 0.2.6, zmqruntime 0.6.1) are open with tests green and pinned by submodule; the touched test files pass one per process; the structural ratchet and NRA show no regressions.
+The guards pass; the library PRs (python-introspect 0.2.7, zmqruntime 0.6.1) are open with tests green and pinned by submodule; the touched test files pass one per process; the structural ratchet and NRA show no regressions.
 
 ## Outcome and corrections
 
