@@ -126,7 +126,7 @@ class WorkerExecutorResources(ABC):
         *,
         actual_max_workers: int,
         execution_bundle: CompiledExecutionBundle,
-        worker_assignments: Dict[str, List[str]] | None,
+        worker_assignments: Mapping[str, Sequence[str]],
     ) -> WorkerAssignmentPlan:
         contexts_snapshot = self.contexts_snapshot(execution_bundle)
         return CompiledContextLanePlanner(
@@ -1248,12 +1248,6 @@ class PooledWorkerLaneRunner:
         pipeline_definition: List[AbstractStep],
     ) -> None:
         import traceback
-
-        if not lane_context.owned_partition_values:
-            raise RuntimeError(
-                f"Worker lane {lane_context.worker_slot} cannot emit an axis error "
-                "without owned partition values."
-            ) from exc
 
         full_traceback = traceback.format_exc()
         error_msg = (

@@ -743,6 +743,10 @@ class ViewerSettleProgress:
     def work_unit_active(self) -> bool:
         return self.intake_item_active or self.active_route_work_unit_active
 
+    def heartbeat_due(self, elapsed_seconds: float, interval_seconds: float) -> bool:
+        """An unchanged observation is re-published only while work is running."""
+        return self.work_unit_active and elapsed_seconds >= interval_seconds
+
     @property
     def completion_percent(self) -> float:
         if self.total_update_count:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, Optional, Sequence, TypeAlias
+from typing import Dict, List, Mapping, Sequence, TypeAlias
 
 from python_introspect import project_dataclass
 
@@ -151,7 +151,7 @@ class CompiledContextLanePlanner:
     def plan(
         self,
         contexts_snapshot: Mapping[str, ProcessingContext],
-        worker_assignments: Optional[Dict[str, List[str]]],
+        worker_assignments: Mapping[str, Sequence[str]],
     ) -> WorkerAssignmentPlan:
         contexts_by_axis = self._contexts_by_axis(contexts_snapshot)
         resolved_assignments = self._resolved_assignments(
@@ -182,9 +182,9 @@ class CompiledContextLanePlanner:
     def _resolved_assignments(
         self,
         contexts_by_axis: Mapping[str, List[str]],
-        worker_assignments: Optional[Dict[str, List[str]]],
+        worker_assignments: Mapping[str, Sequence[str]],
     ) -> Dict[str, List[str]]:
-        if worker_assignments is None:
+        if not worker_assignments:
             return self._default_assignments(contexts_by_axis)
 
         resolved_assignments = {

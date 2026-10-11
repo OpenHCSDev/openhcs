@@ -170,11 +170,6 @@ class BundleExecutionRequest(ProgressExecutionContext):
     def compiled_contexts(self) -> Dict[str, ProcessingContext]:
         return dict(self.execution_bundle.runtime_contexts)
 
-    def worker_assignments_for(self) -> Optional[Dict[str, List[str]]]:
-        if not self.execution_bundle.worker_assignments:
-            return None
-        return dict(self.execution_bundle.worker_assignments)
-
 
 @dataclass(frozen=True, slots=True)
 class ValidatedBundleExecution(ProgressExecutionContext):
@@ -246,7 +241,6 @@ def execute_bundle_request(
         )
 
         execution_bundle = request.execution_bundle
-        worker_assignments = request.worker_assignments_for()
 
         execution_results = BundleExecutionResults()
         dataset_runtime_observation = RuntimeExecutionObservation()
@@ -258,7 +252,7 @@ def execute_bundle_request(
                     worker_assignment_plan = executor_resources.plan_worker_lanes(
                         actual_max_workers=validated.actual_max_workers,
                         execution_bundle=execution_bundle,
-                        worker_assignments=worker_assignments,
+                        worker_assignments=execution_bundle.worker_assignments,
                     )
                     worker_lane_execution_plan = validated.worker_lane_execution_plan(
                         request=request,
@@ -868,7 +862,7 @@ def _dataset_artifact_batch(
             selected_input_edges = {
                 edge.spec.ref(): edge
                 for edge in invocation.select_inputs(step_plan.artifact_inputs).values()
-                if edge.storage_plan is not None and edge.projection is not None
+                if edge.reads_stored_records
             }
             input_ref = input_spec.ref()
             if input_ref not in selected_input_edges:
@@ -1063,7 +1057,9 @@ def wait_until_visualizers_ready(
         orchestrator._execution_cancellation.raise_if_requested(
             "while waiting for streaming viewers"
         )
-        if all(v.is_running for v in visualizers):
+        running_ports = {v.port for v in visualizers if v.is_running}
+        not_ready = [v.port for v in visualizers if v.port not in running_ports]
+        if not not_ready:
             progress_queue.put(
                 progress_context.event(
                     axis_id="",
@@ -1079,7 +1075,6 @@ def wait_until_visualizers_ready(
             return
         time.sleep(0.2)
 
-    not_ready = [v.port for v in visualizers if not v.is_running]
     message = f"Timeout waiting for streaming viewers. Not ready: {not_ready}"
     logger.error(f"🔬 ORCHESTRATOR: {message}")
     progress_queue.put(
@@ -1130,9 +1125,8 @@ class ViewerSettlementProgressObserver:
 
     def __call__(self, progress: "ViewerSettleProgress") -> None:
         observed_at = time.monotonic()
-        if progress == self._last_progress and (
-            not progress.work_unit_active
-            or observed_at - self._last_emitted_at < self.heartbeat_interval_seconds
+        if progress == self._last_progress and not progress.heartbeat_due(
+            observed_at - self._last_emitted_at, self.heartbeat_interval_seconds
         ):
             return
 

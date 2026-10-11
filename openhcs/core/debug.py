@@ -2705,10 +2705,6 @@ class ProgressDebugEventSink(DebugEventSink):
     ) -> None:
         if not debug_session_id:
             raise ValueError("debug_session_id cannot be empty.")
-        if not progress_context.execution_id:
-            raise ValueError("execution_id cannot be empty.")
-        if not progress_context.subject_id:
-            raise ValueError("subject_id cannot be empty.")
         self.debug_session_id = debug_session_id
         self.progress_context = progress_context
         self.emit_progress = emit_progress
