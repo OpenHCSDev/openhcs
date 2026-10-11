@@ -200,7 +200,7 @@ class SingleSliceValueObjectInstanceKeyPlaneAlignmentStrategy(
     ) -> bool:
         return (
             context.child_slice_indices == frozenset({None})
-            and context.single_value_slice_index is not None
+            and isinstance(context.single_value_slice_index, int)
         )
 
     def align(

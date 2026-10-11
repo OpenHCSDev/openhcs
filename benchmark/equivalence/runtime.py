@@ -2842,7 +2842,8 @@ def object_row_occurrence_scope(
     sample_number_offset: RuntimeSampleNumberOffset,
 ) -> ComponentGroupScope | None:
     """Return group identity only when the table owns one local row domain."""
-    if scoped.execution_scope is None or not scoped.execution_scope.has_value:
+    execution_scope = scoped.execution_scope
+    if not (execution_scope is not None and execution_scope.has_value):
         return None
     slice_indices: set[int | None] = set()
     for raw_row in scoped.table.rows.iter_row_mappings():
@@ -2860,7 +2861,7 @@ def object_row_occurrence_scope(
         )
         if len(slice_indices) > 1:
             return None
-    return scoped.execution_scope.group_scope
+    return execution_scope.group_scope
 
 
 def image_row_occurrence_identity(

@@ -314,11 +314,10 @@ class RuntimeMeasurementFactProjectionContract:
             observed = cls.is_observed_value(record.value)
             if observed:
                 observed_values.add(record.padding_group)
-            if not record.measured_object_anchor:
-                continue
-            has_anchor.add(record.padding_group)
-            if observed:
-                observed_anchors.add(record.padding_group)
+            if record.measured_object_anchor:
+                has_anchor.add(record.padding_group)
+                if observed:
+                    observed_anchors.add(record.padding_group)
         return frozenset(observed_anchors | (observed_values - has_anchor))
 
     @classmethod
@@ -430,7 +429,7 @@ class RuntimeMeasurementFactProjectionContract:
                 values_by_key[key] = [value]
                 producer_owned_by_key[key] = True
                 continue
-            if current_is_producer_owned and not record.producer_owned_feature:
+            if current_is_producer_owned != record.producer_owned_feature:
                 continue
             if value in current_values:
                 continue
