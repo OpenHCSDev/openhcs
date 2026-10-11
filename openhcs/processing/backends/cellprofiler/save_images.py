@@ -976,7 +976,6 @@ def _recorded_save_images_rows(
 
 @numpy(contract=Pure3DContract)
 @special_inputs("image_to_save")
-@runtime_context_parameter(None)
 def save_images(
     image: ImagePayload,
     *,
@@ -998,7 +997,6 @@ def save_images(
     base_image_folder: str | None = None,
     series_axis: SaveImagesSeriesAxis = SaveImagesSeriesAxis.TIME,
     lossless_compression: bool = True,
-    context: ProcessingContext | None = None,
 ) -> tuple[RuntimeArrayData, RuntimeArrayData]:
     """Prepare a selected image or object set for saving without replacing the pipeline image.
 
@@ -1020,7 +1018,6 @@ def save_images(
         base_image_folder,
         series_axis,
         lossless_compression,
-        context,
     )
     return image, _converted_saved_image(
         image_to_save,

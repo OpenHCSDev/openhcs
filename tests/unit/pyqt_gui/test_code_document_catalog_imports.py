@@ -9,7 +9,10 @@ from arraybridge import DtypeConversion
 from arraybridge.decorators import SliceBySliceRuntimeParameter
 from objectstate.object_state import ObjectStateRegistry
 
-from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
+from openhcs.agent.services.function_catalog_service import (
+    FunctionCatalogServiceABC,
+    UnknownFunctionIdError,
+)
 from openhcs.core.callable_contract import CallableImportIdentity, CallableMetadata
 from openhcs.core.config import LazyDtypeConfig
 from openhcs.core.function_reference import (
@@ -123,6 +126,25 @@ def test_catalog_does_not_authorize_library_roots_or_unlisted_names(
         error.code == "unsafe_import"
         for error in UiCodeDocumentSourcePolicy(catalog).validate(source(imports, name))
     )
+
+
+@pytest.mark.parametrize(
+    "call",
+    ["get_function(name)", "get_function('a:b', 'c')", "get_function(key='a:b')"],
+)
+def test_registry_lookup_takes_one_literal_catalog_id(catalog, call):
+    imports = "from openhcs.processing.func_registry import get_function\nname = 'a:b'"
+    errors = UiCodeDocumentSourcePolicy(catalog).validate(source(imports, call))
+    assert any(error.code == "unsafe_call" for error in errors)
+
+
+def test_registry_lookup_rejects_unknown_catalog_id(catalog):
+    catalog.reference.side_effect = UnknownFunctionIdError("missing:key")
+    imports = "from openhcs.processing.func_registry import get_function"
+    errors = UiCodeDocumentSourcePolicy(catalog).validate(
+        source(imports, "get_function('missing:key')")
+    )
+    assert any(error.code == "unknown_function_id" for error in errors)
 
 
 def test_catalog_function_cannot_be_called_during_source_evaluation(catalog):
