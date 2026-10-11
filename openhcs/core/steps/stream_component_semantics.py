@@ -366,7 +366,7 @@ class StreamViewerComponentMetadataProjector:
             if value is not None:
                 projected[component] = value
         return ViewerComponentMetadataNormalizer(
-            DeclaredAxes.active()
+            DeclaredAxes.of(AxisFamily.active().axes)
         ).normalize(projected)
 
     def component_value(

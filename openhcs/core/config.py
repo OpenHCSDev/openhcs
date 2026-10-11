@@ -263,7 +263,7 @@ class AxisRoleModeDisplayConfig(ViewerDisplayConfigABC):
         """Stream the axis declarations and this viewer's settings."""
 
         return {
-            DECLARED_AXES_FIELD: DeclaredAxes.active().to_wire(),
+            DECLARED_AXES_FIELD: DeclaredAxes.of(AxisFamily.active().axes).to_wire(),
             **self.settings_wire_mapping(),
         }
 
