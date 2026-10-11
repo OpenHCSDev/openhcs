@@ -51,7 +51,12 @@ from openhcs.core.runtime_execution_validation import (
     runtime_artifact_viewer_component_identity,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_declarations import (
+    FijiViewer,
+    NapariViewer,
+    ViewerFamily,
+    ViewerType,
+)
 from openhcs.runtime.fiji_macro_runtime import FijiMacroExecutionRequest
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageRequest,
@@ -75,20 +80,20 @@ _OFFICIAL30_NAPARI_PARAMS = tuple(
     for case_index, case in enumerate(_OFFICIAL30_CASES)
 )
 _OFFICIAL30_FIJI_VIEWER_VARIANTS = (
-    (ViewerType.FIJI,),
-    (ViewerType.FIJI, ViewerType.NAPARI),
+    (FijiViewer,),
+    (FijiViewer, NapariViewer),
 )
 _OFFICIAL30_FIJI_VIEWER_PARAMS = tuple(
     pytest.param(
-        viewer_types,
+        viewers,
         case_index,
         case,
         id=(
-            "+".join(viewer_type.value for viewer_type in viewer_types)
+            "+".join(viewer.wire_value for viewer in viewers)
             + f"-{case_index:02d}-{case.name}"
         ),
     )
-    for viewer_types in _OFFICIAL30_FIJI_VIEWER_VARIANTS
+    for viewers in _OFFICIAL30_FIJI_VIEWER_VARIANTS
     for case_index, case in enumerate(_OFFICIAL30_CASES)
 )
 _FIJI_FRESH_PROCESS_IMAGE_PROBE = r"""#@ String Directory
@@ -236,13 +241,13 @@ def _free_zmq_port_pair(
 
 
 def _registered_streaming_config_kwargs(
-    viewer_types: Sequence[ViewerType],
-    ports_by_viewer: Mapping[ViewerType, int],
+    viewers: Sequence[type[ViewerFamily]],
+    ports_by_viewer: Mapping[type[ViewerFamily], int],
 ) -> dict[str, StreamingConfig]:
     """Project one viewer selection through registered config owners."""
 
-    selected_viewers = set(viewer_types)
-    if len(selected_viewers) != len(viewer_types):
+    selected_viewers = set(viewers)
+    if len(selected_viewers) != len(viewers):
         raise ValueError("Official30 viewer variants require unique declarations.")
     if set(ports_by_viewer) != selected_viewers:
         raise ValueError(
@@ -250,8 +255,8 @@ def _registered_streaming_config_kwargs(
         )
 
     config_kwargs: dict[str, StreamingConfig] = {}
-    for viewer_type, config_type in StreamingConfig.__registry__.items():
-        enabled = viewer_type in selected_viewers
+    for viewer, config_type in StreamingConfig.__registry__.items():
+        enabled = viewer in selected_viewers
         init_kwargs: dict[str, object] = {
             "enabled": enabled,
             "persistent": enabled,
@@ -259,10 +264,10 @@ def _registered_streaming_config_kwargs(
         if enabled:
             init_kwargs.update(
                 host="127.0.0.1",
-                port=ports_by_viewer[viewer_type],
+                port=ports_by_viewer[viewer],
                 transport_mode=TransportMode.TCP,
             )
-        config_kwargs[viewer_type.family.config_key] = config_type(**init_kwargs)
+        config_kwargs[viewer.config_key] = config_type(**init_kwargs)
 
     if selected_viewers - set(StreamingConfig.__registry__):
         raise ValueError("Official30 viewer variant selected an unregistered config.")
@@ -563,13 +568,13 @@ def test_official30_fiji_variants_project_registered_viewer_configs() -> None:
         partition_filter_config=PartitionFilterConfig(partition_filter=1)
     )
 
-    for viewer_types in _OFFICIAL30_FIJI_VIEWER_VARIANTS:
+    for viewers in _OFFICIAL30_FIJI_VIEWER_VARIANTS:
         ports_by_viewer = {
-            viewer_type: 20_000 + index * 100
-            for index, viewer_type in enumerate(viewer_types)
+            viewer: 20_000 + index * 100
+            for index, viewer in enumerate(viewers)
         }
         configs = _registered_streaming_config_kwargs(
-            viewer_types,
+            viewers,
             ports_by_viewer,
         )
         variant_config = GlobalPipelineConfig(
@@ -585,11 +590,11 @@ def test_official30_fiji_variants_project_registered_viewer_configs() -> None:
             if field.name not in registered_keys
         )
         assert {
-            config.viewer_family.viewer_type() for config in configs.values() if config.enabled
-        } == set(viewer_types)
+            config.viewer_family for config in configs.values() if config.enabled
+        } == set(viewers)
         assert all(config.persistent is config.enabled for config in configs.values())
         assert {
-            config.viewer_family.viewer_type(): config.port
+            config.viewer_family: config.port
             for config in configs.values()
             if config.enabled
         } == ports_by_viewer
@@ -742,12 +747,12 @@ def test_official30_nonpersistent_napari_isolated_per_case(
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    ("viewer_types", "case_index", "case"),
+    ("viewers", "case_index", "case"),
     _OFFICIAL30_FIJI_VIEWER_PARAMS,
 )
 def test_official30_persistent_fiji_variants_isolated_per_case(
     tmp_path: Path,
-    viewer_types: tuple[ViewerType, ...],
+    viewers: tuple[type[ViewerFamily], ...],
     case_index: int,
     case: CellProfilerComparisonCase,
 ) -> None:
@@ -760,14 +765,14 @@ def test_official30_persistent_fiji_variants_isolated_per_case(
         transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
     )
     ports_by_viewer = {
-        viewer_type: _free_zmq_port_pair(
+        viewer: _free_zmq_port_pair(
             excluded_ports,
             transport_mode=TransportMode.TCP,
         )
-        for viewer_type in viewer_types
+        for viewer in viewers
     }
     streaming_configs = _registered_streaming_config_kwargs(
-        viewer_types,
+        viewers,
         ports_by_viewer,
     )
     global_config = GlobalPipelineConfig(
@@ -775,15 +780,15 @@ def test_official30_persistent_fiji_variants_isolated_per_case(
         **streaming_configs,
     )
     endpoints = {
-        viewer_type.value: ViewerRuntimeEndpoint(
-            streaming_configs[viewer_type.family.config_key]
+        viewer.wire_value: ViewerRuntimeEndpoint(
+            streaming_configs[viewer.config_key]
             .viewer_runtime_config()
             .transport_endpoint,
             OPENHCS_ZMQ_CONFIG,
         )
-        for viewer_type in viewer_types
+        for viewer in viewers
     }
-    variant_id = "+".join(viewer_type.value for viewer_type in viewer_types)
+    variant_id = "+".join(viewer.wire_value for viewer in viewers)
     case_output_root = tmp_path / variant_id / f"case_{case_index:02d}"
     macro_path = tmp_path / f"{variant_id}_fresh_process_probe.ijm"
     macro_path.write_text(_FIJI_FRESH_PROCESS_IMAGE_PROBE, encoding="utf-8")
@@ -821,18 +826,18 @@ def test_official30_persistent_fiji_variants_isolated_per_case(
             assert (case_output_root / "summary.csv").is_file()
 
             runtime_observation = _runtime_observation(observations[0])
-            for viewer_type in viewer_types:
-                config = streaming_configs[viewer_type.family.config_key]
-                if viewer_type is ViewerType.NAPARI:
+            for viewer in viewers:
+                config = streaming_configs[viewer.config_key]
+                if viewer is NapariViewer:
                     _assert_live_napari_state(config, runtime_observation)
-                elif viewer_type is ViewerType.FIJI:
+                elif viewer is FijiViewer:
                     _assert_fiji_fresh_process_image(
                         config=config,
                         macro_path=macro_path,
                     )
                 else:
                     raise AssertionError(
-                        f"Unhandled registered Official30 viewer {viewer_type.name!r}."
+                        f"Unhandled registered Official30 viewer {viewer.display_name!r}."
                     )
         except Exception as error:
             failures.append(
