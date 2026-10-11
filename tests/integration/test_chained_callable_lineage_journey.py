@@ -153,7 +153,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
         image_plan, labels_plan, rows_plan = invocation.artifact_output_plans
         records = []
         for plan in (image_plan, labels_plan, rows_plan):
-            [record] = context.runtime_value_store.find_matching(
+            [record] = results.executed_contexts["A01"].runtime_value_store.find_matching(
                 RuntimeArtifactQuery.from_output_plan(
                     plan, axis_id="A01", backend="memory",
                     group_key=plan.group_scope.select_runtime_key(

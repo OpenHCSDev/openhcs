@@ -304,7 +304,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         ),
     )
     assert results["A01"].is_success(), results["A01"].error_message
-    store = context.runtime_value_store
+    store = results.executed_contexts["A01"].runtime_value_store
     (primary_record,) = store.find(name="Nuclei", axis_id="A01")
     (secondary_record,) = store.find(name="Cells", axis_id="A01")
     source_metadata = primary_record.data.metadata

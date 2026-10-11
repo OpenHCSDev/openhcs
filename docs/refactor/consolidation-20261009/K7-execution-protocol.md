@@ -19,21 +19,59 @@ Re-measured at this head. G7 replaced part of K7 (see Already done); the other t
 3. **`ProcessingContext` mixes compile-time and execution-time state** (`core/context/processing_context.py:64`, 324 lines, 258 references in 45 production files). One mutable object carries the compiler's facts (`step_plans`, `axis_id`, `filemanager`, sequential combinations, visualizers, axis filters) and the executor's (`runtime_value_store` and four runtime caches, `completed_step_outputs`, `execution_runtime`, `debug_event_sink`, the per-step value scope). The phase is a flag: `_is_frozen`, checked by `is_frozen()` in 6 compiler stages (`compiler.py:252,536,660,738,775,800`) and in `worker_execution.py:1473`. The compiled context is pickled to workers with empty runtime stores, executed in place, and its stores cleared afterwards (`worker_execution.py:1357`). `compiler.py:227` sets `context.visualizer_config`, an attribute nothing declares or reads.
 4. **`ExecutionResult` is a longhand union** (`orchestrator/execution_result.py:190`): an `ExecutionStatus` enum plus `failed_combination` and `error_message` Optionals meaningful only for some statuses, three `is_*` predicates, and three constructors that restate the field defaults. `RuntimeObservationMode` (same file) is an enum whose members' behaviour is written as `if self is …` branches (rule 1a).
 
-## Target
+## Target (as built)
 
-- **Scope variants.** `ComponentGroupScope` is an ABC with `UngroupedScope`, and `GroupedScope` (holds `component`) with `DynamicGroupScope` and `StaticGroupScope` (holds `keys`). Each variant owns `runtime_keys`, `contains_runtime_key`, `contains_scope`, `resolve_runtime_key`, `select_runtime_key`, `excludes`, `output_lineage_scope` and the other questions consumers asked through predicates. `ComponentGroupScope.of(keys, component)` is the one constructor from raw values. The predicates and `from_raw` are deleted.
-- **Plans hold a scope.** `ArtifactPlan.group_scope` is a field; `group_keys`/`group_component` and every unpack/re-pack are deleted.
-- **Two compositions.** `RuntimeValue.compose(values)` and `RuntimeValue.compose_groups(values, producer_scope: GroupedScope)`; kinds override `compose_runtime_groups` where reconstruction differs. The `producer_group_scope` parameter is deleted.
-- **Phase types.** `ProcessingContext` is the base carrying compile facts. `CompilingContext` is the only mutable one (`inject_plan`, `freeze() -> CompiledContext`); `CompiledContext` is immutable and is what bundles and workers carry; `ExecutingContext(CompiledContext)` adds the runtime stores, caches, debug sink, lane runtime and completed outputs, and is built per execution by `CompiledContext.executing(...)`. `_is_frozen`, `is_frozen()`, the six compiler checks and `visualizer_config` are deleted.
-- **One result family.** `ExecutionResult` ABC with `ExecutionSucceeded`, `ExecutionFailed` (owns `error_message`, `failed_combination`) and `ExecutionCancelled` (owns `error_message`); `ExecutionStatus` and the `is_*` predicates are deleted. `RuntimeObservationMode` becomes a family whose members own `retain_records`.
+- **Scope variants** (`core/component_group_scope.py`). `ComponentGroupScope` is an ABC: `UngroupedScope`; `GroupedScope` (holds `component`) with `DynamicGroupScope`, `StaticGroupScope` (two or more keys) and `SingleKeyScope` (exactly one). Each variant owns `runtime_keys`, `candidate_keys`, `contains_runtime_key`, `contains_scope`, `resolve_runtime_key`, `select_runtime_key`, `single_key`, `excludes`, `selectable_from`, `owned_by`, `admits_record_key`, `value_for_plane`, `may_supply_key`, `shared_invocation_scope` and `output_lineage_scope`. `as_grouped()` yields the typed grouped scope (a non-`None` component) where a caller acts only on grouped scopes; `has_compiled_keys` and `names_several_keys` are declared per variant. `ComponentGroupScope.of(keys, component)` is the one reader of the raw spelling. Deleted: the six predicates, `from_raw`, `ungrouped()`, `dynamic()`, `PathPlannerGroupScope` (its union moved to `ComponentGroupScope.union_compatible`; `output_groups_for` and `missing_from` had no caller), and the seven "lost its component" checks the types now make impossible.
+- **Plans hold a scope.** `ArtifactPlan.group_scope` is a field. Deleted: `group_keys`, `group_component`, `group_scope()`, `ArtifactInputPlan.producer_group_scope()`, `single_group_key`, `has_dynamic_group_scope`; `relation_scope(component)` replaces `PathPlannerGroupScope.relation_scope_from_plan`.
+- **Two compositions.** `RuntimeValue.compose(values)` and `RuntimeValue.compose_groups(values, producer_scope: GroupedScope)`; kinds implement `compose_runtime_values` and, where rebuilding the group axis differs (image, object labels, object lineage), `compose_runtime_groups`. The `producer_group_scope` parameter is deleted.
+- **Phase types** (`core/context/processing_context.py`). `ProcessingContext` is the base (`require_axis_id`, `require_parameter_name`). `CompilingContext` is the only mutable phase; `freeze()` returns a `CompiledContext`, which rejects every attribute assignment and is what bundles, transport and workers carry. `CompiledContext.executing(lane)` starts one execution: `ExecutingContext` adds the runtime value store, the four runtime caches, the debug sink, the lane runtime, completed outputs and the per-step value scope, and still rejects assignment to compiled facts. A worker lane builds one per compiled context it executes; the parent builds one per compiled context per `execute_compiled_bundle` call, merges worker observations into it, runs dataset-scoped steps and post-execute hooks on it, and returns them as `BundleExecutionResults.executed_contexts` (the ZMQ observation export reads them there, not from the bundle). Deleted: `_is_frozen`, `is_frozen()`, the six compiler checks and the worker check, `bind_execution_runtime`, `reset_completed_step_outputs`, `inject_plan`, `visualizer_config` (always `None`) and the `core.context` re-export.
+- **One result family** (`core/orchestrator/execution_result.py`). `ExecutionResult` ABC with `ExecutionSucceeded`, and `ExecutionStopped` (owns `error_message`, `failed_combination`, `progress_phase`, `progress_status`, `at_combination`) with `ExecutionFailed` and `ExecutionCancelled` (`stops_lane`). Deleted: `ExecutionStatus`, `is_error`, `is_cancelled`, the three constructors, and `ZMQExecutionAxisOutcome` (the outcome export stores `result.without_runtime_observation()`; schema version 5). `RuntimeObservationMode` is a family: `OmitRuntimeRecords`, `MergeAllRuntimeRecords`, `MergeDatasetInputRecords` (E1's names), each owning `retain_records`.
+
+Production (Python under `openhcs/`): see the PR status line. The net is small because three families replace three encodings one for one; the deletions are the predicates, re-packs and checks, the additions are the variant classes.
+
+## Deletion certificates
+
+| Deleted | Certificate |
+|---|---|
+| `is_ungrouped`/`is_grouped`/`is_dynamic`/`is_static`/`has_single_static_key`/`require_single_static_key`, `from_raw`, `ungrouped()`, `dynamic()` | **derived** (the variant classes and `ComponentGroupScope.of`) |
+| "lost its component" `RuntimeError`s (7), `ArtifactInputProjectionPlan` re-normalisation | **derived** (`GroupedScope.component` is required by construction) |
+| `ArtifactPlan.group_keys`/`group_component`, `group_scope()`, `producer_group_scope()`, `single_group_key`, `has_dynamic_group_scope` | **derived** (the `group_scope` field) |
+| `PathPlannerGroupScope.output_groups_for`, `.missing_from` | **unused** |
+| `producer_group_scope` parameter of `compose`/`compose_runtime_values` | **derived** (`compose_groups`/`compose_runtime_groups`) |
+| `ProcessingContext._is_frozen`, `is_frozen()`, 6 compiler checks, the worker "not frozen" check | **derived** (`CompilingContext`/`CompiledContext` types) |
+| `bind_execution_runtime`, `reset_completed_step_outputs` | **derived** (`CompiledContext.executing(lane)` builds a fresh execution) |
+| `CompilingContext.inject_plan` | **unused** |
+| `context.visualizer_config` and the `vis_config` argument at the one call | **derived** (it was always `None`, the parameter's default) |
+| `ExecutionStatus`, `is_error`, `is_cancelled`, `ExecutionResult.success/error/cancelled` | **derived** (the result subclasses) |
+| `ZMQExecutionAxisOutcome` | **derived** (`ExecutionResult.without_runtime_observation`) |
+| `RuntimeObservationMode.from_parent_requirement` | **unused** |
+| `openhcs.core.context.ProcessingContext` re-export | **contract** (no re-exports) |
+
+**Tests-only** (behaviour the interface admits that no test exercises):
+- `ComponentGroupScope.of` removes duplicate keys and reads an empty key tuple as "no named keys"; `from_raw` kept duplicates and rejected an empty tuple. No producer of duplicate or empty keys is tested.
+- `RuntimeArtifactInput.records` no longer special-cases an ungrouped producer; the general path selects the same record. A relation that declares a complete-producer selection on an ungrouped producer now runs the declaration check it previously skipped.
+- `ArtifactInputProjectionPlan.validate_storage_plan` raises one message for every out-of-scope selection (three before).
+- Runtime caches (`runtime_image_stack_cache`, pattern-discovery, source-binding, output-identity) now live for one execution of a compiled context. Before, in-process lanes and repeated executions of one bundle shared them through the compiled context. Reuse across executions of one bundle is untested; correctness does not depend on it, timing might.
+- Thread and inline lanes no longer execute on the parent's context object; they get their own `ExecutingContext` like process lanes, and only returned observations reach the parent. Code that read a parent context's store mid-execution from another thread is untested (none found).
+- A cancelled or failed axis reports `type(result).__name__` in `require_success` and export messages (`ExecutionFailed: …`), not `error: …`.
+
+## Reassigned / found outside this surface
+
+| Item | Evidence | Belongs to |
+|---|---|---|
+| `NamedSourceBinding.input_plan(group_keys=, group_component=)` has no caller and names the deleted plan fields | `core/source_bindings.py:1298` | E1 (owns the file in #1203): delete |
+| Annotations `ProcessingContext` on functions that read `execution_runtime` | `processing/materialization/core.py`, `path_scopes.py` | K8: annotate `ExecutingContext` |
+| `RuntimeExecutionAxisScope(component=None, value=None)` packs "no group coordinate" the same way the scope did | `core/component_group_scope.py` | not assigned; for the session lead |
+| E1 (#1203) also converts `ExecutionStatus` and `RuntimeObservationMode`; this surface uses E1's mode names and replaces the status family with result subclasses | `execution_result.py` | whichever merges second resolves in favour of the result family |
+| `PipelineOrchestrator.execute_compiled_bundle(runtime_observation_mode=None)` derives the mode when `None` | `orchestrator.py:765` | G7 follow-up, not assigned |
 
 ## Guards
 
-`tests/unit/test_k7_execution_protocol_guards.py`: no production read of the deleted scope predicates or `from_raw`; no `group_keys`/`group_component` plan fields; no `producer_group_scope` parameter; no `is_frozen`/`_is_frozen`; no `ExecutionStatus` in `execution_result.py`; the scope, context and result families are exactly the declared members.
+`tests/unit/test_k7_execution_protocol_guards.py`: none of the deleted names exists in `openhcs/`; the scope, context-phase, result and observation-mode families are exactly the declared members; `ArtifactPlan` has `group_scope` and neither old field; each scope variant reads back from its raw spelling and pickles; each context phase carries only its own state and compiled facts cannot be reassigned; stopped results own their message and combination.
 
 ## Tests
 
-Touched tests take the new constructors and types. Run: the guards; the unit test files that import the changed modules (one process each); official30 parity (30/30).
+Tests take the new constructors (`tests/context_support.py` builds phase contexts without the compiler). Deleted assertions were on structure only: that a transport context shares the runtime store, that the passed context object was the one executed and cleared. Run: the guards; 191 unit test files that touch the changed modules; `test_main` disk direct and ZMQ; official30 parity.
 
 ## New-case experiments
 
