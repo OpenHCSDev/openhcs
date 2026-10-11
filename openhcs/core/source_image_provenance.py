@@ -127,6 +127,18 @@ class SourceImageIdentity:
         return self.path is not None or self.component_metadata is not None
 
     @property
+    def filter_paths(self) -> tuple[str, ...]:
+        """Store-owned paths that source filters match.
+
+        A virtual workspace path names the plane; the stored source paths it
+        was admitted from are what a FILE filter selects.
+        """
+        stored = SourceMetadataFields.source_filter_paths(self.component_metadata or {})
+        if stored:
+            return stored
+        return () if self.path is None else (self.path,)
+
+    @property
     def filename_extension(self) -> str | None:
         """Project the declared source filename fact, never a format default."""
         if self.component_metadata is None:
