@@ -233,11 +233,14 @@ jobs:
           context.doneCurrent()
           PY
 
+      # 11.6k tests no longer fit the 45-minute budget in one process; files
+      # are isolated per worker (--dist loadfile), as local verification runs.
       - name: Run unit tests
         run: >-
           xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24 +extension GLX"
           python scripts/run_installed_tests.py --coverage --repo-root "$GITHUB_WORKSPACE" --
           tests/unit tests/core -p no:randomly -vv --tb=short
+          -n 3 --dist loadfile
           -o faulthandler_timeout=120
           --cov-report=
 
