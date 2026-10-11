@@ -66,10 +66,7 @@ def test_public_rescale_preserves_one_source_plane_through_stream_binding(method
     invocation = _compile_public_step(step)
     contract = replace(
         invocation.contract,
-        metadata=replace(
-            invocation.contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     pixels = np.arange(20, dtype=np.float32).reshape(4, 5)
     metadata = ImagePayloadMetadata(

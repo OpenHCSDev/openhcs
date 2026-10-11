@@ -14,8 +14,9 @@ import pytest
 from arraybridge import ArrayPayload
 
 import openhcs.core.callable_contract as contract_module
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.callable_contract import (
-    CallableContract, CallableImportIdentity, CallableMetadata, CallableProjection,
+    CallableContract, CallableImportIdentity, CallableDeclaration, CallableProjection,
     attach_callable_contract_metadata, attach_processing_prepare,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
@@ -90,7 +91,7 @@ def test_prepared_composition_default_survives_transport_without_introspection(
     contract = CallableContract.from_prepared_callable(unannotated_composed_echo)
     reference = ImportableFunctionReference(
         import_identity=CallableImportIdentity.from_callable(unannotated_composed_echo),
-        composite_key="test:unannotated_composed_echo", metadata=contract.metadata,
+        composite_key="test:unannotated_composed_echo", declaration=contract.declaration,
     )
     restored = CallableContract.from_callable(serializer.loads(serializer.dumps(reference)))
     def forbidden(*args, **kwargs):
@@ -176,8 +177,8 @@ def test_authored_compilation_prepares_before_signature_and_refreshes_each_compi
         raw.__annotations__["image"] = desired_annotations.pop(0)
 
     monkeypatch.setattr(CallablePreparation, "prepare", prepare)
-    first = NormalizedFunctionGroup.from_pattern("group", raw).items[0].contract
-    second = NormalizedFunctionGroup.from_pattern("group", raw).items[0].contract
+    first = NormalizedFunctionGroup.from_chain("group", (raw,)).items[0].contract
+    second = NormalizedFunctionGroup.from_chain("group", (raw,)).items[0].contract
     assert first.canonical_parameter_annotations["image"] is ArrayPayload
     assert second.canonical_parameter_annotations["image"] is np.ndarray
     assert FunctionContractAttribute.canonical_signature not in vars(raw)
@@ -187,14 +188,14 @@ def test_authored_preparation_precedes_metadata_validation(monkeypatch):
     def raw(image: np.ndarray):
         return image
     events = []
-    original = CallableMetadata.from_projection.__func__
+    original = CallableDeclaration.from_namespace.__func__
 
-    def validate(cls, projection):
+    def validate(cls, namespace, owner):
         assert events == ["prepared"]
-        return original(cls, projection)
+        return original(cls, namespace, owner)
 
     monkeypatch.setattr(CallablePreparation, "prepare", lambda self: events.append("prepared"))
-    monkeypatch.setattr(CallableMetadata, "from_projection", classmethod(validate))
+    monkeypatch.setattr(CallableDeclaration, "from_namespace", classmethod(validate))
     contract = CallableContract.from_prepared_callable(raw)
     assert contract.canonical_parameter_annotations["image"] is np.ndarray
 
@@ -204,7 +205,7 @@ def test_unprepared_function_reference_compilation_reads_prepared_live_declarati
         import_identity=CallableImportIdentity.from_callable(raw_numeric),
         composite_key="test:raw_numeric",
     )
-    contract = NormalizedFunctionGroup.from_pattern("group", reference).items[0].contract
+    contract = NormalizedFunctionGroup.from_chain("group", (reference,)).items[0].contract
     assert contract.func is reference
     assert contract.canonical_parameter_annotations["image"] is np.ndarray
     assert fake_preparation.call_count == 1
@@ -213,19 +214,19 @@ def test_unprepared_function_reference_compilation_reads_prepared_live_declarati
 @pytest.mark.parametrize("serializer", [pickle, cloudpickle])
 def test_prepared_signature_metadata_namespace_and_reference_transport(serializer, fake_preparation):
     contract = CallableContract.from_prepared_callable(raw_numeric)
-    metadata = contract.metadata
+    metadata = contract.declaration
 
     def proxy(image):
         return image
 
     proxy.__dict__.update(metadata.as_namespace())
-    assert CallableMetadata.from_callable(proxy).canonical_signature == metadata.canonical_signature
+    assert CallableContract.from_callable(proxy).prepared_canonical_signature == metadata.prepared_canonical_signature
     reference = ImportableFunctionReference(
         import_identity=CallableImportIdentity.from_callable(raw_numeric),
-        composite_key="test:raw_numeric", metadata=metadata,
+        composite_key="test:raw_numeric", declaration=metadata,
     )
     restored = serializer.loads(serializer.dumps(reference))
-    assert restored.metadata.canonical_signature == metadata.canonical_signature
+    assert restored.declaration.prepared_canonical_signature == metadata.prepared_canonical_signature
     restored_contract = CallableContract.from_callable(restored)
     assert restored_contract.canonical_parameter_annotations["image"] is np.ndarray
     assert restored_contract.canonical_signature.parameters["scale"].default == 2.0
@@ -236,7 +237,7 @@ def test_compiled_raw_projection_never_queries_signature_or_annotations(monkeypa
     contract = CallableContract.from_prepared_callable(raw_numeric)
     reference = ImportableFunctionReference(
         import_identity=CallableImportIdentity.from_callable(raw_numeric),
-        composite_key="test:raw_numeric", metadata=contract.metadata,
+        composite_key="test:raw_numeric", declaration=contract.declaration,
     )
     restored = CallableContract.from_callable(pickle.loads(pickle.dumps(reference)))
     def forbidden(*args, **kwargs):
@@ -286,7 +287,7 @@ def test_malformed_signature_declaration_is_rejected():
         return image
     raw.__dict__[FunctionContractAttribute.canonical_signature] = "not a signature"
     with pytest.raises(TypeError, match="inspect.Signature"):
-        CallableMetadata.from_callable(raw)
+        CallableContract.from_callable(raw).declaration
 
 
 def test_exact_raw_default_filter_and_type_views_refresh_with_library_snapshot():
@@ -347,9 +348,9 @@ def test_distinct_authored_runtime_signature_transport_and_new_compilation_refre
     first = CallableContract.from_prepared_callable(wrapper)
     assert "injected" in first.canonical_signature.parameters
     assert "injected" not in first.raw_runtime_signature.parameters
-    assert first.metadata.raw_runtime_signature is not None
-    restored = pickle.loads(pickle.dumps(first.metadata))
-    assert restored.raw_runtime_signature == first.raw_runtime_signature
+    assert first.prepared_runtime_signature is not None
+    restored = pickle.loads(pickle.dumps(first.declaration))
+    assert restored.prepared_runtime_signature == first.raw_runtime_signature
     assert restored.as_namespace()[FunctionContractAttribute.raw_runtime_signature] == first.raw_runtime_signature
     assert FunctionContractAttribute.canonical_signature not in vars(raw)
     assert FunctionContractAttribute.canonical_signature not in vars(wrapper)
@@ -372,7 +373,7 @@ def test_distinct_targets_own_signatures_even_when_layouts_match_without_compari
     def wrapper(*args, **kwargs):
         return raw(*args, **kwargs)
     contract = CallableContract.from_prepared_callable(wrapper)
-    assert contract.metadata.raw_runtime_signature is not None
+    assert contract.prepared_runtime_signature is not None
     assert contract.raw_runtime_signature is not contract.canonical_signature
     assert contract.raw_runtime_signature.parameters["values"].default is default
     raw.__defaults__ = ("new raw default",)
@@ -383,7 +384,7 @@ def test_distinct_targets_own_signatures_even_when_layouts_match_without_compari
 
 def test_same_actual_target_shares_canonical_signature(fake_preparation):
     contract = CallableContract.from_prepared_callable(raw_numeric)
-    assert contract.metadata.raw_runtime_signature is None
+    assert contract.prepared_runtime_signature is None
     assert contract.raw_runtime_signature is contract.canonical_signature
 
 
@@ -425,7 +426,11 @@ def test_compiled_input_places_named_bundle_once_before_cpu_identity_shortcut(mo
         return original(value, **destination)
 
     monkeypatch.setattr(ImageOutputBundle, "compose", observed)
-    invocation = compile_function_pattern(gaussian_blur, {}, {}).default_group.invocations[0]
+    invocation = compile_function_pattern(
+        admitted_graph(gaussian_blur),
+        {},
+        {},
+    ).default_group.invocations[0]
     placed = invocation.convert_input(source, "numpy")
     invocation.main_flow_call_argument(placed)
     placed.data
@@ -450,7 +455,11 @@ def test_compiled_input_reuses_produced_stack_realization_without_copy():
         tuple(np.full((3, 4), value, dtype=np.float32) for value in (1, 2)),
         memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     )
-    invocation = compile_function_pattern(gaussian_blur, {}, {}).default_group.invocations[0]
+    invocation = compile_function_pattern(
+        admitted_graph(gaussian_blur),
+        {},
+        {},
+    ).default_group.invocations[0]
     placed = invocation.convert_input(source, "numpy")
     assert invocation.convert_input(source, "numpy") is placed
     assert placed.data is source.data

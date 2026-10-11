@@ -11,13 +11,13 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from types import ModuleType
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from python_introspect import Enableable
 
 from openhcs.core.callable_contract import (
     CallableImportIdentity,
-    CallableMetadata,
+    CallableDeclaration,
     FunctionStepExecutionScope,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     )
 
 logger = logging.getLogger(__name__)
+DeclarationT = TypeVar("DeclarationT", bound=CallableDeclaration)
 
 
 class ModuleExportFunctionSource:
@@ -47,11 +48,13 @@ class ModuleExportFunctionSource:
 
 @dataclass(frozen=True, kw_only=True)
 class FunctionReference(PythonSourceLiteral, ABC):
-    """Picklable callable identity plus explicit compiler metadata."""
+    """Picklable callable identity plus its callable declaration."""
 
     import_identity: CallableImportIdentity
     composite_key: str
-    metadata: CallableMetadata = dataclasses.field(default_factory=CallableMetadata)
+    declaration: CallableDeclaration = dataclasses.field(
+        default_factory=CallableDeclaration
+    )
     declaration_revision: str | None = None
 
     @property
@@ -253,43 +256,29 @@ class FunctionReferenceTransportAuthority:
 
     @classmethod
     def reference_function_spec(cls, func_value: object) -> object:
-        """Convert callable function-pattern leaves to FunctionReference."""
-        if callable(func_value):
-            return cls.function_reference(func_value)
+        """Convert callable function-pattern leaves to FunctionReference.
 
-        if isinstance(func_value, tuple):
-            if len(func_value) != 2:
-                raise TypeError(
-                    "Function-pattern tuple leaves must contain exactly two "
-                    "members: (callable, kwargs)."
-                )
-            func, params = func_value
+        Disabled leaves are dropped and the enabled flag is removed.
+        """
+        from openhcs.core.function_patterns import (
+            AuthoredFunctionPattern,
+            NormalizedFunctionPattern,
+        )
 
-            if isinstance(params, dict) and Enableable.disabled_in(params):
+        if isinstance(func_value, NormalizedFunctionPattern):
+            return func_value
+
+        def reference_leaf(leaf, func, params):
+            func_ref = cls.function_reference(func) if callable(func) else func
+            if params is None:
+                return func_ref
+            if Enableable.disabled_in(params):
                 return None
-
-            if isinstance(params, dict) and Enableable.parameter_in(params):
+            if Enableable.parameter_in(params):
                 params = Enableable.without_parameter(params)
+            return (func_ref, params)
 
-            if callable(func):
-                func_ref = cls.reference_function_spec(func)
-                return (func_ref, params)
-            return (func, params)
-
-        if isinstance(func_value, list):
-            referenced = [cls.reference_function_spec(item) for item in func_value]
-            return [item for item in referenced if item is not None]
-
-        if isinstance(func_value, dict):
-            referenced = {
-                key: cls.reference_function_spec(value)
-                for key, value in func_value.items()
-            }
-            return {
-                key: value for key, value in referenced.items() if value is not None
-            }
-
-        return func_value
+        return AuthoredFunctionPattern.map_leaves(func_value, reference_leaf)
 
     @classmethod
     def function_reference(cls, func: Callable) -> FunctionReference:
@@ -304,14 +293,14 @@ class FunctionReferenceTransportAuthority:
             # Compiler metadata belongs to the decorated callable, not whichever
             # reference happened to populate the runtime cache first.
             return dataclasses.replace(
-                resolved_reference, metadata=cls.callable_metadata(func)
+                resolved_reference, declaration=cls.callable_declaration(func)
             )
 
         registry_match = RegistryService.declared_metadata_for_callable(func)
         if registry_match is not None:
             return cls._registry_reference(
                 registry_match,
-                metadata=cls.callable_metadata(registry_match[1].func),
+                declaration=cls.callable_declaration(registry_match[1].func),
             )
 
         original_func = inspect.unwrap(func)
@@ -322,14 +311,14 @@ class FunctionReferenceTransportAuthority:
         if imported is func:
             return cls._python_reference(
                 func,
-                metadata=cls.callable_metadata(func),
+                declaration=cls.callable_declaration(func),
             )
 
         registry_match = RegistryService.metadata_for_callable(func)
         if registry_match is not None:
             return cls._registry_reference(
                 registry_match,
-                metadata=cls.callable_metadata(registry_match[1].func),
+                declaration=cls.callable_declaration(registry_match[1].func),
             )
 
         raise RuntimeError(
@@ -339,25 +328,25 @@ class FunctionReferenceTransportAuthority:
         )
 
     @classmethod
-    def callable_metadata(cls, func: Callable) -> CallableMetadata:
-        """Return compiler transport metadata declared by the callable."""
+    def callable_declaration(cls, func: Callable) -> CallableDeclaration:
+        """Return the transport declaration of ``func``."""
         from openhcs.core.callable_contract import CallableContract
 
-        return cls.reference_metadata(CallableContract.from_callable(func).metadata)
+        return cls.with_raw_function_reference(
+            CallableContract.from_callable(func).declaration
+        )
 
     @classmethod
-    def reference_metadata(cls, metadata: CallableMetadata) -> CallableMetadata:
-        """Reference captured compiler metadata without recapturing its ABI.
-
-        Compiled invocations can carry metadata captured from a resolved runtime
-        wrapper, rather than metadata constructed with a FunctionReference.
-        Both use the same raw-callable declaration owner.
-        """
-        raw_processing_function = metadata.raw_processing_function
+    def with_raw_function_reference(cls, declaration: DeclarationT) -> DeclarationT:
+        """Carry a raw processing callable as its transport reference."""
+        raw_processing_function = declaration.raw_processing_function
         if not callable(raw_processing_function):
-            return metadata
-        return metadata.with_raw_processing_function(
-            cls.raw_processing_function_reference(raw_processing_function)
+            return declaration
+        return dataclasses.replace(
+            declaration,
+            raw_processing_function=cls.raw_processing_function_reference(
+                raw_processing_function
+            ),
         )
 
     @classmethod
@@ -377,15 +366,15 @@ class FunctionReferenceTransportAuthority:
             original_func.__module__,
             original_func.__name__,
         )
-        empty_metadata = CallableMetadata()
+        empty_declaration = CallableDeclaration()
         if imported is func:
-            return cls._python_reference(func, metadata=empty_metadata)
+            return cls._python_reference(func, declaration=empty_declaration)
 
         registry_match = RegistryService.metadata_for_callable(func)
         if registry_match is not None:
             return cls._registry_reference(
                 registry_match,
-                metadata=empty_metadata,
+                declaration=empty_declaration,
             )
 
         raise RuntimeError(
@@ -398,16 +387,16 @@ class FunctionReferenceTransportAuthority:
     def _registry_reference(
         registry_match: tuple[str, "FunctionMetadata"],
         *,
-        metadata: CallableMetadata,
+        declaration: CallableDeclaration,
     ) -> FunctionReference:
         """Build one reference to a registry-owned callable."""
         composite_key, function_metadata = registry_match
         if (
-            metadata.processing_contract is None
-            and metadata.execution_scope is FunctionStepExecutionScope.AXIS
+            declaration.processing_contract is None
+            and declaration.execution_scope is FunctionStepExecutionScope.AXIS
         ):
-            metadata = dataclasses.replace(
-                metadata,
+            declaration = dataclasses.replace(
+                declaration,
                 processing_contract=function_metadata.contract,
             )
         identity = function_metadata.import_identity
@@ -422,7 +411,7 @@ class FunctionReferenceTransportAuthority:
         return reference_type(
             import_identity=identity,
             composite_key=composite_key,
-            metadata=metadata,
+            declaration=declaration,
             declaration_revision=FunctionReferenceTransportAuthority.declaration_revision(
                 function_metadata.func
             ),
@@ -432,7 +421,7 @@ class FunctionReferenceTransportAuthority:
     def _python_reference(
         func: Callable,
         *,
-        metadata: CallableMetadata,
+        declaration: CallableDeclaration,
     ) -> FunctionReference:
         """Build one reference to an importable Python callable."""
         original_func = inspect.unwrap(func)
@@ -441,7 +430,7 @@ class FunctionReferenceTransportAuthority:
             composite_key=(
                 f"python:{original_func.__module__}:{original_func.__name__}"
             ),
-            metadata=metadata,
+            declaration=declaration,
             declaration_revision=FunctionReferenceTransportAuthority.declaration_revision(
                 func
             ),

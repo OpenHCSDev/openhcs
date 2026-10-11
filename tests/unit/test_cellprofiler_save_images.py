@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -880,7 +881,12 @@ def test_save_images_adapter_free_compile_binds_selected_runtime_image() -> None
     materialized = module_contract.artifact_outputs[0]
 
     compiled = compile_function_pattern(
-        save_images,
+        admitted_graph(
+            save_images,
+            invocation_contract_provider=lambda _invocation, _context: (
+            InvocationContractPlan(module_contract)
+        ),
+        ),
         {
             plan.ref(): plan
             for plan in (
@@ -901,9 +907,6 @@ def test_save_images_adapter_free_compile_binds_selected_runtime_image() -> None
                 ),
             )
         },
-        invocation_contract_provider=lambda _invocation, _context: (
-            InvocationContractPlan(module_contract)
-        ),
     )
     invocation = next(compiled.iter_invocations())
 

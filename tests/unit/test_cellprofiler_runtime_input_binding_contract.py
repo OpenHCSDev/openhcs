@@ -57,7 +57,7 @@ def _contract(func, inputs: tuple[ArtifactSpec, ...] = ()) -> CallableContract:
     return replace(
         contract,
         module_name="RuntimeInputBinding",
-        metadata=replace(contract.metadata, artifact_inputs=inputs),
+        artifact_inputs=inputs,
     )
 
 
@@ -651,7 +651,7 @@ def test_callable_abi_consumes_callable_contract_without_partition_wrapper() -> 
     contract = _contract(process, (source,))
     contract = replace(
         contract,
-        metadata=replace(contract.metadata, artifact_outputs=(output,)),
+        artifact_outputs=(output,),
     )
 
     CellProfilerModuleCallableABI.validate_callable_artifact_abi(process, contract)
@@ -678,10 +678,7 @@ def test_callable_abi_keeps_main_flow_artifacts_in_declared_slots() -> None:
         contract = _contract(func, (source,))
         contract = replace(
             contract,
-            metadata=replace(
-                contract.metadata,
-                artifact_outputs=(measurements, labels, *diagnostics),
-            ),
+            artifact_outputs=(measurements, labels, *diagnostics),
         )
 
         CellProfilerModuleCallableABI.validate_callable_artifact_abi(func, contract)

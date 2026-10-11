@@ -13,6 +13,7 @@ import pytest
 from objectstate import ObjectState, ObjectStateRegistry
 from python_introspect import Enableable
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.config import (
     CompilationDebugConfig,
@@ -213,13 +214,15 @@ def test_callable_compilation_resolves_authored_and_default_declared_paths() -> 
     resolver, _filemanager = _resolver()
 
     compiled_default = compile_function_pattern(
-        _path_callable,
+        admitted_graph(_path_callable),
         {},
         {},
         path_resolver=resolver,
     )
     compiled_authored = compile_function_pattern(
-        (_path_callable, {"template_path": Path("templates/template.tif")}),
+        admitted_graph(
+            (_path_callable, {"template_path": Path("templates/template.tif")}),
+        ),
         {},
         {},
         path_resolver=resolver,
@@ -235,7 +238,7 @@ def test_callable_compilation_resolves_authored_and_default_declared_paths() -> 
 
     captured = CallableContract.from_callable(_path_callable).with_prepared_signature()
     restored = pickle.loads(pickle.dumps(captured))
-    assert restored.metadata.canonical_signature == captured.metadata.canonical_signature
+    assert restored.prepared_canonical_signature == captured.prepared_canonical_signature
     assert restored.declared_path_parameters == captured.declared_path_parameters
     assert restored.resolve_declared_paths({}, resolver) == {"template_path": expected}
 
@@ -265,7 +268,7 @@ def test_path_declarations_follow_live_or_captured_signature_epoch() -> None:
 
 def test_relative_declared_path_without_compilation_scope_fails_loudly() -> None:
     with pytest.raises(ValueError, match="CompilationPathResolver"):
-        compile_function_pattern(_path_callable, {}, {})
+        compile_function_pattern(admitted_graph(_path_callable), {}, {})
 
 
 def test_config_annotations_delegate_to_nominal_path_declarations() -> None:

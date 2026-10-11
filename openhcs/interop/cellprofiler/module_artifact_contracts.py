@@ -961,6 +961,15 @@ class CellProfilerModuleArtifactContracts:
         return artifact_inputs.specs
 
     @classmethod
+    def repeated_return_slots(
+        cls,
+        artifact_inputs: ArtifactSpecCollection,
+    ) -> tuple[int, ...]:
+        """Return slots that refill an output an earlier slot declares (none)."""
+        del cls, artifact_inputs
+        return ()
+
+    @classmethod
     def finalize_artifact_contract_outputs(
         cls,
         module: "ModuleBlock",
@@ -1203,11 +1212,9 @@ class CellProfilerModuleArtifactContracts:
         artifact_outputs.unique(conflict_context="module artifact output")
         resolved = replace(
             callable_contract,
-            metadata=replace(
-                callable_contract.metadata,
-                artifact_inputs=artifact_inputs.specs,
-                artifact_outputs=artifact_outputs.specs,
-            ),
+            artifact_inputs=artifact_inputs,
+            artifact_outputs=artifact_outputs,
+            repeated_return_slots=cls.repeated_return_slots(artifact_inputs),
         )
         resolved.validate_artifact_relation_refs(owner_name=cls.__name__)
         return resolved

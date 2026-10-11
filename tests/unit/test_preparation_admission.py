@@ -235,7 +235,7 @@ def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded
         contract=CallableContract.from_prepared_callable(dynamic),
     )
     assert events == ["selected", "unselected", "dynamic"]
-    assert dynamic_invocation.contract.metadata.canonical_signature is not None
+    assert dynamic_invocation.contract.prepared_canonical_signature is not None
     for _ in range(2):
         invocation.contract.resolve_runtime_callable()
         dynamic_invocation.contract.resolve_runtime_callable()

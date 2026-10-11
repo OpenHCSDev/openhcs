@@ -833,11 +833,7 @@ def _compiled_callable_contract(
     raw_contract = CallableContract.from_callable(func)
     return replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_inputs=artifact_inputs,
-            artifact_outputs=artifact_outputs,
-        ),
+        artifact_inputs=artifact_inputs, artifact_outputs=artifact_outputs,
     )
 
 
@@ -850,10 +846,7 @@ def _executor_for_contract(
 ) -> CellProfilerModuleExecutor:
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     available_plans = adapter.request.artifact_outputs
     invocation_key = FunctionInvocationKey(func.__name__, DEFAULT_GROUP_KEY, 0)

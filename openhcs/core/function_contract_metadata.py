@@ -21,10 +21,10 @@ class FunctionContractAttribute:
         "__openhcs_runtime_image_execution_mode__"
     )
     callable_request_binding: ClassVar[str] = "__openhcs_callable_request_binding__"
-    special_inputs: ClassVar[str] = "__special_inputs__"
     artifact_input_parameter_names: ClassVar[str] = (
         "__openhcs_artifact_input_parameter_names__"
     )
+    repeated_return_slots: ClassVar[str] = "__openhcs_repeated_return_slots__"
     runtime_bound_parameters: ClassVar[str] = "__openhcs_runtime_bound_parameters__"
     runtime_context_parameter: ClassVar[str] = "__openhcs_runtime_context_parameter__"
     required_axis_roles: ClassVar[str] = "__openhcs_required_axis_roles__"

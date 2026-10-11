@@ -1016,7 +1016,7 @@ def test_warm_reference_and_helper_reject_source_edits_outside_manager(
     [function] = manager.register_from_code(code)
     reference = FunctionReferenceTransportAuthority.function_reference(function)
     assert reference.resolve() is reference.resolve()
-    owner = reference.metadata.artifact_outputs[1].measurement_feature_owner
+    owner = reference.declaration.artifact_outputs[1].measurement_feature_owner
     owner_payload = pickle.dumps(owner)
     assert pickle.loads(owner_payload) is owner
 

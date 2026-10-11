@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactMeasurementSubjectRelation,
     ArtifactOutputPlan,
@@ -96,7 +97,7 @@ def test_artifact_only_group_declares_no_source_anchor_bindings() -> None:
     def consume(*, payload):
         return payload
 
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
     source_binding_plan = CompiledSourceBindingPlan(
         bindings=(
             NamedSourceBinding(
@@ -246,7 +247,7 @@ def _filter_source_anchors(
         )
     }
     compiled_pattern = compile_function_pattern(
-        measure_images,
+        admitted_graph(measure_images),
         {},
         output_plans,
     )
@@ -418,7 +419,7 @@ def test_grouped_branches_project_their_exact_contract_bindings(
         return image
 
     compiled_pattern = compile_function_pattern(
-        {"2": measure_er, "1": measure_hoechst},
+        admitted_graph({"2": measure_er, "1": measure_hoechst}),
         {},
         {},
     )
@@ -493,7 +494,7 @@ def test_alias_only_step_binding_uses_virtual_projection_for_template_anchor(
             component=Microscopy.Channel,
         ),
         compiled_function_pattern=compile_function_pattern(
-            identify_bodies,
+            admitted_graph(identify_bodies),
             {},
             {},
         ),
@@ -604,7 +605,7 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
             component=Microscopy.Site,
         ),
         compiled_function_pattern=compile_function_pattern(
-            align_source_set,
+            admitted_graph(align_source_set),
             {},
             {output_plan.ref(): output_plan},
         ),
@@ -728,7 +729,7 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
             component=Microscopy.Site,
         ),
         compiled_function_pattern=compile_function_pattern(
-            align_source_set,
+            admitted_graph(align_source_set),
             {},
             output_plans,
         ),

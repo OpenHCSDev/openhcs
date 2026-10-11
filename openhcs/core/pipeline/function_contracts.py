@@ -27,7 +27,7 @@ from openhcs.core.artifacts import (
     SpecialArtifactType,
 )
 from openhcs.core.callable_contract import (
-    CallableMetadata,
+    CallableDeclaration,
     FunctionStepExecutionScope,
     ImagePayloadConsumption,
 )
@@ -74,7 +74,7 @@ def runtime_context_parameter(parameter_name: str | None) -> Callable[[F], F]:
 def resolved_callable_type_hints(func: Callable) -> dict[str, Any]:
     """Return the callable's resolved type contract or propagate its error."""
 
-    signature = CallableMetadata.prepared_callable_signature(func)
+    signature = CallableDeclaration.prepared_callable_signature(func)
     if signature is None:
         return get_type_hints(func)
     from typing import _strip_annotations
@@ -137,7 +137,7 @@ def resolved_callable_parameter(
 ) -> inspect.Parameter:
     """Return one callable parameter with its runtime type hint resolved."""
 
-    signature = CallableMetadata.callable_signature(func)
+    signature = CallableDeclaration.callable_signature(func)
     parameter = signature.parameters.get(parameter_name)
     if parameter is None:
         raise ValueError(
@@ -391,7 +391,7 @@ def _special_parameter_names(
 
 
 def special_inputs(*parameter_names: str) -> Callable[[F], F]:
-    """Declare runtime-managed non-image parameters for compatibility loaders."""
+    """Declare parameters whose values come from artifact inputs."""
 
     normalized = _special_parameter_names(
         parameter_names,
@@ -399,7 +399,7 @@ def special_inputs(*parameter_names: str) -> Callable[[F], F]:
     )
 
     def decorator(func: F) -> F:
-        vars(func)[FunctionContractAttribute.special_inputs] = normalized
+        vars(func)[FunctionContractAttribute.artifact_input_parameter_names] = normalized
         add_parameter_exclusions(func, normalized)
         return func
 

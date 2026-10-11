@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -168,7 +169,7 @@ def _compiled_pattern_with_input_edges(
     def consume(image, *, labels=None, illumination_function=None):
         return image
 
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
     invocation = compiled.default_group.invocations[0]
     edges = []
     for input_index, (spec, source_scope_id) in enumerate(specs_with_scopes):
@@ -317,7 +318,7 @@ def test_compiled_main_flow_edge_selects_exact_producer_identity(
     def consume(image):
         return image
 
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
     invocation = compiled.default_group.invocations[0]
     invocation = invocation.with_artifact_input_edges(
         (
@@ -405,7 +406,11 @@ def test_storage_backed_primary_input_selects_exact_lifecycle_output(
     def calculate_illumination(image):
         return image
 
-    compiled = compile_function_pattern(calculate_illumination, {}, {})
+    compiled = compile_function_pattern(
+        admitted_graph(calculate_illumination),
+        {},
+        {},
+    )
     invocation = compiled.default_group.invocations[0]
     storage_plan = ArtifactInputPlan(
         name=source.name,

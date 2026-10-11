@@ -522,6 +522,12 @@ class ArtifactGraph:
     def empty(cls) -> "ArtifactGraph":
         return cls()
 
+    def validate_invocation_declarations(self) -> None:
+        """Admit each invocation's artifact parameters and output declarations."""
+        for item in () if self.pattern is None else self.pattern.iter_items():
+            item.contract.validate_artifact_input_parameter_bindings()
+            self.invocation_declarations[item.key].validate_artifact_output_declarations()
+
     @property
     def outputs(self) -> OrderedDict[ArtifactSpecRef, ArtifactSpec]:
         """Produced artifact specs in first declaration order."""
@@ -704,7 +710,11 @@ def extract_artifact_declarations(
         contract_plan = invocation_contract_provider(invocation, step_context)
         contract_plans[invocation.key] = contract_plan
         if contract_plan is not None:
-            invocation = replace(invocation, contract=contract_plan.contract)
+            invocation = replace(
+                invocation,
+                contract=contract_plan.contract,
+                kwargs=contract_plan.consume_authored_kwargs(invocation, step_context),
+            )
         resolved_items[invocation.key] = invocation
         artifact_selector = declaration_provider(invocation, step_context)
         declarations[invocation.key] = artifact_selector

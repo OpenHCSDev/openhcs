@@ -139,10 +139,7 @@ def _compiled_image_quality_contract() -> CallableContract:
     contract = CallableContract.from_callable(measure_image_quality)
     return replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            artifact_outputs=(measurement_spec,),
-        ),
+        artifact_outputs=(measurement_spec,),
     )
 
 
@@ -438,10 +435,7 @@ def test_measure_image_quality_table_uses_row_qualified_source_inputs() -> None:
     contract = _compiled_image_quality_contract()
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            artifact_inputs=source_specs,
-        ),
+        artifact_inputs=source_specs,
     )
     _output, records = CellProfilerFunctionContractExecutor().execute(
         contract,

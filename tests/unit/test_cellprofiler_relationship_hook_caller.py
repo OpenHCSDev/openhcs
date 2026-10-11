@@ -122,11 +122,7 @@ def test_relate_objects_hook_uses_the_exact_declared_relationship_spec() -> None
     )
     callable_contract = replace(
         callable_contract,
-        metadata=replace(
-            callable_contract.metadata,
-            artifact_inputs=(parent, child),
-            artifact_outputs=(parent_relationship, child_relationship),
-        ),
+        artifact_inputs=(parent, child), artifact_outputs=(parent_relationship, child_relationship),
     )
 
     assert RelateObjectsModule.relationship_distance_measurements_apply(
@@ -181,11 +177,7 @@ def test_relationship_rows_pass_callable_contract_and_exact_output_entry() -> No
     callable_contract = CallableContract.from_callable(relate_objects)
     callable_contract = replace(
         callable_contract,
-        metadata=replace(
-            callable_contract.metadata,
-            artifact_inputs=(parent, child),
-            artifact_outputs=(relationship_spec,),
-        ),
+        artifact_inputs=(parent, child), artifact_outputs=(relationship_spec,),
     )
     relationship = ObjectRelationship.from_payload(
         name=relationship_spec.name,

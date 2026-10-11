@@ -208,11 +208,7 @@ def _abi_contract(
     return replace(
         raw_contract,
         module_name="Synthetic",
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_inputs=(context_source, *inputs),
-            artifact_outputs=contextual_outputs,
-        ),
+        artifact_inputs=(context_source, *inputs), artifact_outputs=contextual_outputs,
     )
 
 
@@ -830,7 +826,7 @@ def test_object_colocalization_rank_provider_is_runtime_bound() -> None:
     parameter = parameters["rank_provider"]
 
     assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
-    assert CallableContract.from_callable(measure_colocalization_objects).runtime_bound_parameters == ("rank_provider", "threshold_mask_outputs", "costes_threshold_batch")
+    assert CallableContract.from_callable(measure_colocalization_objects).runtime_bound_parameter_names == ("rank_provider", "threshold_mask_outputs", "costes_threshold_batch")
     contract = CallableContract.from_callable(measure_colocalization_objects)
     assert contract.config_bound_parameter_names == ("dtype_config",)
     assert parameters["dtype_config"].annotation is LazyDtypeConfig
@@ -842,7 +838,7 @@ def test_object_colocalization_rank_provider_is_runtime_bound() -> None:
     )
     costes_declaration = next(
         declaration
-        for declaration in contract.metadata.runtime_bound_parameters
+        for declaration in contract.runtime_bound_parameter_types
         if declaration.require_parameter_name() == "costes_threshold_batch"
     )
     assert costes_declaration.annotation_type is RuntimeSliceInvariantValue

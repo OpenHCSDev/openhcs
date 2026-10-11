@@ -799,8 +799,8 @@ class CellProfilerModule(
             )
         first = contract_values[0]
         canonical_callable = cls.require_callable(first.function_name)
-        expected_metadata = replace(
-            first.metadata,
+        expected_declaration = replace(
+            first.declaration,
             artifact_inputs=(),
             artifact_outputs=(),
         )
@@ -812,11 +812,11 @@ class CellProfilerModule(
                 )
             if (
                 replace(
-                    contract.metadata,
+                    contract.declaration,
                     artifact_inputs=(),
                     artifact_outputs=(),
                 )
-                != expected_metadata
+                != expected_declaration
             ):
                 raise ValueError(
                     f"{cls.__name__} dynamic callable contracts disagree outside "
@@ -855,14 +855,11 @@ class CellProfilerModule(
 
         return replace(
             first,
-            metadata=replace(
-                first.metadata,
-                artifact_inputs=combined_occurrences(
-                    contract.metadata.artifact_inputs for contract in contract_values
-                ),
-                artifact_outputs=combined_occurrences(
-                    contract.metadata.artifact_outputs for contract in contract_values
-                ),
+            artifact_inputs=combined_occurrences(
+                contract.artifact_inputs for contract in contract_values
+            ),
+            artifact_outputs=combined_occurrences(
+                contract.artifact_outputs for contract in contract_values
             ),
         )
 
@@ -908,11 +905,9 @@ class CellProfilerModule(
         combined = cls.combine_callable_contracts(contracts)
         resolved = replace(
             invocation.contract,
-            metadata=replace(
-                invocation.contract.metadata,
-                artifact_inputs=combined.metadata.artifact_inputs,
-                artifact_outputs=combined.metadata.artifact_outputs,
-            ),
+            artifact_inputs=combined.artifact_inputs,
+            artifact_outputs=combined.artifact_outputs,
+            repeated_return_slots=combined.repeated_return_slots,
         )
         return resolved, tuple(
             name for name in invocation.kwargs_dict if name in consumed_names

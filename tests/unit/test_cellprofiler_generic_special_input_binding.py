@@ -7,6 +7,7 @@ import inspect
 import numpy as np
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -100,7 +101,7 @@ def test_registered_module_artifact_parameters_are_exact_special_inputs() -> Non
                 if parameter_name in bound_parameters
             )
             special_parameters = CallableContract.from_callable(func).artifact_input_parameter_names
-            runtime_parameters = CallableContract.from_callable(func).runtime_bound_parameters
+            runtime_parameters = CallableContract.from_callable(func).runtime_bound_parameter_names
             bound_without_special = tuple(
                 parameter_name
                 for parameter_name in artifact_parameters
@@ -173,11 +174,13 @@ def _compile_public_step(step: FunctionStep):
         for index, spec in enumerate(output_specs)
     }
     compiled = compile_function_pattern(
-        step.func,
+        admitted_graph(
+            step.func,
+            invocation_contract_provider=provider,
+            step_context=step_context,
+        ),
         {},
         output_plans,
-        invocation_contract_provider=provider,
-        step_context=step_context,
     )
     compiled = PathPlannerArtifactStage(
         PathPlanner.__new__(PathPlanner)
@@ -203,7 +206,11 @@ def _compile_runtime_input_edges(func, plans: tuple[ArtifactInputPlan, ...]):
         raise ValueError(
             "One semantic ArtifactSpecRef cannot resolve to multiple storage plans."
         )
-    compiled = compile_function_pattern(func, plans_by_ref, {})
+    compiled = compile_function_pattern(
+        admitted_graph(func),
+        plans_by_ref,
+        {},
+    )
     return PathPlannerArtifactStage(
         PathPlanner.__new__(PathPlanner)
     ).compile_invocation_input_edges(

@@ -76,9 +76,7 @@ def test_preservation_annotation_cannot_create_missing_source_payload_axis(tmp_p
     producer = session.plans[0]
     (invocation,) = tuple(producer.compiled_function_pattern.iter_invocations())
     # A local counterexample only: do not mutate production callable/registry.
-    falsely_preserving = replace(invocation, contract=replace(invocation.contract, metadata=replace(
-        invocation.contract.metadata, payload_axis_transition=PreservedPayloadAxes(),
-    )))
+    falsely_preserving = replace(invocation, contract=replace(invocation.contract, payload_axis_transition=PreservedPayloadAxes()))
     session.plans[0] = replace(producer, compiled_function_pattern=CompiledFunctionPattern(
         groups=(CompiledFunctionGroup("default", (falsely_preserving,)),), is_grouped=False,
     ))

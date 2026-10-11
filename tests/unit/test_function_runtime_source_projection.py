@@ -1,4 +1,5 @@
 from openhcs.core.steps.abstract import StepExecutionObservation
+from tests.artifact_graphs import admitted_graph
 from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionRequest,
@@ -570,7 +571,9 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
             source_binding_plan=source_binding_plan,
         ),
         compiled_group=compile_function_pattern(
-            lambda image: image, {}, {}
+            admitted_graph(lambda image: image),
+            {},
+            {},
         ).default_group,
         pattern_group_info="fixture",
         component_index=0,
@@ -626,7 +629,11 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
         pipeline_position=0,
         variable_components=(),
         source_binding_plan=bindings,
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     context = SimpleNamespace(
         input_dir=tmp_path,
@@ -641,7 +648,9 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
         context=context,
         execution_plan=replace(plan, source_binding_plan=bindings),
         compiled_group=compile_function_pattern(
-            lambda image: image, {}, {}
+            admitted_graph(lambda image: image),
+            {},
+            {},
         ).default_group,
         pattern_group_info="fixture",
         component_index=0,
@@ -936,7 +945,11 @@ def test_step_output_manifest_scopes_previous_step_inputs(tmp_path: Path) -> Non
         ),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
 
@@ -1024,7 +1037,11 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
         ),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
 
@@ -1117,7 +1134,11 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
 
@@ -1213,7 +1234,11 @@ def test_step_output_manifest_uses_declared_artifact_producer_scope(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
 
@@ -1309,7 +1334,11 @@ def test_special_artifact_input_does_not_narrow_step_output_main_flow(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
     store.begin_step(producer)
@@ -1368,7 +1397,11 @@ def test_step_output_manifest_ignores_sidecar_artifact_for_anchor_filtering() ->
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
 
     assert StepOutputManifestStore().filter_to_producer_paths(
@@ -1397,7 +1430,11 @@ def test_step_output_manifest_preserves_pipeline_start_source_bound_anchor() -> 
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
 
     assert StepOutputManifestStore().filter_to_producer_paths(
@@ -1442,7 +1479,11 @@ def test_step_output_anchor_uses_compiler_owned_component_scope() -> None:
             ("0",),
             component=Microscopy.Channel,
         ),
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     grouped_patterns = {"2": ("A01_s{iii}_w2_z001_t001.tif",)}
     pattern_filter = _anchor_executor(
@@ -1466,7 +1507,7 @@ def test_step_output_dispatch_projects_producer_group_before_pattern_selection(
         return image
 
     compiled_pattern = compile_function_pattern(
-        {"2": identify_secondary},
+        admitted_graph({"2": identify_secondary}),
         {},
         {},
     )
@@ -1522,7 +1563,7 @@ def test_artifact_managed_dispatch_validates_producer_before_group_projection() 
         artifact_type=runtime_image.artifact_type,
     )
     compiled_pattern = compile_function_pattern(
-        identify_primary_objects,
+        admitted_graph(identify_primary_objects),
         {plan.ref(): plan for plan in (runtime_plan,)},
         {},
     )
@@ -1629,7 +1670,7 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
         ),
         execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Site),
         compiled_function_pattern=compile_function_pattern(
-            lambda image: image,
+            admitted_graph(lambda image: image),
             {},
             {},
         ),
@@ -1665,7 +1706,7 @@ def test_source_anchor_uses_compiler_owned_static_component_scope() -> None:
             component=Microscopy.Channel,
         ),
         compiled_function_pattern=compile_function_pattern(
-            lambda image: image,
+            admitted_graph(lambda image: image),
             {},
             {},
         ),
@@ -1747,7 +1788,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
             component=Microscopy.Channel,
         ),
         compiled_function_pattern=compile_function_pattern(
-            measure_source_set,
+            admitted_graph(measure_source_set),
             {},
             {plan.ref(): plan for plan in (measurement_plan,)},
         ),
@@ -1795,7 +1836,7 @@ def test_callable_contract_source_inputs_project_bindings_through_exact_ref_auth
         return image
 
     compiled_group = compile_function_pattern(
-        exact_source_input,
+        admitted_graph(exact_source_input),
         {},
         {},
     ).default_group
@@ -1852,7 +1893,7 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
         relations=output.relations,
     )
     compiled_pattern = compile_function_pattern(
-        {"3": save_image},
+        admitted_graph({"3": save_image}),
         {plan.ref(): plan for plan in (runtime_plan,)},
         {plan.ref(): plan for plan in (output_plan,)},
     )
@@ -1943,7 +1984,7 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
         return image
 
     compiled_pattern = compile_function_pattern(
-        {"1": exact_source_input},
+        admitted_graph({"1": exact_source_input}),
         {},
         {},
     )
@@ -2024,7 +2065,11 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
             ("1",),
             component=Microscopy.Channel,
         ),
-        compiled_function_pattern=compile_function_pattern(exact_source_input, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(exact_source_input),
+            {},
+            {},
+        ),
     )
     pattern_filter = _anchor_executor(
         plan=plan,
@@ -2074,7 +2119,7 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
             component=Microscopy.Channel,
         ),
         compiled_function_pattern=compile_function_pattern(
-            lambda image: image,
+            admitted_graph(lambda image: image),
             {},
             {},
         ),
@@ -2235,7 +2280,7 @@ def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
         match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
     )
     compiled_pattern = compile_function_pattern(
-        source_bound_module,
+        admitted_graph(source_bound_module),
         {},
         {
             plan.ref(): plan
@@ -2294,13 +2339,13 @@ def test_default_callable_runtime_scope_projects_bindings_to_selected_group() ->
             execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
             source_binding_plan=source_binding_plan,
             compiled_function_pattern=compile_function_pattern(
-                lambda image: image,
+                admitted_graph(lambda image: image),
                 {},
                 {},
             ),
         ),
         compiled_group=compile_function_pattern(
-            lambda image: image,
+            admitted_graph(lambda image: image),
             {},
             {},
         ).default_group,
@@ -2328,7 +2373,7 @@ def test_dict_callable_runtime_scope_projects_bindings_to_selected_group() -> No
         )
     )
     compiled_pattern = compile_function_pattern(
-        {"1": lambda image: image},
+        admitted_graph({"1": lambda image: image}),
         {},
         {},
     )
@@ -2371,7 +2416,7 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         )
     )
     compiled_pattern = compile_function_pattern(
-        lambda image: image,
+        admitted_graph(lambda image: image),
         {},
         {},
     )
@@ -2469,7 +2514,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
         return image
 
     compiled_pattern = compile_function_pattern(
-        consume_channel_source,
+        admitted_graph(consume_channel_source),
         {},
         output_plans,
     )
@@ -2597,7 +2642,9 @@ def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -
         source_step_id=0,
     )
     invocation = compile_function_pattern(
-        consume_original, {storage.ref(): storage}, {}
+        admitted_graph(consume_original),
+        {storage.ref(): storage},
+        {},
     ).default_group.invocations[0]
     (key,) = InvocationArtifactInputProjectionKey.for_input_count(invocation.key, 1)
     invocation = invocation.with_artifact_input_edges(
@@ -2626,7 +2673,9 @@ def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -
             source_binding_plan=bindings,
         ),
         compiled_group=compile_function_pattern(
-            consume_original, {storage.ref(): storage}, {}
+            admitted_graph(consume_original),
+            {storage.ref(): storage},
+            {},
         ).default_group,
         artifact_inputs={storage.ref(): storage},
         artifact_outputs={},
@@ -2697,14 +2746,14 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
 
     first_invocation = next(
         compile_function_pattern(
-            record_first_labels,
+            admitted_graph(record_first_labels),
             {},
             {first_plan.ref(): first_plan},
         ).iter_invocations()
     )
     second_invocation = next(
         compile_function_pattern(
-            record_second_labels,
+            admitted_graph(record_second_labels),
             {},
             {second_plan.ref(): second_plan},
         ).iter_invocations()
@@ -2792,7 +2841,11 @@ def test_invocation_source_artifact_owns_cross_component_runtime_binding_scope()
     def exact_source_input(image):
         return image
 
-    compiled_pattern = compile_function_pattern(exact_source_input, {}, {})
+    compiled_pattern = compile_function_pattern(
+        admitted_graph(exact_source_input),
+        {},
+        {},
+    )
     scope = PatternGroupExecutionScope(
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
@@ -2836,7 +2889,7 @@ def test_main_flow_input_owns_runtime_binding_scope_with_auxiliary_source() -> N
         return image
 
     compiled_pattern = compile_function_pattern(
-        main_flow_with_auxiliary_source,
+        admitted_graph(main_flow_with_auxiliary_source),
         {},
         {},
     )
@@ -2910,7 +2963,7 @@ def test_payload_provenance_excludes_auxiliary_binding_from_main_flow_scope() ->
         return image
 
     compiled_pattern = compile_function_pattern(
-        save_main_flow_with_source_prefix,
+        admitted_graph(save_main_flow_with_source_prefix),
         {},
         {},
     )
@@ -2947,7 +3000,11 @@ def test_payload_provenance_outranks_unrelated_artifact_execution_group() -> Non
             ),
         )
     )
-    compiled_pattern = compile_function_pattern(lambda image: image, {}, {})
+    compiled_pattern = compile_function_pattern(
+        admitted_graph(lambda image: image),
+        {},
+        {},
+    )
     scope = PatternGroupExecutionScope(
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
@@ -2995,7 +3052,7 @@ def test_payload_provenance_preserves_bindings_across_a_variable_stack_axis() ->
         return image
 
     compiled_pattern = compile_function_pattern(
-        consume_channel_stack,
+        admitted_graph(consume_channel_stack),
         {},
         {},
     )
@@ -3070,7 +3127,11 @@ def test_main_flow_source_scope_intersects_cross_component_invocation_inputs() -
     def consume_selected_channels(image):
         return image
 
-    compiled_pattern = compile_function_pattern(consume_selected_channels, {}, {})
+    compiled_pattern = compile_function_pattern(
+        admitted_graph(consume_selected_channels),
+        {},
+        {},
+    )
     invocation = compiled_pattern.default_group.invocations[0]
     invocation = invocation.with_artifact_input_edges(
         tuple(
@@ -3139,7 +3200,11 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
         del pixel_size
         return image
 
-    compiled_pattern = compile_function_pattern(measure_neurites, {}, {})
+    compiled_pattern = compile_function_pattern(
+        admitted_graph(measure_neurites),
+        {},
+        {},
+    )
     invocation = compiled_pattern.default_group.invocations[0]
     pixel_size_spec = invocation.contract.artifact_inputs[0]
     invocation = invocation.with_artifact_input_edges(
@@ -3315,7 +3380,7 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
         context=SimpleNamespace(),
         execution_plan=plan,
         compiled_group=compile_function_pattern(
-            lambda image: image,
+            admitted_graph(lambda image: image),
             {},
             {},
         ).default_group,
@@ -3411,7 +3476,7 @@ def test_grouped_main_flow_context_uses_component_selected_output_plan() -> None
         return image
 
     compiled_group = compile_function_pattern(
-        correct_illumination,
+        admitted_graph(correct_illumination),
         {},
         {plan.ref(): plan for plan in (corrected_stain_1, corrected_stain_2)},
     ).default_group
@@ -3460,7 +3525,7 @@ def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
         return image
 
     compiled_group = compile_function_pattern(
-        record_mixed_outputs,
+        admitted_graph(record_mixed_outputs),
         {},
         output_plans,
     ).default_group
@@ -3595,7 +3660,9 @@ def test_component_artifact_plans_reject_malformed_exact_plan_maps() -> None:
                 context=SimpleNamespace(),
                 execution_plan=step_plan,
                 compiled_group=compile_function_pattern(
-                    lambda image: image, {}, {}
+                    admitted_graph(lambda image: image),
+                    {},
+                    {},
                 ).default_group,
                 pattern_group_info="fixture",
                 component_index=0,
@@ -3608,7 +3675,11 @@ def test_grouped_runtime_scope_preserves_empty_source_binding_plan() -> None:
     from openhcs.core.steps.function_runtime import PatternGroupExecutionScope
 
     source_binding_plan = CompiledSourceBindingPlan.empty()
-    compiled_pattern = compile_function_pattern(lambda image: image, {}, {})
+    compiled_pattern = compile_function_pattern(
+        admitted_graph(lambda image: image),
+        {},
+        {},
+    )
     scope = PatternGroupExecutionScope(
         context=SimpleNamespace(),
         execution_plan=SimpleNamespace(
@@ -3659,7 +3730,7 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
         )
     )
     compiled_pattern = compile_function_pattern(
-        {"1": lambda image: image},
+        admitted_graph({"1": lambda image: image}),
         {},
         {},
     )
@@ -3772,7 +3843,9 @@ def test_alias_only_workspace_filter_excludes_unselected_source_and_orders_stack
             source_binding_plan=selected_plan,
         ),
         compiled_group=compile_function_pattern(
-            lambda image: image, {}, {}
+            admitted_graph(lambda image: image),
+            {},
+            {},
         ).default_group,
         pattern_group_info="fixture",
         component_index=0,
@@ -3849,7 +3922,9 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
             ),
         ),
         compiled_group=compile_function_pattern(
-            lambda image: image, {}, {}
+            admitted_graph(lambda image: image),
+            {},
+            {},
         ).default_group,
         pattern_group_info="fixture",
         component_index=0,
@@ -3901,7 +3976,9 @@ def test_step_output_load_filter_skips_source_binding_filter() -> None:
         execution_plan=plan,
         context=SimpleNamespace(),
         compiled_group=compile_function_pattern(
-            lambda image: image, {}, {}
+            admitted_graph(lambda image: image),
+            {},
+            {},
         ).default_group,
         pattern_group_info="fixture",
         component_index=0,
@@ -3920,7 +3997,11 @@ def test_empty_source_binding_plan_does_not_filter_runtime_inputs() -> None:
         PatternGroupExecutionRequest,
     )
 
-    compiled_pattern = compile_function_pattern(lambda image: image, {}, {})
+    compiled_pattern = compile_function_pattern(
+        admitted_graph(lambda image: image),
+        {},
+        {},
+    )
     plan = SimpleNamespace(
         axis_id="A01",
         execution_group_scope=ComponentGroupScope.ungrouped(),
@@ -4048,7 +4129,11 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         ),
     )
 
-    compiled_pattern = compile_function_pattern(lambda image: image, {}, {})
+    compiled_pattern = compile_function_pattern(
+        admitted_graph(lambda image: image),
+        {},
+        {},
+    )
     plan = CompiledStepPlan(
         step_index=0,
         step_name="PipelineStart",
@@ -4163,7 +4248,11 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
         input_dir=tmp_path,
         input_memory_type="numpy",
         variable_components=(Microscopy.ZIndex,),
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=0,
             source_step_scope_id="producer",
@@ -4327,7 +4416,11 @@ def test_step_output_manifest_does_not_filter_main_flow_by_artifact_input(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
 
@@ -4403,7 +4496,11 @@ def test_step_output_manifest_filters_declared_main_flow_contract_identity(
     def identify_stain_1(image):
         return image
 
-    compiled_pattern = compile_function_pattern(identify_stain_1, {}, {})
+    compiled_pattern = compile_function_pattern(
+        admitted_graph(identify_stain_1),
+        {},
+        {},
+    )
     invocation = compiled_pattern.default_group.invocations[0]
     invocation = invocation.with_artifact_input_edges(
         (
@@ -4505,7 +4602,11 @@ def test_step_output_manifest_updates_selected_slot_and_preserves_other_componen
         ),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
     store.begin_step(producer)
@@ -4600,7 +4701,11 @@ def test_step_output_manifest_collapsed_domain_replaces_inherited_components(
         ),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(func, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(func),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
     store.begin_step(producer)
@@ -4671,7 +4776,11 @@ def test_step_output_manifest_new_output_address_replaces_inherited_components(
         ),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
         artifact_inputs={},
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
     store.begin_step(producer)
@@ -4756,7 +4865,7 @@ def test_step_output_manifest_grouped_subset_replaces_inherited_components(
         source_binding_plan=CompiledSourceBindingPlan.empty(),
         artifact_inputs={},
         compiled_function_pattern=compile_function_pattern(
-            {"2": lambda image: image},
+            admitted_graph({"2": lambda image: image}),
             {},
             {},
         ),
@@ -4833,7 +4942,11 @@ def test_step_output_manifest_preserves_anonymous_side_effect_main_flow(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
 
@@ -4894,7 +5007,11 @@ def test_step_output_manifest_accepts_source_anchor_for_qualified_output(
                 ),
             )
         },
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     store = StepOutputManifestStore()
     identity = FunctionOutputIdentity(
@@ -5554,7 +5671,11 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
             runtime_function_output_identity_cache=FunctionOutputIdentityCache(),
             runtime_image_stack_cache=RuntimeImageStackCache(),
         ),
-        compiled_group=compile_function_pattern(func, {}, output_plans).default_group,
+        compiled_group=compile_function_pattern(
+            admitted_graph(func),
+            {},
+            output_plans,
+        ).default_group,
         execution_plan=CompiledStepPlan(
             step_index=0,
             axis_id="A01",
@@ -5630,7 +5751,11 @@ def qualified_producer_manifest(tmp_path):
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=0, source_step_scope_id="producer"
         ),
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
     records = []
     for plane in (1, 2):
@@ -5828,7 +5953,11 @@ def test_producer_loader_validates_ambiguity_before_cache(
         axis_id="A01",
         input_dir=Path("/memory"),
         input_memory_type="numpy",
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=0,
             source_step_scope_id="producer",

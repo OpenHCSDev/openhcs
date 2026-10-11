@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactInputProjectionPlan,
     ArtifactInputPlan,
@@ -33,11 +34,7 @@ from openhcs.core.function_patterns import (
     RuntimeParameterBinding,
     RuntimeInvocationDomain,
     compile_function_pattern,
-    inject_artifact_input_values,
-    inject_kwargs_into_pattern,
-    iter_enabled_function_invocations,
     normalize_function_pattern,
-    strip_disabled_functions,
 )
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
@@ -110,7 +107,7 @@ def test_invocation_keys_preserve_callable_positions_for_list_patterns():
         (second, {"sigma": 1}),
     ]
 
-    keys = [invocation.key for invocation in iter_enabled_function_invocations(pattern)]
+    keys = [invocation.key for invocation in normalize_function_pattern(pattern).iter_items()]
 
     assert keys == [
         FunctionInvocationKey("first", "default", 0),
@@ -130,7 +127,7 @@ def test_invocation_positions_are_renumbered_per_dict_group():
         ],
     }
 
-    keys = [invocation.key for invocation in iter_enabled_function_invocations(pattern)]
+    keys = [invocation.key for invocation in normalize_function_pattern(pattern).iter_items()]
 
     assert keys == [
         FunctionInvocationKey("first", "DAPI", 0),
@@ -198,7 +195,11 @@ def test_artifact_graph_accepts_invocation_aware_declaration_provider():
 
 def test_artifact_graph_distinguishes_same_name_producer_types():
     labels_spec = ArtifactSpec.output("objects", ObjectLabelsArtifactType)
-    measurements_spec = ArtifactSpec.output("objects", MeasurementsArtifactType)
+    measurements_spec = ArtifactSpec.output(
+        "objects",
+        MeasurementsArtifactType,
+        relations=(ArtifactMeasurementSubjectRelation(),),
+    )
 
     @artifact_outputs(labels_spec)
     def identify(image):
@@ -369,7 +370,7 @@ def test_compiled_invocation_uses_exact_artifact_input_edge_parameter():
 
     positions_plan = ArtifactInputPlan("positions", "/tmp/positions.pkl")
     compiled = compile_function_pattern(
-        assemble,
+        admitted_graph(assemble),
         {positions_plan.ref(): positions_plan},
         {},
     )
@@ -420,7 +421,8 @@ def test_compile_function_pattern_builds_invocation_source_of_truth():
     )
 
     compiled = compile_function_pattern(
-        {
+        admitted_graph(
+            {
             "DAPI": [
                 (
                     consume_positions,
@@ -434,6 +436,7 @@ def test_compile_function_pattern_builds_invocation_source_of_truth():
                 measure,
             ]
         },
+        ),
         {positions_input.ref(): positions_input},
         {
             positions_output.ref(): positions_output,
@@ -477,16 +480,18 @@ def test_compile_function_pattern_uses_invocation_aware_declarations():
     nuclei_output = ArtifactOutputPlan("nuclei", "/tmp/nuclei.pkl")
     cells_output = ArtifactOutputPlan("cells", "/tmp/cells.pkl")
     compiled = compile_function_pattern(
-        [
+        admitted_graph(
+            [
             (configurable, {"output_name": "nuclei"}),
             (configurable, {"output_name": "cells"}),
         ],
+            declaration_provider=declarations_for,
+        ),
         {},
         {
             nuclei_output.ref(): nuclei_output,
             cells_output.ref(): cells_output,
         },
-        declaration_provider=declarations_for,
     )
 
     assert [
@@ -520,7 +525,7 @@ def test_callable_artifact_metadata_drives_graph_and_compiled_output_plan():
     )
     graph = extract_artifact_declarations(identify_primary_objects)
     compiled = compile_function_pattern(
-        identify_primary_objects,
+        admitted_graph(identify_primary_objects),
         {dna_plan.ref(): dna_plan},
         {nuclei_plan.ref(): nuclei_plan},
     )
@@ -576,7 +581,7 @@ def test_compiled_group_declares_managed_artifact_input_domain():
         artifact_type=ImageArtifactType,
     )
     compiled = compile_function_pattern(
-        apply_illumination,
+        admitted_graph(apply_illumination),
         {illum_plan.ref(): illum_plan},
         {},
     )
@@ -620,7 +625,9 @@ def test_stored_context_input_beside_main_flow_image_keeps_every_anchor():
         artifact_type=SpecialArtifactType,
     )
     compiled = compile_function_pattern(
-        assemble, {positions_plan.ref(): positions_plan}, {},
+        admitted_graph(assemble),
+        {positions_plan.ref(): positions_plan},
+        {},
     )
     invocation = compiled.default_group.invocations[0]
     invocation = invocation.with_artifact_input_edges((
@@ -648,7 +655,11 @@ def test_source_bound_input_edge_keeps_source_anchored_runtime_domain():
     def consume_source(image):
         return image
 
-    compiled = compile_function_pattern(consume_source, {}, {})
+    compiled = compile_function_pattern(
+        admitted_graph(consume_source),
+        {},
+        {},
+    )
     invocation = compiled.default_group.invocations[0]
     edge = InvocationArtifactInputEdgePlan(
         key=InvocationArtifactInputProjectionKey(
@@ -673,7 +684,7 @@ def test_special_input_without_main_flow_edge_preserves_implicit_image_flow() ->
         del pixel_size
         return image
 
-    compiled = compile_function_pattern(measure, {}, {})
+    compiled = compile_function_pattern(admitted_graph(measure), {}, {})
 
     assert compiled.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) is None
 
@@ -685,7 +696,11 @@ def test_unstored_positional_artifact_does_not_override_compiled_main_flow() -> 
     def consume_source(image):
         return image
 
-    compiled = compile_function_pattern(consume_source, {}, {})
+    compiled = compile_function_pattern(
+        admitted_graph(consume_source),
+        {},
+        {},
+    )
     invocation = compiled.default_group.invocations[0]
     edge = InvocationArtifactInputEdgePlan(
         key=InvocationArtifactInputProjectionKey(
@@ -741,7 +756,7 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
         },
     )
     compiled = compile_function_pattern(
-        measure_channels,
+        admitted_graph(measure_channels),
         {},
         {output_plan.ref(): output_plan},
     )
@@ -862,7 +877,7 @@ def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() ->
         group_scope_sources_by_group={"1": (source.ref(),)},
     )
     invocation = compile_function_pattern(
-        measure_with_aggregate,
+        admitted_graph(measure_with_aggregate),
         {},
         {
             aggregate_plan.ref(): aggregate_plan,
@@ -944,7 +959,7 @@ def test_shared_output_plan_uses_each_invocation_declared_group_lineage() -> Non
         },
     )
     blue_invocation, green_invocation = compile_function_pattern(
-        [measure_blue, measure_green],
+        admitted_graph([measure_blue, measure_green]),
         {},
         {output_plan.ref(): output_plan},
     ).default_group.invocations
@@ -971,7 +986,7 @@ def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
     def consume(*, payload):
         return payload
 
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
 
     assert compiled.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) == ()
     from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -1081,7 +1096,7 @@ def test_adapter_managed_invocation_rejects_partial_component_inputs():
         second_plan.ref(): second_plan,
     }
     compiled = compile_function_pattern(
-        consume_mixed_inputs,
+        admitted_graph(consume_mixed_inputs),
         declared_inputs,
         {},
     )
@@ -1146,7 +1161,7 @@ def test_runtime_artifact_group_lineage_owns_mixed_input_invocation_domain():
         relations=saved.relations,
     )
     compiled = compile_function_pattern(
-        save_image,
+        admitted_graph(save_image),
         {runtime_plan.ref(): runtime_plan},
         {saved_plan.ref(): saved_plan},
     )
@@ -1199,7 +1214,7 @@ def test_adapter_managed_invocation_rejects_cross_component_input_loss():
         paths_by_group={"1": "/memory/current_channel__1.pkl"},
     )
     compiled = compile_function_pattern(
-        consume_cross_channel,
+        admitted_graph(consume_cross_channel),
         {
             cross_channel_plan.ref(): cross_channel_plan,
             current_channel_plan.ref(): current_channel_plan,
@@ -1265,7 +1280,7 @@ def test_adapter_managed_outputs_use_exact_compiled_output_plans():
         paths_by_group={"1": "/memory/w1_Measurements.pkl"},
     )
     compiled = compile_function_pattern(
-        runtime_recorded_outputs,
+        admitted_graph(runtime_recorded_outputs),
         {},
         {
             cells_output.ref(): cells_output,
@@ -1296,7 +1311,11 @@ def test_metadata_satisfied_input_without_compiled_edge_is_source_anchored():
     def apply_illumination(image, illum=None):
         return image
 
-    compiled = compile_function_pattern(apply_illumination, {}, {})
+    compiled = compile_function_pattern(
+        admitted_graph(apply_illumination),
+        {},
+        {},
+    )
 
     group = compiled.default_group
     assert group.invocations[0].contract.artifact_inputs.names() == ("illum",)
@@ -1309,7 +1328,11 @@ def test_metadata_satisfied_input_without_compiled_edge_is_source_anchored():
 
 def test_function_pattern_tuple_leaf_requires_exactly_two_members():
     with pytest.raises(TypeError, match="exactly two"):
-        compile_function_pattern((first, {"sigma": 1}, object()), {}, {})
+        compile_function_pattern(
+            admitted_graph((first, {"sigma": 1}, object())),
+            {},
+            {},
+        )
 
 
 def test_compile_function_pattern_preserves_runtime_context_and_adapter_declarations():
@@ -1324,7 +1347,7 @@ def test_compile_function_pattern_preserves_runtime_context_and_adapter_declarat
         return image
 
     compiled = compile_function_pattern(
-        (configurable, {"sigma": 1}),
+        admitted_graph((configurable, {"sigma": 1})),
         {},
         {},
     )
@@ -1358,7 +1381,7 @@ def test_adapter_free_inputs_bind_distinct_exact_artifact_parameters() -> None:
     )
 
     compiled = compile_function_pattern(
-        save,
+        admitted_graph(save),
         {
             first_plan.ref(): first_plan,
             second_plan.ref(): second_plan,
@@ -1423,7 +1446,7 @@ def test_compile_function_pattern_excludes_nominally_owned_parameters():
         artifact_type=ObjectLabelsArtifactType,
     )
     compiled = compile_function_pattern(
-        managed,
+        admitted_graph(managed),
         {labels_plan.ref(): labels_plan},
         {},
         runtime_parameter_bindings=(
@@ -1470,16 +1493,12 @@ def test_callable_contract_reads_runtime_adapter_from_metadata_namespace():
     assert contract.runtime_adapter.require_parameter_name() == "runtime"
 
 
-def test_inject_kwargs_rejects_three_member_tuple_leaf():
-    with pytest.raises(TypeError, match="exactly two"):
-        inject_kwargs_into_pattern(
-            (first, {"sigma": 1}, object()),
-            {"dtype_config": "inherited"},
-        )
-
-
 def test_compiled_function_pattern_filters_detected_groups_by_compiled_keys():
-    compiled = compile_function_pattern({"1": skipped}, {}, {})
+    compiled = compile_function_pattern(
+        admitted_graph({"1": skipped}),
+        {},
+        {},
+    )
 
     grouped = compiled.prepare_grouped_patterns(
         {1: ["site1"], "2": ["site2"]},
@@ -1502,7 +1521,7 @@ def test_artifact_managed_runtime_domain_uses_one_lifecycle_anchor():
 
 
 def test_ungrouped_compiled_function_pattern_preserves_grouped_source_patterns():
-    compiled = compile_function_pattern(skipped, {}, {})
+    compiled = compile_function_pattern(admitted_graph(skipped), {}, {})
     grouped_patterns = {
         "1": ["A01_s001_w1_z001_t001.tif"],
         "2": ["A01_s002_w1_z001_t001.tif"],
@@ -1670,21 +1689,17 @@ def test_artifact_spec_collection_unique_keys_by_full_ref():
         ArtifactSpecCollection((source_output, materialized_output)).unique()
 
 
-def test_strip_disabled_functions_removes_empty_pattern_branches():
+def test_normalization_drops_disabled_items_and_emptied_groups():
     pattern = {
         "DAPI": [first, (skipped, {"enabled": False})],
         "GFP": [(skipped, {"enabled": False})],
     }
 
-    assert strip_disabled_functions(pattern) == {"DAPI": [first]}
+    normalized = normalize_function_pattern(pattern)
 
-
-def test_inject_kwargs_into_pattern_preserves_user_kwargs_precedence():
-    pattern = [first, (second, {"dtype_config": "explicit", "sigma": 2})]
-
-    assert inject_kwargs_into_pattern(pattern, {"dtype_config": "inherited"}) == [
-        (first, {"dtype_config": "inherited"}),
-        (second, {"dtype_config": "explicit", "sigma": 2}),
+    assert normalized.source_group_keys == ("DAPI",)
+    assert [item.key for item in normalized.iter_items()] == [
+        FunctionInvocationKey("first", "DAPI", 0),
     ]
 
 
@@ -1701,7 +1716,9 @@ def test_compile_function_pattern_moves_runtime_config_kwargs_to_bindings():
     )
 
     compiled = compile_function_pattern(
-        (accepts_dtype_config, {"dtype_config": explicit_config, "sigma": 2}),
+        admitted_graph(
+            (accepts_dtype_config, {"dtype_config": explicit_config, "sigma": 2}),
+        ),
         {},
         {},
         runtime_parameter_bindings=(
@@ -1740,9 +1757,11 @@ def test_compile_function_pattern_keeps_undeclared_runtime_config_kwargs_user_ow
     )
 
     compiled = compile_function_pattern(
-        (
+        admitted_graph(
+            (
             accepts_user_dtype_config,
             {"dtype_config": explicit_config, "sigma": 2},
+        ),
         ),
         {},
         {},
@@ -1762,33 +1781,23 @@ def test_compile_function_pattern_keeps_undeclared_runtime_config_kwargs_user_ow
     assert invocation.runtime_parameter_bindings == ()
 
 
-def test_inject_artifact_input_values_only_targets_declared_inputs():
+def test_artifact_input_values_only_target_declared_inputs():
     @artifact_inputs("grid_dimensions")
     def needs_grid(image, grid_dimensions):
         return image
 
-    pattern = [first, (needs_grid, {"sigma": 2})]
+    pattern = normalize_function_pattern(
+        [first, (needs_grid, {"grid_dimensions": None, "sigma": 2})]
+    )
 
-    assert inject_artifact_input_values(
-        pattern,
+    injected = pattern.with_artifact_input_values(
         {"grid_dimensions": (3, 4), "unused": "ignored"},
-    ) == [
-        first,
-        (needs_grid, {"grid_dimensions": (3, 4), "sigma": 2}),
+    )
+
+    assert [item.kwargs_dict for item in injected.iter_items()] == [
+        {},
+        {"grid_dimensions": (3, 4), "sigma": 2},
     ]
-
-
-def test_inject_artifact_input_values_replaces_serialized_placeholders():
-    @artifact_inputs("grid_dimensions")
-    def needs_grid(image, grid_dimensions):
-        return image
-
-    pattern = (needs_grid, {"grid_dimensions": None, "sigma": 2})
-
-    assert inject_artifact_input_values(
-        pattern,
-        {"grid_dimensions": (3, 4)},
-    ) == (needs_grid, {"grid_dimensions": (3, 4), "sigma": 2})
 
 
 def test_artifact_binding_owner_does_not_erase_undeclared_raw_image_demand():
@@ -1799,7 +1808,7 @@ def test_artifact_binding_owner_does_not_erase_undeclared_raw_image_demand():
     def consume(image, *, runtime):
         return image
 
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
     invocation = compiled.default_group.invocations[0]
     edge = exact_input_edge(
         invocation, input_index=0, spec=source,
@@ -1824,7 +1833,7 @@ def test_table_context_cannot_stand_in_for_an_image_cohort():
     def consume(*, runtime):
         return None
 
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
     invocation = compiled.default_group.invocations[0]
     edge = exact_input_edge(
         invocation, input_index=0, spec=table,
