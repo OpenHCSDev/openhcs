@@ -15,10 +15,11 @@ class SpatialBinMethod(Enum):
 
 
 class StackProjectionMethod(Enum):
-    """Max/mean reductions shared by processor backends."""
+    """Leading-axis projections served by ``image_stack_operations.StackProjection``."""
 
     MAX = "max_projection"
     MEAN = "mean_projection"
+    MIN = "min_projection"
 
 
 class EdgeMagnitudeMethod(Enum):

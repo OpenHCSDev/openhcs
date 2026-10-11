@@ -1,54 +1,28 @@
-"""
-TensorFlow Image Processor Implementation
+"""TensorFlow processor registrations.
 
-This module implements the ImageProcessorInterface using TensorFlow as the backend.
-It leverages GPU acceleration for image processing operations.
-
-Doctrinal Clauses:
-- Clause 3 — Declarative Primacy: All functions are pure and stateless
-- Clause 88 — No Inferred Capabilities: Explicit TensorFlow dependency
-- Clause 106-A — Declared Memory Types: All methods specify TensorFlow tensors
+Shared operations are written once in ``image_stack_operations``; this module
+registers them for TensorFlow and holds the TensorFlow-specific algorithms.
 """
 
 from __future__ import annotations
 
-import logging
-from abc import abstractmethod
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
-from metaclass_registry import AutoRegisterMeta
-from packaging.version import parse as parse_version
+from arraybridge import MemoryType
+from arraybridge.array_operations import ArrayOperations
 
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.utils.import_utils import optional_import_placeholder
 from openhcs.core.memory import tensorflow as tensorflow_func
-from openhcs.core.lazy_gpu_imports import tf
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from openhcs.processing.backends.processors import image_stack_operations as operations
 from openhcs.processing.backends.processors.method_axes import (
     StackProjectionMethod,
 )
 
-# Define error variable
-TENSORFLOW_ERROR = ""
+tf = optional_import_placeholder("tensorflow")
 
-# Check TensorFlow version for DLPack compatibility if available
-if tf is not None:
-    try:
-        tf_version = parse_version(tf.__version__)
-        min_version = parse_version("2.12.0")
-
-        if tf_version < min_version:
-            TENSORFLOW_ERROR = (
-                f"TensorFlow version {tf.__version__} is not supported for DLPack operations. "
-                f"Version 2.12.0 or higher is required for stable DLPack support. "
-                f"Clause 88 violation: Cannot infer DLPack capability."
-            )
-            tf = None
-    except Exception as e:
-        TENSORFLOW_ERROR = str(e)
-        tf = None
-
-logger = logging.getLogger(__name__)
+OPERATIONS = ArrayOperations.for_memory(MemoryType.TENSORFLOW)
 
 
 @tensorflow_func
@@ -66,70 +40,9 @@ def create_linear_weight_mask(
     Returns:
         2D TensorFlow weight mask of shape (height, width)
     """
-    # The compiler will ensure this function is only called when TensorFlow is available
-    # No need to check for TensorFlow availability here
-
-    margin_y = int(tf.math.floor(height * margin_ratio))
-    margin_x = int(tf.math.floor(width * margin_ratio))
-
-    weight_y = tf.ones(height, dtype=tf.float32)
-    if margin_y > 0:
-        ramp_top = tf.linspace(0.0, 1.0, margin_y)
-        ramp_bottom = tf.linspace(1.0, 0.0, margin_y)
-
-        # Update slices of the weight_y tensor
-        weight_y = tf.tensor_scatter_nd_update(
-            weight_y, tf.stack([tf.range(margin_y)], axis=1), ramp_top
-        )
-        weight_y = tf.tensor_scatter_nd_update(
-            weight_y,
-            tf.stack([tf.range(height - margin_y, height)], axis=1),
-            ramp_bottom,
-        )
-
-    weight_x = tf.ones(width, dtype=tf.float32)
-    if margin_x > 0:
-        ramp_left = tf.linspace(0.0, 1.0, margin_x)
-        ramp_right = tf.linspace(1.0, 0.0, margin_x)
-
-        # Update slices of the weight_x tensor
-        weight_x = tf.tensor_scatter_nd_update(
-            weight_x, tf.stack([tf.range(margin_x)], axis=1), ramp_left
-        )
-        weight_x = tf.tensor_scatter_nd_update(
-            weight_x, tf.stack([tf.range(width - margin_x, width)], axis=1), ramp_right
-        )
-
-    # Create 2D weight mask using outer product
-    weight_mask = tf.tensordot(weight_y, weight_x, axes=0)
-
-    return weight_mask
-
-
-def _validate_3d_array(array: Any, name: str = "input") -> None:
-    """
-    Validate that the input is a 3D TensorFlow tensor.
-
-    Args:
-        array: Array to validate
-        name: Name of the array for error messages
-
-    Raises:
-        TypeError: If the array is not a TensorFlow tensor
-        ValueError: If the array is not 3D
-        ImportError: If TensorFlow is not available
-    """
-    # The compiler will ensure this function is only called when TensorFlow is available
-    # No need to check for TensorFlow availability here
-
-    if not isinstance(array, tf.Tensor):
-        raise TypeError(
-            f"{name} must be a TensorFlow tensor, got {type(array)}. "
-            f"No automatic conversion is performed to maintain explicit contracts."
-        )
-
-    if len(array.shape) != 3:
-        raise ValueError(f"{name} must be a 3D tensor, got {len(array.shape)}D")
+    return operations.linear_weight_mask(
+        OPERATIONS, height, width, margin_ratio, ramp_endpoint=True
+    )
 
 
 def _gaussian_blur(image: "tf.Tensor", sigma: float) -> "tf.Tensor":
@@ -175,7 +88,7 @@ def sharpen(
     Returns:
         Sharpened 3D TensorFlow tensor of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     # Store original dtype
     dtype = image.dtype
@@ -239,7 +152,7 @@ def percentile_normalize(
     Returns:
         Normalized 3D TensorFlow tensor of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     # Process each Z-slice independently
     result_list = []
@@ -305,7 +218,7 @@ def stack_percentile_normalize(
     Returns:
         Normalized 3D TensorFlow tensor of shape (Z, Y, X)
     """
-    _validate_3d_array(stack)
+    operations.require_stack(OPERATIONS, stack)
 
     # Calculate global percentiles across the entire stack using TensorFlow Probability
     # This is memory-efficient and doesn't require sorting the entire array
@@ -369,7 +282,7 @@ def create_composite(
 
     # Validate all images are 3D TensorFlow tensors with the same shape
     for i, img in enumerate(images):
-        _validate_3d_array(img, f"images[{i}]")
+        operations.require_stack(OPERATIONS, img, f"images[{i}]")
         if img.shape != images[0].shape:
             raise ValueError(
                 f"All images must have the same shape. "
@@ -413,24 +326,8 @@ def create_composite(
         composite /= total_weight
 
     # Convert back to original dtype (usually uint16)
-    if dtype in [tf.uint8, tf.uint16, tf.uint32, tf.int8, tf.int16, tf.int32, tf.int64]:
-        # Get the maximum value for the specific integer dtype
-        if dtype == tf.uint8:
-            max_val = 255
-        elif dtype == tf.uint16:
-            max_val = 65535
-        elif dtype == tf.uint32:
-            max_val = 4294967295
-        elif dtype == tf.int8:
-            max_val = 127
-        elif dtype == tf.int16:
-            max_val = 32767
-        elif dtype == tf.int32:
-            max_val = 2147483647
-        elif dtype == tf.int64:
-            max_val = 9223372036854775807
-
-        composite = tf.cast(tf.clip_by_value(composite, 0, max_val), dtype)
+    if OPERATIONS.dtype_name(dtype) in operations.CLAMPED_INTEGER_DTYPES:
+        composite = tf.cast(tf.clip_by_value(composite, 0, dtype.max), dtype)
     else:
         composite = tf.cast(composite, dtype)
 
@@ -453,38 +350,7 @@ def apply_mask(image: "tf.Tensor", mask: "tf.Tensor") -> "tf.Tensor":
     Returns:
         Masked 3D TensorFlow tensor of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
-
-    # Handle 2D mask (apply to each Z-slice)
-    if isinstance(mask, tf.Tensor) and len(mask.shape) == 2:
-        if mask.shape != image.shape[1:]:
-            raise ValueError(
-                f"2D mask shape {mask.shape} doesn't match image slice shape {image.shape[1:]}"
-            )
-
-        # Apply 2D mask to each Z-slice
-        result_list = []
-        for z in range(image.shape[0]):
-            result_list.append(
-                tf.cast(image[z], tf.float32) * tf.cast(mask, tf.float32)
-            )
-
-        result = tf.stack(result_list, axis=0)
-        return tf.cast(result, image.dtype)
-
-    # Handle 3D mask
-    if isinstance(mask, tf.Tensor) and len(mask.shape) == 3:
-        if mask.shape != image.shape:
-            raise ValueError(
-                f"3D mask shape {mask.shape} doesn't match image shape {image.shape}"
-            )
-
-        # Apply 3D mask directly
-        masked = tf.cast(image, tf.float32) * tf.cast(mask, tf.float32)
-        return tf.cast(masked, image.dtype)
-
-    # If we get here, the mask is neither 2D nor 3D TensorFlow tensor
-    raise TypeError(f"mask must be a 2D or 3D TensorFlow tensor, got {type(mask)}")
+    return operations.apply_mask(OPERATIONS, image, mask)
 
 
 @tensorflow_func
@@ -501,11 +367,7 @@ def create_weight_mask(
     Returns:
         2D TensorFlow weight mask of shape (Y, X)
     """
-    if not isinstance(shape, tuple) or len(shape) != 2:
-        raise TypeError("shape must be a tuple of (height, width)")
-
-    height, width = shape
-    return create_linear_weight_mask(height, width, margin_ratio)
+    return create_linear_weight_mask(*operations.weight_mask_extent(shape), margin_ratio)
 
 
 @tensorflow_func
@@ -519,11 +381,7 @@ def max_projection(stack: "tf.Tensor") -> "tf.Tensor":
     Returns:
         3D TensorFlow tensor of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    # Create max projection
-    projection_2d = tf.reduce_max(stack, axis=0)
-    return tf.expand_dims(projection_2d, axis=0)
+    return operations.max_projection(OPERATIONS, stack)
 
 
 @tensorflow_func
@@ -537,13 +395,7 @@ def mean_projection(stack: "tf.Tensor") -> "tf.Tensor":
     Returns:
         3D TensorFlow tensor of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    # Create mean projection
-    projection_2d = tf.cast(
-        tf.reduce_mean(tf.cast(stack, tf.float32), axis=0), stack.dtype
-    )
-    return tf.expand_dims(projection_2d, axis=0)
+    return operations.mean_projection(OPERATIONS, stack)
 
 
 @tensorflow_func
@@ -568,7 +420,7 @@ def stack_equalize_histogram(
     Returns:
         Equalized 3D TensorFlow tensor of shape (Z, Y, X)
     """
-    _validate_3d_array(stack)
+    operations.require_stack(OPERATIONS, stack)
 
     # Remember input dtype to preserve it
     input_dtype = stack.dtype
@@ -590,31 +442,8 @@ def stack_equalize_histogram(
     # Normalize the CDF to the input dtype range
     # Avoid division by zero
     if tf.reduce_max(cdf) > 0:
-        if input_dtype in [
-            tf.uint8,
-            tf.uint16,
-            tf.uint32,
-            tf.int8,
-            tf.int16,
-            tf.int32,
-            tf.int64,
-        ]:
-            # Get dtype max value
-            if input_dtype == tf.uint8:
-                dtype_max = 255.0
-            elif input_dtype == tf.uint16:
-                dtype_max = 65535.0
-            elif input_dtype == tf.uint32:
-                dtype_max = 4294967295.0
-            elif input_dtype == tf.int8:
-                dtype_max = 127.0
-            elif input_dtype == tf.int16:
-                dtype_max = 32767.0
-            elif input_dtype == tf.int32:
-                dtype_max = 2147483647.0
-            else:  # int64
-                dtype_max = 9223372036854775807.0
-            cdf = dtype_max * cdf / tf.cast(cdf[-1], tf.float32)
+        if OPERATIONS.dtype_name(input_dtype) in operations.CLAMPED_INTEGER_DTYPES:
+            cdf = float(input_dtype.max) * cdf / tf.cast(cdf[-1], tf.float32)
         else:
             # For float dtypes, normalize to [0, 1]
             cdf = cdf / tf.cast(cdf[-1], tf.float32)
@@ -641,33 +470,6 @@ def stack_equalize_histogram(
     return tf.cast(equalized_stack, input_dtype)
 
 
-class TensorFlowStackProjectionStrategy(
-    EnumKeyedStrategyMixin[StackProjectionMethod],
-    metaclass=AutoRegisterMeta,
-):
-    __enum_member_attr__ = "method"
-
-    """TensorFlow stack-projection dispatch owner."""
-
-    @abstractmethod
-    def apply(self, stack: "tf.Tensor") -> "tf.Tensor":
-        """Apply this projection method."""
-
-
-class TensorFlowMaxStackProjectionStrategy(TensorFlowStackProjectionStrategy):
-    method = StackProjectionMethod.MAX
-
-    def apply(self, stack: "tf.Tensor") -> "tf.Tensor":
-        return max_projection(stack)
-
-
-class TensorFlowMeanStackProjectionStrategy(TensorFlowStackProjectionStrategy):
-    method = StackProjectionMethod.MEAN
-
-    def apply(self, stack: "tf.Tensor") -> "tf.Tensor":
-        return mean_projection(stack)
-
-
 @tensorflow_func
 def create_projection(
     stack: "tf.Tensor",
@@ -678,14 +480,12 @@ def create_projection(
 
     Args:
         stack: 3D TensorFlow tensor of shape (Z, Y, X)
-        method: Projection method (max_projection, mean_projection)
+        method: Projection method served by ``image_stack_operations.StackProjection``
 
     Returns:
         3D TensorFlow tensor of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    return TensorFlowStackProjectionStrategy.for_enum_member(method).apply(stack)
+    return operations.create_projection(OPERATIONS, stack, method)
 
 
 @tensorflow_func
@@ -706,7 +506,7 @@ def tophat(
     Returns:
         Filtered 3D TensorFlow tensor of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     # Process each Z-slice independently
     result_list = []
