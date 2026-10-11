@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 from typing import ClassVar, Mapping, Sequence, TypeAlias
 
+from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.source_path_identity import source_path_identity
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_array_values import RuntimeArrayData
@@ -943,11 +944,17 @@ class FunctionOutputIdentity:
         parser: FilenameParser,
         identity_cache: FunctionOutputIdentityCache,
     ) -> str | None:
-        fallback_extension = cls._extension_from_path(
-            fallback_identity_path, parser=parser, identity_cache=identity_cache
-        )
-        if fallback_extension is not None:
-            return fallback_extension
+        # The input path names the output's file format only when it is an image
+        # file. A step whose input is a non-image artifact (labelled objects read
+        # from their memory key) takes the format of the source planes instead.
+        if fallback_identity_path is not None and ImageFileFormat.is_image_path(
+            fallback_identity_path
+        ):
+            fallback_extension = cls._extension_from_path(
+                fallback_identity_path, parser=parser, identity_cache=identity_cache
+            )
+            if fallback_extension is not None:
+                return fallback_extension
 
         extensions = tuple(
             identity.extension

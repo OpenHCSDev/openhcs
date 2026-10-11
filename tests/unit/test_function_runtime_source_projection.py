@@ -82,6 +82,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.source_image_provenance import (
+    SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
@@ -5025,6 +5026,50 @@ def test_function_output_identity_uses_fallback_path_extension_for_payload_ident
         identity.filename(parser)
         == "A01_s001_w2_z001_t001.png"
     )
+
+
+@pytest.mark.parametrize(
+    ("input_path", "extension"),
+    (
+        ("results/A01_w0_Cells_step20.pkl", ".tif"),
+        ("images/A01_s001_w0_z001_t001.png", ".png"),
+    ),
+)
+def test_source_stack_output_takes_image_extension_not_artifact_key(
+    input_path: str, extension: str
+) -> None:
+    """A volume made from an objects artifact keeps its source planes' format."""
+
+    parser = SourceSchemaFilenameParser()
+    metadata = ImagePayloadMetadata(
+        source_provenance=SourceImageProvenance(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=tuple(
+                    f"A01_s001_w0_z{z:03d}_t001.tif" for z in (1, 2, 3)
+                ),
+                component_metadata=tuple(
+                    {
+                        "well": "A01",
+                        "site": "1",
+                        "channel": "0",
+                        "z_index": str(z),
+                        "timepoint": "1",
+                    }
+                    for z in (1, 2, 3)
+                ),
+            )
+        ),
+    )
+
+    identity = FunctionOutputIdentity.from_metadata(
+        parser,
+        metadata,
+        fallback_identity_path=input_path,
+        variable_components=(Microscopy.ZIndex,),
+    )
+
+    assert identity is not None
+    assert identity.extension == extension
 
 
 def test_function_output_path_uses_input_identity_for_multi_plane_carrier(
