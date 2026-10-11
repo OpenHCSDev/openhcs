@@ -1880,6 +1880,33 @@ def test_collinear_opposite_daughters_stay_an_unowned_crossing():
     assert np.count_nonzero(traces[:, 80]) == 1
 
 
+def test_crossing_arms_adopted_after_the_first_topology_stay_joined():
+    """Real-field pattern (N1b): the first topology leaves an unrooted neurite's
+    crossing arms unowned; secondary adoption then gives them to the neuron
+    it crosses. The final topology must route those arms through the crossing
+    pixel too, not cut them off at the replaced span."""
+    skeleton = np.zeros((128, 128), dtype=bool)
+    bodies = np.zeros(skeleton.shape, dtype=np.int32)
+    bodies[disk((64, 20), 7, shape=skeleton.shape)] = 1
+    for start, end in (((64, 27), (64, 115)), ((20, 75), (110, 75))):
+        skeleton[line(*start, *end)] = True
+    topology = _analyze_topology(skeleton, bodies, 1.0, 3.0, branch_support=skeleton)
+    assert len(topology.resolved_crossings) == 1
+    unrooted = [path for path, coordinates in enumerate(topology.path_coordinates)
+                if np.all(coordinates[:, 1] == 75)]
+    assert unrooted and not np.any(topology.path_owners[unrooted])
+
+    adopted = np.where(skeleton & (bodies == 0), 1, 0).astype(np.int32)
+    final = _analyze_owned_topology(
+        adopted, bodies, 1.0, 3.0, crossing_topology=topology, branch_support=skeleton,
+    )
+    rendered = _render_owned_skeleton(skeleton.shape, final)
+    assert np.count_nonzero(rendered[:, 75]) == np.count_nonzero(skeleton[:, 75])
+    # The shaft (88 px) and the adopted neurite (90 px) both count, crossing
+    # once through the shared pixel.
+    assert final.path_lengths[final.path_owners == 1].sum() == pytest.approx(178.0)
+
+
 def test_final_neurons_project_rooted_trace_ownership(monkeypatch):
     image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
 
