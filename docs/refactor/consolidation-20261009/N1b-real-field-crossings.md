@@ -43,11 +43,36 @@ A new stage that reassigns trace ownership before the final topology needs no cr
 
 ## Done when
 
-Neurite tests and guards pass; on the 24 fields the N1 length loss is gone and cell counts are unchanged; structural ratchet and nra-r1 show no regression. Parity: not run (see below).
+Neurite tests and guards pass; on the 24 fields the N1 length loss is gone and cell counts are unchanged; structural ratchet and nra-r1 show no regression. The 30-workflow parity check is 30/30.
 
 ## Results on the 24 fields
 
-RESULTS_PLACEHOLDER
+Per-field means, 12 control and 12 40 µM fields. `main` is `bfe8c6325`; `N1` is `d597aa224`; `N1 + node pairing` is N1 with main's node-anchored direction reading patched in (ablation only). Cell counts are identical in every run (24/24 fields).
+
+| Measure | main | N1 | N1b (this PR) | N1 + node pairing |
+|---|---|---|---|---|
+| Length/field, control (µm) | 17317 | 17168 | 17355 | 17028 |
+| Length/field, 40 µM (µm) | 29320 | 28950 | 29357 | 28485 |
+| Branches/field, control | 286.3 | 271.8 | 279.2 | 271.2 |
+| Branches/field, 40 µM | 475.1 | 455.4 | 468.1 | 447.6 |
+| Resolved crossovers/field, control | 3.9 | 2.1 | 2.1 | 4.1 |
+| Resolved crossovers/field, 40 µM | 6.8 | 3.9 | 3.9 | 6.9 |
+| Dropped trace (px/field) | 202 | 392 | 195 | 588 |
+| Added trace (px/field) | 7 | 45 | 73 | 74 |
+
+Length change against main on the five worst N1 fields (µm), N1 → N1b: A59_001 −759 → +23; A52_001 −736 → +169; A59_009 −526 → +50; A49_009 −394 → −137; A24_001 −393 → −140.
+
+Reading:
+
+- The length loss was the route defect. With the same pairing, N1b returns length to main's level (+0.2% control, +0.1% 40 µM).
+- The ablation separates the two effects. Node pairing restores main's crossover count (4.1 / 6.9) and makes the route defect worse (more resolved crossings, more severed arms: 588 px dropped). So the crossover drop comes from the L..2L reading alone, and the length drop from the routes alone.
+- N1b's dropped count excludes the rerouted span. Counted the N1 way (core only), `A59_001` is 318 px against main's 257 and N1's 760.
+- Branches recover about half of N1's loss. The rest follows the pairing: a junction no longer resolved as a crossing is classed by the branch ring instead.
+- "Added trace" is the route pixels.
+
+Checks: `tests/unit/test_neurite_outgrowth.py` and `tests/unit/test_n1_neurite_crossing_guards.py`, 117 passed. Structural ratchet (`openhcs`, `scripts`, `benchmark`): exit 0; `CellProfilerNeuriteEngineProfile` excess 38 → 37. nra-r1: no increase. PARITY_PLACEHOLDER
+
+Evidence and scripts are under `.claude/n1b/` in the worktree (untracked): `run_fields.py`, `compare.py`, `route_probe.py`, `pair_probe.py`, `pair_angles.py`, `groups.py`, and the crops in `crops/`.
 
 ## Junction tracing defect (diagnosed, not changed)
 
