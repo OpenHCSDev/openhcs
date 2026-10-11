@@ -156,7 +156,7 @@ def test_axis_capability_is_inherited_without_metadata_overrides():
         assert getattr(ImagePayloadMetadata, name) is getattr(ImagePayloadAxisFields, name)
     metadata = ImagePayloadMetadata()
     assert metadata.axis_position(ColourAxis) is None
-    assert metadata.plane_axis is None
+    assert not metadata.plane_axis.leads_data
     assert metadata.undeclared_axes(np.zeros((3, 7, 9))) == (0, 1, 2)
 
 

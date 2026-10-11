@@ -403,7 +403,7 @@ def test_image_output_context_does_not_infer_axis_for_unmarked_payload():
     )
 
     metadata = result.metadata
-    assert metadata.plane_axis is None
+    assert not metadata.plane_axis.leads_data
     assert metadata.source_image_provenance_planes.paths == (
         "/input/A01_s001_w2_z001_t001.tif",
         "/input/A01_s001_w2_z002_t001.tif",
@@ -470,7 +470,7 @@ def test_image_output_context_preserves_complete_scalar_rgb_identity() -> None:
 
     assert result.data.shape == (4, 5, 3)
     metadata = result.metadata
-    assert metadata.plane_axis is None
+    assert not metadata.plane_axis.leads_data
     assert metadata.axis_index(ColourAxis, result) == 2
     assert metadata.source_path == "/input/A01_s001_w1_z001_t001.tif"
 
@@ -668,7 +668,7 @@ def test_composed_function_output_owns_collapsed_source_identity():
     )
 
     assert result.data.shape == (4, 5, 3)
-    assert result.metadata.plane_axis is None
+    assert not result.metadata.plane_axis.leads_data
     assert result.metadata.axis_position(ColourAxis) == -1
 
 
@@ -1422,7 +1422,7 @@ def test_saved_canonical_source_projection_survives_main_flow_return():
     for payload in (result, stored[0].data):
         np.testing.assert_array_equal(payload.data, pixels[1])
         metadata = payload.metadata
-        assert metadata.plane_axis is None
+        assert not metadata.plane_axis.leads_data
         assert metadata.source_provenance.source_plane_count == 0
         assert metadata.source_path == paths[1]
         assert metadata.source_component_metadata["site"] == "2"
@@ -1703,7 +1703,7 @@ def test_managed_runtime_adapter_output_preserves_authoritative_source_metadata(
 
     metadata = result.metadata
     assert result.data.shape == (2, 3, 3)
-    assert metadata.plane_axis is None
+    assert not metadata.plane_axis.leads_data
     assert metadata.axis_position(ColourAxis) == -1
     assert metadata.source_path == "/input/A01_s1_w3.tif"
     assert dict(metadata.source_component_metadata) == {
@@ -1779,7 +1779,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
         device_id=None,)
     assert stack_payload.data.shape == (2, 3, 3)
     stack_metadata = stack_payload.metadata
-    assert stack_metadata.plane_axis is None
+    assert not stack_metadata.plane_axis.leads_data
     assert stack_metadata.axis_position(ColourAxis) == -1
 
 

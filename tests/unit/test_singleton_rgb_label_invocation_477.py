@@ -80,7 +80,7 @@ def test_match_image_labels_consume_declared_singleton_root_for_scalar_rgb():
     assert invocation.execution_mode is NaturalExecution
     assert invocation.plane_projection is None
     assert invocation.payload.metadata.axis_position(ColourAxis) == 2
-    assert selected.plane_axis is None
+    assert not selected.plane_axis.leads_data
     assert object_label_dense_array(selected).shape == (8, 9)
     output = _execute(case, invocation)
     scalar_labels = ObjectLabelSet(name='Nuclei', variant_data=ObjectLabelVariantData(labels=labels_before[0]), domain=ObjectLabelDomain(declared_object_ids=(1,), scope=ObjectLabelDomainScope.PAYLOAD))
@@ -89,7 +89,7 @@ def test_match_image_labels_consume_declared_singleton_root_for_scalar_rgb():
     np.testing.assert_array_equal(image.data, image_before)
     np.testing.assert_array_equal(object_label_dense_array(labels), labels_before)
     assert labels.plane_axis is RuntimeSlicePlaneAxis
-    assert image.metadata.plane_axis is None
+    assert not image.metadata.plane_axis.leads_data
 
 
 @pytest.mark.parametrize('root_count', (None, 2))

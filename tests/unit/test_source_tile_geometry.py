@@ -662,7 +662,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                     assert metadata.source_voxel_spacing == SourceVoxelSpacing(
                         (0.25, 0.5)
                     )
-                    assert metadata.plane_axis is None
+                    assert not metadata.plane_axis.leads_data
             replay_config = PreparedWorkspaceSource.pipeline_config_for_source(
                 config
             )

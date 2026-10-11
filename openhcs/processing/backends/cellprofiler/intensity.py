@@ -1,7 +1,6 @@
 """Intensity-measurement backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -1495,7 +1494,7 @@ def _object_intensity_prepared_labels_for_batch_group(
     labels = first_request.completion_label_payload
     if not isinstance(labels, ObjectLabelValue):
         return None
-    if labels.plane_axis is SourceBindingPlaneAxis:
+    if labels.plane_axis.one_plane_per_source_binding:
         return None
     return ObjectIntensityPreparedLabels.from_measurement(
         image=first_request.image.data,

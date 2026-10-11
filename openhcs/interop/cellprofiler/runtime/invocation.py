@@ -250,7 +250,7 @@ class CellProfilerSourceIdentityMixin:
         provenances = tuple(
             (
                 fields.source_provenance.for_source_plane(0)
-                if fields.plane_axis is None
+                if not fields.plane_axis.leads_data
                 and fields.source_provenance.source_plane_count == 1
                 else fields.source_provenance
             )
@@ -258,8 +258,7 @@ class CellProfilerSourceIdentityMixin:
         )
         preserve_topology = (
             len(metadata) == 1
-            and metadata[0].plane_axis
-            is SourceBindingPlaneAxis
+            and metadata[0].plane_axis.one_plane_per_source_binding
         )
         scalar_sources = tuple(fields.source_provenance for fields in metadata)
         provenance = SourceImageProvenance.bundle(
@@ -522,7 +521,7 @@ class CellProfilerMeasurementImage(
                     )
             else:
                 image_plane_axis = image.metadata.plane_axis
-                if image_plane_axis is None:
+                if not image_plane_axis.leads_data:
                     plane_projection = None
                 elif image_plane_axis is not plane_projection.axis:
                     raise ValueError(

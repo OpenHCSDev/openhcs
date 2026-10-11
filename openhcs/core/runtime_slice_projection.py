@@ -1,6 +1,7 @@
 """Nominal runtime-slice projection contracts."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
@@ -358,11 +359,11 @@ class RuntimeSliceProjection:
         return value
 
     @classmethod
-    def declared_plane_axis(cls, value: RuntimeProjectionData) -> type[RuntimePlaneAxis] | None:
+    def declared_plane_axis(cls, value: RuntimeProjectionData) -> type[RuntimePlaneAxis]:
         """Return the leading plane axis a value declares; foreign values declare none."""
         if isinstance(value, RuntimeSliceProjectableValue):
             return value.declared_plane_axis
-        return None
+        return NoPlaneAxis
 
     @classmethod
     def alignment_slices(cls, value: RuntimeProjectionData) -> tuple[Any, ...]:

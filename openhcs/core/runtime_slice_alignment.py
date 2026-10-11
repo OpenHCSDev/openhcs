@@ -102,7 +102,7 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
         return self.slice_count
 
     def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
-        if context.axis is not RuntimeSlicePlaneAxis:
+        if not context.axis.one_plane_per_runtime_slice:
             return self
         return self.value_for_aligned_slice(
             context.require_plane_index(), context.axis_size,

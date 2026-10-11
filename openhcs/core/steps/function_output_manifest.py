@@ -61,7 +61,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
     output_path: str
     relative_output_path: str
     image_metadata: ImagePayloadMetadata | None = None
-    main_flow_plane_axis: type[RuntimePlaneAxis] | None = RuntimeSlicePlaneAxis
+    main_flow_plane_axis: type[RuntimePlaneAxis] = RuntimeSlicePlaneAxis
 
     def published(self) -> "ProducedOutputSemantics":
         """Fix the saved slot while retaining live provenance and storage aliases."""
@@ -213,7 +213,7 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         output_identity: FunctionOutputIdentity,
         output_context: AlignedImageSliceContext | None = None,
         image_metadata: ImagePayloadMetadata | None = None,
-        main_flow_plane_axis: type[RuntimePlaneAxis] | None = RuntimeSlicePlaneAxis,
+        main_flow_plane_axis: type[RuntimePlaneAxis] = RuntimeSlicePlaneAxis,
     ) -> "ProducedOutputSemantics":
         output_path_text = str(output_path)
         if output_context is None:

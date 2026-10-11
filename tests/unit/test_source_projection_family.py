@@ -66,7 +66,7 @@ def test_aggregate_context_retains_all_contributors_without_a_pixel_axis():
     )
     metadata = result.metadata
     assert result.shape == (3, 4)
-    assert metadata.plane_axis is None
+    assert not metadata.plane_axis.leads_data
     assert metadata.source_image_provenance_planes.contributor_count == 3
     assert metadata.source_image_paths == source.metadata.source_image_paths
     np.testing.assert_array_equal(np.asarray(result), np.asarray(field))
@@ -110,7 +110,7 @@ def test_independent_selection_member_composes_the_shared_projection(indices):
     assert output.calls == ["before", "after"]
     if len(indices) == 1:
         assert result.shape == (3, 4)
-        assert metadata.plane_axis is None
+        assert not metadata.plane_axis.leads_data
         np.testing.assert_array_equal(np.asarray(result), data[0])
     else:
         assert result.shape == (2, 3, 4)

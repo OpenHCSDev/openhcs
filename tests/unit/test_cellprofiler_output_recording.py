@@ -193,7 +193,7 @@ def test_image_output_recording_uses_exact_invocation_projection_for_rgb(
     monkeypatch: pytest.MonkeyPatch,
     plane_projection: RuntimePlaneAxisValueProjection | None,
     output_shape: tuple[int, ...],
-    expected_plane_axis: type[RuntimePlaneAxis] | None,
+    expected_plane_axis: type[RuntimePlaneAxis],
 ) -> None:
     measured_objects = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
     output = ArtifactSpec.output(

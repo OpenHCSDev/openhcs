@@ -150,7 +150,7 @@ def test_derived_2d_image_does_not_inherit_input_runtime_plane_axis() -> None:
     )
 
     assert result.data.shape == (4, 5)
-    assert result.metadata.plane_axis is None
+    assert not result.metadata.plane_axis.leads_data
     assert result.metadata.source_image_provenance_planes.count == 2
 
 
@@ -284,7 +284,7 @@ def test_projected_scalar_rgb_proves_complete_identity_once(
     assert projection.axis is RuntimeSlicePlaneAxis
     assert projection.axis_size == 1
     assert result is output
-    assert result.metadata.plane_axis is None
+    assert not result.metadata.plane_axis.leads_data
     assert result.metadata.axis_index(ColourAxis, result) == 2
 
 

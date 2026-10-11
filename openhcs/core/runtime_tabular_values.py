@@ -1,7 +1,6 @@
 """Generic columnar and tabular runtime payload values."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import abstractmethod
 from collections.abc import (
@@ -29,7 +28,7 @@ class ColumnarRows(RuntimeSliceProjectableValue):
 
     def value_for_slice(self, context: RuntimePlaneAxisValueProjection) -> Any:
         """Select the rows of one runtime slice through the rows' declared axis."""
-        if context.axis is not RuntimeSlicePlaneAxis:
+        if not context.axis.one_plane_per_runtime_slice:
             return self
         from openhcs.core.measurement_row_materialization import (
             MeasurementRowsAxisProjection,

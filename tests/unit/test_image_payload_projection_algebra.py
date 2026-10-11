@@ -1,5 +1,6 @@
 """Physical source-plane projection preserves composition and mutable isolation."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import fields
 
@@ -61,7 +62,7 @@ def test_physical_projection_agrees_with_separate_semantic_operations(
     assert projected.unit_interval_intensity.scale == (255, 65535)[plane]
     assert projected.source_plane_intensity_scales == ()
     assert projected.source_plane_dtypes == ()
-    assert projected.plane_axis is None
+    assert not projected.plane_axis.leads_data
     projected.source_provenance.source_identity.path = "/tmp/changed.tif"
     assert metadata.source_path == "/tmp/parent.tif"
     assert metadata.source_image_provenance_planes.paths[plane] != "/tmp/changed.tif"
@@ -88,7 +89,7 @@ def test_physical_projection_rejects_leading_channel_axis():
 
 
 def test_physical_projection_requires_declared_plane_axis():
-    metadata = _metadata(None, None)
+    metadata = _metadata(NoPlaneAxis, None)
     with pytest.raises(ValueError, match="declared plane axis"):
         metadata.for_leading_source_plane(1)
 
@@ -97,15 +98,6 @@ def test_physical_projection_requires_declared_plane_axis():
 def test_declared_axis_positions_must_be_int(channel_axis):
     with pytest.raises(TypeError, match="positions must be int"):
         PayloadAxes.colour_samples(channel_axis)
-
-
-def test_physical_projection_preserves_invalid_mutated_plane_error():
-    metadata = _metadata(RuntimeSlicePlaneAxis, None)
-    metadata.plane_axis = "invalid-axis"
-    with pytest.raises(ValueError):
-        metadata.for_source_plane(1).without_leading_plane_axis()
-    with pytest.raises(ValueError):
-        metadata.for_leading_source_plane(1)
 
 
 def test_projection_preserves_selected_spacing_and_nested_contributors():
@@ -213,7 +205,6 @@ def test_source_plane_preserves_intensity_then_proof_effect_order():
             AttributeError,
             "with_missing_from",
         ),
-        ("for_leading_source_plane", 0, "plane", ValueError, "invalid-axis"),
         (
             "without_leading_plane_axis",
             0,
@@ -235,13 +226,6 @@ def test_source_plane_preserves_intensity_then_proof_effect_order():
             ValueError,
             "both plane and",
         ),
-        (
-            "without_leading_plane_axis",
-            0,
-            "plane",
-            ValueError,
-            "both plane and",
-        ),
     ),
 )
 def test_projection_preserves_cross_invalid_constructor_guard_order(
@@ -256,10 +240,8 @@ def test_projection_preserves_cross_invalid_constructor_guard_order(
         metadata.source_spatial_domain = SourceSpatialDomain(origin_yx=(1,))
     elif broken == "spacing":
         metadata.source_component_metadata = {"OpenHCSSourceVoxelSpacingZYX": "0,1,1"}
-    elif broken == "spacing-value":
-        metadata.source_voxel_spacing = None
     else:
-        metadata.plane_axis = "invalid-axis"
+        metadata.source_voxel_spacing = None
     with pytest.raises(error, match=message):
         if operation == "without_leading_plane_axis":
             metadata.without_leading_plane_axis()
@@ -269,7 +251,7 @@ def test_projection_preserves_cross_invalid_constructor_guard_order(
 
 def test_missing_leading_axis_precedes_plane_field_effects():
     metadata, events = _metadata_with_observed_plane_fields(proof_raises=True)
-    metadata.plane_axis = None
+    metadata.plane_axis = NoPlaneAxis
     metadata.axes = PayloadAxes.colour_samples(0)
     with pytest.raises(ValueError, match="requires a declared plane axis"):
         metadata.for_leading_source_plane(0)
@@ -280,7 +262,6 @@ def test_projection_spacing_failure_precedes_other_invalid_source_fields():
     metadata = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis)
     metadata.source_component_metadata = {"OpenHCSSourceVoxelSpacingZYX": "0,1,1"}
     metadata.source_spatial_domain = SourceSpatialDomain(origin_yx=(1,))
-    metadata.plane_axis = "invalid-axis"
     with pytest.raises(ValueError, match="finite and positive"):
         metadata.for_leading_source_plane(0)
 
@@ -288,10 +269,10 @@ def test_projection_spacing_failure_precedes_other_invalid_source_fields():
 @pytest.mark.parametrize(
     "operation,normalization_axes",
     (
-        ("without_leading_plane_axis", (RuntimeSlicePlaneAxis, None)),
+        ("without_leading_plane_axis", (RuntimeSlicePlaneAxis, NoPlaneAxis)),
         (
             "for_leading_source_plane",
-            (RuntimeSlicePlaneAxis, RuntimeSlicePlaneAxis, None),
+            (RuntimeSlicePlaneAxis, RuntimeSlicePlaneAxis, NoPlaneAxis),
         ),
     ),
 )

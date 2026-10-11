@@ -1,6 +1,7 @@
 """Nominal runtime object label domains semantics."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from abc import ABC
 from abc import abstractmethod
@@ -509,8 +510,8 @@ class ObjectLabelPlaneDomainStrategy(
     @abstractmethod
     def value_plane_axis(
         self,
-        plane_axis: type[RuntimePlaneAxis] | None,
-    ) -> type[RuntimePlaneAxis] | None:
+        plane_axis: type[RuntimePlaneAxis],
+    ) -> type[RuntimePlaneAxis]:
         """Return the plane axis valid for this declared domain scope."""
 
     @abstractmethod
@@ -625,10 +626,10 @@ class PayloadObjectLabelPlaneDomainStrategy(ObjectLabelPlaneDomainStrategy):
 
     def value_plane_axis(
         self,
-        plane_axis: type[RuntimePlaneAxis] | None,
-    ) -> None:
+        plane_axis: type[RuntimePlaneAxis],
+    ) -> type[RuntimePlaneAxis]:
         del plane_axis
-        return None
+        return NoPlaneAxis
 
     def value_projection(
         self,
@@ -795,9 +796,9 @@ class PlaneObjectLabelPlaneDomainStrategy(ObjectLabelPlaneDomainStrategy):
 
     def value_plane_axis(
         self,
-        plane_axis: type[RuntimePlaneAxis] | None,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> type[RuntimePlaneAxis]:
-        if plane_axis is None:
+        if not plane_axis.leads_data:
             raise ValueError(
                 "Plane-scoped object labels require a declared runtime plane axis."
             )

@@ -1,6 +1,7 @@
 """Saved label admission retains declared runtime axes, never guessed Z axes."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import numpy as np
@@ -136,12 +137,12 @@ def test_declared_runtime_planes_can_each_contain_a_genuine_calibrated_volume():
 def test_undeclared_volume_and_explicit_payload_override_are_not_guessed_planar():
     labels = np.ones((2, 6, 7), dtype=np.int32)
     for source, options in (
-        (_source(labels, axis=None, spacing=(2.0, 1.3556, 1.3556)), {}),
+        (_source(labels, axis=NoPlaneAxis, spacing=(2.0, 1.3556, 1.3556)), {}),
         (_source(labels), {"domain_scope": ObjectLabelDomainScope.PAYLOAD}),
     ):
         value = SourceImageObjectLabelBuildRequest(image=source, labels=labels, **options).payload()
         assert value.domain.scope is ObjectLabelDomainScope.PAYLOAD
-        assert value.plane_axis is None
+        assert not value.plane_axis.leads_data
         assert value.measurement_planes()[0].labels.shape == (2, 6, 7)
     with pytest.raises(ValueError, match="Cannot project 2-D source voxel spacing onto 3-D data"):
         SourceVoxelSpacing((1.3556, 1.3556)).spacing_for_ndim(3)
@@ -235,7 +236,7 @@ def test_source_constructor_admits_a_new_cooperative_projection_capability(axis)
         PairedSourceProjection.from_source_declaration(axis, bigger.metadata.source_provenance)
     assert RuntimePlaneAxisValueProjection.from_source_declaration(axis, bigger.metadata.source_provenance).axis_size == 3
     # Absence is a declaration, not inferred from three source records.
-    assert PairedSourceProjection.from_source_declaration(None, bigger.metadata.source_provenance) is None
+    assert PairedSourceProjection.from_source_declaration(NoPlaneAxis, bigger.metadata.source_provenance) is None
 
 
 @pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
@@ -253,7 +254,7 @@ def test_produced_volume_global_object_domain_is_independent_of_source_plane_axi
     assert value.domain.declared_object_count == 2
     assert value.domain.declared_object_ids == (1, 2)
     assert value.domain.declared_object_id_domains == ()
-    assert value.plane_axis is None
+    assert not value.plane_axis.leads_data
     assert len(value.measurement_planes()) == 1
     np.testing.assert_array_equal(value.measurement_planes()[0].labels, labels)
     assert value.source_provenance.identity() == source.metadata.source_provenance.identity()
@@ -273,7 +274,7 @@ def test_produced_volume_without_explicit_ids_keeps_one_global_present_id_domain
     assert value.domain.scope is ObjectLabelDomainScope.PAYLOAD
     assert value.domain.declared_object_ids == (29, 106)
     assert value.domain.declared_object_id_domains == ()
-    assert value.plane_axis is None
+    assert not value.plane_axis.leads_data
     assert len(value.measurement_planes()) == 1
 
 

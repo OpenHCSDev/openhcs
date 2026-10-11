@@ -1,7 +1,6 @@
 """Typed debug/test-mode substrate for OpenHCS runtime execution."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import json
 import hashlib
@@ -541,7 +540,7 @@ class DebugInvocationParameter:
             facts.extend(
                 (
                     "declared_plane_axis="
-                    f"{None if value.plane_axis is None else value.plane_axis.name!r}",
+                    f"{value.plane_axis.name!r}",
                     "declared_cardinality="
                     f"{None if projection is None else projection.axis_size!r}",
                 )
@@ -568,10 +567,10 @@ class DebugInvocationParameter:
                         f"{len(metadata.source_image_names)}",
                     )
                 )
-            if metadata.plane_axis is not None:
+            if metadata.plane_axis.leads_data:
                 payload_shape = tuple(int(axis_size) for axis_size in value.shape)
                 if plane_projector is not None and (
-                    metadata.plane_axis is RuntimeSlicePlaneAxis
+                    metadata.plane_axis.one_plane_per_runtime_slice
                     or not isinstance(plane_projector, RuntimePlaneProjection)
                 ):
                     projection = RuntimePlaneAxisValueProjection.from_projector(
@@ -581,19 +580,15 @@ class DebugInvocationParameter:
                     )
                 if projection is None:
                     facts.append(f"plane_axis={metadata.plane_axis.name!r}")
-                facts.extend(
-                    (
-                        f"declared_plane_axis={metadata.plane_axis.name!r}",
-                        f"declared_cardinality={payload_shape[0]}",
-                    )
-                )
+                declared_cardinality = payload_shape[0]
             else:
-                facts.extend(
-                    (
-                        "declared_plane_axis=None",
-                        "declared_cardinality=None",
-                    )
+                declared_cardinality = None
+            facts.extend(
+                (
+                    f"declared_plane_axis={metadata.plane_axis.name!r}",
+                    f"declared_cardinality={declared_cardinality}",
                 )
+            )
         elif isinstance(value, np.ndarray):
             facts.extend(
                 (

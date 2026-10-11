@@ -729,15 +729,14 @@ class ImageArtifactType(ImagePayloadArtifactKind):
         ):
             output_value = output_value.with_undeclared_plane_axis(plane_projection)
         if target.collapses_runtime_slices():
-            if output_value.declared_plane_axis is RuntimeSlicePlaneAxis:
+            if output_value.declared_plane_axis.one_plane_per_runtime_slice:
                 output_value = RuntimeSliceProjection.value_for_singleton_slice(
                     output_value,
                     source_description=f"Image output {target.describe()}",
                 )
-            if (
-                RuntimeSliceProjection.declared_plane_axis(source_payload)
-                is RuntimeSlicePlaneAxis
-            ):
+            if RuntimeSliceProjection.declared_plane_axis(
+                source_payload
+            ).one_plane_per_runtime_slice:
                 source_ref = target.source_context_source()
                 if source_ref is None:
                     raise ValueError(

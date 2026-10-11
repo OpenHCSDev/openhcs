@@ -4,6 +4,7 @@ This module owns callable invocation, artifact routing, and pattern-group stack
 execution. FunctionStep remains responsible for step-level orchestration.
 """
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import logging
 import time
@@ -1249,7 +1250,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 single_output_plane_axis=(
                     processed_stack.plane_axis_for_output_context(output_contexts[0])
                     if len(output_payloads) == 1
-                    else None
+                    else NoPlaneAxis
                 ),
             )
             context.runtime_image_stack_cache.store(
@@ -1703,7 +1704,7 @@ class FunctionCoreExecutor:
         metadata = payload.metadata
         if (
             not metadata.persists_whole_image()
-            and metadata.plane_axis not in (None, RuntimeSlicePlaneAxis)
+            and metadata.plane_axis.one_plane_per_source_binding
         ):
             # A remaining binding axis does not prove this source's ordered
             # physical members. Resolve it through its declared origin owner.

@@ -646,7 +646,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
         assert (
             len(payload.metadata.source_provenance.represented_source_identities) == 9
         )
-        assert payload.metadata.plane_axis is None
+        assert not payload.metadata.plane_axis.leads_data
         np.testing.assert_array_equal(payload.data, array)
 
     # Native image secondaries have their own stored pixels, not the main-image
@@ -666,7 +666,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     np.testing.assert_array_equal(artifact.data, label_pixels)
     assert artifact.metadata.source_dtype == "int64"
     assert artifact.metadata.axis_position(ColourAxis) is None
-    assert artifact.metadata.plane_axis is None
+    assert not artifact.metadata.plane_axis.leads_data
     assert artifact.metadata.source_spatial_domain.source_shape_yx == (8, 9)
     assert (
         artifact_components[str(artifact_path)]["well"] == components[paths[0]]["well"]
@@ -701,7 +701,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     restored = ImagePayloadMetadata.from_viewer_image_metadata(wire_metadata)
     assert restored.source_voxel_spacing == spacing
     assert restored.source_spatial_domain == domain
-    assert restored.plane_axis is None
+    assert not restored.plane_axis.leads_data
     stream_request = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
     declared_domain = stream_request.message_extra["component_value_domain"]
     projected_metadata = stream_request.source.metadata.metadata_by_path

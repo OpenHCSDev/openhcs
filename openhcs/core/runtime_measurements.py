@@ -1,7 +1,6 @@
 """Nominal runtime measurement table values."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from collections.abc import Iterable
 from functools import lru_cache
@@ -128,7 +127,7 @@ class MeasurementTable(
         """Select the rows of one runtime slice."""
 
         if (
-            context.axis is not RuntimeSlicePlaneAxis
+            not context.axis.one_plane_per_runtime_slice
             or self.runtime_slice_row_domain() is None
         ):
             return self

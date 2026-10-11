@@ -82,5 +82,5 @@ def test_singleton_object_projection_consumes_measurement_image_plane_proof() ->
     )
 
     assert aligned_source.plane_projection is None
-    assert aligned_source.payload.metadata.plane_axis is None
+    assert not aligned_source.payload.metadata.plane_axis.leads_data
     assert np.shape(aligned_source.payload) == (4, 5)

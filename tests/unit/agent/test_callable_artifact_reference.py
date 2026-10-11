@@ -1,5 +1,6 @@
 """Execute the canonical public usage code, rather than a copied example."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import re
 import runpy
@@ -453,7 +454,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
         metadata=ImagePayloadMetadata(
             source_dtype="uint16",
             source_path="/synthetic/label-fixture.tif",
-            plane_axis=None if plane_count is None else RuntimeSlicePlaneAxis,
+            plane_axis=NoPlaneAxis if plane_count is None else RuntimeSlicePlaneAxis,
         ),
     )
     call_argument = contract.main_flow_call_argument(stack)

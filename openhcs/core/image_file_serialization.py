@@ -512,7 +512,7 @@ class TiffImageFileFormat(ImageFileFormat):
         metadata = payload.metadata
         if metadata.persists_whole_image():
             axes = list("ZYX")
-        elif metadata.plane_axis is not None:
+        elif metadata.plane_axis.leads_data:
             # Q is a container frame, not a guessed physical Z/channel axis.
             # Its exact OpenHCS component domain remains in source projection.
             axes = list("QYX")
@@ -818,7 +818,7 @@ def image_payload_as_uint8(payload: Any) -> np.ndarray:
 def require_single_image_payload(payload: Any) -> np.ndarray:
     """Return pixels only when no runtime plane axis remains to project."""
     plane_axis = payload.metadata.plane_axis
-    if plane_axis is not None:
+    if plane_axis.leads_data:
         raise ValueError(
             "Single-image raster serialization requires a payload projected off "
             f"its declared {plane_axis.name!r} plane axis."

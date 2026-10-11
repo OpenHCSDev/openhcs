@@ -178,7 +178,7 @@ def test_public_declared_saved_image_reaches_strict_receiver(
     assert item.image_metadata.source_voxel_spacing == SourceVoxelSpacing(
         (1.3556, 1.3556)
     )
-    assert item.image_metadata.plane_axis is None
+    assert not item.image_metadata.plane_axis.leads_data
     assert before == {p: sha256(p.read_bytes()).hexdigest() for p in before}
 
 
@@ -211,7 +211,7 @@ def test_plain_persisted_tiff_without_saved_image_metadata_streams(
     assert len(received) == 1
     for transmitted, item, bindings in received:
         np.testing.assert_array_equal(transmitted, expected)
-        assert item.image_metadata.plane_axis is None
+        assert not item.image_metadata.plane_axis.leads_data
         assert bindings.payload_axes == ()
         assert item.image_metadata.source_voxel_spacing == SourceVoxelSpacing(
             (0.5, 0.5)

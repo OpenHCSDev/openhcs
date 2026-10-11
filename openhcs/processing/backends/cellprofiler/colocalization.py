@@ -1,7 +1,6 @@
 """Colocalization backends for CellProfiler-compatible measurements."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Mapping
@@ -234,7 +233,7 @@ class ColocalizationThresholdMaskRuntimeOutput(RuntimeSliceIndexedValue):
         if self.object_labels is None:
             return self
         projection = self.object_labels.declared_plane_projection()
-        if projection is None or projection.axis is not RuntimeSlicePlaneAxis:
+        if projection is None or not projection.axis.one_plane_per_runtime_slice:
             return self
         projected = RuntimeSliceProjection.value_for_slice(
             self.object_labels,
@@ -1663,7 +1662,7 @@ class ColocalizationImagePairContext:
             return np.isfinite(first_pixels) & np.isfinite(second_pixels)
         valid = np.isfinite(first_pixels) & np.isfinite(second_pixels)
         metadata = image.metadata
-        if metadata.plane_axis is None:
+        if not metadata.plane_axis.leads_data:
             raise ValueError(
                 "MeasureColocalization masked image pairs require a declared "
                 "image plane axis."
@@ -2984,14 +2983,14 @@ def _colocalization_source_plane_output(
     """Attach one declared composed-image source plane to a derived output."""
 
     metadata = image.metadata
-    if metadata.plane_axis is None:
+    if not metadata.plane_axis.leads_data:
         return metadata.project_channel_payload(
             image,
             image_data,
             source_channel_index,
             channel_data=output_data,
         )
-    if metadata.plane_axis is not SourceBindingPlaneAxis:
+    if not metadata.plane_axis.one_plane_per_source_binding:
         raise ValueError(
             "MeasureColocalization source channels require the declared "
             f"source-binding plane axis, got {metadata.plane_axis.name!r}."

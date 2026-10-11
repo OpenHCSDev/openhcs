@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import importlib
 from collections.abc import Callable, Mapping
@@ -405,7 +406,7 @@ def measurement_values_for_label_slices(
     labels: object,
     *,
     domain: ObjectLabelDomain,
-    plane_axis: type[RuntimePlaneAxis] | None,
+    plane_axis: type[RuntimePlaneAxis],
     plane_projector: RuntimePlaneProjection,
     object_name: str | None = None,
     row_axis: MeasurementRowAxisField = MeasurementRowAxisField.SLICE_INDEX,
@@ -435,7 +436,7 @@ def adapter_label_measurement_values(
     labels: object,
     *,
     domain: ObjectLabelDomain,
-    plane_axis: type[RuntimePlaneAxis] | None,
+    plane_axis: type[RuntimePlaneAxis],
     slice_index: int | None = None,
 ) -> tuple[object, ...]:
     return ObjectLabelMeasurementSliceRequest(
@@ -5341,7 +5342,7 @@ def test_cellprofiler_adapter_measurement_query_cache_is_store_scoped():
             ObjectLabelPayload(
                 variant_data=ObjectLabelVariantData(labels=labels),
                 domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
-                plane_axis=None,
+                plane_axis=NoPlaneAxis,
             ),
         )
         producer.add_measurements(
@@ -5470,7 +5471,7 @@ def test_label_measurement_cache_distinguishes_single_plane_from_stack() -> None
                 labels=np.array([[1, 2]], dtype=np.int32)
             ),
             domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
-            plane_axis=None,
+            plane_axis=NoPlaneAxis,
         ),
     )
     producer.add_measurements(
@@ -5731,7 +5732,7 @@ def test_cellprofiler_adapter_projects_duplicate_object_labels_to_current_runtim
             scope=ObjectLabelDomainScope.PAYLOAD,
             declared_object_ids=(1, 2),
         ),
-        plane_axis=None,
+        plane_axis=NoPlaneAxis,
     )
 
     assert len(value_slices) == 1

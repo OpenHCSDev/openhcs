@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
@@ -393,7 +392,7 @@ class RuntimeInputBindingRequest:
         payload: ObjectLabelValue,
     ) -> ObjectLabelValue:
         """Project loaded object labels to the invocation's current plane."""
-        if payload.plane_axis is None:
+        if not payload.plane_axis.leads_data:
             return payload
         plane_count = payload.declared_plane_count()
         if plane_count is None:
@@ -483,7 +482,7 @@ class RuntimeInputBindingRequest:
         """Return whether object inputs are already scoped by source binding."""
         for spec in self.object_inputs:
             labels = self.label_payload_for(spec)
-            if labels.plane_axis is not SourceBindingPlaneAxis:
+            if not labels.plane_axis.one_plane_per_source_binding:
                 continue
             aliases = labels.source_aliases
             if not aliases:

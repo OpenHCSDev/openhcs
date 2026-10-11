@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
-from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 import time
 from collections.abc import Sequence
@@ -293,7 +292,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
         data = edge.composed_value(records)
         projected: RuntimeArrayData = data
         source_metadata = projected.metadata
-        if source_metadata.plane_axis is SourceBindingPlaneAxis:
+        if source_metadata.plane_axis.one_plane_per_source_binding:
             source_projection = preserved_image_plane_projection(
                 projected,
                 self,
@@ -386,7 +385,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
                 ObjectLabelsArtifactType,
             ).composed_value(records),
         )
-        if objects.plane_axis is SourceBindingPlaneAxis:
+        if objects.plane_axis.one_plane_per_source_binding:
             declared_projection = objects.declared_plane_projection()
             if declared_projection is None:
                 raise ValueError(

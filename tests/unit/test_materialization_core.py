@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import json
 from pathlib import Path
@@ -889,7 +890,7 @@ def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
-        plane_axis=None,
+        plane_axis=NoPlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/source/volume.ome.tif",) * 4,
             component_metadata=tuple(
@@ -908,7 +909,7 @@ def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
     )
     rois = load_rois_from_zip(Path(archive))
     metadata = ROIArchiveSourceMetadata.decode(rois)
-    assert payload.plane_axis is None
+    assert not payload.plane_axis.leads_data
     assert metadata.plane_axis is (
         RuntimeSlicePlaneAxis if variable_components else None
     )

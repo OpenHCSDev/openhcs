@@ -80,7 +80,7 @@ def test_declared_singleton_projection_retains_color_mask_and_source_context(
         projected.data, original.data[0]
     )
     metadata = projected.metadata
-    assert metadata.plane_axis is None
+    assert not metadata.plane_axis.leads_data
     assert metadata.axis_position(ColourAxis) == (-1 if color else None)
     assert metadata.source_component_metadata["channel"] == 2
     assert metadata.source_image_names == ("FITC",)

@@ -103,7 +103,7 @@ def test_runtime_plane_projection_requires_matching_payload_axis() -> None:
 
     np.testing.assert_array_equal(selected.data, data[1])
     np.testing.assert_array_equal(selected.mask, mask[1])
-    assert selected.metadata.plane_axis is None
+    assert not selected.metadata.plane_axis.leads_data
 
 
 def test_source_binding_slice_projection_preserves_shared_spatial_mask() -> None:
@@ -208,8 +208,8 @@ def test_slice_projection_keeps_fresh_source_metadata_across_calls(batch: bool) 
 
     assert first.metadata.source_component_metadata["well"] == "A01"
     assert second.metadata.source_component_metadata["well"] == "B02"
-    assert first.metadata.plane_axis is None
-    assert second.metadata.plane_axis is None
+    assert not first.metadata.plane_axis.leads_data
+    assert not second.metadata.plane_axis.leads_data
     np.testing.assert_array_equal(first.mask, masks[1])
     np.testing.assert_array_equal(second.mask, masks[1])
 

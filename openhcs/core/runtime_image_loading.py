@@ -1,6 +1,7 @@
 """Source-file metadata construction for runtime image payloads."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import dataclass
@@ -89,7 +90,7 @@ class ImagePayloadSourceMetadataContext:
         source_identity_path = self.source_path
         source_component_metadata = self.source_identity.component_metadata
         source_image_provenance_planes = SourceImageProvenancePlanes()
-        plane_axis = None
+        plane_axis = NoPlaneAxis
         if source_component_metadata is not None:
             indexed_metadata = SourcePlaneIndexedMetadata.from_declared_source_metadata(
                 source_component_metadata

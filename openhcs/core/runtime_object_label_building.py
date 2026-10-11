@@ -1,6 +1,7 @@
 """Construction of object-label values from source-image context."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 
 from dataclasses import dataclass, field
 from types import MappingProxyType
@@ -76,7 +77,7 @@ class SourceImageObjectLabelBuildRequest:
                     self.image,
                     self.labels,
                 )
-            plane_axis = None
+            plane_axis = NoPlaneAxis
         else:
             if self.declared_object_count is not None or self.declared_object_ids:
                 raise ValueError(

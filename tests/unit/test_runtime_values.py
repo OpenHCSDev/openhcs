@@ -779,7 +779,7 @@ def test_object_label_projected_plane_reduces_domain_to_payload_scope() -> None:
     assert projected.domain.scope is ObjectLabelDomainScope.PAYLOAD
     assert projected.domain.declared_object_ids == (2,)
     assert projected.domain.declared_object_id_domains == ()
-    assert projected.plane_axis is None
+    assert not projected.plane_axis.leads_data
     assert projected.source_image_names == ("rawGFP",)
 
 
@@ -1332,7 +1332,7 @@ def test_object_label_payload_builder_uses_nominal_payload_registry() -> None:
     assert rebuilt.labels is transformed_labels
     assert rebuilt.domain.declared_object_count == 1
     assert rebuilt.domain.declared_object_ids == (2,)
-    assert rebuilt.plane_axis is None
+    assert not rebuilt.plane_axis.leads_data
     assert rebuilt.spatial_origin_yx == (3, 5)
     assert rebuilt.source_spatial_shape_yx == (20, 30)
 
@@ -1468,7 +1468,7 @@ def test_collapse_leading_plane_axis_keeps_common_identity_and_contributors() ->
 
     collapsed = metadata.collapse_leading_plane_axis()
 
-    assert collapsed.plane_axis is None
+    assert not collapsed.plane_axis.leads_data
     assert dict(collapsed.source_component_metadata or {}) == {
         "well": "A01",
         "site": "1",
@@ -1787,7 +1787,7 @@ def test_object_label_payload_from_source_image_keeps_ambiguous_3d_domain_payloa
     ).payload()
 
     assert payload.domain.scope is ObjectLabelDomainScope.PAYLOAD
-    assert payload.plane_axis is None
+    assert not payload.plane_axis.leads_data
     assert payload.domain.declared_object_count == 4
     assert payload.domain.declared_object_id_domains == ()
 
@@ -1857,7 +1857,7 @@ def test_object_label_payload_domain_declaration_overrides_source_binding_planes
     ).payload()
 
     assert payload.domain.scope is ObjectLabelDomainScope.PAYLOAD
-    assert payload.plane_axis is None
+    assert not payload.plane_axis.leads_data
     assert payload.domain.declared_object_count == 4
     assert payload.domain.declared_object_id_domains == ()
 
@@ -1872,7 +1872,7 @@ def test_source_image_metadata_does_not_guess_plane_axis_from_paths() -> None:
         ),
     )
 
-    assert image.metadata.plane_axis is None
+    assert not image.metadata.plane_axis.leads_data
 
 
 def test_source_image_metadata_does_not_guess_axis_from_channel_components() -> None:
@@ -1888,7 +1888,7 @@ def test_source_image_metadata_does_not_guess_axis_from_channel_components() -> 
         ),
     )
 
-    assert image.metadata.plane_axis is None
+    assert not image.metadata.plane_axis.leads_data
 
 
 def test_source_image_metadata_preserves_explicit_runtime_slice_axis() -> None:
@@ -2308,7 +2308,7 @@ def test_declared_source_image_projection_selects_pixels_and_metadata_together()
 
     np.testing.assert_array_equal(projected.data, planes[1])
     metadata = projected.metadata
-    assert metadata.plane_axis is None
+    assert not metadata.plane_axis.leads_data
     assert metadata.source_image_names == ("Green",)
     assert metadata.source_path == "green.tif"
 
@@ -2899,7 +2899,7 @@ def test_group_scoped_artifact_consumes_singleton_payload_axis() -> None:
     )
 
     assert value.data.data.shape == (4, 5)
-    assert value.data.metadata.plane_axis is None
+    assert not value.data.metadata.plane_axis.leads_data
 
 
 def test_group_scoped_artifact_rejects_multi_plane_payload_axis() -> None:

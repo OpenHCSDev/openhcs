@@ -1,7 +1,7 @@
 from pathlib import Path
 from nominal_refactor_advisor.codemod import CodemodPlanDocument, CodemodSourceSnapshot, PatchTargetOperation, RefactorRecipe, SourceRewriteTarget, SourceTextReplacement
 root=Path('/home/ts/code/projects/openhcs-compile-perf');path=root/'openhcs/core/runtime_image_values.py';old=path.read_text()
-before='''        if self.metadata.plane_axis is None:
+before='''        if not self.metadata.plane_axis.leads_data:
             if plane_index != 0:
                 raise ValueError(
                     "Image payload without a plane axis cannot select nonzero "

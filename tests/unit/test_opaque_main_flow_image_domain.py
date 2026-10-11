@@ -1,5 +1,6 @@
 """Whole image domains survive the producer/cache/next-load handoff."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import replace
 from types import SimpleNamespace
@@ -101,7 +102,7 @@ def test_declared_runtime_axis_retains_its_exact_count(count):
     payload = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis).payload_with(pixels)
     projected = _runtime()._project_output_slices(payload, ["source-1.tif", "source-2.tif"])
     assert len(projected) == count
-    assert all(value.metadata.plane_axis is None for value, _context in projected)
+    assert all(not value.metadata.plane_axis.leads_data for value, _context in projected)
     assert payload.data.shape == (count, 4, 5)
     assert payload.metadata.plane_axis is RuntimeSlicePlaneAxis
 
@@ -262,12 +263,12 @@ def test_passed_through_record_preserves_collapsed_and_filename_coordinates(tmp_
     record = ProducedOutputSemantics.from_output(
         plan, tmp_path / "A01_s001_w1_z001_t001.tif",
         FunctionOutputIdentity(component_values={"well": "A01"}, filename_component_values={"well": "A01", "z_index": 1}, extension=".tif", source="test"),
-        main_flow_plane_axis=None,
+        main_flow_plane_axis=NoPlaneAxis,
     )
     passed = record.passed_through(replace(plan, step_index=1, step_scope_id="next"))
     assert passed.component_values == record.component_values
     assert passed.filename_component_values == record.filename_component_values
-    assert passed.main_flow_plane_axis is None
+    assert not passed.main_flow_plane_axis.leads_data
 
 
 def test_duplicate_physical_path_rejects_contradictory_whole_axis(tmp_path):
@@ -277,7 +278,7 @@ def test_duplicate_physical_path_rejects_contradictory_whole_axis(tmp_path):
     opaque = ProducedOutputSemantics.from_output(
         plan, tmp_path / "A01_s001_w1_z001_t001.tif",
         FunctionOutputIdentity(component_values={"well": "A01"}, extension=".tif", source="test"),
-        main_flow_plane_axis=None,
+        main_flow_plane_axis=NoPlaneAxis,
     )
     with pytest.raises(ValueError, match="conflicting main-flow image axes"):
         StepOutputManifestStore._unique_output_path_records((opaque, replace(opaque, main_flow_plane_axis=RuntimeSlicePlaneAxis)))
@@ -437,7 +438,7 @@ def test_scalar_rgb_occurrences_reload_on_runtime_slice_axis(tmp_path, sites):
             component_values={"well": "A01", "site": site, "channel": 3},
             extension=".tif", source="test",
         ),
-        output_context=context, main_flow_plane_axis=None,
+        output_context=context, main_flow_plane_axis=NoPlaneAxis,
     ) for site in sites)
     payloads = tuple(ImagePayloadMetadata(
         source_image_names=("RGBImage",), axes=PayloadAxes.colour_samples(-1),
@@ -459,7 +460,7 @@ def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, 
         plan, tmp_path / f"A01_s001_w1_z001_t001_{name}.tif",
         FunctionOutputIdentity(component_values={"well": "A01"}, extension=".tif", source="test"),
         output_context=AlignedImageSliceContext.main_flow(name),
-        main_flow_plane_axis=None,
+        main_flow_plane_axis=NoPlaneAxis,
     ) for name in ("First", "Second"))
     payloads = tuple(ImagePayloadMetadata(source_image_names=(name,)).payload_with(
         np.ones((4, 5), dtype=np.float32) * i) for i, name in enumerate(("First", "Second")))

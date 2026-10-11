@@ -47,7 +47,7 @@ def test_field_collapses_pixels_not_contributor_history():
     )
     metadata = result.metadata
     assert result.shape == (8, 9)
-    assert metadata.plane_axis is None
+    assert not metadata.plane_axis.leads_data
     assert len(metadata.source_image_paths) == 3
     assert metadata.source_image_provenance_planes.contributor_count == 3
     assert metadata.source_component_metadata == {

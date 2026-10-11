@@ -293,7 +293,7 @@ def test_straighten_worms_policy_consumes_declared_singleton_label_plane() -> No
         projected_labels.labels,
         np.array([[0, 1], [0, 0]], dtype=np.int32),
     )
-    assert projected_labels.plane_axis is None
+    assert not projected_labels.plane_axis.leads_data
     assert projected_labels.domain.scope is ObjectLabelDomainScope.PAYLOAD
 
 

@@ -1,7 +1,6 @@
 """Intensity-distribution backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from metaclass_registry.caches import ProcessLocalBoundedCache
 
@@ -280,7 +279,7 @@ class IntensityDistributionHeatmapRuntimeOutput(RuntimeSliceIndexedValue):
     ) -> "IntensityDistributionHeatmapRuntimeOutput":
         """Project the heatmap object-label domain through its declared axis."""
         projection = self.object_labels.declared_plane_projection()
-        if projection is None or projection.axis is not RuntimeSlicePlaneAxis:
+        if projection is None or not projection.axis.one_plane_per_runtime_slice:
             return self
         projected = RuntimeSliceProjection.value_for_slice(
             self.object_labels,

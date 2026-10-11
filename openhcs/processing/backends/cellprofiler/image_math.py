@@ -827,7 +827,7 @@ class ImageMathPreparedOperands:
         image: RuntimeArrayData,
     ) -> tuple[RuntimeArrayData, ...]:
         metadata = image.metadata
-        if metadata.plane_axis is not SourceBindingPlaneAxis:
+        if not metadata.plane_axis.one_plane_per_source_binding:
             return (image,)
         axis_size = metadata.source_provenance.source_plane_count
         if axis_size <= 0:
@@ -877,7 +877,7 @@ class ImageMathPreparedOperands:
         metadata = self.source_image.metadata
         if metadata.unit_interval_intensity is not None:
             metadata = metadata.without_unit_interval_intensity_scale()
-        if metadata.plane_axis is SourceBindingPlaneAxis:
+        if metadata.plane_axis.one_plane_per_source_binding:
             return metadata.collapse_leading_plane_axis()
         return metadata
 

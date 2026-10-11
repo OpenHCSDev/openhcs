@@ -454,7 +454,7 @@ def test_volumetric_projection_accepts_metadata_payload_array_methods() -> None:
     np.testing.assert_array_equal(result.data, stack.max(axis=0))
     result_metadata = result.metadata
     assert result_metadata.source_dtype == "float32"
-    assert result_metadata.plane_axis is None
+    assert not result_metadata.plane_axis.leads_data
 
 
 def test_with_pixels_rejects_implicit_channel_mask_collapse() -> None:

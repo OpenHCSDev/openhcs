@@ -1,7 +1,6 @@
 """Sparse IJV object-label storage and identity-domain semantics."""
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -93,7 +92,7 @@ class SparseIJVLabelRows(ColumnarRows):
     def value_for_slice(
         self, context: RuntimePlaneAxisValueProjection
     ) -> "SparseIJVLabelRows":
-        if context.axis is not RuntimeSlicePlaneAxis:
+        if not context.axis.one_plane_per_runtime_slice:
             return self
         return self.slice(context.require_plane_index())
 

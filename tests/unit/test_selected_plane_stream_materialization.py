@@ -194,7 +194,7 @@ def test_selection_contract_keeps_exact_source_order_without_channel_inference(
     metadata = payload.metadata
     if len(indices) == 1:
         assert payload.shape == (7, 8)
-        assert metadata.plane_axis is None
+        assert not metadata.plane_axis.leads_data
         assert dict(metadata.source_component_metadata)[component] == "2"
     else:
         assert payload.shape == (2, 7, 8)
@@ -423,7 +423,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
                 request.source.item_fields["image_metadata"]
             )
             assert metadata.source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
-            assert metadata.plane_axis is None
+            assert not metadata.plane_axis.leads_data
             assert data.shape == (7, 8)
             batch = StreamingBatchMessageBuilder.build(
                 viewer,

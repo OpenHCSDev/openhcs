@@ -1711,7 +1711,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         whole-image source retains its intrinsic spatial dimensions.
         """
         metadata = payload.metadata
-        if not metadata.persists_whole_image() and metadata.plane_axis is None:
+        if not metadata.persists_whole_image() and not metadata.plane_axis.leads_data:
             if member_count != 1:
                 raise ValueError(
                     "A scalar source payload must declare exactly one cohort member."

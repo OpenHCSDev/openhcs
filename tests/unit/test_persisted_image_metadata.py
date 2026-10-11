@@ -80,7 +80,7 @@ def test_complete_metadata_codec_uses_declarations_and_preserves_contributors():
     restored = ImagePayloadMetadata.from_mapping(wire)
     assert restored == metadata
     assert len(restored.source_provenance.represented_source_identities) == 9
-    assert restored.plane_axis is None  # Contributors are not a runtime SITE axis.
+    assert not restored.plane_axis.leads_data  # Contributors are not a runtime SITE axis.
     assert restored.source_image_names == ("neurite", "nucleus")
 
 
@@ -108,7 +108,7 @@ def test_saved_format_metadata_is_native_and_does_not_reencode(
     assert restored.source_voxel_spacing == metadata.source_voxel_spacing
     assert restored.source_spatial_domain == metadata.source_spatial_domain
     assert restored.source_provenance == metadata.source_provenance
-    assert restored.plane_axis is None
+    assert not restored.plane_axis.leads_data
     if extension in (".png", ".bmp"):
         assert restored.unit_interval_intensity is None
         assert restored.physical_border_edges_yx is None

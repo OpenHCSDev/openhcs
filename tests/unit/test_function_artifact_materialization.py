@@ -1228,7 +1228,7 @@ def test_runtime_artifact_plan_materializes_3d_point_measurements(source_z_origi
 
     # The measurement table has no pixel-plane axis. Its rendered point archive
     # nevertheless owns every represented Z plane, not only its scalar address.
-    assert result.metadata.plane_axis is None
+    assert not result.metadata.plane_axis.leads_data
     domain = materialization.stream_source_metadata_items((result,), None)
     assert [item["z_index"] for item in domain.values] == list(
         range(source_z_origin, source_z_origin + 4)

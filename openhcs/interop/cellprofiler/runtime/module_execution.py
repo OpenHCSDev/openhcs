@@ -705,7 +705,7 @@ class CellProfilerModuleExecutor:
         )
         plane_projection = (
             preserved_image_plane_projection(payload, adapter, source_aliases)
-            if payload.metadata.plane_axis is not None
+            if payload.metadata.plane_axis.leads_data
             else None
         )
         return CellProfilerMeasurementImage(

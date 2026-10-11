@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from types import MappingProxyType
 
@@ -259,7 +260,7 @@ def test_retained_image_plane_domain_does_not_require_artifact_storage_axes(
         metadata, ()
     )
 
-    assert fields["plane_axis"] == axis.value
+    assert fields["plane_axis"] == axis.name
     assert fields["plane_component_values"] == {component.name: ("1", "2")}
     assert (
         metadata.retained_plane_component_values() == fields["plane_component_values"]
@@ -267,7 +268,7 @@ def test_retained_image_plane_domain_does_not_require_artifact_storage_axes(
 
 
 def test_projected_contributors_do_not_declare_a_retained_pixel_plane_domain():
-    metadata = _plane_metadata(None, ({"channel": "1"}, {"channel": "2"}))
+    metadata = _plane_metadata(NoPlaneAxis, ({"channel": "1"}, {"channel": "2"}))
 
     assert metadata.retained_plane_component_values() == {}
     wire = StreamImagePayloadMetadataProjector.item_fields_for_plane_components(

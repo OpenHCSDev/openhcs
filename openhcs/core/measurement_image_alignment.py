@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import logging
 from abc import ABC, abstractmethod
@@ -374,8 +373,7 @@ class MeasurementImageLabelAlignmentRequest:
         domain = label_payload.object_label_domain()
         if domain.scope is not ObjectLabelDomainScope.PAYLOAD and not (
             domain.scope is ObjectLabelDomainScope.PLANE
-            and label_payload.plane_axis
-            in (RuntimeSlicePlaneAxis, SourceBindingPlaneAxis)
+            and label_payload.plane_axis.leads_data
         ):
             raise ValueError(
                 "Object-label reference alignment has no behavior declared for "

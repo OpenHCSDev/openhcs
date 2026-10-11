@@ -862,14 +862,14 @@ def _binary_images_from_payload(
     if not binary_image_names:
         return ()
     metadata = image.metadata
-    if metadata.plane_axis is None:
+    if not metadata.plane_axis.leads_data:
         if len(binary_image_names) != 1:
             raise ValueError(
                 "MeasureImageAreaOccupied requires a declared source-binding "
                 "axis for multiple binary-image rows."
             )
         return (np.asarray(image.data),)
-    if metadata.plane_axis is not SourceBindingPlaneAxis:
+    if not metadata.plane_axis.one_plane_per_source_binding:
         raise ValueError(
             "MeasureImageAreaOccupied binary-image composition requires a "
             "source-binding image axis, got "

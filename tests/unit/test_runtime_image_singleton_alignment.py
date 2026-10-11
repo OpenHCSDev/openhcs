@@ -141,7 +141,7 @@ def test_singleton_runtime_projection_consumes_rgb_image_and_mask_axis_together(
     assert projected.data.shape == (4, 5, 3)
     np.testing.assert_array_equal(projected.mask, _SINGLETON_MASK)
     projected_metadata = projected.metadata
-    assert projected_metadata.plane_axis is None
+    assert not projected_metadata.plane_axis.leads_data
     assert projected_metadata.axis_index(ColourAxis, projected) == 2
 
 

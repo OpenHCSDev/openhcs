@@ -1,5 +1,6 @@
 """Current intensity units survive composition, projection and native storage."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import dataclass
@@ -175,7 +176,7 @@ def test_saved_output_context_retains_the_independent_composed_buffer_domain():
     copied = stack_image_payloads(inputs, metadata_mode=RuntimeSlicePlaneAxis)
     restored = ImagePayloadStackComposition.with_saved_output_context(
         copied, inputs, tuple(value.metadata for value in inputs),
-        single_output_plane_axis=None,
+        single_output_plane_axis=NoPlaneAxis,
     )
     assert restored.data is copied.data
     for index in (0, 1):

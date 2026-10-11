@@ -68,7 +68,7 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
             np.testing.assert_array_equal(payload.mask, mask[plane])
         else:
             assert payload.mask is None
-        assert payload.metadata.plane_axis is None
+        assert not payload.metadata.plane_axis.leads_data
 
 
 def test_shared_projection_retains_nesting_and_fresh_metadata_snapshots():

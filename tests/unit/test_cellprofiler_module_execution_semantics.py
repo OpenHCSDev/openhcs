@@ -262,7 +262,7 @@ def test_slice_aligned_object_measurement_consumes_declared_singleton_plane() ->
     assert object_label_dense_array(projected).shape == (4, 5)
     assert projected.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD
     assert projected.object_label_domain().declared_object_ids == (7,)
-    assert projected.plane_axis is None
+    assert not projected.plane_axis.leads_data
     assert (
         policy.image_execution_mode(
             projected,

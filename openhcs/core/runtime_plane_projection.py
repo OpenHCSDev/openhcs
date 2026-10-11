@@ -30,9 +30,9 @@ class RuntimeSliceProjectableValue(ABC):
         return None
 
     @property
-    def declared_plane_axis(self) -> "RuntimePlaneAxis | None":
-        """Return the leading plane axis this value declares, if any."""
-        return None
+    def declared_plane_axis(self) -> "type[RuntimePlaneAxis]":
+        """Return the leading plane axis this value declares."""
+        return NoPlaneAxis
 
     @property
     def image_metadata(self) -> "ImagePayloadMetadata":
@@ -168,6 +168,8 @@ class RuntimePlaneAxis(ABC, metaclass=AutoRegisterMeta):
     __registry__: ClassVar[dict[str, type[RuntimePlaneAxis]]] = {}
 
     name: ClassVar[str | None] = None
+    leads_data: ClassVar[bool] = True
+    """The data has a leading dimension that counts planes of this axis."""
     one_plane_per_runtime_slice: ClassVar[bool] = False
     """Each plane is one runtime slice of the invocation."""
     one_plane_per_source_binding: ClassVar[bool] = False
@@ -176,7 +178,14 @@ class RuntimePlaneAxis(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def leading_axes(cls) -> tuple[type[RuntimePlaneAxis], ...]:
         """Return every axis that puts a leading plane dimension on the data."""
-        return tuple(cls.__registry__.values())
+        return tuple(axis for axis in cls.__registry__.values() if axis.leads_data)
+
+    @classmethod
+    def require_member(cls, value: object) -> type[RuntimePlaneAxis]:
+        """Return ``value`` when it is one of this family's axes."""
+        if isinstance(value, type) and issubclass(value, RuntimePlaneAxis):
+            return value
+        raise ValueError(f"{value!r} is not a runtime plane axis.")
 
     @classmethod
     def named(cls, name: object) -> type[RuntimePlaneAxis]:
@@ -206,15 +215,18 @@ class RuntimePlaneAxis(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     @abstractmethod
-    def projected_axis(
-        cls, projected_plane_count: int
-    ) -> type[RuntimePlaneAxis] | None:
+    def projected_axis(cls, projected_plane_count: int) -> type[RuntimePlaneAxis]:
         """Return the axis retained after an exact runtime projection."""
 
     @classmethod
-    def keeps_planes_of(cls, plane_axis: type[RuntimePlaneAxis] | None) -> bool:
+    def keeps_planes_of(cls, plane_axis: type[RuntimePlaneAxis]) -> bool:
         """Whether composing along this axis keeps a member's existing plane axis."""
         return plane_axis is cls
+
+    @classmethod
+    def axis_when_stacked(cls) -> type[RuntimePlaneAxis]:
+        """Return the axis that members declaring this axis are stacked along."""
+        return cls
 
     @classmethod
     @abstractmethod
@@ -257,19 +269,17 @@ class RuntimeSlicePlaneAxis(RuntimePlaneAxis):
         return projector.runtime_slice_axis_size()
 
     @classmethod
-    def projected_axis(
-        cls, projected_plane_count: int
-    ) -> type[RuntimePlaneAxis] | None:
+    def projected_axis(cls, projected_plane_count: int) -> type[RuntimePlaneAxis]:
         if projected_plane_count != 1:
             raise ValueError(
                 "Runtime-slice object-label projection must select exactly one "
                 f"plane, got {projected_plane_count}."
             )
-        return None
+        return NoPlaneAxis
 
     @classmethod
-    def keeps_planes_of(cls, plane_axis: type[RuntimePlaneAxis] | None) -> bool:
-        return plane_axis is None or plane_axis is cls
+    def keeps_planes_of(cls, plane_axis: type[RuntimePlaneAxis]) -> bool:
+        return plane_axis is cls or not plane_axis.leads_data
 
     @classmethod
     def compose_provenance(
@@ -309,15 +319,13 @@ class SourceBindingPlaneAxis(RuntimePlaneAxis):
         return projector.source_binding_axis_size(source_aliases)
 
     @classmethod
-    def projected_axis(
-        cls, projected_plane_count: int
-    ) -> type[RuntimePlaneAxis] | None:
+    def projected_axis(cls, projected_plane_count: int) -> type[RuntimePlaneAxis]:
         if projected_plane_count <= 0:
             raise ValueError(
                 "Source-binding object-label projection must select at least one plane."
             )
         if projected_plane_count == 1:
-            return None
+            return NoPlaneAxis
         return cls
 
     @classmethod
@@ -333,6 +341,54 @@ class SourceBindingPlaneAxis(RuntimePlaneAxis):
         return SourceImageProvenance.bundle(
             provenances, scalar_sources=scalar_sources, **topology
         )
+
+
+class NoPlaneAxis(RuntimePlaneAxis):
+    """The data has no leading plane dimension: it is one plane or one whole image."""
+
+    name = "none"
+    leads_data = False
+
+    @classmethod
+    def plane_index(
+        cls,
+        projector: "RuntimePlaneAxisProjector",
+        source_aliases: tuple[str, ...],
+    ) -> int | None:
+        del projector, source_aliases
+        return None
+
+    @classmethod
+    def axis_size(
+        cls,
+        projector: "RuntimePlaneAxisProjector",
+        source_aliases: tuple[str, ...],
+    ) -> int | None:
+        del projector, source_aliases
+        return None
+
+    @classmethod
+    def projected_axis(cls, projected_plane_count: int) -> type[RuntimePlaneAxis]:
+        raise ValueError("Data without a plane axis has no planes to project.")
+
+    @classmethod
+    def keeps_planes_of(cls, plane_axis: type[RuntimePlaneAxis]) -> bool:
+        del plane_axis
+        return False
+
+    @classmethod
+    def axis_when_stacked(cls) -> type[RuntimePlaneAxis]:
+        return RuntimeSlicePlaneAxis
+
+    @classmethod
+    def compose_provenance(
+        cls,
+        provenances: "Sequence[SourceImageProvenance]",
+        *,
+        scalar_sources: "Sequence[SourceImageProvenance]",
+        **topology: bool,
+    ) -> "SourceImageProvenance":
+        raise ValueError("Members are composed along a declared plane axis.")
 
 
 class RuntimePlaneAxisProjector(ABC):
@@ -413,13 +469,17 @@ class RuntimePlaneProjection(RuntimePlaneAxisProjector):
 class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     """Projection of values that explicitly carry a declared runtime plane axis."""
 
-    axis: RuntimePlaneAxis
+    axis: type[RuntimePlaneAxis]
     source_aliases: tuple[str, ...]
     plane_index: int | None
     axis_size: int
 
     def __post_init__(self) -> None:
-        axis = self.axis
+        axis = RuntimePlaneAxis.require_member(self.axis)
+        if not axis.leads_data:
+            raise ValueError(
+                "RuntimePlaneAxisValueProjection requires an axis that leads the data."
+            )
         source_aliases = tuple(self.source_aliases)
         if any(not isinstance(alias, str) or not alias for alias in source_aliases):
             raise ValueError(
@@ -447,7 +507,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     @classmethod
     def from_source_declaration(
         cls,
-        axis: RuntimePlaneAxis | None,
+        axis: type[RuntimePlaneAxis],
         source: "SourceImageProvenance",
     ) -> "RuntimePlaneAxisValueProjection | None":
         """Construct the retained axis declared by an exact source-image value.
@@ -456,7 +516,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
         multiple contributors. Cardinality and aliases come from that source
         source declaration; array rank never supplies spatial meaning.
         """
-        if axis is None:
+        if not axis.leads_data:
             return None
         return cls.preserve(
             axis=axis,
@@ -468,7 +528,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     def from_projector(
         cls,
         projector: RuntimePlaneAxisProjector | None,
-        axis: RuntimePlaneAxis,
+        axis: type[RuntimePlaneAxis],
         source_aliases: tuple[str, ...],
     ) -> "RuntimePlaneAxisValueProjection | None":
         """Return the runtime-axis projection declared by a runtime projector."""
@@ -490,10 +550,10 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
         )
 
     def validate_source_declaration(
-        self, axis: RuntimePlaneAxis | None, source: "SourceImageProvenance",
+        self, axis: type[RuntimePlaneAxis], source: "SourceImageProvenance",
     ) -> None:
         """Check an explicit projection against retained acquisition declarations."""
-        if axis is None:
+        if not axis.leads_data:
             return
         declared_count = source.source_plane_count
         if self.axis is not axis or (
@@ -508,7 +568,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     def require_from_projector(
         cls,
         projector: RuntimePlaneAxisProjector,
-        axis: RuntimePlaneAxis,
+        axis: type[RuntimePlaneAxis],
         source_aliases: tuple[str, ...] = (),
     ) -> "RuntimePlaneAxisValueProjection":
         """Return the complete projection declared for one runtime image axis."""
@@ -524,7 +584,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     def from_selected_plane(
         cls,
         *,
-        axis: RuntimePlaneAxis,
+        axis: type[RuntimePlaneAxis],
         plane_index: int,
         axis_size: int,
         source_aliases: tuple[str, ...] = (),
@@ -541,7 +601,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     def preserve(
         cls,
         *,
-        axis: RuntimePlaneAxis,
+        axis: type[RuntimePlaneAxis],
         axis_size: int,
         source_aliases: tuple[str, ...] = (),
     ) -> "RuntimePlaneAxisValueProjection":

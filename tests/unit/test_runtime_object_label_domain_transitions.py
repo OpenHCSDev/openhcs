@@ -51,7 +51,7 @@ def test_payload_domain_replacement_drops_inherited_plane_axis() -> None:
         scope=ObjectLabelDomainScope.PAYLOAD,
         declared_object_ids=(1, 2),
     )
-    assert transformed.plane_axis is None
+    assert not transformed.plane_axis.leads_data
     np.testing.assert_array_equal(transformed.labels, labels)
 
 
@@ -99,7 +99,7 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
     reference_image = labels.measurement_reference_image()
     reference_metadata = reference_image.metadata
 
-    assert reference_metadata.plane_axis is None
+    assert not reference_metadata.plane_axis.leads_data
     assert reference_metadata.source_provenance.source_plane_count == 0
     assert reference_metadata.source_image_provenance_planes.contributor_count == 3
     assert reference_metadata.source_image_names == ()
@@ -146,7 +146,7 @@ def test_sparse_label_slice_projection_preserves_overlap_and_axis_domain(
         axis=axis, axis_size=plane_count,
     )
     projected = RuntimeSliceProjection.value_for_slice(labels, preserved.selected_plane(0))
-    assert projected.plane_axis is None
+    assert not projected.plane_axis.leads_data
     assert projected.domain.declared_object_ids == (1, 2)
     np.testing.assert_array_equal(projected.labels.as_array(), first.as_array())
     assert labels.plane_axis is axis

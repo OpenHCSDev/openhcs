@@ -6,7 +6,7 @@ modules, which each mode imports when it executes.
 """
 
 from __future__ import annotations
-from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -132,7 +132,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 f"{type(request.image).__name__}."
             )
         projection = request.plane_projection
-        if projection is None or projection.axis is not RuntimeSlicePlaneAxis:
+        if projection is None or not projection.axis.one_plane_per_runtime_slice:
             raise ValueError(
                 "Aligned runtime batch execution requires a compiled runtime-slice "
                 "projection."
@@ -204,7 +204,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 f"{owner} requires a compiled runtime-slice projection for "
                 "aligned multi-image stack execution."
             )
-        if projection.axis is not RuntimeSlicePlaneAxis:
+        if not projection.axis.one_plane_per_runtime_slice:
             raise RuntimeSliceProjectionDeclarationError(
                 f"{owner} aligned image execution requires "
                 f"RuntimeSlicePlaneAxis, got {projection.axis!r}."
@@ -226,7 +226,7 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 slice_payload.metadata.plane_axis for slice_payload in image.slices
             )
             if any(
-                plane_axis is not SourceBindingPlaneAxis
+                not plane_axis.one_plane_per_source_binding
                 for plane_axis in slice_plane_axes
             ):
                 raise ValueError(

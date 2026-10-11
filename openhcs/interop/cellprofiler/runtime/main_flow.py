@@ -16,7 +16,7 @@ def cellprofiler_main_flow_output(
     """Preserve the declared OpenHCS plane axis on a CP output image."""
     output_image = owned_runtime_value(output_image)
     output_axis = output_image.metadata.plane_axis
-    if output_axis is None:
+    if not output_axis.leads_data:
         return output_image
     if plane_projection is None:
         raise ValueError(
@@ -34,7 +34,7 @@ def cellprofiler_main_flow_output(
         value_name="CellProfiler main-flow output",
     )
     input_axis = input_image.metadata.plane_axis
-    if input_axis is not None:
+    if input_axis.leads_data:
         if input_axis is not plane_projection.axis:
             raise ValueError(
                 "CellProfiler main-flow input axis conflicts with the output "
