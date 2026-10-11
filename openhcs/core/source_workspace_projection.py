@@ -851,7 +851,7 @@ class WorkspaceSourceProjections:
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
     ) -> "WorkspaceSourceProjections":
         return RuntimeWorkspaceSourceProjections(
-            plate_path=Path(context.plate_path),
+            plate_path=Path(context.dataset_root),
             metadata_handler=context.microscope_handler.metadata_handler,
             filemanager=context.filemanager,
             cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
@@ -860,19 +860,19 @@ class WorkspaceSourceProjections:
         )
 
     @classmethod
-    def from_plate_metadata(
+    def from_dataset_metadata(
         cls,
         *,
-        plate_path: Path,
+        dataset_root: Path,
         metadata_handler: "MetadataHandler",
         filemanager: "FileManager",
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
         source_bindings: SourceBindingsConfig | None = None,
     ) -> "WorkspaceSourceProjections":
-        """Build projection authority from the plate-level metadata owners."""
+        """Build projection authority from the dataset-level metadata owners."""
 
         return cls(
-            plate_path=plate_path,
+            plate_path=dataset_root,
             metadata_handler=metadata_handler,
             filemanager=filemanager,
             cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
@@ -882,7 +882,7 @@ class WorkspaceSourceProjections:
     def is_bound_to_context(self, context: "ProcessingContext") -> bool:
         """Compare actual owners, never identities of already-released objects."""
         if not (
-            self.plate_path == Path(context.plate_path)
+            self.plate_path == Path(context.dataset_root)
             and self.metadata_handler is context.microscope_handler.metadata_handler
             and self.filemanager is context.filemanager
         ):

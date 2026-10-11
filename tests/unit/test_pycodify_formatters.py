@@ -17,7 +17,7 @@ from openhcs.core.config import (
     LazyDtypeConfig,
     LazyNapariStreamingConfig,
     LazyProcessingConfig,
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
     PipelineConfig,
 )
 from openhcs.core.function_reference import (
@@ -145,7 +145,7 @@ def test_clean_pipeline_config_omits_empty_inherited_lazy_config_groups():
 
     assert "config = PipelineConfig()" in source
     assert "step_source_bindings_config=" not in source
-    assert "LazyWellFilterConfig" not in source
+    assert "LazyPartitionFilterConfig" not in source
     assert "napari_display_config=" not in source
     assert "napari_streaming_config=" not in source
 
@@ -153,13 +153,13 @@ def test_clean_pipeline_config_omits_empty_inherited_lazy_config_groups():
 def test_clean_pipeline_config_keeps_explicit_nested_lazy_config_values():
     source = _source(
         PipelineConfig(
-            well_filter_config=LazyWellFilterConfig(well_filter=1),
+            partition_filter_config=LazyPartitionFilterConfig(partition_filter=1),
             napari_streaming_config=LazyNapariStreamingConfig(enabled=True),
         )
     )
 
-    assert "well_filter_config=LazyWellFilterConfig(" in source
-    assert "well_filter=1" in source
+    assert "partition_filter_config=LazyPartitionFilterConfig(" in source
+    assert "partition_filter=1" in source
     assert "napari_streaming_config=LazyNapariStreamingConfig(" in source
     assert "enabled=True" in source
     assert "napari_display_config=" not in source
@@ -167,9 +167,9 @@ def test_clean_pipeline_config_keeps_explicit_nested_lazy_config_values():
 
 
 def test_clean_pipeline_config_keeps_explicit_empty_nested_lazy_config():
-    source = _source(PipelineConfig(well_filter_config=LazyWellFilterConfig()))
+    source = _source(PipelineConfig(partition_filter_config=LazyPartitionFilterConfig()))
 
-    assert "well_filter_config=LazyWellFilterConfig()" in source
+    assert "partition_filter_config=LazyPartitionFilterConfig()" in source
 
 
 def test_dtype_conversion_serializes_from_owning_enum_module():
@@ -183,8 +183,8 @@ def test_full_pipeline_config_still_emits_empty_lazy_config_groups():
     source = _source(PipelineConfig(), clean_mode=False)
 
     assert "napari_display_config=LazyNapariDisplayConfig(" in source
-    assert "well_filter_config=LazyWellFilterConfig(" in source
-    assert "well_filter=None" in source
+    assert "partition_filter_config=LazyPartitionFilterConfig(" in source
+    assert "partition_filter=None" in source
 
 
 def test_clean_function_step_omits_objectstate_reconstructed_empty_lazy_configs():

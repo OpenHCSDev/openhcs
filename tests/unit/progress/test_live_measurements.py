@@ -5,7 +5,6 @@ import pytest
 from openhcs.core.artifacts import ArtifactOutputPlan, MeasurementsArtifactType
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
 )
@@ -124,12 +123,10 @@ def _measurement_record(
 
 def _event_with_context(context):
     return ProgressEvent(
-        identity=ProgressIdentity(
-            execution_id="exec-1",
-            plate_id="/tmp/plate",
-            axis_id="A01",
-            step_name="Measure",
-        ),
+        execution_id="exec-1",
+        subject_id="/tmp/plate",
+        axis_id="A01",
+        step_name="Measure",
         phase=ProgressPhase.STEP_COMPLETED,
         status=ProgressStatus.SUCCESS,
         percent=100.0,

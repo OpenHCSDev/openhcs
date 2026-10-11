@@ -122,14 +122,14 @@ def create_test_scenarios() -> Dict[str, TestScenario]:
     """Declare GUI scenarios with the same typed configs used by production."""
 
     def materialization_config(
-        *, output_dir_suffix: str, sub_dir: str, well_filter: Any, num_workers=None
+        *, output_dir_suffix: str, sub_dir: str, partition_filter: Any, num_workers=None
     ) -> PipelineConfig:
         return PipelineConfig(
             num_workers=num_workers,
             step_materialization_config=LazyStepMaterializationConfig(
                 output_dir_suffix=output_dir_suffix,
                 sub_dir=sub_dir,
-                well_filter=well_filter,
+                partition_filter=partition_filter,
             ),
         )
 
@@ -139,7 +139,7 @@ def create_test_scenarios() -> Dict[str, TestScenario]:
             pipeline_config=materialization_config(
                 output_dir_suffix="828282",
                 sub_dir="images",
-                well_filter=5,
+                partition_filter=5,
                 num_workers=1,
             ),
             field_to_test=FieldModificationSpec(
@@ -151,7 +151,7 @@ def create_test_scenarios() -> Dict[str, TestScenario]:
             pipeline_config=materialization_config(
                 output_dir_suffix="828282",
                 sub_dir="images",
-                well_filter=5,
+                partition_filter=5,
                 num_workers=1,
             ),
             field_to_test=FieldModificationSpec(
@@ -163,23 +163,23 @@ def create_test_scenarios() -> Dict[str, TestScenario]:
             pipeline_config=materialization_config(
                 output_dir_suffix="_test",
                 sub_dir="images",
-                well_filter=["A01", "A02"],
+                partition_filter=["A01", "A02"],
             ),
             field_to_test=FieldModificationSpec(("num_workers",), 2),
         ),
         TestScenario(
             name="default_hierarchy",
             pipeline_config=materialization_config(
-                output_dir_suffix="_outputs", sub_dir="images", well_filter=5
+                output_dir_suffix="_outputs", sub_dir="images", partition_filter=5
             ),
             field_to_test=FieldModificationSpec(
-                ("step_materialization_config", "well_filter"), 4
+                ("step_materialization_config", "partition_filter"), 4
             ),
         ),
         TestScenario(
             name="alternative_config",
             pipeline_config=materialization_config(
-                output_dir_suffix="_processed", sub_dir="results", well_filter=10
+                output_dir_suffix="_processed", sub_dir="results", partition_filter=10
             ),
             field_to_test=FieldModificationSpec(
                 ("path_planning_config", "output_dir_suffix"), "_custom"
@@ -188,14 +188,14 @@ def create_test_scenarios() -> Dict[str, TestScenario]:
         TestScenario(
             name="minimal_config",
             pipeline_config=materialization_config(
-                output_dir_suffix="", sub_dir="data", well_filter=1
+                output_dir_suffix="", sub_dir="data", partition_filter=1
             ),
             field_to_test=FieldModificationSpec(
                 ("path_planning_config", "sub_dir"), "test_data"
             ),
         ),
         TestScenario(
-            name="inheritance_hierarchy_step_well_filter",
+            name="inheritance_hierarchy_step_partition_filter",
             pipeline_config=PipelineConfig(
                 num_workers=1,
                 step_materialization_config=LazyStepMaterializationConfig(
@@ -204,15 +204,15 @@ def create_test_scenarios() -> Dict[str, TestScenario]:
                 ),
             ),
             field_to_test=FieldModificationSpec(
-                ("step_well_filter_config", "well_filter"), 42
+                ("step_partition_filter_config", "partition_filter"), 42
             ),
             inheritance_expectations=(
                 InheritanceExpectation(
-                    source_path=("step_well_filter_config", "well_filter"),
+                    source_path=("step_partition_filter_config", "partition_filter"),
                     target_paths=(
-                        ("step_materialization_config", "well_filter"),
-                        ("napari_streaming_config", "well_filter"),
-                        ("fiji_streaming_config", "well_filter"),
+                        ("step_materialization_config", "partition_filter"),
+                        ("napari_streaming_config", "partition_filter"),
+                        ("fiji_streaming_config", "partition_filter"),
                     ),
                 ),
             ),
@@ -227,20 +227,20 @@ def create_test_scenarios() -> Dict[str, TestScenario]:
                 ),
             ),
             setup_modifications=(
-                FieldModificationSpec(("step_well_filter_config", "well_filter"), 5),
+                FieldModificationSpec(("step_partition_filter_config", "partition_filter"), 5),
             ),
             field_to_test=FieldModificationSpec(
-                ("path_planning_config", "well_filter"), 99
+                ("path_planning_config", "partition_filter"), 99
             ),
             inheritance_expectations=(
                 InheritanceExpectation(
-                    source_path=("step_well_filter_config", "well_filter"),
+                    source_path=("step_partition_filter_config", "partition_filter"),
                     target_paths=(
-                        ("step_materialization_config", "well_filter"),
-                        ("napari_streaming_config", "well_filter"),
-                        ("fiji_streaming_config", "well_filter"),
+                        ("step_materialization_config", "partition_filter"),
+                        ("napari_streaming_config", "partition_filter"),
+                        ("fiji_streaming_config", "partition_filter"),
                     ),
-                    excluded_source_paths=(("path_planning_config", "well_filter"),),
+                    excluded_source_paths=(("path_planning_config", "partition_filter"),),
                 ),
             ),
         ),
@@ -489,16 +489,16 @@ def _create_synthetic_plate(tmp_path: Path) -> Path:
 
 def _create_test_global_config() -> GlobalPipelineConfig:
     """Create test global configuration with known values."""
-    from openhcs.core.config import PathPlanningConfig, WellFilterConfig
+    from openhcs.core.config import PathPlanningConfig, PartitionFilterConfig
 
     return GlobalPipelineConfig(
         num_workers=8,
         dataset_source=ImageXpressHandler,
         use_threading=True,
-        # Add well_filter values that test scenarios expect to inherit
-        well_filter_config=WellFilterConfig(well_filter=5),
+        # Add partition_filter values that test scenarios expect to inherit
+        partition_filter_config=PartitionFilterConfig(partition_filter=5),
         path_planning_config=PathPlanningConfig(
-            well_filter=5, output_dir_suffix="_test_global", sub_dir="images"
+            partition_filter=5, output_dir_suffix="_test_global", sub_dir="images"
         ),
     )
 

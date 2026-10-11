@@ -41,10 +41,10 @@ from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyNapariStreamingConfig,
     StreamingConfig,
-    WellFilterConfig,
+    PartitionFilterConfig,
 )
-from openhcs.core.orchestrator.compiled_plate_execution import (
-    CompiledPlateExecutionExtras,
+from openhcs.core.orchestrator.bundle_execution import (
+    BundleExecutionExtras,
 )
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactViewerPayloadExpectation,
@@ -192,7 +192,7 @@ def _assert_manifest_reference_parity(
     cases = load_comparison_cases(manifest_path)
     assert len(cases) == expected_case_count
     global_config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=1),
+        partition_filter_config=PartitionFilterConfig(partition_filter=1),
         napari_streaming_config=LazyNapariStreamingConfig(
             enabled=False,
             persistent=False,
@@ -322,7 +322,7 @@ def _assert_functional_viewer_state(
     adapter_output_dir = Path(observation.openhcs.output_path).parent
     summary_path = adapter_output_dir / ZMQ_RESULTS_SUMMARY_FILENAME
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
-    states_by_port = summary[CompiledPlateExecutionExtras.RESULTS_SUMMARY_KEY]
+    states_by_port = summary[BundleExecutionExtras.RESULTS_SUMMARY_KEY]
     assert len(states_by_port) == 1
     port_text, response = next(iter(states_by_port.items()))
     assert isinstance(response, dict)
@@ -560,7 +560,7 @@ def test_official30_fiji_variants_project_registered_viewer_configs() -> None:
     ) == _OFFICIAL30_CASES * len(_OFFICIAL30_FIJI_VIEWER_VARIANTS)
     registered_keys = set(StreamingConfig.supported_config_keys())
     canonical_nonviewer_config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=1)
+        partition_filter_config=PartitionFilterConfig(partition_filter=1)
     )
 
     for viewer_types in _OFFICIAL30_FIJI_VIEWER_VARIANTS:
@@ -573,7 +573,7 @@ def test_official30_fiji_variants_project_registered_viewer_configs() -> None:
             ports_by_viewer,
         )
         variant_config = GlobalPipelineConfig(
-            well_filter_config=WellFilterConfig(well_filter=1),
+            partition_filter_config=PartitionFilterConfig(partition_filter=1),
             **configs,
         )
 
@@ -615,7 +615,7 @@ def test_official30_nonpersistent_napari_isolated_per_case(
         transport_mode=viewer_transport_mode,
     )
     global_config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=1),
+        partition_filter_config=PartitionFilterConfig(partition_filter=1),
         napari_streaming_config=LazyNapariStreamingConfig(
             enabled=True,
             persistent=False,
@@ -771,7 +771,7 @@ def test_official30_persistent_fiji_variants_isolated_per_case(
         ports_by_viewer,
     )
     global_config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=1),
+        partition_filter_config=PartitionFilterConfig(partition_filter=1),
         **streaming_configs,
     )
     endpoints = {

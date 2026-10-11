@@ -371,7 +371,7 @@ def test_saved_source_bindings_rebuild_canonical_store_projection(
         )
     )
     orchestrator = PipelineOrchestrator(
-        plate_path=tmp_path,
+        dataset_root=tmp_path,
         pipeline_config=PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig.from_config(
                 initial_bindings
@@ -472,7 +472,7 @@ def test_mixed_plane_stores_materialize_and_reopen_with_source_identity(
         )
     )
     orchestrator = PipelineOrchestrator(
-        plate_path=tmp_path,
+        dataset_root=tmp_path,
         pipeline_config=PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig.from_config(source_bindings)
         ),
@@ -520,7 +520,7 @@ def test_mixed_plane_stores_materialize_and_reopen_with_source_identity(
         payload["backend"] for payload in zarr_metadata["workspace_mapping"].values()
     } == {Backend.ZARR.value}
 
-    reopened = PipelineOrchestrator(plate_path=tmp_path).initialize()
+    reopened = PipelineOrchestrator(dataset_root=tmp_path).initialize()
     assert isinstance(reopened.microscope_handler, OpenHCSDatasetSource)
     assert reopened.input_dir == tmp_path / "zarr"
     assert (

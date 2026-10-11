@@ -1,3 +1,4 @@
+from openhcs.core.progress import ProgressExecutionContext
 import time
 import zipfile
 from copy import copy
@@ -63,8 +64,8 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
     pipeline_config, steps = build_neuroncyto_ii_crossover_demo(inputs)
 
     assert pipeline_config.dataset_source is SourceBindingsSource
-    assert pipeline_config.well_filter_config.well_filter == "Image15"
-    assert pipeline_config.path_planning_config.well_filter == 0
+    assert pipeline_config.partition_filter_config.partition_filter == "Image15"
+    assert pipeline_config.path_planning_config.partition_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is True
     assert pipeline_config.materialization_results_path == Path("results")
 
@@ -181,7 +182,7 @@ def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
         ).initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=[inputs.image_id],
+            partition_values=[inputs.image_id],
             is_zmq_execution=True,
         )
     finally:
@@ -255,18 +256,17 @@ def test_neuroncyto_demo_executes_numeric_biological_well_identity(
         ).initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=[inputs.image_id],
+            partition_values=[inputs.image_id],
             enable_visualizer_override=False,
         )
-        results = orchestrator.execute_compiled_plate(
+        results = orchestrator.execute_compiled_bundle(
             execution_bundle=compilation,
             max_workers=1,
             progress_queue=progress_queue,
-            progress_context={
-                "execution_id": f"test::{time.time_ns()}",
-                "plate_id": str(plate_path),
-                "axis_id": "",
-            },
+            progress_context=ProgressExecutionContext(
+                execution_id=f"test::{time.time_ns()}",
+                subject_id=str(plate_path),
+            ),
         )
     finally:
         set_progress_queue(None)
@@ -297,8 +297,8 @@ def test_neuroncyto_declared_identity_replaces_loose_tiff_store_coordinates(
 
     handler.initialize_workspace(plate_path, filemanager)
 
-    projection = WorkspaceSourceProjections.from_plate_metadata(
-        plate_path=plate_path,
+    projection = WorkspaceSourceProjections.from_dataset_metadata(
+        dataset_root=plate_path,
         metadata_handler=handler.metadata_handler,
         filemanager=filemanager,
     ).projection_if_available()
@@ -389,7 +389,7 @@ def test_neuroncyto_demo_contributor_prepares_only_declared_pair(
         ).initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=list(contribution.pipeline_steps),
-            well_filter=["Image15"],
+            partition_values=["Image15"],
             is_zmq_execution=True,
         )
     finally:

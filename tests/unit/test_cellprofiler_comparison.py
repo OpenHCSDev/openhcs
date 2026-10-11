@@ -31,7 +31,7 @@ from benchmark.cellprofiler_comparison import (
 )
 from benchmark.contracts.tool_adapter import BenchmarkResult, ToolExecutionError
 from benchmark.runner import CellProfilerCompatibilityResult
-from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
+from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
 
 
 def test_comparison_observation_extracts_execution_only_speedup(
@@ -223,7 +223,7 @@ def test_failed_comparison_observation_records_traceback(tmp_path: Path) -> None
     assert "TypeError: broken metadata" in observation.native_cellprofiler.error_message
 
 
-def test_native_reference_scope_rejects_unscoped_public_well_filter_reference(
+def test_native_reference_scope_rejects_unscoped_public_partition_filter_reference(
     tmp_path: Path,
 ) -> None:
     dataset_path = tmp_path / "tutorial" / "translocation_axis1_20260512"
@@ -264,7 +264,7 @@ def test_native_reference_scope_rejects_unscoped_public_well_filter_reference(
         native_reference_root=tmp_path / "native_refs",
         pipeline_params={},
         global_config=GlobalPipelineConfig(
-            well_filter_config=WellFilterConfig(well_filter=1),
+            partition_filter_config=PartitionFilterConfig(partition_filter=1),
         ),
     )
     reference = (
@@ -283,7 +283,7 @@ def test_native_reference_scope_rejects_unscoped_public_well_filter_reference(
     assert location.reference_output_dir is None
 
 
-def test_native_reference_scope_accepts_manifest_declared_well_filter_reference(
+def test_native_reference_scope_accepts_manifest_declared_partition_filter_reference(
     tmp_path: Path,
 ) -> None:
     dataset_path = tmp_path / "tutorial" / "translocation_axis1_20260512"
@@ -318,7 +318,7 @@ def test_native_reference_scope_accepts_manifest_declared_well_filter_reference(
         dataset_path=dataset_path,
         cppipe_path=cppipe_path,
         dataset_id="CellProfiler_tutorials",
-        well_filter_config=WellFilterConfig(well_filter=1),
+        partition_filter_config=PartitionFilterConfig(partition_filter=1),
     )
     scope = NativeCellProfilerReferenceScope(
         case=case,
@@ -351,15 +351,15 @@ def test_native_reference_scope_accepts_manifest_declared_well_filter_reference(
     assert location.reference_output_dir == reference
 
 
-def test_case_well_filter_preserves_explicit_caller_scope(tmp_path: Path) -> None:
+def test_case_partition_filter_preserves_explicit_caller_scope(tmp_path: Path) -> None:
     case = CellProfilerComparisonCase(
         name="ExampleScope",
         dataset_path=tmp_path / "images",
         cppipe_path=tmp_path / "pipeline.cppipe",
-        well_filter_config=WellFilterConfig(well_filter=1),
+        partition_filter_config=PartitionFilterConfig(partition_filter=1),
     )
     caller_config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter="B02"),
+        partition_filter_config=PartitionFilterConfig(partition_filter="B02"),
     )
 
     assert case.effective_global_config(caller_config) is caller_config
@@ -539,7 +539,7 @@ def test_load_comparison_cases_from_manifest(tmp_path: Path) -> None:
         json.dumps(
             {
                 "default_pipeline_params": {"compare_image_outputs": True},
-                "default_well_filter": 1,
+                "default_partition_filter": 1,
                 "cases": [
                     {
                         "name": "ExampleHuman",
@@ -577,7 +577,7 @@ def test_load_comparison_cases_from_manifest(tmp_path: Path) -> None:
             pipeline_params={
                 "compare_image_outputs": False,
             },
-            well_filter_config=WellFilterConfig(well_filter=1),
+            partition_filter_config=PartitionFilterConfig(partition_filter=1),
         ),
     )
 

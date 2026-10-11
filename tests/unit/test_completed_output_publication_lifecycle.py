@@ -1,4 +1,6 @@
 """Completed persisted facts survive cleanup, failure and deferred publication."""
+import openhcs.core.progress.types as progress_types
+from types import SimpleNamespace
 from pathlib import Path
 from dataclasses import replace
 import pickle
@@ -57,7 +59,7 @@ def _context(plate_root: Path, count: int) -> ProcessingContext:
             step_name=str(index),
         ) for index in range(count)},
     )
-    context.plate_path = plate_root
+    context.dataset_root = plate_root
     context.microscope_handler = SimpleNamespace(
         parser=SourceSchemaFilenameParser(),
         metadata_handler=SimpleNamespace(source_workspace_metadata_document=lambda _p: None),
@@ -69,7 +71,7 @@ def _context(plate_root: Path, count: int) -> ProcessingContext:
 
 def _lane() -> WorkerLaneExecutionContext:
     return WorkerLaneExecutionContext(
-        execution_id="output-facts", plate_id="plate", worker_slot="worker_0",
+        execution_id="output-facts", subject_id="plate", worker_slot="worker_0",
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         worker_assignments={"worker_0": ["A01"]},
     )
@@ -77,7 +79,7 @@ def _lane() -> WorkerLaneExecutionContext:
 
 @pytest.mark.parametrize("cancel", [False, True])
 def test_completed_projection_facts_survive_error_or_cancel_and_omit(tmp_path, monkeypatch, cancel):
-    monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
+    monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
     facts = _facts(tmp_path)
     signal = ExecutionCancellationSignal()
     pixel_refs = []
@@ -127,8 +129,8 @@ def test_same_plate_reader_uses_completed_facts_before_durable_publication(tmp_p
     assert projection.source_projection_for(lookup).image_metadata.source_dtype == "uint16"
     assert projection.source_metadata_for(lookup)["source_alias"] == "saved"
     # A direct durable reader retains its published-boundary contract.
-    direct = WorkspaceSourceProjections.from_plate_metadata(
-        plate_path=tmp_path, metadata_handler=context.microscope_handler.metadata_handler,
+    direct = WorkspaceSourceProjections.from_dataset_metadata(
+        dataset_root=tmp_path, metadata_handler=context.microscope_handler.metadata_handler,
         filemanager=context.filemanager,
     )
     assert direct.projection_if_available() is None

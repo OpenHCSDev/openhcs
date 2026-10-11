@@ -398,7 +398,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyNapariStreamingConfig,
     LazyProcessingConfig,
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
     PipelineConfig,
 )
 from openhcs.core.steps.function_step import FunctionStep
@@ -408,15 +408,15 @@ from openhcs.core.steps.function_step import FunctionStep
 plate_paths = [Path({str(plate_path)!r})]
 
 global_config = GlobalPipelineConfig(
-    auto_add_output_plate_to_plate_manager=True,
+    auto_add_output_dataset=True,
     num_workers=1,
 )
 
 per_plate_configs = {{
     Path({str(plate_path)!r}): PipelineConfig(
-        well_filter_config=LazyWellFilterConfig(well_filter={WELL!r}),
+        partition_filter_config=LazyPartitionFilterConfig(partition_filter={WELL!r}),
         path_planning_config=LazyPathPlanningConfig(
-            well_filter=0,
+            partition_filter=0,
             global_output_folder=Path({str(output_path)!r}),
         ),
         materialization_results_path=Path({str(output_path / "results")!r}),
@@ -1096,7 +1096,7 @@ def live_measurement_evidence(
     matching_entries = [
         entry
         for entry in entries
-        if isinstance(entry, Mapping) and entry.get("plate_id") == expected_plate
+        if isinstance(entry, Mapping) and entry.get("subject_id") == expected_plate
     ]
     previews = [
         entry["preview"]

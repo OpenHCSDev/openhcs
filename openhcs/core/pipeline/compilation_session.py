@@ -54,9 +54,9 @@ class CompilationPlateScope:
 
     @classmethod
     def from_context(cls, context: ProcessingContext) -> "CompilationPlateScope":
-        if context.plate_path is None:
-            raise ValueError("Compilation plate scope requires context.plate_path.")
-        return cls(Path(context.plate_path))
+        if context.dataset_root is None:
+            raise ValueError("Compilation plate scope requires context.dataset_root.")
+        return cls(Path(context.dataset_root))
 
     @classmethod
     def from_path(cls, plate_path: Path | str | None) -> "CompilationPlateScope":
@@ -454,7 +454,7 @@ class CompilationSession:
             global_config=global_config,
             plans=context.step_plans,
             source_workspace_projection=(
-                VirtualWorkspaceSourceProjection.empty(context.plate_path)
+                VirtualWorkspaceSourceProjection.empty(context.dataset_root)
                 if source_workspace_projection is None
                 else source_workspace_projection
             ),
@@ -469,7 +469,7 @@ class CompilationSession:
         )
 
     def __post_init__(self) -> None:
-        if self.plate_scope is None and self.context.plate_path is not None:
+        if self.plate_scope is None and self.context.dataset_root is not None:
             self.plate_scope = CompilationPlateScope.from_context(self.context)
 
     @property

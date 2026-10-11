@@ -129,7 +129,7 @@ def _anchor_executor(
     executor.plan = plan
     executor.context = Mock(
         completed_step_outputs=StepExecutionObservation.empty(),
-        plate_path=Path("."),
+        dataset_root=Path("."),
         microscope_handler=SimpleNamespace(
             parser=parser,
             source_bindings_still_required=lambda: None,
@@ -227,7 +227,7 @@ def test_pattern_discovery_uses_authoritative_virtual_source_files(
     patterns = engine.auto_detect_patterns_from_files(
         source_files,
         variable_components=[Microscopy.Site],
-        well_filter=["A01"],
+        partition_values=["A01"],
     )
 
     assert patterns == {"A01": ["A01_s{iii}_w1_z001_t001.tif"]}
@@ -618,7 +618,7 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
         axis_id="A01",
         input_dir=tmp_path,
         output_dir=tmp_path / "outputs",
-        output_plate_root=tmp_path / "outputs",
+        output_dataset_root=tmp_path / "outputs",
         sub_dir="images",
         read_backend=Backend.DISK.value,
         write_backend=Backend.MEMORY.value,
@@ -2172,7 +2172,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
             .initialize()
             .compile_pipelines(
                 pipeline_definition=[FunctionStep(func=_identity_source_image)],
-                well_filter=["A01"],
+                partition_values=["A01"],
                 is_zmq_execution=True,
             )
         )
@@ -3257,7 +3257,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
             .initialize()
             .compile_pipelines(
                 pipeline_definition=steps,
-                well_filter=["A01"],
+                partition_values=["A01"],
                 is_zmq_execution=True,
             )
         )

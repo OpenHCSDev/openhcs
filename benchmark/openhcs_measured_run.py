@@ -29,7 +29,7 @@ from benchmark.contracts.run_artifacts import (
 )
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.file_digest import sha256_file
-from openhcs.core.execution_state import ExecutionOutputPlateSummary
+from openhcs.core.execution_state import ExecutionOutputSummary
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
@@ -109,14 +109,14 @@ class _ZMQOpenHCSExecution:
     receipt: MeasuredPipelineRunReceipt
 
     @property
-    def output_plate(self) -> ExecutionOutputPlateSummary:
-        return ExecutionOutputPlateSummary.from_results_summary(self.results_summary)
+    def output_dataset(self) -> ExecutionOutputSummary:
+        return ExecutionOutputSummary.from_results_summary(self.results_summary)
 
     @property
     def execution_output_root(self) -> Path:
         if len(self.output_roots) == 1:
             return self.output_roots[0]
-        summary_root = self.output_plate.output_plate_root
+        summary_root = self.output_dataset.output_dataset_root
         if summary_root is not None:
             return Path(str(summary_root))
         return self.output_roots[0] if self.output_roots else Path(".")
@@ -438,8 +438,8 @@ def retain_measured_openhcs_completion(
         schema_version=MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
         run_id=phase_timing.run_id,
         pipeline_name=phase_timing.pipeline_name,
-        plate_id=request.identity.plate_id,
-        execution_plate_id=request.identity.execution_plate_id,
+        subject_id=request.identity.subject_id,
+        execution_subject_id=request.identity.execution_subject_id,
         selected_pipeline_path=request.identity.selected_pipeline_path,
         execution_id=execution_id,
         pipeline_source_sha256=hashlib.sha256(

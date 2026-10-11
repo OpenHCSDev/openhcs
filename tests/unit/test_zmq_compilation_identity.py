@@ -19,8 +19,8 @@ from openhcs.runtime.zmq_execution_signature import (
 def _payload(config_params=None):
     return ZMQExecutionRequestPayload(
         identity=ZMQExecutionIdentity(
-            plate_id="/plate",
-            execution_plate_id="/source",
+            subject_id="/plate",
+            execution_subject_id="/source",
             selected_pipeline_path="/pipeline",
         ),
         pipeline_code="pipeline_config = PipelineConfig()\npipeline_steps = []\n",
@@ -33,7 +33,7 @@ def _payload(config_params=None):
 @pytest.mark.parametrize("path", ("/evidence/first.pkl.gz", "/evidence/second.pkl.gz"))
 def test_observation_options_change_request_but_not_compilation_identity(scope, path):
     options = ZMQAuxiliaryExecutionParams(
-        axis_filter=("A01",),
+        partition_values=("A01",),
         debug_execution_config=DebugExecutionConfig(debug_session_id="debug-1"),
     )
     compiled = _payload({"unrelated": "keep", **options.to_transport()})
@@ -72,13 +72,13 @@ def test_observation_defaults_do_not_distinguish_compilation(config_params):
 @pytest.mark.parametrize(
     "changed",
     (
-        {"well_filter": ["B02"]},
+        {"partition_values": ["B02"]},
         {"unrelated": "changed"},
         DebugExecutionConfig(debug_session_id="debug-2").to_config_params(),
     ),
 )
 def test_real_execution_inputs_still_distinguish_compilation(changed):
-    compiled = _payload({"well_filter": ["A01"], "unrelated": "keep"})
+    compiled = _payload({"partition_values": ["A01"], "unrelated": "keep"})
     executed = _payload({**compiled.config_params, **changed})
     assert compiled.compilation_signature != executed.compilation_signature
 
@@ -86,8 +86,8 @@ def test_real_execution_inputs_still_distinguish_compilation(changed):
 @pytest.mark.parametrize(
     "field,value",
     (
-        ("plate_id", "/another-plate"),
-        ("execution_plate_id", "/another-source"),
+        ("subject_id", "/another-plate"),
+        ("execution_subject_id", "/another-source"),
         ("selected_pipeline_path", "/another-pipeline"),
     ),
 )

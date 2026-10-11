@@ -70,7 +70,7 @@ def _actual_saved_occurrence(tmp_path, scenario):
     plan = function_step_plan("Collapsed public mosaic")
     plan.streaming_configs = {}
     plan.write_backend = Backend.DISK.value
-    plan.output_plate_root = str(tmp_path)
+    plan.output_dataset_root = str(tmp_path)
     plan.output_dir = tmp_path / "images"
     plan.sub_dir = "images"
     plan.analysis_results_dir = str(plan.output_dir)

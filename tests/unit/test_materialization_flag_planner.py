@@ -168,7 +168,7 @@ def test_path_planning_zero_keeps_final_main_flow_runtime_only() -> None:
 
     MaterializationFlagPlanner(
         pipeline_config=_pipeline_config(
-            path_planning_config=PathPlanningConfig(well_filter=0)
+            path_planning_config=PathPlanningConfig(partition_filter=0)
         ),
         microscope_handler=SimpleNamespace(),
         filemanager=object(),
@@ -188,7 +188,7 @@ def test_path_planning_filter_materializes_only_selected_axis() -> None:
         for axis_id in ("A01", "B03")
     }
     pipeline_config = _pipeline_config(
-        path_planning_config=PathPlanningConfig(well_filter="B03"),
+        path_planning_config=PathPlanningConfig(partition_filter="B03"),
     )
 
     for context in contexts.values():
@@ -249,7 +249,7 @@ def test_auto_backend_admission_is_shared_and_new_submission_is_fresh():
 
 
 def test_unused_materialization_auto_does_not_query_source():
-    config = _pipeline_config(path_planning_config=PathPlanningConfig(well_filter=0))
+    config = _pipeline_config(path_planning_config=PathPlanningConfig(partition_filter=0))
     config.vfs_config = VFSConfig(
         read_backend=Backend.DISK,
         materialization_backend=MaterializationBackend.AUTO,

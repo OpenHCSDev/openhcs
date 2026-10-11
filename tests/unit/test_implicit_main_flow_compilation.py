@@ -75,7 +75,7 @@ def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
         ).initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=["A01"],
+            partition_values=["A01"],
             is_zmq_execution=True,
         )
     finally:

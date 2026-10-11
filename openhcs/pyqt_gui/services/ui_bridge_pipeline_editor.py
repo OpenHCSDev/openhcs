@@ -410,7 +410,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
             return None
         return UiDebugTerminalSummaryState(
             debug_session_id=summary.debug_session_id,
-            plate_scope_id=summary.plate_id,
+            plate_scope_id=summary.subject_id,
             terminal_status=summary.terminal_status,
             command_type=(
                 None if summary.command_type is None else summary.command_type.value
@@ -443,7 +443,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
             snapshot_store_backend=context.snapshot_store_backend,
             progress_identity=UiProgressIdentityState(
                 execution_id=identity.execution_id,
-                plate_id=identity.plate_id,
+                subject_id=identity.subject_id,
                 axis_id=identity.axis_id,
                 step_name=identity.step_name,
             ),
@@ -536,7 +536,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
         return (
             frame.debug_session_id,
             frame.progress_identity.execution_id,
-            frame.progress_identity.plate_id,
+            frame.progress_identity.subject_id,
             frame.progress_identity.axis_id,
             frame.progress_identity.step_name,
             frame.cursor.step_index,

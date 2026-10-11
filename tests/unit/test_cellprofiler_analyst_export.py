@@ -354,7 +354,7 @@ def _export_context() -> ProcessingContext:
         },
         filemanager=SimpleNamespace(exists=lambda *_args: False),
     )
-    context.plate_path = Path("/")
+    context.dataset_root = Path("/")
     context.microscope_handler = SimpleNamespace(
         metadata_handler=_MetadataHandlerStub(),
         source_bindings_still_required=lambda: None,
@@ -888,7 +888,7 @@ def _borrowed_source_export_fixture(
         }
     }
     context = _export_context()
-    context.plate_path = tmp_path
+    context.dataset_root = tmp_path
     context.microscope_handler = SimpleNamespace(
         source_bindings_still_required=lambda: None,
         metadata_handler=SimpleNamespace(

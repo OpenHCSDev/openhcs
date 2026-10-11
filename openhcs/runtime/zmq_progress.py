@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-import os
 import threading
-import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Self
-
-from zmqruntime.messages import MessageFields
 
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
+    ProgressExecutionContext,
     ProgressPhase,
     ProgressQueue,
     ProgressStatus,
@@ -21,28 +17,24 @@ from openhcs.core.progress import (
 
 
 @dataclass(frozen=True, slots=True)
-class ZMQProgressTarget:
-    """Canonical ZMQ progress stream identity."""
+class ZMQCompilerProgressQueue(ProgressQueue):
+    """Compiler progress, reported as the subject of the ZMQ request."""
 
-    enqueue: Callable[[dict], None]
-    plate_id: str
+    enqueue: Callable[[ProgressEvent], None]
+    subject_id: str
 
-
-@dataclass(frozen=True, slots=True)
-class ZMQCompilerProgressQueue(ZMQProgressTarget, ProgressQueue):
-    """Queue adapter that preserves request identity for compiler progress."""
-
-    def put(self, progress_update: dict) -> None:
-        canonical_update = dict(progress_update)
-        canonical_update[MessageFields.SUBJECT_ID] = self.plate_id
-        self.enqueue(canonical_update)
+    def put(self, event: ProgressEvent) -> None:
+        self.enqueue(replace(event, subject_id=self.subject_id))
 
 
 @dataclass(frozen=True, slots=True)
-class ZMQProgressEmitter(ZMQProgressTarget):
+class ZMQProgressEmitter(ProgressExecutionContext):
     """Semantic progress-event emitter for one ZMQ execution."""
 
-    execution_id: str
+    enqueue: Callable[[ProgressEvent], None]
+
+    def emit(self, **event_fields) -> None:
+        self.enqueue(self.event(**event_fields))
 
     def compile_started(self, step_count: int) -> None:
         self.emit(
@@ -69,7 +61,7 @@ class ZMQProgressEmitter(ZMQProgressTarget):
     def planned_init_started(
         self,
         *,
-        wells: list[str],
+        partition_values: list[str],
         step_names: list[str],
     ) -> None:
         self.emit(
@@ -80,7 +72,7 @@ class ZMQProgressEmitter(ZMQProgressTarget):
             percent=0.0,
             completed=0,
             total=1,
-            total_wells=sorted(wells),
+            partition_values=sorted(partition_values),
             step_names=step_names,
         )
 
@@ -99,7 +91,7 @@ class ZMQProgressEmitter(ZMQProgressTarget):
             percent=0.0,
             completed=0,
             total=1,
-            total_wells=compiled_axis_ids,
+            partition_values=compiled_axis_ids,
             worker_assignments=worker_assignments,
             step_names=step_names,
         )
@@ -118,7 +110,7 @@ class ZMQProgressEmitter(ZMQProgressTarget):
             percent=0.0,
             completed=0,
             total=1,
-            total_wells=compiled_axis_ids,
+            partition_values=compiled_axis_ids,
             worker_assignments=worker_assignments,
         )
 
@@ -137,7 +129,7 @@ class ZMQProgressEmitter(ZMQProgressTarget):
             status=ProgressStatus.SUCCESS,
             completed=1,
             percent=100.0,
-            total_wells=compiled_axis_ids,
+            partition_values=compiled_axis_ids,
             worker_assignments=worker_assignments,
         )
 
@@ -166,44 +158,6 @@ class ZMQProgressEmitter(ZMQProgressTarget):
                 error=error,
                 message=error,
             )
-
-    def emit(
-        self,
-        *,
-        axis_id: str,
-        step_name: str,
-        phase: ProgressPhase,
-        status: ProgressStatus,
-        percent: float,
-        completed: int,
-        total: int,
-        error: str | None = None,
-        message: str | None = None,
-        total_wells: list[str] | None = None,
-        worker_assignments: dict[str, list[str]] | None = None,
-        step_names: list[str] | None = None,
-    ) -> None:
-        event = ProgressEvent(
-            identity=ProgressIdentity(
-                execution_id=self.execution_id,
-                plate_id=self.plate_id,
-                axis_id=axis_id,
-                step_name=step_name,
-            ),
-            phase=phase,
-            status=status,
-            percent=percent,
-            completed=completed,
-            total=total,
-            timestamp=time.time(),
-            pid=os.getpid(),
-            error=error,
-            message=message,
-            total_wells=total_wells,
-            worker_assignments=worker_assignments,
-            step_names=step_names,
-        )
-        self.enqueue(event.to_dict())
 
 
 @dataclass(slots=True)

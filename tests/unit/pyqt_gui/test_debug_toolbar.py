@@ -29,7 +29,6 @@ from openhcs.authoring.session.progress_notifications import (
 from openhcs.core.execution_state import ManagerExecutionState, TerminalExecutionStatus
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
 )
@@ -92,7 +91,7 @@ def debug_toolbar_context(
 
 
 def active_debug_session() -> DebugSession:
-    return DebugSession.create(plate_id="plate")
+    return DebugSession.create(subject_id="plate")
 
 
 def test_debug_toolbar_emits_typed_command() -> None:
@@ -206,7 +205,7 @@ def test_debug_toolbar_terminal_summary_retire_matching_local_session() -> None:
     session = session.with_cursor(cursor).with_command(DebugCommandType.STEP)
     terminal_summary = DebugTerminalSummary(
         debug_session_id=session.debug_session_id,
-        plate_id="plate",
+        subject_id="plate",
         terminal_status="complete",
         cursor=cursor,
         command_type=DebugCommandType.STEP,
@@ -446,7 +445,7 @@ def test_pipeline_editor_step_advances_from_the_current_invocation(
 ) -> None:
     with debug_editor(tmp_path, monkeypatch) as harness:
         harness.session.debug_sessions[harness.scope_id] = DebugSession.create(
-            plate_id=harness.scope_id
+            subject_id=harness.scope_id
         ).with_cursor(_cursor(1, "segment"))
 
         harness.workflow.handle_command(DebugCommand(DebugCommandType.STEP))
@@ -462,7 +461,7 @@ def test_pipeline_editor_restarts_from_the_dirty_debug_cursor(
 ) -> None:
     with debug_editor(tmp_path, monkeypatch) as harness:
         harness.session.debug_sessions[harness.scope_id] = (
-            DebugSession.create(plate_id=harness.scope_id)
+            DebugSession.create(subject_id=harness.scope_id)
             .with_cursor(_cursor(1, "segment"))
             .mark_dirty_from_cursor()
         )
@@ -480,7 +479,7 @@ def test_pipeline_editor_step_replays_from_terminal_debug_cursor(
         harness.session.debug_terminal_summaries[harness.scope_id] = (
             DebugTerminalSummary(
                 debug_session_id="debug-terminal",
-                plate_id=harness.scope_id,
+                subject_id=harness.scope_id,
                 terminal_status="complete",
                 cursor=_cursor(2, "measure"),
                 command_type=DebugCommandType.STEP,
@@ -509,12 +508,12 @@ def test_debug_context_prefers_terminal_state_over_a_stale_inspected_session(
         harness.session.compiled[harness.scope_id] = object()
         harness.session.inspected_debug_sessions[harness.scope_id] = (
             DebugSession.create(
-                plate_id=harness.scope_id, execution_id="old-exec", axis_id="A01"
+                subject_id=harness.scope_id, execution_id="old-exec", axis_id="A01"
             ).with_cursor(_cursor(0, "first"))
         )
         summary = DebugTerminalSummary(
             debug_session_id="debug-terminal",
-            plate_id=harness.scope_id,
+            subject_id=harness.scope_id,
             terminal_status="complete",
             cursor=_cursor(2, "measure"),
             command_type=DebugCommandType.STEP,
@@ -537,7 +536,7 @@ def test_runtime_inspection_renders_the_active_session(tmp_path, monkeypatch) ->
     )
     with debug_editor(tmp_path, monkeypatch, run_started_work=True) as harness:
         session = DebugSession.create(
-            plate_id=harness.scope_id, execution_id="exec-1", axis_id="A01"
+            subject_id=harness.scope_id, execution_id="exec-1", axis_id="A01"
         )
         harness.session.debug_sessions[harness.scope_id] = session
         inspected = []
@@ -576,7 +575,7 @@ def test_pipeline_change_marks_the_debug_session_dirty(tmp_path, monkeypatch) ->
 
     with debug_editor(tmp_path, monkeypatch) as harness:
         harness.session.debug_sessions[harness.scope_id] = DebugSession.create(
-            plate_id=harness.scope_id
+            subject_id=harness.scope_id
         ).with_cursor(_cursor(1, "segment"))
         statuses = []
         harness.session.subscribe(
@@ -606,7 +605,7 @@ def test_invocation_badges_mark_the_cursor_row_and_dirty_replay_start(
 ) -> None:
     with debug_editor(tmp_path, monkeypatch) as harness:
         harness.session.debug_sessions[harness.scope_id] = (
-            DebugSession.create(plate_id=harness.scope_id)
+            DebugSession.create(subject_id=harness.scope_id)
             .with_cursor(_cursor(1, "segment"))
             .mark_dirty_from_cursor()
         )
@@ -628,7 +627,7 @@ def test_invocation_badges_mark_the_cursor_row_and_dirty_replay_start(
 def test_badge_provider_uses_the_rendered_step_index(tmp_path, monkeypatch) -> None:
     with debug_editor(tmp_path, monkeypatch) as harness:
         harness.session.debug_sessions[harness.scope_id] = DebugSession.create(
-            plate_id=harness.scope_id
+            subject_id=harness.scope_id
         ).with_cursor(_cursor(1, "segment"))
         presentation = harness.editor.function_presentation
         first = FunctionStep(func=segment, name="first")
@@ -647,7 +646,7 @@ def test_inactive_invocation_badges_stay_out_of_titles(tmp_path, monkeypatch) ->
 
     with debug_editor(tmp_path, monkeypatch) as harness:
         harness.session.debug_sessions[harness.scope_id] = DebugSession.create(
-            plate_id=harness.scope_id
+            subject_id=harness.scope_id
         ).with_cursor(_cursor(1, "segment"))
         presentation = harness.editor.function_presentation
 
@@ -672,12 +671,10 @@ def debug_snapshot_notification(
     )
     return DebugSnapshotAvailableNotification(
         progress_event=ProgressEvent(
-            identity=ProgressIdentity(
-                execution_id="exec-1",
-                plate_id=scope_id,
-                axis_id="A01",
-                step_name="step",
-            ),
+            execution_id="exec-1",
+            subject_id=scope_id,
+            axis_id="A01",
+            step_name="step",
             phase=ProgressPhase.PATTERN_GROUP,
             status=ProgressStatus.SUCCESS,
             percent=100,
@@ -685,7 +682,7 @@ def debug_snapshot_notification(
             total=1,
             timestamp=1.0,
             pid=123,
-            context=debug_context.to_progress_context(),
+            context=debug_context.to_context(),
         ),
         debug_context=debug_context,
     )
@@ -735,7 +732,7 @@ def test_debug_artifact_export_runs_through_the_session(tmp_path, monkeypatch) -
     with debug_editor(tmp_path, monkeypatch) as harness:
         harness.session.debug_sessions[harness.scope_id] = DebugSession(
             debug_session_id="debug-1",
-            plate_id=harness.scope_id,
+            subject_id=harness.scope_id,
             snapshot_store_ref="/debug",
             snapshot_store_backend="memory",
         )
@@ -836,7 +833,7 @@ def test_session_reuses_the_persistent_paused_worker_across_commands(
 def test_dataset_completion_retires_its_debug_session(tmp_path) -> None:
     with caller_session() as session:
         (scope_id,) = add_datasets(session, tmp_path, "plate")
-        debug_session = DebugSession.create(plate_id=scope_id)
+        debug_session = DebugSession.create(subject_id=scope_id)
         session.debug_sessions[scope_id] = debug_session
         session.batch.begin_batch((scope_id,))
         session.batch.record_execution(scope_id, "exec-1")

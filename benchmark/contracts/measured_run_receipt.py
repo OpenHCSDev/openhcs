@@ -51,8 +51,8 @@ class MeasuredPipelineRunReceipt:
     schema_version: str
     run_id: str
     pipeline_name: str
-    plate_id: str
-    execution_plate_id: str | None
+    subject_id: str
+    execution_subject_id: str | None
     selected_pipeline_path: str | None
     execution_id: str
     pipeline_source_sha256: str
@@ -81,7 +81,7 @@ class MeasuredPipelineRunReceipt:
             raise ValueError(
                 f"Unsupported measured pipeline receipt schema: {self.schema_version!r}."
             )
-        if not self.run_id or not self.execution_id or not self.plate_id:
+        if not self.run_id or not self.execution_id or not self.subject_id:
             raise ValueError(
                 "Measured run, execution, and plate identities are required."
             )

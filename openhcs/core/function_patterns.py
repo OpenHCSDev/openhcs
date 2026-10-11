@@ -242,6 +242,11 @@ class InvocationArtifactInputEdgePlan:
     projection: ArtifactInputProjectionPlan | None
     main_flow_projection: MainFlowInputProjection | None = None
 
+    @property
+    def reads_stored_records(self) -> bool:
+        """The edge is fed by records of a stored producer, through a projection."""
+        return self.storage_plan is not None and self.projection is not None
+
     @staticmethod
     def source_projection(
         spec: ArtifactSpec,

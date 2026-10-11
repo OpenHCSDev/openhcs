@@ -28,7 +28,7 @@ from openhcs.core.artifacts import ArtifactType, MeasurementsArtifactType
 from openhcs.core.config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
 )
 from openhcs.core.input_workspace import (
     InputWorkspacePreparationRequest,
@@ -262,8 +262,8 @@ def official30_lab_meeting_demo_contributions(
                 f"Official30 lab-meeting source is missing for {case_name!r}: "
                 f"{cppipe_path}, {source_dataset}."
             )
-        well_filter_config = comparison_case.well_filter_config
-        if well_filter_config is None:
+        partition_filter_config = comparison_case.partition_filter_config
+        if partition_filter_config is None:
             raise ValueError(
                 f"Official30 lab-meeting case {case_name!r} must declare a "
                 "benchmark well filter."
@@ -284,18 +284,18 @@ def official30_lab_meeting_demo_contributions(
             )
         pipeline_steps = prepared.pipeline_steps
         pipeline_config = prepared.pipeline_config
-        plate_path = prepared.execution_plate_path
+        plate_path = prepared.execution_dataset_root
         output_root = (
             resolved_session_root / "outputs" / f"official30_{case_name.casefold()}"
         )
         pipeline_config = replace(
             pipeline_config,
-            well_filter_config=LazyWellFilterConfig(
-                well_filter=_materialized_well_labels(prepared),
-                well_filter_mode=well_filter_config.well_filter_mode,
+            partition_filter_config=LazyPartitionFilterConfig(
+                partition_filter=_materialized_well_labels(prepared),
+                partition_filter_mode=partition_filter_config.partition_filter_mode,
             ),
             path_planning_config=LazyPathPlanningConfig(
-                well_filter=0,
+                partition_filter=0,
                 global_output_folder=output_root,
             ),
             materialization_results_path=output_root / "results",

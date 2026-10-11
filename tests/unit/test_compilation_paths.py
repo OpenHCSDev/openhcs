@@ -27,7 +27,7 @@ from openhcs.core.pipeline.compilation_session import (
     CompilationPlateScope,
     resolve_declared_dataclass_paths,
 )
-from openhcs.core.pipeline.path_planner import _cached_output_plate_root
+from openhcs.core.pipeline.path_planner import _cached_output_dataset_root
 from openhcs.core.vfs_protocol import (
     FileManagerLike,
     PlateInputDirectoryDeclaration,
@@ -337,6 +337,6 @@ def test_compilation_debug_is_last_in_generated_pipeline_config_order() -> None:
 
 
 def test_path_planner_rejects_uncompiled_relative_global_output_folder() -> None:
-    _cached_output_plate_root.cache_clear()
+    _cached_output_dataset_root.cache_clear()
     with pytest.raises(ValueError, match="requires compiled global_output_folder"):
-        _cached_output_plate_root("/plates/plate-a", "exports", "_openhcs")
+        _cached_output_dataset_root("/plates/plate-a", "exports", "_openhcs")

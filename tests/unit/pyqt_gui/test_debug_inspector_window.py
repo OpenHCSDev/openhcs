@@ -60,7 +60,7 @@ class QtApplicationHarness:
 
 def test_debug_inspector_loads_local_snapshot_store(tmp_path) -> None:
     QtApplicationHarness.app()
-    session = DebugSession.create(plate_id="plate")
+    session = DebugSession.create(subject_id="plate")
     snapshot = debug_snapshot()
     store = LocalDebugSnapshotStore.for_session(root_path=tmp_path, session=session)
     store.write_snapshot(snapshot)
@@ -78,7 +78,7 @@ def test_debug_inspector_loads_local_snapshot_store(tmp_path) -> None:
 
 def test_debug_inspector_loads_snapshot_from_store(tmp_path) -> None:
     QtApplicationHarness.app()
-    session = DebugSession.create(plate_id="plate")
+    session = DebugSession.create(subject_id="plate")
     snapshot = debug_snapshot()
     store = LocalDebugSnapshotStore.for_session(root_path=tmp_path, session=session)
     store.write_snapshot(snapshot)

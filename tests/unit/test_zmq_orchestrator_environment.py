@@ -6,38 +6,38 @@ from openhcs.runtime.zmq_orchestrator_environment import (
 def test_pycodified_execution_initializes_from_explicit_prepared_plate_path():
     request = ZMQOrchestratorEnvironmentRequest(
         execution_id="exec-1",
-        plate_id="/tmp/source-plate",
-        execution_plate_id="/tmp/new-output-plate",
+        subject_id="/tmp/source-plate",
+        execution_subject_id="/tmp/new-output-plate",
         selected_pipeline_path=None,
         debug_execution_config=None,
     )
 
-    assert request.prepared_plate_path({}) == "/tmp/new-output-plate"
+    assert request.prepared_dataset_root({}) == "/tmp/new-output-plate"
 
 
 def test_pycodified_execution_defaults_to_source_plate_without_preparation():
     request = ZMQOrchestratorEnvironmentRequest(
         execution_id="exec-1",
-        plate_id="/tmp/source-plate",
-        execution_plate_id=None,
+        subject_id="/tmp/source-plate",
+        execution_subject_id=None,
         selected_pipeline_path=None,
         debug_execution_config=None,
     )
 
-    assert request.prepared_plate_path({}) == "/tmp/source-plate"
+    assert request.prepared_dataset_root({}) == "/tmp/source-plate"
 
 
 def test_selected_external_pipeline_initializes_from_prepared_workspace_path():
     request = ZMQOrchestratorEnvironmentRequest(
         execution_id="exec-1",
-        plate_id="/tmp/source-plate#openhcs-cppipe=segmentation_final.cppipe",
-        execution_plate_id="/tmp/source-plate/.openhcs_cellprofiler/segmentation_final",
+        subject_id="/tmp/source-plate#openhcs-cppipe=segmentation_final.cppipe",
+        execution_subject_id="/tmp/source-plate/.openhcs_cellprofiler/segmentation_final",
         selected_pipeline_path="/tmp/source-plate/segmentation_final.cppipe",
         debug_execution_config=None,
     )
 
     assert (
-        request.prepared_plate_path({})
+        request.prepared_dataset_root({})
         == "/tmp/source-plate/.openhcs_cellprofiler/segmentation_final"
     )
 
@@ -73,13 +73,13 @@ def test_omero_plate_uses_backend_metadata_namespace_authority(monkeypatch):
     storage_registry = {}
     request = ZMQOrchestratorEnvironmentRequest(
         execution_id="exec-1",
-        plate_id="17",
-        execution_plate_id=None,
+        subject_id="17",
+        execution_subject_id=None,
         selected_pipeline_path=None,
         debug_execution_config=None,
     )
 
-    assert request.prepared_plate_path(storage_registry) == "/omero/plate_17"
+    assert request.prepared_dataset_root(storage_registry) == "/omero/plate_17"
     assert backend_kwargs == {
         "omero_conn": connection,
         "lock_dir_name": ".openhcs",

@@ -50,7 +50,7 @@ def test_image_browser_state_resolves_plate_then_global(tmp_path) -> None:
         )
         browser_state = ImageBrowserWidget._create_state_for_orchestrator(
             browser,
-            SimpleNamespace(plate_path=plate_path),
+            SimpleNamespace(dataset_root=plate_path),
         )
 
         nested_browser = SimpleNamespace(
@@ -60,7 +60,7 @@ def test_image_browser_state_resolves_plate_then_global(tmp_path) -> None:
         )
         nested_state = ImageBrowserWidget._create_state_for_orchestrator(
             nested_browser,
-            SimpleNamespace(plate_path=plate_path),
+            SimpleNamespace(dataset_root=plate_path),
         )
 
         assert browser_state._parent_state is plate_state

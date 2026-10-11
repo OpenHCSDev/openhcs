@@ -264,7 +264,7 @@ class CompiledStepPlan:
     step_scope_id: str | None = None
     input_dir: Path | None = None
     output_dir: Path | None = None
-    output_plate_root: str | None = None
+    output_dataset_root: str | None = None
     sub_dir: str | None = None
     analysis_results_dir: str | None = None
     pipeline_position: int | None = None
@@ -462,10 +462,10 @@ class CompiledStepPlan:
                 f"Compiled plan for step {self.step_index} ({self.step_name}) "
                 "has no pipeline_position."
             )
-        if self.output_plate_root is None:
+        if self.output_dataset_root is None:
             raise ValueError(
                 f"Compiled plan for step {self.step_index} ({self.step_name}) "
-                "has no output_plate_root."
+                "has no output_dataset_root."
             )
         if self.sub_dir is None:
             raise ValueError(
@@ -559,9 +559,9 @@ class CompiledStepPlan:
         return None if component is None else component.name
 
     @property
-    def artifact_output_plate_root(self) -> str:
+    def artifact_output_dataset_root(self) -> str:
         """Resolve artifact plate identity alongside its compiled directories."""
-        plate_root = self.output_plate_root
+        plate_root = self.output_dataset_root
         if self.materialized_output is not None:
             plate_root = self.materialized_output.plate_root
         if plate_root is None:

@@ -86,7 +86,7 @@ def synthetic_three_outputs(image):
 def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, main_filter):
     plate = _plate(tmp_path / "source", site_count=24)
     config = PipelineConfig(
-        path_planning_config=LazyPathPlanningConfig(output_dir_suffix="_out", well_filter=main_filter),
+        path_planning_config=LazyPathPlanningConfig(output_dir_suffix="_out", partition_filter=main_filter),
         num_workers=1, use_threading=True,
     )
     orchestrator = PipelineOrchestrator(plate, pipeline_config=config).initialize()
@@ -102,7 +102,7 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
         RuntimeContextObservation(context_key=key, records=(), outputs=step.process(context, 0))
         for key, context in bundle.runtime_contexts.items()
     ))
-    OpenHCSMetadataTarget.finalize_completed_plate(
+    OpenHCSMetadataTarget.finalize_completed_dataset(
         bundle.runtime_contexts, runtime_observations=(observations,)
     )
     root = tmp_path / "source_out"
@@ -156,4 +156,4 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
     # error. This is not a missing-address permissive fallback.
     tifffile.imwrite(root / "checkpoints" / "unaddressed.tif", np.zeros((8, 8), dtype=np.uint16))
     with pytest.raises(MetadataWriteError, match="Saved images lack typed produced addresses.*unaddressed"):
-        OpenHCSMetadataTarget.finalize_completed_plate(bundle.runtime_contexts)
+        OpenHCSMetadataTarget.finalize_completed_dataset(bundle.runtime_contexts)

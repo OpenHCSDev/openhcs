@@ -44,7 +44,7 @@ from openhcs.core.config import (
     MaterializationBackend,
     StreamingConfig,
     VFSConfig,
-    WellFilterConfig,
+    PartitionFilterConfig,
 )
 from openhcs.core.debug import DebugExecutionPolicy, NoOpDebugExecutionPolicy
 from openhcs.core.axis_filter import (
@@ -95,10 +95,10 @@ from openhcs.core.source_bindings import (
     SourceProjectionRole,
 )
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.core.utils import WellFilterProcessor
+from openhcs.core.partition_filter import PartitionFilterProcessor
 from objectstate import ObjectState, ObjectStateRegistry, get_base_type_for_lazy
 from openhcs.core.steps.function_step import FunctionStep  # Used for isinstance check
-from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
+from openhcs.core.progress import ProgressPhase, ProgressStatus
 from dataclasses import dataclass, replace
 from openhcs.core.axes import AxisFamily
 from openhcs.core.post_execute import PostExecuteHook
@@ -127,11 +127,11 @@ def _compiler_step_scope_id(
 
 
 def _compiler_pipeline_scope_id(
-    plate_path_str: str,
+    dataset_root: str,
     pipeline_definition: Sequence["AbstractStep"],
 ) -> str:
     """Build the compiler declaration scope for one submitted pipeline."""
-    return f"{plate_path_str}::pipeline::submission_{id(pipeline_definition):x}"
+    return f"{dataset_root}::pipeline::submission_{id(pipeline_definition):x}"
 
 
 MATERIALIZATION_PLAN_REQUIREMENTS = (
@@ -860,7 +860,7 @@ class PipelineCompiler:
                 )
 
         available_backends = microscope_handler.available_backends(
-            orchestrator.input_dir or orchestrator.plate_path
+            orchestrator.input_dir or orchestrator.dataset_root
         )
         if read_backend not in available_backends:
             raise ValueError(
@@ -890,20 +890,20 @@ class PipelineCompiler:
         effective_config: GlobalPipelineConfig,
     ) -> List[str]:
         resolved_axis_filter = axis_filter
-        well_filter_config = (
-            effective_config.well_filter_config if effective_config else None
+        partition_filter_config = (
+            effective_config.partition_filter_config if effective_config else None
         )
-        if well_filter_config and well_filter_config.well_filter is not None:
+        if partition_filter_config and partition_filter_config.partition_filter is not None:
             available_wells = orchestrator.get_component_keys(
                 AxisFamily.active().partition_axis(), resolved_config=effective_config
             )
-            resolved_wells = WellFilterProcessor.resolve_filter_with_mode(
-                well_filter_config.well_filter,
-                well_filter_config.well_filter_mode,
+            resolved_wells = PartitionFilterProcessor.resolve_filter_with_mode(
+                partition_filter_config.partition_filter,
+                partition_filter_config.partition_filter_mode,
                 available_wells,
             )
             logger.info(
-                f"Well filter: {well_filter_config.well_filter} (mode={well_filter_config.well_filter_mode.value}) "
+                f"Well filter: {partition_filter_config.partition_filter} (mode={partition_filter_config.partition_filter_mode.value}) "
                 f"→ {len(resolved_wells)} wells to process: {resolved_wells}"
             )
             resolved_axis_filter = (
@@ -931,7 +931,7 @@ class PipelineCompiler:
         if orchestrator.pipeline_config is None:
             raise RuntimeError("Missing pipeline config; cannot resolve pipeline.")
         compiler_scope = _compiler_pipeline_scope_id(
-            str(orchestrator.plate_path), pipeline_definition
+            str(orchestrator.dataset_root), pipeline_definition
         )
         ancestors = (
             *ObjectStateRegistry.get_ancestor_objects_with_scopes(
@@ -1062,7 +1062,7 @@ class PipelineCompiler:
             request.global_config,
             request.source_projections_by_axis[context.axis_id],
             metadata_writer=metadata_writer,
-            plate_path=request.orchestrator.plate_path,
+            plate_path=request.orchestrator.dataset_root,
             path_resolver=request.path_resolver,
             is_zmq_execution=request.is_zmq_execution,
         )
@@ -1455,9 +1455,7 @@ class PipelineCompiler:
         completed: int,
         total: int,
     ) -> None:
-        emit(
-            execution_id=orchestrator.execution_id,
-            plate_id=str(orchestrator.plate_path),
+        orchestrator.progress_context().emit(
             axis_id=axis_id,
             step_name="compilation",
             phase=ProgressPhase.COMPILE,
@@ -1497,7 +1495,7 @@ class PipelineCompiler:
             return
         first_context = next(iter(compiled_contexts.values()))
         logger.info("📁 PATH PLANNING SUMMARY:")
-        logger.info("   Main pipeline output: %s", first_context.output_plate_root)
+        logger.info("   Main pipeline output: %s", first_context.output_dataset_root)
         for step_id, plan in first_context.step_plans.items():
             if plan.materialized_output is not None:
                 step_name = plan.step_name or f"step_{step_id}"
@@ -1603,7 +1601,7 @@ class PipelineCompiler:
                     ),
                 )
             path_resolver = CompilationPathResolver(
-                plate_scope=CompilationPlateScope.from_path(orchestrator.plate_path),
+                plate_scope=CompilationPlateScope.from_path(orchestrator.dataset_root),
                 filemanager=orchestrator.filemanager,
                 backend=Backend.DISK.value,
             )
@@ -1732,11 +1730,11 @@ def _resolve_step_axis_filters(
     global_config: GlobalPipelineConfig,
 ):
     """
-    Resolve axis filters for steps with any WellFilterConfig instances.
+    Resolve axis filters for steps with any PartitionFilterConfig instances.
 
     This function handles step-level axis filtering by resolving patterns like
     "row:A", ["A01", "B02"], or max counts against the available axis values for the plate.
-    It processes ALL WellFilterConfig instances (materialization, streaming, etc.) uniformly.
+    It processes ALL PartitionFilterConfig instances (materialization, streaming, etc.) uniformly.
 
     Args:
         pipeline: Resolved steps and their same-epoch saved-field provenance
@@ -1754,33 +1752,33 @@ def _resolve_step_axis_filters(
         return
 
     for step_index, step in enumerate(pipeline.steps):
-        step_filters: dict[type[WellFilterConfig], StepAxisFilterResolution] = {}
+        step_filters: dict[type[PartitionFilterConfig], StepAxisFilterResolution] = {}
         for field_name, config in vars(step).items():
-            if not isinstance(config, WellFilterConfig) or config.well_filter is None:
+            if not isinstance(config, PartitionFilterConfig) or config.partition_filter is None:
                 continue
             provenance = pipeline.step_provenance[step_index].get(
-                f"{field_name}.well_filter"
+                f"{field_name}.partition_filter"
             )
             source_type = provenance[1] if provenance is not None else None
-            if not config.accepts_well_filter_provenance(source_type):
+            if not config.accepts_partition_filter_provenance(source_type):
                 logger.debug(
                     "Ignoring %s.%s inherited from sibling policy %s",
                     type(config).__name__,
-                    "well_filter",
+                    "partition_filter",
                     source_type.__name__ if source_type is not None else "unknown",
                 )
                 continue
-            resolved_axis_values = WellFilterProcessor.resolve_filter_with_mode(
-                config.well_filter,
-                config.well_filter_mode,
+            resolved_axis_values = PartitionFilterProcessor.resolve_filter_with_mode(
+                config.partition_filter,
+                config.partition_filter_mode,
                 available_axis_values,
             )
             step_filters[type(config)] = StepAxisFilterResolution(
                 resolved_axis_values=frozenset(
                     str(value) for value in resolved_axis_values
                 ),
-                filter_mode=config.well_filter_mode,
-                original_filter=config.well_filter,
+                filter_mode=config.partition_filter_mode,
+                original_filter=config.partition_filter,
             )
 
         if step_filters:

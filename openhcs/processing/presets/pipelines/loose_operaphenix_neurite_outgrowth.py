@@ -32,7 +32,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazyStepMaterializationConfig,
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
     PipelineConfig,
 )
 from openhcs.core.function_patterns import get_core_callable
@@ -192,9 +192,9 @@ def build_loose_operaphenix_neurite_config(
     )
     return PipelineConfig(
         dataset_source=SourceBindingsSource,
-        well_filter_config=LazyWellFilterConfig(well_filter=inputs.well),
+        partition_filter_config=LazyPartitionFilterConfig(partition_filter=inputs.well),
         path_planning_config=LazyPathPlanningConfig(
-            well_filter=0,
+            partition_filter=0,
             global_output_folder=output_root,
         ),
         materialization_results_path=output_root / "results",

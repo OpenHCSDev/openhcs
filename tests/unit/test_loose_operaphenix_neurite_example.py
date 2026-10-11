@@ -76,8 +76,8 @@ def test_neurite_example_declares_bounded_sources_and_final_user_result(
     pipeline_config, steps = build_loose_operaphenix_neurite_pipeline(inputs)
 
     assert pipeline_config.dataset_source is SourceBindingsSource
-    assert pipeline_config.well_filter_config.well_filter == "B03"
-    assert pipeline_config.path_planning_config.well_filter == 0
+    assert pipeline_config.partition_filter_config.partition_filter == "B03"
+    assert pipeline_config.path_planning_config.partition_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is True
     assert pipeline_config.materialization_results_path == (
         inputs.output_root.resolve() / "results"
@@ -129,7 +129,7 @@ def test_neurite_example_declares_bounded_sources_and_final_user_result(
     ]
     assert [step.name for step in streamed_steps][-1] == "UnifiedNeurons"
     assert all(
-        step.napari_streaming_config.well_filter is None for step in streamed_steps
+        step.napari_streaming_config.partition_filter is None for step in streamed_steps
     )
     assert {step.step_materialization_config.sub_dir for step in steps} >= {
         "qc_smi312_signal",
@@ -196,7 +196,7 @@ def test_neurite_example_compiles_with_declared_loose_file_identities(
         ).initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=[inputs.well],
+            partition_values=[inputs.well],
             is_zmq_execution=True,
         )
     finally:

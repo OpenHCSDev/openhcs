@@ -48,7 +48,7 @@ def test_declared_result_directory_admits_only_existing_directories(tmp_path, ki
 
 class _ImageBrowserOrchestrator:
     def __init__(self, plate_path: Path, microscope_handler, filemanager: FileManager):
-        self.plate_path = plate_path
+        self.dataset_root = plate_path
         self.microscope_handler = microscope_handler
         self.filemanager = filemanager
         self._config = GlobalPipelineConfig()

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Mapping
 
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.execution_state import ExecutionOutputPlateSummary
+from openhcs.core.execution_state import ExecutionOutputSummary
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.runtime.zmq_progress import (
     ZMQCompileProgressHeartbeat,
@@ -56,8 +56,15 @@ class ZMQCompilationResult:
     """Compiled execution artifacts needed by worker execution."""
 
     execution_bundle: CompiledExecutionBundle
-    compiled_axis_ids: list[str]
-    output_plate: ExecutionOutputPlateSummary = ExecutionOutputPlateSummary()
+    output_dataset: ExecutionOutputSummary = ExecutionOutputSummary()
+
+    @property
+    def compiled_axis_ids(self) -> list[str]:
+        return list(self.execution_bundle.axis_ids)
+
+    @property
+    def step_names(self) -> list[str]:
+        return extract_compiled_step_names(self.execution_bundle.runtime_contexts)
 
     @property
     def worker_assignments(self) -> dict[str, list[str]]:
@@ -72,7 +79,7 @@ class ZMQCompilationRequest:
     """Compile or reuse a compile artifact for one ZMQ execution."""
 
     execution_id: str
-    plate_id: str
+    subject_id: str
     pipeline_steps: list[AbstractStep]
     orchestrator: "PipelineOrchestrator"
     resolved_config: GlobalPipelineConfig | None
@@ -105,40 +112,28 @@ class ZMQCompilationRequest:
             else self.compilation_signature
         )
         artifact.require_compatible_request(
-            plate_id=self.plate_id,
+            subject_id=self.subject_id,
             signature=expected_signature,
             retain_compile_artifact=self.retain_compile_artifact,
         )
 
-        execution_bundle = artifact.compilation.execution_bundle
-        compiled_contexts = execution_bundle.runtime_contexts
-        if not compiled_contexts:
-            raise ValueError("Compile artifact missing compiled_contexts")
-        worker_assignments = {
-            worker_slot: list(axis_ids)
-            for worker_slot, axis_ids in execution_bundle.worker_assignments.items()
-        }
-        compiled_axis_ids = list(execution_bundle.axis_ids)
-        compiled_step_names = extract_compiled_step_names(compiled_contexts)
+        compilation = artifact.compilation
+        step_names = compilation.step_names
         if not self.retain_compile_artifact:
             self.compiled_artifacts.pop(self.compile_artifact_id)
         self.progress_emitter.artifact_init_started(
-            compiled_axis_ids=compiled_axis_ids,
-            worker_assignments=worker_assignments,
-            step_names=compiled_step_names,
+            compiled_axis_ids=compilation.compiled_axis_ids,
+            worker_assignments=compilation.worker_assignments,
+            step_names=step_names,
         )
         logger.info(
-            "[%s] Reused compile artifact %s for plate %s (sig=%s)",
+            "[%s] Reused compile artifact %s for subject %s (sig=%s)",
             self.execution_id,
             self.compile_artifact_id,
-            self.plate_id,
+            self.subject_id,
             expected_signature[:12],
         )
-        return ZMQCompilationResult(
-            execution_bundle=execution_bundle,
-            compiled_axis_ids=compiled_axis_ids,
-            output_plate=artifact.compilation.output_plate,
-        )
+        return compilation
 
     def compile_fresh(self) -> ZMQCompilationResult:
         from openhcs.core.progress import set_progress_queue
@@ -155,7 +150,7 @@ class ZMQCompilationRequest:
             ):
                 execution_bundle = self.orchestrator.compile_pipelines(
                     pipeline_definition=self.pipeline_steps,
-                    well_filter=self.partition_values,
+                    partition_values=self.partition_values,
                     is_zmq_execution=True,
                     debug_execution_policy=self.debug_execution_policy,
                     resolved_config=self.resolved_config,
@@ -167,45 +162,33 @@ class ZMQCompilationRequest:
         if not compiled_contexts:
             raise ValueError("Compilation produced no compiled contexts")
 
-        worker_assignments = {
-            worker_slot: list(axis_ids)
-            for worker_slot, axis_ids in execution_bundle.worker_assignments.items()
-        }
-        compiled_axis_ids = list(execution_bundle.axis_ids)
-        compiled_step_names = extract_compiled_step_names(compiled_contexts)
-        self.progress_emitter.compiled_init_started(
-            compiled_axis_ids=compiled_axis_ids,
-            worker_assignments=worker_assignments,
-        )
-        self.progress_emitter.compile_succeeded(
-            step_count=len(compiled_step_names),
-            compiled_axis_ids=compiled_axis_ids,
-            worker_assignments=worker_assignments,
-        )
-        for axis_id in compiled_axis_ids:
-            self.progress_emitter.axis_compile_succeeded(axis_id)
-
-        first_context = next(iter(compiled_contexts.values()))
-        output_plate_root = first_context.output_plate_root
-        auto_add_output_plate = bool(
-            self.resolved_config.auto_add_output_plate_to_plate_manager
-        )
-        logger.info(
-            "[%s] Captured auto_add_output_plate=%s output_plate_root=%s",
-            self.execution_id,
-            auto_add_output_plate,
-            output_plate_root,
-        )
-        return ZMQCompilationResult(
+        output_dataset_root = next(iter(compiled_contexts.values())).output_dataset_root
+        compilation = ZMQCompilationResult(
             execution_bundle=execution_bundle,
-            compiled_axis_ids=compiled_axis_ids,
-            output_plate=ExecutionOutputPlateSummary(
-                output_plate_root=(
-                    None if output_plate_root is None else str(output_plate_root)
+            output_dataset=ExecutionOutputSummary(
+                output_dataset_root=(
+                    None if output_dataset_root is None else str(output_dataset_root)
                 ),
-                auto_add_output_plate_to_plate_manager=auto_add_output_plate,
+                auto_add_output_dataset=bool(self.resolved_config.auto_add_output_dataset),
             ),
         )
+        self.progress_emitter.compiled_init_started(
+            compiled_axis_ids=compilation.compiled_axis_ids,
+            worker_assignments=compilation.worker_assignments,
+        )
+        self.progress_emitter.compile_succeeded(
+            step_count=len(compilation.step_names),
+            compiled_axis_ids=compilation.compiled_axis_ids,
+            worker_assignments=compilation.worker_assignments,
+        )
+        for axis_id in compilation.compiled_axis_ids:
+            self.progress_emitter.axis_compile_succeeded(axis_id)
+        logger.info(
+            "[%s] Captured output summary %s",
+            self.execution_id,
+            compilation.output_dataset,
+        )
+        return compilation
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,7 +196,7 @@ class ZMQCompileArtifactRecord:
     """Stored compile-only artifact payload."""
 
     execution_id: str
-    plate_id: str
+    subject_id: str
     compilation_signature: str
     debug_replay_signature: str
     compilation: ZMQCompilationResult
@@ -228,7 +211,7 @@ class ZMQCompileArtifactRecord:
     def require_compatible_request(
         self,
         *,
-        plate_id: str,
+        subject_id: str,
         signature: str,
         retain_compile_artifact: bool,
     ) -> None:
@@ -237,8 +220,8 @@ class ZMQCompileArtifactRecord:
             raise ValueError(
                 f"Compile artifact '{self.execution_id}' does not match execution request"
             )
-        if self.plate_id != str(plate_id):
+        if self.subject_id != str(subject_id):
             raise ValueError(
-                f"Compile artifact '{self.execution_id}' is for plate "
-                f"{self.plate_id}, not {plate_id}"
+                f"Compile artifact '{self.execution_id}' is for subject "
+                f"{self.subject_id}, not {subject_id}"
             )

@@ -301,7 +301,7 @@ class LiveMeasurementsWindow(QDialog):
             progress_config=self._progress_config,
             state_scope_parent_id=SCOPE_SEGMENT_SEPARATOR.join(
                 (
-                    str(self._orchestrator.plate_path),
+                    str(self._orchestrator.dataset_root),
                     self.STATE_SCOPE_SEGMENT,
                 )
             ),
@@ -418,7 +418,7 @@ def _navigation_label(entry: LiveMeasurementTableEntry) -> str:
     return (
         f"{entry.step_name}\n"
         f"{address.key.name}{object_text}\n"
-        f"{scope_text or entry.plate_id}"
+        f"{scope_text or entry.subject_id}"
     )
 
 

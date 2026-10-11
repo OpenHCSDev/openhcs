@@ -143,7 +143,7 @@ def test_public_combineobjects_import_compiles_source_owned_scope(
 
     ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
     orchestrator = PipelineOrchestrator(
-        prepared.execution_plate_path,
+        prepared.execution_dataset_root,
         pipeline_config=prepared.pipeline_config,
     )
     set_progress_queue(SimpleQueue())
@@ -151,7 +151,7 @@ def test_public_combineobjects_import_compiles_source_owned_scope(
         orchestrator.initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=prepared.pipeline_steps,
-            well_filter=["A01"],
+            partition_values=["A01"],
             is_zmq_execution=True,
         )
     finally:

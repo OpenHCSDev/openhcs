@@ -600,9 +600,9 @@ def test_artifact_plan_axis_filter_uses_execution_filter_authority(tmp_path):
             definition.contribution,
             pipeline_config=replace(
                 definition.contribution.pipeline_config,
-                well_filter_config=replace(
-                    definition.contribution.pipeline_config.well_filter_config,
-                    well_filter=1,
+                partition_filter_config=replace(
+                    definition.contribution.pipeline_config.partition_filter_config,
+                    partition_filter=1,
                 ),
             ),
         ),
@@ -735,7 +735,7 @@ class _FakePublicMcpClient:
                         "payload": {
                             "entries": [
                                 {
-                                    "plate_id": self.plate_scope_id,
+                                    "subject_id": self.plate_scope_id,
                                     "preview": {
                                         "address": {"key": {"name": name}},
                                         "row_count": 2,

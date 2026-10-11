@@ -340,9 +340,9 @@ def register_reactor_providers(
     # Window handlers are registered in main.py after widgets are created
 
     # Preview formatters (OpenHCS-specific)
-    from openhcs.core.config import WellFilterConfig
+    from openhcs.core.config import PartitionFilterConfig
     from openhcs.pyqt_gui.widgets.config_preview_formatters import (
-        format_well_filter_config,
+        format_partition_filter_config,
     )
 
-    register_preview_formatter(WellFilterConfig, format_well_filter_config)
+    register_preview_formatter(PartitionFilterConfig, format_partition_filter_config)

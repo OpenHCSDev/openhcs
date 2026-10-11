@@ -11,7 +11,6 @@ from openhcs.core.debug import (
 )
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
 )
@@ -28,12 +27,10 @@ def _event(
     timestamp: float = 1.0,
 ) -> ProgressEvent:
     return ProgressEvent(
-        identity=ProgressIdentity(
-            execution_id="exec-1",
-            plate_id="/tmp/plate",
-            axis_id="A01",
-            step_name="segment",
-        ),
+        execution_id="exec-1",
+        subject_id="/tmp/plate",
+        axis_id="A01",
+        step_name="segment",
         phase=ProgressPhase.PATTERN_GROUP,
         status=ProgressStatus.STARTED,
         percent=50.0,
@@ -64,7 +61,7 @@ def _debug_context(
         cursor=_cursor(),
         event_type=event_type,
         snapshot_store_ref="/tmp/debug",
-    ).to_progress_context()
+    ).to_context()
 
 
 def test_debug_progress_record_ignores_normal_progress_context() -> None:
@@ -78,10 +75,10 @@ def test_debug_progress_record_ignores_normal_progress_context() -> None:
 
 
 def test_debug_progress_record_fails_loudly_for_malformed_debug_context() -> None:
-    with pytest.raises(KeyError):
+    with pytest.raises(ValueError, match="missing required field"):
         DebugProgressRecord.from_progress_event(
             _event(
-                context={DebugProgressContext.progress_context_discriminator: "debug-1"}
+                context={DebugProgressContext.context_key: {"debug_session_id": "debug-1"}}
             )
         )
 
@@ -94,7 +91,7 @@ def test_runtime_projection_builder_projects_debug_records_from_same_snapshot() 
     session = DebugSession(
         debug_session_id="debug-1",
         execution_id="exec-1",
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
     ).with_cursor(_cursor())
 
     bundle = RuntimeProjectionBuilder().build(
@@ -112,7 +109,7 @@ def test_runtime_projection_builder_projects_debug_records_from_same_snapshot() 
         )
     )
 
-    assert bundle.execution.get_plate("/tmp/plate", "exec-1") is not None
+    assert bundle.execution.get_subject("/tmp/plate", "exec-1") is not None
     assert len(bundle.debug.records) == 1
     assert bundle.debug.debug_session_id == session.debug_session_id
     assert bundle.debug.current_frame is not None
@@ -130,7 +127,7 @@ def test_terminal_debug_projection_keeps_last_frame_without_active_frame() -> No
     event = _event(context=_debug_context(), timestamp=2.0)
     terminal_summary = DebugTerminalSummary(
         debug_session_id="debug-1",
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
         terminal_status="complete",
         cursor=_cursor(),
     )

@@ -1,5 +1,7 @@
 """Actual batch outcomes, independent of subsequent logical-value rendering."""
 
+import openhcs.core.progress.types as progress_types
+from types import SimpleNamespace
 from dataclasses import replace
 from pathlib import Path
 import pickle
@@ -14,9 +16,9 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.function_patterns import compile_function_pattern
-from openhcs.core.orchestrator.compiled_plate_execution import (
-    CompiledPlateExecutionExtras,
-    CompiledPlateExecutionResults,
+from openhcs.core.orchestrator.bundle_execution import (
+    BundleExecutionExtras,
+    BundleExecutionResults,
 )
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
@@ -167,12 +169,12 @@ def test_worker_exports_actual_step_outcomes_after_resource_release(
     context = FrozenWorkerContext()
     lane = WorkerLaneExecutionContext(
         execution_id="execution",
-        plate_id="plate",
+        subject_id="plate",
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         worker_slot="worker-0",
         worker_assignments={"worker-0": ("A01",)},
     )
-    monkeypatch.setattr(worker, "emit", lambda **_kwargs: None)
+    monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
 
     def forbidden_reconstruction(*_args, **_kwargs):
         pytest.fail("Ordinary execution must consume actual step outcomes")
@@ -212,9 +214,9 @@ def test_parent_and_worker_exports_share_existing_observation_authority(tmp_path
     parent = RuntimeExecutionObservation(
         contexts=(RuntimeContextObservation("A01", (), StepExecutionObservation({}, (plate_path,))),)
     )
-    results = CompiledPlateExecutionResults(
+    results = BundleExecutionResults(
         {"A01": ExecutionResult.success("A01", runtime_observation=worker)},
-        extras=CompiledPlateExecutionExtras(
+        extras=BundleExecutionExtras(
             viewer_states_by_port={}, runtime_observation=parent
         ),
     )

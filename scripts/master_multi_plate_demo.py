@@ -616,7 +616,7 @@ def artifact_plan_axis_filter(item: ScheduledDemo) -> tuple[str, ...]:
     """Project the exact bounded axes from the execution-filter authority."""
 
     configured = (
-        item.definition.contribution.pipeline_config.well_filter_config.well_filter
+        item.definition.contribution.pipeline_config.partition_filter_config.partition_filter
     )
     if isinstance(configured, str) and configured:
         return (configured,)

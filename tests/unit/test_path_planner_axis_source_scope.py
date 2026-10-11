@@ -30,7 +30,7 @@ def test_path_planner_scopes_source_metadata_to_compilation_axis() -> None:
     context = SimpleNamespace(
         axis_id="A01",
         input_dir="/workspace",
-        plate_path=Path("/workspace"),
+        dataset_root=Path("/workspace"),
     )
     session = SimpleNamespace(
         context=context,

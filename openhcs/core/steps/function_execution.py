@@ -30,7 +30,7 @@ from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
     RuntimeInvocationDomain,
 )
-from openhcs.core.progress import ProgressPhase, ProgressStatus, emit
+from openhcs.core.progress import ProgressPhase, ProgressStatus
 from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
 from openhcs.core.source_binding_selection import (
     SourceBoundAnchorPatternPolicy,
@@ -57,7 +57,6 @@ from openhcs.core.steps.function_runtime import (
     _process_single_pattern_group,
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
-from openhcs.core.axes import AxisFamily
 
 if TYPE_CHECKING:
     from openhcs.core.dataset_sources.interfaces import FilenameParser
@@ -803,8 +802,6 @@ class FunctionStepExecutor:
 
     def _detect_patterns(self) -> dict[str, DiscoveredPatternCollection]:
         plan = self.plan
-        axis_name = AxisFamily.active().partition_axis().name
-        axis_filter = {f"{axis_name}_filter": [plan.axis_id]}
         source_files = step_output_manifest(self.context).producer_paths_for(plan)
         if source_files is None:
             source_projection = self.context.runtime_source_workspace_projections.projection_if_available()
@@ -852,7 +849,7 @@ class FunctionStepExecutor:
             group_by=plan.group_by,
             variable_components=plan.require_variable_components(),
             pattern_cache=self.context.runtime_pattern_discovery_cache,
-            **axis_filter,
+            partition_values=[plan.axis_id],
         )
 
     def _log_discovered_patterns(
@@ -1033,9 +1030,7 @@ class FunctionStepExecutor:
         runtime = self.context.execution_runtime
         if runtime is None:
             return
-        emit(
-            execution_id=runtime.execution_id,
-            plate_id=runtime.plate_id,
+        runtime.emit(
             axis_id=self.plan.axis_id,
             step_name=self.plan.step_name,
             phase=ProgressPhase.PATTERN_GROUP,
@@ -1045,6 +1040,4 @@ class FunctionStepExecutor:
             percent=(completed_groups / total_groups) * 100.0,
             component=str(component_value),
             pattern=str(pattern_item),
-            worker_slot=runtime.worker_slot,
-            owned_wells=list(runtime.owned_wells),
         )

@@ -978,7 +978,7 @@ class DualEditorWindow(BaseFormDialog):
         self,
         notification: RuntimeArtifactAvailableNotification,
     ) -> None:
-        if notification.event.plate_id != self.plate_scope:
+        if notification.event.subject_id != self.plate_scope:
             return
         if self.artifact_plan_view is not None:
             self.artifact_plan_view.apply_runtime_notification(notification)
@@ -987,7 +987,7 @@ class DualEditorWindow(BaseFormDialog):
         self,
         notification: DebugSnapshotAvailableNotification,
     ) -> None:
-        if notification.progress_event.plate_id != self.plate_scope:
+        if notification.progress_event.subject_id != self.plate_scope:
             return
         if self.artifact_plan_view is not None and notification.snapshot is not None:
             self.artifact_plan_view.apply_debug_snapshot(notification.snapshot)

@@ -35,18 +35,18 @@ def _schema() -> ConfigSchema:
         config_type="PipelineConfig",
         fields=(
             ConfigFieldSchema(
-                path="well_filter_config",
-                type_repr="LazyWellFilterConfig | None",
+                path="partition_filter_config",
+                type_repr="LazyPartitionFilterConfig | None",
                 default_repr="None",
                 required=False,
                 description="Filter wells before execution.",
                 registry_values=tuple(
                     "one two three four five six seven eight nine ten".split()
                 ),
-                value_type_repr="LazyWellFilterConfig",
+                value_type_repr="LazyPartitionFilterConfig",
                 lazy=True,
                 inheritable=True,
-                nested_schema_path="well_filter_config",
+                nested_schema_path="partition_filter_config",
             ),
             ConfigFieldSchema(
                 path="fiji_streaming_config",
@@ -68,7 +68,7 @@ def _schema() -> ConfigSchema:
             ),
         ),
         registries=(ConfigRegistrySchema(owner_type="PipelineConfig", registered_types=()),),
-        types=(ConfigTypeSchema(type_repr="LazyWellFilterConfig", description="Wells."),),
+        types=(ConfigTypeSchema(type_repr="LazyPartitionFilterConfig", description="Wells."),),
     )
 
 
@@ -101,13 +101,13 @@ def test_config_schema_renderer_filters_and_bounds_fields() -> None:
     assert "Fields: total=3 matched=2 shown=1 registries=1 types=1" in rendered
     assert "Filter: contains=lazy" in rendered
     assert (
-        "- well_filter_config: LazyWellFilterConfig | None "
-        "value=LazyWellFilterConfig default=None "
-        "flags=optional,lazy,inheritable nested=well_filter_config"
+        "- partition_filter_config: LazyPartitionFilterConfig | None "
+        "value=LazyPartitionFilterConfig default=None "
+        "flags=optional,lazy,inheritable nested=partition_filter_config"
     ) in rendered
     assert "fiji_streaming_config" not in rendered
     assert "...<truncated 1 fields>" in rendered
-    assert "- LazyWellFilterConfig extends=<none>" in rendered
+    assert "- LazyPartitionFilterConfig extends=<none>" in rendered
 
     defaults = ConfigSchemaRenderer.render(_batch(_schema()))
     assert "Fields: total=3 matched=3 shown=3" in defaults

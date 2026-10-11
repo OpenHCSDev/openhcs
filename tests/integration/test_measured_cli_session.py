@@ -226,7 +226,7 @@ def test_read_only_source_plate_completes_and_stays_byte_identical(
     receipt = MeasuredPipelineRunReceipt.read(
         MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
     )
-    assert receipt.plate_id == str(plate)
-    assert Path(receipt.execution_plate_id).is_relative_to(output_dir / "workspace")
+    assert receipt.subject_id == str(plate)
+    assert Path(receipt.execution_subject_id).is_relative_to(output_dir / "workspace")
     assert after == before
     _assert_no_server_left(port)

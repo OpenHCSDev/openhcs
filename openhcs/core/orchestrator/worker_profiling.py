@@ -10,8 +10,12 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+
+if TYPE_CHECKING:
+    from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 
 
 class WorkerProfilingPolicy(ABC):
@@ -21,11 +25,7 @@ class WorkerProfilingPolicy(ABC):
     @abstractmethod
     def profile(
         self,
-        *,
-        execution_id: str,
-        plate_id: str,
-        worker_slot: str,
-        owned_wells: list[str],
+        lane: WorkerLaneExecutionContext,
     ) -> Iterator[None]:
         """Profile a worker execution region when the policy is active."""
         yield
@@ -38,11 +38,7 @@ class DisabledWorkerProfilingPolicy(WorkerProfilingPolicy):
     @contextmanager
     def profile(
         self,
-        *,
-        execution_id: str,
-        plate_id: str,
-        worker_slot: str,
-        owned_wells: list[str],
+        lane: WorkerLaneExecutionContext,
     ) -> Iterator[None]:
         with nullcontext():
             yield
@@ -66,11 +62,7 @@ class CProfileWorkerProfilingPolicy(WorkerProfilingPolicy):
     @contextmanager
     def profile(
         self,
-        *,
-        execution_id: str,
-        plate_id: str,
-        worker_slot: str,
-        owned_wells: list[str],
+        lane: WorkerLaneExecutionContext,
     ) -> Iterator[None]:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         profiler = cProfile.Profile()
@@ -83,12 +75,7 @@ class CProfileWorkerProfilingPolicy(WorkerProfilingPolicy):
             profiler.dump_stats(
                 str(
                     self.output_dir
-                    / self.profile_filename(
-                        execution_id=execution_id,
-                        plate_id=plate_id,
-                        worker_slot=worker_slot,
-                        owned_wells=owned_wells,
-                    )
+                    / self.profile_filename(lane)
                 )
             )
 
@@ -96,16 +83,10 @@ class CProfileWorkerProfilingPolicy(WorkerProfilingPolicy):
     def configure_profile_event_scope(self) -> None:
         """Bind profiler events to the concrete runtime's execution thread."""
 
-    def profile_filename(
-        self,
-        *,
-        execution_id: str,
-        plate_id: str,
-        worker_slot: str,
-        owned_wells: list[str],
-    ) -> str:
-        well_token = "all" if not owned_wells else "-".join(sorted(owned_wells))
-        fields = (execution_id, plate_id, worker_slot, well_token)
+    def profile_filename(self, lane: WorkerLaneExecutionContext) -> str:
+        owned = lane.owned_partition_values
+        partition_token = "all" if not owned else "-".join(sorted(owned))
+        fields = (lane.execution_id, lane.subject_id, lane.worker_slot, partition_token)
         return "__".join(self.filename_component(field) for field in fields) + ".prof"
 
     @staticmethod

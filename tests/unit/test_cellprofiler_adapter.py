@@ -34,7 +34,7 @@ from benchmark.adapters.cellprofiler_installation import (
     OPENHCS_BENCHMARK_TOOL_ROOTS_ENV,
 )
 from benchmark.contracts.tool_adapter import ToolExecutionError, ToolNotInstalledError
-from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
+from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.source_bindings import (
@@ -499,7 +499,7 @@ def test_cellprofiler_adapter_runs_bounded_image_set_range(
     assert result.provenance[CELLPROFILER_LAST_IMAGE_SET_PARAM] == 1
 
 
-def test_cellprofiler_adapter_file_list_applies_public_well_filter(
+def test_cellprofiler_adapter_file_list_applies_public_partition_filter(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
@@ -585,7 +585,7 @@ def test_cellprofiler_adapter_file_list_applies_public_well_filter(
     adapter = CellProfilerAdapter(
         executable="/usr/bin/cellprofiler",
         global_config=GlobalPipelineConfig(
-            well_filter_config=WellFilterConfig(well_filter=1),
+            partition_filter_config=PartitionFilterConfig(partition_filter=1),
         ),
     )
     adapter.validate_installation()

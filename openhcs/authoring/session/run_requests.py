@@ -47,16 +47,16 @@ def dataset_pipeline_request(
     orchestrator = dataset_orchestrator(scope_id)
     workspace = orchestrator.input_workspace_preparation_result
     if workspace is not None:
-        execution_root = str(workspace.execution_plate_path)
+        execution_root = str(workspace.execution_dataset_root)
         pipeline_path = (
             None if workspace.pipeline_path is None else str(workspace.pipeline_path)
         )
     else:
-        if orchestrator.plate_path is None:
+        if orchestrator.dataset_root is None:
             raise RuntimeError(
                 f"PipelineOrchestrator for {scope_id!r} has no execution root."
             )
-        execution_root = str(orchestrator.plate_path)
+        execution_root = str(orchestrator.dataset_root)
         pipeline_path = None
     if pipeline_path is None and orchestrator.selected_pipeline_path is not None:
         pipeline_path = str(orchestrator.selected_pipeline_path)

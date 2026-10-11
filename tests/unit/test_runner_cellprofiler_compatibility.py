@@ -16,7 +16,7 @@ from benchmark.adapters.cellprofiler import (
     NativeCellProfilerProvenanceField,
     _primary_workspace_wells,
     _write_native_reference_success_marker,
-    native_cellprofiler_well_filter_scope_slug,
+    native_cellprofiler_partition_filter_scope_slug,
 )
 from benchmark.cellprofiler_comparison import (
     CellProfilerComparisonCase,
@@ -28,7 +28,7 @@ from benchmark.runner import (
     run_cellprofiler_compatibility_benchmark,
     run_cellprofiler_cppipe_parity,
 )
-from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
+from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceMaterialization
 
 SOURCE_ONLY_CPIPE = (
@@ -236,7 +236,7 @@ def test_native_reference_lookup_separates_bounded_image_set_scope(
     )
 
 
-def test_native_reference_lookup_separates_public_well_filter_scope(
+def test_native_reference_lookup_separates_public_partition_filter_scope(
     tmp_path: Path,
 ) -> None:
     cppipe_path = tmp_path / "pipeline.cppipe"
@@ -279,7 +279,7 @@ def test_native_reference_lookup_separates_public_well_filter_scope(
     )
     native_reference_root = tmp_path / "native_refs"
     global_config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=1),
+        partition_filter_config=PartitionFilterConfig(partition_filter=1),
     )
 
     location = _native_reference_location(
@@ -289,7 +289,7 @@ def test_native_reference_lookup_separates_public_well_filter_scope(
     )
 
     assert (
-        native_cellprofiler_well_filter_scope_slug(global_config.well_filter_config)
+        native_cellprofiler_partition_filter_scope_slug(global_config.partition_filter_config)
         == "wells_include_first1"
     )
     assert location.output_dir == (

@@ -18,17 +18,17 @@ from openhcs.core.vfs_protocol import FileManagerLike
 class SourceBindingContext:
     """Complete public source-binding context for one logical plate row."""
 
-    logical_plate_id: str
-    display_plate_root: Path
-    execution_plate_path: Path
+    logical_dataset_id: str
+    display_dataset_root: Path
+    execution_dataset_root: Path
     source_bindings: SourceBindingsConfig
     filemanager: FileManagerLike
     source_backend: str
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "display_plate_root", Path(self.display_plate_root))
+        object.__setattr__(self, "display_dataset_root", Path(self.display_dataset_root))
         object.__setattr__(
-            self, "execution_plate_path", Path(self.execution_plate_path)
+            self, "execution_dataset_root", Path(self.execution_dataset_root)
         )
         if not isinstance(self.source_bindings, SourceBindingsConfig):
             raise TypeError(
@@ -50,7 +50,7 @@ class SourceBindingContext:
             )
         return SourceInventory.from_filemanager(
             filemanager=self.filemanager,
-            source_root=self.display_plate_root,
+            source_root=self.display_dataset_root,
             backend=self.source_backend,
             source_bindings=self.source_bindings,
             step_bindings=step_bindings,

@@ -41,10 +41,12 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.progress import (
+    DeclaredProgressContextPayload,
     ProgressEvent,
-    ProgressIdentity,
+    ProgressExecutionContext,
     ProgressPhase,
     ProgressStatus,
+    emit_event,
 )
 from openhcs.core.vfs_protocol import FileManagerLike
 
@@ -1760,10 +1762,10 @@ class DebugEvent(DebugBoundaryState):
 
 
 @dataclass(frozen=True, slots=True)
-class DebugProgressContext:
+class DebugProgressContext(DeclaredProgressContextPayload):
     """Small debug context intended for ProgressEvent.context transport."""
 
-    progress_context_discriminator: ClassVar[str] = "debug_session_id"
+    context_key: ClassVar[str] = "debug"
 
     debug_session_id: str
     snapshot_id: str | None
@@ -1793,34 +1795,6 @@ class DebugProgressContext:
             snapshot_store_backend=snapshot_store_backend,
         )
 
-    def to_progress_context(self) -> dict[str, Any]:
-        return {
-            "debug_session_id": self.debug_session_id,
-            "snapshot_id": self.snapshot_id,
-            "cursor": to_jsonable(self.cursor),
-            "event_type": self.event_type.value,
-            "snapshot_store_ref": self.snapshot_store_ref,
-            "snapshot_store_backend": self.snapshot_store_backend,
-        }
-
-    @classmethod
-    def from_progress_context(
-        cls,
-        context: Mapping[str, Any],
-    ) -> "DebugProgressContext":
-        return cls(
-            debug_session_id=str(context["debug_session_id"]),
-            snapshot_id=context.get("snapshot_id"),
-            cursor=dataclass_from_mapping(DebugCursor, context["cursor"]),
-            event_type=DebugEventType(context["event_type"]),
-            snapshot_store_ref=context.get("snapshot_store_ref"),
-            snapshot_store_backend=context.get("snapshot_store_backend"),
-        )
-
-    @classmethod
-    def is_progress_context(cls, context: Mapping[str, Any]) -> bool:
-        return cls.progress_context_discriminator in context
-
 
 @dataclass(frozen=True, slots=True)
 class DebugProgressEventRequest(DebugSessionRequest):
@@ -1829,28 +1803,23 @@ class DebugProgressEventRequest(DebugSessionRequest):
     request_kind: ClassVar[str] = "progress_event"
 
     debug_event: DebugEvent
-    execution_id: str
-    plate_id: str
+    progress_context: ProgressExecutionContext
     snapshot_id: str | None = None
     snapshot_store_ref: str | None = None
     snapshot_store_backend: str | None = None
     completed: int = 0
     total: int = 1
     percent: float = 0.0
-    worker_slot: str | None = None
-    owned_wells: tuple[str, ...] | None = None
-    timestamp: float = field(default_factory=time.time)
-    pid: int = 0
 
     @property
     def required_non_empty_values(self) -> tuple[tuple[str, str | None], ...]:
         return (
             ("debug_session_id", self.debug_session_id),
-            ("execution_id", self.execution_id),
-            ("plate_id", self.plate_id),
+            ("execution_id", self.progress_context.execution_id),
+            ("subject_id", self.progress_context.subject_id),
         )
 
-    def progress_context(self) -> DebugProgressContext:
+    def debug_progress_context(self) -> DebugProgressContext:
         return DebugProgressContext.from_event(
             debug_session_id=self.debug_session_id,
             event=self.debug_event,
@@ -1862,13 +1831,9 @@ class DebugProgressEventRequest(DebugSessionRequest):
     def to_progress_event(self) -> ProgressEvent:
         if self.debug_event.axis_id is None:
             raise ValueError("DebugProgressEventRequest requires debug_event.axis_id.")
-        return ProgressEvent(
-            identity=ProgressIdentity(
-                execution_id=self.execution_id,
-                plate_id=self.plate_id,
-                axis_id=self.debug_event.axis_id,
-                step_name=self.debug_event.step_name,
-            ),
+        return self.progress_context.event(
+            axis_id=self.debug_event.axis_id,
+            step_name=self.debug_event.step_name,
             phase=ProgressPhase.PATTERN_GROUP,
             status=DebugBoundaryEventDeclarationBase.for_event_type(
                 self.debug_event.event_type
@@ -1876,14 +1841,10 @@ class DebugProgressEventRequest(DebugSessionRequest):
             percent=self.percent,
             completed=self.completed,
             total=self.total,
-            timestamp=self.timestamp,
-            pid=self.pid,
             message=self.debug_event.event_type.value,
-            context=self.progress_context().to_progress_context(),
+            context=self.debug_progress_context().to_context(),
             error=self.debug_event.exception,
             traceback=self.debug_event.traceback_text,
-            worker_slot=self.worker_slot,
-            owned_wells=(None if self.owned_wells is None else list(self.owned_wells)),
         )
 
 
@@ -1995,7 +1956,7 @@ class DebugSession:
 
     debug_session_id: str
     execution_id: str | None = None
-    plate_id: str | None = None
+    subject_id: str | None = None
     axis_id: str | None = None
     command_type: DebugCommandType | None = None
     selected_source_group: str | None = None
@@ -2010,14 +1971,14 @@ class DebugSession:
         cls,
         *,
         execution_id: str | None = None,
-        plate_id: str | None = None,
+        subject_id: str | None = None,
         axis_id: str | None = None,
         command_type: DebugCommandType | None = None,
     ) -> "DebugSession":
         return cls(
             debug_session_id=str(uuid4()),
             execution_id=execution_id,
-            plate_id=plate_id,
+            subject_id=subject_id,
             axis_id=axis_id,
             command_type=command_type,
         )
@@ -2026,7 +1987,7 @@ class DebugSession:
         return DebugSession(
             debug_session_id=self.debug_session_id,
             execution_id=self.execution_id,
-            plate_id=self.plate_id,
+            subject_id=self.subject_id,
             axis_id=self.axis_id,
             command_type=command_type,
             selected_source_group=self.selected_source_group,
@@ -2047,7 +2008,7 @@ class DebugSession:
         return DebugSession(
             debug_session_id=self.debug_session_id,
             execution_id=self.execution_id,
-            plate_id=self.plate_id,
+            subject_id=self.subject_id,
             axis_id=self.axis_id if axis_id is None else axis_id,
             command_type=self.command_type,
             selected_source_group=self.selected_source_group,
@@ -2062,7 +2023,7 @@ class DebugSession:
         return DebugSession(
             debug_session_id=self.debug_session_id,
             execution_id=self.execution_id,
-            plate_id=self.plate_id,
+            subject_id=self.subject_id,
             axis_id=self.axis_id,
             command_type=self.command_type,
             selected_source_group=self.selected_source_group,
@@ -2079,7 +2040,7 @@ class DebugSession:
         return DebugSession(
             debug_session_id=self.debug_session_id,
             execution_id=self.execution_id,
-            plate_id=self.plate_id,
+            subject_id=self.subject_id,
             axis_id=self.axis_id,
             command_type=self.command_type,
             selected_source_group=self.selected_source_group,
@@ -2096,7 +2057,7 @@ class DebugTerminalSummary:
     """Terminal UI/debug summary for one completed debug session."""
 
     debug_session_id: str
-    plate_id: str
+    subject_id: str
     terminal_status: str
     cursor: DebugCursor | None = None
     command_type: DebugCommandType | None = None
@@ -2116,11 +2077,11 @@ class DebugTerminalSummary:
         terminal_status: str,
         completed_at_unix: float | None = None,
     ) -> "DebugTerminalSummary":
-        if session.plate_id is None:
-            raise ValueError("DebugTerminalSummary requires session.plate_id.")
+        if session.subject_id is None:
+            raise ValueError("DebugTerminalSummary requires session.subject_id.")
         return cls(
             debug_session_id=session.debug_session_id,
-            plate_id=session.plate_id,
+            subject_id=session.subject_id,
             terminal_status=terminal_status,
             cursor=session.cursor,
             command_type=session.command_type,
@@ -2140,7 +2101,7 @@ class DebugTerminalSummary:
     ) -> "DebugTerminalSummary":
         return DebugTerminalSummary(
             debug_session_id=self.debug_session_id,
-            plate_id=self.plate_id,
+            subject_id=self.subject_id,
             terminal_status=self.terminal_status,
             cursor=self.cursor if snapshot is None else snapshot.cursor,
             command_type=self.command_type,
@@ -2514,10 +2475,7 @@ class DebugSinkInstallRequest:
     """Execution identity needed to install one worker debug sink."""
 
     context: DebugExecutionContext
-    execution_id: str
-    plate_id: str
-    worker_slot: str
-    owned_wells: tuple[str, ...]
+    progress_context: ProgressExecutionContext
 
     def __post_init__(self) -> None:
         if not isinstance(self.context, DebugExecutionContext):
@@ -2525,9 +2483,8 @@ class DebugSinkInstallRequest:
                 "DebugSinkInstallRequest.context must implement DebugExecutionContext."
             )
         for field_name, value in (
-            ("execution_id", self.execution_id),
-            ("plate_id", self.plate_id),
-            ("worker_slot", self.worker_slot),
+            ("execution_id", self.progress_context.execution_id),
+            ("subject_id", self.progress_context.subject_id),
         ):
             if not value:
                 raise ValueError(f"{field_name} cannot be empty.")
@@ -2563,8 +2520,6 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         self,
         request: DebugSinkInstallRequest,
     ) -> None:
-        from openhcs.core.progress import emit_event
-
         invocation_strategy = DebugInvocationExecutionStrategy.for_config(self.config)
         pause_controller = (
             DebugPausedWorkerRegistry.controller_for(self.config.debug_session_id)
@@ -2577,25 +2532,19 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         if self.config.snapshot_store_ref is not None:
             debug_event_sink: DebugEventSink = LocalSnapshotProgressDebugEventSink(
                 debug_session_id=self.config.debug_session_id,
-                execution_id=request.execution_id,
-                plate_id=request.plate_id,
+                progress_context=request.progress_context,
                 emit_progress=emit_event,
                 snapshot_store=self.snapshot_store_for_context(request.context),
                 snapshot_store_ref=self.config.snapshot_store_ref,
                 snapshot_store_backend=self.config.snapshot_store_backend,
-                worker_slot=request.worker_slot,
-                owned_wells=request.owned_wells,
                 invocation_strategy=invocation_strategy,
                 pause_controller=pause_controller,
             )
         else:
             debug_event_sink = ProgressDebugEventSink(
                 debug_session_id=self.config.debug_session_id,
-                execution_id=request.execution_id,
-                plate_id=request.plate_id,
+                progress_context=request.progress_context,
                 emit_progress=emit_event,
-                worker_slot=request.worker_slot,
-                owned_wells=request.owned_wells,
                 invocation_strategy=invocation_strategy,
                 pause_controller=pause_controller,
             )
@@ -2747,30 +2696,20 @@ class ProgressDebugEventSink(DebugEventSink):
         self,
         *,
         debug_session_id: str,
-        execution_id: str,
-        plate_id: str,
+        progress_context: ProgressExecutionContext,
         emit_progress: Callable[[ProgressEvent], None],
         snapshot_store_ref: str | None = None,
         snapshot_store_backend: str | None = None,
-        worker_slot: str | None = None,
-        owned_wells: tuple[str, ...] | None = None,
         invocation_strategy: DebugInvocationExecutionStrategy | None = None,
         pause_controller: DebugPausedWorkerController | None = None,
     ) -> None:
         if not debug_session_id:
             raise ValueError("debug_session_id cannot be empty.")
-        if not execution_id:
-            raise ValueError("execution_id cannot be empty.")
-        if not plate_id:
-            raise ValueError("plate_id cannot be empty.")
         self.debug_session_id = debug_session_id
-        self.execution_id = execution_id
-        self.plate_id = plate_id
+        self.progress_context = progress_context
         self.emit_progress = emit_progress
         self.snapshot_store_ref = snapshot_store_ref
         self.snapshot_store_backend = snapshot_store_backend
-        self.worker_slot = worker_slot
-        self.owned_wells = owned_wells
         self.invocation_strategy = (
             invocation_strategy or NeverStopDebugInvocationExecutionStrategy()
         )
@@ -2781,12 +2720,9 @@ class ProgressDebugEventSink(DebugEventSink):
             DebugProgressEventRequest(
                 debug_session_id=self.debug_session_id,
                 debug_event=event,
-                execution_id=self.execution_id,
-                plate_id=self.plate_id,
+                progress_context=self.progress_context,
                 snapshot_store_ref=self.snapshot_store_ref,
                 snapshot_store_backend=self.snapshot_store_backend,
-                worker_slot=self.worker_slot,
-                owned_wells=self.owned_wells,
             ).to_progress_event()
         )
         if self.pause_controller is not None:
@@ -2808,14 +2744,11 @@ class LocalSnapshotProgressDebugEventSink(DebugEventSink):
         self,
         *,
         debug_session_id: str,
-        execution_id: str,
-        plate_id: str,
+        progress_context: ProgressExecutionContext,
         emit_progress: Callable[[ProgressEvent], None],
         snapshot_store: "DebugSnapshotStore",
         snapshot_store_ref: str,
         snapshot_store_backend: str | None = None,
-        worker_slot: str | None = None,
-        owned_wells: tuple[str, ...] | None = None,
         invocation_strategy: DebugInvocationExecutionStrategy | None = None,
         pause_controller: DebugPausedWorkerController | None = None,
     ) -> None:
@@ -2824,14 +2757,11 @@ class LocalSnapshotProgressDebugEventSink(DebugEventSink):
                 "snapshot_store.debug_session_id must match debug_session_id."
             )
         self.debug_session_id = debug_session_id
-        self.execution_id = execution_id
-        self.plate_id = plate_id
+        self.progress_context = progress_context
         self.emit_progress = emit_progress
         self.snapshot_store = snapshot_store
         self.snapshot_store_ref = snapshot_store_ref
         self.snapshot_store_backend = snapshot_store_backend
-        self.worker_slot = worker_slot
-        self.owned_wells = owned_wells
         self.invocation_strategy = (
             invocation_strategy or NeverStopDebugInvocationExecutionStrategy()
         )
@@ -2844,13 +2774,10 @@ class LocalSnapshotProgressDebugEventSink(DebugEventSink):
             DebugProgressEventRequest(
                 debug_session_id=self.debug_session_id,
                 debug_event=event,
-                execution_id=self.execution_id,
-                plate_id=self.plate_id,
+                progress_context=self.progress_context,
                 snapshot_id=snapshot_id,
                 snapshot_store_ref=self.snapshot_store_ref,
                 snapshot_store_backend=self.snapshot_store_backend,
-                worker_slot=self.worker_slot,
-                owned_wells=self.owned_wells,
             ).to_progress_event()
         )
         if self.pause_controller is not None:

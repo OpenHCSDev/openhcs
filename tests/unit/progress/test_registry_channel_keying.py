@@ -2,7 +2,6 @@ from openhcs.core.progress import (
     ProgressChannel,
     ProgressChannelDeclarationBase,
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhaseDeclarationBase,
     ProgressPhase,
     ProgressStatusDeclarationBase,
@@ -22,12 +21,10 @@ def _event(
     total: int = 1,
 ) -> ProgressEvent:
     return ProgressEvent(
-        identity=ProgressIdentity(
-            execution_id="exec-1",
-            plate_id="/tmp/plate",
-            axis_id=axis_id,
-            step_name=step_name,
-        ),
+        execution_id="exec-1",
+        subject_id="/tmp/plate",
+        axis_id=axis_id,
+        step_name=step_name,
         phase=phase,
         status=status,
         percent=percent,

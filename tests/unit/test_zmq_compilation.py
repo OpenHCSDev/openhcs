@@ -103,7 +103,7 @@ class _FreshCompileOrchestrator:
         self,
         *,
         pipeline_definition,
-        well_filter,
+        partition_values,
         is_zmq_execution,
         debug_execution_policy,
         resolved_config,
@@ -111,7 +111,7 @@ class _FreshCompileOrchestrator:
         self.calls.append(
             {
                 "pipeline_definition": pipeline_definition,
-                "well_filter": well_filter,
+                "partition_values": partition_values,
                 "is_zmq_execution": is_zmq_execution,
                 "debug_execution_policy": debug_execution_policy,
                 "resolved_config": resolved_config,
@@ -162,17 +162,14 @@ def test_reused_compile_artifact_reads_step_names_from_compiled_plans() -> None:
         worker_assignments={"worker_0": ["A01"]},
         runtime_environment=_runtime_environment(),
     )
-    compilation = ZMQCompilationResult(
-        execution_bundle=bundle,
-        compiled_axis_ids=["A01"],
-    )
+    compilation = ZMQCompilationResult(execution_bundle=bundle)
     artifacts = {
         "artifact-1": ZMQCompileArtifactRecord(
             configs=OpenHCSExecutionConfigBundle(
                 GlobalPipelineConfig(), PipelineConfig()
             ),
             execution_id="compile-1",
-            plate_id="/tmp/plate",
+            subject_id="/tmp/plate",
             compilation_signature="signature",
             debug_replay_signature="debug-signature",
             compilation=compilation,
@@ -181,7 +178,7 @@ def test_reused_compile_artifact_reads_step_names_from_compiled_plans() -> None:
 
     request = ZMQCompilationRequest(
         execution_id="exec-1",
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
         pipeline_steps=[],
         orchestrator=None,
         resolved_config=None,
@@ -222,7 +219,7 @@ def test_compile_fresh_emits_heartbeat_during_long_compilation() -> None:
 
     request = ZMQCompilationRequest(
         execution_id="exec-1",
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
         pipeline_steps=[_StrippedStepShell(), _StrippedStepShell()],
         orchestrator=orchestrator,
         resolved_config=GlobalPipelineConfig(),
@@ -246,7 +243,7 @@ def test_compile_fresh_emits_heartbeat_during_long_compilation() -> None:
     assert orchestrator.calls == [
         {
             "pipeline_definition": request.pipeline_steps,
-            "well_filter": ["A01"],
+            "partition_values": ["A01"],
             "is_zmq_execution": True,
             "debug_execution_policy": "debug-policy",
             "resolved_config": request.resolved_config,
@@ -281,19 +278,17 @@ def test_rejected_reuse_preserves_artifact_for_a_valid_request(retain, invalid):
     artifact = ZMQCompileArtifactRecord(
         configs=OpenHCSExecutionConfigBundle(GlobalPipelineConfig(), PipelineConfig()),
         execution_id="compile-1",
-        plate_id="/plate",
+        subject_id="/plate",
         compilation_signature="signature",
         debug_replay_signature="debug-signature",
-        compilation=ZMQCompilationResult(
-            execution_bundle=bundle, compiled_axis_ids=["A01"]
-        ),
+        compilation=ZMQCompilationResult(execution_bundle=bundle),
     )
     if invalid == "signature":
         artifact = replace(
             artifact, compilation_signature="wrong", debug_replay_signature="wrong"
         )
     elif invalid == "plate":
-        artifact = replace(artifact, plate_id="/another-plate")
+        artifact = replace(artifact, subject_id="/another-plate")
     else:
         artifact = replace(
             artifact,
@@ -306,7 +301,7 @@ def test_rejected_reuse_preserves_artifact_for_a_valid_request(retain, invalid):
     emitter = _ProgressEmitter()
     request = ZMQCompilationRequest(
         execution_id="execute-1",
-        plate_id="/plate",
+        subject_id="/plate",
         pipeline_steps=[],
         orchestrator=None,
         resolved_config=GlobalPipelineConfig(),
@@ -327,7 +322,7 @@ def test_rejected_reuse_preserves_artifact_for_a_valid_request(retain, invalid):
 
     valid = replace(
         artifact,
-        plate_id="/plate",
+        subject_id="/plate",
         compilation_signature="signature",
         debug_replay_signature="debug-signature",
         compilation=replace(artifact.compilation, execution_bundle=bundle),

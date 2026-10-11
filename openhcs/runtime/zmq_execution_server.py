@@ -18,7 +18,6 @@ from zmqruntime.messages import (
     ExecuteRequest,
     ExecutionRecord,
     ExecutionStatus,
-    MessageFields,
     StatusRequest,
 )
 from zmqruntime.startup import EndpointStartupStatusCallback
@@ -73,15 +72,15 @@ class ZMQExecutionContext:
 
     @property
     def pipeline_config(self) -> PipelineConfig:
-        return self.configs.plate_pipeline
+        return self.configs.pipeline
 
     @property
-    def plate_id(self) -> str:
-        return self.request_payload.plate_id
+    def subject_id(self) -> str:
+        return self.request_payload.subject_id
 
     @property
-    def execution_plate_id(self) -> str | None:
-        return self.request_payload.execution_plate_id
+    def execution_subject_id(self) -> str | None:
+        return self.request_payload.execution_subject_id
 
     @property
     def config_params(self) -> dict | None:
@@ -121,13 +120,10 @@ class ZMQExecutionContext:
         if self.compile_only and self.compile_artifact_id:
             raise ValueError("compile_only and compile_artifact_id cannot both be set")
 
-    def progress_context(self) -> dict:
-        return {
-            **ProgressExecutionContext(
-                execution_id=self.execution_id, plate_id=self.plate_id
-            ).to_transport_fields(),
-            MessageFields.AXIS_ID: "",
-        }
+    def progress_context(self) -> ProgressExecutionContext:
+        return ProgressExecutionContext(
+            execution_id=self.execution_id, subject_id=self.subject_id
+        )
 
 
 class FunctionCatalogExecutionServer(ExecutionServer):
@@ -256,22 +252,6 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             )
         return super().handle_control_message(message)
 
-    @staticmethod
-    def _validate_worker_claim(
-        worker_slot: str,
-        owned_wells: list[str],
-        assignments: dict[str, list[str]],
-    ) -> None:
-        if worker_slot not in assignments:
-            raise ValueError(
-                f"Unknown worker_slot '{worker_slot}'. Expected one of: {list(assignments.keys())}"
-            )
-        expected = assignments[worker_slot]
-        if sorted(owned_wells) != sorted(expected):
-            raise ValueError(
-                f"Invalid worker claim for {worker_slot}: expected={expected}, got={owned_wells}"
-            )
-
     def _set_compile_status(
         self, status: str, message: str | None = None, ttl_seconds: float = 4.0
     ) -> None:
@@ -310,83 +290,51 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             compile_message=compile_message,
         )
 
-    def _enqueue_progress(self, progress_update: dict) -> None:
-        event = ProgressEvent.from_dict(progress_update)
-        if event.total_wells is not None:
-            logger.info(
-                "_enqueue_progress: total_wells=%s, keys=%s, step_name=%s",
-                event.total_wells,
-                list(progress_update.keys()),
-                event.step_name,
-            )
+    def _enqueue_progress(self, event: ProgressEvent) -> None:
         self.send_progress_update(event.to_dict())
 
     def _forward_worker_progress(self, worker_queue) -> None:
-        import logging
+        """Publish worker progress with the execution's lane topology attached."""
 
-        logger = logging.getLogger(__name__)
-        while True:
-            progress_update = worker_queue.get()
-            if progress_update is None:
-                logger.info("Progress forwarder received None, exiting")
-                break
-            event = ProgressEvent.from_dict(progress_update)
+        while (event := worker_queue.get()) is not None:
             assignments = self._worker_assignments_for_execution(event.execution_id)
-
             # Axisless events are owned by the parent execution lifecycle, not
             # by a worker lane. They carry topology but never a worker claim.
-            if not event.axis_id:
-                if event.worker_slot is not None or event.owned_wells is not None:
-                    raise ValueError(
-                        "Execution-level progress cannot carry a worker claim: "
-                        f"{progress_update}"
-                    )
-                self.send_progress_update(
-                    event.with_worker_topology(
-                        worker_assignments=assignments,
-                        total_wells=sorted(
-                            {
-                                axis_id
-                                for assigned_axes in assignments.values()
-                                for axis_id in assigned_axes
-                            }
-                        ),
-                    ).to_dict()
-                )
-                continue
-
-            if event.worker_slot is None:
+            if event.axis_id:
+                self._require_worker_claim(event, assignments)
+            elif event.worker_slot is not None or event.owned_partition_values is not None:
                 raise ValueError(
-                    "Worker progress missing required field 'worker_slot': "
-                    f"{progress_update}"
+                    f"Execution-level progress cannot carry a worker claim: {event}"
                 )
-            if event.owned_wells is None:
-                raise ValueError(
-                    "Worker progress missing required field 'owned_wells': "
-                    f"{progress_update}"
-                )
-            owned_wells = [str(axis_id) for axis_id in event.owned_wells]
-            self._validate_worker_claim(event.worker_slot, owned_wells, assignments)
-            # Attach topology metadata to every worker progress event so the UI
-            # cannot lose worker/well ownership due first-message ordering.
-            enriched_event = event.with_worker_topology(
-                worker_assignments=assignments,
-                total_wells=sorted(
-                    {
+            self._enqueue_progress(
+                event.with_worker_topology(
+                    worker_assignments=assignments,
+                    partition_values=sorted(
                         axis_id
                         for assigned_axes in assignments.values()
                         for axis_id in assigned_axes
-                    }
-                ),
+                    ),
+                )
             )
-            logger.info(
-                "Forwarding progress: pid=%s, axis=%s, step_name=%s, worker_slot=%s",
-                enriched_event.pid,
-                enriched_event.axis_id,
-                enriched_event.step_name,
-                enriched_event.worker_slot,
+
+    @staticmethod
+    def _require_worker_claim(
+        event: ProgressEvent,
+        assignments: dict[str, list[str]],
+    ) -> None:
+        """A lane event must name a planned lane and exactly that lane's values."""
+
+        if event.worker_slot not in assignments:
+            raise ValueError(
+                f"Unknown worker_slot {event.worker_slot!r}. "
+                f"Expected one of: {list(assignments)}"
             )
-            self.send_progress_update(enriched_event.to_dict())
+        expected = assignments[event.worker_slot]
+        if sorted(event.owned_partition_values or ()) != sorted(expected):
+            raise ValueError(
+                f"Invalid worker claim for {event.worker_slot}: expected={expected}, "
+                f"got={event.owned_partition_values}"
+            )
 
     def _worker_assignments_for_execution(
         self,
@@ -423,7 +371,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             )
         except Exception as e:
             logger.warning(
-                "[%s] Failed to attach output_plate_root to results_summary: %s",
+                "[%s] Failed to attach output_dataset_root to results_summary: %s",
                 record.execution_id,
                 e,
             )
@@ -448,7 +396,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         execution_id: str,
         request_payload: ZMQExecutionRequestPayload,
     ):
-        logger.info("[%s] Starting plate %s", execution_id, request_payload.plate_id)
+        logger.info("[%s] Starting subject %s", execution_id, request_payload.subject_id)
 
         request_payload.compile_control.validate()
         self._cleanup_compiled_artifacts()
@@ -464,7 +412,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             )
             retain = self._retain_compile_artifact(auxiliary.debug_execution_config)
             artifact.require_compatible_request(
-                plate_id=request_payload.plate_id,
+                subject_id=request_payload.subject_id,
                 signature=(
                     request_payload.debug_replay_signature
                     if retain
@@ -518,9 +466,9 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         )
         request_context.validate_compile_request()
         logger.info(
-            "[%s] Request received: plate=%s compile_only=%s artifact_id=%s step_count=%d pipeline_sha=%s request_sig=%s",
+            "[%s] Request received: subject=%s compile_only=%s artifact_id=%s step_count=%d pipeline_sha=%s request_sig=%s",
             execution_id,
-            request_context.plate_id,
+            request_context.subject_id,
             request_context.compile_only,
             request_context.compile_artifact_id,
             len(request_context.pipeline_steps),
@@ -549,7 +497,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             )
             return OpenHCSExecutionConfigBundle(
                 global_pipeline=global_config,
-                plate_pipeline=pipeline_config,
+                pipeline=pipeline_config,
             )
         raise ValueError("config_code is required for execution config resolution")
 
@@ -565,20 +513,20 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         auxiliary_params = request_context.auxiliary_params
         environment = ZMQOrchestratorEnvironmentRequest(
             execution_id=request_context.execution_id,
-            plate_id=request_context.plate_id,
-            execution_plate_id=request_context.execution_plate_id,
+            subject_id=request_context.subject_id,
+            execution_subject_id=request_context.execution_subject_id,
             selected_pipeline_path=request_context.request_payload.selected_pipeline_path,
             debug_execution_config=auxiliary_params.debug_execution_config,
         ).prepare()
         debug_execution_policy = environment.debug_execution_policy
         debug_execution_config = environment.debug_execution_config
-        plate_path_str = environment.plate_path_str
+        dataset_root = environment.dataset_root
 
         progress_context = request_context.progress_context()
         progress_emitter = ZMQProgressEmitter(
             enqueue=self._enqueue_progress,
             execution_id=request_context.execution_id,
-            plate_id=request_context.plate_id,
+            subject_id=request_context.subject_id,
         )
 
         partition_values: list[str] | None = None
@@ -609,15 +557,15 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 )
             orchestrator = self._initialize_orchestrator(
                 request_context.execution_id,
-                plate_path_str,
+                dataset_root,
                 request_context.pipeline_config,
                 resolved_config=resolved_config,
                 selected_pipeline_path=request_context.request_payload.selected_pipeline_path,
                 execution_bundle=execution_bundle,
             )
             self._raise_if_cancelled(request_context.execution_id, "initialization")
-            partition_values = self._wells_for_execution(
-                auxiliary_params.axis_filter,
+            partition_values = self._partition_values_for_execution(
+                auxiliary_params.partition_values,
                 orchestrator,
                 debug_execution_policy,
                 execution_bundle=execution_bundle,
@@ -684,7 +632,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
     def _initialize_orchestrator(
         self,
         execution_id: str,
-        plate_path_str: str,
+        dataset_root: str,
         pipeline_config,
         *,
         resolved_config: GlobalPipelineConfig | None,
@@ -699,7 +647,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             if resolved_config is None:
                 raise ValueError("Fresh initialization requires resolved configuration.")
             orchestrator = PipelineOrchestrator(
-                plate_path=Path(plate_path_str),
+                dataset_root=Path(dataset_root),
                 pipeline_config=pipeline_config,
                 resolved_config=resolved_config,
                 selected_pipeline_path=selected_pipeline_path,
@@ -711,7 +659,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         else:
             orchestrator = PipelineOrchestrator.from_compiled_execution(
                 execution_bundle,
-                plate_path=Path(plate_path_str),
+                dataset_root=Path(dataset_root),
                 pipeline_config=pipeline_config,
                 selected_pipeline_path=selected_pipeline_path,
                 transport_config=self.config,
@@ -733,7 +681,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             raise ExecutionCancelledError("Execution cancelled by user")
 
     @staticmethod
-    def _wells_for_execution(
+    def _partition_values_for_execution(
         axis_filter: tuple[str, ...] | None,
         orchestrator,
         debug_execution_policy,
@@ -764,7 +712,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
     ) -> None:
         if compile_artifact_id is None:
             progress_emitter.planned_init_started(
-                wells=partition_values,
+                partition_values=partition_values,
                 step_names=[step.name for step in pipeline_steps],
             )
 
@@ -783,7 +731,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             self._cleanup_compiled_artifacts()
         return ZMQCompilationRequest(
             execution_id=request_context.execution_id,
-            plate_id=request_context.plate_id,
+            subject_id=request_context.subject_id,
             pipeline_steps=request_context.pipeline_steps,
             orchestrator=orchestrator,
             resolved_config=resolved_config,
@@ -798,7 +746,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             progress_emitter=progress_emitter,
             compiler_progress_queue=ZMQCompilerProgressQueue(
                 enqueue=self._enqueue_progress,
-                plate_id=request_context.plate_id,
+                subject_id=request_context.subject_id,
             ),
             debug_execution_policy=debug_execution_policy,
         ).resolve()
@@ -813,10 +761,10 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         self._worker_assignments_by_execution[execution_id] = (
             compilation.worker_assignments
         )
-        if compilation.output_plate.is_present:
+        if compilation.output_dataset.is_present:
             self.active_executions[execution_id].set_extra(
-                compilation.output_plate.EXECUTION_RECORD_KEY,
-                compilation.output_plate,
+                compilation.output_dataset.EXECUTION_RECORD_KEY,
+                compilation.output_dataset,
             )
 
     def _finish_compilation_or_execute(
@@ -825,7 +773,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         request_context: ZMQExecutionContext,
         orchestrator,
         compilation,
-        progress_context: dict,
+        progress_context: ProgressExecutionContext,
         debug_execution_policy,
     ):
         if request_context.compile_only:
@@ -883,7 +831,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         execution_bundle = compilation.execution_bundle
         output_roots = runtime_output_roots(
             execution_bundle.runtime_contexts,
-            compilation.output_plate.output_plate_root,
+            compilation.output_dataset.output_dataset_root,
         )
         if (
             request_context.auxiliary_params.runtime_observation_export_scope
@@ -933,7 +881,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         self._compiled_artifacts[request_context.execution_id] = (
             ZMQCompileArtifactRecord(
                 execution_id=request_context.execution_id,
-                plate_id=request_context.plate_id,
+                subject_id=request_context.subject_id,
                 compilation_signature=request_context.compilation_signature,
                 debug_replay_signature=request_context.debug_replay_signature,
                 compilation=compilation,

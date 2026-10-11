@@ -165,8 +165,8 @@ def test_physical_c3_remains_available_after_c1_only_preparation(tmp_path, chann
         # The original generic (pipeline/Image Browser) constructor still gives
         # the selected projection precedence even over an exact acquisition owner.
         physical_handler = BioFormatsHandler(filemanager)
-        projection = WorkspaceSourceProjections.from_plate_metadata(
-            plate_path=tmp_path,
+        projection = WorkspaceSourceProjections.from_dataset_metadata(
+            dataset_root=tmp_path,
             metadata_handler=physical_handler.metadata_handler,
             filemanager=filemanager,
         ).projection_if_available()

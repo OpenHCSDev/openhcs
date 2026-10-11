@@ -59,7 +59,7 @@ from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.debug import DebugExecutionConfig
-from openhcs.core.execution_state import ExecutionOutputPlateSummary
+from openhcs.core.execution_state import ExecutionOutputSummary
 from openhcs.core.pipeline_document import (
     PipelineDocument,
     PipelineDocumentCodec,
@@ -217,14 +217,14 @@ _COMPILED_PIPELINE_POLL_INTERVAL_SECONDS = 0.05
 ZMQScalar: TypeAlias = str | int | float | bool | None
 ZMQValue: TypeAlias = ZMQScalar | Mapping[str, "ZMQValue"] | Sequence["ZMQValue"]
 ZMQParams: TypeAlias = Mapping[str, ZMQValue]
-PlateIdentifier: TypeAlias = str | Path
+SubjectIdentifier: TypeAlias = str | Path
 
 
 class ExecutionSubmissionPreparationTimeoutError(TimeoutError):
     """Raised when submission preparation expires before the execute request."""
 
 
-def _optional_plate_identifier(value: PlateIdentifier | None) -> str | None:
+def _optional_subject_identifier(value: SubjectIdentifier | None) -> str | None:
     if value is None:
         return None
     return str(value)
@@ -243,11 +243,11 @@ class OpenHCSExecutionSubmission:
     def __init__(
         self,
         *,
-        plate_id: PlateIdentifier,
+        subject_id: SubjectIdentifier,
         pipeline_document: PipelineDocument,
         global_config: GlobalPipelineConfig,
-        execution_plate_id: PlateIdentifier | None = None,
-        selected_pipeline_path: PlateIdentifier | None = None,
+        execution_subject_id: SubjectIdentifier | None = None,
+        selected_pipeline_path: SubjectIdentifier | None = None,
         config_params: ZMQParams | None = None,
         compile_artifact_id: str | None = None,
         compile_only: bool = False,
@@ -262,9 +262,9 @@ class OpenHCSExecutionSubmission:
         )
         self._set_parts(
             identity=ZMQExecutionIdentity(
-                plate_id=str(plate_id),
-                execution_plate_id=_optional_plate_identifier(execution_plate_id),
-                selected_pipeline_path=_optional_plate_identifier(
+                subject_id=str(subject_id),
+                execution_subject_id=_optional_subject_identifier(execution_subject_id),
+                selected_pipeline_path=_optional_subject_identifier(
                     selected_pipeline_path
                 ),
             ),
@@ -313,12 +313,12 @@ class OpenHCSExecutionSubmission:
         self.compile_control = compile_control
 
     @property
-    def plate_id(self) -> str:
-        return self.identity.plate_id
+    def subject_id(self) -> str:
+        return self.identity.subject_id
 
     @property
-    def execution_plate_id(self) -> str | None:
-        return self.identity.execution_plate_id
+    def execution_subject_id(self) -> str | None:
+        return self.identity.execution_subject_id
 
     @property
     def selected_pipeline_path(self) -> str | None:
@@ -424,10 +424,10 @@ class ZMQCompiledPipelineRun:
         return dict(self.execution_record.results_summary or {})
 
     @property
-    def output_plate(self) -> ExecutionOutputPlateSummary:
-        """Decode output-plate metadata through its shared typed authority."""
+    def output_dataset(self) -> ExecutionOutputSummary:
+        """Decode output-dataset metadata through its typed summary."""
 
-        return ExecutionOutputPlateSummary.from_results_summary(self.results_summary)
+        return ExecutionOutputSummary.from_results_summary(self.results_summary)
 
 
 def run_compiled_pipeline(
@@ -560,8 +560,8 @@ class ZMQExecutionRequestBuilder:
     def request(self) -> ExecuteRequest:
         source_fields = self.config_projection.source_fields
         return ExecuteRequest(
-            subject_id=self.identity.plate_id,
-            execution_subject_id=self.identity.execution_plate_id,
+            subject_id=self.identity.subject_id,
+            execution_subject_id=self.identity.execution_subject_id,
             selected_pipeline_path=self.identity.selected_pipeline_path,
             pipeline_code=self.pipeline_code,
             config_params=self.config_params,
@@ -1020,8 +1020,8 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         request = request_builder.request()
         request_payload = request_builder.request_payload
         logger.info(
-            "Serialize task: plate=%s compile_only=%s artifact_id=%s pipeline_sha=%s config_sha=%s",
-            request_builder.identity.plate_id,
+            "Serialize task: subject=%s compile_only=%s artifact_id=%s pipeline_sha=%s config_sha=%s",
+            request_builder.identity.subject_id,
             request_builder.compile_control.compile_only,
             request_builder.compile_control.compile_artifact_id,
             request_payload.pipeline_sha,

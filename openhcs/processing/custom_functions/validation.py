@@ -198,7 +198,7 @@ def validate_function(func: Callable) -> ValidationResult:
         if contract.execution_scope is FunctionStepExecutionScope.PLATE:
             from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 
-            FuncStepContractValidator.validate_plate_callable_contracts(
+            FuncStepContractValidator.validate_dataset_callable_contracts(
                 (contract,), func.__name__,
             )
         else:

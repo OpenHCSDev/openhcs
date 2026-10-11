@@ -47,7 +47,6 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
 )
@@ -154,7 +153,7 @@ def _compiled_fixture() -> tuple[
     )
     inspection = CompiledArtifactInspection.from_execution_bundle(
         compile_artifact_id="compile-1",
-        plate_id="/plates/one",
+        subject_id="/plates/one",
         bundle=bundle,
     )
     return inspection, output_plan, bundle
@@ -162,12 +161,10 @@ def _compiled_fixture() -> tuple[
 
 def _progress_event() -> ProgressEvent:
     return ProgressEvent(
-        identity=ProgressIdentity(
-            execution_id="run-1",
-            plate_id="/plates/one",
-            axis_id="A01",
-            step_name="Transform",
-        ),
+        execution_id="run-1",
+        subject_id="/plates/one",
+        axis_id="A01",
+        step_name="Transform",
         phase=ProgressPhase.STEP_COMPLETED,
         status=ProgressStatus.SUCCESS,
         percent=100.0,
@@ -220,13 +217,10 @@ def test_registered_control_router_reads_retained_compile_artifact() -> None:
     record = ZMQCompileArtifactRecord(
         configs=OpenHCSExecutionConfigBundle(GlobalPipelineConfig(), PipelineConfig()),
         execution_id="compile-1",
-        plate_id="/plates/one",
+        subject_id="/plates/one",
         compilation_signature="request",
         debug_replay_signature="debug",
-        compilation=ZMQCompilationResult(
-            execution_bundle=bundle,
-            compiled_axis_ids=["A01"],
-        ),
+        compilation=ZMQCompilationResult(execution_bundle=bundle),
     )
     request = CompiledArtifactInspectionRequest("compile-1")
     message = CompiledArtifactInspectionControlPayload.from_request(request).to_dict()

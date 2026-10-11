@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 
 import openhcs
@@ -215,3 +216,84 @@ def test_domain_allowlist_names_existing_domain_modules() -> None:
 
 def test_product_entry_point_activates_microscopy() -> None:
     assert AxisFamily.active() is Microscopy
+
+
+# The runtime (G7): orchestrator, lane planning, worker IPC, progress, execution
+# server and config speak the kernel's words: subject, dataset, partition values.
+RUNTIME_MODULE_ROOTS = (
+    "openhcs/core/orchestrator",
+    "openhcs/core/progress",
+    "openhcs/core/config.py",
+)
+RUNTIME_MODULE_GLOBS = ("openhcs/runtime/zmq_*.py",)
+
+# Names the runtime modules use but do not declare. Each is owned elsewhere:
+# FunctionStepExecutionScope.PLATE and the vfs Plate*Output path declarations
+# are also spelled by processing (P renames them with processing); the
+# source-binding, workspace-projection, dataset-source and metadata-writer
+# names belong to W's kernel-wide ratchet.
+RUNTIME_FOREIGN_NAMES = frozenset(
+    {
+        ("openhcs/core/config.py", "PlateOutputDirectory"),
+        ("openhcs/core/config.py", "PlateOutputFile"),
+        ("openhcs/core/orchestrator/bundle_execution.py", "PLATE"),
+        ("openhcs/core/orchestrator/worker_execution.py", "PLATE"),
+        ("openhcs/core/orchestrator/orchestrator.py", "plate_folder"),
+        ("openhcs/core/orchestrator/orchestrator.py", "plate_root"),
+    }
+)
+
+
+def _runtime_domain_words() -> frozenset[str]:
+    """The partition axis's spellings, and "plate", microscopy's dataset scope."""
+
+    partition = Microscopy.partition_axis()
+    return frozenset(
+        {partition.name, partition.metadata_collection_field, "plate", "plates"}
+    )
+
+
+def _identifier_words(name: str) -> set[str]:
+    return {word.lower() for word in re.findall(r"[A-Z]?[a-z]+|[A-Z]+(?![a-z])", name)}
+
+
+def _runtime_modules() -> list[Path]:
+    files: list[Path] = []
+    for root in RUNTIME_MODULE_ROOTS:
+        base = REPO_ROOT / root
+        files.extend([base] if base.is_file() else sorted(base.rglob("*.py")))
+    for pattern in RUNTIME_MODULE_GLOBS:
+        files.extend(sorted(REPO_ROOT.glob(pattern)))
+    return files
+
+
+def _names_and_identifier_literals(tree: ast.AST) -> set[str]:
+    names = _identifiers(tree)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.arg):
+            names.add(node.arg)
+        elif isinstance(node, ast.keyword) and node.arg:
+            names.add(node.arg)
+        elif (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and re.fullmatch(r"[A-Za-z_][\w.]*", node.value)
+        ):
+            names.add(node.value)
+    return names
+
+
+def test_runtime_modules_speak_no_microscopy_word() -> None:
+    domain_words = _runtime_domain_words()
+    found = {
+        (_relative(path), name)
+        for path in _runtime_modules()
+        for name in _names_and_identifier_literals(ast.parse(path.read_text()))
+        if _identifier_words(name) & domain_words
+    }
+    assert found == RUNTIME_FOREIGN_NAMES
+
+
+def test_runtime_foreign_names_name_existing_modules() -> None:
+    for module, _name in RUNTIME_FOREIGN_NAMES:
+        assert (REPO_ROOT / module).exists(), module

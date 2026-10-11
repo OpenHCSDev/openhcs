@@ -42,7 +42,7 @@ from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.axes import Ungrouped
 from openhcs.core.config import (
     LazyProcessingConfig,
-    LazyStepWellFilterConfig,
+    LazyStepPartitionFilterConfig,
     PipelineConfig,
 )
 from openhcs.core.debug import DebugCommandType
@@ -1240,7 +1240,7 @@ def test_add_step_history_preserves_the_open_step_across_edit_rewind_and_forward
         ]
 
 
-def test_step_well_filter_live_resolution_is_visible_in_the_row(tmp_path) -> None:
+def test_step_partition_filter_live_resolution_is_visible_in_the_row(tmp_path) -> None:
     """Inherited step well filters fan out into the visible row preview."""
 
     with editor_gui(tmp_path) as harness:
@@ -1248,13 +1248,13 @@ def test_step_well_filter_live_resolution_is_visible_in_the_row(tmp_path) -> Non
             [
                 FunctionStep(
                     name="Threshold",
-                    step_well_filter_config=LazyStepWellFilterConfig(),
+                    step_partition_filter_config=LazyStepPartitionFilterConfig(),
                 )
             ]
         )
         dataset_state = ObjectStateRegistry.get_by_scope(harness.scope_id)
 
-        dataset_state.update_parameter("well_filter_config.well_filter", "A01")
+        dataset_state.update_parameter("partition_filter_config.partition_filter", "A01")
         ObjectStateRegistry._notify_change()
         (step,) = harness.editor.displayed_steps
         styled_text, _ = harness.editor.format_item_for_display(step, step_index=0)
@@ -1264,7 +1264,7 @@ def test_step_well_filter_live_resolution_is_visible_in_the_row(tmp_path) -> Non
             for segment in styled_text.layout.preview_segments
             if segment.field_path
         }
-        assert preview_by_path["step_well_filter_config.well_filter"] == ":A01"
+        assert preview_by_path["step_partition_filter_config.partition_filter"] == ":A01"
 
 
 def test_a_pipeline_config_scope_is_not_a_current_orchestrator() -> None:
@@ -1300,7 +1300,7 @@ def _compiled(scope_id: str) -> CompiledDataset:
         compile_artifact_id="compile-1",
         steps=(),
         inspection=CompiledArtifactInspection(
-            compile_artifact_id="compile-1", plate_id=scope_id, steps=()
+            compile_artifact_id="compile-1", subject_id=scope_id, steps=()
         ),
     )
 

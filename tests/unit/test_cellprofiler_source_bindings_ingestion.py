@@ -98,9 +98,9 @@ def _filemanager() -> FileManager:
 
 def test_source_binding_context_has_exact_public_workspace_inputs() -> None:
     assert _field_names(SourceBindingContext) == (
-        "logical_plate_id",
-        "display_plate_root",
-        "execution_plate_path",
+        "logical_dataset_id",
+        "display_dataset_root",
+        "execution_dataset_root",
         "source_bindings",
         "filemanager",
         "source_backend",

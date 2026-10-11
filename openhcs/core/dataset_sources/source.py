@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar, List, Optional, Tuple, Type, Union
 
@@ -472,7 +472,7 @@ class DatasetSource(
         group_by=None,
         variable_components=None,
         pattern_cache: "RuntimePatternDiscoveryCache | None" = None,
-        **kwargs,
+        partition_values: Sequence[str] | None = None,
     ):
         """Group the folder's files into patterns through the pattern engine."""
         folder_path = Path(folder_path)
@@ -489,7 +489,7 @@ class DatasetSource(
                 group_by=group_by,
                 variable_components=variable_components,
                 backend=backend,
-                **kwargs,
+                partition_values=partition_values,
             )
         )
 

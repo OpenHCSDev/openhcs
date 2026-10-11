@@ -47,7 +47,7 @@ class ProgressRegistry:
 
     @staticmethod
     def _event_key(event: ProgressEvent) -> tuple[str, str, ProgressChannel]:
-        return (event.plate_id, event.axis_id, phase_channel(event.phase))
+        return (event.subject_id, event.axis_id, phase_channel(event.phase))
 
     def register_event(self, execution_id: str, event: ProgressEvent) -> bool:
         return self._event_registry.register_event(execution_id, event)

@@ -17,7 +17,7 @@ class LiveMeasurementTableEntry:
 
     sequence_id: int
     execution_id: str
-    plate_id: str
+    subject_id: str
     axis_id: str
     step_name: str
     preview: LiveMeasurementTablePreview
@@ -36,7 +36,7 @@ class LiveMeasurementTableEntry:
     def semantic_sort_key(self) -> tuple:
         address = self.preview.address
         return (
-            _semantic_sort_atom(self.plate_id),
+            _semantic_sort_atom(self.subject_id),
             *(_semantic_sort_atom(part) for part in astuple(address.key.scope)),
             _semantic_sort_atom(self.step_name),
             _semantic_sort_atom(address.key.artifact_type.value),
@@ -68,7 +68,7 @@ class LiveMeasurementTable:
                 LiveMeasurementTableEntry(
                     sequence_id=self._next_sequence_id,
                     execution_id=event.execution_id,
-                    plate_id=event.plate_id,
+                    subject_id=event.subject_id,
                     axis_id=event.axis_id,
                     step_name=event.step_name,
                     preview=preview,

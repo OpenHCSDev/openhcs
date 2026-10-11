@@ -664,7 +664,7 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
                 UiCodeDocumentSelectionMode.ALL.value,
             ),
             current_selection_count=sum(
-                entry.plate_id in selected_plate_ids for entry in all_entries
+                entry.subject_id in selected_plate_ids for entry in all_entries
             ),
             total_scope_count=len(all_entries),
         )
@@ -737,7 +737,7 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
             all_entries
             if mode is UiCodeDocumentSelectionMode.ALL
             else tuple(
-                entry for entry in all_entries if entry.plate_id in selected_plate_ids
+                entry for entry in all_entries if entry.subject_id in selected_plate_ids
             )
         )
         entry_states = tuple(self._entry_state(entry) for entry in entries)
@@ -762,7 +762,7 @@ class LiveMeasurementsStateSurfaceProvider(UiStateSurfaceProviderABC):
         return UiLiveMeasurementEntryState(
             sequence_id=entry.sequence_id,
             execution_id=entry.execution_id,
-            plate_id=entry.plate_id,
+            subject_id=entry.subject_id,
             axis_id=entry.axis_id,
             step_name=entry.step_name,
             preview=entry.preview,

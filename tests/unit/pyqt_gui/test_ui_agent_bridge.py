@@ -142,7 +142,6 @@ from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.pipeline_document import PipelineDocument
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
 )
@@ -151,9 +150,9 @@ from openhcs.core.progress.debug_projection import (
     RuntimeProjectionSource,
 )
 from openhcs.core.progress.projection import (
-    PlateRuntimeIdentity,
-    PlateRuntimeProjection,
-    PlateRuntimeState,
+    SubjectRuntimeIdentity,
+    SubjectRuntimeProjection,
+    ExecutingSubjectRuntimeState,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.config import AgentUiBridgeConfig
@@ -1433,7 +1432,7 @@ def test_widget_tree_action_summaries_keep_reset_actions_with_field_context() ->
                         (0, 2),
                         class_name="QPushButton",
                         text="Reset",
-                        object_name="well_filter_config_reset",
+                        object_name="partition_filter_config_reset",
                         action_kinds=(WidgetActionKind.BUTTON,),
                     ),
                 ),
@@ -4058,17 +4057,17 @@ def test_plate_manager_state_ignores_stale_runtime_without_current_execution_id(
     None
 ):
     with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
-        stale_projection = PlateRuntimeProjection(
-            identity=PlateRuntimeIdentity(
+        stale_projection = SubjectRuntimeProjection(
+            identity=SubjectRuntimeIdentity(
                 execution_id="old-execution",
-                plate_id=DATASET_SCOPE_ID,
+                subject_id=DATASET_SCOPE_ID,
             ),
-            state=PlateRuntimeState.EXECUTING,
+            state=ExecutingSubjectRuntimeState,
             percent=0.0,
             axis_progress=(),
             latest_timestamp=1.0,
         )
-        gui.session.runtime_projection.add_plate(stale_projection)
+        gui.session.runtime_projection.add_subject(stale_projection)
         gui.session.runtime_projection.mark_latest(stale_projection.identity)
 
         row = _plate_manager_state(_plate_manager_bridge(gui.plate_manager)).payload[
@@ -4546,7 +4545,7 @@ def test_pipeline_debug_toolbar_runtime_values_action_requires_debug_session(
 ) -> None:
     with pipeline_gui() as gui:
         gui.session.debug_sessions[DATASET_SCOPE_ID] = DebugSession.create(
-            plate_id=DATASET_SCOPE_ID
+            subject_id=DATASET_SCOPE_ID
         )
         gui.pipeline_editor.update_button_states()
         inspections = []
@@ -4598,7 +4597,7 @@ def _debug_state(gui):
 def test_pipeline_debug_session_state_surface_projects_context_and_actions() -> None:
     with pipeline_gui() as gui:
         debug_session = DebugSession.create(
-            plate_id=DATASET_SCOPE_ID, execution_id="exec-1", axis_id="A01"
+            subject_id=DATASET_SCOPE_ID, execution_id="exec-1", axis_id="A01"
         ).with_cursor(_debug_cursor())
         gui.session.debug_sessions[DATASET_SCOPE_ID] = debug_session
 
@@ -4626,17 +4625,15 @@ def test_pipeline_debug_session_state_surface_projects_runtime_frame() -> None:
     with pipeline_gui() as gui:
         debug_session = DebugSession(
             debug_session_id="debug-1",
-            plate_id=DATASET_SCOPE_ID,
+            subject_id=DATASET_SCOPE_ID,
             execution_id="exec-1",
             axis_id="A01",
         ).with_cursor(_debug_cursor())
         progress_event = ProgressEvent(
-            identity=ProgressIdentity(
-                execution_id="exec-1",
-                plate_id=DATASET_SCOPE_ID,
-                axis_id="A01",
-                step_name="IdentifyPrimaryObjects",
-            ),
+            execution_id="exec-1",
+            subject_id=DATASET_SCOPE_ID,
+            axis_id="A01",
+            step_name="IdentifyPrimaryObjects",
             phase=ProgressPhase.PATTERN_GROUP,
             status=ProgressStatus.SUCCESS,
             percent=100.0,
@@ -4650,7 +4647,7 @@ def test_pipeline_debug_session_state_surface_projects_runtime_frame() -> None:
                 cursor=_debug_cursor(),
                 event_type=DebugEventType.AFTER_INVOCATION,
                 snapshot_store_ref="/debug",
-            ).to_progress_context(),
+            ).to_context(),
         )
         gui.session.debug_sessions[DATASET_SCOPE_ID] = debug_session
         gui.session.debug_runtime_projection = (
@@ -4676,7 +4673,7 @@ def test_pipeline_debug_session_state_surface_projects_runtime_frame() -> None:
 def _terminal_summary(debug_session_id: str) -> DebugTerminalSummary:
     return DebugTerminalSummary(
         debug_session_id=debug_session_id,
-        plate_id=DATASET_SCOPE_ID,
+        subject_id=DATASET_SCOPE_ID,
         terminal_status="complete",
         cursor=_debug_cursor(),
         command_type=DebugCommandType.STEP,
@@ -4707,7 +4704,7 @@ def test_pipeline_debug_session_terminal_summary_retires_the_inspected_session()
     with pipeline_gui() as gui:
         inspected = (
             DebugSession.create(
-                plate_id=DATASET_SCOPE_ID, execution_id="exec-1", axis_id="A01"
+                subject_id=DATASET_SCOPE_ID, execution_id="exec-1", axis_id="A01"
             )
             .with_cursor(_debug_cursor())
             .with_command(DebugCommandType.STEP)

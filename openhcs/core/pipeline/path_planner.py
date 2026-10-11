@@ -609,7 +609,7 @@ class PathPlannerMetadataArtifactInjection:
             ):
                 value = self.planner.ctx.microscope_handler.resolve_metadata_artifact(
                     spec.name,
-                    self.planner.ctx.plate_path,
+                    self.planner.ctx.dataset_root,
                 )
                 pattern = inject_artifact_input_values(pattern, {spec.name: value})
         return pattern
@@ -1811,7 +1811,7 @@ class PathPlannerMaterializationStage:
             return
 
         materialization_config = step.step_materialization_config
-        materialized_plate_root = self.planner.paths.build_output_plate_root(
+        materialized_plate_root = self.planner.paths.build_output_dataset_root(
             self.planner.plate_path,
             materialization_config,
             is_per_step_materialization=False,
@@ -1946,7 +1946,7 @@ class PathPlannerPathAuthority:
     planner: PathPlanner
 
     @staticmethod
-    def build_output_plate_root(
+    def build_output_dataset_root(
         plate_path: Path,
         path_config,
         is_per_step_materialization: bool = False,
@@ -1966,7 +1966,7 @@ class PathPlannerPathAuthority:
             )
 
         return Path(
-            _cached_output_plate_root(
+            _cached_output_dataset_root(
                 str(plate_path),
                 (
                     None
@@ -2190,7 +2190,7 @@ class PathPlannerStepAssemblyStage:
         compiled_function_pattern: CompiledFunctionPattern | None,
     ) -> None:
         """Write the always-present path and artifact planning fields."""
-        main_plate_root = self.planner.paths.build_output_plate_root(
+        main_plate_root = self.planner.paths.build_output_dataset_root(
             self.planner.plate_path,
             self.planner.cfg,
             is_per_step_materialization=False,
@@ -2198,7 +2198,7 @@ class PathPlannerStepAssemblyStage:
         step_plan = self.planner.plans[step_index]
         step_plan.input_dir = input_dir
         step_plan.output_dir = output_dir
-        step_plan.output_plate_root = str(main_plate_root)
+        step_plan.output_dataset_root = str(main_plate_root)
         step_plan.sub_dir = self.planner.cfg.sub_dir
         step_plan.analysis_results_dir = str(self.planner.paths.results_path())
         step_plan.pipeline_position = step_index
@@ -2332,9 +2332,9 @@ class PathPlanner:
 
         self.validation.validate()
 
-        # Set output_plate_root and sub_dir for metadata writing
+        # Set output_dataset_root and sub_dir for metadata writing
         if self.session.step_count:
-            self.ctx.output_plate_root = self.paths.build_output_plate_root(
+            self.ctx.output_dataset_root = self.paths.build_output_dataset_root(
                 self.plate_path,
                 self.cfg,
                 is_per_step_materialization=False,
@@ -2358,13 +2358,13 @@ class PipelinePathPlanner:
         return PathPlanner(session).plan()
 
     @staticmethod
-    def build_output_plate_root(
+    def build_output_dataset_root(
         plate_path: Path,
         path_config,
         is_per_step_materialization: bool = False,
     ) -> Path:
         """Build output plate root from configuration components."""
-        return PathPlannerPathAuthority.build_output_plate_root(
+        return PathPlannerPathAuthority.build_output_dataset_root(
             plate_path,
             path_config,
             is_per_step_materialization=is_per_step_materialization,
@@ -2391,7 +2391,7 @@ class PipelinePathPlanner:
 
 
 @lru_cache(maxsize=65536)
-def _cached_output_plate_root(
+def _cached_output_dataset_root(
     plate_path: str,
     global_output_folder: str | None,
     output_dir_suffix: str,
@@ -2416,7 +2416,7 @@ def _cached_output_path(
     """Return the configured image output path for one normalized path config."""
     return str(
         Path(
-            _cached_output_plate_root(
+            _cached_output_dataset_root(
                 plate_path,
                 global_output_folder,
                 output_dir_suffix,
@@ -2435,24 +2435,24 @@ def _cached_results_path(
 ) -> str:
     """Return the artifact results path for one normalized path config."""
     results_path = Path(materialization_results_path)
-    output_plate_root = Path(
-        _cached_output_plate_root(
+    output_dataset_root = Path(
+        _cached_output_dataset_root(
             plate_path,
             global_output_folder,
             output_dir_suffix,
         )
     )
-    results_path = (output_plate_root / results_path).resolve()
+    results_path = (output_dataset_root / results_path).resolve()
     try:
-        relative_results = results_path.relative_to(output_plate_root.resolve())
+        relative_results = results_path.relative_to(output_dataset_root.resolve())
     except ValueError as error:
         raise ValueError(
             "materialization_results_path must be inside the output plate root "
-            f"{output_plate_root}; got {results_path}."
+            f"{output_dataset_root}; got {results_path}."
         ) from error
     # Preserve the compiled plate spelling, including a symlinked ancestor:
     # persistence projects addresses relative to that same lexical authority.
-    return str(output_plate_root / relative_results)
+    return str(output_dataset_root / relative_results)
 
 
 @lru_cache(maxsize=131072)

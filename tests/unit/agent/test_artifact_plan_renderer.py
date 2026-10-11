@@ -41,7 +41,7 @@ def test_artifact_plan_renderer_shows_main_flow_and_viewer_plans() -> None:
                                         "effective_config": {
                                             "enabled": True,
                                             "persistent": True,
-                                            "well_filter": ["A01"],
+                                            "partition_filter": ["A01"],
                                             "port": 5555,
                                         },
                                     }
@@ -64,4 +64,4 @@ def test_artifact_plan_renderer_shows_main_flow_and_viewer_plans() -> None:
     assert "viewer stream: viewer=napari" in rendered
     assert "config=napari_streaming_config" in rendered
     assert "enabled=True" in rendered
-    assert "well_filter=['A01']" in rendered
+    assert "partition_filter=['A01']" in rendered

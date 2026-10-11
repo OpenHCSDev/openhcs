@@ -63,7 +63,7 @@ def _anchor_executor(
     executor = object.__new__(FunctionStepExecutor)
     executor.plan = plan
     executor.context = Mock(
-        plate_path=Path("."),
+        dataset_root=Path("."),
         microscope_handler=SimpleNamespace(
             parser=parser,
             source_bindings_still_required=lambda: None,

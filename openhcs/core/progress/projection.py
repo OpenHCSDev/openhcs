@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import ABC
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import ClassVar, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from metaclass_registry import AutoRegisterMeta
@@ -27,45 +26,23 @@ from .types import (
 )
 
 
-class PlateRuntimeState(str, Enum):
-    IDLE = "idle"
-    QUEUED = "queued"
-    COMPILING = "compiling"
-    COMPILED = "compiled"
-    EXECUTING = "executing"
-    COMPLETE = "complete"
-    FAILED = "failed"
+class SubjectRuntimeState(ABC, metaclass=AutoRegisterMeta):
+    """Where one subject's execution stands; each state is a subclass.
 
+    ``state_name`` is the state's spelling at the UI and wire boundary.
+    """
 
-class PlateRuntimeStateDeclarationBase(ABC, metaclass=AutoRegisterMeta):
-    """Nominal semantic declaration for one plate runtime state."""
-
-    __registry_key__ = "state"
+    __registry_key__ = "state_name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[
-        dict[PlateRuntimeState, type["PlateRuntimeStateDeclarationBase"]]
-    ] = {}
+    __registry__: ClassVar[dict[str, type["SubjectRuntimeState"]]] = {}
 
-    state: ClassVar[PlateRuntimeState | None] = None
+    state_name: ClassVar[str | None] = None
     is_terminal: ClassVar[bool] = False
     is_active: ClassVar[bool] = False
     default_channel: ClassVar[ProgressChannel | None] = None
     status_label: ClassVar[str] = ""
     count_label: ClassVar[str] = ""
     count_sort_order: ClassVar[int] = 0
-
-    @classmethod
-    def require_state(cls) -> PlateRuntimeState:
-        if cls.state is None:
-            raise TypeError(f"{cls.__name__} does not declare a runtime state.")
-        return cls.state
-
-    @classmethod
-    def for_state(
-        cls,
-        state: PlateRuntimeState,
-    ) -> type["PlateRuntimeStateDeclarationBase"]:
-        return cls.__registry__[state]
 
     @classmethod
     def state_channel_from_events(
@@ -86,21 +63,21 @@ class PlateRuntimeStateDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         return generic_percent
 
     @classmethod
-    def status_label_for_plate(cls, plate: "PlateRuntimeProjection") -> str:
-        del plate
+    def status_label_for_subject(cls, subject: "SubjectRuntimeProjection") -> str:
+        del subject
         return cls.status_label
 
     @classmethod
-    def formatted_status_for_plate(cls, plate: "PlateRuntimeProjection") -> str:
-        label = cls.status_label_for_plate(plate)
+    def formatted_status_for_subject(cls, subject: "SubjectRuntimeProjection") -> str:
+        label = cls.status_label_for_subject(subject)
         if not label:
             return ""
-        return f"{label} {plate.percent:.1f}%"
+        return f"{label} {subject.percent:.1f}%"
 
     @classmethod
     def counted_declarations(
         cls,
-    ) -> Tuple[type["PlateRuntimeStateDeclarationBase"], ...]:
+    ) -> Tuple[type["SubjectRuntimeState"], ...]:
         return tuple(
             sorted(
                 (
@@ -119,55 +96,55 @@ class PlateRuntimeStateDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         return cls.count_label.format(count=count)
 
     @classmethod
-    def accepts_server_lifecycle_state(cls, state: PlateRuntimeState) -> bool:
+    def accepts_server_lifecycle_state(cls, state: type[SubjectRuntimeState]) -> bool:
         """Return whether a live server snapshot may advance this state."""
 
         del state
         return False
 
 
-class TerminalPlateRuntimeState:
-    """Trait for plate runtime states that close the current execution."""
+class TerminalSubjectRuntimeState:
+    """Trait for subject runtime states that close the current execution."""
 
     is_terminal: ClassVar[bool] = True
 
 
-class PendingPlateRuntimeState:
+class PendingSubjectRuntimeState:
     """Trait for states fully governed by a live server lifecycle snapshot."""
 
     @classmethod
-    def accepts_server_lifecycle_state(cls, state: PlateRuntimeState) -> bool:
+    def accepts_server_lifecycle_state(cls, state: type[SubjectRuntimeState]) -> bool:
         return state in (
-            PlateRuntimeState.QUEUED,
-            PlateRuntimeState.COMPILING,
-            PlateRuntimeState.EXECUTING,
+            QueuedSubjectRuntimeState,
+            CompilingSubjectRuntimeState,
+            ExecutingSubjectRuntimeState,
         )
 
 
-class IdlePlateRuntimeState(PendingPlateRuntimeState, PlateRuntimeStateDeclarationBase):
-    state = PlateRuntimeState.IDLE
+class IdleSubjectRuntimeState(PendingSubjectRuntimeState, SubjectRuntimeState):
+    state_name = "idle"
 
 
-class QueuedPlateRuntimeState(
-    PendingPlateRuntimeState,
-    PlateRuntimeStateDeclarationBase,
+class QueuedSubjectRuntimeState(
+    PendingSubjectRuntimeState,
+    SubjectRuntimeState,
 ):
-    state = PlateRuntimeState.QUEUED
+    state_name = "queued"
     status_label = "⏳ Queued"
     count_label = "⏳ {count} queued"
     count_sort_order = 5
     is_active = True
 
     @classmethod
-    def formatted_status_for_plate(cls, plate: "PlateRuntimeProjection") -> str:
-        status = super().formatted_status_for_plate(plate)
-        if plate.queue_position is None:
+    def formatted_status_for_subject(cls, subject: "SubjectRuntimeProjection") -> str:
+        status = super().formatted_status_for_subject(subject)
+        if subject.queue_position is None:
             return status
-        return f"{status} (q#{plate.queue_position})"
+        return f"{status} (q#{subject.queue_position})"
 
 
-class CompilingPlateRuntimeState(PlateRuntimeStateDeclarationBase):
-    state = PlateRuntimeState.COMPILING
+class CompilingSubjectRuntimeState(SubjectRuntimeState):
+    state_name = "compiling"
     default_channel = ProgressChannel.COMPILE
     status_label = "⏳ Compiling"
     count_label = "⏳ {count} compiling"
@@ -175,27 +152,27 @@ class CompilingPlateRuntimeState(PlateRuntimeStateDeclarationBase):
     is_active = True
 
     @classmethod
-    def accepts_server_lifecycle_state(cls, state: PlateRuntimeState) -> bool:
+    def accepts_server_lifecycle_state(cls, state: type[SubjectRuntimeState]) -> bool:
         return state in (
-            PlateRuntimeState.COMPILING,
-            PlateRuntimeState.EXECUTING,
+            CompilingSubjectRuntimeState,
+            ExecutingSubjectRuntimeState,
         )
 
 
-class CompiledPlateRuntimeState(PlateRuntimeStateDeclarationBase):
-    state = PlateRuntimeState.COMPILED
+class CompiledSubjectRuntimeState(SubjectRuntimeState):
+    state_name = "compiled"
     default_channel = ProgressChannel.COMPILE
     status_label = "✅ Compiled"
     count_label = "✓ {count} compiled"
     count_sort_order = 30
 
     @classmethod
-    def accepts_server_lifecycle_state(cls, state: PlateRuntimeState) -> bool:
-        return state is PlateRuntimeState.EXECUTING
+    def accepts_server_lifecycle_state(cls, state: type[SubjectRuntimeState]) -> bool:
+        return state is ExecutingSubjectRuntimeState
 
 
-class ExecutingPlateRuntimeState(PlateRuntimeStateDeclarationBase):
-    state = PlateRuntimeState.EXECUTING
+class ExecutingSubjectRuntimeState(SubjectRuntimeState):
+    state_name = "executing"
     default_channel = ProgressChannel.PIPELINE
     status_label = "⚙️ Executing"
     count_label = "⚙️ {count} executing"
@@ -203,24 +180,24 @@ class ExecutingPlateRuntimeState(PlateRuntimeStateDeclarationBase):
     is_active = True
 
     @classmethod
-    def accepts_server_lifecycle_state(cls, state: PlateRuntimeState) -> bool:
-        return state is PlateRuntimeState.EXECUTING
+    def accepts_server_lifecycle_state(cls, state: type[SubjectRuntimeState]) -> bool:
+        return state is ExecutingSubjectRuntimeState
 
 
-class CompletePlateRuntimeState(
-    TerminalPlateRuntimeState, PlateRuntimeStateDeclarationBase
+class CompleteSubjectRuntimeState(
+    TerminalSubjectRuntimeState, SubjectRuntimeState
 ):
-    state = PlateRuntimeState.COMPLETE
+    state_name = "complete"
     default_channel = ProgressChannel.PIPELINE
     status_label = "✅ Complete"
     count_label = "✅ {count} complete"
     count_sort_order = 40
 
 
-class FailedPlateRuntimeState(
-    TerminalPlateRuntimeState, PlateRuntimeStateDeclarationBase
+class FailedSubjectRuntimeState(
+    TerminalSubjectRuntimeState, SubjectRuntimeState
 ):
-    state = PlateRuntimeState.FAILED
+    state_name = "failed"
     status_label = "❌ Failed"
     count_label = "❌ {count} failed"
     count_sort_order = 50
@@ -251,8 +228,8 @@ class FailedPlateRuntimeState(
         return sum(axis.percent for axis in axis_progress) / len(axis_progress)
 
     @classmethod
-    def status_label_for_plate(cls, plate: "PlateRuntimeProjection") -> str:
-        if plate.state_channel is ProgressChannel.COMPILE:
+    def status_label_for_subject(cls, subject: "SubjectRuntimeProjection") -> str:
+        if subject.state_channel is ProgressChannel.COMPILE:
             return "❌ Compile Failed"
         return cls.status_label
 
@@ -280,25 +257,25 @@ class AxisRuntimeProjection:
 
 
 @dataclass(frozen=True)
-class PlateRuntimeIdentity:
+class SubjectRuntimeIdentity:
     execution_id: str
-    plate_id: str
+    subject_id: str
 
     @classmethod
-    def from_generic_plate(
+    def from_generic_subject(
         cls,
-        generic_plate: GenericSubjectProjection[PlateRuntimeState],
-    ) -> "PlateRuntimeIdentity":
+        generic_subject: GenericSubjectProjection[type[SubjectRuntimeState]],
+    ) -> "SubjectRuntimeIdentity":
         return cls(
-            execution_id=generic_plate.execution_id,
-            plate_id=generic_plate.subject_id,
+            execution_id=generic_subject.execution_id,
+            subject_id=generic_subject.subject_id,
         )
 
 
 @dataclass(frozen=True)
-class PlateRuntimeProjection:
-    identity: PlateRuntimeIdentity
-    state: PlateRuntimeState
+class SubjectRuntimeProjection:
+    identity: SubjectRuntimeIdentity
+    state: type[SubjectRuntimeState]
     percent: float
     axis_progress: Tuple[AxisRuntimeProjection, ...]
     latest_timestamp: float
@@ -306,28 +283,25 @@ class PlateRuntimeProjection:
     queue_position: int | None = None
 
     @classmethod
-    def from_generic_plate(
+    def from_generic_subject(
         cls,
-        generic_plate: GenericSubjectProjection[PlateRuntimeState],
+        generic_subject: GenericSubjectProjection[type[SubjectRuntimeState]],
         *,
         state_channel: ProgressChannel | None = None,
-    ) -> "PlateRuntimeProjection":
+    ) -> "SubjectRuntimeProjection":
         axis_progress = tuple(
             AxisRuntimeProjection.from_generic_axis(axis)
-            for axis in generic_plate.axis_progress
-        )
-        state_declaration = PlateRuntimeStateDeclarationBase.for_state(
-            generic_plate.state
+            for axis in generic_subject.axis_progress
         )
         return cls(
-            identity=PlateRuntimeIdentity.from_generic_plate(generic_plate),
-            state=generic_plate.state,
-            percent=state_declaration.percent_from_generic_projection(
-                generic_percent=generic_plate.percent,
+            identity=SubjectRuntimeIdentity.from_generic_subject(generic_subject),
+            state=generic_subject.state,
+            percent=generic_subject.state.percent_from_generic_projection(
+                generic_percent=generic_subject.percent,
                 axis_progress=axis_progress,
             ),
             axis_progress=axis_progress,
-            latest_timestamp=generic_plate.latest_timestamp,
+            latest_timestamp=generic_subject.latest_timestamp,
             state_channel=state_channel,
         )
 
@@ -336,8 +310,8 @@ class PlateRuntimeProjection:
         return self.identity.execution_id
 
     @property
-    def plate_id(self) -> str:
-        return self.identity.plate_id
+    def subject_id(self) -> str:
+        return self.identity.subject_id
 
     @property
     def active_axes(self) -> Tuple[AxisRuntimeProjection, ...]:
@@ -349,54 +323,47 @@ class PlateRuntimeProjection:
 
     @property
     def is_terminal(self) -> bool:
-        return PlateRuntimeStateDeclarationBase.for_state(self.state).is_terminal
+        return self.state.is_terminal
 
     @property
     def is_active(self) -> bool:
-        return PlateRuntimeStateDeclarationBase.for_state(self.state).is_active
+        return self.state.is_active
 
     @property
     def status_label(self) -> str:
-        return PlateRuntimeStateDeclarationBase.for_state(
-            self.state
-        ).status_label_for_plate(self)
+        return self.state.status_label_for_subject(self)
 
     @property
     def formatted_status(self) -> str:
-        return PlateRuntimeStateDeclarationBase.for_state(
-            self.state
-        ).formatted_status_for_plate(self)
+        return self.state.formatted_status_for_subject(self)
 
 
 @dataclass
 class ExecutionRuntimeProjection:
-    plates: List[PlateRuntimeProjection] = field(default_factory=list)
-    by_identity: Dict[PlateRuntimeIdentity, PlateRuntimeProjection] = field(
+    subjects: List[SubjectRuntimeProjection] = field(default_factory=list)
+    by_identity: Dict[SubjectRuntimeIdentity, SubjectRuntimeProjection] = field(
         default_factory=dict
     )
-    by_plate_latest: Dict[str, PlateRuntimeProjection] = field(default_factory=dict)
-    state_counts: Dict[PlateRuntimeState, int] = field(default_factory=dict)
+    by_subject_latest: Dict[str, SubjectRuntimeProjection] = field(default_factory=dict)
+    state_counts: Dict[type[SubjectRuntimeState], int] = field(default_factory=dict)
     overall_percent: float = 0.0
 
     @classmethod
     def from_generic_projection(
         cls,
-        generic_projection: GenericExecutionProjection[PlateRuntimeState],
+        generic_projection: GenericExecutionProjection[type[SubjectRuntimeState]],
         events_by_identity: (
-            Mapping[PlateRuntimeIdentity, Sequence[ProgressEvent]] | None
+            Mapping[SubjectRuntimeIdentity, Sequence[ProgressEvent]] | None
         ) = None,
     ) -> "ExecutionRuntimeProjection":
         projection = cls()
 
-        for generic_plate in generic_projection.subjects:
-            identity = PlateRuntimeIdentity.from_generic_plate(generic_plate)
-            state_declaration = PlateRuntimeStateDeclarationBase.for_state(
-                generic_plate.state
-            )
-            projection.add_plate(
-                PlateRuntimeProjection.from_generic_plate(
-                    generic_plate,
-                    state_channel=state_declaration.state_channel_from_events(
+        for generic_subject in generic_projection.subjects:
+            identity = SubjectRuntimeIdentity.from_generic_subject(generic_subject)
+            projection.add_subject(
+                SubjectRuntimeProjection.from_generic_subject(
+                    generic_subject,
+                    state_channel=generic_subject.state.state_channel_from_events(
                         ()
                         if events_by_identity is None
                         else events_by_identity.get(identity, ())
@@ -404,23 +371,23 @@ class ExecutionRuntimeProjection:
                 )
             )
 
-        for generic_plate in generic_projection.by_subject_latest.values():
+        for generic_subject in generic_projection.by_subject_latest.values():
             projection.mark_latest(
-                PlateRuntimeIdentity.from_generic_plate(generic_plate)
+                SubjectRuntimeIdentity.from_generic_subject(generic_subject)
             )
 
         projection.recalculate_summary()
 
         return projection
 
-    def count_for_state(self, state: PlateRuntimeState) -> int:
+    def count_for_state(self, state: type[SubjectRuntimeState]) -> int:
         return self.state_counts.get(state, 0)
 
     def count_status_labels(self) -> Tuple[str, ...]:
         labels: List[str] = []
-        for declaration in PlateRuntimeStateDeclarationBase.counted_declarations():
+        for declaration in SubjectRuntimeState.counted_declarations():
             label = declaration.count_status_label(
-                self.count_for_state(declaration.require_state())
+                self.count_for_state(declaration)
             )
             if label:
                 labels.append(label)
@@ -428,31 +395,31 @@ class ExecutionRuntimeProjection:
 
     @property
     def has_active_work(self) -> bool:
-        """Whether any latest plate projection represents live work."""
+        """Whether any latest subject projection represents live work."""
 
-        return any(plate.is_active for plate in self.by_plate_latest.values())
+        return any(subject.is_active for subject in self.by_subject_latest.values())
 
-    def add_plate(self, plate_projection: PlateRuntimeProjection) -> None:
-        self.plates.append(plate_projection)
-        self.by_identity[plate_projection.identity] = plate_projection
+    def add_subject(self, subject_projection: SubjectRuntimeProjection) -> None:
+        self.subjects.append(subject_projection)
+        self.by_identity[subject_projection.identity] = subject_projection
 
-    def upsert_plate(self, plate_projection: PlateRuntimeProjection) -> None:
-        existing = self.by_identity.get(plate_projection.identity)
+    def upsert_subject(self, subject_projection: SubjectRuntimeProjection) -> None:
+        existing = self.by_identity.get(subject_projection.identity)
         if existing is None:
-            self.add_plate(plate_projection)
+            self.add_subject(subject_projection)
             return
-        self.plates[self.plates.index(existing)] = plate_projection
-        self.by_identity[plate_projection.identity] = plate_projection
+        self.subjects[self.subjects.index(existing)] = subject_projection
+        self.by_identity[subject_projection.identity] = subject_projection
 
-    def mark_latest(self, identity: PlateRuntimeIdentity) -> None:
-        self.by_plate_latest[identity.plate_id] = self.by_identity[identity]
+    def mark_latest(self, identity: SubjectRuntimeIdentity) -> None:
+        self.by_subject_latest[identity.subject_id] = self.by_identity[identity]
 
-    def get_plate(
-        self, plate_id: str, execution_id: Optional[str] = None
-    ) -> Optional[PlateRuntimeProjection]:
+    def get_subject(
+        self, subject_id: str, execution_id: Optional[str] = None
+    ) -> Optional[SubjectRuntimeProjection]:
         if execution_id is not None:
-            return self.by_identity.get(PlateRuntimeIdentity(execution_id, plate_id))
-        return self.by_plate_latest.get(plate_id)
+            return self.by_identity.get(SubjectRuntimeIdentity(execution_id, subject_id))
+        return self.by_subject_latest.get(subject_id)
 
     def reconcile_server_executions(
         self,
@@ -463,21 +430,21 @@ class ExecutionRuntimeProjection:
         """Project the authoritative live server queue over retained event history."""
 
         running_identities = {
-            PlateRuntimeIdentity(entry.execution_id, entry.subject_id)
+            SubjectRuntimeIdentity(entry.execution_id, entry.subject_id)
             for entry in running_executions
         }
         for entry in queued_executions:
-            identity = PlateRuntimeIdentity(entry.execution_id, entry.subject_id)
+            identity = SubjectRuntimeIdentity(entry.execution_id, entry.subject_id)
             if identity in running_identities:
                 continue
             current = self.by_identity.get(identity)
-            if current is None or PlateRuntimeStateDeclarationBase.for_state(
-                current.state
-            ).accepts_server_lifecycle_state(PlateRuntimeState.QUEUED):
-                self.upsert_plate(
-                    PlateRuntimeProjection(
+            if current is None or current.state.accepts_server_lifecycle_state(
+                QueuedSubjectRuntimeState
+            ):
+                self.upsert_subject(
+                    SubjectRuntimeProjection(
                         identity=identity,
-                        state=PlateRuntimeState.QUEUED,
+                        state=QueuedSubjectRuntimeState,
                         percent=0.0,
                         axis_progress=(),
                         latest_timestamp=(
@@ -489,18 +456,18 @@ class ExecutionRuntimeProjection:
             self.mark_latest(identity)
 
         for entry in running_executions:
-            identity = PlateRuntimeIdentity(entry.execution_id, entry.subject_id)
+            identity = SubjectRuntimeIdentity(entry.execution_id, entry.subject_id)
             current = self.by_identity.get(identity)
             server_state = (
-                PlateRuntimeState.COMPILING
+                CompilingSubjectRuntimeState
                 if entry.compile_only
-                else PlateRuntimeState.EXECUTING
+                else ExecutingSubjectRuntimeState
             )
-            if current is None or PlateRuntimeStateDeclarationBase.for_state(
-                current.state
-            ).accepts_server_lifecycle_state(server_state):
-                self.upsert_plate(
-                    PlateRuntimeProjection(
+            if current is None or current.state.accepts_server_lifecycle_state(
+                server_state
+            ):
+                self.upsert_subject(
+                    SubjectRuntimeProjection(
                         identity=identity,
                         state=server_state,
                         percent=0.0 if current is None else current.percent,
@@ -519,24 +486,24 @@ class ExecutionRuntimeProjection:
 
     def recalculate_summary(self) -> None:
         self.state_counts = {
-            declaration.require_state(): 0
-            for declaration in PlateRuntimeStateDeclarationBase.__registry__.values()
+            declaration: 0
+            for declaration in SubjectRuntimeState.__registry__.values()
         }
-        for plate in self.by_plate_latest.values():
-            self.state_counts[plate.state] += 1
+        for subject in self.by_subject_latest.values():
+            self.state_counts[subject.state] += 1
         self.overall_percent = (
-            sum(plate.percent for plate in self.by_plate_latest.values())
-            / len(self.by_plate_latest)
-            if self.by_plate_latest
+            sum(subject.percent for subject in self.by_subject_latest.values())
+            / len(self.by_subject_latest)
+            if self.by_subject_latest
             else 0.0
         )
 
 
 class _OpenHCSProjectionAdapter(
-    ProgressProjectionAdapterABC[ProgressEvent, PlateRuntimeState]
+    ProgressProjectionAdapterABC[ProgressEvent, SubjectRuntimeState]
 ):
     def subject_id(self, event: ProgressEvent) -> str:
-        return event.plate_id
+        return event.subject_id
 
     def axis_id(self, event: ProgressEvent) -> str:
         return event.axis_id
@@ -556,8 +523,8 @@ class _OpenHCSProjectionAdapter(
     def known_axes(self, events: Iterable[ProgressEvent]) -> List[str]:
         axes: set[str] = set()
         for event in events:
-            if event.total_wells:
-                axes.update(event.total_wells)
+            if event.partition_values:
+                axes.update(event.partition_values)
         return sorted(axes)
 
     def is_failure_event(self, event: ProgressEvent) -> bool:
@@ -566,34 +533,34 @@ class _OpenHCSProjectionAdapter(
     def is_success_terminal_event(self, event: ProgressEvent) -> bool:
         return is_success_terminal_event(event)
 
-    def state_idle(self) -> PlateRuntimeState:
-        return PlateRuntimeState.IDLE
+    def state_idle(self) -> type[SubjectRuntimeState]:
+        return IdleSubjectRuntimeState
 
     def state_idle_from_events(
         self,
         events: Sequence[ProgressEvent],
-    ) -> PlateRuntimeState:
+    ) -> type[SubjectRuntimeState]:
         if any(
             event.worker_assignments is not None or event.phase is ProgressPhase.QUEUED
             for event in events
         ):
-            return PlateRuntimeState.QUEUED
+            return QueuedSubjectRuntimeState
         return self.state_idle()
 
-    def state_compiling(self) -> PlateRuntimeState:
-        return PlateRuntimeState.COMPILING
+    def state_compiling(self) -> type[SubjectRuntimeState]:
+        return CompilingSubjectRuntimeState
 
-    def state_compiled(self) -> PlateRuntimeState:
-        return PlateRuntimeState.COMPILED
+    def state_compiled(self) -> type[SubjectRuntimeState]:
+        return CompiledSubjectRuntimeState
 
-    def state_executing(self) -> PlateRuntimeState:
-        return PlateRuntimeState.EXECUTING
+    def state_executing(self) -> type[SubjectRuntimeState]:
+        return ExecutingSubjectRuntimeState
 
-    def state_complete(self) -> PlateRuntimeState:
-        return PlateRuntimeState.COMPLETE
+    def state_complete(self) -> type[SubjectRuntimeState]:
+        return CompleteSubjectRuntimeState
 
-    def state_failed(self) -> PlateRuntimeState:
-        return PlateRuntimeState.FAILED
+    def state_failed(self) -> type[SubjectRuntimeState]:
+        return FailedSubjectRuntimeState
 
 
 _PROJECTION_ADAPTER = _OpenHCSProjectionAdapter()
@@ -605,11 +572,11 @@ def build_execution_runtime_projection(
     running_executions: Sequence[RunningExecutionInfo] = (),
     queued_executions: Sequence[QueuedExecutionInfo] = (),
 ) -> ExecutionRuntimeProjection:
-    events_by_identity: Dict[PlateRuntimeIdentity, List[ProgressEvent]] = {}
+    events_by_identity: Dict[SubjectRuntimeIdentity, List[ProgressEvent]] = {}
     for execution_id, events in events_by_execution.items():
         for event in events:
             events_by_identity.setdefault(
-                PlateRuntimeIdentity(execution_id, event.plate_id),
+                SubjectRuntimeIdentity(execution_id, event.subject_id),
                 [],
             ).append(event)
 

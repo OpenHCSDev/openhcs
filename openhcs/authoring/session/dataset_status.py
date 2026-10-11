@@ -9,7 +9,7 @@ from openhcs.core.debug_session_projection import (
     DebugSessionPhase,
     DebugSessionPhaseDeclarationBase,
 )
-from openhcs.core.progress.projection import PlateRuntimeProjection
+from openhcs.core.progress.projection import SubjectRuntimeProjection
 from openhcs.core.execution_state import (
     TerminalExecutionStatus,
 )
@@ -35,7 +35,7 @@ class PlateStatusPresenter:
         is_compile_pending: bool,
         is_execution_active: bool,
         terminal_status: Optional[TerminalExecutionStatus],
-        runtime_projection: Optional[PlateRuntimeProjection],
+        runtime_projection: Optional[SubjectRuntimeProjection],
     ) -> str:
         # Runtime projection is canonical whenever present.
         if runtime_projection is not None:
@@ -57,5 +57,5 @@ class PlateStatusPresenter:
         return orchestrator_state.status_prefix
 
     @staticmethod
-    def _format_runtime_plate_status(plate: PlateRuntimeProjection) -> str:
+    def _format_runtime_plate_status(plate: SubjectRuntimeProjection) -> str:
         return plate.formatted_status

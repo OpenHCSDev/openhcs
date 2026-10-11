@@ -184,7 +184,7 @@ def test_orchestrator_exposes_prepared_virtual_source_workspace(
     write_bioformats_manifest_fixture(tmp_path)
     ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
 
-    orchestrator = PipelineOrchestrator(plate_path=tmp_path).initialize()
+    orchestrator = PipelineOrchestrator(dataset_root=tmp_path).initialize()
 
     projection = orchestrator.source_workspace_projection()
 

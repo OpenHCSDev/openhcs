@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "description": "Dated three-case refresh of the Official30 workflows that retained native image outputs. Value-only pruning is disabled so newly executed native CellProfiler and OpenHCS image pixels are compared.",
-  "default_well_filter": 1,
+  "default_partition_filter": 1,
   "cases": [
     {
       "cellprofiler_timeout_seconds": 900.0,

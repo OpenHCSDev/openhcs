@@ -16,7 +16,7 @@ from openhcs.constants.constants import Backend
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.config import GlobalPipelineConfig, MaterializationBackend
-from openhcs.core.utils import WellFilterProcessor
+from openhcs.core.partition_filter import PartitionFilterProcessor
 
 from openhcs.core.vfs_protocol import FileManagerLike
 from openhcs.core.dataset_sources.source import DatasetSource
@@ -46,11 +46,11 @@ class MaterializationFlagPlanner:
             "_materialization_axes",
             (
                 None
-                if path_config.well_filter is None
+                if path_config.partition_filter is None
                 else frozenset(
-                    WellFilterProcessor.resolve_filter_with_mode(
-                        path_config.well_filter,
-                        path_config.well_filter_mode,
+                    PartitionFilterProcessor.resolve_filter_with_mode(
+                        path_config.partition_filter,
+                        path_config.partition_filter_mode,
                         [str(value) for value in self.available_axis_values],
                     )
                 )

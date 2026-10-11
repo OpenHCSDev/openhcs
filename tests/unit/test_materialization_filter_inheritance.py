@@ -14,7 +14,7 @@ from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyStepMaterializationConfig,
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
     MaterializationBackend,
     PipelineConfig,
     VFSConfig,
@@ -37,11 +37,11 @@ def _resolved_checkpoint(
     checkpoint_filter: str | None = None,
 ):
     pipeline_config = PipelineConfig(
-        well_filter_config=LazyWellFilterConfig(well_filter="A01"),
-        path_planning_config=LazyPathPlanningConfig(well_filter=0),
+        partition_filter_config=LazyPartitionFilterConfig(partition_filter="A01"),
+        path_planning_config=LazyPathPlanningConfig(partition_filter=0),
     )
     orchestrator = SimpleNamespace(
-        plate_path=plate_path,
+        dataset_root=plate_path,
         pipeline_config=pipeline_config,
         get_component_keys=lambda _component, *, resolved_config: ["A01", "B02"],
         create_context=lambda axis_id, *, resolved_config: SimpleNamespace(
@@ -55,7 +55,7 @@ def _resolved_checkpoint(
             name="checkpoint",
             step_materialization_config=LazyStepMaterializationConfig(
                 enabled=True,
-                well_filter=checkpoint_filter,
+                partition_filter=checkpoint_filter,
             ),
         )
     ]
@@ -76,7 +76,7 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
 
     snapshot = resolved.steps[0]
     checkpoint_config = snapshot.step_materialization_config
-    assert checkpoint_config.well_filter == 0
+    assert checkpoint_config.partition_filter == 0
     assert filters[0].allows(checkpoint_config, "A01")
     assert not filters[0].allows(checkpoint_config, "B02")
 
@@ -143,6 +143,6 @@ def test_explicit_checkpoint_filter_overrides_inherited_workload(tmp_path) -> No
     )
 
     checkpoint_config = resolved.steps[0].step_materialization_config
-    assert checkpoint_config.well_filter == "B02"
+    assert checkpoint_config.partition_filter == "B02"
     assert not filters[0].allows(checkpoint_config, "A01")
     assert filters[0].allows(checkpoint_config, "B02")

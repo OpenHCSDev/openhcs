@@ -1,15 +1,21 @@
 """Immutable progress types following OpenHCS patterns."""
 
+import multiprocessing.queues
+import queue
+import os
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from dataclasses import replace as dataclass_replace
 from enum import Enum
-from typing import Any, ClassVar
+from collections.abc import Mapping
+from typing import Any, ClassVar, Self
 
 from metaclass_registry import AutoRegisterMeta
+from python_introspect import dataclass_from_mapping, project_dataclass, to_jsonable
 from zmqruntime.messages import TaskProgress
+
+from .exceptions import ProgressError
 
 # =============================================================================
 # ProgressPhase Enum - Unifies TaskPhase + AxisPhase
@@ -434,370 +440,184 @@ def is_success_terminal_event(event: "ProgressEvent") -> bool:
 
 
 # =============================================================================
-# ProgressEvent Frozen Dataclass - Single Source of Truth
+# =============================================================================
+# ProgressEvent: one declaration, encoded and decoded by its fields
 # =============================================================================
 
 
 @dataclass(frozen=True)
 class ProgressIdentity:
-    """Nominal identity for one progress event."""
+    """The fields that identify which work one progress event reports on."""
 
     execution_id: str
-    plate_id: str
+    subject_id: str
     axis_id: str
     step_name: str
 
-    @classmethod
-    def from_transport_fields(cls, data: dict[str, Any]) -> "ProgressIdentity":
-        return cls(
-            execution_id=str(data["execution_id"]),
-            plate_id=str(data["subject_id"]),
-            axis_id=str(data["axis_id"]),
-            step_name=str(data["step_name"]),
-        )
 
+@dataclass(frozen=True, kw_only=True)
+class ProgressEvent(TaskProgress):
+    """One progress event.
 
-class ProgressQueue(ABC):
-    """Queue contract for serialized progress updates."""
+    Extends zmqruntime's generic ``TaskProgress``: the wire mapping is exactly
+    the declared fields, so encoding and decoding read this declaration.
+    """
 
-    @abstractmethod
-    def put(self, progress_update: dict) -> None:
-        """Enqueue a serialized progress update."""
-
-        raise NotImplementedError
-
-
-@dataclass(frozen=True, slots=True)
-class ProgressExecutionContext:
-    """Execution identity carried with progress queue setup."""
-
-    execution_id: str
-    plate_id: str
-
-    @classmethod
-    def from_transport_fields(
-        cls,
-        data: Mapping[str, object],
-    ) -> "ProgressExecutionContext":
-        return cls(
-            execution_id=str(data["execution_id"]),
-            plate_id=str(data["plate_id"]),
-        )
-
-    @classmethod
-    def from_value(
-        cls,
-        value: "ProgressExecutionContext | Mapping[str, object]",
-    ) -> "ProgressExecutionContext":
-        if isinstance(value, cls):
-            return value
-        return cls.from_transport_fields(value)
-
-    def to_transport_fields(self) -> dict[str, str]:
-        return {
-            "execution_id": self.execution_id,
-            "plate_id": self.plate_id,
-        }
-
-    def identity_for_event(self, *, axis_id: str, step_name: str) -> ProgressIdentity:
-        """Return a progress-event identity scoped by this execution."""
-
-        return ProgressIdentity(
-            execution_id=self.execution_id,
-            plate_id=self.plate_id,
-            axis_id=axis_id,
-            step_name=step_name,
-        )
-
-
-@dataclass(frozen=True)
-class ProgressEventPayload:
-    """Nominal payload for constructing progress events."""
-
-    identity: ProgressIdentity
     phase: ProgressPhase
     status: ProgressStatus
-    percent: float
-    completed: int = 0
-    total: int = 1
-    error: str | None = None
-    traceback: str | None = None
-    total_wells: list[str] | None = None
+    subject_id: str
+    axis_id: str
+    step_name: str
+    pid: int
+    partition_values: list[str] | None = None
     worker_assignments: dict[str, list[str]] | None = None
     worker_slot: str | None = None
-    owned_wells: list[str] | None = None
+    owned_partition_values: list[str] | None = None
     message: str | None = None
     component: str | None = None
     pattern: str | None = None
     context: dict[str, Any] | None = None
-
-    def to_event(self, *, timestamp: float, pid: int) -> "ProgressEvent":
-        return ProgressEvent(
-            identity=self.identity,
-            phase=self.phase,
-            status=self.status,
-            percent=self.percent,
-            completed=self.completed,
-            total=self.total,
-            timestamp=timestamp,
-            pid=pid,
-            error=self.error,
-            traceback=self.traceback,
-            total_wells=self.total_wells,
-            worker_assignments=self.worker_assignments,
-            worker_slot=self.worker_slot,
-            owned_wells=self.owned_wells,
-            message=self.message,
-            component=self.component,
-            pattern=self.pattern,
-            context=self.context,
-        )
-
-
-@dataclass(frozen=True)
-class ProgressEvent:
-    """Immutable progress event - single source of truth.
-
-    Replaces dict-based progress payloads with validated, immutable data.
-    Uses frozen=True to ensure thread-safety and prevent accidental mutation.
-
-    All fields are explicit and typed - no generic metadata dict.
-    """
-
-    # Required core identifiers
-    identity: ProgressIdentity
-
-    # Progress tracking
-    phase: ProgressPhase
-    status: ProgressStatus
-    percent: float
-    completed: int
-    total: int
-
-    # Metadata (timestamp, PID)
-    timestamp: float
-    pid: int
-
-    # Optional error information
-    error: str | None = None
-    traceback: str | None = None
-
-    # Optional application-specific fields
-    total_wells: list[str] | None = None
-    worker_assignments: dict[str, list[str]] | None = None
-    worker_slot: str | None = None
-    owned_wells: list[str] | None = None
-    message: str | None = None  # General message field (e.g., error messages)
-    component: str | None = None  # Component value for pattern group progress
-    pattern: str | None = None  # Pattern value for pattern group progress
-    context: dict[str, Any] | None = None  # Generic context for arbitrary data
-    step_names: list[str] | None = None  # Step names for the pipeline
-
-    def __post_init__(self) -> None:
-        self._validate()
+    step_names: list[str] | None = None
 
     @property
-    def execution_id(self) -> str:
-        return self.identity.execution_id
-
-    @property
-    def plate_id(self) -> str:
-        return self.identity.plate_id
-
-    @property
-    def axis_id(self) -> str:
-        return self.identity.axis_id
-
-    @property
-    def step_name(self) -> str:
-        return self.identity.step_name
-
-    def _validate(self):
-        """Validate invariants (fail-loud principle)."""
-        # Validate percent range
-        if not (0.0 <= self.percent <= 100.0):
-            raise ValueError(f"percent must be in [0.0, 100.0], got {self.percent}")
-
-        # Validate completed <= total
-        if self.completed > self.total:
-            raise ValueError(
-                f"completed ({self.completed}) cannot exceed total ({self.total})"
-            )
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ProgressEvent":
-        """Create ProgressEvent from dict (for ZMQ transport).
-
-        Converts string phase/status to enums for type safety.
-
-        Args:
-            data: Dictionary with progress data (from ZMQ message)
-
-        Returns:
-            ProgressEvent instance
-
-        Raises:
-            KeyError: If required fields missing
-            ValueError: If phase/status strings invalid
-            TypeError: If field types invalid
-        """
-        # Validate generic transport invariants using zmqruntime primitive
-        TaskProgress.from_dict(data)
-
-        # Validate OpenHCS-required fields
-        required_fields = {
-            "execution_id",
-            "subject_id",
-            "axis_id",
-            "step_name",
-            "phase",
-            "status",
-            "percent",
-            "completed",
-            "total",
-            "timestamp",
-            "pid",
-        }
-        missing = required_fields - set(data.keys())
-        if missing:
-            raise KeyError(
-                f"Missing required fields: {missing}. Got keys: {list(data.keys())}"
-            )
-
-        # Convert phase string to enum
-        phase_str = data["phase"]
-        try:
-            phase = ProgressPhase(phase_str)
-        except ValueError:
-            raise ValueError(
-                f"Invalid phase '{phase_str}'. Valid phases: "
-                f"{[p.value for p in ProgressPhase]}"
-            )
-
-        # Convert status string to enum
-        status_str = data["status"]
-        try:
-            status = ProgressStatus(status_str)
-        except ValueError:
-            raise ValueError(
-                f"Invalid status '{status_str}'. Valid statuses: "
-                f"{[s.value for s in ProgressStatus]}"
-            )
-
-        # Create event with all fields (optional fields use .get())
-        return cls(
-            identity=ProgressIdentity.from_transport_fields(data),
-            phase=phase,
-            status=status,
-            percent=float(data["percent"]),
-            completed=int(data["completed"]),
-            total=int(data["total"]),
-            timestamp=float(data["timestamp"]),
-            pid=int(data["pid"]),
-            error=data.get("error"),
-            traceback=data.get("traceback"),
-            total_wells=data.get("total_wells"),
-            worker_assignments=data.get("worker_assignments"),
-            worker_slot=data.get("worker_slot"),
-            owned_wells=data.get("owned_wells"),
-            message=data.get("message"),
-            component=data.get("component"),
-            pattern=data.get("pattern"),
-            context=data.get("context"),
-            step_names=data.get("step_names"),
-        )
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dict (for ZMQ transport).
-
-        Converts enums to strings for JSON serialization.
-        Only includes optional fields if they are not None.
-
-        Returns:
-            Dictionary representation of this event
-        """
-        result = {
-            "execution_id": self.execution_id,
-            "subject_id": self.plate_id,
-            "axis_id": self.axis_id,
-            "step_name": self.step_name,
-            "phase": self.phase.value,  # Enum → string
-            "status": self.status.value,  # Enum → string
-            "percent": self.percent,
-            "completed": self.completed,
-            "total": self.total,
-            "timestamp": self.timestamp,
-            "pid": self.pid,
-        }
-
-        # Add optional fields if present
-        if self.error is not None:
-            result["error"] = self.error
-        if self.traceback is not None:
-            result["traceback"] = self.traceback
-        if self.total_wells is not None:
-            result["total_wells"] = self.total_wells
-        if self.worker_assignments is not None:
-            result["worker_assignments"] = self.worker_assignments
-        if self.worker_slot is not None:
-            result["worker_slot"] = self.worker_slot
-        if self.owned_wells is not None:
-            result["owned_wells"] = self.owned_wells
-        if self.message is not None:
-            result["message"] = self.message
-        if self.component is not None:
-            result["component"] = self.component
-        if self.pattern is not None:
-            result["pattern"] = self.pattern
-        if self.context is not None:
-            result["context"] = self.context
-        if self.step_names is not None:
-            result["step_names"] = self.step_names
-
-        return result
+    def identity(self) -> ProgressIdentity:
+        return project_dataclass(ProgressIdentity, self)
 
     def with_worker_topology(
         self,
         *,
         worker_assignments: dict[str, list[str]],
-        total_wells: list[str],
+        partition_values: list[str],
     ) -> "ProgressEvent":
         """Return this event with execution topology attached."""
         return dataclass_replace(
             self,
             worker_assignments=worker_assignments,
-            total_wells=total_wells,
+            partition_values=partition_values,
         )
 
     def is_complete(self) -> bool:
-        """Check if this event represents a completed/terminal state.
-
-        Returns:
-            True if the event is in a terminal phase or status
-        """
+        """Whether the event is in a terminal phase or status."""
         return is_terminal_event(self)
 
 
-# =============================================================================
-# Utility Functions
-# =============================================================================
+class ProgressContextPayload(ABC, metaclass=AutoRegisterMeta):
+    """One typed entry of ``ProgressEvent.context``, stored under its key."""
+
+    __registry_key__ = "context_key"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["ProgressContextPayload"]]] = {}
+
+    context_key: ClassVar[str | None] = None
+    malformed_error: ClassVar[type[ValueError]] = ValueError
+
+    @abstractmethod
+    def context_body(self) -> dict[str, Any]:
+        """This payload's wire body."""
+
+    @classmethod
+    @abstractmethod
+    def from_context_body(cls, body: Mapping[str, Any]) -> Self:
+        """Decode this payload's wire body."""
+
+    def to_context(self) -> dict[str, Any]:
+        return {self.context_key: self.context_body()}
+
+    @classmethod
+    def from_context(cls, context: Mapping[str, Any] | None) -> Self | None:
+        """This payload out of an event context, if the context carries one."""
+
+        if not context or cls.context_key not in context:
+            return None
+        body = context[cls.context_key]
+        if not isinstance(body, Mapping):
+            raise cls.malformed_error(f"{cls.context_key!r} must be a mapping.")
+        return cls.from_context_body(body)
+
+    @staticmethod
+    def context_of(*payloads: "ProgressContextPayload | None") -> dict[str, Any] | None:
+        """The event context carrying these payloads."""
+
+        context = {
+            payload.context_key: payload.context_body()
+            for payload in payloads
+            if payload is not None
+        }
+        return context or None
 
 
-def create_event(payload: ProgressEventPayload) -> ProgressEvent:
-    """Convenience function to create ProgressEvent with defaults.
+class DeclaredProgressContextPayload(ProgressContextPayload):
+    """A payload whose wire body is its declared dataclass fields."""
 
-    Automatically sets timestamp and pid for caller.
+    def context_body(self) -> dict[str, Any]:
+        return dict(to_jsonable(self))
 
-    Args:
-        payload: Nominal progress payload.
+    @classmethod
+    def from_context_body(cls, body: Mapping[str, Any]) -> Self:
+        return dataclass_from_mapping(cls, body)
 
-    Returns:
-        ProgressEvent instance with timestamp and pid set
 
-    Raises:
-        ValueError: If validation fails
-    """
-    return payload.to_event(
-        timestamp=time.time(),
-        pid=__import__("os").getpid(),
-    )
+class ProgressQueue(ABC):
+    """Where one process puts the progress events it emits."""
+
+    @abstractmethod
+    def put(self, event: ProgressEvent) -> None:
+        """Enqueue one progress event."""
+
+        raise NotImplementedError
+
+
+# Thread and process queues carry events as they are.
+for _queue_type in (
+    queue.Queue,
+    queue.SimpleQueue,
+    multiprocessing.queues.Queue,
+    multiprocessing.queues.SimpleQueue,
+):
+    ProgressQueue.register(_queue_type)
+
+_progress_queue: ProgressQueue | None = None
+
+
+def set_progress_queue(progress_queue: ProgressQueue | None) -> None:
+    """Install the queue this process emits progress events into."""
+
+    global _progress_queue
+    _progress_queue = progress_queue
+
+
+def emit_event(event: ProgressEvent) -> None:
+    """Put one event on the installed progress queue."""
+
+    if _progress_queue is None:
+        raise ProgressError(
+            "Progress emission requires a queue installed with set_progress_queue()."
+        )
+    _progress_queue.put(event)
+
+
+@dataclass(frozen=True, slots=True)
+class ProgressExecutionContext:
+    """The execution a progress event belongs to; builds and emits its events."""
+
+    execution_id: str
+    subject_id: str
+
+    def event_fields(self) -> dict[str, object]:
+        """The event fields this context fixes for every event it emits."""
+
+        return {
+            declared.name: getattr(self, declared.name)
+            for declared in fields(ProgressExecutionContext)
+        }
+
+    def event(self, **event_fields: Any) -> ProgressEvent:
+        return ProgressEvent(
+            **self.event_fields(),
+            timestamp=time.time(),
+            pid=os.getpid(),
+            **event_fields,
+        )
+
+    def emit(self, **event_fields: Any) -> None:
+        emit_event(self.event(**event_fields))

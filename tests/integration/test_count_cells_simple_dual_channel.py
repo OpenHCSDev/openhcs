@@ -235,12 +235,12 @@ def persisted_special_output_probe(image):
         Microscopy.Channel,
     ]
 
-    output_plate_root = PathPlannerPathAuthority.build_output_plate_root(
+    output_dataset_root = PathPlannerPathAuthority.build_output_dataset_root(
         plate_dir,
         global_config.path_planning_config,
     )
     analysis_results_dir = (
-        output_plate_root / global_config.materialization_results_path
+        output_dataset_root / global_config.materialization_results_path
     )
     analysis_results_dir.mkdir(parents=True)
     stale_csv_path = analysis_results_dir / "A01_stale_counts_step0_details.csv"
@@ -252,7 +252,7 @@ def persisted_special_output_probe(image):
     observation_path = tmp_path / "dual_channel_runtime_observation.pkl"
     ensure_global_config_context(GlobalPipelineConfig, global_config)
     submission = OpenHCSExecutionSubmission(
-        plate_id=plate_dir,
+        subject_id=plate_dir,
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
         ),
@@ -283,7 +283,7 @@ def persisted_special_output_probe(image):
         execution_response = ExecutionSubmissionResponse.from_wire(
             client.submit_pipeline(
                 OpenHCSExecutionSubmission(
-                    plate_id=plate_dir,
+                    subject_id=plate_dir,
                     pipeline_document=PipelineDocumentCodec.from_values(
                         pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
                     ),

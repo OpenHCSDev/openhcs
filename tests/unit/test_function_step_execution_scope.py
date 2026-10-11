@@ -41,10 +41,10 @@ from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     CompositeInvocationContractProvider,
 )
-from openhcs.core.orchestrator.compiled_plate_execution import (
-    _plate_artifact_batch,
-    execute_plate_scoped_steps,
-    validate_plate_scoped_contexts,
+from openhcs.core.orchestrator.bundle_execution import (
+    _dataset_artifact_batch,
+    execute_dataset_scoped_steps,
+    validate_dataset_scoped_contexts,
 )
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.progress import (
@@ -411,7 +411,7 @@ def _plate_step_plan(
         axis_id=axis_id,
         input_dir=Path("/plate/images"),
         output_dir=Path("/plate/images"),
-        output_plate_root="/plate",
+        output_dataset_root="/plate",
         sub_dir="images",
         analysis_results_dir="/plate/analysis",
         pipeline_position=step_index + 1,
@@ -454,16 +454,16 @@ def _execute_plate_steps(
     heartbeat_interval_seconds: float = 2.0,
 ) -> list[ProgressEvent]:
     progress_queue = _RecordingProgressQueue()
-    execute_plate_scoped_steps(
+    execute_dataset_scoped_steps(
         contexts,
         progress_queue=progress_queue,
         progress_context=ProgressExecutionContext(
             execution_id="execution-1",
-            plate_id="plate-1",
+            subject_id="plate-1",
         ),
         heartbeat_interval_seconds=heartbeat_interval_seconds,
     )
-    return [ProgressEvent.from_dict(event) for event in progress_queue.events]
+    return list(progress_queue.events)
 
 
 def _record_measurements(
@@ -595,7 +595,7 @@ def test_plate_artifact_batch_keeps_optional_source_declaration_without_record()
     assert {record.key.artifact_type for record in records} == {
         MeasurementsArtifactType,
     }
-    batch = _plate_artifact_batch(
+    batch = _dataset_artifact_batch(
         compiled_contexts={"A01": context},
         step_index=1,
         invocation_position=0,
@@ -683,7 +683,7 @@ def test_plate_retention_uses_exact_edges_instead_of_requested_types(
         count=3,
     )
     observations = context.runtime_value_store.observed_values
-    retained = RuntimeObservationMode.MERGE_PLATE_INPUTS.retain_records(
+    retained = RuntimeObservationMode.MERGE_DATASET_INPUTS.retain_records(
         observations,
         context,
     )
@@ -704,7 +704,7 @@ def test_plate_retention_uses_exact_edges_instead_of_requested_types(
     retained_store = type(context.runtime_value_store)()
     retained_store.merge_observed_values(retained)
     batches = tuple(
-        _plate_artifact_batch(
+        _dataset_artifact_batch(
             compiled_contexts={"A01": context},
             step_index=1,
             invocation_position=0,
@@ -751,9 +751,9 @@ def test_plate_retention_defers_required_missing_admission_to_parent() -> None:
         metadata_writer=True,
     )
     context = _plate_context("A01", (plan,))
-    assert RuntimeObservationMode.MERGE_PLATE_INPUTS.retain_records((), context) == ()
+    assert RuntimeObservationMode.MERGE_DATASET_INPUTS.retain_records((), context) == ()
     with pytest.raises(ValueError, match="missing required input"):
-        _plate_artifact_batch(
+        _dataset_artifact_batch(
             compiled_contexts={"A01": context},
             step_index=1,
             invocation_position=0,
@@ -914,7 +914,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
         persistent_enabled=True, persistent_backend=Backend.MEMORY.value,
     )
-    plan.output_plate_root = str(tmp_path)
+    plan.output_dataset_root = str(tmp_path)
     plan.output_dir = tmp_path / "images"
     plan.analysis_results_dir = str(tmp_path / "analysis")
     context = _plate_context("A01", (plan,))
@@ -930,12 +930,12 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     )
     progress_queue = _RecordingProgressQueue()
 
-    observation = execute_plate_scoped_steps(
+    observation = execute_dataset_scoped_steps(
         {"A01": context},
         progress_queue=progress_queue,
         progress_context=ProgressExecutionContext(
             execution_id="execution-1",
-            plate_id="plate-1",
+            subject_id="plate-1",
         ),
     )
 
@@ -953,7 +953,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     assert table.csv_content == "ImageNumber,Count\r\n1,7\r\n"
     assert table.well_id == "A01"
     assert observation.contexts[0].outputs.runtime_export_paths == (table.path,)
-    events = [ProgressEvent.from_dict(event) for event in progress_queue.events]
+    events = list(progress_queue.events)
     assert events[-1].phase is ProgressPhase.STEP_COMPLETED
 
 
@@ -1296,7 +1296,7 @@ def test_plate_scope_rejects_context_invocation_drift() -> None:
         contexts[axis_id] = _plate_context(axis_id, (plan,))
 
     with pytest.raises(ValueError, match="drifted"):
-        validate_plate_scoped_contexts(contexts)
+        validate_dataset_scoped_contexts(contexts)
 
 
 def test_plate_scope_rejects_context_output_plan_drift() -> None:
@@ -1332,7 +1332,7 @@ def test_plate_scope_rejects_context_output_plan_drift() -> None:
         contexts[axis_id] = _plate_context(axis_id, (plan,))
 
     with pytest.raises(ValueError, match="compiled invocations drifted"):
-        validate_plate_scoped_contexts(contexts)
+        validate_dataset_scoped_contexts(contexts)
 
 
 def test_plate_scope_rejects_mismatched_output_plan_key_before_invocation() -> None:
@@ -1404,7 +1404,7 @@ def test_plate_scope_rejects_membership_present_only_after_first_context() -> No
     }
 
     with pytest.raises(ValueError, match="membership drifted"):
-        validate_plate_scoped_contexts(contexts)
+        validate_dataset_scoped_contexts(contexts)
 
 
 def test_plate_scope_rejects_source_binding_plan_drift() -> None:
@@ -1438,7 +1438,7 @@ def test_plate_scope_rejects_source_binding_plan_drift() -> None:
         contexts[axis_id] = _plate_context(axis_id, (plan,))
 
     with pytest.raises(ValueError, match="source-binding plan drifted"):
-        validate_plate_scoped_contexts(contexts)
+        validate_dataset_scoped_contexts(contexts)
 
 
 def test_plate_scope_compares_complete_nominal_invocation_contract() -> None:
@@ -1492,4 +1492,4 @@ def test_plate_scope_compares_complete_nominal_invocation_contract() -> None:
         contexts[axis_id] = _plate_context(axis_id, (plan,))
 
     with pytest.raises(ValueError, match="compiled invocations drifted"):
-        validate_plate_scoped_contexts(contexts)
+        validate_dataset_scoped_contexts(contexts)

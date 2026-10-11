@@ -145,8 +145,8 @@ class PlateImageInventory:
             orchestrator.initialize_microscope_handler()
             handler = orchestrator.microscope_handler
         if handler is None:
-            return cls(plate_path=Path(orchestrator.plate_path), records=())
-        plate_path = Path(orchestrator.plate_path)
+            return cls(plate_path=Path(orchestrator.dataset_root), records=())
+        plate_path = Path(orchestrator.dataset_root)
         source_projection = cls._projection(
             plate_path,
             handler.metadata_handler,
@@ -157,7 +157,7 @@ class PlateImageInventory:
             handler=handler,
             filemanager=orchestrator.filemanager,
             backend=handler.get_primary_backend(
-                orchestrator.plate_path,
+                orchestrator.dataset_root,
                 orchestrator.filemanager,
             ),
             source_projection=source_projection,
@@ -271,8 +271,8 @@ class PlateImageInventory:
         metadata_handler: "MetadataHandler",
         filemanager: "FileManager",
     ) -> VirtualWorkspaceSourceProjection | None:
-        return WorkspaceSourceProjections.from_plate_metadata(
-            plate_path=plate_path,
+        return WorkspaceSourceProjections.from_dataset_metadata(
+            dataset_root=plate_path,
             metadata_handler=metadata_handler,
             filemanager=filemanager,
         ).projection_if_available()
@@ -739,7 +739,7 @@ class PlateResultFileInventory:
         cls,
         orchestrator: "PipelineOrchestrator",
     ) -> "PlateResultFileInventory":
-        plate_path = Path(orchestrator.plate_path)
+        plate_path = Path(orchestrator.dataset_root)
         handler = orchestrator.microscope_handler
         if handler is None:
             return cls.from_configured_output_root(
@@ -796,12 +796,12 @@ class PlateResultFileInventory:
         parser: "FilenameParser | None" = None,
     ) -> "PlateResultFileInventory":
         """Read artifacts from the output plate planned for a source plate."""
-        output_plate_root = PathPlannerPathAuthority.build_output_plate_root(
+        output_dataset_root = PathPlannerPathAuthority.build_output_dataset_root(
             plate_path,
             path_config,
         )
         return cls.from_configured_output_root(
-            plate_path=output_plate_root,
+            plate_path=output_dataset_root,
             path_config=path_config,
             parser=parser,
         )

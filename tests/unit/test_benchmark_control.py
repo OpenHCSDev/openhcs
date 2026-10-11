@@ -162,8 +162,8 @@ def _measured_run_receipt(output_dir: Path) -> MeasuredPipelineRunReceipt:
         schema_version=MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
         run_id="run-1",
         pipeline_name="ordinary",
-        plate_id=str(output_dir / "plate"),
-        execution_plate_id=None,
+        subject_id=str(output_dir / "plate"),
+        execution_subject_id=None,
         selected_pipeline_path=None,
         execution_id="execution-1",
         pipeline_source_sha256=hashlib.sha256(pipeline_source).hexdigest(),
@@ -535,7 +535,7 @@ def test_measured_finalization_refuses_missing_server_timing_without_receipt(
     observation_path = tmp_path / "observation.pkl"
     observation_path.touch()
     submission = OpenHCSExecutionSubmission(
-        plate_id=tmp_path,
+        subject_id=tmp_path,
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(), pipeline_steps=[]
         ),

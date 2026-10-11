@@ -41,6 +41,6 @@ step_2 = FunctionStep(
         ]
     },
     name="blur_tophat",
-    napari_streaming_config=LazyNapariStreamingConfig(well_filter="3"),
+    napari_streaming_config=LazyNapariStreamingConfig(partition_filter="3"),
 )
 pipeline_steps.append(step_2)

@@ -159,8 +159,8 @@ def _reference_export_equivalence(
 
 def _execute_pipeline_via_zmq_server(
     *,
-    plate_id: str | Path,
-    execution_plate_id: str | Path,
+    subject_id: str | Path,
+    execution_subject_id: str | Path,
     selected_pipeline_path: str | Path,
     pipeline_steps: Sequence[AbstractStep],
     global_config: GlobalPipelineConfig,
@@ -176,8 +176,8 @@ def _execute_pipeline_via_zmq_server(
         pipeline_steps
     )
     submission = OpenHCSExecutionSubmission(
-        plate_id=plate_id,
-        execution_plate_id=execution_plate_id,
+        subject_id=subject_id,
+        execution_subject_id=execution_subject_id,
         selected_pipeline_path=selected_pipeline_path,
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=transport_pipeline
@@ -307,7 +307,7 @@ class OpenHCSAdapter(ToolAdapter):
         request: OpenHCSRunRequest,
         *,
         output_suffix: str,
-        output_plate_root: Path,
+        output_dataset_root: Path,
         compilation_debug_config: CompilationDebugConfig,
     ) -> GlobalPipelineConfig:
         """Select benchmark output paths without replacing declared path policy."""
@@ -329,7 +329,7 @@ class OpenHCSAdapter(ToolAdapter):
             ),
             compilation_debug_config=compilation_debug_config,
             materialize_runtime_artifacts=request.materialize_runtime_artifacts,
-            materialization_results_path=output_plate_root / "results",
+            materialization_results_path=output_dataset_root / "results",
         )
 
     def _run_converted_cppipe_pipeline(
@@ -360,7 +360,7 @@ class OpenHCSAdapter(ToolAdapter):
             ) from exc
 
         output_suffix = f"_{request.pipeline_name}_converted_cppipe"
-        output_plate_root = (
+        output_dataset_root = (
             request.output_dir / f"{request.dataset_path.name}{output_suffix}"
         )
         generated_source_path = request.output_dir / f"{cppipe_path.stem}_openhcs.py"
@@ -405,7 +405,7 @@ class OpenHCSAdapter(ToolAdapter):
             raise ToolExecutionError(
                 f"CellProfiler pipeline preparation produced no pipeline: {cppipe_path}"
             )
-        execution_plate_path = ingestion.execution_plate_path
+        execution_dataset_root = ingestion.execution_dataset_root
         generated_pipeline_source = generated_source_path.read_text(encoding="utf-8")
         canonical_pipeline_source = FunctionStepTransportAuthority.source_from_pipeline(
             pipeline_steps
@@ -429,7 +429,7 @@ class OpenHCSAdapter(ToolAdapter):
         global_config = self._execution_global_config(
             request,
             output_suffix=output_suffix,
-            output_plate_root=output_plate_root,
+            output_dataset_root=output_dataset_root,
             compilation_debug_config=compilation_debug_config,
         )
         ensure_global_config_context(GlobalPipelineConfig, global_config)
@@ -450,8 +450,8 @@ class OpenHCSAdapter(ToolAdapter):
                 timing_observer,
             ):
                 server_execution, pipeline_source = _execute_pipeline_via_zmq_server(
-                    plate_id=request.dataset_path,
-                    execution_plate_id=execution_plate_path,
+                    subject_id=request.dataset_path,
+                    execution_subject_id=execution_dataset_root,
                     selected_pipeline_path=cppipe_path,
                     pipeline_steps=pipeline_steps,
                     global_config=global_config,
@@ -542,7 +542,7 @@ class OpenHCSAdapter(ToolAdapter):
                     raise ToolExecutionError(equivalence_failure_message)
 
         metric_results = self._metric_results(request.metrics)
-        output_plate_root.mkdir(parents=True, exist_ok=True)
+        output_dataset_root.mkdir(parents=True, exist_ok=True)
         execution_output_root.mkdir(parents=True, exist_ok=True)
 
         provenance = {

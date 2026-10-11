@@ -1,4 +1,4 @@
-"""Worker-lane execution runners for compiled plate execution."""
+"""Worker-lane execution runners for compiled bundle execution."""
 
 from __future__ import annotations
 
@@ -21,7 +21,6 @@ from openhcs.core.compiled_execution import (
 from openhcs.core.artifacts import ArtifactInputPlan
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.compiled_step_plan import (
-    CompiledStepPlan,
     FrameworkDeviceAssignment,
 )
 from openhcs.core.config import MultiprocessingStartMethod
@@ -50,14 +49,16 @@ from openhcs.core.orchestrator.worker_lanes import (
     WorkerLaneExecutionPlan,
 )
 from openhcs.core.orchestrator.worker_profiling import CProfileWorkerProfilingPolicy
-from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
-from openhcs.core.progress import ProgressQueue
-from openhcs.core.progress.live_measurements import (
-    live_measurement_context_for_records,
+from openhcs.core.progress import (
+    ProgressContextPayload,
+    ProgressEvent,
+    ProgressPhase,
+    ProgressQueue,
+    ProgressStatus,
+    set_progress_queue,
 )
-from openhcs.core.progress.runtime_artifacts import (
-    runtime_artifact_context_for_records,
-)
+from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
+from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
 from openhcs.core.runtime_stores import (
     StoredRuntimeValue,
     RuntimeArtifactAddress,
@@ -82,16 +83,13 @@ def _runtime_observation_progress_context(
 ) -> dict | None:
     """Project one RuntimeValueStore observation delta through owned payloads."""
 
-    runtime_artifacts = runtime_artifact_context_for_records(records)
-    live_measurements = live_measurement_context_for_records(
-        records,
-        materialized_locations_by_address=materialized_locations_by_address,
+    return ProgressContextPayload.context_of(
+        RuntimeArtifactProgressPayload.from_records(records),
+        LiveMeasurementProgressPayload.from_records(
+            records,
+            materialized_locations_by_address=materialized_locations_by_address,
+        ),
     )
-    if runtime_artifacts is None:
-        return live_measurements
-    if live_measurements is None:
-        return runtime_artifacts
-    return {**runtime_artifacts, **live_measurements}
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,7 +126,7 @@ class WorkerExecutorResources(ABC):
         *,
         actual_max_workers: int,
         execution_bundle: CompiledExecutionBundle,
-        worker_assignments: Dict[str, List[str]] | None,
+        worker_assignments: Mapping[str, Sequence[str]],
     ) -> WorkerAssignmentPlan:
         contexts_snapshot = self.contexts_snapshot(execution_bundle)
         return CompiledContextLanePlanner(
@@ -171,7 +169,7 @@ class WorkerExecutorResources(ABC):
     def map_partition_invocations(
         self, func: Callable[[object], object], requests: Sequence[object]
     ) -> tuple[object, ...]:
-        """Prepare plate partitions using this execution's existing resources."""
+        """Prepare dataset-scoped partitions using this execution's existing resources."""
         return tuple(func(request) for request in requests)
 
     def release_parent_runtime_resources(
@@ -241,19 +239,18 @@ class ForkInheritedWorkerExecutorResources(WorkerExecutorResources):
         return self._runner.cancel()
 
     @property
-    def partition_worker_processes(self) -> list[tuple[str, Any, Any]]:
-        return self._runner._processes
+    def worker_processes(self) -> list[WorkerProcess]:
+        """The worker processes this execution may hand partition work to."""
 
-    def partition_command(
-        self, func: Callable[[object], object], requests: tuple[tuple[int, object], ...]
-    ) -> tuple[object, ...]:
-        return func, requests
+        return self._runner.workers
 
-    def _collect_results(self, workers: list[tuple[str, Any, Any]]) -> Iterable[Any]:
+    def collect_results(self, workers: Sequence[WorkerProcess]) -> Iterable[Any]:
+        """Read each worker's result in turn; raise the first failure after all."""
+
         errors: list[Exception] = []
         for worker in workers:
             try:
-                yield self._runner._receive_result(*worker)
+                yield worker.result()
             except Exception as exc:
                 errors.append(exc)
         if errors:
@@ -262,22 +259,20 @@ class ForkInheritedWorkerExecutorResources(WorkerExecutorResources):
     def map_partition_invocations(
         self, func: Callable[[object], object], requests: Sequence[object]
     ) -> tuple[object, ...]:
-        workers = self.partition_worker_processes[: len(requests)]
+        workers = self.worker_processes[: len(requests)]
         if not workers or len(requests) <= 1:
             return tuple(func(request) for request in requests)
         indexed = tuple(enumerate(requests))
-        submitted = []
+        submitted: list[WorkerProcess] = []
         errors: list[Exception] = []
         for offset, worker in enumerate(workers):
             try:
-                worker[2].send(
-                    self.partition_command(func, indexed[offset :: len(workers)])
-                )
+                worker.send(MapPartitions(func, indexed[offset :: len(workers)]))
                 submitted.append(worker)
             except Exception as exc:
                 errors.append(exc)
         results: dict[int, object] = {}
-        for batch_results in self._collect_results(submitted):
+        for batch_results in self.collect_results(submitted):
             results.update(batch_results)
         if errors:
             raise errors[0]
@@ -565,66 +560,236 @@ def _configure_worker_process(
     configure_native_thread_count(1)
 
     if progress_queue is not None:
-        from openhcs.core.progress import set_progress_queue
-
         set_progress_queue(progress_queue)
 
 
-def _execute_fork_inherited_worker_lane_process(
-    result_connection: Any,
-    lane_axis_context_keys: List[tuple[str, List[str]]],
-    lane_context: WorkerLaneExecutionContext,
-    runtime_observation_mode: RuntimeObservationMode,
-    inherited_parent_connections: tuple[Any, ...],
-) -> None:
-    """Process entrypoint for fork-inherited worker lane execution."""
+# =============================================================================
+# Worker protocol: the commands a parent sends and the replies a worker answers
+# =============================================================================
 
-    WorkerExecutorResources.initialize_process_signals()
-    for connection in inherited_parent_connections:
-        connection.close()
-    profiling_policy = CProfileWorkerProfilingPolicy.from_environment()
-    try:
-        with profiling_policy.profile(
-            execution_id=lane_context.execution_id,
-            plate_id=lane_context.plate_id,
-            worker_slot=lane_context.worker_slot,
-            owned_wells=list(lane_context.owned_wells),
-        ):
-            result_connection.send(
-                (
-                    "result",
-                    _execute_fork_inherited_worker_lane_static(
-                        lane_axis_context_keys,
-                        lane_context,
-                        runtime_observation_mode,
-                    ),
-                )
-            )
-        while True:
-            invocation = result_connection.recv()
-            if invocation is None:
-                break
-            func, indexed_requests = invocation
-            try:
-                result_connection.send(
-                    (
-                        "result",
-                        tuple(
-                            (index, func(request))
-                            for index, request in indexed_requests
-                        ),
-                    )
-                )
-            except Exception as exc:
-                import traceback
 
-                result_connection.send(("error", exc, traceback.format_exc()))
-    except BaseException as exc:
+class WorkerReply(ABC):
+    """One message a worker process sends to its parent."""
+
+    @abstractmethod
+    def settle(
+        self,
+        worker: WorkerProcess,
+        progress_queue: ProgressQueue | None,
+    ) -> WorkerResult | None:
+        """Act on this reply in the parent; return the result it completes."""
+
+
+@dataclass(frozen=True)
+class WorkerResult(WorkerReply):
+    """The result of the command the worker was serving."""
+
+    payload: Any
+
+    def settle(
+        self,
+        worker: WorkerProcess,
+        progress_queue: ProgressQueue | None,
+    ) -> WorkerResult:
+        return self
+
+
+@dataclass(frozen=True)
+class WorkerFailure(WorkerReply):
+    """The command the worker was serving raised."""
+
+    error: str
+    traceback: str
+
+    @classmethod
+    def from_exception(cls, exc: BaseException) -> WorkerFailure:
         import traceback
 
-        result_connection.send(("error", exc, traceback.format_exc()))
+        return cls(error=str(exc), traceback=traceback.format_exc())
+
+    def settle(
+        self,
+        worker: WorkerProcess,
+        progress_queue: ProgressQueue | None,
+    ) -> WorkerResult | None:
+        raise RuntimeError(
+            f"Worker lane {worker.slot} failed: {self.error}\n{self.traceback}"
+        )
+
+
+@dataclass(frozen=True)
+class WorkerProgress(WorkerReply):
+    """A progress event emitted while the worker serves a command."""
+
+    event: ProgressEvent
+
+    def settle(
+        self,
+        worker: WorkerProcess,
+        progress_queue: ProgressQueue | None,
+    ) -> WorkerResult | None:
+        progress_queue.put(self.event)
+        return None
+
+
+class WorkerConnectionProgressQueue(ProgressQueue):
+    """Write progress in the same ordered stream as this worker's result."""
+
+    def __init__(self, connection: Any):
+        self.connection = connection
+
+    def put(self, event: ProgressEvent) -> None:
+        self.connection.send(WorkerProgress(event))
+
+
+class WorkerCommand(ABC):
+    """One request a worker process serves."""
+
+    @abstractmethod
+    def serve(self, connection: Any) -> bool:
+        """Carry out this request; return False to end the worker process."""
+
+
+class AnsweredWorkerCommand(WorkerCommand):
+    """A command the worker answers with exactly one result or failure."""
+
+    def serve(self, connection: Any) -> bool:
+        try:
+            reply: WorkerReply = WorkerResult(self.run(connection))
+        except Exception as exc:
+            reply = WorkerFailure.from_exception(exc)
+        connection.send(reply)
+        return True
+
+    @abstractmethod
+    def run(self, connection: Any) -> object:
+        """Carry out the command and return its result."""
+
+
+@dataclass(frozen=True)
+class PrepareWorker(AnsweredWorkerCommand):
+    """Route this worker's progress through its connection, then report ready."""
+
+    def run(self, connection: Any) -> None:
+        set_progress_queue(WorkerConnectionProgressQueue(connection))
+
+
+@dataclass(frozen=True)
+class ExecuteInheritedLane(AnsweredWorkerCommand):
+    """Execute one lane against the execution bundle this process holds."""
+
+    lane_axis_context_keys: list[tuple[str, list[str]]]
+    lane_context: WorkerLaneExecutionContext
+    runtime_observation_mode: RuntimeObservationMode
+
+    def run(self, connection: Any) -> Dict[str, ExecutionResult]:
+        execution_bundle = ForkInheritedWorkerExecutionState.require_current()
+        return execute_worker_lane(
+            pipeline_definition=list(execution_bundle.pipeline_definition),
+            lane_axis_contexts=ForkInheritedWorkerExecutionState.resolve_lane_contexts(
+                self.lane_axis_context_keys
+            ),
+            lane_context=self.lane_context,
+            runtime_observation_mode=self.runtime_observation_mode,
+        )
+
+
+@dataclass(frozen=True)
+class ExecuteShippedLane(ExecuteInheritedLane):
+    """Install a pickled execution bundle, then execute one lane against it."""
+
+    bundle_payload: bytes
+    log_file_base: str | None
+
+    def run(self, connection: Any) -> Dict[str, ExecutionResult]:
+        if self.log_file_base is not None:
+            _configure_worker_logging(self.log_file_base)
+        ForkInheritedWorkerExecutionState.install(pickle.loads(self.bundle_payload))
+        return ExecuteInheritedLane.run(self, connection)
+
+
+@dataclass(frozen=True)
+class MapPartitions(AnsweredWorkerCommand):
+    """Apply one function to this worker's share of a partitioned request list."""
+
+    func: Callable[[object], object]
+    indexed_requests: tuple[tuple[int, object], ...]
+
+    def run(self, connection: Any) -> tuple[tuple[int, object], ...]:
+        return tuple(
+            (index, self.func(request)) for index, request in self.indexed_requests
+        )
+
+
+@dataclass(frozen=True)
+class FinishExecution(AnsweredWorkerCommand):
+    """Drop the execution bundle so the process can serve the next execution."""
+
+    def run(self, connection: Any) -> None:
+        ForkInheritedWorkerExecutionState.clear()
+
+
+@dataclass(frozen=True)
+class StopWorker(WorkerCommand):
+    """End the worker process."""
+
+    def serve(self, connection: Any) -> bool:
+        return False
+
+
+def _serve_worker(
+    connection: Any,
+    inherited_parent_connections: tuple[Any, ...],
+    first_command: WorkerCommand,
+) -> None:
+    """Worker process entrypoint: serve commands until stopped or orphaned."""
+
+    WorkerExecutorResources.initialize_process_signals()
+    for inherited_connection in inherited_parent_connections:
+        inherited_connection.close()
+    command = first_command
+    try:
+        while command.serve(connection):
+            try:
+                command = connection.recv()
+            except EOFError:
+                break
     finally:
-        result_connection.close()
+        ForkInheritedWorkerExecutionState.clear()
+        set_progress_queue(None)
+        connection.close()
+
+
+@dataclass(frozen=True)
+class WorkerProcess:
+    """One worker process a parent owns: its slot, process and connection."""
+
+    slot: str
+    process: Any
+    connection: Any
+
+    def send(self, command: WorkerCommand) -> None:
+        self.connection.send(command)
+
+    def receive(self, progress_queue: ProgressQueue | None = None) -> WorkerResult | None:
+        """Read one reply; return the result it completes, if any."""
+
+        try:
+            reply = self.connection.recv()
+        except EOFError as exc:
+            self.process.join()
+            raise RuntimeError(
+                f"Worker lane {self.slot} exited without a result; "
+                f"exitcode={self.process.exitcode}."
+            ) from exc
+        return reply.settle(self, progress_queue)
+
+    def result(self, progress_queue: ProgressQueue | None = None) -> Any:
+        """Read replies until the result of the command being served."""
+
+        while (result := self.receive(progress_queue)) is None:
+            pass
+        return result.payload
 
 
 class ForkInheritedWorkerLaneRunner:
@@ -632,7 +797,28 @@ class ForkInheritedWorkerLaneRunner:
 
     def __init__(self, multiprocessing_context: Any) -> None:
         self._multiprocessing_context = multiprocessing_context
-        self._processes: list[tuple[str, Any, Any]] = []
+        self.workers: list[WorkerProcess] = []
+
+    def start_worker(self, slot: str, first_command: WorkerCommand) -> WorkerProcess:
+        parent_connection, child_connection = self._multiprocessing_context.Pipe()
+        process = self._multiprocessing_context.Process(
+            target=_serve_worker,
+            args=(
+                child_connection,
+                (parent_connection, *(worker.connection for worker in self.workers)),
+                first_command,
+            ),
+        )
+        try:
+            process.start()
+        except BaseException:
+            parent_connection.close()
+            child_connection.close()
+            raise
+        child_connection.close()
+        worker = WorkerProcess(slot, process, parent_connection)
+        self.workers.append(worker)
+        return worker
 
     def run(
         self,
@@ -647,39 +833,21 @@ class ForkInheritedWorkerLaneRunner:
                 execution_plan,
             )
 
-        execution_results: Dict[str, ExecutionResult] = {}
-
         for worker_slot, lane_contexts in active_lanes:
-            worker_lane_context = execution_plan.lane_context(worker_slot)
-            result_reader, result_writer = self._multiprocessing_context.Pipe(
-                duplex=True
-            )
-            process = self._multiprocessing_context.Process(
-                target=_execute_fork_inherited_worker_lane_process,
-                args=(
-                    result_writer,
-                    lane_contexts,
-                    worker_lane_context,
-                    execution_plan.runtime_observation_mode,
-                    (
-                        result_reader,
-                        *(connection for _, _, connection in self._processes),
-                    ),
+            self.start_worker(
+                worker_slot,
+                ExecuteInheritedLane(
+                    lane_axis_context_keys=lane_contexts,
+                    lane_context=execution_plan.lane_context(worker_slot),
+                    runtime_observation_mode=execution_plan.runtime_observation_mode,
                 ),
             )
-            try:
-                process.start()
-            except BaseException:
-                result_reader.close()
-                result_writer.close()
-                raise
-            result_writer.close()
-            self._processes.append((worker_slot, process, result_reader))
 
+        execution_results: Dict[str, ExecutionResult] = {}
         lane_errors: list[Exception] = []
-        for worker_slot, process, result_reader in self._processes:
+        for worker in self.workers:
             try:
-                lane_results = self._receive_result(worker_slot, process, result_reader)
+                lane_results = worker.result()
                 execution_results.update(lane_results)
                 for result in lane_results.values():
                     result.runtime_observation.merge_into(
@@ -692,48 +860,23 @@ class ForkInheritedWorkerLaneRunner:
 
         return execution_results
 
-    @staticmethod
-    def _receive_result(worker_slot: str, process: Any, connection: Any) -> Any:
-        try:
-            message_kind, payload, *rest = connection.recv()
-        except EOFError as exc:
-            process.join()
-            raise RuntimeError(
-                f"Fork worker lane {worker_slot} exited without returning "
-                f"a result; exitcode={process.exitcode}."
-            ) from exc
-        if message_kind == "error":
-            if not rest:
-                raise RuntimeError(
-                    f"Fork worker lane {worker_slot} returned an error without traceback."
-                )
-            raise RuntimeError(
-                f"Fork worker lane {worker_slot} generated an exception: "
-                f"{payload}\n{rest[0]}"
-            )
-        if message_kind != "result":
-            raise RuntimeError(
-                f"Fork worker lane {worker_slot} returned unknown message {message_kind!r}."
-            )
-        return payload
-
     def cancel(self) -> int:
         """Terminate only processes owned by this runner's active execution."""
         terminated = 0
-        for _worker_slot, process, _connection in self._processes:
-            if process.is_alive():
-                process.terminate()
+        for worker in self.workers:
+            if worker.process.is_alive():
+                worker.process.terminate()
                 terminated += 1
         return terminated
 
     def shutdown(self) -> None:
         """Close every owned channel and join every lane, including failed lanes."""
-        processes, self._processes = self._processes, []
+        workers, self.workers = self.workers, []
         errors: list[Exception] = []
-        for _worker_slot, process, connection in processes:
+        for worker in workers:
             try:
-                if process.is_alive():
-                    connection.send(None)
+                if worker.process.is_alive():
+                    worker.send(StopWorker())
             except (BrokenPipeError, EOFError, OSError):
                 # The failed lane has already closed its channel.
                 pass
@@ -741,15 +884,16 @@ class ForkInheritedWorkerLaneRunner:
                 errors.append(exc)
             finally:
                 try:
-                    connection.close()
+                    worker.connection.close()
                 except Exception as exc:
                     errors.append(exc)
-        for worker_slot, process, _connection in processes:
+        for worker in workers:
             try:
-                process.join()
-                if process.exitcode != 0:
+                worker.process.join()
+                if worker.process.exitcode != 0:
                     raise RuntimeError(
-                        f"Fork worker lane {worker_slot} exited with exitcode={process.exitcode}."
+                        f"Worker lane {worker.slot} exited with "
+                        f"exitcode={worker.process.exitcode}."
                     )
             except Exception as exc:
                 errors.append(exc)
@@ -764,99 +908,11 @@ class ForkInheritedWorkerLaneRunner:
     ) -> Dict[str, ExecutionResult]:
         """Run a single fork-inherited lane without launching a child process."""
 
-        execution_state = ForkInheritedWorkerExecutionState.require_current()
-        lane_axis_contexts = ForkInheritedWorkerExecutionState.resolve_lane_contexts(
-            lane_axis_context_keys
-        )
-        lane_results = execute_worker_lane(
-            pipeline_definition=list(execution_state.pipeline_definition),
-            lane_axis_contexts=lane_axis_contexts,
+        return ExecuteInheritedLane(
+            lane_axis_context_keys=lane_axis_context_keys,
             lane_context=execution_plan.lane_context(worker_slot),
             runtime_observation_mode=execution_plan.runtime_observation_mode,
-        )
-        return lane_results
-
-
-class WorkerConnectionProgressQueue(ProgressQueue):
-    """Write progress in the same ordered stream as this worker's result."""
-
-    def __init__(self, connection: Any):
-        self.connection = connection
-
-    def put(self, progress_update: dict) -> None:
-        self.connection.send(("progress", progress_update))
-
-
-def _execute_prepared_fork_worker_process(
-    connection: Any,
-    inherited_parent_connections: tuple[Any, ...],
-) -> None:
-    """Serve isolated compiled jobs in a process prepared with the server."""
-    WorkerExecutorResources.initialize_process_signals()
-    for inherited_connection in inherited_parent_connections:
-        inherited_connection.close()
-    from openhcs.core.progress import set_progress_queue
-
-    set_progress_queue(WorkerConnectionProgressQueue(connection))
-    connection.send(("result", None))
-    try:
-        while True:
-            command = connection.recv()
-            if command is None:
-                break
-            operation, *arguments = command
-            try:
-                if operation == "execute":
-                    (
-                        payload,
-                        lane_keys,
-                        lane_context,
-                        observation_mode,
-                        log_file_base,
-                    ) = arguments
-                    if log_file_base is not None:
-                        _configure_worker_logging(log_file_base)
-                    execution_bundle = pickle.loads(payload)
-                    ForkInheritedWorkerExecutionState.install(execution_bundle)
-                    profiling_policy = CProfileWorkerProfilingPolicy.from_environment()
-                    with profiling_policy.profile(
-                        execution_id=lane_context.execution_id,
-                        plate_id=lane_context.plate_id,
-                        worker_slot=lane_context.worker_slot,
-                        owned_wells=list(lane_context.owned_wells),
-                    ):
-                        result = _execute_fork_inherited_worker_lane_static(
-                            lane_keys, lane_context, observation_mode
-                        )
-                    connection.send(("result", result))
-                    del result
-                elif operation == "finish":
-                    ForkInheritedWorkerExecutionState.clear()
-                    del execution_bundle
-                    connection.send(("result", None))
-                elif operation == "partition":
-                    func, indexed_requests = arguments
-                    connection.send(
-                        (
-                            "result",
-                            tuple(
-                                (index, func(request))
-                                for index, request in indexed_requests
-                            ),
-                        )
-                    )
-                else:
-                    raise ValueError(f"Unknown prepared worker command {operation!r}.")
-            except Exception as exc:
-                import traceback
-
-                connection.send(("error", exc, traceback.format_exc()))
-    except EOFError:
-        pass
-    finally:
-        ForkInheritedWorkerExecutionState.clear()
-        set_progress_queue(None)
-        connection.close()
+        ).run(None)
 
 
 class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
@@ -867,33 +923,16 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
         if capacity < 1:
             raise ValueError("Prepared worker capacity must be positive.")
         self._capacity = capacity
-        self._available: list[tuple[str, Any, Any]] = []
+        self._available: list[WorkerProcess] = []
         self._ownership_lock = threading.RLock()
         self._closed = False
         self._next_worker_id = 0
 
-    def _start_worker(self) -> tuple[str, Any, Any]:
-        parent, child = self._multiprocessing_context.Pipe()
-        worker_slot = f"prepared_{self._next_worker_id}"
+    def _start_prepared_worker(self) -> WorkerProcess:
+        worker = self.start_worker(f"prepared_{self._next_worker_id}", PrepareWorker())
         self._next_worker_id += 1
-        process = self._multiprocessing_context.Process(
-            target=_execute_prepared_fork_worker_process,
-            args=(
-                child,
-                (parent, *(connection for _, _, connection in self._processes)),
-            ),
-        )
         try:
-            process.start()
-        except BaseException:
-            parent.close()
-            child.close()
-            raise
-        child.close()
-        worker = (worker_slot, process, parent)
-        self._processes.append(worker)
-        try:
-            self._receive_result(*worker)
+            worker.result()
         except BaseException:
             self.release([worker], retire=True)
             raise
@@ -905,44 +944,43 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
         with self._ownership_lock:
             if self._closed:
                 raise RuntimeError("Prepared worker resources are closed.")
-            while len(self._processes) < self._capacity:
-                self._available.append(self._start_worker())
+            while len(self.workers) < self._capacity:
+                self._available.append(self._start_prepared_worker())
 
-    def acquire(self, worker_count: int) -> list[tuple[str, Any, Any]]:
+    def acquire(self, worker_count: int) -> list[WorkerProcess]:
         """Transfer process ownership without locking any execution work."""
         with self._ownership_lock:
             if self._closed:
                 raise RuntimeError("Prepared worker resources are closed.")
             dead_workers = [
-                worker for worker in self._available if not worker[1].is_alive()
+                worker for worker in self._available if not worker.process.is_alive()
             ]
             if dead_workers:
                 self._available = [
-                    worker for worker in self._available if worker[1].is_alive()
+                    worker for worker in self._available if worker.process.is_alive()
                 ]
                 self.release(dead_workers, retire=True)
             while len(self._available) < worker_count:
                 # Larger or concurrent jobs preserve their requested worker count.
                 # Any extra creation is paid inside that job's execution clock.
-                self._available.append(self._start_worker())
+                self._available.append(self._start_prepared_worker())
             workers = self._available[:worker_count]
             del self._available[:worker_count]
             return workers
 
-    def release(self, workers: list[tuple[str, Any, Any]], *, retire: bool) -> None:
+    def release(self, workers: list[WorkerProcess], *, retire: bool) -> None:
         """Return clean processes or retire the exact failed/cancelled lease."""
         with self._ownership_lock:
             for worker in workers:
-                _, process, connection = worker
-                if not retire and not self._closed and process.is_alive():
+                if not retire and not self._closed and worker.process.is_alive():
                     self._available.append(worker)
                     continue
-                if process.is_alive():
-                    process.terminate()
-                process.join()
-                connection.close()
-                self._processes = [
-                    entry for entry in self._processes if entry[1] is not process
+                if worker.process.is_alive():
+                    worker.process.terminate()
+                worker.process.join()
+                worker.connection.close()
+                self.workers = [
+                    owned for owned in self.workers if owned.process is not worker.process
                 ]
 
     def close(self) -> None:
@@ -951,10 +989,10 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
             self._closed = True
             self._available.clear()
             self.cancel()
-            processes, self._processes = self._processes, []
-            for _, process, connection in processes:
-                process.join()
-                connection.close()
+            workers, self.workers = self.workers, []
+            for worker in workers:
+                worker.process.join()
+                worker.connection.close()
 
 
 @dataclass(frozen=True, slots=True)
@@ -968,7 +1006,7 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
     _execution_bundle: CompiledExecutionBundle | None = field(
         default=None, init=False, repr=False, compare=False
     )
-    _processes: list[tuple[str, Any, Any]] = field(
+    _leased: list[WorkerProcess] = field(
         default_factory=list, init=False, repr=False, compare=False
     )
     _retire_workers: bool = field(default=False, init=False, repr=False, compare=False)
@@ -1005,10 +1043,10 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
             )
         self.cancellation.raise_if_requested("before prepared worker checkout")
         lane_items = list(worker_lane_execution_plan.active_lane_items())
-        self._processes.extend(self._runner.acquire(len(lane_items)))
-        submitted: list[tuple[str, Any, Any]] = []
-        for (worker_slot, lane_keys), (_, process, connection) in zip(
-            lane_items, self._processes, strict=True
+        self._leased.extend(self._runner.acquire(len(lane_items)))
+        submitted: list[WorkerProcess] = []
+        for (worker_slot, lane_keys), worker in zip(
+            lane_items, self._leased, strict=True
         ):
             self.cancellation.raise_if_requested("before prepared worker submission")
             payload = pickle.dumps(
@@ -1021,19 +1059,18 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
                 ),
                 protocol=pickle.HIGHEST_PROTOCOL,
             )
-            connection.send(
-                (
-                    "execute",
-                    payload,
-                    lane_keys,
-                    worker_lane_execution_plan.lane_context(worker_slot),
-                    worker_lane_execution_plan.runtime_observation_mode,
-                    self.log_file_base,
+            worker.send(
+                ExecuteShippedLane(
+                    lane_axis_context_keys=lane_keys,
+                    lane_context=worker_lane_execution_plan.lane_context(worker_slot),
+                    runtime_observation_mode=worker_lane_execution_plan.runtime_observation_mode,
+                    bundle_payload=payload,
+                    log_file_base=self.log_file_base,
                 )
             )
-            submitted.append((worker_slot, process, connection))
+            submitted.append(worker)
         results: Dict[str, ExecutionResult] = {}
-        for lane_results in self._collect_results(submitted):
+        for lane_results in self.collect_results(submitted):
             results.update(lane_results)
             for result in lane_results.values():
                 if not result.is_success():
@@ -1043,64 +1080,41 @@ class PreparedForkWorkerExecutorResources(ForkInheritedWorkerExecutorResources):
         return results
 
     @property
-    def partition_worker_processes(self) -> list[tuple[str, Any, Any]]:
-        return self._processes
+    def worker_processes(self) -> list[WorkerProcess]:
+        return self._leased
 
-    def partition_command(
-        self, func: Callable[[object], object], requests: tuple[tuple[int, object], ...]
-    ) -> tuple[object, ...]:
-        return "partition", func, requests
+    def collect_results(self, workers: Sequence[WorkerProcess]) -> Iterable[Any]:
+        """Read results as workers finish, forwarding their progress meanwhile."""
 
-    def _collect_results(self, workers: list[tuple[str, Any, Any]]) -> Iterable[Any]:
-        pending = {
-            connection: (worker_slot, process)
-            for worker_slot, process, connection in workers
-        }
+        pending = {worker.connection: worker for worker in workers}
         while pending:
             for connection in wait_for_worker_connections(tuple(pending)):
-                worker_slot, process = pending[connection]
-                try:
-                    kind, payload, *rest = connection.recv()
-                except EOFError as exc:
-                    process.join()
-                    raise RuntimeError(
-                        f"Prepared worker lane {worker_slot} exited without a result; exitcode={process.exitcode}."
-                    ) from exc
-                if kind == "progress":
-                    self.progress_queue.put(payload)
-                elif kind == "result":
+                result = pending[connection].receive(self.progress_queue)
+                if result is not None:
                     del pending[connection]
-                    yield payload
-                elif kind == "error":
-                    raise RuntimeError(
-                        f"Prepared worker lane {worker_slot} failed: {payload}\n{rest[0]}"
-                    )
-                else:
-                    raise RuntimeError(
-                        f"Prepared worker lane {worker_slot} returned unknown message {kind!r}."
-                    )
+                    yield result.payload
 
     def cancel_execution(self) -> int:
         object.__setattr__(self, "_retire_workers", True)
         self.cancellation.request()
         terminated = 0
-        for _, process, _ in self._processes:
-            if process.is_alive():
-                process.terminate()
+        for worker in self._leased:
+            if worker.process.is_alive():
+                worker.process.terminate()
                 terminated += 1
         return terminated
 
     def shutdown_executor(self) -> None:
-        if not self._processes:
+        if not self._leased:
             return
-        workers = list(self._processes)
-        self._processes.clear()
+        workers = list(self._leased)
+        self._leased.clear()
         retire = self._retire_workers
         if not retire:
             try:
-                for _, _, connection in workers:
-                    connection.send(("finish",))
-                for _ in self._collect_results(workers):
+                for worker in workers:
+                    worker.send(FinishExecution())
+                for _ in self.collect_results(workers):
                     pass
             except BaseException:
                 self._runner.release(workers, retire=True)
@@ -1127,21 +1141,13 @@ class InlineWorkerLaneRunner:
             )
 
         worker_slot, lane_contexts = active_lanes[0]
-        lane_context = execution_plan.lane_context(worker_slot)
-        profiling_policy = CProfileWorkerProfilingPolicy.from_environment()
-        with profiling_policy.profile(
-            execution_id=lane_context.execution_id,
-            plate_id=lane_context.plate_id,
-            worker_slot=lane_context.worker_slot,
-            owned_wells=list(lane_context.owned_wells),
-        ):
-            return execute_worker_lane(
-                pipeline_definition=pipeline_definition,
-                lane_axis_contexts=lane_contexts,
-                lane_context=lane_context,
-                runtime_observation_mode=execution_plan.runtime_observation_mode,
-                cancellation=self._cancellation,
-            )
+        return execute_worker_lane(
+            pipeline_definition=pipeline_definition,
+            lane_axis_contexts=lane_contexts,
+            lane_context=execution_plan.lane_context(worker_slot),
+            runtime_observation_mode=execution_plan.runtime_observation_mode,
+            cancellation=self._cancellation,
+        )
 
 
 class PooledWorkerLaneRunner:
@@ -1179,20 +1185,12 @@ class PooledWorkerLaneRunner:
         self,
         pipeline_definition: List[AbstractStep],
         execution_plan: WorkerLaneExecutionPlan,
-    ) -> Dict[concurrent.futures.Future, tuple[str, List[str]]]:
+    ) -> Dict[concurrent.futures.Future, str]:
         pipeline_definition = FunctionStepTransportAuthority.normalize_pipeline(
             pipeline_definition
         )
-        future_to_worker_slot: Dict[
-            concurrent.futures.Future, tuple[str, List[str]]
-        ] = {}
-        for (
-            worker_slot,
-            lane_contexts,
-        ) in execution_plan.assignments.lane_axis_contexts.items():
-            if not lane_contexts:
-                continue
-            owned_wells = list(execution_plan.assignments.owned_wells(worker_slot))
+        future_to_worker_slot: Dict[concurrent.futures.Future, str] = {}
+        for worker_slot, lane_contexts in execution_plan.active_lane_items():
             try:
                 future = self._executor.submit(
                     execute_worker_lane,
@@ -1203,7 +1201,7 @@ class PooledWorkerLaneRunner:
                     self._cancellation,
                     self._release_axis_resources,
                 )
-                future_to_worker_slot[future] = (worker_slot, owned_wells)
+                future_to_worker_slot[future] = worker_slot
             except Exception as submit_error:
                 logger.error(
                     f"🔥 ORCHESTRATOR ERROR: Failed to submit lane {worker_slot}: {submit_error}",
@@ -1214,9 +1212,7 @@ class PooledWorkerLaneRunner:
 
     def _collect_results(
         self,
-        future_to_worker_slot: Mapping[
-            concurrent.futures.Future, tuple[str, List[str]]
-        ],
+        future_to_worker_slot: Mapping[concurrent.futures.Future, str],
         pipeline_definition: List[AbstractStep],
         execution_plan: WorkerLaneExecutionPlan,
         parent_contexts: Mapping[str, ProcessingContext],
@@ -1224,7 +1220,7 @@ class PooledWorkerLaneRunner:
         execution_results: Dict[str, ExecutionResult] = {}
         lane_errors: list[Exception] = []
         for future in concurrent.futures.as_completed(future_to_worker_slot):
-            worker_slot, owned_wells = future_to_worker_slot[future]
+            worker_slot = future_to_worker_slot[future]
 
             try:
                 lane_results = future.result()
@@ -1234,10 +1230,8 @@ class PooledWorkerLaneRunner:
             except Exception as exc:
                 self._emit_lane_error(
                     exc,
-                    worker_slot=worker_slot,
-                    owned_wells=owned_wells,
+                    lane_context=execution_plan.lane_context(worker_slot),
                     pipeline_definition=pipeline_definition,
-                    execution_plan=execution_plan,
                 )
                 lane_errors.append(exc)
         if lane_errors:
@@ -1250,30 +1244,23 @@ class PooledWorkerLaneRunner:
         self,
         exc: Exception,
         *,
-        worker_slot: str,
-        owned_wells: List[str],
+        lane_context: WorkerLaneExecutionContext,
         pipeline_definition: List[AbstractStep],
-        execution_plan: WorkerLaneExecutionPlan,
     ) -> None:
         import traceback
 
-        if not owned_wells:
-            raise RuntimeError(
-                f"Worker lane {worker_slot} cannot emit an axis error without owned wells."
-            ) from exc
-
         full_traceback = traceback.format_exc()
         error_msg = (
-            f"Worker lane {worker_slot} generated an exception during execution: {exc}"
+            f"Worker lane {lane_context.worker_slot} generated an exception during "
+            f"execution: {exc}"
         )
         logger.error(f"🔥 ORCHESTRATOR ERROR: {error_msg}", exc_info=True)
         logger.error(
-            f"🔥 ORCHESTRATOR FULL TRACEBACK for worker lane {worker_slot}:\n{full_traceback}"
+            f"🔥 ORCHESTRATOR FULL TRACEBACK for worker lane "
+            f"{lane_context.worker_slot}:\n{full_traceback}"
         )
-        emit(
-            execution_id=execution_plan.execution_id,
-            plate_id=execution_plan.plate_id,
-            axis_id=owned_wells[0],
+        lane_context.emit(
+            axis_id=lane_context.owned_partition_values[0],
             step_name=PIPELINE_PROGRESS_STEP_NAME,
             phase=ProgressPhase.AXIS_ERROR,
             status=ProgressStatus.ERROR,
@@ -1282,8 +1269,6 @@ class PooledWorkerLaneRunner:
             percent=0.0,
             error=str(exc),
             traceback=full_traceback,
-            worker_slot=worker_slot,
-            owned_wells=owned_wells,
         )
 
 
@@ -1307,9 +1292,7 @@ def _execute_axis_with_sequential_combinations(
     total_steps = len(pipeline_definition)
     completed_axis_steps = _completed_axis_step_count(first_context, total_steps)
 
-    emit(
-        execution_id=lane_context.execution_id,
-        plate_id=lane_context.plate_id,
+    lane_context.emit(
         axis_id=axis_id,
         step_name=PIPELINE_PROGRESS_STEP_NAME,
         phase=ProgressPhase.AXIS_STARTED,
@@ -1317,8 +1300,6 @@ def _execute_axis_with_sequential_combinations(
         completed=0,
         total=total_steps,
         percent=0.0,
-        worker_slot=lane_context.worker_slot,
-        owned_wells=list(lane_context.owned_wells),
     )
 
     runtime_observations: list[RuntimeContextObservation] = []
@@ -1372,9 +1353,7 @@ def _execute_axis_with_sequential_combinations(
             logger.error(
                 f"🔄 WORKER: Combination {context_key} failed for axis {axis_id}"
             )
-            emit(
-                execution_id=lane_context.execution_id,
-                plate_id=lane_context.plate_id,
+            lane_context.emit(
                 axis_id=axis_id,
                 step_name=PIPELINE_PROGRESS_STEP_NAME,
                 phase=(
@@ -1391,8 +1370,6 @@ def _execute_axis_with_sequential_combinations(
                 total=total_steps,
                 percent=0.0,
                 message=result.error_message,
-                worker_slot=lane_context.worker_slot,
-                owned_wells=list(lane_context.owned_wells),
             )
             return replace(
                 result,
@@ -1402,9 +1379,7 @@ def _execute_axis_with_sequential_combinations(
                 ),
             )
 
-    emit(
-        execution_id=lane_context.execution_id,
-        plate_id=lane_context.plate_id,
+    lane_context.emit(
         axis_id=axis_id,
         step_name=PIPELINE_PROGRESS_STEP_NAME,
         phase=ProgressPhase.AXIS_COMPLETED,
@@ -1412,8 +1387,6 @@ def _execute_axis_with_sequential_combinations(
         completed=completed_axis_steps,
         total=total_steps,
         percent=(completed_axis_steps / total_steps) * 100.0,
-        worker_slot=lane_context.worker_slot,
-        owned_wells=list(lane_context.owned_wells),
     )
     return ExecutionResult.success(
         axis_id=axis_id,
@@ -1461,7 +1434,7 @@ def _completed_axis_step_count(
     context: ProcessingContext,
     total_steps: int,
 ) -> int:
-    """Return the pipeline position where terminal plate processing begins."""
+    """Return the pipeline position where terminal dataset-scoped processing begins."""
 
     return min(
         (
@@ -1559,9 +1532,7 @@ def _execute_single_axis_static(
                         materialized_locations_by_address=reused_outputs.materialized_locations_by_address,
                     )
                     frozen_context.record_completed_step_outputs(reused_outputs)
-                    emit(
-                        execution_id=lane_context.execution_id,
-                        plate_id=lane_context.plate_id,
+                    lane_context.emit(
                         axis_id=axis_id,
                         step_name=step_name,
                         phase=ProgressPhase.STEP_COMPLETED,
@@ -1569,16 +1540,12 @@ def _execute_single_axis_static(
                         completed=step_index + 1,
                         total=total_steps,
                         percent=((step_index + 1) / total_steps) * 100.0,
-                        worker_slot=lane_context.worker_slot,
-                        owned_wells=list(lane_context.owned_wells),
                         message="Reused warm debug artifacts",
                         context=runtime_progress_context,
                     )
                 continue
 
-            emit(
-                execution_id=lane_context.execution_id,
-                plate_id=lane_context.plate_id,
+            lane_context.emit(
                 axis_id=axis_id,
                 step_name=step_name,
                 phase=ProgressPhase.STEP_STARTED,
@@ -1586,8 +1553,6 @@ def _execute_single_axis_static(
                 completed=step_index,
                 total=total_steps,
                 percent=(step_index / total_steps) * 100.0,
-                worker_slot=lane_context.worker_slot,
-                owned_wells=list(lane_context.owned_wells),
             )
 
             observation_cursor = runtime_value_store.observation_cursor()
@@ -1601,9 +1566,7 @@ def _execute_single_axis_static(
                 materialized_locations_by_address=step_observation.materialized_locations_by_address,
             )
 
-            emit(
-                execution_id=lane_context.execution_id,
-                plate_id=lane_context.plate_id,
+            lane_context.emit(
                 axis_id=axis_id,
                 step_name=step_name,
                 phase=ProgressPhase.STEP_COMPLETED,
@@ -1611,8 +1574,6 @@ def _execute_single_axis_static(
                 completed=step_index + 1,
                 total=total_steps,
                 percent=((step_index + 1) / total_steps) * 100.0,
-                worker_slot=lane_context.worker_slot,
-                owned_wells=list(lane_context.owned_wells),
                 context=runtime_progress_context,
             )
             if lane_context.debug_execution_policy.step_stop_strategy().should_stop_after_step(
@@ -1668,12 +1629,14 @@ def execute_worker_lane(
     cancellation: ExecutionCancellationSignal | None = None,
     release_axis_resources: bool = True,
 ) -> Dict[str, ExecutionResult]:
-    """Execute a deterministic worker lane: wells sequentially within one slot."""
+    """Execute a deterministic worker lane: its partitions in order, in one slot."""
 
-    with RuntimeProfileLogger.run(
+    with CProfileWorkerProfilingPolicy.from_environment().profile(
+        lane_context
+    ), RuntimeProfileLogger.run(
         execution_id=lane_context.execution_id,
         worker_slot=lane_context.worker_slot,
-        owned_wells=tuple(lane_context.owned_wells),
+        owned_partition_values=tuple(lane_context.owned_partition_values),
     ):
         lane_results: Dict[str, ExecutionResult] = {}
         for axis_id, axis_contexts in lane_axis_contexts:
@@ -1697,21 +1660,3 @@ def execute_worker_lane(
             if lane_results[axis_id].is_cancelled():
                 break
         return lane_results
-
-
-def _execute_fork_inherited_worker_lane_static(
-    lane_axis_context_keys: List[tuple[str, List[str]]],
-    lane_context: WorkerLaneExecutionContext,
-    runtime_observation_mode: RuntimeObservationMode,
-) -> Dict[str, ExecutionResult]:
-    """Execute a worker lane using fork-inherited compiled contexts."""
-
-    execution_bundle = ForkInheritedWorkerExecutionState.require_current()
-    return execute_worker_lane(
-        pipeline_definition=list(execution_bundle.pipeline_definition),
-        lane_axis_contexts=ForkInheritedWorkerExecutionState.resolve_lane_contexts(
-            lane_axis_context_keys
-        ),
-        lane_context=lane_context,
-        runtime_observation_mode=runtime_observation_mode,
-    )

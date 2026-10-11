@@ -143,8 +143,8 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     assert isinstance(handler, OpenHCSDatasetSource)
     handler.initialize_workspace(workspace, filemanager)
     cache = VirtualWorkspaceSourceProjectionCache()
-    full = WorkspaceSourceProjections.from_plate_metadata(
-        plate_path=workspace, metadata_handler=handler.metadata_handler,
+    full = WorkspaceSourceProjections.from_dataset_metadata(
+        dataset_root=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache,
     ).projection_or_empty()
     admissions = []
@@ -153,8 +153,8 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         admissions.append(projection)
         return original_admit(projector, projection)
     monkeypatch.setattr(SourceBindingWorkspaceProjector, "accept_prepared_projection", observe_admission)
-    selected = WorkspaceSourceProjections.from_plate_metadata(
-        plate_path=workspace, metadata_handler=handler.metadata_handler,
+    selected = WorkspaceSourceProjections.from_dataset_metadata(
+        dataset_root=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache, source_bindings=config,
     ).projection_or_empty()
     assert set(selected.component_values(Microscopy.Site)) == set(map(str, expected_sites))
@@ -168,7 +168,7 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     assert len(full.pipeline_start_files()) == 18
     from openhcs.core.context.processing_context import ProcessingContext
     context = ProcessingContext(filemanager=filemanager, axis_id="A01")
-    context.plate_path = workspace
+    context.dataset_root = workspace
     context.microscope_handler = handler
     from openhcs.core import source_workspace_projection
     monkeypatch.setattr(source_workspace_projection, "DEFAULT_SOURCE_PROJECTION_CACHE", cache)
@@ -178,12 +178,12 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     assert runtime_projection.pipeline_start_files() == selected.pipeline_start_files()
     assert not hasattr(context, "runtime_source_workspace_projection_cache")
     other = ProcessingContext(filemanager=filemanager, axis_id="A01")
-    other.plate_path = workspace
+    other.dataset_root = workspace
     other.microscope_handler = handler
     assert context.runtime_source_workspace_projections.cache is other.runtime_source_workspace_projections.cache is cache
     assert other.runtime_source_workspace_projections.projection_or_empty() is selected
-    equivalent = WorkspaceSourceProjections.from_plate_metadata(
-        plate_path=workspace, metadata_handler=handler.metadata_handler,
+    equivalent = WorkspaceSourceProjections.from_dataset_metadata(
+        dataset_root=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache, source_bindings=replace(config),
     ).projection_or_empty()
     assert equivalent is selected
@@ -237,8 +237,8 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     }
     assert materialization.metadata_path.read_bytes() == original_bytes
     with pytest.raises(ValueError, match="matched no prepared workspace sources"):
-        WorkspaceSourceProjections.from_plate_metadata(
-            plate_path=workspace, metadata_handler=handler.metadata_handler,
+        WorkspaceSourceProjections.from_dataset_metadata(
+            dataset_root=workspace, metadata_handler=handler.metadata_handler,
             filemanager=filemanager, source_bindings=SourceBindingsConfig(source_filters=(
                 SourceFilterClause(subject=SourceFilterSubject.FILE,
                                   match_type=SourceFilterMatchType.CONTAINS,

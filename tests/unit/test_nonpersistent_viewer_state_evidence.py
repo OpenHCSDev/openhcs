@@ -1,3 +1,4 @@
+from openhcs.core.progress import ProgressExecutionContext
 from types import SimpleNamespace
 
 from zmqruntime.messages import (
@@ -7,10 +8,10 @@ from zmqruntime.messages import (
     ResponseType,
 )
 
-from openhcs.core.execution_state import ExecutionOutputPlateSummary
-from openhcs.core.orchestrator.compiled_plate_execution import (
-    CompiledPlateExecutionExtras,
-    CompiledPlateExecutionResults,
+from openhcs.core.execution_state import ExecutionOutputSummary
+from openhcs.core.orchestrator.bundle_execution import (
+    BundleExecutionExtras,
+    BundleExecutionResults,
 )
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
@@ -45,9 +46,9 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
             ),
         }
     )
-    compiled_results = CompiledPlateExecutionResults(
+    compiled_results = BundleExecutionResults(
         {"A01": ExecutionResult.success("A01")},
-        extras=CompiledPlateExecutionExtras(viewer_states_by_port={5563: response}),
+        extras=BundleExecutionExtras(viewer_states_by_port={5563: response}),
     )
 
     class ProgressQueue:
@@ -73,7 +74,7 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
     execution_calls = []
 
     class Orchestrator:
-        def execute_compiled_plate(self, **kwargs):
+        def execute_compiled_bundle(self, **kwargs):
             execution_calls.append(kwargs)
             return compiled_results
 
@@ -90,7 +91,10 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
         orchestrator=Orchestrator(),
         execution_bundle=execution_bundle,
         runtime_observation_mode=RuntimeObservationMode.OMIT,
-        progress_context={"execution_id": "exec", "plate_id": "plate"},
+        progress_context=ProgressExecutionContext(
+            execution_id="exec",
+            subject_id="plate",
+        ),
         debug_execution_policy=object(),
         active_execution_record=record,
         forward_worker_progress=lambda _queue: None,
@@ -99,17 +103,17 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
     assert returned is compiled_results
     assert execution_calls[0]["runtime_observation_mode"] is RuntimeObservationMode.OMIT
     assert progress_queue.values == [None]
-    assert record.get_extra(CompiledPlateExecutionExtras.EXECUTION_RECORD_KEY) is (
+    assert record.get_extra(BundleExecutionExtras.EXECUTION_RECORD_KEY) is (
         compiled_results.extras
     )
 
     record.status = ExecutionStatus.COMPLETE.value
     record.results_summary = {"well_count": 1, "wells": ["A01"]}
-    output_plate = ExecutionOutputPlateSummary(
-        output_plate_root="/tmp/output",
-        auto_add_output_plate_to_plate_manager=True,
+    output_dataset = ExecutionOutputSummary(
+        output_dataset_root="/tmp/output",
+        auto_add_output_dataset=True,
     )
-    record.set_extra(output_plate.EXECUTION_RECORD_KEY, output_plate)
+    record.set_extra(output_dataset.EXECUTION_RECORD_KEY, output_dataset)
     status_response = {
         MessageFields.STATUS: ResponseType.OK.value,
         MessageFields.EXECUTION: record.to_dict(),
@@ -120,9 +124,9 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
     )
 
     summary = enriched[MessageFields.EXECUTION][MessageFields.RESULTS_SUMMARY]
-    assert summary["output_plate_root"] == "/tmp/output"
-    assert summary["auto_add_output_plate_to_plate_manager"] is True
-    states_by_port = summary[CompiledPlateExecutionExtras.RESULTS_SUMMARY_KEY]
+    assert summary["output_dataset_root"] == "/tmp/output"
+    assert summary["auto_add_output_dataset"] is True
+    states_by_port = summary[BundleExecutionExtras.RESULTS_SUMMARY_KEY]
     state_payload = states_by_port["5563"]["payload"]
     layer = state_payload["layers"][0]
     assert layer["route_key"] == "step-2:objects"

@@ -1587,8 +1587,8 @@ class OpenHCSDatasetSource(PreparedWorkspaceSource, DatasetSource):
         if self._source_bindings_config is not None:
             from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 
-            projection = WorkspaceSourceProjections.from_plate_metadata(
-                plate_path=plate_path,
+            projection = WorkspaceSourceProjections.from_dataset_metadata(
+                dataset_root=plate_path,
                 metadata_handler=self.metadata_handler,
                 filemanager=filemanager,
                 source_bindings=self._source_bindings_config,

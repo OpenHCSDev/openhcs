@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from openhcs.core.debug import NoOpDebugExecutionPolicy
+from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.orchestrator.worker_profiling import (
     CProfileWorkerProfilingPolicy,
     DisabledWorkerProfilingPolicy,
@@ -18,13 +20,14 @@ from openhcs.core.orchestrator.worker_profiling import (
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 
-def profile_arguments():
-    return {
-        "execution_id": "execution",
-        "plate_id": "plate",
-        "worker_slot": "worker_0",
-        "owned_wells": ["W001"],
-    }
+def lane() -> WorkerLaneExecutionContext:
+    return WorkerLaneExecutionContext(
+        execution_id="execution",
+        subject_id="plate",
+        debug_execution_policy=NoOpDebugExecutionPolicy(),
+        worker_slot="worker_0",
+        worker_assignments={"worker_0": ("W001",)},
+    )
 
 
 def test_disabled_profiling_does_not_claim_an_event_lease(monkeypatch):
@@ -64,14 +67,14 @@ def test_profile_excludes_concurrent_polling_and_cleans_up(
         if raises:
             with (
                 pytest.raises(ValueError, match="execution failed"),
-                policy.profile(**profile_arguments()),
+                policy.profile(lane()),
             ):
                 active.set()
                 owning_thread_operation()
                 assert observed.wait(1)
                 raise ValueError("execution failed")
         else:
-            with policy.profile(**profile_arguments()):
+            with policy.profile(lane()):
                 active.set()
                 owning_thread_operation()
                 assert observed.wait(1)
@@ -101,7 +104,7 @@ def test_profile_excludes_concurrent_polling_and_cleans_up(
                     is None
                 )
     # A subsequent profile must acquire a fresh clean lease.
-    with policy.profile(**profile_arguments()):
+    with policy.profile(lane()):
         owning_thread_operation()
 
 
@@ -117,7 +120,7 @@ def test_profile_event_setup_failure_releases_lease(monkeypatch, tmp_path):
     monkeypatch.setattr(type(policy), "configure_profile_event_scope", fail_setup)
     with (
         pytest.raises(RuntimeError, match="cannot bind events"),
-        policy.profile(**profile_arguments()),
+        policy.profile(lane()),
     ):
         raise AssertionError("profile body must not run")
     assert next(tmp_path.glob("*.prof")).is_file()
@@ -131,6 +134,8 @@ import json,pstats,threading,time
 import openhcs
 from numba import njit
 from openhcs.core.orchestrator.worker_profiling import CProfileWorkerProfilingPolicy
+from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
+from openhcs.core.debug import NoOpDebugExecutionPolicy
 @njit(nogil=True)
 def profiled_kernel(n):
     value=0.
@@ -143,7 +148,7 @@ def foreign_polling_thread():
 thread=threading.Thread(target=foreign_polling_thread);thread.start()
 policy=CProfileWorkerProfilingPolicy.from_environment()
 try:
-    with policy.profile(execution_id='kernel',plate_id='plate',worker_slot='worker_0',owned_wells=['W001']):
+    with policy.profile(WorkerLaneExecutionContext(execution_id='kernel',subject_id='plate',debug_execution_policy=NoOpDebugExecutionPolicy(),worker_slot='worker_0',worker_assignments={'worker_0':('W001',)})):
         for _ in range(10):profiled_kernel(1_000_000)
 finally:
     stop.set();thread.join()

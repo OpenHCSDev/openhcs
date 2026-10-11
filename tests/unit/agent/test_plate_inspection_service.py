@@ -552,7 +552,7 @@ def test_plate_file_query_reads_path_planned_results_for_source_plate(
             output_dir_suffix="_explicit_test_results",
         )
     )
-    output_root = PathPlannerPathAuthority.build_output_plate_root(
+    output_root = PathPlannerPathAuthority.build_output_dataset_root(
         plate,
         config.path_planning_config,
     )
@@ -1589,19 +1589,19 @@ def test_plate_file_query_resolves_source_projection_once(
 ) -> None:
     plate = ImageXpressPlateFixture.write(tmp_path)
     source_projection_resolution_count = 0
-    original_from_plate_metadata = (
-        WorkspaceSourceProjections.from_plate_metadata.__func__
+    original_from_dataset_metadata = (
+        WorkspaceSourceProjections.from_dataset_metadata.__func__
     )
 
-    def counted_from_plate_metadata(cls, **kwargs):
+    def counted_from_dataset_metadata(cls, **kwargs):
         nonlocal source_projection_resolution_count
         source_projection_resolution_count += 1
-        return original_from_plate_metadata(cls, **kwargs)
+        return original_from_dataset_metadata(cls, **kwargs)
 
     monkeypatch.setattr(
         WorkspaceSourceProjections,
-        "from_plate_metadata",
-        classmethod(counted_from_plate_metadata),
+        "from_dataset_metadata",
+        classmethod(counted_from_dataset_metadata),
     )
     service = PlateInspectionService(
         AgentPathPolicy.with_roots(

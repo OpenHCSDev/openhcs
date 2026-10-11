@@ -13,33 +13,33 @@ from openhcs.constants.constants import OrchestratorState
 
 
 @dataclass(frozen=True, slots=True)
-class ExecutionOutputPlateSummary:
+class ExecutionOutputSummary:
     """Typed OpenHCS output-plate fields embedded in a runtime result summary."""
 
-    EXECUTION_RECORD_KEY: ClassVar[str] = "output_plate_summary"
+    EXECUTION_RECORD_KEY: ClassVar[str] = "output_summary"
 
-    output_plate_root: str | None = None
-    auto_add_output_plate_to_plate_manager: bool | None = None
+    output_dataset_root: str | None = None
+    auto_add_output_dataset: bool | None = None
 
     def __post_init__(self) -> None:
-        if self.output_plate_root is not None and not isinstance(
-            self.output_plate_root,
+        if self.output_dataset_root is not None and not isinstance(
+            self.output_dataset_root,
             str,
         ):
-            raise TypeError("output_plate_root must be a string or None")
-        if self.auto_add_output_plate_to_plate_manager is not None and not isinstance(
-            self.auto_add_output_plate_to_plate_manager,
+            raise TypeError("output_dataset_root must be a string or None")
+        if self.auto_add_output_dataset is not None and not isinstance(
+            self.auto_add_output_dataset,
             bool,
         ):
             raise TypeError(
-                "auto_add_output_plate_to_plate_manager must be a bool or None"
+                "auto_add_output_dataset must be a bool or None"
             )
 
     @classmethod
     def from_results_summary(
         cls,
         summary: Mapping[str, Any],
-    ) -> ExecutionOutputPlateSummary:
+    ) -> ExecutionOutputSummary:
         return cls(
             **{
                 declared_field.name: summary[declared_field.name]
@@ -65,17 +65,17 @@ class ExecutionCompletionPayload:
     status: TerminalExecutionStatus
     execution_id: str | None
     results: Mapping[str, Any]
-    output_plate: ExecutionOutputPlateSummary
+    output_dataset: ExecutionOutputSummary
     traceback_text: str
     message: str
 
     @property
-    def output_plate_root(self) -> str | None:
-        return self.output_plate.output_plate_root
+    def output_dataset_root(self) -> str | None:
+        return self.output_dataset.output_dataset_root
 
     @property
-    def auto_add_output_plate_to_plate_manager(self) -> bool | None:
-        return self.output_plate.auto_add_output_plate_to_plate_manager
+    def auto_add_output_dataset(self) -> bool | None:
+        return self.output_dataset.auto_add_output_dataset
 
     @classmethod
     def completed(
@@ -92,7 +92,7 @@ class ExecutionCompletionPayload:
             status=status,
             execution_id=execution_id,
             results=results,
-            output_plate=ExecutionOutputPlateSummary.from_results_summary(results),
+            output_dataset=ExecutionOutputSummary.from_results_summary(results),
             traceback_text="",
             message="Execution completed",
         )
@@ -110,7 +110,7 @@ class ExecutionCompletionPayload:
             status=status,
             execution_id=execution_id,
             results={},
-            output_plate=ExecutionOutputPlateSummary(),
+            output_dataset=ExecutionOutputSummary(),
             traceback_text=str(execution_payload.get(MessageFields.TRACEBACK, "")),
             message=str(execution_payload.get(MessageFields.ERROR, "Unknown error")),
         )
@@ -129,7 +129,7 @@ class ExecutionCompletionPayload:
             status=status,
             execution_id=execution_id,
             results={},
-            output_plate=ExecutionOutputPlateSummary(),
+            output_dataset=ExecutionOutputSummary(),
             traceback_text="",
             message="Execution was cancelled",
         )
@@ -237,7 +237,7 @@ class TerminalExecutionStatus(str, Enum):
     orchestrator_state: OrchestratorState
     status_prefix: str
     emit_failure: bool
-    auto_add_output_plate: bool
+    auto_add_output_dataset: bool
     serialized_aliases: frozenset[str]
 
     COMPLETE = (
@@ -278,7 +278,7 @@ class TerminalExecutionStatus(str, Enum):
         orchestrator_state: OrchestratorState,
         status_prefix: str,
         emit_failure: bool,
-        auto_add_output_plate: bool,
+        auto_add_output_dataset: bool,
         serialized_aliases: frozenset[str],
         completion_factory: Callable[
             [TerminalExecutionStatus, str | None, Mapping[str, Any]],
@@ -291,7 +291,7 @@ class TerminalExecutionStatus(str, Enum):
         obj.orchestrator_state = orchestrator_state
         obj.status_prefix = status_prefix
         obj.emit_failure = emit_failure
-        obj.auto_add_output_plate = auto_add_output_plate
+        obj.auto_add_output_dataset = auto_add_output_dataset
         obj.serialized_aliases = serialized_aliases
         obj._completion_factory = completion_factory
         return obj

@@ -76,7 +76,7 @@ class ProcessingContext:
         axis_id: Identifier of the multiprocessing axis value being processed.
         filemanager: Instance of FileManager for VFS operations.
         post_execute_hooks: Domain hooks bound for this compilation.
-        output_plate_root: Planned runtime output plate root.
+        output_dataset_root: Planned runtime output plate root.
         pipeline_sequential_mode: Flag indicating pipeline-wide vs step-wide sequential processing.
         pipeline_sequential_combinations: Pre-computed sequential combinations for pipeline-wide mode.
         current_sequential_combination: Active combination during pipeline-wide sequential execution.
@@ -97,7 +97,7 @@ class ProcessingContext:
         filemanager: FileManager | None = None,
         tiff_config: TiffConfig | None = None,
         post_execute_hooks: "tuple[PostExecuteHook, ...]" = (),
-        output_plate_root: str | None = None,
+        output_dataset_root: str | None = None,
         transport_config: ZMQConfig = OPENHCS_ZMQ_CONFIG,
     ):
         """
@@ -108,7 +108,7 @@ class ProcessingContext:
             axis_id: Identifier of the multiprocessing axis value being processed.
             filemanager: FileManager instance for VFS operations.
             post_execute_hooks: Domain hooks bound for this compilation.
-            output_plate_root: Planned runtime output plate root.
+            output_dataset_root: Planned runtime output plate root.
         """
         self._is_frozen = False
 
@@ -134,13 +134,13 @@ class ProcessingContext:
         self.microscope_handler = None
         self.input_dir = None
         self.workspace_path = None
-        self.plate_path = None
+        self.dataset_root = None
         self.required_visualizers: list[RequiredVisualizer] = []
         self.step_axis_filters: StepAxisFilterMap = {}
         self.metadata_cache: dict[str, dict[str, str | None]] | None = None
         self.tiff_config = tiff_config if tiff_config is not None else TiffConfig()
         self.post_execute_hooks = tuple(post_execute_hooks)
-        self.output_plate_root = output_plate_root
+        self.output_dataset_root = output_dataset_root
         self.transport_config = transport_config
 
         self.execution_runtime: WorkerLaneExecutionContext | None = None

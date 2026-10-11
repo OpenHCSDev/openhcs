@@ -130,7 +130,7 @@ def _compile(root: Path, results: Path, main_filter=0):
     plate = _plate(root / "source")
     config = PipelineConfig(
         materialization_results_path=results,
-        path_planning_config=LazyPathPlanningConfig(output_dir_suffix="_out", well_filter=main_filter),
+        path_planning_config=LazyPathPlanningConfig(output_dir_suffix="_out", partition_filter=main_filter),
         processing_config=LazyProcessingConfig(
             group_by=Microscopy.Channel,
             variable_components=[Microscopy.Site],
@@ -166,7 +166,7 @@ def test_converted_checkpoint_has_typed_address_on_final_reconciliation(tmp_path
     for context in bundle.runtime_contexts.values():
         for index, step in enumerate(steps):
             step.process(context, index)
-    OpenHCSMetadataTarget.finalize_completed_plate(bundle.runtime_contexts)
+    OpenHCSMetadataTarget.finalize_completed_dataset(bundle.runtime_contexts)
     saved = tmp_path / "source_out" / "converted"
     files = tuple(saved.glob("*.tif"))
     assert len(files) == 1
@@ -217,7 +217,7 @@ def test_planning_preserves_symlinked_plate_identity(tmp_path):
     _orchestrator, _steps, bundle = _compile(alias, Path("results"))
     for context in bundle.runtime_contexts.values():
         for plan in context.step_plans.values():
-            assert Path(plan.analysis_results_dir).is_relative_to(plan.output_plate_root)
+            assert Path(plan.analysis_results_dir).is_relative_to(plan.output_dataset_root)
 
 
 def test_planning_rejects_symlinked_results_escape(tmp_path):

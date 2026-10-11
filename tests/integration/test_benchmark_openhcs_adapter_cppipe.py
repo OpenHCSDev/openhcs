@@ -75,7 +75,7 @@ def test_openhcs_adapter_retains_declared_path_policy_and_explicit_exports(
     adapter = OpenHCSAdapter(
         execution_port=18000 + os.getpid() % 20000,
         global_config=GlobalPipelineConfig(
-            path_planning_config=PathPlanningConfig(well_filter=0),
+            path_planning_config=PathPlanningConfig(partition_filter=0),
         ),
     )
 
@@ -99,7 +99,7 @@ def test_openhcs_adapter_retains_declared_path_policy_and_explicit_exports(
         (output_dir / "submitted_global_config.py").read_text(encoding="utf-8"),
         expected_config_type=GlobalPipelineConfig,
     )
-    assert submitted_config.path_planning_config.well_filter == 0
+    assert submitted_config.path_planning_config.partition_filter == 0
     tiff_outputs = tuple(
         path
         for path in result.output_path.rglob("*")

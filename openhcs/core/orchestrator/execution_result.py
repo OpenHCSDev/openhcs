@@ -114,7 +114,7 @@ class RuntimeObservationMode(Enum):
     """Controls whether worker runtime records are returned to the parent."""
 
     MERGE_INTO_PARENT = "merge_into_parent"
-    MERGE_PLATE_INPUTS = "merge_plate_inputs"
+    MERGE_DATASET_INPUTS = "merge_dataset_inputs"
     OMIT = "omit"
 
     @property
@@ -131,10 +131,10 @@ class RuntimeObservationMode(Enum):
     def for_compiled_bundle(
         cls, bundle: "CompiledExecutionBundle"
     ) -> "RuntimeObservationMode":
-        """Consolidation carries rendered tables; only plate inputs need records."""
+        """Consolidation carries rendered tables; only dataset-scoped inputs need records."""
 
         if bundle.requires_parent_runtime_observation:
-            return cls.MERGE_PLATE_INPUTS
+            return cls.MERGE_DATASET_INPUTS
         return cls.OMIT
 
     def including_parent_requirement(

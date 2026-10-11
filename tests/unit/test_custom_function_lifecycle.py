@@ -65,7 +65,7 @@ def test_custom_plate_uses_native_abi_projection_and_source_lifecycle(
     assert not contract.declared_memory_types
     assert contract.processing_contract is None
     assert metadata.tags == ["openhcs", "custom"]
-    FuncStepContractValidator.validate_plate_callable_contracts((contract,), "engineering")
+    FuncStepContractValidator.validate_dataset_callable_contracts((contract,), "engineering")
     reference = FunctionReferenceTransportAuthority.function_reference(function)
     assert reference.resolve() is function
 

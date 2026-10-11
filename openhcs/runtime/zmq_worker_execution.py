@@ -12,12 +12,13 @@ from zmqruntime.messages import ExecutionStatus
 
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
-from openhcs.core.orchestrator.compiled_plate_execution import (
-    CompiledPlateExecutionExtras,
-    CompiledPlateExecutionResults,
+from openhcs.core.orchestrator.bundle_execution import (
+    BundleExecutionExtras,
+    BundleExecutionResults,
 )
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.worker_execution import PreparedForkWorkerLaneRunner
+from openhcs.core.progress import ProgressExecutionContext
 from openhcs.core.xdg_paths import get_openhcs_log_dir
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class ZMQWorkerExecutionRequest:
     orchestrator: Any
     execution_bundle: CompiledExecutionBundle
     runtime_observation_mode: RuntimeObservationMode
-    progress_context: dict[str, Any]
+    progress_context: ProgressExecutionContext
     debug_execution_policy: Any
     active_execution_record: Any
     forward_worker_progress: Callable[[Any], None]
@@ -65,8 +66,8 @@ class ZMQWorkerExecutionRequest:
                 self.execution_id,
                 len(execution_bundle.pipeline_definition),
             )
-            execution_results: CompiledPlateExecutionResults = (
-                self.orchestrator.execute_compiled_plate(
+            execution_results: BundleExecutionResults = (
+                self.orchestrator.execute_compiled_bundle(
                     execution_bundle=execution_bundle,
                     log_file_base=str(
                         ExecutionWorkerLogIdentity.base_path(
@@ -82,7 +83,7 @@ class ZMQWorkerExecutionRequest:
                 )
             )
             self.active_execution_record.set_extra(
-                CompiledPlateExecutionExtras.EXECUTION_RECORD_KEY,
+                BundleExecutionExtras.EXECUTION_RECORD_KEY,
                 execution_results.extras,
             )
             return execution_results

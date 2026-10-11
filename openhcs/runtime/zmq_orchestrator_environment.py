@@ -17,7 +17,7 @@ class ZMQOrchestratorEnvironment:
 
     debug_execution_policy: DebugExecutionPolicy
     debug_execution_config: DebugExecutionConfig | None
-    plate_path_str: str
+    dataset_root: str
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -41,15 +41,15 @@ class ZMQOrchestratorEnvironmentRequest(ZMQExecutionIdentity):
         return ZMQOrchestratorEnvironment(
             debug_execution_policy=debug_execution_policy,
             debug_execution_config=self.debug_execution_config,
-            plate_path_str=self.prepared_plate_path(storage_registry),
+            dataset_root=self.prepared_dataset_root(storage_registry),
         )
 
-    def prepared_plate_path(self, storage_registry) -> str:
+    def prepared_dataset_root(self, storage_registry) -> str:
         from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
 
-        plate_path_str = str(
-            self.plate_id if self.execution_plate_id is None else self.execution_plate_id
+        dataset_root = str(
+            self.subject_id if self.execution_subject_id is None else self.execution_subject_id
         )
-        return DatasetRootRule.for_dataset(plate_path_str).prepare_storage(
-            plate_path_str, storage_registry
+        return DatasetRootRule.for_dataset(dataset_root).prepare_storage(
+            dataset_root, storage_registry
         )

@@ -116,7 +116,7 @@ def _streaming_context(
         parser=SourceSchemaFilenameParser(),
         source_name="runtime_validation",
     )
-    context.plate_path = Path("/tmp/plate")
+    context.dataset_root = Path("/tmp/plate")
     return context
 
 

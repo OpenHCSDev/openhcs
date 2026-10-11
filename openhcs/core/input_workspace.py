@@ -58,7 +58,7 @@ class InputWorkspacePreparationResult:
     """Prepared input workspace plus optional external pipeline import product."""
 
     original_source_root: Path
-    execution_plate_path: Path
+    execution_dataset_root: Path
     pipeline_path: Path | None = None
     pipeline_steps: list[FunctionStep] | None = None
     pipeline_config: PipelineConfig | None = None
@@ -70,7 +70,7 @@ class InputWorkspacePreparationResult:
             self, "original_source_root", Path(self.original_source_root)
         )
         object.__setattr__(
-            self, "execution_plate_path", Path(self.execution_plate_path)
+            self, "execution_dataset_root", Path(self.execution_dataset_root)
         )
         if self.pipeline_path is not None:
             object.__setattr__(self, "pipeline_path", Path(self.pipeline_path))

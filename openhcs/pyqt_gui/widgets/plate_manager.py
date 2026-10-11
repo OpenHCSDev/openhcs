@@ -326,7 +326,7 @@ class PlateManagerWidget(
     def _(self, event: LiveMeasurementAvailable) -> None:
         if self.live_measurements_window is not None:
             self.live_measurements_window.set_orchestrator(
-                self.results_orchestrator(event.notification.event.plate_id)
+                self.results_orchestrator(event.notification.event.subject_id)
             )
             self.live_measurements_window.refresh(select_latest=True)
 

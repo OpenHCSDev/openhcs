@@ -102,7 +102,7 @@ def test_dispatcher_notifies_source_root_without_self_flash(qapp) -> None:
             return False
 
     class FakeRoot:
-        field_id = "step_well_filter_config"
+        field_id = "step_partition_filter_config"
         scope_id = "plate"
         before_mutation = None
         _parent_manager = None
@@ -141,21 +141,21 @@ def test_dispatcher_notifies_source_root_without_self_flash(qapp) -> None:
 
     try:
         FieldChangeDispatcher.instance().dispatch(
-            FieldChangeEvent("well_filter", "B02", manager)
+            FieldChangeEvent("partition_filter", "B02", manager)
         )
         loop = QEventLoop()
         QTimer.singleShot(240, loop.quit)
         loop.exec()
 
-        assert manager.state.updated == [("step_well_filter_config.well_filter", "B02")]
-        assert manager.synced == ["well_filter"]
+        assert manager.state.updated == [("step_partition_filter_config.partition_filter", "B02")]
+        assert manager.synced == ["partition_filter"]
         assert manager.flash_requests == []
         assert manager.live_refreshes == 1
         assert manager.parameter_changed.emissions == [
-            ("step_well_filter_config.well_filter", "B02")
+            ("step_partition_filter_config.partition_filter", "B02")
         ]
         assert manager.context_changed.emissions == [
-            ("plate", "step_well_filter_config.well_filter")
+            ("plate", "step_partition_filter_config.partition_filter")
         ]
     finally:
         ObjectStateRegistry._change_callbacks[:] = previous_callbacks
@@ -247,7 +247,7 @@ def test_chrome_sync_refreshes_widgets_by_exact_objectstate_path() -> None:
         ) -> None:
             self.field_id = field_id
             self.state = state
-            self.widgets = {"well_filter": FakeWidget()}
+            self.widgets = {"partition_filter": FakeWidget()}
             self.nested_managers = {}
             self._parent_manager = None
             self.form_tree = None
@@ -261,15 +261,15 @@ def test_chrome_sync_refreshes_widgets_by_exact_objectstate_path() -> None:
 
     state = FakeState(
         parameters={
-            "well_filter_config.well_filter": "A01",
-            "path_planning_config.well_filter": None,
+            "partition_filter_config.partition_filter": "A01",
+            "path_planning_config.partition_filter": None,
         }
     )
     widget_service = FakeWidgetService()
     placeholder_service = FakePlaceholderService()
     root = FakeManager("", state, widget_service, placeholder_service)
-    well_filter = FakeManager(
-        "well_filter_config",
+    partition_filter = FakeManager(
+        "partition_filter_config",
         state,
         widget_service,
         placeholder_service,
@@ -281,32 +281,32 @@ def test_chrome_sync_refreshes_widgets_by_exact_objectstate_path() -> None:
         placeholder_service,
     )
     root.nested_managers = {
-        "well_filter_config": well_filter,
+        "partition_filter_config": partition_filter,
         "path_planning_config": path_planning,
     }
-    well_filter._parent_manager = root
+    partition_filter._parent_manager = root
     path_planning._parent_manager = root
     form_tree = ParameterFormTreeIndex(root)
     root.form_tree = form_tree
-    well_filter.form_tree = form_tree
+    partition_filter.form_tree = form_tree
     path_planning.form_tree = form_tree
 
-    root.chrome_sync.refresh_widgets_for_paths({"well_filter_config.well_filter"})
+    root.chrome_sync.refresh_widgets_for_paths({"partition_filter_config.partition_filter"})
 
-    assert widget_service.calls == [("well_filter_config", "well_filter", "A01", False)]
-    assert well_filter.widgets["well_filter"].values == ["A01"]
-    assert path_planning.widgets["well_filter"].values == []
+    assert widget_service.calls == [("partition_filter_config", "partition_filter", "A01", False)]
+    assert partition_filter.widgets["partition_filter"].values == ["A01"]
+    assert path_planning.widgets["partition_filter"].values == []
     assert placeholder_service.calls == []
 
-    root.chrome_sync.refresh_widgets_for_paths({"path_planning_config.well_filter"})
+    root.chrome_sync.refresh_widgets_for_paths({"path_planning_config.partition_filter"})
 
     assert widget_service.calls[-1] == (
         "path_planning_config",
-        "well_filter",
+        "partition_filter",
         None,
         True,
     )
-    assert placeholder_service.calls == [("path_planning_config", "well_filter")]
+    assert placeholder_service.calls == [("path_planning_config", "partition_filter")]
 
 
 def test_resolved_change_refreshes_widget_values_outside_time_travel(qapp) -> None:
@@ -367,7 +367,7 @@ def test_resolved_change_refreshes_widget_values_outside_time_travel(qapp) -> No
     try:
         ParameterFormManager._on_resolved_values_changed(
             manager,
-            {"well_filter_config.well_filter"},
+            {"partition_filter_config.partition_filter"},
         )
         loop = QEventLoop()
         QTimer.singleShot(0, loop.quit)
@@ -377,10 +377,10 @@ def test_resolved_change_refreshes_widget_values_outside_time_travel(qapp) -> No
         manager.deleteLater()
         qapp.processEvents()
 
-    assert manager.chrome_sync.widget_paths == [{"well_filter_config.well_filter"}]
-    assert manager.chrome_sync.state_paths == [{"well_filter_config.well_filter"}]
-    assert manager.flash_registrations == [("well_filter_config.well_filter", False)]
-    assert manager.flash_batches == [("well_filter_config.well_filter",)]
+    assert manager.chrome_sync.widget_paths == [{"partition_filter_config.partition_filter"}]
+    assert manager.chrome_sync.state_paths == [{"partition_filter_config.partition_filter"}]
+    assert manager.flash_registrations == [("partition_filter_config.partition_filter", False)]
+    assert manager.flash_batches == [("partition_filter_config.partition_filter",)]
 
 
 def test_flash_paths_keep_single_structural_leaf_but_coalesce_rows() -> None:

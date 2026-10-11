@@ -22,7 +22,7 @@ from openhcs.core.config import (
     GlobalPipelineConfig,
     MaterializationBackend,
     PathPlanningConfig,
-    StepWellFilterConfig,
+    StepPartitionFilterConfig,
     VFSConfig,
     Backend,
     ZarrConfig,
@@ -33,7 +33,7 @@ from openhcs.core.config import (
     LazyStepMaterializationConfig,
     LazyNapariStreamingConfig,
     LazyFijiStreamingConfig,
-    LazyStepWellFilterConfig,
+    LazyStepPartitionFilterConfig,
     LazyPathPlanningConfig,
     LazyDtypeConfig,
     LazyProcessingConfig,
@@ -94,9 +94,9 @@ class TestConstants:
     DEFAULT_WORKERS: int = 1
     DEFAULT_SUB_DIR: str = "images"
     OUTPUT_SUFFIX: str = "_outputs"
-    STEP_WELL_FILTER_TEST: int = 4
-    PIPELINE_STEP_WELL_FILTER_TEST: int = 2
-    GLOBAL_STEP_WELL_FILTER_TEST: int = 3
+    STEP_PARTITION_FILTER_TEST: int = 4
+    PIPELINE_STEP_PARTITION_FILTER_TEST: int = 2
+    GLOBAL_STEP_PARTITION_FILTER_TEST: int = 3
 
     # Metadata validation
     METADATA_FILENAME: str = "openhcs_metadata.json"
@@ -136,7 +136,7 @@ class TestPorts:
 class TestConfig:
     """Configuration for test execution."""
 
-    plate_dir: Union[Path, int]  # Path for disk-based, int (plate_id) for OMERO
+    plate_dir: Union[Path, int]  # Path for disk-based, int (subject_id) for OMERO
     backend_config: str
     execution_mode: str
     microscope_config: Dict
@@ -275,8 +275,8 @@ def create_test_pipeline(
                     {"low_percentile": 0.5, "high_percentile": 99.5},
                 )
             ],
-            step_well_filter_config=LazyStepWellFilterConfig(
-                well_filter=CONSTANTS.STEP_WELL_FILTER_TEST
+            step_partition_filter_config=LazyStepPartitionFilterConfig(
+                partition_filter=CONSTANTS.STEP_PARTITION_FILTER_TEST
             ),
             step_materialization_config=LazyStepMaterializationConfig(),
             napari_streaming_config=LazyNapariStreamingConfig(
@@ -476,8 +476,8 @@ def _create_pipeline_config(test_config: TestConfig) -> GlobalPipelineConfig:
         ),
         vfs_config=VFSConfig(materialization_backend=materialization_backend),
         zarr_config=ZarrConfig(),
-        step_well_filter_config=StepWellFilterConfig(
-            well_filter=CONSTANTS.GLOBAL_STEP_WELL_FILTER_TEST
+        step_partition_filter_config=StepPartitionFilterConfig(
+            partition_filter=CONSTANTS.GLOBAL_STEP_PARTITION_FILTER_TEST
         ),
         use_threading=test_config.use_threading,
     )
@@ -534,8 +534,8 @@ def _initialize_orchestrator(
         path_planning_config=LazyPathPlanningConfig(
             output_dir_suffix=CONSTANTS.OUTPUT_SUFFIX
         ),
-        step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=CONSTANTS.PIPELINE_STEP_WELL_FILTER_TEST
+        step_partition_filter_config=LazyStepPartitionFilterConfig(
+            partition_filter=CONSTANTS.PIPELINE_STEP_PARTITION_FILTER_TEST
         ),
         sequential_processing_config=LazySequentialProcessingConfig(
             sequential_components=sequential_components if sequential_components else []
@@ -618,7 +618,7 @@ def _execute_pipeline_phases(
     """Execute compilation and execution phases of the pipeline (direct mode)."""
     import multiprocessing
     import threading
-    from openhcs.core.progress import set_progress_queue
+    from openhcs.core.progress import ProgressExecutionContext, set_progress_queue
     import logging
 
     logger = logging.getLogger(__name__)
@@ -640,7 +640,7 @@ def _execute_pipeline_phases(
     try:
         set_progress_queue(progress_queue)
         execution_bundle = orchestrator.compile_pipelines(
-            pipeline_definition=pipeline, well_filter=wells
+            pipeline_definition=pipeline, partition_values=wells
         )
 
         compiled_contexts = execution_bundle.runtime_contexts
@@ -666,13 +666,12 @@ def _execute_pipeline_phases(
         # Execution phase - pass the progress queue
         import time
 
-        progress_context = {
-            "execution_id": f"direct::{int(time.time() * 1_000_000)}",
-            "plate_id": str(orchestrator.plate_path),
-            "axis_id": "",
-        }
+        progress_context = ProgressExecutionContext(
+            execution_id=f"direct::{int(time.time() * 1_000_000)}",
+            subject_id=str(orchestrator.dataset_root),
+        )
 
-        results = orchestrator.execute_compiled_plate(
+        results = orchestrator.execute_compiled_bundle(
             execution_bundle=execution_bundle,
             progress_queue=progress_queue,
             progress_context=progress_context,
@@ -726,7 +725,7 @@ def _execute_pipeline_zmq(
         # Execute pipeline - server will create orchestrator and get wells
         response = client.execute_pipeline(
             OpenHCSExecutionSubmission(
-                plate_id=str(test_config.plate_dir),
+                subject_id=str(test_config.plate_dir),
                 pipeline_document=PipelineDocumentCodec.from_values(
                     pipeline_config=pipeline_config, pipeline_steps=pipeline
                 ),
@@ -792,7 +791,7 @@ def _execute_pipeline_with_mode(
         # Create pipeline config with lazy configs
         from openhcs.core.config import (
             LazyPathPlanningConfig,
-            LazyStepWellFilterConfig,
+            LazyStepPartitionFilterConfig,
             LazySequentialProcessingConfig,
         )
 
@@ -800,8 +799,8 @@ def _execute_pipeline_with_mode(
             path_planning_config=LazyPathPlanningConfig(
                 output_dir_suffix=CONSTANTS.OUTPUT_SUFFIX
             ),
-            step_well_filter_config=LazyStepWellFilterConfig(
-                well_filter=CONSTANTS.PIPELINE_STEP_WELL_FILTER_TEST
+            step_partition_filter_config=LazyStepPartitionFilterConfig(
+                partition_filter=CONSTANTS.PIPELINE_STEP_PARTITION_FILTER_TEST
             ),
             sequential_processing_config=LazySequentialProcessingConfig(
                 sequential_components=(
@@ -834,7 +833,7 @@ def test_main(
 ):
     """Unified test for all combinations of microscope types, backends, data types, execution modes, and sequential processing."""
     ports = TestPorts.allocate(free_port_pair)
-    # Handle both Path and int (OMERO plate_id)
+    # Handle both Path and int (OMERO subject_id)
     test_config = TestConfig(
         plate_dir if isinstance(plate_dir, int) else Path(plate_dir),
         backend_config,

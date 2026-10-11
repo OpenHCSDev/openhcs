@@ -145,7 +145,7 @@ def test_server_and_worker_are_the_only_artifact_projection_producers() -> None:
             relative_path = str(path.relative_to(ROOT))
             if call_name == "CompiledArtifactInspection.from_execution_bundle":
                 compiled_projection_owners.add(relative_path)
-            if call_name == "runtime_artifact_context_for_records":
+            if call_name == "RuntimeArtifactProgressPayload.from_records":
                 runtime_projection_owners.add(relative_path)
 
     assert compiled_projection_owners == {"openhcs/runtime/zmq_control.py"}

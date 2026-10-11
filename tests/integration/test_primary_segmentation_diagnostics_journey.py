@@ -4,6 +4,7 @@ Run only in the coordinator's serialized native-validation slot. There is no
 private plate, segmentation replacement, mocked runtime or biological verdict.
 """
 
+from openhcs.core.progress import ProgressExecutionContext
 import numpy as np
 import pytest
 from openhcs.interop.cellprofiler.object_label_variants import (
@@ -294,16 +295,15 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     orchestrator = PipelineOrchestrator(
         tmp_path, pipeline_config=document.pipeline_config
     ).initialize()
-    results = orchestrator.execute_compiled_plate(
+    results = orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
         max_workers=1,
         runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
         progress_queue=AgentProgressQueue(),
-        progress_context={
-            "execution_id": "primary-diagnostics-synthetic",
-            "plate_id": str(tmp_path),
-            "axis_id": "",
-        },
+        progress_context=ProgressExecutionContext(
+            execution_id="primary-diagnostics-synthetic",
+            subject_id=str(tmp_path),
+        ),
     )
     assert results["A01"].is_success(), results["A01"].error_message
     store = context.runtime_value_store
@@ -366,8 +366,8 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     primary_plan = context.step_plans[0]
     assert primary_plan.write_backend == "memory"
     assert primary_plan.materialized_output is None
-    OpenHCSMetadataTarget.finalize_completed_plate(bundle.runtime_contexts)
-    metadata_path = METADATA_CONFIG.metadata_path(primary_plan.output_plate_root)
+    OpenHCSMetadataTarget.finalize_completed_dataset(bundle.runtime_contexts)
+    metadata_path = METADATA_CONFIG.metadata_path(primary_plan.output_dataset_root)
     metadata_document = json.loads(metadata_path.read_text())
     persisted_source_provenance = SourceImageProvenance.from_mapping(
         json.loads(json.dumps(to_jsonable(source_metadata.source_provenance)))
@@ -399,7 +399,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         (saved_path,) = primary_plan.artifact_analysis_output_dir.glob(
             f"*_{spec.name}_step0.tif"
         )
-        relative_path = str(saved_path.relative_to(primary_plan.output_plate_root))
+        relative_path = str(saved_path.relative_to(primary_plan.output_dataset_root))
         projection = entries[relative_path]
         result_record = result_records[relative_path]
         assert result_record.source_projection == projection
@@ -420,7 +420,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
             f"*_{alias}_step*.labels.tif"
         )
         projection = entries[
-            str(saved_path.relative_to(primary_plan.output_plate_root))
+            str(saved_path.relative_to(primary_plan.output_dataset_root))
         ]
         assert projection.source_alias == alias
         assert projection.artifact_kind is ObjectLabelsArtifactType

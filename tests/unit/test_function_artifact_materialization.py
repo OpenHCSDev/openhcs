@@ -45,7 +45,7 @@ from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import TiffConfig, WellFilterMode
+from openhcs.core.config import TiffConfig, PartitionFilterMode
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
@@ -215,7 +215,7 @@ class StreamingConfigStub(ViewerDisplayConfigABC):
 
         return ViewerStreamSourceIdentity(
             microscope_handler=_context.microscope_handler,
-            plate_path=_context.plate_path,
+            plate_path=_context.dataset_root,
         )
 
 
@@ -509,7 +509,7 @@ def _context(filemanager):
             {"channel": {"1": "OrigDNA", "2": "OrigER", "3": "OrigRNA"}}
         ),
     )
-    context.plate_path = Path("/tmp/plate")
+    context.dataset_root = Path("/tmp/plate")
     context.input_dir = Path("/tmp/plate/images")
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
     context.axis_id = "A01"
@@ -536,7 +536,7 @@ def test_named_artifact_streaming_respects_compiled_streaming_filter():
             {
                 type(config): StepAxisFilterResolution(
                     resolved_axis_values=frozenset({"B03"}),
-                    filter_mode=WellFilterMode.INCLUDE,
+                    filter_mode=PartitionFilterMode.INCLUDE,
                     original_filter="B03",
                 )
             }

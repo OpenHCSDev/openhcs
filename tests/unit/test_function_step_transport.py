@@ -182,7 +182,7 @@ def test_submission_namespace_and_server_payload_use_direct_step_lists() -> None
     global_config = GlobalPipelineConfig()
     pipeline_config = PipelineConfig()
     submission = OpenHCSExecutionSubmission(
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=[step]
         ),
@@ -211,7 +211,7 @@ def test_request_builder_stores_explicit_pipeline_code_directly() -> None:
     )
     pipeline_source = PipelineDocumentCodec.render(pipeline_document)
     submission = OpenHCSExecutionSubmission(
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
         pipeline_document=PipelineDocumentCodec.from_source(pipeline_source),
         global_config=GlobalPipelineConfig(),
     )
@@ -268,7 +268,7 @@ def test_zmq_execution_cancellation_uses_bounded_control_request(monkeypatch) ->
 
 def test_zmq_execution_submission_serializes_default_plate_config_on_client() -> None:
     submission = OpenHCSExecutionSubmission(
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(), pipeline_steps=[]
         ),

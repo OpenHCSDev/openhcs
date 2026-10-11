@@ -6,13 +6,12 @@ from zmqruntime.messages import PongResponse
 
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
     is_success_terminal_event,
     is_terminal_event,
 )
-from openhcs.core.progress.projection import PlateRuntimeState
+from openhcs.core.progress.projection import CompiledSubjectRuntimeState
 from openhcs.pyqt_gui.widgets.shared.server_browser.progress_projection import (
     ExecutionProgressProjection,
     ExecutionServerProgressRenderer,
@@ -29,25 +28,23 @@ def _event(
     status: ProgressStatus,
     percent: float,
     execution_id: str = "exec-1",
-    plate_id: str = "/tmp/plate",
+    subject_id: str = "/tmp/plate",
     axis_id: str = "A01",
     step_name: str = "pipeline",
     completed: int = 0,
     total: int = 1,
     timestamp: float = 1.0,
     worker_slot: str | None = None,
-    owned_wells: list[str] | None = None,
+    owned_partition_values: list[str] | None = None,
     worker_assignments: dict[str, list[str]] | None = None,
-    total_wells: list[str] | None = None,
+    partition_values: list[str] | None = None,
     step_names: list[str] | None = None,
 ) -> ProgressEvent:
     return ProgressEvent(
-        identity=ProgressIdentity(
-            execution_id=execution_id,
-            plate_id=plate_id,
-            axis_id=axis_id,
-            step_name=step_name,
-        ),
+        execution_id=execution_id,
+        subject_id=subject_id,
+        axis_id=axis_id,
+        step_name=step_name,
         phase=phase,
         status=status,
         percent=percent,
@@ -56,9 +53,9 @@ def _event(
         timestamp=timestamp,
         pid=1111,
         worker_slot=worker_slot,
-        owned_wells=owned_wells,
+        owned_partition_values=owned_partition_values,
         worker_assignments=worker_assignments,
-        total_wells=total_wells,
+        partition_values=partition_values,
         step_names=step_names,
     )
 
@@ -66,13 +63,13 @@ def _event(
 def _init_event(
     *,
     execution_id: str = "exec-1",
-    plate_id: str = "/tmp/plate",
+    subject_id: str = "/tmp/plate",
     wells: tuple[str, ...] = ("A01",),
     timestamp: float = 0.0,
 ) -> ProgressEvent:
     return _event(
         execution_id=execution_id,
-        plate_id=plate_id,
+        subject_id=subject_id,
         phase=ProgressPhase.INIT,
         status=ProgressStatus.RUNNING,
         percent=0.0,
@@ -80,7 +77,7 @@ def _init_event(
         step_name="init",
         timestamp=timestamp,
         worker_assignments={"worker_0": list(wells)},
-        total_wells=list(wells),
+        partition_values=list(wells),
         step_names=["normalize", "max_project"],
     )
 
@@ -131,7 +128,7 @@ def test_worker_tree_uses_pipeline_percent_for_parent_aggregation():
         step_name="normalize",
         timestamp=1.0,
         worker_slot="worker_0",
-        owned_wells=["A01"],
+        owned_partition_values=["A01"],
     )
     step_event = _event(
         phase=ProgressPhase.PATTERN_GROUP,
@@ -142,7 +139,7 @@ def test_worker_tree_uses_pipeline_percent_for_parent_aggregation():
         step_name="max_project",
         timestamp=2.0,
         worker_slot="worker_0",
-        owned_wells=["A01"],
+        owned_partition_values=["A01"],
     )
 
     plate = _nodes({"exec-1": [_init_event(), pipeline_event, step_event]})[0]
@@ -180,7 +177,7 @@ def test_compile_tree_marks_plate_as_compiled():
             percent=100.0,
             axis_id=axis_id,
             step_name="compilation",
-            total_wells=["A01", "B01"],
+            partition_values=["A01", "B01"],
         )
         for axis_id in ("A01", "B01")
     ]
@@ -194,8 +191,8 @@ def test_compile_tree_marks_plate_as_compiled():
         "✅ Compiled",
     ]
     assert [child.runtime_state for child in plate.children] == [
-        PlateRuntimeState.COMPILED,
-        PlateRuntimeState.COMPILED,
+        CompiledSubjectRuntimeState,
+        CompiledSubjectRuntimeState,
     ]
 
 
@@ -241,7 +238,7 @@ def test_worker_tree_marks_failed_well_and_plate():
         total=2,
         step_name="normalize",
         worker_slot="worker_0",
-        owned_wells=["A01"],
+        owned_partition_values=["A01"],
     )
 
     plate = _nodes({"exec-1": [_init_event(), failed_event]})[0]
@@ -279,7 +276,7 @@ def test_queued_plates_are_projected_without_progress_events():
 def test_new_queued_execution_replaces_old_compiled_identity_for_same_plate():
     old_compile = _event(
         execution_id="exec-compile",
-        plate_id="/tmp/plate_a",
+        subject_id="/tmp/plate_a",
         phase=ProgressPhase.COMPILE,
         status=ProgressStatus.SUCCESS,
         percent=100.0,
@@ -352,7 +349,7 @@ def test_compile_events_with_worker_topology_stay_in_compile_mode():
         status=ProgressStatus.SUCCESS,
         percent=100.0,
         step_name="compilation",
-        total_wells=["A01"],
+        partition_values=["A01"],
     )
 
     plate = _nodes(

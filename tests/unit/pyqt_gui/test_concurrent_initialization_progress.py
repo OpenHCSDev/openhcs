@@ -4,9 +4,9 @@ from PyQt6.QtWidgets import QApplication, QProgressBar
 
 from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,
-    PlateRuntimeIdentity,
-    PlateRuntimeProjection,
-    PlateRuntimeState,
+    SubjectRuntimeIdentity,
+    SubjectRuntimeProjection,
+    ExecutingSubjectRuntimeState,
 )
 from openhcs.pyqt_gui.services.main_window_workflows import MainWindowLifecycleWorkflow
 
@@ -14,14 +14,14 @@ from openhcs.pyqt_gui.services.main_window_workflows import MainWindowLifecycleW
 def test_init_signals_and_completion_preserve_running_progress():
     app = QApplication.instance() or QApplication([])
     projection = ExecutionRuntimeProjection()
-    plate = PlateRuntimeProjection(
-        identity=PlateRuntimeIdentity(plate_id="/running", execution_id="owned-run"),
-        state=PlateRuntimeState.EXECUTING,
+    plate = SubjectRuntimeProjection(
+        identity=SubjectRuntimeIdentity(subject_id="/running", execution_id="owned-run"),
+        state=ExecutingSubjectRuntimeState,
         percent=43,
         axis_progress=(),
         latest_timestamp=1,
     )
-    projection.add_plate(plate)
+    projection.add_subject(plate)
     projection.mark_latest(plate.identity)
     projection.recalculate_summary()
     session = SimpleNamespace(runtime_projection=projection, init_pending={"/other"})

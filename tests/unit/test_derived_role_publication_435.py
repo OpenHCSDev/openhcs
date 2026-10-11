@@ -70,7 +70,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
     plan = function_step_plan("Derived role images")
     plan.streaming_configs = {}
     plan.write_backend = Backend.DISK.value
-    plan.output_plate_root = str(tmp_path)
+    plan.output_dataset_root = str(tmp_path)
     plan.output_dir = tmp_path / "images"
     plan.sub_dir = "images"
     plan.analysis_results_dir = str(plan.output_dir)

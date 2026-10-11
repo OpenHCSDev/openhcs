@@ -363,7 +363,7 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
             (2, 3) if name == "grid_dimensions" else None
         ),
     )
-    planner.ctx.plate_path = planner.plate_path
+    planner.ctx.dataset_root = planner.plate_path
     pattern = (metadata_consumer, {"grid_dimensions": None})
     snapshot = _resolved_step(
         func=pattern,
@@ -443,7 +443,7 @@ def test_registered_metadata_provider_value_reaches_runtime_unchanged(artifact_n
 
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
-    planner.ctx.plate_path = planner.plate_path
+    planner.ctx.dataset_root = planner.plate_path
     assert planner.ctx.microscope_handler.can_resolve_metadata_artifact(artifact_name)
     compiled, input_plans = _compile_metadata_pattern(planner, (metadata_consumer, {"calibration": -7.0}))
     (invocation,) = compiled.default_group.invocations
@@ -489,7 +489,7 @@ def test_new_metadata_provider_composes_cooperative_capabilities_through_runtime
 
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
-    planner.ctx.plate_path = planner.plate_path
+    planner.ctx.dataset_root = planner.plate_path
     assert planner.ctx.microscope_handler.can_resolve_metadata_artifact(
         CheckedExposureMetadataProvider.require_artifact_name()
     )
@@ -521,7 +521,7 @@ def test_hidden_pixel_size_reaches_callable_with_exact_source_calibration():
 
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
-    planner.ctx.plate_path = planner.plate_path
+    planner.ctx.dataset_root = planner.plate_path
     compiled, _ = _compile_metadata_pattern(planner, metadata_consumer)
     _execute_compiled_metadata_pattern(compiled)
     assert received == [1.3556]
@@ -541,7 +541,7 @@ def test_required_metadata_input_has_no_magic_default(value):
         can_resolve_metadata_artifact=lambda name: name == "pixel_size",
         resolve_metadata_artifact=lambda name, plate_path: value,
     )
-    planner.ctx.plate_path = planner.plate_path
+    planner.ctx.dataset_root = planner.plate_path
     compiled, _ = _compile_metadata_pattern(planner, metadata_consumer)
     if value is None:
         with pytest.raises(ValueError, match="Required metadata artifact .* has no value"):
@@ -570,7 +570,7 @@ def test_exact_producer_takes_precedence_over_metadata_provider():
 
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
-    planner.ctx.plate_path = planner.plate_path
+    planner.ctx.dataset_root = planner.plate_path
     producer = _record_declared_output(planner, ArtifactOutputPlan(
         name="pixel_size", path="/memory/pixel_size.pkl",
         artifact_type=SpecialArtifactType, producer_step_index=2,
