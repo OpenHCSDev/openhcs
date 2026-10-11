@@ -43,6 +43,9 @@ from openhcs.runtime.viewer_protocol import (
     NapariLayerKind,
     ViewerComponentValueOrdering,
     ViewerSettlePhase,
+    SettlementComplete,
+    SettlementFailed,
+    SettlementRunning,
     ViewerSettleProgress,
     ViewerNativeWindowGeometry,
     ViewerNativeWindowState,
@@ -382,17 +385,17 @@ class NapariLayerSettlementState:
                 self.active_route_work_unit_count = 0
 
     @property
-    def phase(self) -> ViewerSettlePhase:
+    def phase(self) -> type[ViewerSettlePhase]:
         with self._lock:
             if self.failed:
-                return ViewerSettlePhase.FAILED
+                return SettlementFailed
             if (
                 self.updates is not None
                 and self.completed_update_count == len(self.updates)
                 and self.active_route is None
             ):
-                return ViewerSettlePhase.COMPLETE
-            return ViewerSettlePhase.RUNNING
+                return SettlementComplete
+            return SettlementRunning
 
     def begin_next(
         self,
@@ -402,7 +405,7 @@ class NapariLayerSettlementState:
         with self._lock:
             if self.updates is None:
                 return None
-            if self.phase is not ViewerSettlePhase.RUNNING:
+            if not self.phase.running:
                 return None
             if self.active_route is not None:
                 raise RuntimeError(
@@ -493,7 +496,7 @@ class NapariLayerSettlementState:
         """Requested settlement must finish; unrequested intake can be cancelled."""
         with self._lock:
             if (
-                (self.requested and self.phase is ViewerSettlePhase.RUNNING)
+                (self.requested and self.phase.running)
                 or self.active_route is not None
             ):
                 raise RuntimeError("Cannot retire layers during active settlement.")
@@ -1827,7 +1830,7 @@ class NapariLayerRouteStateStore:
                 self.layer_settlement is not None
                 and not self.layer_settlement.awaiting_updates
             ):
-                if self.layer_settlement.phase is ViewerSettlePhase.RUNNING:
+                if self.layer_settlement.phase.running:
                     raise RuntimeError(
                         "Cannot queue a Napari layer update while settlement is active."
                     )

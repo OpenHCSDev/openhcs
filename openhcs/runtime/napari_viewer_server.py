@@ -190,7 +190,6 @@ from openhcs.runtime.viewer_protocol import (
     ViewerPayloadRecord,
     ViewerProtocolStatus,
     ViewerQtEnvironmentPolicy,
-    ViewerSettlePhase,
     ViewerSettleProgress,
     ViewerStateControlOptions,
 )
@@ -6866,7 +6865,7 @@ class NapariViewerServer(ViewerServerPort, OpenHCSViewerServerABC):
         # The transport only admits the cycle. This Qt service binds route
         # updates and stops their timers after the accepted intake barrier.
         progress = self.layer_route_state.existing_settlement_progress(requested_only=True)
-        if progress is not None and progress.phase is ViewerSettlePhase.RUNNING:
+        if progress is not None and progress.phase.running:
             self.display_pipeline.settlement_progress()
         while True:
             try:

@@ -1166,7 +1166,7 @@ class ViewerSettlementProgressObserver:
             percent=percent,
             context={
                 "viewer_port": self.viewer_port,
-                **progress.to_wire_mapping(),
+                **progress.to_dict(),
             },
         )
 

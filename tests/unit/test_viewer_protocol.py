@@ -43,7 +43,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerProcessPlatform,
     ViewerQtEnvironmentPolicy,
     ViewerRuntimeEndpoint,
-    ViewerSettlePhase,
+    SettlementRunning,
     ViewerSettleProgress,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
@@ -515,14 +515,14 @@ def test_managed_viewer_settlement_tracks_progress_without_total_timeout(
             return DetachedViewerPythonArguments.from_literals(str(log_file))
 
     progress_rows = (
-        ViewerSettleProgress(ViewerSettlePhase.RUNNING, 0, 1, "large", 0, True),
-        ViewerSettleProgress(ViewerSettlePhase.RUNNING, 0, 1, "large", 0, True),
-        ViewerSettleProgress(ViewerSettlePhase.RUNNING, 0, 1, "large", 1),
+        ViewerSettleProgress(SettlementRunning, 0, 1, "large", 0, True),
+        ViewerSettleProgress(SettlementRunning, 0, 1, "large", 0, True),
+        ViewerSettleProgress(SettlementRunning, 0, 1, "large", 1),
         ViewerSettleProgress.complete(1),
     )
     responses = [
         ViewerControlResponse(
-            payload={"status": "success", **progress.to_wire_mapping()}
+            payload={"status": "success", **progress.to_dict()}
         )
         for progress in progress_rows
     ]
@@ -556,13 +556,13 @@ def test_managed_viewer_settlement_tracks_progress_without_total_timeout(
 
 def test_managed_viewer_settlement_rejects_no_progress(monkeypatch):
     progress = ViewerSettleProgress(
-        ViewerSettlePhase.RUNNING,
+        SettlementRunning,
         0,
         1,
         "stalled",
     )
     response = ViewerControlResponse(
-        payload={"status": "success", **progress.to_wire_mapping()}
+        payload={"status": "success", **progress.to_dict()}
     )
     viewer = type(
         "StalledViewer",

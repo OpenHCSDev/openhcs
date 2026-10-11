@@ -69,7 +69,7 @@ from openhcs.core.progress import ProgressExecutionContext
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponse,
     ViewerPersistenceMode,
-    ViewerSettlePhase,
+    SettlementRunning,
     ViewerSettleProgress,
 )
 from openhcs.core.progress.types import (
@@ -1363,7 +1363,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
             if progress_callback is not None:
                 progress_callback(
                     ViewerSettleProgress(
-                        ViewerSettlePhase.RUNNING,
+                        SettlementRunning,
                         1,
                         2,
                         "large-rois",
@@ -1414,7 +1414,7 @@ def test_viewer_settlement_progress_throttles_unchanged_active_observations(
     monkeypatch,
 ):
     active = ViewerSettleProgress(
-        ViewerSettlePhase.RUNNING,
+        SettlementRunning,
         1,
         2,
         "large-rois",

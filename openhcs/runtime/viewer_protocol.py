@@ -35,6 +35,7 @@ from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime.client import EndpointProcessGroup, endpoint_process
 from zmqruntime.config import NonBlankString, TransportMode, ZMQConfig
 from zmqruntime.messages import (
+    WireView,
     ControlRequestHeader,
     ControlMessageType,
     EndpointApplicationCompatibility,
@@ -120,25 +121,58 @@ _EXECUTION_OWNED_VIEWER_PROCESSES = EndpointProcessGroup()
 register_cleanup_callback(_EXECUTION_OWNED_VIEWER_PROCESSES.stop_all)
 
 
-class ViewerSettlePhase(str, Enum):
-    """Lifecycle phase for incremental viewer settlement."""
+class ViewerSettlePhase(ABC, metaclass=AutoRegisterMeta):
+    """Where one viewer's incremental settlement stands.
 
-    RUNNING = "running"
-    COMPLETE = "complete"
-    FAILED = "failed"
+    Each phase is a subclass; ``name`` is its wire spelling.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["ViewerSettlePhase"]]] = {}
+
+    name: ClassVar[str | None] = None
+    running: ClassVar[bool] = False
+    """Display work is still queued or active."""
+    settled: ClassVar[bool] = False
+    """Every queued update is displayed."""
+    failed: ClassVar[bool] = False
+    """Display work failed; settlement will not complete."""
+    idle_completion_percent: ClassVar[float] = 0.0
+    """Completion reported when there were no updates to settle."""
+
+    @classmethod
+    def validate(cls, progress: "ViewerSettleProgress") -> None:
+        """Reject progress this phase cannot report."""
 
 
-class ViewerSettleField(str, Enum):
-    """Wire fields owned by viewer-settlement progress replies."""
+class SettlementRunning(ViewerSettlePhase):
+    name = "running"
+    running = True
 
-    PHASE = "settle_phase"
-    COMPLETED_UPDATE_COUNT = "completed_update_count"
-    TOTAL_UPDATE_COUNT = "total_update_count"
-    ACTIVE_ROUTE = "active_route"
-    ACTIVE_ROUTE_WORK_UNIT_COUNT = "active_route_work_unit_count"
-    ACTIVE_ROUTE_WORK_UNIT_ACTIVE = "active_route_work_unit_active"
-    PROCESSED_INTAKE_ITEM_COUNT = "processed_intake_item_count"
-    INTAKE_ITEM_ACTIVE = "intake_item_active"
+
+class SettlementComplete(ViewerSettlePhase):
+    name = "complete"
+    settled = True
+    idle_completion_percent = 100.0
+
+    @classmethod
+    def validate(cls, progress: "ViewerSettleProgress") -> None:
+        if progress.intake_item_active:
+            raise ValueError("Completed settlement cannot have active intake.")
+        if (
+            progress.completed_update_count != progress.total_update_count
+            or progress.active_route is not None
+        ):
+            raise ValueError(
+                "Completed viewer settlement must have no active route and all "
+                "updates completed."
+            )
+
+
+class SettlementFailed(ViewerSettlePhase):
+    name = "failed"
+    failed = True
 
 
 class ViewerPayloadSummaryField(str, Enum):
@@ -661,10 +695,13 @@ class ViewerControlResponse:
 
 
 @dataclass(frozen=True, slots=True)
-class ViewerSettleProgress:
-    """Typed progress for one viewer's incremental settlement cycle."""
+class ViewerSettleProgress(WireView):
+    """Typed progress for one viewer's incremental settlement cycle.
 
-    phase: ViewerSettlePhase
+    It travels as declared fields beside the control reply's header.
+    """
+
+    phase: type[ViewerSettlePhase]
     completed_update_count: int
     total_update_count: int
     active_route: str | None = None
@@ -681,8 +718,6 @@ class ViewerSettleProgress:
             raise ValueError("Viewer processed intake count must be non-negative.")
         if type(self.intake_item_active) is not bool:
             raise TypeError("Viewer intake activity must be boolean.")
-        if self.phase is ViewerSettlePhase.COMPLETE and self.intake_item_active:
-            raise ValueError("Completed settlement cannot have active intake.")
         if (
             type(self.completed_update_count) is not int
             or type(self.total_update_count) is not int
@@ -692,14 +727,6 @@ class ViewerSettleProgress:
         ):
             raise ValueError(
                 "Viewer settle progress counts must satisfy 0 <= completed <= total."
-            )
-        if self.phase is ViewerSettlePhase.COMPLETE and (
-            self.completed_update_count != self.total_update_count
-            or self.active_route is not None
-        ):
-            raise ValueError(
-                "Completed viewer settlement must have no active route and all "
-                "updates completed."
             )
         if self.active_route is not None and not isinstance(self.active_route, str):
             raise TypeError("Viewer settle active_route must be a string or None.")
@@ -720,13 +747,14 @@ class ViewerSettleProgress:
             raise ValueError(
                 "Viewer settle active work-unit state requires an active route."
             )
+        self.phase.validate(self)
 
     @classmethod
     def complete(cls, total_update_count: int = 0) -> "ViewerSettleProgress":
         """Return terminal successful settlement progress."""
 
         return cls(
-            phase=ViewerSettlePhase.COMPLETE,
+            phase=SettlementComplete,
             completed_update_count=total_update_count,
             total_update_count=total_update_count,
         )
@@ -751,60 +779,7 @@ class ViewerSettleProgress:
     def completion_percent(self) -> float:
         if self.total_update_count:
             return 100.0 * self.completed_update_count / self.total_update_count
-        return 100.0 if self.phase is ViewerSettlePhase.COMPLETE else 0.0
-
-    @classmethod
-    def from_response(
-        cls,
-        response: ViewerControlResponse,
-    ) -> "ViewerSettleProgress":
-        """Parse exact settlement progress from a control response."""
-
-        payload = response.payload
-        active_route_value = payload[ViewerSettleField.ACTIVE_ROUTE.value]
-        active_work_unit_value = payload[
-            ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_ACTIVE.value
-        ]
-        if type(active_work_unit_value) is not bool:
-            raise TypeError("Viewer settle active work-unit state must be boolean.")
-        return cls(
-            phase=ViewerSettlePhase(str(payload[ViewerSettleField.PHASE.value])),
-            completed_update_count=int(
-                payload[ViewerSettleField.COMPLETED_UPDATE_COUNT.value]
-            ),
-            total_update_count=int(payload[ViewerSettleField.TOTAL_UPDATE_COUNT.value]),
-            active_route=(
-                None if active_route_value is None else str(active_route_value)
-            ),
-            active_route_work_unit_count=int(
-                payload[ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_COUNT.value]
-            ),
-            active_route_work_unit_active=active_work_unit_value,
-            processed_intake_item_count=cast(int, payload[
-                ViewerSettleField.PROCESSED_INTAKE_ITEM_COUNT.value
-            ]),
-            intake_item_active=payload[ViewerSettleField.INTAKE_ITEM_ACTIVE.value],
-        )
-
-    def to_wire_mapping(self) -> dict[str, object]:
-        """Return exact fields for a viewer control reply."""
-
-        return {
-            ViewerSettleField.PHASE.value: self.phase.value,
-            ViewerSettleField.COMPLETED_UPDATE_COUNT.value: (
-                self.completed_update_count
-            ),
-            ViewerSettleField.TOTAL_UPDATE_COUNT.value: self.total_update_count,
-            ViewerSettleField.ACTIVE_ROUTE.value: self.active_route,
-            ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_COUNT.value: (
-                self.active_route_work_unit_count
-            ),
-            ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_ACTIVE.value: (
-                self.active_route_work_unit_active
-            ),
-            ViewerSettleField.PROCESSED_INTAKE_ITEM_COUNT.value: self.processed_intake_item_count,
-            ViewerSettleField.INTAKE_ITEM_ACTIVE.value: self.intake_item_active,
-        }
+        return self.phase.idle_completion_percent
 
 
 class ViewerComponentValueOrdering:
@@ -2185,7 +2160,7 @@ class ManagedViewerLifecycleMixin(
                     message_type=ViewerControlMessageType.SETTLE.value,
                     timeout=timeout,
                 ).send()
-                progress = ViewerSettleProgress.from_response(response)
+                progress = ViewerSettleProgress.from_dict(response.payload)
                 if progress_callback is not None:
                     progress_callback(progress)
             except Exception as error:
@@ -2196,14 +2171,14 @@ class ManagedViewerLifecycleMixin(
                 )
                 return False
 
-            if not response.succeeded() or progress.phase is ViewerSettlePhase.FAILED:
+            if not response.succeeded() or progress.phase.failed:
                 logger.warning(
                     "%s viewer settlement failed: %s",
                     self.viewer_process_label,
                     response.payload,
                 )
                 return False
-            if progress.phase is ViewerSettlePhase.COMPLETE:
+            if progress.phase.settled:
                 logger.info(
                     "%s viewer settled %d/%d layer updates",
                     self.viewer_process_label,
