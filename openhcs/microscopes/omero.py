@@ -146,22 +146,22 @@ class OMEROMetadataHandler(MetadataHandler):
         self._metadata_cache[plate_id] = metadata
         return metadata
 
-    def find_metadata_file(self, plate_path: str | Path) -> Path:
+    def find_metadata_file(self, dataset_root: str | Path) -> Path:
         """
         OMERO doesn't use metadata files, but detects based on /omero/ path pattern.
 
-        Returns the plate_path itself if it matches the OMERO virtual path pattern,
+        Returns the dataset_root itself if it matches the OMERO virtual path pattern,
         otherwise raises MetadataNotFoundError.
         """
-        plate_path = Path(plate_path)
+        dataset_root = Path(dataset_root)
         # OMERO plates use virtual paths like /omero/plate_123
-        if str(plate_path).startswith("/omero/plate_"):
-            return plate_path
+        if str(dataset_root).startswith("/omero/plate_"):
+            return dataset_root
         raise MetadataNotFoundError(
-            f"OMERO plate path must use /omero/plate_<id>, got {plate_path}"
+            f"OMERO plate path must use /omero/plate_<id>, got {dataset_root}"
         )
 
-    def _extract_plate_id(self, plate_path: str | Path | int) -> int:
+    def _extract_plate_id(self, dataset_root: str | Path | int) -> int:
         """
         Extract plate_id from various path formats.
 
@@ -171,7 +171,7 @@ class OMEROMetadataHandler(MetadataHandler):
         - Path('/omero/plate_57_outputs'): extracts 57 from 'plate_57_outputs'
 
         Args:
-            plate_path: Plate identifier (int or Path)
+            dataset_root: Plate identifier (int or Path)
 
         Returns:
             Plate ID as integer
@@ -179,31 +179,31 @@ class OMEROMetadataHandler(MetadataHandler):
         Raises:
             ValueError: If path format is invalid
         """
-        if isinstance(plate_path, int):
-            return plate_path
+        if isinstance(dataset_root, int):
+            return dataset_root
 
         # Extract from path: /omero/plate_57 or /omero/plate_57_outputs
-        path_str = str(Path(plate_path).name)  # Get just the filename part
+        path_str = str(Path(dataset_root).name)  # Get just the filename part
 
         # Match 'plate_<id>' or 'plate_<id>_<suffix>'
         match = re.match(r"plate_(\d+)", path_str)
         if not match:
             raise ValueError(
-                f"Invalid OMERO path format: {plate_path}. Expected /omero/plate_<id> or /omero/plate_<id>_<suffix>"
+                f"Invalid OMERO path format: {dataset_root}. Expected /omero/plate_<id> or /omero/plate_<id>_<suffix>"
             )
 
         return int(match.group(1))
 
     def component_value_set(
         self,
-        plate_path: str | Path | int,
+        dataset_root: str | Path | int,
     ) -> MetadataComponentValueSet:
         """Return one cached nominal metadata projection for the OMERO plate."""
 
-        plate_id = self._extract_plate_id(plate_path)
+        plate_id = self._extract_plate_id(dataset_root)
         return self._load_plate_metadata(plate_id)
 
-    def get_grid_dimensions(self, plate_path: str | Path | int) -> tuple[int, int]:
+    def get_grid_dimensions(self, dataset_root: str | Path | int) -> tuple[int, int]:
         """
         Extract grid dimensions from OMERO plate metadata.
 
@@ -213,7 +213,7 @@ class OMEROMetadataHandler(MetadataHandler):
         Returns:
             Tuple of (rows, cols) representing the grid dimensions
         """
-        plate_id = self._extract_plate_id(plate_path)
+        plate_id = self._extract_plate_id(dataset_root)
         conn = self._get_omero_conn()
         plate = conn.getObject("Plate", plate_id)
 
@@ -240,13 +240,13 @@ class OMEROMetadataHandler(MetadataHandler):
             f"{self.GRID_DIMENSIONS_METADATA_KEY}."
         )
 
-    def get_pixel_size(self, plate_path: str | Path | int) -> float:
+    def get_pixel_size(self, dataset_root: str | Path | int) -> float:
         """
         Get pixel size from OMERO image metadata.
 
         Queries the first image in the plate for pixel size.
         """
-        plate_id = self._extract_plate_id(plate_path)
+        plate_id = self._extract_plate_id(dataset_root)
         conn = self._get_omero_conn()
         plate = conn.getObject("Plate", plate_id)
 
@@ -266,7 +266,7 @@ class OMEROMetadataHandler(MetadataHandler):
         raise ValueError(f"OMERO Plate {plate_id} does not declare pixel size.")
 
     def get_image_files(
-        self, plate_path: str | Path | int, all_subdirs: bool = False
+        self, dataset_root: str | Path | int, all_subdirs: bool = False
     ) -> list[str]:
         """
         Get list of virtual filenames from OMERO backend.
@@ -274,11 +274,11 @@ class OMEROMetadataHandler(MetadataHandler):
         Delegates to OMEROLocalBackend.list_files() to generate virtual filenames.
 
         Args:
-            plate_path: Path to the plate folder or plate ID
+            dataset_root: Path to the plate folder or plate ID
             all_subdirs: Unused for OMERO (no subdirectories), kept for interface compatibility
         """
         plate_id = (
-            plate_path if isinstance(plate_path, int) else int(Path(plate_path).name)
+            dataset_root if isinstance(dataset_root, int) else int(Path(dataset_root).name)
         )
 
         # Get OMERO backend from registry
@@ -414,30 +414,30 @@ class OMEROHandler(RemoteServiceSource, DatasetSource):
         return workspace_path
 
     def initialize_workspace(
-        self, plate_path: int | Path, filemanager: FileManager
+        self, dataset_root: int | Path, filemanager: FileManager
     ) -> Path:
         """
         OMERO creates a virtual path for the plate.
 
-        For OMERO, plate_path is an int (plate_id). We convert it to a virtual
+        For OMERO, dataset_root is an int (plate_id). We convert it to a virtual
         Path like "/omero/plate_54/Images" that can be used throughout the system.
         The backend extracts the plate_id from this virtual path when needed.
 
         Args:
-            plate_path: OMERO plate_id (int) or Path (for compatibility)
+            dataset_root: OMERO plate_id (int) or Path (for compatibility)
             filemanager: Unused for OMERO
 
         Returns:
             Virtual Path for OMERO plate (e.g., "/omero/plate_54/Images")
         """
         # Convert int plate_id to virtual path
-        if isinstance(plate_path, int):
+        if isinstance(dataset_root, int):
             # Create virtual path: /omero/plate_{id}/Images
-            virtual_path = Path(f"/omero/plate_{plate_path}/Images")
+            virtual_path = Path(f"/omero/plate_{dataset_root}/Images")
             return virtual_path
         else:
             # Already a Path (shouldn't happen for OMERO, but handle it)
-            return plate_path
+            return dataset_root
 
 
 class OMEROPlateRoot(DatasetRootRule):

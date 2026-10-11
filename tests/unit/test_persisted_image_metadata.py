@@ -163,10 +163,10 @@ def test_saved_two_channel_planes_keep_runtime_axis_not_contributor_axis(
 def receive_projection_entries(writer, metadata_path, subdirectory, entries):
     target = RuntimeArtifactMetadataTarget(
         output_dir=Path(metadata_path).parent / subdirectory,
-        plate_root=str(Path(metadata_path).parent), sub_dir=subdirectory,
+        dataset_root=str(Path(metadata_path).parent), sub_dir=subdirectory,
         backend="disk", results_dir=None, create_openhcs_metadata=False,
     )
-    writer.reconcile_completed_plate(
+    writer.reconcile_completed_dataset(
         metadata_path, {}, produced_entries_by_target={target: entries}
     )
 
@@ -229,7 +229,7 @@ def publish_projection_inventory(writer, path, projection_metadata, saved_paths)
 
 
 @pytest.mark.parametrize(
-    "merge_method", ("merge_subdirectory_metadata", "reconcile_completed_plate")
+    "merge_method", ("merge_subdirectory_metadata", "reconcile_completed_dataset")
 )
 def test_atomic_projection_merge_refreshes_geometry_from_current_document(
     tmp_path, merge_method

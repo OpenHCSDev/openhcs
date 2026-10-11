@@ -272,12 +272,12 @@ class OperaPhenixMetadataHandler(DiskImageFileListingMetadataHandler):
 
     # Legacy mode has been completely purged
 
-    def find_metadata_file(self, plate_path: Union[str, Path]):
+    def find_metadata_file(self, dataset_root: Union[str, Path]):
         """
         Find the Index.xml file in the plate directory.
 
         Args:
-            plate_path: Path to the plate directory
+            dataset_root: Path to the plate directory
 
         Returns:
             Path to the Index.xml file
@@ -285,21 +285,21 @@ class OperaPhenixMetadataHandler(DiskImageFileListingMetadataHandler):
         Raises:
             FileNotFoundError: If no Index.xml file is found
         """
-        # Ensure plate_path is a Path object
-        if isinstance(plate_path, str):
-            plate_path = Path(plate_path)
+        # Ensure dataset_root is a Path object
+        if isinstance(dataset_root, str):
+            dataset_root = Path(dataset_root)
 
         # Ensure the path exists
-        if not plate_path.exists():
-            raise FileNotFoundError(f"Plate path does not exist: {plate_path}")
+        if not dataset_root.exists():
+            raise FileNotFoundError(f"Plate path does not exist: {dataset_root}")
 
         # Check for Index.xml in the plate directory
-        index_xml = plate_path / "Index.xml"
+        index_xml = dataset_root / "Index.xml"
         if index_xml.exists():
             return index_xml
 
         # Check for Index.xml in the Images directory
-        images_dir = plate_path / "Images"
+        images_dir = dataset_root / "Images"
         if images_dir.exists():
             index_xml = images_dir / "Index.xml"
             if index_xml.exists():
@@ -307,16 +307,16 @@ class OperaPhenixMetadataHandler(DiskImageFileListingMetadataHandler):
 
         # No recursive search - only check root and Images directories
         raise FileNotFoundError(
-            f"Index.xml not found in {plate_path} or {plate_path}/Images. "
+            f"Index.xml not found in {dataset_root} or {dataset_root}/Images. "
             "Opera Phenix metadata requires Index.xml file."
         )
 
-    def get_grid_dimensions(self, plate_path: Union[str, Path]):
+    def get_grid_dimensions(self, dataset_root: Union[str, Path]):
         """
         Get grid dimensions for stitching from Index.xml file.
 
         Args:
-            plate_path: Path to the plate folder
+            dataset_root: Path to the plate folder
 
         Returns:
             Tuple of (grid_rows, grid_cols) - UPDATED: Now returns (rows, cols) for MIST compatibility
@@ -326,16 +326,16 @@ class OperaPhenixMetadataHandler(DiskImageFileListingMetadataHandler):
             OperaPhenixXmlParseError: If the XML cannot be parsed
             OperaPhenixXmlContentError: If grid dimensions cannot be determined
         """
-        # Ensure plate_path is a Path object
-        if isinstance(plate_path, str):
-            plate_path = Path(plate_path)
+        # Ensure dataset_root is a Path object
+        if isinstance(dataset_root, str):
+            dataset_root = Path(dataset_root)
 
         # Ensure the path exists
-        if not plate_path.exists():
-            raise FileNotFoundError(f"Plate path does not exist: {plate_path}")
+        if not dataset_root.exists():
+            raise FileNotFoundError(f"Plate path does not exist: {dataset_root}")
 
         # Find the Index.xml file - this will raise FileNotFoundError if not found
-        index_xml = self.find_metadata_file(plate_path)
+        index_xml = self.find_metadata_file(dataset_root)
 
         # Use the OperaPhenixXmlParser to get the grid size
         # This will raise appropriate exceptions if parsing fails
@@ -355,12 +355,12 @@ class OperaPhenixMetadataHandler(DiskImageFileListingMetadataHandler):
         # FIXED: Return (rows, cols) for MIST compatibility instead of (cols, rows)
         return (grid_size[1], grid_size[0])
 
-    def get_pixel_size(self, plate_path: Union[str, Path]):
+    def get_pixel_size(self, dataset_root: Union[str, Path]):
         """
         Get the pixel size from Index.xml file.
 
         Args:
-            plate_path: Path to the plate folder
+            dataset_root: Path to the plate folder
 
         Returns:
             Pixel size in micrometers
@@ -370,16 +370,16 @@ class OperaPhenixMetadataHandler(DiskImageFileListingMetadataHandler):
             OperaPhenixXmlParseError: If the XML cannot be parsed
             OperaPhenixXmlContentError: If pixel size cannot be determined
         """
-        # Ensure plate_path is a Path object
-        if isinstance(plate_path, str):
-            plate_path = Path(plate_path)
+        # Ensure dataset_root is a Path object
+        if isinstance(dataset_root, str):
+            dataset_root = Path(dataset_root)
 
         # Ensure the path exists
-        if not plate_path.exists():
-            raise FileNotFoundError(f"Plate path does not exist: {plate_path}")
+        if not dataset_root.exists():
+            raise FileNotFoundError(f"Plate path does not exist: {dataset_root}")
 
         # Find the Index.xml file - this will raise FileNotFoundError if not found
-        index_xml = self.find_metadata_file(plate_path)
+        index_xml = self.find_metadata_file(dataset_root)
 
         # Use the OperaPhenixXmlParser to get the pixel size
         # This will raise appropriate exceptions if parsing fails
@@ -398,17 +398,17 @@ class OperaPhenixMetadataHandler(DiskImageFileListingMetadataHandler):
 
     def component_value_set(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> MetadataComponentValueSet:
         """Return channel labels declared by Opera Phenix Index.xml."""
 
         try:
-            # Ensure plate_path is a Path object
-            if isinstance(plate_path, str):
-                plate_path = Path(plate_path)
+            # Ensure dataset_root is a Path object
+            if isinstance(dataset_root, str):
+                dataset_root = Path(dataset_root)
 
             # Find and parse Index.xml
-            index_xml = self.find_metadata_file(plate_path)
+            index_xml = self.find_metadata_file(dataset_root)
             xml_parser = self.create_xml_parser(index_xml)
 
             # Extract channel information
@@ -520,26 +520,26 @@ class OperaPhenixHandler(VirtualMappingSource):
     # Uses default workspace initialization from base class
 
     def _build_virtual_mapping(
-        self, plate_path: Path, filemanager: FileManager
+        self, dataset_root: Path, filemanager: FileManager
     ) -> Path:
         """
         Build Opera Phenix virtual workspace mapping using plate-relative paths.
 
         Args:
-            plate_path: Path to plate directory
+            dataset_root: Path to plate directory
             filemanager: FileManager instance for file operations
 
         Returns:
             Path to image directory
         """
-        plate_path = Path(plate_path)  # Ensure Path object
+        dataset_root = Path(dataset_root)  # Ensure Path object
 
         logger.info(
-            f"🔄 BUILDING VIRTUAL MAPPING: Opera Phenix field remapping for {plate_path}"
+            f"🔄 BUILDING VIRTUAL MAPPING: Opera Phenix field remapping for {dataset_root}"
         )
 
         # Opera Phenix images are always in Images/ subdirectory
-        image_dir = plate_path / self.root_dir
+        image_dir = dataset_root / self.root_dir
 
         # Default to empty field mapping (no remapping)
         field_mapping = {}
@@ -548,7 +548,7 @@ class OperaPhenixHandler(VirtualMappingSource):
         xml_parser = None
         try:
             index_xml = filemanager.find_file_recursive(
-                plate_path, "Index.xml", Backend.DISK.value
+                dataset_root, "Index.xml", Backend.DISK.value
             )
             if index_xml:
                 xml_parser = OperaPhenixXmlParser(index_xml)
@@ -622,7 +622,7 @@ class OperaPhenixHandler(VirtualMappingSource):
         )
 
         # Save virtual workspace mapping and all available metadata
-        self.save_virtual_workspace_metadata(plate_path, workspace_mapping)
+        self.save_virtual_workspace_metadata(dataset_root, workspace_mapping)
 
         return image_dir
 

@@ -95,11 +95,11 @@ class VirtualWorkspaceSourceProjection:
 
     @classmethod
     def empty(
-        cls, plate_path: Path | None = None
+        cls, dataset_root: Path | None = None
     ) -> "VirtualWorkspaceSourceProjection":
         workspace_root = None
-        if plate_path is not None:
-            workspace_root = str(plate_path)
+        if dataset_root is not None:
+            workspace_root = str(dataset_root)
         return cls(
             source_refs_by_virtual_path=MappingProxyType({}),
             source_metadata_by_path=MappingProxyType({}),
@@ -110,10 +110,10 @@ class VirtualWorkspaceSourceProjection:
     @classmethod
     def from_openhcs_metadata(
         cls,
-        plate_path: Path,
+        dataset_root: Path,
         metadata: OpenHCSMetadataPayload,
     ) -> "VirtualWorkspaceSourceProjection":
-        builder = VirtualWorkspaceSourceProjectionBuilder(plate_path)
+        builder = VirtualWorkspaceSourceProjectionBuilder(dataset_root)
         for subdirectory in OpenHCSMetadataSubdirectories(metadata).values():
             builder.ingest_subdirectory(subdirectory)
         return builder.projection()
@@ -121,13 +121,13 @@ class VirtualWorkspaceSourceProjection:
     @classmethod
     def from_openhcs_metadata_if_available(
         cls,
-        plate_path: Path,
+        dataset_root: Path,
         metadata: OpenHCSMetadataPayload,
     ) -> "VirtualWorkspaceSourceProjection | None":
         subdirectories = OpenHCSMetadataSubdirectories(metadata)
         if not subdirectories.has_workspace_mapping():
             return None
-        builder = VirtualWorkspaceSourceProjectionBuilder(plate_path)
+        builder = VirtualWorkspaceSourceProjectionBuilder(dataset_root)
         for subdirectory in subdirectories.values():
             builder.ingest_subdirectory(subdirectory)
         return builder.projection()
@@ -767,27 +767,27 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
 class VirtualWorkspaceSourceProjectionCache:
     """Process-local cache for projections keyed by metadata object identity."""
 
-    projections_by_plate_path: dict[
+    projections_by_dataset_root: dict[
         str,
         VirtualWorkspaceSourceProjectionCacheEntry,
     ] = field(default_factory=dict)
 
     def projection_for(
         self,
-        plate_path: Path,
+        dataset_root: Path,
         metadata: OpenHCSMetadataPayload,
         *,
         source_bindings: SourceBindingsConfig | None = None,
     ) -> VirtualWorkspaceSourceProjection | None:
-        plate_key = str(plate_path)
-        cached = self.projections_by_plate_path.get(plate_key)
+        dataset_key = str(dataset_root)
+        cached = self.projections_by_dataset_root.get(dataset_key)
         if cached is None or cached.metadata is not metadata:
             projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
-                plate_path,
+                dataset_root,
                 metadata,
             )
             cached = VirtualWorkspaceSourceProjectionCacheEntry(metadata, projection)
-            self.projections_by_plate_path[plate_key] = cached
+            self.projections_by_dataset_root[dataset_key] = cached
         return cached.accepted_for(source_bindings).projection
 
     def filtered_by_axis(
@@ -813,7 +813,7 @@ class VirtualWorkspaceSourceProjectionCache:
         axis_ids: Sequence[str],
     ) -> Mapping[str, VirtualWorkspaceSourceProjection]:
         """Share admitted axis views between compilation and runtime queries."""
-        document_entry = self.projections_by_plate_path.get(projection.workspace_root)
+        document_entry = self.projections_by_dataset_root.get(projection.workspace_root)
         cached = (
             None if document_entry is None
             else document_entry.entry_for_projection(projection)
@@ -834,7 +834,7 @@ DEFAULT_SOURCE_PROJECTION_CACHE = VirtualWorkspaceSourceProjectionCache()
 class WorkspaceSourceProjections:
     """Projection authority for source-workspace metadata owned by a plate handler."""
 
-    plate_path: Path
+    dataset_root: Path
     metadata_handler: "MetadataHandler"
     filemanager: "FileManager"
     cache: VirtualWorkspaceSourceProjectionCache | None = None
@@ -851,7 +851,7 @@ class WorkspaceSourceProjections:
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
     ) -> "WorkspaceSourceProjections":
         return RuntimeWorkspaceSourceProjections(
-            plate_path=Path(context.dataset_root),
+            dataset_root=Path(context.dataset_root),
             metadata_handler=context.microscope_handler.metadata_handler,
             filemanager=context.filemanager,
             cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
@@ -872,7 +872,7 @@ class WorkspaceSourceProjections:
         """Build projection authority from the dataset-level metadata owners."""
 
         return cls(
-            plate_path=dataset_root,
+            dataset_root=dataset_root,
             metadata_handler=metadata_handler,
             filemanager=filemanager,
             cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
@@ -882,7 +882,7 @@ class WorkspaceSourceProjections:
     def is_bound_to_context(self, context: "ProcessingContext") -> bool:
         """Compare actual owners, never identities of already-released objects."""
         if not (
-            self.plate_path == Path(context.dataset_root)
+            self.dataset_root == Path(context.dataset_root)
             and self.metadata_handler is context.microscope_handler.metadata_handler
             and self.filemanager is context.filemanager
         ):
@@ -895,7 +895,7 @@ class WorkspaceSourceProjections:
 
         if isinstance(self.metadata_handler, OpenHCSMetadataHandler):
             return (self.metadata_handler,)
-        metadata_path = self.plate_path / OpenHCSMetadataHandler.METADATA_FILENAME
+        metadata_path = self.dataset_root / OpenHCSMetadataHandler.METADATA_FILENAME
         if not self.filemanager.exists(str(metadata_path), Backend.DISK.value):
             return (self.metadata_handler,)
         workspace_handler = self._workspace_metadata_handler
@@ -909,7 +909,7 @@ class WorkspaceSourceProjections:
         documents: list[OpenHCSMetadataPayload] = []
         for metadata_handler in self.metadata_handlers():
             metadata = metadata_handler.source_workspace_metadata_document(
-                self.plate_path
+                self.dataset_root
             )
             if metadata is None:
                 continue
@@ -934,7 +934,7 @@ class WorkspaceSourceProjections:
     def projection_if_available(
         self, *, axis_id: str | None = None,
     ) -> VirtualWorkspaceSourceProjection | None:
-        workspace_root = self.metadata_handler.source_workspace_root(self.plate_path)
+        workspace_root = self.metadata_handler.source_workspace_root(self.dataset_root)
         for metadata in self.metadata_documents():
             if self.cache is None:
                 projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
@@ -962,7 +962,7 @@ class WorkspaceSourceProjections:
         projection = self.projection_if_available(axis_id=axis_id)
         if projection is not None:
             return projection
-        return VirtualWorkspaceSourceProjection.empty(self.plate_path)
+        return VirtualWorkspaceSourceProjection.empty(self.dataset_root)
 
 
 @dataclass(frozen=True, slots=True)
@@ -989,8 +989,8 @@ class RuntimeWorkspaceSourceProjections(
             for target, entries in (
                 self.context.completed_step_outputs.source_projection_entries_by_target.items()
             )
-            if source_path_identity_key(target.plate_root)
-            == source_path_identity_key(self.plate_path)
+            if source_path_identity_key(target.dataset_root)
+            == source_path_identity_key(self.dataset_root)
             and not entries.is_empty
         )
         if not produced_entries:
@@ -998,7 +998,7 @@ class RuntimeWorkspaceSourceProjections(
                 None if projection is None
                 else self._projection_for_axis(projection, axis_id=axis_id)
             )
-        builder = VirtualWorkspaceSourceProjectionBuilder(self.plate_path)
+        builder = VirtualWorkspaceSourceProjectionBuilder(self.dataset_root)
         if projection is not None:
             builder.ingest_workspace_mapping(
                 VirtualWorkspaceMapping(projection.source_refs_by_virtual_path)
@@ -1026,7 +1026,7 @@ class RuntimeWorkspaceSourceProjections(
 class VirtualWorkspaceSourceProjectionBuilder:
     """Build source-binding projection data from OpenHCS virtual-workspace metadata."""
 
-    plate_path: Path
+    dataset_root: Path
     workspace_source_refs: dict[str, SourcePixelRef] = field(default_factory=dict)
     source_metadata_by_path: dict[str, SourceMetadataMapping] = field(
         default_factory=dict
@@ -1058,7 +1058,7 @@ class VirtualWorkspaceSourceProjectionBuilder:
             raise TypeError(
                 "Workspace source references must be SourcePixelRef values."
             )
-        loadable_path = str(self.plate_path / virtual_path)
+        loadable_path = str(self.dataset_root / virtual_path)
         self.workspace_source_refs[virtual_path] = source_ref
         self.workspace_source_refs[loadable_path] = source_ref
 
@@ -1097,7 +1097,7 @@ class VirtualWorkspaceSourceProjectionBuilder:
                 )
             self.source_projections_by_virtual_path[virtual_path] = projection
             self.source_projections_by_virtual_path[
-                str(self.plate_path / virtual_path)
+                str(self.dataset_root / virtual_path)
             ] = projection
 
     def ingest_source_metadata(
@@ -1114,7 +1114,7 @@ class VirtualWorkspaceSourceProjectionBuilder:
     ) -> None:
         normalized_metadata = SourceMetadataFields.readonly_snapshot(metadata_fields)
         self.source_metadata_by_path[virtual_path] = normalized_metadata
-        self.source_metadata_by_path[str(self.plate_path / virtual_path)] = (
+        self.source_metadata_by_path[str(self.dataset_root / virtual_path)] = (
             normalized_metadata
         )
 
@@ -1130,5 +1130,5 @@ class VirtualWorkspaceSourceProjectionBuilder:
             source_projections_by_virtual_path=MappingProxyType(
                 self.source_projections_by_virtual_path
             ),
-            workspace_root=str(self.plate_path),
+            workspace_root=str(self.dataset_root),
         )

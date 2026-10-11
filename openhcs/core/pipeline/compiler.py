@@ -55,7 +55,7 @@ from openhcs.core.axis_filter import (
 from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
-    CompilationPlateScope,
+    CompilationDatasetScope,
     CompilationSession,
     ResolvedPipelineDefinition,
     resolve_declared_dataclass_paths,
@@ -196,7 +196,7 @@ class PipelineCompiler:
         global_config: "GlobalPipelineConfig",
         source_workspace_projection: VirtualWorkspaceSourceProjection,
         metadata_writer: bool = False,
-        plate_path: Optional[Path] = None,
+        dataset_root: Optional[Path] = None,
         path_resolver: CompilationPathResolver | None = None,
         is_zmq_execution: bool = False,
         # base_input_dir and axis_id parameters removed, will use from context
@@ -211,7 +211,7 @@ class PipelineCompiler:
             pipeline: Ordered resolved steps with saved provenance and scope identities
             orchestrator: Orchestrator instance for well filter resolution
             metadata_writer: If True, this well is responsible for creating OpenHCS metadata files
-            plate_path: Path to plate root for zarr conversion detection
+            dataset_root: Path to plate root for zarr conversion detection
             global_config: Resolved global compiler configuration
 
         Returns:
@@ -227,7 +227,7 @@ class PipelineCompiler:
             global_config=global_config,
             source_workspace_projection=source_workspace_projection,
             metadata_writer=metadata_writer,
-            plate_path=plate_path,
+            dataset_root=dataset_root,
             path_resolver=path_resolver,
             is_zmq_execution=is_zmq_execution,
         )
@@ -275,8 +275,8 @@ class PipelineCompiler:
     ) -> None:
         context = session.context
         steps = session.pipeline.steps
-        plate_path = session.plate_path
-        if not steps or plate_path is None:
+        dataset_root = session.dataset_root
+        if not steps or dataset_root is None:
             return
 
         vfs_config = session.global_config.vfs_config
@@ -284,20 +284,19 @@ class PipelineCompiler:
             return
 
         available_backends = context.microscope_handler.available_backends(
-            plate_path
+            dataset_root
         )
         if Backend.ZARR in available_backends:
             return
 
-        from openhcs.core.dataset_sources.openhcs_format import (
-            OpenHCSMetadataHandler,
-            get_subdirectory_name,
-        )
+        from polystore.metadata_writer import get_subdirectory_name
+
+        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 
         openhcs_metadata_handler = OpenHCSMetadataHandler(context.filemanager)
-        metadata = openhcs_metadata_handler._load_metadata_dict(plate_path)
+        metadata = openhcs_metadata_handler._load_metadata_dict(dataset_root)
         subdirs = metadata["subdirectories"]
-        original_subdir = get_subdirectory_name(context.input_dir, plate_path)
+        original_subdir = get_subdirectory_name(context.input_dir, dataset_root)
         uses_virtual_workspace = (
             Backend.VIRTUAL_WORKSPACE.value
             in subdirs[original_subdir]["available_backends"]
@@ -305,7 +304,7 @@ class PipelineCompiler:
 
         zarr_subdir = "zarr" if uses_virtual_workspace else original_subdir
         context.step_plans[0].input_conversion = InputConversionPlan(
-            output_dir=plate_path / zarr_subdir,
+            output_dir=dataset_root / zarr_subdir,
             backend=MaterializationBackend.ZARR.value,
             uses_virtual_workspace=uses_virtual_workspace,
             original_subdir=original_subdir,
@@ -894,26 +893,26 @@ class PipelineCompiler:
             effective_config.partition_filter_config if effective_config else None
         )
         if partition_filter_config and partition_filter_config.partition_filter is not None:
-            available_wells = orchestrator.get_component_keys(
+            available_values = orchestrator.get_component_keys(
                 AxisFamily.active().partition_axis(), resolved_config=effective_config
             )
-            resolved_wells = PartitionFilterProcessor.resolve_filter_with_mode(
+            resolved_values = PartitionFilterProcessor.resolve_filter_with_mode(
                 partition_filter_config.partition_filter,
                 partition_filter_config.partition_filter_mode,
-                available_wells,
+                available_values,
             )
             logger.info(
-                f"Well filter: {partition_filter_config.partition_filter} (mode={partition_filter_config.partition_filter_mode.value}) "
-                f"→ {len(resolved_wells)} wells to process: {resolved_wells}"
+                f"Partition filter: {partition_filter_config.partition_filter} (mode={partition_filter_config.partition_filter_mode.value}) "
+                f"→ {len(resolved_values)} partition values to process: {resolved_values}"
             )
             resolved_axis_filter = (
-                [well for well in resolved_wells if well in axis_filter]
+                [value for value in resolved_values if value in axis_filter]
                 if axis_filter
-                else resolved_wells
+                else resolved_values
             )
             if axis_filter:
                 logger.info(
-                    f"Intersected with axis_filter: {len(resolved_axis_filter)} wells remain"
+                    f"Intersected with axis_filter: {len(resolved_axis_filter)} partition values remain"
                 )
 
         return orchestrator.get_component_keys(
@@ -1062,7 +1061,7 @@ class PipelineCompiler:
             request.global_config,
             request.source_projections_by_axis[context.axis_id],
             metadata_writer=metadata_writer,
-            plate_path=request.orchestrator.dataset_root,
+            dataset_root=request.orchestrator.dataset_root,
             path_resolver=request.path_resolver,
             is_zmq_execution=request.is_zmq_execution,
         )
@@ -1480,7 +1479,7 @@ class PipelineCompiler:
             f"Execution config: {effective_config.num_workers} workers configured for pipeline execution"
         )
         logger.info(
-            f"Compilation complete: {len(compiled_contexts)} wells compiled successfully"
+            f"Compilation complete: {len(compiled_contexts)} partition values compiled successfully"
         )
         logger.debug(
             "Pipeline definition stripped before compiler return: %s steps",
@@ -1507,17 +1506,17 @@ class PipelineCompiler:
 
     @staticmethod
     def _calculate_worker_assignments(
-        wells: list[str],
+        axis_ids: list[str],
         num_workers: int,
     ) -> dict[str, list[str]]:
         """Assign compiled context keys to stable worker slots."""
         if num_workers <= 0:
             raise ValueError(f"num_workers must be >= 1, got {num_workers}")
-        if len(set(wells)) != len(wells):
-            raise ValueError(f"Duplicate well IDs: {wells}")
+        if len(set(axis_ids)) != len(axis_ids):
+            raise ValueError(f"Duplicate axis IDs: {axis_ids}")
 
         slots = {f"worker_{idx}": [] for idx in range(num_workers)}
-        for idx, axis_id in enumerate(sorted(wells)):
+        for idx, axis_id in enumerate(sorted(axis_ids)):
             slot = f"worker_{idx % num_workers}"
             slots[slot].append(axis_id)
         return {slot: owned for slot, owned in slots.items() if owned}
@@ -1601,7 +1600,7 @@ class PipelineCompiler:
                     ),
                 )
             path_resolver = CompilationPathResolver(
-                plate_scope=CompilationPlateScope.from_path(orchestrator.dataset_root),
+                dataset_scope=CompilationDatasetScope.from_path(orchestrator.dataset_root),
                 filemanager=orchestrator.filemanager,
                 backend=Backend.DISK.value,
             )

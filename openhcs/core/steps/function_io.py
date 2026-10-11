@@ -371,7 +371,7 @@ def get_all_image_paths(
 
 
 def update_metadata_for_zarr_conversion(
-    plate_root: Path,
+    dataset_root: Path,
     original_subdir: str,
     zarr_subdir: str | None,
     context: ProcessingContext,
@@ -388,20 +388,20 @@ def update_metadata_for_zarr_conversion(
         OpenHCSMetadataHandler,
     )
 
-    metadata_path = get_metadata_path(plate_root)
+    metadata_path = get_metadata_path(dataset_root)
     writer = AtomicMetadataWriter()
 
     if zarr_subdir:
-        zarr_dir = plate_root / zarr_subdir
+        zarr_dir = dataset_root / zarr_subdir
         metadata_handler = OpenHCSMetadataHandler(context.filemanager)
-        metadata_document = metadata_handler.load_metadata_document(plate_root)
+        metadata_document = metadata_handler.load_metadata_document(dataset_root)
         subdirectories = dict(OpenHCSMetadataSubdirectories(metadata_document).items())
         if original_subdir not in subdirectories:
             raise ValueError(
                 "Zarr conversion metadata is missing original subdirectory "
                 f"{original_subdir!r}."
             )
-        source_dir = plate_root / original_subdir
+        source_dir = dataset_root / original_subdir
         grid_dimensions = metadata_handler.get_metadata_grid_dimensions(source_dir)
         pixel_size = metadata_handler.get_metadata_pixel_size(source_dir)
         source_projections = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
@@ -477,7 +477,7 @@ def update_metadata_for_zarr_conversion(
                 str(zarr_dir),
                 Backend.ZARR.value,
                 is_main=True,
-                plate_root=str(plate_root),
+                dataset_root=str(dataset_root),
                 sub_dir=zarr_subdir,
                 grid_dimensions=grid_dimensions,
                 pixel_size=pixel_size,

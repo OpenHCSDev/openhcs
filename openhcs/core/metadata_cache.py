@@ -19,12 +19,12 @@ class MetadataCache:
         self._lock = threading.Lock()
 
     def cache_metadata(
-        self, microscope_handler, plate_path: Path, component_keys_cache: Dict
+        self, microscope_handler, dataset_root: Path, component_keys_cache: Dict
     ) -> None:
         """Cache all metadata from metadata handler."""
         with self._lock:
             # Parse all metadata once
-            metadata = microscope_handler.metadata_handler.parse_metadata(plate_path)
+            metadata = microscope_handler.metadata_handler.parse_metadata(dataset_root)
             logger.info(f"🔍 METADATA_CACHE: parse_metadata returned: {metadata}")
 
             # Initialize all components with keys mapped to None
@@ -52,7 +52,7 @@ class MetadataCache:
 
             # Store metadata file mtime for invalidation
             metadata_file = microscope_handler.metadata_handler.find_metadata_file(
-                plate_path
+                dataset_root
             )
             if metadata_file and metadata_file.exists():
                 self._metadata_file_mtimes[metadata_file] = (

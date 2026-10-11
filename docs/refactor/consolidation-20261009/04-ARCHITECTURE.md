@@ -160,7 +160,7 @@ Generic work that OpenHCS does itself moves to the library that owns the concept
 | L6 | pycodify, ObjectState | the nested-enum formatter fix (pycodify `formatters.py:77-87`), path factoring and `PythonSourceLiteral`; `objectstate.codegen` for the LazyDataclass formatter |
 | L7 | new `streamviewer` | zmqruntime's viewer protocol and state, PolyStore's streaming receivers, and the napari/Fiji servers, component system and controls (about 12k lines) |
 
-A separate compiler-kernel library is not warranted. It would have one consumer, so the kernel stays a package inside OpenHCS.
+The kernel stays a package inside OpenHCS until the layout step; it then becomes its own distribution, arraypipe (End state).
 
 ## Package layout
 
@@ -177,6 +177,8 @@ The layout moves last (P2). Every earlier surface already writes its new modules
 
 A second domain must be declarations only. The CI witness is a test that declares a non-microscopy family, compiles and runs a small pipeline over a synthetic dataset, and streams it to a headless viewer. For example, remote sensing: `Scene(PartitionAxis)`, `Band(ColourAxis)`, `Tile(TileAxis)`, `Date(TimeAxis)`, with no stack axis. It must pass with zero kernel edits. A ratchet counts domain member references in kernel modules, and the count only goes down.
 
+Built by W ([W-witness.md](W-witness.md)): the family is declared in `tests/unit/remote_sensing_witness_domain.py`; `test_axis_family_witness.py` runs it direct, over the ZMQ execution server with spawned workers, and streaming to napari; `test_axis_family_guards.py::test_kernel_domain_references_only_shrink` is the ratchet.
+
 ## End state: two distributions
 
 The owner's goal is to split the codebase into a domain-agnostic platform and OpenHCS as its microscopy instantiation. The layout step (P) is the last in-repo step. The split follows it mechanically once these hold:
@@ -187,7 +189,9 @@ The owner's goal is to split the codebase into a domain-agnostic platform and Op
 4. **A layer for the processing function library:** the generic image-processing functions (backends per array library) become a layer that depends on the kernel and is usable by any image domain. Microscopy-only functions move to the domain.
 5. **Viewers extracted (L7):** `streamviewer` is a first-party library under both.
 
-Then the kernel moves to its own repository and distribution (name decided by the owner), and OpenHCS depends on it with a pinned version, in lockstep like the other first-party libraries.
+Then the kernel moves to its own repository and distribution, and OpenHCS depends on it with a pinned version, in lockstep like the other first-party libraries.
+
+**Decision (owner, 2026-10-11):** the kernel distribution is named **arraypipe**: repository `OpenHCSDev/arraypipe`, PyPI name reserved with release 0.0.1. `openhcs/kernel/` (P) is the package that moves into it.
 
 ## The UI: one session interface, thin renderers (surfaces U1 to U5)
 

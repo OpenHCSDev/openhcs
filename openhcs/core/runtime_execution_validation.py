@@ -386,7 +386,7 @@ def _runtime_output_roots(
             if plan.output_dataset_root is not None:
                 roots.append(Path(plan.output_dataset_root))
             if plan.materialized_output is not None:
-                roots.append(Path(plan.materialized_output.plate_root))
+                roots.append(Path(plan.materialized_output.dataset_root))
 
     if roots:
         return tuple(dict.fromkeys(roots))

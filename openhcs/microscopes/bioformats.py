@@ -62,29 +62,29 @@ class BioFormatsMetadataHandler(MetadataHandler):
         self.filemanager = filemanager
         self.source_bindings = source_bindings or SourceBindingsConfig()
 
-    def source_dataset(self, plate_path: Union[str, Path]) -> SourcePlaneDataset:
+    def source_dataset(self, dataset_root: Union[str, Path]) -> SourcePlaneDataset:
         return SourcePlaneStoreAdapter.discover_dataset(
-            plate_path, source_bindings=self.source_bindings
+            dataset_root, source_bindings=self.source_bindings
         )
 
     def source_diagnostics(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> tuple[Mapping[str, object], ...]:
         """Project decoder-owned dataset diagnostics for metadata consumers."""
 
         return tuple(
             dict(diagnostic.metadata_payload())
-            for diagnostic in self.source_dataset(plate_path).diagnostics
+            for diagnostic in self.source_dataset(dataset_root).diagnostics
         )
 
     def physical_source_paths(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> tuple[Path, ...]:
         """Return store-declared physical containers, not projected plane names."""
 
-        dataset = self.source_dataset(plate_path)
+        dataset = self.source_dataset(dataset_root)
         return tuple(
             dict.fromkeys(
                 dataset.root / candidate.relative_path
@@ -94,11 +94,11 @@ class BioFormatsMetadataHandler(MetadataHandler):
 
     def _component_values(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         component: type[Axis],
     ) -> Optional[Dict[str, Optional[str]]]:
         values: dict[str, str | None] = {}
-        for candidate in self.source_dataset(plate_path).candidates:
+        for candidate in self.source_dataset(dataset_root).candidates:
             address = candidate.declared_address
             if address is None:
                 raise ValueError("Store candidate lacks an exact plane address.")
@@ -112,55 +112,55 @@ class BioFormatsMetadataHandler(MetadataHandler):
             values[coordinate] = label if label is not None else previous
         return dict(sorted(values.items())) or None
 
-    def find_metadata_file(self, plate_path: Union[str, Path]) -> Path:
+    def find_metadata_file(self, dataset_root: Union[str, Path]) -> Path:
         try:
-            self.source_dataset(plate_path)
+            self.source_dataset(dataset_root)
         except PlaneStoreUnavailableError as exc:
             raise FileNotFoundError(
-                f"No addressable Bio-Formats source dataset found for {plate_path}."
+                f"No addressable Bio-Formats source dataset found for {dataset_root}."
             ) from exc
-        return Path(plate_path)
+        return Path(dataset_root)
 
-    def get_grid_dimensions(self, plate_path: Union[str, Path]) -> tuple[int, int]:
-        del plate_path
+    def get_grid_dimensions(self, dataset_root: Union[str, Path]) -> tuple[int, int]:
+        del dataset_root
         return (1, 1)
 
-    def get_pixel_size(self, plate_path: Union[str, Path]) -> float:
+    def get_pixel_size(self, dataset_root: Union[str, Path]) -> float:
         return SourceVoxelSpacing.require_physical_pixel_size(
-            self._source_voxel_spacings(plate_path)
+            self._source_voxel_spacings(dataset_root)
         )
 
-    def get_metadata_pixel_size(self, plate_path: Union[str, Path]) -> float:
+    def get_metadata_pixel_size(self, dataset_root: Union[str, Path]) -> float:
         """Retain the dataset's numeric view without asserting physical units."""
-        return self.source_dataset(plate_path).pixel_size
+        return self.source_dataset(dataset_root).pixel_size
 
-    def source_voxel_spacing(self, plate_path: Union[str, Path]) -> SourceVoxelSpacing:
-        return SourceVoxelSpacing.common(self._source_voxel_spacings(plate_path))
+    def source_voxel_spacing(self, dataset_root: Union[str, Path]) -> SourceVoxelSpacing:
+        return SourceVoxelSpacing.common(self._source_voxel_spacings(dataset_root))
 
     def _source_voxel_spacings(
-        self, plate_path: Union[str, Path]
+        self, dataset_root: Union[str, Path]
     ) -> tuple[SourceVoxelSpacing, ...]:
         return tuple(
             SourceVoxelSpacing.from_source_metadata(candidate.metadata)
-            for candidate in self.source_dataset(plate_path).candidates
+            for candidate in self.source_dataset(dataset_root).candidates
         )
 
     def component_value_set(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> MetadataComponentValueSet:
         """Derive all component labels from exact store plane declarations."""
 
         return MetadataComponentValueSet(
             (
-                (component, self._component_values(plate_path, component))
+                (component, self._component_values(dataset_root, component))
                 for component in AxisFamily.active().axes
             )
         )
 
     def get_image_files(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         all_subdirs: bool = False,
     ) -> list[str]:
         del all_subdirs
@@ -171,7 +171,7 @@ class BioFormatsMetadataHandler(MetadataHandler):
                     candidate.declared_address.parsed_component_values()
                 )
             )
-            for candidate in self.source_dataset(plate_path).candidates
+            for candidate in self.source_dataset(dataset_root).candidates
             if candidate.declared_address is not None
         ]
 
@@ -185,7 +185,7 @@ class BioFormatsHandler(BroadStoreSource, DatasetSource):
     @classmethod
     def detect(
         cls,
-        plate_folder: Path,
+        dataset_root: Path,
         filemanager: FileManager,
         source_bindings_config: SourceBindingsConfig | None = None,
     ) -> bool:
@@ -193,7 +193,7 @@ class BioFormatsHandler(BroadStoreSource, DatasetSource):
         try:
             BioFormatsMetadataHandler(
                 filemanager, source_bindings_config
-            ).find_metadata_file(plate_folder)
+            ).find_metadata_file(dataset_root)
         except (FileNotFoundError, TypeError):
             return False
         return True
@@ -244,37 +244,37 @@ class BioFormatsHandler(BroadStoreSource, DatasetSource):
 
     def initialize_workspace(
         self,
-        plate_path: Path,
+        dataset_root: Path,
         filemanager: FileManager,
     ) -> Path:
         return self._prepare_workspace(
-            Path(plate_path),
+            Path(dataset_root),
             filemanager,
             refresh_dataset=True,
         )
 
     def available_backends(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> List[Backend]:
-        del plate_path
+        del dataset_root
         return [Backend.BIOFORMATS]
 
     def post_workspace(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         filemanager: FileManager,
         skip_preparation: bool = False,
     ) -> Path:
         return self._prepare_workspace(
-            Path(plate_path),
+            Path(dataset_root),
             filemanager,
             refresh_dataset=not skip_preparation,
         )
 
     def _prepare_workspace(
         self,
-        plate_root: Path,
+        dataset_root: Path,
         filemanager: FileManager,
         *,
         refresh_dataset: bool,
@@ -284,18 +284,18 @@ class BioFormatsHandler(BroadStoreSource, DatasetSource):
         self.register_source_backends(filemanager)
         if refresh_dataset:
             self._write_dataset(
-                plate_root,
-                self.source_metadata_handler.source_dataset(plate_root),
+                dataset_root,
+                self.source_metadata_handler.source_dataset(dataset_root),
                 filemanager,
             )
         self.metadata_handler = OpenHCSMetadataHandler(filemanager)
-        self._register_virtual_workspace_backend(plate_root, filemanager)
-        self.plate_folder = plate_root
-        return plate_root
+        self._register_virtual_workspace_backend(dataset_root, filemanager)
+        self.dataset_root = dataset_root
+        return dataset_root
 
     def _write_dataset(
         self,
-        plate_root: Path,
+        dataset_root: Path,
         dataset: SourcePlaneDataset,
         filemanager: FileManager,
     ) -> None:
@@ -303,7 +303,7 @@ class BioFormatsHandler(BroadStoreSource, DatasetSource):
             source_bindings=self.source_bindings,
             parser=self.parser,
         ).projection_set_for_candidates(
-            plate_root,
+            dataset_root,
             dataset.candidates,
             filemanager=filemanager,
             diagnostics=dataset.diagnostics,
@@ -317,7 +317,7 @@ class BioFormatsHandler(BroadStoreSource, DatasetSource):
             main=True,
         )
         AtomicMetadataWriter().merge_subdirectory_metadata(
-            get_metadata_path(plate_root),
+            get_metadata_path(dataset_root),
             {FIELDS.DEFAULT_SUBDIRECTORY: metadata},
         )
 

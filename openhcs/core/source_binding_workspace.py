@@ -672,28 +672,28 @@ class SourceBindingWorkspaceProjector:
 
     def projection_set(
         self,
-        plate_path: Path,
+        dataset_root: Path,
         image_files: Sequence[str | Path],
         *,
         filemanager: FileManagerLike,
         source_backend: Backend | str = Backend.DISK,
     ) -> SourceProjectionSet:
         """Return source projections for the exact submitted source universe."""
-        plate_path = Path(plate_path)
+        dataset_root = Path(dataset_root)
         candidates = self.source_candidates(
-            plate_path,
+            dataset_root,
             image_files,
             source_backend=source_backend,
         )
         return self.projection_set_for_candidates(
-            plate_path,
+            dataset_root,
             candidates,
             filemanager=filemanager,
         )
 
     def projection_set_for_candidates(
         self,
-        plate_path: Path,
+        dataset_root: Path,
         candidates: tuple[SourceCandidate, ...],
         *,
         filemanager: FileManagerLike,
@@ -712,7 +712,7 @@ class SourceBindingWorkspaceProjector:
                         physical_path := filemanager.physical_source_path(
                             candidate.source_ref.backend_address,
                             candidate.source_ref.backend,
-                            base_path=plate_path,
+                            base_path=dataset_root,
                         )
                     )
                     is not None
@@ -726,7 +726,7 @@ class SourceBindingWorkspaceProjector:
         )
 
         candidates = tuple(
-            self._candidate_with_declared_metadata(plate_path, candidate)
+            self._candidate_with_declared_metadata(dataset_root, candidate)
             for candidate in candidates
         )
 
@@ -738,7 +738,7 @@ class SourceBindingWorkspaceProjector:
             SourceTileLayout.from_projection_set(projection_set)
             return projection_set
         candidates_by_alias = self._candidates_by_alias(
-            plate_path,
+            dataset_root,
             candidates,
             filemanager=filemanager,
         )
@@ -756,7 +756,7 @@ class SourceBindingWorkspaceProjector:
         source_sets = SourceSetAssembler.for_config(self.source_bindings).source_sets(
             self.source_bindings.match_plan,
             matched_candidates,
-            self._imported_metadata_indexes(plate_path, filemanager),
+            self._imported_metadata_indexes(dataset_root, filemanager),
         )
         source_sets = self._append_broadcast_members(
             source_sets,

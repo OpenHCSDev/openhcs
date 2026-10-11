@@ -214,7 +214,7 @@ class AtomicMetadataWriter:
             update(metadata_document)
         return published_entries
 
-    def reconcile_completed_plate(
+    def reconcile_completed_dataset(
         self,
         metadata_path: str | Path,
         target_contexts: Mapping[OpenHCSMetadataTarget, ProcessingContext],
@@ -312,10 +312,10 @@ class AtomicMetadataWriter:
         return data
 
 
-def get_metadata_path(plate_root: str | Path) -> Path:
+def get_metadata_path(dataset_root: str | Path) -> Path:
     """Return the canonical metadata path for one OpenHCS plate root."""
 
-    return METADATA_CONFIG.metadata_path(plate_root)
+    return METADATA_CONFIG.metadata_path(dataset_root)
 
 
 

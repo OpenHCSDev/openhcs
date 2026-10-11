@@ -100,7 +100,7 @@ class FileManagerLike(ABC):
         """Ensure a directory exists in the selected backend."""
 
 
-class PlatePathDeclaration(ABC):
+class DatasetPathDeclaration(ABC):
     """Nominal declaration for a path resolved against one compilation plate."""
 
     @abstractmethod
@@ -114,7 +114,7 @@ class PlatePathDeclaration(ABC):
         """Validate the resolved target without creating it."""
 
     @classmethod
-    def from_annotation(cls, annotation: Any) -> "PlatePathDeclaration | None":
+    def from_annotation(cls, annotation: Any) -> "DatasetPathDeclaration | None":
         """Return the sole declaration carried by one structured annotation."""
 
         declarations = cls._from_annotation(annotation)
@@ -127,7 +127,7 @@ class PlatePathDeclaration(ABC):
         return unique[0] if unique else None
 
     @classmethod
-    def _from_annotation(cls, annotation: Any) -> tuple["PlatePathDeclaration", ...]:
+    def _from_annotation(cls, annotation: Any) -> tuple["DatasetPathDeclaration", ...]:
         args = get_args(annotation)
         if get_origin(annotation) is Annotated:
             base, *metadata = args
@@ -143,7 +143,7 @@ class PlatePathDeclaration(ABC):
 
 
 @dataclass(frozen=True, slots=True)
-class PlateInputFileDeclaration(PlatePathDeclaration):
+class PlateInputFileDeclaration(DatasetPathDeclaration):
     """Existing plate-relative input file."""
 
     def validate_target(
@@ -160,7 +160,7 @@ class PlateInputFileDeclaration(PlatePathDeclaration):
 
 
 @dataclass(frozen=True, slots=True)
-class PlateInputDirectoryDeclaration(PlatePathDeclaration):
+class PlateInputDirectoryDeclaration(DatasetPathDeclaration):
     """Existing plate-relative input directory."""
 
     def validate_target(
@@ -181,7 +181,7 @@ class PlateInputDirectoryDeclaration(PlatePathDeclaration):
 
 
 @dataclass(frozen=True, slots=True)
-class PlateOutputFileDeclaration(PlatePathDeclaration):
+class PlateOutputFileDeclaration(DatasetPathDeclaration):
     """Plate-relative output file whose writer owns creation."""
 
     def validate_target(
@@ -195,7 +195,7 @@ class PlateOutputFileDeclaration(PlatePathDeclaration):
 
 
 @dataclass(frozen=True, slots=True)
-class PlateOutputDirectoryDeclaration(PlatePathDeclaration):
+class PlateOutputDirectoryDeclaration(DatasetPathDeclaration):
     """Plate-relative output directory whose writer owns creation."""
 
     def validate_target(

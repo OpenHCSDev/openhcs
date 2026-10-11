@@ -335,7 +335,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
         step_plan.materialized_output = MaterializedOutputPlan(
             output_dir=Path("/tmp/out/A01/checkpoints"),
             backend="disk",
-            plate_root="/tmp/out",
+            dataset_root="/tmp/out",
             sub_dir="checkpoints",
             analysis_results_dir="/tmp/out/A01/checkpoints/analysis",
         )

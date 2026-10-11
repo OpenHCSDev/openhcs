@@ -169,7 +169,7 @@ class DatasetSource(
     ):
         self.parser = parser
         self.metadata_handler = metadata_handler
-        self.plate_folder: Optional[Path] = None
+        self.dataset_root: Optional[Path] = None
 
     # -- selection ------------------------------------------------------------
 
@@ -196,7 +196,7 @@ class DatasetSource(
     @classmethod
     def detect(
         cls,
-        plate_folder: Path,
+        dataset_root: Path,
         filemanager: FileManager,
         source_bindings_config: Optional["SourceBindingsConfig"] = None,
     ) -> bool:
@@ -208,7 +208,7 @@ class DatasetSource(
 
         del source_bindings_config
         try:
-            cls.metadata_handler_class(filemanager).find_metadata_file(plate_folder)
+            cls.metadata_handler_class(filemanager).find_metadata_file(dataset_root)
         except (MetadataNotFoundError, FileNotFoundError, TypeError):
             return False
         return True
@@ -312,7 +312,7 @@ class DatasetSource(
         """Storage backends this source can read, in priority order."""
 
     @abstractmethod
-    def initialize_workspace(self, plate_path: Path, filemanager: FileManager) -> Path:
+    def initialize_workspace(self, dataset_root: Path, filemanager: FileManager) -> Path:
         """Prepare the dataset for reading and return its image directory."""
 
     def get_required_backend(self) -> Optional["MaterializationBackend"]:
@@ -333,58 +333,58 @@ class DatasetSource(
             return MaterializationBackend(backend_value)
         return None
 
-    def available_backends(self, plate_path: Union[str, Path]) -> List[Backend]:
+    def available_backends(self, dataset_root: Union[str, Path]) -> List[Backend]:
         """Backends available for this dataset (default: every compatible one)."""
-        del plate_path
+        del dataset_root
         return self.compatible_backends
 
     def get_primary_backend(
-        self, plate_path: Union[str, Path], filemanager: "FileManager"
+        self, dataset_root: Union[str, Path], filemanager: "FileManager"
     ) -> str:
         """The backend reads go through: a registered virtual workspace first."""
         if Backend.VIRTUAL_WORKSPACE.value in filemanager.registry:
             return Backend.VIRTUAL_WORKSPACE.value
-        available_backends = self.available_backends(plate_path)
+        available_backends = self.available_backends(dataset_root)
         if not available_backends:
             raise RuntimeError(
-                f"No available backends for {self.source_name} at {plate_path}"
+                f"No available backends for {self.source_name} at {dataset_root}"
             )
         return available_backends[0].value
 
     @staticmethod
     def _register_virtual_workspace_backend(
-        plate_path: Union[str, Path], filemanager: FileManager
+        dataset_root: Union[str, Path], filemanager: FileManager
     ) -> None:
         """Register (or reuse) the virtual workspace backend for this dataset."""
         from polystore.virtual_workspace import VirtualWorkspaceBackend
 
         from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 
-        plate_root = Path(plate_path).resolve()
+        resolved_root = Path(dataset_root).resolve()
         registered = filemanager.registry.get(Backend.VIRTUAL_WORKSPACE.value)
         if (
             isinstance(registered, VirtualWorkspaceBackend)
-            and registered.plate_root.resolve() == plate_root
+            and registered.plate_root.resolve() == resolved_root
             and registered.metadata_config == METADATA_CONFIG
         ):
             return
 
         backend = VirtualWorkspaceBackend(
-            plate_root=plate_root, metadata_config=METADATA_CONFIG
+            plate_root=resolved_root, metadata_config=METADATA_CONFIG
         )
         filemanager.register_backend(Backend.VIRTUAL_WORKSPACE.value, backend)
-        logger.info(f"Registered virtual workspace backend for {plate_path}")
+        logger.info(f"Registered virtual workspace backend for {dataset_root}")
 
     @classmethod
     def register_workspace_backends(
         cls,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         filemanager: FileManager,
     ) -> None:
         """Register the backends this source declares for workspace replay."""
 
         cls.register_source_backends(filemanager)
-        cls._register_virtual_workspace_backend(plate_path, filemanager)
+        cls._register_virtual_workspace_backend(dataset_root, filemanager)
 
     @staticmethod
     def register_source_backends(filemanager: FileManager) -> None:
@@ -392,7 +392,7 @@ class DatasetSource(
 
     def save_virtual_workspace_metadata(
         self,
-        plate_path: Path,
+        dataset_root: Path,
         workspace_mapping: Mapping[str, SourcePixelRef],
     ) -> None:
         """Write a virtual workspace mapping and this source's facts to metadata."""
@@ -402,14 +402,14 @@ class DatasetSource(
             get_metadata_path,
         )
 
-        metadata_path = get_metadata_path(plate_path)
+        metadata_path = get_metadata_path(dataset_root)
         metadata_dict = {
             FIELDS.WORKSPACE_MAPPING: {
                 virtual_path: source_ref.to_workspace_mapping()
                 for virtual_path, source_ref in workspace_mapping.items()
             },
             FIELDS.SOURCE_METADATA: self.metadata_handler.source_metadata_by_path(
-                plate_path, self.parser, workspace_mapping
+                dataset_root, self.parser, workspace_mapping
             ),
             FIELDS.AVAILABLE_BACKENDS: {
                 Backend.DISK.value: True,
@@ -418,10 +418,10 @@ class DatasetSource(
             FIELDS.MICROSCOPE_HANDLER_NAME: self.source_name,
             FIELDS.SOURCE_FILENAME_PARSER_NAME: self.parser.__class__.__name__,
             FIELDS.GRID_DIMENSIONS: self.metadata_handler.get_grid_dimensions(
-                plate_path
+                dataset_root
             ),
             FIELDS.PIXEL_SIZE: self.metadata_handler.get_metadata_pixel_size(
-                plate_path
+                dataset_root
             ),
         }
         AtomicMetadataWriter().merge_subdirectory_metadata(
@@ -520,11 +520,11 @@ class DatasetSource(
 
     # -- metadata -------------------------------------------------------------------
 
-    def find_metadata_file(self, plate_path: Union[str, Path]) -> Path:
-        return self.metadata_handler.find_metadata_file(plate_path)
+    def find_metadata_file(self, dataset_root: Union[str, Path]) -> Path:
+        return self.metadata_handler.find_metadata_file(dataset_root)
 
-    def get_grid_dimensions(self, plate_path: Union[str, Path]) -> Tuple[int, int]:
-        return self.metadata_handler.get_grid_dimensions(plate_path)
+    def get_grid_dimensions(self, dataset_root: Union[str, Path]) -> Tuple[int, int]:
+        return self.metadata_handler.get_grid_dimensions(dataset_root)
 
     def can_resolve_metadata_artifact(self, artifact_name: str) -> bool:
         return self.metadata_handler.can_resolve_metadata_artifact(artifact_name)
@@ -532,15 +532,15 @@ class DatasetSource(
     def resolve_metadata_artifact(
         self,
         artifact_name: str,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> object:
         return self.metadata_handler.resolve_metadata_artifact(
             artifact_name,
-            plate_path,
+            dataset_root,
         )
 
-    def get_pixel_size(self, plate_path: Union[str, Path]) -> float:
-        return self.metadata_handler.get_pixel_size(plate_path)
+    def get_pixel_size(self, dataset_root: Union[str, Path]) -> float:
+        return self.metadata_handler.get_pixel_size(dataset_root)
 
 
 __all__ = [

@@ -87,7 +87,7 @@ def test_bioformats_handler_persists_dataset_diagnostics_once(
     monkeypatch.setattr(
         handler.metadata_handler,
         "source_dataset",
-        lambda plate_path: dataset,
+        lambda dataset_root: dataset,
     )
 
     handler.initialize_workspace(tmp_path, filemanager)
@@ -163,7 +163,7 @@ def test_bioformats_structured_refs_project_inside_pattern_runtime(
         filemanager,
     )
     authority = WorkspaceSourceProjections(
-        plate_path=tmp_path,
+        dataset_root=tmp_path,
         metadata_handler=OpenHCSMetadataHandler(filemanager),
         filemanager=filemanager,
         cache=VirtualWorkspaceSourceProjectionCache(),
@@ -218,7 +218,7 @@ def test_openhcs_replay_registers_declared_source_handler_backends(
     assert Backend.BIOFORMATS.value not in reopened_filemanager.registry
 
     handler = DatasetSourceChoice.named("auto").open(tmp_path, filemanager=reopened_filemanager)
-    assert handler.plate_folder == tmp_path
+    assert handler.dataset_root == tmp_path
     handler.initialize_workspace(tmp_path, reopened_filemanager)
 
     assert isinstance(handler, OpenHCSDatasetSource)
@@ -299,7 +299,7 @@ def test_openhcs_output_subdirectory_initializes_from_metadata_root(
     input_dir = handler.initialize_workspace(results, filemanager)
 
     assert isinstance(handler, OpenHCSDatasetSource)
-    assert handler.plate_folder == plate
+    assert handler.dataset_root == plate
     assert input_dir == images
 
 

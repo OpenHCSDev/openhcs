@@ -225,7 +225,7 @@ class PlateInspectionHandlerCandidateProjection:
     ) -> PlateInspectionHandlerCandidate | None:
         try:
             handler = handler_type.create(filemanager=filemanager)
-            handler.plate_folder = plate_path
+            handler.dataset_root = plate_path
             parser = handler.parser
             if parser is None:
                 return None

@@ -120,13 +120,13 @@ def _publish_saved_step(context, plan, *, artifact_materializations=()):
         context, plan, artifact_materializations=artifact_materializations
     )
     for metadata_path in dict.fromkeys(
-        METADATA_CONFIG.metadata_path(target.plate_root) for target in facts
+        METADATA_CONFIG.metadata_path(target.dataset_root) for target in facts
     ):
         entries = {
             target: value for target, value in facts.items()
-            if METADATA_CONFIG.metadata_path(target.plate_root) == metadata_path
+            if METADATA_CONFIG.metadata_path(target.dataset_root) == metadata_path
         }
-        AtomicMetadataWriter().reconcile_completed_plate(
+        AtomicMetadataWriter().reconcile_completed_dataset(
             metadata_path,
             {target: context for target in entries if target.create_openhcs_metadata},
             produced_entries_by_target=entries,
@@ -387,10 +387,10 @@ def context_stub(filemanager, parser=None):
 def test_openhcs_metadata_handler_preserves_unknown_layout_for_serialization(
     tmp_path,
 ):
-    plate_root = tmp_path / "plate"
-    images_dir = plate_root / "images"
+    dataset_root = tmp_path / "plate"
+    images_dir = dataset_root / "images"
     images_dir.mkdir(parents=True)
-    (plate_root / "openhcs_metadata.json").write_text(
+    (dataset_root / "openhcs_metadata.json").write_text(
         json.dumps(
             {
                 FIELDS.SUBDIRECTORIES: {
@@ -679,7 +679,7 @@ def test_source_preserving_output_uses_manifest_path_for_materialization_and_str
     plan.materialized_output = MaterializedOutputPlan(
         output_dir=Path("/tmp/materialized"),
         backend=Backend.ZARR.value,
-        plate_root="/tmp/materialized",
+        dataset_root="/tmp/materialized",
         sub_dir=".",
         analysis_results_dir=None,
     )
@@ -1476,7 +1476,7 @@ def test_metadata_target_family_discovers_new_declaration_without_consumer_edits
                 return cls(
                     output_dir=tmp_path,
                     backend=Backend.DISK.value,
-                    plate_root=str(tmp_path),
+                    dataset_root=str(tmp_path),
                     sub_dir="supplemental",
                     results_dir=None,
                 )
@@ -1518,8 +1518,8 @@ def test_metadata_writer_skips_owner_without_image_outputs():
 def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifact(
     tmp_path,
 ):
-    plate_root = tmp_path / "output_dataset"
-    output_dir = plate_root / "images"
+    dataset_root = tmp_path / "output_dataset"
+    output_dir = dataset_root / "images"
     output_dir.mkdir(parents=True)
     output_path = output_dir / "A01_s1_w1.tif"
     pixels = np.zeros((4, 5), dtype=np.uint16)
@@ -1549,9 +1549,9 @@ def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifac
     }
     plan = function_step_plan("Segment nuclei")
     plan.output_dir = output_dir
-    plan.output_dataset_root = str(plate_root)
+    plan.output_dataset_root = str(dataset_root)
     plan.sub_dir = "images"
-    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.analysis_results_dir = str(dataset_root / "images_results")
     plan.write_backend = Backend.DISK.value
     plan.create_openhcs_metadata = True
     record_output_path(context, plan, output_path)
@@ -1559,7 +1559,7 @@ def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifac
     _publish_saved_step(context, plan)
 
     subdirectory = json.loads(
-        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
+        (dataset_root / "openhcs_metadata.json").read_text(encoding="utf-8")
     )[FIELDS.SUBDIRECTORIES]["images"]
     assert subdirectory[FIELDS.GRID_DIMENSIONS] == []
 
@@ -1568,8 +1568,8 @@ def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifac
 def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     tmp_path, metadata_writer
 ):
-    plate_root = tmp_path / "output_dataset"
-    output_dir = plate_root / "images"
+    dataset_root = tmp_path / "output_dataset"
+    output_dir = dataset_root / "images"
     path = output_dir / "A01_s1_w1.tif"
     output_dir.mkdir(parents=True)
     pixels = np.zeros((2, 4, 5), dtype=np.uint16)
@@ -1591,9 +1591,9 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     }
     plan = function_step_plan("Mosaic")
     plan.output_dir = output_dir
-    plan.output_dataset_root = str(plate_root)
+    plan.output_dataset_root = str(dataset_root)
     plan.sub_dir = "images"
-    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.analysis_results_dir = str(dataset_root / "images_results")
     plan.write_backend = Backend.DISK.value
     plan.create_openhcs_metadata = metadata_writer
     context.step_plans = {plan.step_index: plan}
@@ -1653,7 +1653,7 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context})
 
     subdirectory = json.loads(
-        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
+        (dataset_root / "openhcs_metadata.json").read_text(encoding="utf-8")
     )[FIELDS.SUBDIRECTORIES]["images"]
     assert subdirectory[FIELDS.GRID_DIMENSIONS] == []
     assert subdirectory[FIELDS.PIXEL_SIZE] == 0.5
@@ -1674,8 +1674,8 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
 def test_runtime_image_artifact_projects_persisted_source_binding(
     tmp_path, monkeypatch
 ) -> None:
-    plate_root = tmp_path / "output_dataset"
-    output_dir = plate_root / "analysis_inputs"
+    dataset_root = tmp_path / "output_dataset"
+    output_dir = dataset_root / "analysis_inputs"
     output_dir.mkdir(parents=True)
     output_path = (
         output_dir / "A49_s001_w2_z001_t001_neurite_candidate_mask.checkpoint.tif"
@@ -1695,9 +1695,9 @@ def test_runtime_image_artifact_projects_persisted_source_binding(
     plan.materialized_output = MaterializedOutputPlan(
         output_dir=output_dir,
         backend=Backend.DISK.value,
-        plate_root=str(plate_root),
+        dataset_root=str(dataset_root),
         sub_dir="analysis_inputs",
-        analysis_results_dir=str(plate_root / "analysis_inputs_results"),
+        analysis_results_dir=str(dataset_root / "analysis_inputs_results"),
     )
     plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
         persistent_enabled=True,
@@ -1782,11 +1782,11 @@ def test_runtime_image_artifact_projects_persisted_source_binding(
 def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
     tmp_path, monkeypatch
 ) -> None:
-    plate_root = tmp_path / "output_dataset"
-    output_dir = plate_root / "analysis_inputs"
+    dataset_root = tmp_path / "output_dataset"
+    output_dir = dataset_root / "analysis_inputs"
     output_dir.mkdir(parents=True)
     output_path = (
-        plate_root
+        dataset_root
         / "analysis_inputs_results"
         / "A49_z_index-1_timepoint-1_neurite_outgrowth_step0.labels.tif"
     )
@@ -1806,9 +1806,9 @@ def test_runtime_multiplane_label_artifact_projects_persisted_source_binding(
     plan.materialized_output = MaterializedOutputPlan(
         output_dir=output_dir,
         backend=Backend.DISK.value,
-        plate_root=str(plate_root),
+        dataset_root=str(dataset_root),
         sub_dir="analysis_inputs",
-        analysis_results_dir=str(plate_root / "analysis_inputs_results"),
+        analysis_results_dir=str(dataset_root / "analysis_inputs_results"),
     )
     plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
         persistent_enabled=True,
@@ -1958,8 +1958,8 @@ class _QualifierIgnoringParserStub:
 def test_produced_projection_derives_artifact_alias_for_same_address_outputs(
     tmp_path,
 ):
-    plate_root = tmp_path / "output_dataset"
-    output_dir = plate_root / "images"
+    dataset_root = tmp_path / "output_dataset"
+    output_dir = dataset_root / "images"
     output_dir.mkdir(parents=True)
     first = output_dir / "A01_s1_w1_IllumActin.tif"
     second = output_dir / "A01_s1_w1_IllumActinAvg.tif"
@@ -1987,9 +1987,9 @@ def test_produced_projection_derives_artifact_alias_for_same_address_outputs(
     }
     plan = function_step_plan("SaveImages")
     plan.output_dir = output_dir
-    plan.output_dataset_root = str(plate_root)
+    plan.output_dataset_root = str(dataset_root)
     plan.sub_dir = "images"
-    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.analysis_results_dir = str(dataset_root / "images_results")
     plan.write_backend = Backend.DISK.value
     context.step_plans = {plan.step_index: plan}
 
@@ -2015,7 +2015,7 @@ def test_produced_projection_derives_artifact_alias_for_same_address_outputs(
     _publish_saved_step(context, plan)
 
     subdirectory = json.loads(
-        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
+        (dataset_root / "openhcs_metadata.json").read_text(encoding="utf-8")
     )[FIELDS.SUBDIRECTORIES]["images"]
     projections = subdirectory[FIELDS.SOURCE_PROJECTION]
     roles = {record["projection_role"] for record in projections}
@@ -2041,8 +2041,8 @@ def test_produced_address_publication_never_parses_generated_filenames(
     tmp_path, monkeypatch, well, extension, z_values
 ):
     """Bounded identity/image publication and durable reconciliation journey."""
-    plate_root = tmp_path / "plate"
-    output_dir = plate_root / "images"
+    dataset_root = tmp_path / "plate"
+    output_dir = dataset_root / "images"
     output_dir.mkdir(parents=True)
     parser = SourceSchemaFilenameParser()
     filemanager = FileManager(
@@ -2061,9 +2061,9 @@ def test_produced_address_publication_never_parses_generated_filenames(
     }
     plan = function_step_plan("typed identity")
     plan.output_dir = output_dir
-    plan.output_dataset_root = str(plate_root)
+    plan.output_dataset_root = str(dataset_root)
     plan.sub_dir = "images"
-    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.analysis_results_dir = str(dataset_root / "images_results")
     plan.write_backend = Backend.DISK.value
     plan.create_openhcs_metadata = True
     context.step_plans = {plan.step_index: plan}
@@ -2126,7 +2126,7 @@ def test_produced_address_publication_never_parses_generated_filenames(
     for record in records:
         filemanager.delete(record.output_path, Backend.MEMORY.value)
     OpenHCSMetadataTarget.finalize_completed_dataset({well: context})
-    subdirectory = json.loads((plate_root / "openhcs_metadata.json").read_text())[
+    subdirectory = json.loads((dataset_root / "openhcs_metadata.json").read_text())[
         FIELDS.SUBDIRECTORIES
     ]["images"]
     assert set(subdirectory[FIELDS.IMAGE_FILES]) == set(paths)
@@ -2141,7 +2141,7 @@ def test_produced_address_publication_never_parses_generated_filenames(
         assert restored.source_dtype == "uint16"
         assert restored.source_voxel_spacing.values_zyx == (0.5, 0.5)
 
-    metadata_path = plate_root / "openhcs_metadata.json"
+    metadata_path = dataset_root / "openhcs_metadata.json"
     previous_metadata = metadata_path.read_bytes()
     unregistered = output_dir / "unowned_s001_w1_z001_t001.tif"
     tifffile.imwrite(unregistered, pixels)
@@ -2152,7 +2152,7 @@ def test_produced_address_publication_never_parses_generated_filenames(
 
     if len(paths) > 1:
         removed = paths[0]
-        (plate_root / removed).unlink()
+        (dataset_root / removed).unlink()
         OpenHCSMetadataTarget.finalize_completed_dataset({well: context})
         reconciled = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES][
             "images"
@@ -2201,8 +2201,8 @@ def test_produced_stacked_dotted_identity_keeps_declared_extension(
 def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     tmp_path,
 ):
-    plate_root = tmp_path / "output_dataset"
-    images_dir = plate_root / "images"
+    dataset_root = tmp_path / "output_dataset"
+    images_dir = dataset_root / "images"
     images_dir.mkdir(parents=True)
     first_image = images_dir / "A01_s1_w1.tif"
     later_image = images_dir / "B03_s1_w1.tif"
@@ -2234,25 +2234,25 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     }
     owner_plan = function_step_plan("final")
     owner_plan.output_dir = images_dir
-    owner_plan.output_dataset_root = str(plate_root)
+    owner_plan.output_dataset_root = str(dataset_root)
     owner_plan.sub_dir = "images"
-    owner_plan.analysis_results_dir = str(plate_root / "images_results")
+    owner_plan.analysis_results_dir = str(dataset_root / "images_results")
     owner_plan.write_backend = Backend.DISK.value
     owner_plan.create_openhcs_metadata = True
     owner_context.step_plans = {owner_plan.step_index: owner_plan}
     record_output_path(owner_context, owner_plan, str(first_image))
 
     first_facts = OpenHCSMetadataTarget.observe_for_step(owner_context, owner_plan)
-    assert not (plate_root / "openhcs_metadata.json").exists()
+    assert not (dataset_root / "openhcs_metadata.json").exists()
 
     follower_context = context_stub(filemanager)
     follower_context.metadata_cache = owner_context.metadata_cache
     follower_plan = function_step_plan("final")
     follower_plan.axis_id = "B03"
     follower_plan.output_dir = images_dir
-    follower_plan.output_dataset_root = str(plate_root)
+    follower_plan.output_dataset_root = str(dataset_root)
     follower_plan.sub_dir = "images"
-    follower_plan.analysis_results_dir = str(plate_root / "images_results")
+    follower_plan.analysis_results_dir = str(dataset_root / "images_results")
     follower_plan.write_backend = Backend.DISK.value
     follower_context.step_plans = {follower_plan.step_index: follower_plan}
     follower_plan.create_openhcs_metadata = True
@@ -2266,8 +2266,8 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
         )
         for target in dict.fromkeys((*first_facts, *later_facts))
     }
-    AtomicMetadataWriter().reconcile_completed_plate(
-        plate_root / "openhcs_metadata.json",
+    AtomicMetadataWriter().reconcile_completed_dataset(
+        dataset_root / "openhcs_metadata.json",
         {target: owner_context for target in combined_facts},
         produced_entries_by_target=combined_facts,
     )
@@ -2277,7 +2277,7 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     )
 
     metadata = json.loads(
-        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
+        (dataset_root / "openhcs_metadata.json").read_text(encoding="utf-8")
     )["subdirectories"]["images"]
     assert metadata["image_files"] == [
         "images/A01_s1_w1.tif",
@@ -2287,22 +2287,22 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
 
 
 def test_completed_plate_metadata_skips_unmaterialized_output_target(tmp_path):
-    plate_root = tmp_path / "output_dataset"
-    missing_images_dir = plate_root / "images"
+    dataset_root = tmp_path / "output_dataset"
+    missing_images_dir = dataset_root / "images"
     filemanager = FileManager({Backend.DISK.value: DiskStorageBackend()})
     context = context_stub(filemanager)
     plan = function_step_plan("measurements-only")
     plan.output_dir = missing_images_dir
-    plan.output_dataset_root = str(plate_root)
+    plan.output_dataset_root = str(dataset_root)
     plan.sub_dir = "images"
-    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.analysis_results_dir = str(dataset_root / "images_results")
     plan.write_backend = Backend.DISK.value
     plan.create_openhcs_metadata = True
     context.step_plans = {plan.step_index: plan}
 
     OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context})
 
-    assert not (plate_root / "openhcs_metadata.json").exists()
+    assert not (dataset_root / "openhcs_metadata.json").exists()
 
 
 @pytest.mark.parametrize("contents", ["absent", "tables", "images"])
@@ -2729,8 +2729,8 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
     from openhcs.core.source_projection import SourceArtifactProjection
 
-    plate_root = tmp_path / "plate"
-    output_dir = plate_root / "images"
+    dataset_root = tmp_path / "plate"
+    output_dir = dataset_root / "images"
     output_dir.mkdir(parents=True)
     path = output_dir / "A01_s001_w2_z001_t001.tif"
     pixels = np.arange(5 * 6 * 7, dtype=np.uint16).reshape(5, 6, 7)
@@ -2791,9 +2791,9 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
         "Volume checkpoint", variable_components=(Microscopy.ZIndex,)
     )
     plan.output_dir = output_dir
-    plan.output_dataset_root = str(plate_root)
+    plan.output_dataset_root = str(dataset_root)
     plan.sub_dir = "images"
-    plan.analysis_results_dir = str(plate_root / "results")
+    plan.analysis_results_dir = str(dataset_root / "results")
     plan.write_backend = "disk"
     identity = FunctionOutputIdentity(
         component_values={"well": "A01", "site": 1, "channel": 2, "timepoint": 1},

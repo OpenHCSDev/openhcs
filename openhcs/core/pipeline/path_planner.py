@@ -58,7 +58,7 @@ from openhcs.core.pipeline.artifact_planning import (
     ArtifactProducer,
 )
 from openhcs.core.pipeline.compilation_session import (
-    CompilationPlateScope,
+    CompilationDatasetScope,
     CompilationSession,
 )
 from openhcs.core.source_bindings import (
@@ -1811,15 +1811,15 @@ class PathPlannerMaterializationStage:
             return
 
         materialization_config = step.step_materialization_config
-        materialized_plate_root = self.planner.paths.build_output_dataset_root(
-            self.planner.plate_path,
+        materialized_dataset_root = self.planner.paths.build_output_dataset_root(
+            self.planner.dataset_root,
             materialization_config,
             is_per_step_materialization=False,
         )
         self.planner.plans[step_index].materialized_output = MaterializedOutputPlan(
             output_dir=materialized_output_dir,
             backend=self.planner.vfs.materialization_backend.value,
-            plate_root=str(materialized_plate_root),
+            dataset_root=str(materialized_dataset_root),
             sub_dir=materialization_config.sub_dir,
             analysis_results_dir=str(
                 self.planner.paths.analysis_results_dir_for(materialized_output_dir)
@@ -1932,7 +1932,7 @@ class PathPlannerValidationStage:
                 step_plan.materialized_output = MaterializedOutputPlan(
                     output_dir=resolved_path,
                     backend=step_plan.materialized_output.backend,
-                    plate_root=step_plan.materialized_output.plate_root,
+                    dataset_root=step_plan.materialized_output.dataset_root,
                     sub_dir=new_sub_dir,
                     analysis_results_dir=str(resolved_analysis_results_dir),
                 )
@@ -1947,7 +1947,7 @@ class PathPlannerPathAuthority:
 
     @staticmethod
     def build_output_dataset_root(
-        plate_path: Path,
+        dataset_root: Path,
         path_config,
         is_per_step_materialization: bool = False,
     ) -> Path:
@@ -1967,7 +1967,7 @@ class PathPlannerPathAuthority:
 
         return Path(
             _cached_output_dataset_root(
-                str(plate_path),
+                str(dataset_root),
                 (
                     None
                     if path_config.global_output_folder is None
@@ -1996,7 +1996,7 @@ class PathPlannerPathAuthority:
         self,
         path_config: PathPlanningConfig | None = None,
     ) -> Path:
-        """Build complete output path: plate_root + sub_dir."""
+        """Build complete output path: dataset_root + sub_dir."""
         config = path_config or self.planner.cfg
         if not config.output_dir_suffix:
             raise ValueError(
@@ -2006,7 +2006,7 @@ class PathPlannerPathAuthority:
             )
         return Path(
             _cached_output_path(
-                str(self.planner.plate_path),
+                str(self.planner.dataset_root),
                 (
                     None
                     if config.global_output_folder is None
@@ -2035,7 +2035,7 @@ class PathPlannerPathAuthority:
             )
         return Path(
             _cached_results_path(
-                str(self.planner.plate_path),
+                str(self.planner.dataset_root),
                 (
                     None
                     if self.planner.cfg.global_output_folder is None
@@ -2190,15 +2190,15 @@ class PathPlannerStepAssemblyStage:
         compiled_function_pattern: CompiledFunctionPattern | None,
     ) -> None:
         """Write the always-present path and artifact planning fields."""
-        main_plate_root = self.planner.paths.build_output_dataset_root(
-            self.planner.plate_path,
+        main_dataset_root = self.planner.paths.build_output_dataset_root(
+            self.planner.dataset_root,
             self.planner.cfg,
             is_per_step_materialization=False,
         )
         step_plan = self.planner.plans[step_index]
         step_plan.input_dir = input_dir
         step_plan.output_dir = output_dir
-        step_plan.output_dataset_root = str(main_plate_root)
+        step_plan.output_dataset_root = str(main_dataset_root)
         step_plan.sub_dir = self.planner.cfg.sub_dir
         step_plan.analysis_results_dir = str(self.planner.paths.results_path())
         step_plan.pipeline_position = step_index
@@ -2322,8 +2322,8 @@ class PathPlanner:
 
         # Initial input determination (once)
         self.initial_input = Path(self.ctx.input_dir)
-        self.plate_scope = CompilationPlateScope.from_context(self.ctx)
-        self.plate_path = self.plate_scope.path
+        self.dataset_scope = CompilationDatasetScope.from_context(self.ctx)
+        self.dataset_root = self.dataset_scope.path
 
     def plan(self) -> dict[int, CompiledStepPlan]:
         """Plan all paths with zero duplication."""
@@ -2335,7 +2335,7 @@ class PathPlanner:
         # Set output_dataset_root and sub_dir for metadata writing
         if self.session.step_count:
             self.ctx.output_dataset_root = self.paths.build_output_dataset_root(
-                self.plate_path,
+                self.dataset_root,
                 self.cfg,
                 is_per_step_materialization=False,
             )
@@ -2359,13 +2359,13 @@ class PipelinePathPlanner:
 
     @staticmethod
     def build_output_dataset_root(
-        plate_path: Path,
+        dataset_root: Path,
         path_config,
         is_per_step_materialization: bool = False,
     ) -> Path:
         """Build output plate root from configuration components."""
         return PathPlannerPathAuthority.build_output_dataset_root(
-            plate_path,
+            dataset_root,
             path_config,
             is_per_step_materialization=is_per_step_materialization,
         )
@@ -2392,15 +2392,15 @@ class PipelinePathPlanner:
 
 @lru_cache(maxsize=65536)
 def _cached_output_dataset_root(
-    plate_path: str,
+    dataset_root: str,
     global_output_folder: str | None,
     output_dir_suffix: str,
 ) -> str:
     """Return the output plate root for one normalized path config."""
     from openhcs.core.dataset_sources.dataset_roots import DatasetRootRule
 
-    path = Path(plate_path)
-    base = DatasetRootRule.for_dataset(plate_path).output_base(
+    path = Path(dataset_root)
+    base = DatasetRootRule.for_dataset(dataset_root).output_base(
         path, global_output_folder
     )
     return str(base / f"{path.name}{output_dir_suffix}")
@@ -2408,7 +2408,7 @@ def _cached_output_dataset_root(
 
 @lru_cache(maxsize=65536)
 def _cached_output_path(
-    plate_path: str,
+    dataset_root: str,
     global_output_folder: str | None,
     output_dir_suffix: str,
     sub_dir: str,
@@ -2417,7 +2417,7 @@ def _cached_output_path(
     return str(
         Path(
             _cached_output_dataset_root(
-                plate_path,
+                dataset_root,
                 global_output_folder,
                 output_dir_suffix,
             )
@@ -2428,7 +2428,7 @@ def _cached_output_path(
 
 @lru_cache(maxsize=65536)
 def _cached_results_path(
-    plate_path: str,
+    dataset_root: str,
     global_output_folder: str | None,
     output_dir_suffix: str,
     materialization_results_path: str,
@@ -2437,7 +2437,7 @@ def _cached_results_path(
     results_path = Path(materialization_results_path)
     output_dataset_root = Path(
         _cached_output_dataset_root(
-            plate_path,
+            dataset_root,
             global_output_folder,
             output_dir_suffix,
         )
