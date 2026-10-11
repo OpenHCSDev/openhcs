@@ -1,11 +1,13 @@
 """Witness: a second, non-microscopy family needs only its declaration.
 
-A remote-sensing family (scene, tile, band, date; no stack axis) is declared
-here and activated in-process. Family queries, configuration defaults and
-validation, viewer mode projection, plane filenames and the compiler's
-axis resolution all follow it without kernel edits. In a fresh process the
-same family opens a dataset written in the kernel's openhcsdata format and
-runs a two-step pipeline end to end.
+A remote-sensing family (scene, tile, band, date; no stack axis), declared in
+``remote_sensing_witness_domain``, is activated in-process. Family queries,
+configuration defaults and validation, viewer mode projection, plane
+filenames and the compiler's axis resolution all follow it without kernel
+edits. In a fresh process the same family opens a dataset written in the
+kernel's openhcsdata format and runs a pipeline end to end: in that process,
+over the ZMQ execution server with spawned workers, and streaming to a napari
+viewer whose layers carry the family's axes.
 """
 
 from __future__ import annotations
@@ -34,27 +36,8 @@ from openhcs.core.axes import (
     Ungrouped,
 )
 from openhcs.domains.microscopy.axes import Microscopy
-
-
-class RemoteSensing(AxisFamily):
-    payload_spatial_rank = 2
-
-    class Tile(Axis, TileAxis, DefaultVariable, OrdinalValued):
-        name = "tile"
-        filename_prefix = "f"
-        filename_padding = 3
-
-    class Band(Axis, ColourAxis, DefaultGroupBy, OrdinalValued):
-        name = "band"
-        filename_prefix = "b"
-
-    class Date(Axis, TimeAxis, OrdinalValued):
-        name = "date"
-        filename_prefix = "d"
-        filename_padding = 3
-
-    class Scene(Axis, PartitionAxis, LabelValued):
-        name = "scene"
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from tests.unit.remote_sensing_witness_domain import RemoteSensing
 
 
 @pytest.fixture
@@ -64,6 +47,29 @@ def remote_sensing() -> Iterator[type[RemoteSensing]]:
         yield RemoteSensing
     finally:
         Microscopy.activate()
+
+
+def test_child_processes_serve_the_parent_family(remote_sensing) -> None:
+    """A process importing the product package keeps the family its parent activated."""
+
+    assert AxisFamily.from_family_name(RemoteSensing.family_name) is RemoteSensing
+    import_root = OpenHCSRuntimeImportAuthority.current().import_root
+    repo_root = Path(__file__).resolve().parents[2]
+    child = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import openhcs\n"
+            "from openhcs.core.axes import AxisFamily\n"
+            "print(AxisFamily.active().family_name)",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=300,
+        env={**os.environ, "PYTHONPATH": os.pathsep.join(map(str, (import_root, repo_root)))},
+        check=True,
+    )
+    assert child.stdout.strip().splitlines()[-1] == RemoteSensing.family_name
 
 
 def test_family_queries_follow_the_declaration(remote_sensing) -> None:
@@ -280,22 +286,65 @@ def test_family_declaration_enforces_role_cardinality() -> None:
     assert not issubclass(RemoteSensing.Band, PartitionAxis)
 
 
-def test_pipeline_runs_end_to_end_through_the_kernel_dataset_source(tmp_path) -> None:
+def _free_port_pairs(count: int) -> list[int]:
+    from zmqruntime import DataControlPortPairAuthority
+
+    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+
+    taken: set[int] = set()
+    ports = []
+    for _ in range(count):
+        pair = DataControlPortPairAuthority.acquire(
+            OPENHCS_ZMQ_CONFIG,
+            transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
+            excluded=taken,
+        )
+        taken.update(pair.ports)
+        ports.append(pair.data_port)
+    return ports
+
+
+# The napari viewer is interactive: on Linux it needs an X server (xvfb in CI).
+_NO_X_SERVER = sys.platform.startswith("linux") and not os.environ.get("DISPLAY")
+
+
+@pytest.mark.parametrize(
+    "transport",
+    [
+        "direct",
+        "zmq",
+        pytest.param(
+            "zmq+napari",
+            marks=pytest.mark.skipif(_NO_X_SERVER, reason="napari needs an X server"),
+        ),
+    ],
+)
+def test_pipeline_runs_end_to_end_through_the_kernel(
+    tmp_path, transport, reap_spawned_processes
+) -> None:
     script = Path(__file__).with_name("remote_sensing_witness_pipeline.py")
     repo_root = Path(__file__).resolve().parents[2]
+    import_root = OpenHCSRuntimeImportAuthority.current().import_root
+    mode, _, viewer = transport.partition("+")
+    ports = [] if mode == "direct" else _free_port_pairs(2 if viewer else 1)
     completed = subprocess.run(
-        [sys.executable, str(script), str(tmp_path)],
+        [sys.executable, str(script), str(tmp_path), mode, *map(str, ports)],
         capture_output=True,
         text=True,
-        timeout=600,
-        env={**os.environ, "PYTHONPATH": str(repo_root)},
+        timeout=900,
+        # The kernel this test imports, then the checkout for the witness domain;
+        # processes the kernel spawns inherit both.
+        env={**os.environ, "PYTHONPATH": os.pathsep.join(map(str, (import_root, repo_root)))},
         check=False,
     )
     assert completed.returncode == 0, completed.stderr[-4000:]
     report = json.loads(completed.stdout.strip().splitlines()[-1])
 
-    assert report["is_kernel_source"], report["source_type"]
-    assert report["results"] == {"S01": True, "S02": True}, report["errors"]
+    if mode == "direct":
+        assert report["is_kernel_source"], report["source_type"]
+        assert report["results"] == {"S01": True, "S02": True}, report["errors"]
+    else:
+        assert report["partition_values"] == ["S01", "S02"]
     assert report["outputs"] == sorted(
         f"images/{scene}_f{int(tile):03d}_b{band}_d{int(date):03d}.tif"
         for scene in ("S01", "S02")
@@ -311,9 +360,28 @@ def test_pipeline_runs_end_to_end_through_the_kernel_dataset_source(tmp_path) ->
     assert not {"analysis_consolidation_config", "plate_metadata_config"} & set(
         report["config_fields"]
     )
-    # The measurement step's rows are named by the domain's own dialect.
+    # The measurement step's rows are named by the domain's own dialect, in the
+    # worker processes too.
     assert report["measurement_headers"] == ["reading,cell_count,tile,band,date,scene"]
     assert report["loaded_domain_modules"] == []
+
+    if viewer:
+        state = report["viewer"]
+        assert state["observed"] and not state["errors"]
+        (layer,) = state["layers"]
+        assert layer["stack_axes"] == ["tile", "band", "date", "scene"]
+        assert layer["axis_labels"] == ["tile", "band", "date", "scene", "y", "x"]
+        assert layer["item_count"] == 24
+        assert sorted(
+            (value["scene"], value["tile"], value["band"], value["date"])
+            for value in layer["component_values"]
+        ) == sorted(
+            (scene, tile, band, date)
+            for scene in ("S01", "S02")
+            for tile in (1, 2)
+            for band in (1, 2)
+            for date in (1, 2, 3)
+        )
 
 
 # ---------------------------------------------------------------------------

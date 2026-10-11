@@ -8,12 +8,10 @@ from abc import abstractmethod
 from pathlib import Path
 
 from polystore.filemanager import FileManager
+from polystore.metadata_writer import resolve_subdirectory_path
 
 from openhcs.constants.constants import Backend
-from openhcs.core.dataset_sources.openhcs_format import (
-    OpenHCSMetadataHandler,
-    resolve_subdirectory_path,
-)
+from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
 from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -28,19 +26,19 @@ class VirtualMappingSource(DatasetSource):
     """
 
     @abstractmethod
-    def _build_virtual_mapping(self, plate_path: Path, filemanager: FileManager) -> Path:
+    def _build_virtual_mapping(self, dataset_root: Path, filemanager: FileManager) -> Path:
         """Write this layout's mapping to metadata and return the image directory."""
 
-    def initialize_workspace(self, plate_path: Path, filemanager: FileManager) -> Path:
-        plate_path = Path(plate_path)
-        self.plate_folder = plate_path
-        self._build_virtual_mapping(plate_path, filemanager)
-        self._register_virtual_workspace_backend(plate_path, filemanager)
-        return self._normalize_mapped_filenames(plate_path, filemanager)
+    def initialize_workspace(self, dataset_root: Path, filemanager: FileManager) -> Path:
+        dataset_root = Path(dataset_root)
+        self.dataset_root = dataset_root
+        self._build_virtual_mapping(dataset_root, filemanager)
+        self._register_virtual_workspace_backend(dataset_root, filemanager)
+        return self._normalize_mapped_filenames(dataset_root, filemanager)
 
     def _normalize_mapped_filenames(
         self,
-        plate_path: Path,
+        dataset_root: Path,
         filemanager: FileManager,
     ) -> Path:
         """Rename mapped files to their padded vendor spelling with a Z index."""
@@ -48,10 +46,10 @@ class VirtualMappingSource(DatasetSource):
 
         from openhcs.core.virtual_workspace_metadata import FIELDS
 
-        metadata = OpenHCSMetadataHandler(filemanager)._load_metadata_dict(plate_path)
+        metadata = OpenHCSMetadataHandler(filemanager)._load_metadata_dict(dataset_root)
         if FIELDS.SUBDIRECTORIES not in metadata:
             raise MetadataNotFoundError(
-                f"'{FIELDS.SUBDIRECTORIES}' is missing from metadata for {plate_path}."
+                f"'{FIELDS.SUBDIRECTORIES}' is missing from metadata for {dataset_root}."
             )
         subdir_with_mapping = next(
             (
@@ -63,9 +61,9 @@ class VirtualMappingSource(DatasetSource):
         )
         if subdir_with_mapping is None:
             raise MetadataNotFoundError(
-                f"No {FIELDS.WORKSPACE_MAPPING} found in metadata for {plate_path}."
+                f"No {FIELDS.WORKSPACE_MAPPING} found in metadata for {dataset_root}."
             )
-        image_dir = resolve_subdirectory_path(subdir_with_mapping, plate_path)
+        image_dir = resolve_subdirectory_path(subdir_with_mapping, dataset_root)
 
         backend_type = (
             Backend.VIRTUAL_WORKSPACE.value

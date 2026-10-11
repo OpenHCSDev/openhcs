@@ -94,7 +94,7 @@ def _compiled_plan(**overrides):
         materialized_output=MaterializedOutputPlan(
             output_dir=Path("/tmp/materialized"),
             backend="disk",
-            plate_root="/tmp/plate_materialized",
+            dataset_root="/tmp/plate_materialized",
             sub_dir="images",
             analysis_results_dir="/tmp/materialized_results",
         ),

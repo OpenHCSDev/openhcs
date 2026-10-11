@@ -12,6 +12,8 @@ MCP), spelled by ``Axis.name`` and decoded by ``AxisFamily.named``.
 
 from __future__ import annotations
 
+import importlib
+import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -422,6 +424,10 @@ def is_grouping_declaration(value: object) -> TypeGuard[type[GroupingDeclaration
 # ---------------------------------------------------------------------------
 
 
+ACTIVE_FAMILY_VARIABLE = "OPENHCS_AXIS_FAMILY"
+"""Environment variable carrying the active family's ``family_name`` to children."""
+
+
 class AxisFamilyNotActive(RuntimeError):
     """The kernel was used before a domain activated its axis family."""
 
@@ -433,10 +439,9 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
     cardinalities are checked when the family is declared.
     """
 
-    __registry_key__ = "family_name"
-    __skip_if_no_key__ = True
-
     family_name: ClassVar[str | None] = None
+    """Boundary spelling (``module:qualname``) a child process decodes with
+    :meth:`from_family_name` to serve the same domain."""
     axes: ClassVar[tuple[type[Axis], ...]] = ()
     config_modules: ClassVar[tuple[str, ...]] = ()
     """Modules declaring this domain's global-config sections.
@@ -513,11 +518,40 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
 
     @classmethod
     def activate(cls) -> None:
-        """Make this family the process's active family."""
+        """Make this family the active family of this process and its children.
+
+        Child processes (execution servers, spawned workers, viewers) inherit
+        the family through the environment, as they inherit ``sys.path``.
+        """
 
         if cls is AxisFamily:
             raise TypeError("Activate a declared family, not the AxisFamily base.")
         AxisFamily._active = cls
+        os.environ[ACTIVE_FAMILY_VARIABLE] = cls.family_name
+
+    @classmethod
+    def activate_entry_point(cls) -> None:
+        """Activate the family this process inherited, else this entry point's.
+
+        A domain's entry point calls this before the kernel is imported. A
+        process the user starts has no parent family and takes the entry
+        point's; a child the kernel spawns serves its parent's domain.
+        """
+
+        inherited = os.environ.get(ACTIVE_FAMILY_VARIABLE)
+        (cls if inherited is None else AxisFamily.from_family_name(inherited)).activate()
+
+    @staticmethod
+    def from_family_name(family_name: str) -> type[AxisFamily]:
+        """The family ``family_name`` spells, importing its declaring module."""
+
+        module_name, _, qualname = family_name.partition(":")
+        family: object = importlib.import_module(module_name)
+        for part in qualname.split("."):
+            family = getattr(family, part)
+        if not (isinstance(family, type) and issubclass(family, AxisFamily)):
+            raise TypeError(f"{family_name!r} does not name an axis family.")
+        return family
 
     @staticmethod
     def active() -> type[AxisFamily]:

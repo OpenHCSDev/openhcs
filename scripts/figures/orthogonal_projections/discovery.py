@@ -53,7 +53,7 @@ def get_microscope_handler(plate_path: Path):
     filemanager = FileManager(storage_registry)
 
     handler = OpenHCSDatasetSource(filemanager=filemanager)
-    handler.plate_folder = Path(plate_path)
+    handler.dataset_root = Path(plate_path)
 
     return handler
 

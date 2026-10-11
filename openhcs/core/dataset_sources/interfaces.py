@@ -209,7 +209,7 @@ class MetadataArtifactProvider(ABC, metaclass=AutoRegisterMeta):
     def resolve(
         self,
         handler: "MetadataHandler",
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> object:
         """Return this metadata artifact for a plate."""
 
@@ -227,9 +227,9 @@ class GridDimensionsMetadataArtifactProvider(MetadataArtifactProvider):
     def resolve(
         self,
         handler: "MetadataHandler",
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> tuple[int, int]:
-        return handler.get_grid_dimensions(plate_path)
+        return handler.get_grid_dimensions(dataset_root)
 
 
 class PixelSizeMetadataArtifactProvider(MetadataArtifactProvider):
@@ -245,9 +245,9 @@ class PixelSizeMetadataArtifactProvider(MetadataArtifactProvider):
     def resolve(
         self,
         handler: "MetadataHandler",
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> float:
-        return handler.get_pixel_size(plate_path)
+        return handler.get_pixel_size(dataset_root)
 
 
 @dataclass(frozen=True)
@@ -274,12 +274,12 @@ class MetadataViewDocument:
 
 def list_relative_disk_image_files(
     filemanager: FileManager,
-    plate_path: Union[str, Path],
+    dataset_root: Union[str, Path],
     *,
     recursive: bool,
 ) -> list[str]:
     """List disk-backed image files relative to a declared plate root."""
-    root_path = Path(plate_path)
+    root_path = Path(dataset_root)
     image_paths = filemanager.list_image_files(
         root_path,
         Backend.DISK.value,
@@ -457,13 +457,13 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
     or raise an exception explaining why the contract cannot be satisfied.
     """
 
-    def source_workspace_root(self, plate_path: Union[str, Path]) -> Path:
+    def source_workspace_root(self, dataset_root: Union[str, Path]) -> Path:
         """Return the storage anchor for this owner's workspace-relative addresses."""
-        return Path(plate_path)
+        return Path(dataset_root)
 
     def source_workspace_metadata_document(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> Mapping[str, object] | None:
         """Return source-workspace metadata for handlers that own virtual mappings."""
 
@@ -471,33 +471,33 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
 
     def source_dataset(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> "SourcePlaneDataset | None":
         """Return exact store-emitted source planes when the metadata owner has them."""
 
-        del plate_path
+        del dataset_root
         return None
 
     def physical_source_paths(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> tuple[Path, ...]:
         """Return physical source files for format-recognition diagnostics."""
 
-        root = Path(plate_path)
+        root = Path(dataset_root)
         return tuple(
             path if path.is_absolute() else root / path
-            for value in self.get_image_files(plate_path, all_subdirs=True)
+            for value in self.get_image_files(dataset_root, all_subdirs=True)
             for path in (Path(value),)
         )
 
     def source_diagnostics(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> tuple[Mapping[str, object], ...]:
         """Return structured source-level diagnostics owned by this handler."""
 
-        del plate_path
+        del dataset_root
         return ()
 
     def can_resolve_metadata_artifact(self, artifact_name: str) -> bool:
@@ -513,7 +513,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
     def resolve_metadata_artifact(
         self,
         artifact_name: str,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> object:
         """Resolve a declared metadata artifact for this plate."""
         provider_type = MetadataArtifactProvider.provider_type_for_handler(
@@ -522,70 +522,70 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         )
         if provider_type is None:
             raise ValueError(f"No metadata artifact provider for {artifact_name!r}.")
-        return provider_type().resolve(self, plate_path)
+        return provider_type().resolve(self, dataset_root)
 
     @abstractmethod
-    def find_metadata_file(self, plate_path: Union[str, Path]) -> Path:
+    def find_metadata_file(self, dataset_root: Union[str, Path]) -> Path:
         """
         Find the metadata file for a plate.
 
         Args:
-            plate_path: Path to the plate folder (str or Path)
+            dataset_root: Path to the plate folder (str or Path)
 
         Returns:
             Path to the metadata file
 
         Raises:
-            TypeError: If plate_path is not a valid path type
+            TypeError: If dataset_root is not a valid path type
             FileNotFoundError: If no metadata file is found
         """
         pass
 
     @abstractmethod
-    def get_grid_dimensions(self, plate_path: Union[str, Path]) -> Tuple[int, int]:
+    def get_grid_dimensions(self, dataset_root: Union[str, Path]) -> Tuple[int, int]:
         """
         Get grid dimensions for stitching from metadata.
 
         Args:
-            plate_path: Path to the plate folder (str or Path)
+            dataset_root: Path to the plate folder (str or Path)
 
         Returns:
             Tuple of (grid_size_x, grid_size_y)
 
         Raises:
-            TypeError: If plate_path is not a valid path type
+            TypeError: If dataset_root is not a valid path type
             FileNotFoundError: If no metadata file is found
             ValueError: If grid dimensions cannot be determined
         """
         pass
 
-    def get_metadata_grid_dimensions(self, plate_path: Union[str, Path]) -> list[int]:
+    def get_metadata_grid_dimensions(self, dataset_root: Union[str, Path]) -> list[int]:
         """Serialization view: an empty list preserves genuinely unknown layout.
 
         Grid-consuming artifacts must still use strict ``get_grid_dimensions``.
         Metadata presentation and ordinary output writing do not establish or
         require a rectangular acquisition layout.
         """
-        return list(self.get_grid_dimensions(plate_path))
+        return list(self.get_grid_dimensions(dataset_root))
 
-    def get_metadata_pixel_size(self, plate_path: Union[str, Path]) -> float:
+    def get_metadata_pixel_size(self, dataset_root: Union[str, Path]) -> float:
         """Numeric serialization view, including a format's legacy unit default.
 
         This is not a request for physical calibration. Formats carrying relative
         or anisotropic source coordinates can preserve their numeric compatibility
         view without supplying the physical scalar artifact.
         """
-        return self.get_pixel_size(plate_path)
+        return self.get_pixel_size(dataset_root)
 
-    def source_voxel_spacing(self, plate_path: Union[str, Path]) -> SourceVoxelSpacing:
+    def source_voxel_spacing(self, dataset_root: Union[str, Path]) -> SourceVoxelSpacing:
         """Project this acquisition's physical calibration into source coordinates."""
 
-        pixel_size = self.get_pixel_size(plate_path)
+        pixel_size = self.get_pixel_size(dataset_root)
         return SourceVoxelSpacing((pixel_size, pixel_size))
 
     def source_metadata_by_path(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         parser: FilenameParser,
         source_paths: Iterable[str],
     ) -> dict[str, dict[str, SourceMetadataValue]]:
@@ -595,7 +595,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         supplies physical coordinates. Explicit source spacing takes precedence.
         """
 
-        acquisition_spacing = self.source_voxel_spacing(plate_path)
+        acquisition_spacing = self.source_voxel_spacing(dataset_root)
         sources = {}
         for path in source_paths:
             parsed = parser.parse_filename(Path(path).name)
@@ -609,18 +609,18 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         return sources
 
     @abstractmethod
-    def get_pixel_size(self, plate_path: Union[str, Path]) -> float:
+    def get_pixel_size(self, dataset_root: Union[str, Path]) -> float:
         """
         Get the pixel size from metadata.
 
         Args:
-            plate_path: Path to the plate folder (str or Path)
+            dataset_root: Path to the plate folder (str or Path)
 
         Returns:
             Pixel size in micrometers
 
         Raises:
-            TypeError: If plate_path is not a valid path type
+            TypeError: If dataset_root is not a valid path type
             FileNotFoundError: If no metadata file is found
             ValueError: If pixel size cannot be determined
         """
@@ -629,7 +629,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
     @abstractmethod
     def component_value_set(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> MetadataComponentValueSet:
         """Return value labels for every declared axis."""
 
@@ -637,19 +637,19 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
 
     def get_component_values(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         component_name: str,
     ) -> Optional[Dict[str, Optional[str]]]:
         """Project display values at the viewer's string-keyed boundary."""
 
-        values = self.component_value_set(plate_path).values_for(
+        values = self.component_value_set(dataset_root).values_for(
             AxisFamily.active().named(component_name)
         )
         return None if values is None else dict(values)
 
     @abstractmethod
     def get_image_files(
-        self, plate_path: Union[str, Path], all_subdirs: bool = False
+        self, dataset_root: Union[str, Path], all_subdirs: bool = False
     ) -> list[str]:
         """
         Get image files exposed by this metadata handler.
@@ -661,25 +661,25 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
 
     def analysis_result_directories(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> tuple[AnalysisResultDirectory, ...]:
         """Return analysis-result directories declared by this metadata source."""
         return ()
 
     def parse_metadata(
-        self, plate_path: Union[str, Path]
+        self, dataset_root: Union[str, Path]
     ) -> Dict[str, Dict[str, Optional[str]]]:
         """Serialize available nominal component metadata.
 
         Args:
-            plate_path: Path to the plate folder (str or Path)
+            dataset_root: Path to the plate folder (str or Path)
 
         Returns:
             Dict mapping component names to their key→name mappings
             Example: {"channel": {"1": "HOECHST 33342", "2": "Calcein"}}
         """
         result = {}
-        component_values = self.component_value_set(plate_path)
+        component_values = self.component_value_set(dataset_root)
         for component, values in component_values.component_values():
             if values:
                 result[component.name] = dict(values)
@@ -687,16 +687,16 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
 
     def build_metadata_view_document(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         microscope_handler: ViewerMicroscopeHandlerABC,
     ) -> MetadataViewDocument:
         """Project this handler's metadata into the standard read-only UI document."""
         from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadata
 
-        component_values = self.component_value_set(plate_path)
-        grid_dims = self.get_metadata_grid_dimensions(plate_path)
-        pixel_size = self.get_metadata_pixel_size(plate_path)
-        image_files = self.get_image_files(plate_path)
+        component_values = self.component_value_set(dataset_root)
+        grid_dims = self.get_metadata_grid_dimensions(dataset_root)
+        pixel_size = self.get_metadata_pixel_size(dataset_root)
+        image_files = self.get_image_files(dataset_root)
 
         parser = microscope_handler.parser
         if parser is None:
@@ -713,7 +713,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
             image_files=image_files,
             available_backends={"disk": True},
             source_diagnostics=[
-                dict(diagnostic) for diagnostic in self.source_diagnostics(plate_path)
+                dict(diagnostic) for diagnostic in self.source_diagnostics(dataset_root)
             ]
             or None,
             main=None,
@@ -737,11 +737,11 @@ class DiskImageFileListingMetadataHandler(MetadataHandler):
     filemanager: FileManager
 
     def get_image_files(
-        self, plate_path: Union[str, Path], all_subdirs: bool = False
+        self, dataset_root: Union[str, Path], all_subdirs: bool = False
     ) -> list[str]:
         return list_relative_disk_image_files(
             self.filemanager,
-            plate_path,
+            dataset_root,
             recursive=True,
         )
 

@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-import os
-import signal
 import socket
-import uuid
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import replace
 from typing import Any
 
-import psutil
 import pytest
 from zmqruntime import EndpointShutdownMode, ZMQClient
 from zmqruntime.transport import DataControlPortPairAuthority
@@ -174,53 +170,6 @@ def free_port_pair() -> Iterator[Callable[[], int]]:
             )
 
 
-SPAWN_MARKER_VARIABLE = "OPENHCS_TEST_SPAWN_MARKER"
-
-
-def _marked_processes(marker: str) -> list[psutil.Process]:
-    found = []
-    for process in psutil.process_iter(["pid"]):
-        if process.pid == os.getpid():
-            continue
-        try:
-            if process.environ().get(SPAWN_MARKER_VARIABLE) == marker:
-                found.append(process)
-        except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
-            continue
-    return found
-
-
 @pytest.fixture(autouse=True)
-def reap_spawned_processes(monkeypatch) -> Iterator[None]:
-    """Kill every process this test spawned, detached ones included.
-
-    Execution and viewer servers start their own sessions (setsid), so they
-    outlive the test and its process tree. Each test marks its environment;
-    every descendant inherits the marker, and teardown kills the process group
-    of each marked process still alive, whether the test passed or failed.
-    """
-    marker = uuid.uuid4().hex
-    monkeypatch.setenv(SPAWN_MARKER_VARIABLE, marker)
-    yield
-    own_group = os.getpgid(0)
-    survivors = _marked_processes(marker)
-    for process in survivors:
-        try:
-            group = os.getpgid(process.pid)
-            if group != own_group:
-                os.killpg(group, signal.SIGTERM)
-            else:
-                process.terminate()
-        except (ProcessLookupError, psutil.NoSuchProcess):
-            continue
-    _gone, alive = psutil.wait_procs(survivors, timeout=10)
-    for process in alive:
-        try:
-            group = os.getpgid(process.pid)
-            if group != own_group:
-                os.killpg(group, signal.SIGKILL)
-            else:
-                process.kill()
-        except (ProcessLookupError, psutil.NoSuchProcess):
-            continue
-    psutil.wait_procs(alive, timeout=10)
+def reap_integration_processes(reap_spawned_processes) -> None:
+    """Every integration test reaps the processes it spawned."""

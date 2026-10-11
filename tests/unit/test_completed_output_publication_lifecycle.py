@@ -34,7 +34,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 
 def _facts(plate_root: Path) -> StepExecutionObservation:
     target = PrimaryImageMetadataTarget(
-        output_dir=plate_root / "images", backend="disk", plate_root=str(plate_root),
+        output_dir=plate_root / "images", backend="disk", dataset_root=str(plate_root),
         sub_dir="images", results_dir=None,
     )
     projection = SourcePlaneProjection(

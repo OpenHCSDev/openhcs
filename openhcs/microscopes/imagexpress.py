@@ -264,9 +264,9 @@ class ImageXpressMetadataHandler(DiskImageFileListingMetadataHandler):
 
     def _read_htd_content(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> str:
-        htd_file = self.find_metadata_file(plate_path)
+        htd_file = self.find_metadata_file(dataset_root)
         encodings_to_try = ("utf-8", "windows-1252", "latin-1", "cp1252", "iso-8859-1")
 
         for encoding in encodings_to_try:
@@ -282,34 +282,34 @@ class ImageXpressMetadataHandler(DiskImageFileListingMetadataHandler):
 
     def find_metadata_file(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> Path:
         """
         Find the HTD file for an ImageXpress plate.
 
         Args:
-            plate_path: Path to the plate folder
+            dataset_root: Path to the plate folder
         Returns:
             Path to the HTD file
 
         Raises:
             MetadataNotFoundError: If no HTD file is found
-            TypeError: If plate_path is not a valid path type
+            TypeError: If dataset_root is not a valid path type
         """
-        # Ensure plate_path is a Path object
-        if isinstance(plate_path, str):
-            plate_path = Path(plate_path)
-        elif not isinstance(plate_path, Path):
-            raise TypeError(f"Expected str or Path, got {type(plate_path).__name__}")
+        # Ensure dataset_root is a Path object
+        if isinstance(dataset_root, str):
+            dataset_root = Path(dataset_root)
+        elif not isinstance(dataset_root, Path):
+            raise TypeError(f"Expected str or Path, got {type(dataset_root).__name__}")
 
         # Ensure the path exists
-        if not plate_path.exists():
-            raise FileNotFoundError(f"Plate path does not exist: {plate_path}")
+        if not dataset_root.exists():
+            raise FileNotFoundError(f"Plate path does not exist: {dataset_root}")
 
         # Use filemanager to list files
         # Pass the backend parameter as required by Clause 306 (Backend Positional Parameters)
         htd_files = self.filemanager.list_files(
-            plate_path, Backend.DISK.value, pattern="*.HTD"
+            dataset_root, Backend.DISK.value, pattern="*.HTD"
         )
         if htd_files:
             for htd_file in htd_files:
@@ -333,13 +333,13 @@ class ImageXpressMetadataHandler(DiskImageFileListingMetadataHandler):
 
     def get_grid_dimensions(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> Tuple[int, int]:
         """
         Get grid dimensions for stitching from HTD file.
 
         Args:
-            plate_path: Path to the plate folder
+            dataset_root: Path to the plate folder
         Returns:
             (grid_rows, grid_cols) - UPDATED: Now returns (rows, cols) for MIST compatibility
 
@@ -348,7 +348,7 @@ class ImageXpressMetadataHandler(DiskImageFileListingMetadataHandler):
             ValueError: If grid dimensions cannot be determined from metadata
         """
         try:
-            htd_content = self._read_htd_content(plate_path)
+            htd_content = self._read_htd_content(dataset_root)
 
             # Extract grid dimensions - try multiple formats
             # First try the new format with "XSites" and "YSites"
@@ -373,30 +373,30 @@ class ImageXpressMetadataHandler(DiskImageFileListingMetadataHandler):
 
             # Fail loudly if grid dimensions cannot be determined
             raise ValueError(
-                f"Could not find grid dimensions in HTD metadata for {plate_path}"
+                f"Could not find grid dimensions in HTD metadata for {dataset_root}"
             )
         except Exception as e:
             # Fail loudly on any error
             raise ValueError(
-                f"Error parsing ImageXpress grid dimensions for {plate_path}: {e}"
+                f"Error parsing ImageXpress grid dimensions for {dataset_root}: {e}"
             )
 
     def get_pixel_size(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> float:
         """
         Get pixel size from ImageXpress HTD metadata.
 
         Args:
-            plate_path: Path to the plate folder
+            dataset_root: Path to the plate folder
         Returns:
             Pixel size in micrometers
 
         Raises:
             ValueError: If pixel size cannot be determined from metadata
         """
-        htd_content = self._read_htd_content(plate_path)
+        htd_content = self._read_htd_content(dataset_root)
         pixel_size_match = re.search(
             r'"(?:PixelSizeUM|PixelSizeMicrons|PixelSize)",\s*([0-9]+(?:\.[0-9]+)?)',
             htd_content,
@@ -405,16 +405,16 @@ class ImageXpressMetadataHandler(DiskImageFileListingMetadataHandler):
             return float(pixel_size_match.group(1))
 
         raise ValueError(
-            f"ImageXpress HTD metadata does not declare pixel size for {plate_path}"
+            f"ImageXpress HTD metadata does not declare pixel size for {dataset_root}"
         )
 
     def component_value_set(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
     ) -> MetadataComponentValueSet:
         """Return the channel labels declared by ImageXpress HTD metadata."""
 
-        htd_content = self._read_htd_content(plate_path)
+        htd_content = self._read_htd_content(dataset_root)
         channel_mapping: dict[str, str | None] = {}
         wave_pattern = re.compile(r'"WaveName(\d+)", "([^"]*)"')
         for wave_num, wave_name in wave_pattern.findall(htd_content):
@@ -476,7 +476,7 @@ class ImageXpressHandler(
     # Uses default workspace initialization from base class
 
     def _build_virtual_mapping(
-        self, plate_path: Path, filemanager: FileManager
+        self, dataset_root: Path, filemanager: FileManager
     ) -> Path:
         """
         Build ImageXpress virtual workspace mapping using plate-relative paths.
@@ -484,20 +484,20 @@ class ImageXpressHandler(
         Flattens TimePoint and Z-step folder structures virtually by building a mapping dict.
 
         Args:
-            plate_path: Path to plate directory
+            dataset_root: Path to plate directory
             filemanager: FileManager instance for file operations
 
         Returns:
             Path to image directory
         """
-        plate_path = Path(plate_path)  # Ensure Path object
+        dataset_root = Path(dataset_root)  # Ensure Path object
 
         logger.info(
-            f"🔄 BUILDING VIRTUAL MAPPING: ImageXpress folder flattening for {plate_path}"
+            f"🔄 BUILDING VIRTUAL MAPPING: ImageXpress folder flattening for {dataset_root}"
         )
 
         workspace_mapping = self.acquisition_workspace_mapping(
-            self.metadata_handler.get_image_files(plate_path, all_subdirs=True),
+            self.metadata_handler.get_image_files(dataset_root, all_subdirs=True),
             backend=Backend.DISK.value,
         )
 
@@ -506,7 +506,7 @@ class ImageXpressHandler(
         )
 
         # Save virtual workspace mapping and all available metadata
-        self.save_virtual_workspace_metadata(plate_path, workspace_mapping)
+        self.save_virtual_workspace_metadata(dataset_root, workspace_mapping)
 
         # Return the image directory
-        return plate_path
+        return dataset_root

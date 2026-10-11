@@ -13,17 +13,17 @@ from openhcs.core.dataset_sources.exceptions import PixelSizeUnavailableError
 class TiffPixelSizeMixin:
     """Utility mixin to extract pixel size and channel name from TIFF metadata."""
 
-    def _first_tiff(self, plate_path, filemanager, extensions=None) -> Path:
+    def _first_tiff(self, dataset_root, filemanager, extensions=None) -> Path:
         exts = extensions or {".tif", ".tiff"}
         images = filemanager.list_image_files(
-            plate_path, "disk", extensions=exts, recursive=True
+            dataset_root, "disk", extensions=exts, recursive=True
         )
         if not images:
-            raise FileNotFoundError(f"No TIFF images found in {plate_path}")
+            raise FileNotFoundError(f"No TIFF images found in {dataset_root}")
         return Path(images[0])
 
-    def _pixel_size_from_tiff(self, plate_path, filemanager) -> float:
-        img = self._first_tiff(plate_path, filemanager)
+    def _pixel_size_from_tiff(self, dataset_root, filemanager) -> float:
+        img = self._first_tiff(dataset_root, filemanager)
         with tifffile.TiffFile(img) as tif:
             page = tif.pages[0]
             uic = page.tags.get("UIC1tag")
@@ -44,9 +44,9 @@ class TiffPixelSizeMixin:
         raise PixelSizeUnavailableError(img)
 
     def _channel_from_tiff(
-        self, plate_path, filemanager
+        self, dataset_root, filemanager
     ) -> Optional[Dict[str, Optional[str]]]:
-        img = self._first_tiff(plate_path, filemanager)
+        img = self._first_tiff(dataset_root, filemanager)
         with tifffile.TiffFile(img) as tif:
             page = tif.pages[0]
             uic = page.tags.get("UIC1tag")

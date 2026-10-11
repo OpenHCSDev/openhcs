@@ -20,11 +20,11 @@ OpenHCSProcessEnvironment.project_dependency_import_policy()
 ensure_source_checkout_external_paths()
 
 # This distribution is the microscopy domain's entry point: it selects the
-# process's axis family before any kernel module asks for it. Spawned workers
-# and viewer processes import this package first, so each process activates it.
+# process's axis family before any kernel module asks for it. Spawned servers,
+# workers and viewers import this package first and keep their parent's family.
 from openhcs.domains.microscopy.axes import Microscopy  # noqa: E402
 
-Microscopy.activate()
+Microscopy.activate_entry_point()
 
 # Force UTF-8 encoding for stdout/stderr on Windows
 # This ensures emoji and Unicode characters work in console output

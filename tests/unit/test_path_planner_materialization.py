@@ -176,10 +176,10 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
 
 
 class _EngineeringMetadataHandler(OpenHCSMetadataHandler):
-    def get_pixel_size(self, plate_path):
+    def get_pixel_size(self, dataset_root):
         return 1.3556
 
-    def get_exposure_duration(self, plate_path):
+    def get_exposure_duration(self, dataset_root):
         return 17.25
 
 
@@ -190,8 +190,8 @@ class _EngineeringExposureMetadataArtifactProvider(MetadataArtifactProvider):
     def supports_handler(cls, handler):
         return isinstance(handler, _EngineeringMetadataHandler)
 
-    def resolve(self, handler, plate_path):
-        return handler.get_exposure_duration(plate_path)
+    def resolve(self, handler, dataset_root):
+        return handler.get_exposure_duration(dataset_root)
 
 
 def _prepare_step_declarations(planner, step, step_index):
@@ -247,7 +247,7 @@ class PathConfigStub:
 
 def _artifact_planner_stub() -> PathPlanner:
     planner = PathPlanner.__new__(PathPlanner)
-    planner.plate_path = Path("/data/plate1")
+    planner.dataset_root = Path("/data/plate1")
     planner.cfg = PathConfigStub(sub_dir="images")
     planner.session = SimpleNamespace(
         global_config=SimpleNamespace(materialization_results_path="analysis"),
@@ -363,7 +363,7 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
             (2, 3) if name == "grid_dimensions" else None
         ),
     )
-    planner.ctx.dataset_root = planner.plate_path
+    planner.ctx.dataset_root = planner.dataset_root
     pattern = (metadata_consumer, {"grid_dimensions": None})
     snapshot = _resolved_step(
         func=pattern,
@@ -443,7 +443,7 @@ def test_registered_metadata_provider_value_reaches_runtime_unchanged(artifact_n
 
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
-    planner.ctx.dataset_root = planner.plate_path
+    planner.ctx.dataset_root = planner.dataset_root
     assert planner.ctx.microscope_handler.can_resolve_metadata_artifact(artifact_name)
     compiled, input_plans = _compile_metadata_pattern(planner, (metadata_consumer, {"calibration": -7.0}))
     (invocation,) = compiled.default_group.invocations
@@ -461,17 +461,17 @@ def test_new_metadata_provider_composes_cooperative_capabilities_through_runtime
     received = []
 
     class PositiveMetadataValue:
-        def resolve(self, handler, plate_path):
-            value = super().resolve(handler, plate_path)
+        def resolve(self, handler, dataset_root):
+            value = super().resolve(handler, dataset_root)
             events.append(("validate", value))
             if value <= 0:
                 raise ValueError("Exposure duration must be positive")
             return value
 
     class ResolutionReceipt:
-        def resolve(self, handler, plate_path):
+        def resolve(self, handler, dataset_root):
             events.append("resolve")
-            value = super().resolve(handler, plate_path)
+            value = super().resolve(handler, dataset_root)
             events.append(("resolved", value))
             return value
 
@@ -489,7 +489,7 @@ def test_new_metadata_provider_composes_cooperative_capabilities_through_runtime
 
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
-    planner.ctx.dataset_root = planner.plate_path
+    planner.ctx.dataset_root = planner.dataset_root
     assert planner.ctx.microscope_handler.can_resolve_metadata_artifact(
         CheckedExposureMetadataProvider.require_artifact_name()
     )
@@ -499,7 +499,7 @@ def test_new_metadata_provider_composes_cooperative_capabilities_through_runtime
     assert events == ["resolve", ("validate", 17.25), ("resolved", 17.25)]
 
     class InvalidExposureHandler(_EngineeringMetadataHandler):
-        def get_exposure_duration(self, plate_path):
+        def get_exposure_duration(self, dataset_root):
             return -17.25
 
     events.clear()
@@ -521,7 +521,7 @@ def test_hidden_pixel_size_reaches_callable_with_exact_source_calibration():
 
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
-    planner.ctx.dataset_root = planner.plate_path
+    planner.ctx.dataset_root = planner.dataset_root
     compiled, _ = _compile_metadata_pattern(planner, metadata_consumer)
     _execute_compiled_metadata_pattern(compiled)
     assert received == [1.3556]
@@ -539,9 +539,9 @@ def test_required_metadata_input_has_no_magic_default(value):
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = SimpleNamespace(
         can_resolve_metadata_artifact=lambda name: name == "pixel_size",
-        resolve_metadata_artifact=lambda name, plate_path: value,
+        resolve_metadata_artifact=lambda name, dataset_root: value,
     )
-    planner.ctx.dataset_root = planner.plate_path
+    planner.ctx.dataset_root = planner.dataset_root
     compiled, _ = _compile_metadata_pattern(planner, metadata_consumer)
     if value is None:
         with pytest.raises(ValueError, match="Required metadata artifact .* has no value"):
@@ -570,7 +570,7 @@ def test_exact_producer_takes_precedence_over_metadata_provider():
 
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
-    planner.ctx.dataset_root = planner.plate_path
+    planner.ctx.dataset_root = planner.dataset_root
     producer = _record_declared_output(planner, ArtifactOutputPlan(
         name="pixel_size", path="/memory/pixel_size.pkl",
         artifact_type=SpecialArtifactType, producer_step_index=2,
@@ -797,7 +797,7 @@ def test_compiled_pattern_rejects_accumulator_owned_output_conflict():
 
 def test_materialization_collision_updates_results_dir_and_config():
     planner = PathPlanner.__new__(PathPlanner)
-    planner.plate_path = Path("/data/plate1")
+    planner.dataset_root = Path("/data/plate1")
     planner.plans = {
         3: CompiledStepPlan(
             step_index=3,
@@ -806,7 +806,7 @@ def test_materialization_collision_updates_results_dir_and_config():
             materialized_output=MaterializedOutputPlan(
                 output_dir=Path("/data/plate1_processed/images"),
                 backend="disk",
-                plate_root="/data/plate1_processed",
+                dataset_root="/data/plate1_processed",
                 sub_dir="images",
                 analysis_results_dir="/data/plate1_processed/images_results",
             ),

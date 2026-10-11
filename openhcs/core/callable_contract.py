@@ -73,7 +73,7 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_output_matching import RuntimeMatchedOutput
     from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
     from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
-    from openhcs.core.vfs_protocol import PlatePathDeclaration
+    from openhcs.core.vfs_protocol import DatasetPathDeclaration
     from openhcs.core.processing_contracts import (
         ProcessingContract,
     )
@@ -351,7 +351,7 @@ class CallableSignature(inspect.Signature):
         return_annotation=inspect.Signature.empty,
         __validate_parameters__=True
     ):
-        from openhcs.core.vfs_protocol import PlatePathDeclaration
+        from openhcs.core.vfs_protocol import DatasetPathDeclaration
 
         super().__init__(
             parameters,
@@ -363,7 +363,7 @@ class CallableSignature(inspect.Signature):
                 name: declaration
                 for name, parameter in self.parameters.items()
                 for declaration in (
-                    PlatePathDeclaration.from_annotation(parameter.annotation),
+                    DatasetPathDeclaration.from_annotation(parameter.annotation),
                 )
                 if declaration is not None
             }
@@ -382,7 +382,7 @@ class CallableSignature(inspect.Signature):
         )
 
     @property
-    def declared_path_parameters(self) -> Mapping[str, "PlatePathDeclaration"]:
+    def declared_path_parameters(self) -> Mapping[str, "DatasetPathDeclaration"]:
         return self._declared_path_parameters
 
 
@@ -537,7 +537,7 @@ class CallableMetadata:
 
     def declared_path_parameters_for(
         self, func: Any
-    ) -> Mapping[str, "PlatePathDeclaration"]:
+    ) -> Mapping[str, "DatasetPathDeclaration"]:
         """Read the captured signature layout; unprepared authoring stays live."""
         return CallableSignature.from_signature(
             self.canonical_signature_for(func)
@@ -1359,18 +1359,18 @@ class CallableContract(ArtifactPlanKeySelector):
         return frozenset(names)
 
     @property
-    def declared_path_parameters(self) -> Mapping[str, "PlatePathDeclaration"]:
+    def declared_path_parameters(self) -> Mapping[str, "DatasetPathDeclaration"]:
         """Plate-relative path declarations owned by the semantic ABI."""
         return self.metadata.declared_path_parameters_for(self.func)
 
     def declared_path_values(
         self,
         kwargs: Mapping[str, object],
-    ) -> Mapping[str, tuple["PlatePathDeclaration", object]]:
+    ) -> Mapping[str, tuple["DatasetPathDeclaration", object]]:
         """Return authored or signature-default values for declared paths."""
 
         signature = self.canonical_signature
-        values: dict[str, tuple["PlatePathDeclaration", object]] = {}
+        values: dict[str, tuple["DatasetPathDeclaration", object]] = {}
         for parameter_name, declaration in self.declared_path_parameters.items():
             value = kwargs.get(parameter_name, signature.parameters[parameter_name].default)
             if parameter_name not in kwargs and value is inspect.Parameter.empty:

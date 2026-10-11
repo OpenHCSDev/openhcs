@@ -105,16 +105,16 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
     @classmethod
     def detect(
         cls,
-        plate_folder: Path,
+        dataset_root: Path,
         filemanager: FileManager,
         source_bindings_config: SourceBindingsConfig | None = None,
     ) -> bool:
-        del plate_folder, filemanager, source_bindings_config
+        del dataset_root, filemanager, source_bindings_config
         return False
 
     def _replay_persisted_workspace(
         self,
-        plate_root: Path,
+        dataset_root: Path,
         filemanager: FileManager,
     ) -> bool:
         """Replay a persisted projection for a workspace without physical sources.
@@ -124,18 +124,18 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
         root that still lists physical sources must always rebuild so new files
         and refreshed imported tables are picked up.
         """
-        if self._list_source_files(plate_root, filemanager):
+        if self._list_source_files(dataset_root, filemanager):
             return False
-        metadata_path = plate_root / OpenHCSMetadataHandler.METADATA_FILENAME
+        metadata_path = dataset_root / OpenHCSMetadataHandler.METADATA_FILENAME
         if not filemanager.exists(str(metadata_path), Backend.DISK.value):
             return False
         from openhcs.core.source_workspace_projection import (
             VirtualWorkspaceSourceProjection,
         )
 
-        metadata = self.metadata_handler.source_workspace_metadata_document(plate_root)
+        metadata = self.metadata_handler.source_workspace_metadata_document(dataset_root)
         workspace_metadata = self.metadata_handler.workspace_mapping_metadata(
-            plate_root
+            dataset_root
         )
         if workspace_metadata is None:
             return False
@@ -145,18 +145,18 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
             return False
         if (
             VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
-                plate_root,
+                dataset_root,
                 metadata,
             )
             is None
         ):
             return False
-        self._register_virtual_workspace_backend(plate_root, filemanager)
+        self._register_virtual_workspace_backend(dataset_root, filemanager)
         return True
 
     def initialize_workspace(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         filemanager: FileManager,
     ) -> Path:
         """Rebuild declared sources on explicit initialization.
@@ -168,34 +168,34 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
             materialize_source_binding_workspace,
         )
 
-        plate_root = Path(plate_path)
-        self.plate_folder = plate_root
-        if self._replay_persisted_workspace(plate_root, filemanager):
-            return plate_root
+        dataset_root = Path(dataset_root)
+        self.dataset_root = dataset_root
+        if self._replay_persisted_workspace(dataset_root, filemanager):
+            return dataset_root
         materialize_source_binding_workspace(
-            plate_root,
-            plate_root,
+            dataset_root,
+            dataset_root,
             self._source_bindings_config,
             filemanager=filemanager,
             source_backend=Backend.DISK,
             workspace_backend=Backend.DISK,
-            source_files=self._list_source_files(plate_root, filemanager),
+            source_files=self._list_source_files(dataset_root, filemanager),
             parser=self.parser,
         )
         self.metadata_handler = OpenHCSMetadataHandler(filemanager)
-        self._register_virtual_workspace_backend(plate_root, filemanager)
-        return plate_root
+        self._register_virtual_workspace_backend(dataset_root, filemanager)
+        return dataset_root
 
     def _list_source_files(
         self,
-        plate_path: Path,
+        dataset_root: Path,
         filemanager: FileManager,
     ) -> tuple[Path, ...]:
-        managed_paths = METADATA_CONFIG.managed_paths(plate_path)
+        managed_paths = METADATA_CONFIG.managed_paths(dataset_root)
         return tuple(
             Path(path)
             for path in filemanager.list_files(
-                plate_path,
+                dataset_root,
                 Backend.DISK.value,
                 recursive=True,
             )

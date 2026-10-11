@@ -29,7 +29,7 @@ from openhcs.core.invocation_artifacts import (
 )
 from openhcs.core.vfs_protocol import (
     FileManagerLike,
-    PlatePathDeclaration,
+    DatasetPathDeclaration,
 )
 from openhcs.core.axes import AxisFamily, Ungrouped
 
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
-class CompilationPlateScope:
+class CompilationDatasetScope:
     """Plate-root identity used for compiler ObjectState scopes and paths."""
 
     path: Path
@@ -53,16 +53,16 @@ class CompilationPlateScope:
             )
 
     @classmethod
-    def from_context(cls, context: ProcessingContext) -> "CompilationPlateScope":
+    def from_context(cls, context: ProcessingContext) -> "CompilationDatasetScope":
         if context.dataset_root is None:
             raise ValueError("Compilation plate scope requires context.dataset_root.")
         return cls(Path(context.dataset_root))
 
     @classmethod
-    def from_path(cls, plate_path: Path | str | None) -> "CompilationPlateScope":
-        if plate_path is None:
+    def from_path(cls, dataset_root: Path | str | None) -> "CompilationDatasetScope":
+        if dataset_root is None:
             raise ValueError("Compilation plate scope requires a plate path.")
-        return cls(Path(plate_path))
+        return cls(Path(dataset_root))
 
     @property
     def object_state_scope_id(self) -> str:
@@ -96,19 +96,19 @@ class CompilationPlateScope:
 class CompilationPathResolver:
     """Resolve declaration-owned paths for one compilation plate."""
 
-    plate_scope: CompilationPlateScope
+    dataset_scope: CompilationDatasetScope
     filemanager: FileManagerLike
     backend: str
 
     def resolve(
         self,
         value: str | Path,
-        declaration: PlatePathDeclaration,
+        declaration: DatasetPathDeclaration,
         *,
         owner: str,
     ) -> Path:
         try:
-            target = self.plate_scope.resolve_address(
+            target = self.dataset_scope.resolve_address(
                 value,
                 filemanager=self.filemanager,
                 backend=self.backend,
@@ -122,7 +122,7 @@ class CompilationPathResolver:
         except Exception as error:
             error.add_note(
                 f"While resolving {owner}: authored={value!r}, "
-                f"plate_root={self.plate_scope.path}, backend={self.backend!r}."
+                f"dataset_root={self.dataset_scope.path}, backend={self.backend!r}."
             )
             raise
 
@@ -141,7 +141,7 @@ def resolve_declared_dataclass_paths(
     replacements: dict[str, object] = {}
     for dataclass_field in fields(value):
         field_value = DataclassFieldAccess.raw_value(value, dataclass_field.name)
-        declaration = PlatePathDeclaration.from_annotation(
+        declaration = DatasetPathDeclaration.from_annotation(
             annotations.get(dataclass_field.name)
         )
         if declaration is not None and field_value is not None:
@@ -424,7 +424,7 @@ class CompilationSession:
     source_workspace_projection: VirtualWorkspaceSourceProjection
     path_resolver: CompilationPathResolver | None = None
     metadata_writer: bool = False
-    plate_scope: CompilationPlateScope | None = None
+    dataset_scope: CompilationDatasetScope | None = None
     is_zmq_execution: bool = False
 
     _source_literal_field_types: Mapping[str, type[object] | None] | None = field(
@@ -442,7 +442,7 @@ class CompilationSession:
         source_workspace_projection: VirtualWorkspaceSourceProjection | None = None,
         path_resolver: CompilationPathResolver | None = None,
         metadata_writer: bool = False,
-        plate_path: Path | None = None,
+        dataset_root: Path | None = None,
         is_zmq_execution: bool = False,
     ) -> "CompilationSession":
         if context.step_plans is None:
@@ -460,27 +460,27 @@ class CompilationSession:
             ),
             path_resolver=path_resolver,
             metadata_writer=metadata_writer,
-            plate_scope=(
-                CompilationPlateScope.from_path(plate_path)
-                if plate_path is not None
+            dataset_scope=(
+                CompilationDatasetScope.from_path(dataset_root)
+                if dataset_root is not None
                 else None
             ),
             is_zmq_execution=is_zmq_execution,
         )
 
     def __post_init__(self) -> None:
-        if self.plate_scope is None and self.context.dataset_root is not None:
-            self.plate_scope = CompilationPlateScope.from_context(self.context)
+        if self.dataset_scope is None and self.context.dataset_root is not None:
+            self.dataset_scope = CompilationDatasetScope.from_context(self.context)
 
     @property
     def axis_id(self) -> str:
         return self.context.axis_id
 
     @property
-    def plate_path(self) -> Path | None:
-        if self.plate_scope is None:
+    def dataset_root(self) -> Path | None:
+        if self.dataset_scope is None:
             return None
-        return self.plate_scope.path
+        return self.dataset_scope.path
 
     @property
     def realized_source_metadata(
