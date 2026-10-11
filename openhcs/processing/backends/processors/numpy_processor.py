@@ -1,22 +1,17 @@
-"""
-NumPy Image Processor Implementation
+"""NumPy processor registrations.
 
-This module implements the ImageProcessorInterface using NumPy as the backend.
-It serves as the reference implementation and works on CPU.
-
-Doctrinal Clauses:
-- Clause 3 — Declarative Primacy: All functions are pure and stateless
-- Clause 88 — No Inferred Capabilities: Explicit NumPy dependency
-- Clause 106-A — Declared Memory Types: All methods specify NumPy arrays
+Shared operations are written once in ``image_stack_operations``; this module
+registers them for NumPy and holds the operations whose NumPy algorithm
+(scikit-image, the numba composite kernel) differs from other backends.
 """
 
 from __future__ import annotations
 
-import logging
-from abc import abstractmethod
 from enum import Enum
-from typing import Annotated, Any, List, Optional, Tuple
+from typing import Annotated, List, Optional, Tuple
 
+from arraybridge import MemoryType
+from arraybridge.array_operations import ArrayOperations
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
 from numba import njit
@@ -25,13 +20,10 @@ from skimage import morphology as morph
 from skimage import transform as trans
 
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
-
-# Use direct import from core memory decorators to avoid circular imports
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.processing_preparation import RegisteredNumbaKernelPreparation
+from openhcs.processing.backends.processors import image_stack_operations as operations
 from openhcs.processing.backends.processors.method_axes import (
     OrthogonalProjectionPlane,
     SpatialBinMethod,
@@ -41,7 +33,7 @@ from openhcs.core.processing_contracts import (
     VolumetricToSliceContract,
 )
 
-logger = logging.getLogger(__name__)
+OPERATIONS = ArrayOperations.for_memory(MemoryType.NUMPY)
 
 
 @numpy_func(contract=Pure2DContract)
@@ -120,44 +112,6 @@ SpatialBinMethodInput = Annotated[
 ]
 
 
-class NumpySpatialBinStrategy(
-    EnumKeyedStrategyMixin[SpatialBinMethod], metaclass=AutoRegisterMeta
-):
-    __enum_member_attr__ = "method"
-
-    @abstractmethod
-    def apply(self, array: np.ndarray, axis: tuple[int, ...]) -> np.ndarray:
-        raise NotImplementedError
-
-
-class NumpyMeanSpatialBinStrategy(NumpySpatialBinStrategy):
-    method = SpatialBinMethod.MEAN
-
-    def apply(self, array: np.ndarray, axis: tuple[int, ...]) -> np.ndarray:
-        return np.mean(array, axis=axis)
-
-
-class NumpySumSpatialBinStrategy(NumpySpatialBinStrategy):
-    method = SpatialBinMethod.SUM
-
-    def apply(self, array: np.ndarray, axis: tuple[int, ...]) -> np.ndarray:
-        return np.sum(array, axis=axis)
-
-
-class NumpyMaxSpatialBinStrategy(NumpySpatialBinStrategy):
-    method = SpatialBinMethod.MAX
-
-    def apply(self, array: np.ndarray, axis: tuple[int, ...]) -> np.ndarray:
-        return np.max(array, axis=axis)
-
-
-class NumpyMinSpatialBinStrategy(NumpySpatialBinStrategy):
-    method = SpatialBinMethod.MIN
-
-    def apply(self, array: np.ndarray, axis: tuple[int, ...]) -> np.ndarray:
-        return np.min(array, axis=axis)
-
-
 @numpy_func
 def create_linear_weight_mask(
     height: int, width: int, margin_ratio: float = 0.1
@@ -173,46 +127,9 @@ def create_linear_weight_mask(
     Returns:
         2D weight mask of shape (height, width)
     """
-    margin_y = int(np.floor(height * margin_ratio))
-    margin_x = int(np.floor(width * margin_ratio))
-
-    weight_y = np.ones(height, dtype=np.float32)
-    if margin_y > 0:
-        ramp_top = np.linspace(0, 1, margin_y, endpoint=False)
-        ramp_bottom = np.linspace(1, 0, margin_y, endpoint=False)
-        weight_y[:margin_y] = ramp_top
-        weight_y[-margin_y:] = ramp_bottom
-
-    weight_x = np.ones(width, dtype=np.float32)
-    if margin_x > 0:
-        ramp_left = np.linspace(0, 1, margin_x, endpoint=False)
-        ramp_right = np.linspace(1, 0, margin_x, endpoint=False)
-        weight_x[:margin_x] = ramp_left
-        weight_x[-margin_x:] = ramp_right
-
-    # Create 2D weight mask
-    weight_mask = np.outer(weight_y, weight_x)
-
-    return weight_mask
-
-
-def _validate_3d_array(array: Any, name: str = "input") -> None:
-    """
-    Validate that the input is a 3D NumPy array.
-
-    Args:
-        array: Array to validate
-        name: Name of the array for error messages
-
-    Raises:
-        TypeError: If the array is not a NumPy array
-        ValueError: If the array is not 3D
-    """
-    if not isinstance(array, (np.ndarray, RuntimeArrayPayload)):
-        raise TypeError(f"{name} must be a NumPy array, got {type(array)}")
-
-    if array.ndim != 3:
-        raise ValueError(f"{name} must be a 3D array, got {array.ndim}D")
+    return operations.linear_weight_mask(
+        OPERATIONS, height, width, margin_ratio, ramp_endpoint=False
+    )
 
 
 @numpy_func
@@ -229,7 +146,7 @@ def sharpen(image: np.ndarray, radius: float = 1.0, amount: float = 1.0) -> np.n
     Returns:
         Sharpened 3D NumPy array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     # Store original dtype
     dtype = image.dtype
@@ -288,27 +205,8 @@ def percentile_normalize(
     Returns:
         Normalized 3D NumPy array of shape (N, Y, X).
     """
-    _validate_3d_array(image)
-
-    # Import shared utilities
-    from .percentile_utils import resolve_target_range, slice_percentile_normalize_core
-
-    # Auto-detect target range based on input dtype if not specified
-    target_min, target_max = resolve_target_range(image.dtype, target_min, target_max)
-
-    # Use shared core logic with NumPy-specific functions
-    return slice_percentile_normalize_core(
-        image=image,
-        low_percentile=low_percentile,
-        high_percentile=high_percentile,
-        target_min=target_min,
-        target_max=target_max,
-        percentile_func=np.percentile,
-        clip_func=np.clip,
-        ones_like_func=np.ones_like,
-        zeros_like_func=lambda arr, dtype=None: np.zeros_like(
-            arr, dtype=dtype or np.float32
-        ),
+    return operations.percentile_normalize_planes(
+        OPERATIONS, image, low_percentile, high_percentile, target_min, target_max
     )
 
 
@@ -336,7 +234,7 @@ def percentile_normalize_plane(
         plane_index: Leading-axis plane to normalize; zero selects the first plane.
     """
 
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
     if not 0 <= plane_index < image.shape[0]:
         raise ValueError("plane_index is outside the input stack")
 
@@ -381,24 +279,8 @@ def stack_percentile_normalize(
     Returns:
         Normalized 3D NumPy array of shape (N, Y, X).
     """
-    _validate_3d_array(stack)
-
-    # Import shared utilities
-    from .percentile_utils import resolve_target_range, percentile_normalize_core
-
-    # Auto-detect target range based on input dtype if not specified
-    target_min, target_max = resolve_target_range(stack.dtype, target_min, target_max)
-
-    # Use shared core logic with NumPy-specific functions
-    return percentile_normalize_core(
-        stack=stack,
-        low_percentile=low_percentile,
-        high_percentile=high_percentile,
-        target_min=target_min,
-        target_max=target_max,
-        percentile_func=lambda arr, pct: np.percentile(arr, pct, axis=None),
-        clip_func=np.clip,
-        ones_like_func=np.ones_like,
+    return operations.percentile_normalize_stack(
+        OPERATIONS, stack, low_percentile, high_percentile, target_min, target_max
     )
 
 
@@ -508,32 +390,9 @@ def create_composite(
         Composite 2D NumPy array of shape (Y, X). OpenHCS contract execution
         restores the singleton runtime stack axis.
     """
-    # Validate input is 3D array
-    _validate_3d_array(stack)
-
-    n_slices, height, width = stack.shape
-
-    # Default weights if none provided
-    if weights is None:
-        # Equal weights forangeit so that it can only all slices
-        weights = [1.0 / n_slices] * n_slices
-    elif isinstance(weights, (list, tuple)):
-        # Convert tuple to list if needed
-        weights = list(weights)
-        if len(weights) != n_slices:
-            raise ValueError(
-                f"Number of weights ({len(weights)}) must match number of slices ({n_slices})"
-            )
-    else:
-        raise TypeError(
-            f"weights must be a list of values or None, got {type(weights)}: {weights}"
-        )
-
-    # Normalize weights to sum to 1
-    weight_sum = sum(weights)
-    if weight_sum == 0:
-        raise ValueError("Sum of weights cannot be zero")
-    normalized_weights = [w / weight_sum for w in weights]
+    operations.require_stack(OPERATIONS, stack)
+    n_slices = stack.shape[0]
+    normalized_weights = operations.composite_weights(weights, n_slices)
 
     # Convert weights to NumPy array for efficient computation
     # CRITICAL: Use float32 for weights to preserve fractional values, not stack.dtype
@@ -565,35 +424,7 @@ def apply_mask(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
     Returns:
         Masked 3D NumPy array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
-
-    # Handle 2D mask (apply to each Z-slice)
-    if isinstance(mask, np.ndarray) and mask.ndim == 2:
-        if mask.shape != image.shape[1:]:
-            raise ValueError(
-                f"2D mask shape {mask.shape} doesn't match image slice shape {image.shape[1:]}"
-            )
-
-        # Apply 2D mask to each Z-slice
-        result = np.zeros_like(image)
-        for z in range(image.shape[0]):
-            result[z] = image[z].astype(np.float32) * mask.astype(np.float32)
-
-        return result.astype(image.dtype)
-
-    # Handle 3D mask
-    if isinstance(mask, np.ndarray) and mask.ndim == 3:
-        if mask.shape != image.shape:
-            raise ValueError(
-                f"3D mask shape {mask.shape} doesn't match image shape {image.shape}"
-            )
-
-        # Apply 3D mask directly
-        masked = image.astype(np.float32) * mask.astype(np.float32)
-        return masked.astype(image.dtype)
-
-    # If we get here, the mask is neither 2D nor 3D NumPy array
-    raise TypeError(f"mask must be a 2D or 3D NumPy array, got {type(mask)}")
+    return operations.apply_mask(OPERATIONS, image, mask)
 
 
 @numpy_func
@@ -608,11 +439,7 @@ def create_weight_mask(shape: Tuple[int, int], margin_ratio: float = 0.1) -> np.
     Returns:
         2D NumPy weight mask of shape (Y, X)
     """
-    if not isinstance(shape, tuple) or len(shape) != 2:
-        raise TypeError("shape must be a tuple of (height, width)")
-
-    height, width = shape
-    return create_linear_weight_mask(height, width, margin_ratio)
+    return create_linear_weight_mask(*operations.weight_mask_extent(shape), margin_ratio)
 
 
 @numpy_func
@@ -623,11 +450,7 @@ def max_projection(stack: np.ndarray) -> np.ndarray:
     Returns:
         3D NumPy array of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    # Create max projection
-    projection_2d = np.max(stack, axis=0)
-    return projection_2d.reshape(1, projection_2d.shape[0], projection_2d.shape[1])
+    return operations.max_projection(OPERATIONS, stack)
 
 
 @numpy_func
@@ -638,59 +461,18 @@ def mean_projection(stack: np.ndarray) -> np.ndarray:
     Returns:
         3D NumPy array of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    # Create mean projection
-    projection_2d = np.mean(stack, axis=0).astype(stack.dtype)
-    return projection_2d.reshape(1, projection_2d.shape[0], projection_2d.shape[1])
-
-
-def min_projection(stack: np.ndarray) -> np.ndarray:
-    """Create a minimum intensity projection from a Z-stack."""
-
-    _validate_3d_array(stack)
-    projection_2d = np.min(stack, axis=0)
-    return projection_2d.reshape(1, *projection_2d.shape)
+    return operations.mean_projection(OPERATIONS, stack)
 
 
 class NumpyStackProjectionMethod(Enum):
-    """Stack reductions implemented by the NumPy projection dispatcher."""
+    """NumPy ``create_projection`` choices; values name ``StackProjection`` members.
+
+    Kept as its own class because saved pipelines import it from this module.
+    """
 
     MAX = "max_projection"
     MEAN = "mean_projection"
     MIN = "min_projection"
-
-
-class NumpyStackProjectionStrategy(
-    EnumKeyedStrategyMixin[NumpyStackProjectionMethod],
-    metaclass=AutoRegisterMeta,
-):
-    __enum_member_attr__ = "method"
-
-    @abstractmethod
-    def apply(self, stack: np.ndarray) -> np.ndarray:
-        raise NotImplementedError
-
-
-class NumpyMaxStackProjectionStrategy(NumpyStackProjectionStrategy):
-    method = NumpyStackProjectionMethod.MAX
-
-    def apply(self, stack: np.ndarray) -> np.ndarray:
-        return max_projection(stack)
-
-
-class NumpyMeanStackProjectionStrategy(NumpyStackProjectionStrategy):
-    method = NumpyStackProjectionMethod.MEAN
-
-    def apply(self, stack: np.ndarray) -> np.ndarray:
-        return mean_projection(stack)
-
-
-class NumpyMinStackProjectionStrategy(NumpyStackProjectionStrategy):
-    method = NumpyStackProjectionMethod.MIN
-
-    def apply(self, stack: np.ndarray) -> np.ndarray:
-        return min_projection(stack)
 
 
 @numpy_func
@@ -720,7 +502,7 @@ def create_orthogonal_projections(
         - Returns data, never performs I/O
         - Testable in isolation
     """
-    _validate_3d_array(stack)
+    operations.require_stack(OPERATIONS, stack)
 
     result = {}
     if OrthogonalProjectionPlane.XY in projections:
@@ -743,7 +525,7 @@ def gaussian_blur(stack: np.ndarray, sigma: float = 1.0) -> np.ndarray:
     Returns:
         Blurred 3D NumPy array of shape (Z, Y, X)
     """
-    _validate_3d_array(stack)
+    operations.require_stack(OPERATIONS, stack)
 
     # Apply Gaussian blur slice-by-slice
     blurred = np.zeros_like(stack, dtype=np.float64)
@@ -771,37 +553,7 @@ def spatial_bin_2d(
     Returns:
         Binned 3D NumPy array of shape (Z, Y//bin_size, X//bin_size)
     """
-    _validate_3d_array(stack)
-
-    if bin_size <= 0:
-        raise ValueError("bin_size must be positive")
-
-    z_slices, height, width = stack.shape
-
-    # Calculate output dimensions
-    new_height = height // bin_size
-    new_width = width // bin_size
-
-    if new_height == 0 or new_width == 0:
-        raise ValueError(
-            f"bin_size {bin_size} is too large for image dimensions {height}x{width}"
-        )
-
-    # Crop to make dimensions divisible by bin_size
-    crop_height = new_height * bin_size
-    crop_width = new_width * bin_size
-    cropped_stack = stack[:, :crop_height, :crop_width]
-
-    # Reshape for binning: (Z, new_height, bin_size, new_width, bin_size)
-    reshaped = cropped_stack.reshape(
-        z_slices, new_height, bin_size, new_width, bin_size
-    )
-
-    result = NumpySpatialBinStrategy.for_enum_member(method).apply(
-        reshaped, axis=(2, 4)
-    )
-
-    return result.astype(stack.dtype)
+    return operations.spatial_bin_2d(OPERATIONS, stack, bin_size, method)
 
 
 @numpy_func
@@ -821,39 +573,7 @@ def spatial_bin_3d(
     Returns:
         Binned 3D NumPy array of shape (Z//bin_size, Y//bin_size, X//bin_size)
     """
-    _validate_3d_array(stack)
-
-    if bin_size <= 0:
-        raise ValueError("bin_size must be positive")
-
-    depth, height, width = stack.shape
-
-    # Calculate output dimensions
-    new_depth = depth // bin_size
-    new_height = height // bin_size
-    new_width = width // bin_size
-
-    if new_depth == 0 or new_height == 0 or new_width == 0:
-        raise ValueError(
-            f"bin_size {bin_size} is too large for stack dimensions {depth}x{height}x{width}"
-        )
-
-    # Crop to make dimensions divisible by bin_size
-    crop_depth = new_depth * bin_size
-    crop_height = new_height * bin_size
-    crop_width = new_width * bin_size
-    cropped_stack = stack[:crop_depth, :crop_height, :crop_width]
-
-    # Reshape for 3D binning: (new_depth, bin_size, new_height, bin_size, new_width, bin_size)
-    reshaped = cropped_stack.reshape(
-        new_depth, bin_size, new_height, bin_size, new_width, bin_size
-    )
-
-    result = NumpySpatialBinStrategy.for_enum_member(method).apply(
-        reshaped, axis=(1, 3, 5)
-    )
-
-    return result.astype(stack.dtype)
+    return operations.spatial_bin_3d(OPERATIONS, stack, bin_size, method)
 
 
 @numpy_func
@@ -877,41 +597,9 @@ def stack_equalize_histogram(
     Returns:
         Equalized 3D NumPy array of shape (Z, Y, X)
     """
-    _validate_3d_array(stack)
-
-    # Remember input dtype to preserve it
-    input_dtype = stack.dtype
-
-    # Flatten the entire stack to compute the global histogram
-    flat_stack = stack.flatten()
-
-    # Calculate the histogram and cumulative distribution function (CDF)
-    hist, bin_edges = np.histogram(flat_stack, bins=bins, range=(range_min, range_max))
-    cdf = hist.cumsum()
-
-    # Normalize the CDF to the input dtype range
-    # Avoid division by zero
-    if cdf[-1] > 0:
-        if np.issubdtype(input_dtype, np.integer):
-            dtype_info = np.iinfo(input_dtype)
-            cdf = dtype_info.max * cdf / cdf[-1]
-        else:
-            # For float dtypes, normalize to [0, 1]
-            cdf = cdf / cdf[-1]
-
-    # Use linear interpolation to map input values to equalized values
-    equalized_stack = np.interp(stack.flatten(), bin_edges[:-1], cdf).reshape(
-        stack.shape
+    return operations.stack_equalize_histogram(
+        OPERATIONS, stack, bins, range_min, range_max
     )
-
-    # Convert back to input dtype
-    if np.issubdtype(input_dtype, np.integer):
-        dtype_info = np.iinfo(input_dtype)
-        return np.clip(equalized_stack, dtype_info.min, dtype_info.max).astype(
-            input_dtype
-        )
-    else:
-        return equalized_stack.astype(input_dtype)
 
 
 @numpy_func(contract=VolumetricToSliceContract)
@@ -923,15 +611,12 @@ def create_projection(
     Create a projection from a stack using the specified method.
 
     Args:
-        method: Projection method owned by ``NumpyStackProjectionStrategy``.
+        method: Projection method served by ``image_stack_operations.StackProjection``.
 
     Returns:
         2D NumPy array of shape (Y, X)
     """
-    stack_array = np.asarray(stack)
-    _validate_3d_array(stack_array)
-
-    return NumpyStackProjectionStrategy.for_enum_member(method).apply(stack_array)[0]
+    return operations.create_projection(OPERATIONS, np.asarray(stack), method)[0]
 
 
 @numpy_func
@@ -971,39 +656,9 @@ def crop(
     np.ndarray
         Cropped 3D array of shape (depth, height, width)
     """
-    _validate_3d_array(input_image)
-
-    # Validate crop parameters
-    if width <= 0 or height <= 0 or depth <= 0:
-        raise ValueError(
-            f"Crop dimensions must be positive: width={width}, height={height}, depth={depth}"
-        )
-
-    if start_x < 0 or start_y < 0 or start_z < 0:
-        raise ValueError(
-            f"Start coordinates must be non-negative: start_x={start_x}, start_y={start_y}, start_z={start_z}"
-        )
-
-    # Get input dimensions
-    input_depth, input_height, input_width = input_image.shape
-
-    # Calculate end coordinates
-    end_x = start_x + width
-    end_y = start_y + height
-    end_z = start_z + depth
-
-    # Validate bounds
-    if end_x > input_width or end_y > input_height or end_z > input_depth:
-        raise ValueError(
-            f"Crop region extends beyond image bounds. "
-            f"Image shape: {input_image.shape}, "
-            f"Crop region: ({start_z}:{end_z}, {start_y}:{end_y}, {start_x}:{end_x})"
-        )
-
-    # Perform the crop using NumPy slicing
-    cropped = input_image[start_z:end_z, start_y:end_y, start_x:end_x]
-
-    return cropped
+    return operations.crop(
+        OPERATIONS, input_image, start_x, start_y, start_z, width, height, depth
+    )
 
 
 @numpy_func
@@ -1045,7 +700,7 @@ def tophat(
     Returns:
         Background-subtracted 3D NumPy array of shape (N, Y, X).
     """
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     # Process each Z-slice independently
     result = np.zeros_like(image)

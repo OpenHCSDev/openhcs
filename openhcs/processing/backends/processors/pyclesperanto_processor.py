@@ -1,114 +1,35 @@
-"""
-pyclesperanto GPU processor for OpenHCS.
+"""pyclesperanto processor registrations.
 
-This processor uses pyclesperanto for GPU-accelerated image processing,
-providing excellent compatibility with OpenCL devices and seamless integration
-with OpenHCS patterns.
+Shared operations are written once in ``image_stack_operations``; this module
+registers them for pyclesperanto and holds the operations built from
+pyclesperanto's own kernels (min/max normalization, CLAHE, top-hat sphere).
 """
 
-import logging
-import os
-from abc import abstractmethod
-from enum import Enum
 from typing import List, Optional
 
-from metaclass_registry import AutoRegisterMeta
+from arraybridge import MemoryType
+from arraybridge.array_operations import ArrayOperations
 
-# Import OpenHCS decorator
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.utils.import_utils import optional_import_placeholder
 from openhcs.core.memory import pyclesperanto as pyclesperanto_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from openhcs.processing.backends.processors import image_stack_operations as operations
 from openhcs.processing.backends.processors.method_axes import (
     StackProjectionMethod,
 )
 
-# Set up logging
-logger = logging.getLogger(__name__)
+cle = optional_import_placeholder("pyclesperanto")
 
-
-class PyclesperantoMaskDimensionality(Enum):
-    """Closed mask-dimensionality family for GPU mask application."""
-
-    MASK_2D = 2
-    MASK_3D = 3
-
-    @classmethod
-    def from_mask(cls, mask: "cle.Array") -> "PyclesperantoMaskDimensionality":
-        try:
-            return cls(len(mask.shape))
-        except ValueError as exc:
-            raise TypeError(
-                f"mask must be a 2D or 3D pyclesperanto Array, got shape {mask.shape}"
-            ) from exc
-
-    def apply(self, image: "cle.Array", mask: "cle.Array") -> "cle.Array":
-        if self is PyclesperantoMaskDimensionality.MASK_2D:
-            if mask.shape != image.shape[1:]:
-                raise ValueError(
-                    f"2D mask shape {mask.shape} doesn't match image slice shape "
-                    f"{image.shape[1:]}"
-                )
-
-            result = cle.create_like(image)
-            for z in range(image.shape[0]):
-                result[z] = cle.multiply_images(image[z], mask)
-            return result
-
-        if mask.shape != image.shape:
-            raise ValueError(
-                f"3D mask shape {mask.shape} doesn't match image shape {image.shape}"
-            )
-        return cle.multiply_images(image, mask)
-
-
-# Check if we're in subprocess runner mode and should skip GPU imports
-if os.getenv("OPENHCS_SUBPROCESS_NO_GPU") == "1":
-    # Subprocess runner mode - skip GPU imports
-    PYCLESPERANTO_AVAILABLE = False
-    cle = None
-    logger.info("Subprocess runner mode - skipping pyclesperanto import")
-else:
-    # Normal mode - try to import pyclesperanto
-    try:
-        import pyclesperanto as cle
-
-        PYCLESPERANTO_AVAILABLE = True
-        logger.info("pyclesperanto available - GPU acceleration enabled")
-    except ImportError:
-        PYCLESPERANTO_AVAILABLE = False
-        cle = None
-        logger.warning(
-            "pyclesperanto not available - install with: pip install pyclesperanto"
-        )
-
-
-def _check_pyclesperanto_available():
-    """Check if pyclesperanto is available and raise error if not."""
-    if not PYCLESPERANTO_AVAILABLE:
-        raise ImportError(
-            "pyclesperanto is required but not available. Install with: pip install pyclesperanto"
-        )
-
-
-def _validate_3d_array(array) -> None:
-    """Validate that the input is a 3D array."""
-    if array.ndim != 3:
-        raise ValueError(f"Expected 3D array, got {array.ndim}D array")
+OPERATIONS = ArrayOperations.for_memory(MemoryType.PYCLESPERANTO)
 
 
 def _gpu_minmax_normalize_range(image: "cle.Array") -> tuple:
-    """Calculate normalization range using min/max instead of percentiles - pure GPU."""
-    import pyclesperanto as cle
-
-    # Use min/max instead of percentiles to stay purely on GPU
-    # This is similar to how CLAHE works internally
-    min_val = cle.minimum_of_all_pixels(image)
-    max_val = cle.maximum_of_all_pixels(image)
-
-    # For compatibility, we could apply a small margin based on percentile values
-    # but for pure GPU operation, we use full min/max range
-    return float(min_val), float(max_val)
+    """Return the image's (min, max), computed on the device."""
+    return (
+        float(cle.minimum_of_all_pixels(image)),
+        float(cle.maximum_of_all_pixels(image)),
+    )
 
 
 @pyclesperanto_func
@@ -137,9 +58,7 @@ def per_slice_minmax_normalize(
     Returns:
         Normalized 3D pyclesperanto Array of shape (Z, Y, X) with dtype uint16
     """
-    # Validate 3D array
-    if len(image.shape) != 3:
-        raise ValueError(f"Expected 3D array, got {len(image.shape)}D array")
+    operations.require_stack(OPERATIONS, image)
 
     # Build result by concatenating pairs of slices
     result_slices = []
@@ -200,11 +119,7 @@ def stack_minmax_normalize(
     Returns:
         Normalized 3D pyclesperanto Array of shape (Z, Y, X) with dtype uint16
     """
-    _check_pyclesperanto_available()
-
-    # Validate 3D array
-    if len(image.shape) != 3:
-        raise ValueError(f"Expected 3D array, got {len(image.shape)}D array")
+    operations.require_stack(OPERATIONS, image)
 
     # Calculate global min/max range from entire stack (pure GPU)
     p_low, p_high = _gpu_minmax_normalize_range(image)
@@ -247,11 +162,7 @@ def sharpen(
     Returns:
         Sharpened 3D pyclesperanto Array of shape (Z, Y, X)
     """
-    _check_pyclesperanto_available()
-
-    # Validate 3D array
-    if len(image.shape) != 3:
-        raise ValueError(f"Expected 3D array, got {len(image.shape)}D array")
+    operations.require_stack(OPERATIONS, image)
 
     # Apply 3D Gaussian blur (pyclesperanto handles Z-dimension efficiently)
     gpu_blurred = cle.gaussian_blur(image, sigma_x=radius, sigma_y=radius, sigma_z=0)
@@ -284,21 +195,7 @@ def max_projection(stack: "cle.Array") -> "cle.Array":
     Returns:
         3D pyclesperanto Array of shape (1, Y, X)
     """
-    _check_pyclesperanto_available()
-
-    # Validate 3D array
-    if len(stack.shape) != 3:
-        raise ValueError(f"Expected 3D array, got {len(stack.shape)}D array")
-
-    # Create max projection (stays on GPU)
-    gpu_projection_2d = cle.maximum_z_projection(stack)
-
-    # Reshape to (1, Y, X) by creating a new 3D array
-    result_shape = (1, gpu_projection_2d.shape[0], gpu_projection_2d.shape[1])
-    result = cle.create(result_shape, dtype=gpu_projection_2d.dtype)
-    result[0] = gpu_projection_2d  # Direct assignment
-
-    return result
+    return operations.max_projection(OPERATIONS, stack)
 
 
 @pyclesperanto_func
@@ -314,50 +211,11 @@ def mean_projection(stack: "cle.Array") -> "cle.Array":
         stack: 3D pyclesperanto Array of shape (Z, Y, X)
 
     Returns:
-        3D pyclesperanto Array of shape (1, Y, X)
+        3D pyclesperanto Array of shape (1, Y, X) holding pyclesperanto's
+        float32 z-mean (not cast back to the input dtype).
     """
-    _check_pyclesperanto_available()
-
-    # Validate 3D array
-    if len(stack.shape) != 3:
-        raise ValueError(f"Expected 3D array, got {len(stack.shape)}D array")
-
-    # Create mean projection (stays on GPU)
-    gpu_projection_2d = cle.mean_z_projection(stack)
-
-    # Reshape to (1, Y, X) by creating a new 3D array
-    result_shape = (1, gpu_projection_2d.shape[0], gpu_projection_2d.shape[1])
-    result = cle.create(result_shape, dtype=gpu_projection_2d.dtype)
-    result[0] = gpu_projection_2d  # Direct assignment
-
-    return result
-
-
-class PyclesperantoStackProjectionStrategy(
-    EnumKeyedStrategyMixin[StackProjectionMethod],
-    metaclass=AutoRegisterMeta,
-):
-    __enum_member_attr__ = "method"
-
-    """pyclesperanto stack-projection dispatch owner."""
-
-    @abstractmethod
-    def apply(self, stack: "cle.Array") -> "cle.Array":
-        """Apply this projection method."""
-
-
-class PyclesperantoMaxStackProjectionStrategy(PyclesperantoStackProjectionStrategy):
-    method = StackProjectionMethod.MAX
-
-    def apply(self, stack: "cle.Array") -> "cle.Array":
-        return max_projection(stack)
-
-
-class PyclesperantoMeanStackProjectionStrategy(PyclesperantoStackProjectionStrategy):
-    method = StackProjectionMethod.MEAN
-
-    def apply(self, stack: "cle.Array") -> "cle.Array":
-        return mean_projection(stack)
+    operations.require_stack(OPERATIONS, stack)
+    return OPERATIONS.prepend_axis(OPERATIONS.mean(stack, 0))
 
 
 @pyclesperanto_func
@@ -373,18 +231,15 @@ def create_projection(
 
     Args:
         stack: 3D pyclesperanto Array of shape (Z, Y, X)
-        method: Projection method (max_projection, mean_projection)
+        method: Projection method served by ``image_stack_operations.StackProjection``;
+            MEAN keeps pyclesperanto's float32 z-mean (``mean_projection``).
 
     Returns:
         3D pyclesperanto Array of shape (1, Y, X)
     """
-    _check_pyclesperanto_available()
-
-    # Validate 3D array
-    if len(stack.shape) != 3:
-        raise ValueError(f"Expected 3D array, got {len(stack.shape)}D array")
-
-    return PyclesperantoStackProjectionStrategy.for_enum_member(method).apply(stack)
+    if method is StackProjectionMethod.MEAN:
+        return mean_projection(stack)
+    return operations.create_projection(OPERATIONS, stack, method)
 
 
 @pyclesperanto_func
@@ -415,11 +270,7 @@ def tophat(
     Returns:
         Filtered 3D pyclesperanto Array of shape (Z, Y, X)
     """
-    _check_pyclesperanto_available()
-
-    # Validate 3D array
-    if len(image.shape) != 3:
-        raise ValueError(f"Expected 3D array, got {len(image.shape)}D array")
+    operations.require_stack(OPERATIONS, image)
 
     # 1) Downsample entire stack at once (more efficient)
     scale_factor = 1.0 / downsample_factor
@@ -481,13 +332,25 @@ def apply_mask(image: "cle.Array", mask: "cle.Array") -> "cle.Array":
     Returns:
         Masked 3D pyclesperanto Array of shape (Z, Y, X)
     """
-    _check_pyclesperanto_available()
-
-    # Validate 3D image
-    if len(image.shape) != 3:
-        raise ValueError(f"Expected 3D image array, got {len(image.shape)}D array")
-
-    return PyclesperantoMaskDimensionality.from_mask(mask).apply(image, mask)
+    operations.require_stack(OPERATIONS, image)
+    if len(mask.shape) == 3:
+        if mask.shape != image.shape:
+            raise ValueError(
+                f"3D mask shape {mask.shape} doesn't match image shape {image.shape}"
+            )
+        return cle.multiply_images(image, mask)
+    if len(mask.shape) != 2:
+        raise TypeError(
+            f"mask must be a 2D or 3D pyclesperanto Array, got shape {mask.shape}"
+        )
+    if mask.shape != image.shape[1:]:
+        raise ValueError(
+            f"2D mask shape {mask.shape} doesn't match image slice shape {image.shape[1:]}"
+        )
+    result = cle.create_like(image)
+    for z in range(image.shape[0]):
+        result[z] = cle.multiply_images(image[z], mask)
+    return result
 
 
 @pyclesperanto_func
@@ -508,34 +371,9 @@ def create_composite(
     Returns:
         Composite 3D pyclesperanto Array of shape (1, Y, X)
     """
-    _check_pyclesperanto_available()
-
-    # Validate input is 3D array
-    if len(stack.shape) != 3:
-        raise ValueError(f"Expected 3D array, got {len(stack.shape)}D array")
-
-    n_slices, height, width = stack.shape
-
-    # Default weights if none provided
-    if weights is None:
-        weights = [1.0 / n_slices] * n_slices
-    elif isinstance(weights, (list, tuple)):
-        # Convert tuple to list if needed
-        weights = list(weights)
-        if len(weights) != n_slices:
-            raise ValueError(
-                f"Number of weights ({len(weights)}) must match number of slices ({n_slices})"
-            )
-    else:
-        raise TypeError(
-            f"weights must be a list of values or None, got {type(weights)}: {weights}"
-        )
-
-    # Normalize weights to sum to 1
-    weight_sum = sum(weights)
-    if weight_sum == 0:
-        raise ValueError("Sum of weights cannot be zero")
-    normalized_weights = [w / weight_sum for w in weights]
+    operations.require_stack(OPERATIONS, stack)
+    _, height, width = stack.shape
+    normalized_weights = operations.composite_weights(weights, stack.shape[0])
 
     # Create result array with shape (1, Y, X)
     result = cle.create((1, height, width), dtype=stack.dtype)
@@ -588,11 +426,7 @@ def equalize_histogram_3d(
     Returns:
         Equalized 3D pyclesperanto Array of shape (Z, Y, X)
     """
-    _check_pyclesperanto_available()
-
-    # Validate 3D array
-    if len(stack.shape) != 3:
-        raise ValueError(f"Expected 3D array, got {len(stack.shape)}D array")
+    operations.require_stack(OPERATIONS, stack)
 
     # Use 3D CLAHE with 3D tiles (cubes)
     gpu_equalized = cle.clahe(stack, tile_size=tile_size, clip_limit=clip_limit)
@@ -630,11 +464,7 @@ def equalize_histogram_per_slice(
     Returns:
         Equalized 3D pyclesperanto Array of shape (Z, Y, X)
     """
-    _check_pyclesperanto_available()
-
-    # Validate 3D array
-    if len(stack.shape) != 3:
-        raise ValueError(f"Expected 3D array, got {len(stack.shape)}D array")
+    operations.require_stack(OPERATIONS, stack)
 
     # Create result array
     result = cle.create_like(stack)
@@ -812,8 +642,4 @@ def create_weight_mask(shape: tuple, margin_ratio: float = 0.1) -> "cle.Array":
     Returns:
         2D pyclesperanto Array of shape (Y, X)
     """
-    if not isinstance(shape, tuple) or len(shape) != 2:
-        raise TypeError("shape must be a tuple of (height, width)")
-
-    height, width = shape
-    return create_linear_weight_mask(height, width, margin_ratio)
+    return create_linear_weight_mask(*operations.weight_mask_extent(shape), margin_ratio)

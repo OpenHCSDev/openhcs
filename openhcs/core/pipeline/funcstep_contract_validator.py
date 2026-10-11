@@ -274,8 +274,8 @@ class ImportStatementExtractor(ast.NodeVisitor):
         """Resolve an ImportFrom module and level to an absolute module name.
 
         Args:
-            module: The ImportFrom module (e.g. 'percentile_utils' for
-                `from .percentile_utils import ...`).
+            module: The ImportFrom module (e.g. 'image_stack_operations' for
+                `from .image_stack_operations import ...`).
             level: The ImportFrom level (1='.', 2='..', ...).
 
         Returns:

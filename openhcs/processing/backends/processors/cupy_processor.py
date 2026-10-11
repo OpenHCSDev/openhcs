@@ -1,28 +1,25 @@
-"""
-CuPy Image Processor Implementation
+"""CuPy processor registrations.
 
-This module implements the ImageProcessorInterface using CuPy as the backend.
-It leverages GPU acceleration for image processing operations.
-
-Doctrinal Clauses:
-- Clause 3 — Declarative Primacy: All functions are pure and stateless
-- Clause 88 — No Inferred Capabilities: Explicit CuPy dependency
-- Clause 106-A — Declared Memory Types: All methods specify CuPy arrays
+Shared operations are written once in ``image_stack_operations``; this module
+registers them for CuPy and holds the CuPy-specific algorithms (sharpening,
+top-hat, Sobel kernels).
 """
 
 from __future__ import annotations
 
-import logging
-import os
 from abc import abstractmethod
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
+from arraybridge import MemoryType
+from arraybridge.array_operations import ArrayOperations
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.utils.import_utils import optional_import_placeholder
 from openhcs.core.memory import cupy as cupy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from openhcs.processing.backends.processors import image_stack_operations as operations
 from openhcs.processing.backends.processors.method_axes import (
     EdgeMagnitudeMethod,
     ScipyBoundaryMode,
@@ -30,28 +27,10 @@ from openhcs.processing.backends.processors.method_axes import (
     SpatialBinMethod,
     StackProjectionMethod,
 )
-from openhcs.utils.import_utils import optional_import_placeholder
 
-logger = logging.getLogger(__name__)
+cp = optional_import_placeholder("cupy")
 
-# Check if we're in subprocess runner mode and should skip GPU imports
-if os.getenv("OPENHCS_SUBPROCESS_NO_GPU") == "1":
-    # Subprocess runner mode - skip GPU imports
-    cp = None
-    ndimage = None
-    cucim_filters = None
-    logger.info("Subprocess runner mode - skipping cupy import")
-else:
-    # Normal mode - import CuPy as an optional dependency
-    cp = optional_import_placeholder("cupy")
-    ndimage = None
-    if cp:
-        ndimage = optional_import_placeholder("cupyx.scipy.ndimage")
-
-    # Import CuCIM for edge detection
-    cucim_filters = optional_import_placeholder("cucim.skimage.filters")
-
-logger = logging.getLogger(__name__)
+OPERATIONS = ArrayOperations.for_memory(MemoryType.CUPY)
 
 
 @cupy_func
@@ -69,56 +48,9 @@ def create_linear_weight_mask(
     Returns:
         2D CuPy weight mask of shape (height, width)
     """
-    # The compiler will ensure this function is only called when CuPy is available
-    # No need to check for CuPy availability here
-
-    margin_y = int(cp.floor(height * margin_ratio))
-    margin_x = int(cp.floor(width * margin_ratio))
-
-    weight_y = cp.ones(height, dtype=cp.float32)
-    if margin_y > 0:
-        ramp_top = cp.linspace(0, 1, margin_y, endpoint=False)
-        ramp_bottom = cp.linspace(1, 0, margin_y, endpoint=False)
-        weight_y[:margin_y] = ramp_top
-        weight_y[-margin_y:] = ramp_bottom
-
-    weight_x = cp.ones(width, dtype=cp.float32)
-    if margin_x > 0:
-        ramp_left = cp.linspace(0, 1, margin_x, endpoint=False)
-        ramp_right = cp.linspace(1, 0, margin_x, endpoint=False)
-        weight_x[:margin_x] = ramp_left
-        weight_x[-margin_x:] = ramp_right
-
-    # Create 2D weight mask
-    weight_mask = cp.outer(weight_y, weight_x)
-
-    return weight_mask
-
-
-def _validate_3d_array(array: Any, name: str = "input") -> None:
-    """
-    Validate that the input is a 3D CuPy array.
-
-    Args:
-        array: Array to validate
-        name: Name of the array for error messages
-
-    Raises:
-        TypeError: If the array is not a CuPy array
-        ValueError: If the array is not 3D
-        ImportError: If CuPy is not available
-    """
-    # The compiler will ensure this function is only called when CuPy is available
-    # No need to check for CuPy availability here
-
-    if not isinstance(array, cp.ndarray):
-        raise TypeError(
-            f"{name} must be a CuPy array, got {type(array)}. "
-            f"No automatic conversion is performed to maintain explicit contracts."
-        )
-
-    if array.ndim != 3:
-        raise ValueError(f"{name} must be a 3D array, got {array.ndim}D")
+    return operations.linear_weight_mask(
+        OPERATIONS, height, width, margin_ratio, ramp_endpoint=False
+    )
 
 
 @cupy_func
@@ -139,7 +71,9 @@ def sharpen(
     Returns:
         Sharpened 3D CuPy array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    from cupyx.scipy import ndimage
+
+    operations.require_stack(OPERATIONS, image)
 
     # Store original dtype
     dtype = image.dtype
@@ -202,33 +136,14 @@ def percentile_normalize(
         high_percentile: Upper percentile (0-100)
         target_min: Target minimum value (auto-detected from dtype if None)
         target_max: Target maximum value (auto-detected from dtype if None)
-        preserve_dtype: If True, output same dtype as input. If False, use target range.
+        preserve_dtype: No effect; the output always has the input dtype.
 
     Returns:
-        Normalized 3D CuPy array of shape (Z, Y, X) with same or specified dtype
+        Normalized 3D CuPy array of shape (Z, Y, X) with the input dtype
     """
-    _validate_3d_array(image)
-
-    # Import shared utilities
-    from .percentile_utils import resolve_target_range, slice_percentile_normalize_core
-
-    # Auto-detect target range based on input dtype if not specified
-    target_min, target_max = resolve_target_range(image.dtype, target_min, target_max)
-
-    # Use shared core logic with CuPy-specific functions
-    return slice_percentile_normalize_core(
-        image=image,
-        low_percentile=low_percentile,
-        high_percentile=high_percentile,
-        target_min=target_min,
-        target_max=target_max,
-        percentile_func=cp.percentile,
-        clip_func=cp.clip,
-        ones_like_func=cp.ones_like,
-        zeros_like_func=lambda arr, dtype=None: cp.zeros_like(
-            arr, dtype=dtype or cp.float32
-        ),
-        preserve_dtype=preserve_dtype,
+    del preserve_dtype  # the output always has the input dtype
+    return operations.percentile_normalize_planes(
+        OPERATIONS, image, low_percentile, high_percentile, target_min, target_max
     )
 
 
@@ -253,30 +168,14 @@ def stack_percentile_normalize(
         high_percentile: Upper percentile (0-100)
         target_min: Target minimum value (auto-detected from dtype if None)
         target_max: Target maximum value (auto-detected from dtype if None)
-        preserve_dtype: If True, output same dtype as input. If False, use target range.
+        preserve_dtype: No effect; the output always has the input dtype.
 
     Returns:
-        Normalized 3D CuPy array of shape (Z, Y, X) with same or specified dtype
+        Normalized 3D CuPy array of shape (Z, Y, X) with the input dtype
     """
-    _validate_3d_array(stack)
-
-    # Import shared utilities
-    from .percentile_utils import percentile_normalize_core, resolve_target_range
-
-    # Auto-detect target range based on input dtype if not specified
-    target_min, target_max = resolve_target_range(stack.dtype, target_min, target_max)
-
-    # Use shared core logic with CuPy-specific functions
-    return percentile_normalize_core(
-        stack=stack,
-        low_percentile=low_percentile,
-        high_percentile=high_percentile,
-        target_min=target_min,
-        target_max=target_max,
-        percentile_func=lambda arr, pct: cp.percentile(arr, pct),
-        clip_func=cp.clip,
-        ones_like_func=cp.ones_like,
-        preserve_dtype=preserve_dtype,
+    del preserve_dtype  # the output always has the input dtype
+    return operations.percentile_normalize_stack(
+        OPERATIONS, stack, low_percentile, high_percentile, target_min, target_max
     )
 
 
@@ -294,70 +193,7 @@ def create_composite(
     Returns:
         Composite 3D CuPy array of shape (1, Y, X)
     """
-    # 🔄 MEMORY CONVERSION LOGGING: Log what we actually received
-    import logging
-
-    logger = logging.getLogger(__name__)
-    logger.info(
-        f"🔄 CREATE_COMPOSITE: Called with stack type: {type(stack)}, shape: {getattr(stack, 'shape', 'no shape')}"
-    )
-    logger.info(
-        f"🔄 CREATE_COMPOSITE: weights parameter - type: {type(weights)}, value: {weights}"
-    )
-
-    # Validate input is 3D array
-    if not hasattr(stack, "shape") or len(stack.shape) != 3:
-        raise TypeError(
-            f"stack must be a 3D CuPy array, got shape: {getattr(stack, 'shape', 'no shape')}"
-        )
-
-    n_slices, height, width = stack.shape
-
-    # Default weights if none provided
-    if weights is None:
-        # Equal weights for all slices
-        weights = [1.0 / n_slices] * n_slices
-        logger.info(f"🔄 CREATE_COMPOSITE: Using default equal weights: {weights}")
-    elif isinstance(weights, (list, tuple)):
-        # Convert tuple to list if needed
-        weights = list(weights)
-        logger.info(f"🔄 CREATE_COMPOSITE: Using provided weights: {weights}")
-        if len(weights) != n_slices:
-            raise ValueError(
-                f"Number of weights ({len(weights)}) must match number of slices ({n_slices})"
-            )
-    else:
-        # Log the problematic type and value for debugging
-        logger.error(
-            f"🔄 CREATE_COMPOSITE: Invalid weights type - expected list/tuple/None, got {type(weights)}: {weights}"
-        )
-        raise TypeError(
-            f"weights must be a list of values or None, got {type(weights)}: {weights}"
-        )
-
-    # Normalize weights to sum to 1
-    weight_sum = sum(weights)
-    if weight_sum == 0:
-        raise ValueError("Sum of weights cannot be zero")
-    normalized_weights = [w / weight_sum for w in weights]
-
-    # Convert weights to CuPy array for efficient computation
-    # CRITICAL: Use float32 for weights to preserve fractional values, not stack.dtype
-    weights_array = cp.array(normalized_weights, dtype=cp.float32)
-
-    # Reshape weights for broadcasting: (N, 1, 1) to multiply with (N, Y, X)
-    weights_array = weights_array.reshape(n_slices, 1, 1)
-
-    # Create composite by weighted sum along the first axis
-    # Convert stack to float32 for computation to avoid precision loss
-    stack_float = stack.astype(cp.float32)
-    weighted_stack = stack_float * weights_array
-    composite_slice = cp.sum(weighted_stack, axis=0, keepdims=True)  # Keep as (1, Y, X)
-
-    # Convert back to original dtype
-    composite_slice = composite_slice.astype(stack.dtype)
-
-    return composite_slice
+    return operations.weighted_composite(OPERATIONS, stack, weights)
 
 
 @artifact_inputs(ArtifactSpec.input("mask", ImageArtifactType, parameter_name="mask"))
@@ -376,35 +212,7 @@ def apply_mask(image: "cp.ndarray", mask: "cp.ndarray") -> "cp.ndarray":
     Returns:
         Masked 3D CuPy array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
-
-    # Handle 2D mask (apply to each Z-slice)
-    if isinstance(mask, cp.ndarray) and mask.ndim == 2:
-        if mask.shape != image.shape[1:]:
-            raise ValueError(
-                f"2D mask shape {mask.shape} doesn't match image slice shape {image.shape[1:]}"
-            )
-
-        # Apply 2D mask to all Z-slices simultaneously using broadcasting - GPU PARALLELIZED
-        # Broadcasting mask from (Y, X) to (1, Y, X) allows vectorized operation across all slices
-        mask_3d = mask[None, :, :]  # Shape: (1, Y, X)
-        result = image.astype(cp.float32) * mask_3d.astype(cp.float32)
-
-        return result.astype(image.dtype)
-
-    # Handle 3D mask
-    if isinstance(mask, cp.ndarray) and mask.ndim == 3:
-        if mask.shape != image.shape:
-            raise ValueError(
-                f"3D mask shape {mask.shape} doesn't match image shape {image.shape}"
-            )
-
-        # Apply 3D mask directly - MATCH NUMPY EXACTLY
-        masked = image.astype(cp.float32) * mask.astype(cp.float32)
-        return masked.astype(image.dtype)
-
-    # If we get here, the mask is neither 2D nor 3D CuPy array
-    raise TypeError(f"mask must be a 2D or 3D CuPy array, got {type(mask)}")
+    return operations.apply_mask(OPERATIONS, image, mask)
 
 
 @cupy_func
@@ -421,11 +229,7 @@ def create_weight_mask(
     Returns:
         2D CuPy weight mask of shape (Y, X)
     """
-    if not isinstance(shape, tuple) or len(shape) != 2:
-        raise TypeError("shape must be a tuple of (height, width)")
-
-    height, width = shape
-    return create_linear_weight_mask(height, width, margin_ratio)
+    return create_linear_weight_mask(*operations.weight_mask_extent(shape), margin_ratio)
 
 
 @cupy_func
@@ -439,11 +243,7 @@ def max_projection(stack: "cp.ndarray") -> "cp.ndarray":
     Returns:
         3D CuPy array of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    # Create max projection
-    projection_2d = cp.max(stack, axis=0)
-    return projection_2d.reshape(1, projection_2d.shape[0], projection_2d.shape[1])
+    return operations.max_projection(OPERATIONS, stack)
 
 
 @cupy_func
@@ -457,73 +257,7 @@ def mean_projection(stack: "cp.ndarray") -> "cp.ndarray":
     Returns:
         3D CuPy array of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    # Create mean projection
-    projection_2d = cp.mean(stack, axis=0).astype(stack.dtype)
-    return projection_2d.reshape(1, projection_2d.shape[0], projection_2d.shape[1])
-
-
-class CupySpatialBinStrategy(
-    EnumKeyedStrategyMixin[SpatialBinMethod], metaclass=AutoRegisterMeta
-):
-    __enum_member_attr__ = "method"
-
-    @abstractmethod
-    def apply(self, array: "cp.ndarray", axis: tuple[int, ...]) -> "cp.ndarray":
-        raise NotImplementedError
-
-
-class CupyMeanSpatialBinStrategy(CupySpatialBinStrategy):
-    method = SpatialBinMethod.MEAN
-
-    def apply(self, array: "cp.ndarray", axis: tuple[int, ...]) -> "cp.ndarray":
-        return cp.mean(array, axis=axis)
-
-
-class CupySumSpatialBinStrategy(CupySpatialBinStrategy):
-    method = SpatialBinMethod.SUM
-
-    def apply(self, array: "cp.ndarray", axis: tuple[int, ...]) -> "cp.ndarray":
-        return cp.sum(array, axis=axis)
-
-
-class CupyMaxSpatialBinStrategy(CupySpatialBinStrategy):
-    method = SpatialBinMethod.MAX
-
-    def apply(self, array: "cp.ndarray", axis: tuple[int, ...]) -> "cp.ndarray":
-        return cp.max(array, axis=axis)
-
-
-class CupyMinSpatialBinStrategy(CupySpatialBinStrategy):
-    method = SpatialBinMethod.MIN
-
-    def apply(self, array: "cp.ndarray", axis: tuple[int, ...]) -> "cp.ndarray":
-        return cp.min(array, axis=axis)
-
-
-class CupyStackProjectionStrategy(
-    EnumKeyedStrategyMixin[StackProjectionMethod], metaclass=AutoRegisterMeta
-):
-    __enum_member_attr__ = "method"
-
-    @abstractmethod
-    def apply(self, stack: "cp.ndarray") -> "cp.ndarray":
-        raise NotImplementedError
-
-
-class CupyMaxStackProjectionStrategy(CupyStackProjectionStrategy):
-    method = StackProjectionMethod.MAX
-
-    def apply(self, stack: "cp.ndarray") -> "cp.ndarray":
-        return max_projection(stack)
-
-
-class CupyMeanStackProjectionStrategy(CupyStackProjectionStrategy):
-    method = StackProjectionMethod.MEAN
-
-    def apply(self, stack: "cp.ndarray") -> "cp.ndarray":
-        return mean_projection(stack)
+    return operations.mean_projection(OPERATIONS, stack)
 
 
 @cupy_func
@@ -546,35 +280,7 @@ def spatial_bin_2d(
     Returns:
         Binned 3D CuPy array of shape (Z, Y//bin_size, X//bin_size)
     """
-    _validate_3d_array(stack)
-
-    if bin_size <= 0:
-        raise ValueError("bin_size must be positive")
-
-    z_slices, height, width = stack.shape
-
-    # Calculate output dimensions
-    new_height = height // bin_size
-    new_width = width // bin_size
-
-    if new_height == 0 or new_width == 0:
-        raise ValueError(
-            f"bin_size {bin_size} is too large for image dimensions {height}x{width}"
-        )
-
-    # Crop to make dimensions divisible by bin_size
-    crop_height = new_height * bin_size
-    crop_width = new_width * bin_size
-    cropped_stack = stack[:, :crop_height, :crop_width]
-
-    # Reshape for binning: (Z, new_height, bin_size, new_width, bin_size)
-    reshaped = cropped_stack.reshape(
-        z_slices, new_height, bin_size, new_width, bin_size
-    )
-
-    result = CupySpatialBinStrategy.for_enum_member(method).apply(reshaped, axis=(2, 4))
-
-    return result.astype(stack.dtype)
+    return operations.spatial_bin_2d(OPERATIONS, stack, bin_size, method)
 
 
 @cupy_func
@@ -597,39 +303,7 @@ def spatial_bin_3d(
     Returns:
         Binned 3D CuPy array of shape (Z//bin_size, Y//bin_size, X//bin_size)
     """
-    _validate_3d_array(stack)
-
-    if bin_size <= 0:
-        raise ValueError("bin_size must be positive")
-
-    depth, height, width = stack.shape
-
-    # Calculate output dimensions
-    new_depth = depth // bin_size
-    new_height = height // bin_size
-    new_width = width // bin_size
-
-    if new_depth == 0 or new_height == 0 or new_width == 0:
-        raise ValueError(
-            f"bin_size {bin_size} is too large for stack dimensions {depth}x{height}x{width}"
-        )
-
-    # Crop to make dimensions divisible by bin_size
-    crop_depth = new_depth * bin_size
-    crop_height = new_height * bin_size
-    crop_width = new_width * bin_size
-    cropped_stack = stack[:crop_depth, :crop_height, :crop_width]
-
-    # Reshape for 3D binning: (new_depth, bin_size, new_height, bin_size, new_width, bin_size)
-    reshaped = cropped_stack.reshape(
-        new_depth, bin_size, new_height, bin_size, new_width, bin_size
-    )
-
-    result = CupySpatialBinStrategy.for_enum_member(method).apply(
-        reshaped, axis=(1, 3, 5)
-    )
-
-    return result.astype(stack.dtype)
+    return operations.spatial_bin_3d(OPERATIONS, stack, bin_size, method)
 
 
 @cupy_func
@@ -654,41 +328,9 @@ def stack_equalize_histogram(
     Returns:
         Equalized 3D CuPy array of shape (Z, Y, X)
     """
-    _validate_3d_array(stack)
-
-    # Remember input dtype to preserve it
-    input_dtype = stack.dtype
-
-    # MATCH NUMPY EXACTLY - Flatten the entire stack to compute the global histogram
-    flat_stack = stack.flatten()
-
-    # Calculate the histogram and cumulative distribution function (CDF) - MATCH NUMPY EXACTLY
-    hist, bin_edges = cp.histogram(flat_stack, bins=bins, range=(range_min, range_max))
-    cdf = hist.cumsum()
-
-    # Normalize the CDF to the input dtype range
-    # Avoid division by zero
-    if cdf[-1] > 0:
-        if cp.issubdtype(input_dtype, cp.integer):
-            dtype_info = cp.iinfo(input_dtype)
-            cdf = dtype_info.max * cdf / cdf[-1]
-        else:
-            # For float dtypes, normalize to [0, 1]
-            cdf = cdf / cdf[-1]
-
-    # Use linear interpolation to map input values to equalized values - MATCH NUMPY EXACTLY
-    equalized_stack = cp.interp(stack.flatten(), bin_edges[:-1], cdf).reshape(
-        stack.shape
+    return operations.stack_equalize_histogram(
+        OPERATIONS, stack, bins, range_min, range_max
     )
-
-    # Convert back to input dtype
-    if cp.issubdtype(input_dtype, cp.integer):
-        dtype_info = cp.iinfo(input_dtype)
-        return cp.clip(equalized_stack, dtype_info.min, dtype_info.max).astype(
-            input_dtype
-        )
-    else:
-        return equalized_stack.astype(input_dtype)
 
 
 @cupy_func
@@ -701,14 +343,12 @@ def create_projection(
 
     Args:
         stack: 3D CuPy array of shape (Z, Y, X)
-        method: Projection method (max_projection, mean_projection)
+        method: Projection method served by ``image_stack_operations.StackProjection``
 
     Returns:
         3D CuPy array of shape (1, Y, X)
     """
-    _validate_3d_array(stack)
-
-    return CupyStackProjectionStrategy.for_enum_member(method).apply(stack)
+    return operations.create_projection(OPERATIONS, stack, method)
 
 
 @cupy_func
@@ -748,39 +388,9 @@ def crop(
     cp.ndarray
         Cropped 3D array of shape (depth, height, width)
     """
-    _validate_3d_array(input_image)
-
-    # Validate crop parameters
-    if width <= 0 or height <= 0 or depth <= 0:
-        raise ValueError(
-            f"Crop dimensions must be positive: width={width}, height={height}, depth={depth}"
-        )
-
-    if start_x < 0 or start_y < 0 or start_z < 0:
-        raise ValueError(
-            f"Start coordinates must be non-negative: start_x={start_x}, start_y={start_y}, start_z={start_z}"
-        )
-
-    # Get input dimensions
-    input_depth, input_height, input_width = input_image.shape
-
-    # Calculate end coordinates
-    end_x = start_x + width
-    end_y = start_y + height
-    end_z = start_z + depth
-
-    # Validate bounds
-    if end_x > input_width or end_y > input_height or end_z > input_depth:
-        raise ValueError(
-            f"Crop region extends beyond image bounds. "
-            f"Image shape: {input_image.shape}, "
-            f"Crop region: ({start_z}:{end_z}, {start_y}:{end_y}, {start_x}:{end_x})"
-        )
-
-    # Perform the crop using CuPy slicing
-    cropped = input_image[start_z:end_z, start_y:end_y, start_x:end_x]
-
-    return cropped
+    return operations.crop(
+        OPERATIONS, input_image, start_x, start_y, start_z, width, height, depth
+    )
 
 
 def _create_disk_cupy(radius: int) -> "cp.ndarray":
@@ -868,7 +478,9 @@ def tophat(
     Returns:
         Filtered 3D CuPy array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    from cupyx.scipy import ndimage
+
+    operations.require_stack(OPERATIONS, image)
 
     # Process each Z-slice independently - IMPROVED MATCH TO NUMPY
     # NOTE: For loop is ALGORITHMICALLY NECESSARY here due to complex multi-step
@@ -924,9 +536,6 @@ def _get_sobel_2d_kernel():
     """Get or create the Sobel 2D parallel kernel."""
     global _sobel_2d_parallel
     if _sobel_2d_parallel is None:
-        if not cp:
-            raise ImportError("CuPy is required for GPU Sobel operations")
-
         _sobel_2d_parallel = cp.ElementwiseKernel(
             "raw T input, int32 Y, int32 X, int32 mode, T cval",
             "T output",
@@ -994,7 +603,7 @@ def sobel_2d_vectorized(
     Returns:
         Edge magnitude as 3D CuPy array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     Z, Y, X = image.shape
     input_float = image.astype(cp.float32)
@@ -1038,8 +647,9 @@ def _sobel_3d_voxel(
     cval: float,
 ) -> "cp.ndarray":
     """Apply the 3-D Sobel implementation at its library string boundary."""
+    from cupyx.scipy import ndimage
 
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     # Convert to float32 for processing
     image_float = image.astype(cp.float32)
@@ -1085,7 +695,9 @@ def sobel_components(
         - If include_z=False: (sobel_x, sobel_y) - 2D gradients per slice
         - If include_z=True: (sobel_x, sobel_y, sobel_z) - 3D gradients
     """
-    _validate_3d_array(image)
+    from cupyx.scipy import ndimage
+
+    operations.require_stack(OPERATIONS, image)
 
     # Convert to float32 for processing
     image_float = image.astype(cp.float32)
@@ -1161,7 +773,7 @@ def edge_magnitude(
     Returns:
         Edge magnitude as 3D CuPy array of shape (Z, Y, X)
     """
-    _validate_3d_array(image)
+    operations.require_stack(OPERATIONS, image)
 
     return CupyEdgeMagnitudeStrategy.for_enum_member(method).apply(
         image, mode=mode, cval=cval
@@ -1212,13 +824,7 @@ def sobel(
         CuCIM's sobel normalizes integer inputs to [0, 1] range and returns float64.
         This wrapper always preserves the input dtype by forcing dtype conversion.
     """
-    if not cucim_filters:
-        raise ImportError(
-            "CuCIM is required for sobel edge detection but is not available"
-        )
-
-    # Import here to avoid circular dependency
-    from openhcs.constants.constants import MemoryType
+    from cucim.skimage import filters as cucim_filters
 
     # Store original dtype
     original_dtype = image.dtype
