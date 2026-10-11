@@ -412,6 +412,7 @@ class CellProfilerNeuriteEngineProfile:
             topology,
         )
         crossing_core_mask = topology.crossing_core_mask(outgrowth_skeleton.shape)
+        crossing_span_mask = topology.crossing_span_mask(outgrowth_skeleton.shape, outgrowth_width_px)
         resolved_crossovers = topology.multi_owner_crossing_count
         owner_skeleton = _repair_signal_supported_skeleton(
             owner_skeleton,
@@ -453,9 +454,7 @@ class CellProfilerNeuriteEngineProfile:
             maximum_root_distance=_TopologyResult.soma_attachment_radius(outgrowth_width_px),
         )
         topology_dropped_trace = (
-            (pre_topology_owner_skeleton > 0)
-            & (neurite_skeleton == 0)
-            & ~crossing_core_mask
+            (pre_topology_owner_skeleton > 0) & (neurite_skeleton == 0) & ~crossing_span_mask
         )
         topology_added_trace = (neurite_skeleton > 0) & (pre_topology_owner_skeleton == 0)
         final_topology_owned_trace_pixels = int(np.count_nonzero(neurite_skeleton))
@@ -1353,8 +1352,41 @@ class _ResolvedCrossing:
             tuple(path + path_offset for path in self.core_paths),
         )
 
+    def outward_arms(self, path_coordinates: tuple[np.ndarray, ...]) -> list[np.ndarray]:
+        """Each arm's pixels, ordered from the core outwards."""
+        return [
+            path_coordinates[path] if endpoint == 0 else path_coordinates[path][::-1]
+            for path, endpoint in self.arms
+        ]
+
+    def replaced_span(
+        self, path_coordinates: tuple[np.ndarray, ...], lookahead: int,
+    ) -> np.ndarray:
+        """The core and each arm's first ``lookahead`` pixels: the span whose
+        medial axis the crossing distorts, which the owners' routes replace."""
+        return np.concatenate([
+            self.core_coordinates(path_coordinates),
+            *(arm[:lookahead] for arm in self.outward_arms(path_coordinates)),
+        ])
+
+    def arm_owners(
+        self, owner_skeleton: np.ndarray, path_coordinates: tuple[np.ndarray, ...],
+        lookahead: int,
+    ) -> tuple[int, ...]:
+        """The owner of each arm: the label at its outer pixel, where the
+        replaced span ends and the owner's route to the crossing pixel starts.
+
+        Ownership after secondary adoption and signal repair is read here, not
+        the first topology's path owners: an arm adopted by a neuron must stay
+        joined to it through the crossing.
+        """
+        return tuple(
+            int(owner_skeleton[tuple(arm[min(lookahead, len(arm) - 1)])])
+            for arm in self.outward_arms(path_coordinates)
+        )
+
     def passages(
-        self, path_owners: np.ndarray, path_coordinates: tuple[np.ndarray, ...],
+        self, arm_owners: Sequence[int], path_coordinates: tuple[np.ndarray, ...],
         lookahead: int,
     ) -> tuple[np.ndarray, np.ndarray, dict[int, list[np.ndarray]]]:
         """Return the pixels this crossing replaces, its crossing pixel, and
@@ -1369,17 +1401,12 @@ class _ResolvedCrossing:
         neurite stays straight through it.
         """
         core = self.core_coordinates(path_coordinates)
-        outward = [
-            path_coordinates[path] if endpoint == 0 else path_coordinates[path][::-1]
-            for path, endpoint in self.arms
-        ]
-        replaced = np.concatenate([core, *(arm[:lookahead] for arm in outward)])
+        outward = self.outward_arms(path_coordinates)
+        replaced = self.replaced_span(path_coordinates, lookahead)
         outer_by_owner: dict[int, list[np.ndarray]] = defaultdict(list)
-        for (path, _), arm in zip(self.arms, outward):
-            if path_owners[path] > 0:
-                outer_by_owner[int(path_owners[path])].append(
-                    arm[min(lookahead, len(arm) - 1)]
-                )
+        for owner, arm in zip(arm_owners, outward):
+            if owner > 0:
+                outer_by_owner[owner].append(arm[min(lookahead, len(arm) - 1)])
         attachment = np.concatenate([core, [arm[0] for arm in outward]])
         lower, upper = attachment.min(axis=0) - 1, attachment.max(axis=0) + 2
         candidates = np.moveaxis(np.indices(tuple(upper - lower)), 0, -1).reshape(-1, 2) + lower
@@ -1714,40 +1741,50 @@ class _TopologyResult:
             mask[tuple(coordinates.T)] = True
         return mask
 
-    def crossing_routes(
-        self, occupied_owners: np.ndarray, *, owner: int,
-        origin: tuple[int, int], outgrowth_width_px: float,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """Return the pixels the owner's crossings replace and its routes.
+    def crossing_span_mask(
+        self, shape: tuple[int, int], outgrowth_width_px: float,
+    ) -> np.ndarray:
+        """Pixels of every resolved crossing's replaced span."""
+        lookahead = self.crossing_lookahead(outgrowth_width_px)
+        mask = np.zeros(shape, dtype=bool)
+        for crossing in self.resolved_crossings:
+            mask[tuple(crossing.replaced_span(self.path_coordinates, lookahead).T)] = True
+        return mask
 
-        Each surviving arm of the owner (its outer pixel still carries the
-        owner after repair) is joined to the shared crossing pixel by a
-        digital straight line. Two owners crossing therefore both traverse
-        the crossing pixel; the label image can show only one of them, but the
-        topology built from these routes measures the crossing for both.
+    def crossing_routes(
+        self, owner_skeleton: np.ndarray, *, owner: int, outgrowth_width_px: float,
+        region: tuple[slice, slice] = (slice(None), slice(None)),
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Return, within ``region``, the pixels the owner's crossings replace
+        and its routes.
+
+        Each arm whose outer pixel carries the owner in ``owner_skeleton`` (the
+        whole image, after adoption and repair) is joined to the shared
+        crossing pixel by a digital straight line. Two owners crossing
+        therefore both traverse the crossing pixel; the label image can show
+        only one of them, but the topology built from these routes measures
+        the crossing for both.
         """
         lookahead = self.crossing_lookahead(outgrowth_width_px)
-        shape = np.asarray(occupied_owners.shape)
-        offset = np.asarray(origin)
-        replaced = np.zeros(occupied_owners.shape, dtype=bool)
-        routes = np.zeros(occupied_owners.shape, dtype=bool)
+        local = owner_skeleton[region]
+        shape = np.asarray(local.shape)
+        offset = np.asarray([axis.indices(size)[0]
+                             for axis, size in zip(region, owner_skeleton.shape)])
+        replaced = np.zeros(local.shape, dtype=bool)
+        routes = np.zeros(local.shape, dtype=bool)
 
         def inside(coordinates: np.ndarray) -> np.ndarray:
             return coordinates[np.all((coordinates >= 0) & (coordinates < shape), axis=1)]
 
         for crossing in self.resolved_crossings:
-            if not crossing.supports_owner(owner, self.path_owners):
+            arm_owners = crossing.arm_owners(owner_skeleton, self.path_coordinates, lookahead)
+            if owner not in arm_owners:
                 continue
             crossing_pixels, centre, outer_by_owner = crossing.passages(
-                self.path_owners, self.path_coordinates, lookahead,
+                arm_owners, self.path_coordinates, lookahead,
             )
             replaced[tuple(inside(crossing_pixels - offset).T)] = True
-            for outer in outer_by_owner.get(owner, ()):
-                local_outer = outer - offset
-                if not np.all((local_outer >= 0) & (local_outer < shape)):
-                    continue
-                if occupied_owners[tuple(local_outer)] != owner:
-                    continue
+            for outer in outer_by_owner[owner]:
                 route = np.column_stack(draw_line(*outer, *centre)) - offset
                 routes[tuple(inside(route).T)] = True
         return replaced, routes
@@ -3273,9 +3310,8 @@ def _analyze_owned_topology(
             ),
         )
         replaced, routes = crossing_topology.crossing_routes(
-            owned[owner_slice], owner=owner,
-            origin=(owner_slice[0].start, owner_slice[1].start),
-            outgrowth_width_px=outgrowth_width_px,
+            owned, owner=owner, outgrowth_width_px=outgrowth_width_px,
+            region=owner_slice,
         )
         local_bodies = bodies[owner_slice]
         local_owner_mask = ((owned[owner_slice] == owner) & ~replaced) | (
