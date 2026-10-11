@@ -7,14 +7,10 @@ from types import MappingProxyType
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    MeasurementsArtifactType,
-    SourceStackLineageSourceRelation,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
+from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
     normalize_function_pattern,

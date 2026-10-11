@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING, Annotated, ClassVar, Optional, Sequence, Tuple
 
 import numpy as np
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
     ObjectLabelsArtifactType,

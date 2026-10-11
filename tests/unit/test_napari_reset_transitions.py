@@ -50,7 +50,7 @@ from openhcs.runtime.napari_viewer_server import (
 )
 from openhcs.runtime.napari_streaming_handlers import NapariStreamLayerItem
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
-from openhcs.core.artifacts import ObjectArtifactSubjectBinding
+from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
 from openhcs.agent.dto.viewer import ViewerWindowLayerRetirementRequest
 from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService, ZMQViewerWindowGateway,

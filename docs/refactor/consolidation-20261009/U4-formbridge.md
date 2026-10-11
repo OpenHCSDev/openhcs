@@ -79,3 +79,17 @@ Measured against the E1 head `c7a953030`: OpenHCS production −13,730 +736; tes
 - **QApplication teardown segfault: not reproducible.** The offscreen smoke driver with normal interpreter teardown exited cleanly 18 of 18 times on this branch (6 after deleting the application, 12 with it alive) and 8 of 8 on the E1 head. The smoke test no longer exits with `os._exit`, so a teardown crash fails it.
 - **Found outside the brief:** `openhcs/utils/performance_monitor.py` was an unused copy of the library module (deleted); `parameter_ops_service` in pyqt-reactive had an `ImportError` stub fallback (deleted).
 - **Not done here:** `openhcs/core/log_utils.py` restates parts of formbridge's `core.log_utils` (log discovery and classification); owner U5 (dead and misplaced UI code). The GUI's own "plate manager" names (`PlateManagerWidget`, `OpenHCSUiWindowId.plate_manager`) are U1's container-manager rename.
+
+## Deliberate contract changes
+
+Merged with `main` at `44980dfe2` (E1, K2, K3, N1). Against the published MCP snapshot (`tests/fixtures/mcp/mcp_tool_contract.json` on `main`) exactly one tool record differs; surfaces and resources are identical.
+
+| Change | Where it shows | In the MCP snapshot |
+|---|---|---|
+| `openhcs_ui_get_state_surface` requires `surface_id` (the default `plate_manager.state` is gone) | MCP tool input schema | yes: the only snapshot change (3 lines added, 1 removed) |
+| Bridge protocol `openhcs.ui_bridge.v4` (was `v3`) | descriptor files and bridge request/response envelopes between an MCP client and a running GUI | no |
+| Bridge envelopes and bridge DTO results built by formbridge carry `schema_version: "formbridge.v1"`; OpenHCS's own DTOs keep `openhcs.agent.v1` | field value in bridge tool results | no (value, not schema) |
+| Bridge widget id `datasets` (was `plate_manager`); document `datasets.orchestrator_config`; surfaces `datasets.state`, `datasets.live_measurements` | identity values in bridge catalogs and requests | no (values) |
+| Bridge error hints name bridge operations (`get_operation_status`, `navigate_window`, `get_document`) instead of OpenHCS tool names | `hint` text of bridge errors | no |
+
+A GUI and an MCP client from different sides of this change refuse each other at the protocol check.

@@ -10,14 +10,14 @@ import numpy as np
 import pytest
 
 from openhcs.core.aligned_image_payload import ImageOutputBundle
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
-    SourceStackLineageSourceRelation,
 )
+from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,

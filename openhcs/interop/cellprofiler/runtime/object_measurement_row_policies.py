@@ -5,11 +5,8 @@ from abc import ABC
 from collections.abc import Collection, Iterable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementProjectedColumnarRows,
@@ -130,7 +127,7 @@ class CellProfilerObjectMeasurementRowPolicy(
         rows: ColumnarRows,
     ) -> ColumnarRows:
         """Complete raw table rows over the module's declared object domain."""
-        from openhcs.core.artifacts import ObjectLabelsArtifactType
+        from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 
         object_inputs = ArtifactSpecCollection(
             request.callable_contract.artifact_inputs.specs

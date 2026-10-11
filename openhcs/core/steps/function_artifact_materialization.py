@@ -15,9 +15,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.axis_filter import step_axis_allows_config
 from openhcs.core.dataset_sources.interfaces import FilenameParser
 from openhcs.core.compiled_step_plan import (
@@ -216,7 +214,8 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
     ) -> Mapping[str, StreamingViewerSurface]:
         """Capture enabled destinations for this artifact at the write boundary."""
         streams_artifact = (
-            not plan.compiled_function_pattern.publishes_output_to_main_flow(
+            materialization.output_plan.viewer_streaming.automatically_streams
+            and not plan.compiled_function_pattern.publishes_output_to_main_flow(
                 materialization.output_plan,
                 materialization.record.key.scope.value_text,
             )
@@ -581,7 +580,8 @@ class RuntimeArtifactMaterialization:
         artifact_path: str | None = None,
         record: StoredRuntimeValue | None = None,
         materialization_spec: MaterializationSpec | None = None,
-        output_plan: ArtifactOutputPlan | None = None,
+        *,
+        output_plan: ArtifactOutputPlan,
     ) -> tuple[str, SourceImageIdentity | None, str | None]:
         """Build analysis output identity from the artifact's source metadata."""
         record_source = None
@@ -621,7 +621,7 @@ class RuntimeArtifactMaterialization:
                     output_plan=output_plan,
                 )
             except IncompleteFunctionOutputFilenameIdentityError as exc:
-                if output_plan is None or not cls.missing_component_is_aggregated(
+                if not cls.missing_component_is_aggregated(
                     exc.component_name,
                     record.key.scope,
                     tuple(plan.variable_components or ()),
@@ -641,11 +641,7 @@ class RuntimeArtifactMaterialization:
             )
 
         if record is not None:
-            metadata = (
-                output_plan.materialization_metadata(record)
-                if output_plan is not None
-                else cls.record_payload_metadata(record)
-            )
+            metadata = output_plan.materialization_metadata(record)
             source_identity = (
                 None
                 if metadata is None
@@ -767,7 +763,7 @@ class RuntimeArtifactMaterialization:
         record: StoredRuntimeValue,
         materialization_spec: MaterializationSpec,
         *,
-        output_plan: ArtifactOutputPlan | None = None,
+        output_plan: ArtifactOutputPlan,
     ) -> tuple[str, SourceImageIdentity | None] | None:
         """Return source filename stem and identity for one artifact record."""
         exact_fixed_scope = record.key.scope.has_fixed_components
@@ -776,12 +772,7 @@ class RuntimeArtifactMaterialization:
         metadata = cls.record_payload_metadata(record)
         if metadata is None:
             return None
-        if (
-            output_plan is not None
-            and output_plan.materialization_source() is not None
-            and output_plan.materialization_source()
-            != output_plan.source_context_source()
-        ):
+        if output_plan.names_files_from_independent_source():
             metadata = output_plan.materialization_metadata(record)
         handler = context.microscope_handler
         parser = handler.parser
@@ -828,16 +819,10 @@ class RuntimeArtifactMaterialization:
                     tuple(plan.variable_components or ()),
                 ):
                     raise
-                if exact_fixed_scope or (
-                    output_plan is not None
-                    and output_plan.materialization_source() is not None
-                ):
+                if exact_fixed_scope or output_plan.materialization_source() is not None:
                     raise
             except ValueError:
-                if exact_fixed_scope or (
-                    output_plan is not None
-                    and output_plan.materialization_source() is not None
-                ):
+                if exact_fixed_scope or output_plan.materialization_source() is not None:
                     raise
             else:
                 return (
@@ -968,11 +953,7 @@ class RuntimeArtifactMaterialization:
                 if source_filename is None
                 else cls.source_identity_for_path(context, source_filename)
             )
-        if (
-            output_plan.materialization_source() is not None
-            and output_plan.materialization_source()
-            != output_plan.source_context_source()
-        ):
+        if output_plan.names_files_from_independent_source():
             metadata = cls.record_metadata_with_runtime_scope(
                 record,
                 cls.record_payload_metadata(record),

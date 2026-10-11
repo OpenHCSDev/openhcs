@@ -17,16 +17,14 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     InProcessCompileInspectionGateway,
 )
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpecCollection, MainFlowStackOutputSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
-    ImageMeasurementSubjectRelation,
-    MainFlowStackOutputSpec,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
+from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,

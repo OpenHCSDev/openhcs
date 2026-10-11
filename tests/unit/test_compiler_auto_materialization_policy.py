@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from openhcs.core.config import MaterializeToDisk
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.pipeline.materialization_flag_planner import (
@@ -43,7 +44,7 @@ def test_disabling_automatic_materialization_keeps_only_declared_exports(
         1: SimpleNamespace(artifact_outputs={"export": declared_image}),
     }
     context = object()
-    vfs_config = SimpleNamespace(materialization_backend="disk")
+    vfs_config = SimpleNamespace(materialization_backend=MaterializeToDisk)
     session = SimpleNamespace(
         global_config=SimpleNamespace(
             materialize_runtime_artifacts=False,
@@ -64,7 +65,7 @@ def test_disabling_automatic_materialization_keeps_only_declared_exports(
     )
     PipelineCompiler._compile_runtime_artifact_materialization_plans(session, planner)
 
-    assert backend_requests == [vfs_config.materialization_backend]
+    assert backend_requests == [vfs_config.materialization_backend.backend]
     assert not plans[0].runtime_artifact_materialization.has_persistent_target
     assert plans[1].runtime_artifact_materialization.has_persistent_target
     assert plans[1].runtime_artifact_materialization.require_persistent_backend() == (

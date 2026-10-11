@@ -3,9 +3,9 @@ from openhcs.processing.materialization.persistence import TerminalMaterializati
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -23,6 +23,7 @@ from openhcs.processing.materialization import (
     ROIOptions,
     materialize,
 )
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 class DerivedImageArtifactType(ImageArtifactType):
@@ -169,7 +170,7 @@ def test_scalar_image_materialization_preserves_planned_vfs_path() -> None:
         data=np.zeros((4, 5), dtype=np.uint16),
         path="/output/A01_s001_w1_z001_t001.tif",
         filemanager=filemanager,
-        backends=("memory",),
+        backends=("memory",), output_plan=materialization_output_plan()
     )
 
     assert primary_path == "/output/A01_s001_w1_z001_t001.tif"

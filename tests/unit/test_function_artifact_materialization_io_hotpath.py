@@ -16,7 +16,8 @@ from openhcs.core.steps.function_artifact_materialization import (
     PersistentArtifactMaterializationTargetPlan,
     RuntimeArtifactMaterialization,
 )
-from openhcs.core.artifacts import ArtifactOutputPlan, ImageArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.processing.materialization.core import (

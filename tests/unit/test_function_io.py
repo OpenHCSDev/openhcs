@@ -9,7 +9,7 @@ from polystore.filemanager import FileManager
 from scipy.io import savemat
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.source_binding_selection import (
     PipelineStartSourceUniverseRequest,

@@ -14,16 +14,14 @@ from pycodify import Assignment, generate_python_source
 import openhcs.serialization.pycodify_formatters  # noqa: F401
 from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ImageArtifactType,
     MeasurementsArtifactType,
     RelationshipsArtifactType,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,

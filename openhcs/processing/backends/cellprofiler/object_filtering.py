@@ -34,17 +34,17 @@ from openhcs.core.measurement_feature_queries import (
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRef,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactSpecRef
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
     MeasurementsArtifactType,
-    SourceStackLineageSourceRelation,
 )
 from openhcs.core.runtime_object_label_domains import (
     DenseObjectLabelExtentDomainDeclaration,
@@ -170,15 +170,8 @@ class FilterObjectsRemovedObjectSourceRelation(SourceStackLineageSourceRelation)
     """Mark the complementary FilterObjects output derived from one input set."""
 
     relation_key: ClassVar[str] = "filter_objects_removed_object_source"
+    source_artifact_type = ObjectLabelsArtifactType
     target_artifact_type = ObjectLabelsArtifactType
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
-        if self.source.artifact_type is not ObjectLabelsArtifactType:
-            raise ValueError(
-                "FilterObjects removed-object output requires an object-label "
-                f"source, got {self.source.artifact_type.value}:{self.source.name}."
-            )
 
 
 @dataclass(frozen=True, slots=True)

@@ -78,13 +78,9 @@ from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService,
     ZMQViewerWindowGateway,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ObjectLabelsArtifactType,
-    SpecialArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, SpecialArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,

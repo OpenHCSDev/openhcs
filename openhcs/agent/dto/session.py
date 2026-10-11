@@ -14,12 +14,16 @@ from zmqruntime.config import PositiveInteger
 from openhcs.runtime.zmq_execution_signature import ZMQRuntimeObservationExportScope
 
 RuntimeObservationExportScopeName = Enum(
-    "RuntimeObservationExportScopeName",
+    "ZMQRuntimeObservationExportScope",
     [(name.upper(), name) for name in ZMQRuntimeObservationExportScope.__registry__],
     type=str,
     module=__name__,
 )
-"""Boundary view of the export-scope registry, for agent request fields."""
+"""Boundary view of the export-scope registry, for agent request fields.
+
+It keeps the MCP schema's published name and description for the field.
+"""
+RuntimeObservationExportScopeName.__doc__ = ZMQRuntimeObservationExportScope.__doc__.splitlines()[0]
 RuntimeObservationExportScopeName.scope = property(
     lambda member: ZMQRuntimeObservationExportScope.named(member.value)
 )

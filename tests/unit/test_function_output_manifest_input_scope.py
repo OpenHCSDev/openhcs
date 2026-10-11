@@ -6,11 +6,10 @@ import pytest
 
 from tests.artifact_graphs import admitted_graph
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactInputProjectionPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,

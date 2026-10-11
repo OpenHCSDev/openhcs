@@ -55,9 +55,9 @@ from openhcs.agent.dto.functions import (
 )
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     RelationshipsArtifactType,
 )
@@ -1315,7 +1315,7 @@ def _artifact_spec(spec: ArtifactSpec) -> FunctionArtifactSpec:
         required=spec.required,
         sidecar_role=None if spec.sidecar_role is None else spec.sidecar_role.name,
         materialization_uses_source_identity_filename=spec.materialization_uses_source_identity_filename(),
-        viewer_streaming=spec.viewer_streaming,
+        viewer_streaming=spec.viewer_streaming.name,
     )
 
 
@@ -1344,7 +1344,7 @@ def _cellprofiler_artifact_binding_summary(
     plan_type = binding.require_artifact_plan_type()
     return CellProfilerArtifactBindingSummary(
         direction="input" if plan_type is ArtifactInputPlan else "output",
-        kind=binding.require_artifact_type().require_value(),
+        kind=binding.require_artifact_type().value,
         setting_names=setting_names(binding.setting_name),
         parameter_name=binding.require_parameter_name(),
         runtime_parameter_name=binding.runtime_parameter_name,

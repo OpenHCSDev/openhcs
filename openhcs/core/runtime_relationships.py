@@ -8,12 +8,12 @@ from collections.abc import (
 from dataclasses import dataclass, replace
 from typing import Any, ClassVar, Self
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactPlan,
-    ArtifactSpecRef,
-    ArtifactSpecRelation,
-    NamedArtifactPayload,
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.plans import ArtifactPlan, ArtifactSpecRef
+from openhcs.core.artifacts.relations import ArtifactSpecRelation
+from openhcs.core.artifacts.payloads import NamedArtifactPayload
+from openhcs.core.artifacts.kinds import (
+    ArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
 )
@@ -80,7 +80,8 @@ class ObjectRelationshipDeclaration(ArtifactSpecRelation):
         )
 
     relation_key = "object_relationship_declaration"
-    target_plan_type: ClassVar[type[ArtifactPlan] | None] = None
+    target_plan_type: ClassVar[type[ArtifactPlan]] = ArtifactPlan
+    source_artifact_type: ClassVar[type[ArtifactType]] = ObjectLabelsArtifactType
     target: ArtifactSpecRef
     relationship_type: str
     source_role: str
@@ -93,16 +94,6 @@ class ObjectRelationshipDeclaration(ArtifactSpecRelation):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        if self.source.artifact_type is not ObjectLabelsArtifactType:
-            raise ValueError(
-                "ObjectRelationshipDeclaration source must be object labels, got "
-                f"{self.source.artifact_type.value}:{self.source.name}."
-            )
-        if not isinstance(self.target, ArtifactSpecRef):
-            raise TypeError(
-                "ObjectRelationshipDeclaration.target must be ArtifactSpecRef, got "
-                f"{type(self.target).__name__}."
-            )
         if self.target.artifact_type is not ObjectLabelsArtifactType:
             raise ValueError(
                 "ObjectRelationshipDeclaration target must be object labels, got "
@@ -290,7 +281,7 @@ class ObjectRelationship(
         )
 
     def __post_init__(self, *source_provenance_values: object) -> None:
-        self.validate_artifact_name()
+        self.require_name()
         self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_source_provenance_fields()
         if not isinstance(self.declaration, ObjectRelationshipDeclaration):

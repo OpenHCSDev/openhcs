@@ -10,7 +10,7 @@ from openhcs.agent.ui_bridge_identities import (
     DatasetLiveMeasurementsStateSurfaceIdentity,
 )
 from formbridge.bridge.identities import UiStateSurfaceIdentityDeclarationBase
-from openhcs.core.artifacts import MeasurementsArtifactType
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.progress import ProgressEvent
 from openhcs.core.progress.live_measurements import (

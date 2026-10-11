@@ -22,6 +22,7 @@ from openhcs.processing.materialization import (
     ROIOptions,
     materialize,
 )
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 @pytest.mark.parametrize("spacing", [(0.65, 0.65), (2.0, 0.65, 0.65)])
@@ -117,7 +118,7 @@ def test_real_roi_materialization_persists_output_source_metadata(tmp_path):
         path=str(tmp_path / "labels.roi.zip"),
         filemanager=FileManager({"disk": DiskStorageBackend()}),
         backends=["disk"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     rois = load_rois_from_zip(Path(path))
     metadata = ROIArchiveSourceMetadata.decode(rois)

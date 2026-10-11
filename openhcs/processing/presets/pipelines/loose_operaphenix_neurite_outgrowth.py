@@ -26,7 +26,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
@@ -448,7 +448,7 @@ def loose_operaphenix_neurite_demo_contribution(
             projection_key=secondary_output_name,
             step_name=analysis_step.name,
             pipeline_position=None,
-            artifact_kind=ObjectLabelsArtifactType.require_value(),
+            artifact_kind=ObjectLabelsArtifactType.value,
         ),
         supporting_presentation_identities=(
             StreamProducerIdentity.pipeline_output(
@@ -457,7 +457,7 @@ def loose_operaphenix_neurite_demo_contribution(
                 projection_key=AlignedImageSliceContext.MAIN_FLOW_OUTPUT_KIND,
                 step_name=topology_step.name,
                 pipeline_position=None,
-                artifact_kind=ImageArtifactType.require_value(),
+                artifact_kind=ImageArtifactType.value,
             ),
         ),
         prepare=prepare,

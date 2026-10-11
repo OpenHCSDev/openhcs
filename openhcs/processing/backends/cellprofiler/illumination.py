@@ -17,14 +17,13 @@ from numba import njit
 from openhcs.constants.constants import MemoryType
 from openhcs.core.aligned_image_payload import (AlignedImageStack)
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
-    ImageArtifactType,
     InputStackBroadcastSourceRelation,
     SourceStackLineageSourceRelation,
 )
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import special_inputs

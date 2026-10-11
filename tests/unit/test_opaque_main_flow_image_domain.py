@@ -309,7 +309,8 @@ def test_record_axis_survives_replace_and_pickle(tmp_path):
 
 
 def _selected_pattern(name):
-    from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+    from openhcs.core.artifacts.specs import ArtifactSpec
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.pipeline.function_contracts import artifact_inputs
     from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan, InvocationArtifactInputProjectionKey
     spec = ArtifactSpec.input(name, ImageArtifactType)
@@ -329,7 +330,7 @@ def _selected_pattern(name):
 
 @pytest.mark.parametrize("cache_hit", [False, True])
 def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_domains(tmp_path, monkeypatch, cache_hit):
-    from openhcs.core.artifacts import ImageArtifactType
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     source = "/input/A01_s001_w1_z001_t001.tif"
     components = {"well": "A01", "site": "1", "channel": "1", "z_index": "1", "timepoint": "1"}
     contexts = tuple(AlignedImageSliceContext.main_flow(name, artifact_kind=ImageArtifactType.value) for name in ("Planes", "Volume"))

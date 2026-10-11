@@ -1,6 +1,6 @@
 """Selected image declarations must materialize with their exact source identity."""
 
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 
 from pathlib import Path
 from dataclasses import dataclass, fields, replace
@@ -18,7 +18,8 @@ from polystore.streaming import (
 )
 
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.artifacts import ArtifactOutputPlan
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.streaming import AutomaticStreaming
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
@@ -62,6 +63,8 @@ from test_function_artifact_materialization import (
 )
 from test_materialization_core import _viewer_stream_backend_kwargs
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def _source_stack(axis, component=Microscopy.Channel.name):
@@ -109,7 +112,7 @@ def test_public_selected_checkpoint_materializes_and_streams_without_storage_axe
     payload = ImageArtifactType.contextualize_output(
         source,
         selected,
-        None,
+        MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(axis=axis, axis_size=2),
     )
     spec = next(
@@ -148,7 +151,7 @@ def test_public_selected_checkpoint_materializes_and_streams_without_storage_axe
             ["disk", "napari_stream"],
             {"napari_stream": _viewer_stream_backend_kwargs()},
             context=_context(filemanager),
-            variable_components=(),
+            variable_components=(), output_plan=materialization_output_plan()
         )
         assert Path(result).is_file()
         np.testing.assert_array_equal(
@@ -231,7 +234,7 @@ def test_independent_leaf_and_capabilities_execute_cooperative_selection_hooks()
     payload = ImageArtifactType.contextualize_output(
         _source_stack(RuntimePlaneAxis.SOURCE_BINDING),
         selected,
-        None,
+        MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
         ),
@@ -266,7 +269,7 @@ def test_new_diagnostic_leaf_composes_cooperative_hooks_without_consumer_edits()
     response = DeclaredResponse(pixels, (1,))
     calls.clear()
     payload = ImageArtifactType.contextualize_output(
-        source, response, None,
+        source, response, MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
         ),
@@ -300,7 +303,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
     selected = ImageArtifactType.contextualize_output(
         source,
         SelectedPlaneImageOutput((labels[1] > 0).astype(np.uint8)[None], (1,)),
-        None,
+        MAIN_FLOW,
         projection,
     )
     graph = SpatialGraph(
@@ -328,7 +331,9 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
             np.asarray(source)[1].astype(np.float32), labels[1] > 0,
             np.asarray(source)[1].astype(np.float32),
         ).selected_outputs(1),
-        *NeuriteOwnershipPlanes(labels[1], labels[1], labels[1]).selected_outputs(1),
+        *NeuriteOwnershipPlanes(
+            labels[1], labels[1], labels[1], (labels[1] > 0).astype(np.uint8),
+        ).selected_outputs(1),
         graph,
     )
     specs = CallableContract.from_callable(
@@ -340,7 +345,9 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
             path=str(tmp_path / "runtime" / f"{spec.name}.pkl"),
             artifact_type=spec.artifact_type,
             materialization=spec.materialization,
-            viewer_streaming=spec.viewer_streaming,
+            # Stream every output, including on-demand QA planes, to check
+            # each selected plane's streamed payload.
+            viewer_streaming=AutomaticStreaming,
             sidecar_role=spec.sidecar_role,
             relations=spec.relations,
         )
@@ -365,7 +372,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
         value = (ImageArtifactType if output is None else output.artifact_type).contextualize_output(
             source,
             value,
-            output,
+            output or MAIN_FLOW,
             projection,
         )
         context.runtime_value_store.record(

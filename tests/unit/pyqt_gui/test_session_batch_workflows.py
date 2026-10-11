@@ -26,7 +26,7 @@ from openhcs.authoring.session.events import (
 from openhcs.authoring.session.execution_batch import ExecutionBatchRuntime
 from openhcs.authoring.session.progress import execution_server_status_text
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
-from openhcs.core.artifacts import MeasurementsArtifactType
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.debug import DebugCursor, DebugEvent, DebugProgressEventRequest

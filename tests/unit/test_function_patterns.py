@@ -5,21 +5,24 @@ import pytest
 from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
-    ArtifactInputProjectionPlan,
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
-    ArtifactMeasurementSubjectRelation,
-    GroupLineageSourceRelation,
     ImageArtifactType,
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
     MeasurementsArtifactType,
     SpecialArtifactType,
+)
+from openhcs.core.artifacts.relations import (
+    ArtifactMeasurementSubjectRelation,
+    GroupLineageSourceRelation,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.component_group_scope import ComponentGroupScope

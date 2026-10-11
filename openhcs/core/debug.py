@@ -20,10 +20,12 @@ from python_introspect import dataclass_from_mapping, project_dataclass, to_json
 from zmqruntime.messages import ResponseType, TypedWireMessage, WireView
 import numpy as np
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactOutputPlan,
     ArtifactPlan,
     ArtifactSpecRef,
+)
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     MeasurementsArtifactType,
     RelationshipsArtifactType,

@@ -17,7 +17,8 @@ from openhcs.core.artifact_inspection import (
     CompiledArtifactInspection,
     CompiledArtifactStepInspection,
 )
-from openhcs.core.artifacts import ArtifactPlan, ArtifactSpec
+from openhcs.core.artifacts.plans import ArtifactPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.debug import DebugArtifactIdentity, DebugArtifactRef, DebugSnapshot
 from openhcs.core.runtime_stores import RuntimeArtifactAddress, RuntimeValueStore
 from openhcs.authoring.session.progress_notifications import (

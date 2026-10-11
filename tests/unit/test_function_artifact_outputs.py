@@ -9,21 +9,25 @@ import numpy as np
 from tests.artifact_graphs import admitted_graph
 from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
-    ArtifactMeasurementSubjectRelation,
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecRef,
-    GroupLineageSourceRelation,
     ImageArtifactType,
-    ImageMeasurementSubjectRelation,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
     MetadataArtifactType,
     SpecialArtifactType,
 )
+from openhcs.core.artifacts.relations import (
+    ArtifactMeasurementSubjectRelation,
+    GroupLineageSourceRelation,
+    ImageMeasurementSubjectRelation,
+)
+from openhcs.core.artifacts.plans import (
+    ArtifactInputPlan,
+    ArtifactOutputPlan,
+    ArtifactSpecRef,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
@@ -117,6 +121,7 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes import ColourAxis
 from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def passthrough(image):
@@ -344,7 +349,7 @@ def test_image_output_context_preserves_stack_after_exact_source_projection():
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         output,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=1,
@@ -394,7 +399,7 @@ def test_image_output_context_does_not_infer_axis_for_unmarked_payload():
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         np.ones((2, 4, 5), dtype=np.uint16),
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(2),
     )
 
@@ -426,7 +431,7 @@ def test_image_output_context_rejects_declared_output_axis_shape_drift():
         (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
             np.ones((1, 4, 5), dtype=np.float32),
             output,
-            output_plan,
+            output_plan or MAIN_FLOW,
             RuntimePlaneAxisValueProjection.preserve(
                 axis=RuntimePlaneAxis.RUNTIME_SLICE,
                 axis_size=2,
@@ -460,7 +465,7 @@ def test_image_output_context_preserves_complete_scalar_rgb_identity() -> None:
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(1),
     )
 
@@ -487,7 +492,7 @@ def test_image_output_context_preserves_target_axis_across_source_rank_change() 
     result = ImageArtifactType.contextualize_output(
         source,
         output,
-        None,
+        MAIN_FLOW,
         None,
     )
 
@@ -546,7 +551,7 @@ def test_image_output_context_projects_complete_multi_plane_identity() -> None:
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(2),
     )
 
@@ -587,7 +592,7 @@ def test_named_image_outputs_bypass_unrelated_source_axis_projection():
     result = ImageArtifactType.contextualize_output_from_projector(
         source,
         bundle,
-        None,
+        MAIN_FLOW,
         RuntimePlaneProjection.stack(2),
     )
 
@@ -627,7 +632,7 @@ def test_image_output_context_projector_proves_source_ownership_once(
     result = ImageArtifactType.contextualize_output_from_projector(
         source,
         output,
-        None,
+        MAIN_FLOW,
         RuntimePlaneProjection.stack(2),
     )
 

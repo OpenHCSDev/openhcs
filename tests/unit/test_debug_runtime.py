@@ -55,18 +55,17 @@ from openhcs.core.debug import (
     debug_event_sink_from_context,
 )
 from openhcs.core.progress import ProgressEvent
-from openhcs.core.artifacts import (
-    ArtifactMeasurementSubjectRelation,
-    ArtifactInputPlan,
-    ArtifactInputProjectionPlan,
-    ArtifactSpec,
-    ArtifactOutputPlan,
+from openhcs.core.artifacts.relations import ArtifactMeasurementSubjectRelation
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
-    NoMainFlowOutput,
     RelationshipsArtifactType,
 )
+from openhcs.core.artifacts.payloads import NoMainFlowOutput
 from openhcs.core.artifact_key_selection import (
     AdapterRecordedArtifactOutputPolicy,
     NativeReturnArtifactOutputPolicy,

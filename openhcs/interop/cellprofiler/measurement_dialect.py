@@ -14,7 +14,9 @@ from openhcs.core.equivalence.policy import (
 from openhcs.core.measurement_dialect import (
     MeasurementDialect,
     RuntimeMeasurementFeatureLookup,
-    RuntimeMeasurementSourceNameEncoding,
+    FeatureSuffixSourceName,
+    SeparateKeySourceName,
+    SourceNameEncoding,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -190,10 +192,10 @@ class CellProfilerMeasurementDialect(MeasurementDialect):
     def source_name_encoding(
         self,
         scope: MeasurementScope,
-    ) -> RuntimeMeasurementSourceNameEncoding:
+    ) -> type[SourceNameEncoding]:
         if scope in (MeasurementScope.SAMPLE, MeasurementScope.OBJECT):
-            return RuntimeMeasurementSourceNameEncoding.FEATURE_SUFFIX
-        return RuntimeMeasurementSourceNameEncoding.SEPARATE_KEY
+            return FeatureSuffixSourceName
+        return SeparateKeySourceName
 
     def query_object_name(
         self,

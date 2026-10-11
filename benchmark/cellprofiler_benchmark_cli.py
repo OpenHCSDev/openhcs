@@ -24,7 +24,7 @@ from benchmark.datasets.cache import (
 )
 from benchmark.datasets.cppipe_case_catalog import official_cp3_case_category
 from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime
-from openhcs.core.source_matching import is_image_path
+from openhcs.core.source_bindings import PathIsImage
 
 
 class BenchmarkCliCommand(ABC, metaclass=AutoRegisterMeta):
@@ -1009,7 +1009,7 @@ def _official_cellprofiler3_source_root(dataset_wrapper_path: Path) -> Path:
 
 def _has_image_payloads(path: Path) -> bool:
     return any(
-        candidate.is_file() and is_image_path(str(candidate))
+        candidate.is_file() and PathIsImage.holds_for(str(candidate))
         for candidate in path.iterdir()
     )
 

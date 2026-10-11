@@ -12,16 +12,15 @@ import pytest
 from PIL import Image
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ImageArtifactType,
     MeasurementsArtifactType,
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
@@ -1947,7 +1946,7 @@ def _field_rows(
 
 
 def test_database_projection_includes_derived_grid_measurements() -> None:
-    from openhcs.core.artifacts import SpatialGridArtifactType
+    from openhcs.core.artifacts.kinds import SpatialGridArtifactType
     from openhcs.core.runtime_spatial_grid import SpatialGrid
     from openhcs.core.source_image_provenance import SourceImageProvenance
 

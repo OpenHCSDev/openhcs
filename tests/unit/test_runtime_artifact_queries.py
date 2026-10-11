@@ -5,11 +5,8 @@ import weakref
 
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactType,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ArtifactType, MeasurementsArtifactType
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementProjectedColumnarRows,

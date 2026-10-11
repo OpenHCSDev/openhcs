@@ -77,7 +77,8 @@ The census ran as five batches (this worktree plus four in parallel, merged here
 
 **Reassigned** (guard table, by owner):
 - K3 (#1199's measurement files): `MeasurementScope`, `MeasurementRowAxisField`, `MeasurementRowValueField`, `MeasurementStatistic`, `ObjectFeatureArrayDomain`, `RuntimeCellValueKind`, `RuntimeMeasurementFeatureNameMode`, `RuntimeMeasurementQualifierValueMode`, `RuntimeMeasurementSourceNameEncoding`, `MeasurementTableRowLayout`, `MeasurementObjectRowIdentity`, `MissingObjectMeasurementValuePolicy`, `ObjectLabelRepresentation`; `WriteMode` (its policy family restates it one-to-one; converting it edits `spreadsheet_export.py`).
-- K5: `FunctionStepExecutionScope`, `ImagePayloadConsumption`, `MainFlowInputProjection`, `RuntimeInvocationDomain`. K2: `ArtifactPayloadShape`.
+- K5: `FunctionStepExecutionScope`, `ImagePayloadConsumption`, `MainFlowInputProjection`, `RuntimeInvocationDomain`. K2 deleted `ArtifactPayloadShape`.
+- After merging K2, K3 and K5 into E1, the K3, K5 and plane-mode entries above are still enums and no longer blocked by held files; they need an owner (proposed E2).
 - Plane-mode family (flagged unowned by G3; needs `artifacts.py` and #1199): `RuntimePlaneAxis`, `ImagePayloadMetadataCompositionMode`, `ObjectLabelDomainScope`.
 - L7/G6: `ViewerLayerField`, `ViewerControlField`, `ViewerPayloadField`, `ViewerIntensityWindowField`, `ViewerDescriptorField` (reply-dict keys; the server should emit the agent DTO records and the window service decode them).
 - U2: `CapabilityKind`, `CapabilityRole`, `CapabilityVisibility`, `PlateFileKind` (MCP tool-input choices; converting needs the MCP binder to project family fields, which python-introspect 0.2.8 enables).

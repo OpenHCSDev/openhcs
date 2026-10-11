@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 
 from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle, ImagePayloadStackComposition, ImagePayloadSliceStack, compose_aligned_image_payload)
-from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_measurements import (

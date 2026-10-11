@@ -9,12 +9,9 @@ from types import SimpleNamespace
 from typing import Any
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactInputProjectionPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.function_patterns import (

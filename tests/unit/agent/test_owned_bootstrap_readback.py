@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.agent.dto.execution import ArtifactMaterializationPlanSummary, ArtifactPlanSummary
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection, SourcePlaneProjection
 from openhcs.processing.custom_functions.manager import CustomFunctionManager
 from tests.diagnostics.check_owned_bootstrap_live import fixture_registration_sources, guard

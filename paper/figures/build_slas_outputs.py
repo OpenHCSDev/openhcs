@@ -16,7 +16,7 @@ import numpy as np
 from roifile import ImagejRoi
 import tifffile
 
-from openhcs.core.artifacts import ObjectArtifactSubjectBinding
+from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     NEURITE_CELLS_OUTPUT,
     NEURITE_MORPHOLOGY_OUTPUT,

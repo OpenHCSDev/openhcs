@@ -302,7 +302,7 @@ def neuroncyto_ii_crossover_demo_contribution(
             projection_key=NEURITE_MORPHOLOGY_OUTPUT.name,
             step_name=analysis_step.name,
             pipeline_position=None,
-            artifact_kind=NEURITE_MORPHOLOGY_OUTPUT.artifact_type.require_value(),
+            artifact_kind=NEURITE_MORPHOLOGY_OUTPUT.artifact_type.value,
         ),
         supporting_presentation_identities=(
             StreamProducerIdentity.pipeline_output(

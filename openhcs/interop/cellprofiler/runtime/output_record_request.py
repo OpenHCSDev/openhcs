@@ -6,13 +6,13 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpec,
     ArtifactSpecRef,
-    ObjectLabelsArtifactType,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_plane_alignment import (

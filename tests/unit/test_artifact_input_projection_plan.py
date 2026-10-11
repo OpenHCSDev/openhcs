@@ -1,8 +1,8 @@
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactInputProjectionPlan,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,

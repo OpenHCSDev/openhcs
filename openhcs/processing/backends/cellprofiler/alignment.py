@@ -18,10 +18,9 @@ from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType
+from openhcs.core.artifacts.relations import (
     ImageMeasurementSubjectRelation,
     SourceStackLineageSourceRelation,
 )

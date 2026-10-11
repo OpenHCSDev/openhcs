@@ -16,7 +16,7 @@ from polystore.metadata_writer import MetadataConfig
 from polystore.virtual_workspace import SourcePixelRef
 from python_introspect import registered_class_from_key
 
-from openhcs.core.artifacts import ArtifactType
+from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import PrimaryPlaneRole, SourceProjectionRole

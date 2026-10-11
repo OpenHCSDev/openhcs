@@ -16,17 +16,21 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
-from enum import Enum
 from functools import lru_cache, partial
 from types import MappingProxyType
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 from metaclass_registry.caches import ProcessLocalBoundedCache
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from python_introspect import declared_public_names
 
 from openhcs.core.axes import AxisFamily
+from openhcs.core.measurement_row_qualifiers import (
+    DEFAULT_MEASUREMENT_ROW_QUALIFIER_SEQUENCES,
+    DEFAULT_MEASUREMENT_ROW_QUALIFIERS,
+    RuntimeMeasurementRowQualifier,
+    RuntimeMeasurementRowQualifierSequence,
+)
 from openhcs.core.runtime_identifier import (
     normalize_runtime_identifier,
     normalize_runtime_source_name,
@@ -42,13 +46,6 @@ from openhcs.core.runtime_measurements import (
 )
 
 FeatureParts = tuple[str, ...]
-
-
-class RuntimeMeasurementSourceNameEncoding(str, Enum):
-    """How a dialect encodes source-image identity in measurement features."""
-
-    SEPARATE_KEY = "separate_key"
-    FEATURE_SUFFIX = "feature_suffix"
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,193 +68,76 @@ class RuntimeMeasurementSourceQualifiedFeature:
         )
 
 
+class SourceNameEncoding(ABC):
+    """How a dialect carries source-image identity in a feature for one scope."""
 
-
-class RuntimeMeasurementQualifierValueMode(str, Enum):
-    """How a row qualifier value is rendered into a feature suffix."""
-
-    IDENTIFIER = "identifier"
-    TWO_DIGIT_INTEGER = "two_digit_integer"
-    FRACTION_OF_COUNT = "fraction_of_count"
-
-
-
-
-@dataclass(frozen=True, slots=True)
-class RuntimeMeasurementRowQualifier:
-    """Declarative row fields that qualify measurement feature names."""
-
-    field_names: tuple[str, ...]
-    value_mode: RuntimeMeasurementQualifierValueMode = (
-        RuntimeMeasurementQualifierValueMode.IDENTIFIER
-    )
-    feature_prefixes: tuple[tuple[str, ...], ...] = ()
-
-    def __post_init__(self) -> None:
-        field_names = tuple(
-            normalize_runtime_identifier(field_name)
-            for field_name in self.field_names
-            if str(field_name).strip()
-        )
-        if not field_names:
-            raise ValueError(
-                "RuntimeMeasurementRowQualifier.field_names cannot be empty."
-            )
-        object.__setattr__(self, "field_names", field_names)
-        object.__setattr__(
-            self,
-            "value_mode",
-            (
-                self.value_mode
-                if isinstance(
-                    self.value_mode,
-                    RuntimeMeasurementQualifierValueMode,
-                )
-                else RuntimeMeasurementQualifierValueMode(self.value_mode)
-            ),
-        )
-        object.__setattr__(
-            self,
-            "feature_prefixes",
-            tuple(
-                tuple(
-                    normalize_runtime_identifier(part)
-                    for part in prefix
-                    if str(part).strip()
-                )
-                for prefix in self.feature_prefixes
-            ),
-        )
-
-
-class RuntimeMeasurementQualifierSuffixMatchStrategy(
-    EnumKeyedStrategyMixin[RuntimeMeasurementQualifierValueMode],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Registered suffix parser for one row-qualifier value semantics."""
-
-    __registry_key__ = "strategy_label"
-    __skip_if_no_key__ = True
-    __enum_member_attr__ = "value_mode"
-
-    value_mode: ClassVar[RuntimeMeasurementQualifierValueMode | None] = None
-    strategy_label: ClassVar[str | None] = None
-
+    @classmethod
     @abstractmethod
-    def matched_token_width(
-        self,
-        feature_tokens: tuple[str, ...],
-        end_index: int,
-        qualifier: RuntimeMeasurementRowQualifier,
-    ) -> int | None:
-        """Return token width owned by ``qualifier`` before ``end_index``."""
+    def encode(
+        cls,
+        dialect: "MeasurementDialect",
+        feature_name: str,
+        source_name: str,
+        qualifiers: tuple[str, ...],
+    ) -> RuntimeMeasurementSourceQualifiedFeature:
+        """Encode a normalized feature and its (present) source name."""
+
+    @classmethod
+    @abstractmethod
+    def bind_family(
+        cls,
+        feature_name: str,
+        source_name: str | None,
+        families: tuple[str, ...],
+    ) -> RuntimeMeasurementSourceQualifiedFeature | None:
+        """Bind a normalized feature to one of ``families`` (longest first)."""
 
 
-class IdentifierQualifierSuffixMatchStrategy(
-    RuntimeMeasurementQualifierSuffixMatchStrategy
-):
-    """Match free-form identifier qualifier suffixes."""
+class SeparateKeySourceName(SourceNameEncoding):
+    """The source name stays beside the feature name, in its own key field."""
 
-    value_mode = RuntimeMeasurementQualifierValueMode.IDENTIFIER
+    @classmethod
+    def encode(cls, dialect, feature_name, source_name, qualifiers):
+        del dialect, qualifiers
+        return RuntimeMeasurementSourceQualifiedFeature(feature_name, source_name)
 
-    def matched_token_width(
-        self,
-        feature_tokens: tuple[str, ...],
-        end_index: int,
-        qualifier: RuntimeMeasurementRowQualifier,
-    ) -> int | None:
-        del feature_tokens, qualifier
-        return 1 if end_index > 0 else None
+    @classmethod
+    def bind_family(cls, feature_name, source_name, families):
+        if feature_name in families:
+            return RuntimeMeasurementSourceQualifiedFeature(feature_name, source_name)
+        return None
 
 
-class TwoDigitIntegerQualifierSuffixMatchStrategy(
-    RuntimeMeasurementQualifierSuffixMatchStrategy
-):
-    """Match two-digit integer qualifier suffixes."""
+class FeatureSuffixSourceName(SourceNameEncoding):
+    """The source name is spelled into the feature name, before its qualifiers."""
 
-    value_mode = RuntimeMeasurementQualifierValueMode.TWO_DIGIT_INTEGER
-
-    def matched_token_width(
-        self,
-        feature_tokens: tuple[str, ...],
-        end_index: int,
-        qualifier: RuntimeMeasurementRowQualifier,
-    ) -> int | None:
-        del qualifier
-        if end_index <= 0:
-            return None
-        token = feature_tokens[end_index - 1]
-        return 1 if len(token) == 2 and token.isdigit() else None
-
-
-class FractionOfCountQualifierSuffixMatchStrategy(
-    RuntimeMeasurementQualifierSuffixMatchStrategy
-):
-    """Match ``N of M`` fraction-count qualifier suffixes."""
-
-    value_mode = RuntimeMeasurementQualifierValueMode.FRACTION_OF_COUNT
-
-    def matched_token_width(
-        self,
-        feature_tokens: tuple[str, ...],
-        end_index: int,
-        qualifier: RuntimeMeasurementRowQualifier,
-    ) -> int | None:
-        del qualifier
-        if end_index < 3:
-            return None
-        left, of_token, right = feature_tokens[end_index - 3 : end_index]
-        return 3 if left.isdigit() and of_token == "of" and right.isdigit() else None
-
-
-@dataclass(frozen=True, slots=True)
-class RuntimeMeasurementRowQualifierSequence:
-    """Declared row-qualifier sequence rendered as one feature suffix."""
-
-    field_names_by_qualifier: tuple[tuple[str, ...], ...]
-
-    def __post_init__(self) -> None:
-        field_names_by_qualifier = tuple(
-            tuple(
-                normalize_runtime_identifier(field_name)
-                for field_name in field_names
-                if str(field_name).strip()
-            )
-            for field_names in self.field_names_by_qualifier
+    @classmethod
+    def encode(cls, dialect, feature_name, source_name, qualifiers):
+        source_tokens = runtime_source_name_tokens(source_name)
+        if not source_tokens:
+            return RuntimeMeasurementSourceQualifiedFeature(feature_name)
+        feature_tokens = tuple(token for token in feature_name.split("_") if token)
+        encoded_tokens = dialect.place_feature_suffix_source_tokens(
+            feature_tokens,
+            source_tokens,
+            dialect.source_qualified_feature_qualifier_tokens(qualifiers),
         )
-        if not field_names_by_qualifier or any(
-            not field_names for field_names in field_names_by_qualifier
-        ):
-            raise ValueError(
-                "RuntimeMeasurementRowQualifierSequence requires non-empty "
-                "qualifier field names."
-            )
-        object.__setattr__(
-            self,
-            "field_names_by_qualifier",
-            field_names_by_qualifier,
-        )
+        return RuntimeMeasurementSourceQualifiedFeature("_".join(encoded_tokens))
 
+    @classmethod
+    def bind_family(cls, feature_name, source_name, families):
+        del source_name
+        if feature_name in families:
+            return RuntimeMeasurementSourceQualifiedFeature(feature_name)
+        for family in families:
+            prefix = f"{family}_"
+            if feature_name.startswith(prefix):
+                return RuntimeMeasurementSourceQualifiedFeature(
+                    family,
+                    feature_name[len(prefix) :],
+                )
+        return None
 
-_DEFAULT_MEASUREMENT_ROW_QUALIFIERS = (
-    RuntimeMeasurementRowQualifier(("scale",)),
-    RuntimeMeasurementRowQualifier(
-        ("direction",),
-        RuntimeMeasurementQualifierValueMode.TWO_DIGIT_INTEGER,
-    ),
-    RuntimeMeasurementRowQualifier(("gray_levels",)),
-    RuntimeMeasurementRowQualifier(
-        ("bin_index", "bin_count"),
-        RuntimeMeasurementQualifierValueMode.FRACTION_OF_COUNT,
-    ),
-)
-_DEFAULT_MEASUREMENT_ROW_QUALIFIER_SEQUENCES = (
-    RuntimeMeasurementRowQualifierSequence(
-        (("scale",), ("direction",), ("gray_levels",))
-    ),
-    RuntimeMeasurementRowQualifierSequence((("bin_index", "bin_count"),)),
-)
 
 
 
@@ -304,11 +184,11 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         RuntimeMeasurementRowIdentityContract()
     )
     row_qualifiers: ClassVar[tuple[RuntimeMeasurementRowQualifier, ...]] = (
-        _DEFAULT_MEASUREMENT_ROW_QUALIFIERS
+        DEFAULT_MEASUREMENT_ROW_QUALIFIERS
     )
     source_suffix_qualifier_sequences: ClassVar[
         tuple[RuntimeMeasurementRowQualifierSequence, ...]
-    ] = _DEFAULT_MEASUREMENT_ROW_QUALIFIER_SEQUENCES
+    ] = DEFAULT_MEASUREMENT_ROW_QUALIFIER_SEQUENCES
     threshold_qualifier_tokens: ClassVar[frozenset[str]] = frozenset()
     source_qualifier_prefix_tokens: ClassVar[frozenset[str]] = frozenset()
     source_qualifier_suffix_tokens: ClassVar[frozenset[str]] = frozenset()
@@ -459,10 +339,10 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
     def source_name_encoding(
         self,
         scope: MeasurementScope,
-    ) -> "RuntimeMeasurementSourceNameEncoding":
+    ) -> type[SourceNameEncoding]:
         """How this dialect encodes source-image identity for a scope."""
         del scope
-        return RuntimeMeasurementSourceNameEncoding.SEPARATE_KEY
+        return SeparateKeySourceName
 
     def query_object_name(
         self,
@@ -700,6 +580,34 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         """Bind this dialect's grammar for one producer admission."""
         return partial(_projected_feature_name, self)
 
+    def row_qualifier_field_names(self) -> frozenset[str]:
+        """Row fields that qualify feature names in this dialect."""
+        return self._cached(
+            "row_qualifier_field_names",
+            lambda: frozenset(
+                field_name
+                for qualifier in self.row_qualifiers
+                for field_name in qualifier.field_names
+            ),
+        )
+
+    def row_qualifier_suffixes(
+        self,
+        row: Mapping[str, object],
+        field_name: str,
+    ) -> tuple[str, ...]:
+        """Rendered qualifier suffixes a row contributes to one feature name."""
+        field_parts = tuple(
+            part for part in normalize_runtime_identifier(field_name).split("_") if part
+        )
+        return tuple(
+            rendered
+            for qualifier in self.row_qualifiers
+            if qualifier.applies_to(field_parts)
+            for rendered in (qualifier.render_row(row),)
+            if rendered is not None
+        )
+
     # -- feature lookup --------------------------------------------------------
 
     def feature_parts(self, parts: FeatureParts) -> FeatureParts:
@@ -760,32 +668,14 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         """Encode source identity into a feature according to this dialect."""
         normalized_feature_name = normalize_runtime_identifier(feature_name)
         normalized_source_name = normalize_runtime_source_name(source_name)
-        encoding = self.source_name_encoding(scope)
-        if (
-            normalized_source_name is None
-            or encoding is RuntimeMeasurementSourceNameEncoding.SEPARATE_KEY
-        ):
-            return RuntimeMeasurementSourceQualifiedFeature(
-                normalized_feature_name,
-                normalized_source_name,
-            )
-        if encoding is not RuntimeMeasurementSourceNameEncoding.FEATURE_SUFFIX:
-            raise ValueError(
-                f"Unsupported measurement source-name encoding: {encoding}."
-            )
-        source_tokens = runtime_source_name_tokens(normalized_source_name)
-        if not source_tokens:
+        if normalized_source_name is None:
             return RuntimeMeasurementSourceQualifiedFeature(normalized_feature_name)
-        feature_tokens = tuple(
-            token for token in normalized_feature_name.split("_") if token
+        return self.source_name_encoding(scope).encode(
+            self,
+            normalized_feature_name,
+            normalized_source_name,
+            qualifiers,
         )
-        qualifier_tokens = self.source_qualified_feature_qualifier_tokens(qualifiers)
-        encoded_tokens = self.place_feature_suffix_source_tokens(
-            feature_tokens,
-            source_tokens,
-            qualifier_tokens,
-        )
-        return RuntimeMeasurementSourceQualifiedFeature("_".join(encoded_tokens))
 
     def source_qualified_feature_qualifier_tokens(
         self,
@@ -904,11 +794,7 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         """Return matched suffix length for a declared qualifier sequence."""
         cursor = len(feature_tokens)
         for qualifier in reversed(qualifiers):
-            token_count = (
-                RuntimeMeasurementQualifierSuffixMatchStrategy.for_enum_member(
-                    qualifier.value_mode
-                ).matched_token_width(feature_tokens, cursor, qualifier)
-            )
+            token_count = qualifier.suffix_token_width(feature_tokens, cursor)
             if token_count is None:
                 return None
             cursor -= token_count
@@ -921,10 +807,7 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         qualifiers: tuple[RuntimeMeasurementRowQualifier, ...],
     ) -> bool:
         """Return whether a qualifier sequence is distinctive enough to infer."""
-        if any(
-            qualifier.value_mode is not RuntimeMeasurementQualifierValueMode.IDENTIFIER
-            for qualifier in qualifiers
-        ):
+        if any(qualifier.value_format.distinctive for qualifier in qualifiers):
             return True
         base_tokens = feature_tokens[: len(feature_tokens) - len(suffix_tokens)]
         return any(
@@ -968,28 +851,11 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         )
         if not normalized_families:
             return None
-        encoding = self.source_name_encoding(scope)
-        if encoding is RuntimeMeasurementSourceNameEncoding.SEPARATE_KEY:
-            if normalized_feature_name in normalized_families:
-                return RuntimeMeasurementSourceQualifiedFeature(
-                    normalized_feature_name,
-                    normalized_source_name,
-                )
-            return None
-        if encoding is not RuntimeMeasurementSourceNameEncoding.FEATURE_SUFFIX:
-            raise ValueError(
-                f"Unsupported measurement source-name encoding: {encoding}."
-            )
-        if normalized_feature_name in normalized_families:
-            return RuntimeMeasurementSourceQualifiedFeature(normalized_feature_name)
-        for family in normalized_families:
-            prefix = f"{family}_"
-            if normalized_feature_name.startswith(prefix):
-                return RuntimeMeasurementSourceQualifiedFeature(
-                    family,
-                    normalized_feature_name[len(prefix) :],
-                )
-        return None
+        return self.source_name_encoding(scope).bind_family(
+            normalized_feature_name,
+            normalized_source_name,
+            normalized_families,
+        )
 
 
 
@@ -1022,13 +888,7 @@ def _projected_feature_name(
     feature_name: str,
     qualifier_values: tuple[tuple[str, object], ...],
 ) -> str:
-    from openhcs.core.equivalence.measurement_rows import measurement_row_qualifiers
-
-    qualifiers = measurement_row_qualifiers(
-        dict(qualifier_values),
-        dialect,
-        feature_name,
-    )
+    qualifiers = dialect.row_qualifier_suffixes(dict(qualifier_values), feature_name)
     return "_".join((feature_name, *qualifiers)) if qualifiers else feature_name
 
 

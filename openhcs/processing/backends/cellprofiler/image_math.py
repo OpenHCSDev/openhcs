@@ -10,12 +10,10 @@ from typing import TYPE_CHECKING, ClassVar
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    SourceStackLineageSourceRelation,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType
+from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
 from openhcs.core.memory.decorators import numpy as numpy_decorator
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,

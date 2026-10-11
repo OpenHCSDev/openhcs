@@ -20,13 +20,14 @@ from typing import (
 import numpy as np
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    NoMainFlowOutput,
-    ImageArtifactType,
     ArtifactSpecRef,
+    MAIN_FLOW,
 )
+from openhcs.core.artifacts.payloads import NoMainFlowOutput
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import (
     ImagePayloadConsumption,
 )
@@ -2162,7 +2163,7 @@ class FunctionCoreExecutor:
         return ImageArtifactType.contextualize_output_from_projector(
             output_source_payload,
             main_output,
-            None,
+            MAIN_FLOW,
             self.plane_projection,
         )
 

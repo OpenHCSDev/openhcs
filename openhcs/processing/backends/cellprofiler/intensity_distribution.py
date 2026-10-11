@@ -24,13 +24,12 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
 )
-from openhcs.core.artifacts import (
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
     SourceStackLineageSourceRelation,
 )
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import KeywordRuntimeParameter
 from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
@@ -40,7 +39,6 @@ from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, runtime_bound_parameters, special_inputs)
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.measurement_dialect import RuntimeMeasurementQualifierSuffixMatchStrategy
 from metaclass_registry.strategies import enum_member_with_payload
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
@@ -266,16 +264,8 @@ class IntensityDistributionHeatmapObjectRelation(ArtifactSpecRelation):
     """Declare the exact object-label domain rendered by one heatmap."""
 
     relation_key: ClassVar[str] = "intensity_distribution_heatmap_object"
+    source_artifact_type = ObjectLabelsArtifactType
     target_artifact_type = ImageArtifactType
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
-        if self.source.artifact_type is not ObjectLabelsArtifactType:
-            raise ValueError(
-                "Intensity-distribution heatmap object relation requires an "
-                f"object source, got {self.source.artifact_type.value}:"
-                f"{self.source.name}."
-            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -439,9 +429,7 @@ class RadialDistributionFeatureDeclaration(
                 MeasurementRowAxisField.BIN_COUNT.value,
             )
         )
-        return RuntimeMeasurementQualifierSuffixMatchStrategy.for_enum_member(
-            qualifier.value_mode
-        ).matched_token_width(feature_tokens, len(feature_tokens), qualifier)
+        return qualifier.suffix_token_width(feature_tokens, len(feature_tokens))
 
 
 class MeasureObjectIntensityDistributionModule(

@@ -11,13 +11,9 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
 )
-from openhcs.core.artifacts import (
-    ObjectLabelsArtifactType,
-    ArtifactSpecCollection,
-    ArtifactSpec,
-    ImageArtifactType,
-    SourceStackLineageSourceRelation,
-)
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, ImageArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpecCollection, ArtifactSpec
+from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
 from openhcs.core.callable_contract import CallableContract, KeywordRuntimeParameter
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,

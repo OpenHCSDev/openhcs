@@ -18,12 +18,14 @@ from numba import njit
 
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.artifacts import (
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
-    SourceStackLineageSourceRelation,
     SpatialGridArtifactType,
 )
 from openhcs.core.memory.decorators import numpy
@@ -92,7 +94,7 @@ from openhcs.core.image_payload_execution_mode import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.artifacts import ArtifactSpec
+    from openhcs.core.artifacts.specs import ArtifactSpec
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.callable_contract import CallableContract

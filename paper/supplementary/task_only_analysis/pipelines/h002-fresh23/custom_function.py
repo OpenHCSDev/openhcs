@@ -4,7 +4,14 @@ from scipy import ndimage as ndi
 from skimage.morphology import h_maxima
 from skimage.segmentation import watershed
 from openhcs.core.memory import numpy
-from openhcs.core.artifacts import (ImageArtifactType, MainFlowStackOutputSpec, MeasurementsArtifactType, ObjectLabelsArtifactType, ObjectMeasurementSubjectRelation, ArtifactSpec, SpecialArtifactType)
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
+    MeasurementsArtifactType,
+    ObjectLabelsArtifactType,
+    SpecialArtifactType,
+)
+from openhcs.core.artifacts.specs import MainFlowStackOutputSpec, ArtifactSpec
+from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_measurements import ObjectCoreMeasurementFeature, RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner

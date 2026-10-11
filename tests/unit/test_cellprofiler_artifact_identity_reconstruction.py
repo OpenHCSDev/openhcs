@@ -7,15 +7,13 @@ from dataclasses import replace
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ArtifactSpecRef,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet

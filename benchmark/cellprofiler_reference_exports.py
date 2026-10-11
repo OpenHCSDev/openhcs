@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from benchmark.equivalence.images import RuntimeImageSnapshot
 from benchmark.equivalence.outputs import image_paths
 from openhcs.interop.cellprofiler import cellprofiler_terminal_artifact_specs

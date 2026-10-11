@@ -20,7 +20,8 @@ from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConf
 
 from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
-from openhcs.core.artifacts import ArtifactSpec, ArtifactSpecRef
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.plans import ArtifactSpecRef
 from openhcs.core.callable_contract import (
     CallableContract,
     CallableImportIdentity,

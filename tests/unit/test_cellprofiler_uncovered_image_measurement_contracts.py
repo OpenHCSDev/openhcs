@@ -7,14 +7,13 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
-    ImageMeasurementSubjectRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
+from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
 from openhcs.core.function_patterns import FunctionInvocationKey
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext

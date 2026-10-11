@@ -23,7 +23,7 @@ from zmqruntime.viewer_protocol import ViewerBatchWireField, ViewerWireField
 from zmqruntime.viewer_state import ViewerStateManager
 
 from openhcs.core.axes import AxisFamily
-from openhcs.core.artifacts import ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.dataset_sources.interfaces import MetadataHandler
@@ -94,6 +94,7 @@ from openhcs.processing.materialization import (
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 class FakeFileManager:
@@ -1038,7 +1039,7 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
         path=str(tmp_path / "centres"),
         filemanager=FileManager({"disk": DiskStorageBackend()}),
         backends=["disk"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     filemanager = FakeFileManager()
     handler = SimpleNamespace(

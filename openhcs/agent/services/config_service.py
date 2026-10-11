@@ -35,6 +35,7 @@ from python_introspect import (
     coerce_enum_member,
     declared_enum_type,
     enum_input_values,
+    registered_class_from_key,
     resolve_optional,
 )
 
@@ -52,7 +53,7 @@ from openhcs.agent.dto.config import (
     ConfigValidationResult,
 )
 from openhcs.agent.exceptions import AgentFacingErrorMixin
-from openhcs.core.artifacts import ArtifactType
+from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.dataset_sources.choice import DatasetSourceChoices
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -529,6 +530,10 @@ def _coerce_patch_value(field_type, value: JsonValue) -> object:
     ):
         return AxisFamily.active().grouping_named(value)
 
+    family = _registered_family(resolve_optional(unwrapped_type))
+    if family is not None and isinstance(value, str):
+        return registered_class_from_key(family, value)
+
     path_type = _unwrap_path_type(unwrapped_type)
     if path_type is not None and isinstance(value, str):
         return path_type(value)
@@ -587,6 +592,15 @@ def _coerce_collection_patch_value(field_type, value: JsonValue) -> tuple[bool, 
             for key, item in value.items()
         }
     return False, value
+
+
+def _registered_family(field_type) -> AutoRegisterMeta | None:
+    """The family a ``type[Family]`` field holds a member of, if it is registered."""
+
+    if get_origin(field_type) is not type:
+        return None
+    (bound,) = get_args(field_type)
+    return bound if isinstance(bound, AutoRegisterMeta) else None
 
 
 def _dataclass_type(field_type) -> type | None:

@@ -18,7 +18,7 @@ from openhcs.processing.backends.cellprofiler.intensity import (
 )
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
-from openhcs.core.artifacts import ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 
 
 @dataclass(frozen=True)
@@ -223,4 +223,4 @@ def test_catalog_projects_registered_and_new_binding_declarations_without_a_rost
         assert summary.parameter_name == binding.require_parameter_name()
         assert summary.runtime_parameter_name == binding.runtime_parameter_name
         assert summary.repeated is binding.repeated
-        assert summary.kind == binding.require_artifact_type().require_value()
+        assert summary.kind == binding.require_artifact_type().value

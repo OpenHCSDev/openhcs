@@ -45,6 +45,35 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
         """Apply ``transform`` to each slice's value, keeping slice alignment."""
         return RuntimeSliceAlignedValues(tuple(transform(value) for value in self.values))
 
+    def map_indexed_slices(
+        self, transform: Callable[[int, SliceValueT], MappedValueT],
+    ) -> "RuntimeSliceAlignedValues[MappedValueT]":
+        """Apply ``transform`` to each slice's index and value, keeping alignment."""
+        return RuntimeSliceAlignedValues(
+            tuple(transform(index, value) for index, value in enumerate(self.values))
+        )
+
+    def stored_slices(self) -> tuple[SliceValueT, ...]:
+        return self.values
+
+    def match_alignment(
+        self,
+        *,
+        scalar: Callable[[Any], Any],
+        aligned: Callable[[Any], Any],
+    ) -> Any:
+        del scalar
+        return aligned(self)
+
+    def contextualized_output(
+        self,
+        kind: Any,
+        source: object,
+        target: Any,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> object:
+        return kind.contextualize_aligned(source, self, target, plane_projection)
+
     def value_for_aligned_slice(
         self,
         slice_index: int,
@@ -137,15 +166,14 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
         )
 
         return stack_image_payloads(
-            tuple(
-                source.contextualize_image_output(
+            self.map_indexed_slices(
+                lambda index, source: source.contextualize_image_output(
                     output.slice_payload(
                         output_array[index], index, plane_axis=plane_projection.axis,
                     ),
                     None,
                 )
-                for index, source in enumerate(self.values)
-            ),
+            ).values,
             metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
         )
 
@@ -153,34 +181,20 @@ class RuntimeSliceAlignedValueSet(RuntimeSliceProjectableValue, Generic[SliceVal
         self, source: Any, plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> "RuntimeSliceAlignedValues[Any]":
         """Build object labels for each slice from that slice of ``source``."""
-        if plane_projection is None:
-            raise ValueError(
-                "Runtime-slice-aligned object-label output requires a declared "
-                "runtime plane projection."
-            )
-        if plane_projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            raise ValueError(
-                "Runtime-slice-aligned object-label output requires the "
-                f"runtime-slice axis, got {plane_projection.axis.value!r}."
-            )
-        if plane_projection.axis_size != self.slice_count:
-            raise ValueError(
-                "Runtime-slice-aligned object-label output count must exactly "
-                "match the declared runtime plane axis: "
-                f"{self.slice_count} != {plane_projection.axis_size}."
-            )
+        projection = RuntimePlaneAxisValueProjection.require_runtime_slice_axis(
+            plane_projection,
+            self.slice_count,
+            value_name="Runtime-slice-aligned object-label output",
+        )
         from openhcs.core.runtime_image_values import ImagePayload
         from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
-        return RuntimeSliceAlignedValues(
-            tuple(
-                ImagePayload.of(output).object_label_output(
-                    RuntimeSliceProjection.value_for_slice(
-                        source, plane_projection.selected_plane(index),
-                    ),
-                    None,
-                )
-                for index, output in enumerate(self.values)
+        return self.map_indexed_slices(
+            lambda index, output: ImagePayload.of(output).object_label_output(
+                RuntimeSliceProjection.value_for_slice(
+                    source, projection.selected_plane(index),
+                ),
+                None,
             )
         )
 

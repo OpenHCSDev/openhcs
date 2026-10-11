@@ -1,19 +1,16 @@
 """Intensity-measurement backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
-from openhcs.core.artifacts import ArtifactInputPlan
+from openhcs.core.artifacts.plans import ArtifactInputPlan
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, ClassVar
 
-from openhcs.core.artifacts import (
-    ArtifactSpecCollection,
-    SourceStackLineageSourceRelation,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
     MeasurementProjectedColumnarRows,

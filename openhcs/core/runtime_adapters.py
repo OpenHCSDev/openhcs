@@ -14,12 +14,12 @@ from openhcs.core.artifact_key_selection import (
     NativeReturnArtifactOutputPolicy,
 )
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpecCollection,
     ArtifactSpecRef,
 )
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (

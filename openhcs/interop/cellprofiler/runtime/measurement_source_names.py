@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from openhcs.core.artifacts import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
 
 if TYPE_CHECKING:

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     MeasurementsArtifactType,
     MeasurementBearingArtifactType,

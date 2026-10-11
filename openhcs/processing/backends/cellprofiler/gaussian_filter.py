@@ -14,7 +14,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.image_payload_execution_mode import (
     FullStackExecution,
 )
