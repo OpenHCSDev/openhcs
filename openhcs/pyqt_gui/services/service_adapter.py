@@ -6,15 +6,11 @@ from typing import Optional
 
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
+from pyqt_reactive.core.path_cache import PathCacheKey, cache_path, get_initial_path
 from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
 from pyqt_reactive.theming import ColorScheme, ThemeManager
 
-from openhcs.core.path_cache import (
-    PathCacheKey,
-    cache_path,
-    get_initial_path,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +165,7 @@ class PyQtServiceAdapter:
 
     def show_cached_directory_dialog(
         self,
-        cache_key: PathCacheKey,
+        cache_key: type[PathCacheKey],
         title: str = "Select Directory",
         fallback_path: Optional[Path] = None,
         allow_multiple: bool = False,

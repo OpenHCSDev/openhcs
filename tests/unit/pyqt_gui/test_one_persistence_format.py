@@ -10,7 +10,9 @@ from pyqt_reactive.services.function_pattern_code_document import (
     FunctionPatternCodeDocumentService,
 )
 
-from openhcs.core.path_cache import PathCacheKey
+from pyqt_reactive.core.path_cache import PathCacheKey
+
+import openhcs.pyqt_gui.widgets.plate_manager  # noqa: F401 - declares its dialog context
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
@@ -179,4 +181,8 @@ def test_gui_offers_no_pickle_file_formats() -> None:
         if marker in path.read_text(encoding="utf-8")
     ]
     assert offenders == []
-    assert [key.name for key in PathCacheKey] == ["PLATE_IMPORT"]
+    assert [
+        key.__name__
+        for key in PathCacheKey.__registry__.values()
+        if key.__module__.startswith("openhcs.")
+    ] == ["PlateImport"]

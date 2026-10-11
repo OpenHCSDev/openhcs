@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Optional, Tuple
 from objectstate import DataclassFieldAccess
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from PyQt6.QtCore import pyqtSignal
+from pyqt_reactive.core.path_cache import PathCacheKey
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.widgets.shared.abstract_manager_widget import (
@@ -83,7 +84,6 @@ from openhcs.authoring.session.views import (
 )
 from openhcs.core.config import PipelineConfig
 from openhcs.constants.constants import OrchestratorState
-from openhcs.core.path_cache import PathCacheKey
 from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     UiOwnedStateSurfaceDeclaration,
@@ -477,13 +477,17 @@ class PlateManagerWidget(
 # ---------------------------------------------------------------------------
 
 
+class PlateImport(PathCacheKey):
+    """The directory a dataset was last added from."""
+
+
 class AddDatasetsPrompter(RequestPrompter):
     operation = AddDatasets
 
     def prompt(self, renderer: GuiRenderer) -> DatasetRootsRequest | None:
         manager = renderer.plate_manager
         selected = manager.service_adapter.show_cached_directory_dialog(
-            cache_key=PathCacheKey.PLATE_IMPORT,
+            cache_key=PlateImport,
             title="Select Dataset Directory",
             fallback_path=Path.home(),
             allow_multiple=True,
