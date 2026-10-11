@@ -128,8 +128,7 @@ def test_search_prefers_declared_document_matches_over_equal_body_matches(tmp_pa
     (docs / "notes.md").write_text(
         "# Setup notes\n\n"
         + "\n".join(
-            f"## Note {index}\n\nThis body mentions a recipe.\n"
-            for index in range(8)
+            f"## Note {index}\n\nThis body mentions a recipe.\n" for index in range(8)
         ),
         encoding="utf-8",
     )
@@ -314,14 +313,19 @@ def test_knowledge_base_retrieves_canonical_image_source_guide():
     assert "CZI" in document.content
     assert "OME-TIFF" in document.content
     assert "OME-Zarr" in document.content
-    assert "WELL" in document.content
-    assert "SITE" in document.content
-    assert "CHANNEL" in document.content
-    assert "Z_INDEX" in document.content
-    assert "TIMEPOINT" in document.content
+    from openhcs.domains.microscopy.axes import Microscopy
+
+    for axis in (
+        Microscopy.Well,
+        Microscopy.Site,
+        Microscopy.Channel,
+        Microscopy.ZIndex,
+        Microscopy.Timepoint,
+    ):
+        assert f"Microscopy.{axis.__name__}" in document.content
     assert "Binding positions are not microscope channel values" in document.content
     assert "full named physical" in document.content
-    assert "inputs consumed by the nominal handler projection" in document.content
+    assert "inputs consumed by the dataset source projection" in document.content
     assert "Seeing all three in the source workspace inventory is valid" in (
         document.content
     )
@@ -348,8 +352,9 @@ def test_knowledge_base_retrieves_canonical_image_source_guide():
     assert "``neurite_channel_index=0``" in document.content
     assert "``nuclear_stain.channel_index=1``" in document.content
     assert "not equivalent to MAP2-seeded analysis" in document.content
-    assert "``variable_components=[CHANNEL]`` assembles the channel stack" in (
-        document.content
+    assert (
+        "``variable_components=[Microscopy.Channel]`` assembles the channel stack"
+        in (document.content)
     )
     assert "compiler normalizes it to" in document.content
     assert "``Ungrouped``" in document.content
