@@ -20,6 +20,7 @@ from openhcs.core.artifacts import (
     GroupLineageSourceRelation,
     ImageArtifactType,
     InputGroupLineageSourceRelation,
+    InputImageSetContextSourceRelation,
     InputStackBroadcastSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -421,7 +422,13 @@ def test_measurement_inputs_do_not_invent_image_or_object_self_lineage() -> None
     inputs = contract.artifact_inputs
 
     assert tuple(spec.name for spec in inputs.specs) == ("CropBlue", "Nuclei")
-    assert tuple(spec.relations for spec in inputs.specs) == ((), ())
+    image_input, label_input = inputs.specs
+    # No self lineage; measured objects carry only the exact selected image-set
+    # context (356c47ed0, #547).
+    assert image_input.relations == ()
+    assert label_input.relations == (
+        InputImageSetContextSourceRelation(image_input.ref()),
+    )
 
 
 def test_optional_object_special_input_does_not_consume_primary_image() -> None:

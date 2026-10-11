@@ -947,7 +947,7 @@ def _recorded_save_images_rows(
     else:
         filename = f"{single_file_name}{suffix}{file_format.value}"
     relative_path = str(
-        SaveImagesModule.relative_path_scope.project(
+        SaveImagesModule.relative_path_scope.scoped_path(
             PurePosixPath(_relative_template(output_location, filename)),
             context,
         )

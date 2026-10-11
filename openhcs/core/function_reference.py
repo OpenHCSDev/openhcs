@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 import dataclasses
 import importlib
 import inspect
@@ -89,7 +90,7 @@ class FunctionReference(PythonSourceLiteral, ABC):
     def source_literal_imports(self) -> frozenset[tuple[str, str]]:
         imports = super().source_literal_imports()
         identity = self.source_import_identity
-        if identity.module_name == "builtins":
+        if identity.module_name == builtins.__name__:
             return imports
         return imports | frozenset({(identity.module_name, identity.function_name)})
 

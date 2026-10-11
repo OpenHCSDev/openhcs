@@ -1753,6 +1753,8 @@ class ArtifactSidecarRole(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
 
     name: ClassVar[str]
+    inspection_only: ClassVar[bool] = False
+    """Whether the sidecar exists only for inspection, never as a pipeline result."""
 
     @classmethod
     def name_for(
@@ -1780,6 +1782,7 @@ class QaCheckpoint(ArtifactSidecarRole):
     """An inspection checkpoint published beside a primary artifact."""
 
     name = "qa_checkpoint"
+    inspection_only = True
 
 
 class ArtifactViewerStreaming(str, Enum):

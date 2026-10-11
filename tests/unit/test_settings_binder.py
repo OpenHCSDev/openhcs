@@ -1502,7 +1502,7 @@ def test_measure_object_size_shape_binds_zernike_toggle():
     assert bound.unmapped_kwargs == {}
 
 
-def test_measure_object_size_shape_splits_repeated_object_sets_into_invocations():
+def test_measure_object_size_shape_keeps_repeated_object_sets_as_one_roster():
     module = ModuleBlock(
         name="MeasureObjectSizeShape",
         module_num=7,
@@ -1517,10 +1517,10 @@ def test_measure_object_size_shape_splits_repeated_object_sets_into_invocations(
     blocks = MeasureObjectSizeShapeModule.invocation_module_blocks(module)
     bound = tuple(_bind_declared_module_settings(block) for block in blocks)
 
+    # The complete roster stays on one invocation; the runtime Cartesian
+    # batch owns per-object execution (497e553a7, #536).
     assert tuple(item.kwargs["select_object_sets_to_measure"] for item in bound) == (
-        "Comet",
-        "CometHead",
-        "CometTail",
+        ("Comet", "CometHead", "CometTail"),
     )
     assert all(item.kwargs["calculate_advanced"] is False for item in bound)
 

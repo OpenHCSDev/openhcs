@@ -828,14 +828,14 @@ def test_path_planner_step_output_projects_only_exact_source_artifacts() -> None
 
 
 @pytest.mark.parametrize(
-    "function,artifact_input_names",
+    "function,expected_artifact_inputs",
     (
         (neurite_outgrowth_metaxpress, ("pixel_size",)),
         (neurite_outgrowth_metaxpress_pixels, ()),
     ),
 )
 def test_path_planner_preserves_metaxpress_primary_source_order(
-    function, artifact_input_names
+    function, expected_artifact_inputs
 ) -> None:
     pipeline_bindings = (
         NamedSourceBinding(alias="Hoechst"),
@@ -880,7 +880,7 @@ def test_path_planner_preserves_metaxpress_primary_source_order(
     )
 
     assert contract.accepts_implicit_main_flow_input is True
-    assert contract.artifact_inputs.names() == artifact_input_names
+    assert contract.artifact_inputs.names() == expected_artifact_inputs
     assert tuple(binding.alias for binding in pipeline_bindings) == (
         "Hoechst",
         "MAP2",

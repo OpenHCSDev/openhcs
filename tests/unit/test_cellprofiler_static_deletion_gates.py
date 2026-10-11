@@ -1347,7 +1347,9 @@ def test_cellprofiler_module_mro_has_no_reflective_semantic_dispatch() -> None:
             break
         module_mro.update(discovered)
 
-    forbidden_calls = {"getattr", "setattr", "hasattr", "issubclass"}
+    # issubclass is nominal family membership, the mechanism rule 1a
+    # (families, not enums) requires; attribute reflection stays forbidden.
+    forbidden_calls = {"getattr", "setattr", "hasattr"}
     violations = []
     for class_name in module_mro:
         for path, class_node in definitions.get(class_name, ()):

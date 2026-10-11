@@ -9,7 +9,7 @@ from openhcs.core.pipeline_import import PipelineImporter
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 
 
-class CellProfilerPipelineImporter(PipelineImporter):
+class CppipeImporter(PipelineImporter):
     suffix = ".cppipe"
     title = "CellProfiler Pipelines"
 
