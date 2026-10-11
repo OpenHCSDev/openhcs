@@ -45,13 +45,12 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     is_structural_missing_measurement_cell,
 )
-from openhcs.core.equivalence.measurement_rows import measurement_qualifier_field_names
-from openhcs.core.equivalence.relationships import RuntimeScopedMeasurementTable
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
     ColumnarRows,
 )
 from openhcs.core.runtime_measurements import (
+    RuntimeScopedMeasurementTable,
     MeasurementRowAxisField,
     MeasurementRowValueField,
     MeasurementScope,
@@ -754,9 +753,7 @@ class CPATableRowProjection:
             default_subject=default_subject,
             default_scope=table.subject.scope,
             object_id_field=table.subject.object_id_field,
-            qualifier_field_names=measurement_qualifier_field_names(
-                CELLPROFILER_MEASUREMENT_DIALECT
-            ),
+            qualifier_field_names=CELLPROFILER_MEASUREMENT_DIALECT.row_qualifier_field_names(),
         )
         object_subjects = accumulator.object_subjects()
         object_subject_set = frozenset(object_subjects)

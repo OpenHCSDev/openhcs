@@ -11,7 +11,6 @@ from openhcs.core.runtime_tabular_values import (
     MeasurementObjectRowIdentity,
 )
 from openhcs.core.runtime_measurements import (
-    ObjectFeatureMissingValue,
     RuntimeMeasurementFeature,
     RuntimeMeasurementFeatureSemanticMarker,
 )
@@ -50,7 +49,6 @@ from openhcs.processing.backends.cellprofiler.perf_fixtures import (
 )
 from openhcs.processing.backends.cellprofiler.zernike import (
     ShapeZernikeFeatureAuthority,
-    ShapeObjectZernikeDescriptorDeclaration,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelVariantData
 from openhcs.core.pipeline.function_contracts import (
@@ -66,11 +64,8 @@ if TYPE_CHECKING:
 
 
 class ZeroFilledShapeFeature(RuntimeMeasurementFeatureSemanticMarker):
-    """Native shape vector padded with zero through the material object extent."""
-
-
-class LabelIndexedShapeFeature(RuntimeMeasurementFeatureSemanticMarker):
-    """Shape vector whose values retain their measured label identities."""
+    """Shape feature that is zero, not missing, for an empty label below the
+    largest measured label."""
 
 
 class MeasureObjectSizeShapeModule(
@@ -180,12 +175,12 @@ class MeasureObjectSizeShapeModule(
         MIN_FERET_DIAMETER = (
             "MinFeretDiameter",
             (),
-            (ShapeDescriptorFeature, LabelIndexedShapeFeature, ZeroFilledShapeFeature),
+            (ShapeDescriptorFeature, ZeroFilledShapeFeature),
         )
         MAX_FERET_DIAMETER = (
             "MaxFeretDiameter",
             (),
-            (ShapeDescriptorFeature, LabelIndexedShapeFeature, ZeroFilledShapeFeature),
+            (ShapeDescriptorFeature, ZeroFilledShapeFeature),
         )
         EQUIVALENT_DIAMETER = ("EquivalentDiameter", (), (ShapeDescriptorFeature,))
         SPATIAL_MOMENT = ("SpatialMoment", (), (ShapeDescriptorFeature,))
@@ -464,7 +459,6 @@ from openhcs.core.runtime_object_label_domains import (
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
-    ObjectFeatureArrayDomain,
     ObjectFeatureValueTable,
 )
 from openhcs.core.runtime_object_labels import (
@@ -515,60 +509,28 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
 
     table_label = "shape"
 
-    def feature_array_domain(self, feature_name: str) -> ObjectFeatureArrayDomain:
-        """Derive compact versus label-indexed vectors from feature declarations."""
+    def validate_feature_values(self, feature_name: str, values: np.ndarray) -> None:
+        """Admit only declared AreaShape features, one value per measured object."""
         if (
             feature_name
             not in MeasureObjectSizeShapeModule.measurement_all_field_names()
         ):
             raise ValueError(
-                f"{type(self).__name__} feature {feature_name!r} has no declared "
-                "feature-array domain."
+                f"{type(self).__name__} feature {feature_name!r} is not a declared "
+                "AreaShape feature."
             )
-        if (
-            ShapeObjectZernikeDescriptorDeclaration.from_feature_name(feature_name)
-            is not None
-            or any(
-                feature.value == feature_name
-                and LabelIndexedShapeFeature.matches_feature(feature)
-                for feature in MeasureObjectSizeShapeModule.MeasurementFeature
-            )
-        ):
-            return ObjectFeatureArrayDomain.MEASURED_OBJECT_ID
-        return ObjectFeatureArrayDomain.ROW_ORDINAL
+        super().validate_feature_values(feature_name, values)
 
-    def feature_missing_values_for_objects(
-        self, feature_name: str, object_ids: tuple[int, ...],
-    ) -> Mapping[int, ObjectFeatureMissingValue]:
-        """Native radius/Feret vectors contain zeros within their material extent."""
-        array_domain = self.feature_array_domain(feature_name)
-        zero_filled = any(
+    def missing_value(self, feature_name: str, object_id: int) -> float:
+        """Radius and Feret features are zero for empty labels below the largest
+        measured label, as CellProfiler sizes those vectors by label count."""
+        if object_id <= max(self.measured_object_ids, default=0) and any(
             feature.value == feature_name
             and ZeroFilledShapeFeature.matches_feature(feature)
             for feature in MeasureObjectSizeShapeModule.MeasurementFeature
-        )
-        missing_values = super().feature_missing_values_for_objects(
-            feature_name, object_ids
-        )
-        if not zero_filled:
-            return missing_values
-        material_extent = max(self.measured_object_ids, default=0)
-        material_slots = (
-            {object_id: object_id - 1 for object_id in object_ids}
-            if array_domain is ObjectFeatureArrayDomain.MEASURED_OBJECT_ID
-            else {
-                object_id: position
-                for position, object_id in enumerate(self.object_domain)
-            }
-        )
-        return {
-            object_id: (
-                ObjectFeatureMissingValue.ZERO
-                if material_slots[object_id] < material_extent
-                else missing_value
-            )
-            for object_id, missing_value in missing_values.items()
-        }
+        ):
+            return 0.0
+        return super().missing_value(feature_name, object_id)
 
 
 class ShapeObjectMeasurementRows(ObjectMeasurementColumnarRows):
@@ -690,7 +652,7 @@ class ObjectSizeShapeFeatureArrayOwner(ABC, metaclass=AutoRegisterMeta):
         return (
             feature_values,
             measured_object_ids,
-            measurement.measurement_row_domain(measured_object_ids),
+            tuple(int(value) for value in measurement.object_indices(labels)),
         )
 
 
@@ -711,17 +673,6 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             int(labels.max(initial=0)) + 1,
             dtype=np.int32,
         )
-
-    def measurement_row_domain(
-        self,
-        measured_object_ids: np.ndarray,
-    ) -> tuple[int, ...]:
-        """Return the exact row domain written by CellProfiler for these vectors."""
-        if self.object_domain is not None:
-            return self.object_domain
-        if np.asarray(self.labels).ndim == 2:
-            return tuple(int(value) for value in self.object_indices(self.labels))
-        return tuple(range(1, len(measured_object_ids) + 1))
 
     def feature_arrays(self) -> ShapeFeatureArrays:
         """Return feature arrays and measured label ids for 2-D or 3-D labels."""

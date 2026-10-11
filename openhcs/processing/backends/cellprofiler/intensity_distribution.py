@@ -40,7 +40,6 @@ from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, runtime_bound_parameters, special_inputs)
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.measurement_dialect import RuntimeMeasurementQualifierSuffixMatchStrategy
 from metaclass_registry.strategies import enum_member_with_payload
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
@@ -439,9 +438,7 @@ class RadialDistributionFeatureDeclaration(
                 MeasurementRowAxisField.BIN_COUNT.value,
             )
         )
-        return RuntimeMeasurementQualifierSuffixMatchStrategy.for_enum_member(
-            qualifier.value_mode
-        ).matched_token_width(feature_tokens, len(feature_tokens), qualifier)
+        return qualifier.suffix_token_width(feature_tokens, len(feature_tokens))
 
 
 class MeasureObjectIntensityDistributionModule(

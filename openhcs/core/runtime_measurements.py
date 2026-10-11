@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from functools import lru_cache
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from openhcs.core.artifacts import (
     NamedArtifactPayload,
@@ -23,13 +23,9 @@ from abc import ABC
 from abc import abstractmethod
 from collections.abc import Mapping
 from collections.abc import Sequence
-from dataclasses import replace
 from enum import Enum
 from metaclass_registry import AutoRegisterMeta
-from metaclass_registry import RegistryFamily
-from metaclass_registry import RegistryKeyAttribute
 from openhcs.core.alias_property import AliasProperty
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from metaclass_registry.strategies import str_enum_member_with_payload
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
@@ -39,6 +35,7 @@ import math
 import numpy as np
 import re
 from openhcs.core.axes import AxisFamily
+from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
     VolumeSourceSpatialDomain,
@@ -1524,153 +1521,15 @@ def measurement_axis_integer_domain(
     )
 
 
-class ObjectFeatureArrayDomain(str, Enum):
-    """How a feature array indexes values for an object-feature table."""
-
-    MEASURED_OBJECT_ID = "measured_object_id"
-    LABEL_ID = "label_id"
-    ROW_ORDINAL = "row_ordinal"
-
-
-class ObjectFeatureMissingValue(str, Enum):
-    """How an object-feature table represents unmeasured feature values."""
-
-    def __new__(cls, value: str, scalar: float):
-        member = str.__new__(cls, value)
-        member._value_ = value
-        member.scalar = scalar
-        return member
-
-    NAN = ("nan", float(np.nan))
-    ZERO = ("zero", 0.0)
-    scalar: float
-
-
-@dataclass(frozen=True, slots=True)
-class ObjectFeatureArrayDomainContext:
-    """Feature-array indexing inputs for one object-feature table."""
-
-    object_id: int
-    values: np.ndarray
-    measured_object_ids: tuple[int, ...]
-    object_domain: tuple[int, ...]
-
-    @property
-    def value_count(self) -> int:
-        return int(self.values.shape[0])
-
-    @property
-    def measured_object_count(self) -> int:
-        return len(self.measured_object_ids)
-
-    @property
-    def measured_object_max(self) -> int:
-        return max(self.measured_object_ids, default=0)
-
-
-class ObjectFeatureArrayDomainStrategy(
-    EnumKeyedStrategyMixin[ObjectFeatureArrayDomain], ABC, metaclass=AutoRegisterMeta
-):
-    """Project feature arrays according to their declared object domain."""
-
-    __registry_family__ = RegistryFamily(RegistryKeyAttribute.STRATEGY_LABEL)
-    __enum_member_attr__ = "domain"
-    domain: ClassVar[ObjectFeatureArrayDomain]
-    strategy_label: ClassVar[str | None] = None
-
-    @abstractmethod
-    def value_index(self, context: ObjectFeatureArrayDomainContext) -> int | None:
-        """Return the value index for ``context.object_id``."""
-
-    def value_indexes(
-        self, context: ObjectFeatureArrayDomainContext
-    ) -> Mapping[int, int]:
-        """Return object-id to value-index mappings for a feature array."""
-        indexes: dict[int, int] = {}
-        for object_id in context.object_domain:
-            value_index = self.value_index(replace(context, object_id=object_id))
-            if value_index is not None:
-                indexes[object_id] = value_index
-        return indexes
-
-    @abstractmethod
-    def accepts(self, context: ObjectFeatureArrayDomainContext) -> bool:
-        """Return whether the feature array shape is valid for this domain."""
-
-
-class OrdinalObjectFeatureArrayDomainStrategy(ObjectFeatureArrayDomainStrategy):
-    """Feature arrays indexed by an ordered object-ID axis."""
-
-    @abstractmethod
-    def ordinal_axis(self, context: ObjectFeatureArrayDomainContext) -> tuple[int, ...]:
-        """Return the object-ID axis that defines feature-array order."""
-
-    def value_index(self, context: ObjectFeatureArrayDomainContext) -> int | None:
-        axis = self.ordinal_axis(context)
-        if context.object_id not in axis:
-            return None
-        value_index = axis.index(context.object_id)
-        return value_index if value_index < context.value_count else None
-
-    def value_indexes(
-        self, context: ObjectFeatureArrayDomainContext
-    ) -> Mapping[int, int]:
-        return {
-            object_id: index
-            for index, object_id in enumerate(self.ordinal_axis(context))
-            if index < context.value_count
-        }
-
-
-class MeasuredObjectFeatureArrayDomainStrategy(OrdinalObjectFeatureArrayDomainStrategy):
-    """Feature arrays indexed by compact measured-object IDs."""
-
-    domain = ObjectFeatureArrayDomain.MEASURED_OBJECT_ID
-
-    def ordinal_axis(self, context: ObjectFeatureArrayDomainContext) -> tuple[int, ...]:
-        return context.measured_object_ids
-
-    def accepts(self, context: ObjectFeatureArrayDomainContext) -> bool:
-        return context.value_count == context.measured_object_count
-
-
-class LabelIdFeatureArrayDomainStrategy(ObjectFeatureArrayDomainStrategy):
-    """Feature arrays indexed by dense label ID minus one."""
-
-    domain = ObjectFeatureArrayDomain.LABEL_ID
-
-    def value_index(self, context: ObjectFeatureArrayDomainContext) -> int | None:
-        value_index = context.object_id - 1
-        return value_index if 0 <= value_index < context.value_count else None
-
-    def accepts(self, context: ObjectFeatureArrayDomainContext) -> bool:
-        return context.value_count >= context.measured_object_max
-
-    def value_indexes(
-        self, context: ObjectFeatureArrayDomainContext
-    ) -> Mapping[int, int]:
-        return {
-            object_id: object_id - 1
-            for object_id in context.object_domain
-            if 0 <= object_id - 1 < context.value_count
-        }
-
-
-class RowOrdinalFeatureArrayDomainStrategy(OrdinalObjectFeatureArrayDomainStrategy):
-    """Feature arrays indexed by the emitted row ordinal."""
-
-    domain = ObjectFeatureArrayDomain.ROW_ORDINAL
-
-    def ordinal_axis(self, context: ObjectFeatureArrayDomainContext) -> tuple[int, ...]:
-        return context.object_domain
-
-    def accepts(self, context: ObjectFeatureArrayDomainContext) -> bool:
-        return context.value_count <= len(context.object_domain)
-
-
 @dataclass(frozen=True, slots=True)
 class ObjectFeatureValueTable:
-    """Wide object-feature values aligned onto a declared object-id domain."""
+    """Wide object-feature values aligned onto a declared object-id domain.
+
+    A 1-D feature array holds one value per measured object, in the order of
+    ``measured_object_ids``. Each value lands on the row of the object it was
+    measured for; a declared object without a measured value gets
+    :meth:`missing_value`.
+    """
 
     feature_values: Mapping[str, Any]
     measured_object_ids: tuple[int, ...]
@@ -1678,8 +1537,6 @@ class ObjectFeatureValueTable:
     object_id_field: str = MeasurementRowAxisField.OBJECT_LABEL.value
     slice_index_field: str = MeasurementRowAxisField.SLICE_INDEX.value
     slice_index: int = 0
-    feature_array_domains: ClassVar[Mapping[str, ObjectFeatureArrayDomain]] = {}
-    feature_missing_values: ClassVar[Mapping[str, ObjectFeatureMissingValue]] = {}
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -1718,133 +1575,50 @@ class ObjectFeatureValueTable:
 
     def rows(self) -> list[dict[str, float | int]]:
         """Return wide rows ordered by the declared object domain."""
+        value_indexes = {
+            object_id: index for index, object_id in enumerate(self.measured_object_ids)
+        }
         feature_items = []
         for feature_name, values in self.feature_values.items():
             array = np.asarray(values)
-            python_values = self.python_feature_values(values)
-            value_indexes = self.feature_value_indexes(feature_name, array)
-            missing_object_ids = (
-                tuple(
-                    object_id
-                    for object_id in self.object_domain
-                    if object_id not in value_indexes
-                )
-                if array.ndim != 0
-                else ()
-            )
-            missing_values = (
-                self.feature_missing_values_for_objects(
-                    feature_name, missing_object_ids
-                )
-                if missing_object_ids
-                else {}
-            )
-            feature_items.append(
-                (feature_name, array, python_values, value_indexes, missing_values)
-            )
+            self.validate_feature_values(feature_name, array)
+            feature_items.append((feature_name, array.ndim, array.tolist()))
         rows: list[dict[str, float | int]] = []
         for object_id in self.object_domain:
+            value_index = value_indexes.get(object_id)
             row: dict[str, float | int] = {
                 self.slice_index_field: self.slice_index,
                 self.object_id_field: object_id,
             }
-            for (
-                feature_name,
-                values,
-                python_values,
-                value_indexes,
-                missing_values,
-            ) in feature_items:
-                if values.ndim == 0:
+            for feature_name, ndim, python_values in feature_items:
+                if ndim == 0:
                     row[feature_name] = python_values
-                    continue
-                value_index = value_indexes.get(object_id)
-                row[feature_name] = (
-                    missing_values[object_id].scalar
-                    if value_index is None else python_values[value_index]
-                )
+                elif value_index is None:
+                    row[feature_name] = self.missing_value(feature_name, object_id)
+                else:
+                    row[feature_name] = python_values[value_index]
             self.complete_row(row)
             rows.append(row)
         return rows
 
-    def feature_value_indexes(
-        self, feature_name: str, values: np.ndarray
-    ) -> Mapping[int, int]:
-        """Return object-id to feature-value indexes for one feature array."""
-        if values.ndim == 0:
-            return {}
-        self.validate_feature_value_domain(feature_name, values)
-        return ObjectFeatureArrayDomainStrategy.for_enum_member(
-            self.feature_array_domain(feature_name)
-        ).value_indexes(
-            ObjectFeatureArrayDomainContext(
-                object_id=0,
-                values=values,
-                measured_object_ids=self.measured_object_ids,
-                object_domain=self.object_domain,
-            )
-        )
-
-    def feature_value_index(
-        self, feature_name: str, object_id: int, *, values: np.ndarray
-    ) -> int | None:
-        """Return the feature-array index for one declared object ID."""
-        return ObjectFeatureArrayDomainStrategy.for_enum_member(
-            self.feature_array_domain(feature_name)
-        ).value_index(
-            ObjectFeatureArrayDomainContext(
-                object_id=object_id,
-                values=values,
-                measured_object_ids=self.measured_object_ids,
-                object_domain=self.object_domain,
-            )
-        )
-
-    def feature_array_domain(self, feature_name: str) -> ObjectFeatureArrayDomain:
-        """Return the declared indexing domain for one feature array."""
-        return self.feature_array_domains.get(
-            feature_name, ObjectFeatureArrayDomain.MEASURED_OBJECT_ID
-        )
-
-    def validate_feature_value_domain(
-        self, feature_name: str, values: np.ndarray
-    ) -> None:
-        """Fail when a feature array is not aligned to a declared object domain."""
-        if values.ndim == 0:
-            return
-        context = ObjectFeatureArrayDomainContext(
-            object_id=0,
-            values=values,
-            measured_object_ids=self.measured_object_ids,
-            object_domain=self.object_domain,
-        )
-        if ObjectFeatureArrayDomainStrategy.for_enum_member(
-            self.feature_array_domain(feature_name)
-        ).accepts(context):
+    def validate_feature_values(self, feature_name: str, values: np.ndarray) -> None:
+        """Fail when a feature array is not one value per measured object."""
+        if values.ndim == 0 or values.shape[0] == len(self.measured_object_ids):
             return
         raise ValueError(
-            f"{type(self).__name__} feature {feature_name!r} has {context.value_count} values for {context.measured_object_count} measured objects. Feature arrays must align to measured_object_ids unless the table declares another feature-array domain."
+            f"{type(self).__name__} feature {feature_name!r} has {values.shape[0]} "
+            f"values for {len(self.measured_object_ids)} measured objects; feature "
+            "arrays hold one value per measured object id."
         )
 
-    def python_feature_values(self, values: Any) -> Any:
-        """Return Python-native feature values for row serialization."""
-        array = np.asarray(values)
-        if array.ndim == 0:
-            return array.item()
-        return array.tolist()
+    def missing_value(self, feature_name: str, object_id: int) -> float:
+        """Return the value of a declared object that has no measured value."""
+        del feature_name, object_id
+        return math.nan
 
     def complete_row(self, row: dict[str, float | int]) -> None:
         """Add table-specific axis/value fields after feature projection."""
         del row
-
-    def feature_missing_values_for_objects(
-        self, feature_name: str, object_ids: tuple[int, ...],
-    ) -> Mapping[int, ObjectFeatureMissingValue]:
-        """Project one column's missing-value policy onto its absent objects."""
-        missing_value = self.feature_missing_values.get(
-            feature_name, ObjectFeatureMissingValue.NAN
-        )
-        return dict.fromkeys(object_ids, missing_value)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1916,3 +1690,15 @@ class MeasurementSubject:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class RuntimeScopedMeasurementTable:
+    """Measurement table plus the execution scope and record it came from."""
+
+    table: MeasurementTable
+    record_identity: str | None = None
+    execution_scope: RuntimeExecutionAxisScope | None = None
+    occurrence_identity: object = field(
+        default_factory=object,
+        repr=False,
+        compare=False,
+    )
