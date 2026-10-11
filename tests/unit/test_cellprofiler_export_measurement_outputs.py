@@ -177,7 +177,7 @@ def _export_context() -> ProcessingContext:
                 step_index=0,
                 step_name="ExportToDatabase",
                 axis_id="A01",
-                source_binding_plan=CompiledSourceBindingPlan.empty(),
+                source_binding_plan=CompiledSourceBindingPlan(),
                 compiled_function_pattern=compile_function_pattern(
                     admitted_graph(export_to_database),
                     {},

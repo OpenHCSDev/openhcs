@@ -13,9 +13,9 @@ from openhcs.core.source_binding_workspace import (
     _SourceSet,
 )
 from openhcs.core.source_metadata import SourceMetadataValue
-from openhcs.core.source_bindings import (
+from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.config import (
     EMPTY_SOURCE_BINDINGS,
-    NamedSourceBinding,
     SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
@@ -249,7 +249,7 @@ class SourceBindingsPreview:
         ):
             return (), ()
         try:
-            source_sets = SourceSetAssembler.for_config(config).source_sets(
+            source_sets = SourceSetAssembler.assemble(
                 config.match_plan,
                 matched_members,
                 (),

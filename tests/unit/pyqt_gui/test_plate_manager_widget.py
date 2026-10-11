@@ -61,6 +61,7 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     PipelineConfig,
     PartitionFilterConfig,
+    LazyStepSourceBindingsConfig,
 )
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
@@ -77,11 +78,10 @@ from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent
 from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.core.source_bindings import (
-    LazyStepSourceBindingsConfig,
     MetadataSelector,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
+    PairByOrder,
     SourceSelector,
 )
 from openhcs.core.steps.function_step import FunctionStep
@@ -410,7 +410,7 @@ def test_workspace_import_replaces_steps_keeps_public_functions_and_applies_conf
     tmp_path,
 ) -> None:
     root, scope_id = _cellprofiler_dataset(tmp_path, "CropExample", "crop.cppipe")
-    match_plan = SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER)
+    match_plan = PairByOrder()
     pipeline_config = PipelineConfig(
         source_bindings_config=LazySourceBindingsConfig(match_plan=match_plan),
     )
@@ -471,7 +471,7 @@ def test_workspace_import_replaces_steps_keeps_public_functions_and_applies_conf
 def test_selection_does_not_reseed_a_dirty_imported_config(tmp_path) -> None:
     imported_config = PipelineConfig(
         source_bindings_config=LazySourceBindingsConfig(
-            match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+            match_plan=PairByOrder(),
         ),
     )
     with session_gui() as gui:
@@ -485,8 +485,8 @@ def test_selection_does_not_reseed_a_dirty_imported_config(tmp_path) -> None:
         session.import_workspace_pipeline(scope_id, workspace)
         state = ObjectStateRegistry.get_by_scope(scope_id)
         state.update_parameter(
-            "source_bindings_config.match_plan.method",
-            SourceBindingMatchMethod.METADATA,
+            "source_bindings_config.match_plan",
+            PairByMetadata(),
         )
 
         session.select((other,))
@@ -494,10 +494,10 @@ def test_selection_does_not_reseed_a_dirty_imported_config(tmp_path) -> None:
         gui.settle()
 
         assert (
-            state.parameters["source_bindings_config.match_plan.method"]
-            is SourceBindingMatchMethod.METADATA
+            state.parameters["source_bindings_config.match_plan"]
+            == PairByMetadata()
         )
-        assert "source_bindings_config.match_plan.method" in state.dirty_fields
+        assert "source_bindings_config.match_plan" in state.dirty_fields
         assert _names(session.pipeline_steps(scope_id)) == ["Imported"]
 
 

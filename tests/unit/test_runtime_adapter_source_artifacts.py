@@ -9,7 +9,6 @@ from polystore.filemanager import FileManager
 from scipy.io import savemat
 
 from openhcs.constants.constants import Backend
-from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
@@ -19,18 +18,15 @@ from openhcs.core.source_binding_selection import SourcePatternResolutionContext
 from openhcs.core.runtime_object_labels import ObjectLabelSet
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.source_bindings import (
-    CompiledSourceBindingPlan,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
-    SourceBindingsConfig,
+    PairByOrder,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceProjectionRole,
     SourceSelector,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
 from openhcs.core.source_image_provenance import SourceImageIdentity
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_projection import SourcePlaneProjection
@@ -114,7 +110,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
             illumination_binding,
             labels_binding,
         ),
-        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
     )
     filemanager = _filemanager()
     SourceBindingWorkspaceProjector(
@@ -193,13 +189,11 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
         return RuntimeAdapterRequest(
             context=context,
             source_payload=primary_payload,
-            source_binding_plan=CompiledSourceBindingPlan.from_config(
-                StepSourceBindingsConfig(
+            source_binding_plan=StepSourceBindingsConfig(
                     bindings=source_bindings.binding_declarations,
                     match_plan=source_bindings.match_plan,
                     enabled=True,
-                ),
-            ),
+                ).compiled_plan(),
             axis_scope=RuntimeExecutionAxisScope.from_raw(
                 "A01",
                 component=None,

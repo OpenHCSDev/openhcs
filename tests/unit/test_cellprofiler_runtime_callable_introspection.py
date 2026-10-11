@@ -15,6 +15,7 @@ from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyProcessingConfig,
     PipelineConfig,
+    StepSourceBindingsConfig,
 )
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.callable_contract import CallableContract
@@ -30,11 +31,7 @@ from openhcs.core.function_patterns import (
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.compilation_session import CompilationSession
-from openhcs.core.source_bindings import (
-    ComponentSelector,
-    NamedSourceBinding,
-    StepSourceBindingsConfig,
-)
+from openhcs.core.source_bindings import ComponentSelector, NamedSourceBinding
 from openhcs.core.steps.function_step import FunctionStep
 from objectstate.object_state import ObjectState
 from openhcs.interop.cellprofiler.compile_time_contracts import (

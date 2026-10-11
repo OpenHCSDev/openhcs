@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
     from openhcs.core.dataset_sources.source import DatasetSource
-    from openhcs.core.source_bindings import SourceBindingsConfig
+    from openhcs.core.config import SourceBindingsConfig
 
 
 class DatasetSourceChoice(ABC):
@@ -89,7 +89,7 @@ class DatasetSourceChoice(ABC):
         """Construct the selected source bound to ``root``."""
 
         from openhcs.core.dataset_sources.source import DeclaredFileSource
-        from openhcs.core.source_bindings import source_bindings_defaults_to_base
+        from openhcs.core.config import source_bindings_defaults_to_base
 
         root = Path(root)
         source_bindings = (

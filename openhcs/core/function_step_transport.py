@@ -36,19 +36,16 @@ class FunctionStepTransportAuthority:
     ) -> str:
         """Normalize and pycodify one public FunctionStep list."""
         import openhcs.serialization.pycodify_formatters  # noqa: F401
-        from pycodify import Assignment
-        from openhcs.serialization.source_path_factoring import (
-            OpenHCSPythonSourceDocument,
-        )
+        from pycodify import Assignment, generate_python_source
 
         steps = list(pipeline_steps)
         cls._require_function_steps(steps)
         normalized = cls.normalize_pipeline(steps)
-        return OpenHCSPythonSourceDocument(
+        return generate_python_source(
             Assignment(PipelineDocumentField.PIPELINE_STEPS.value, normalized),
             header="# Edit this pipeline and save to apply changes",
             clean_mode=clean_mode,
-        ).render()
+        )
 
     @classmethod
     def pipeline_steps_from_namespace(

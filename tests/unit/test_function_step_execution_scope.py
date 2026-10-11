@@ -291,7 +291,7 @@ def test_runtime_artifact_batch_is_exact_immutable_contract_selection() -> None:
     )
 
     assert batch.input_specs == (spec,)
-    assert batch.source_binding_plan.is_empty
+    assert batch.source_binding_plan == CompiledSourceBindingPlan()
     assert isinstance(batch.records_by_axis, MappingProxyType)
     assert batch.require_parameter_name() == "artifact_batch"
     parameter = batch.parameter()

@@ -6,9 +6,9 @@ from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
-    SourceBindingsConfig,
     SourceSelector,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_matching import (
     SourceImageSetIdentity,

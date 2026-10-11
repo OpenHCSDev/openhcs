@@ -21,9 +21,9 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.source_bindings import (
     MetadataSelector,
     NamedSourceBinding,
-    SourceBindingsConfig,
     SourceSelector,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_image_provenance import SourceImageIdentity
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.viewer_streaming_service import ViewerStreamingSource

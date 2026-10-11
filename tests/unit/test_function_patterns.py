@@ -686,7 +686,7 @@ def test_special_input_without_main_flow_edge_preserves_implicit_image_flow() ->
 
     compiled = compile_function_pattern(admitted_graph(measure), {}, {})
 
-    assert compiled.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) is None
+    assert compiled.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan()) is None
 
 
 def test_unstored_positional_artifact_does_not_override_compiled_main_flow() -> None:
@@ -717,7 +717,7 @@ def test_unstored_positional_artifact_does_not_override_compiled_main_flow() -> 
         invocations=(invocation.with_artifact_input_edges((edge,)),),
     )
 
-    assert group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) is None
+    assert group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan()) is None
 
 
 def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
@@ -786,10 +786,10 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
         component=Microscopy.Channel,
     )
 
-    assert group.main_flow_input_refs_for_component(execution_scope, "1", source_bindings=CompiledSourceBindingPlan.empty()) == (
+    assert group.main_flow_input_refs_for_component(execution_scope, "1", source_bindings=CompiledSourceBindingPlan()) == (
         blue.ref(),
     )
-    assert group.main_flow_input_refs_for_component(execution_scope, "2", source_bindings=CompiledSourceBindingPlan.empty()) == (
+    assert group.main_flow_input_refs_for_component(execution_scope, "2", source_bindings=CompiledSourceBindingPlan()) == (
         green.ref(),
     )
     green_outputs = invocation.output_plans_for_component(execution_scope, "2")
@@ -988,7 +988,7 @@ def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
 
     compiled = compile_function_pattern(admitted_graph(consume), {}, {})
 
-    assert compiled.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) == ()
+    assert compiled.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan()) == ()
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.pipeline.framework_device_assignment import (
         assign_framework_devices,
@@ -1819,10 +1819,10 @@ def test_artifact_binding_owner_does_not_erase_undeclared_raw_image_demand():
     group = replace(compiled.default_group, invocations=(invocation,))
     assert invocation.adapter_manages_artifact_inputs
     assert invocation.contract.accepts_implicit_main_flow_input
-    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None, source_bindings=CompiledSourceBindingPlan.empty()) is None
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None, source_bindings=CompiledSourceBindingPlan()) is None
     primary = replace(edge, main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD)
     group = replace(group, invocations=(invocation.with_artifact_input_edges((primary,)),))
-    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None, source_bindings=CompiledSourceBindingPlan.empty()) == (primary,)
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None, source_bindings=CompiledSourceBindingPlan()) == (primary,)
 
 
 def test_table_context_cannot_stand_in_for_an_image_cohort():
@@ -1841,4 +1841,4 @@ def test_table_context_cannot_stand_in_for_an_image_cohort():
         parameter_name=None,
     )
     group = replace(compiled.default_group, invocations=(invocation.with_artifact_input_edges((edge,)),))
-    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None, source_bindings=CompiledSourceBindingPlan.empty()) is None
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None, source_bindings=CompiledSourceBindingPlan()) is None

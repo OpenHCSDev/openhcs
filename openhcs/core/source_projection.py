@@ -41,6 +41,7 @@ from openhcs.core.source_metadata import (
     source_metadata_scalar,
 )
 from python_introspect import to_jsonable
+from openhcs.core.source_path_identity import source_path_posix
 from openhcs.core.axes import Axis, AxisFamily, PartitionAxis, StackAxis, TileAxis
 
 
@@ -323,7 +324,7 @@ class SourceCandidate:
     def __post_init__(self) -> None:
         if not isinstance(self.source_ref, SourcePixelRef):
             raise TypeError("SourceCandidate.source_ref must be SourcePixelRef.")
-        relative_path = Path(str(self.relative_path)).as_posix()
+        relative_path = source_path_posix(str(self.relative_path))
         if not relative_path:
             raise ValueError("SourceCandidate.relative_path cannot be empty.")
         source_axis_shape = tuple(self.source_axis_shape)
@@ -348,7 +349,7 @@ class SourceCandidate:
                 )
         source_filter_paths = tuple(
             dict.fromkeys(
-                Path(str(path)).as_posix() for path in self.source_filter_paths
+                source_path_posix(str(path)) for path in self.source_filter_paths
             )
         )
         if any(not path for path in source_filter_paths):

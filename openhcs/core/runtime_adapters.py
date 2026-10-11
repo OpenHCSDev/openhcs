@@ -75,7 +75,7 @@ class RuntimeAdapterRequest:
     artifact_outputs: Mapping[ArtifactSpecRef, ArtifactOutputPlan] = field(
         default_factory=dict
     )
-    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan.empty()
+    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan()
     group_key: str | None = None
     axis_scope: RuntimeExecutionAxisScope
     plane_projection: RuntimePlaneProjection = field(

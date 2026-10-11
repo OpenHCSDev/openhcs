@@ -32,9 +32,8 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
-    SourceBindingsConfig,
+    PairByMetadata,
+    PairByOrder,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
@@ -42,6 +41,7 @@ from openhcs.core.source_bindings import (
     SourceSetRole,
     SourceSelector,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.dataset_sources.plane_stores import SourcePlaneStoreAdapter
 from openhcs.core.dataset_sources.openhcs_format import (
@@ -600,7 +600,7 @@ def test_source_binding_workspace_remaps_store_addresses_and_labels(tmp_path):
                 ),
             ),
             bindings=(binding("DNA", "1"), binding("RNA", "2")),
-            match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+            match_plan=PairByOrder(),
         ),
         parser=SourceSchemaFilenameParser(),
     )
@@ -667,9 +667,7 @@ def test_source_binding_workspace_projects_declared_groups_to_wells(tmp_path):
                     component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
             ),
-            match_plan=SourceBindingMatchPlan(
-                method=SourceBindingMatchMethod.ORDER,
-            ),
+            match_plan=PairByOrder(),
             grouping_metadata_fields=("Run",),
         ),
         parser=SourceSchemaFilenameParser(),
@@ -718,9 +716,7 @@ def test_source_binding_workspace_projects_registered_well_parts(tmp_path):
                 ),
             ),
             bindings=(NamedSourceBinding(alias="DNA"),),
-            match_plan=SourceBindingMatchPlan(
-                method=SourceBindingMatchMethod.ORDER,
-            ),
+            match_plan=PairByOrder(),
             grouping_metadata_fields=("WellRow", "WellCol"),
         )
     )
@@ -763,9 +759,7 @@ def test_group_address_preserves_distinct_source_well_as_literal_metadata(tmp_pa
                     component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
             ),
-            match_plan=SourceBindingMatchPlan(
-                method=SourceBindingMatchMethod.ORDER,
-            ),
+            match_plan=PairByOrder(),
             grouping_metadata_fields=("Run",),
         ),
         parser=SourceSchemaFilenameParser(),
@@ -847,9 +841,7 @@ def test_source_binding_workspace_projector_order_matches_aliases(tmp_path):
                     ),
                 ),
             ),
-            match_plan=SourceBindingMatchPlan(
-                method=SourceBindingMatchMethod.ORDER,
-            ),
+            match_plan=PairByOrder(),
         )
     ).projection_set(tmp_path, (dapi, actin), filemanager=_filemanager())
 
@@ -930,7 +922,7 @@ def test_order_source_sets_join_imported_metadata_across_aliases(tmp_path):
                 component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
         ),
-        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
         imported_metadata_tables=(
             ImportedMetadataTable(
                 location="metadata/plate.csv",
@@ -997,7 +989,7 @@ def test_order_source_sets_preserve_shared_virtual_stack_coordinates(tmp_path):
                     component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
                 ),
             ),
-            match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+            match_plan=PairByOrder(),
             source_stack_components=(Microscopy.ZIndex,),
         )
     ).projection_set(
@@ -1048,17 +1040,14 @@ def test_metadata_source_sets_propagate_imported_metadata(tmp_path):
             )
             for alias in ("DNA", "Actin")
         ),
-        match_plan=SourceBindingMatchPlan(
-            SourceBindingMatchMethod.METADATA,
-            dimensions=(
+        match_plan=PairByMetadata(dimensions=(
                 SourceBindingMatchDimension(
                     fields=tuple(
                         SourceBindingMatchField(alias, "Well")
                         for alias in ("DNA", "Actin")
                     ),
                 ),
-            ),
-        ),
+            )),
         imported_metadata_tables=(
             ImportedMetadataTable(
                 location="plate.csv",
@@ -1194,14 +1183,11 @@ def test_imported_metadata_coerces_join_and_payload_values_through_declared_type
             ),
         ),
         bindings=(NamedSourceBinding(alias="DNA"),),
-        match_plan=SourceBindingMatchPlan(
-            SourceBindingMatchMethod.METADATA,
-            dimensions=(
+        match_plan=PairByMetadata(dimensions=(
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("DNA", "Site"),),
                 ),
-            ),
-        ),
+            )),
         imported_metadata_tables=(
             ImportedMetadataTable(
                 location="plate.csv",
@@ -1285,7 +1271,7 @@ def test_imported_metadata_rejects_conflicting_or_unmatched_complete_joins(
             for stain in ("DNA", "Actin")
             if any(name.endswith(f"_{stain}.tif") for name in image_names)
         ),
-        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
         imported_metadata_tables=(
             ImportedMetadataTable(
                 location="plate.csv",
@@ -1610,7 +1596,7 @@ def test_source_binding_workspace_projector_expands_declared_source_stack(tmp_pa
                     ),
                 ),
             ),
-            match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+            match_plan=PairByOrder(),
             source_stack_components=(Microscopy.ZIndex,),
         )
     ).projection_set(tmp_path, (stack,), filemanager=_filemanager())
@@ -1658,7 +1644,7 @@ def test_order_source_sets_pair_expanded_stack_planes_across_aliases(tmp_path):
                     ),
                 ),
             ),
-            match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+            match_plan=PairByOrder(),
             source_stack_components=(Microscopy.ZIndex,),
         )
     ).projection_set(
@@ -1722,7 +1708,7 @@ def test_source_binding_workspace_projector_order_uses_shortest_member_count(
                     ),
                 ),
             ),
-            match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+            match_plan=PairByOrder(),
         )
     )
 
@@ -1775,7 +1761,7 @@ def test_source_binding_workspace_broadcasts_explicit_single_members(tmp_path):
                 ),
             ),
             image_plane_sources=(explicit_source,),
-            match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+            match_plan=PairByOrder(),
         )
     )
 
@@ -1845,17 +1831,14 @@ def test_metadata_source_sets_reuse_declared_partial_match_members(tmp_path):
                     ),
                 ),
             ),
-            match_plan=SourceBindingMatchPlan(
-                SourceBindingMatchMethod.METADATA,
-                dimensions=(
+            match_plan=PairByMetadata(dimensions=(
                     SourceBindingMatchDimension(
                         fields=(SourceBindingMatchField("DAPI", "Well"),),
                     ),
                     SourceBindingMatchDimension(
                         fields=(SourceBindingMatchField("DAPI", "Site"),),
                     ),
-                ),
-            ),
+                )),
         )
     )
 
@@ -1915,7 +1898,7 @@ def test_source_binding_workspace_materializes_artifact_only_matched_groups(
                     ("SecondObjects", second),
                 )
             ),
-            match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+            match_plan=PairByOrder(),
         ),
         parser=SourceSchemaFilenameParser(),
     )

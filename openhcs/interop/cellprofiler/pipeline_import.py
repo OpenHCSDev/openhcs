@@ -28,6 +28,8 @@ from openhcs.core.config import (
     LazyStepSourceBindingsConfig,
     PipelineConfig,
     ProcessingConfig,
+    SourceBindingsConfig,
+    StepSourceBindingsConfig,
 )
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
@@ -43,11 +45,7 @@ from openhcs.core.pipeline.artifact_planning import (
     ArtifactProducer,
     extract_artifact_declarations,
 )
-from openhcs.core.source_bindings import (
-    SourceBindingsConfig,
-    StepSourceBindingsConfig,
-    source_binding_group_keys_for_group_by,
-)
+from openhcs.core.source_bindings import source_binding_group_keys_for_group_by
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.vfs_protocol import FileManagerLike
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule

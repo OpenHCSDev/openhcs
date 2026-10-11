@@ -13,11 +13,14 @@ from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import ArtifactViewerStreaming
-from openhcs.core.config import GlobalPipelineConfig, LazyNapariStreamingConfig
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    LazyNapariStreamingConfig,
+    source_bindings_defaults_to_base,
+)
 from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
-from openhcs.core.source_bindings import source_bindings_defaults_to_base
 from openhcs.core.source_workspace_projection import (
     WorkspaceSourceProjections,
 )

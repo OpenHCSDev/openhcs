@@ -48,7 +48,8 @@ from openhcs.processing.materialization import (
 
 from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.source_bindings import CompiledSourceBindingPlan, StepSourceBindingsConfig
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_step import FunctionStep
 
@@ -242,7 +243,7 @@ class ArtifactGraph:
         default_factory=StepInputDependency.unresolved
     )
     source_binding_plan: CompiledSourceBindingPlan = field(
-        default_factory=CompiledSourceBindingPlan.empty
+        default_factory=CompiledSourceBindingPlan
     )
     _input_lineage_order: (
         tuple[tuple[ArtifactSpecRef, tuple[ArtifactSpecRef, ...]], ...] | None
@@ -378,8 +379,7 @@ class ArtifactGraph:
         context: ArtifactDeclarationStepContext,
     ) -> "ArtifactGraph":
         """Capture fixed source routing once per graph."""
-        binding_plan = CompiledSourceBindingPlan.from_contracts(
-            config,
+        binding_plan = config.compiled_plan_for_contracts(
             () if self.pattern is None else (
                 item.contract for item in self.pattern.iter_items()
             ),

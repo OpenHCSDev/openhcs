@@ -666,10 +666,8 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
     )
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.source_bindings import (
-        NamedSourceBinding,
-        StepSourceBindingsConfig,
-    )
+    from openhcs.core.source_bindings import NamedSourceBinding
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
@@ -870,11 +868,8 @@ def test_cellprofiler_invocation_contract_uses_one_complete_step_context() -> No
         ArtifactSpecCollection,
         ImageArtifactType,
     )
-    from openhcs.core.source_bindings import (
-        ComponentSelector,
-        NamedSourceBinding,
-        StepSourceBindingsConfig,
-    )
+    from openhcs.core.source_bindings import ComponentSelector, NamedSourceBinding
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.processing.backends.cellprofiler import (
         correct_illumination_calculate,
@@ -1037,9 +1032,7 @@ def test_cellprofiler_invocation_contract_accepts_main_flow_input_without_bindin
         ArtifactSpecCollection,
         ImageArtifactType,
     )
-    from openhcs.core.source_bindings import (
-        StepSourceBindingsConfig,
-    )
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.processing.backends.cellprofiler import color_to_gray
     from openhcs.processing.backends.cellprofiler.color import ColorToGrayMode
@@ -1089,10 +1082,8 @@ def test_align_omission_probe_rejects_insufficient_static_source_without_throwin
         ArtifactSpecCollection,
         ImageArtifactType,
     )
-    from openhcs.core.source_bindings import (
-        NamedSourceBinding,
-        StepSourceBindingsConfig,
-    )
+    from openhcs.core.source_bindings import NamedSourceBinding
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.processing.backends.cellprofiler import align
 
@@ -1132,10 +1123,8 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
     )
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.source_bindings import (
-        NamedSourceBinding,
-        StepSourceBindingsConfig,
-    )
+    from openhcs.core.source_bindings import NamedSourceBinding
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
@@ -1193,10 +1182,8 @@ def test_cellprofiler_invocation_contract_allows_source_binding_supersets() -> N
         ArtifactSpecCollection,
         ImageArtifactType,
     )
-    from openhcs.core.source_bindings import (
-        NamedSourceBinding,
-        StepSourceBindingsConfig,
-    )
+    from openhcs.core.source_bindings import NamedSourceBinding
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.processing.backends.cellprofiler import color_to_gray
     from openhcs.processing.backends.cellprofiler.color import ColorToGrayMode
@@ -1258,11 +1245,8 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.source_bindings import (
-        NamedSourceBinding,
-        SourceProjectionRole,
-        StepSourceBindingsConfig,
-    )
+    from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,

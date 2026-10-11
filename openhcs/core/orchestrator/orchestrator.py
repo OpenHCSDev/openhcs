@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
 from openhcs.constants.constants import Backend, OrchestratorState
 from openhcs.core.compiled_execution import CompiledExecutionBundle
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config import GlobalPipelineConfig, source_bindings_defaults_to_base
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
@@ -22,7 +22,6 @@ from openhcs.core.metadata_cache import MetadataCache
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.source_binding_context import SourceBindingContext
-from openhcs.core.source_bindings import source_bindings_defaults_to_base
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.steps.abstract import AbstractStep
 

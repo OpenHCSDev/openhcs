@@ -33,8 +33,8 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
+    PairByOrder,
     SourceBindingOrigin,
     SourceSelector,
 )
@@ -120,8 +120,8 @@ def test_artifact_only_group_declares_no_source_anchor_bindings() -> None:
         pattern_filter.source_anchor_bindings(
             compiled.default_group,
             component_value=None,
-        )
-        is None
+        ).binding_declarations
+        == ()
     )
 
 
@@ -169,10 +169,7 @@ def _filter_source_anchors(
     )
     source_binding_plan = CompiledSourceBindingPlan(
         bindings=compiled_bindings,
-        match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=_match_dimensions(dimension_aliases or aliases),
-        ),
+        match_plan=PairByMetadata(dimensions=_match_dimensions(dimension_aliases or aliases)),
     )
     declared_specs = tuple(binding.input_spec() for binding in compiled_bindings)
     source_aligned_outputs = tuple(
@@ -404,10 +401,7 @@ def test_grouped_branches_project_their_exact_contract_bindings(
     aliases = tuple(binding.alias for binding in compiled_bindings)
     source_binding_plan = CompiledSourceBindingPlan(
         bindings=compiled_bindings,
-        match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=_match_dimensions(aliases),
-        ),
+        match_plan=PairByMetadata(dimensions=_match_dimensions(aliases)),
     )
 
     @artifact_inputs(compiled_bindings[0].input_spec())
@@ -596,9 +590,7 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=bindings,
-            match_plan=SourceBindingMatchPlan(
-                method=SourceBindingMatchMethod.ORDER,
-            ),
+            match_plan=PairByOrder(),
         ),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1", "2"),
@@ -720,9 +712,7 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=bindings,
-            match_plan=SourceBindingMatchPlan(
-                method=SourceBindingMatchMethod.ORDER,
-            ),
+            match_plan=PairByOrder(),
         ),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1", "2"),

@@ -34,13 +34,13 @@ from openhcs.core.config import (
     LazyStepMaterializationConfig,
     LazyPartitionFilterConfig,
     PipelineConfig,
+    LazySourceBindingsConfig,
+    LazyStepSourceBindingsConfig,
 )
 from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.source_bindings import (
     ComponentSelector,
-    LazySourceBindingsConfig,
-    LazyStepSourceBindingsConfig,
     NamedSourceBinding,
     SourceFilterClause,
     SourceFilterMatchType,

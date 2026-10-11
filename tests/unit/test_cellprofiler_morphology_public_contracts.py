@@ -20,7 +20,12 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.config import DtypeConfig, GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config import (
+    DtypeConfig,
+    GlobalPipelineConfig,
+    PipelineConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.function_patterns import (
@@ -32,11 +37,7 @@ from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.source_bindings import (
-    NamedSourceBinding,
-    SourceProjectionRole,
-    StepSourceBindingsConfig,
-)
+from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.runtime_object_labels import ObjectLabelValue

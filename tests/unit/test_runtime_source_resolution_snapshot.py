@@ -16,6 +16,7 @@ from openhcs.core.source_binding_selection import (
 from openhcs.core.source_bindings import (
     MetadataExtractionRule,
     MetadataSource,
+    PairByOrder,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_image_provenance import SourceImageIdentity
@@ -198,7 +199,7 @@ def test_matched_set_preserves_resolved_record_behavior_and_precedence():
     )
     matched = SourceBindingMatchedImageSet.from_plan(
         bindings=(),
-        match_plan=None,
+        match_plan=PairByOrder(),
         source_context=context,
         identity_policy=SourceImageSetIdentityPolicy(),
     )

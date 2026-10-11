@@ -44,7 +44,13 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_artifact_values import RuntimeValue
-from openhcs.core.config import ProcessingConfig, StepMaterializationConfig
+from openhcs.core.config import (
+    ProcessingConfig,
+    StepMaterializationConfig,
+    EMPTY_SOURCE_BINDINGS,
+    SourceBindingsConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     CompositeInvocationContractProvider,
@@ -99,12 +105,9 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
     ComponentSelector,
-    EMPTY_SOURCE_BINDINGS,
     NamedSourceBinding,
     SourceBindingOrigin,
-    SourceBindingsConfig,
     SourceProjectionRole,
-    StepSourceBindingsConfig,
 )
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.step_dependencies import StepInputDependencyKind
@@ -131,7 +134,7 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
         step_name="metadata-consumer",
         axis_id="A01",
         input_memory_type=MEMORY_TYPE_NUMPY,
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         variable_components=(),
         execution_group_scope=ComponentGroupScope.ungrouped(),
         compiled_function_pattern=compiled,
@@ -374,15 +377,10 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
     declarations, pattern, _, contracts = _prepare_step_declarations(planner,
         snapshot, 3
     )
-    execution_bindings = CompiledSourceBindingPlan.from_contracts(
-        snapshot.source_bindings,
-        contracts,
-        StepInputDependency.step_output(
+    execution_bindings = snapshot.source_bindings.compiled_plan_for_contracts(contracts, StepInputDependency.step_output(
             source_step_index=2,
             source_step_scope_id="plate::functionstep_2",
-        ),
-        planner.artifact_context.available_artifacts,
-    )
+        ), planner.artifact_context.available_artifacts)
     execution_group_scope = planner.execution_groups.get_execution_groups(
         snapshot,
         PathPlannerComponentScopes.empty(),
@@ -409,7 +407,7 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
         declarations=planner.artifacts.inject_metadata(declarations),
     )
 
-    assert execution_bindings == CompiledSourceBindingPlan.empty()
+    assert execution_bindings == CompiledSourceBindingPlan()
     assert execution_group_scope == PathPlannerGroupScope.dynamic(Microscopy.Channel)
     assert runtime_input_plans == {}
     assert compiled is not None
@@ -628,12 +626,7 @@ def test_plate_artifact_consumer_omits_inherited_source_plans():
         callable_scope,
         contracts,
     ) = _prepare_step_declarations(planner, snapshot, 3)
-    execution_bindings = CompiledSourceBindingPlan.from_contracts(
-        snapshot.source_bindings,
-        contracts,
-        StepInputDependency.no_main_flow(),
-        planner.artifact_context.available_artifacts,
-    )
+    execution_bindings = snapshot.source_bindings.compiled_plan_for_contracts(contracts, StepInputDependency.no_main_flow(), planner.artifact_context.available_artifacts)
     maps = planner.artifacts.compile_plan_maps(
         snapshot,
         3,
@@ -4185,12 +4178,7 @@ def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
             ),
     )
 
-    contract_bindings = CompiledSourceBindingPlan.from_contracts(
-        snapshot.source_bindings,
-        (source_contract,),
-        StepInputDependency.pipeline_start(),
-        planner.artifact_context.available_artifacts,
-    )
+    contract_bindings = snapshot.source_bindings.compiled_plan_for_contracts((source_contract,), StepInputDependency.pipeline_start(), planner.artifact_context.available_artifacts)
     source_anchor_specs = tuple(
         binding.input_spec() for binding in contract_bindings.primary_plane_bindings
     )
@@ -4337,12 +4325,7 @@ def test_execution_anchor_ignores_source_artifact_lineage():
         artifact_inputs=(original_blue, rgb_image),
     )
 
-    contract_bindings = CompiledSourceBindingPlan.from_contracts(
-        snapshot.source_bindings,
-        (source_contract,),
-        StepInputDependency.pipeline_start(),
-        planner.artifact_context.available_artifacts,
-    )
+    contract_bindings = snapshot.source_bindings.compiled_plan_for_contracts((source_contract,), StepInputDependency.pipeline_start(), planner.artifact_context.available_artifacts)
     source_anchor_specs = tuple(
         binding.input_spec() for binding in contract_bindings.primary_plane_bindings
     )
@@ -4629,8 +4612,8 @@ def test_compiled_group_by_preserves_dynamic_execution_scope():
         inputs={},
         outputs={},
         relation_source_scopes={},
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
-        source_universe_plan=CompiledSourceUniversePlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
+        source_universe_plan=CompiledSourceUniversePlan(),
     )
 
     planner.steps.update_core_step_plan(

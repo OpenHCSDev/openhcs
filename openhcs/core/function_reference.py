@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-import builtins
 import dataclasses
 import importlib
 import inspect
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from types import ModuleType
 from typing import TYPE_CHECKING, ClassVar, TypeVar
 
+from pycodify import FormatContext, PythonSourceLiteral, SourceFragment, imported_name
 from python_introspect import Enableable
 
 from openhcs.core.callable_contract import (
@@ -21,7 +21,6 @@ from openhcs.core.callable_contract import (
     FunctionStepExecutionScope,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.python_source_literal import PythonSourceLiteral
 
 if TYPE_CHECKING:
     from openhcs.core.steps.abstract import AbstractStep
@@ -78,24 +77,10 @@ class FunctionReference(PythonSourceLiteral, ABC):
     def source_expression(self, imported_name: str) -> str:
         """Render through the source authority, including pycodify name aliases."""
 
-    def source_literal(self) -> str:
-        return self.source_expression(self.source_import_identity.function_name)
-
-    def source_literal_with_names(
-        self, name_mappings: Mapping[tuple[str, str], str],
-    ) -> str:
+    def source_fragment(self, context: FormatContext) -> SourceFragment:
         identity = self.source_import_identity
-        imported_name = name_mappings.get(
-            (identity.module_name, identity.function_name), identity.function_name,
-        )
-        return self.source_expression(imported_name)
-
-    def source_literal_imports(self) -> frozenset[tuple[str, str]]:
-        imports = super().source_literal_imports()
-        identity = self.source_import_identity
-        if identity.module_name == builtins.__name__:
-            return imports
-        return imports | frozenset({(identity.module_name, identity.function_name)})
+        name = imported_name(identity.module_name, identity.function_name, context)
+        return SourceFragment(self.source_expression(name.code), name.imports)
 
     @abstractmethod
     def resolve(self) -> Callable:

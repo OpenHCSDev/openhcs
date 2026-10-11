@@ -36,6 +36,7 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.step_dependencies import (
     StepInputDependency,
     StepInputDependencyKind,
@@ -132,7 +133,7 @@ def test_compiled_step_plan_is_the_runtime_plan_owner():
     assert plan.variable_components == (Microscopy.Site,)
     assert plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
     assert plan.main_input_dependency.source_step_scope_id == "plate::functionstep_1"
-    assert plan.source_binding_plan.is_empty
+    assert plan.source_binding_plan == CompiledSourceBindingPlan()
     assert plan.device_id_for(plan.input_memory_type) is None
     assert not plan.requires_gpu
     assert plan.gpu_memory_types == frozenset()

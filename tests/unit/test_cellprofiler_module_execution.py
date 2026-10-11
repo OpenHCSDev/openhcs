@@ -3264,7 +3264,7 @@ def test_object_output_measurements_derive_count_and_locations_from_output_label
         wants_relationship_tables=False,
     )
     projection = CellProfilerAnalystProjectionBuilder(
-        source_binding_plan=CompiledSourceBindingPlan.empty()
+        source_binding_plan=CompiledSourceBindingPlan()
     ).build(batch, settings, ())
     assert projection.image_table.rows[0]["Image_Count_Cells"] == 2
 

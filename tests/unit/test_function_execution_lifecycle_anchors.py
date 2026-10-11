@@ -179,7 +179,7 @@ def test_source_anchored_group_uses_exact_main_flow_producer_manifest() -> None:
             source_step_index=2,
             source_step_scope_id="exact-main-flow-producer",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         execution_group_value=None,
         execution_group_scope=ComponentGroupScope.ungrouped(),
         compiled_function_pattern=compiled_pattern,

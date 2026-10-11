@@ -32,13 +32,13 @@ from openhcs.core.source_metadata import (
     SourceMetadataFields,
     SourceMetadataScalar,
     SourceMetadataValue,
-    path_metadata_values_equivalent,
+    normalized_path_metadata_value,
     source_metadata_field_identity,
     source_metadata_component,
     source_metadata_dict,
     source_metadata_scalar,
 )
-from openhcs.core.source_path_identity import source_path_identity_key
+from openhcs.core.source_path_identity import source_path_identity_key, source_path_posix
 from openhcs.core.axes import Axis, AxisFamily
 
 if TYPE_CHECKING:
@@ -318,7 +318,7 @@ def metadata_source_texts(
 
     path = Path(file_path)
     if source is MetadataSource.FOLDER_NAME:
-        parent_path = path.parent.as_posix()
+        parent_path = source_path_posix(path.parent)
         parent_name = path.parent.name
         if parent_path == parent_name:
             return (parent_name,)
@@ -665,7 +665,8 @@ def merge_source_metadata(
             and not (
                 isinstance(existing, str)
                 and isinstance(normalized_value, str)
-                and path_metadata_values_equivalent(existing, normalized_value)
+                and normalized_path_metadata_value(existing)
+                == normalized_path_metadata_value(normalized_value)
             )
         ):
             raise RuntimeError(

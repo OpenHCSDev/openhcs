@@ -98,10 +98,7 @@ class PipelineDocumentCodec:
         """Render a validated pipeline document as reviewable Python source."""
 
         import openhcs.serialization.pycodify_formatters  # noqa: F401
-        from pycodify import Assignment, BlankLine, CodeBlock
-        from openhcs.serialization.source_path_factoring import (
-            OpenHCSPythonSourceDocument,
-        )
+        from pycodify import Assignment, BlankLine, CodeBlock, generate_python_source
 
         normalized = cls.from_values(
             pipeline_config=document.pipeline_config,
@@ -120,11 +117,11 @@ class PipelineDocumentCodec:
                 ),
             )
         )
-        return OpenHCSPythonSourceDocument(
+        return generate_python_source(
             body,
             header=cls.HEADER,
             clean_mode=clean_mode,
-        ).render()
+        )
 
     @staticmethod
     def _require_pipeline_config(value: object) -> None:

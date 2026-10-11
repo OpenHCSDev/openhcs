@@ -48,7 +48,8 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_bindings import NamedSourceBinding, StepSourceBindingsConfig
+from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule

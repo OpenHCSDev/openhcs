@@ -21,7 +21,7 @@ from openhcs.core.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
     materialize_source_binding_workspace,
 )
-from openhcs.core.source_bindings import source_bindings_defaults_to_base
+from openhcs.core.config import source_bindings_defaults_to_base
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 

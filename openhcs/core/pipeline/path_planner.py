@@ -49,7 +49,11 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.config import PathPlanningConfig
+from openhcs.core.config import (
+    PathPlanningConfig,
+    EMPTY_SOURCE_BINDINGS,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.pipeline.artifact_planning import (
     ArtifactGraph,
     ArtifactOutputMaterializationPlanner,
@@ -62,8 +66,6 @@ from openhcs.core.pipeline.compilation_session import (
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
-    EMPTY_SOURCE_BINDINGS,
-    StepSourceBindingsConfig,
     SourceBindingDeclarationsMixin,
     source_binding_group_keys_for_group_by,
 )
@@ -661,12 +663,11 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             source_bindings
             if isinstance(source_bindings, CompiledSourceBindingPlan)
             else (
-                CompiledSourceBindingPlan.from_config(
-                    source_bindings,
+                source_bindings.compiled_plan(
                     realized_source_metadata=self.planner.session.realized_source_metadata,
                 )
                 if source_bindings.binding_declarations
-                else CompiledSourceBindingPlan.empty()
+                else CompiledSourceBindingPlan()
             )
         )
         source_universe_plan = CompiledSourceUniversePlan.from_source_binding_plan(

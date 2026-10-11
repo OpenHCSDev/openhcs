@@ -20,14 +20,13 @@ from openhcs.core.source_bindings import (
     MetadataExtractionRule,
     MetadataSource,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
-    SourceBindingsConfig,
+    PairByOrder,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -49,7 +48,7 @@ def _two_channel_config(
                 ),
             ),
         ),
-        match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
         source_filters=(
             SourceFilterClause(
                 subject=SourceFilterSubject.EXTENSION,

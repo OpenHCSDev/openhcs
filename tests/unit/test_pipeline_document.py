@@ -163,10 +163,7 @@ def test_render_revalidates_direct_pipeline_document_instances() -> None:
 def test_pipeline_document_preserves_intrinsic_volume_source_declaration():
     import pickle
     from openhcs.core.config import LazySourceBindingsConfig
-    from openhcs.core.source_bindings import (
-        CompiledSourceBindingPlan,
-        StepSourceBindingsConfig,
-    )
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
 
     domain = VolumeSourceSpatialDomain()
@@ -183,7 +180,5 @@ def test_pipeline_document_preserves_intrinsic_volume_source_declaration():
     assert (
         restored.pipeline_config.source_bindings_config.source_spatial_domain == domain
     )
-    plan = CompiledSourceBindingPlan.from_config(
-        StepSourceBindingsConfig(source_spatial_domain=domain)
-    )
+    plan = StepSourceBindingsConfig(source_spatial_domain=domain).compiled_plan()
     assert pickle.loads(pickle.dumps(plan)).source_spatial_domain == domain

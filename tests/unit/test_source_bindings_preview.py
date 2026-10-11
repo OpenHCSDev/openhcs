@@ -7,16 +7,14 @@ from openhcs.core.source_bindings import (
     MetadataSource,
     MetadataSelector,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByOrder,
     SourceBindingOrigin,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
 from openhcs.core.source_bindings_preview import (
     SourceBindingDiagnosticSeverity,
     SourceBindingsPreview,
@@ -88,7 +86,7 @@ def test_source_bindings_preview_reuses_typed_filter_and_order_matching(tmp_path
                 origin=SourceBindingOrigin.PIPELINE_START,
             ),
         ),
-        match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
     )
     inventory = SourceInventory.from_paths(
         tuple(sorted(source_root.iterdir())),

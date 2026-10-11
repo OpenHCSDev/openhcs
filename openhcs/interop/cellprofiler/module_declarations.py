@@ -27,13 +27,14 @@ from openhcs.core.callable_contract import (
     CompilerPreparedAutoRegisterFamily,
     FunctionStepExecutionScope,
 )
-from openhcs.core.config import ProcessingConfig, StepSourceBindingsConfig
+from openhcs.core.config import (
+    ProcessingConfig,
+    StepSourceBindingsConfig,
+    SourceBindingsConfig,
+)
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     ArtifactInputPlan,
-)
-from openhcs.core.source_bindings import (
-    SourceBindingsConfig,
 )
 from openhcs.interop.cellprofiler.module_artifact_contracts import (
     CellProfilerModuleArtifactContracts,
@@ -429,7 +430,7 @@ class CellProfilerModule(
         config: "SourceBindingsConfig",
     ) -> "SourceBindingsConfig":
         """Fold enabled modules into one public source-binding configuration."""
-        from openhcs.core.source_bindings import SourceBindingsConfig
+        from openhcs.core.config import SourceBindingsConfig
 
         if not isinstance(config, SourceBindingsConfig):
             raise TypeError(
