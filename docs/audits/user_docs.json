@@ -1160,7 +1160,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "781bd20677f309152ad4041bd7d62d5aca9ea802bd9a0a201a96ad187bb7b05f",
+        "sha256": "5b8e9a8e150c07e2a003b1d7ada05711f6a2936ece1833c2a421edcb2802fddd",
         "role": "Exercises Windows and macOS native installers, staged updates, and cellprofiler-compat installation on Python 3.14."
       },
       {
@@ -1172,6 +1172,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against .github/workflows/integration-tests.yml: the unit-tests job now runs three file-isolated xdist workers; no claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/getting_started/getting_started.rst in full and compared it against the changed authorities: pyproject.toml (python-introspect 0.2.8), openhcs/mcp/installed_demo.py, openhcs/desktop/update.py, openhcs/desktop/update_worker.py, openhcs/desktop/deployment.py and tests/unit/desktop/test_desktop_update_worker.py (E1: update-check origin, failed-update response and runtime platform became class families); the page names none of those types; the extras, Python range, openhcs and openhcs-mcp-demo scripts, and the verified-replacement update with the previous environment preserved are unchanged, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/getting_started/getting_started.rst in full and compared it against the changed authorities: pyproject.toml (first-party floors moved to zmqruntime 0.6.2, pycodify 0.2, objectstate 2.1.1, python-introspect 0.2.7, pyqt-reactive 0.5). The page states no dependency floors; rechecked requires-python (3.11-3.14) and every named extra (gui, viz, bioformats, mcp, cellprofiler-compat, napari, fiji, gpu) against pyproject.toml; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against B6's later changes to openhcs/mcp/installed_demo.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
@@ -2796,7 +2797,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "781bd20677f309152ad4041bd7d62d5aca9ea802bd9a0a201a96ad187bb7b05f",
+        "sha256": "5b8e9a8e150c07e2a003b1d7ada05711f6a2936ece1833c2a421edcb2802fddd",
         "role": "Defines the operating-system integration matrix, the Python 3.14 core job, the scoped four-platform Official30 parity lane and its required check, installed-wheel GUI/MCP operation, installer screenshot artifacts, and source-gate coverage artifacts used by CI."
       },
       {
@@ -2928,6 +2929,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/guides/testing_guide.rst against .github/workflows/integration-tests.yml: the unit-tests job now runs three file-isolated xdist workers; no claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/guides/testing_guide.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/config.py; the diff renames AgentRuntimePlatformAuthority to AgentRuntimePlatform and adds GuiLogLevel.emits_records; LoggingConfig and its default log directory, which the debugging section relies on, are unchanged, so no correction was needed.",
       "On 2026-10-11 (B6), re-read docs/source/guides/testing_guide.rst in full and compared it against the changed authority openhcs/core/xdg_paths.py (legacy ~/.openhcs migration helpers deleted; get_*_file_path now plain path joins); the page's log-location claim (get_openhcs_data_dir() / \"logs\", honouring XDG_DATA_HOME, default ~/.local/share/openhcs/logs) still holds and the page never described the deleted migration, so no correction was needed.",
       "On 2026-10-11 (B6 final), compared docs/source/guides/testing_guide.rst against B6's later changes to .github/workflows/integration-tests.yml: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",

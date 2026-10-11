@@ -3533,7 +3533,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "781bd20677f309152ad4041bd7d62d5aca9ea802bd9a0a201a96ad187bb7b05f",
+        "sha256": "5b8e9a8e150c07e2a003b1d7ada05711f6a2936ece1833c2a421edcb2802fddd",
         "role": "Cross-platform source-candidate and published-dependency readiness, installed-wheel live GUI/MCP operation with retained native screenshots, three-stage native-installer workflow proof, signing-helper parse, and staged-update validation matrix."
       },
       {
@@ -3628,6 +3628,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/development/mcp_release.rst against .github/workflows/integration-tests.yml: the unit-tests job now runs three file-isolated xdist workers; no claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_release.rst against B6's later changes to .github/workflows/integration-tests.yml: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_release.rst against B6's later changes to tests/unit/test_mcp_release_workflow.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_release.rst against the later B6 changes to tests/unit/test_mcp_release_workflow.py, scripts/smoke_installed_gui.py, tests/unit/test_smoke_installed_gui.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -3755,13 +3756,14 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "781bd20677f309152ad4041bd7d62d5aca9ea802bd9a0a201a96ad187bb7b05f",
+        "sha256": "5b8e9a8e150c07e2a003b1d7ada05711f6a2936ece1833c2a421edcb2802fddd",
         "role": "Runs explicitly selected live OMERO variants and preserves component and table-service diagnostics on failure."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/development/omero_testing.rst against .github/workflows/integration-tests.yml: the unit-tests job now runs three file-isolated xdist workers; no claim this page makes changes.",
       "On 2026-10-11 (B6), re-read docs/source/development/omero_testing.rst in full and compared it against the changed authorities: tests/integration/test_main.py (E1: ReadPipelineStart, PadToMaxSize and MaterializationBackend.__registry__ replace enum members); the page names none of those spellings; the harness still selects the omero_local materialization backend for OMERO runs and exercises direct and ZMQ execution, so nothing was changed.",
       "On 2026-10-11 (B6 final), compared docs/source/development/omero_testing.rst against B6's later changes to .github/workflows/integration-tests.yml: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/omero_testing.rst against the later B6 changes to external/PolyStore/src/polystore/omero_local.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
