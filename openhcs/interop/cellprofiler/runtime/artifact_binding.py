@@ -482,28 +482,9 @@ class RuntimeInputBindingRequest:
         """Return whether object inputs are already scoped by source binding."""
         return any(
             labels.plane_axis.one_plane_per_source_binding
-            and self.source_binding_labels_select_one_plane(labels)
+            and labels.source_aliases_select_one_plane()
             for labels in map(self.label_payload_for, self.object_inputs)
         )
-
-    @staticmethod
-    def source_binding_labels_select_one_plane(labels: ObjectLabelValue) -> bool:
-        """Return whether source-binding labels resolve their aliases to one plane."""
-        aliases = labels.source_aliases
-        if not aliases:
-            raise ValueError(
-                "Source-binding object labels require explicit source aliases."
-            )
-        declared_projection = labels.declared_plane_projection()
-        if declared_projection is None:
-            raise ValueError(
-                "Source-binding object labels require a declared plane projection."
-            )
-        source_plane_index = labels.source_alias_plane_index(
-            aliases,
-            declared_projection.axis_size,
-        )
-        return source_plane_index is not None
 
     def runtime_value(
         self,

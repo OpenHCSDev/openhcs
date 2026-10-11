@@ -65,7 +65,13 @@ class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     @abstractmethod
-    def validate_domain(cls, domain: ObjectLabelDomain) -> None:
+    def validate_declared_ids(
+        cls,
+        *,
+        object_count: int | None,
+        object_ids: tuple[int, ...],
+        plane_id_domains: tuple[tuple[int, ...], ...],
+    ) -> None:
         """Reject declared IDs that do not fit this scope."""
 
     @classmethod
@@ -214,8 +220,15 @@ class PayloadLabelScope(ObjectLabelDomainScope):
     ids_span_payload = True
 
     @classmethod
-    def validate_domain(cls, domain: ObjectLabelDomain) -> None:
-        if domain.declared_object_id_domains:
+    def validate_declared_ids(
+        cls,
+        *,
+        object_count: int | None,
+        object_ids: tuple[int, ...],
+        plane_id_domains: tuple[tuple[int, ...], ...],
+    ) -> None:
+        del object_count, object_ids
+        if plane_id_domains:
             raise ValueError(
                 "Payload-scoped object-label domains cannot declare per-plane "
                 "object-ID domains."
@@ -352,13 +365,19 @@ class PlaneLabelScope(ObjectLabelDomainScope):
     ids_span_payload = False
 
     @classmethod
-    def validate_domain(cls, domain: ObjectLabelDomain) -> None:
-        if not domain.declared_object_id_domains:
+    def validate_declared_ids(
+        cls,
+        *,
+        object_count: int | None,
+        object_ids: tuple[int, ...],
+        plane_id_domains: tuple[tuple[int, ...], ...],
+    ) -> None:
+        if not plane_id_domains:
             raise ValueError(
                 "Plane-scoped object-label domains require one explicit object-ID "
                 "domain per plane."
             )
-        if domain.declared_object_count is not None or domain.declared_object_ids:
+        if object_count is not None or object_ids:
             raise ValueError(
                 "Plane-scoped object-label domains cannot also declare a payload-wide "
                 "object count or object-ID domain."
@@ -573,7 +592,11 @@ class ObjectLabelDomain:
                 )
             ),
         )
-        ObjectLabelDomainScope.require_member(self.scope).validate_domain(self)
+        ObjectLabelDomainScope.require_member(self.scope).validate_declared_ids(
+            object_count=self.declared_object_count,
+            object_ids=self.declared_object_ids,
+            plane_id_domains=self.declared_object_id_domains,
+        )
 
     @staticmethod
     def _normalize_ids(
