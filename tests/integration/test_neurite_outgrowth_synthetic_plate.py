@@ -67,6 +67,7 @@ from openhcs.processing.materialization.core import (
     ViewerStreamBackendCallKwargs,
 )
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
+    CellProfilerNeuriteEngineProfile,
     MetaXpressCellBodySettings,
     MetaXpressNuclearSettings,
     MetaXpressOutgrowthSettings,
@@ -94,13 +95,13 @@ def _write_known_neurite_images(plate_dir):
 
     image_dir = plate_dir / "TimePoint_1"
     for site in (1, 2):
-        tifffile.imwrite(image_dir / f"A01_s{site:03d}_w1_z001_t001.tif", neurites)
-        tifffile.imwrite(image_dir / f"A01_s{site:03d}_w2_z001_t001.tif", nuclei)
+        tifffile.imwrite(image_dir / f"A01_s{site:03d}_w1.tif", neurites)
+        tifffile.imwrite(image_dir / f"A01_s{site:03d}_w2.tif", nuclei)
     return np.stack((neurites, nuclei))
 
 
 def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
-    tmp_path, caplog, monkeypatch
+    tmp_path, caplog, monkeypatch, viewer_ack_return_route
 ):
     caplog.set_level(logging.CRITICAL)
     plate_dir = tmp_path / "synthetic_neurite_plate"
@@ -311,19 +312,13 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                 np.testing.assert_array_equal(retained, expected_labels)
 
         checkpoint_paths = []
+        # Checkpoints are the declared outputs between the label artifacts and
+        # the trailing morphology table; the callable's output family owns them.
+        checkpoint_names = tuple(
+            spec.name for spec in CellProfilerNeuriteEngineProfile.artifact_outputs()[6:-1]
+        )
         for artifact_name, expected_checkpoint in zip(
-            (
-                "neurite_candidate_mask",
-                "neurite_unrooted_residual",
-                "neurite_secondary_ownership",
-                "neurite_topology_dropped_trace",
-                "neurite_topology_added_trace",
-                "neurite_enhanced_response",
-                "neurite_threshold_support",
-                "neurite_retained_support",
-                "neurite_local_response",
-                "neurite_local_support",
-            ),
+            checkpoint_names,
             expected[7:-1],
             strict=True,
         ):
@@ -336,7 +331,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                     retained,
                     np.asarray(expected_checkpoint)[0],
                 )
-        assert len({path.name for path in checkpoint_paths}) == 20
+        assert len({path.name for path in checkpoint_paths}) == 2 * len(checkpoint_names)
 
         assert compiled_plan.output_dataset_root is not None
         output_dataset_root = Path(compiled_plan.output_dataset_root)
@@ -368,7 +363,8 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
 
             # Exercise the real stream projection of the compiled writer outputs.
             # Artifact storage axes are legitimately empty; source image planes are not.
-            assert len(dense_outputs) == 18
+            # Both sites publish four label images and every declared checkpoint.
+            assert len(dense_outputs) == 2 * (4 + len(checkpoint_names))
         stream_kwargs = ViewerStreamBackendCallKwargs(
             ViewerStreamBackendKwargs(
                 ViewerStreamRequest(
@@ -424,13 +420,16 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                             request
                         ),
                         display_payload_extra=backend.display_payload_extra(request),
+                        return_route=viewer_ack_return_route,
                     ),
                 )
                 for output, item in zip(outputs, batch.batch_images, strict=True):
                     assert output.variable_components == ()
-                    # This fixture injects physical pixel_size into the callable,
-                    # but does not declare voxel spacing on its runtime images.
-                    assert output.metadata.source_voxel_spacing == SourceVoxelSpacing()
+                    # The acquisition's calibration is the same physical pixel
+                    # size the compiler injected into the callable.
+                    assert output.metadata.source_voxel_spacing == SourceVoxelSpacing(
+                        (compiled_invocation.kwargs_dict["pixel_size"],) * 2
+                    )
                     if checkpoint_batch:
                         assert "_w1_" in Path(output.path).name
                     else:

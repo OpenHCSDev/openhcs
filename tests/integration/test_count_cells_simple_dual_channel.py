@@ -55,6 +55,7 @@ from openhcs.demo.synthetic_data import (
     SyntheticMicroscopyGenerator,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 def _write_known_dual_channel_images(plate_dir):
@@ -74,19 +75,19 @@ def _write_known_dual_channel_images(plate_dir):
     image_dir = plate_dir / "TimePoint_1"
     for well in ("A01", "B01"):
         tifffile.imwrite(
-            image_dir / f"{well}_s001_w1_z001_t001.tif",
+            image_dir / f"{well}_s001_w1.tif",
             channel_1,
         )
         tifffile.imwrite(
-            image_dir / f"{well}_s001_w2_z001_t001.tif",
+            image_dir / f"{well}_s001_w2.tif",
             channel_2,
         )
         tifffile.imwrite(
-            image_dir / f"{well}_s002_w1_z001_t001.tif",
+            image_dir / f"{well}_s002_w1.tif",
             channel_1,
         )
         tifffile.imwrite(
-            image_dir / f"{well}_s002_w2_z001_t001.tif",
+            image_dir / f"{well}_s002_w2.tif",
             channel_2,
         )
 
@@ -186,7 +187,6 @@ from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec, ROIOptions
 
 import numpy as np
-from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 
 @numpy
