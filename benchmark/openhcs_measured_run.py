@@ -8,10 +8,7 @@ import json
 import sys
 import time
 from collections.abc import Callable, Mapping
-from dataclasses import (
-    dataclass,
-    field,
-)
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
