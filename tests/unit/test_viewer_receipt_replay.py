@@ -30,7 +30,10 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowStateResult,
 )
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.agent.services.plate_inspection_service import PlateInspectionService
+from openhcs.agent.services.plate_inspection_service import (
+    PlateInspectionContext,
+    PlateInspectionService,
+)
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
@@ -45,6 +48,16 @@ from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 from openhcs.core.axes import ColourAxis
 
+
+
+def _plate_context(plate_path, filemanager) -> PlateInspectionContext:
+    """A plate whose metadata owner anchors workspace addresses at the plate."""
+    return PlateInspectionContext(
+        plate_path=plate_path,
+        filemanager=filemanager,
+        handler=SimpleNamespace(metadata_handler=SimpleNamespace(source_workspace_root=Path)),
+        parser=None,
+    )
 
 def receipt_state(path, *, summary=None):
     fixed = {
@@ -285,7 +298,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(
         )
     )
     service = PlateStreamingService(inspection, object())
-    context = SimpleNamespace(plate_path=tmp_path, filemanager=manager)
+    context = _plate_context(tmp_path, manager)
     request = PlateFileStreamRequest(plate_path=str(tmp_path), source_receipt=resource)
     source_record = PlateFileRecord(
         kind=PlateFileKind.IMAGE,
@@ -476,10 +489,7 @@ def test_receipt_projection_refuses_unowned_or_invalid_declared_source(tmp_path,
         )
     )
     service = PlateStreamingService(inspection, object())
-    context = SimpleNamespace(
-        plate_path=tmp_path,
-        filemanager=FileManager({"disk": DiskStorageBackend()}),
-    )
+    context = _plate_context(tmp_path, FileManager({"disk": DiskStorageBackend()}))
     source_ref = None if refusal == "unowned" else SourcePixelRef(
         backend="disk", backend_address=str(path),
     )
