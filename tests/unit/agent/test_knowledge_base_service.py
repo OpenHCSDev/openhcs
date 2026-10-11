@@ -446,7 +446,7 @@ def test_example_corpus_document_exposes_native_python_source():
     assert "from openhcs.core.steps.function_step import FunctionStep" in (
         source.content
     )
-    assert "class MfdPresetKey" in source.content
+    assert "class MfdPresetDefinition" in source.content
     assert "def build_mfd_preset" in source.content
 
 
@@ -530,7 +530,7 @@ def test_knowledge_base_search_covers_native_python_source():
 
     result = service.search(
         KnowledgeBaseSearchRequest(
-            query="MfdPresetKey build_mfd_preset FunctionStep",
+            query="MfdPresetDefinition build_mfd_preset FunctionStep",
             limit=5,
         )
     )

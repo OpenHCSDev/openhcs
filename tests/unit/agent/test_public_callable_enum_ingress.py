@@ -16,7 +16,7 @@ from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.custom_functions.runtime_registry import (
-    CustomFunctionLifetime,
+    EphemeralLifetime,
     CustomFunctionRuntimeRegistry,
     project_custom_function,
 )
@@ -62,7 +62,7 @@ def independent_request_projection(request: IndependentProjectionRequest):
 def author(monkeypatch, request):
     # Declarations outside the registry's modules are custom functions.
     metadata = project_custom_function(request.param)
-    CustomFunctionRuntimeRegistry.publish(metadata, CustomFunctionLifetime.EPHEMERAL)
+    CustomFunctionRuntimeRegistry.publish(metadata, EphemeralLifetime)
     function_id = metadata.composite_key
     monkeypatch.setattr(RegistryService, "_metadata_cache", {function_id: metadata})
     monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})

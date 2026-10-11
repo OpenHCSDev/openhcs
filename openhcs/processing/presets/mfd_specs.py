@@ -5,11 +5,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from metaclass_registry import AutoRegisterMeta
 from arraybridge.decorators import DtypeConversion
 
 from openhcs.constants.input_source import InputSource
@@ -96,35 +94,21 @@ class PresetPipelineSpec:
         return [step.materialize() for step in self.steps]
 
 
-class MfdPresetKey(str, Enum):
-    """Named MFD preset variants materialized by this spec authority."""
-
-    CROP_ANALYZE = "10x_mfd_crop_analyze"
-    CROP_ANALYZE_DAPI_FITC_CY5 = "10x_mfd_crop_analyze_dapi_fitc_cy5"
-    STITCH_ASHLAR_CPU = "10x_mfd_stitch_ashlar_cpu"
-    STITCH_GPU = "10x_mfd_stitch_gpu"
-
-
-class MfdPresetFamily(str, Enum):
-    """High-level MFD preset template families."""
-
-    CROP_ANALYZE = "crop_analyze"
-    STITCH = "stitch"
-
-
 @dataclass(frozen=True, slots=True)
 class MfdPresetDefinition:
     """Variant row for MFD preset materialization."""
 
-    key: MfdPresetKey
-    family: MfdPresetFamily
+    name: str
+    """The preset's pipeline name."""
+    materializer: type["MfdPresetMaterializer"]
+    """The template family that builds this preset's steps."""
     include_cy5_cell_count: bool = False
     stitch_func: Callable[..., Any] | None = None
 
     def required_stitch_func(self) -> Callable[..., Any]:
         if self.stitch_func is None:
             raise ValueError(
-                f"MFD stitch preset {self.key.value} is missing stitch_func"
+                f"MFD stitch preset {self.name} is missing stitch_func"
             )
         return self.stitch_func
 
@@ -285,41 +269,8 @@ STITCH_STEP_TEMPLATES: tuple[PresetStepTemplate, ...] = (
 )
 
 
-MFD_PRESET_DEFINITIONS: dict[MfdPresetKey, MfdPresetDefinition] = {
-    MfdPresetKey.CROP_ANALYZE: MfdPresetDefinition(
-        key=MfdPresetKey.CROP_ANALYZE,
-        family=MfdPresetFamily.CROP_ANALYZE,
-    ),
-    MfdPresetKey.CROP_ANALYZE_DAPI_FITC_CY5: MfdPresetDefinition(
-        key=MfdPresetKey.CROP_ANALYZE_DAPI_FITC_CY5,
-        family=MfdPresetFamily.CROP_ANALYZE,
-        include_cy5_cell_count=True,
-    ),
-    MfdPresetKey.STITCH_ASHLAR_CPU: MfdPresetDefinition(
-        key=MfdPresetKey.STITCH_ASHLAR_CPU,
-        family=MfdPresetFamily.STITCH,
-        stitch_func=ashlar_compute_tile_positions_cpu,
-    ),
-    MfdPresetKey.STITCH_GPU: MfdPresetDefinition(
-        key=MfdPresetKey.STITCH_GPU,
-        family=MfdPresetFamily.STITCH,
-        stitch_func=ashlar_compute_tile_positions_gpu,
-    ),
-}
-
-
-class MfdPresetMaterializer(ABC, metaclass=AutoRegisterMeta):
-    """Nominal strategy family for materializing MFD preset families."""
-
-    __registry_key__ = "family"
-    __skip_if_no_key__ = True
-    __registry__: dict[MfdPresetFamily, type["MfdPresetMaterializer"]] = {}
-
-    family: MfdPresetFamily | None = None
-
-    @classmethod
-    def for_family(cls, family: MfdPresetFamily) -> "MfdPresetMaterializer":
-        return cls.__registry__[family]()
+class MfdPresetMaterializer(ABC):
+    """One MFD preset template family; it builds a preset's steps."""
 
     @abstractmethod
     def materialize(self, definition: MfdPresetDefinition) -> list[FunctionStep]:
@@ -329,11 +280,9 @@ class MfdPresetMaterializer(ABC, metaclass=AutoRegisterMeta):
 class CropAnalyzeMfdPresetMaterializer(MfdPresetMaterializer):
     """Materialize MFD crop/analyze preset variants."""
 
-    family = MfdPresetFamily.CROP_ANALYZE
-
     def materialize(self, definition: MfdPresetDefinition) -> list[FunctionStep]:
         return PresetPipelineSpec(
-            name=definition.key.value,
+            name=definition.name,
             steps=(
                 PresetStepSpec(
                     binding=PresetStepBinding(
@@ -359,11 +308,9 @@ class CropAnalyzeMfdPresetMaterializer(MfdPresetMaterializer):
 class StitchMfdPresetMaterializer(MfdPresetMaterializer):
     """Materialize MFD stitch preset variants."""
 
-    family = MfdPresetFamily.STITCH
-
     def materialize(self, definition: MfdPresetDefinition) -> list[FunctionStep]:
         return PresetPipelineSpec(
-            name=definition.key.value,
+            name=definition.name,
             steps=tuple(
                 template.materialize_spec(definition)
                 for template in STITCH_STEP_TEMPLATES
@@ -371,8 +318,26 @@ class StitchMfdPresetMaterializer(MfdPresetMaterializer):
         ).materialize()
 
 
-def build_mfd_preset(key: MfdPresetKey | str) -> list[FunctionStep]:
-    """Materialize an MFD preset by typed key."""
-    preset_key = MfdPresetKey(key)
-    definition = MFD_PRESET_DEFINITIONS[preset_key]
-    return MfdPresetMaterializer.for_family(definition.family).materialize(definition)
+MFD_CROP_ANALYZE = MfdPresetDefinition(
+    "10x_mfd_crop_analyze", CropAnalyzeMfdPresetMaterializer
+)
+MFD_CROP_ANALYZE_DAPI_FITC_CY5 = MfdPresetDefinition(
+    "10x_mfd_crop_analyze_dapi_fitc_cy5",
+    CropAnalyzeMfdPresetMaterializer,
+    include_cy5_cell_count=True,
+)
+MFD_STITCH_ASHLAR_CPU = MfdPresetDefinition(
+    "10x_mfd_stitch_ashlar_cpu",
+    StitchMfdPresetMaterializer,
+    stitch_func=ashlar_compute_tile_positions_cpu,
+)
+MFD_STITCH_GPU = MfdPresetDefinition(
+    "10x_mfd_stitch_gpu",
+    StitchMfdPresetMaterializer,
+    stitch_func=ashlar_compute_tile_positions_gpu,
+)
+
+
+def build_mfd_preset(preset: MfdPresetDefinition) -> list[FunctionStep]:
+    """Materialize one MFD preset into its steps."""
+    return preset.materializer().materialize(preset)

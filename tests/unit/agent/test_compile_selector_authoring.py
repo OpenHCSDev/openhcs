@@ -38,7 +38,7 @@ from openhcs.processing.backends.cellprofiler.illumination import (
 from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 from openhcs.processing.custom_functions.runtime_registry import (
-    CustomFunctionLifetime,
+    EphemeralLifetime,
     CustomFunctionRuntimeRegistry,
     project_custom_function,
 )
@@ -288,7 +288,7 @@ def test_new_declaration_composes_independent_settings_without_consumer_edits(
         ) < NewAuthoringModule.__mro__.index(CellProfilerModuleSettings)
         metadata = project_custom_function(new_authoring_callable)
         CustomFunctionRuntimeRegistry.publish(
-            metadata, CustomFunctionLifetime.EPHEMERAL
+            metadata, EphemeralLifetime
         )
         monkeypatch.setitem(
             RegistryService._metadata_cache, metadata.composite_key, metadata
