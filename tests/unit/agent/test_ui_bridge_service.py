@@ -102,7 +102,7 @@ from formbridge.runtime_platform import AgentRuntimePlatform
 from formbridge.bridge.service import (
     UiBridgeApplyDocumentOperation,
     UiBridgeCloseWindowOperation,
-    UiBridgeDescriptorDirectoryAuthority,
+    UiBridgeDescriptorDirectories,
     UiBridgeDescriptorReader,
     UiBridgeGatewayABC,
     UiBridgeGatewayResponseError,
@@ -1056,7 +1056,7 @@ def test_descriptor_catalog_removes_dead_process_before_application_compatibilit
     descriptor_path.write_text(json.dumps(payload), encoding="utf-8")
     monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", raising=False)
     monkeypatch.setattr(
-        UiBridgeDescriptorDirectoryAuthority,
+        UiBridgeDescriptorDirectories,
         "descriptor_dirs",
         classmethod(lambda cls: (descriptor_directory,)),
     )
@@ -1243,7 +1243,7 @@ def test_descriptor_resolution_uses_process_advertised_descriptor(
         proc_root,
     )
     monkeypatch.setattr(
-        UiBridgeDescriptorDirectoryAuthority,
+        UiBridgeDescriptorDirectories,
         "descriptor_dirs",
         classmethod(lambda cls: (tmp_path / "empty-descriptor-dir",)),
     )
@@ -1309,7 +1309,7 @@ def test_descriptor_catalog_unions_default_and_process_advertised_live_bridges(
     ).write()
     monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", raising=False)
     monkeypatch.setattr(
-        UiBridgeDescriptorDirectoryAuthority,
+        UiBridgeDescriptorDirectories,
         "descriptor_dirs",
         classmethod(lambda cls: (default_directory,)),
     )
@@ -1349,7 +1349,7 @@ def test_descriptor_catalog_reads_duplicate_resolved_path_once(monkeypatch, tmp_
     alias_path = descriptor_directory / ".." / "descriptors" / descriptor_path.name
     monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", raising=False)
     monkeypatch.setattr(
-        UiBridgeDescriptorDirectoryAuthority,
+        UiBridgeDescriptorDirectories,
         "descriptor_dirs",
         classmethod(lambda cls: (descriptor_directory,)),
     )

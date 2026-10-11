@@ -14,7 +14,7 @@ from formbridge.runtime_platform import (
     WindowsRuntimePlatform,
 )
 from formbridge.bridge.service import (
-    UiBridgeDescriptorDirectoryAuthority,
+    UiBridgeDescriptorDirectories,
     UiBridgeDescriptorReader,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
@@ -58,7 +58,7 @@ def test_windows_descriptor_default_uses_local_application_data(
         staticmethod(lambda: WindowsRuntimePlatform),
     )
 
-    descriptor_dirs = UiBridgeDescriptorDirectoryAuthority.descriptor_dirs()
+    descriptor_dirs = UiBridgeDescriptorDirectories.descriptor_dirs()
 
     assert descriptor_dirs[0] == (
         local_application_data / "OpenHCS" / "runtime" / "ui-bridge"
