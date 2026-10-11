@@ -4668,7 +4668,8 @@ def test_pure_2d_auxiliary_aggregator_preserves_image_payload_metadata() -> None
 
     stacked = Pure2DAuxiliaryOutputAggregator.aggregate([first, second], "numpy")
 
-    assert isinstance(stacked, ImageMetadataPayload)
+    # PURE2D image stacks stay deferred slices (70a79fa38); any ImagePayload.
+    assert isinstance(stacked, ImagePayload)
     assert stacked.data.shape == (2, 2, 3)
     assert (
         stacked.metadata.for_source_plane(0).intensity_scale == 65535.0

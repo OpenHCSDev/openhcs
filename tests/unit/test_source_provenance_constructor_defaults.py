@@ -23,6 +23,7 @@ from openhcs.core.runtime_relationships import (
     ObjectRelationshipDeclaration,
 )
 from openhcs.core.runtime_spatial_graph import SpatialGraph
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.source_image_provenance import SourceImageProvenance
 
@@ -49,7 +50,10 @@ def _carriers():
             rows=EmptyRows(),
             subject=MeasurementSubject(MeasurementScope.SAMPLE, "DNA"),
         ),
-        partial(SpatialGraph, name="Graph", nodes=(), edges=()),
+        partial(
+            SpatialGraph, name="Graph", nodes=(), edges=(),
+            coordinate_spacing=SourceVoxelSpacing((1.0, 1.0)),
+        ),
         partial(
             ObjectRelationship,
             name="ParentChild",
