@@ -105,9 +105,9 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
-    SourceBindingOrigin,
+    FromPipelineStart,
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
-    SourceProjectionRole,
+    PrimaryPlaneRole,
 )
 from openhcs.core.runtime_image_values import (
     ImagePayload,
@@ -792,7 +792,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         bindings = tuple(
             binding
             for binding in source_binding_plan.bindings
-            if binding.projection_role is SourceProjectionRole.PRIMARY_PLANE
+            if binding.projection_role is PrimaryPlaneRole
         )
         if not bindings:
             return matching_files
@@ -1681,7 +1681,7 @@ class FunctionCoreExecutor:
             or self.invocation.key.position != 0
             or self.group_data.execution_plan.main_input_dependency.kind
             is not StepInputDependencyKind.PIPELINE_START
-            or binding.origin is not SourceBindingOrigin.PIPELINE_START
+            or binding.origin is not FromPipelineStart
             or request.context is not self.group_data.context
         ):
             return None

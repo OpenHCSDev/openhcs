@@ -15,19 +15,18 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
 from openhcs.core.runtime_array_values import array_geometry
-from metaclass_registry.strategies import (
-    EnumKeyedStrategyMixin,
-    NominalTypeKeyedStrategyMixin,
-)
+from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataTable,
     NamedSourceBinding,
     PairByMetadata,
     PairByOrder,
+    BroadcastSource,
+    PrimaryPlaneRole,
+    SourceArtifactRole,
     SourceProjectionRole,
     SourceSetPairing,
-    SourceSetRole,
 )
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_path_identity import source_path_posix
@@ -503,14 +502,16 @@ class OrderSourceSetAssembler(SourceSetAssembler):
         )
 
 
-class SourceBindingProjectionStrategy(
-    EnumKeyedStrategyMixin[SourceProjectionRole],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
+class SourceBindingProjectionStrategy(ABC, metaclass=AutoRegisterMeta):
     """Project one binding member through its declared projection role."""
 
-    strategy_key: ClassVar[SourceProjectionRole | None] = None
+    __registry_key__ = "role"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[
+        dict[type[SourceProjectionRole], type["SourceBindingProjectionStrategy"]]
+    ] = {}
+
+    role: ClassVar[type[SourceProjectionRole] | None] = None
 
     @abstractmethod
     def projection(
@@ -523,7 +524,7 @@ class SourceBindingProjectionStrategy(
 
 
 class PrimaryPlaneBindingProjection(SourceBindingProjectionStrategy):
-    strategy_key = SourceProjectionRole.PRIMARY_PLANE
+    role = PrimaryPlaneRole
 
     def projection(
         self,
@@ -549,7 +550,7 @@ class PrimaryPlaneBindingProjection(SourceBindingProjectionStrategy):
 
 
 class SourceArtifactBindingProjection(SourceBindingProjectionStrategy):
-    strategy_key = SourceProjectionRole.SOURCE_ARTIFACT
+    role = SourceArtifactRole
 
     def projection(
         self,
@@ -568,11 +569,8 @@ class SourceArtifactBindingProjection(SourceBindingProjectionStrategy):
 
 
 def _validate_source_binding_projection_registry() -> None:
-    strategy_keys = {
-        strategy_type.strategy_key
-        for strategy_type in SourceBindingProjectionStrategy.registered_strategy_types()
-    }
-    expected = set(SourceProjectionRole)
+    strategy_keys = set(SourceBindingProjectionStrategy.__registry__)
+    expected = set(SourceProjectionRole.__registry__.values())
     if strategy_keys != expected:
         raise RuntimeError(
             "Source binding projection registry does not exactly cover "
@@ -890,12 +888,12 @@ class SourceBindingWorkspaceProjector:
         plane_mappings = {
             path: projection.ref.to_workspace_mapping()
             for projection, path in projection_paths
-            if projection.projection_role is SourceProjectionRole.PRIMARY_PLANE
+            if projection.projection_role is PrimaryPlaneRole
         }
         artifact_mappings = {
             path: projection.ref.to_workspace_mapping()
             for projection, path in projection_paths
-            if projection.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+            if projection.projection_role is SourceArtifactRole
         }
         return SourceBindingWorkspaceMaterialization(
             source_root=source_root,
@@ -1110,7 +1108,7 @@ class SourceBindingWorkspaceProjector:
     ) -> tuple[SourceCandidate, ...]:
         if candidate.declared_address is not None:
             return (candidate,)
-        if binding.source_set_role is SourceSetRole.BROADCAST:
+        if binding.source_set_role is BroadcastSource:
             return (candidate,)
         components = self.source_bindings.source_stack_components
         if not components:
@@ -1195,7 +1193,9 @@ class SourceBindingWorkspaceProjector:
         projections: list[SourceProjection] = []
         for source_set in source_sets:
             well = self._source_set_well(source_set)
-            projection_indexes = {role: 0 for role in SourceProjectionRole}
+            projection_indexes = {
+                role: 0 for role in SourceProjectionRole.__registry__.values()
+            }
             for binding in bindings:
                 candidate = source_set.candidates_by_alias.get(binding.alias)
                 if candidate is None:
@@ -1224,9 +1224,9 @@ class SourceBindingWorkspaceProjector:
                         for axis in AxisFamily.active().axes
                     )
                 projections.append(
-                    SourceBindingProjectionStrategy.for_enum_member(
+                    SourceBindingProjectionStrategy.__registry__[
                         binding.projection_role
-                    ).projection(
+                    ]().projection(
                         binding,
                         replace(
                             candidate,

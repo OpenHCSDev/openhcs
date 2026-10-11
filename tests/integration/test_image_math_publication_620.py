@@ -20,7 +20,10 @@ from openhcs.core.config import (
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.source_bindings import MetadataExtractionRule, MetadataSource
+from openhcs.core.source_bindings import (
+    FromFileName,
+    MetadataExtractionRule,
+)
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.virtual_workspace_metadata import (
@@ -51,7 +54,7 @@ def test_registered_mixed_image_math_publishes_once_in_both_operand_orders(tmp_p
             variable_components=[Microscopy.ZIndex], group_by=Microscopy.Channel),
         path_planning_config=LazyPathPlanningConfig(global_output_folder=tmp_path / 'results'),
         source_bindings_config=replace(imported.source_bindings_config,
-            metadata_rules=(MetadataExtractionRule(source=MetadataSource.FILE_NAME,
+            metadata_rules=(MetadataExtractionRule(source=FromFileName,
                 pattern=r'(?P<well>[A-H]\d{2})_s(?P<site>\d+)_w(?P<channel>\d+)_z(?P<z_index>\d+)_t(?P<timepoint>\d+)_(?:Gray|Color)\.tif'),),
             source_stack_components=(), source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5))),
         napari_streaming_config=LazyNapariStreamingConfig(enabled=False),

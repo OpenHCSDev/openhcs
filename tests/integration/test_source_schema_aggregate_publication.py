@@ -34,8 +34,8 @@ from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
     ComponentSelector,
+    FromFileName,
     MetadataExtractionRule,
-    MetadataSource,
     NamedSourceBinding,
     SourceSelector,
 )
@@ -84,7 +84,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
                 dataset_source=SourceBindingsSource,
                 source_bindings_config=LazySourceBindingsConfig(
                     metadata_rules=(MetadataExtractionRule(
-                        source=MetadataSource.FILE_NAME,
+                        source=FromFileName,
                         pattern=r"(?P<well>A[0-9]+)_s(?P<site>[0-9]+)_w(?P<channel>[0-9]+)_z(?P<z_index>[0-9]+)_t(?P<timepoint>[0-9]+)",
                     ),),
                     bindings=(NamedSourceBinding(

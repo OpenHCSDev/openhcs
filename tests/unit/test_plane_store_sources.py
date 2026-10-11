@@ -32,10 +32,10 @@ from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextEquals,
 )
 from openhcs.core.steps.function_io import (
     save_materialized_data,
@@ -199,8 +199,8 @@ def _binding(alias: str, file_name: str) -> NamedSourceBinding:
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.EQUALS,
+                    SourceFileName,
+                    TextEquals,
                     file_name,
                 ),
             ),

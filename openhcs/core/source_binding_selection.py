@@ -22,7 +22,10 @@ from openhcs.core.source_bindings import (
     PairByMetadata,
     PairByOrder,
     SourceSetPairing,
-    SourceSetRole,
+    FromPipelineStart,
+    FromStepInput,
+    MatchedSource,
+    SourceBindingOrigin,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
@@ -536,7 +539,7 @@ class SourceBindingCandidateMatcher:
         return tuple(
             binding
             for binding in resolvable_bindings
-            if binding.source_set_role is SourceSetRole.MATCHED
+            if binding.source_set_role is MatchedSource
         )
 
     @staticmethod
@@ -1157,7 +1160,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
         return tuple(
             binding
             for binding in self.bindings
-            if binding.source_set_role is SourceSetRole.MATCHED
+            if binding.source_set_role is MatchedSource
         )
 
     @classmethod
@@ -1604,10 +1607,11 @@ class SourceUniverseRuntimeState:
 class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     """Plan-artifact request for source-binding runtime universe resolution."""
 
-    __registry_key__ = "universe_request_kind"
+    __registry_key__ = "origin"
     __skip_if_no_key__ = True
 
-    universe_request_kind: ClassVar[str | None] = None
+    origin: ClassVar[type[SourceBindingOrigin] | None] = None
+    """The binding origin whose source universe this request resolves."""
     context: "ProcessingContext"
     plan: "CompiledStepPlan"
     matching_files: tuple[str, ...]
@@ -1760,7 +1764,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     @classmethod
     def for_binding(cls, binding: NamedSourceBinding) -> type[SourceUniverseRequest]:
         """Select the already registered owner of a binding's origin."""
-        return cls.__registry__[binding.origin.value]
+        return cls.__registry__[binding.origin]
 
     def runtime_universe_state(self) -> SourceUniverseRuntimeState:
         """Return cached source-universe state for this request."""
@@ -1906,7 +1910,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
 class StepInputSourceUniverseRequest(SourceUniverseRequest):
     """Request for the source universe represented by the current step input."""
 
-    universe_request_kind = "step_input"
+    origin = FromStepInput
 
     @classmethod
     def source_artifact_payload(
@@ -1941,7 +1945,7 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
 class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
     """Request for the source universe represented by the pipeline start."""
 
-    universe_request_kind = "pipeline_start"
+    origin = FromPipelineStart
 
     def contribute_runtime_state(
         self,

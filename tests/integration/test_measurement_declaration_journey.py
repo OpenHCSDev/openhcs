@@ -55,11 +55,11 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceSelector,
     PairByOrder,
+    SourceFileName,
+    SourceFilterClause,
+    SourceSelector,
+    TextContains,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.measurement_dialect import (
@@ -186,8 +186,8 @@ def _source(alias, channel):
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.CONTAINS,
+                    subject=SourceFileName,
+                    match_type=TextContains,
                     value=f"_w{channel}_",
                 ),
             ),

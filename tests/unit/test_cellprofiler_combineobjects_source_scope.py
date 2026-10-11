@@ -30,7 +30,10 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerGroupScope,
 )
 from openhcs.core.progress import set_progress_queue
-from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.source_bindings import (
+    NamedSourceBinding,
+    SourceArtifactRole,
+)
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.plate_workspace import (
     CellProfilerPlateWorkspacePreparer,
@@ -84,7 +87,7 @@ def test_artifact_owned_scope_uses_exact_source_artifact_component_identity() ->
             NamedSourceBinding(
                 alias=source.name,
                 artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
             ),
         ),
     )

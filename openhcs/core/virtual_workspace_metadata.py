@@ -14,11 +14,12 @@ from typing import TYPE_CHECKING, Any, Callable, TypeAlias
 from polystore.atomic import FileLockError, atomic_update_json
 from polystore.metadata_writer import MetadataConfig
 from polystore.virtual_workspace import SourcePixelRef
+from python_introspect import registered_class_from_key
 
 from openhcs.core.artifacts import ArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_bindings import SourceProjectionRole
+from openhcs.core.source_bindings import PrimaryPlaneRole, SourceProjectionRole
 from openhcs.core.source_metadata import (
     DurableSourceMetadata,
     SourceMetadataMapping,
@@ -659,8 +660,8 @@ class VirtualWorkspaceSourceProjectionEntries:
             )
         virtual_path = cls._required_text(record, "virtual_path")
         try:
-            projection_role = SourceProjectionRole(
-                cls._required_text(record, "projection_role")
+            projection_role = registered_class_from_key(
+                SourceProjectionRole, cls._required_text(record, "projection_role")
             )
         except ValueError as exc:
             raise RuntimeError(
@@ -680,7 +681,7 @@ class VirtualWorkspaceSourceProjectionEntries:
                 "virtual_workspace source_projection address must be a mapping or "
                 "null."
             )
-        if projection_role is SourceProjectionRole.PRIMARY_PLANE and address is None:
+        if projection_role is PrimaryPlaneRole and address is None:
             raise RuntimeError(
                 "Primary source projections require a complete plane address."
             )
@@ -696,7 +697,7 @@ class VirtualWorkspaceSourceProjectionEntries:
             None if image_metadata_value is None else
             ImagePayloadMetadata.from_mapping(image_metadata_value)
         )
-        if projection_role is SourceProjectionRole.PRIMARY_PLANE:
+        if projection_role is PrimaryPlaneRole:
             projection: SourceProjection = SourcePlaneProjection(
                 address=address,
                 ref=ref,

@@ -68,7 +68,7 @@ from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
-    SourceProjectionRole,
+    SourceArtifactRole,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.interop.cellprofiler.analyst_export import (
@@ -665,7 +665,7 @@ def test_official30_database_modules_bind_and_build_exact_contracts(
                 bindings=tuple(
                     NamedSourceBinding(
                         alias=name,
-                        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                        projection_role=SourceArtifactRole,
                     )
                     for name in source_names
                 ),

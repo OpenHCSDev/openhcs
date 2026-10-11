@@ -39,27 +39,29 @@ from openhcs.core.source_binding_selection import (
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_bindings import (
+    BroadcastSource,
     CompiledSourceUniversePlan,
     ComponentSelector,
+    FromFileName,
+    FromFolderName,
+    FromPipelineStart,
+    FromStepInput,
     ImagePlaneSource,
     ImportedMetadataJoin,
     ImportedMetadataTable,
     MetadataExtractionRule,
     MetadataSelector,
-    MetadataSource,
     NamedSourceBinding,
-    SourceBindingMatchDimension,
-    SourceBindingMatchField,
     PairByMetadata,
     PairByOrder,
-    SourceBindingOrigin,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceProjectionRole,
-    SourceSelector,
-    SourceSetRole,
     source_binding_group_keys_for_group_by,
+    SourceArtifactRole,
+    SourceBindingMatchDimension,
+    SourceBindingMatchField,
+    SourceFileName,
+    SourceFilterClause,
+    SourceSelector,
+    TextContains,
 )
 from openhcs.core.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
@@ -156,19 +158,19 @@ def test_source_image_set_policy_uses_binding_and_source_stack_declarations():
     )
 
 
-def test_named_source_binding_normalizes_origin_and_requires_alias():
+def test_named_source_binding_normalizes_artifact_kind_and_requires_alias():
     binding = NamedSourceBinding(
         alias="OrigBlue",
-        origin="pipeline_start",
+        origin=FromPipelineStart,
     )
 
-    assert binding.origin is SourceBindingOrigin.PIPELINE_START
+    assert binding.origin is FromPipelineStart
     assert binding.artifact_kind is ImageArtifactType
 
     objects_binding = NamedSourceBinding(
         alias="Nuclei",
         artifact_kind="object_labels",
-        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        projection_role=SourceArtifactRole,
     )
 
     assert objects_binding.artifact_kind is ObjectLabelsArtifactType
@@ -742,7 +744,7 @@ def test_source_bindings_expose_generic_resolution_requirements():
             ),
             NamedSourceBinding(
                 alias="IllumDNA",
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
             ),
         )
     )
@@ -833,12 +835,12 @@ def test_compiled_source_binding_plan_preserves_named_selectors():
         ),
         metadata_rules=(
             MetadataExtractionRule(
-                source=MetadataSource.FILE_NAME,
+                source=FromFileName,
                 pattern=r".*(?P<plate>PlateA)\.tif",
                 filters=(
                     SourceFilterClause(
-                        subject=SourceFilterSubject.FILE,
-                        match_type=SourceFilterMatchType.CONTAINS,
+                        subject=SourceFileName,
+                        match_type=TextContains,
                         value="PlateA",
                     ),
                 ),
@@ -865,7 +867,7 @@ def test_compiled_source_binding_plan_preserves_named_selectors():
 
     assert plan.has_primary_content
     assert len(plan.bindings) == 1
-    assert plan.metadata_rules[0].source is MetadataSource.FILE_NAME
+    assert plan.metadata_rules[0].source is FromFileName
     assert isinstance(plan.match_plan, PairByMetadata)
     binding = plan.bindings[0]
     assert binding.alias == "OrigBlue"
@@ -883,7 +885,7 @@ def test_pipeline_start_binding_does_not_force_full_source_universe():
                     selector=SourceSelector(
                         components=(ComponentSelector(Microscopy.Channel, "1"),),
                     ),
-                    origin=SourceBindingOrigin.PIPELINE_START,
+                    origin=FromPipelineStart,
                 ),
             ),
             enabled=True,
@@ -906,26 +908,26 @@ def test_matched_image_set_without_match_plan_uses_selector_compatible_sources()
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            subject=SourceFilterSubject.FILE,
-                            match_type=SourceFilterMatchType.CONTAINS,
+                            subject=SourceFileName,
+                            match_type=TextContains,
                             value="w1",
                         ),
                     )
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
             ),
             NamedSourceBinding(
                 alias="PH3",
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            subject=SourceFilterSubject.FILE,
-                            match_type=SourceFilterMatchType.CONTAINS,
+                            subject=SourceFileName,
+                            match_type=TextContains,
                             value="w2",
                         ),
                     )
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
             ),
         ),
         match_plan=PairByOrder(),
@@ -1002,7 +1004,7 @@ def test_source_set_without_matched_bindings_preserves_anchor_candidates() -> No
         bindings=(
             NamedSourceBinding(
                 alias="PlateTemplate",
-                source_set_role=SourceSetRole.BROADCAST,
+                source_set_role=BroadcastSource,
             ),
         ),
         match_plan=PairByOrder(),
@@ -1164,7 +1166,7 @@ def test_source_binding_members_use_exact_source_identity_without_metadata_axes(
         alias="SavedIPO",
         component_identity=coordinates,
         artifact_kind=ObjectLabelsArtifactType,
-        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        projection_role=SourceArtifactRole,
     )
     refs = {
         primary_path: SourcePixelRef("disk", source_path),
@@ -1554,8 +1556,8 @@ def test_virtual_workspace_source_matching_uses_declared_filter_identity():
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.CONTAINS,
+                    subject=SourceFileName,
+                    match_type=TextContains,
                     value="N_R",
                 ),
             ),
@@ -1619,7 +1621,7 @@ def test_rule_metadata_preserves_original_source_metadata_mapping():
         source_paths_by_virtual_path={},
         metadata_rules=(
             MetadataExtractionRule(
-                source=MetadataSource.FILE_NAME,
+                source=FromFileName,
                 pattern=r"(?P<Plate>[^_]+)_(?P<Site>\d+)",
             ),
         ),
@@ -1642,13 +1644,13 @@ def test_compiled_source_binding_plan_round_trips_through_pickle():
                     selector=SourceSelector(
                         components=(ComponentSelector(Microscopy.Channel, "1"),),
                     ),
-                    origin=SourceBindingOrigin.STEP_INPUT,
+                    origin=FromStepInput,
                 ),
             ),
             enabled=True,
             metadata_rules=(
                 MetadataExtractionRule(
-                    source=MetadataSource.FOLDER_NAME,
+                    source=FromFolderName,
                     pattern=r"(?P<plate>PlateA)",
                 ),
             ),
@@ -1670,3 +1672,60 @@ def test_compiled_source_binding_plan_round_trips_through_pickle():
     assert restored.metadata_rules == plan.metadata_rules
     assert restored.match_plan == plan.match_plan
     assert restored.binding_for_alias("OrigBlue") == plan.binding_for_alias("OrigBlue")
+
+
+SOURCE_BINDING_FAMILIES = (
+    source_bindings_module.SourceBindingOrigin,
+    source_bindings_module.SourceSetRole,
+    source_bindings_module.SourceProjectionRole,
+    source_bindings_module.MetadataSource,
+    source_bindings_module.SourceFilterSubject,
+    source_bindings_module.SourceFilterMatchType,
+)
+
+
+@pytest.mark.parametrize("family", SOURCE_BINDING_FAMILIES, ids=lambda f: f.__name__)
+def test_source_binding_kinds_travel_as_their_registry_names(family):
+    from python_introspect import registered_class_from_key, to_jsonable
+
+    members = tuple(family.__registry__.values())
+    assert members
+    for member in members:
+        spelling = to_jsonable(member)
+        assert spelling == member.name
+        assert registered_class_from_key(family, spelling) is member
+
+
+def test_source_filter_match_types_answer_the_path_table():
+    sb = source_bindings_module
+    path = "/plate/A01/VitraChannel1ILLUM.tif"
+    expected = {
+        sb.TextContains: ("ILLUM", True),
+        sb.TextContainsRegex: (r"Channel\d", True),
+        sb.TextEquals: ("VitraChannel1ILLUM.tif", True),
+        sb.TextStartsWith: ("Vitra", True),
+        sb.TextEndsWith: (".npy", False),
+        sb.PathIsImage: (None, True),
+        sb.PathIsTif: (None, True),
+    }
+    for match_type, (value, holds) in expected.items():
+        clause = sb.SourceFilterClause(sb.SourceFileName, match_type, value)
+        assert clause.matches(path) is holds, match_type
+        if issubclass(match_type, sb.TextMatchType):
+            negated = sb.SourceFilterClause(
+                sb.SourceFileName, match_type.negation(), value
+            )
+            assert negated.matches(path) is not holds, match_type.negation()
+    text_matches = {
+        member
+        for member in sb.SourceFilterMatchType.__registry__.values()
+        if issubclass(member, sb.TextMatchType)
+    }
+    negations = {
+        member for member in text_matches if issubclass(member, sb.NegatedTextMatch)
+    }
+    assert {positive.negation() for positive in text_matches - negations} == negations
+    assert sb.SourceDirectory.text_of(path) == "/plate/A01"
+    assert sb.SourceExtension.text_of(path) == ".tif"
+    assert FromFileName.texts(path) == ("VitraChannel1ILLUM.tif",)
+    assert FromFolderName.texts(path) == ("A01", "/plate/A01")

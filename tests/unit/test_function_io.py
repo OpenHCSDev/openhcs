@@ -21,11 +21,11 @@ from openhcs.core.source_bindings import (
     CompiledSourceUniversePlan,
     NamedSourceBinding,
     PairByOrder,
+    SourceArtifactRole,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceProjectionRole,
     SourceSelector,
+    TextEquals,
 )
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -254,8 +254,8 @@ def test_bulk_preload_preserves_nested_virtual_workspace_paths(tmp_path: Path) -
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.EQUALS,
+                            SourceFileName,
+                            TextEquals,
                             source_paths[0].name,
                         ),
                     ),
@@ -264,12 +264,12 @@ def test_bulk_preload_preserves_nested_virtual_workspace_paths(tmp_path: Path) -
             NamedSourceBinding(
                 alias="ObjectLabels",
                 artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.EQUALS,
+                            SourceFileName,
+                            TextEquals,
                             source_paths[1].name,
                         ),
                     ),
@@ -331,12 +331,12 @@ def test_object_only_source_anchors_match_compiled_pattern_after_loading(
             NamedSourceBinding(
                 alias=alias,
                 artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.EQUALS,
+                            SourceFileName,
+                            TextEquals,
                             source_path.name,
                         ),
                     ),
@@ -400,12 +400,12 @@ def test_virtual_pipeline_source_universe_does_not_mix_physical_paths(
             NamedSourceBinding(
                 alias=alias,
                 artifact_kind=ObjectLabelsArtifactType,
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.EQUALS,
+                            SourceFileName,
+                            TextEquals,
                             source_path.name,
                         ),
                     )
@@ -486,8 +486,8 @@ def test_bulk_preload_loads_matlab_pixels_through_declared_vfs_backend(
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.EQUALS,
+                            SourceFileName,
+                            TextEquals,
                             path.name,
                         ),
                     ),

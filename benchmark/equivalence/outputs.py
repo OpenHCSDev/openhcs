@@ -24,7 +24,9 @@ from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
 from openhcs.core.runtime_exports import RuntimeExportObservation
-from openhcs.core.source_bindings import SourceProjectionRole
+from openhcs.core.source_bindings import (
+    SourceArtifactRole,
+)
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_projection import SourceProjectionSet
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
@@ -159,7 +161,7 @@ class RuntimeOutputSnapshot:
                 for projection in (
                     workspace.source_projections_by_virtual_path[virtual_path],
                 )
-                if projection.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+                if projection.projection_role is SourceArtifactRole
                 and (root / projection.ref.backend_address).absolute() in expected_paths
             )
             if not projections:

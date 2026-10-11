@@ -45,8 +45,8 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
     ComponentSelector,
+    FromFileName,
     MetadataExtractionRule,
-    MetadataSource,
     NamedSourceBinding,
     PairByOrder,
     SourceSelector,
@@ -506,7 +506,7 @@ def test_compiler_keeps_variable_components_as_stack_source():
 def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
     ObjectStateRegistry.clear()
     metadata_rule = MetadataExtractionRule(
-        source=MetadataSource.FILE_NAME,
+        source=FromFileName,
         pattern=r"(?P<well>[A-H]\d{2})\.tif",
     )
     match_plan = PairByOrder()

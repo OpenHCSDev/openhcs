@@ -57,10 +57,10 @@ from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextContains,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
@@ -163,8 +163,8 @@ def test_compiler_derives_runtime_executor_after_generic_transport(
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.CONTAINS,
+                    subject=SourceFileName,
+                    match_type=TextContains,
                     value="OrigStain1",
                 ),
             )

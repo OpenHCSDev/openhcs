@@ -71,9 +71,9 @@ def test_compiler_source_queries_borrow_config_while_public_queries_stay_live(
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.source_bindings import (
+        SourceFileName,
         SourceFilterClause,
-        SourceFilterMatchType,
-        SourceFilterSubject,
+        TextContains,
     )
     from openhcs.core.config import SourceBindingsConfig, LazySourceBindingsConfig
 
@@ -101,12 +101,12 @@ def test_compiler_source_queries_borrow_config_while_public_queries_stay_live(
     metadata_path.write_text(json.dumps(metadata_document))
     source_a = SourceBindingsConfig(source_filters=(
         SourceFilterClause(
-            SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "source-a"
+            SourceFileName, TextContains, "source-a"
         ),
     ))
     source_b = SourceBindingsConfig(source_filters=(
         SourceFilterClause(
-            SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "source-b"
+            SourceFileName, TextContains, "source-b"
         ),
     ))
     held_config = GlobalPipelineConfig(source_bindings_config=source_a)

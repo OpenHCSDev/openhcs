@@ -617,8 +617,13 @@ def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
 
 def test_named_producer_members_keep_acquisition_filters_and_site_correlations():
     from openhcs.core.source_bindings import (
-        CompiledSourceBindingPlan, ComponentSelector, NamedSourceBinding,
-        SourceFilterClause, SourceFilterMatchType, SourceFilterSubject, SourceSelector,
+        CompiledSourceBindingPlan,
+        ComponentSelector,
+        NamedSourceBinding,
+        SourceFileName,
+        SourceFilterClause,
+        SourceSelector,
+        TextContains,
     )
     from openhcs.core.source_matching import SourceImageSetIdentityPolicy
     from openhcs.core.source_metadata import SourceFilterPathMetadata
@@ -652,7 +657,7 @@ def test_named_producer_members_keep_acquisition_filters_and_site_correlations()
     bindings = CompiledSourceBindingPlan(bindings=(NamedSourceBinding(
         alias="OrigStain1",
         selector=SourceSelector(filters=(SourceFilterClause(
-            SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "N_R",
+            SourceFileName, TextContains, "N_R",
         ),)),
         component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
     ),))
@@ -666,7 +671,7 @@ def test_named_producer_members_keep_acquisition_filters_and_site_correlations()
     assert tuple(record.component_values["site"] for record in selected) == (1, 2)
     wrong_binding = replace(bindings, bindings=(replace(
         bindings.bindings[0], selector=SourceSelector(filters=(SourceFilterClause(
-            SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "absent",
+            SourceFileName, TextContains, "absent",
         ),)),
     ),))
     assert index.source_binding_members(

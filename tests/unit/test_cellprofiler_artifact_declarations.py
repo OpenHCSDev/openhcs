@@ -57,6 +57,7 @@ from openhcs.core.pipeline.artifact_planning import (
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
+    SourceArtifactRole,
     SourceProjectionRole,
 )
 from openhcs.core.steps.function_step import FunctionStep
@@ -747,10 +748,12 @@ def test_declarations_carry_cross_step_object_and_measurement_flow() -> None:
 
 
 @pytest.mark.parametrize("in_main_flow", (True, False))
-@pytest.mark.parametrize("projection_role", tuple(SourceProjectionRole))
+@pytest.mark.parametrize(
+    "projection_role", tuple(SourceProjectionRole.__registry__.values())
+)
 def test_source_bound_input_is_declared_once_regardless_of_main_flow_membership(
     in_main_flow: bool,
-    projection_role: SourceProjectionRole,
+    projection_role: type[SourceProjectionRole],
 ) -> None:
     source_image = ArtifactSpec.input("OrigBlue", ImageArtifactType)
     module = _module(
@@ -887,7 +890,7 @@ def test_group_artifact_context_reseeds_main_flow_from_exact_primary_bindings() 
     illumination = NamedSourceBinding(
         alias="Illumination",
         artifact_kind=ImageArtifactType,
-        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        projection_role=SourceArtifactRole,
         component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
     )
     bindings = (dna, rna, illumination)
@@ -966,7 +969,7 @@ def test_measure_image_quality_all_loaded_uses_only_primary_plane_bindings() -> 
         NamedSourceBinding(
             alias="Illumination",
             artifact_kind=ImageArtifactType,
-            projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+            projection_role=SourceArtifactRole,
         ),
     )
     source_specs = tuple(binding.input_spec() for binding in bindings)
@@ -1963,7 +1966,7 @@ def test_declaration_resolves_exact_source_binding_without_cursor_artifact() -> 
                     NamedSourceBinding(
                         alias="Nuclei",
                         artifact_kind=ObjectLabelsArtifactType,
-                        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                        projection_role=SourceArtifactRole,
                     ),
                 ),
             ),

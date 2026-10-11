@@ -42,7 +42,7 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     PairByOrder,
-    SourceProjectionRole,
+    PrimaryPlaneRole,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.vfs_protocol import FileManagerLike
@@ -1783,7 +1783,7 @@ SaveImages:[module_num:4|enabled:True]
             "ColorLung"
         )
     assert color_lung_binding is not None
-    assert color_lung_binding.projection_role is SourceProjectionRole.PRIMARY_PLANE
+    assert color_lung_binding.projection_role is PrimaryPlaneRole
     save_invocation = next(
         normalize_function_pattern(pipeline_steps[2].func).iter_items()
     )

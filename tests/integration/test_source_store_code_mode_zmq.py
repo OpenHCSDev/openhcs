@@ -35,10 +35,10 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextEquals,
 )
 from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.core.steps.function_step import FunctionStep
@@ -90,8 +90,8 @@ def _binding(alias: str, file_name: str | None = None) -> NamedSourceBinding:
         selector = SourceSelector(
             filters=(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.EQUALS,
+                    subject=SourceFileName,
+                    match_type=TextEquals,
                     value=file_name,
                 ),
             ),

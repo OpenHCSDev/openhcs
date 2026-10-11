@@ -29,12 +29,12 @@ from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
+    FromPipelineStart,
     NamedSourceBinding,
-    SourceBindingMatchDimension,
-    SourceBindingMatchField,
     PairByMetadata,
     PairByOrder,
-    SourceBindingOrigin,
+    SourceBindingMatchDimension,
+    SourceBindingMatchField,
     SourceSelector,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
@@ -131,7 +131,7 @@ def _source_bindings() -> tuple[NamedSourceBinding, ...]:
             selector=SourceSelector(
                 components=(ComponentSelector(Microscopy.Channel, channel),),
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
         for alias, channel in SOURCE_ALIASES
@@ -553,7 +553,7 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
             selector=SourceSelector(
                 components=(ComponentSelector(Microscopy.Channel, channel),),
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
         for alias, channel in (("OrigStain1", "1"), ("OrigStain2", "2"))
@@ -658,7 +658,7 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
             selector=SourceSelector(
                 filters=(),
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
         for alias, channel in (("OrigStain1", "1"), ("OrigStain2", "2"))

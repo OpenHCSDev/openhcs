@@ -1226,7 +1226,7 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+    from openhcs.core.source_bindings import NamedSourceBinding, SourceArtifactRole
     from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
@@ -1250,7 +1250,7 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
                 NamedSourceBinding(
                     alias="Nuclei",
                     artifact_kind=ObjectLabelsArtifactType,
-                    projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                    projection_role=SourceArtifactRole,
                 ),
             ),
         ),

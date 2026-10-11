@@ -13,7 +13,10 @@ from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source_bindings import (
+    CompiledSourceBindingPlan,
+    FromPipelineStart,
+)
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.steps import function_runtime
@@ -774,11 +777,11 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     from openhcs.core.pipeline.function_contracts import artifact_inputs
     from openhcs.core.memory.decorators import numpy as numpy_memory
     from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneProjection
-    from openhcs.core.source_bindings import NamedSourceBinding, SourceBindingOrigin
+    from openhcs.core.source_bindings import NamedSourceBinding
     from openhcs.core.step_dependencies import StepInputDependency
 
     request, paths, payload = _fixture()
-    binding = NamedSourceBinding(alias="Raw", origin=SourceBindingOrigin.PIPELINE_START)
+    binding = NamedSourceBinding(alias="Raw", origin=FromPipelineStart)
     source = binding.input_spec()
 
     @artifact_inputs(source)

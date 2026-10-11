@@ -93,7 +93,7 @@ from openhcs.core.image_file_serialization import (
 )
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
-    SourceProjectionRole,
+    PrimaryPlaneRole,
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.partition_filter import PartitionFilterProcessor
@@ -1395,7 +1395,7 @@ class PipelineCompiler:
                 for projection in (
                     workspace_projection.source_projections_by_virtual_path.values()
                 )
-                if projection.projection_role is SourceProjectionRole.PRIMARY_PLANE
+                if projection.projection_role is PrimaryPlaneRole
             )
         if not selected:
             failures.append(

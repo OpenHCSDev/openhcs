@@ -44,7 +44,10 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.source_bindings import (
+    NamedSourceBinding,
+    SourceArtifactRole,
+)
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.interop.cellprofiler.module_declarations import (
@@ -108,7 +111,7 @@ def _contract(
                 bindings=tuple(
                     NamedSourceBinding(
                         alias=name,
-                        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                        projection_role=SourceArtifactRole,
                     )
                     for name in source_names
                 ),
@@ -286,7 +289,7 @@ def test_save_images_public_contract_selects_upstream_runtime_image() -> None:
             bindings=(
                 NamedSourceBinding(
                     alias="OrigBlue",
-                    projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                    projection_role=SourceArtifactRole,
                 ),
             ),
         ),

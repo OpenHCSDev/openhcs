@@ -10,7 +10,6 @@ import urllib.request
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
-from enum import Enum
 from pathlib import Path, PureWindowsPath
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self, TypeVar
@@ -27,7 +26,8 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
 )
 from openhcs.core.component_set import ComponentSet
-from python_introspect import FieldLabel
+from polystore.formats import get_format_from_extension
+from python_introspect import FieldLabel, RegisteredClassChoices
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
     SourceMetadataFields,
@@ -38,7 +38,7 @@ from openhcs.core.source_metadata import (
     source_metadata_scalar,
 )
 from openhcs.core.xdg_paths import get_openhcs_cache_dir
-from openhcs.core.source_path_identity import source_paths_equal
+from openhcs.core.source_path_identity import source_path_posix, source_paths_equal
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.axis_boundaries import AxisChoices
 from openhcs.core.axes import Axis, AxisFamily, GroupingDeclaration
@@ -59,77 +59,341 @@ SOURCE_BINDING_ALIAS_METADATA_FIELD = "source_alias"
 SourceBindingValue = TypeVar("SourceBindingValue")
 
 
-class SourceBindingOrigin(Enum):
-    """Where a named binding should be resolved from."""
+class SourceBindingOrigin(ABC, metaclass=AutoRegisterMeta):
+    """Where a named binding is resolved from."""
 
-    STEP_INPUT = "step_input"
-    PIPELINE_START = "pipeline_start"
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["SourceBindingOrigin"]]] = {}
 
-
-class SourceSetRole(Enum):
-    """How one source binding participates in source-set assembly."""
-
-    MATCHED = "matched"
-    BROADCAST = "broadcast"
+    name: ClassVar[str | None] = None
+    """Spelling in forms and on the wire."""
 
 
-class SourceProjectionRole(Enum):
+class FromStepInput(SourceBindingOrigin):
+    """The planes the prior step hands this step."""
+
+    name = "step_input"
+
+
+class FromPipelineStart(SourceBindingOrigin):
+    """The source planes as they were before the pipeline's first step."""
+
+    name = "pipeline_start"
+
+
+class SourceSetRole(ABC, metaclass=AutoRegisterMeta):
+    """How one source binding takes part in source-set assembly."""
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["SourceSetRole"]]] = {}
+
+    name: ClassVar[str | None] = None
+    """Spelling in forms and on the wire."""
+
+
+class MatchedSource(SourceSetRole):
+    """The alias determines which source sets exist and how many."""
+
+    name = "matched"
+
+
+class BroadcastSource(SourceSetRole):
+    """The alias is appended to every assembled source set."""
+
+    name = "broadcast"
+
+
+class SourceProjectionRole(ABC, metaclass=AutoRegisterMeta):
     """How one source binding is represented in a materialized workspace."""
 
-    PRIMARY_PLANE = "primary_plane"
-    SOURCE_ARTIFACT = "source_artifact"
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["SourceProjectionRole"]]] = {}
+
+    name: ClassVar[str | None] = None
+    """Spelling in forms and on the wire."""
+
+    @classmethod
+    def check_artifact_kind(cls, artifact_kind: type[ArtifactType]) -> None:
+        """Reject an artifact kind this projection cannot carry."""
 
 
-class MetadataSource(Enum):
-    """Where metadata extraction rules read source text from."""
+class PrimaryPlaneRole(SourceProjectionRole):
+    """The source becomes a primary image plane of the step's stack."""
 
-    FILE_NAME = "file_name"
-    FOLDER_NAME = "folder_name"
+    name = "primary_plane"
+
+    @classmethod
+    def check_artifact_kind(cls, artifact_kind: type[ArtifactType]) -> None:
+        if not issubclass(artifact_kind, ImageArtifactType):
+            raise ValueError(
+                "NamedSourceBinding primary-plane projections require an image "
+                f"artifact kind, got {artifact_kind.__name__}."
+            )
 
 
-class SourceFilterSubject(Enum):
-    """Which part of a source path one filter clause targets."""
+class SourceArtifactRole(SourceProjectionRole):
+    """The source is handed to functions as a named artifact."""
 
-    FILE = "file"
-    DIRECTORY = "directory"
-    EXTENSION = "extension"
+    name = "source_artifact"
 
 
-class SourceFilterMatchType(Enum):
-    """How one source filter clause matches its target text."""
+class MetadataSource(ABC, metaclass=AutoRegisterMeta):
+    """Which text of a source path metadata extraction rules search."""
 
-    def __new__(cls, value: str, requires_value: bool = True):
-        obj = object.__new__(cls)
-        obj._value_ = value
-        obj.requires_value = requires_value
-        return obj
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["MetadataSource"]]] = {}
 
-    CONTAINS = ("contains", True)
-    CONTAINS_REGEX = ("contains_regex", True)
-    DOES_NOT_CONTAIN = ("does_not_contain", True)
-    DOES_NOT_CONTAIN_REGEX = ("does_not_contain_regex", True)
-    EQUALS = ("equals", True)
-    DOES_NOT_EQUAL = ("does_not_equal", True)
-    STARTS_WITH = ("starts_with", True)
-    DOES_NOT_START_WITH = ("does_not_start_with", True)
-    ENDS_WITH = ("ends_with", True)
-    DOES_NOT_END_WITH = ("does_not_end_with", True)
-    IS_IMAGE = ("is_image", False)
-    IS_TIF = ("is_tif", False)
+    name: ClassVar[str | None] = None
+    """Spelling in forms and on the wire."""
+
+    @staticmethod
+    @abstractmethod
+    def texts(file_path: str) -> tuple[str, ...]:
+        """The texts a rule's pattern is searched in, in order."""
+
+
+class FromFileName(MetadataSource):
+    name = "file_name"
+
+    @staticmethod
+    def texts(file_path: str) -> tuple[str, ...]:
+        return (Path(file_path).name,)
+
+
+class FromFolderName(MetadataSource):
+    name = "folder_name"
+
+    @staticmethod
+    def texts(file_path: str) -> tuple[str, ...]:
+        parent = Path(file_path).parent
+        parent_path = source_path_posix(parent)
+        if parent_path == parent.name:
+            return (parent.name,)
+        return (parent.name, parent_path)
+
+
+class SourceFilterSubject(ABC, metaclass=AutoRegisterMeta):
+    """Which part of a source path one filter clause inspects."""
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["SourceFilterSubject"]]] = {}
+
+    name: ClassVar[str | None] = None
+    """Spelling in forms and on the wire."""
+
+    @staticmethod
+    @abstractmethod
+    def text_of(file_path: str) -> str:
+        """The text of ``file_path`` this subject names."""
+
+
+class SourceFileName(SourceFilterSubject):
+    name = "file"
+
+    @staticmethod
+    def text_of(file_path: str) -> str:
+        return os.path.basename(file_path)
+
+
+class SourceDirectory(SourceFilterSubject):
+    name = "directory"
+
+    @staticmethod
+    def text_of(file_path: str) -> str:
+        return os.path.dirname(file_path)
+
+
+class SourceExtension(SourceFilterSubject):
+    name = "extension"
+
+    @staticmethod
+    def text_of(file_path: str) -> str:
+        return os.path.splitext(file_path)[1].lower()
+
+
+class SourceFilterMatchType(ABC, metaclass=AutoRegisterMeta):
+    """How one source filter clause matches a source path."""
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["SourceFilterMatchType"]]] = {}
+
+    name: ClassVar[str | None] = None
+    """Spelling in forms and on the wire."""
+
+    requires_value: ClassVar[bool]
+    """The clause carries a comparison operand."""
+
+    @classmethod
+    @abstractmethod
+    def matches(cls, file_path: str, text: str, value: str | None) -> bool:
+        """Whether ``file_path``, whose subject text is ``text``, matches."""
+
+
+class TextMatchType(SourceFilterMatchType):
+    """Compares the subject text with the clause's value."""
+
+    requires_value = True
+
+    @staticmethod
+    @abstractmethod
+    def compare(text: str, value: str) -> bool:
+        """Whether ``text`` satisfies this comparison with ``value``."""
+
+    @classmethod
+    def matches(cls, file_path: str, text: str, value: str | None) -> bool:
+        if value is None:
+            raise ValueError(f"{cls.name} source filters require a value.")
+        return cls.compare(text, value)
+
+    @classmethod
+    def negation(cls) -> type["TextMatchType"]:
+        """The comparison that holds exactly when this one does not."""
+
+        (negation,) = (
+            member
+            for member in SourceFilterMatchType.__registry__.values()
+            if issubclass(member, NegatedTextMatch) and member.negates is cls
+        )
+        return negation
+
+
+class NegatedTextMatch(TextMatchType):
+    """Holds exactly when the comparison it negates does not."""
+
+    negates: ClassVar[type[TextMatchType]]
+
+    @classmethod
+    def compare(cls, text: str, value: str) -> bool:
+        return not cls.negates.compare(text, value)
+
+
+class TextContains(TextMatchType):
+    name = "contains"
+
+    @staticmethod
+    def compare(text: str, value: str) -> bool:
+        return value in text
+
+
+class TextContainsRegex(TextMatchType):
+    name = "contains_regex"
+
+    @staticmethod
+    def compare(text: str, value: str) -> bool:
+        return re.search(value, text) is not None
+
+
+class TextDoesNotContain(NegatedTextMatch):
+    name = "does_not_contain"
+    negates = TextContains
+
+
+class TextDoesNotContainRegex(NegatedTextMatch):
+    name = "does_not_contain_regex"
+    negates = TextContainsRegex
+
+
+class TextEquals(TextMatchType):
+    name = "equals"
+
+    @staticmethod
+    def compare(text: str, value: str) -> bool:
+        return text == value
+
+
+class TextDoesNotEqual(NegatedTextMatch):
+    name = "does_not_equal"
+    negates = TextEquals
+
+
+class TextStartsWith(TextMatchType):
+    name = "starts_with"
+
+    @staticmethod
+    def compare(text: str, value: str) -> bool:
+        return text.startswith(value)
+
+
+class TextDoesNotStartWith(NegatedTextMatch):
+    name = "does_not_start_with"
+    negates = TextStartsWith
+
+
+class TextEndsWith(TextMatchType):
+    name = "ends_with"
+
+    @staticmethod
+    def compare(text: str, value: str) -> bool:
+        return text.endswith(value)
+
+
+class TextDoesNotEndWith(NegatedTextMatch):
+    name = "does_not_end_with"
+    negates = TextEndsWith
+
+
+class PathMatchType(SourceFilterMatchType):
+    """A predicate of the whole path; the clause carries no value."""
+
+    requires_value = False
+
+    @staticmethod
+    @abstractmethod
+    def holds_for(file_path: str) -> bool:
+        """Whether ``file_path`` satisfies this predicate."""
+
+    @classmethod
+    def matches(cls, file_path: str, text: str, value: str | None) -> bool:
+        if value is not None:
+            raise ValueError(f"{cls.name} source filters do not accept a value.")
+        return cls.holds_for(file_path)
+
+
+class PathIsImage(PathMatchType):
+    """The path's extension names a loadable pixel format."""
+
+    name = "is_image"
+
+    @staticmethod
+    def holds_for(file_path: str) -> bool:
+        suffix = os.path.splitext(file_path)[1].lower()
+        try:
+            file_format = get_format_from_extension(suffix)
+        except ValueError:
+            return False
+        return file_format.is_pixel_payload
+
+
+class PathIsTif(PathMatchType):
+    name = "is_tif"
+
+    @staticmethod
+    def holds_for(file_path: str) -> bool:
+        return os.path.splitext(file_path)[1].lower() in {".tif", ".tiff"}
 
 
 @dataclass(frozen=True, slots=True)
 class SourceFilterClause:
     """Typed filter clause applied before metadata extraction."""
 
-    subject: SourceFilterSubject
+    subject: Annotated[
+        type[SourceFilterSubject], RegisteredClassChoices(SourceFilterSubject)
+    ]
     """Part of the source path inspected by this clause."""
 
-    match_type: SourceFilterMatchType
+    match_type: Annotated[
+        type[SourceFilterMatchType], RegisteredClassChoices(SourceFilterMatchType)
+    ]
     """Comparison applied to the selected path text."""
 
     value: str | None = None
-    """Comparison operand; omitted for predicate matches such as ``IS_IMAGE``."""
+    """Comparison operand; omitted for path predicates such as ``PathIsImage``."""
 
     any_group: int | None = None
     """Optional OR-group identifier.
@@ -139,31 +403,26 @@ class SourceFilterClause:
     """
 
     def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "subject",
-            SourceFilterSubject(
-                self.subject,
-            ),
-        )
-        match_type = SourceFilterMatchType(
-            self.match_type,
-        )
-        object.__setattr__(self, "match_type", match_type)
         if self.any_group is not None:
             if not isinstance(self.any_group, int) or self.any_group < 0:
                 raise ValueError(
                     "SourceFilterClause.any_group must be a nonnegative integer."
                 )
-        normalized_value = None if self.value is None else str(self.value)
-        if not match_type.requires_value:
+        if not self.match_type.requires_value:
             object.__setattr__(self, "value", None)
             return
-        if normalized_value is None:
+        if self.value is None:
             raise ValueError(
-                "SourceFilterClause.value is required unless match_type is IS_IMAGE."
+                f"SourceFilterClause.value is required for {self.match_type.name}."
             )
-        object.__setattr__(self, "value", normalized_value)
+        object.__setattr__(self, "value", str(self.value))
+
+    def matches(self, file_path: str) -> bool:
+        """Whether one source path satisfies this clause."""
+
+        return self.match_type.matches(
+            file_path, self.subject.text_of(file_path), self.value
+        )
 
 
 def _normalized_optional_source_text(value: str | None) -> str | None:
@@ -439,7 +698,7 @@ def normalize_source_binding_values(
 class MetadataExtractionRule:
     """Regex-backed metadata extraction rule for source binding resolution."""
 
-    source: MetadataSource
+    source: Annotated[type[MetadataSource], RegisteredClassChoices(MetadataSource)]
     """Source-path text searched by the regular expression."""
 
     pattern: str
@@ -449,13 +708,6 @@ class MetadataExtractionRule:
     """Optional path clauses limiting which sources this extraction rule processes."""
 
     def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "source",
-            MetadataSource(
-                self.source,
-            ),
-        )
         if not self.pattern:
             raise ValueError("MetadataExtractionRule.pattern cannot be empty.")
         compiled_pattern = re.compile(str(self.pattern))
@@ -771,7 +1023,9 @@ class SourceAssignmentBase(metaclass=AutoRegisterMeta):
     selector: SourceSelector = SourceSelector()
     """Source-plane selection criteria for this named input."""
 
-    origin: SourceBindingOrigin = SourceBindingOrigin.STEP_INPUT
+    origin: Annotated[
+        type[SourceBindingOrigin], RegisteredClassChoices(SourceBindingOrigin)
+    ] = FromStepInput
     """Whether selection starts from the prior step input or pipeline-start sources."""
 
     component_identity: Annotated[
@@ -811,13 +1065,6 @@ class SourceAssignmentBase(metaclass=AutoRegisterMeta):
             self,
             "component_identity",
             tuple(dict.fromkeys(component_identity)),
-        )
-        object.__setattr__(
-            self,
-            "origin",
-            SourceBindingOrigin(
-                self.origin,
-            ),
         )
 
     @property
@@ -922,10 +1169,14 @@ class NamedSourceBinding(SourceAssignmentBase):
     required: bool = True
     """Whether compilation fails when this alias cannot supply an artifact."""
 
-    source_set_role: SourceSetRole = SourceSetRole.MATCHED
+    source_set_role: Annotated[
+        type[SourceSetRole], RegisteredClassChoices(SourceSetRole)
+    ] = MatchedSource
     """Whether this alias determines source-set membership or broadcasts to every set."""
 
-    projection_role: SourceProjectionRole = SourceProjectionRole.PRIMARY_PLANE
+    projection_role: Annotated[
+        type[SourceProjectionRole], RegisteredClassChoices(SourceProjectionRole)
+    ] = PrimaryPlaneRole
     """Whether the resolved source becomes a primary image plane or source artifact."""
 
     explicit_source: ImagePlaneSource | None = None
@@ -950,19 +1201,7 @@ class NamedSourceBinding(SourceAssignmentBase):
             "artifact_kind",
             ArtifactType.coerce(self.artifact_kind),
         )
-        source_set_role = SourceSetRole(
-            self.source_set_role,
-        )
-        projection_role = SourceProjectionRole(
-            self.projection_role,
-        )
-        if projection_role is SourceProjectionRole.PRIMARY_PLANE and not issubclass(
-            self.artifact_kind, ImageArtifactType
-        ):
-            raise ValueError(
-                "NamedSourceBinding PRIMARY_PLANE projections require an image "
-                f"artifact kind, got {self.artifact_kind.__name__}."
-            )
+        self.projection_role.check_artifact_kind(self.artifact_kind)
         if self.explicit_source is not None and not isinstance(
             self.explicit_source,
             ImagePlaneSource,
@@ -970,8 +1209,6 @@ class NamedSourceBinding(SourceAssignmentBase):
             raise TypeError(
                 "NamedSourceBinding.explicit_source must be ImagePlaneSource or None."
             )
-        object.__setattr__(self, "source_set_role", source_set_role)
-        object.__setattr__(self, "projection_role", projection_role)
         object.__setattr__(self, "required", bool(self.required))
         object.__setattr__(self, "load_as_monochrome", bool(self.load_as_monochrome))
         object.__setattr__(self, "load_as_mask", bool(self.load_as_mask))
@@ -1165,11 +1402,11 @@ class NamedSourceBinding(SourceAssignmentBase):
         metadata = payload.metadata
         provenance = metadata.source_provenance
         if not provenance.has_values:
-            raise ValueError(f"STEP_INPUT binding {self.alias!r} requires source provenance.")
+            raise ValueError(f"Step-input binding {self.alias!r} requires source provenance.")
 
         if not provenance.source_plane_count:
             if not self.selector.matches_provenance(provenance):
-                raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
+                raise ValueError(f"Step-input binding {self.alias!r} selects no current planes.")
             selected = payload
         else:
             named_planes = provenance.source_plane_selection(self.alias)
@@ -1182,7 +1419,7 @@ class NamedSourceBinding(SourceAssignmentBase):
                 if self.selector.matches_provenance(provenance.for_source_plane(index))
             )
             if not selection:
-                raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
+                raise ValueError(f"Step-input binding {self.alias!r} selects no current planes.")
             selected = metadata.project_source_planes(payload, selection)
         return self.apply_loaded_payload(selected, source_context=None)
 
@@ -1190,8 +1427,8 @@ class NamedSourceBinding(SourceAssignmentBase):
     def requires_current_pixels(self) -> bool:
         """Whether this source projects the actual current main-flow pixels."""
         return (
-            self.origin is SourceBindingOrigin.STEP_INPUT
-            and self.projection_role is SourceProjectionRole.PRIMARY_PLANE
+            self.origin is FromStepInput
+            and self.projection_role is PrimaryPlaneRole
         )
 
     @staticmethod
@@ -1331,7 +1568,7 @@ class NamedSourceBinding(SourceAssignmentBase):
         components: tuple[type[Axis], ...],
     ) -> bool:
         """Whether resolving this binding needs component-varying step input."""
-        if self.origin is not SourceBindingOrigin.STEP_INPUT:
+        if self.origin is not FromStepInput:
             return False
         if not components:
             return False
@@ -1362,7 +1599,7 @@ class SourceBindingDeclarationsMixin:
         return tuple(
             binding
             for binding in self.binding_declarations
-            if binding.source_set_role is SourceSetRole.MATCHED
+            if binding.source_set_role is MatchedSource
         )
 
     @property
@@ -1372,7 +1609,7 @@ class SourceBindingDeclarationsMixin:
         return tuple(
             binding
             for binding in self.binding_declarations
-            if binding.source_set_role is SourceSetRole.BROADCAST
+            if binding.source_set_role is BroadcastSource
         )
 
     @property
@@ -1382,7 +1619,7 @@ class SourceBindingDeclarationsMixin:
         return tuple(
             binding
             for binding in self.binding_declarations
-            if binding.projection_role is SourceProjectionRole.PRIMARY_PLANE
+            if binding.projection_role is PrimaryPlaneRole
         )
 
     def binding_for_alias(
@@ -1447,7 +1684,7 @@ class SourceBindingDeclarationsMixin:
     def requires_pipeline_start_resolution(self) -> bool:
         """Whether any declaration resolves from the pipeline-start universe."""
         return any(
-            binding.origin is SourceBindingOrigin.PIPELINE_START
+            binding.origin is FromPipelineStart
             for binding in self.binding_declarations
         )
 
@@ -1458,8 +1695,8 @@ class SourceBindingDeclarationsMixin:
             sum(
                 1
                 for binding in self.binding_declarations
-                if binding.origin is SourceBindingOrigin.PIPELINE_START
-                and binding.source_set_role is SourceSetRole.MATCHED
+                if binding.origin is FromPipelineStart
+                and binding.source_set_role is MatchedSource
             )
             > 1
         )
@@ -1468,7 +1705,7 @@ class SourceBindingDeclarationsMixin:
     def requires_step_input_selector_resolution(self) -> bool:
         """Whether step-input declarations need selector-aware matching."""
         return any(
-            binding.origin is SourceBindingOrigin.STEP_INPUT
+            binding.origin is FromStepInput
             and binding.requires_selector_resolution
             for binding in self.binding_declarations
         )
@@ -1975,7 +2212,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         """Whether any step-input binding needs selector-aware source matching."""
 
         return any(
-            binding.origin is SourceBindingOrigin.STEP_INPUT
+            binding.origin is FromStepInput
             and binding.requires_selector_resolution
             for binding in self.bindings
         )
@@ -2015,7 +2252,7 @@ class CompiledSourceUniversePlan:
         uses_pipeline_start_binding_origin = (
             source_binding_plan.has_primary_content
             and any(
-                binding.origin is SourceBindingOrigin.PIPELINE_START
+                binding.origin is FromPipelineStart
                 for binding in source_binding_plan.bindings
             )
         )

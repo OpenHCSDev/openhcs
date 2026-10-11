@@ -43,8 +43,8 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
+    SourceFileName,
+    TextEquals,
     SourceSelector,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -142,8 +142,8 @@ def _exact_image_binding(
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.EQUALS,
+                    subject=SourceFileName,
+                    match_type=TextEquals,
                     value=source.filename,
                 ),
             ),

@@ -2,26 +2,20 @@
 
 from __future__ import annotations
 
-import os
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
-from pathlib import Path
-from typing import Callable, ClassVar, Mapping, Sequence, TYPE_CHECKING, TypeAlias
+from typing import ClassVar, Mapping, Sequence, TYPE_CHECKING, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
 
-from polystore.formats import get_format_from_extension
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.source_bindings import (
     MetadataExtractionRule,
-    MetadataSource,
     SourceBindingDeclarationsMixin,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
 )
 from openhcs.core.source_metadata import (
     DECLARED_SOURCE_METADATA_FIELD,
@@ -38,238 +32,11 @@ from openhcs.core.source_metadata import (
     source_metadata_dict,
     source_metadata_scalar,
 )
-from openhcs.core.source_path_identity import source_path_identity_key, source_path_posix
+from openhcs.core.source_path_identity import source_path_identity_key
 from openhcs.core.axes import Axis, AxisFamily
 
 if TYPE_CHECKING:
     from openhcs.core.config import PipelineConfig
-
-
-@dataclass(frozen=True, slots=True)
-class SourceFilterMatchRequest:
-    """Typed request for one source-filter match evaluation."""
-
-    file_path: str
-    clause: SourceFilterClause
-    target: str
-
-
-def _string_contains(target: str, value: str) -> bool:
-    return value in target
-
-
-def _string_does_not_contain(target: str, value: str) -> bool:
-    return value not in target
-
-
-def _string_contains_regex(target: str, value: str) -> bool:
-    return re.search(value, target) is not None
-
-
-def _string_does_not_contain_regex(target: str, value: str) -> bool:
-    return re.search(value, target) is None
-
-
-def _string_equals(target: str, value: str) -> bool:
-    return target == value
-
-
-def _string_does_not_equal(target: str, value: str) -> bool:
-    return target != value
-
-
-def _string_starts_with(target: str, value: str) -> bool:
-    return target.startswith(value)
-
-
-def _string_does_not_start_with(target: str, value: str) -> bool:
-    return not target.startswith(value)
-
-
-def _string_ends_with(target: str, value: str) -> bool:
-    return target.endswith(value)
-
-
-def _string_does_not_end_with(target: str, value: str) -> bool:
-    return not target.endswith(value)
-
-
-def is_image_path(file_path: str) -> bool:
-    """Return whether the path extension is a loadable image source."""
-    suffix = os.path.splitext(file_path)[1].lower()
-    try:
-        file_format = get_format_from_extension(suffix)
-    except ValueError:
-        return False
-    return file_format.is_pixel_payload
-
-
-def is_tif_path(file_path: str) -> bool:
-    """Return whether the path extension is a TIFF source."""
-
-    return os.path.splitext(file_path)[1].lower() in {".tif", ".tiff"}
-
-
-class SourceFilterMatcher(ABC, metaclass=AutoRegisterMeta):
-    """Nominal family for typed source-filter match behavior."""
-
-    __registry_key__ = "match_type_key"
-    __skip_if_no_key__ = True
-    match_type: ClassVar[SourceFilterMatchType | None] = None
-    match_type_key: ClassVar[str | None] = None
-
-    @classmethod
-    def for_match_type(
-        cls,
-        match_type: SourceFilterMatchType,
-    ) -> "SourceFilterMatcher":
-        return cls.__registry__[match_type.value]()
-
-    @abstractmethod
-    def matches(self, request: SourceFilterMatchRequest) -> bool:
-        """Return whether one file path satisfies the filter clause."""
-
-
-class ValuePredicateSourceFilterMatcher(SourceFilterMatcher):
-    """Declarative matcher for source-filter clauses with scalar values."""
-
-    value_predicate: ClassVar[Callable[[str, str], bool]]
-
-    def matches(self, request: SourceFilterMatchRequest) -> bool:
-        return type(self).value_predicate(
-            request.target,
-            _require_filter_value(request.clause),
-        )
-
-
-class PathPredicateSourceFilterMatcher(SourceFilterMatcher):
-    """Declarative matcher for source-filter clauses that inspect the path."""
-
-    path_predicate: ClassVar[Callable[[str], bool]]
-
-    def matches(self, request: SourceFilterMatchRequest) -> bool:
-        if request.clause.value is not None:
-            raise ValueError(
-                f"{request.clause.match_type.value} source filters do not accept "
-                "a scalar clause value."
-            )
-        return type(self).path_predicate(request.file_path)
-
-
-class ContainsSourceFilterMatcher(ValuePredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.CONTAINS
-    match_type_key = SourceFilterMatchType.CONTAINS.value
-    value_predicate = staticmethod(_string_contains)
-
-
-class DoesNotContainSourceFilterMatcher(ValuePredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.DOES_NOT_CONTAIN
-    match_type_key = SourceFilterMatchType.DOES_NOT_CONTAIN.value
-    value_predicate = staticmethod(_string_does_not_contain)
-
-
-class ContainsRegexSourceFilterMatcher(ValuePredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.CONTAINS_REGEX
-    match_type_key = SourceFilterMatchType.CONTAINS_REGEX.value
-    value_predicate = staticmethod(_string_contains_regex)
-
-
-class DoesNotContainRegexSourceFilterMatcher(ValuePredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.DOES_NOT_CONTAIN_REGEX
-    match_type_key = SourceFilterMatchType.DOES_NOT_CONTAIN_REGEX.value
-    value_predicate = staticmethod(_string_does_not_contain_regex)
-
-
-class EqualsSourceFilterMatcher(ValuePredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.EQUALS
-    match_type_key = SourceFilterMatchType.EQUALS.value
-    value_predicate = staticmethod(_string_equals)
-
-
-class DoesNotEqualSourceFilterMatcher(ValuePredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.DOES_NOT_EQUAL
-    match_type_key = SourceFilterMatchType.DOES_NOT_EQUAL.value
-    value_predicate = staticmethod(_string_does_not_equal)
-
-
-class StartsWithSourceFilterMatcher(ValuePredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.STARTS_WITH
-    match_type_key = SourceFilterMatchType.STARTS_WITH.value
-    value_predicate = staticmethod(_string_starts_with)
-
-
-class DoesNotStartWithSourceFilterMatcher(ValuePredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.DOES_NOT_START_WITH
-    match_type_key = SourceFilterMatchType.DOES_NOT_START_WITH.value
-    value_predicate = staticmethod(_string_does_not_start_with)
-
-
-class EndsWithSourceFilterMatcher(ValuePredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.ENDS_WITH
-    match_type_key = SourceFilterMatchType.ENDS_WITH.value
-    value_predicate = staticmethod(_string_ends_with)
-
-
-class DoesNotEndWithSourceFilterMatcher(ValuePredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.DOES_NOT_END_WITH
-    match_type_key = SourceFilterMatchType.DOES_NOT_END_WITH.value
-    value_predicate = staticmethod(_string_does_not_end_with)
-
-
-class IsImageSourceFilterMatcher(PathPredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.IS_IMAGE
-    match_type_key = SourceFilterMatchType.IS_IMAGE.value
-    path_predicate = staticmethod(is_image_path)
-
-
-class IsTifSourceFilterMatcher(PathPredicateSourceFilterMatcher):
-    match_type = SourceFilterMatchType.IS_TIF
-    match_type_key = SourceFilterMatchType.IS_TIF.value
-    path_predicate = staticmethod(is_tif_path)
-
-
-class SourceFilterTargetResolver(ABC, metaclass=AutoRegisterMeta):
-    """Nominal family for source-filter target text resolution."""
-
-    __registry_key__ = "subject_key"
-    __skip_if_no_key__ = True
-    subject: ClassVar[SourceFilterSubject | None] = None
-    subject_key: ClassVar[str | None] = None
-
-    @classmethod
-    def for_subject(
-        cls,
-        subject: SourceFilterSubject,
-    ) -> "SourceFilterTargetResolver":
-        return cls.__registry__[subject.value]()
-
-    @abstractmethod
-    def resolve_text(self, file_path: str) -> str:
-        """Return the subject-specific text inspected by one filter clause."""
-
-
-class FileSourceFilterTargetResolver(SourceFilterTargetResolver):
-    subject = SourceFilterSubject.FILE
-    subject_key = SourceFilterSubject.FILE.value
-
-    def resolve_text(self, file_path: str) -> str:
-        return os.path.basename(file_path)
-
-
-class DirectorySourceFilterTargetResolver(SourceFilterTargetResolver):
-    subject = SourceFilterSubject.DIRECTORY
-    subject_key = SourceFilterSubject.DIRECTORY.value
-
-    def resolve_text(self, file_path: str) -> str:
-        return os.path.dirname(file_path)
-
-
-class ExtensionSourceFilterTargetResolver(SourceFilterTargetResolver):
-    subject = SourceFilterSubject.EXTENSION
-    subject_key = SourceFilterSubject.EXTENSION.value
-
-    def resolve_text(self, file_path: str) -> str:
-        return os.path.splitext(file_path)[1].lower()
 
 
 def metadata_from_rules(
@@ -283,10 +50,10 @@ def metadata_from_rules(
     extracted: dict[str, str] = {}
     filter_candidate = file_path if filter_path is None else filter_path
     for rule in metadata_rules:
-        if not rule_filters_match(filter_candidate, rule.filters):
+        if not source_filters_match(filter_candidate, rule.filters):
             continue
         match = None
-        for target in metadata_source_texts(file_path, rule.source):
+        for target in rule.source.texts(file_path):
             match = re.search(rule.pattern, target)
             if match is not None:
                 break
@@ -310,31 +77,6 @@ def metadata_from_rules(
     )
 
 
-def metadata_source_texts(
-    file_path: str,
-    source: MetadataSource,
-) -> tuple[str, ...]:
-    """Return ordered path texts inspected by one metadata extraction rule."""
-
-    path = Path(file_path)
-    if source is MetadataSource.FOLDER_NAME:
-        parent_path = source_path_posix(path.parent)
-        parent_name = path.parent.name
-        if parent_path == parent_name:
-            return (parent_name,)
-        return (parent_name, parent_path)
-    return (path.name,)
-
-
-def rule_filters_match(
-    file_path: str,
-    filters: tuple[SourceFilterClause, ...],
-) -> bool:
-    """Return whether one source path satisfies metadata-rule filters."""
-
-    return source_filters_match(file_path, filters)
-
-
 def source_filters_match(
     file_path: str,
     filters: tuple[SourceFilterClause, ...],
@@ -351,7 +93,7 @@ def _source_filters_match_cached(
 ) -> bool:
     any_group_matches: dict[int, bool] = {}
     for clause in filters:
-        matches = filter_clause_matches(file_path, clause)
+        matches = clause.matches(file_path)
         if clause.any_group is None:
             if not matches:
                 return False
@@ -360,24 +102,6 @@ def _source_filters_match_cached(
             any_group_matches.get(clause.any_group, False) or matches
         )
     return all(any_group_matches.values())
-
-
-def filter_clause_matches(
-    file_path: str,
-    clause: SourceFilterClause,
-) -> bool:
-    """Return whether one source path satisfies one source-filter clause."""
-
-    target = SourceFilterTargetResolver.for_subject(clause.subject).resolve_text(
-        file_path
-    )
-    return SourceFilterMatcher.for_match_type(clause.match_type).matches(
-        SourceFilterMatchRequest(
-            file_path=file_path,
-            clause=clause,
-            target=target,
-        )
-    )
 
 
 class SourceImageSetComponentRole(Enum):
@@ -943,11 +667,3 @@ class SourceAxisMetadataScope:
             and source_metadata_values_equal(str(metadata_value), value)
             for metadata_value in SourceMetadataFields.scalar_values(metadata)
         )
-
-
-def _require_filter_value(clause: SourceFilterClause) -> str:
-    if clause.value is None:
-        raise ValueError(
-            "SourceFilterClause.value must be set unless match_type is IS_IMAGE."
-        )
-    return clause.value

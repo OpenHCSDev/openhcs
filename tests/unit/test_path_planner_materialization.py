@@ -104,9 +104,9 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
     ComponentSelector,
+    FromPipelineStart,
     NamedSourceBinding,
-    SourceBindingOrigin,
-    SourceProjectionRole,
+    SourceArtifactRole,
 )
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.step_dependencies import StepInputDependencyKind
@@ -2664,7 +2664,7 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
         bindings=tuple(
             NamedSourceBinding(
                 alias=name,
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
                 component_identity=(ComponentSelector(Microscopy.Channel, channel),),
             )
             for name, channel in ((blue.name, "1"), (green.name, "2"))
@@ -4154,7 +4154,7 @@ def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
             NamedSourceBinding(
                 alias="DF_image",
                 component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
             ),
         ),
     )
@@ -4315,7 +4315,7 @@ def test_execution_anchor_ignores_source_artifact_lineage():
             NamedSourceBinding(
                 alias="OrigRed",
                 component_identity=(ComponentSelector(Microscopy.Channel, "3"),),
-                projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+                projection_role=SourceArtifactRole,
             ),
         ),
     )

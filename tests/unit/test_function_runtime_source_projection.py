@@ -68,17 +68,19 @@ from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContex
 from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
 from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import (
-    SOURCE_BINDING_ALIAS_METADATA_FIELD,
     CompiledSourceBindingPlan,
     ComponentSelector,
+    FromPipelineStart,
     NamedSourceBinding,
     PairByOrder,
-    SourceBindingOrigin,
+    PrimaryPlaneRole,
+    SOURCE_BINDING_ALIAS_METADATA_FIELD,
+    SourceArtifactRole,
+    SourceExtension,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceProjectionRole,
     SourceSelector,
+    TextContains,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
@@ -319,11 +321,11 @@ def test_workspace_source_files_select_exact_projection_roles(
         workspace_root=str(plate_path),
     )
 
-    assert projection.files_for_projection_role(SourceProjectionRole.PRIMARY_PLANE) == (
+    assert projection.files_for_projection_role(PrimaryPlaneRole) == (
         str(plate_path / canonical_path),
     )
     assert projection.files_for_projection_role(
-        SourceProjectionRole.SOURCE_ARTIFACT
+        SourceArtifactRole
     ) == (str(plate_path / artifact_path),)
 
 
@@ -1693,7 +1695,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
             selector=SourceSelector(
                 components=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
         ),
         NamedSourceBinding(
@@ -1701,7 +1703,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
             selector=SourceSelector(
                 components=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(ComponentSelector(Microscopy.Channel, "2"),),
         ),
     )
@@ -1887,7 +1889,7 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
                 selector=SourceSelector(
                     components=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
                 component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
             NamedSourceBinding(
@@ -1895,7 +1897,7 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
                 selector=SourceSelector(
                     components=(ComponentSelector(Microscopy.Channel, "3"),),
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
                 component_identity=(ComponentSelector(Microscopy.Channel, "3"),),
             ),
         ),
@@ -1953,7 +1955,7 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
                 selector=SourceSelector(
                     components=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
                 component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
@@ -2007,7 +2009,7 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
                 selector=SourceSelector(
                     components=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
                 component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
@@ -2052,7 +2054,7 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
             selector=SourceSelector(
                 components=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(ComponentSelector(Microscopy.Channel, "MCP_DNA"),),
         ),
         NamedSourceBinding(
@@ -2060,7 +2062,7 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
             selector=SourceSelector(
                 components=(ComponentSelector(Microscopy.Channel, "2"),),
             ),
-            origin=SourceBindingOrigin.PIPELINE_START,
+            origin=FromPipelineStart,
             component_identity=(ComponentSelector(Microscopy.Channel, "MCP_AGP"),),
         ),
     )
@@ -2227,7 +2229,7 @@ def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
                 selector=SourceSelector(
                     components=(ComponentSelector(Microscopy.Channel, "1"),),
                 ),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
                 component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
@@ -2819,7 +2821,7 @@ def test_main_flow_input_owns_runtime_binding_scope_with_auxiliary_source() -> N
             NamedSourceBinding(
                 alias="OrigStain1",
                 component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
-                origin=SourceBindingOrigin.PIPELINE_START,
+                origin=FromPipelineStart,
             ),
             NamedSourceBinding(
                 alias="OrigStain2",
@@ -3634,8 +3636,8 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.CONTAINS,
+                            SourceFileName,
+                            TextContains,
                             "N_R",
                         ),
                     )
@@ -3647,8 +3649,8 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
                 selector=SourceSelector(
                     filters=(
                         SourceFilterClause(
-                            SourceFilterSubject.FILE,
-                            SourceFilterMatchType.CONTAINS,
+                            SourceFileName,
+                            TextContains,
                             "N_G",
                         ),
                     )
@@ -3811,7 +3813,7 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
         Microscopy.ZIndex.name: 3,
         Microscopy.Timepoint.name: 4,
         Microscopy.Well.name: "A01",
-        SourceFilterSubject.EXTENSION.value: ".tif",
+        SourceExtension.name: ".tif",
     }
     projection = VirtualWorkspaceSourceProjection(
         source_refs_by_virtual_path={virtual_path: source_ref},
@@ -3879,7 +3881,7 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
         Microscopy.ZIndex.name: 3,
         Microscopy.Timepoint.name: 4,
         Microscopy.Well.name: "A01",
-        SourceFilterSubject.EXTENSION.value: ".tif",
+        SourceExtension.name: ".tif",
     }
     assert projected.metadata.source_provenance.represented_source_image_names == ("OrigDNA",)
 

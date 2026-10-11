@@ -21,7 +21,10 @@ from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayload
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
-from openhcs.core.source_bindings import MetadataExtractionRule, MetadataSource
+from openhcs.core.source_bindings import (
+    FromFileName,
+    MetadataExtractionRule,
+)
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_matching import source_component_metadata_value
@@ -88,7 +91,7 @@ def _config():
     return SourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
+                FromFileName,
                 r"(?P<well>A\d+)_s(?P<site>\d+)_w(?P<channel>\d+)_z(?P<z_index>\d+)_t(?P<timepoint>\d+)\.tif",
             ),
         )

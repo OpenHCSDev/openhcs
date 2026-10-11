@@ -21,6 +21,8 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     NamedSourceBinding,
+    PrimaryPlaneRole,
+    SourceArtifactRole,
     SourceProjectionRole,
 )
 from openhcs.core.source_matching import (
@@ -597,7 +599,7 @@ class SourcePlaneDataset:
 class SourceProjection:
     """Nominal root for typed source projections."""
 
-    projection_role: ClassVar[SourceProjectionRole]
+    projection_role: ClassVar[type[SourceProjectionRole]]
     address: OpenHCSPlaneAddress | None
     ref: SourcePixelRef
     source_alias: str | None
@@ -725,7 +727,7 @@ declared_optional_payload_field = lru_cache(maxsize=None)(
 class SourcePlaneProjection(SourceProjection):
     """One canonical primary plane mapped to one source pixel reference."""
 
-    projection_role: ClassVar[SourceProjectionRole] = SourceProjectionRole.PRIMARY_PLANE
+    projection_role: ClassVar[type[SourceProjectionRole]] = PrimaryPlaneRole
     artifact_kind: ClassVar[type[ArtifactType]] = ImageArtifactType
 
     address: OpenHCSPlaneAddress
@@ -766,9 +768,7 @@ class SourcePlaneProjection(SourceProjection):
 class SourceArtifactProjection(SourceProjection):
     """One typed source artifact attached to a source-set execution address."""
 
-    projection_role: ClassVar[SourceProjectionRole] = (
-        SourceProjectionRole.SOURCE_ARTIFACT
-    )
+    projection_role: ClassVar[type[SourceProjectionRole]] = SourceArtifactRole
 
     address: OpenHCSPlaneAddress | None
     ref: SourcePixelRef
@@ -968,7 +968,7 @@ class SourceProjectionSet:
             tuple(
                 projection
                 for projection in self.projections
-                if projection.projection_role is SourceProjectionRole.PRIMARY_PLANE
+                if projection.projection_role is PrimaryPlaneRole
             ),
         )
 
@@ -981,7 +981,7 @@ class SourceProjectionSet:
             tuple(
                 projection
                 for projection in self.projections
-                if projection.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
+                if projection.projection_role is SourceArtifactRole
             ),
         )
 
@@ -1358,7 +1358,7 @@ class SourceProjectionMetadataSerializer:
             "virtual_path": path,
             "address": projection.serialized_address(),
             "ref": projection.ref.to_workspace_mapping(),
-            "projection_role": projection.projection_role.value,
+            "projection_role": projection.projection_role.name,
         }
         if projection.source_alias is not None:
             payload["source_alias"] = projection.source_alias
@@ -1409,7 +1409,7 @@ def _normalize_projection(projection: SourceProjection) -> None:
     ):
         raise TypeError("Source projection address must be OpenHCSPlaneAddress.")
     if projection.address is None and (
-        projection.projection_role is not SourceProjectionRole.SOURCE_ARTIFACT
+        projection.projection_role is not SourceArtifactRole
         or projection.execution_scope is None
     ):
         raise TypeError(
