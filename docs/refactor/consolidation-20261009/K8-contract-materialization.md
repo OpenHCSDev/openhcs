@@ -43,4 +43,5 @@ The materialization package is in `openhcs/core/`, nothing imports the old path,
 ## Progress
 
 - Done: receipt; item 4 (dead `SecondaryObjectStats` computation and class deleted).
-- Next: secondary tests and the parity check under flock; items 1 to 3 wait for E1.
+- Secondary tests (34 passed) and official30 parity (passed, after item 4).
+- Next: item 5, template-crop naming (coordinator-assigned); items 1 to 3 wait for E1.
