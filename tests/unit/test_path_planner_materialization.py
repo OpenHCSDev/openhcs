@@ -1612,7 +1612,7 @@ def test_artifact_lineage_projects_exact_source_binding_component():
     )
     assert maps.group_scope.keys == expected_channel_scope.keys
     assert maps.group_scope.component is expected_channel_scope.component
-    assert maps.outputs[object_output.ref()].group_keys == ("1",)
+    assert maps.outputs[object_output.ref()].group_scope.keys == ("1",)
     assert maps.outputs[object_output.ref()].variable_components == (
         Microscopy.Site,
     )
@@ -1970,10 +1970,10 @@ def test_declared_group_lineage_scopes_outputs_without_rewriting_execution():
         "FilterObjects_8_measurements",
         MeasurementsArtifactType,
     ).ref()
-    assert maps.outputs[filtered_tiles_ref].group_keys == ("1",)
-    assert maps.outputs[measurements_ref].group_keys == ("1",)
-    assert maps.outputs[filtered_tiles_ref].group_component is Microscopy.Channel
-    assert maps.outputs[measurements_ref].group_component is Microscopy.Channel
+    assert maps.outputs[filtered_tiles_ref].group_scope.keys == ("1",)
+    assert maps.outputs[measurements_ref].group_scope.keys == ("1",)
+    assert maps.outputs[filtered_tiles_ref].group_scope.component is Microscopy.Channel
+    assert maps.outputs[measurements_ref].group_scope.component is Microscopy.Channel
     assert maps.group_scope == ComponentGroupScope.of(
         ("2",),
         component=Microscopy.Channel,
@@ -2019,11 +2019,11 @@ def test_declared_group_lineage_uses_main_flow_scope_without_artifact_plan():
         "MeasureColocalization_4_measurements",
         MeasurementsArtifactType,
     ).ref()
-    assert maps.outputs[measurements_ref].group_keys == (
+    assert maps.outputs[measurements_ref].group_scope.keys == (
         "1",
         "2",
     )
-    assert maps.outputs[measurements_ref].group_component is Microscopy.Site
+    assert maps.outputs[measurements_ref].group_scope.component is Microscopy.Site
 
 
 def test_prior_main_flow_artifact_scopes_output_without_rewriting_execution():
@@ -2073,7 +2073,7 @@ def test_prior_main_flow_artifact_scopes_output_without_rewriting_execution():
         component=Microscopy.Channel,
     )
     nuclei_ref = ArtifactSpec.output("Nuclei", ObjectLabelsArtifactType).ref()
-    assert maps.outputs[nuclei_ref].group_keys == ("3",)
+    assert maps.outputs[nuclei_ref].group_scope.keys == ("3",)
 
 
 def test_dict_invocation_lineage_uses_its_non_plan_input_group_scope():
@@ -2110,7 +2110,7 @@ def test_dict_invocation_lineage_uses_its_non_plan_input_group_scope():
     )
 
     objects_ref = ArtifactSpec.output("Objects1", ObjectLabelsArtifactType).ref()
-    assert maps.outputs[objects_ref].group_keys == ("1",)
+    assert maps.outputs[objects_ref].group_scope.keys == ("1",)
 
 
 def test_measurement_output_scope_compiles_exact_cross_group_consumer_edge():
@@ -2187,7 +2187,7 @@ def test_measurement_output_scope_compiles_exact_cross_group_consumer_edge():
         measurement_name,
         MeasurementsArtifactType,
     ).ref()
-    assert maps.outputs[measurement_ref].group_keys == ("2",)
+    assert maps.outputs[measurement_ref].group_scope.keys == ("2",)
     _record_declared_output(planner, maps.outputs[measurement_ref])
     measurement_input = ArtifactSpec.input(
         measurement_name,
@@ -2364,8 +2364,8 @@ def test_artifact_managed_single_source_output_retains_source_group_scope():
 
     assert maps.group_scope == UngroupedScope()
     nuclei_ref = ArtifactSpec.output("Nuclei", ObjectLabelsArtifactType).ref()
-    assert maps.outputs[nuclei_ref].group_keys == ("1",)
-    assert maps.outputs[nuclei_ref].group_component is Microscopy.Channel
+    assert maps.outputs[nuclei_ref].group_scope.keys == ("1",)
+    assert maps.outputs[nuclei_ref].group_scope.component is Microscopy.Channel
 
 
 def test_declared_group_lineage_unions_compatible_source_groups():
@@ -2433,7 +2433,7 @@ def test_declared_group_lineage_unions_compatible_source_groups():
         "Measurements",
         MeasurementsArtifactType,
     ).ref()
-    assert maps.outputs[measurements_ref].group_keys == ("1", "2")
+    assert maps.outputs[measurements_ref].group_scope.keys == ("1", "2")
     assert maps.relation_source_scopes[first_ref] == (
         ComponentGroupScope.of(("1",), component=Microscopy.Channel)
     )
@@ -2518,8 +2518,8 @@ def test_collected_lineage_outputs_use_relation_owned_group_scope():
         "Measurements",
         MeasurementsArtifactType,
     ).ref()
-    assert maps.outputs[measurements_ref].group_keys == (None,)
-    assert maps.outputs[measurements_ref].group_component is Microscopy.Site
+    assert maps.outputs[measurements_ref].group_scope.keys == (None,)
+    assert maps.outputs[measurements_ref].group_scope.component is Microscopy.Site
 
 
 def test_output_lineage_uses_input_qualified_consumer_scope():
@@ -2591,7 +2591,7 @@ def test_output_lineage_uses_input_qualified_consumer_scope():
             component=Microscopy.Channel,
         )
     )
-    assert output_plan.group_keys == ("1",)
+    assert output_plan.group_scope.keys == ("1",)
     assert output_plan.group_scope_sources_by_group == {
         "1": (prior_measurements.ref(),),
     }
@@ -2753,7 +2753,7 @@ def test_real_object_measurement_preserves_selected_labels_group_scope(
         available_artifact_producers=(
             ArtifactProducer(
                 ArtifactSpec.output("Cells", ObjectLabelsArtifactType),
-                groups=labels_plan.group_keys,
+                groups=labels_plan.group_scope.keys,
                 invocation_keys=(),
                 producer_step_index=2,
             ),
@@ -2813,8 +2813,8 @@ def test_real_object_measurement_preserves_selected_labels_group_scope(
 
     maps = planner.artifacts.compile_plan_maps(snapshot, 3, declarations, group_scope)
     measurement_plan = maps.outputs[measurement.ref()]
-    assert maps.inputs[labels_input.ref()].group_keys == labels_plan.group_keys
-    assert measurement_plan.group_keys == ("2",)
+    assert maps.inputs[labels_input.ref()].group_scope.keys == labels_plan.group_scope.keys
+    assert measurement_plan.group_scope.keys == ("2",)
     assert measurement_plan.group_scope_sources_by_group == {
         "2": (labels_input.ref(),),
     }
@@ -2904,7 +2904,7 @@ def test_declared_group_lineage_cannot_rewrite_scalar_step_execution_scope():
         component=Microscopy.Channel,
     )
     masked_ref = ArtifactSpec.output("MembMasked", ImageArtifactType).ref()
-    assert maps.outputs[masked_ref].group_keys == ("3",)
+    assert maps.outputs[masked_ref].group_scope.keys == ("3",)
     assert maps.outputs[masked_ref].relations == (
         GroupLineageSourceRelation(
             ArtifactSpec.input(
@@ -2919,7 +2919,7 @@ def test_declared_group_lineage_cannot_rewrite_scalar_step_execution_scope():
         monolayer_ref,
     )
     assert maps.inputs[monolayer_ref].path == ("/memory/MonolayerMask_1.pkl")
-    assert maps.inputs[monolayer_ref].group_keys == ("1",)
+    assert maps.inputs[monolayer_ref].group_scope.keys == ("1",)
 
 
 def test_artifact_output_storage_scope_is_independent_of_execution_scope():
@@ -2991,7 +2991,7 @@ def test_artifact_output_storage_scope_is_independent_of_execution_scope():
         component=Microscopy.Channel,
     )
     ratio_ref = ArtifactSpec.output("Ratio", MeasurementsArtifactType).ref()
-    assert maps.outputs[ratio_ref].group_keys == ("1",)
+    assert maps.outputs[ratio_ref].group_scope.keys == ("1",)
     assert tuple(maps.inputs) == (
         ArtifactSpec.input("Nuclei", ObjectLabelsArtifactType).ref(),
         ArtifactSpec.input("PriorMeasurements", MeasurementsArtifactType).ref(),
@@ -3070,10 +3070,10 @@ def test_each_output_storage_scope_is_independent_of_execution_scope():
         "ambiguous",
         MeasurementsArtifactType,
     ).ref()
-    assert ComponentGroupScope.from_output_plan(maps.outputs[scoped_ref]) == (
+    assert maps.outputs[scoped_ref].group_scope == (
         relation_scope
     )
-    assert ComponentGroupScope.from_output_plan(maps.outputs[ambiguous_ref]) == (
+    assert maps.outputs[ambiguous_ref].group_scope == (
         execution_scope
     )
 
@@ -3177,8 +3177,8 @@ def test_source_binding_component_identity_narrows_declared_output_lineage():
     )
 
     cells_ref = ArtifactSpec.output("Cells", ObjectLabelsArtifactType).ref()
-    assert maps.outputs[cells_ref].group_keys == ("3",)
-    assert maps.outputs[cells_ref].group_component is Microscopy.Channel
+    assert maps.outputs[cells_ref].group_scope.keys == ("3",)
+    assert maps.outputs[cells_ref].group_scope.component is Microscopy.Channel
 
 
 def test_source_binding_identity_scopes_outputs_without_execution_fanout():
@@ -3222,8 +3222,8 @@ def test_source_binding_identity_scopes_outputs_without_execution_fanout():
 
     assert maps.group_scope == UngroupedScope()
     cells_ref = ArtifactSpec.output("Cells", ObjectLabelsArtifactType).ref()
-    assert maps.outputs[cells_ref].group_keys == ("3",)
-    assert maps.outputs[cells_ref].group_component is Microscopy.Channel
+    assert maps.outputs[cells_ref].group_scope.keys == ("3",)
+    assert maps.outputs[cells_ref].group_scope.component is Microscopy.Channel
 
 
 def test_image_object_outputs_keep_declared_image_execution_group_scope():
@@ -3291,7 +3291,7 @@ def test_image_object_outputs_keep_declared_image_execution_group_scope():
         "MeasureObjectIntensity_7_measurements",
         MeasurementsArtifactType,
     ).ref()
-    assert maps.outputs[measurements_ref].group_keys == ("2",)
+    assert maps.outputs[measurements_ref].group_scope.keys == ("2",)
 
 
 def test_group_lineage_source_resolves_prior_main_flow_output_without_store_input():
@@ -3346,7 +3346,7 @@ def test_group_lineage_source_resolves_prior_main_flow_output_without_store_inpu
         "Filtered_tiles",
         ObjectLabelsArtifactType,
     ).ref()
-    assert maps.outputs[filtered_tiles_ref].group_keys == ("1",)
+    assert maps.outputs[filtered_tiles_ref].group_scope.keys == ("1",)
 
 
 def test_resolved_pipeline_owns_invocation_aware_artifact_declarations():
@@ -4015,8 +4015,8 @@ def test_non_dict_group_by_namespaces_artifact_outputs_with_dynamic_component():
     output_plan = maps.outputs[
         ArtifactSpec.output("segmentation_masks", ObjectLabelsArtifactType).ref()
     ]
-    assert output_plan.group_keys == (None,)
-    assert output_plan.group_component is Microscopy.Channel
+    assert output_plan.group_scope.keys == (None,)
+    assert output_plan.group_scope.component is Microscopy.Channel
 
 
 def test_non_dict_group_by_uses_source_binding_identity_for_pipeline_start_scope():
@@ -4116,7 +4116,7 @@ def test_auxiliary_source_does_not_restrict_declared_payload_execution(stored_pa
         else ComponentGroupScope.of(("3",), component=Microscopy.Channel)
     )
     assert scope == expected
-    assert not scope.contains_runtime_key("1") or scope.is_dynamic
+    assert not scope.contains_runtime_key("1") or not scope.has_compiled_keys
 
 
 def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
@@ -4249,7 +4249,7 @@ def test_site_execution_preserves_channel_grouped_producer_and_output_lineage():
             component=Microscopy.Channel,
         )
     )
-    assert ComponentGroupScope.from_output_plan(maps.outputs[measurements.ref()]) == (
+    assert maps.outputs[measurements.ref()].group_scope == (
         execution_scope
     )
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
@@ -4783,8 +4783,8 @@ def test_artifact_input_plan_preserves_single_grouped_producer_scope():
 
     illumination_ref = ArtifactSpec.input("illumination", ImageArtifactType).ref()
     plan = inputs[illumination_ref]
-    assert plan.group_keys == ("1",)
-    assert plan.group_component is Microscopy.Channel
+    assert plan.group_scope.keys == ("1",)
+    assert plan.group_scope.component is Microscopy.Channel
     assert plan.path == "/memory/illumination_channel_1.pkl"
     assert plan.paths_by_group == {"1": "/memory/illumination_channel_1.pkl"}
 
@@ -5000,7 +5000,7 @@ def test_compilation_accepts_exact_single_artifact_from_another_group():
         consumer_variable_components=ComponentSet((Microscopy.Site,)),
     )
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
-    assert edge.projection.invocation_scope.is_ungrouped
+    assert not edge.projection.invocation_scope.as_grouped()
     assert edge.projection.producer_selection_scope == (
         input_plan.group_scope
     )
@@ -5242,8 +5242,8 @@ def test_artifact_input_plan_preserves_multi_grouped_producer_across_components(
 
     illumination_ref = ArtifactSpec.input("illumination", ImageArtifactType).ref()
     plan = inputs[illumination_ref]
-    assert plan.group_keys == ("1", "2")
-    assert plan.group_component is Microscopy.Channel
+    assert plan.group_scope.keys == ("1", "2")
+    assert plan.group_scope.component is Microscopy.Channel
     assert plan.paths_by_group == {
         "1": "/memory/illumination_channel_1.pkl",
         "2": "/memory/illumination_channel_2.pkl",

@@ -36,13 +36,13 @@ from openhcs.core.runtime_stores import (
     StoredRuntimeValue,
 )
 
-# ProcessingContext is used in type hints
+# ExecutingContext is used in type hints
 if TYPE_CHECKING:
     from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
     from openhcs.core.virtual_workspace_metadata import (
         VirtualWorkspaceSourceProjectionEntries,
     )
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.post_execute import HookObservations
 
 
@@ -197,7 +197,7 @@ class AbstractStep(abc.ABC):
     like name, input/output memory types, etc.). After compilation, these attributes
     are stripped by the StepAttributeStripper, and the step instances become
     stateless shells. During execution, steps operate solely based on the
-    ProcessingContext (which is frozen) and their specific plan within
+    ExecutingContext (which is frozen) and their specific plan within
     context.step_plans.
 
     Input Source Control:
@@ -371,7 +371,7 @@ class AbstractStep(abc.ABC):
     @abc.abstractmethod
     def process(
         self,
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         step_index: int,
     ) -> "StepExecutionObservation":
         """
@@ -386,7 +386,7 @@ class AbstractStep(abc.ABC):
         performed during this step execution.
 
         Args:
-            context: The frozen ProcessingContext containing all required fields,
+            context: The frozen ExecutingContext containing all required fields,
                      including step_plans and filemanager.
         """
         raise NotImplementedError(

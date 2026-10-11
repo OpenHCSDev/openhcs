@@ -13,7 +13,7 @@ from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_execution import FunctionStepExecutor
 
 if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
 
 
 FunctionEntry: TypeAlias = Callable | tuple[Callable, dict]
@@ -40,7 +40,7 @@ class FunctionStep(AbstractStep):
 
     def process(
         self,
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         step_index: int,
     ) -> StepExecutionObservation:
         return FunctionStepExecutor.execute(context, step_index)

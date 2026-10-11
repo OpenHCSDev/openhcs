@@ -21,7 +21,7 @@ from openhcs.core.dataset_sources.discovery import domain_registry_config
 if TYPE_CHECKING:
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.config import GlobalPipelineConfig
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.orchestrator.execution_result import (
         ExecutionResult,
         RuntimeExecutionObservation,
@@ -53,7 +53,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     def observe_saved_outputs(
         self,
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         plan: "CompiledStepPlan",
         saved: "MaterializedRuntimeArtifact",
     ) -> object | None:
@@ -63,7 +63,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     def observe_reused_outputs(
         self,
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         plan: "CompiledStepPlan",
         materialization: "RuntimeArtifactMaterialization",
         outputs: tuple["Output", ...],
@@ -85,7 +85,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def run(
         self,
-        compiled_contexts: Mapping[str, "ProcessingContext"],
+        compiled_contexts: Mapping[str, "ExecutingContext"],
         observation: object | None,
     ) -> None:
         """Do this hook's work after every partition succeeded."""
@@ -101,7 +101,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     @staticmethod
     def observe_saved(
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         plan: "CompiledStepPlan",
         saved: "MaterializedRuntimeArtifact",
     ) -> HookObservations:
@@ -112,7 +112,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     @staticmethod
     def observe_reused(
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         plan: "CompiledStepPlan",
         materialization: "RuntimeArtifactMaterialization",
         outputs: tuple["Output", ...],
@@ -135,7 +135,7 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
 
     @staticmethod
     def run_all(
-        compiled_contexts: Mapping[str, "ProcessingContext"],
+        compiled_contexts: Mapping[str, "ExecutingContext"],
         execution_results: Mapping[str, "ExecutionResult"],
         dataset_runtime_observation: "RuntimeExecutionObservation",
     ) -> None:

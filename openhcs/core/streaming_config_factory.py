@@ -29,7 +29,7 @@ from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:
     from openhcs.core.config import StreamingConfig
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,10 +216,10 @@ class StreamingConfigBehaviorMixin:
 
     def streaming_viewer_surface(
         self,
-        context: "ProcessingContext | None",
+        context: "ExecutingContext | None",
     ) -> StreamingViewerSurface:
         if context is None:
-            raise ValueError("Streaming viewer surface requires a ProcessingContext.")
+            raise ValueError("Streaming viewer surface requires a ExecutingContext.")
         source = ViewerStreamSourceIdentity(
             microscope_handler=context.microscope_handler,
             plate_path=context.dataset_root,

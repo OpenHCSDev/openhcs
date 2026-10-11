@@ -8,7 +8,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeExecutionObservation,
@@ -153,7 +153,7 @@ class ZMQRuntimeExecutionObservationExport:
     def from_execution(
         cls,
         *,
-        compiled_contexts: Mapping[str, ProcessingContext],
+        executed_contexts: Mapping[str, ExecutingContext],
         execution_results: Mapping[str, ExecutionResult],
         output_roots: tuple[Path, ...],
         runtime_observations: tuple[RuntimeExecutionObservation, ...],
@@ -161,12 +161,12 @@ class ZMQRuntimeExecutionObservationExport:
         execution_id: str | None = None,
     ) -> ZMQRuntimeExecutionObservationExport:
         observation = RuntimeArtifactExecutionObservation.from_contexts(
-            compiled_contexts, runtime_observations=runtime_observations
+            executed_contexts, runtime_observations=runtime_observations
         )
         return cls(
             schema_version=ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION,
-            expectation=RuntimeArtifactExecutionExpectation.from_compiled_contexts(
-                compiled_contexts
+            expectation=RuntimeArtifactExecutionExpectation.from_executed_contexts(
+                executed_contexts
             ),
             records_by_axis=dict(observation.records_by_axis),
             exports=observation.exports,

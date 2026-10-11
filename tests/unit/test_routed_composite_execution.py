@@ -34,6 +34,9 @@ from openhcs.processing.backends.processors.numpy_processor import (
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.microscopes.imagexpress import ImageXpressHandler
+from openhcs.core.component_group_scope import (
+    UngroupedScope,
+)
 
 
 @pytest.mark.parametrize("channels", [(1, 2), (2, 3)])
@@ -140,7 +143,7 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
         )
         context = compiled.runtime_contexts["A01"]
         if not reduce_channels:
-            assert not context.step_plans[2].execution_group_scope.is_ungrouped
+            assert context.step_plans[2].execution_group_scope.as_grouped()
         if stitch:
             context = compiled.runtime_contexts["A01"]
             position_step_index = 2 + project_z
@@ -152,7 +155,7 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
             )
             assert context.step_plans[
                 position_step_index
-            ].execution_group_scope.is_ungrouped
+            ].execution_group_scope == UngroupedScope()
         result = orchestrator.execute_compiled_bundle(
             execution_bundle=compiled,
             max_workers=1,

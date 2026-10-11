@@ -196,7 +196,7 @@ class CoreExecutionRequest:
 def _execute_function_core(request: CoreExecutionRequest):
     pattern = (
         request.func_callable
-        if request.execution_group_scope.is_ungrouped
+        if not request.execution_group_scope.as_grouped()
         else {request.group_key: [request.func_callable]}
     )
     compiled_pattern = compile_function_pattern(
@@ -241,7 +241,7 @@ def _execute_function_core(request: CoreExecutionRequest):
         artifact_outputs=request.artifact_outputs,
     )
     component_value = (
-        None if request.execution_group_scope.is_ungrouped else request.group_key
+        None if not request.execution_group_scope.as_grouped() else request.group_key
     )
     runtime_scope = PatternGroupData(
         matching_files=[

@@ -31,7 +31,8 @@ from openhcs.core.compiled_execution import (
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import (
-    ProcessingContext,
+    CompiledContext,
+    ExecutingContext,
     RequiredVisualizer,
 )
 from openhcs.core.debug import DebugExecutionPolicy
@@ -125,18 +126,24 @@ class BundleExecutionExtras:
 
 
 class BundleExecutionResults(dict[str, ExecutionResult]):
-    """Axis results plus parent-owned diagnostics from one compiled execution."""
+    """Axis results plus parent-owned diagnostics from one compiled execution.
+
+    ``executed_contexts`` are the parent's execution contexts, holding the
+    runtime records merged back from the workers.
+    """
 
     def __init__(
         self,
         results: Mapping[str, ExecutionResult] | None = None,
         *,
         extras: BundleExecutionExtras | None = None,
+        executed_contexts: Mapping[str, ExecutingContext] | None = None,
     ) -> None:
         super().__init__(results or {})
         self.extras = extras or BundleExecutionExtras(
             viewer_states_by_port=MappingProxyType({})
         )
+        self.executed_contexts = MappingProxyType(dict(executed_contexts or {}))
 
     def is_success(self) -> bool:
         """Whether every returned axis completed successfully."""
@@ -178,7 +185,7 @@ class BundleExecutionRequest(ProgressExecutionContext):
         return list(self.execution_bundle.pipeline_definition)
 
     @property
-    def compiled_contexts(self) -> Dict[str, ProcessingContext]:
+    def compiled_contexts(self) -> Dict[str, CompiledContext]:
         return dict(self.execution_bundle.runtime_contexts)
 
 
@@ -187,7 +194,7 @@ class ValidatedBundleExecution(ProgressExecutionContext):
     """Validated execution inputs plus defaults derived from orchestrator state."""
 
     pipeline_definition: List[AbstractStep]
-    compiled_contexts: Dict[str, ProcessingContext]
+    compiled_contexts: Dict[str, CompiledContext]
     actual_max_workers: int
     progress_queue: ProgressQueue
     runtime_environment: CompiledRuntimeEnvironmentPlan
@@ -232,8 +239,10 @@ def execute_bundle_request(
         raise
 
     set_progress_queue(validated.progress_queue)
-    for context in validated.compiled_contexts.values():
-        context.reset_completed_step_outputs()
+    executing_contexts = {
+        context_key: context.executing()
+        for context_key, context in validated.compiled_contexts.items()
+    }
     try:
         orchestrator._state = OrchestratorState.EXECUTING
         logger.info(
@@ -272,7 +281,7 @@ def execute_bundle_request(
                     lane_results = executor_resources.run_worker_lanes(
                         pipeline_definition=validated.pipeline_definition,
                         worker_lane_execution_plan=worker_lane_execution_plan,
-                        parent_contexts=validated.compiled_contexts,
+                        parent_contexts=executing_contexts,
                     )
                     # Lanes finish in any order; results follow the compiled axis order.
                     execution_results = BundleExecutionResults(
@@ -292,7 +301,7 @@ def execute_bundle_request(
                     cancellation.raise_if_requested("after worker execution")
                     if execution_results.is_success():
                         dataset_runtime_observation = execute_dataset_scoped_steps(
-                            validated.compiled_contexts,
+                            executing_contexts,
                             progress_queue=validated.progress_queue,
                             progress_context=validated,
                             executor_resources=(
@@ -318,16 +327,16 @@ def execute_bundle_request(
 
             if execution_results.is_success():
                 PostExecuteHook.run_all(
-                    validated.compiled_contexts,
+                    executing_contexts,
                     execution_results,
                     dataset_runtime_observation,
                 )
         finally:
             OpenHCSMetadataTarget.finalize_completed_dataset(
-                validated.compiled_contexts,
+                executing_contexts,
                 runtime_observations=(
                     RuntimeExecutionObservation.from_completed_outputs(
-                        validated.compiled_contexts
+                        executing_contexts
                     ),
                 ),
             )
@@ -357,6 +366,7 @@ def execute_bundle_request(
                 viewer_states_by_port=viewer_states_by_port,
                 runtime_observation=dataset_runtime_observation,
             ),
+            executed_contexts=executing_contexts,
         )
     except ExecutionCancelledError:
         orchestrator._state = OrchestratorState.READY
@@ -417,7 +427,7 @@ def validate_bundle_execution(
 
 
 def validate_dataset_scoped_contexts(
-    compiled_contexts: Mapping[str, ProcessingContext],
+    compiled_contexts: Mapping[str, CompiledContext],
 ) -> tuple[int, ...]:
     """Validate dataset-scoped lifecycle invariants shared by compilation contexts."""
 
@@ -496,7 +506,7 @@ def validate_dataset_scoped_contexts(
 
 
 def execute_dataset_scoped_steps(
-    compiled_contexts: Mapping[str, ProcessingContext],
+    compiled_contexts: Mapping[str, ExecutingContext],
     *,
     progress_queue: ProgressQueue,
     progress_context: ProgressExecutionContext,
@@ -814,7 +824,7 @@ def _validate_dataset_invocation(
 
 
 def _runtime_record_snapshot(
-    compiled_contexts: Mapping[str, ProcessingContext],
+    compiled_contexts: Mapping[str, ExecutingContext],
 ) -> Mapping[str, tuple[StoredRuntimeValue, ...]]:
     records: OrderedDict[
         str,
@@ -836,9 +846,9 @@ def _runtime_record_snapshot(
 
 
 def _dataset_output_owner(
-    compiled_contexts: Mapping[str, ProcessingContext],
+    compiled_contexts: Mapping[str, ExecutingContext],
     step_index: int,
-) -> tuple[ProcessingContext, CompiledStepPlan]:
+) -> tuple[ExecutingContext, CompiledStepPlan]:
     owners = tuple(
         (context, context.step_plans[step_index])
         for context in compiled_contexts.values()
@@ -854,7 +864,7 @@ def _dataset_output_owner(
 
 def _dataset_artifact_batch(
     *,
-    compiled_contexts: Mapping[str, ProcessingContext],
+    compiled_contexts: Mapping[str, ExecutingContext],
     step_index: int,
     invocation_position: int,
     contract: CallableContract,
@@ -951,7 +961,7 @@ def actual_max_workers(
 def bootstrap_execution_visualizers(
     *,
     orchestrator: "PipelineOrchestrator",
-    compiled_contexts: Dict[str, ProcessingContext],
+    compiled_contexts: Dict[str, CompiledContext],
     visualizer: ExecutionVisualizerABC | None,
     progress_queue: ProgressQueue,
     progress_context: ProgressExecutionContext,
@@ -988,31 +998,25 @@ def bootstrap_execution_visualizers(
 def iter_required_visualizers(
     *,
     orchestrator: "PipelineOrchestrator",
-    compiled_contexts: Dict[str, ProcessingContext],
+    compiled_contexts: Dict[str, CompiledContext],
     progress_queue: ProgressQueue,
     progress_context: ProgressExecutionContext,
 ) -> Iterator[ExecutionVisualizerABC]:
     """Create one viewer for each distinct visualizer requirement."""
 
-    unique_configs: dict[tuple[str, int], tuple[RequiredVisualizer, object]] = {}
+    unique_configs: dict[tuple[str, int], RequiredVisualizer] = {}
     for ctx in compiled_contexts.values():
         for required_visualizer in ctx.required_visualizers:
             if required_visualizer.key not in unique_configs:
-                unique_configs[required_visualizer.key] = (
-                    required_visualizer,
-                    ctx.visualizer_config,
-                )
+                unique_configs[required_visualizer.key] = required_visualizer
 
-    for required_visualizer, vis_config in unique_configs.values():
+    for required_visualizer in unique_configs.values():
         emit_launching_viewer(
             required_visualizer=required_visualizer,
             progress_queue=progress_queue,
             progress_context=progress_context,
         )
-        yield orchestrator.get_or_create_visualizer(
-            required_visualizer.config,
-            vis_config,
-        )
+        yield orchestrator.get_or_create_visualizer(required_visualizer.config)
 
 
 def rollback_failed_visualizer_bootstrap(

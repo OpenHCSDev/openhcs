@@ -343,7 +343,7 @@ def test_compiled_artifact_viewer_expectations_preserve_full_producers() -> None
         backend="memory",
     )
 
-    expectation = RuntimeArtifactExecutionExpectation.from_compiled_contexts(
+    expectation = RuntimeArtifactExecutionExpectation.from_executed_contexts(
         {"A01": context}
     )
 
@@ -462,7 +462,7 @@ def test_empty_roi_materialization_does_not_invent_viewer_layer() -> None:
         backend="memory",
     )
 
-    expectation = RuntimeArtifactExecutionExpectation.from_compiled_contexts(
+    expectation = RuntimeArtifactExecutionExpectation.from_executed_contexts(
         {"A01": context}
     )
 
@@ -514,7 +514,7 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
     observation = RuntimeArtifactExecutionObservation.from_contexts(
         contexts, runtime_observations=runtime_observations
     )
-    expectation = RuntimeArtifactExecutionExpectation.from_compiled_contexts(contexts)
+    expectation = RuntimeArtifactExecutionExpectation.from_executed_contexts(contexts)
 
     assert observation.exports.table_outputs == (contracted_output,)
     assert expectation.artifact_kinds == frozenset((MeasurementsArtifactType,))

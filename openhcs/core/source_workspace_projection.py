@@ -47,7 +47,7 @@ from openhcs.core.axes import AxisFamily
 from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.context.processing_context import ExecutingContext
     from openhcs.core.dataset_sources.interfaces import MetadataHandler
     from openhcs.core.vfs_protocol import FileManagerLike
     from polystore.filemanager import FileManager
@@ -846,7 +846,7 @@ class WorkspaceSourceProjections:
     @classmethod
     def from_context(
         cls,
-        context: "ProcessingContext",
+        context: "ExecutingContext",
         *,
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
     ) -> "WorkspaceSourceProjections":
@@ -879,7 +879,7 @@ class WorkspaceSourceProjections:
             source_bindings=source_bindings,
         )
 
-    def is_bound_to_context(self, context: "ProcessingContext") -> bool:
+    def is_bound_to_context(self, context: "ExecutingContext") -> bool:
         """Compare actual owners, never identities of already-released objects."""
         if not (
             self.dataset_root == Path(context.dataset_root)
@@ -971,9 +971,9 @@ class RuntimeWorkspaceSourceProjections(
 ):
     """Read completed same-plate outputs from their execution observation owner."""
 
-    context: "ProcessingContext" = field(kw_only=True, compare=False, repr=False)
+    context: "ExecutingContext" = field(kw_only=True, compare=False, repr=False)
 
-    def is_bound_to_context(self, context: "ProcessingContext") -> bool:
+    def is_bound_to_context(self, context: "ExecutingContext") -> bool:
         return self.context is context and super(
             RuntimeWorkspaceSourceProjections, self
         ).is_bound_to_context(context)

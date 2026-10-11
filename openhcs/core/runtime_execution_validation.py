@@ -12,7 +12,10 @@ from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ArtifactType
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import (
+    ExecutingContext,
+    ProcessingContext,
+)
 from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 from openhcs.core.runtime_exports import (
     RuntimeExportExpectation,
@@ -126,9 +129,9 @@ class RuntimeArtifactExecutionExpectation:
     artifact_viewer: tuple[RuntimeArtifactViewerExpectation, ...] = ()
 
     @classmethod
-    def from_compiled_contexts(
+    def from_executed_contexts(
         cls,
-        compiled_contexts: Mapping[str, ProcessingContext],
+        executed_contexts: Mapping[str, ExecutingContext],
     ) -> "RuntimeArtifactExecutionExpectation":
         """Derive execution expectations from compiler-owned output plans."""
         output_specs = tuple(
@@ -140,7 +143,7 @@ class RuntimeArtifactExecutionExpectation:
                     viewer_streaming=output.viewer_streaming,
                     sidecar_role=output.sidecar_role,
                 )
-                for context in compiled_contexts.values()
+                for context in executed_contexts.values()
                 for step_plan in context.step_plans.values()
                 for output in step_plan.artifact_outputs.values()
             )
@@ -148,7 +151,7 @@ class RuntimeArtifactExecutionExpectation:
         return cls(
             artifact_kinds=frozenset(spec.artifact_type for spec in output_specs),
             exports=RuntimeExportExpectation.from_output_specs(output_specs),
-            artifact_viewer=runtime_artifact_viewer_expectations(compiled_contexts),
+            artifact_viewer=runtime_artifact_viewer_expectations(executed_contexts),
             axis_expectations=tuple(
                 RuntimeArtifactAxisExpectation(
                     axis_id=str(axis_id),
@@ -159,7 +162,7 @@ class RuntimeArtifactExecutionExpectation:
                         for output in plan.artifact_outputs.values()
                     ),
                 )
-                for axis_id, context in compiled_contexts.items()
+                for axis_id, context in executed_contexts.items()
             ),
         )
 
@@ -207,7 +210,7 @@ class RuntimeArtifactExecutionExpectation:
 
 
 def runtime_artifact_viewer_expectations(
-    compiled_contexts: Mapping[str, ProcessingContext],
+    executed_contexts: Mapping[str, ExecutingContext],
 ) -> tuple[RuntimeArtifactViewerExpectation, ...]:
     """Derive artifact-only viewer expectations from compiled plans and records."""
 
@@ -215,7 +218,7 @@ def runtime_artifact_viewer_expectations(
         StreamProducerIdentity,
         list[RuntimeArtifactViewerPayloadExpectation],
     ] = {}
-    for context in compiled_contexts.values():
+    for context in executed_contexts.values():
         for plan in context.step_plans.values():
             if not plan.streaming_configs or not plan.owns_runtime_outputs:
                 continue
@@ -299,7 +302,7 @@ class RuntimeArtifactExecutionObservation:
     @classmethod
     def from_contexts(
         cls,
-        execution_contexts: Mapping[str, ProcessingContext],
+        execution_contexts: Mapping[str, ExecutingContext],
         *,
         runtime_observations: Sequence[RuntimeExecutionObservation],
     ) -> "RuntimeArtifactExecutionObservation":
@@ -357,7 +360,7 @@ class RuntimeArtifactExecutionObservation:
 
 
 def runtime_records_by_axis(
-    execution_contexts: Mapping[str, ProcessingContext],
+    execution_contexts: Mapping[str, ExecutingContext],
 ) -> Mapping[str, tuple[StoredRuntimeValue, ...]]:
     """Return stored runtime records from compiled execution contexts."""
     records_by_axis: dict[str, tuple[StoredRuntimeValue, ...]] = {}

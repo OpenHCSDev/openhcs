@@ -22,7 +22,7 @@ from openhcs.core.runtime_stores import RuntimeArtifactInput
 from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
 from openhcs.core.callable_contract import ImagePayloadConsumption
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     FunctionGroupKey,
@@ -123,7 +123,7 @@ def _filter_patterns_by_component(
 class FunctionStepExecutor:
     """Run one compiled FunctionStep plan for one multiprocessing axis."""
 
-    def __init__(self, context: ProcessingContext, step_index: int) -> None:
+    def __init__(self, context: ExecutingContext, step_index: int) -> None:
         self.context = context
         compiled_plan = context.step_plans[step_index]
         if not isinstance(compiled_plan, CompiledStepPlan):
@@ -538,7 +538,7 @@ class FunctionStepExecutor:
     @classmethod
     def execute(
         cls,
-        context: ProcessingContext,
+        context: ExecutingContext,
         step_index: int,
     ) -> StepExecutionObservation:
         step_name = f"step_{step_index}"

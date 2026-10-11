@@ -12,7 +12,10 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Mapping
 
 from openhcs.constants.constants import Backend
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import (
+    ExecutingContext,
+    ProcessingContext,
+)
 from openhcs.core.progress.types import (
     AxisErrorProgressPhase,
     CancelledProgressPhase,
@@ -88,7 +91,7 @@ class RuntimeExecutionObservation:
 
     @classmethod
     def from_completed_outputs(
-        cls, contexts: Mapping[str, ProcessingContext]
+        cls, contexts: Mapping[str, ExecutingContext]
     ) -> "RuntimeExecutionObservation":
         """Project saved facts independently of retained runtime pixel records."""
         return cls(contexts=tuple(
@@ -101,7 +104,7 @@ class RuntimeExecutionObservation:
             if not context.completed_step_outputs.is_empty
         ))
 
-    def merge_into(self, execution_contexts: Mapping[str, ProcessingContext]) -> None:
+    def merge_into(self, execution_contexts: Mapping[str, ExecutingContext]) -> None:
         """Merge returned runtime records into parent-owned compiled contexts."""
         for context_observation in self.contexts:
             context = execution_contexts[context_observation.context_key]

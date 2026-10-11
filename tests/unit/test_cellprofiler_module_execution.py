@@ -766,7 +766,7 @@ def _artifact_input_edge_for_test(
             spec=spec,
             invocation_scope=scope,
             producer_selection_scope=UngroupedScope(),
-            component_scopes=() if scope.is_ungrouped else (scope,),
+            component_scopes=() if not scope.as_grouped() else (scope,),
             consumer_variable_components=(),
         ),
         spec=spec,
@@ -4304,7 +4304,7 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
                 name=storage_plan.name,
                 path=storage_plan.path_for_runtime_query(group_key),
                 artifact_type=storage_plan.artifact_type,
-                group_scope=ComponentGroupScope.of((group_key,), component=storage_plan.group_component),
+                group_scope=ComponentGroupScope.of((group_key,), component=storage_plan.group_scope.component),
                 variable_components=storage_plan.variable_components,
                 component_domains=storage_plan.component_domains,
                 paths_by_group={
@@ -4312,7 +4312,7 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
                 },
                 sidecar_role=storage_plan.sidecar_role,
             )
-            for group_key in (storage_plan.group_keys or (None,))
+            for group_key in (storage_plan.group_scope.keys or (None,))
         )
 
     @staticmethod

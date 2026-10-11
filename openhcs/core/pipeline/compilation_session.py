@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Sequence, get_ty
 from objectstate import DataclassFieldAccess
 
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import CompilingContext
 from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataMapping
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.abstract import AbstractStep
@@ -52,7 +52,7 @@ class CompilationDatasetScope:
             )
 
     @classmethod
-    def from_context(cls, context: ProcessingContext) -> "CompilationDatasetScope":
+    def from_context(cls, context: CompilingContext) -> "CompilationDatasetScope":
         if context.dataset_root is None:
             raise ValueError("Compilation plate scope requires context.dataset_root.")
         return cls(Path(context.dataset_root))
@@ -407,7 +407,7 @@ class CompilationSession:
     compiled-plan map for one axis or sequential-combination context.
     """
 
-    context: ProcessingContext
+    context: CompilingContext
     pipeline: ResolvedPipelineDefinition
     orchestrator: "PipelineOrchestrator"
     global_config: "GlobalPipelineConfig"
@@ -426,7 +426,7 @@ class CompilationSession:
     def from_context(
         cls,
         *,
-        context: ProcessingContext,
+        context: CompilingContext,
         pipeline: ResolvedPipelineDefinition,
         orchestrator: "PipelineOrchestrator",
         global_config: "GlobalPipelineConfig",

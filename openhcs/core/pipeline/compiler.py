@@ -37,7 +37,8 @@ from openhcs.core.callable_contract import (
     PayloadAxisRequirement,
 )
 from openhcs.core.context.processing_context import (
-    ProcessingContext,
+    CompiledContext,
+    CompilingContext,
     RequiredVisualizer,
 )
 from openhcs.core.config import (
@@ -166,7 +167,7 @@ class AxisCompilationRequest:
     enable_visualizer_override: bool
     is_zmq_execution: bool
 
-    def context_for(self, axis_id: str) -> ProcessingContext:
+    def context_for(self, axis_id: str) -> CompilingContext:
         context = self.orchestrator.create_context(
             axis_id, resolved_config=self.global_config
         )
@@ -196,7 +197,7 @@ class PipelineCompiler:
 
     @staticmethod
     def initialize_step_plans_for_context(
-        context: ProcessingContext,
+        context: CompilingContext,
         pipeline: ResolvedPipelineDefinition,
         orchestrator,
         global_config: "GlobalPipelineConfig",
@@ -223,8 +224,6 @@ class PipelineCompiler:
         Returns:
             The axis-scoped compilation session used by all downstream stages.
         """
-        PipelineCompiler._assert_context_mutable_for_planning(context)
-        context.visualizer_config = None
         logger.debug("Using pipeline-resolved steps for context %s", context.axis_id)
         session = CompilationSession.from_context(
             context=context,
@@ -246,15 +245,6 @@ class PipelineCompiler:
         PipelineCompiler._supplement_step_plans(session)
         PipelineCompiler._collect_streaming_configs(session)
         return session
-
-    @staticmethod
-    def _assert_context_mutable_for_planning(context: ProcessingContext) -> None:
-        if context.is_frozen():
-            raise AttributeError(
-                "Cannot initialize step plans in a frozen ProcessingContext."
-            )
-        if context.step_plans is None:
-            context.step_plans = {}
 
     @staticmethod
     def _missing_plan_fields(
@@ -533,10 +523,6 @@ class PipelineCompiler:
         by calling MaterializationFlagPlanner.
         """
         context = session.context
-        if context.is_frozen():
-            raise AttributeError(
-                "Cannot plan materialization flags in a frozen ProcessingContext."
-            )
         if not context.step_plans:
             logger.warning(
                 "step_plans is empty in context for materialization planning. This may be valid if pipeline is empty."
@@ -644,7 +630,7 @@ class PipelineCompiler:
 
     @staticmethod
     def analyze_pipeline_sequential_mode(
-        context: ProcessingContext,
+        context: CompilingContext,
         global_config: GlobalPipelineConfig,
         orchestrator: PipelineOrchestrator,
     ) -> None:
@@ -657,10 +643,6 @@ class PipelineCompiler:
             global_config: GlobalPipelineConfig containing SequentialProcessingConfig
             orchestrator: PipelineOrchestrator with microscope handler for pattern discovery
         """
-        if context.is_frozen():
-            raise AttributeError(
-                "Cannot analyze pipeline sequential mode in a frozen ProcessingContext."
-            )
 
         # Get pipeline-level sequential processing config
         seq_config = global_config.sequential_processing_config
@@ -735,10 +717,6 @@ class PipelineCompiler:
             orchestrator: Optional orchestrator for dict pattern key validation
         """
         context = session.context
-        if context.is_frozen():
-            raise AttributeError(
-                "Cannot validate memory contracts in a frozen ProcessingContext."
-            )
 
         FuncStepContractValidator.validate_pipeline(
             steps=session.pipeline.steps,
@@ -772,10 +750,6 @@ class PipelineCompiler:
     def assign_framework_device_resources(session: CompilationSession) -> None:
         """Resolve each step's declaration-derived framework device footprint."""
         context = session.context
-        if context.is_frozen():
-            raise AttributeError(
-                "Cannot assign GPU resources in a frozen ProcessingContext."
-            )
 
         assign_framework_devices(context.step_plans)
 
@@ -797,10 +771,6 @@ class PipelineCompiler:
         Applies global visualizer override to all step_plans in the context.
         """
         context = session.context
-        if context.is_frozen():
-            raise AttributeError(
-                "Cannot apply visualizer override in a frozen ProcessingContext."
-            )
 
         if global_enable_visualizer:
             if not context.step_plans:
@@ -996,10 +966,10 @@ class PipelineCompiler:
     def _compile_axis_values(
         request: AxisCompilationRequest,
         axis_values: Sequence[str],
-    ) -> Dict[str, ProcessingContext]:
+    ) -> Dict[str, CompiledContext]:
         # The final declaration admits providers before any axis-specific work.
         request.pipeline.invocation_contract_provider
-        compiled_contexts: Dict[str, ProcessingContext] = {}
+        compiled_contexts: Dict[str, CompiledContext] = {}
         responsible_axis_value = sorted(axis_values)[0]
         total_axis_values = len(axis_values)
         for completed, axis_id in enumerate(axis_values, start=1):
@@ -1024,7 +994,7 @@ class PipelineCompiler:
         request: AxisCompilationRequest,
         axis_id: str,
         metadata_writer: bool,
-    ) -> Dict[str, ProcessingContext]:
+    ) -> Dict[str, CompiledContext]:
         context = request.context_for(axis_id)
         session = PipelineCompiler.build_initialize_axis_session(
             request,
@@ -1057,7 +1027,7 @@ class PipelineCompiler:
     @staticmethod
     def build_initialize_axis_session(
         request: AxisCompilationRequest,
-        context: ProcessingContext,
+        context: CompilingContext,
         metadata_writer: bool,
     ) -> CompilationSession:
         return PipelineCompiler.initialize_step_plans_for_context(
@@ -1076,11 +1046,11 @@ class PipelineCompiler:
     def _compile_sequential_axis_contexts(
         *,
         request: AxisCompilationRequest,
-        temp_context: ProcessingContext,
+        temp_context: CompilingContext,
         axis_id: str,
         metadata_writer: bool,
-    ) -> Dict[str, ProcessingContext]:
-        compiled_contexts: Dict[str, ProcessingContext] = {}
+    ) -> Dict[str, CompiledContext]:
+        compiled_contexts: Dict[str, CompiledContext] = {}
         combinations = temp_context.pipeline_sequential_combinations
         for combo_idx, combo in enumerate(combinations):
             context = request.context_for(axis_id)
@@ -1100,8 +1070,7 @@ class PipelineCompiler:
                 session,
                 enable_visualizer_override=request.enable_visualizer_override,
             )
-            context.freeze()
-            compiled_contexts[f"{axis_id}__combo_{combo_idx}"] = context
+            compiled_contexts[f"{axis_id}__combo_{combo_idx}"] = context.freeze()
         return compiled_contexts
 
     @staticmethod
@@ -1110,7 +1079,7 @@ class PipelineCompiler:
         *,
         materialization_planner: MaterializationFlagPlanner,
         enable_visualizer_override: bool,
-    ) -> ProcessingContext:
+    ) -> CompiledContext:
         """Finish a nonsequential axis using its validated initial plan."""
         context = session.context
         PipelineCompiler.declare_zarr_stores(session)
@@ -1119,8 +1088,7 @@ class PipelineCompiler:
             session,
             enable_visualizer_override=enable_visualizer_override,
         )
-        context.freeze()
-        return context
+        return context.freeze()
 
     @staticmethod
     def _run_post_plan_compile_stages(
@@ -1468,7 +1436,7 @@ class PipelineCompiler:
     def _finalize_compilation(
         orchestrator,
         pipeline_definition: List[AbstractStep],
-        compiled_contexts: Mapping[str, ProcessingContext],
+        compiled_contexts: Mapping[str, CompiledContext],
         effective_config: GlobalPipelineConfig,
     ) -> None:
         PipelineCompiler._log_path_planning_summary(compiled_contexts)
@@ -1488,7 +1456,7 @@ class PipelineCompiler:
 
     @staticmethod
     def _log_path_planning_summary(
-        compiled_contexts: Mapping[str, ProcessingContext],
+        compiled_contexts: Mapping[str, CompiledContext],
     ) -> None:
         if not compiled_contexts:
             return

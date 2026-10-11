@@ -251,8 +251,8 @@ def test_output_plan_uses_its_single_scope_for_ungrouped_invocation():
 
     resolved = output_plan.for_invocation_group(None)
 
-    assert resolved.group_keys == ("1",)
-    assert resolved.group_component is Microscopy.Channel
+    assert resolved.group_scope.keys == ("1",)
+    assert resolved.group_scope.component is Microscopy.Channel
     assert resolved.path == "/memory/Nuclei_1.pkl"
 
 
@@ -267,8 +267,8 @@ def test_ungrouped_output_plan_ignores_incidental_invocation_group():
 
     resolved = output_plan.for_invocation_group("1")
 
-    assert resolved.group_keys == (None,)
-    assert resolved.group_component is None
+    assert resolved.group_scope.keys == (None,)
+    assert resolved.group_scope.component is None
     assert resolved.path == "/memory/RGBImage.pkl"
 
 
@@ -1809,7 +1809,7 @@ def _grouped_label_input_with_distinct_consumer_channel():
         name=storage_plan.name,
         path=path,
         artifact_type=storage_plan.artifact_type,
-        group_scope=ComponentGroupScope.of(storage_plan.group_keys, component=storage_plan.group_component),
+        group_scope=ComponentGroupScope.of(storage_plan.group_scope.keys, component=storage_plan.group_scope.component),
         paths_by_group=storage_plan.paths_by_group,
     ).for_group("0")
     value = RuntimeValue.normalize_for_execution_scope(

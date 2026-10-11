@@ -19,7 +19,7 @@ from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 
 from openhcs.core.metadata_cache import MetadataCache
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import CompilingContext
 from openhcs.core.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.source_binding_context import SourceBindingContext
 from openhcs.core.pipeline.compiler import PipelineCompiler
@@ -632,8 +632,8 @@ class PipelineOrchestrator:
 
     def create_context(
         self, axis_id: str, *, resolved_config: GlobalPipelineConfig | None = None
-    ) -> ProcessingContext:
-        """Creates a ProcessingContext for a given multiprocessing axis value."""
+    ) -> CompilingContext:
+        """Start compiling the context of one multiprocessing-axis value."""
         if not self.is_initialized():
             raise RuntimeError(
                 "Orchestrator must be initialized before calling create_context()."
@@ -648,7 +648,7 @@ class PipelineOrchestrator:
         effective_config = (
             self.get_effective_config() if resolved_config is None else resolved_config
         )
-        context = ProcessingContext(
+        context = CompilingContext(
             axis_id=axis_id,
             filemanager=self.filemanager,
             tiff_config=effective_config.tiff_config,

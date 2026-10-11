@@ -1397,7 +1397,7 @@ def test_cellprofiler_adapter_does_not_select_relationship_from_current_source_p
                     name=relationship_name,
                     path=output_plan.path,
                     artifact_type=RelationshipsArtifactType,
-                    group_scope=ComponentGroupScope.of(output_plan.group_keys, component=output_plan.group_component),
+                    group_scope=ComponentGroupScope.of(output_plan.group_scope.keys, component=output_plan.group_scope.component),
                     paths_by_group=output_plan.paths_by_group,
                 ),
                 invocation_scope=UngroupedScope(),
@@ -1495,7 +1495,7 @@ def test_cellprofiler_adapter_aligns_grouped_relationships_to_runtime_slices():
                     name=relationship_name,
                     path=output_plan.path,
                     artifact_type=RelationshipsArtifactType,
-                    group_scope=ComponentGroupScope.of(output_plan.group_keys, component=output_plan.group_component),
+                    group_scope=ComponentGroupScope.of(output_plan.group_scope.keys, component=output_plan.group_scope.component),
                     paths_by_group=output_plan.paths_by_group,
                 ),
                 invocation_scope=UngroupedScope(),
@@ -4689,21 +4689,21 @@ def test_declared_measurement_inputs_require_producer_declared_slice_indexes():
                         name=MEASUREMENTS,
                         path=output_plan.path,
                         artifact_type=MeasurementsArtifactType,
-                        group_scope=ComponentGroupScope.of(output_plan.group_keys, component=Microscopy.Site),
+                        group_scope=ComponentGroupScope.of(output_plan.group_scope.keys, component=Microscopy.Site),
                         paths_by_group=output_plan.paths_by_group,
                     ),
                     invocation_scope=ComponentGroupScope.of(
                         ("1",), component=Microscopy.Channel
                     ),
                     producer_selection_scope=ComponentGroupScope.of(
-                        output_plan.group_keys, component=Microscopy.Site
+                        output_plan.group_scope.keys, component=Microscopy.Site
                     ),
                     component_scopes=(
                         ComponentGroupScope.of(
                             ("1",), component=Microscopy.Channel
                         ),
                         ComponentGroupScope.of(
-                            output_plan.group_keys, component=Microscopy.Site
+                            output_plan.group_scope.keys, component=Microscopy.Site
                         ),
                     ),
                     consumer_variable_components=(Microscopy.Site,),

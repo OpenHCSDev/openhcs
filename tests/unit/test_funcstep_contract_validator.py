@@ -144,7 +144,7 @@ def _compiled_pattern_with_exact_input_edges(
                             invocation_scope=invocation_scope,
                             producer_selection_scope=producer_scope,
                             component_scopes=(
-                                () if producer_scope.is_ungrouped else (producer_scope,)
+                                () if not producer_scope.as_grouped() else (producer_scope,)
                             ),
                         ),
                     )

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 
 from openhcs.core.axes import AxisFamily
-from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.context.processing_context import ExecutingContext
 from openhcs.core.post_execute import PostExecuteHook
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
@@ -93,7 +93,7 @@ class RuntimeAnalysisConsolidationInputs:
     def from_reused_outputs(
         cls,
         config: AnalysisConsolidationConfig,
-        context: ProcessingContext,
+        context: ExecutingContext,
         plan: CompiledStepPlan,
         materialization: RuntimeArtifactMaterialization,
         outputs: tuple[Output, ...],
@@ -273,7 +273,7 @@ class AnalysisConsolidationHook(PostExecuteHook):
 
     def run(
         self,
-        compiled_contexts: Mapping[str, ProcessingContext],
+        compiled_contexts: Mapping[str, ExecutingContext],
         observation: RuntimeAnalysisConsolidationInputs | None,
     ) -> None:
         if not self.analysis_consolidation_config.enabled:

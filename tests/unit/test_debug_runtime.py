@@ -314,7 +314,7 @@ class DebugRuntimeFixture:
                         producer_selection_scope=plan.group_scope,
                         component_scopes=(
                             ()
-                            if plan.group_scope.is_ungrouped
+                            if not plan.group_scope.as_grouped()
                             else (plan.group_scope,)
                         ),
                     ),
