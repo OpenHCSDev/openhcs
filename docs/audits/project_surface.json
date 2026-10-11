@@ -12,7 +12,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "3592cc37444e2e1f5bb0284e939643039c0d513217861af8133dd8bd6e8a4325",
+        "sha256": "c3a2bea22aa6872940125f4aaac72c9eac72084fefc6c2cefdb54b5273361e4a",
         "role": "Declares the published README, Python range, package dependencies, optional extras, console commands, and project links."
       },
       {
@@ -32,42 +32,42 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
+        "sha256": "d1216010dec1804c51aec9c774f298513638ca016d500fe6328d76a9a9bfb4d6",
         "role": "Owns compile-time resolution across selected axes, compile progress emission, and construction of the execution bundle."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
+        "sha256": "90d75f6287c5f21f93d82960729199261f7906e0f4912b7728527260b9723a66",
         "role": "Declares ResolvedPipelineDefinition and CompilationSession named in the compilation diagram."
       },
       {
         "path": "openhcs/core/progress/types.py",
-        "sha256": "beabbfeb8a6ed727b4bb09f6155de60c4e8b89e71e7ed053bb85574aa1675419",
+        "sha256": "b5f2ca1a053665a12cca78a6a6676f1ad7e157afafcc5e2161655fddf8bf34e5",
         "role": "Declares set_progress_queue, which compilation requires before it emits progress events."
       },
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "65eb0ec5c903366243ca8bd5ea07412e8d34bdb81e6015fa76b3c4c59838733f",
+        "sha256": "907551ae0ce4bf42a557554f5df0252b0a88fc9b7c1b7ac19705aade66b6656f",
         "role": "Declares image, object, measurement, relationship, table, and file artifact semantics used by materialization."
       },
       {
         "path": "openhcs/core/dataset_sources/source.py",
-        "sha256": "097fde4d2b74031eacf53a88e79f499417e8c1c97ba0753e8a9df831b307efa6",
+        "sha256": "f736728d2f715b72cd5479fcc79520911b037d3410a42ebfc9febef2e51ffda6",
         "role": "Declares the auto-registered DatasetSource family that the ImageXpress, Opera Phenix, Bio-Formats, OMERO and OpenHCS-format sources join."
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "b1e9253021b9c3ab14a070b7d0f10909f641ba07784c794ad95d2ce36041b1d3",
+        "sha256": "f2bf83e045d40391446ca7629c91f32fccad9a102f0d57cbb0157f780d630cbc",
         "role": "Owns declaration-based callable discovery, execution memory contracts, processing contracts, and registry caching."
       },
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "c96eca530f767002cfcc9aca4fe75c93d7a5848a7f42df9e5d336bf6712ed51e",
+        "sha256": "b85d6d9b0677bdbd99a657672e19e3a27ef418bfcddfb5550524a83e7598ec4b",
         "role": "Owns manual and orchestrated image and ROI streaming through registered viewer declarations."
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "eaebe33af01d057d1d21b3701f958bc96ede3ec5d0bddddca9917c1164ef0042",
+        "sha256": "87c8e2e5aeb425b9a2eb690d48bdd6f5af7a327c389deac261d7e4e0da5d609f",
         "role": "Declares the MCP capability profiles, including the full profile and governed custom-function registration."
       },
       {
@@ -77,17 +77,17 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "3439d96f3fbfcb104a53019dc150049021d9a8132bd27096f1ccf510eefbe37b",
+        "sha256": "5d3646e17f7de843a5b36164f7cef7505da7841636423ae4fb4e00d194a87e9c",
         "role": "Declares import_cellprofiler_pipeline and its returned FunctionStep list and PipelineConfig."
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "dbd6e113a7135901f936e9bc8278d727d678e9971a7c951fced9080adfd9d6df",
+        "sha256": "3297b0e54ad3a349d35b613bd7d406e92c974320e12723be80dcfc0a90be2116",
         "role": "Exercises all 30 declared CellProfiler comparison cases over ZMQ and validates live Napari and Fiji projections."
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "4025c591644e29f3df61e476ecae2143690e014336ea9f889aadeff4e692445e",
+        "sha256": "edc32916215a88b62702621dea9b692586572284caf9b781394b5784f62897ee",
         "role": "Declares the openhcs-benchmark subcommands and options, including run-measured through the OpenHCS session."
       },
       {
@@ -107,7 +107,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "093b584eeb37cbb12089d5af082ad45acd779e9d2bdd5b3feaea08234fc22183",
+        "sha256": "2798cf80df1222c80bb3aa9955b5c20c0c90e415a1795017779d22460f442bf2",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],
@@ -121,6 +121,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared README.md against the later B6 changes to pyproject.toml, openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/progress/types.py, openhcs/core/artifacts.py, openhcs/core/dataset_sources/source.py, openhcs/processing/backends/lib_registry/unified_registry.py, openhcs/core/viewer_streaming_service.py, openhcs/agent/capabilities.py, openhcs/interop/cellprofiler/pipeline_import.py, tests/integration/test_cellprofiler_official30_zmq.py, benchmark/cellprofiler_benchmark_cli.py, tests/unit/test_benchmark_control.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read README.md in full and compared it against the changed authorities: pyproject.toml, openhcs/desktop_installation.py (moved to openhcs/desktop/installation.py), openhcs/core/pipeline_document.py, openhcs/core/pipeline/compiler.py, openhcs/core/artifacts.py, openhcs/constants/constants.py, unified_registry.py, viewer_streaming_service.py, openhcs/agent/capabilities.py, openhcs/mcp/client_registration.py, pipeline_import.py, the Official30 integration test and the benchmark CLI/receipt/control modules; installed a progress queue in the CellProfiler example and renamed its root to dataset_root, rewrote the run-measured and finalizer paragraphs for the session-backed run, replaced microscope-handler wording with dataset sources, replaced the deleted StepSnapshot with ResolvedPipelineDefinition in the validation card and compilation diagram, and confirmed extras, console scripts, benchmark subcommands/options, MCP tool names, the full profile, client targets, and the eight submodules against current source.",
       "Re-read README.md in full and challenged its explanation role, audience, capability claims, installation routes, package boundaries, flow, and links against the hash-pinned declaration owners.",
       "Removed the obsolete embedded-assistant claim while preserving the MCP-first agent workflow.",
