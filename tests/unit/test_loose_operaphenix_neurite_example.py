@@ -79,9 +79,8 @@ def test_neurite_example_declares_bounded_sources_and_final_user_result(
     assert pipeline_config.partition_filter_config.partition_filter == "B03"
     assert pipeline_config.path_planning_config.partition_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is True
-    assert pipeline_config.materialization_results_path == (
-        inputs.output_root.resolve() / "results"
-    )
+    # Results live inside the output plate root (path planner rule, 6f8c327c8).
+    assert pipeline_config.materialization_results_path == Path("results")
 
     bindings = pipeline_config.source_bindings_config.bindings
     assert [binding.alias for binding in bindings] == ["Hoechst", "MAP2", "SMI312"]
