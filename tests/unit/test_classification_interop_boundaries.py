@@ -9,17 +9,17 @@ import numpy as np
 import pytest
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
+    ObjectMeasurementSubjectRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
-    ObjectMeasurementSubjectRelation,
-    SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (

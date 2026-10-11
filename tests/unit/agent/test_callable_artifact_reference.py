@@ -19,14 +19,9 @@ from openhcs.agent.knowledge_manifest import (
     knowledge_base_source_paths_from_manifest,
 )
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import (
     compile_function_pattern,
@@ -54,6 +49,8 @@ from openhcs.processing.materialization import materialize
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.roi import load_rois_from_zip
+from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 ROOT = Path(__file__).resolve().parents[3]
 DOCUMENT_PATH = "docs/source/development/callable_artifact_authoring.rst"
@@ -246,7 +243,7 @@ def test_points_declaration_materializes_fractional_geometry_and_full_source_dom
     materialize(
         spec.materialization, data=table, path=str(tmp_path / "centres"),
         filemanager=FileManager({"disk": DiskStorageBackend()}),
-        backends=["disk"], backend_kwargs={},
+        backends=["disk"], backend_kwargs={}, output_plan=materialization_output_plan()
     )
     csv_options = next(
         option for option in spec.materialization.outputs
@@ -366,7 +363,7 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
 ):
     from openhcs.core.callable_contract import FunctionStepExecutionScope
     from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
-    from openhcs.core.artifacts import SpecialArtifactType
+    from openhcs.core.artifacts.kinds import SpecialArtifactType
     from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
     from openhcs.core.runtime_measurements import MeasurementTable
     from openhcs.core.runtime_stores import RuntimeArtifactBatch
@@ -430,7 +427,7 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
     csv_path = materialize(
         output.materialization, data=table, path=str(tmp_path / "summary"),
         filemanager=FileManager({"disk": DiskStorageBackend()}),
-        backends=["disk"], backend_kwargs={},
+        backends=["disk"], backend_kwargs={}, output_plan=materialization_output_plan()
     )
     assert Path(csv_path).read_text().splitlines() == [
         "axis_id,record_count,measurement_row_count", "axis-a,1,2", "axis-b,1,0",
@@ -474,7 +471,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
             plane_index=None, axis_size=plane_count,
         )
     )
-    label_payload = ObjectLabelsArtifactType.contextualize_output(stack, labels, None, projection)
+    label_payload = ObjectLabelsArtifactType.contextualize_output(stack, labels, MAIN_FLOW, projection)
     assert isinstance(label_payload, ObjectLabelPayload)
     np.testing.assert_array_equal(label_payload.labels, stack.data)
     assert label_payload.plane_axis is (
@@ -492,7 +489,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         ).payload_with(stack.data[:, :-1, :])
         with pytest.raises(ValueError, match="Object-label spatial shape"):
-            ObjectLabelsArtifactType.contextualize_output(stack, wrong_spatial_shape, None, projection)
+            ObjectLabelsArtifactType.contextualize_output(stack, wrong_spatial_shape, MAIN_FLOW, projection)
     assert not manager.storage_dir.exists()
 
 
@@ -554,7 +551,7 @@ def test_reference_writes_native_csv_and_roi_files(reference_namespace, tmp_path
         path=str(tmp_path / "fixture_object_rows"),
         filemanager=filemanager,
         backends=["disk"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     assert Path(csv_path).read_text().splitlines() == [
         "slice_index,object_label,pixel_count",
@@ -567,7 +564,7 @@ def test_reference_writes_native_csv_and_roi_files(reference_namespace, tmp_path
         path=str(tmp_path / "fixture_labels"),
         filemanager=filemanager,
         backends=["disk"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     assert Path(roi_path).is_file()
     rois = load_rois_from_zip(Path(roi_path))

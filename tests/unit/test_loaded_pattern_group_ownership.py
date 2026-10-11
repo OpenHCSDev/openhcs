@@ -362,15 +362,10 @@ def test_component_artifact_admission_precedes_source_provenance_capture(monkeyp
 
 def _stored_primary_fixture(*, preserves_main_flow=False):
     from openhcs.constants.constants import Backend
-    from openhcs.core.artifacts import (
-        ArtifactInputPlan,
-        ArtifactOutputPlan,
-        ArtifactSpec,
-        ArtifactSpecCollection,
-        GroupLineageSourceRelation,
-        ImageArtifactType,
-        SpecialArtifactType,
-    )
+    from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+    from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+    from openhcs.core.artifacts.relations import GroupLineageSourceRelation
+    from openhcs.core.artifacts.kinds import ImageArtifactType, SpecialArtifactType
     from openhcs.core.component_set import ComponentSet
     from openhcs.core.pipeline.function_contracts import (
         artifact_inputs,
@@ -776,7 +771,8 @@ def test_same_step_primary_producer_is_not_queried_before_its_callable_runs():
 def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read(
     monkeypatch, plane_index, primary_only,
 ):
-    from openhcs.core.artifacts import ArtifactSpec, ArtifactSpecCollection, ImageArtifactType
+    from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.pipeline.function_contracts import artifact_inputs
     from openhcs.core.memory.decorators import numpy as numpy_memory
     from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneProjection

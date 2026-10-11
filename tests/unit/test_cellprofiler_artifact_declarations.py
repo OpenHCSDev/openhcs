@@ -14,21 +14,21 @@ from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.constants.input_source import ReadPipelineStart
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
-    ImageArtifactType,
     InputImageSetContextSourceRelation,
     InputGroupLineageSourceRelation,
     InputObjectMeasurementSourceRelation,
-    MeasurementsArtifactType,
-    ObjectLabelsArtifactType,
     ObjectMeasurementSubjectRelation,
     SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
+    MeasurementsArtifactType,
+    ObjectLabelsArtifactType,
     SpatialGridArtifactType,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -576,7 +576,7 @@ def test_prior_measurement_selects_its_declared_producer_group_scope() -> None:
 
 
 def test_calculate_math_retains_measurement_subjects_across_producer_channels() -> None:
-    from openhcs.core.artifacts import ArtifactInputProjectionPlan
+    from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
     from openhcs.core.component_group_scope import ComponentGroupScope
 
     image = ArtifactSpec.input("CorrProtein", ImageArtifactType)
@@ -1845,7 +1845,8 @@ def test_calculate_math_selects_measurements_by_nominal_feature_owner() -> None:
         MeasurementsArtifactType
     )
     assert {
-        type(relation).relation_key for relation in calculation_output.relations
+        getattr(type(relation), "relation_key", None)
+        for relation in calculation_output.relations
     } >= {
         "calculate_math_numerator_object",
         "calculate_math_denominator_object",

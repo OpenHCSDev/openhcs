@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QApplication
 from pyqt_reactive.theming import ColorScheme
 
 from openhcs.constants.constants import OrchestratorReady
-from openhcs.core.artifacts import MeasurementsArtifactType
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.config import NapariStreamingConfig
 from openhcs.core.debug import (
     DebugArtifactRef,

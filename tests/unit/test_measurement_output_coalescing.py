@@ -4,10 +4,10 @@ from dataclasses import replace
 
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecRelation,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.relations import ArtifactSpecRelation
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,

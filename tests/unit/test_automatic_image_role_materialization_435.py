@@ -15,7 +15,10 @@ from polystore.memory import MemoryStorageBackend
 from test_function_outputs import context_stub, function_step_plan, record_output_path
 from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext, ImagePayloadBundleContext
-from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.pipeline.artifact_planning import ArtifactOutputMaterializationPlanner
 from openhcs.core.runtime_artifact_values import RuntimeValue
@@ -170,7 +173,7 @@ def test_retained_role_policy_preserves_authored_and_unnamed_image_paths(tmp_pat
         else MaterializationSpec(options) if purpose == "terminal_source_declared_explicit"
         else spec
     )
-    output_plan = None if purpose in ("unnamed_terminal", "unnamed_explicit") else ArtifactOutputPlan(
+    output_plan = materialization_output_plan() if purpose in ("unnamed_terminal", "unnamed_explicit") else ArtifactOutputPlan(
         name="DeclaredRole", path="/memory/DeclaredRole.pkl",
         artifact_type=ImageArtifactType, materialization=declared_spec,
     )
@@ -363,7 +366,7 @@ def test_parser_free_render_requires_parser_only_for_automatic_named_role(tmp_pa
 
     options = ImageFileOptions(filename_suffix=".tif")
     spec = MaterializationSpec(options) if purpose == "explicit" else TerminalMaterializationSpec(options)
-    plan = None if purpose == "unnamed_terminal" else ArtifactOutputPlan(
+    plan = materialization_output_plan() if purpose == "unnamed_terminal" else ArtifactOutputPlan(
         name="Role", path="/memory/role", artifact_type=ImageArtifactType, materialization=spec,
     )
     manager = FileManager({Backend.MEMORY.value: MemoryStorageBackend()})

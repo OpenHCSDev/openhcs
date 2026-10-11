@@ -272,11 +272,8 @@ def test_combine_objects_binds_overlap_policy_nominally():
 
 
 def test_watershed_function_selection_follows_module_revision():
-    from openhcs.core.artifacts import (
-        ArtifactSpec,
-        ArtifactSpecCollection,
-        ImageArtifactType,
-    )
+    from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.function_patterns import (
         DEFAULT_GROUP_KEY,
         FunctionInvocationKey,
@@ -1279,7 +1276,7 @@ def test_measure_image_quality_splits_exact_image_groups_and_preserves_blur_scal
 
 
 def test_measure_image_quality_rejects_empty_explicit_selector_at_contract_build():
-    from openhcs.core.artifacts import ArtifactSpecCollection
+    from openhcs.core.artifacts.specs import ArtifactSpecCollection
     from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 

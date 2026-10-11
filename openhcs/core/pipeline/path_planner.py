@@ -15,15 +15,14 @@ from pathlib import Path
 from typing import Dict, Mapping, Optional
 
 from openhcs.core.axis_filter import StepAxisFilterSet
-from openhcs.core.artifacts import (
-    ArtifactInputProjectionPlan,
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpecCollection,
     ArtifactSpecRef,
-    ArtifactSpec,
     grouped_artifact_path,
 )
+from openhcs.core.artifacts.specs import ArtifactSpecCollection, ArtifactSpec
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,

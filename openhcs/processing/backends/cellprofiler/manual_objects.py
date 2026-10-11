@@ -17,11 +17,8 @@ from dataclasses import dataclass
 import numpy as np
 
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )

@@ -6,11 +6,13 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.relations import (
     ArtifactMeasurementSubjectRelation,
-    ArtifactOutputPlan,
-    ArtifactSpec,
     GroupLineageSourceRelation,
+)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     SpecialArtifactType,

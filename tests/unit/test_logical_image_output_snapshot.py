@@ -12,7 +12,7 @@ import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from benchmark.matched_cellprofiler_batch import _require_compared_output_inventory
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from benchmark.equivalence.comparison import runtime_image_differences
 from benchmark.equivalence.images import RuntimeImageSnapshot

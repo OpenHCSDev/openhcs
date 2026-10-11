@@ -73,7 +73,7 @@ from openhcs.runtime.viewer_display import (
 )
 from openhcs.core.vfs_protocol import PlateOutputDirectory, PlateOutputFile
 from openhcs.utils.environment import OpenHCSProcessEnvironment
-from openhcs.core.artifacts import ArtifactSpecCollection
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_bindings import (

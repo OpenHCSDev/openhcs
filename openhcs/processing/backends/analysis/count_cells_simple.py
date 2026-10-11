@@ -8,12 +8,14 @@ watershed infrastructure while exposing controls appropriate to each workflow.
 """
 
 from openhcs.core.memory import numpy
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.relations import (
     ArtifactMeasurementSubjectRelation,
-    ArtifactSpec,
+    ObjectMeasurementSubjectRelation,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
-    ObjectMeasurementSubjectRelation,
 )
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,

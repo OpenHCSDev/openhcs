@@ -12,14 +12,11 @@ from typing import NamedTuple, get_args
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    QaCheckpoint,
-    ArtifactSidecarSourceRelation,
-    ArtifactSpec,
-    ArtifactViewerStreaming,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.sidecars import QaCheckpoint
+from openhcs.core.artifacts.relations import ArtifactSidecarSourceRelation
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.streaming import OnDemandStreaming
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, MaskedImagePayload
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -34,6 +31,7 @@ from openhcs.processing.materialization import (
     ImageFileOptions,
     NameByArtifactName,
 )
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def _source():
@@ -160,7 +158,7 @@ def test_diagnostic_contract_has_source_producer_stage_identity_not_new_objects(
         assert spec.artifact_type is ImageArtifactType
         assert spec.sidecar_role is QaCheckpoint
         assert not spec.participates_in_main_flow
-        assert spec.viewer_streaming is ArtifactViewerStreaming.ON_DEMAND
+        assert spec.viewer_streaming is OnDemandStreaming
         assert spec.materialization.participates_in_persistent_materialization()
         assert not spec.materialization.participates_in_runtime_export_observation()
         assert spec.materialization.outputs == (
@@ -176,7 +174,7 @@ def test_diagnostic_contract_has_source_producer_stage_identity_not_new_objects(
 
 
 def test_ordinary_image_contextualization_preserves_unexecuted_masks():
-    from openhcs.core.artifacts import ArtifactOutputPlan
+    from openhcs.core.artifacts.plans import ArtifactOutputPlan
 
 
     source = _source()
@@ -197,7 +195,7 @@ def test_ordinary_image_contextualization_preserves_unexecuted_masks():
             relations=spec.relations,
         )
         value = (ImageArtifactType if plan is None else plan.artifact_type).contextualize_output(
-            source, plane, plan, None
+            source, plane, plan or MAIN_FLOW, None
         )
         np.testing.assert_array_equal(value.mask, plane.mask)
         np.testing.assert_array_equal(value.data, plane.data)

@@ -7,14 +7,14 @@ from basicpy import BaSiC
 from basicpy.basicpy import FittingMode
 
 from openhcs.core.axes import ColourAxis
-from openhcs.core.artifacts import (
-    QaCheckpoint,
+from openhcs.core.artifacts.sidecars import QaCheckpoint
+from openhcs.core.artifacts.specs import (
     ArtifactSpec,
-    ArtifactViewerStreaming,
-    ImageArtifactType,
     MainFlowPlaneProjectionOutputSpec,
     MainFlowStackOutputSpec,
 )
+from openhcs.core.artifacts.streaming import OnDemandStreaming
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.config import DtypeConfig
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import (
@@ -45,7 +45,7 @@ def _fitted_field_output(name: str) -> ArtifactSpec:
                 filename_identity=NameByArtifactName,
             )
         ),
-        viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+        viewer_streaming=OnDemandStreaming,
     )
 
 

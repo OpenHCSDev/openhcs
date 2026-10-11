@@ -33,7 +33,7 @@ from polystore.streaming.viewer_transport import (
 from zmqruntime.viewer_protocol import ViewerWireValue
 
 from openhcs.core.source_path_identity import source_path_identity
-from openhcs.core.artifacts import ArtifactMaterializationPayload
+from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.image_file_serialization import ImageFileFormat
@@ -110,7 +110,7 @@ from openhcs.core.runtime_image_values import array_data_of, image_metadata_of
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
 
-    from openhcs.core.artifacts import ArtifactOutputPlan
+    from openhcs.core.artifacts.plans import ArtifactOutputPlan
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.dataset_sources.interfaces import FilenameParser
 
@@ -1845,7 +1845,7 @@ class ROIMaterializationTargetRequest(ROIRequestBase):
     materialization_input: MaterializationInput
     artifact_source_identity: SourceImageIdentity | None = None
     artifact_filename_identity: SourceImageIdentity | None = None
-    output_plan: ArtifactOutputPlan | None = None
+    output_plan: ArtifactOutputPlan = field(kw_only=True)
     pipeline_position: int | None = None
 
     @classmethod
@@ -1883,7 +1883,7 @@ class ROIMaterializationTargetRequest(ROIRequestBase):
     ) -> str:
         """Name one projected plane from its source and compiled artifact identity."""
 
-        if self.output_plan is None or self.pipeline_position is None:
+        if self.pipeline_position is None:
             return self.path(
                 paths=self.paths,
                 options=self.options,
@@ -2515,7 +2515,7 @@ class MaterializationContext:
     write_mode: WriteMode = WriteMode.OVERWRITE
     source_paths: tuple[str, ...] = ()
     pipeline_position: int | None = None
-    output_plan: ArtifactOutputPlan | None = None
+    output_plan: ArtifactOutputPlan = field(kw_only=True)
     materialization_spec: MaterializationSpec | None = None
 
     def named_source_filename(
@@ -3794,27 +3794,26 @@ def _write_roi_zip(
                 spatial_origin_yx=source_domain.origin_yx,
                 source_spatial_shape_yx=source_domain.source_shape_yx,
             )
-            if ctx.output_plan is not None:
-                object_subject_binding = ctx.output_plan.object_subject_binding()
-                if object_subject_binding is not None:
-                    rois = [
-                        replace(
-                            roi,
-                            metadata={
-                                **roi.metadata,
-                                **object_subject_binding.feature_metadata(
-                                    roi.metadata,
-                                    producer_step_scope_id=(
-                                        ctx.output_plan.producer_step_scope_id
-                                    ),
-                                    producer_step_index=(
-                                        ctx.output_plan.producer_step_index
-                                    ),
+            object_subject_binding = ctx.output_plan.object_subject_binding()
+            if object_subject_binding is not None:
+                rois = [
+                    replace(
+                        roi,
+                        metadata={
+                            **roi.metadata,
+                            **object_subject_binding.feature_metadata(
+                                roi.metadata,
+                                producer_step_scope_id=(
+                                    ctx.output_plan.producer_step_scope_id
                                 ),
-                            },
-                        )
-                        for roi in rois
-                    ]
+                                producer_step_index=(
+                                    ctx.output_plan.producer_step_index
+                                ),
+                            ),
+                        },
+                    )
+                    for roi in rois
+                ]
             target_rois.extend(rois)
 
         total_roi_count += len(target_rois)
@@ -4126,14 +4125,13 @@ def _write_spatial_graph_roi_zip(
         segment_lengths = np.linalg.norm(np.diff(coordinates, axis=0), axis=1)
         edge_features = edge.feature_mapping()
         object_subject_metadata: Mapping[str, object] = {}
-        if ctx.output_plan is not None:
-            object_subject_binding = ctx.output_plan.object_subject_binding()
-            if object_subject_binding is not None:
-                object_subject_metadata = object_subject_binding.feature_metadata(
-                    edge_features,
-                    producer_step_scope_id=ctx.output_plan.producer_step_scope_id,
-                    producer_step_index=ctx.output_plan.producer_step_index,
-                )
+        object_subject_binding = ctx.output_plan.object_subject_binding()
+        if object_subject_binding is not None:
+            object_subject_metadata = object_subject_binding.feature_metadata(
+                edge_features,
+                producer_step_scope_id=ctx.output_plan.producer_step_scope_id,
+                producer_step_index=ctx.output_plan.producer_step_index,
+            )
         metadata = {
             "label": edge.edge_id,
             "area": 0.0,
@@ -4814,7 +4812,7 @@ class MaterializationSpec(ArtifactMaterializationPayload):
         """Explicit materialization specs are externally observed exports."""
         return True
 
-    def filename_qualifier(self, output_plan: ArtifactOutputPlan | None) -> str | None:
+    def filename_qualifier(self, output_plan: ArtifactOutputPlan) -> str | None:
         """Preserve the source filenames authored by an explicit export."""
         return None
 
@@ -5031,7 +5029,7 @@ def materialization_outputs(
     variable_components: Sequence[type[Axis]] = (),
     source_paths: Sequence[str] = (),
     pipeline_position: int | None = None,
-    output_plan: ArtifactOutputPlan | None = None,
+    output_plan: ArtifactOutputPlan,
     output_path_filter: Callable[[Path], bool] | None = None,
 ) -> tuple[Output, ...]:
     """Derive selected writer outputs without saving.
@@ -5078,7 +5076,7 @@ def prepare_materialization(
     variable_components: Sequence[type[Axis]] = (),
     source_paths: Sequence[str] = (),
     pipeline_position: int | None = None,
-    output_plan: ArtifactOutputPlan | None = None,
+    output_plan: ArtifactOutputPlan,
 ) -> MaterializationBatch:
     """Prepare one exact batch for saving and immediate publication."""
 
@@ -5124,7 +5122,7 @@ def materialize(
     variable_components: Sequence[type[Axis]] = (),
     source_paths: Sequence[str] = (),
     pipeline_position: int | None = None,
-    output_plan: ArtifactOutputPlan | None = None,
+    output_plan: ArtifactOutputPlan,
 ) -> str:
     """Materialize data and return the primary path derived from its writer batch."""
     batch = prepare_materialization(

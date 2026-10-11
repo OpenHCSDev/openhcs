@@ -715,7 +715,10 @@ def test_artifact_spec_refs_are_derived_only_by_nominal_owners() -> None:
     for path in _source_paths():
         tree = _parse_source(path)
         allowed_calls: set[int] = set()
-        if path == PROJECT_ROOT / "openhcs/core/artifacts.py":
+        if path in {
+            PROJECT_ROOT / "openhcs/core/artifacts/specs.py",
+            PROJECT_ROOT / "openhcs/core/artifacts/plans.py",
+        }:
             for class_node in tree.body:
                 if not isinstance(class_node, ast.ClassDef) or class_node.name not in {
                     "ArtifactSpec",

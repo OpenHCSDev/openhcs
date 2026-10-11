@@ -24,10 +24,8 @@ from openhcs.core import (
     runtime_array_values,
     runtime_image_values,
 )
-from openhcs.core.artifacts import (
-    NamedArtifactPayload,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.payloads import NamedArtifactPayload
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     NominalTypeStrategyFamilyMixin,
@@ -67,9 +65,6 @@ from openhcs.core.source_spatial_domain import (
 )
 
 from enum import Enum
-from openhcs.core.alias_property import AliasProperty
-from openhcs.core.artifacts import ArtifactPayloadShape
-from metaclass_registry.strategies import str_enum_member_with_payload
 
 _PRESERVE_PLANE_AXIS = object()
 
@@ -92,14 +87,8 @@ def normalize_source_label_data(data: object, channel_axis: int | None) -> objec
 class ObjectLabelRepresentation(str, Enum):
     """Storage representation used by an object-label artifact payload."""
 
-    def __new__(cls, value: str, payload_shape: ArtifactPayloadShape):
-        return str_enum_member_with_payload(
-            cls, value, payload_attribute="_payload_shape", payload=payload_shape
-        )
-
-    DENSE_LABELS = ("dense_labels", ArtifactPayloadShape.ARRAY)
-    SPARSE_IJV = ("sparse_ijv", ArtifactPayloadShape.TABLE)
-    payload_shape = AliasProperty[ArtifactPayloadShape]("_payload_shape")
+    DENSE_LABELS = "dense_labels"
+    SPARSE_IJV = "sparse_ijv"
 
 
 class ObjectLabelVariant(ABC, metaclass=AutoRegisterMeta):
@@ -1382,6 +1371,14 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
         return self
 
     @classmethod
+    def named(cls, name: str, payload: ObjectLabelValue) -> Self:
+        """Return labels named ``name``: a named set must already carry it."""
+        if isinstance(payload, cls):
+            payload.validate_artifact_name(name)
+            return payload
+        return cls.from_payload(name, payload)
+
+    @classmethod
     def from_payload(
         cls,
         name: str,
@@ -1413,7 +1410,7 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
             ).value_plane_axis(payload.plane_axis)
             variants = variants.in_representation(payload.representation)
             if isinstance(payload, ObjectLabelSet):
-                payload.validate_artifact_name()
+                payload.require_name()
                 if payload.source_image_name == "":
                     raise ValueError("ObjectLabelSet.source_image_name cannot be empty.")
             variants.validate_representation(
@@ -1448,7 +1445,7 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.validate_object_label_variants()
         self.absorb_explicit_source_provenance(source_provenance_values)
-        self.validate_artifact_name()
+        self.require_name()
         if self.source_image_name == "":
             raise ValueError("ObjectLabelSet.source_image_name cannot be empty.")
         self.normalize_object_label_metadata(f"ObjectLabelSet '{self.name}'")

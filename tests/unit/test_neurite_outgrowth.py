@@ -9,9 +9,9 @@ from polystore.filemanager import FileManager
 from scipy import ndimage as ndi
 from skimage.draw import disk, line
 
-from openhcs.core.artifacts import (
-    QaCheckpoint,
-    ArtifactViewerStreaming,
+from openhcs.core.artifacts.sidecars import QaCheckpoint
+from openhcs.core.artifacts.streaming import OnDemandStreaming
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -71,6 +71,8 @@ from openhcs.processing.materialization import (
 from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
     PrimaryObjectDiagnosticPlanes,
 )
+from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def _declared_shaft_admission(response, mask=None):
@@ -251,7 +253,7 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
     )
     source = metadata.payload_with(image)
     graph = SpatialGraphArtifactType.contextualize_output(
-        source, result[-1], None, None
+        source, result[-1], MAIN_FLOW, None
     )
     assert graph.source_voxel_spacing == spacing
     assert graph.coordinate_spacing.unit is SourceVoxelSpacingUnit.PIXELS
@@ -262,7 +264,7 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
     csv_path = materialize(
         declarations[1].materialization, data=result[2],
         path=str(tmp_path / "cells.csv"), filemanager=manager,
-        backends=["disk"], backend_kwargs={},
+        backends=["disk"], backend_kwargs={}, output_plan=materialization_output_plan()
     )
     with open(csv_path, newline="") as stream:
         rows = tuple(csv.DictReader(stream))
@@ -272,7 +274,7 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
     zip_path = materialize(
         declarations[-1].materialization, data=graph,
         path=str(tmp_path / "morphology.roi.zip"), filemanager=manager,
-        backends=["disk"], backend_kwargs={},
+        backends=["disk"], backend_kwargs={}, output_plan=materialization_output_plan()
     )
     restored = load_rois_from_zip(Path(zip_path))
     saved = ROIArchiveSourceMetadata.decode(restored)
@@ -289,7 +291,7 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
         materialize(
             MaterializationSpec(SWCOptions()), data=graph,
             path=str(tmp_path / "forbidden.swc"), filemanager=manager,
-            backends=["disk"], backend_kwargs={},
+            backends=["disk"], backend_kwargs={}, output_plan=materialization_output_plan()
         )
     assert not tuple(tmp_path.glob("*.swc"))
 
@@ -538,7 +540,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
     ):
         assert spec.artifact_type is ImageArtifactType
         assert spec.sidecar_role is QaCheckpoint
-        assert spec.viewer_streaming is ArtifactViewerStreaming.ON_DEMAND
+        assert spec.viewer_streaming is OnDemandStreaming
         assert tuple(type(output) for output in spec.materialization.outputs) == (
             ImageFileOptions,
         )
@@ -569,7 +571,7 @@ def test_neurite_label_materialization_preserves_exact_pixels_below_roi_area_cut
         path=str(tmp_path / "neurons.roi.zip"),
         filemanager=filemanager,
         backends=["disk"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     paths = tuple(tmp_path.glob("*.labels.tif"))
     assert len(paths) == 1

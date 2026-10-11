@@ -13,7 +13,8 @@ from openhcs.core.source_path_identity import (
     source_path_identity,
     source_path_relative_to,
 )
-from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactType, ImageArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher

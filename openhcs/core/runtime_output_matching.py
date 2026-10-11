@@ -5,10 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, TypeAlias
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
 
 
 class RuntimeOutputBundle(ABC):

@@ -35,7 +35,7 @@ from openhcs.core.axes import AxisFamily, Ungrouped
 if TYPE_CHECKING:
     from openhcs.core.config import GlobalPipelineConfig
     from openhcs.core.pipeline.artifact_planning import ArtifactGraph
-    from openhcs.core.artifacts import ArtifactSpecRef
+    from openhcs.core.artifacts.plans import ArtifactSpecRef
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 

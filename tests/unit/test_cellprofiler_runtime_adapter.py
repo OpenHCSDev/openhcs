@@ -10,11 +10,13 @@ import pytest
 
 from openhcs.constants.input_source import InputSource
 from openhcs.core.alias_property import AliasProperty
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpec,
     ArtifactSpecRef,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
     MeasurementsArtifactType,
@@ -916,10 +918,8 @@ def _calculate_math_contract(
     operand1_object_name: str | None = None,
     operand2_object_name: str | None = None,
 ) -> CallableContract:
-    from openhcs.core.artifacts import (
-        ArtifactSpecCollection,
-        GroupLineageSourceRelation,
-    )
+    from openhcs.core.artifacts.specs import ArtifactSpecCollection
+    from openhcs.core.artifacts.relations import GroupLineageSourceRelation
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting

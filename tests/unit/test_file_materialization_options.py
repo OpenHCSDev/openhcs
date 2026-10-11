@@ -26,6 +26,7 @@ from openhcs.processing.materialization.options import (
     NameBySourceIdentity,
     SourceOptions,
 )
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 def _option_types():
@@ -80,7 +81,7 @@ def test_source_identity_image_file_projects_addressable_stack_planes() -> None:
         data=payload,
         path="/analysis/aggregate.pkl",
         filemanager=filemanager,
-        backends=("memory",),
+        backends=("memory",), output_plan=materialization_output_plan()
     )
 
     assert primary_path == "/analysis/site1_saved.npy"
@@ -108,7 +109,7 @@ def test_file_bundle_preserves_bytes_and_utf8_encodes_text() -> None:
         },
         path="/analysis/ExportBundle.pkl",
         filemanager=filemanager,
-        backends=("memory",),
+        backends=("memory",), output_plan=materialization_output_plan()
     )
 
     assert primary_path == "/analysis/tables/Image.csv"
@@ -127,7 +128,7 @@ def test_file_bundle_outputs_retain_declared_text_semantics() -> None:
             "analysis.sqlite": b"SQLite format 3\x00\x01",
         },
         path="/analysis/ExportBundle.pkl",
-        filemanager=FileManager({"memory": MemoryStorageBackend()}),
+        filemanager=FileManager({"memory": MemoryStorageBackend()}), output_plan=materialization_output_plan()
     )
 
     assert outputs[0].require_text_content() == "ImageNumber,Count\n1,2\n"
@@ -148,7 +149,7 @@ def test_file_bundle_persists_bytes_and_utf8_text_to_disk(tmp_path) -> None:
         },
         path=str(tmp_path / "ExportBundle.pkl"),
         filemanager=filemanager,
-        backends=("disk",),
+        backends=("disk",), output_plan=materialization_output_plan()
     )
 
     assert primary_path == str(tmp_path / "tables" / "Image.csv")
@@ -173,7 +174,7 @@ def test_materialization_spec_error_write_mode_refuses_existing_path(tmp_path) -
             data={"report.txt": b"replacement"},
             path=str(tmp_path / "ExportBundle.pkl"),
             filemanager=filemanager,
-            backends=("disk",),
+            backends=("disk",), output_plan=materialization_output_plan()
         )
 
     assert output_path.read_bytes() == b"existing"
@@ -200,5 +201,5 @@ def test_file_bundle_rejects_unsafe_or_unsupported_entries(bundle) -> None:
             data=bundle,
             path=str(Path("/analysis/ExportBundle.pkl")),
             filemanager=filemanager,
-            backends=("memory",),
+            backends=("memory",), output_plan=materialization_output_plan()
         )

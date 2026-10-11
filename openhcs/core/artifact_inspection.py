@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from zmqruntime.messages import TypedWireMessage
 
-from openhcs.core.artifacts import ArtifactInputPlan, ArtifactOutputPlan, ArtifactSpec
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,

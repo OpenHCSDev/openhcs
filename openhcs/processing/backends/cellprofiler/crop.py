@@ -7,14 +7,15 @@ from enum import Enum
 from typing import TYPE_CHECKING, ClassVar
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
-from openhcs.core.artifacts import (
-    ArtifactSidecarRole,
+from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
+from openhcs.core.artifacts.relations import (
     ArtifactSidecarSourceRelation,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+    InputStackBroadcastSourceRelation,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
-    InputStackBroadcastSourceRelation,
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import preserves_payload_axes

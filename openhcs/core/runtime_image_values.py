@@ -1593,6 +1593,36 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         """Whether this payload, returned as an output, already owns its source context."""
         return False
 
+    def contextualized_output(
+        self,
+        kind: Any,
+        source: object,
+        target: Any,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> object:
+        return kind.contextualize_image(source, self, target, plane_projection)
+
+    def owns_complete_source_context(
+        self, plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> bool:
+        """Whether this returned output keeps, or fully declares, its source context."""
+        return self.keeps_own_source_context or self.metadata.has_complete_source_identity(
+            self, plane_projection,
+        )
+
+    def with_undeclared_plane_axis(
+        self, plane_projection: RuntimePlaneAxisValueProjection,
+    ) -> "ImagePayload":
+        """Declare ``plane_projection``'s axis when this dense stack carries it undeclared."""
+        metadata = self.metadata
+        if (
+            self.declared_plane_axis is None
+            and metadata.source_provenance.source_plane_count == plane_projection.axis_size
+            and plane_projection.dense_shape_carries_axis(self.geometry.shape)
+        ):
+            return metadata.replace_fields(plane_axis=plane_projection.axis).attach_to(self)
+        return self
+
     def requires_output_plane_contextualization(
         self,
         output: "ImagePayload",

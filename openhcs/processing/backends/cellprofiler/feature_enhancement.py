@@ -9,7 +9,7 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import processing_prepare
 from openhcs.core.memory.decorators import numpy
 from metaclass_registry.strategies import EnumKeyedStrategyMixin

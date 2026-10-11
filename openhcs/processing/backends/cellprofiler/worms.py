@@ -53,16 +53,16 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
-    SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import KeywordRuntimeParameter
 from openhcs.core.runtime_array_values import RuntimeArrayData

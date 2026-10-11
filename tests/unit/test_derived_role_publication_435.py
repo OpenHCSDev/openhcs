@@ -17,7 +17,8 @@ from test_function_outputs import (
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext, stack_image_payloads
-from openhcs.core.artifacts import ArtifactOutputPlan, ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import ComponentGroupScope, RuntimeExecutionAxisScope
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.runtime_artifact_values import RuntimeValue

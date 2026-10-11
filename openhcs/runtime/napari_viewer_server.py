@@ -79,7 +79,7 @@ from openhcs.runtime.viewer_snapshot import (
 )
 from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.artifacts import ObjectArtifactSubjectBinding
+from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
 from openhcs.runtime.viewer_display import (
     NapariDisplaySettings,
     NapariSlots,

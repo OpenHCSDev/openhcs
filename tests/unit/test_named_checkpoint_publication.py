@@ -13,8 +13,10 @@ import pytest
 import tifffile
 
 from test_artifact_publication_journey import _plate, progress_events
-from openhcs.core.artifacts import (
-    QaCheckpoint, ImageArtifactType, MainFlowPlaneProjectionOutputSpec,
+from openhcs.core.artifacts.sidecars import QaCheckpoint
+from openhcs.core.artifacts.kinds import ImageArtifactType
+from openhcs.core.artifacts.specs import (
+    MainFlowPlaneProjectionOutputSpec,
     MainFlowStackOutputSpec,
 )
 from openhcs.core.config import (

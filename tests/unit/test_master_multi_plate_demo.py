@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.core.artifacts import ImageArtifactType, MeasurementsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
 from openhcs.ui.shared.plate_manager_code_document import (
@@ -119,7 +119,7 @@ def test_compiled_presentation_contract_validates_visual_and_all_measurements(tm
         projection_key="neighbor_count",
         step_name="Measure neighbors",
         pipeline_position=None,
-        artifact_kind=ImageArtifactType.require_value(),
+        artifact_kind=ImageArtifactType.value,
     )
     definition = _definition_with_identity(definition, identity)
     plan = _compiled_plan(
@@ -157,7 +157,7 @@ def test_compiled_presentation_contract_rejects_missing_visual_output(tmp_path):
         projection_key="missing",
         step_name="Measure",
         pipeline_position=None,
-        artifact_kind=ImageArtifactType.require_value(),
+        artifact_kind=ImageArtifactType.value,
     )
     definition = _definition_with_identity(definition, identity)
 
@@ -172,7 +172,7 @@ def test_compiled_presentation_contract_rejects_missing_visual_output(tmp_path):
                     "artifact_outputs": [
                         {
                             "name": "table",
-                            "kind": MeasurementsArtifactType.require_value(),
+                            "kind": MeasurementsArtifactType.value,
                         }
                     ],
                 }
@@ -190,7 +190,7 @@ def test_compiled_presentation_contract_accepts_named_image_promoted_to_main_flo
         projection_key="main",
         step_name="Measure neighbors",
         pipeline_position=None,
-        artifact_kind=ImageArtifactType.require_value(),
+        artifact_kind=ImageArtifactType.value,
     )
     definition = _definition_with_identity(definition, identity)
 

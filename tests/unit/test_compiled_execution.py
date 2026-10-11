@@ -7,11 +7,8 @@ import pytest
 
 from arraybridge import MemoryType
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ImageArtifactType,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,

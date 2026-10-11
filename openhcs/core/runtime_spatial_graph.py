@@ -10,7 +10,7 @@ from typing import ClassVar, Self, TYPE_CHECKING
 
 import numpy as np
 
-from openhcs.core.artifacts import NamedArtifactPayload
+from openhcs.core.artifacts.payloads import NamedArtifactPayload
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingFields
 from openhcs.core.source_image_provenance import (
@@ -218,7 +218,7 @@ class SpatialGraph(
         self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_source_provenance_fields()
         self.normalize_source_voxel_spacing_fields()
-        self.validate_artifact_name()
+        self.require_name()
         nodes = tuple(self.nodes)
         edges = tuple(self.edges)
         object.__setattr__(self, "nodes", nodes)

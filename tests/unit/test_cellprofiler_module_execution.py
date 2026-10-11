@@ -23,20 +23,21 @@ from openhcs.interop.cellprofiler.measurement_lookup import (
 from openhcs.constants.constants import Backend, MemoryType
 from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ProducedImageStack, ImageOutputBundle, ImagePayloadBundleContext, aligned_image_stack_kwargs, compose_aligned_image_payload, pack_aligned_image_outputs)
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
-    ArtifactType,
     GroupLineageSourceRelation,
-    ImageArtifactType,
     InputStackBroadcastSourceRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
+    ArtifactType,
+    ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLineageArtifactType,
     ObjectLabelsArtifactType,
     RelationshipsArtifactType,
-    SourceStackLineageSourceRelation,
     SpatialGridArtifactType,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
@@ -404,6 +405,7 @@ from openhcs.core.pipeline.function_contracts import (
     MatchImageStackLabels,
     SliceAlignedLabels,
 )
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def _compiled_callable_contract(
@@ -4556,12 +4558,10 @@ class _CalculateMathObjectOperandAdapter(_FakeCellProfilerRuntime):
 
 
 def _calculate_math_object_contract() -> CallableContract:
-    from openhcs.core.artifacts import (
-        ArtifactInputPlan,
-        ArtifactSpecCollection,
-        GroupLineageSourceRelation,
-        MeasurementsArtifactType,
-    )
+    from openhcs.core.artifacts.plans import ArtifactInputPlan
+    from openhcs.core.artifacts.specs import ArtifactSpecCollection
+    from openhcs.core.artifacts.relations import GroupLineageSourceRelation
+    from openhcs.core.artifacts.kinds import MeasurementsArtifactType
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.artifact_planning import (
@@ -9671,7 +9671,7 @@ def test_image_output_context_preserves_aligned_image_stack_payload():
     result = ImageArtifactType.contextualize_output(
         dna_payload,
         aligned,
-        None,
+        MAIN_FLOW,
         None,
     )
 
@@ -17292,7 +17292,7 @@ def test_filterobjects_runtime_plan_uses_compiled_removed_output_relation() -> N
 
 
 def test_filterobjects_removed_output_relation_rejects_non_object_source() -> None:
-    with pytest.raises(ValueError, match="requires an object-label source"):
+    with pytest.raises(ValueError, match="source of kind ObjectLabelsArtifactType"):
         FilterObjectsRemovedObjectSourceRelation(
             source=ArtifactSpec.input("Image", ImageArtifactType).ref()
         )
@@ -18211,7 +18211,7 @@ def test_convert_objects_to_image_uses_declared_label_source_for_runtime_plane_d
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(3),
     )
 
@@ -18249,7 +18249,7 @@ def test_object_label_image_output_rejects_source_plane_count_drift() -> None:
             ImagePayloadMetadata().payload_with(
                 np.zeros(labels.shape, dtype=np.uint16)
             ),
-            output_plan,
+            output_plan or MAIN_FLOW,
             RuntimePlaneProjection.stack(2),
         )
 
@@ -18278,7 +18278,7 @@ def test_object_label_singleton_volume_output_declares_runtime_plane_axis() -> N
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(1),
     )
 
@@ -18310,7 +18310,7 @@ def test_object_label_scalar_image_output_does_not_invent_runtime_plane_axis() -
     result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(1),
     )
 

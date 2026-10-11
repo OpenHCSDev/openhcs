@@ -6,7 +6,7 @@ import numpy as np
 
 from openhcs.core.runtime_profile import RuntimeProfileFieldValue
 from arraybridge import ArrayGeometry
-from openhcs.core.artifacts import ArtifactSpec
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     ObjectLabelStorageStrategy,

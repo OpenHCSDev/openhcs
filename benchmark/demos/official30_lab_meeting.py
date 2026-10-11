@@ -24,7 +24,7 @@ from benchmark.contracts.comparison_manifest import (
     ManifestCasePayload,
 )
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.artifacts import ArtifactType, MeasurementsArtifactType
+from openhcs.core.artifacts.kinds import ArtifactType, MeasurementsArtifactType
 from openhcs.core.config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
@@ -108,7 +108,7 @@ class Official30PresentationDeclaration:
             projection_key=projection_key,
             step_name=self.step_name,
             pipeline_position=None,
-            artifact_kind=self.artifact_type.require_value(),
+            artifact_kind=self.artifact_type.value,
         )
 
 

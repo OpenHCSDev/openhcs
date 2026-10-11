@@ -25,14 +25,13 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
     ObjectLabelsArtifactType,
-    SourceStackLineageSourceRelation,
 )
+from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.steps.function_runtime import RuntimeCallableKwargs

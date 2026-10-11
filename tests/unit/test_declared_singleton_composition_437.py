@@ -18,7 +18,8 @@ from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
     composed_image_payload,
 )
-from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,

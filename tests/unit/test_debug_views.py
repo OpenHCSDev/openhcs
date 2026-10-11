@@ -1,4 +1,4 @@
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,

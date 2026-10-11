@@ -13,14 +13,14 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from python_introspect import RuntimeParameterDeclarationABC
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactPlan,
-    ArtifactSpec,
     ArtifactSpecRef,
-    ArtifactType,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
     ComponentGroupScope,

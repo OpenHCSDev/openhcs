@@ -28,11 +28,9 @@ from numba import njit
 
 from openhcs.constants.constants import MemoryType
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ImageArtifactType,
-    ImageMeasurementSubjectRelation,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
+from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
 from openhcs.core.callable_contract import (
     KeywordRuntimeParameter,
     runtime_image_execution_mode,
@@ -149,7 +147,8 @@ from openhcs.core.image_payload_execution_mode import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.artifacts import ArtifactSpecCollection, ArtifactSpecRelation
+    from openhcs.core.artifacts.specs import ArtifactSpecCollection
+    from openhcs.core.artifacts.relations import ArtifactSpecRelation
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.interop.cellprofiler.parser import ModuleBlock

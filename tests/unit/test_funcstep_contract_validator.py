@@ -6,14 +6,14 @@ import numpy as np
 import pytest
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
-    ArtifactInputProjectionPlan,
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpec,
     ArtifactSpecRef,
-    ImageArtifactType,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope

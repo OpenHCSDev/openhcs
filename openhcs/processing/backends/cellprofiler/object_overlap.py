@@ -7,7 +7,7 @@ import numpy as np
 from typing import TYPE_CHECKING, Annotated, ClassVar, Tuple
 from dataclasses import dataclass
 from enum import Enum
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,

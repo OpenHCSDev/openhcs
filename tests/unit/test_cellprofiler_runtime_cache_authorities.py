@@ -12,10 +12,9 @@ from tests.unit.cellprofiler_runtime_test_support import (
 )
 
 from openhcs.core.aligned_image_payload import AlignedImageStack, ProducedImageStack
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,

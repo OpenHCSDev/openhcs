@@ -5,8 +5,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     SpecialArtifactType,

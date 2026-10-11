@@ -3,11 +3,8 @@
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.function_patterns import FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs

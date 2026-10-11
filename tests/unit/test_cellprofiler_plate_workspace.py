@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import tifffile
 
-from openhcs.core.artifacts import ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.config import source_bindings_defaults_to_base
 from openhcs.interop.cellprofiler.plate_workspace import (
     CellProfilerPlateWorkspacePreparer,

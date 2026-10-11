@@ -11,7 +11,7 @@ from typing import Any, Self, TYPE_CHECKING
 
 import numpy as np
 
-from openhcs.core.artifacts import NamedArtifactPayload
+from openhcs.core.artifacts.payloads import NamedArtifactPayload
 from openhcs.core.source_spatial_domain import SpatialShapeYX
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
@@ -294,7 +294,7 @@ class SpatialGrid(SourceImageProvenanceFields, NamedArtifactPayload):
         )
 
     def __post_init__(self) -> None:
-        self.validate_artifact_name()
+        self.require_name()
         if self.total_width is None:
             self.total_width = self.x_spacing * self.columns
         if self.total_height is None:

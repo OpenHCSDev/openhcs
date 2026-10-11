@@ -12,11 +12,10 @@ from objectstate import config_context
 
 from openhcs.constants import Backend
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRelation,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import ArtifactSpecRelation
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -218,7 +217,7 @@ def test_adjacent_filters_preserve_original_named_object_lineage(
     second_input: str,
     tmp_path: Path,
 ) -> None:
-    from openhcs.core.artifacts import SourceStackLineageSourceRelation
+    from openhcs.core.artifacts.relations import SourceStackLineageSourceRelation
     from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
     from openhcs.core.pipeline_document import PipelineDocumentCodec
     from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
@@ -1475,9 +1474,7 @@ MeasureObjectIntensity:[module_num:6|enabled:True]
     )
     assert tuple(
         subject.name
-        for subject in ArtifactSpecRelation.measurement_subjects_for_output(
-            measurement_output,
-        )
+        for subject in measurement_output.measurement_subjects()
     ) == ("Nuclei", "Cells", "Cytoplasm")
 
 

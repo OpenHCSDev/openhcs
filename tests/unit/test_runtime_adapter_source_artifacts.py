@@ -9,7 +9,7 @@ from polystore.filemanager import FileManager
 from scipy.io import savemat
 
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext

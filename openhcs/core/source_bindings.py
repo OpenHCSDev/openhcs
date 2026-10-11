@@ -17,14 +17,9 @@ from urllib.parse import unquote, urlsplit
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRef,
-    ArtifactType,
-    ImageArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactSpecRef
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.component_set import ComponentSet
 from polystore.formats import get_format_from_extension
 from python_introspect import FieldLabel, RegisteredClassChoices

@@ -32,7 +32,7 @@ from polystore.filemanager import FileManager
 from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
-from openhcs.core.artifacts import ArtifactSpec
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
@@ -485,7 +485,7 @@ def czi_brain_axon_cellbody_demo_contribution(
             projection_key=output_spec.name,
             step_name=step.name,
             pipeline_position=None,
-            artifact_kind=output_spec.artifact_type.require_value(),
+            artifact_kind=output_spec.artifact_type.value,
         )
 
     return PipelineDemoContribution(

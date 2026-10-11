@@ -1,6 +1,7 @@
 import numpy as np
 
-from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode_from_callable,
 )

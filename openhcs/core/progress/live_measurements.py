@@ -10,7 +10,7 @@ from typing import Any, ClassVar, cast
 
 import numpy as np
 
-from openhcs.core.artifacts import MeasurementsArtifactType
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.progress.types import ProgressContextPayload
 from openhcs.core.measurement_row_materialization import (
     is_structural_missing_measurement_cell,

@@ -17,11 +17,14 @@ from openhcs.core.config import (
     LazyStepMaterializationConfig,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+from openhcs.core.orchestrator.execution_result import RuntimeContextObservation, RuntimeExecutionObservation
 from openhcs.core.progress import set_progress_queue
-from openhcs.core.artifacts import (
-    ArtifactSpec, ObjectLabelsArtifactType, MeasurementsArtifactType,
-    ArtifactMeasurementSubjectRelation,
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
+    ObjectLabelsArtifactType,
+    MeasurementsArtifactType,
 )
+from openhcs.core.artifacts.relations import ArtifactMeasurementSubjectRelation
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
@@ -164,10 +167,15 @@ def test_public_planning_rejects_external_results_root(tmp_path):
 def test_converted_checkpoint_has_typed_address_on_final_reconciliation(tmp_path, absolute, main_filter):
     results = tmp_path / "source_out" / "results" if absolute else Path("results")
     orchestrator, steps, bundle = _compile(tmp_path, results, main_filter)
-    for context in bundle.runtime_contexts.values():
-        for index, step in enumerate(steps):
-            step.process(context, index)
-    OpenHCSMetadataTarget.finalize_completed_dataset(bundle.runtime_contexts)
+    # Workers return each step's saved outputs; the receiving boundary publishes them.
+    observations = RuntimeExecutionObservation(contexts=tuple(
+        RuntimeContextObservation(context_key=key, records=(), outputs=step.process(context, index))
+        for key, context in bundle.runtime_contexts.items()
+        for index, step in enumerate(steps)
+    ))
+    OpenHCSMetadataTarget.finalize_completed_dataset(
+        bundle.runtime_contexts, runtime_observations=(observations,)
+    )
     saved = tmp_path / "source_out" / "converted"
     files = tuple(saved.glob("*.tif"))
     assert len(files) == 1

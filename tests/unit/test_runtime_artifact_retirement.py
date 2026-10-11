@@ -9,7 +9,9 @@ import pytest
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata

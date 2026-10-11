@@ -13,7 +13,7 @@ from typing import Callable, ClassVar
 
 from python_introspect import registered_class_from_key
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
     ObjectLabelsArtifactType,

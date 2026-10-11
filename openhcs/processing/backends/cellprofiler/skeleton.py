@@ -23,7 +23,7 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     pack_aligned_image_outputs,
 )
-from openhcs.core.artifacts import ObjectLabelsArtifactType, ImageArtifactType
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType, ImageArtifactType
 from openhcs.core.memory.decorators import numpy as numpy_backend
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
