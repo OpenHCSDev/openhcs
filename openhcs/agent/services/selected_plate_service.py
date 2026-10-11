@@ -30,7 +30,10 @@ from openhcs.agent.ui_bridge_identities import (
 )
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.agent.services.ui_bridge_service import UiBridgeService
+from openhcs.agent.services.ui_bridge_service import (
+    UiBridgeGetStateSurfaceOperation,
+    UiBridgeService,
+)
 from openhcs.core.plate_image_inventory import PlateFileKind
 from openhcs.core.selection import SelectedAllSelectionMode
 
@@ -283,7 +286,8 @@ class SelectedPlateService:
         self,
         connection: UiBridgeConnectionSpec,
     ) -> SelectedPlateStateResolution:
-        state_document = self.ui_bridge_service.get_state_surface(
+        state_document = self.ui_bridge_service.invoke(
+            UiBridgeGetStateSurfaceOperation,
             UiStateSurfaceRequest(
                 surface_id=PlateManagerStateSurfaceIdentityDeclaration.require_value(),
                 selection_mode=SelectedAllSelectionMode.SELECTED.value,

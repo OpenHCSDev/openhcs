@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 
+from openhcs.agent.dto.common import AgentError
 from openhcs.core.debug import DebugCommandType
 
 if TYPE_CHECKING:
@@ -27,6 +28,9 @@ class DebugActionDisabledReason:
     code: str
     message: str
     hint: str
+
+    def as_agent_error(self) -> AgentError:
+        return AgentError(code=self.code, message=self.message, hint=self.hint)
 
 
 class DebugActionPlacement(Enum):

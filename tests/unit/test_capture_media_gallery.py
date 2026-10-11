@@ -8,6 +8,10 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
+
+from openhcs.agent.services.ui_bridge_service import (
+    UiBridgeSnapshotWindowOperation,
+)
 from pyqt_reactive.animation import WindowFlashOverlay
 from pyqt_reactive.animation.flash_overlay_opengl import WindowFlashOverlayGL
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
@@ -261,7 +265,8 @@ def test_ui_bridge_snapshot_capture_uses_declared_request_and_result_contracts(
             observed_connections.append(kwargs)
             return kwargs
 
-        def snapshot_window(self, request, connection):
+        def invoke(self, operation, request, connection):
+            assert operation is UiBridgeSnapshotWindowOperation
             observed_requests.append(request)
             assert connection is observed_connections[-1]
             return UiWindowSnapshotResult(

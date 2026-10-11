@@ -36,7 +36,10 @@ from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogService,
     FunctionCatalogServiceABC,
 )
-from openhcs.agent.services.ui_bridge_service import UiBridgeService
+from openhcs.agent.services.ui_bridge_service import (
+    UiBridgeListObjectStateScopesOperation,
+    UiBridgeService,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,7 +88,8 @@ class ObjectStateFieldHelpService:
         request: UiObjectStateFieldHelpRequest,
         connection: UiBridgeConnectionSpec,
     ) -> UiObjectStateFieldHelpResult:
-        catalog = self.ui_bridge_service.list_object_state_scopes(
+        catalog = self.ui_bridge_service.invoke(
+            UiBridgeListObjectStateScopesOperation,
             UiObjectStateScopeListRequest.from_visibility_options(
                 UiObjectStateScopeVisibility(include_system_scopes=True),
                 UiObjectStateFieldListOptions(
@@ -199,7 +203,8 @@ class ObjectStateFieldHelpService:
         query: UiObjectStateFieldHelpQuery,
         connection: UiBridgeConnectionSpec,
     ) -> tuple[str | None, UiObjectStateFieldHelpResult | None]:
-        catalog = self.ui_bridge_service.list_object_state_scopes(
+        catalog = self.ui_bridge_service.invoke(
+            UiBridgeListObjectStateScopesOperation,
             UiObjectStateScopeListRequest.from_visibility_options(
                 UiObjectStateScopeVisibility(include_system_scopes=True),
                 UiObjectStateFieldListOptions(

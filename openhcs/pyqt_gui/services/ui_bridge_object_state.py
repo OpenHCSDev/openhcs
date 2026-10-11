@@ -20,14 +20,9 @@ from pyqt_reactive.services.window_code_document import (
 )
 from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.window_navigation import WindowNavigationRequest
-from pyqt_reactive.services.parameter_help_service import (
-    parameter_help_content,
-    resolved_parameter_description,
-)
 from python_introspect import (
     JsonValue,
     UnifiedParameterAnalyzer,
-    enum_input_values,
     project_dataclass,
     to_jsonable,
 )
@@ -45,8 +40,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiMutationReceipt,
     UiObjectStateFieldFilter,
     UiObjectStateFieldProvenance,
-    UiObjectStateFieldHelpRequest,
-    UiObjectStateFieldHelpResult,
     UiObjectStateFieldMutationRequest,
     UiObjectStateFieldMutationResult,
     UiObjectStateFieldSemanticCarrier,
@@ -671,154 +664,15 @@ class ObjectStateScopeProjectionService:
         return field_path.rsplit(".", 1)[0]
 
 
-class ObjectStateFieldHelpProjectionService:
-    """Resolve ObjectState field help through the shared UI help introspection path."""
-
-    def describe(
-        self,
-        request: UiObjectStateFieldHelpRequest,
-    ) -> UiObjectStateFieldHelpResult:
-        state = self._state_for_agent_scope_id(request.object_state_scope_id)
-        if state is None:
-            return self._error_result(
-                request,
-                AgentError(
-                    code="ui_object_state_scope_not_found",
-                    message=(
-                        "ObjectState scope is not registered in the running UI: "
-                        f"{request.object_state_scope_id!r}"
-                    ),
-                ),
-            )
-        if request.field_path not in state.parameters:
-            return self._error_result(
-                request,
-                AgentError(
-                    code="ui_object_state_field_not_found",
-                    message=(
-                        "ObjectState field is not registered on this scope: "
-                        f"{request.field_path!r}"
-                    ),
-                ),
-            )
-
-        field = ObjectStateFieldSemanticProjection.from_state(
-            state,
-            request.field_path,
-        ).to_field_summary()
-        try:
-            help_target = self._help_target(state, request.field_path)
-            parameter_name = ObjectStateScopeProjectionService.field_name(
-                request.field_path
-            )
-            parameter_description = resolved_parameter_description(
-                help_target=help_target,
-                param_name=parameter_name,
-                widget_description=self._widget_description(
-                    state,
-                    request.field_path,
-                ),
-            )
-            parameter_type = self._parameter_type(help_target, parameter_name)
-            parameter_content = parameter_help_content(
-                param_name=parameter_name,
-                param_type=parameter_type,
-                description=parameter_description,
-            )
-            description, description_truncated = self._bounded_text(
-                parameter_content.description,
-                request.max_description_chars,
-            )
-            return UiObjectStateFieldHelpResult(
-                schema_version=SCHEMA_VERSION,
-                address=field.address,
-                field=field,
-                object_type=ObjectStateScopeProjectionService.type_qualname(
-                    type(state.object_instance)
-                ),
-                help_target_type=ObjectStateScopeProjectionService.type_qualname(
-                    help_target
-                ),
-                parameter_name=parameter_name,
-                summary=parameter_content.summary,
-                description=description,
-                enum_values=enum_input_values(parameter_type),
-                description_truncated=description_truncated,
-            )
-        except Exception as exc:
-            return self._error_result(
-                request,
-                AgentError.from_exception(
-                    "ui_object_state_field_help_failed",
-                    exc,
-                ),
-                field=field,
-            )
-
-    @staticmethod
-    def _state_for_agent_scope_id(scope_id: str) -> ObjectState | None:
-        for candidate_scope_id in OpenHCSUiWindowId.manager_scopes_for_agent_window_id(
-            scope_id
-        ):
-            state = ObjectStateRegistry.get_by_scope(candidate_scope_id)
-            if state is not None:
-                return state
-        return None
-
-    @staticmethod
-    def _help_target(
-        state: ObjectState, field_path: str
-    ) -> type | Callable[..., object]:
-        return state.type_for_path(field_path)
-
-    @staticmethod
-    def _parameter_type(
-        help_target: type | Callable[..., object],
-        parameter_name: str,
-    ) -> type | None:
-        parameter_info = UnifiedParameterAnalyzer.analyze(help_target).get(
-            parameter_name
-        )
-        if parameter_info is None:
-            return None
-        return parameter_info.param_type
-
-    @staticmethod
-    def _widget_description(state: ObjectState, field_path: str) -> str:
-        description = state.parameter_descriptions.get(field_path)
-        if description is None:
-            return ""
-        return description
-
-    @staticmethod
-    def _bounded_text(value: str | None, max_chars: int) -> tuple[str | None, bool]:
-        if value is None:
-            return None, False
-        bounded_max = max(0, max_chars)
-        if len(value) <= bounded_max:
-            return value, False
-        return (
-            value[:bounded_max] + f"\n...<truncated {len(value) - bounded_max} chars>",
-            True,
-        )
-
-    @staticmethod
-    def _error_result(
-        request: UiObjectStateFieldHelpRequest,
-        error: AgentError,
-        *,
-        field: UiObjectStateFieldSummary | None = None,
-    ) -> UiObjectStateFieldHelpResult:
-        return UiObjectStateFieldHelpResult(
-            schema_version=SCHEMA_VERSION,
-            address=UiSemanticAddress(
-                object_state_scope_id=request.object_state_scope_id,
-                field_path=request.field_path,
-                window_id=request.window_id,
-            ),
-            field=field,
-            errors=(error,),
-        )
+def object_state_for_agent_scope_id(scope_id: str) -> ObjectState | None:
+    """The ObjectState an agent-facing scope or window id names."""
+    for candidate_scope_id in OpenHCSUiWindowId.manager_scopes_for_agent_window_id(
+        scope_id
+    ):
+        state = ObjectStateRegistry.get_by_scope(candidate_scope_id)
+        if state is not None:
+            return state
+    return None
 
 
 class ObjectStateFieldMutationService:
@@ -834,7 +688,7 @@ class ObjectStateFieldMutationService:
         self,
         request: UiObjectStateFieldMutationRequest,
     ) -> UiObjectStateFieldMutationResult:
-        state = ObjectStateFieldHelpProjectionService._state_for_agent_scope_id(
+        state = object_state_for_agent_scope_id(
             request.object_state_scope_id
         )
         if state is None:

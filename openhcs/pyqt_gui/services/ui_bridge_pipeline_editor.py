@@ -7,11 +7,8 @@ from dataclasses import replace
 
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
-    UiActionCatalog,
     UiActionIdentity,
-    UiActionInvocationStatus,
     UiActionInvokeRequest,
-    UiActionInvokeResult,
     UiActionSummary,
     UiCodeDocumentSelectionMode,
     UiDebugActionState,
@@ -22,7 +19,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiLiveOverviewMetric,
     UiLiveOverviewSection,
     UiLiveOverviewSeverity,
-    UiMutationReceipt,
     UiPipelineDebugSessionState,
     UiPipelineEditorState,
     UiProgressIdentityState,
@@ -41,6 +37,7 @@ from python_introspect import to_jsonable
 from objectstate.object_state import ObjectStateRegistry
 from openhcs.core.progress.debug_projection import DebugRuntimeFrame
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
+    UiActionDispatch,
     UiActionProviderABC,
     UiActionProviderIdentity,
     UiBridgeSnapshotProviderABC,
@@ -62,9 +59,6 @@ from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
 from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
     DebugActionRenderModel,
     DebugToolbarActionProjector,
-)
-from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
-    DebugActionDisabledReason,
 )
 
 PIPELINE_EDITOR_ACTIONS_TITLE = "Pipeline editor actions"
@@ -103,15 +97,14 @@ class PipelineDebugToolbarActionProvider(UiActionProviderABC):
     def __init__(self, manager) -> None:
         self._manager = manager
 
-    def catalog(self) -> UiActionCatalog:
-        return UiActionCatalog(
-            schema_version=SCHEMA_VERSION,
-            actions=tuple(self.summary(action_id) for action_id in self._action_ids()),
+    def action_ids(self) -> tuple[str, ...]:
+        return tuple(
+            declaration.action_id()
+            for declaration in DebugToolbarActionProjector.declarations()
         )
 
     def summary(self, action_id: str) -> UiActionSummary:
         model = self._model(action_id)
-        availability_error = self._availability_error(model)
         return UiActionSummary(
             schema_version=SCHEMA_VERSION,
             identity=UiActionIdentity(
@@ -119,8 +112,12 @@ class PipelineDebugToolbarActionProvider(UiActionProviderABC):
                 action_id=action_id,
             ),
             title=model.label,
-            enabled=availability_error is None,
-            disabled_error=availability_error,
+            enabled=model.disabled_reason is None,
+            disabled_error=(
+                None
+                if model.disabled_reason is None
+                else model.disabled_reason.as_agent_error()
+            ),
             invocation_mode="sync",
             side_effects=model.side_effects,
             confirmation_required=model.confirmation_required,
@@ -131,39 +128,22 @@ class PipelineDebugToolbarActionProvider(UiActionProviderABC):
             related_state_surface_ids=self._related_state_surface_ids(action_id),
         )
 
-    def invoke(self, request: UiActionInvokeRequest) -> UiActionInvokeResult:
-        guard_error = self._guard_error(request)
-        if guard_error is not None:
-            return self._invoke_error(request, guard_error)
+    def dispatch(self, request: UiActionInvokeRequest) -> UiActionDispatch:
+        event_sequence = self._manager.session.event_log.last_sequence
+        self._model(request.action_id).declaration.invoke(self._manager.debug_workflow)
+        return UiActionDispatch(event_sequence=event_sequence)
 
-        try:
-            model = self._model(request.action_id)
-            model.declaration.invoke(self._manager.debug_workflow)
-        except Exception as exc:
-            return self._invoke_error(
-                request,
-                AgentError.from_exception("ui_action_dispatch_failed", exc),
-            )
-
-        return UiActionInvokeResult(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=self.identity.widget_id,
-                action_id=request.action_id,
-            ),
-            status=UiActionInvocationStatus.ACCEPTED.value,
-            receipt=UiMutationReceipt.accepted_for(request.request_token),
-            target_scope_ids=self._target_scope_ids(),
-            selection_revision_token=self._selection_revision_token(),
-            workflow_status_surface_ids=self._workflow_status_surface_ids(),
-            recommended_poll_interval_ms=500,
-        )
-
-    @staticmethod
-    def _action_ids() -> tuple[str, ...]:
+    def workflow_status_surface_ids(self) -> tuple[str, ...]:
         return tuple(
-            declaration.action_id()
-            for declaration in DebugToolbarActionProjector.declarations()
+            dict.fromkeys(
+                (
+                    PLATE_MANAGER_STATE_SURFACE_ID,
+                    *(
+                        declaration.surface_id
+                        for declaration in self._owner_surface_declarations()
+                    ),
+                )
+            )
         )
 
     @staticmethod
@@ -183,20 +163,6 @@ class PipelineDebugToolbarActionProvider(UiActionProviderABC):
             dict.fromkeys((PLATE_MANAGER_STATE_SURFACE_ID, *owner_surface_ids))
         )
 
-    @classmethod
-    def _workflow_status_surface_ids(cls) -> tuple[str, ...]:
-        return tuple(
-            dict.fromkeys(
-                (
-                    PLATE_MANAGER_STATE_SURFACE_ID,
-                    *(
-                        declaration.surface_id
-                        for declaration in cls._owner_surface_declarations()
-                    ),
-                )
-            )
-        )
-
     def _models(self) -> tuple[DebugActionRenderModel, ...]:
         return DebugToolbarActionProjector.render_models(
             self._manager.debug_session_context()
@@ -207,86 +173,6 @@ class PipelineDebugToolbarActionProvider(UiActionProviderABC):
             if model.action_id == action_id:
                 return model
         raise ValueError(f"Debug toolbar action is not declared: {action_id!r}")
-
-    @staticmethod
-    def _availability_error(model: DebugActionRenderModel) -> AgentError | None:
-        if model.disabled_reason is None:
-            return None
-        return PipelineDebugToolbarActionProvider._agent_error_from_reason(
-            model.disabled_reason
-        )
-
-    def _guard_error(self, request: UiActionInvokeRequest) -> AgentError | None:
-        try:
-            model = self._model(request.action_id)
-        except Exception as exc:
-            return AgentError.from_exception("unknown_ui_action", exc)
-
-        target_scope_ids = model.target_scope_ids
-        if (
-            request.selected_scope_ids
-            and request.selected_scope_ids != target_scope_ids
-        ):
-            return AgentError(
-                code="stale_ui_action_selection",
-                message=(
-                    f"{self.identity.widget_id} action target scopes changed after "
-                    "the action was planned."
-                ),
-            )
-        observed_revision = request.observed_selection_revision_token
-        current_revision = self._selection_revision_token()
-        if observed_revision is not None and observed_revision != current_revision:
-            return AgentError(
-                code="stale_ui_action_revision",
-                message=(
-                    f"{self.identity.widget_id} selection changed after the action "
-                    "was planned."
-                ),
-            )
-        availability_error = self._availability_error(model)
-        if availability_error is not None:
-            return availability_error
-        if model.confirmation_required and request.confirmation_is_required():
-            return AgentError(
-                code="confirmation_required",
-                message=(
-                    f"{self.identity.widget_id} action {request.action_id!r} mutates "
-                    "debug execution state; set require_confirmation=False to dispatch it."
-                ),
-            )
-        return None
-
-    def _invoke_error(
-        self,
-        request: UiActionInvokeRequest,
-        error: AgentError,
-    ) -> UiActionInvokeResult:
-        return UiActionInvokeResult(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=request.widget_id,
-                action_id=request.action_id,
-            ),
-            status=UiActionInvocationStatus.REJECTED.value,
-            receipt=UiMutationReceipt.rejected_for(request.request_token),
-            target_scope_ids=self._target_scope_ids(),
-            selection_revision_token=self._selection_revision_token(),
-            errors=(error,),
-        )
-
-    @staticmethod
-    def _agent_error_from_reason(reason: DebugActionDisabledReason) -> AgentError:
-        return AgentError(
-            code=reason.code,
-            message=reason.message,
-            hint=reason.hint,
-        )
-
-    def _target_scope_ids(self) -> tuple[str, ...]:
-        return DebugToolbarActionProjector.target_scope_ids(
-            self._manager.debug_session_context()
-        )
 
     def _selection_revision_token(self) -> str:
         models = self._models()
@@ -497,9 +383,7 @@ class PipelineDebugSessionStateSurfaceProvider(UiStateSurfaceProviderABC):
             disabled_error=(
                 None
                 if model.disabled_reason is None
-                else PipelineDebugToolbarActionProvider._agent_error_from_reason(
-                    model.disabled_reason
-                )
+                else model.disabled_reason.as_agent_error()
             ),
             selected_scope_ids=model.target_scope_ids,
         )

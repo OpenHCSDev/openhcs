@@ -1,9 +1,9 @@
 from dataclasses import fields as dataclass_fields
 
 from openhcs.agent.capabilities import (
+    UiBridgeOperationInvocation,
     AgentCapabilityDeclaration,
     AgentCapabilityExposition,
-    AgentConnectionServiceInvocation,
     AgentDataclassRequestServiceInvocation,
     AgentFromFieldsServiceInvocation,
     AgentServiceInvocation,
@@ -513,7 +513,7 @@ def test_viewer_probe_capability_declares_compact_liveness_contract():
 def test_connection_shape_is_declared_by_the_invocation_family():
     assert isinstance(
         agent_capabilities.ui_bridge_status.invocation,
-        AgentConnectionServiceInvocation,
+        UiBridgeOperationInvocation,
     )
     for capability in (
         agent_capabilities.get_viewer_window_payloads,

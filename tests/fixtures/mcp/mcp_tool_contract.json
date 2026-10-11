@@ -500,6 +500,7 @@
    "openhcs_ui_restore_snapshot",
    "openhcs_ui_sample_selected_plate_image",
    "openhcs_ui_selected_plate_workflow",
+   "openhcs_ui_session_events",
    "openhcs_ui_snapshot_window",
    "openhcs_ui_stream_selected_plate_files_to_viewer",
    "openhcs_ui_switch_branch",
@@ -614,6 +615,7 @@
    "openhcs_ui_restore_snapshot",
    "openhcs_ui_sample_selected_plate_image",
    "openhcs_ui_selected_plate_workflow",
+   "openhcs_ui_session_events",
    "openhcs_ui_snapshot_window",
    "openhcs_ui_stream_selected_plate_files_to_viewer",
    "openhcs_ui_switch_branch",
@@ -9280,7 +9282,7 @@
     "readOnlyHint": false,
     "title": "Invoke UI action"
    },
-   "description": "Dispatches one running-UI action using the selection_revision_token from openhcs_ui_list_actions; workflow progress is polled through related state surfaces.",
+   "description": "Dispatches one running-UI action using the selection_revision_token from openhcs_ui_list_actions; follow the work it starts with openhcs_ui_session_events from the returned event_sequence.",
    "execution": null,
    "icons": null,
    "inputSchema": {
@@ -12249,6 +12251,175 @@
     "type": "object"
    },
    "title": "Selected plate workflow"
+  },
+  "openhcs_ui_session_events": {
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true,
+    "title": "Running UI session events"
+   },
+   "description": "Returns the running UI session's events published after after_sequence, waiting up to timeout_seconds for the first one. UI actions return the event_sequence they started at; pass it here instead of polling state surfaces. Keep timeout_seconds below the connection timeout.",
+   "execution": null,
+   "icons": null,
+   "inputSchema": {
+    "$defs": {
+     "McpUiBridgeConnectionRequest": {
+      "properties": {
+       "auth_token": {
+        "anyOf": [
+         {
+          "minLength": 1,
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Auth Token"
+       },
+       "bridge_instance_id": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Bridge Instance Id"
+       },
+       "descriptor_file_path": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Descriptor File Path"
+       },
+       "host": {
+        "anyOf": [
+         {
+          "minLength": 1,
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Host"
+       },
+       "persistent": {
+        "anyOf": [
+         {
+          "type": "boolean"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Persistent"
+       },
+       "port": {
+        "anyOf": [
+         {
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Port"
+       },
+       "timeout_ms": {
+        "anyOf": [
+         {
+          "maximum": 5000,
+          "minimum": 1,
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Bounded ui bridge timeout in milliseconds (1..5000).",
+        "title": "Timeout Ms"
+       },
+       "transport_mode": {
+        "anyOf": [
+         {
+          "$ref": "#/$defs/TransportMode"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null
+       }
+      },
+      "title": "McpUiBridgeConnectionRequest",
+      "type": "object"
+     },
+     "TransportMode": {
+      "description": "Closed serialized identities resolved through transport declarations.",
+      "enum": [
+       "tcp",
+       "ipc"
+      ],
+      "title": "TransportMode",
+      "type": "string"
+     }
+    },
+    "additionalProperties": false,
+    "properties": {
+     "after_sequence": {
+      "default": 0,
+      "title": "After Sequence",
+      "type": "integer"
+     },
+     "connection": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/McpUiBridgeConnectionRequest"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "timeout_seconds": {
+      "default": 0.0,
+      "title": "Timeout Seconds",
+      "type": "number"
+     }
+    },
+    "title": "openhcs_ui_session_eventsArguments",
+    "type": "object"
+   },
+   "meta": {
+    "openhcs/outputContract": "SessionEventBatch"
+   },
+   "name": "openhcs_ui_session_events",
+   "outputSchema": {
+    "additionalProperties": true,
+    "title": "openhcs_ui_session_eventsDictOutput",
+    "type": "object"
+   },
+   "title": "Running UI session events"
   },
   "openhcs_ui_snapshot_window": {
    "annotations": {

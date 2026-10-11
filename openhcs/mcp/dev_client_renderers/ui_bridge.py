@@ -874,8 +874,8 @@ class UiActionResultRenderer(UiMutationRenderer, ABC):
                 cls.acknowledgement_line(action.receipt),
                 f"Selection: targets={cls.sequence_text(action.target_scope_ids)} "
                 f"selection_rev={cls.text(action.selection_revision_token)}",
-                f"Polling: surfaces={cls.sequence_text(action.workflow_status_surface_ids)} "
-                f"interval_ms={action.recommended_poll_interval_ms}",
+                f"Follow: surfaces={cls.sequence_text(action.workflow_status_surface_ids)} "
+                f"events_after={cls.text(action.event_sequence)}",
             )
         )
 

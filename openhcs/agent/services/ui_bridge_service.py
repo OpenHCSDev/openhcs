@@ -10,10 +10,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import Enum
-from functools import singledispatch
 from os import environ
 from pathlib import Path
-from typing import Annotated, ClassVar, Generic, TypeAlias, TypeVar
+from typing import Annotated, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import (
@@ -31,6 +30,7 @@ from zmqruntime.config import (
 )
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
+from openhcs.agent.dto.session import SessionEventBatch, SessionEventsRequest
 from openhcs.agent.dto.ui_bridge import (
     UI_BRIDGE_UNKNOWN_WIDGET,
     UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
@@ -65,8 +65,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentValidationRequest,
     UiCodeDocumentValidationResult,
     UiMutationReceipt,
-    UiObjectStateFieldHelpRequest,
-    UiObjectStateFieldHelpResult,
+    UiMutationRequestToken,
     UiObjectStateFieldListQuery,
     UiObjectStateFieldListResult,
     UiObjectStateFieldMutationRequest,
@@ -110,120 +109,42 @@ from openhcs.runtime.viewer_protocol import ViewerLaunchContext
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
-UI_BRIDGE_PROTOCOL_VERSION = "openhcs.ui_bridge.v2"
+UI_BRIDGE_PROTOCOL_VERSION = "openhcs.ui_bridge.v3"
 DEFAULT_UI_BRIDGE_CONNECTION_SPEC = UiBridgeConnectionSpec()
 DEFAULT_UI_BRIDGE_TIMEOUT_MS = DEFAULT_UI_BRIDGE_CONNECTION_SPEC.timeout_ms
 UNAVAILABLE_UI_CODE_DOCUMENT_TITLE = "Unavailable UI code document"
 UNAVAILABLE_UI_STATE_SURFACE_TITLE = "Unavailable UI state surface"
-UiBridgeResultT = TypeVar("UiBridgeResultT")
-UiBridgeRequestT = TypeVar("UiBridgeRequestT")
-UiBridgeResponseT = TypeVar("UiBridgeResponseT")
 
 
-@dataclass(frozen=True, slots=True)
-class UiBridgeGatewayMethod(Generic[UiBridgeResponseT]):
-    """Nominal reference to a UI bridge gateway method."""
+@dataclass(slots=True)
+class UiBridgeRequestRejected(Exception):
+    """A request the client refuses before it reaches the bridge."""
 
-    method: Callable
-
-    @property
-    def name(self) -> str:
-        return self.method.__name__
+    errors: tuple[AgentError, ...]
 
 
-@dataclass(frozen=True, slots=True)
-class UiBridgeNoPayloadGatewayMethod(UiBridgeGatewayMethod[UiBridgeResponseT]):
-    """Gateway method that accepts only a connection payload."""
+class UiBridgeOperation(ABC, metaclass=AutoRegisterMeta):
+    """One running-UI operation: its request, result and failure answer.
 
-    method: Callable[["UiBridgeGatewayABC", UiBridgeConnectionSpec], UiBridgeResponseT]
-    call: Callable[["UiBridgeGatewayABC", UiBridgeConnectionSpec], UiBridgeResponseT]
-
-    def invoke(
-        self,
-        gateway: "UiBridgeGatewayABC",
-        connection: UiBridgeConnectionSpec,
-    ) -> UiBridgeResponseT:
-        return self.call(gateway, connection)
-
-
-@dataclass(frozen=True, slots=True)
-class UiBridgePayloadGatewayMethod(
-    UiBridgeGatewayMethod[UiBridgeResponseT],
-    Generic[UiBridgeRequestT, UiBridgeResponseT],
-):
-    """Gateway method that accepts a typed request payload."""
-
-    method: Callable[
-        ["UiBridgeGatewayABC", UiBridgeConnectionSpec, UiBridgeRequestT],
-        UiBridgeResponseT,
-    ]
-    call: Callable[
-        ["UiBridgeGatewayABC", UiBridgeConnectionSpec, UiBridgeRequestT],
-        UiBridgeResponseT,
-    ]
-
-    def invoke(
-        self,
-        gateway: "UiBridgeGatewayABC",
-        connection: UiBridgeConnectionSpec,
-        request: UiBridgeRequestT,
-    ) -> UiBridgeResponseT:
-        return self.call(gateway, connection, request)
-
-
-class UiBridgeFeature(str, Enum):
-    """Status feature tags projected from UI bridge operation declarations."""
-
-    UI_CODE_DOCUMENTS = "ui_code_documents"
-    UI_STATE_SURFACES = "ui_state_surfaces"
-    UI_ACTIONS = "ui_actions"
-    UI_WINDOWS = "ui_windows"
-    UI_WINDOW_NAVIGATION = "ui_window_navigation"
-    UI_WINDOW_SNAPSHOTS = "ui_window_snapshots"
-    SELECTED_PLATE_WORKFLOWS = "selected_plate_workflows"
-    WIDGET_TREE_PROJECTION = "widget_tree_projection"
-    WIDGET_ACTION_INVOCATION = "widget_action_invocation"
-    OBJECTSTATE_SCOPES = "objectstate_scopes"
-    OBJECTSTATE_FIELD_MUTATION = "objectstate_field_mutation"
-    OBJECTSTATE_SNAPSHOTS = "objectstate_snapshots"
-    OBJECTSTATE_BRANCHES = "objectstate_branches"
-    OPERATION_STATUS = "operation_status"
-
-
-def _ui_bridge_operation_registry_key(
-    _class_name: str,
-    operation_type: type,
-) -> str | None:
-    gateway_method = operation_type.gateway_method
-    if isinstance(gateway_method, UiBridgeGatewayMethod):
-        return gateway_method.name
-    return None
-
-
-class UiBridgeOperationContractABC(ABC, metaclass=AutoRegisterMeta):
-    """Registered UI bridge operation contract declaration."""
+    The class is the operation. Gateways, ``UiBridgeService`` and the MCP
+    capabilities are generic over it; the running UI serves it with one
+    ``@serves`` method. Operations with a ``name`` cross the wire and are
+    registered under it; operations without one are composed on the client.
+    """
 
     __registry_key__ = "name"
-    __key_extractor__ = _ui_bridge_operation_registry_key
     __skip_if_no_key__ = True
 
     name: ClassVar[str | None] = None
-    gateway_method: ClassVar[UiBridgeGatewayMethod | None] = None
-    response_type: ClassVar[type]
+    request_type: ClassVar[type]
+    result_type: ClassVar[type]
     requires_auth: ClassVar[bool] = True
-    request_type: ClassVar[type | None] = None
-    bridge_features: ClassVar[tuple[UiBridgeFeature, ...]] = ()
+    bridge_feature: ClassVar[str | None] = None
     success_outcome: ClassVar[str] = "completed"
     failure_error_code: ClassVar[str] = "ui_bridge_operation_failed"
 
     @classmethod
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        if cls.name is None and cls.gateway_method is not None:
-            cls.name = cls.gateway_method.name
-
-    @classmethod
-    def for_name(cls, operation_name: str) -> "UiBridgeOperationContract":
+    def for_name(cls, operation_name: str) -> type["UiBridgeOperation"]:
         try:
             return cls.__registry__[operation_name]
         except KeyError as exc:
@@ -242,35 +163,90 @@ class UiBridgeOperationContractABC(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def supported_bridge_features(cls) -> tuple[str, ...]:
         return tuple(
-            feature.value
-            for feature in dict.fromkeys(
-                feature
-                for operation_type in cls.__registry__.values()
-                for feature in operation_type.bridge_features
+            dict.fromkeys(
+                operation.bridge_feature
+                for operation in cls.__registry__.values()
+                if operation.bridge_feature is not None
             )
         )
 
+    # -- request on the wire ------------------------------------------------
 
-class UiBridgeNoPayloadOperationContract(
-    UiBridgeOperationContractABC,
-    Generic[UiBridgeResponseT],
-):
-    """Typed UI bridge operation whose gateway method accepts no request payload."""
+    @classmethod
+    def decode_request(cls, payload: JsonObject):
+        return dataclass_from_mapping(cls.request_type, payload)
+
+    @classmethod
+    def validate_request(cls, request) -> None:
+        if not isinstance(request, cls.request_type):
+            raise TypeError(
+                f"UI bridge operation {cls.name!r} requires "
+                f"{cls.request_type.__name__} request."
+            )
+
+    @classmethod
+    def serve(cls, handler: Callable, request):
+        """Run the running UI's implementation of this operation."""
+        return handler(request)
+
+    @classmethod
+    def as_served(cls, result, binding: UiBridgeConnectionSpec):
+        """The result as the bridge server answers it."""
+        del binding
+        return result
+
+    @classmethod
+    def accepted(cls, request, bridge_operation: UiBridgeOperationRef):
+        """The placeholder a queued mutation answers before it completes."""
+        raise NotImplementedError(f"{cls.__name__} is not a queued mutation.")
+
+    @classmethod
+    def outcome(cls, result) -> str:
+        """The tracker outcome of one completed mutation."""
+        del result
+        return cls.success_outcome
+
+    # -- client side -------------------------------------------------------
+
+    @classmethod
+    def failed(cls, request, errors: tuple[AgentError, ...]):
+        """The result reporting that the operation could not run."""
+        raise NotImplementedError(f"{cls.__name__} declares no failure answer.")
+
+    @classmethod
+    def prepare(cls, service: "UiBridgeService", request):
+        """Check or rewrite the request before it leaves the client."""
+        del service
+        return request
+
+    @classmethod
+    def call(cls, service: "UiBridgeService", connection, request):
+        return service.gateway.invoke(connection, cls, request)
+
+    @classmethod
+    def respond(cls, service: "UiBridgeService", connection, request):
+        try:
+            request = cls.prepare(service, request)
+        except UiBridgeRequestRejected as rejected:
+            return cls.failed(request, rejected.errors)
+        resolution = service.resolve(connection)
+        if not resolution.ok:
+            return cls.failed(request, resolution.errors)
+        try:
+            return cls.call(service, resolution, request)
+        except Exception as exc:
+            return cls.failed(
+                request, ui_bridge_gateway_errors(exc, "ui_bridge_unavailable")
+            )
+
+
+class UiBridgeRequestlessOperation(UiBridgeOperation):
+    """Operation that takes no request."""
 
     request_type: ClassVar[None] = None
-    gateway_method: ClassVar[UiBridgeNoPayloadGatewayMethod[UiBridgeResponseT]]
 
     @classmethod
-    def invoke_with_payload(
-        cls,
-        gateway: "UiBridgeGatewayABC",
-        connection: UiBridgeConnectionSpec,
-        payload: None,
-    ) -> UiBridgeResponseT:
-        return cls.gateway_method.invoke(gateway, connection)
-
-    @classmethod
-    def decode_request_payload(cls, payload: JsonObject) -> None:
+    def decode_request(cls, payload: JsonObject) -> None:
         if payload:
             raise ValueError(
                 f"UI bridge operation {cls.name!r} does not accept a payload."
@@ -278,286 +254,562 @@ class UiBridgeNoPayloadOperationContract(
         return None
 
     @classmethod
-    def validate_request_payload(cls, payload: None) -> None:
-        if payload is not None:
+    def validate_request(cls, request) -> None:
+        if request is not None:
             raise TypeError(
-                f"UI bridge operation {cls.name!r} does not accept a payload."
+                f"UI bridge operation {cls.name!r} does not accept a request."
             )
 
+    @classmethod
+    def serve(cls, handler: Callable, request):
+        del request
+        return handler()
 
-class UiBridgePayloadOperationContract(
-    UiBridgeOperationContractABC,
-    Generic[UiBridgeRequestT, UiBridgeResponseT],
-):
-    """Typed UI bridge operation whose gateway method accepts a request payload."""
 
-    request_type: ClassVar[type[UiBridgeRequestT]]
-    gateway_method: ClassVar[
-        UiBridgePayloadGatewayMethod[UiBridgeRequestT, UiBridgeResponseT]
-    ]
+def serves(operation: type[UiBridgeOperation]) -> Callable[[Callable], Callable]:
+    """Mark the running UI's implementation of one wire operation."""
+
+    def mark(handler: Callable) -> Callable:
+        handler.served_operation = operation
+        return handler
+
+    return mark
+
+
+class UiBridgeOperationServer:
+    """Implementation side of the family: one ``@serves`` method per operation."""
+
+    served_operations: ClassVar[dict[type[UiBridgeOperation], Callable]] = {}
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        cls.served_operations = {
+            handler.served_operation: handler
+            for klass in reversed(cls.__mro__)
+            for handler in vars(klass).values()
+            if hasattr(handler, "served_operation")
+        }
+
+    def invoke(self, operation: type[UiBridgeOperation], request=None):
+        handler = self.served_operations[operation]
+        return operation.serve(handler.__get__(self), request)
+
+
+# -- operation groups: the status feature tag and shared failure answers -----
+
+
+class UiCodeDocumentOperation(UiBridgeOperation):
+    bridge_feature = "ui_code_documents"
+
+
+class UiStateSurfaceOperation(UiBridgeOperation):
+    bridge_feature = "ui_state_surfaces"
+
+
+class UiActionOperation(UiBridgeOperation):
+    bridge_feature = "ui_actions"
+
+
+class UiWindowOperation(UiBridgeOperation):
+    bridge_feature = "ui_windows"
+
+
+class UiObjectStateScopeOperation(UiBridgeOperation):
+    bridge_feature = "objectstate_scopes"
+
+
+class UiObjectStateSnapshotOperation(UiBridgeOperation):
+    bridge_feature = "objectstate_snapshots"
+
+
+class UiObjectStateRestoreOperation(UiBridgeOperation):
+    """Operations that move the running UI to another ObjectState snapshot."""
+
+    result_type = UiSnapshotRestoreResult
 
     @classmethod
-    def invoke_with_payload(
-        cls,
-        gateway: "UiBridgeGatewayABC",
-        connection: UiBridgeConnectionSpec,
-        payload: UiBridgeRequestT,
-    ) -> UiBridgeResponseT:
-        return cls.gateway_method.invoke(gateway, connection, payload)
+    def failed(cls, request, errors):
+        del request
+        return UiSnapshotRestoreResult(
+            schema_version=SCHEMA_VERSION,
+            restored=False,
+            target_snapshot=None,
+            current_snapshot=None,
+            errors=errors,
+        )
 
     @classmethod
-    def decode_request_payload(cls, payload: JsonObject) -> UiBridgeRequestT:
-        return dataclass_from_mapping(cls.request_type, payload)
+    def accepted(cls, request, bridge_operation):
+        del request
+        return UiSnapshotRestoreResult(
+            schema_version=SCHEMA_VERSION,
+            restored=False,
+            target_snapshot=None,
+            operation_id=bridge_operation.identity.operation_id,
+            receipt=UiMutationReceipt.accepted_for(
+                UiMutationRequestToken(),
+                bridge_operation_id=bridge_operation.identity.operation_id,
+            ),
+        )
 
     @classmethod
-    def validate_request_payload(cls, payload: UiBridgeRequestT) -> None:
-        if not isinstance(payload, cls.request_type):
-            raise TypeError(
-                f"UI bridge operation {cls.name!r} requires "
-                f"{cls.request_type.__name__} payload."
-            )
+    def outcome(cls, result) -> str:
+        return "restored" if result.restored else "not_restored"
 
 
-UiBridgeOperationContract: TypeAlias = (
-    type[UiBridgeNoPayloadOperationContract] | type[UiBridgePayloadOperationContract]
-)
+class UiBridgeOperationStatusQuery(UiBridgeOperation):
+    """Operations answering with one bridge operation's status."""
+
+    result_type = UiBridgeOperationRef
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiBridgeOperationRef(
+            schema_version=SCHEMA_VERSION,
+            identity=UiBridgeOperationIdentity(
+                operation_id=request.operation_id,
+                route=UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
+            ),
+            status=UiBridgeOperationStatus.UNAVAILABLE.value,
+            started_at_unix=0.0,
+            errors=errors,
+        )
 
 
-class UiBridgeDescriptorDirectoryAuthority:
-    """Filesystem location policy for live UI bridge descriptors."""
+# -- the operations ----------------------------------------------------------
+
+
+class UiBridgeStatusOperation(UiBridgeRequestlessOperation):
+    name = "status"
+    result_type = UiBridgeStatus
+    requires_auth = False
+
+    @classmethod
+    def as_served(cls, result: UiBridgeStatus, binding: UiBridgeConnectionSpec):
+        return replace(
+            result,
+            auth_required=True,
+            bridge_instance_id=binding.bridge_instance_id,
+            connection=binding.public_connection(),
+            descriptor_file_path=binding.descriptor_file_path,
+            supported_operations=UiBridgeOperation.supported_operation_names(),
+            provider_catalog_schema_versions=(SCHEMA_VERSION,),
+            bridge_features=UiBridgeOperation.supported_bridge_features(),
+        )
+
+    @classmethod
+    def failed(cls, request, errors):
+        del request
+        return UiBridgeStatus(schema_version=SCHEMA_VERSION, reachable=False, errors=errors)
 
     @staticmethod
-    def default_descriptor_dir() -> Path:
-        return UiBridgeDescriptorDirectoryAuthority.descriptor_dirs()[0]
-
-    @classmethod
-    def descriptor_dirs(cls) -> tuple[Path, ...]:
-        configured = environ.get(
-            UiBridgeDescriptorEnvironment.descriptor_directory_path_key
-        )
-        if configured:
-            return (AgentRuntimePlatformAuthority.resolved_path(configured),)
-
-        return AgentRuntimePlatformAuthority.current().application_runtime_dirs(
-            "OpenHCS",
-            "ui-bridge",
+    def _unreachable(resolution: "UiBridgeConnectionResolution") -> UiBridgeStatus:
+        return UiBridgeStatus(
+            schema_version=SCHEMA_VERSION,
+            reachable=False,
+            connection=resolution.public_connection(),
+            descriptor_file_path=resolution.descriptor_file_path,
+            descriptor_status=resolution.descriptor.status,
+            descriptors=resolution.descriptor.summaries,
+            errors=resolution.errors,
         )
 
+    @classmethod
+    def respond(cls, service, connection, request):
+        resolution = service.resolve(connection)
+        if not resolution.ok:
+            return cls._unreachable(resolution)
+        try:
+            status = cls.call(service, resolution, request)
+        except Exception as exc:
+            return cls._unreachable(
+                UiBridgeConnectionResolution.from_connection(
+                    resolution,
+                    descriptor=resolution.descriptor,
+                    errors=ui_bridge_gateway_errors(exc, "ui_bridge_unreachable"),
+                )
+            )
+        validation_errors = resolution.validate_live_status(status)
+        if validation_errors:
+            return cls._unreachable(
+                UiBridgeConnectionResolution.from_connection(
+                    resolution,
+                    descriptor=replace(
+                        resolution.descriptor,
+                        status=validation_errors[0].code,
+                    ),
+                    errors=validation_errors,
+                )
+            )
+        return resolution.descriptor.project_status(status, connection=resolution)
 
-class UiBridgeGatewayABC(ABC, metaclass=AutoRegisterMeta):
-    """Transport boundary for querying a running OpenHCS UI bridge."""
 
-    __registry_key__ = "registry_key"
-    __skip_if_no_key__ = True
-    registry_key: str | None = None
+class UiBridgeListDocumentsOperation(
+    UiBridgeRequestlessOperation, UiCodeDocumentOperation
+):
+    name = "list_documents"
+    result_type = UiCodeDocumentCatalog
 
     @classmethod
-    def registered_types(cls) -> tuple[type["UiBridgeGatewayABC"], ...]:
-        return tuple(cls.__registry__.values())
+    def failed(cls, request, errors):
+        return UiCodeDocumentCatalog(SCHEMA_VERSION, documents=(), errors=errors)
 
-    @abstractmethod
-    def status(self, connection: UiBridgeConnectionSpec) -> UiBridgeStatus:
-        raise NotImplementedError
 
-    @abstractmethod
-    def list_documents(
-        self,
-        connection: UiBridgeConnectionSpec,
-    ) -> UiCodeDocumentCatalog:
-        raise NotImplementedError
+class UiBridgeListStateSurfacesOperation(
+    UiBridgeRequestlessOperation, UiStateSurfaceOperation
+):
+    name = "list_state_surfaces"
+    result_type = UiStateSurfaceCatalog
 
-    @abstractmethod
-    def list_state_surfaces(
-        self,
-        connection: UiBridgeConnectionSpec,
-    ) -> UiStateSurfaceCatalog:
-        raise NotImplementedError
+    @classmethod
+    def failed(cls, request, errors):
+        return UiStateSurfaceCatalog(SCHEMA_VERSION, surfaces=(), errors=errors)
 
-    @abstractmethod
-    def list_actions(
-        self,
-        connection: UiBridgeConnectionSpec,
-    ) -> UiActionCatalog:
-        raise NotImplementedError
 
-    @abstractmethod
-    def list_windows(
-        self,
-        connection: UiBridgeConnectionSpec,
-    ) -> UiWindowCatalog:
-        raise NotImplementedError
+class UiBridgeListActionsOperation(UiBridgeRequestlessOperation, UiActionOperation):
+    name = "list_actions"
+    result_type = UiActionCatalog
 
-    @abstractmethod
-    def list_object_state_scopes(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiObjectStateScopeListRequest,
-    ) -> UiObjectStateScopeCatalog:
-        raise NotImplementedError
+    @classmethod
+    def failed(cls, request, errors):
+        return UiActionCatalog(SCHEMA_VERSION, actions=(), errors=errors)
 
-    @abstractmethod
-    def describe_object_state_field(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiObjectStateFieldHelpRequest,
-    ) -> UiObjectStateFieldHelpResult:
-        raise NotImplementedError
 
-    @abstractmethod
-    def mutate_object_state_field(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiObjectStateFieldMutationRequest,
-    ) -> UiObjectStateFieldMutationResult:
-        raise NotImplementedError
+class UiBridgeListWindowsOperation(UiBridgeRequestlessOperation, UiWindowOperation):
+    name = "list_windows"
+    result_type = UiWindowCatalog
 
-    @abstractmethod
-    def get_document(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiCodeDocumentRequest,
-    ) -> UiCodeDocument:
-        raise NotImplementedError
+    @classmethod
+    def failed(cls, request, errors):
+        return UiWindowCatalog(schema_version=SCHEMA_VERSION, windows=(), errors=errors)
 
-    @abstractmethod
-    def get_state_surface(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiStateSurfaceRequest,
-    ) -> UiStateSurfaceDocument:
-        raise NotImplementedError
 
-    @abstractmethod
-    def invoke_action(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiActionInvokeRequest,
-    ) -> UiActionInvokeResult:
-        raise NotImplementedError
+class UiBridgeListObjectStateScopesOperation(UiObjectStateScopeOperation):
+    name = "list_object_state_scopes"
+    request_type = UiObjectStateScopeListRequest
+    result_type = UiObjectStateScopeCatalog
 
-    @abstractmethod
-    def focus_window(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWindowFocusRequest,
-    ) -> UiWindowFocusResult:
-        raise NotImplementedError
+    @classmethod
+    def failed(cls, request, errors):
+        del request
+        return UiObjectStateScopeCatalog(
+            schema_version=SCHEMA_VERSION,
+            object_state_token=0,
+            current_branch="",
+            current_snapshot_index=-1,
+            active=False,
+            scopes=(),
+            errors=errors,
+        )
 
-    @abstractmethod
-    def navigate_window(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWindowNavigateRequest,
-    ) -> UiWindowNavigateResult:
-        raise NotImplementedError
+    @classmethod
+    def respond(cls, service, connection, request):
+        return request.filtered_catalog(super().respond(service, connection, request))
 
-    @abstractmethod
-    def close_window(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWindowCloseRequest,
-    ) -> UiWindowCloseResult:
-        raise NotImplementedError
 
-    @abstractmethod
-    def snapshot_window(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWindowSnapshotRequest,
-    ) -> UiWindowSnapshotResult:
-        raise NotImplementedError
+class UiBridgeGetObjectStateFieldsOperation(UiObjectStateScopeOperation):
+    """Field rows projected on the client from the scope catalog."""
 
-    @abstractmethod
-    def widget_tree(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWidgetTreeRequest,
-    ) -> UiWidgetTreeResult:
-        raise NotImplementedError
+    request_type = UiObjectStateFieldListQuery
+    result_type = UiObjectStateFieldListResult
 
-    @abstractmethod
-    def invoke_widget_action(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWidgetActionInvokeRequest,
-    ) -> UiWidgetActionInvokeResult:
-        raise NotImplementedError
+    @classmethod
+    def respond(cls, service, connection, request):
+        catalog = UiBridgeListObjectStateScopesOperation.respond(
+            service, connection, request.scope_list_request()
+        )
+        return ObjectStateFieldListProjector.project_catalog(request, catalog)
 
-    @abstractmethod
-    def validate_document(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiCodeDocumentValidationRequest,
-    ) -> UiCodeDocumentValidationResult:
-        raise NotImplementedError
 
-    @abstractmethod
-    def apply_document(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiCodeDocumentApplyRequest,
-    ) -> UiCodeDocumentApplyResult:
-        raise NotImplementedError
+class UiBridgeMutateObjectStateFieldOperation(UiBridgeOperation):
+    name = "mutate_object_state_field"
+    request_type = UiObjectStateFieldMutationRequest
+    result_type = UiObjectStateFieldMutationResult
+    bridge_feature = "objectstate_field_mutation"
 
-    @abstractmethod
-    def list_snapshots(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiSnapshotListRequest,
-    ) -> UiSnapshotCatalog:
-        raise NotImplementedError
+    @classmethod
+    def failed(cls, request, errors):
+        return UiObjectStateFieldMutationResult(
+            schema_version=SCHEMA_VERSION,
+            address=request,
+            mutated=False,
+            reset=request.reset,
+            receipt=UiMutationReceipt.rejected_for(request.request_token),
+            errors=errors,
+        )
 
-    @abstractmethod
-    def restore_snapshot(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiSnapshotRestoreRequest,
-    ) -> UiSnapshotRestoreResult:
-        raise NotImplementedError
+    @classmethod
+    def accepted(cls, request, bridge_operation):
+        return UiObjectStateFieldMutationResult(
+            schema_version=SCHEMA_VERSION,
+            address=request,
+            mutated=False,
+            reset=request.reset,
+            receipt=UiMutationReceipt.accepted_for(
+                request.request_token,
+                bridge_operation_id=bridge_operation.identity.operation_id,
+            ),
+        )
 
-    @abstractmethod
-    def time_travel_head(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiTimeTravelHeadRequest,
-    ) -> UiSnapshotRestoreResult:
-        raise NotImplementedError
+    @classmethod
+    def outcome(cls, result) -> str:
+        return "mutated" if result.mutated else "not_mutated"
 
-    @abstractmethod
-    def list_branches(
-        self,
-        connection: UiBridgeConnectionSpec,
-    ) -> UiBranchCatalog:
-        raise NotImplementedError
 
-    @abstractmethod
-    def switch_branch(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiBranchSwitchRequest,
-    ) -> UiSnapshotRestoreResult:
-        raise NotImplementedError
+class UiBridgeGetDocumentOperation(UiCodeDocumentOperation):
+    name = "get_document"
+    request_type = UiCodeDocumentRequest
+    result_type = UiCodeDocument
 
-    @abstractmethod
-    def get_operation_status(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiBridgeOperationStatusRequest,
-    ) -> UiBridgeOperationRef:
-        raise NotImplementedError
+    @classmethod
+    def failed(cls, request, errors):
+        return UiCodeDocument(
+            schema_version=SCHEMA_VERSION,
+            summary=UiCodeDocumentSummary(
+                schema_version=SCHEMA_VERSION,
+                identity=UiCodeDocumentIdentity(document_id=request.document_id),
+                title=UNAVAILABLE_UI_CODE_DOCUMENT_TITLE,
+                widget_id=UI_BRIDGE_UNKNOWN_WIDGET,
+                readable=False,
+                writable=False,
+            ),
+            source="",
+            mime_type="text/x-python",
+            size_bytes=0,
+            sha256="",
+            current_revision_token=None,
+            current_snapshot=None,
+            selection_mode=request.resolved_selection_mode(
+                UiCodeDocumentSelectionMode.SELECTED
+            ),
+            selected_scope_ids=(),
+            errors=errors,
+        )
 
-    def wait_for_operation_receipt(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiBridgeOperationWaitRequest,
-    ) -> UiBridgeOperationRef:
-        """Wait for an operation through the authoritative one-shot status method."""
+
+class UiBridgeGetStateSurfaceOperation(UiStateSurfaceOperation):
+    name = "get_state_surface"
+    request_type = UiStateSurfaceRequest
+    result_type = UiStateSurfaceDocument
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiStateSurfaceDocument(
+            schema_version=SCHEMA_VERSION,
+            summary=UiStateSurfaceSummary(
+                schema_version=SCHEMA_VERSION,
+                identity=UiStateSurfaceIdentity(surface_id=request.surface_id),
+                title=UNAVAILABLE_UI_STATE_SURFACE_TITLE,
+                widget_id=UI_BRIDGE_UNKNOWN_WIDGET,
+                readable=False,
+            ),
+            payload_schema="openhcs.ui.unavailable_state_surface.v1",
+            payload={},
+            selection_mode=request.resolved_selection_mode(
+                UiCodeDocumentSelectionMode.ALL
+            ),
+            selected_scope_ids=(),
+            current_revision_token=None,
+            current_snapshot=None,
+            errors=errors,
+        )
+
+
+class UiBridgeInvokeActionOperation(UiActionOperation):
+    name = "invoke_action"
+    request_type = UiActionInvokeRequest
+    result_type = UiActionInvokeResult
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiActionInvokeResult(
+            schema_version=SCHEMA_VERSION,
+            identity=UiActionIdentity(
+                widget_id=request.widget_id,
+                action_id=request.action_id,
+            ),
+            status=UiActionInvocationStatus.UNAVAILABLE.value,
+            receipt=UiMutationReceipt.rejected_for(request.request_token),
+            errors=errors,
+        )
+
+    @classmethod
+    def accepted(cls, request, bridge_operation):
+        return UiActionInvokeResult(
+            schema_version=SCHEMA_VERSION,
+            identity=UiActionIdentity(
+                widget_id=request.widget_id,
+                action_id=request.action_id,
+            ),
+            status=UiActionInvocationStatus.ACCEPTED.value,
+            receipt=UiMutationReceipt.accepted_for(
+                request.request_token,
+                bridge_operation_id=bridge_operation.identity.operation_id,
+            ),
+            target_scope_ids=request.selected_scope_ids,
+            selection_revision_token=request.observed_selection_revision_token,
+        )
+
+    @classmethod
+    def outcome(cls, result) -> str:
+        return result.status
+
+
+class UiBridgeSelectedPlateWorkflowOperation(UiBridgeOperation):
+    name = "selected_plate_workflow"
+    request_type = UiSelectedPlateWorkflowRequest
+    result_type = UiSelectedPlateWorkflowResult
+    bridge_feature = "selected_plate_workflows"
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiSelectedPlateWorkflowResult(
+            schema_version=SCHEMA_VERSION,
+            workflow=request.workflow,
+            action_result=UiActionInvokeResult(
+                schema_version=SCHEMA_VERSION,
+                identity=UiActionIdentity(
+                    widget_id=UI_BRIDGE_UNKNOWN_WIDGET,
+                    action_id=request.workflow.value,
+                ),
+                status=UiActionInvocationStatus.UNAVAILABLE.value,
+                receipt=UiMutationReceipt.rejected_for(request.request_token),
+                errors=errors,
+            ),
+            errors=errors,
+        )
+
+
+class UiBridgeSessionEventsOperation(UiBridgeOperation):
+    """The running UI's session events after a sequence (push, not polling)."""
+
+    name = "session_events"
+    request_type = SessionEventsRequest
+    result_type = SessionEventBatch
+    bridge_feature = "session_events"
+
+    @classmethod
+    def failed(cls, request, errors):
+        return SessionEventBatch(
+            events=(), last_sequence=request.after_sequence, errors=errors
+        )
+
+
+class UiBridgeFocusWindowOperation(UiWindowOperation):
+    name = "focus_window"
+    request_type = UiWindowFocusRequest
+    result_type = UiWindowFocusResult
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiWindowFocusResult(
+            schema_version=SCHEMA_VERSION,
+            window_id=request.window_id,
+            focused=False,
+            errors=errors,
+        )
+
+
+class UiBridgeNavigateWindowOperation(UiBridgeOperation):
+    name = "navigate_window"
+    request_type = UiWindowNavigateRequest
+    result_type = UiWindowNavigateResult
+    bridge_feature = "ui_window_navigation"
+    success_outcome = "navigated"
+    failure_error_code = "ui_window_navigation_failed"
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiWindowNavigateResult(
+            schema_version=SCHEMA_VERSION,
+            window_id=request.window_id,
+            focused=False,
+            navigated=False,
+            created=False,
+            errors=errors,
+        )
+
+
+class UiBridgeCloseWindowOperation(UiWindowOperation):
+    name = "close_window"
+    request_type = UiWindowCloseRequest
+    result_type = UiWindowCloseResult
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiWindowCloseResult(
+            schema_version=SCHEMA_VERSION,
+            window_id=request.window_id,
+            closed=False,
+            errors=errors,
+        )
+
+
+class UiBridgeSnapshotWindowOperation(UiBridgeOperation):
+    name = "snapshot_window"
+    request_type = UiWindowSnapshotRequest
+    result_type = UiWindowSnapshotResult
+    bridge_feature = "ui_window_snapshots"
+    success_outcome = "captured"
+    failure_error_code = "ui_window_snapshot_failed"
+
+    @classmethod
+    def failed(cls, request, errors):
+        return project_dataclass(
+            UiWindowSnapshotResult,
+            request,
+            schema_version=SCHEMA_VERSION,
+            window_id=request.window_id,
+            captured=False,
+            errors=errors,
+        )
+
+    @classmethod
+    def prepare(cls, service, request):
+        try:
+            output_dir = service.path_policy.assert_writable(request.output_dir_path)
+        except AgentPathPolicyError as exc:
+            raise UiBridgeRequestRejected((exc.to_agent_error(),)) from exc
+        return replace(request, output_dir_path=str(output_dir))
+
+
+class UiBridgeWidgetTreeOperation(UiBridgeOperation):
+    name = "widget_tree"
+    request_type = UiWidgetTreeRequest
+    result_type = UiWidgetTreeResult
+    bridge_feature = "widget_tree_projection"
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiWidgetTreeResult(
+            schema_version=SCHEMA_VERSION,
+            window_id=request.window_id,
+            projected=False,
+            errors=errors,
+        )
+
+
+class UiBridgeGetOperationStatusOperation(UiBridgeOperationStatusQuery):
+    name = "get_operation_status"
+    request_type = UiBridgeOperationStatusRequest
+    bridge_feature = "operation_status"
+
+
+class UiBridgeWaitForOperationReceiptOperation(UiBridgeOperationStatusQuery):
+    """Wait on the client for an operation to reach a terminal status."""
+
+    request_type = UiBridgeOperationWaitRequest
+
+    @classmethod
+    def call(cls, service, connection, request):
         deadline = time.monotonic() + request.timeout_seconds
         status_request = UiBridgeOperationStatusRequest(
             operation_id=request.operation_id
         )
         while True:
-            operation = self.get_operation_status(connection, status_request)
+            operation = UiBridgeGetOperationStatusOperation.call(
+                service, connection, status_request
+            )
             try:
                 status = UiBridgeOperationStatus(operation.status)
             except ValueError:
@@ -601,566 +853,223 @@ class UiBridgeGatewayABC(ABC, metaclass=AutoRegisterMeta):
                 )
             time.sleep(min(request.poll_interval_seconds, remaining_seconds))
 
-    @abstractmethod
-    def selected_plate_workflow(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiSelectedPlateWorkflowRequest,
-    ) -> UiSelectedPlateWorkflowResult:
-        raise NotImplementedError
 
-
-class UiBridgeStatusOperation(UiBridgeNoPayloadOperationContract[UiBridgeStatus]):
-    gateway_method = UiBridgeNoPayloadGatewayMethod(
-        UiBridgeGatewayABC.status,
-        lambda gateway, connection: gateway.status(connection),
-    )
-    response_type = UiBridgeStatus
-    requires_auth = False
-
-
-class UiBridgeListDocumentsOperation(
-    UiBridgeNoPayloadOperationContract[UiCodeDocumentCatalog]
-):
-    gateway_method = UiBridgeNoPayloadGatewayMethod(
-        UiBridgeGatewayABC.list_documents,
-        lambda gateway, connection: gateway.list_documents(connection),
-    )
-    response_type = UiCodeDocumentCatalog
-    bridge_features = (UiBridgeFeature.UI_CODE_DOCUMENTS,)
-
-
-class UiBridgeListStateSurfacesOperation(
-    UiBridgeNoPayloadOperationContract[UiStateSurfaceCatalog]
-):
-    gateway_method = UiBridgeNoPayloadGatewayMethod(
-        UiBridgeGatewayABC.list_state_surfaces,
-        lambda gateway, connection: gateway.list_state_surfaces(connection),
-    )
-    response_type = UiStateSurfaceCatalog
-    bridge_features = (UiBridgeFeature.UI_STATE_SURFACES,)
-
-
-class UiBridgeListActionsOperation(UiBridgeNoPayloadOperationContract[UiActionCatalog]):
-    gateway_method = UiBridgeNoPayloadGatewayMethod(
-        UiBridgeGatewayABC.list_actions,
-        lambda gateway, connection: gateway.list_actions(connection),
-    )
-    response_type = UiActionCatalog
-    bridge_features = (UiBridgeFeature.UI_ACTIONS,)
-
-
-class UiBridgeListWindowsOperation(UiBridgeNoPayloadOperationContract[UiWindowCatalog]):
-    gateway_method = UiBridgeNoPayloadGatewayMethod(
-        UiBridgeGatewayABC.list_windows,
-        lambda gateway, connection: gateway.list_windows(connection),
-    )
-    response_type = UiWindowCatalog
-    bridge_features = (UiBridgeFeature.UI_WINDOWS,)
-
-
-class UiBridgeListObjectStateScopesOperation(
-    UiBridgePayloadOperationContract[
-        UiObjectStateScopeListRequest,
-        UiObjectStateScopeCatalog,
-    ]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.list_object_state_scopes,
-        lambda gateway, connection, request: gateway.list_object_state_scopes(
-            connection, request
-        ),
-    )
-    request_type = UiObjectStateScopeListRequest
-    response_type = UiObjectStateScopeCatalog
-    bridge_features = (UiBridgeFeature.OBJECTSTATE_SCOPES,)
-
-
-class UiBridgeDescribeObjectStateFieldOperation(
-    UiBridgePayloadOperationContract[
-        UiObjectStateFieldHelpRequest,
-        UiObjectStateFieldHelpResult,
-    ]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.describe_object_state_field,
-        lambda gateway, connection, request: gateway.describe_object_state_field(
-            connection, request
-        ),
-    )
-    request_type = UiObjectStateFieldHelpRequest
-    response_type = UiObjectStateFieldHelpResult
-    bridge_features = (UiBridgeFeature.OBJECTSTATE_SCOPES,)
-
-
-class UiBridgeMutateObjectStateFieldOperation(
-    UiBridgePayloadOperationContract[
-        UiObjectStateFieldMutationRequest,
-        UiObjectStateFieldMutationResult,
-    ]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.mutate_object_state_field,
-        lambda gateway, connection, request: gateway.mutate_object_state_field(
-            connection, request
-        ),
-    )
-    request_type = UiObjectStateFieldMutationRequest
-    response_type = UiObjectStateFieldMutationResult
-    bridge_features = (UiBridgeFeature.OBJECTSTATE_FIELD_MUTATION,)
-
-
-class UiBridgeGetDocumentOperation(
-    UiBridgePayloadOperationContract[UiCodeDocumentRequest, UiCodeDocument]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.get_document,
-        lambda gateway, connection, request: gateway.get_document(connection, request),
-    )
-    request_type = UiCodeDocumentRequest
-    response_type = UiCodeDocument
-    bridge_features = (UiBridgeFeature.UI_CODE_DOCUMENTS,)
-
-
-class UiBridgeGetStateSurfaceOperation(
-    UiBridgePayloadOperationContract[UiStateSurfaceRequest, UiStateSurfaceDocument]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.get_state_surface,
-        lambda gateway, connection, request: gateway.get_state_surface(
-            connection, request
-        ),
-    )
-    request_type = UiStateSurfaceRequest
-    response_type = UiStateSurfaceDocument
-    bridge_features = (UiBridgeFeature.UI_STATE_SURFACES,)
-
-
-class UiBridgeInvokeActionOperation(
-    UiBridgePayloadOperationContract[UiActionInvokeRequest, UiActionInvokeResult]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.invoke_action,
-        lambda gateway, connection, request: gateway.invoke_action(connection, request),
-    )
-    request_type = UiActionInvokeRequest
-    response_type = UiActionInvokeResult
-    bridge_features = (UiBridgeFeature.UI_ACTIONS,)
-
-
-class UiBridgeFocusWindowOperation(
-    UiBridgePayloadOperationContract[UiWindowFocusRequest, UiWindowFocusResult]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.focus_window,
-        lambda gateway, connection, request: gateway.focus_window(connection, request),
-    )
-    request_type = UiWindowFocusRequest
-    response_type = UiWindowFocusResult
-    bridge_features = (UiBridgeFeature.UI_WINDOWS,)
-
-
-class UiBridgeNavigateWindowOperation(
-    UiBridgePayloadOperationContract[UiWindowNavigateRequest, UiWindowNavigateResult]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.navigate_window,
-        lambda gateway, connection, request: gateway.navigate_window(
-            connection, request
-        ),
-    )
-    request_type = UiWindowNavigateRequest
-    response_type = UiWindowNavigateResult
-    bridge_features = (UiBridgeFeature.UI_WINDOW_NAVIGATION,)
-    success_outcome = "navigated"
-    failure_error_code = "ui_window_navigation_failed"
-
-
-class UiBridgeCloseWindowOperation(
-    UiBridgePayloadOperationContract[UiWindowCloseRequest, UiWindowCloseResult]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.close_window,
-        lambda gateway, connection, request: gateway.close_window(connection, request),
-    )
-    request_type = UiWindowCloseRequest
-    response_type = UiWindowCloseResult
-    bridge_features = (UiBridgeFeature.UI_WINDOWS,)
-
-
-class UiBridgeSnapshotWindowOperation(
-    UiBridgePayloadOperationContract[UiWindowSnapshotRequest, UiWindowSnapshotResult]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.snapshot_window,
-        lambda gateway, connection, request: gateway.snapshot_window(
-            connection, request
-        ),
-    )
-    request_type = UiWindowSnapshotRequest
-    response_type = UiWindowSnapshotResult
-    bridge_features = (UiBridgeFeature.UI_WINDOW_SNAPSHOTS,)
-    success_outcome = "captured"
-    failure_error_code = "ui_window_snapshot_failed"
-
-
-class UiBridgeWidgetTreeOperation(
-    UiBridgePayloadOperationContract[UiWidgetTreeRequest, UiWidgetTreeResult]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.widget_tree,
-        lambda gateway, connection, request: gateway.widget_tree(connection, request),
-    )
-    request_type = UiWidgetTreeRequest
-    response_type = UiWidgetTreeResult
-    bridge_features = (UiBridgeFeature.WIDGET_TREE_PROJECTION,)
-
-
-class UiBridgeInvokeWidgetActionOperation(
-    UiBridgePayloadOperationContract[
-        UiWidgetActionInvokeRequest,
-        UiWidgetActionInvokeResult,
-    ]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.invoke_widget_action,
-        lambda gateway, connection, request: gateway.invoke_widget_action(
-            connection, request
-        ),
-    )
+class UiBridgeInvokeWidgetActionOperation(UiBridgeOperation):
+    name = "invoke_widget_action"
     request_type = UiWidgetActionInvokeRequest
-    response_type = UiWidgetActionInvokeResult
-    bridge_features = (UiBridgeFeature.WIDGET_ACTION_INVOCATION,)
+    result_type = UiWidgetActionInvokeResult
+    bridge_feature = "widget_action_invocation"
 
-
-class UiBridgeValidateDocumentOperation(
-    UiBridgePayloadOperationContract[
-        UiCodeDocumentValidationRequest,
-        UiCodeDocumentValidationResult,
-    ]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.validate_document,
-        lambda gateway, connection, request: gateway.validate_document(
-            connection, request
-        ),
-    )
-    request_type = UiCodeDocumentValidationRequest
-    response_type = UiCodeDocumentValidationResult
-    bridge_features = (UiBridgeFeature.UI_CODE_DOCUMENTS,)
-
-
-class UiBridgeApplyDocumentOperation(
-    UiBridgePayloadOperationContract[
-        UiCodeDocumentApplyRequest, UiCodeDocumentApplyResult
-    ]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.apply_document,
-        lambda gateway, connection, request: gateway.apply_document(
-            connection, request
-        ),
-    )
-    request_type = UiCodeDocumentApplyRequest
-    response_type = UiCodeDocumentApplyResult
-    bridge_features = (UiBridgeFeature.UI_CODE_DOCUMENTS,)
-
-
-class UiBridgeListSnapshotsOperation(
-    UiBridgePayloadOperationContract[UiSnapshotListRequest, UiSnapshotCatalog]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.list_snapshots,
-        lambda gateway, connection, request: gateway.list_snapshots(
-            connection, request
-        ),
-    )
-    request_type = UiSnapshotListRequest
-    response_type = UiSnapshotCatalog
-    bridge_features = (UiBridgeFeature.OBJECTSTATE_SNAPSHOTS,)
-
-
-class UiBridgeRestoreSnapshotOperation(
-    UiBridgePayloadOperationContract[UiSnapshotRestoreRequest, UiSnapshotRestoreResult]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.restore_snapshot,
-        lambda gateway, connection, request: gateway.restore_snapshot(
-            connection, request
-        ),
-    )
-    request_type = UiSnapshotRestoreRequest
-    response_type = UiSnapshotRestoreResult
-    bridge_features = (UiBridgeFeature.OBJECTSTATE_SNAPSHOTS,)
-
-
-class UiBridgeTimeTravelHeadOperation(
-    UiBridgePayloadOperationContract[UiTimeTravelHeadRequest, UiSnapshotRestoreResult]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.time_travel_head,
-        lambda gateway, connection, request: gateway.time_travel_head(
-            connection, request
-        ),
-    )
-    request_type = UiTimeTravelHeadRequest
-    response_type = UiSnapshotRestoreResult
-    bridge_features = (UiBridgeFeature.OBJECTSTATE_SNAPSHOTS,)
-
-
-class UiBridgeListBranchesOperation(
-    UiBridgeNoPayloadOperationContract[UiBranchCatalog]
-):
-    gateway_method = UiBridgeNoPayloadGatewayMethod(
-        UiBridgeGatewayABC.list_branches,
-        lambda gateway, connection: gateway.list_branches(connection),
-    )
-    response_type = UiBranchCatalog
-    bridge_features = (UiBridgeFeature.OBJECTSTATE_BRANCHES,)
-
-
-class UiBridgeSwitchBranchOperation(
-    UiBridgePayloadOperationContract[UiBranchSwitchRequest, UiSnapshotRestoreResult]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.switch_branch,
-        lambda gateway, connection, request: gateway.switch_branch(connection, request),
-    )
-    request_type = UiBranchSwitchRequest
-    response_type = UiSnapshotRestoreResult
-    bridge_features = (UiBridgeFeature.OBJECTSTATE_BRANCHES,)
-
-
-class UiBridgeGetOperationStatusOperation(
-    UiBridgePayloadOperationContract[
-        UiBridgeOperationStatusRequest, UiBridgeOperationRef
-    ]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.get_operation_status,
-        lambda gateway, connection, request: gateway.get_operation_status(
-            connection, request
-        ),
-    )
-    request_type = UiBridgeOperationStatusRequest
-    response_type = UiBridgeOperationRef
-    bridge_features = (UiBridgeFeature.OPERATION_STATUS,)
-
-
-class UiBridgeSelectedPlateWorkflowOperation(
-    UiBridgePayloadOperationContract[
-        UiSelectedPlateWorkflowRequest,
-        UiSelectedPlateWorkflowResult,
-    ]
-):
-    gateway_method = UiBridgePayloadGatewayMethod(
-        UiBridgeGatewayABC.selected_plate_workflow,
-        lambda gateway, connection, request: gateway.selected_plate_workflow(
-            connection, request
-        ),
-    )
-    request_type = UiSelectedPlateWorkflowRequest
-    response_type = UiSelectedPlateWorkflowResult
-    bridge_features = (UiBridgeFeature.SELECTED_PLATE_WORKFLOWS,)
-
-
-class UnavailableUiBridgeGateway(UiBridgeGatewayABC):
-    """Gateway used until the PyQt bridge transport is wired."""
-
-    registry_key = UiBridgeOperationStatus.UNAVAILABLE.value
-
-    def status(self, connection: UiBridgeConnectionSpec) -> UiBridgeStatus:
-        return UiBridgeStatus(
+    @classmethod
+    def failed(cls, request, errors):
+        return UiWidgetActionInvokeResult(
             schema_version=SCHEMA_VERSION,
-            reachable=False,
-            connection=connection.public_connection(),
-            descriptor_file_path=connection.descriptor_file_path,
-            errors=(
-                AgentError(
-                    code="ui_bridge_unavailable",
-                    message="No running OpenHCS UI bridge gateway is configured.",
-                    hint="Start OpenHCS with the UI bridge enabled.",
-                ),
+            window_id=request.window_id,
+            path_id=request.path_id,
+            action_kind=request.action_kind,
+            invoked=False,
+            receipt=UiMutationReceipt.rejected_for(request.request_token),
+            errors=errors,
+        )
+
+    @classmethod
+    def accepted(cls, request, bridge_operation):
+        return UiWidgetActionInvokeResult(
+            schema_version=SCHEMA_VERSION,
+            window_id=request.window_id,
+            path_id=request.path_id,
+            action_kind=request.action_kind,
+            invoked=False,
+            receipt=UiMutationReceipt.accepted_for(
+                request.request_token,
+                bridge_operation_id=bridge_operation.identity.operation_id,
             ),
         )
 
-    def list_documents(
+    @classmethod
+    def outcome(cls, result) -> str:
+        return result.outcome.value
+
+    @classmethod
+    def call(cls, service, connection, request):
+        """Return the terminal fact an accepted action receipt stands for."""
+        result = super().call(service, connection, request)
+        operation_id = result.receipt.bridge_operation_id
+        if result.invoked or not result.receipt.accepted or operation_id is None:
+            return result
+        operation = UiBridgeWaitForOperationReceiptOperation.call(
+            service,
+            connection,
+            UiBridgeOperationWaitRequest(
+                operation_id=operation_id,
+                timeout_seconds=min(connection.timeout_ms / 1000.0, 120.0),
+                poll_interval_seconds=0.05,
+            ),
+        )
+        return result.resolve_operation(operation)
+
+
+class UiBridgeValidateDocumentOperation(UiCodeDocumentOperation):
+    name = "validate_document"
+    request_type = UiCodeDocumentValidationRequest
+    result_type = UiCodeDocumentValidationResult
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiCodeDocumentValidationResult(
+            schema_version=SCHEMA_VERSION,
+            document_id=request.document_id,
+            valid=False,
+            errors=errors,
+        )
+
+
+class UiBridgeApplyDocumentOperation(UiCodeDocumentOperation):
+    name = "apply_document"
+    request_type = UiCodeDocumentApplyRequest
+    result_type = UiCodeDocumentApplyResult
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiCodeDocumentApplyResult(
+            schema_version=SCHEMA_VERSION,
+            document_id=request.document_id,
+            applied=False,
+            base_revision_token=request.base_revision_token,
+            receipt=UiMutationReceipt.rejected_for(request.request_token),
+            errors=errors,
+        )
+
+    @classmethod
+    def accepted(cls, request, bridge_operation):
+        return UiCodeDocumentApplyResult(
+            schema_version=SCHEMA_VERSION,
+            document_id=request.document_id,
+            applied=False,
+            base_revision_token=request.base_revision_token,
+            outcome=UiBridgeOperationStatus.RUNNING.value,
+            operation_id=bridge_operation.identity.operation_id,
+            receipt=UiMutationReceipt.accepted_for(
+                request.request_token,
+                bridge_operation_id=bridge_operation.identity.operation_id,
+            ),
+        )
+
+    @classmethod
+    def outcome(cls, result) -> str:
+        return result.outcome
+
+
+class UiBridgeListSnapshotsOperation(UiObjectStateSnapshotOperation):
+    name = "list_snapshots"
+    request_type = UiSnapshotListRequest
+    result_type = UiSnapshotCatalog
+
+    @classmethod
+    def failed(cls, request, errors):
+        del request
+        return UiSnapshotCatalog(
+            schema_version=SCHEMA_VERSION,
+            current_branch="",
+            current_snapshot_index=-1,
+            object_state_token=0,
+            active=False,
+            snapshots=(),
+            branches=(),
+            errors=errors,
+        )
+
+
+class UiBridgeRestoreSnapshotOperation(
+    UiObjectStateRestoreOperation, UiObjectStateSnapshotOperation
+):
+    name = "restore_snapshot"
+    request_type = UiSnapshotRestoreRequest
+
+    @classmethod
+    def prepare(cls, service, request):
+        del service
+        selectors = (request.snapshot_id, request.index, request.branch)
+        if sum(selector is not None for selector in selectors) != 1:
+            raise UiBridgeRequestRejected(
+                (
+                    AgentError(
+                        code="invalid_snapshot_restore_request",
+                        message="Exactly one snapshot restore selector is required.",
+                    ),
+                )
+            )
+        return request
+
+
+class UiBridgeTimeTravelHeadOperation(
+    UiObjectStateRestoreOperation, UiObjectStateSnapshotOperation
+):
+    name = "time_travel_head"
+    request_type = UiTimeTravelHeadRequest
+
+
+class UiObjectStateBranchOperation(UiBridgeOperation):
+    bridge_feature = "objectstate_branches"
+
+
+class UiBridgeListBranchesOperation(
+    UiBridgeRequestlessOperation, UiObjectStateBranchOperation
+):
+    name = "list_branches"
+    result_type = UiBranchCatalog
+
+    @classmethod
+    def failed(cls, request, errors):
+        return UiBranchCatalog(
+            SCHEMA_VERSION, current_branch="", branches=(), errors=errors
+        )
+
+
+class UiBridgeSwitchBranchOperation(
+    UiObjectStateRestoreOperation, UiObjectStateBranchOperation
+):
+    name = "switch_branch"
+    request_type = UiBranchSwitchRequest
+
+
+class UiBridgeDescriptorDirectoryAuthority:
+    """Filesystem location policy for live UI bridge descriptors."""
+
+    @staticmethod
+    def default_descriptor_dir() -> Path:
+        return UiBridgeDescriptorDirectoryAuthority.descriptor_dirs()[0]
+
+    @classmethod
+    def descriptor_dirs(cls) -> tuple[Path, ...]:
+        configured = environ.get(
+            UiBridgeDescriptorEnvironment.descriptor_directory_path_key
+        )
+        if configured:
+            return (AgentRuntimePlatformAuthority.resolved_path(configured),)
+
+        return AgentRuntimePlatformAuthority.current().application_runtime_dirs(
+            "OpenHCS",
+            "ui-bridge",
+        )
+
+
+class UiBridgeGatewayABC(ABC):
+    """Transport to a running OpenHCS UI bridge, generic over the operation."""
+
+    @abstractmethod
+    def invoke(
         self,
         connection: UiBridgeConnectionSpec,
-    ) -> UiCodeDocumentCatalog:
-        raise UiBridgeGatewayUnavailableError
-
-    def list_state_surfaces(
-        self,
-        connection: UiBridgeConnectionSpec,
-    ) -> UiStateSurfaceCatalog:
-        raise UiBridgeGatewayUnavailableError
-
-    def list_actions(
-        self,
-        connection: UiBridgeConnectionSpec,
-    ) -> UiActionCatalog:
-        raise UiBridgeGatewayUnavailableError
-
-    def list_windows(
-        self,
-        connection: UiBridgeConnectionSpec,
-    ) -> UiWindowCatalog:
-        raise UiBridgeGatewayUnavailableError
-
-    def list_object_state_scopes(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiObjectStateScopeListRequest,
-    ) -> UiObjectStateScopeCatalog:
-        raise UiBridgeGatewayUnavailableError
-
-    def describe_object_state_field(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiObjectStateFieldHelpRequest,
-    ) -> UiObjectStateFieldHelpResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def mutate_object_state_field(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiObjectStateFieldMutationRequest,
-    ) -> UiObjectStateFieldMutationResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def get_document(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiCodeDocumentRequest,
-    ) -> UiCodeDocument:
-        raise UiBridgeGatewayUnavailableError
-
-    def get_state_surface(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiStateSurfaceRequest,
-    ) -> UiStateSurfaceDocument:
-        raise UiBridgeGatewayUnavailableError
-
-    def invoke_action(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiActionInvokeRequest,
-    ) -> UiActionInvokeResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def focus_window(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWindowFocusRequest,
-    ) -> UiWindowFocusResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def navigate_window(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWindowNavigateRequest,
-    ) -> UiWindowNavigateResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def close_window(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWindowCloseRequest,
-    ) -> UiWindowCloseResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def snapshot_window(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWindowSnapshotRequest,
-    ) -> UiWindowSnapshotResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def widget_tree(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWidgetTreeRequest,
-    ) -> UiWidgetTreeResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def invoke_widget_action(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiWidgetActionInvokeRequest,
-    ) -> UiWidgetActionInvokeResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def validate_document(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiCodeDocumentValidationRequest,
-    ) -> UiCodeDocumentValidationResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def apply_document(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiCodeDocumentApplyRequest,
-    ) -> UiCodeDocumentApplyResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def list_snapshots(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiSnapshotListRequest,
-    ) -> UiSnapshotCatalog:
-        raise UiBridgeGatewayUnavailableError
-
-    def restore_snapshot(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiSnapshotRestoreRequest,
-    ) -> UiSnapshotRestoreResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def time_travel_head(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiTimeTravelHeadRequest,
-    ) -> UiSnapshotRestoreResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def list_branches(
-        self,
-        connection: UiBridgeConnectionSpec,
-    ) -> UiBranchCatalog:
-        raise UiBridgeGatewayUnavailableError
-
-    def switch_branch(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiBranchSwitchRequest,
-    ) -> UiSnapshotRestoreResult:
-        raise UiBridgeGatewayUnavailableError
-
-    def get_operation_status(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiBridgeOperationStatusRequest,
-    ) -> UiBridgeOperationRef:
-        raise UiBridgeGatewayUnavailableError
-
-    def selected_plate_workflow(
-        self,
-        connection: UiBridgeConnectionSpec,
-        request: UiSelectedPlateWorkflowRequest,
-    ) -> UiSelectedPlateWorkflowResult:
-        raise UiBridgeGatewayUnavailableError
+        operation: type[UiBridgeOperation],
+        request,
+    ):
+        raise NotImplementedError
 
 
-class UiBridgeGatewayErrorABC(ABC, metaclass=AutoRegisterMeta):
-    """Nominal projection contract for gateway-originated bridge failures."""
 
-    __registry_key__ = "registry_key"
-    __skip_if_no_key__ = True
-    registry_key: ClassVar[str | None] = None
+class UiBridgeGatewayErrorABC(ABC):
+    """Gateway-originated bridge failure that knows its agent-facing errors."""
 
     @abstractmethod
     def agent_errors(self, fallback_code: str) -> tuple[AgentError, ...]:
@@ -1169,8 +1078,6 @@ class UiBridgeGatewayErrorABC(ABC, metaclass=AutoRegisterMeta):
 
 @dataclass(slots=True)
 class UiBridgeGatewayUnavailableError(ConnectionError, UiBridgeGatewayErrorABC):
-    registry_key = "unavailable"
-
     def __str__(self) -> str:
         return "No running OpenHCS UI bridge gateway is configured."
 
@@ -1198,8 +1105,6 @@ class UiBridgeGatewayUnavailableError(ConnectionError, UiBridgeGatewayErrorABC):
 
 @dataclass(slots=True)
 class UiBridgeGatewayResponseError(RuntimeError, UiBridgeGatewayErrorABC):
-    registry_key = "response"
-
     errors: tuple[AgentError, ...]
 
     def __str__(self) -> str:
@@ -1229,7 +1134,6 @@ class UiBridgeGatewayResponseError(RuntimeError, UiBridgeGatewayErrorABC):
 
 @dataclass(slots=True)
 class UiBridgeGatewayTimeoutError(TimeoutError, UiBridgeGatewayErrorABC):
-    registry_key = "timeout"
     agent_error_code: ClassVar[str] = "ui_bridge_timeout"
 
     operation: str
@@ -1256,38 +1160,15 @@ class UiBridgeGatewayTimeoutError(TimeoutError, UiBridgeGatewayErrorABC):
         )
 
 
-@singledispatch
 def ui_bridge_gateway_errors(
     exception: Exception,
     fallback_code: str,
 ) -> tuple[AgentError, ...]:
-    """Project gateway exceptions into agent-facing errors."""
+    """Project a gateway exception into agent-facing errors."""
 
+    if isinstance(exception, UiBridgeGatewayErrorABC):
+        return exception.agent_errors(fallback_code)
     return (AgentError.from_exception(fallback_code, exception),)
-
-
-@ui_bridge_gateway_errors.register
-def _unavailable_gateway_errors(
-    exception: UiBridgeGatewayUnavailableError,
-    fallback_code: str,
-) -> tuple[AgentError, ...]:
-    return exception.agent_errors(fallback_code)
-
-
-@ui_bridge_gateway_errors.register
-def _response_gateway_errors(
-    exception: UiBridgeGatewayResponseError,
-    fallback_code: str,
-) -> tuple[AgentError, ...]:
-    return exception.agent_errors(fallback_code)
-
-
-@ui_bridge_gateway_errors.register
-def _timeout_gateway_errors(
-    exception: UiBridgeGatewayTimeoutError,
-    fallback_code: str,
-) -> tuple[AgentError, ...]:
-    return exception.agent_errors(fallback_code)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1883,7 +1764,7 @@ DEFAULT_UI_BRIDGE_DESCRIPTOR_RESOLVER = UiBridgeDescriptorResolver()
 
 
 class UiBridgeService:
-    """Expose running-UI code documents and ObjectState snapshots to agents."""
+    """Run UI-bridge operations against the running UI an agent names."""
 
     def __init__(
         self,
@@ -1895,9 +1776,21 @@ class UiBridgeService:
             from openhcs.agent.services.ui_bridge_transport import ZMQUiBridgeGateway
 
             gateway = ZMQUiBridgeGateway()
-        self._gateway = gateway
+        self.gateway = gateway
         self._descriptor_resolver = descriptor_resolver
-        self._path_policy = path_policy or AgentPathPolicy.from_environment()
+        self.path_policy = path_policy or AgentPathPolicy.from_environment()
+
+    def invoke(
+        self,
+        operation: type[UiBridgeOperation],
+        request=None,
+        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
+    ):
+        """Run one operation; failures come back as the operation's own result."""
+        return operation.respond(self, connection, request)
+
+    def resolve(self, connection: UiBridgeConnectionSpec) -> UiBridgeConnectionResolution:
+        return self._descriptor_resolver.resolve(connection)
 
     def connection_from_args(
         self,
@@ -1933,22 +1826,6 @@ class UiBridgeService:
             defaults=DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
         )
 
-    def _dispatch_gateway(
-        self,
-        *,
-        connection: UiBridgeConnectionSpec,
-        call: Callable[[UiBridgeConnectionResolution], UiBridgeResultT],
-        error_result: Callable[[tuple[AgentError, ...]], UiBridgeResultT],
-        unavailable_error_code: str = "ui_bridge_unavailable",
-    ) -> UiBridgeResultT:
-        resolution = self._descriptor_resolver.resolve(connection)
-        if not resolution.ok:
-            return error_result(resolution.errors)
-        try:
-            return call(resolution)
-        except Exception as exc:
-            return error_result(self._gateway_errors(unavailable_error_code, exc))
-
     def list_bridges(self) -> UiBridgeCatalog:
         return UiBridgeDescriptorCatalog.descriptor_catalog()
 
@@ -1975,742 +1852,3 @@ class UiBridgeService:
         if platform_authority.graphical_session_available(environ):
             return ViewerLaunchContext.inherited_graphical_session()
         return ViewerLaunchContext.headless()
-
-    def status(
-        self,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiBridgeStatus:
-        resolution = self._descriptor_resolver.resolve(connection)
-        if not resolution.ok:
-            return self._status_from_resolution(resolution)
-        try:
-            status_result = self._gateway.status(resolution)
-        except Exception as exc:
-            return self._status_from_resolution(
-                UiBridgeConnectionResolution.from_connection(
-                    resolution,
-                    descriptor=resolution.descriptor,
-                    errors=self._gateway_errors("ui_bridge_unreachable", exc),
-                )
-            )
-        validation_errors = resolution.validate_live_status(status_result)
-        if validation_errors:
-            return self._status_from_resolution(
-                UiBridgeConnectionResolution.from_connection(
-                    resolution,
-                    descriptor=replace(
-                        resolution.descriptor,
-                        status=validation_errors[0].code,
-                    ),
-                    errors=validation_errors,
-                )
-            )
-        return resolution.descriptor.project_status(
-            status_result, connection=resolution
-        )
-
-    def list_documents(
-        self,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiCodeDocumentCatalog:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=self._gateway.list_documents,
-            error_result=lambda errors: UiCodeDocumentCatalog(
-                SCHEMA_VERSION,
-                documents=(),
-                errors=errors,
-            ),
-        )
-
-    def list_state_surfaces(
-        self,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiStateSurfaceCatalog:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=self._gateway.list_state_surfaces,
-            error_result=lambda errors: UiStateSurfaceCatalog(
-                SCHEMA_VERSION,
-                surfaces=(),
-                errors=errors,
-            ),
-        )
-
-    def list_actions(
-        self,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiActionCatalog:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=self._gateway.list_actions,
-            error_result=lambda errors: UiActionCatalog(
-                SCHEMA_VERSION,
-                actions=(),
-                errors=errors,
-            ),
-        )
-
-    def list_windows(
-        self,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiWindowCatalog:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=self._gateway.list_windows,
-            error_result=lambda errors: UiWindowCatalog(
-                schema_version=SCHEMA_VERSION,
-                windows=(),
-                errors=errors,
-            ),
-        )
-
-    def list_object_state_scopes(
-        self,
-        request: UiObjectStateScopeListRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiObjectStateScopeCatalog:
-        catalog = self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.list_object_state_scopes(
-                resolution,
-                request,
-            ),
-            error_result=self._object_state_scope_catalog_error,
-        )
-        return request.filtered_catalog(catalog)
-
-    def get_object_state_fields(
-        self,
-        query: UiObjectStateFieldListQuery,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiObjectStateFieldListResult:
-        catalog = self.list_object_state_scopes(
-            query.scope_list_request(),
-            connection,
-        )
-        return ObjectStateFieldListProjector.project_catalog(query, catalog)
-
-    def describe_object_state_field(
-        self,
-        request: UiObjectStateFieldHelpRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiObjectStateFieldHelpResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.describe_object_state_field(
-                resolution,
-                request,
-            ),
-            error_result=lambda errors: UiObjectStateFieldHelpResult(
-                schema_version=SCHEMA_VERSION,
-                address=request,
-                errors=errors,
-            ),
-        )
-
-    def mutate_object_state_field(
-        self,
-        request: UiObjectStateFieldMutationRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiObjectStateFieldMutationResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.mutate_object_state_field(
-                resolution,
-                request,
-            ),
-            error_result=lambda errors: UiObjectStateFieldMutationResult(
-                schema_version=SCHEMA_VERSION,
-                address=request,
-                mutated=False,
-                reset=request.reset,
-                receipt=UiMutationReceipt.rejected_for(request.request_token),
-                errors=errors,
-            ),
-        )
-
-    def get_document(
-        self,
-        request: UiCodeDocumentRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiCodeDocument:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.get_document(resolution, request),
-            error_result=lambda errors: self._document_error(
-                request,
-                errors,
-            ),
-        )
-
-    def get_state_surface(
-        self,
-        request: UiStateSurfaceRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiStateSurfaceDocument:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.get_state_surface(
-                resolution,
-                request,
-            ),
-            error_result=lambda errors: self._state_surface_error(
-                request,
-                errors,
-            ),
-        )
-
-    def invoke_action(
-        self,
-        request: UiActionInvokeRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiActionInvokeResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.invoke_action(resolution, request),
-            error_result=lambda errors: self._action_error(
-                request,
-                errors,
-            ),
-        )
-
-    def selected_plate_workflow(
-        self,
-        request: UiSelectedPlateWorkflowRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiSelectedPlateWorkflowResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.selected_plate_workflow(
-                resolution,
-                request,
-            ),
-            error_result=lambda errors: self._selected_plate_workflow_error(
-                request,
-                errors,
-            ),
-        )
-
-    def focus_window(
-        self,
-        request: UiWindowFocusRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiWindowFocusResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.focus_window(resolution, request),
-            error_result=lambda errors: self._window_focus_error(
-                request,
-                errors,
-            ),
-        )
-
-    def navigate_window(
-        self,
-        request: UiWindowNavigateRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiWindowNavigateResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.navigate_window(resolution, request),
-            error_result=lambda errors: self._window_navigate_error(
-                request,
-                errors,
-            ),
-        )
-
-    def close_window(
-        self,
-        request: UiWindowCloseRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiWindowCloseResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.close_window(resolution, request),
-            error_result=lambda errors: self._window_close_error(
-                request,
-                errors,
-            ),
-        )
-
-    def snapshot_window(
-        self,
-        request: UiWindowSnapshotRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiWindowSnapshotResult:
-        try:
-            request = self._writable_snapshot_request(request)
-        except AgentPathPolicyError as exc:
-            return self._window_snapshot_error(request, (exc.to_agent_error(),))
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.snapshot_window(
-                resolution,
-                request,
-            ),
-            error_result=lambda errors: self._window_snapshot_error(
-                request,
-                errors,
-            ),
-        )
-
-    def _writable_snapshot_request(
-        self,
-        request: UiWindowSnapshotRequest,
-    ) -> UiWindowSnapshotRequest:
-        return replace(
-            request,
-            output_dir_path=str(
-                self._path_policy.assert_writable(request.output_dir_path)
-            ),
-        )
-
-    def widget_tree(
-        self,
-        request: UiWidgetTreeRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiWidgetTreeResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.widget_tree(resolution, request),
-            error_result=lambda errors: self._widget_tree_error(
-                request,
-                errors,
-            ),
-        )
-
-    def invoke_widget_action(
-        self,
-        request: UiWidgetActionInvokeRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiWidgetActionInvokeResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._resolved_widget_action(
-                resolution,
-                request,
-            ),
-            error_result=lambda errors: self._widget_action_error(
-                request,
-                errors,
-            ),
-        )
-
-    def _resolved_widget_action(
-        self,
-        connection: UiBridgeConnectionResolution,
-        request: UiWidgetActionInvokeRequest,
-    ) -> UiWidgetActionInvokeResult:
-        """Return the terminal fact represented by an accepted action receipt."""
-
-        result = self._gateway.invoke_widget_action(connection, request)
-        operation_id = result.receipt.bridge_operation_id
-        if result.invoked or not result.receipt.accepted or operation_id is None:
-            return result
-        operation = self._gateway.wait_for_operation_receipt(
-            connection,
-            UiBridgeOperationWaitRequest(
-                operation_id=operation_id,
-                timeout_seconds=min(connection.timeout_ms / 1000.0, 120.0),
-                poll_interval_seconds=0.05,
-            ),
-        )
-        return result.resolve_operation(operation)
-
-    def validate_document(
-        self,
-        request: UiCodeDocumentValidationRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiCodeDocumentValidationResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.validate_document(
-                resolution,
-                request,
-            ),
-            error_result=lambda errors: UiCodeDocumentValidationResult(
-                schema_version=SCHEMA_VERSION,
-                document_id=request.document_id,
-                valid=False,
-                errors=errors,
-            ),
-        )
-
-    def apply_document(
-        self,
-        request: UiCodeDocumentApplyRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiCodeDocumentApplyResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.apply_document(
-                resolution,
-                request,
-            ),
-            error_result=lambda errors: UiCodeDocumentApplyResult(
-                schema_version=SCHEMA_VERSION,
-                document_id=request.document_id,
-                applied=False,
-                base_revision_token=request.base_revision_token,
-                receipt=UiMutationReceipt.rejected_for(request.request_token),
-                errors=errors,
-            ),
-        )
-
-    def list_snapshots(
-        self,
-        request: UiSnapshotListRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiSnapshotCatalog:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.list_snapshots(
-                resolution,
-                request,
-            ),
-            error_result=self._snapshot_catalog_error,
-        )
-
-    def restore_snapshot(
-        self,
-        request: UiSnapshotRestoreRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiSnapshotRestoreResult:
-        selector_count = sum(
-            selector is not None
-            for selector in (request.snapshot_id, request.index, request.branch)
-        )
-        if selector_count != 1:
-            return self._restore_error(
-                (
-                    AgentError(
-                        code="invalid_snapshot_restore_request",
-                        message="Exactly one snapshot restore selector is required.",
-                    ),
-                )
-            )
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.restore_snapshot(
-                resolution,
-                request,
-            ),
-            error_result=self._restore_error,
-        )
-
-    def time_travel_head(
-        self,
-        request: UiTimeTravelHeadRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiSnapshotRestoreResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.time_travel_head(
-                resolution,
-                request,
-            ),
-            error_result=self._restore_error,
-        )
-
-    def list_branches(
-        self,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiBranchCatalog:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=self._gateway.list_branches,
-            error_result=lambda errors: UiBranchCatalog(
-                SCHEMA_VERSION,
-                current_branch="",
-                branches=(),
-                errors=errors,
-            ),
-        )
-
-    def switch_branch(
-        self,
-        request: UiBranchSwitchRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiSnapshotRestoreResult:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.switch_branch(resolution, request),
-            error_result=self._restore_error,
-        )
-
-    def get_operation_status(
-        self,
-        operation_id: str,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiBridgeOperationRef:
-        request = UiBridgeOperationStatusRequest(operation_id=operation_id)
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.get_operation_status(
-                resolution,
-                request,
-            ),
-            error_result=lambda errors: self._operation_error_ref(operation_id, errors),
-        )
-
-    def wait_for_operation_receipt(
-        self,
-        request: UiBridgeOperationWaitRequest,
-        connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
-    ) -> UiBridgeOperationRef:
-        return self._dispatch_gateway(
-            connection=connection,
-            call=lambda resolution: self._gateway.wait_for_operation_receipt(
-                resolution,
-                request,
-            ),
-            error_result=lambda errors: self._operation_error_ref(
-                request.operation_id,
-                errors,
-            ),
-        )
-
-    @staticmethod
-    def _operation_error_ref(
-        operation_id: str,
-        errors: tuple[AgentError, ...],
-    ) -> UiBridgeOperationRef:
-        return UiBridgeOperationRef(
-            schema_version=SCHEMA_VERSION,
-            identity=UiBridgeOperationIdentity(
-                operation_id=operation_id,
-                route=UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
-            ),
-            status=UiBridgeOperationStatus.UNAVAILABLE.value,
-            started_at_unix=0.0,
-            errors=errors,
-        )
-
-    @staticmethod
-    def _status_from_resolution(
-        resolution: UiBridgeConnectionResolution,
-    ) -> UiBridgeStatus:
-        return UiBridgeStatus(
-            schema_version=SCHEMA_VERSION,
-            reachable=False,
-            connection=resolution.public_connection(),
-            descriptor_file_path=resolution.descriptor_file_path,
-            descriptor_status=resolution.descriptor.status,
-            descriptors=resolution.descriptor.summaries,
-            errors=resolution.errors,
-        )
-
-    @staticmethod
-    def _document_error(
-        request: UiCodeDocumentRequest,
-        errors: tuple[AgentError, ...],
-    ) -> UiCodeDocument:
-        selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.SELECTED
-        )
-        summary = UiCodeDocumentSummary(
-            schema_version=SCHEMA_VERSION,
-            identity=UiCodeDocumentIdentity(document_id=request.document_id),
-            title=UNAVAILABLE_UI_CODE_DOCUMENT_TITLE,
-            widget_id=UI_BRIDGE_UNKNOWN_WIDGET,
-            readable=False,
-            writable=False,
-        )
-        return UiCodeDocument(
-            schema_version=SCHEMA_VERSION,
-            summary=summary,
-            source="",
-            mime_type="text/x-python",
-            size_bytes=0,
-            sha256="",
-            current_revision_token=None,
-            current_snapshot=None,
-            selection_mode=selection_mode,
-            selected_scope_ids=(),
-            errors=errors,
-        )
-
-    @staticmethod
-    def _state_surface_error(
-        request: UiStateSurfaceRequest,
-        errors: tuple[AgentError, ...],
-    ) -> UiStateSurfaceDocument:
-        selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
-        )
-        summary = UiStateSurfaceSummary(
-            schema_version=SCHEMA_VERSION,
-            identity=UiStateSurfaceIdentity(surface_id=request.surface_id),
-            title=UNAVAILABLE_UI_STATE_SURFACE_TITLE,
-            widget_id=UI_BRIDGE_UNKNOWN_WIDGET,
-            readable=False,
-        )
-        return UiStateSurfaceDocument(
-            schema_version=SCHEMA_VERSION,
-            summary=summary,
-            payload_schema="openhcs.ui.unavailable_state_surface.v1",
-            payload={},
-            selection_mode=selection_mode,
-            selected_scope_ids=(),
-            current_revision_token=None,
-            current_snapshot=None,
-            errors=errors,
-        )
-
-    @staticmethod
-    def _action_error(
-        request: UiActionInvokeRequest,
-        errors: tuple[AgentError, ...],
-    ) -> UiActionInvokeResult:
-        return UiActionInvokeResult(
-            schema_version=SCHEMA_VERSION,
-            identity=UiActionIdentity(
-                widget_id=request.widget_id,
-                action_id=request.action_id,
-            ),
-            status=UiActionInvocationStatus.UNAVAILABLE.value,
-            receipt=UiMutationReceipt.rejected_for(request.request_token),
-            errors=errors,
-        )
-
-    @staticmethod
-    def _selected_plate_workflow_error(
-        request: UiSelectedPlateWorkflowRequest,
-        errors: tuple[AgentError, ...],
-    ) -> UiSelectedPlateWorkflowResult:
-        return UiSelectedPlateWorkflowResult(
-            schema_version=SCHEMA_VERSION,
-            workflow=request.workflow,
-            action_result=UiActionInvokeResult(
-                schema_version=SCHEMA_VERSION,
-                identity=UiActionIdentity(
-                    widget_id=UI_BRIDGE_UNKNOWN_WIDGET,
-                    action_id=request.workflow.value,
-                ),
-                status=UiActionInvocationStatus.UNAVAILABLE.value,
-                receipt=UiMutationReceipt.rejected_for(request.request_token),
-                errors=errors,
-            ),
-            errors=errors,
-        )
-
-    @staticmethod
-    def _window_focus_error(
-        request: UiWindowFocusRequest,
-        errors: tuple[AgentError, ...],
-    ) -> UiWindowFocusResult:
-        return UiWindowFocusResult(
-            schema_version=SCHEMA_VERSION,
-            window_id=request.window_id,
-            focused=False,
-            errors=errors,
-        )
-
-    @staticmethod
-    def _window_navigate_error(
-        request: UiWindowNavigateRequest,
-        errors: tuple[AgentError, ...],
-    ) -> UiWindowNavigateResult:
-        return UiWindowNavigateResult(
-            schema_version=SCHEMA_VERSION,
-            window_id=request.window_id,
-            focused=False,
-            navigated=False,
-            created=False,
-            errors=errors,
-        )
-
-    @staticmethod
-    def _window_close_error(
-        request: UiWindowCloseRequest,
-        errors: tuple[AgentError, ...],
-    ) -> UiWindowCloseResult:
-        return UiWindowCloseResult(
-            schema_version=SCHEMA_VERSION,
-            window_id=request.window_id,
-            closed=False,
-            errors=errors,
-        )
-
-    @staticmethod
-    def _window_snapshot_error(
-        request: UiWindowSnapshotRequest,
-        errors: tuple[AgentError, ...],
-    ) -> UiWindowSnapshotResult:
-        return project_dataclass(
-            UiWindowSnapshotResult,
-            request,
-            schema_version=SCHEMA_VERSION,
-            window_id=request.window_id,
-            captured=False,
-            errors=errors,
-        )
-
-    @staticmethod
-    def _widget_tree_error(
-        request: UiWidgetTreeRequest,
-        errors: tuple[AgentError, ...],
-    ) -> UiWidgetTreeResult:
-        return UiWidgetTreeResult(
-            schema_version=SCHEMA_VERSION,
-            window_id=request.window_id,
-            projected=False,
-            errors=errors,
-        )
-
-    @staticmethod
-    def _widget_action_error(
-        request: UiWidgetActionInvokeRequest,
-        errors: tuple[AgentError, ...],
-    ) -> UiWidgetActionInvokeResult:
-        return UiWidgetActionInvokeResult(
-            schema_version=SCHEMA_VERSION,
-            window_id=request.window_id,
-            path_id=request.path_id,
-            action_kind=request.action_kind,
-            invoked=False,
-            receipt=UiMutationReceipt.rejected_for(request.request_token),
-            errors=errors,
-        )
-
-    @staticmethod
-    def _object_state_scope_catalog_error(
-        errors: tuple[AgentError, ...],
-    ) -> UiObjectStateScopeCatalog:
-        return UiObjectStateScopeCatalog(
-            schema_version=SCHEMA_VERSION,
-            object_state_token=0,
-            current_branch="",
-            current_snapshot_index=-1,
-            active=False,
-            scopes=(),
-            errors=errors,
-        )
-
-    @staticmethod
-    def _snapshot_catalog_error(errors: tuple[AgentError, ...]) -> UiSnapshotCatalog:
-        return UiSnapshotCatalog(
-            schema_version=SCHEMA_VERSION,
-            current_branch="",
-            current_snapshot_index=-1,
-            object_state_token=0,
-            active=False,
-            snapshots=(),
-            branches=(),
-            errors=errors,
-        )
-
-    @staticmethod
-    def _restore_error(errors: tuple[AgentError, ...]) -> UiSnapshotRestoreResult:
-        return UiSnapshotRestoreResult(
-            schema_version=SCHEMA_VERSION,
-            restored=False,
-            target_snapshot=None,
-            current_snapshot=None,
-            errors=errors,
-        )
-
-    @staticmethod
-    def _gateway_errors(code: str, exception: Exception) -> tuple[AgentError, ...]:
-        return ui_bridge_gateway_errors(exception, code)

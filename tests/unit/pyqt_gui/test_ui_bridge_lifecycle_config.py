@@ -21,6 +21,14 @@ from zmqruntime import (
 )
 from zmqruntime.transport import get_default_transport_mode
 
+from python_introspect import to_jsonable
+
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from openhcs.agent.dto.ui_bridge import UiBridgeRequestEnvelope, UiBridgeStatus
+from openhcs.agent.services.ui_bridge_service import (
+    UI_BRIDGE_PROTOCOL_VERSION,
+    UiBridgeStatusOperation,
+)
 from openhcs.pyqt_gui.config import (
     AgentUiBridgeConfig,
     PyQtGuiRuntimeContext,
@@ -442,7 +450,7 @@ def test_ui_bridge_answers_zmq_browser_control_ping(tmp_path) -> None:
     context = None
     socket = None
     try:
-        binding = server.start()
+        server.start()
         context = zmq.Context()
         socket = context.socket(zmq.REQ)
         socket.setsockopt(zmq.LINGER, 0)
@@ -465,7 +473,6 @@ def test_ui_bridge_answers_zmq_browser_control_ping(tmp_path) -> None:
     assert response["port"] == port
     assert response["control_port"] == (port + OPENHCS_ZMQ_CONFIG.control_port_offset)
     assert response["ready"] is True
-    assert response["bridge_instance_id"] == binding.bridge_instance_id
     assert response["application"] == OPENHCS_ENDPOINT_APPLICATION.to_dict()
 
 
@@ -486,7 +493,12 @@ def test_second_ipc_ui_bridge_cannot_replace_live_endpoint_pair(tmp_path) -> Non
         descriptor_directory_path=tmp_path / "descriptors",
     )
     original = UiBridgeControlServer(
-        bridge=SimpleNamespace(close=lambda: None),
+        bridge=SimpleNamespace(
+            close=lambda: None,
+            invoke=lambda operation, request: UiBridgeStatus(
+                schema_version=SCHEMA_VERSION, reachable=True
+            ),
+        ),
         config=replace(config, bridge_instance_id="original"),
         transport_config=transport_config,
     )
@@ -511,10 +523,23 @@ def test_second_ipc_ui_bridge_cannot_replace_live_endpoint_pair(tmp_path) -> Non
         socket = context.socket(zmq.REQ)
         socket.setsockopt(zmq.LINGER, 0)
         socket.setsockopt(zmq.RCVTIMEO, 1000)
-        socket.connect(original_binding.connection.zmq_control_url(transport_config))
-        socket.send(pickle.dumps({"type": ControlMessageType.PING.value}))
-        response = pickle.loads(socket.recv())
-        assert response["bridge_instance_id"] == "original"
+        socket.connect(original_binding.connection.zmq_data_url(transport_config))
+        socket.send_json(
+            to_jsonable(
+                UiBridgeRequestEnvelope(
+                    schema_version=SCHEMA_VERSION,
+                    bridge_protocol_version=UI_BRIDGE_PROTOCOL_VERSION,
+                    application=OPENHCS_ENDPOINT_APPLICATION,
+                    request_id="identity",
+                    operation=UiBridgeStatusOperation.name,
+                    auth_token=None,
+                    payload={},
+                )
+            )
+        )
+        response = socket.recv_json()
+        assert response["ok"] is True, response
+        assert response["payload"]["bridge_instance_id"] == "original"
     finally:
         original.stop()
         if contender.is_running:
