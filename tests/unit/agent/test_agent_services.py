@@ -432,7 +432,7 @@ class _FakeRuntimeServerGateway:
             running_executions=(
                 RunningExecutionInfo(
                     execution_id=_ExecutionTestId.EXECUTE,
-                    plate_id="plate-1",
+                    subject_id="plate-1",
                     start_time=0.0,
                     elapsed=0.0,
                 ),

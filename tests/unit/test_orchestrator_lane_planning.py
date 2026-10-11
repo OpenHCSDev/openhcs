@@ -1066,7 +1066,7 @@ def test_pooled_worker_lane_runner_emits_error_before_reraising(monkeypatch):
         )
 
     assert emitted[0]["execution_id"] == "exec"
-    assert emitted[0]["plate_id"] == "plate"
+    assert emitted[0]["subject_id"] == "plate"
     assert emitted[0]["axis_id"] == "A01"
     assert emitted[0]["worker_slot"] == "worker_0"
     assert emitted[0]["owned_wells"] == ["A01"]

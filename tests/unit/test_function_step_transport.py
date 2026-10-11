@@ -230,14 +230,12 @@ def test_request_builder_stores_explicit_pipeline_code_directly() -> None:
     assert compile_submission.compile_only is True
     assert builder.pipeline_code == pipeline_source
     assert builder.request_payload.pipeline_code == pipeline_source
-    assert builder.request().values[MessageFields.PIPELINE_CODE] == pipeline_source
+    assert builder.request().pipeline_code == pipeline_source
     assert not hasattr(builder, "pipeline_transport")
-    assert builder.request().values[MessageFields.COMPILE_ONLY] is True
+    assert builder.request().compile_only is True
     assert artifact_builder.pipeline_code == pipeline_source
-    assert artifact_builder.request().values[MessageFields.COMPILE_ARTIFACT_ID] == (
-        "compile-1"
-    )
-    assert MessageFields.COMPILE_ONLY not in artifact_builder.request().values
+    assert artifact_builder.request().compile_artifact_id == "compile-1"
+    assert artifact_builder.request().compile_only is False
 
     with pytest.raises(ValueError, match="compile_artifact_id cannot be empty"):
         submission.with_compile_artifact_id("")
@@ -277,13 +275,11 @@ def test_zmq_execution_submission_serializes_default_plate_config_on_client() ->
         global_config=GlobalPipelineConfig(),
     )
 
-    payload = ZMQExecutionClient().serialize_task(submission)
-    document = PipelineDocumentCodec.from_source(
-        payload[MessageFields.PIPELINE_CODE]
-    )
+    request = ZMQExecutionClient().serialize_task(submission)
+    document = PipelineDocumentCodec.from_source(request.pipeline_code)
 
-    assert MessageFields.CONFIG_CODE in payload
-    assert MessageFields.PIPELINE_CONFIG_CODE not in payload
+    assert request.config_code is not None
+    assert request.pipeline_config_code is None
     assert isinstance(document.pipeline_config, PipelineConfig)
 
 

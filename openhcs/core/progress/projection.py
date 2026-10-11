@@ -12,7 +12,7 @@ from zmqruntime.messages import QueuedExecutionInfo, RunningExecutionInfo
 from zmqruntime.progress import (
     GenericAxisProjection,
     GenericExecutionProjection,
-    GenericPlateProjection,
+    GenericSubjectProjection,
     ProgressProjectionAdapterABC,
     build_execution_projection,
 )
@@ -287,11 +287,11 @@ class PlateRuntimeIdentity:
     @classmethod
     def from_generic_plate(
         cls,
-        generic_plate: GenericPlateProjection[PlateRuntimeState],
+        generic_plate: GenericSubjectProjection[PlateRuntimeState],
     ) -> "PlateRuntimeIdentity":
         return cls(
             execution_id=generic_plate.execution_id,
-            plate_id=generic_plate.plate_id,
+            plate_id=generic_plate.subject_id,
         )
 
 
@@ -308,7 +308,7 @@ class PlateRuntimeProjection:
     @classmethod
     def from_generic_plate(
         cls,
-        generic_plate: GenericPlateProjection[PlateRuntimeState],
+        generic_plate: GenericSubjectProjection[PlateRuntimeState],
         *,
         state_channel: ProgressChannel | None = None,
     ) -> "PlateRuntimeProjection":
@@ -388,7 +388,7 @@ class ExecutionRuntimeProjection:
     ) -> "ExecutionRuntimeProjection":
         projection = cls()
 
-        for generic_plate in generic_projection.plates:
+        for generic_plate in generic_projection.subjects:
             identity = PlateRuntimeIdentity.from_generic_plate(generic_plate)
             state_declaration = PlateRuntimeStateDeclarationBase.for_state(
                 generic_plate.state
@@ -404,7 +404,7 @@ class ExecutionRuntimeProjection:
                 )
             )
 
-        for generic_plate in generic_projection.by_plate_latest.values():
+        for generic_plate in generic_projection.by_subject_latest.values():
             projection.mark_latest(
                 PlateRuntimeIdentity.from_generic_plate(generic_plate)
             )
@@ -463,11 +463,11 @@ class ExecutionRuntimeProjection:
         """Project the authoritative live server queue over retained event history."""
 
         running_identities = {
-            PlateRuntimeIdentity(entry.execution_id, entry.plate_id)
+            PlateRuntimeIdentity(entry.execution_id, entry.subject_id)
             for entry in running_executions
         }
         for entry in queued_executions:
-            identity = PlateRuntimeIdentity(entry.execution_id, entry.plate_id)
+            identity = PlateRuntimeIdentity(entry.execution_id, entry.subject_id)
             if identity in running_identities:
                 continue
             current = self.by_identity.get(identity)
@@ -489,7 +489,7 @@ class ExecutionRuntimeProjection:
             self.mark_latest(identity)
 
         for entry in running_executions:
-            identity = PlateRuntimeIdentity(entry.execution_id, entry.plate_id)
+            identity = PlateRuntimeIdentity(entry.execution_id, entry.subject_id)
             current = self.by_identity.get(identity)
             server_state = (
                 PlateRuntimeState.COMPILING
@@ -535,7 +535,7 @@ class ExecutionRuntimeProjection:
 class _OpenHCSProjectionAdapter(
     ProgressProjectionAdapterABC[ProgressEvent, PlateRuntimeState]
 ):
-    def plate_id(self, event: ProgressEvent) -> str:
+    def subject_id(self, event: ProgressEvent) -> str:
         return event.plate_id
 
     def axis_id(self, event: ProgressEvent) -> str:

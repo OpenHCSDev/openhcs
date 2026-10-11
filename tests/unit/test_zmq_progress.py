@@ -11,7 +11,7 @@ def test_compiler_progress_queue_uses_request_plate_identity():
 
     compiler_update = {
         "execution_id": "exec-1",
-        "plate_id": "/tmp/plate",
+        "subject_id": "/tmp/plate",
         "axis_id": "A01",
         "step_name": "compilation",
         "phase": ProgressPhase.COMPILE.value,
@@ -23,8 +23,8 @@ def test_compiler_progress_queue_uses_request_plate_identity():
 
     queue.put(compiler_update)
 
-    assert emitted[0]["plate_id"] == "/tmp/plate#openhcs-cppipe=Analysis.cppipe"
-    assert compiler_update["plate_id"] == "/tmp/plate"
+    assert emitted[0]["subject_id"] == "/tmp/plate#openhcs-cppipe=Analysis.cppipe"
+    assert compiler_update["subject_id"] == "/tmp/plate"
 
 
 def test_compile_failed_emits_failed_compile_events_for_axes():
@@ -71,7 +71,7 @@ def test_compile_heartbeat_emits_running_pipeline_compile_event():
 
     assert len(emitted) == 1
     assert emitted[0]["execution_id"] == "exec-1"
-    assert emitted[0]["plate_id"] == "/tmp/plate"
+    assert emitted[0]["subject_id"] == "/tmp/plate"
     assert emitted[0]["axis_id"] == ""
     assert emitted[0]["step_name"] == "pipeline"
     assert emitted[0]["phase"] == ProgressPhase.COMPILE.value

@@ -10,7 +10,10 @@ from objectstate import ObjectStateRegistry
 from packaging.version import Version
 from PyQt6.QtNetwork import QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import QMessageBox, QWidget
-from pyqt_reactive.process_launch import BackgroundProcessPlatform
+from zmqruntime.process_launch import (
+    BackgroundProcessPlatform,
+    WindowsBackgroundProcesses,
+)
 from pyqt_reactive.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 
@@ -671,7 +674,7 @@ def test_windows_update_worker_uses_windowed_interpreter_and_no_console(
     monkeypatch.setattr(
         BackgroundProcessPlatform,
         "current",
-        classmethod(lambda cls: cls.WINDOWS),
+        classmethod(lambda cls: WindowsBackgroundProcesses),
     )
     monkeypatch.setattr(
         DesktopRuntimeEnvironment,

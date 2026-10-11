@@ -38,7 +38,15 @@ class ViewerWindowSnapshotFailureReply(ControlErrorResponse):
         )
 
     def to_dict(self) -> dict[str, object]:
-        return {**super().to_dict(), "observation": self.observation}
+        """The control error's wire mapping, carrying the native observation as is."""
+
+        error = ControlErrorResponse(
+            **{
+                declared.name: getattr(self, declared.name)
+                for declared in fields(ControlErrorResponse)
+            }
+        )
+        return {**error.to_dict(), "observation": self.observation}
 
 
 class ViewerWindowSnapshotService(QtWindowSnapshotService):

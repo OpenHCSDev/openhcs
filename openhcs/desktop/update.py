@@ -24,8 +24,8 @@ from PyQt6.QtCore import QByteArray, QObject, QUrl, pyqtSignal
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import QMessageBox
-from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from python_introspect import dataclass_from_mapping, to_jsonable
+from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.desktop.deployment import (

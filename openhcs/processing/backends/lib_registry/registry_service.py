@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Dict, Optional
 from arraybridge import MemoryType
 from objectstate import LazyDataclassFactory
 from python_introspect import SignatureAnalyzer
-from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
+from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime import OperationCancellation
 from zmqruntime.client import endpoint_process
 

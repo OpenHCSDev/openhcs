@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeAlias
 
 from arraybridge import MemoryType
-from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from typing_extensions import override
 from zmqruntime import (
     EndpointApplicationCompatibility,
@@ -40,11 +39,13 @@ from zmqruntime.messages import (
     ControlMessageType,
     ControlRequestHeader,
     EndpointApplicationCompatibilityError,
+    ExecuteRequest,
     ExecutionRecord,
-    MessageFields,
     PongResponse,
     ServerRole,
+    StatusRequest,
 )
+from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime.startup import (
     EndpointStartupObserver,
     EndpointStartupPhase,
@@ -556,41 +557,18 @@ class ZMQExecutionRequestBuilder:
             compile_control=self.compile_control,
         )
 
-    def request(self) -> "ZMQRequest":
-        return ZMQRequest.from_items(
-            (
-                (MessageFields.TYPE, ControlMessageType.EXECUTE.value),
-                (MessageFields.PIPELINE_CODE, self.pipeline_code),
-                *self.identity.request_items(),
-                *self.compile_control.request_items(),
-                *self.config_projection.request_items(),
-            )
+    def request(self) -> ExecuteRequest:
+        source_fields = self.config_projection.source_fields
+        return ExecuteRequest(
+            subject_id=self.identity.plate_id,
+            execution_subject_id=self.identity.execution_plate_id,
+            selected_pipeline_path=self.identity.selected_pipeline_path,
+            pipeline_code=self.pipeline_code,
+            config_params=self.config_params,
+            config_code=None if source_fields is None else source_fields.config_code,
+            compile_only=self.compile_control.compile_only,
+            compile_artifact_id=self.compile_control.compile_artifact_id,
         )
-
-
-@dataclass(frozen=True, slots=True)
-class ZMQRequest:
-    """Nominal OpenHCS execution request before lowering to zmqruntime."""
-
-    values: Mapping[str, ZMQValue]
-
-    @classmethod
-    def from_items(
-        cls,
-        items: Sequence[tuple[str, ZMQValue]],
-    ) -> "ZMQRequest":
-        return cls(values=dict(items))
-
-    def with_items(
-        self,
-        items: Sequence[tuple[str, ZMQValue]],
-    ) -> "ZMQRequest":
-        values = dict(self.values)
-        values.update(items)
-        return ZMQRequest(values=values)
-
-    def as_wire_payload(self) -> dict[str, ZMQValue]:
-        return dict(self.values)
 
 
 @dataclass(frozen=True, slots=True)
@@ -619,19 +597,10 @@ class ZMQConfigParamsBoundary:
         merged_params.update(updates)
         return ZMQConfigParamsBoundary(params=merged_params)
 
-    def request_items(self) -> tuple[tuple[str, ZMQValue], ...]:
-        return ((MessageFields.CONFIG_PARAMS, self.params),)
-
 
 @dataclass(frozen=True, slots=True)
 class ZMQConfigSourceFields:
     config_code: str | None = None
-
-    def request_items(self) -> tuple[tuple[str, ZMQValue], ...]:
-        items: list[tuple[str, ZMQValue]] = []
-        if self.config_code is not None:
-            items.append((MessageFields.CONFIG_CODE, self.config_code))
-        return tuple(items)
 
 
 @dataclass(frozen=True, slots=True)
@@ -655,14 +624,6 @@ class ZMQConfigProjection:
             source_fields=ZMQConfigSourceFields(config_source),
             config_sha=hashlib.sha256(config_source.encode("utf-8")).hexdigest()[:12],
         )
-
-    def request_items(self) -> tuple[tuple[str, ZMQValue], ...]:
-        items: list[tuple[str, ZMQValue]] = []
-        if self.params_boundary is not None:
-            items.extend(self.params_boundary.request_items())
-        if self.source_fields is not None:
-            items.extend(self.source_fields.request_items())
-        return tuple(items)
 
     def signature_transport(self) -> ZMQExecutionConfigTransport:
         source_fields = self.source_fields
@@ -1050,12 +1011,12 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         self,
         task: OpenHCSExecutionSubmission,
         config=None,
-    ) -> dict[str, ZMQValue]:
+    ) -> ExecuteRequest:
         return self.serialize_prepared_request(ZMQExecutionRequestBuilder.from_task(task))
 
     def serialize_prepared_request(
         self, request_builder: ZMQExecutionRequestBuilder
-    ) -> dict[str, ZMQValue]:
+    ) -> ExecuteRequest:
         request = request_builder.request()
         request_payload = request_builder.request_payload
         logger.info(
@@ -1066,7 +1027,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
             request_payload.pipeline_sha,
             request_builder.config_projection.config_sha,
         )
-        return request.as_wire_payload()
+        return request
 
     def submit_pipeline(
         self,
@@ -1135,11 +1096,8 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         *,
         timeout_ms: int | None = None,
     ):
-        request = {MessageFields.TYPE: ControlMessageType.STATUS.value}
-        if execution_id:
-            request[MessageFields.EXECUTION_ID] = execution_id
         return self._send_control_request(
-            request,
+            StatusRequest(execution_id=execution_id or None).to_dict(),
             timeout_ms=self._control_timeout_ms(timeout_ms),
         )
 
@@ -1171,7 +1129,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
 
     def _submit_submission(
         self,
-        build_request: Callable[[], dict[str, ZMQValue]],
+        build_request: Callable[[], ExecuteRequest],
         *,
         timeout_ms: int,
     ):
@@ -1192,9 +1150,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
             self._ensure_progress_subscription(
                 timeout_ms=deadline.remaining_milliseconds()
             )
-            request = build_request()
-            if MessageFields.TYPE not in request:
-                request[MessageFields.TYPE] = ControlMessageType.EXECUTE.value
+            request = build_request().to_dict()
             request_timeout_ms = deadline.remaining_milliseconds()
         except TimeoutError as exc:
             raise ExecutionSubmissionPreparationTimeoutError(
