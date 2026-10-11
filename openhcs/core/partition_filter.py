@@ -45,42 +45,28 @@ class PartitionFilterProcessor:
         Raises:
             ValueError: If values don't exist (INCLUDE mode only), insufficient values for count, or invalid patterns
         """
-        # First resolve the filter to a set of values
-        # Pass strict=False for EXCLUDE mode (ignore unknown partition values)
         resolved_values = PartitionFilterProcessor.resolve_compilation_filter(
             partition_filter,
             available_values,
-            strict=(partition_filter_mode == PartitionFilterMode.INCLUDE),
+            strict=partition_filter_mode.rejects_unknown_values,
         )
-
-        logger.debug(
-            f"resolve_filter_with_mode: partition_filter={partition_filter}, mode={partition_filter_mode.value}, "
-            f"available_values={available_values}, resolved_values={resolved_values}"
-        )
-
-        # Apply mode: INCLUDE = use resolved values, EXCLUDE = use all except resolved values
         resolved_identity_keys = {
             PartitionFilterProcessor._identity_key(value) for value in resolved_values
         }
-        if partition_filter_mode == PartitionFilterMode.EXCLUDE:
-            # Return all values that are NOT in the resolved set, preserving order
-            result = [
-                w
-                for w in available_values
-                if PartitionFilterProcessor._identity_key(w)
-                not in resolved_identity_keys
-            ]
-            logger.debug(f"EXCLUDE mode: returning {result}")
-            return result
-        else:
-            # Return resolved values in the order they appear in available_values
-            result = [
-                w
-                for w in available_values
-                if PartitionFilterProcessor._identity_key(w) in resolved_identity_keys
-            ]
-            logger.debug(f"INCLUDE mode: returning {result}")
-            return result
+        result = [
+            value
+            for value in available_values
+            if (PartitionFilterProcessor._identity_key(value) in resolved_identity_keys)
+            is partition_filter_mode.keeps_matches
+        ]
+        logger.debug(
+            "Partition filter %r (%s) over %s selects %s",
+            partition_filter,
+            partition_filter_mode.value,
+            available_values,
+            result,
+        )
+        return result
 
     @staticmethod
     def resolve_compilation_filter(

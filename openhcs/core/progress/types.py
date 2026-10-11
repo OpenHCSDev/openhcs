@@ -579,11 +579,11 @@ for _queue_type in (
 _progress_queue: ProgressQueue | None = None
 
 
-def set_progress_queue(queue: ProgressQueue | None) -> None:
+def set_progress_queue(progress_queue: ProgressQueue | None) -> None:
     """Install the queue this process emits progress events into."""
 
     global _progress_queue
-    _progress_queue = queue
+    _progress_queue = progress_queue
 
 
 def emit_event(event: ProgressEvent) -> None:

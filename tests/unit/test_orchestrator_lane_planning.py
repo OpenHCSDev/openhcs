@@ -66,7 +66,6 @@ from openhcs.core.orchestrator.worker_lanes import (
     WorkerLaneExecutionPlan,
 )
 from openhcs.core.progress import (
-    ProgressEvent,
     ProgressExecutionContext,
     ProgressPhase,
     ProgressStatus,
