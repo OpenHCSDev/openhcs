@@ -5,9 +5,9 @@ from objectstate import ObjectState, ObjectStateRegistry
 
 from openhcs.core.config import PipelineConfig
 from openhcs.core.source_bindings import (
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
+    TextEquals,
 )
 from openhcs.pyqt_gui.widgets.source_bindings_editor import (
     SourceBindingsEditorWidget,
@@ -72,8 +72,8 @@ def test_removed_structural_row_time_travel_preserves_visible_viewport() -> None
 
         def source_filter(value: str) -> SourceFilterClause:
             return SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.EQUALS,
+                SourceFileName,
+                TextEquals,
                 value,
             )
 

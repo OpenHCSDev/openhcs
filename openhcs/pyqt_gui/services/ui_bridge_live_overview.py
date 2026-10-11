@@ -7,9 +7,9 @@ from dataclasses import replace
 
 from zmqruntime.viewer_state import ViewerInstance, ViewerStateManager
 
+from openhcs.core.selection import AllItems
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
-    UiCodeDocumentSelectionMode,
     UiLiveOverviewItem,
     UiLiveOverviewMetric,
     UiLiveOverviewSection,
@@ -184,14 +184,14 @@ class UiLiveOverviewStateSurfaceProvider(UiStateSurfaceProviderABC):
             title=self.identity.title,
             widget_id=self.identity.widget_id,
             readable=True,
-            supported_selection_modes=(UiCodeDocumentSelectionMode.ALL.value,),
+            supported_selection_modes=(AllItems.name,),
             current_selection_count=0,
             total_scope_count=1,
         )
 
     def read(self, request: UiStateSurfaceRequest) -> UiStateSurfaceDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
+            AllItems
         )
         try:
             state = UiLiveOverviewState(
@@ -272,7 +272,7 @@ class UiLiveOverviewStateSurfaceProvider(UiStateSurfaceProviderABC):
         errors: tuple[AgentError, ...],
     ) -> UiStateSurfaceDocument:
         selection_mode = request.resolved_selection_mode(
-            UiCodeDocumentSelectionMode.ALL
+            AllItems
         )
         state = UiLiveOverviewState(
             schema_version=SCHEMA_VERSION,

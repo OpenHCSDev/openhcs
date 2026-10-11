@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+from abc import ABC
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
@@ -16,6 +17,8 @@ from typing import (
     get_origin,
     get_type_hints,
 )
+
+from metaclass_registry import AutoRegisterMeta
 
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
@@ -53,35 +56,55 @@ class ModuleSettingRowRecord:
 class ModuleSettingCoverageRecord(ModuleSettingRowRecord):
     """Coverage status for one concrete CellProfiler setting row."""
 
-    status: "ModuleSettingCoverageStatus"
+    status: type[ModuleSettingCoverageStatus]
 
 
-class ModuleSettingCoverageStatus(str, Enum):
-    """How one CellProfiler setting row was accounted for by import binding."""
+class ModuleSettingCoverageStatus(ABC, metaclass=AutoRegisterMeta):
+    """How one CellProfiler setting row was accounted for by import binding.
 
-    BOUND = "bound"
-    IGNORED = "ignored"
-    UNMAPPED = "unmapped"
+    Each status is a subclass; ``name`` is its spelling in coverage reports.
+    """
 
-    @property
-    def is_covered(self) -> bool:
-        """Return whether the declaration accounted for this setting row."""
-        return self is not ModuleSettingCoverageStatus.UNMAPPED
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[ModuleSettingCoverageStatus]]] = {}
 
-    @classmethod
+    name: ClassVar[str | None] = None
+    is_covered: ClassVar[bool] = True
+    """The declaration accounted for this setting row."""
+
+    @staticmethod
     def for_setting(
-        cls,
         normalized_name: str,
         *,
         unmapped_kwargs: Mapping[str, Any],
         ignored_setting_names: frozenset[str],
-    ) -> "ModuleSettingCoverageStatus":
-        """Return the coverage status owned by this status enum."""
+    ) -> type[ModuleSettingCoverageStatus]:
+        """Return the status of one setting row after binding."""
         if normalized_name not in unmapped_kwargs:
-            return cls.BOUND
+            return SettingBound
         if normalized_name in ignored_setting_names:
-            return cls.IGNORED
-        return cls.UNMAPPED
+            return SettingIgnored
+        return SettingUnmapped
+
+
+class SettingBound(ModuleSettingCoverageStatus):
+    """The row was bound to a function keyword."""
+
+    name = "bound"
+
+
+class SettingIgnored(ModuleSettingCoverageStatus):
+    """The module declaration deliberately ignores the row."""
+
+    name = "ignored"
+
+
+class SettingUnmapped(ModuleSettingCoverageStatus):
+    """No binding accounted for the row."""
+
+    name = "unmapped"
+    is_covered = False
 
 
 @dataclass(frozen=True, slots=True)

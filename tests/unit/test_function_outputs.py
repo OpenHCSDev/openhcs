@@ -60,7 +60,7 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import NoMainFlowInput, StepOutputInput
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     FunctionOutputPathRequest,
@@ -103,7 +103,7 @@ from openhcs.processing.materialization.core import Output
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameBySourceIdentity,
 )
 from openhcs.core.axes import Axis, AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
@@ -425,7 +425,7 @@ def function_step_plan(
         output_dir=Path("/tmp/output"),
         pipeline_position=pipeline_position,
         step_scope_id=f"step-scope-{pipeline_position}",
-        main_input_dependency=StepInputDependency.no_main_flow(),
+        main_input_dependency=NoMainFlowInput(),
         variable_components=variable_components,
         compiled_function_pattern=compile_function_pattern(
             admitted_graph(lambda image: image),
@@ -576,7 +576,7 @@ def test_step_output_manifest_prefers_main_dependency_over_auxiliary_artifact_in
     )
 
     consumer = function_step_plan("Watershed")
-    consumer.main_input_dependency = StepInputDependency.step_output(
+    consumer.main_input_dependency = StepOutputInput(
         source_step_index=24,
         source_step_scope_id="main-producer",
     )
@@ -2336,7 +2336,7 @@ def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, conte
         materialization=MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".tif",
-                filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+                filename_identity=NameBySourceIdentity,
             )
         ),
     )
@@ -2451,7 +2451,7 @@ def test_declared_image_destinations_publish_and_reconcile_after_value_cleanup(
             materialization=MaterializationSpec(
                 ImageFileOptions(
                     filename_suffix=".tif",
-                    filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+                    filename_identity=NameBySourceIdentity,
                     relative_path_template=f"{directory}/A01_s001_w2_z001_t001.tif",
                 )
             ),

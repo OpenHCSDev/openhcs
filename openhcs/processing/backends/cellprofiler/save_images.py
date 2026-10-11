@@ -64,7 +64,8 @@ from openhcs.processing.materialization import (
     ExecutionAxisMaterializationRelativePathScope,
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
+    NameBySourceIdentity,
     WriteMode,
 )
 from openhcs.core.runtime_image_values import ImagePayload
@@ -877,9 +878,9 @@ class SaveImagesModule(
             file_format=file_format,
         )
         filename_identity = (
-            MaterializedFilenameIdentity.SOURCE_IDENTITY
+            NameBySourceIdentity
             if filename_method is SaveImagesFilenameMethod.FROM_IMAGE_FILENAME
-            else MaterializedFilenameIdentity.ARTIFACT_NAME
+            else NameByArtifactName
         )
         options = ImageFileOptions(
             filename_suffix=f"{suffix}{file_format.value}",

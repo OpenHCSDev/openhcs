@@ -13,6 +13,7 @@ from openhcs.authoring.session.operations.datasets import (
     WaitForServer,
 )
 from openhcs.authoring.session.views import DatasetListView
+from openhcs.constants.constants import OrchestratorReady
 from openhcs.core.execution_state import ManagerExecutionState
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.config import get_default_ui_config
@@ -59,9 +60,7 @@ def test_endpoint_phase_resolves_the_compile_slot(monkeypatch, phase, expected):
 def test_connect_needs_no_dataset_and_startup_is_never_available(tmp_path):
     with caller_session() as session:
         (scope_id,) = add_datasets(session, tmp_path, "plate")
-        session.orchestrator(scope_id)._state = (
-            session.orchestrator(scope_id)._state.READY
-        )
+        session.orchestrator(scope_id)._state = OrchestratorReady
         session.set_pipeline(scope_id, [FunctionStep(name="Step")])
         assert ConnectServer.available(session, ConnectServer.request()) is None
         for selection in ((), (scope_id,)):

@@ -35,6 +35,7 @@ from pyqt_reactive.widgets.shared.manager_state_binding import ManagerStateBindi
 from pyqt_reactive.widgets.shared.scope_visual_config import ListItemType
 from typing_extensions import override
 
+from openhcs.core.selection import SelectedItems, SelectionScope
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentTarget
 from openhcs.agent.dto.session import DatasetRootsRequest
 from openhcs.agent.ui_bridge_identities import (
@@ -83,8 +84,7 @@ from openhcs.authoring.session.views import (
     output_relations,
 )
 from openhcs.core.config import PipelineConfig
-from openhcs.constants.constants import OrchestratorState
-from openhcs.core.selection import SelectedAllSelectionMode
+from openhcs.constants.constants import OrchestratorCreated
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     UiOwnedStateSurfaceDeclaration,
 )
@@ -355,7 +355,7 @@ class PlateManagerWidget(
     @override
     def _get_list_item_tooltip(self, item: DatasetRow) -> str:
         orchestrator = ObjectStateRegistry.get_object(item.scope_id)
-        return f"Status: {orchestrator.state.value}" if orchestrator else ""
+        return f"Status: {orchestrator.state.name}" if orchestrator else ""
 
     @override
     def _get_item_scope_id(self, item: DatasetRow, index: int) -> Optional[str]:
@@ -396,16 +396,12 @@ class PlateManagerWidget(
 
     def dataset_document(
         self,
-        selection_mode: SelectedAllSelectionMode = SelectedAllSelectionMode.SELECTED,
+        selection_mode: type[SelectionScope] = SelectedItems,
     ) -> DatasetDocument:
         """The dataset code document: the selection, else every dataset."""
 
         every = tuple(row.scope_id for row in self.plates)
-        scope_ids = (
-            every
-            if selection_mode is SelectedAllSelectionMode.ALL
-            else self.selection_scope_ids() or every
-        )
+        scope_ids = selection_mode.pick(self.selection_scope_ids(), every) or every
         return render_dataset_document(
             self.session, scope_ids, selection_mode=selection_mode
         )
@@ -420,7 +416,7 @@ class PlateManagerWidget(
             ).apply_namespace,
         )
 
-    def show_dataset_code(self, selection_mode: SelectedAllSelectionMode) -> None:
+    def show_dataset_code(self, selection_mode: type[SelectionScope]) -> None:
         """Open the dataset code document in the code editor."""
 
         document = self.dataset_document(selection_mode)
@@ -454,7 +450,7 @@ class PlateManagerWidget(
         orchestrator = ObjectStateRegistry.get_object(scope_id)
         if (
             orchestrator is not None
-            and orchestrator.state is not OrchestratorState.CREATED
+            and orchestrator.state is not OrchestratorCreated
         ):
             return orchestrator
         return None
@@ -550,7 +546,7 @@ class ShowDatasetCodePresenter(OperationPresenter):
 
     def present(self, renderer: GuiRenderer, request) -> None:
         del request
-        renderer.plate_manager.show_dataset_code(SelectedAllSelectionMode.SELECTED)
+        renderer.plate_manager.show_dataset_code(SelectedItems)
 
 
 class ShowLiveResultsPresenter(OperationPresenter):

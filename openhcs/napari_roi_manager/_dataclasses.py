@@ -6,6 +6,9 @@ from typing import Any
 import numpy as np
 from napari.layers.shapes._shapes_constants import ShapeType
 from numpy.typing import NDArray
+from python_introspect import to_jsonable
+
+import openhcs.core.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
 
 
 @dataclass(frozen=True)
@@ -44,7 +47,7 @@ class RoiData:
             out["names"] = self.names
         if self.features is not None:
             out["features"] = {
-                column: [_json_value(value) for value in values]
+                column: to_jsonable(list(values))
                 for column, values in self.features.items()
             }
         return out
@@ -87,19 +90,3 @@ class RoiTuple:
         if not isinstance(self.shape_type, ShapeType):
             raise TypeError("ROI shape type must be a Napari ShapeType member")
 
-
-def _json_value(value: Any) -> Any:
-    """Project native feature values into JSON without stringifying semantics."""
-    if value is None or isinstance(value, (str, bool, int, float)):
-        return value
-    if isinstance(value, np.generic):
-        return _json_value(value.item())
-    if isinstance(value, np.ndarray):
-        return [_json_value(item) for item in value.tolist()]
-    if isinstance(value, (list, tuple)):
-        return [_json_value(item) for item in value]
-    if isinstance(value, dict):
-        return {str(key): _json_value(item) for key, item in value.items()}
-    raise TypeError(
-        f"ROI feature value of type {type(value).__name__!r} is not JSON serializable"
-    )

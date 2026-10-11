@@ -150,7 +150,7 @@ class CPPipeSettingCompatibilityCoverage(ModuleSettingRowRecord):
 
     case_name: str
     canonical_module_name: str
-    coverage: ModuleSettingCoverageStatus
+    coverage: type[ModuleSettingCoverageStatus]
 
 
 @dataclass(frozen=True, slots=True)

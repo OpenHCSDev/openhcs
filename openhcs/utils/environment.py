@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from openhcs.resources.brand import BRAND_PRODUCT_NAME
 
 if TYPE_CHECKING:
-    from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+    from openhcs.agent.runtime_platform import AgentRuntimePlatform
 
 
 class OpenHCSProcessEnvironment:
@@ -32,7 +32,7 @@ class OpenHCSProcessEnvironment:
 
     @staticmethod
     def numba_cache_path(
-        platform_authority: "AgentRuntimePlatformAuthority",
+        platform_authority: "AgentRuntimePlatform",
     ) -> Path:
         """Return the user-local cache path for compiled Numba artifacts."""
 
@@ -44,9 +44,9 @@ class OpenHCSProcessEnvironment:
     def current_numba_cache_path(cls) -> Path:
         """Return the compiled-code cache for the current host platform."""
 
-        from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+        from openhcs.agent.runtime_platform import AgentRuntimePlatform
 
-        return cls.numba_cache_path(AgentRuntimePlatformAuthority.current())
+        return cls.numba_cache_path(AgentRuntimePlatform.current())
 
     @classmethod
     def child_process_environment_keys(cls) -> tuple[str, ...]:

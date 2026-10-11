@@ -1,106 +1,49 @@
+"""Where a pipeline step's main flow comes from.
+
+A step reads either the main-flow result of the previous step or the
+pipeline-start main flow (for example to compute tile positions from the
+original images). Separately named images or other typed values are artifact
+inputs, satisfied through step source bindings or prior artifact producers; they
+are not another input source.
+
+```python
+step = FunctionStep(
+    func=ashlar_compute_tile_positions_gpu,
+    name="compute_positions",
+    processing_config=LazyProcessingConfig(input_source=ReadPipelineStart),
+)
+```
 """
-Input Source Strategy Enum for OpenHCS.
 
-This module defines the InputSource enum for explicit input source declaration
-in pipeline steps, replacing the @chain_breaker decorator system with a cleaner,
-more declarative approach.
+from __future__ import annotations
 
-Doctrinal Clauses:
-- Clause 3 — Declarative Primacy
-- Clause 88 — No Inferred Capabilities
-- Clause 245 — Declarative Enforcement
-"""
+from abc import ABC
+from typing import ClassVar
 
-from enum import Enum
+from metaclass_registry import AutoRegisterMeta
 
 
-class InputSource(Enum):
-    """
-    Main-flow source strategies for pipeline steps.
+class InputSource(ABC, metaclass=AutoRegisterMeta):
+    """Main-flow source of one step; ``name`` is its spelling in forms and on the wire."""
 
-    This enum replaces the @chain_breaker decorator system with explicit
-    input source declaration, providing cleaner and more predictable
-    pipeline behavior.
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[InputSource]]] = {}
 
-    The InputSource enum supports two strategies:
+    name: ClassVar[str | None] = None
+    reads_pipeline_start: ClassVar[bool]
+    """The step reads the pipeline-start main flow, not the previous step's."""
 
-    1. **PREVIOUS_STEP** (Default): Standard pipeline chaining where each step
-       receives the ordinary main-flow result of the previous step.
 
-    2. **PIPELINE_START**: The step receives the pipeline-start main-flow input,
-       bypassing previous step results. This replaces the @chain_breaker
-       decorator functionality.
+class ReadPreviousStep(InputSource):
+    """Standard chaining: the previous step's main-flow result."""
 
-    The enum does not select separately named images or other typed values. A
-    callable declares those as artifact inputs, and compilation satisfies them
-    through step source bindings or prior artifact producers alongside the main
-    flow.
+    name = "previous"
+    reads_pipeline_start = False
 
-    Usage Examples:
 
-    Standard chaining (default behavior):
-    ```python
-    step = FunctionStep(
-        func=my_processing_function,
-        name="process_images",
-        processing_config=LazyProcessingConfig(
-            input_source=InputSource.PREVIOUS_STEP,
-        ),
-    )
-    ```
+class ReadPipelineStart(InputSource):
+    """The pipeline-start main flow, bypassing previous step results."""
 
-    Chain breaking for position generation:
-    ```python
-    step = FunctionStep(
-        func=ashlar_compute_tile_positions_gpu,
-        name="compute_positions",
-        processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
-        ),
-    )
-    ```
-
-    Quality control accessing original data:
-    ```python
-    step = FunctionStep(
-        func=quality_control_function,
-        name="qc_check",
-        processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
-        ),
-    )
-    ```
-    """
-
-    PREVIOUS_STEP = "previous"
-    """
-    Standard pipeline chaining strategy.
-    
-    The step consumes the ordinary main-flow result of the previous step. This
-    is the default behavior and maintains normal pipeline chaining.
-    
-    This strategy:
-    - Maintains sequential data flow
-    - Enables progressive image processing
-    - Is the default for all steps
-    """
-
-    PIPELINE_START = "start"
-    """
-    Pipeline start input strategy (replaces @chain_breaker).
-    
-    The step consumes the pipeline-start main-flow input, bypassing all previous
-    step results. This is equivalent to the @chain_breaker behavior but declared
-    explicitly.
-    
-    This strategy:
-    - Accesses original input data
-    - Bypasses all previous processing steps
-    - Is required for position generation and quality control
-    
-    Common use cases:
-    - Position generation functions (MIST, Ashlar)
-    - Quality control and validation steps
-    - Analysis requiring original image data
-    - Debugging and comparison operations
-    """
+    name = "start"
+    reads_pipeline_start = True

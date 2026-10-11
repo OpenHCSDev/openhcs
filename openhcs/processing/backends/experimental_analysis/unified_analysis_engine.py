@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 
 from openhcs.domains.microscopy.config import ExperimentalAnalysisConfig
-from openhcs.processing.backends.experimental_analysis.layout_rows import ExperimentalAnalysisScope
 from openhcs.processing.backends.experimental_analysis.result_formats import (
     ExperimentalResultFormatStrategy,
 )
@@ -47,13 +46,11 @@ class ExperimentalAnalysisEngine:
         try:
             # Parse the workbook declaration that owns result format.
             experiment_config = self._parse_experiment_config(config_file)
-            scope = ExperimentalAnalysisScope.coerce(experiment_config["scope"])
-
-            # Process microscope data through the scope-keyed leaf.
-            processed_data = ExperimentalResultFormatStrategy.for_enum_member(
-                scope
-            ).process(results_path)
-            format_name = scope.value
+            result_format = ExperimentalResultFormatStrategy.for_scope(
+                experiment_config["scope"]
+            )
+            processed_data = result_format.process(results_path)
+            format_name = result_format.scope_name
 
             # Create the experiment data structure.
             experiment_dict_locations = self._make_experiment_dict_locations(

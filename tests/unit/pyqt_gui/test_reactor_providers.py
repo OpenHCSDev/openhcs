@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 from objectstate import ObjectStateRegistry
 
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import OrchestratorReady
 from openhcs.core.orchestrator import PipelineOrchestrator
 from openhcs.pyqt_gui.services.reactor_providers import (
     OpenHCSComponentSelectionProvider,
@@ -38,7 +38,7 @@ def test_component_provider_resolves_the_public_orchestrator_declaration(
 
     assert provider.has_components_available(Microscopy.Channel) is False
 
-    orchestrator.state = OrchestratorState.READY
+    orchestrator.state = OrchestratorReady
 
     assert provider.has_components_available(Microscopy.Channel) is True
     assert provider.get_component_keys(Microscopy.Channel) == ["1", "2"]

@@ -1196,7 +1196,6 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         """Read the compiler-owned artifact inspection projection."""
 
         from openhcs.core.artifact_inspection import (
-            CompiledArtifactInspectionControlPayload,
             CompiledArtifactInspectionRequest,
             CompiledArtifactInspectionResponse,
         )
@@ -1206,9 +1205,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         request = CompiledArtifactInspectionRequest(
             compile_artifact_id=compile_artifact_id
         )
-        response = self._send_control_request(
-            CompiledArtifactInspectionControlPayload.from_request(request).to_dict()
-        )
+        response = self._send_control_request(request.to_dict())
         return CompiledArtifactInspectionResponse.from_control_response(
             response
         ).inspection

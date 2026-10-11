@@ -46,7 +46,7 @@ def configure_gui_logging(
     handlers: list[logging.Handler] = []
     log_file: Path | None = None
 
-    if level is not GuiLogLevel.SILENT:
+    if level.emits_records:
         if config.enable_console_logging:
             console_handler = GuiConsoleHandler(sys.stdout)
             console_handler.setFormatter(formatter)
@@ -75,14 +75,14 @@ def configure_gui_logging(
     root_logger = logging.getLogger()
     previous_handlers = tuple(root_logger.handlers)
     root_logger.handlers = handlers
-    if level is GuiLogLevel.SILENT:
-        logging.disable(logging.CRITICAL)
-        root_logger.setLevel(logging.CRITICAL + 1)
-    else:
+    if level.emits_records:
         logging.disable(logging.NOTSET)
         root_logger.setLevel(level.logging_level)
         logging.getLogger("openhcs").setLevel(level.logging_level)
         logging.getLogger("PIL").setLevel(logging.WARNING)
+    else:
+        logging.disable(logging.CRITICAL)
+        root_logger.setLevel(level.logging_level)
 
     for handler in previous_handlers:
         if handler not in handlers and isinstance(handler, GuiLoggingHandler):

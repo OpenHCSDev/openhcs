@@ -37,6 +37,16 @@ def source_path_identity(path: str | PathLike[str]) -> Path:
     return _normal_form(str(path))
 
 
+def absolute_source_path(path: str | PathLike[str]) -> Path:
+    """Return the identity of ``path`` made absolute against the working directory.
+
+    Datasets, stores and workspaces are identified by absolute paths; this is
+    that identity, still without following symlinks.
+    """
+
+    return _normal_form(str(Path(path).absolute()))
+
+
 def source_path_identity_key(path: str | PathLike[str]) -> str:
     """Return the identity of ``path`` as a string key."""
 

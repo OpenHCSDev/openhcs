@@ -7,7 +7,8 @@ import pytest
 
 from openhcs.mcp.http_auth import (
     IntrospectionTokenVerifier,
-    McpHttpAuthenticationMode,
+    OAuthIntrospectionAccess,
+    PublicReadOnlyAccess,
     McpHttpConfigurationError,
     McpHttpOAuthSettings,
     McpHttpResourceServerSettings,
@@ -84,7 +85,7 @@ def test_http_settings_allow_explicit_loopback_development():
 def test_public_read_only_settings_need_no_oauth_credentials():
     settings = _settings(oauth=None)
 
-    assert settings.authentication_mode is McpHttpAuthenticationMode.PUBLIC_READ_ONLY
+    assert settings.authentication_mode is PublicReadOnlyAccess
     assert settings.authentication_mode.requires_oauth is False
     assert settings.authentication_mode.access_qualifier == "public"
     assert settings.required_scopes == ()
@@ -97,7 +98,7 @@ def test_public_read_only_settings_need_no_oauth_credentials():
 def test_oauth_settings_project_auth_facets_from_the_mode_owner():
     settings = _settings()
 
-    assert settings.authentication_mode is McpHttpAuthenticationMode.OAUTH_INTROSPECTION
+    assert settings.authentication_mode is OAuthIntrospectionAccess
     assert settings.authentication_mode.requires_oauth is True
     assert (
         settings.authentication_mode.access_qualifier
@@ -143,7 +144,7 @@ def test_environment_builds_public_read_only_settings(monkeypatch, tmp_path):
     settings = McpHttpResourceServerSettings.from_environment()
 
     assert settings.oauth is None
-    assert settings.authentication_mode is McpHttpAuthenticationMode.PUBLIC_READ_ONLY
+    assert settings.authentication_mode is PublicReadOnlyAccess
     assert settings.openai_domain_challenge_token == "openai-domain-token"
 
 

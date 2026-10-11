@@ -24,7 +24,6 @@ from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
-    FunctionCatalogControlMessageType,
     FunctionCatalogControlRequest,
     FunctionCatalogControlRequestABC,
     FunctionCatalogControlResponse,
@@ -225,7 +224,7 @@ def test_new_request_declaration_and_cooperative_capability_need_no_consumer_edi
     @dataclass(frozen=True, slots=True)
     class IndependentCatalogProbe(FunctionCatalogControlRequestABC):
         marker: str = "independent"
-        message_type = FunctionCatalogControlMessageType.READ_CATALOG
+        wire_type = FunctionCatalogControlRequest.wire_type
 
     events = []
 
@@ -348,8 +347,8 @@ def test_explicit_selection_alone_can_replace_closed_session(monkeypatch, select
         if payload[MessageFields.TYPE] == ControlMessageType.PING.value:
             return expected.to_dict()
         if (
-            payload["request"].message_type
-            is FunctionCatalogControlMessageType.START_PREPARATION
+            payload["request"].wire_type
+            == FunctionCatalogPreparationStartRequest.wire_type
         ):
             return FunctionCatalogPreparationStateControlResponse(
                 state

@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterator, Mapping
 from concurrent.futures import Future
 from contextlib import contextmanager
 from dataclasses import dataclass
-from enum import Enum, auto
+from abc import ABC
 from traceback import TracebackException
 from typing import TYPE_CHECKING
 
@@ -79,24 +79,32 @@ class CustomFunctionCanonicalLookup:
         )
 
 
-class CustomFunctionLifetime(Enum):
+class CustomFunctionLifetime(ABC):
     """Lifetime owned by one process-local custom-function declaration."""
 
-    PERSISTED = auto()
-    EPHEMERAL = auto()
+    @classmethod
+    def require_current_source(cls, source: CustomFunctionSource) -> None:
+        """Validate the durable source; only a persisted function owns a file."""
 
-    def require_current_source(self, source: CustomFunctionSource) -> None:
-        """Validate the durable source only for the lifetime that owns a file."""
-        if self is CustomFunctionLifetime.PERSISTED:
-            from openhcs.processing.custom_functions.manager import (
-                CustomFunctionManager,
-            )
+    @staticmethod
+    def from_persist(persist: bool) -> type[CustomFunctionLifetime]:
+        return PersistedLifetime if persist else EphemeralLifetime
 
-            CustomFunctionManager(create_storage=False).require_source(source)
+
+class PersistedLifetime(CustomFunctionLifetime):
+    """Declared by a source file in the custom-function store."""
 
     @classmethod
-    def from_persist(cls, persist: bool) -> CustomFunctionLifetime:
-        return cls.PERSISTED if persist else cls.EPHEMERAL
+    def require_current_source(cls, source: CustomFunctionSource) -> None:
+        from openhcs.processing.custom_functions.manager import (
+            CustomFunctionManager,
+        )
+
+        CustomFunctionManager(create_storage=False).require_source(source)
+
+
+class EphemeralLifetime(CustomFunctionLifetime):
+    """Declared only in this process."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,7 +112,7 @@ class CustomFunctionRuntimeDeclaration:
     """One projected custom function together with its source lifetime."""
 
     metadata: FunctionMetadata
-    lifetime: CustomFunctionLifetime
+    lifetime: type[CustomFunctionLifetime]
 
     def require_source_namespace(
         self,
@@ -304,14 +312,14 @@ class CustomFunctionRuntimeRegistry:
     def publish(
         cls,
         metadata: FunctionMetadata,
-        lifetime: CustomFunctionLifetime,
+        lifetime: type[CustomFunctionLifetime],
     ) -> None:
         """Publish one prepared declaration with its exact source lifetime."""
 
         with cls._lock:
             metadata = cls._canonical_metadata_for_publication(metadata)
             cls._publish_locked(metadata, lifetime)
-            if lifetime is CustomFunctionLifetime.PERSISTED:
+            if lifetime is PersistedLifetime:
                 cls._source_revision = None
 
     @classmethod
@@ -371,7 +379,7 @@ class CustomFunctionRuntimeRegistry:
             if old_name != new_name:
                 cls._remove_preparation_outcomes_locked(old_name)
                 cls._remove_module_exports_locked((old_name,))
-            cls._publish_locked(metadata, CustomFunctionLifetime.PERSISTED)
+            cls._publish_locked(metadata, PersistedLifetime)
             cls._source_revision = None
 
     @classmethod
@@ -392,7 +400,7 @@ class CustomFunctionRuntimeRegistry:
             ephemeral_declarations = {
                 name: declaration
                 for name, declaration in cls._declarations_by_name.items()
-                if declaration.lifetime is CustomFunctionLifetime.EPHEMERAL
+                if declaration.lifetime is EphemeralLifetime
             }
             for function_name, metadata in metadata_by_name.items():
                 ephemeral = ephemeral_declarations.get(function_name)
@@ -411,7 +419,7 @@ class CustomFunctionRuntimeRegistry:
             persisted_names = {
                 name
                 for name, declaration in cls._declarations_by_name.items()
-                if declaration.lifetime is CustomFunctionLifetime.PERSISTED
+                if declaration.lifetime is PersistedLifetime
             }
             for function_name in persisted_names - metadata_by_name.keys():
                 cls._remove_preparation_outcomes_locked(function_name)
@@ -421,7 +429,7 @@ class CustomFunctionRuntimeRegistry:
                 **{
                     name: CustomFunctionRuntimeDeclaration(
                         metadata=metadata,
-                        lifetime=CustomFunctionLifetime.PERSISTED,
+                        lifetime=PersistedLifetime,
                     )
                     for name, metadata in metadata_by_name.items()
                 },
@@ -440,7 +448,7 @@ class CustomFunctionRuntimeRegistry:
             declaration = cls._declarations_by_name.pop(function_name, None)
             if (
                 declaration is not None
-                and declaration.lifetime is CustomFunctionLifetime.PERSISTED
+                and declaration.lifetime is PersistedLifetime
             ):
                 cls._source_revision = None
 
@@ -467,7 +475,7 @@ class CustomFunctionRuntimeRegistry:
     def _publish_locked(
         cls,
         metadata: FunctionMetadata,
-        lifetime: CustomFunctionLifetime,
+        lifetime: type[CustomFunctionLifetime],
     ) -> None:
         existing = cls._declarations_by_name.get(metadata.original_name)
         replacing_name = (
@@ -595,6 +603,6 @@ def register_custom_function(func: Callable) -> Callable:
     metadata = project_custom_function(func)
     CustomFunctionRuntimeRegistry.publish(
         metadata,
-        CustomFunctionLifetime.EPHEMERAL,
+        EphemeralLifetime,
     )
     return metadata.func

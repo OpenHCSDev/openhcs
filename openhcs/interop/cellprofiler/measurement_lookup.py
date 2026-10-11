@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass
-from enum import Enum
 from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
@@ -82,12 +81,77 @@ class ChildCountFeatureDeclaration(RuntimeMeasurementFeatureDeclaration):
 
 
 
-class CellProfilerMeasurementFeatureKind(Enum):
-    """CellProfiler measurement feature families with structured semantics."""
+class CellProfilerMeasurementFeatureKind(ABC, metaclass=AutoRegisterMeta):
+    """A CellProfiler measurement feature-name convention.
 
-    OBJECT_COUNT = "object_count"
-    CHILD_COUNT = "child_count"
-    OTHER = "other"
+    Each convention is a subclass that parses and renders its names. A kind
+    whose names target an object set reads the object name out of them.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[CellProfilerMeasurementFeatureKind]]] = {}
+
+    name: ClassVar[str | None] = None
+    needs_prior_measurement_rows: ClassVar[bool] = True
+    """Its values come from earlier measurement rows, not from object labels."""
+
+    @classmethod
+    def object_name_in(cls, feature_name: str) -> str | None:
+        """Return the object name ``feature_name`` targets in this convention."""
+        return None
+
+    @classmethod
+    def feature(cls, object_name: str) -> "CellProfilerMeasurementFeature":
+        """Return the feature this convention names for ``object_name``."""
+        raise TypeError(f"{cls.__name__} does not name features after object sets.")
+
+
+class ObjectCountFeatureName(CellProfilerMeasurementFeatureKind):
+    """CellProfiler ``Count_<object>`` image-level object counts."""
+
+    name = "object_count"
+    needs_prior_measurement_rows = False
+    prefix: ClassVar[str] = "Count_"
+
+    @classmethod
+    def object_name_in(cls, feature_name: str) -> str | None:
+        if not feature_name.startswith(cls.prefix):
+            return None
+        return feature_name[len(cls.prefix) :].strip() or None
+
+    @classmethod
+    def feature(cls, object_name: str) -> "CellProfilerMeasurementFeature":
+        normalized = object_name.strip()
+        if not normalized:
+            raise ValueError("Object-count feature requires a non-empty object name.")
+        return CellProfilerMeasurementFeature(
+            name=f"{cls.prefix}{normalized}", kind=cls, object_name=normalized
+        )
+
+
+class ChildCountFeatureName(CellProfilerMeasurementFeatureKind):
+    """CellProfiler ``Children_<object>_Count`` relationship counts."""
+
+    name = "child_count"
+
+    @classmethod
+    def object_name_in(cls, feature_name: str) -> str | None:
+        return ChildCountFeatureDeclaration.from_feature_name(feature_name)
+
+    @classmethod
+    def feature(cls, object_name: str) -> "CellProfilerMeasurementFeature":
+        return CellProfilerMeasurementFeature(
+            name=ChildCountFeatureDeclaration.feature_name(object_name),
+            kind=cls,
+            object_name=object_name.strip(),
+        )
+
+
+class OtherFeatureName(CellProfilerMeasurementFeatureKind):
+    """Any other feature name; it names no object set."""
+
+    name = "other"
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,37 +159,22 @@ class CellProfilerMeasurementFeature:
     """Structured view of one CellProfiler measurement feature name."""
 
     name: str
-    kind: CellProfilerMeasurementFeatureKind
+    kind: type[CellProfilerMeasurementFeatureKind]
     object_name: str | None = None
 
     @classmethod
     def parse(cls, feature_name: str | None) -> "CellProfilerMeasurementFeature | None":
-        """Parse a CellProfiler feature name into nominal feature semantics."""
+        """Parse a CellProfiler feature name into its convention and object."""
         if feature_name is None:
             return None
         normalized = feature_name.strip()
         if not normalized:
             return None
-        for parser_type in CellProfilerMeasurementFeatureParser.__registry__.values():
-            parsed = parser_type().parse_feature(normalized)
-            if parsed is not None:
-                return parsed
-        return cls(
-            normalized,
-            CellProfilerMeasurementFeatureKind.OTHER,
-        )
-
-    @classmethod
-    def object_count(cls, object_name: str) -> "CellProfilerMeasurementFeature":
-        return CellProfilerMeasurementFeatureParser.for_kind(
-            CellProfilerMeasurementFeatureKind.OBJECT_COUNT
-        ).feature_from_object_name(object_name)
-
-    @classmethod
-    def child_count(cls, child_object_name: str) -> "CellProfilerMeasurementFeature":
-        return CellProfilerMeasurementFeatureParser.for_kind(
-            CellProfilerMeasurementFeatureKind.CHILD_COUNT
-        ).feature_from_object_name(child_object_name)
+        for kind in CellProfilerMeasurementFeatureKind.__registry__.values():
+            object_name = kind.object_name_in(normalized)
+            if object_name is not None:
+                return cls(normalized, kind, object_name)
+        return cls(normalized, OtherFeatureName)
 
     @classmethod
     def child_count_object_names(
@@ -133,135 +182,25 @@ class CellProfilerMeasurementFeature:
         feature_names: tuple[object, ...],
     ) -> tuple[str, ...]:
         """Return ordered unique child object names referenced by count features."""
-        child_names = tuple(
-            parsed.object_name
+        child_names = (
+            ChildCountFeatureName.object_name_in(str(feature_name).strip())
             for feature_name in feature_names
-            for parsed in (cls.parse(str(feature_name)),)
-            if (
-                parsed is not None
-                and parsed.kind is CellProfilerMeasurementFeatureKind.CHILD_COUNT
-                and parsed.object_name is not None
-            )
         )
-        return tuple(dict.fromkeys(child_names))
-
-
-class CellProfilerMeasurementFeatureParser(ABC, metaclass=AutoRegisterMeta):
-    """Registered parser/renderer for one CellProfiler measurement feature family."""
-
-    __registry_key__ = "kind_key"
-    __skip_if_no_key__ = True
-    kind: ClassVar[CellProfilerMeasurementFeatureKind | None] = None
-    kind_key: ClassVar[str | None] = None
-
-    @classmethod
-    def for_kind(
-        cls,
-        kind: CellProfilerMeasurementFeatureKind,
-    ) -> "CellProfilerMeasurementFeatureParser":
-        parser_type = cls.__registry__.get(kind.value)
-        if parser_type is None:
-            raise KeyError(f"No CellProfiler measurement parser registered for {kind}.")
-        return parser_type()
-
-    @abstractmethod
-    def parse_feature(
-        self,
-        feature_name: str,
-    ) -> CellProfilerMeasurementFeature | None:
-        """Return parsed feature semantics when this parser owns the name."""
-
-    @abstractmethod
-    def feature_from_object_name(
-        self,
-        object_name: str,
-    ) -> CellProfilerMeasurementFeature:
-        """Render a feature name for an object-targeted feature family."""
-
-
-class CellProfilerObjectCountFeatureParser(CellProfilerMeasurementFeatureParser):
-    """Parser for CellProfiler ``Count_<object>`` image-level object counts."""
-
-    kind = CellProfilerMeasurementFeatureKind.OBJECT_COUNT
-    kind_key = kind.value
-    prefix = "Count_"
-
-    def parse_feature(
-        self,
-        feature_name: str,
-    ) -> CellProfilerMeasurementFeature | None:
-        if not feature_name.startswith(self.prefix):
-            return None
-        object_name = feature_name[len(self.prefix) :].strip()
-        if not object_name:
-            return None
-        return CellProfilerMeasurementFeature(
-            name=feature_name,
-            kind=CellProfilerMeasurementFeatureKind.OBJECT_COUNT,
-            object_name=object_name,
-        )
-
-    def feature_from_object_name(
-        self,
-        object_name: str,
-    ) -> CellProfilerMeasurementFeature:
-        normalized = object_name.strip()
-        if not normalized:
-            raise ValueError("Object-count feature requires a non-empty object name.")
-        return CellProfilerMeasurementFeature(
-            name=f"{self.prefix}{normalized}",
-            kind=CellProfilerMeasurementFeatureKind.OBJECT_COUNT,
-            object_name=normalized,
-        )
-
-
-class CellProfilerChildCountFeatureParser(CellProfilerMeasurementFeatureParser):
-    """Parser for CellProfiler ``Children_<object>_Count`` relationships."""
-
-    kind = CellProfilerMeasurementFeatureKind.CHILD_COUNT
-    kind_key = kind.value
-
-    def parse_feature(self, feature_name: str) -> CellProfilerMeasurementFeature | None:
-        object_name = ChildCountFeatureDeclaration.from_feature_name(feature_name)
-        if object_name is None:
-            return None
-        return CellProfilerMeasurementFeature(
-            name=feature_name,
-            kind=CellProfilerMeasurementFeatureKind.CHILD_COUNT,
-            object_name=object_name,
-        )
-
-    def feature_from_object_name(
-        self, object_name: str
-    ) -> CellProfilerMeasurementFeature:
-        feature_name = ChildCountFeatureDeclaration.feature_name(object_name)
-        return CellProfilerMeasurementFeature(
-            name=feature_name,
-            kind=CellProfilerMeasurementFeatureKind.CHILD_COUNT,
-            object_name=object_name.strip(),
-        )
+        return tuple(dict.fromkeys(name for name in child_names if name is not None))
 
 
 def count_feature_object_name(feature_name: str | None) -> str | None:
     """Return the object-set name encoded by a CellProfiler Count_* feature."""
-    parsed = CellProfilerMeasurementFeature.parse(feature_name)
-    if (
-        parsed is None
-        or parsed.kind is not CellProfilerMeasurementFeatureKind.OBJECT_COUNT
-    ):
+    if feature_name is None:
         return None
-    return parsed.object_name
+    return ObjectCountFeatureName.object_name_in(feature_name.strip())
 
 
 def child_count_feature_child_name(feature_name: str | None) -> str | None:
     """Return the child object name encoded by Children_<object>_Count."""
-    parsed = CellProfilerMeasurementFeature.parse(feature_name)
-    if (
-        parsed is None
-        or parsed.kind is not CellProfilerMeasurementFeatureKind.CHILD_COUNT
-    ):
+    if feature_name is None:
         return None
-    return parsed.object_name
+    return ChildCountFeatureName.object_name_in(feature_name.strip())
 
 
 __all__ = declared_public_names(

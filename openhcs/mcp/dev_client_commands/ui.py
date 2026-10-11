@@ -12,6 +12,7 @@ from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotFrameCondition,
 )
 
+from openhcs.core.selection import AllItems, SelectedItems, SelectionScope
 from openhcs.agent.dto.session import (
     DatasetRowState,
     SessionEventBatch,
@@ -19,6 +20,7 @@ from openhcs.agent.dto.session import (
 )
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.ui_bridge import (
+    AllFields,
     UiActionInvokeRequest,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentRequest,
@@ -40,7 +42,6 @@ from openhcs.agent.services.ui_bridge_service import (
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerStateSurfaceIdentityDeclaration,
 )
-from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.mcp.dev_client_commanding import (
     CapabilityBackedCommandSpec,
     McpDevCommandSpec,
@@ -56,6 +57,9 @@ from openhcs.mcp.dev_client_core import (
     McpDevToolBatchResponse,
     McpDevToolCall,
     McpDevToolResult,
+    PollCompleted,
+    PollFailed,
+    PollTimedOut,
     WorkflowPollBaseline,
     WorkflowPollSkipReason,
     WorkflowPollSummary,
@@ -70,8 +74,8 @@ from openhcs.mcp.dev_client_core import (
     parse_cli_json_value,
     parse_json_object,
     selected_workflow_tool_arguments,
-    state_surface_tool_arguments,
     state_surface_document,
+    state_surface_tool_arguments,
     ui_request_tool_arguments,
     ui_tool_arguments,
     workflow_operation_receipt_skip_reason,
@@ -86,7 +90,9 @@ from openhcs.mcp.dev_client_core import (
     workflow_result_was_accepted,
 )
 from openhcs.mcp.dev_client_rendering import (
+    JsonWidgetTree,
     McpDevOutputRenderer,
+    OutlineWidgetTree,
     WidgetTreeOutputFormat,
 )
 
@@ -102,8 +108,8 @@ class StateSurfaceCommandSpec(CapabilityBackedCommandSpec):
         )
         parser.add_argument(
             "--selection-mode",
-            choices=tuple(mode.value for mode in SelectedAllSelectionMode),
-            default=SelectedAllSelectionMode.ALL.value,
+            choices=tuple(SelectionScope.__registry__),
+            default=AllItems.name,
         )
         parser.add_argument("--base-revision-token")
         add_ui_connection_options(parser)
@@ -185,8 +191,8 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
             "--wait-selection-mode",
             "--poll-selection-mode",
             dest="poll_selection_mode",
-            choices=tuple(mode.value for mode in SelectedAllSelectionMode),
-            default=SelectedAllSelectionMode.SELECTED.value,
+            choices=tuple(SelectionScope.__registry__),
+            default=SelectedItems.name,
             help=(f"Selection mode used while waiting on {state_surface_id}."),
         )
         parser.add_argument(
@@ -357,7 +363,7 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
         baseline: WorkflowPollBaseline | None,
         results: list[McpDevToolResult],
         transient_poll_error_count: int,
-    ) -> tuple[WorkflowPollSummaryStatus, bool, int, int]:
+    ) -> tuple[type[WorkflowPollSummaryStatus], bool, int, int]:
         """Re-read the workflow's state each time the session publishes events.
 
         Starts after the bridge receipt completes; between reads it waits on
@@ -392,7 +398,7 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
             return after_sequence if batch is None else batch.last_sequence
 
         poll_count = 0
-        terminal_status: WorkflowPollSummaryStatus | None = None
+        terminal_status: type[WorkflowPollSummaryStatus] | None = None
         while True:
             poll_result = await call_mcp_tool(
                 session,
@@ -411,7 +417,7 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
                     events_after = await await_events(events_after)
                     continue
                 results.append(poll_result)
-                terminal_status = WorkflowPollSummaryStatus.FAILED
+                terminal_status = PollFailed
                 break
             results.append(poll_result)
             if policy.can_evaluate(poll_result, baseline):
@@ -426,10 +432,10 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
                 break
             events_after = await await_events(events_after)
 
-        status = terminal_status or WorkflowPollSummaryStatus.TIMEOUT
+        status = terminal_status or PollTimedOut
         return (
             status,
-            status is WorkflowPollSummaryStatus.COMPLETED,
+            status is PollCompleted,
             poll_count,
             transient_poll_error_count,
         )
@@ -455,7 +461,7 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
             (
                 "Action: "
                 f"{McpDevOutputRenderer.text(summary.action_status)} "
-                f"poll={summary.status.value} count={summary.poll_count}"
+                f"poll={summary.status.name} count={summary.poll_count}"
             ),
         ]
         if summary.target_scope_ids:
@@ -699,12 +705,12 @@ class WidgetTreeCommandSpec(CapabilityBackedCommandSpec):
             "--json",
             dest="output",
             action="store_const",
-            const=WidgetTreeOutputFormat.JSON.value,
+            const=JsonWidgetTree.name,
             help="Alias for --output json.",
         )
 
     def requests_json_output(self, args: argparse.Namespace) -> bool:
-        return WidgetTreeOutputFormat(args.output).is_json
+        return WidgetTreeOutputFormat.named(args.output).is_json
 
     @staticmethod
     def _effective_max_depth(args: argparse.Namespace) -> int | None:
@@ -716,7 +722,7 @@ class WidgetTreeCommandSpec(CapabilityBackedCommandSpec):
     def _effective_max_nodes(args: argparse.Namespace) -> int | None:
         if args.max_nodes is not None:
             return args.max_nodes
-        return 800 if args.output == WidgetTreeOutputFormat.OUTLINE.value else 40
+        return WidgetTreeOutputFormat.named(args.output).default_max_nodes
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument("window_id")
@@ -727,8 +733,8 @@ class WidgetTreeCommandSpec(CapabilityBackedCommandSpec):
         parser.add_argument("--create-if-missing", action="store_true")
         parser.add_argument(
             "--output",
-            choices=WidgetTreeOutputFormat.choices(),
-            default=WidgetTreeOutputFormat.OUTLINE.value,
+            choices=tuple(WidgetTreeOutputFormat.__registry__),
+            default=OutlineWidgetTree.name,
             help="Render JSON or a clean indented widget outline.",
         )
         parser.add_argument(
@@ -767,12 +773,13 @@ class WidgetTreeCommandSpec(CapabilityBackedCommandSpec):
                 if args.actionable_only
                 else (
                     False
-                    if args.output == WidgetTreeOutputFormat.OUTLINE.value
+                    if WidgetTreeOutputFormat.named(args.output).shows_whole_tree
                     else not args.include_non_actionable
                 )
             ),
             include_tree=(
-                args.include_tree or args.output == WidgetTreeOutputFormat.OUTLINE.value
+                args.include_tree
+                or WidgetTreeOutputFormat.named(args.output).shows_whole_tree
             ),
             max_depth=self._effective_max_depth(args),
             max_nodes=self._effective_max_nodes(args),
@@ -968,7 +975,7 @@ class ObjectStateFieldsCommandSpec(CapabilityBackedCommandSpec):
             field_path_contains=tuple(args.contains),
             include_system_scopes=args.include_system_scopes,
             include_clean_fields=(
-                args.field_filter == UiObjectStateFieldFilter.ALL.value
+                UiObjectStateFieldFilter.named(args.field_filter) is AllFields
             ),
             include_container_fields=args.include_container_fields,
             field_filter=args.field_filter,

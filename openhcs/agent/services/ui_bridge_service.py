@@ -9,7 +9,6 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, replace
-from enum import Enum
 from os import environ
 from pathlib import Path
 from typing import Annotated, ClassVar
@@ -29,14 +28,18 @@ from zmqruntime.config import (
     TransportMode,
 )
 
+from openhcs.core.selection import AllItems, SelectedItems
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError
 from openhcs.agent.dto.session import SessionEventBatch, SessionEventsRequest
 from openhcs.agent.dto.ui_bridge import (
+    ActionAccepted,
+    ActionUnavailable,
+    OperationRunning,
+    OperationUnavailable,
     UI_BRIDGE_UNKNOWN_WIDGET,
     UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
     UiActionCatalog,
     UiActionIdentity,
-    UiActionInvocationStatus,
     UiActionInvokeRequest,
     UiActionInvokeResult,
     UiBranchCatalog,
@@ -60,7 +63,6 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentCatalog,
     UiCodeDocumentIdentity,
     UiCodeDocumentRequest,
-    UiCodeDocumentSelectionMode,
     UiCodeDocumentSummary,
     UiCodeDocumentValidationRequest,
     UiCodeDocumentValidationResult,
@@ -99,7 +101,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
-from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+from openhcs.agent.runtime_platform import AgentRuntimePlatform
 from openhcs.agent.services.object_state_field_projection import (
     ObjectStateFieldListProjector,
 )
@@ -370,7 +372,7 @@ class UiBridgeOperationStatusQuery(UiBridgeOperation):
                 operation_id=request.operation_id,
                 route=UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
             ),
-            status=UiBridgeOperationStatus.UNAVAILABLE.value,
+            status=OperationUnavailable.name,
             started_at_unix=0.0,
             errors=errors,
         )
@@ -580,7 +582,7 @@ class UiBridgeGetDocumentOperation(UiCodeDocumentOperation):
             current_revision_token=None,
             current_snapshot=None,
             selection_mode=request.resolved_selection_mode(
-                UiCodeDocumentSelectionMode.SELECTED
+                SelectedItems
             ),
             selected_scope_ids=(),
             errors=errors,
@@ -606,7 +608,7 @@ class UiBridgeGetStateSurfaceOperation(UiStateSurfaceOperation):
             payload_schema="openhcs.ui.unavailable_state_surface.v1",
             payload={},
             selection_mode=request.resolved_selection_mode(
-                UiCodeDocumentSelectionMode.ALL
+                AllItems
             ),
             selected_scope_ids=(),
             current_revision_token=None,
@@ -628,7 +630,7 @@ class UiBridgeInvokeActionOperation(UiActionOperation):
                 widget_id=request.widget_id,
                 action_id=request.action_id,
             ),
-            status=UiActionInvocationStatus.UNAVAILABLE.value,
+            status=ActionUnavailable,
             receipt=UiMutationReceipt.rejected_for(request.request_token),
             errors=errors,
         )
@@ -641,7 +643,7 @@ class UiBridgeInvokeActionOperation(UiActionOperation):
                 widget_id=request.widget_id,
                 action_id=request.action_id,
             ),
-            status=UiActionInvocationStatus.ACCEPTED.value,
+            status=ActionAccepted,
             receipt=UiMutationReceipt.accepted_for(
                 request.request_token,
                 bridge_operation_id=bridge_operation.identity.operation_id,
@@ -652,7 +654,7 @@ class UiBridgeInvokeActionOperation(UiActionOperation):
 
     @classmethod
     def outcome(cls, result) -> str:
-        return result.status
+        return result.status.name
 
 
 class UiBridgeSelectedPlateWorkflowOperation(UiBridgeOperation):
@@ -672,7 +674,7 @@ class UiBridgeSelectedPlateWorkflowOperation(UiBridgeOperation):
                     widget_id=UI_BRIDGE_UNKNOWN_WIDGET,
                     action_id=request.workflow.value,
                 ),
-                status=UiActionInvocationStatus.UNAVAILABLE.value,
+                status=ActionUnavailable,
                 receipt=UiMutationReceipt.rejected_for(request.request_token),
                 errors=errors,
             ),
@@ -811,7 +813,7 @@ class UiBridgeWaitForOperationReceiptOperation(UiBridgeOperationStatusQuery):
                 service, connection, status_request
             )
             try:
-                status = UiBridgeOperationStatus(operation.status)
+                status = UiBridgeOperationStatus.named(operation.status)
             except ValueError:
                 return replace(
                     operation,
@@ -947,7 +949,7 @@ class UiBridgeApplyDocumentOperation(UiCodeDocumentOperation):
             document_id=request.document_id,
             applied=False,
             base_revision_token=request.base_revision_token,
-            outcome=UiBridgeOperationStatus.RUNNING.value,
+            outcome=OperationRunning.name,
             operation_id=bridge_operation.identity.operation_id,
             receipt=UiMutationReceipt.accepted_for(
                 request.request_token,
@@ -1046,9 +1048,9 @@ class UiBridgeDescriptorDirectoryAuthority:
             UiBridgeDescriptorEnvironment.descriptor_directory_path_key
         )
         if configured:
-            return (AgentRuntimePlatformAuthority.resolved_path(configured),)
+            return (AgentRuntimePlatform.resolved_path(configured),)
 
-        return AgentRuntimePlatformAuthority.current().application_runtime_dirs(
+        return AgentRuntimePlatform.current().application_runtime_dirs(
             "OpenHCS",
             "ui-bridge",
         )
@@ -1300,27 +1302,21 @@ class UiBridgeDescriptorProcessIdentityError(ValueError):
         )
 
 
-class DescriptorSetCardinality(Enum):
-    NONE = "none"
-    ONE = "one"
-    MANY = "many"
-
-
 @dataclass(frozen=True, slots=True)
 class LiveUiBridgeDescriptorSet:
     descriptors: tuple[UiBridgeDescriptorFile, ...]
 
-    @property
-    def cardinality(self) -> DescriptorSetCardinality:
+    def resolution_runner(self) -> "DescriptorSetResolutionRunner":
+        """Return the resolver for this set's size: none, one or many."""
         count = len(self.descriptors)
         if count == 0:
-            return DescriptorSetCardinality.NONE
+            return NoDescriptorSetResolutionRunner()
         if count == 1:
-            return DescriptorSetCardinality.ONE
-        return DescriptorSetCardinality.MANY
+            return SingleDescriptorSetResolutionRunner()
+        return AmbiguousDescriptorSetResolutionRunner()
 
     def only_descriptor(self) -> UiBridgeDescriptorFile:
-        if self.cardinality is not DescriptorSetCardinality.ONE:
+        if len(self.descriptors) != 1:
             raise ValueError(
                 "Live UI bridge descriptor set does not contain exactly one descriptor."
             )
@@ -1361,20 +1357,8 @@ class UiBridgeEnvironment(UiBridgeConnectionFields):
         )
 
 
-class DescriptorSetResolutionRunner(ABC, metaclass=AutoRegisterMeta):
-    """Registered resolver behavior for live UI bridge descriptor cardinality."""
-
-    __registry_key__ = "cardinality"
-    __skip_if_no_key__ = True
-
-    cardinality: ClassVar[DescriptorSetCardinality | None] = None
-
-    @classmethod
-    def for_cardinality(
-        cls,
-        cardinality: DescriptorSetCardinality,
-    ) -> "DescriptorSetResolutionRunner":
-        return cls.__registry__[cardinality]()
+class DescriptorSetResolutionRunner(ABC):
+    """Resolver behavior for a live UI bridge descriptor set of one size."""
 
     @abstractmethod
     def resolve(
@@ -1387,8 +1371,6 @@ class DescriptorSetResolutionRunner(ABC, metaclass=AutoRegisterMeta):
 
 
 class NoDescriptorSetResolutionRunner(DescriptorSetResolutionRunner):
-    cardinality = DescriptorSetCardinality.NONE
-
     def resolve(
         self,
         resolver: "UiBridgeDescriptorResolver",
@@ -1403,8 +1385,6 @@ class NoDescriptorSetResolutionRunner(DescriptorSetResolutionRunner):
 
 
 class SingleDescriptorSetResolutionRunner(DescriptorSetResolutionRunner):
-    cardinality = DescriptorSetCardinality.ONE
-
     def resolve(
         self,
         resolver: "UiBridgeDescriptorResolver",
@@ -1419,8 +1399,6 @@ class SingleDescriptorSetResolutionRunner(DescriptorSetResolutionRunner):
 
 
 class AmbiguousDescriptorSetResolutionRunner(DescriptorSetResolutionRunner):
-    cardinality = DescriptorSetCardinality.MANY
-
     def resolve(
         self,
         resolver: "UiBridgeDescriptorResolver",
@@ -1509,7 +1487,7 @@ class UiBridgeDescriptorReader:
         stat_result = path.stat()
         if not stat.S_ISREG(stat_result.st_mode):
             raise PermissionError("UI bridge descriptor must be a regular file.")
-        platform_authority = AgentRuntimePlatformAuthority.current()
+        platform_authority = AgentRuntimePlatform.current()
         if not platform_authority.supports_posix_permissions():
             return
         uid = platform_authority.current_user_id()
@@ -1533,7 +1511,7 @@ class UiBridgeDescriptorReader:
 
     @staticmethod
     def _validate_descriptor_process(descriptor: UiBridgeDescriptorFile) -> None:
-        process_started_at_unix = AgentRuntimePlatformAuthority.process_started_at_unix(
+        process_started_at_unix = AgentRuntimePlatform.process_started_at_unix(
             descriptor.pid
         )
         if process_started_at_unix is None:
@@ -1556,7 +1534,7 @@ class UiBridgeDescriptorCatalog:
         configured = environ.get(UiBridgeDescriptorEnvironment.descriptor_file_path_key)
         if not configured:
             return None
-        return AgentRuntimePlatformAuthority.resolved_path(configured)
+        return AgentRuntimePlatform.resolved_path(configured)
 
     @classmethod
     def live_descriptors(cls) -> tuple[UiBridgeDescriptorFile, ...]:
@@ -1599,7 +1577,7 @@ class UiBridgeDescriptorCatalog:
         )
 
         for path in dict.fromkeys(
-            AgentRuntimePlatformAuthority.resolved_path(path)
+            AgentRuntimePlatform.resolved_path(path)
             for path in descriptor_paths
         ):
             result = UiBridgeDescriptorReader.read(path)
@@ -1671,7 +1649,7 @@ class UiBridgeDescriptorResolver:
     ) -> UiBridgeConnectionResolution:
         if connection.descriptor_file_path is not None:
             return self._resolve_explicit_file(
-                AgentRuntimePlatformAuthority.resolved_path(
+                AgentRuntimePlatform.resolved_path(
                     connection.descriptor_file_path
                 ),
                 connection,
@@ -1690,9 +1668,9 @@ class UiBridgeDescriptorResolver:
         descriptor_set = LiveUiBridgeDescriptorSet(
             UiBridgeDescriptorCatalog.live_descriptors()
         )
-        return DescriptorSetResolutionRunner.for_cardinality(
-            descriptor_set.cardinality
-        ).resolve(self, descriptor_set, connection)
+        return descriptor_set.resolution_runner().resolve(
+            self, descriptor_set, connection
+        )
 
     def _resolve_explicit_file(
         self,
@@ -1834,7 +1812,7 @@ class UiBridgeService:
         connection: UiBridgeConnectionSpec = DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
     ) -> ViewerLaunchContext:
         """Resolve one typed detached-viewer context from UI or current process."""
-        platform_authority = AgentRuntimePlatformAuthority.current()
+        platform_authority = AgentRuntimePlatform.current()
         resolution = self._descriptor_resolver.resolve(connection)
         if resolution.ok and resolution.process_id is not None:
             environment = platform_authority.graphical_process_environment(

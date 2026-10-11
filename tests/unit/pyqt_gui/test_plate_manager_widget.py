@@ -16,12 +16,12 @@ from PyQt6.QtCore import Qt
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 import openhcs.processing.backends.cellprofiler as cellprofiler_backend
+from openhcs.core.selection import AllItems, SelectedItems
 from openhcs.agent.dto.ui_bridge import (
     UiBridgeConfirmationRequirement,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentId,
     UiCodeDocumentRequest,
-    UiCodeDocumentSelectionMode,
     UiStateSurfaceId,
     UiStateSurfaceRequest,
     UiWindowNavigateRequest,
@@ -53,7 +53,7 @@ from openhcs.authoring.session.operations.pipelines import (
 )
 from openhcs.authoring.session.pipelines import PipelineObjectStateBinding
 from openhcs.authoring.session.views import DatasetListView
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import OrchestratorCompleted, OrchestratorCreated, OrchestratorExecFailed, OrchestratorExecuting, OrchestratorInitFailed, OrchestratorReady
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyFijiStreamingConfig,
@@ -70,13 +70,12 @@ from openhcs.core.execution_state import (
     ExecutionCompletionPayload,
     ExecutionOutputSummary,
     ManagerExecutionState,
-    TerminalExecutionStatus,
+    ExecutionCancelled, ExecutionCompleted, ExecutionFailed,
 )
 from openhcs.core.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import ProgressEvent
-from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.core.source_bindings import (
     MetadataSelector,
     NamedSourceBinding,
@@ -134,7 +133,7 @@ class InlineUiThreadDispatcher:
 
 def _ready(session, *scope_ids: str) -> None:
     for scope_id in scope_ids:
-        session.set_dataset_state(scope_id, OrchestratorState.READY)
+        session.set_dataset_state(scope_id, OrchestratorReady)
 
 
 def _running(session, scope_id: str, execution_id: str) -> None:
@@ -172,11 +171,11 @@ def _bridge(manager) -> UiAgentBridgeService:
     )
 
 
-def _apply(bridge, source: str, *, selection_mode=UiCodeDocumentSelectionMode.ALL):
+def _apply(bridge, source: str, *, selection_mode=AllItems):
     document = bridge.get_document(
         UiCodeDocumentRequest(
             document_id=UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value,
-            selection_mode=selection_mode.value,
+            selection_mode=selection_mode.name,
         )
     )
     return bridge.apply_document(
@@ -348,18 +347,18 @@ def test_initialization_publishes_the_workspace_config_while_another_dataset_run
 
         def complete_initialization():
             assert scope_id in session.init_pending
-            orchestrator._state = OrchestratorState.READY
+            orchestrator._state = OrchestratorReady
 
         monkeypatch.setattr(orchestrator, "initialize", complete_initialization)
         if already_initialized:
             orchestrator.bind_input_workspace(workspace)
-            orchestrator._state = OrchestratorState.READY
+            orchestrator._state = OrchestratorReady
         _running(session, running, "owned")
 
         asyncio.run(session.initialize_datasets((scope_id,)))
 
         assert not session.init_pending
-        assert orchestrator.state is OrchestratorState.READY
+        assert orchestrator.state is OrchestratorReady
         assert (
             ObjectStateRegistry.get_by_scope(scope_id).get_saved_resolved_value(
                 "num_workers"
@@ -390,7 +389,7 @@ def test_initialization_imports_steps_before_announcing_the_selection(
         monkeypatch.setattr(
             orchestrator,
             "initialize",
-            lambda: setattr(orchestrator, "_state", OrchestratorState.READY),
+            lambda: setattr(orchestrator, "_state", OrchestratorReady),
         )
         observed = []
         gui.plate_manager.plate_selected.connect(
@@ -533,7 +532,7 @@ def test_workspace_import_never_writes_into_the_displayed_dataset(tmp_path) -> N
         assert _names(gui.pipeline_editor.displayed_steps) == ["StartOnly"]
 
 
-@pytest.mark.parametrize("state", (OrchestratorState.READY, OrchestratorState.EXECUTING))
+@pytest.mark.parametrize("state", (OrchestratorReady, OrchestratorExecuting))
 def test_source_binding_context_projects_the_current_orchestrator_config(
     tmp_path, state
 ) -> None:
@@ -581,7 +580,7 @@ def test_source_binding_context_projects_the_current_orchestrator_config(
         after = orchestrator.source_binding_context(logical_scope)
         assert tuple(b.alias for b in after.source_bindings.bindings) == ("After",)
         assert tuple(b.alias for b in before.source_bindings.bindings) == ("Before",)
-        assert orchestrator.state is OrchestratorState.CREATED
+        assert orchestrator.state is OrchestratorCreated
 
 
 def test_compile_needs_an_initialized_dataset(tmp_path) -> None:
@@ -604,7 +603,7 @@ def test_live_results_show_the_source_orchestrator_for_source_and_output_rows(
         source, output = add_datasets(
             gui.session, tmp_path, "source_plate", "source_plate_openhcs"
         )
-        gui.session.set_dataset_state(source, OrchestratorState.COMPLETED)
+        gui.session.set_dataset_state(source, OrchestratorCompleted)
         source_orchestrator = gui.session.orchestrator(source)
 
         assert gui.plate_manager.results_orchestrator(source) is source_orchestrator
@@ -727,9 +726,9 @@ def test_restart_restores_a_missing_dataset_without_initializing_it(tmp_path) ->
 
         orchestrator = gui.session.orchestrator(scope_id)
         assert isinstance(outcome, DesktopRestartSucceeded)
-        assert orchestrator.state is OrchestratorState.CREATED
+        assert orchestrator.state is OrchestratorCreated
         assert not orchestrator.is_initialized()
-        restored = gui.plate_manager.dataset_document(SelectedAllSelectionMode.ALL)
+        restored = gui.plate_manager.dataset_document(AllItems)
         assert restored.payload.plate_paths == (scope_id,)
         assert restored.payload.per_plate_configs == payload.per_plate_configs
         assert restored.payload.pipeline_data == payload.pipeline_data
@@ -755,15 +754,15 @@ def test_a_missing_dataset_declaration_stays_editable_until_initialization(
         apply_dataset_document(session, payload, AllDatasetDocumentScope())
 
         orchestrator = session.orchestrator(scope_id)
-        assert orchestrator.state is OrchestratorState.CREATED
+        assert orchestrator.state is OrchestratorCreated
         assert not orchestrator.is_initialized()
         rendered = render_dataset_document(
-            session, (scope_id,), selection_mode=SelectedAllSelectionMode.ALL
+            session, (scope_id,), selection_mode=AllItems
         )
         assert rendered.payload.plate_paths == (scope_id,)
         with pytest.raises(FileNotFoundError, match="unavailable-plate"):
             orchestrator.initialize()
-        assert orchestrator.state is OrchestratorState.INIT_FAILED
+        assert orchestrator.state is OrchestratorInitFailed
 
 
 def test_drag_reorder_persists_the_dataset_order(tmp_path) -> None:
@@ -825,7 +824,7 @@ def test_progress_from_a_worker_thread_reaches_the_live_row(tmp_path) -> None:
             (scope_id,) = add_datasets(gui.session, tmp_path, "plate")
             orchestrator = gui.session.orchestrator(scope_id)
             orchestrator._initialized = True
-            orchestrator._state = OrchestratorState.EXECUTING
+            orchestrator._state = OrchestratorExecuting
             gui.session.batch.begin_batch((scope_id,))
             gui.session.batch.record_execution(scope_id, "execution-1")
             gui.settle()
@@ -951,7 +950,7 @@ def test_selected_code_document_replaces_only_the_selected_pipeline(
                 [selected],
                 {selected: [FunctionStep(name="New selected")]},
             ),
-            selection_mode=UiCodeDocumentSelectionMode.SELECTED,
+            selection_mode=SelectedItems,
         )
 
         assert result.applied
@@ -1044,7 +1043,7 @@ def test_adopting_a_global_config_preserves_a_dirty_dataset_override(tmp_path) -
 
 def _render(session, *scope_ids):
     return render_dataset_document(
-        session, tuple(scope_ids), selection_mode=SelectedAllSelectionMode.ALL
+        session, tuple(scope_ids), selection_mode=AllItems
     )
 
 
@@ -1182,7 +1181,7 @@ def test_a_pipeline_change_clears_stale_compilation_and_terminal_tracking(
 
     with caller_session() as session:
         (scope_id,) = add_datasets(session, tmp_path, "plate")
-        session.orchestrator(scope_id)._state = OrchestratorState.COMPLETED
+        session.orchestrator(scope_id)._state = OrchestratorCompleted
         session.set_compiled(
             scope_id,
             CompiledDataset(
@@ -1195,7 +1194,7 @@ def test_a_pipeline_change_clears_stale_compilation_and_terminal_tracking(
         )
         session.batch.begin_batch((scope_id,))
         session.batch.record_execution(scope_id, "execution-1")
-        session.batch.mark_terminal(scope_id, TerminalExecutionStatus.COMPLETE)
+        session.batch.mark_terminal(scope_id, ExecutionCompleted)
 
         apply_dataset_document(
             session,
@@ -1213,15 +1212,15 @@ def test_a_pipeline_change_clears_stale_compilation_and_terminal_tracking(
         assert scope_id not in session.compiled
         assert session.batch.execution_id(scope_id) is None
         assert session.batch.terminal_status(scope_id) is None
-        assert session.orchestrator(scope_id).state is OrchestratorState.READY
+        assert session.orchestrator(scope_id).state is OrchestratorReady
         assert _names(session.pipeline_steps(scope_id)) == ["Replacement"]
 
 
 def _failed(execution_id: str, detail: str) -> ExecutionCompletionPayload:
-    return TerminalExecutionStatus.FAILED.completion_payload(
+    return ExecutionFailed.completion_payload(
         execution_id=execution_id,
         execution_payload={
-            "status": TerminalExecutionStatus.FAILED.value,
+            "status": ExecutionFailed.name,
             "error": detail,
         },
     )
@@ -1233,7 +1232,7 @@ def _executing_dataset(gui, tmp_path) -> str:
     session.set_pipeline(scope_id, [FunctionStep(func=percentile_normalize, name="Failing")])
     orchestrator = session.orchestrator(scope_id)
     orchestrator._initialized = True
-    orchestrator._state = OrchestratorState.EXECUTING
+    orchestrator._state = OrchestratorExecuting
     session.compiled[scope_id] = object()
     _running(session, scope_id, "execution-1")
     gui.settle()
@@ -1261,20 +1260,20 @@ def test_dataset_document_edits_during_a_run_and_recovers_after_its_failure(
         session.finish_dataset_execution(_failed("execution-1", "expected"), scope_id)
         gui.settle()
         assert session.execution_state is ManagerExecutionState.IDLE
-        assert session.orchestrator(scope_id).state is OrchestratorState.EXEC_FAILED
+        assert session.orchestrator(scope_id).state is OrchestratorExecFailed
         assert session.batch.execution_id(scope_id) is None
 
         result = _apply(bridge, replacement)
         state = bridge.get_state_surface(
             UiStateSurfaceRequest(
                 surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
-                selection_mode=UiCodeDocumentSelectionMode.ALL.value,
+                selection_mode=AllItems.name,
             )
         )
 
         (row,) = state.payload["rows"]
         assert result.applied
-        assert row["orchestrator_state"] == OrchestratorState.READY.value
+        assert row["orchestrator_state"] == OrchestratorReady.name
         assert row["compiled"] is False
         assert row["execution_active"] is False
         assert row["execution_id"] is None
@@ -1312,7 +1311,7 @@ def test_a_failure_is_presented_only_after_the_run_finalizes(tmp_path) -> None:
             document = bridge.get_document(
                 UiCodeDocumentRequest(
                     document_id="window_code_document:pipeline_editor",
-                    selection_mode=UiCodeDocumentSelectionMode.SELECTED.value,
+                    selection_mode=SelectedItems.name,
                 )
             )
             return bridge.apply_document(
@@ -1345,10 +1344,10 @@ def test_a_failure_is_presented_only_after_the_run_finalizes(tmp_path) -> None:
                 time.sleep(0.01)
 
             assert presented == [(ManagerExecutionState.IDLE, None)]
-            assert session.orchestrator(scope_id).state is OrchestratorState.EXEC_FAILED
+            assert session.orchestrator(scope_id).state is OrchestratorExecFailed
             assert apply(replacement).applied
             assert _names(session.pipeline_steps(scope_id)) == ["Replacement"]
-            assert session.orchestrator(scope_id).state is OrchestratorState.READY
+            assert session.orchestrator(scope_id).state is OrchestratorReady
             assert scope_id not in session.compiled
         finally:
             WindowManager.unregister(window_id, editor)
@@ -1368,7 +1367,7 @@ def test_stop_completion_resets_the_force_kill_state(tmp_path, monkeypatch) -> N
         assert session.execution_state is ManagerExecutionState.FORCE_KILL_READY
 
         session.finish_dataset_execution(
-            TerminalExecutionStatus.CANCELLED.completion_payload(
+            ExecutionCancelled.completion_payload(
                 execution_id="execution-1", execution_payload={}
             ),
             scope_id,
@@ -1424,7 +1423,7 @@ def test_a_produced_output_dataset_selects_prepared_replay_once(
         (source,) = add_datasets(session, tmp_path, "source")
         output_root = str(tmp_path / "produced")
         completion = ExecutionCompletionPayload(
-            status=TerminalExecutionStatus.COMPLETE,
+            status=ExecutionCompleted,
             execution_id="produced",
             results={},
             output_dataset=ExecutionOutputSummary(
@@ -1448,7 +1447,7 @@ def test_a_produced_output_dataset_selects_prepared_replay_once(
         _running(session, source, "produced-again")
         session.finish_dataset_execution(
             ExecutionCompletionPayload(
-                status=TerminalExecutionStatus.COMPLETE,
+                status=ExecutionCompleted,
                 execution_id="produced-again",
                 results={},
                 output_dataset=completion.output_dataset,

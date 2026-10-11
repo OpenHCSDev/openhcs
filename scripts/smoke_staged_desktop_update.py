@@ -13,7 +13,8 @@ from packaging.version import Version
 
 from openhcs.desktop.update_worker import (
     DesktopUpdatePlan,
-    DesktopUpdateProgressAction,
+    DesktopUpdateFailureResponse,
+    ExitAfterFailedUpdate,
     DesktopUpdateProgressReporterABC,
     ResolvedProcessLaunchSpec,
     _run_update,
@@ -27,9 +28,9 @@ class _ConsoleProgress(DesktopUpdateProgressReporterABC):
     def output(self, message: str) -> None:
         print(message, file=sys.stderr, flush=True)
 
-    def failure(self, message: str) -> DesktopUpdateProgressAction:
+    def failure(self, message: str) -> type[DesktopUpdateFailureResponse]:
         print(f"FAILURE: {message}", file=sys.stderr, flush=True)
-        return DesktopUpdateProgressAction.EXIT
+        return ExitAfterFailedUpdate
 
     def complete(self) -> None:
         print("COMPLETE", file=sys.stderr, flush=True)

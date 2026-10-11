@@ -11,6 +11,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, ClassVar
 
+from python_introspect import registered_class_from_key
+
 from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
@@ -24,19 +26,37 @@ from openhcs.core.source_bindings import (
     MetadataExtractionRule,
     MetadataSelector,
     MetadataSource,
+    FromFileName,
+    FromFolderName,
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
     PairByMetadata,
     PairByOrder,
     SourceSetPairing,
+    BroadcastSource,
+    FromPipelineStart,
+    MatchedSource,
+    PathIsImage,
+    PathIsTif,
+    PrimaryPlaneRole,
+    SourceArtifactRole,
     SourceBindingOrigin,
+    SourceExtension,
+    SourceFileName,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceProjectionRole,
     SourceSelector,
     SourceSetRole,
+    TextContains,
+    TextContainsRegex,
+    TextDoesNotContain,
+    TextEquals,
+    TextEndsWith,
+    TextMatchType,
+    TextStartsWith,
 )
 from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_matching import source_metadata_component
@@ -83,88 +103,32 @@ _SOURCE_FILTER_SUBJECT_PATTERN = re.compile(
 _SOURCE_FILTER_TOKEN_PATTERN = re.compile(r'\s*(\(|\)|"(?:\\.|[^"\\])*"|[^\s()]+)')
 
 
-class CellProfilerSourceFilterSubject(Enum):
-    """CellProfiler filter subject translated to one generic subject."""
-
-    def __new__(cls, literal: str, subject: SourceFilterSubject):
-        member = object.__new__(cls)
-        member._value_ = literal
-        member.subject = subject
-        return member
-
-    FILE = ("file", SourceFilterSubject.FILE)
-    DIRECTORY = ("directory", SourceFilterSubject.DIRECTORY)
-    EXTENSION = ("extension", SourceFilterSubject.EXTENSION)
-
-    @classmethod
-    def from_literal(cls, value: str) -> "CellProfilerSourceFilterSubject":
-        normalized = value.strip().casefold()
-        for member in cls:
-            if member.value == normalized:
-                return member
-        raise ValueError(f"Unsupported source filter subject: {value!r}.")
+_CELLPROFILER_FILTER_OPERATORS: Mapping[str, type[SourceFilterMatchType]] = {
+    "contain": TextContains,
+    "containregexp": TextContainsRegex,
+    "eq": TextEquals,
+    "startwith": TextStartsWith,
+    "endwith": TextEndsWith,
+    "isimage": PathIsImage,
+    "istif": PathIsTif,
+}
+"""CellProfiler's filter-operator literals and the match each spells."""
 
 
-class CellProfilerSourceFilterOperator(Enum):
-    """CellProfiler filter operator translated to generic positive/negative forms."""
-
-    def __new__(
-        cls,
-        literal: str,
-        match_type: SourceFilterMatchType,
-        negated_match_type: SourceFilterMatchType | None,
-    ):
-        member = object.__new__(cls)
-        member._value_ = literal
-        member.match_type = match_type
-        member.negated_match_type = negated_match_type
-        return member
-
-    CONTAINS = (
-        "contain",
-        SourceFilterMatchType.CONTAINS,
-        SourceFilterMatchType.DOES_NOT_CONTAIN,
-    )
-    CONTAINS_REGEX = (
-        "containregexp",
-        SourceFilterMatchType.CONTAINS_REGEX,
-        SourceFilterMatchType.DOES_NOT_CONTAIN_REGEX,
-    )
-    EQUALS = (
-        "eq",
-        SourceFilterMatchType.EQUALS,
-        SourceFilterMatchType.DOES_NOT_EQUAL,
-    )
-    STARTS_WITH = (
-        "startwith",
-        SourceFilterMatchType.STARTS_WITH,
-        SourceFilterMatchType.DOES_NOT_START_WITH,
-    )
-    ENDS_WITH = (
-        "endwith",
-        SourceFilterMatchType.ENDS_WITH,
-        SourceFilterMatchType.DOES_NOT_END_WITH,
-    )
-    IS_IMAGE = ("isimage", SourceFilterMatchType.IS_IMAGE, None)
-    IS_TIF = ("istif", SourceFilterMatchType.IS_TIF, None)
-
-    @classmethod
-    def from_literal(cls, value: str) -> "CellProfilerSourceFilterOperator":
-        normalized = value.strip().casefold()
-        for member in cls:
-            if member.value == normalized:
-                return member
-        raise ValueError(f"Unsupported source filter operator: {value!r}.")
-
-    def generic_match_type(self, *, negated: bool) -> SourceFilterMatchType:
-        if not negated:
-            return self.match_type
-        if self.negated_match_type is None:
-            raise ValueError(
-                "Unsupported source filter operator/negation pair: "
-                f"{self.value!r}, negated=True."
-            )
-        return self.negated_match_type
+def _cellprofiler_filter_match(
+    operator_literal: str, *, negated: bool
+) -> type[SourceFilterMatchType]:
+    match_type = _CELLPROFILER_FILTER_OPERATORS.get(operator_literal)
+    if match_type is None:
+        raise ValueError(f"Unsupported source filter operator: {operator_literal!r}.")
+    if not negated:
+        return match_type
+    if not issubclass(match_type, TextMatchType):
+        raise ValueError(
+            "Unsupported source filter operator/negation pair: "
+            f"{operator_literal!r}, negated=True."
+        )
+    return match_type.negation()
 
 
 class CellProfilerSourceImageType(Enum):
@@ -174,7 +138,7 @@ class CellProfilerSourceImageType(Enum):
         cls,
         literal: str,
         artifact_kind: type[ArtifactType],
-        projection_role: SourceProjectionRole,
+        projection_role: type[SourceProjectionRole],
         load_as_monochrome: bool,
         load_as_mask: bool,
         source_channel_axis: int | None,
@@ -193,7 +157,7 @@ class CellProfilerSourceImageType(Enum):
     GRAYSCALE = (
         "grayscale image",
         ImageArtifactType,
-        SourceProjectionRole.PRIMARY_PLANE,
+        PrimaryPlaneRole,
         True,
         False,
         None,
@@ -202,7 +166,7 @@ class CellProfilerSourceImageType(Enum):
     COLOR = (
         "color image",
         ImageArtifactType,
-        SourceProjectionRole.PRIMARY_PLANE,
+        PrimaryPlaneRole,
         False,
         False,
         -1,
@@ -211,7 +175,7 @@ class CellProfilerSourceImageType(Enum):
     BINARY_IMAGE = (
         "binary image",
         ImageArtifactType,
-        SourceProjectionRole.PRIMARY_PLANE,
+        PrimaryPlaneRole,
         True,
         True,
         None,
@@ -220,7 +184,7 @@ class CellProfilerSourceImageType(Enum):
     BINARY_MASK = (
         "binary mask",
         ImageArtifactType,
-        SourceProjectionRole.PRIMARY_PLANE,
+        PrimaryPlaneRole,
         True,
         True,
         None,
@@ -229,7 +193,7 @@ class CellProfilerSourceImageType(Enum):
     MASK = (
         "mask",
         ImageArtifactType,
-        SourceProjectionRole.PRIMARY_PLANE,
+        PrimaryPlaneRole,
         True,
         True,
         None,
@@ -238,7 +202,7 @@ class CellProfilerSourceImageType(Enum):
     ILLUMINATION_FUNCTION = (
         "illumination function",
         ImageArtifactType,
-        SourceProjectionRole.SOURCE_ARTIFACT,
+        SourceArtifactRole,
         False,
         False,
         None,
@@ -247,7 +211,7 @@ class CellProfilerSourceImageType(Enum):
     OBJECTS = (
         "objects",
         ObjectLabelsArtifactType,
-        SourceProjectionRole.SOURCE_ARTIFACT,
+        SourceArtifactRole,
         False,
         False,
         None,
@@ -266,9 +230,9 @@ class CellProfilerSourceImageType(Enum):
         self,
         alias: str,
         selector: SourceSelector,
-        origin: SourceBindingOrigin,
+        origin: type[SourceBindingOrigin],
         *,
-        source_set_role: SourceSetRole,
+        source_set_role: type[SourceSetRole],
         explicit_source: ImagePlaneSource | None = None,
     ) -> NamedSourceBinding:
         return NamedSourceBinding(
@@ -430,23 +394,26 @@ def _source_filter_clause_from_parts(
     negated: bool,
     value: str | None,
 ) -> SourceFilterClause:
-    subject = CellProfilerSourceFilterSubject.from_literal(subject_literal).subject
+    subject = registered_class_from_key(
+        SourceFilterSubject, subject_literal.strip().casefold()
+    )
     normalized_operator = operator_literal.casefold()
     if (
-        subject is SourceFilterSubject.EXTENSION
+        subject is SourceExtension
         and not negated
         and normalized_operator.startswith("is")
         and normalized_operator not in {"isimage", "istif"}
     ):
         return SourceFilterClause(
             subject=subject,
-            match_type=SourceFilterMatchType.EQUALS,
+            match_type=TextEquals,
             value=f".{normalized_operator.removeprefix('is')}",
         )
-    operator = CellProfilerSourceFilterOperator.from_literal(normalized_operator)
     return SourceFilterClause(
         subject=subject,
-        match_type=operator.generic_match_type(negated=negated),
+        match_type=_cellprofiler_filter_match(
+            normalized_operator.strip(), negated=negated
+        ),
         value=value,
     )
 
@@ -510,14 +477,11 @@ def _images_filters(module: ModuleBlock) -> tuple[SourceFilterClause, ...]:
     )
     filtering_mode = module.get_setting("Filter images?", "").strip().casefold()
     if "images" in filtering_mode and not any(
-        clause.match_type is SourceFilterMatchType.IS_IMAGE for clause in filters
+        clause.match_type is PathIsImage for clause in filters
     ):
         filters.insert(
             0,
-            SourceFilterClause(
-                subject=SourceFilterSubject.FILE,
-                match_type=SourceFilterMatchType.IS_IMAGE,
-            ),
+            SourceFilterClause(subject=SourceFileName, match_type=PathIsImage),
         )
     return tuple(dict.fromkeys(filters))
 
@@ -559,13 +523,13 @@ _LOAD_IMAGES_FOLDER_PATTERN = SettingNameFamily(
 )
 
 
-def _load_images_match_type(module: ModuleBlock) -> SourceFilterMatchType:
+def _load_images_match_type(module: ModuleBlock) -> type[SourceFilterMatchType]:
     mode = module.get_setting("How do you want to load these files?", "")
     normalized = mode.strip().casefold()
     if not normalized or "exact" in normalized:
-        return SourceFilterMatchType.CONTAINS
+        return TextContains
     if "regular" in normalized or "regex" in normalized:
-        return SourceFilterMatchType.CONTAINS_REGEX
+        return TextContainsRegex
     raise ValueError(f"Unsupported LoadImages matching mode: {mode!r}.")
 
 
@@ -578,7 +542,7 @@ def _load_images_filters(
     if match_text:
         filters.append(
             SourceFilterClause(
-                subject=SourceFilterSubject.FILE,
+                subject=SourceFileName,
                 match_type=_load_images_match_type(module),
                 value=decode_cellprofiler_setting_literal(match_text),
             )
@@ -591,23 +555,23 @@ def _load_images_filters(
         if exclusion:
             filters.append(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.DOES_NOT_CONTAIN,
+                    subject=SourceFileName,
+                    match_type=TextDoesNotContain,
                     value=decode_cellprofiler_setting_literal(exclusion),
                 )
             )
     return tuple(filters)
 
 
-def _load_images_metadata_sources(value: str) -> tuple[MetadataSource, ...]:
+def _load_images_metadata_sources(value: str) -> tuple[type[MetadataSource], ...]:
     normalized = value.strip().casefold()
     if not normalized or normalized == "none":
         return ()
-    sources: list[MetadataSource] = []
+    sources: list[type[MetadataSource]] = []
     if "file" in normalized or "both" in normalized:
-        sources.append(MetadataSource.FILE_NAME)
+        sources.append(FromFileName)
     if any(token in normalized for token in ("folder", "subfolder", "path", "both")):
-        sources.append(MetadataSource.FOLDER_NAME)
+        sources.append(FromFolderName)
     if not sources:
         raise ValueError(f"Unsupported LoadImages metadata extraction mode: {value!r}.")
     return tuple(dict.fromkeys(sources))
@@ -615,11 +579,11 @@ def _load_images_metadata_sources(value: str) -> tuple[MetadataSource, ...]:
 
 def _load_images_metadata_pattern(
     block: Sequence[ModuleSetting],
-    source: MetadataSource,
+    source: type[MetadataSource],
 ) -> str:
     family = (
         _LOAD_IMAGES_FOLDER_PATTERN
-        if source is MetadataSource.FOLDER_NAME
+        if source is FromFolderName
         else _LOAD_IMAGES_FILE_PATTERN
     )
     pattern = decode_cellprofiler_setting_literal(
@@ -628,7 +592,7 @@ def _load_images_metadata_pattern(
     if not pattern or pattern.strip().casefold() == "none":
         raise ValueError(
             "LoadImages metadata extraction requires a non-empty "
-            f"{source.value} regular expression."
+            f"{source.name} regular expression."
         )
     return pattern
 
@@ -668,8 +632,8 @@ class LoadImagesModule(SourceSetupCellProfilerModule):
                 source_type.binding(
                     alias,
                     selector,
-                    SourceBindingOrigin.PIPELINE_START,
-                    source_set_role=SourceSetRole.MATCHED,
+                    FromPipelineStart,
+                    source_set_role=MatchedSource,
                 )
             )
             for source in _load_images_metadata_sources(
@@ -711,11 +675,11 @@ class CellProfilerMetadataPatternBlock:
     """Typed access to one CellProfiler path-metadata regex block."""
 
     block: Sequence[ModuleSetting]
-    source: MetadataSource
+    source: type[MetadataSource]
 
     @property
     def pattern(self) -> str:
-        if self.source is MetadataSource.FOLDER_NAME:
+        if self.source is FromFolderName:
             value = block_setting_value(
                 self.block,
                 "Regular expression to extract from folder name",
@@ -732,7 +696,7 @@ class CellProfilerMetadataPatternBlock:
         if not self.pattern:
             raise ValueError(
                 "CellProfiler path metadata extraction requires a non-empty "
-                f"{self.source.value} regular expression."
+                f"{self.source.name} regular expression."
             )
         return self.pattern
 
@@ -840,14 +804,14 @@ class MetadataModule(SourceSetupCellProfilerModule):
             return True
 
     class ExtractionSource(Enum):
-        def __new__(cls, literal: str, source: MetadataSource):
+        def __new__(cls, literal: str, source: type[MetadataSource]):
             member = object.__new__(cls)
             member._value_ = literal
             member.source = source
             return member
 
-        FILE_NAME = ("File name", MetadataSource.FILE_NAME)
-        FOLDER_NAME = ("Folder name", MetadataSource.FOLDER_NAME)
+        FILE_NAME = ("File name", FromFileName)
+        FOLDER_NAME = ("Folder name", FromFolderName)
 
     class ExtractionScope(str, Enum):
         ALL_IMAGES = "All images"
@@ -1316,10 +1280,10 @@ class NamesAndTypesModule(SourceSetupCellProfilerModule):
             binding = source_type.binding(
                 alias,
                 selector,
-                SourceBindingOrigin.PIPELINE_START,
-                source_set_role=SourceSetRole.MATCHED,
+                FromPipelineStart,
+                source_set_role=MatchedSource,
             )
-            if source_type.projection_role is SourceProjectionRole.PRIMARY_PLANE:
+            if source_type.projection_role is PrimaryPlaneRole:
                 channel_identity = _selector_component_identity(
                     selector,
                     colour_axis,
@@ -1364,11 +1328,11 @@ class NamesAndTypesModule(SourceSetupCellProfilerModule):
             binding = source_type.binding(
                 alias,
                 SourceSelector(),
-                SourceBindingOrigin.PIPELINE_START,
-                source_set_role=SourceSetRole.BROADCAST,
+                FromPipelineStart,
+                source_set_role=BroadcastSource,
                 explicit_source=explicit_source,
             )
-            if source_type.projection_role is SourceProjectionRole.PRIMARY_PLANE:
+            if source_type.projection_role is PrimaryPlaneRole:
                 while str(next_channel_index) in used_channel_values:
                     next_channel_index += 1
                 channel_identity = ComponentSelector(

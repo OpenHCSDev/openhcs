@@ -39,7 +39,7 @@ def create_hosted_invocation_observer(
             "schema_version": "openhcs.mcp.audit.v2",
             "event": "capability_invocation",
             "timestamp_unix": time.time(),
-            "authentication_mode": settings.authentication_mode.value,
+            "authentication_mode": settings.authentication_mode.name,
             "capability": capability.name,
             "transport": CapabilityTransport.HOSTED_STREAMABLE_HTTP.value,
             "outcome": outcome.value,
@@ -163,7 +163,7 @@ def register_public_http_routes(
             {
                 "status": "ok",
                 "transport": CapabilityTransport.HOSTED_STREAMABLE_HTTP.value,
-                "authentication_mode": settings.authentication_mode.value,
+                "authentication_mode": settings.authentication_mode.name,
             }
         )
 

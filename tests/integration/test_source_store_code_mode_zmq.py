@@ -17,13 +17,13 @@ from zmqruntime.execution.responses import (
 )
 
 from openhcs.constants.constants import Backend
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazyVFSConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     PipelineConfig,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
@@ -35,10 +35,10 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextEquals,
 )
 from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.core.steps.function_step import FunctionStep
@@ -90,8 +90,8 @@ def _binding(alias: str, file_name: str | None = None) -> NamedSourceBinding:
         selector = SourceSelector(
             filters=(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.EQUALS,
+                    subject=SourceFileName,
+                    match_type=TextEquals,
                     value=file_name,
                 ),
             ),
@@ -130,7 +130,7 @@ def _source_step() -> FunctionStep:
         name="Normalize named source store",
         func=stack_percentile_normalize,
         processing_config=LazyProcessingConfig(
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=LazyStepSourceBindingsConfig(enabled=True),
     )
@@ -149,7 +149,7 @@ def _code_mode_round_trip(
             global_output_folder=output_root,
         ),
         vfs_config=LazyVFSConfig(
-            materialization_backend=MaterializationBackend.DISK,
+            materialization_backend=MaterializeToDisk,
         ),
     )
     payload = PlateManagerCodeDocumentAuthority.from_values(

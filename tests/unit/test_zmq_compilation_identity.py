@@ -29,7 +29,7 @@ def _payload(config_params=None):
     )
 
 
-@pytest.mark.parametrize("scope", tuple(ZMQRuntimeObservationExportScope))
+@pytest.mark.parametrize("scope", tuple(ZMQRuntimeObservationExportScope.__registry__.values()))
 @pytest.mark.parametrize("path", ("/evidence/first.pkl.gz", "/evidence/second.pkl.gz"))
 def test_observation_options_change_request_but_not_compilation_identity(scope, path):
     options = ZMQAuxiliaryExecutionParams(

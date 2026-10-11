@@ -51,7 +51,7 @@ from openhcs.runtime.zmq_execution_observation import (
 )
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
-    ZMQRuntimeObservationExportScope,
+    ExportRuntimeOutcomes,
 )
 
 
@@ -319,7 +319,7 @@ def test_ordinary_execution_can_export_outcomes_without_value_observation(
     ).with_auxiliary_params(
         ZMQAuxiliaryExecutionParams(
             runtime_observation_export_path=export_path,
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+            runtime_observation_export_scope=ExportRuntimeOutcomes,
         )
     )
 
@@ -344,7 +344,7 @@ def test_ordinary_execution_can_export_outcomes_without_value_observation(
     assert completed.observation is None
     assert (
         completed.receipt.observation_export_scope
-        is ZMQRuntimeObservationExportScope.OUTCOMES
+        is ExportRuntimeOutcomes
     )
     assert {
         BenchmarkPhase.COMPILE_OPENHCS,
@@ -394,7 +394,7 @@ def test_measured_repetitions_share_one_owned_ordinary_server(tmp_path: Path) ->
                         evidence_dir / "observation.pkl.gz"
                     ),
                     runtime_observation_export_scope=(
-                        ZMQRuntimeObservationExportScope.OUTCOMES
+                        ExportRuntimeOutcomes
                     ),
                 )
             )
@@ -473,7 +473,7 @@ def test_well_throughput_wrapper_runs_a_synthetic_ordinary_plate(
     assert receipt.subject_id == str(source_identity)
     assert receipt.execution_subject_id == str(plate)
     assert receipt.expected_axis_count == receipt.observed_axis_count == 1
-    assert receipt.observation_export_scope is ZMQRuntimeObservationExportScope.OUTCOMES
+    assert receipt.observation_export_scope is ExportRuntimeOutcomes
 
 
 def test_paper_two_worker_geometry_uses_one_ordinary_measured_run(
@@ -566,7 +566,7 @@ def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
     assert receipt.execution_subject_id == str(plate)
     assert receipt.run_id == "ordinary-cli"
     assert receipt.pipeline_name == "pipeline"
-    assert receipt.observation_export_scope is ZMQRuntimeObservationExportScope.OUTCOMES
+    assert receipt.observation_export_scope is ExportRuntimeOutcomes
     # The CLI measures on its own client, so client phases precede the server's.
     assert BenchmarkPhase.SERVER_PIPELINE_JOB in {
         timing.phase for timing in receipt.phase_timings

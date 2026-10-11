@@ -9,7 +9,7 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from objectstate.lazy_factory import ensure_global_config_context
 
-from openhcs.constants import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -86,7 +86,7 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
             FunctionStep(
                 func=identity,
                 processing_config=LazyProcessingConfig(
-                    input_source=InputSource.PIPELINE_START
+                    input_source=ReadPipelineStart
                 ),
             ),
             FunctionStep(func=assemble_stack_cpu),

@@ -24,6 +24,7 @@ from openhcs.constants.constants import Backend
 from openhcs.core.axes import Axis
 from openhcs.core.dataset_sources.choice import DatasetSourceChoice
 from openhcs.core.dataset_sources.discovery import domain_registry_config
+from openhcs.core.source_path_identity import absolute_source_path
 from openhcs.core.dataset_sources.interfaces import (
     FilenameParser,
     MetadataHandler,
@@ -33,7 +34,7 @@ from openhcs.core.dataset_sources.interfaces import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from openhcs.core.config import MaterializationBackend, PipelineConfig
+    from openhcs.core.config import PipelineConfig
     from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
     from openhcs.core.config import SourceBindingsConfig
 
@@ -315,24 +316,6 @@ class DatasetSource(
     def initialize_workspace(self, dataset_root: Path, filemanager: FileManager) -> Path:
         """Prepare the dataset for reading and return its image directory."""
 
-    def get_required_backend(self) -> Optional["MaterializationBackend"]:
-        """The materialization backend this source requires, when it has one."""
-        from openhcs.core.config import MaterializationBackend
-
-        if len(self.compatible_backends) == 1:
-            backend_value = self.compatible_backends[0].value
-            materialization_values = {
-                materialization_backend.value
-                for materialization_backend in MaterializationBackend
-            }
-            if backend_value not in materialization_values:
-                raise RuntimeError(
-                    f"{self.source_name} declares single backend "
-                    f"{backend_value!r}, but it is not a materialization backend."
-                )
-            return MaterializationBackend(backend_value)
-        return None
-
     def available_backends(self, dataset_root: Union[str, Path]) -> List[Backend]:
         """Backends available for this dataset (default: every compatible one)."""
         del dataset_root
@@ -360,17 +343,17 @@ class DatasetSource(
 
         from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 
-        resolved_root = Path(dataset_root).resolve()
+        root = absolute_source_path(dataset_root)
         registered = filemanager.registry.get(Backend.VIRTUAL_WORKSPACE.value)
         if (
             isinstance(registered, VirtualWorkspaceBackend)
-            and registered.plate_root.resolve() == resolved_root
+            and absolute_source_path(registered.plate_root) == root
             and registered.metadata_config == METADATA_CONFIG
         ):
             return
 
         backend = VirtualWorkspaceBackend(
-            plate_root=resolved_root, metadata_config=METADATA_CONFIG
+            plate_root=root, metadata_config=METADATA_CONFIG
         )
         filemanager.register_backend(Backend.VIRTUAL_WORKSPACE.value, backend)
         logger.info(f"Registered virtual workspace backend for {dataset_root}")

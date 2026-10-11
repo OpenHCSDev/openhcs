@@ -22,11 +22,11 @@ from openhcs.authoring.session.compilation import (
 )
 from openhcs.authoring.session.events import ErrorReported, StatusReported
 from openhcs.core.execution_state import (
-    TerminalExecutionStatus,
+    ExecutionFailed,
     parse_terminal_status,
 )
 from openhcs.core.debug import DebugExecutionConfig
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import OrchestratorExecFailed
 from openhcs.runtime.zmq_execution_client import ZMQExecutionRequestBuilder
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
@@ -133,8 +133,8 @@ class ExecutionSubmission:
         error_text = response.require_failure_text(f"{label} submission")
         logger.error("%s submission failed for %s: %s", label, scope_id, error_text)
         session.publish(ErrorReported(f"Submission failed for {scope_id}: {error_text}"))
-        session.batch.mark_terminal(scope_id, TerminalExecutionStatus.FAILED)
-        session.set_dataset_state(scope_id, OrchestratorState.EXEC_FAILED)
+        session.batch.mark_terminal(scope_id, ExecutionFailed)
+        session.set_dataset_state(scope_id, OrchestratorExecFailed)
         return None
 
     def follow(self, execution_id: str, scope_id: str) -> None:
@@ -177,7 +177,7 @@ class ExecutionSubmission:
         def on_status_error(error_id: str, message: str) -> None:
             if current(error_id):
                 session.finish_dataset_execution(
-                    TerminalExecutionStatus.FAILED.completion_payload(
+                    ExecutionFailed.completion_payload(
                         execution_id=error_id,
                         execution_payload={MessageFields.ERROR: message},
                     ),

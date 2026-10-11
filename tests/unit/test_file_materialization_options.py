@@ -22,7 +22,8 @@ from openhcs.processing.materialization.core import (
 )
 from openhcs.processing.materialization.options import (
     FileOutputOptions,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
+    NameBySourceIdentity,
     SourceOptions,
 )
 from tests.materialization_plans import output_plan as materialization_output_plan
@@ -43,7 +44,7 @@ def test_image_and_bundle_options_extend_existing_writer_options() -> None:
     assert issubclass(image_options, SourceOptions)
     assert issubclass(bundle_options, FileOutputOptions)
     assert bundle_options().filename_identity is (
-        MaterializedFilenameIdentity.ARTIFACT_NAME
+        NameByArtifactName
     )
 
 
@@ -70,7 +71,7 @@ def test_source_identity_image_file_projects_addressable_stack_planes() -> None:
     spec = MaterializationSpec(
         image_options(
             filename_suffix="_saved.npy",
-            filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+            filename_identity=NameBySourceIdentity,
         )
     )
     filemanager = FileManager({"memory": MemoryStorageBackend()})
