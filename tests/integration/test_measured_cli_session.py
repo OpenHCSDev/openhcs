@@ -78,7 +78,34 @@ def _source_state(root: Path) -> dict[str, tuple]:
     return state
 
 
+# Everyone may not create, change or delete entries; inherited by the tree.
+# Write rights are named one by one: the generic W also denies SYNCHRONIZE,
+# which every open (reads included) requests.
+WINDOWS_READ_ONLY_ACE = "*S-1-1-0:(OI)(CI)(WD,AD,WEA,WA,D,DC)"
+
+if sys.platform == "win32":
+    # A console's Ctrl+C cannot be sent to one process; Ctrl+Break can, to a
+    # child started in its own process group.
+    INTERRUPT_LAUNCH = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+    INTERRUPT_SIGNAL = signal.CTRL_BREAK_EVENT
+else:
+    INTERRUPT_LAUNCH = {}
+    INTERRUPT_SIGNAL = signal.SIGINT
+
+
 def _set_writable(root: Path, writable: bool) -> None:
+    """Make ``root`` and its tree writable again, or genuinely not writable.
+
+    Windows ignores the read-only attribute on directories (and os.access
+    ignores ACLs), so there an inherited deny ACE is what refuses writes.
+    """
+
+    if sys.platform == "win32":
+        change = (
+            ("/remove:d", "*S-1-1-0") if writable else ("/deny", WINDOWS_READ_ONLY_ACE)
+        )
+        subprocess.run(("icacls", str(root), *change), check=True, capture_output=True)
+        return
     for path in (root, *root.rglob("*")):
         mode = path.stat().st_mode
         path.chmod(mode | 0o200 if writable else mode & ~0o222)
@@ -178,6 +205,7 @@ def test_ctrl_c_stops_the_run_and_its_server(tmp_path: Path) -> None:
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
         text=True,
+        **INTERRUPT_LAUNCH,
     )
     stderr_lines: list[str] = []
     try:
@@ -188,7 +216,7 @@ def test_ctrl_c_stops_the_run_and_its_server(tmp_path: Path) -> None:
         else:
             pytest.fail("".join(stderr_lines)[-4000:])
         time.sleep(1.0)
-        process.send_signal(signal.SIGINT)
+        process.send_signal(INTERRUPT_SIGNAL)
         _stdout, rest = process.communicate(timeout=RUN_DEADLINE_SECONDS)
     finally:
         if process.poll() is None:
