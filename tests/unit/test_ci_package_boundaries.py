@@ -636,10 +636,11 @@ def test_candidate_builder_installs_outside_the_source_checkout() -> None:
 
 def test_installed_test_runner_removes_checkout_paths_from_parent_and_children(
     monkeypatch,
-    tmp_path: Path,
 ) -> None:
     external_path = REPO_ROOT / "external" / "pyqt-reactive" / "src"
-    safe_path = tmp_path / "installed"
+    # Outside the checkout by construction; ``tmp_path`` may live under it
+    # when ``--basetemp`` points into the worktree.
+    safe_path = REPO_ROOT.parent / f"{REPO_ROOT.name}-installed"
     monkeypatch.setattr(
         sys,
         "path",

@@ -1002,8 +1002,6 @@ def save_images(
 
     Args:
         image_to_save: Image or object labels written by the configured save step.
-        context: Unused; runtime context injection is disabled for this
-            variant. Leave as ``None``.
     """
 
     del (
