@@ -76,6 +76,12 @@ def test_grid_placement_is_declared_only_by_grid_addressed_axes() -> None:
                 base.id if isinstance(base, ast.Name) else getattr(base, "attr", "")
                 for base in node.bases
             }
-            if declares and node.name != "GridAddressed" and "GridAddressed" not in bases:
+            # A pyqt-reactive GridAddressing adapter forwards to a GridAddressed
+            # axis; it lays the axis out and declares no placement of its own.
+            if (
+                declares
+                and node.name != "GridAddressed"
+                and not bases & {"GridAddressed", "GridAddressing"}
+            ):
                 offenders.append(f"{path.relative_to(ROOT)}:{node.name}")
     assert offenders == []
