@@ -6,6 +6,7 @@ from typing import ClassVar
 
 from openhcs.core.projected_image_output import SourceProjectedImageOutput
 from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.runtime_image_values import ImagePayload
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.axes import AxisFamily, AxisRole, TileAxis
 
@@ -34,7 +35,7 @@ class FittedIlluminationFieldOutput(SourceProjectedImageOutput):
     @classmethod
     def validate_observation_domain(cls, source: RuntimeArrayData) -> None:
         """Reject mislabeled metadata-backed ensembles before fitting."""
-        metadata = source.metadata
+        metadata = ImagePayload.of(source).metadata
         family = AxisFamily.active()
         retained_axes = tuple(
             family.named(name) for name in metadata.retained_plane_component_values()
