@@ -69,7 +69,14 @@ def test_authored_beginner_costes_flag_survives_public_lowering_and_roundtrip():
     )
     steps, _config = import_cellprofiler_pipeline(cppipe)
     original = _colocalization_kwargs(steps)
-    assert len(original) == 4
+    # One invocation keeps the complete object and image rosters (#536).
+    assert len(original) == 1
+    assert original[0]["select_object_sets_to_measure"] == (
+        "Cells",
+        "Cytoplasm",
+        "Nuclei",
+        "Nucleoli",
+    )
     assert all(item["do_costes"] is False for item in original)
     source = FunctionStepTransportAuthority.source_from_pipeline(steps)
     namespace = {}

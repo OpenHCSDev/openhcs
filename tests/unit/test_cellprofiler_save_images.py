@@ -723,7 +723,7 @@ def test_save_images_keeps_declared_relative_paths_for_single_axis_execution() -
     context = ProcessingContext(axis_id="A01")
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
 
-    assert scope.project(PurePosixPath("exports/Saved.tiff"), context) == (
+    assert scope.scoped_path(PurePosixPath("exports/Saved.tiff"), context) == (
         PurePosixPath("exports/Saved.tiff")
     )
 

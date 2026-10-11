@@ -132,7 +132,7 @@ def test_real_primary_callable_declumps_through_selected_signed_watershed(
         )
     ).astype(np.float32)
     original_image = image.copy()
-    returned_image, measurements, payload = identify_primary_objects(
+    returned_image, measurements, payload, *_diagnostic_planes = identify_primary_objects(
         image,
         min_diameter=4,
         max_diameter=14,

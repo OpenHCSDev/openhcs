@@ -430,13 +430,15 @@ def test_measurement_output_separates_provenance_from_invocation_group_scope() -
         artifact_inputs=artifact_inputs,
     )
 
+    # Per-object measurements execute in their object invocation domain
+    # (#785); the image stays a provenance dependency only.
     assert output.relations == (
         ArtifactSpecRelation(artifact_inputs.specs[0].ref()),
         ArtifactSpecRelation(artifact_inputs.specs[1].ref()),
-        GroupLineageSourceRelation(artifact_inputs.specs[0].ref()),
+        GroupLineageSourceRelation(artifact_inputs.specs[1].ref()),
         ObjectMeasurementSubjectRelation(artifact_inputs.specs[1].ref()),
     )
-    assert output.group_scope_sources() == (artifact_inputs.specs[0].ref(),)
+    assert output.group_scope_sources() == (artifact_inputs.specs[1].ref(),)
     assert output.source_stack_scope_sources() == ()
 
 
@@ -1843,8 +1845,10 @@ def test_calculate_math_selects_measurements_by_nominal_feature_owner() -> None:
         "calculate_math_numerator_object",
         "calculate_math_denominator_object",
     }
-    assert calculation_output.group_scope_sources() == tuple(
-        spec.ref() for spec in selected_measurements
+    # The first required object operand owns Math's correlated row domain;
+    # the other operands stay bound through their own relations (94a634bdc).
+    assert calculation_output.group_scope_sources() == (
+        nuclei.for_plan_type(ArtifactInputPlan).ref(),
     )
     assert {
         relation.source

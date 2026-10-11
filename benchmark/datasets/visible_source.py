@@ -27,6 +27,8 @@ def resolve_visible_source_path(path: Path) -> Path:
     metadata sidecars.
     """
     source_path = Path(path).expanduser().resolve()
+    if not source_path.exists():
+        raise FileNotFoundError(f"Visible-source target does not exist: {source_path}")
     if _is_visible_path(source_path):
         return source_path
 

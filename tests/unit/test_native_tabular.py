@@ -15,11 +15,21 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseCell,
     _measurement_sparse_cell_values_equal,
 )
+from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
+from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     SpreadsheetDelimiter,
     SpreadsheetNanRepresentation,
     SpreadsheetFileSelection,
 )
+
+
+def _columnar(rows) -> MeasurementSparseColumnarRows:
+    """CSV export takes typed columnar rows; absent cells stay structural."""
+    names = tuple(dict.fromkeys(name for row in rows for name in row))
+    return MeasurementSparseColumnarRows.from_rows(
+        rows, fields=tuple(FieldSpec(name, required=False) for name in names)
+    )
 
 
 @pytest.mark.parametrize("delimiter", tuple(SpreadsheetDelimiter))
@@ -74,7 +84,7 @@ def test_csv_matches_standard_writer_with_explicit_nonfinite_values(delimiter, m
     rows = tuple({"index": index, "value": value} for index, value in enumerate(values))
     assert (
         SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
-            rows,
+            _columnar(rows),
             active_subjects=("Image",),
             delimiter=delimiter,
             nan_representation=mode,
@@ -83,7 +93,7 @@ def test_csv_matches_standard_writer_with_explicit_nonfinite_values(delimiter, m
     )
     assert (
         SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
-            tuple(UserDict(row) for row in rows),
+            _columnar(tuple(UserDict(row) for row in rows)),
             active_subjects=("Image",),
             delimiter=delimiter,
             nan_representation=mode,
@@ -105,7 +115,7 @@ def test_csv_matches_standard_writer_with_explicit_nonfinite_values(delimiter, m
 def test_empty_cells_and_missing_columns(rows, expected):
     assert (
         SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
-            rows,
+            _columnar(rows),
             active_subjects=("Image",),
             delimiter=SpreadsheetDelimiter.COMMA,
             nan_representation=SpreadsheetNanRepresentation.NAN,
@@ -121,7 +131,7 @@ def test_unicode_subclasses_are_not_stringified_again():
 
     assert (
         SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
-            ({Text("field"): Text("a,b")},),
+            _columnar(({Text("field"): Text("a,b")},)),
             active_subjects=("Image",),
             delimiter=SpreadsheetDelimiter.COMMA,
             nan_representation=SpreadsheetNanRepresentation.NAN,
@@ -151,7 +161,7 @@ def test_csv_normalizes_whole_row_before_stringification_and_retains_values():
 
     row.update(first=First(), second=Second(1))
     result = SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
-        (row,),
+        _columnar((row,)),
         active_subjects=("Image",),
         delimiter=SpreadsheetDelimiter.COMMA,
         nan_representation=SpreadsheetNanRepresentation.NAN,
@@ -170,7 +180,7 @@ def test_nonfinite_float_subclass_skips_its_stringification():
 
     assert (
         SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
-            ({"value": BecomesNan(1)},),
+            _columnar(({"value": BecomesNan(1)},)),
             active_subjects=("Image",),
             delimiter=SpreadsheetDelimiter.COMMA,
             nan_representation=SpreadsheetNanRepresentation.NAN,
@@ -182,14 +192,14 @@ def test_nonfinite_float_subclass_skips_its_stringification():
 def test_numeric_conversion_failure_does_not_poison_next_render():
     with pytest.raises(OverflowError):
         SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
-            ({"value": 10**500},),
+            _columnar(({"value": 10**500},)),
             active_subjects=("Image",),
             delimiter=SpreadsheetDelimiter.COMMA,
             nan_representation=SpreadsheetNanRepresentation.NAN,
         )
     assert (
         SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
-            ({"value": 1.0},),
+            _columnar(({"value": 1.0},)),
             active_subjects=("Image",),
             delimiter=SpreadsheetDelimiter.COMMA,
             nan_representation=SpreadsheetNanRepresentation.NAN,

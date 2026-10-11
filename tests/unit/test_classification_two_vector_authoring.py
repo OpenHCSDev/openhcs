@@ -14,6 +14,7 @@ import pytest
 from openhcs.agent.dto.pipeline import FunctionSpecRef, FunctionStepAddRequest, FunctionStepSpec
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
 from openhcs.core.function_patterns import normalize_function_pattern
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
@@ -427,8 +428,9 @@ def test_explicit_empty_rules_preserve_original_scalar_default(rules):
     bound = ClassifyObjectsSingleMeasurementModule.bind_runtime_inputs(request)
     np.testing.assert_array_equal(bound["measurement_values"], (9.0, 300.0))
     assert "measurement_values_by_rule" not in bound
+    # The single-measurement callable takes an ImagePayload (G3).
     image, rows = inspect.unwrap(classify_objects_single_measurement)(
-        request.current_image,
+        ImagePayloadMetadata().payload_with(request.current_image),
         measurement_feature="AreaShape_Area",
         classification_rules=rules,
         **bound,

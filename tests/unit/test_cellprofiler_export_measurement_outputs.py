@@ -190,7 +190,8 @@ def _export_context() -> ProcessingContext:
     context.microscope_handler = SimpleNamespace(
         source_bindings_still_required=lambda: None,
         metadata_handler=SimpleNamespace(
-            source_workspace_metadata_document=lambda _plate_path: None
+            source_workspace_root=Path,
+            source_workspace_metadata_document=lambda _plate_path: None,
         ),
     )
     return context

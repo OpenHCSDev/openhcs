@@ -154,6 +154,8 @@ def cellprofiler_terminal_artifact_specs(
 ) -> tuple[ArtifactSpec, ...]:
     """Return processing outputs not consumed or replaced later in a pipeline.
 
+    Inspection-only sidecars (QA checkpoints) are not pipeline results.
+
     The projection uses the same parsed module contracts and artifact context as
     :func:`import_cellprofiler_pipeline`.  Setup-module source declarations and
     consumer-local guesses therefore cannot become terminal processing outputs.
@@ -190,6 +192,8 @@ def cellprofiler_terminal_artifact_specs(
             for spec in later_unit.contract.artifact_outputs
         )
         for spec in unit.contract.artifact_outputs:
+            if spec.sidecar_role is not None and spec.sidecar_role.inspection_only:
+                continue
             input_ref = spec.ref().for_plan_type(ArtifactInputPlan)
             if input_ref in later_input_refs or input_ref in later_output_refs:
                 continue

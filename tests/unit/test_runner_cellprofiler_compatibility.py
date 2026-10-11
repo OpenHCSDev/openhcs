@@ -149,10 +149,7 @@ def test_cellprofiler_cppipe_parity_runner_accepts_local_cppipe(
 
 def test_native_reference_lookup_uses_visible_source_identity(
     tmp_path: Path,
-    monkeypatch,
 ) -> None:
-    visible_root = tmp_path / "visible_sources"
-    monkeypatch.setenv("OPENHCS_BENCHMARK_VISIBLE_SOURCE_ROOT", str(visible_root))
     dataset_path = tmp_path / ".cache" / "datasets" / "images"
     dataset_path.mkdir(parents=True)
     cppipe_path = tmp_path / "pipeline.cppipe"
@@ -217,6 +214,7 @@ def test_native_reference_lookup_separates_bounded_image_set_scope(
 ) -> None:
     cppipe_path = tmp_path / "pipeline.cppipe"
     cppipe_path.write_text(SOURCE_ONLY_CPIPE, encoding="utf-8")
+    (tmp_path / "images").mkdir()
     case = CellProfilerComparisonCase(
         name="ExampleBounded",
         dataset_path=tmp_path / "images",
@@ -271,6 +269,7 @@ def test_native_reference_lookup_separates_public_partition_filter_scope(
         ),
         encoding="utf-8",
     )
+    (tmp_path / "images").mkdir()
     case = CellProfilerComparisonCase(
         name="ExampleOneWell",
         dataset_path=tmp_path / "images",

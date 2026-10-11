@@ -889,14 +889,16 @@ class CallableContract(ArtifactPlanKeySelector):
     def __post_init__(self) -> None:
         """Capture the declared positional ABI once, before any returned values."""
         outputs = ArtifactSpecCollection(self.metadata.artifact_outputs)
+        # Return slots are positional. A declaration may repeat one spec in
+        # several slots (IdentifyTertiaryObjects with larger == smaller
+        # objects); resolving returned values requires unique refs.
         by_ref: dict[ArtifactSpecRef, ArtifactSpec] = {}
         for spec in outputs:
-            ref = spec.ref()
-            if ref in by_ref:
+            if by_ref.setdefault(spec.ref(), spec) != spec:
                 raise ValueError(
-                    f"Callable output ABI contains duplicate artifact ref {ref!r}."
+                    "Callable output ABI declares conflicting specs for artifact "
+                    f"ref {spec.ref()!r}."
                 )
-            by_ref[ref] = spec
         canonical_count = 0
         if self.execution_scope is FunctionStepExecutionScope.PLATE:
             canonical_count = min(1, len(outputs))
@@ -910,7 +912,7 @@ class CallableContract(ArtifactPlanKeySelector):
                     ):
                         break
                     canonical_count += 1
-        refs = tuple(by_ref)
+        refs = tuple(spec.ref() for spec in outputs)
         object.__setattr__(
             self,
             "artifact_outputs",
@@ -1125,6 +1127,18 @@ class CallableContract(ArtifactPlanKeySelector):
         from openhcs.core.aligned_image_payload import AlignedImageStack
         from openhcs.core.runtime_output_matching import split_runtime_output
 
+        return_refs = (
+            *self.canonical_return_output_refs,
+            *self._trailing_return_output_refs,
+        )
+        duplicate_refs = tuple(
+            ref for index, ref in enumerate(return_refs) if ref in return_refs[:index]
+        )
+        if duplicate_refs:
+            raise ValueError(
+                "Callable output ABI contains duplicate artifact ref "
+                f"{duplicate_refs[0]!r}."
+            )
         canonical_output, trailing_values = split_runtime_output(returned_output)
         trailing_specs = self.trailing_return_output_specs.specs
         if len(trailing_values) != len(trailing_specs):
