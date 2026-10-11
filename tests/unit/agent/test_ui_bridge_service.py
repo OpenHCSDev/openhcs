@@ -12,6 +12,7 @@ import pytest
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
 from zmqruntime import EndpointApplication, EndpointApplicationCompatibilityError
 
+from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentResourceRef
 from openhcs.agent.dto.ui_bridge import (
     UiActionCatalog,
@@ -1912,7 +1913,13 @@ def test_restore_request_preserves_confirmation_and_auto_branch(monkeypatch, tmp
 def test_snapshot_window_forwards_request_and_resource(monkeypatch, tmp_path):
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR_DIR", str(tmp_path))
     gateway = _FakeUiBridgeGateway()
-    service = UiBridgeService(gateway=gateway)
+    # Writable roots are declared, not inherited from where pytest puts tmp_path.
+    service = UiBridgeService(
+        gateway=gateway,
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        ),
+    )
     connection = service.connection_from_args(port=9999, auth_token="token")
 
     result = service.invoke(
