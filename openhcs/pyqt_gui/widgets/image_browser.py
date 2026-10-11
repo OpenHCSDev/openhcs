@@ -5,13 +5,16 @@ Displays a table of all image files from plate metadata and allows users to
 view them in Napari with configurable display settings.
 """
 
+from openhcs.core.axes import Axis, AxisFamily, GridAddressed
+from pyqt_reactive.widgets.grid_selector import GridAddressing, GridSelectorWidget
+from objectstate import ScopeKey
 import logging
 import subprocess
 import time
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field, make_dataclass
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set
+from typing import Callable, Dict, Optional, Set
 
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from polystore.base import storage_registry
@@ -47,15 +50,44 @@ from openhcs.core.plate_image_inventory import (
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
-from openhcs.core.dataset_sources.dataset_scopes import SCOPE_SEGMENT_SEPARATOR
-from openhcs.core.axes import AxisFamily
-from openhcs.pyqt_gui.widgets.shared.plate_view_widget import (
-    PlateViewWidget,
-    active_grid_axis,
-    require_grid_axis,
-)
 
 logger = logging.getLogger(__name__)
+
+
+def active_grid_axis() -> type[Axis] | None:
+    """The active family's grid-addressed axis, if it declares one."""
+
+    grid_axes = AxisFamily.active().with_role(GridAddressed)
+    return grid_axes[0] if grid_axes else None
+
+
+@dataclass(frozen=True, slots=True)
+class GridAxisAddressing(GridAddressing):
+    """Lays a GridAddressed axis's values out on the grid selector."""
+
+    axis: type[Axis]
+
+    @property
+    def default_grid(self) -> tuple[int, int]:
+        return self.axis.default_grid
+
+    def grid_index(self, value: object) -> tuple[int, int] | None:
+        return self.axis.grid_index(value)
+
+    def row_label(self, row: int) -> str:
+        return self.axis.row_label(row)
+
+
+def require_grid_axis() -> type[Axis]:
+    """The grid axis the plate view lays out; a plate view needs one."""
+
+    grid_axis = active_grid_axis()
+    if grid_axis is None:
+        raise TypeError(
+            f"Axis family {AxisFamily.active().__qualname__} declares no "
+            "GridAddressed axis; it has no plate grid."
+        )
+    return grid_axis
 
 
 
@@ -599,10 +631,15 @@ class ImageBrowserWidget(QWidget):
 
         # Plate view (initially hidden; built only for a family with a grid axis)
         if active_grid_axis() is not None:
-            self.plate_view_widget = PlateViewWidget(
-                color_scheme=self.color_scheme, parent=self
+            grid_axis = require_grid_axis()
+            self.plate_view_widget = GridSelectorWidget(
+                addressing=GridAxisAddressing(grid_axis),
+                title="Plate View",
+                cell_noun=f"{grid_axis.label.lower()}s",
+                color_scheme=self.color_scheme,
+                parent=self,
             )
-            self.plate_view_widget.wells_selected.connect(self._on_wells_selected)
+            self.plate_view_widget.cells_selected.connect(self._on_wells_selected)
             self.plate_view_widget.detach_requested.connect(self._detach_plate_view)
             self.plate_view_widget.setVisible(False)
             self.middle_splitter.addWidget(self.plate_view_widget)
@@ -793,8 +830,8 @@ class ImageBrowserWidget(QWidget):
             state_parent_scope = self._state_scope_parent_id or str(
                 orchestrator.dataset_root
             )
-            self.scope_id = SCOPE_SEGMENT_SEPARATOR.join(
-                (state_parent_scope, OpenHCSUiWindowId.image_browser)
+            self.scope_id = ScopeKey(state_parent_scope).child(
+                OpenHCSUiWindowId.image_browser
             )
         parent_state = (
             ObjectStateRegistry.get_by_scope(str(orchestrator.dataset_root))
@@ -1486,7 +1523,7 @@ class ImageBrowserWidget(QWidget):
         ):
             return
         self.selected_wells = set()
-        self.plate_view_widget.select_wells(
+        self.plate_view_widget.select_cells(
             self.metadata_display_resolver.raw_values(
                 well_key,
                 set(selected_values),
@@ -1525,77 +1562,9 @@ class ImageBrowserWidget(QWidget):
         )
 
         # Update plate view with well IDs, dimensions, and coordinate mapping
-        self.plate_view_widget.set_available_wells(
+        self.plate_view_widget.set_available_cells(
             well_ids, plate_dimensions, coord_to_well
         )
-
-        # Handle subdirectory selection
-        current_folder = self._get_current_folder()
-        subdirs = self._detect_plate_subdirs(current_folder)
-        self.plate_view_widget.set_subdirectories(subdirs)
-
-    def _get_current_folder(self) -> Optional[str]:
-        """Get currently selected folder path from tree."""
-        selected_items = self.folder_tree.selectedItems()
-        if selected_items:
-            folder_path = selected_items[0].data(0, Qt.ItemDataRole.UserRole)
-            return folder_path
-        return None
-
-    def _detect_plate_subdirs(self, current_folder: Optional[str]) -> List[str]:
-        """
-        Detect plate output subdirectories.
-
-        Logic:
-        - If at plate root (no folder selected or root selected), look for subdirs with well images
-        - If in a subdir, return empty list (already in a plate output)
-
-        Returns list of subdirectory names (not full paths).
-        """
-        if not self.orchestrator:
-            return []
-
-        plate_path = self.orchestrator.dataset_root
-
-        # If no folder selected or root selected, we're at plate root
-        if current_folder is None:
-            base_path = plate_path
-        else:
-            # Check if current folder is plate root
-            if str(Path(current_folder)) == str(plate_path):
-                base_path = plate_path
-            else:
-                # Already in a subdirectory, no subdirs to show
-                return []
-
-        # Find immediate subdirectories that contain well files
-        subdirs_with_wells = set()
-
-        for filename, item in self.file_items.items():
-            file_path = Path(filename)
-
-            # Check if file is in a subdirectory of base_path
-            try:
-                relative = file_path.relative_to(base_path)
-                parts = relative.parts
-
-                # If file is in a subdirectory (not directly in base_path)
-                if len(parts) > 1:
-                    subdir_name = parts[0]
-
-                    # Check if this file has well metadata
-                    try:
-                        self._extract_well_id(item.metadata)
-                        # Has well metadata, add subdir
-                        subdirs_with_wells.add(subdir_name)
-                    except (KeyError, ValueError):
-                        # No well metadata, skip
-                        pass
-            except ValueError:
-                # File not relative to base_path, skip
-                pass
-
-        return sorted(list(subdirs_with_wells))
 
     # ========== Plate View Helper Methods ==========
 

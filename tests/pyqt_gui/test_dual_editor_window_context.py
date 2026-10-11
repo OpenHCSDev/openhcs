@@ -1,13 +1,14 @@
+from openhcs.authoring.session.events import (
+    GlobalConfigChanged,
+    PipelineChanged,
+    PipelineImported,
+)
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
 
 
 class DummyServiceAdapter:
     def __init__(self) -> None:
         self.main_window = object()
-        self.event_bus = object()
-
-    def get_event_bus(self) -> object:
-        return self.event_bus
 
 
 def test_dual_editor_window_uses_explicit_service_adapter_context() -> None:
@@ -15,7 +16,6 @@ def test_dual_editor_window_uses_explicit_service_adapter_context() -> None:
     window.service_adapter = DummyServiceAdapter()
 
     assert window._find_main_window() is window.service_adapter.main_window
-    assert window._get_event_bus() is window.service_adapter.event_bus
 
 
 class RecordingSignal:
@@ -30,17 +30,24 @@ class RecordingSignal:
         self.disconnected.append(callback)
 
 
-class RecordingEventBus:
+class RecordingRelay:
     def __init__(self) -> None:
-        self.pipeline_changed = RecordingSignal()
-        self.config_changed = RecordingSignal()
+        self.closed = False
+
+    def close(self) -> None:
+        self.closed = True
+
+    def release(self) -> None:
+        self.close()
 
 
 def test_dual_editor_window_cleans_cross_window_subscriptions() -> None:
     window = DualEditorWindow.__new__(DualEditorWindow)
-    event_bus = RecordingEventBus()
+    relay = RecordingRelay()
+    restore_subscription = RecordingRelay()
     orchestrator_signal = RecordingSignal()
-    window._event_bus = event_bus
+    window._session_events = relay
+    window._pipeline_restore_subscription = restore_subscription
     window._orchestrator_config_signal = orchestrator_signal
     window._compiled_artifact_signal = None
     window._runtime_artifact_signal = None
@@ -50,10 +57,9 @@ def test_dual_editor_window_cleans_cross_window_subscriptions() -> None:
 
     window._cleanup_managed_resources()
 
-    assert event_bus.pipeline_changed.disconnected == [window._on_pipeline_changed]
-    assert event_bus.config_changed.disconnected == [window._on_config_changed]
+    assert relay.closed and restore_subscription.closed
     assert orchestrator_signal.disconnected == [window.on_orchestrator_config_changed]
-    assert window._event_bus is None
+    assert window._session_events is None
     assert window._orchestrator_config_signal is None
 
 
@@ -65,3 +71,37 @@ def test_dual_editor_window_orchestrator_signal_connection_is_owned() -> None:
 
     assert signal.connected == [window.on_orchestrator_config_changed]
     assert window._orchestrator_config_signal is signal
+
+
+class PipelineSession:
+    def __init__(self) -> None:
+        self.steps = {"/plate1": ["a", "b"], "/plate2": ["c"]}
+
+    def pipeline_steps(self, scope_id: str) -> list:
+        return self.steps[scope_id]
+
+
+def test_dual_editor_follows_its_own_plates_pipeline_changes(monkeypatch) -> None:
+    window = DualEditorWindow.__new__(DualEditorWindow)
+    window._session = PipelineSession()
+    window.plate_scope = "/plate1"
+    followed = []
+    monkeypatch.setattr(window, "_on_pipeline_changed", followed.append)
+
+    window.on_session_event(PipelineChanged(dataset_scope_id="/plate2"))
+    window.on_session_event(PipelineChanged(dataset_scope_id="/plate1"))
+    window.on_session_event(PipelineImported(dataset_scope_id="/plate1"))
+
+    assert followed == [["a", "b"], ["a", "b"]]
+
+
+def test_dual_editor_reresolves_placeholders_on_global_config_change(monkeypatch) -> None:
+    from objectstate.object_state import ObjectStateRegistry
+
+    window = DualEditorWindow.__new__(DualEditorWindow)
+    tokens = []
+    monkeypatch.setattr(ObjectStateRegistry, "increment_token", lambda: tokens.append(1))
+
+    window.on_session_event(GlobalConfigChanged(config=object()))
+
+    assert tokens == [1]

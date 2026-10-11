@@ -17,7 +17,7 @@ class _PlateSelectionRecorder:
     def __init__(self) -> None:
         self.selected: set[str] = set()
 
-    def select_wells(self, well_ids: set[str], *, emit_signal: bool) -> None:
+    def select_cells(self, well_ids: set[str], *, emit_signal: bool) -> None:
         assert not emit_signal
         self.selected = well_ids
 

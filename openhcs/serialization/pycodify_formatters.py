@@ -7,7 +7,6 @@ from enum import Enum
 from pathlib import Path
 
 from objectstate import semantic_values_equal
-from objectstate.field_access import DataclassFieldAccess, DottedFieldPath
 from objectstate.lazy_factory import LazyDataclass
 from pycodify import FormatContext, SourceFormatter, SourceFragment, to_source
 from pyqt_reactive.pattern_metadata import PatternScopeToken
@@ -363,57 +362,6 @@ class LazyDataclassFieldEmissionState:
             elif left_value != right_value:
                 return False
         return True
-
-    @classmethod
-    def retain_only_authored_paths(
-        cls,
-        value: LazyDataclass,
-        authored_field_paths: frozenset[str] | set[str],
-    ) -> LazyDataclass:
-        """Restore constructor intent after a flattened ObjectState rebuild.
-
-        ObjectState reconstructs lazy dataclasses from every flattened field so
-        their constructors can preserve raw ``None`` inheritance markers. That
-        necessarily marks every constructor keyword as explicit. Clean source
-        generation instead needs the raw-vs-signature paths already owned by
-        ObjectState, so apply those paths to the existing lazy metadata without
-        changing field values.
-        """
-
-        paths = tuple(DottedFieldPath(path) for path in authored_field_paths)
-        return cls._copy_with_only_authored_paths(
-            value,
-            prefix=DottedFieldPath(""),
-            authored_field_paths=paths,
-        )
-
-    @classmethod
-    def _copy_with_only_authored_paths(
-        cls,
-        value: LazyDataclass,
-        *,
-        prefix: DottedFieldPath,
-        authored_field_paths: tuple[DottedFieldPath, ...],
-    ) -> LazyDataclass:
-        field_values = {}
-        for field in fields(value):
-            field_value = DataclassFieldAccess.raw_value(value, field.name)
-            if isinstance(field_value, LazyDataclass):
-                field_value = cls._copy_with_only_authored_paths(
-                    field_value,
-                    prefix=prefix.child(field.name),
-                    authored_field_paths=authored_field_paths,
-                )
-            field_values[field.name] = field_value
-
-        projected = type(value)(**field_values)
-        explicit_field_names = {
-            field.name
-            for field in fields(projected)
-            if prefix.child(field.name).contains_any(authored_field_paths)
-        }
-        object.__setattr__(projected, "_explicitly_set_fields", explicit_field_names)
-        return projected
 
 
 @dataclass(frozen=True)

@@ -4,6 +4,7 @@ Plate Viewer Window - Tabbed interface for Image Browser and Metadata Viewer.
 Combines image browsing and metadata viewing in a single window with tabs.
 """
 
+from objectstate import ScopeKey
 import logging
 
 from PyQt6.QtCore import Qt
@@ -66,7 +67,9 @@ class PlateViewerWindow(BaseFormDialog):
         # scope_id for singleton behavior - one viewer per plate
         # Use ::plate_viewer suffix to avoid conflicts with ConfigWindow (which uses just plate_path)
         self.scope_id = (
-            f"{orchestrator.dataset_root}::plate_viewer" if orchestrator else None
+            ScopeKey(str(orchestrator.dataset_root)).child("plate_viewer")
+            if orchestrator
+            else None
         )
         # Store plate path for styling (without suffix) so border matches plate's ConfigWindow
         self._style_scope_id = str(orchestrator.dataset_root) if orchestrator else None

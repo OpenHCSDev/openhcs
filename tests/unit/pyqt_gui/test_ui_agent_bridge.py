@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pyqt_reactive.widgets.shared.dock_layout import DockPane
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -156,14 +157,11 @@ from openhcs.core.progress.projection import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.config import AgentUiBridgeConfig
-from openhcs.pyqt_gui.services.config_window_code_document import (
-    ConfigCodeDocumentDriver,
-)
+from pyqt_reactive.windows.config_window import ConfigCodeDocumentDriver
 from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
 )
 from openhcs.pyqt_gui.services.main_window_workflows import (
-    MainWindowDockPane,
     MainWindowEmbeddedWidgets,
 )
 from openhcs.pyqt_gui.services.reactor_providers import OpenHCSCodegenProvider
@@ -302,6 +300,7 @@ def replacement_function(image, threshold: int = 2):
 
 def test_config_code_document_honors_clean_flag() -> None:
     driver = ConfigCodeDocumentDriver(
+        document_format=ConfigDocumentAuthority,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=lambda: GlobalPipelineConfig(num_workers=2),
@@ -320,6 +319,7 @@ def test_pycodified_config_document_delegates_to_config_authority() -> None:
     replacement = GlobalPipelineConfig(num_workers=3)
     applied: list[GlobalPipelineConfig] = []
     driver = ConfigCodeDocumentDriver(
+        document_format=ConfigDocumentAuthority,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=lambda: original,
@@ -347,6 +347,7 @@ def test_pycodified_config_document_delegates_to_config_authority() -> None:
 def test_pycodified_config_document_authorizes_before_apply() -> None:
     applied: list[GlobalPipelineConfig] = []
     driver = ConfigCodeDocumentDriver(
+        document_format=ConfigDocumentAuthority,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=GlobalPipelineConfig,
@@ -490,7 +491,7 @@ class FakeEmbeddedWindowWidgets(MainWindowEmbeddedWidgets):
             dock_widget.setObjectName(window_id)
             dock_widget.setWidget(widget)
             self.register(
-                MainWindowDockPane(
+                DockPane(
                     window_id=window_id,
                     title=title,
                     widget=widget,
@@ -989,7 +990,7 @@ def test_floating_embedded_pane_is_not_duplicated_as_qt_top_level() -> None:
     main_window = QMainWindow()
     main_window.session = BridgeSessions.get()
     embedded_widgets = MainWindowEmbeddedWidgets()
-    pipeline_pane = MainWindowDockPane.create(
+    pipeline_pane = DockPane.create(
         main_window=main_window,
         window_id=OpenHCSUiWindowId.pipeline_editor,
         title="Pipeline Editor",
@@ -1050,7 +1051,7 @@ def test_embedded_registration_does_not_hide_main_window_from_bridge(
     embedded_widgets = MainWindowEmbeddedWidgets()
     embedded_scope_id = "test_main_window_embedded_scope"
     embedded_widget = QWidget()
-    embedded_pane = MainWindowDockPane.create(
+    embedded_pane = DockPane.create(
         main_window=main_window,
         window_id=embedded_scope_id,
         title="Embedded",

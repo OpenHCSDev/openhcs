@@ -32,7 +32,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
 )
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.field_label import FieldLabel
+from python_introspect import FieldLabel
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
     SourceMetadataFields,

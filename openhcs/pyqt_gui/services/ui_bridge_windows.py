@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from objectstate.inspection import field_markers, state_markers
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, replace
@@ -134,7 +135,7 @@ from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 
 if TYPE_CHECKING:
     from openhcs.pyqt_gui.main import OpenHCSMainWindow
-    from openhcs.pyqt_gui.services.main_window_workflows import MainWindowDockPane
+    from pyqt_reactive.widgets.shared.dock_layout import DockPane
 
 
 WindowRouteCollection: TypeAlias = (
@@ -199,14 +200,7 @@ class ManagedWindowSummaryProjection:
 
     @staticmethod
     def _semantic_markers(state: ObjectState | None) -> tuple[str, ...]:
-        if state is None:
-            return ()
-        markers = []
-        if state.dirty_fields:
-            markers.append("*")
-        if state.signature_diff_fields:
-            markers.append("_")
-        return tuple(markers)
+        return () if state is None else state_markers(state)
 
     @staticmethod
     def _managed_action_ids(
@@ -259,12 +253,10 @@ class EmbeddedManagerSummaryProjection:
         dirty_field_count: int,
         signature_diff_field_count: int,
     ) -> tuple[str, ...]:
-        markers = []
-        if dirty_field_count:
-            markers.append("*")
-        if signature_diff_field_count:
-            markers.append("_")
-        return tuple(markers)
+        return field_markers(
+            dirty=bool(dirty_field_count),
+            signature_diff=bool(signature_diff_field_count),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -541,7 +533,7 @@ class FocusableWindowRouteMixin(ABC):
 class EmbeddedWindowRoute:
     """Focusable embedded widget route owned by the main window layout."""
 
-    pane: "MainWindowDockPane"
+    pane: "DockPane"
 
     @property
     def identity(self) -> UiWindowIdentity:
@@ -1871,7 +1863,7 @@ class _WidgetFieldSemanticContext:
             return
         records[_WidgetGeometryKey.from_qwidget(widget)] = _WidgetFieldSemanticRecord(
             action_role=action_role,
-            projection=ObjectStateFieldSemanticProjection.from_state(
+            projection=ObjectStateFieldSemanticProjection.of(
                 state,
                 field_path,
             ),
@@ -1936,12 +1928,7 @@ class _WidgetItemSemanticRecord:
 
     @property
     def semantic_markers(self) -> tuple[str, ...]:
-        markers = []
-        if self.dirty_fields:
-            markers.append("*")
-        if self.signature_diff_fields:
-            markers.append("_")
-        return tuple(markers)
+        return field_markers(dirty=self.dirty, signature_diff=self.signature_diff)
 
     def to_action_carrier(self) -> UiWidgetActionSemanticCarrier:
         return UiWidgetActionSemanticCarrier(

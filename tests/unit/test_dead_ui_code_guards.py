@@ -56,15 +56,6 @@ REMOVED_MEMBERS = {
             "register_theme_change_callback",
         }
     ),
-    "GlobalEventBus": frozenset(
-        {
-            "step_changed",
-            "emit_step_changed",
-            "register_window",
-            "unregister_window",
-            "_registered_windows",
-        }
-    ),
 }
 MAIN_WINDOW_SERVICE_ALIASES = frozenset(
     {

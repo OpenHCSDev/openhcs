@@ -316,7 +316,7 @@ EXTERNAL_DIMENSION_WORDS = frozenset({"channel", "channels"})
 # Every (kernel module, identifier) that still speaks microscopy. The set may
 # only shrink: delete the entries a change removes, never add one. The ceiling
 # makes growing the pin itself a visible edit.
-KERNEL_DOMAIN_REFERENCE_CEILING = 72
+KERNEL_DOMAIN_REFERENCE_CEILING = 70
 KERNEL_DOMAIN_REFERENCES = frozenset(
     {
         ("openhcs/core/artifacts.py", "PLATE"),
@@ -338,8 +338,6 @@ KERNEL_DOMAIN_REFERENCES = frozenset(
         ("openhcs/core/function_patterns.py", "PLATE"),
         ("openhcs/core/orchestrator/bundle_execution.py", "PLATE"),
         ("openhcs/core/orchestrator/worker_execution.py", "PLATE"),
-        ("openhcs/core/path_cache.py", "PLATE_IMPORT"),
-        ("openhcs/core/path_cache.py", "plate_import"),
         ("openhcs/core/pipeline/artifact_planning.py", "PLATE"),
         ("openhcs/core/pipeline/compilation_session.py", "PLATE"),
         ("openhcs/core/pipeline/compiler.py", "PLATE"),

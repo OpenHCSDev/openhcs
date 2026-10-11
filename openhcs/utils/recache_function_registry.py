@@ -106,12 +106,6 @@ def recache_function_registry():
         except Exception as e:
             print(f"  ❌ Error importing cache utilities: {e}")
 
-        # Step 0: Migrate legacy cache files to XDG locations
-        print("\n🔄 Migrating legacy cache files to XDG locations...")
-        from openhcs.core.xdg_paths import migrate_all_legacy_cache_files
-
-        migrate_all_legacy_cache_files()
-
         # Step 1: Clear function metadata caches for available libraries
         print("\n🧹 Clearing function metadata caches for available libraries...")
         print("  🧹 Clearing canonical registry caches...")

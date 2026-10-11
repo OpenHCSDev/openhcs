@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pyqt_reactive.widgets.shared.dock_layout import DockPane
 import ast
 import asyncio
 import threading
@@ -98,7 +99,6 @@ from openhcs.processing.backends.processors.numpy_processor import (
     percentile_normalize,
 )
 from openhcs.pyqt_gui.services.main_window_workflows import (
-    MainWindowDockPane,
     MainWindowEmbeddedWidgets,
     MainWindowPipelineActions,
 )
@@ -625,7 +625,7 @@ def test_embedded_manager_navigation_selects_the_exact_live_row(tmp_path) -> Non
         main_window.embedded_widgets = MainWindowEmbeddedWidgets()
         main_window.window_specs = {}
         main_window.embedded_widgets.register(
-            MainWindowDockPane.create(
+            DockPane.create(
                 main_window=main_window,
                 window_id=OpenHCSUiWindowId.plate_manager,
                 title="Plate Manager",
