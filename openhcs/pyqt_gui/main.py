@@ -1424,9 +1424,7 @@ class OpenHCSMainWindow(QMainWindow):
 
     def check_for_updates(self) -> None:
         """Start an explicit, asynchronous stable-release check."""
-        if not self.desktop_update_service.check_for_updates(
-            ExplicitUpdateCheck
-        ):
+        if not self.desktop_update_service.check_for_updates(ExplicitUpdateCheck):
             return
         self.check_for_updates_action.setEnabled(False)
         self.status_message.emit("Checking for OpenHCS updates…")
@@ -1436,9 +1434,7 @@ class OpenHCSMainWindow(QMainWindow):
 
         if not self.runtime_context.ui_config.check_for_updates_on_startup:
             return
-        if self.desktop_update_service.check_for_updates(
-            StartupUpdateCheck
-        ):
+        if self.desktop_update_service.check_for_updates(StartupUpdateCheck):
             self.check_for_updates_action.setEnabled(False)
 
     def _on_update_check_completed(

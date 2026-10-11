@@ -353,10 +353,7 @@ def test_ordinary_execution_can_export_outcomes_without_value_observation(
     assert exported.server_environment is not None
     assert exported.server_environment.python_executable
     assert completed.observation is None
-    assert (
-        completed.receipt.observation_export_scope
-        is ExportRuntimeOutcomes
-    )
+    assert completed.receipt.observation_export_scope is ExportRuntimeOutcomes
     assert {
         BenchmarkPhase.COMPILE_OPENHCS,
         BenchmarkPhase.EXECUTE_OPENHCS,
@@ -404,9 +401,7 @@ def test_measured_repetitions_share_one_owned_ordinary_server(tmp_path: Path) ->
                     runtime_observation_export_path=(
                         evidence_dir / "observation.pkl.gz"
                     ),
-                    runtime_observation_export_scope=(
-                        ExportRuntimeOutcomes
-                    ),
+                    runtime_observation_export_scope=(ExportRuntimeOutcomes),
                 )
             )
             completed, _ = execute_measured_openhcs_pipeline_on_client(

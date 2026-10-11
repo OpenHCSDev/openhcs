@@ -27,7 +27,9 @@ RuntimeObservationExportScopeName = Enum(
 
 It keeps the MCP schema's published name and description for the field.
 """
-RuntimeObservationExportScopeName.__doc__ = ZMQRuntimeObservationExportScope.__doc__.splitlines()[0]
+RuntimeObservationExportScopeName.__doc__ = (
+    ZMQRuntimeObservationExportScope.__doc__.splitlines()[0]
+)
 RuntimeObservationExportScopeName.scope = property(
     lambda member: ZMQRuntimeObservationExportScope.named(member.value)
 )

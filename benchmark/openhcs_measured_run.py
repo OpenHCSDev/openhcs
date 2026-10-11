@@ -381,10 +381,7 @@ def retain_measured_openhcs_completion(
             "OpenHCS ZMQ execution completed without writing runtime observation "
             f"export: {observation_export_path}"
         )
-    if (
-        auxiliary_params.runtime_observation_export_scope
-        is ExportRuntimeOutcomes
-    ):
+    if auxiliary_params.runtime_observation_export_scope is ExportRuntimeOutcomes:
         observation_export = ZMQRuntimeExecutionOutcomeExport.read(
             observation_export_path
         )

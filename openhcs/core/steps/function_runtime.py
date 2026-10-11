@@ -906,9 +906,7 @@ class PatternGroupExecutionRequest(
     ) -> list[str]:
         """Constrain the loaded main stack to declared image source bindings."""
 
-        if (
-            isinstance(self.execution_plan.main_input_dependency, StepOutputInput)
-        ):
+        if isinstance(self.execution_plan.main_input_dependency, StepOutputInput):
             return matching_files
 
         source_binding_plan = self.main_flow_source_binding_plan
@@ -1781,8 +1779,7 @@ class FunctionCoreExecutor(FunctionCoreDebugMixin):
         if (
             binding is None
             or self.invocation.key.position != 0
-            or not self.group_data.execution_plan.main_input_dependency
-            .uses_pipeline_start_anchors()
+            or not self.group_data.execution_plan.main_input_dependency.uses_pipeline_start_anchors()
             or binding.origin is not FromPipelineStart
             or request.context is not self.group_data.context
         ):
