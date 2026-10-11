@@ -37,6 +37,11 @@ from PyQt6.QtWidgets import (
 )
 from pyqt_reactive.forms.parameter_form_manager import ParameterFormManager
 
+from openhcs.authoring.session.operations.datasets import (
+    AddDatasets,
+    EditDatasetConfig,
+    InitializeDatasets,
+)
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
@@ -630,8 +635,12 @@ def _access_plate_manager(context: WorkflowContext) -> WorkflowContext:
 
 
 def _add_and_select_plate(context: WorkflowContext) -> WorkflowContext:
-    """Add synthetic plate and select it in plate manager."""
-    context.plate_manager_widget.add_plate_callback([context.synthetic_plate_dir])
+    """Add synthetic plate through the session and select it in plate manager."""
+    result = context.plate_manager_widget.session.invoke(
+        AddDatasets,
+        AddDatasets.request(roots=(str(context.synthetic_plate_dir),)),
+    )
+    assert result.accepted, result.errors
     _wait_for_gui(TIMING.ACTION_DELAY)
 
     item_list = context.plate_manager_widget.item_list
@@ -647,14 +656,21 @@ def _add_and_select_plate(context: WorkflowContext) -> WorkflowContext:
 
 def _initialize_plate(context: WorkflowContext) -> WorkflowContext:
     """Initialize plate using Init button."""
-    init_button = context.plate_manager_widget.buttons["init_plate"]
+    plate_manager = context.plate_manager_widget
+    init_button = plate_manager.buttons[InitializeDatasets.operation_id]
     if not init_button.isEnabled():
         raise AssertionError(
             "Init button is disabled - plate may not be properly added"
         )
 
     init_button.click()
-    _wait_for_gui(TIMING.SAVE_DELAY)
+    scope_id = plate_manager.selected_plate_path
+    session = plate_manager.session
+    deadline = time.monotonic() + 60.0
+    while not session.is_initialized(scope_id) or scope_id in session.init_pending:
+        if time.monotonic() >= deadline:
+            raise AssertionError(f"Dataset {scope_id!r} did not finish initializing")
+        _wait_for_gui(0.05)
     return context
 
 
@@ -665,9 +681,8 @@ def _apply_orchestrator_config(context: WorkflowContext) -> WorkflowContext:
             "Test scenario must be provided for parameterized orchestrator configuration"
         )
 
-    orchestrator = context.plate_manager_widget.get_selected_orchestrator()
-    if orchestrator is None:
-        raise AssertionError("The selected plate has no initialized orchestrator")
+    plate_manager = context.plate_manager_widget
+    orchestrator = plate_manager.session.orchestrator(plate_manager.selected_plate_path)
 
     orchestrator.apply_pipeline_config(context.test_scenario.pipeline_config)
     _wait_for_gui(TIMING.ACTION_DELAY)
@@ -709,7 +724,7 @@ def _wait_for_form_build(
 )
 def _open_config_window(context: WorkflowContext) -> WorkflowContext:
     """Open plate-specific configuration window."""
-    edit_button = context.plate_manager_widget.buttons["edit_config"]
+    edit_button = context.plate_manager_widget.buttons[EditDatasetConfig.operation_id]
     if not edit_button.isEnabled():
         raise AssertionError(
             "Edit button is disabled - plate may not be properly initialized"
@@ -891,7 +906,7 @@ def _reopen_config_window(context: WorkflowContext) -> WorkflowContext:
     context = _close_config_window(context)
 
     # Validate edit button state
-    edit_button = context.plate_manager_widget.buttons["edit_config"]
+    edit_button = context.plate_manager_widget.buttons[EditDatasetConfig.operation_id]
     if not edit_button.isEnabled():
         raise AssertionError(
             "LAZY CONFIG BUG: Edit button disabled after closing config window. "
