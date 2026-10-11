@@ -234,7 +234,7 @@ def test_napari_viewer_reuse_requires_matching_process_launch(monkeypatch) -> No
         lambda _request: ViewerControlResponse(
             {
                 "status": "success",
-                "process_launch": active_launch.to_wire_mapping(),
+                "process_launch": active_launch.to_dict(),
             }
         ),
     )
@@ -1409,7 +1409,7 @@ def test_streaming_viewer_lifecycle_admits_new_launch_inside_managed_acquisition
         ViewerControlMessageRequest, "send",
         lambda self: ViewerControlResponse({
             "status": "success",
-            "process_launch": active_config.viewer_process_launch_config().to_wire_mapping(),
+            "process_launch": active_config.viewer_process_launch_config().to_dict(),
         }),
     )
     lifecycle_manager.get_or_create_viewer(

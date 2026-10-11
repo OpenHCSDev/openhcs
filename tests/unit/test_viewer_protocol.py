@@ -678,17 +678,19 @@ def test_viewer_process_launch_config_round_trips_exact_wire_declaration():
     config = ViewerProcessLaunchConfig(qt_font_dpi=96, listen_host="192.0.2.1")
 
     assert (
-        ViewerProcessLaunchConfig.from_wire_mapping(config.to_wire_mapping()) == config
+        ViewerProcessLaunchConfig.from_wire_mapping(config.to_dict()) == config
     )
 
     with pytest.raises(KeyError):
         ViewerProcessLaunchConfig.from_wire_mapping({})
     with pytest.raises(TypeError):
-        ViewerProcessLaunchConfig.from_wire_mapping({"qt_font_dpi": True})
+        ViewerProcessLaunchConfig.from_wire_mapping(
+            {"qt_font_dpi": True, "listen_host": "127.0.0.1"}
+        )
     with pytest.raises(ValueError):
         ViewerProcessLaunchConfig(qt_font_dpi=0)
 
-    with pytest.raises(TypeError, match="listen host must be a string"):
+    with pytest.raises(TypeError, match="listen_host must be str"):
         ViewerProcessLaunchConfig.from_wire_mapping(
             {"qt_font_dpi": None, "listen_host": True}
         )

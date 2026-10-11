@@ -241,7 +241,7 @@ class ProcessLaunchControlAction(LifecycleControlAction):
             response_type=self.response_type,
             fields={
                 ViewerControlField.PROCESS_LAUNCH.value: (
-                    server.process_launch.to_wire_mapping()
+                    server.process_launch.to_dict()
                 )
             },
         )
