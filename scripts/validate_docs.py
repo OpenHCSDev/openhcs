@@ -49,6 +49,7 @@ FIRST_PARTY_MODULE_ROOTS = {
         / "metaclass_registry"
     ),
     "polystore": REPOSITORY_ROOT / "external" / "PolyStore" / "src" / "polystore",
+    "formbridge": REPOSITORY_ROOT / "external" / "formbridge" / "src" / "formbridge",
     "pyqt_reactive": (
         REPOSITORY_ROOT / "external" / "pyqt-reactive" / "src" / "pyqt_reactive"
     ),
