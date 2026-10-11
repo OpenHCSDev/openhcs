@@ -192,9 +192,19 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
             )
         return module_name
 
+    @classmethod
+    def prepare_declared_callable(cls, implementation: Callable[..., Any]) -> None:
+        """Complete one owned callable before any reader projects it.
 
-def _registry_catalog_module_for_callable(func: Callable[..., Any]) -> str:
-    """Return the local nominal owner's catalog module or the defining module."""
+        Fresh catalog scans and cached-catalog reconstruction both pass through
+        this hook, so what a reader sees never depends on which path ran.
+        """
+
+
+def _catalog_declaration_for_callable(
+    func: Callable[..., Any],
+) -> type[OpenHCSFunctionCatalogDeclaration] | None:
+    """Return the local nominal declaration that owns one callable, if any."""
 
     declared = inspect.unwrap(func)
     implementation_module = importlib.import_module(declared.__module__)
@@ -208,14 +218,29 @@ def _registry_catalog_module_for_callable(func: Callable[..., Any]) -> str:
         and declared.__name__ in candidate.declared_function_names()
     )
     if not owners:
-        return declared.__module__
+        return None
     if len(owners) > 1:
         raise ValueError(
             f"OpenHCS callable {declared.__module__}.{declared.__name__} is claimed "
             "by multiple catalog declarations: "
             f"{tuple(owner.__name__ for owner in owners)!r}."
         )
-    return owners[0].require_registry_catalog_module()
+    return owners[0]
+
+
+def _registry_catalog_module_for_callable(func: Callable[..., Any]) -> str:
+    """Return the local nominal owner's catalog module or the defining module."""
+
+    owner = _catalog_declaration_for_callable(func)
+    if owner is None:
+        return inspect.unwrap(func).__module__
+    return owner.require_registry_catalog_module()
+
+
+def _prepare_declared_callable(func: Callable[..., Any]) -> None:
+    owner = _catalog_declaration_for_callable(func)
+    if owner is not None:
+        owner.prepare_declared_callable(func)
 
 
 _MEMORY_DECORATOR_IMPORT_MODULES = frozenset(
@@ -712,6 +737,7 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         # Generate unique function name using module information
         unique_name = self._generate_function_name(name, module_name)
 
+        _prepare_declared_callable(func)
         # Extract full docstring, not just first line
         doc = self._extract_function_docstring(func)
 
@@ -794,6 +820,7 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             wrapped_func = self._registered_callables.get(declared)
             if wrapped_func is not None:
                 return wrapped_func
+            _prepare_declared_callable(func)
             wrapped_func = super().reconstruct_cached_callable(func, contract)
             self._registered_callables[declared] = wrapped_func
             return wrapped_func

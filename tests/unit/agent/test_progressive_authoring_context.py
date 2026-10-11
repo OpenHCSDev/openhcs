@@ -31,7 +31,10 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentTarget,
 )
 from openhcs.agent.image_analysis_qa import ImageAnalysisQaPolicy
-from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
+from openhcs.agent.services.knowledge_base_service import (
+    MAX_DOCUMENT_CHARS,
+    KnowledgeBaseService,
+)
 from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
 from openhcs.core.axes import Ungrouped
 
@@ -328,7 +331,10 @@ def test_actual_mcp_onboarding_reaches_responsive_preparation_without_endpoint_c
         )
         guide = await read(
             agent_capabilities.get_knowledge_document,
-            {"document_id": "openhcs_custom_function_workflow"},
+            {
+                "document_id": "openhcs_custom_function_workflow",
+                "max_chars": MAX_DOCUMENT_CHARS,
+            },
             KnowledgeBaseDocument,
         )
         assert guide.document.document_id == "openhcs_custom_function_workflow"
@@ -338,7 +344,7 @@ def test_actual_mcp_onboarding_reaches_responsive_preparation_without_endpoint_c
         )
         discovery = await read(
             agent_capabilities.search_capabilities,
-            {"query": "catalog preparation", "limit": 10},
+            {"text": "catalog preparation", "limit": 10},
             AgentCapabilitySearchResult,
         )
         assert agent_capabilities.start_function_catalog_preparation.name in {

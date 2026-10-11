@@ -592,7 +592,7 @@ class CellProfilerModule(
         """Prepare and admit one raw callable at the authored declaration boundary."""
 
         implementation = cls._require_declared_callable(function_name)
-        cls._install_callable_parameter_help(implementation)
+        cls.prepare_declared_callable(implementation)
         cls._validate_callable_parameter_exclusions(
             implementation, CallableContract.from_callable(implementation),
         )
@@ -621,7 +621,7 @@ class CellProfilerModule(
             )
 
     @classmethod
-    def _install_callable_parameter_help(
+    def prepare_declared_callable(
         cls,
         implementation: Callable[..., Any],
     ) -> None:

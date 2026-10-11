@@ -958,6 +958,11 @@ def export_to_database(
     Args:
         selected_objects: Object measurement subjects to export; use ``None``
             for all subjects or an empty tuple for no object subjects.
+        wants_workspace_file: Whether to write a CellProfiler Analyst workspace
+            file beside the properties file.
+        workspace_panels: CellProfiler Analyst workspace panels (plots and
+            their measurement selections) written when
+            ``wants_workspace_file`` is enabled.
         image_channels: CellProfiler Analyst image-channel declarations to
             write when ``include_all_images`` is disabled.
         location_object: Object measurement subject whose center coordinates

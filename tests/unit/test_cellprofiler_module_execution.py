@@ -463,7 +463,7 @@ def test_compiled_image_request_does_not_repeat_authored_callable_preparation(
 
     monkeypatch.setattr(CallableContract, "from_callable", reject_authored_preparation)
     monkeypatch.setattr(
-        module, "_install_callable_parameter_help", reject_authored_preparation
+        module, "prepare_declared_callable", reject_authored_preparation
     )
     executor = CellProfilerModuleExecutor(raw, contract)
     image_request = executor._image_request(

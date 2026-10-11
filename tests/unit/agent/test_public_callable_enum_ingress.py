@@ -15,6 +15,11 @@ from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
+from openhcs.processing.custom_functions.runtime_registry import (
+    CustomFunctionLifetime,
+    CustomFunctionRuntimeRegistry,
+    project_custom_function,
+)
 from tests.unit.agent.test_compile_selector_authoring import SelectedDeclarations
 
 
@@ -55,12 +60,16 @@ def independent_request_projection(request: IndependentProjectionRequest):
 
 @pytest.fixture(params=(independent_declared_projection, independent_request_projection))
 def author(monkeypatch, request):
-    function_id, metadata = RegistryService.declared_metadata_for_callable(
-        request.param
-    )
+    # Declarations outside the registry's modules are custom functions.
+    metadata = project_custom_function(request.param)
+    CustomFunctionRuntimeRegistry.publish(metadata, CustomFunctionLifetime.EPHEMERAL)
+    function_id = metadata.composite_key
     monkeypatch.setattr(RegistryService, "_metadata_cache", {function_id: metadata})
     monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})
-    return PipelineAuthoringService(function_catalog=SelectedDeclarations()), function_id
+    try:
+        yield PipelineAuthoringService(function_catalog=SelectedDeclarations()), function_id
+    finally:
+        CustomFunctionRuntimeRegistry.remove(request.param.__name__)
 
 
 @pytest.mark.parametrize("clean", (False, True))
