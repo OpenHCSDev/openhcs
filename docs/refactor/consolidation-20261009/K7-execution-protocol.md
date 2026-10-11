@@ -47,7 +47,7 @@ The guards pass; touched tests pass; official30 is 30/30; the structural ratchet
 ## Progress
 
 - [x] Receipt.
-- [x] ExecutionResult and RuntimeObservationMode families (`ExecutionSucceeded`/`ExecutionFailed`/`ExecutionCancelled`; `ReturnNoRecords`/`ReturnAllRecords`/`ReturnDatasetInputRecords`; `ZMQExecutionAxisOutcome` deleted, outcome export stores results without records).
+- [x] ExecutionResult and RuntimeObservationMode families (`ExecutionSucceeded`/`ExecutionFailed`/`ExecutionCancelled`; `OmitRuntimeRecords`/`MergeAllRuntimeRecords`/`MergeDatasetInputRecords`; `ZMQExecutionAxisOutcome` deleted, outcome export stores results without records).
 - [ ] ComponentGroupScope variants, plan `group_scope` field, compose split.
 - [ ] Context phase types.
 - [ ] Guards, tests, ratchet, parity, PR.

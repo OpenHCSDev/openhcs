@@ -34,7 +34,7 @@ from openhcs.core.orchestrator.execution_result import (
     ExecutionFailed,
     ExecutionResult,
     ExecutionSucceeded,
-    ReturnAllRecords,
+    MergeAllRuntimeRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
     RuntimeObservationMode,
@@ -1454,7 +1454,7 @@ def _execute_single_axis_static(
     *,
     context_key: str,
     cancellation: ExecutionCancellationSignal | None = None,
-    runtime_observation_mode: type[RuntimeObservationMode] = ReturnAllRecords,
+    runtime_observation_mode: type[RuntimeObservationMode] = MergeAllRuntimeRecords,
 ) -> ExecutionResult:
     """Execute one frozen axis context against the compiled pipeline."""
 

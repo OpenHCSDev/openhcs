@@ -30,7 +30,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.memory import numpy as numpy_function
 from openhcs.core.orchestrator.execution_result import (
-    ReturnAllRecords,
+    MergeAllRuntimeRecords,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.function_contracts import artifact_outputs
@@ -115,7 +115,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
         orchestrator = PipelineOrchestrator(source, pipeline_config=document.pipeline_config).initialize()
         outcomes = orchestrator.execute_compiled_bundle(
             execution_bundle=bundle, max_workers=1,
-            runtime_observation_mode=ReturnAllRecords,
+            runtime_observation_mode=MergeAllRuntimeRecords,
             progress_queue=AgentProgressQueue(),
             progress_context=ProgressExecutionContext(
                 execution_id="source-schema-aggregate-synthetic",

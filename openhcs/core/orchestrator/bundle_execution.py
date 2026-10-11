@@ -41,7 +41,7 @@ from openhcs.core.post_execute import PostExecuteHook
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
-    ReturnAllRecords,
+    MergeAllRuntimeRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
     RuntimeObservationMode,
@@ -655,7 +655,7 @@ def execute_dataset_scoped_steps(
                 context_key=context_key,
                 context=context,
                 records=records,
-                runtime_observation_mode=ReturnAllRecords,
+                runtime_observation_mode=MergeAllRuntimeRecords,
                 outputs=StepExecutionObservation.combine(
                     observations_by_context[context_key]
                 ),

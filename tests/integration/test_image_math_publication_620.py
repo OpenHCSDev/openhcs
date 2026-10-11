@@ -18,7 +18,7 @@ from openhcs.core.config import (
     LazyProcessingConfig,
 )
 from openhcs.core.orchestrator.execution_result import (
-    ReturnAllRecords,
+    MergeAllRuntimeRecords,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -66,7 +66,7 @@ def test_registered_mixed_image_math_publishes_once_in_both_operand_orders(tmp_p
     )).execution_bundle
     outcomes = PipelineOrchestrator(source, pipeline_config=config).initialize().execute_compiled_bundle(
         execution_bundle=bundle, max_workers=1,
-        runtime_observation_mode=ReturnAllRecords,
+        runtime_observation_mode=MergeAllRuntimeRecords,
         progress_queue=AgentProgressQueue(),
         progress_context=ProgressExecutionContext(
             execution_id='engineering620-registered',

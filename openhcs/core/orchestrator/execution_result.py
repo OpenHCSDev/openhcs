@@ -123,8 +123,8 @@ class RuntimeObservationMode(ABC):
         """Consolidation carries rendered tables; only dataset-scoped inputs need records."""
 
         if bundle.requires_parent_runtime_observation:
-            return ReturnDatasetInputRecords
-        return ReturnNoRecords
+            return MergeDatasetInputRecords
+        return OmitRuntimeRecords
 
     @classmethod
     def including_parent_requirement(
@@ -133,7 +133,7 @@ class RuntimeObservationMode(ABC):
     ) -> type["RuntimeObservationMode"]:
         """Return this mode strengthened by an additional retention requirement."""
 
-        return ReturnAllRecords if required else cls
+        return MergeAllRuntimeRecords if required else cls
 
     @classmethod
     @abstractmethod
@@ -145,7 +145,7 @@ class RuntimeObservationMode(ABC):
         """Keep records consumed by the selected parent-side execution route."""
 
 
-class ReturnNoRecords(RuntimeObservationMode):
+class OmitRuntimeRecords(RuntimeObservationMode):
     """Return no runtime records; the parent needs none."""
 
     collects_records = False
@@ -155,7 +155,7 @@ class ReturnNoRecords(RuntimeObservationMode):
         return ()
 
 
-class ReturnAllRecords(RuntimeObservationMode):
+class MergeAllRuntimeRecords(RuntimeObservationMode):
     """Return every runtime record to the parent."""
 
     returns_every_record = True
@@ -165,7 +165,7 @@ class ReturnAllRecords(RuntimeObservationMode):
         return records
 
 
-class ReturnDatasetInputRecords(RuntimeObservationMode):
+class MergeDatasetInputRecords(RuntimeObservationMode):
     """Return only the records dataset-scoped steps consume in the parent."""
 
     @classmethod

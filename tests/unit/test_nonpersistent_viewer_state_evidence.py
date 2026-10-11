@@ -15,7 +15,7 @@ from openhcs.core.orchestrator.bundle_execution import (
 )
 from openhcs.core.orchestrator.execution_result import (
     ExecutionSucceeded,
-    ReturnNoRecords,
+    OmitRuntimeRecords,
 )
 from openhcs.runtime.viewer_protocol import ViewerControlResponse
 from openhcs.runtime.zmq_server_hooks import ZMQResultsSummaryEnricher
@@ -90,7 +90,7 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
         execution_id="exec",
         orchestrator=Orchestrator(),
         execution_bundle=execution_bundle,
-        runtime_observation_mode=ReturnNoRecords,
+        runtime_observation_mode=OmitRuntimeRecords,
         progress_context=ProgressExecutionContext(
             execution_id="exec",
             subject_id="plate",
@@ -101,7 +101,7 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
     ).execute()
 
     assert returned is compiled_results
-    assert execution_calls[0]["runtime_observation_mode"] is ReturnNoRecords
+    assert execution_calls[0]["runtime_observation_mode"] is OmitRuntimeRecords
     assert progress_queue.values == [None]
     assert record.get_extra(BundleExecutionExtras.EXECUTION_RECORD_KEY) is (
         compiled_results.extras

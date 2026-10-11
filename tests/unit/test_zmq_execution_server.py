@@ -29,9 +29,9 @@ from openhcs.core.orchestrator.bundle_execution import (
 from openhcs.core.orchestrator.execution_result import (
     ExecutionFailed,
     ExecutionSucceeded,
-    ReturnAllRecords,
-    ReturnDatasetInputRecords,
-    ReturnNoRecords,
+    MergeAllRuntimeRecords,
+    MergeDatasetInputRecords,
+    OmitRuntimeRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
 )
@@ -134,7 +134,7 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
         compile_only=False,
         execution_id=record.execution_id,
         auxiliary_params=SimpleNamespace(
-            runtime_observation_mode_for=lambda bundle: ReturnNoRecords
+            runtime_observation_mode_for=lambda bundle: OmitRuntimeRecords
         ),
     )
     monkeypatch.setattr(
@@ -225,26 +225,26 @@ def test_terminal_notification_contains_openhcs_summary_before_cleanup(
 @pytest.mark.parametrize(
     ("compiled_mode", "export_path", "expected_mode"),
     (
-        (ReturnNoRecords, None, ReturnNoRecords),
+        (OmitRuntimeRecords, None, OmitRuntimeRecords),
         (
-            ReturnNoRecords,
+            OmitRuntimeRecords,
             "/tmp/runtime-observation.pkl",
-            ReturnAllRecords,
+            MergeAllRuntimeRecords,
         ),
         (
-            ReturnDatasetInputRecords,
+            MergeDatasetInputRecords,
             None,
-            ReturnDatasetInputRecords,
+            MergeDatasetInputRecords,
         ),
         (
-            ReturnDatasetInputRecords,
+            MergeDatasetInputRecords,
             "/tmp/runtime-observation.pkl",
-            ReturnAllRecords,
+            MergeAllRuntimeRecords,
         ),
         (
-            ReturnAllRecords,
+            MergeAllRuntimeRecords,
             None,
-            ReturnDatasetInputRecords,
+            MergeDatasetInputRecords,
         ),
     ),
 )
@@ -276,7 +276,7 @@ def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> 
 
     assert (
         params.runtime_observation_mode_for(execution_bundle)
-        is ReturnNoRecords
+        is OmitRuntimeRecords
     )
     assert ZMQAuxiliaryExecutionParams.from_transport(params.to_transport()) == params
 

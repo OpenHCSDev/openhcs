@@ -24,7 +24,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.function_patterns import MainFlowInputProjection
 from openhcs.core.orchestrator.execution_result import (
-    ReturnAllRecords,
+    MergeAllRuntimeRecords,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -140,7 +140,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
     results = orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
         max_workers=1,
-        runtime_observation_mode=ReturnAllRecords,
+        runtime_observation_mode=MergeAllRuntimeRecords,
         progress_queue=AgentProgressQueue(),
         progress_context=ProgressExecutionContext(
             execution_id="chained-public-callable-synthetic",

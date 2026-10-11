@@ -33,9 +33,9 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.orchestrator import worker_execution
 from openhcs.core.orchestrator.execution_result import (
     ExecutionSucceeded,
-    ReturnAllRecords,
-    ReturnDatasetInputRecords,
-    ReturnNoRecords,
+    MergeAllRuntimeRecords,
+    MergeDatasetInputRecords,
+    OmitRuntimeRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
     RuntimeObservationMode,
@@ -118,13 +118,13 @@ def test_compiled_execution_bundle_derives_axis_ids_from_contexts() -> None:
 @pytest.mark.parametrize(
     ("execution_scopes", "expected_mode"),
     (
-        ((FunctionStepExecutionScope.AXIS,), ReturnNoRecords),
+        ((FunctionStepExecutionScope.AXIS,), OmitRuntimeRecords),
         (
             (
                 FunctionStepExecutionScope.AXIS,
                 FunctionStepExecutionScope.PLATE,
             ),
-            ReturnDatasetInputRecords,
+            MergeDatasetInputRecords,
         ),
     ),
 )
@@ -203,18 +203,18 @@ def test_consolidation_does_not_require_parent_payload_records(
     assert bundle.requires_parent_runtime_observation is False
     assert (
         RuntimeObservationMode.for_compiled_bundle(bundle)
-        is ReturnNoRecords
+        is OmitRuntimeRecords
     )
 
 
 def test_runtime_observation_mode_can_only_be_strengthened() -> None:
     assert (
-        ReturnNoRecords.including_parent_requirement(True)
-        is ReturnAllRecords
+        OmitRuntimeRecords.including_parent_requirement(True)
+        is MergeAllRuntimeRecords
     )
     assert (
-        ReturnAllRecords.including_parent_requirement(False)
-        is ReturnAllRecords
+        MergeAllRuntimeRecords.including_parent_requirement(False)
+        is MergeAllRuntimeRecords
     )
 
 
@@ -262,7 +262,7 @@ def test_axis_only_worker_lane_releases_runtime_values_after_each_axis(
             worker_slot="worker",
             worker_assignments={"worker": [context.axis_id for context in contexts]},
         ),
-        runtime_observation_mode=ReturnNoRecords,
+        runtime_observation_mode=OmitRuntimeRecords,
         release_axis_resources=False,
     )
 
@@ -354,10 +354,10 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
         *,
         context_key,
         cancellation=None,
-        runtime_observation_mode=ReturnAllRecords,
+        runtime_observation_mode=MergeAllRuntimeRecords,
     ):
         assert context_key == "A01"
-        assert runtime_observation_mode is ReturnAllRecords
+        assert runtime_observation_mode is MergeAllRuntimeRecords
         current_records.append(
             context.runtime_value_store.replace(
                 measurement_value(2),
@@ -395,7 +395,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
             worker_slot="worker-0",
             worker_assignments={"worker-0": ["A01"]},
         ),
-        runtime_observation_mode=ReturnAllRecords,
+        runtime_observation_mode=MergeAllRuntimeRecords,
     )
 
     assert result.runtime_observation.contexts == (
@@ -460,7 +460,7 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
                 worker_slot="worker-0",
                 worker_assignments={"worker-0": ["A01"]},
             ),
-            runtime_observation_mode=ReturnNoRecords,
+            runtime_observation_mode=OmitRuntimeRecords,
         )
 
     assert cleaned == [(MemoryType.CUPY, 2)]
@@ -512,7 +512,7 @@ def test_worker_lane_releases_previous_axis_stack_before_next_axis(
 
 @pytest.mark.parametrize(
     "observation_mode",
-    (ReturnNoRecords, ReturnDatasetInputRecords),
+    (OmitRuntimeRecords, MergeDatasetInputRecords),
 )
 @pytest.mark.parametrize("release_process_resources", (True, False))
 def test_worker_lane_releases_unconsumed_image_records_before_next_axis(

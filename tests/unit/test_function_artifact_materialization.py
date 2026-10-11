@@ -66,8 +66,8 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.post_execute import PostExecuteHook
 from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
 from openhcs.core.orchestrator.execution_result import (
-    ReturnAllRecords,
-    ReturnNoRecords,
+    MergeAllRuntimeRecords,
+    OmitRuntimeRecords,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
 )
@@ -2007,7 +2007,7 @@ def test_consolidation_preserves_export_bundle_and_text_tables(options, payload)
 
 @pytest.mark.parametrize(
     "observation_mode",
-    (ReturnNoRecords, ReturnAllRecords),
+    (OmitRuntimeRecords, MergeAllRuntimeRecords),
 )
 def test_completed_observation_projects_tables_before_worker_payload_release(
     observation_mode, monkeypatch,
@@ -2069,10 +2069,10 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
     context.runtime_value_store.clear()
     del pixels
     assert (pixel_reference() is not None) is (
-        observation_mode is ReturnAllRecords
+        observation_mode is MergeAllRuntimeRecords
     )
     assert len(observation.records) == (
-        2 if observation_mode is ReturnAllRecords else 0
+        2 if observation_mode is MergeAllRuntimeRecords else 0
     )
     assert len(observation.outputs.runtime_export_paths) == 1
     assert observation.outputs.runtime_export_paths[0].suffix == ".csv"

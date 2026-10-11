@@ -19,7 +19,7 @@ from openhcs.core.orchestrator import worker_execution
 from openhcs.core.orchestrator.execution_result import (
     ExecutionCancelled,
     ExecutionFailed,
-    ReturnNoRecords,
+    OmitRuntimeRecords,
 )
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -110,7 +110,7 @@ def test_completed_projection_facts_survive_error_or_cancel_and_omit(tmp_path, m
 
     context = _context(tmp_path, 2)
     result = worker_execution._execute_axis_with_sequential_combinations(
-        [Save(), Fail()], [("A01", context)], _lane(), ReturnNoRecords,
+        [Save(), Fail()], [("A01", context)], _lane(), OmitRuntimeRecords,
         cancellation=signal, release_axis_resources=False,
     )
     assert type(result) is (ExecutionCancelled if cancel else ExecutionFailed)

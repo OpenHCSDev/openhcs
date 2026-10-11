@@ -42,7 +42,7 @@ from openhcs.core.measurement_feature_queries import measurement_values_for_feat
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.memory import numpy
 from openhcs.core.orchestrator.execution_result import (
-    ReturnAllRecords,
+    MergeAllRuntimeRecords,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -285,7 +285,7 @@ def _execute(path, document, bundle):
     return orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
         max_workers=1,
-        runtime_observation_mode=ReturnAllRecords,
+        runtime_observation_mode=MergeAllRuntimeRecords,
         progress_queue=AgentProgressQueue(),
         progress_context=ProgressExecutionContext(
             execution_id="measurement-contract-synthetic",
