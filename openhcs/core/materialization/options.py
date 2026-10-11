@@ -81,6 +81,22 @@ class TabularExtractionOptions:
     row_columns: Dict[str, str] = field(default_factory=dict)
     row_unpacker: Optional[Callable[[Any], List[Dict[str, Any]]]] = None
 
+    def declares_fields(self) -> bool:
+        """Whether the columns are restricted to a declared list (possibly empty)."""
+        return self.fields is not None
+
+    def has_fields(self) -> bool:
+        """Whether at least one column is declared."""
+        return bool(self.fields)
+
+    def extracts_rows(self) -> bool:
+        """Whether rows come from a row field or an unpacker, not the value itself."""
+        return self.row_unpacker is not None or self.row_field is not None
+
+    def requests_extraction(self) -> bool:
+        """Whether any extraction option is set."""
+        return any((self.fields, self.row_field, self.row_unpacker, self.row_columns))
+
 
 @dataclass(frozen=True)
 class CsvOptions(FileOutputOptions, SourceOptions, TabularExtractionOptions):
@@ -219,6 +235,10 @@ class ImageFileOptions(FileOutputOptions, SourceOptions):
     relative_path_scope: MaterializationRelativePathScope = field(
         default_factory=SharedMaterializationRelativePathScope
     )
+
+    def names_files_by_template(self) -> bool:
+        """Whether each file is named from ``relative_path_template``."""
+        return self.relative_path_template is not None
 
 
 @dataclass(frozen=True)

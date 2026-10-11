@@ -93,6 +93,10 @@ class SourceImageIdentity:
     component_metadata: SourceComponentMetadata | None = None
     _identity: SourceProvenanceIdentity = field(init=False, repr=False)
 
+    def has_component_metadata(self) -> bool:
+        """Whether this identity addresses the image by parsed components."""
+        return self.component_metadata is not None
+
     def __post_init__(self) -> None:
         self.path = normalize_source_path(self.path)
         if self.component_metadata is not None:
@@ -961,6 +965,13 @@ class SourceImageProvenance:
     @property
     def source_path(self) -> str | None:
         return self.source_identity.path
+
+    def names_a_path_for_every_source_plane(self) -> bool:
+        """Whether the image, or each of its source planes, has a known path."""
+        if self.source_path is not None:
+            return True
+        planes = self.source_image_provenance_planes
+        return planes.has_values and all(path is not None for path in planes.paths)
 
     @property
     def source_component_metadata(self) -> SourceComponentMetadata | None:
