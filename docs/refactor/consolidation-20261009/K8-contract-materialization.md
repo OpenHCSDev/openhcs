@@ -39,3 +39,8 @@ After items 1 to 3: no `openhcs.processing.materialization` import anywhere; no 
 ## Done when
 
 The materialization package is in `openhcs/core/`, nothing imports the old path, `json_payload_value`, `JsonPayloadAuthority` and `corpus._json_value` are gone in favour of `to_jsonable`, and parity is 30/30.
+
+## Progress
+
+- Done: receipt; item 4 (dead `SecondaryObjectStats` computation and class deleted).
+- Next: secondary tests and the parity check under flock; items 1 to 3 wait for E1.
