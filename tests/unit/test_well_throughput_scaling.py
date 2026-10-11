@@ -1341,7 +1341,7 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
                 multiprocessing_start_method=MultiprocessingStartMethod.SPAWN,
             ),
             materialization=SimpleNamespace(metadata_path=tmp_path / "metadata.json"),
-            execution_plate_path=tmp_path / "plate",
+            execution_dataset_root=tmp_path / "plate",
         ),
     )
     monkeypatch.setattr(

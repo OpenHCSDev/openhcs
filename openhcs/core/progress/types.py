@@ -1,6 +1,7 @@
 """Immutable progress types following OpenHCS patterns."""
 
 import multiprocessing.queues
+import queue
 import os
 import time
 from abc import ABC, abstractmethod
@@ -509,8 +510,14 @@ class ProgressQueue(ABC):
         raise NotImplementedError
 
 
-# A multiprocessing queue carries events between processes as it is.
-ProgressQueue.register(multiprocessing.queues.Queue)
+# Thread and process queues carry events as they are.
+for _queue_type in (
+    queue.Queue,
+    queue.SimpleQueue,
+    multiprocessing.queues.Queue,
+    multiprocessing.queues.SimpleQueue,
+):
+    ProgressQueue.register(_queue_type)
 
 _progress_queue: ProgressQueue | None = None
 

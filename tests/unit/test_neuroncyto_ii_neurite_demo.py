@@ -1,3 +1,4 @@
+from openhcs.core.progress import ProgressExecutionContext
 import time
 import zipfile
 from copy import copy
@@ -262,11 +263,10 @@ def test_neuroncyto_demo_executes_numeric_biological_well_identity(
             execution_bundle=compilation,
             max_workers=1,
             progress_queue=progress_queue,
-            progress_context={
-                "execution_id": f"test::{time.time_ns()}",
-                "subject_id": str(plate_path),
-                "axis_id": "",
-            },
+            progress_context=ProgressExecutionContext(
+                execution_id=f"test::{time.time_ns()}",
+                subject_id=str(plate_path),
+            ),
         )
     finally:
         set_progress_queue(None)
@@ -297,8 +297,8 @@ def test_neuroncyto_declared_identity_replaces_loose_tiff_store_coordinates(
 
     handler.initialize_workspace(plate_path, filemanager)
 
-    projection = WorkspaceSourceProjections.from_plate_metadata(
-        plate_path=plate_path,
+    projection = WorkspaceSourceProjections.from_dataset_metadata(
+        dataset_root=plate_path,
         metadata_handler=handler.metadata_handler,
         filemanager=filemanager,
     ).projection_if_available()

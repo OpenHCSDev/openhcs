@@ -1,5 +1,7 @@
 """Actual batch outcomes, independent of subsequent logical-value rendering."""
 
+import openhcs.core.progress.types as progress_types
+from types import SimpleNamespace
 from dataclasses import replace
 from pathlib import Path
 import pickle
@@ -172,7 +174,7 @@ def test_worker_exports_actual_step_outcomes_after_resource_release(
         worker_slot="worker-0",
         worker_assignments={"worker-0": ("A01",)},
     )
-    monkeypatch.setattr(worker, "emit", lambda **_kwargs: None)
+    monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
 
     def forbidden_reconstruction(*_args, **_kwargs):
         pytest.fail("Ordinary execution must consume actual step outcomes")

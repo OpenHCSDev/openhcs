@@ -220,10 +220,7 @@ def test_registered_control_router_reads_retained_compile_artifact() -> None:
         subject_id="/plates/one",
         compilation_signature="request",
         debug_replay_signature="debug",
-        compilation=ZMQCompilationResult(
-            execution_bundle=bundle,
-            compiled_axis_ids=["A01"],
-        ),
+        compilation=ZMQCompilationResult(execution_bundle=bundle),
     )
     request = CompiledArtifactInspectionRequest("compile-1")
     message = CompiledArtifactInspectionControlPayload.from_request(request).to_dict()

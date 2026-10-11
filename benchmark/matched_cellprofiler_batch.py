@@ -1670,7 +1670,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient | None) -> in
         )
         submission = OpenHCSExecutionSubmission(
             subject_id=case.dataset_path,
-            execution_subject_id=prepared.execution_plate_path,
+            execution_subject_id=prepared.execution_dataset_root,
             selected_pipeline_path=case.cppipe_path,
             pipeline_document=PipelineDocumentCodec.from_values(
                 pipeline_config=pipeline_config,

@@ -170,7 +170,7 @@ def test_prepare_cellprofiler_input_workspace_preserves_external_object_inputs(
 
     result = CellProfilerPlateWorkspacePreparer(fixture.plate_root).prepare()
 
-    assert result.execution_plate_path == (
+    assert result.execution_dataset_root == (
         fixture.plate_root / ".openhcs_cellprofiler" / "ExampleFly_source_workspace"
     )
     assert result.materialization is not None
@@ -231,7 +231,7 @@ def test_prepare_cellprofiler_input_workspace_refreshes_stale_root_metadata(
     result = CellProfilerPlateWorkspacePreparer.from_paths(fixture.plate_root).prepare()
 
     assert result.original_source_root == fixture.plate_root
-    assert result.execution_plate_path == (
+    assert result.execution_dataset_root == (
         fixture.plate_root
         / ".openhcs_cellprofiler"
         / "BBBC022_Analysis_Final_source_workspace"

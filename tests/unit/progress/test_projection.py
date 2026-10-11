@@ -150,7 +150,7 @@ def test_projection_dedupes_multiple_execution_ids_for_same_plate():
         }
     )
 
-    assert len(projection.plates) == 2  # raw snapshots
+    assert len(projection.subjects) == 2  # raw snapshots
     assert len(projection.by_subject_latest) == 1  # deduped visible plate set
     assert projection.count_for_state(ExecutingSubjectRuntimeState) == 1
     assert projection.count_for_state(CompiledSubjectRuntimeState) == 0
@@ -193,16 +193,13 @@ def test_projection_marks_plate_failed_on_axis_error():
     assert projection.count_for_state(FailedSubjectRuntimeState) == 1
 
 
-def test_plate_runtime_state_declarations_cover_wire_tokens():
-    assert set(SubjectRuntimeState.__registry__) == set(SubjectRuntimeState)
-
-
 def test_execution_projection_does_not_mirror_registered_state_counts_as_fields():
     projection_fields = {field.name for field in fields(ExecutionRuntimeProjection)}
 
     assert "state_counts" in projection_fields
     assert (
-        not {f"{state.value}_count" for state in SubjectRuntimeState} & projection_fields
+        not {f"{name}_count" for name in SubjectRuntimeState.__registry__}
+        & projection_fields
     )
 
 

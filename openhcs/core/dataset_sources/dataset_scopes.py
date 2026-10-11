@@ -192,7 +192,7 @@ class PreparedWorkspaceScope(DatasetScopeKind):
 
         return InputWorkspacePreparationResult(
             original_source_root=scope.root,
-            execution_plate_path=scope.execution_root,
+            execution_dataset_root=scope.execution_root,
         )
 
 

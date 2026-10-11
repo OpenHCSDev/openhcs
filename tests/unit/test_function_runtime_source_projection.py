@@ -129,7 +129,7 @@ def _anchor_executor(
     executor.plan = plan
     executor.context = Mock(
         completed_step_outputs=StepExecutionObservation.empty(),
-        plate_path=Path("."),
+        dataset_root=Path("."),
         microscope_handler=SimpleNamespace(
             parser=parser,
             source_bindings_still_required=lambda: None,
@@ -227,7 +227,7 @@ def test_pattern_discovery_uses_authoritative_virtual_source_files(
     patterns = engine.auto_detect_patterns_from_files(
         source_files,
         variable_components=[Microscopy.Site],
-        partition_filter=["A01"],
+        partition_values=["A01"],
     )
 
     assert patterns == {"A01": ["A01_s{iii}_w1_z001_t001.tif"]}

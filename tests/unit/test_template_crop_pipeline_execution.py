@@ -1,5 +1,6 @@
 """Real compiler, runtime and TIFF persistence for native stack cropping."""
 
+from openhcs.core.progress import ProgressExecutionContext
 from multiprocessing import SimpleQueue
 
 import cv2
@@ -113,11 +114,10 @@ def test_template_crop_persists_each_source_channel(
             execution_bundle=compiled,
             max_workers=1,
             progress_queue=queue,
-            progress_context={
-                "execution_id": str(tmp_path),
-                "subject_id": str(plate),
-                "axis_id": "",
-            },
+            progress_context=ProgressExecutionContext(
+                execution_id=str(tmp_path),
+                subject_id=str(plate),
+            ),
         )
     finally:
         set_progress_queue(None)

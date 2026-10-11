@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.alias_property import AliasProperty
 
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
@@ -16,6 +17,7 @@ from openhcs.core.callable_contract import CallableContract, CallableMetadata
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.debug import (
+    NoOpDebugExecutionPolicy,
     DebugArtifactRef,
     DebugArtifactRefProjection,
     DebugArtifactExportControlPayload,
@@ -164,7 +166,17 @@ class DebugRuntimeFixture:
     STEP_SCOPE_ID = "scope"
     GROUP_KEY = "default"
     AXIS_ID = "A01"
-    PLATE_ID = "plate"
+    SUBJECT_ID = "plate"
+
+    @classmethod
+    def lane(cls) -> WorkerLaneExecutionContext:
+        return WorkerLaneExecutionContext(
+            execution_id=cls.EXECUTION_ID,
+            subject_id=cls.SUBJECT_ID,
+            debug_execution_policy=NoOpDebugExecutionPolicy(),
+            worker_slot="worker_0",
+            worker_assignments={"worker_0": ("A01",)},
+        )
     SEGMENT_NAME = "segment"
 
     @staticmethod
@@ -384,13 +396,7 @@ class DebugRuntimeFixture:
         *,
         context: DebugExecutionContext,
     ) -> DebugSinkInstallRequest:
-        return DebugSinkInstallRequest(
-            context=context,
-            execution_id=cls.EXECUTION_ID,
-            subject_id=cls.PLATE_ID,
-            worker_slot="worker_0",
-            owned_partition_values=("A01",),
-        )
+        return DebugSinkInstallRequest(context=context, progress_context=cls.lane())
 
 
 def test_debug_command_and_boundary_declarations_cover_wire_tokens():
@@ -1174,7 +1180,7 @@ def test_local_debug_snapshot_store_round_trips_metadata(tmp_path):
     )
     session = DebugSession.create(
         execution_id="exec-1",
-        subject_id=DebugRuntimeFixture.PLATE_ID,
+        subject_id=DebugRuntimeFixture.SUBJECT_ID,
         axis_id="B02",
     )
     store = LocalDebugSnapshotStore.for_session(root_path=tmp_path, session=session)
@@ -1231,7 +1237,7 @@ def test_debug_progress_context_round_trips_through_progress_event():
     )
     progress = ProgressEvent(
         execution_id="exec",
-        subject_id=DebugRuntimeFixture.PLATE_ID,
+        subject_id=DebugRuntimeFixture.SUBJECT_ID,
         axis_id=DebugRuntimeFixture.AXIS_ID,
         step_name=DebugRuntimeFixture.SEGMENT_NAME,
         phase=ProgressPhase.PATTERN_GROUP,
@@ -1259,18 +1265,13 @@ def test_debug_progress_event_request_builds_lightweight_progress_event():
     request = DebugProgressEventRequest(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
         debug_event=sink_event,
-        execution_id=DebugRuntimeFixture.EXECUTION_ID,
-        subject_id=DebugRuntimeFixture.PLATE_ID,
+        progress_context=DebugRuntimeFixture.lane(),
         snapshot_id="snap-3",
         snapshot_store_ref=DebugRuntimeFixture.SNAPSHOT_STORE_REF,
         snapshot_store_backend=DebugRuntimeFixture.DEBUG_SNAPSHOT_BACKEND,
         completed=1,
         total=1,
         percent=100,
-        worker_slot="worker_0",
-        owned_partition_values=("A01",),
-        timestamp=2.0,
-        pid=456,
     )
 
     progress = request.to_progress_event()
@@ -1297,13 +1298,10 @@ def test_progress_debug_event_sink_uses_injected_progress_emitter():
     emitted: list[ProgressEvent] = []
     sink = ProgressDebugEventSink(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
-        execution_id=DebugRuntimeFixture.EXECUTION_ID,
-        subject_id=DebugRuntimeFixture.PLATE_ID,
+        progress_context=DebugRuntimeFixture.lane(),
         emit_progress=emitted.append,
         snapshot_store_ref=DebugRuntimeFixture.SNAPSHOT_STORE_REF,
         snapshot_store_backend=DebugRuntimeFixture.DEBUG_SNAPSHOT_BACKEND,
-        worker_slot="worker_0",
-        owned_partition_values=("A01",),
     )
 
     sink.record(
@@ -1348,13 +1346,10 @@ def test_local_snapshot_progress_sink_writes_snapshot_and_emits_id(tmp_path):
     )
     sink = LocalSnapshotProgressDebugEventSink(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
-        execution_id=DebugRuntimeFixture.EXECUTION_ID,
-        subject_id=DebugRuntimeFixture.PLATE_ID,
+        progress_context=DebugRuntimeFixture.lane(),
         emit_progress=emitted.append,
         snapshot_store=store,
         snapshot_store_ref=str(tmp_path),
-        worker_slot="worker_0",
-        owned_partition_values=("A01",),
     )
 
     sink.record(
@@ -1497,7 +1492,7 @@ def test_debug_execution_policy_skips_before_start_step_index():
 
 def test_debug_session_marks_current_cursor_dirty_nominally():
     cursor = DebugRuntimeFixture.cursor()
-    session = DebugSession.create(subject_id=DebugRuntimeFixture.PLATE_ID).with_cursor(
+    session = DebugSession.create(subject_id=DebugRuntimeFixture.SUBJECT_ID).with_cursor(
         cursor
     )
 

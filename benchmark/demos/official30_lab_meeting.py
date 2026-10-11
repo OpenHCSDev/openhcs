@@ -284,7 +284,7 @@ def official30_lab_meeting_demo_contributions(
             )
         pipeline_steps = prepared.pipeline_steps
         pipeline_config = prepared.pipeline_config
-        plate_path = prepared.execution_plate_path
+        plate_path = prepared.execution_dataset_root
         output_root = (
             resolved_session_root / "outputs" / f"official30_{case_name.casefold()}"
         )

@@ -163,7 +163,7 @@ def _export_context() -> ProcessingContext:
             )
         }
     )
-    context.plate_path = Path("/")
+    context.dataset_root = Path("/")
     return context
 
 
@@ -487,7 +487,7 @@ def test_quality_control_plate_invocation_is_context_independent(
 
     ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
     orchestrator = PipelineOrchestrator(
-        prepared.execution_plate_path,
+        prepared.execution_dataset_root,
         pipeline_config=prepared.pipeline_config,
     )
     set_progress_queue(SimpleQueue())

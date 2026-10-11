@@ -105,7 +105,7 @@ class _Browser:
 
 class _ResultOnlyOrchestrator:
     def __init__(self, plate_path: Path, config: GlobalPipelineConfig) -> None:
-        self.plate_path = plate_path
+        self.dataset_root = plate_path
         self.microscope_handler = None
         self._config = config
 
@@ -160,7 +160,7 @@ class _InventoryMicroscopeHandler(FilenameParserCapability):
 
 class _LazyInventoryOrchestrator:
     def __init__(self, plate_path: Path, handler_result_dir: Path) -> None:
-        self.plate_path = plate_path
+        self.dataset_root = plate_path
         self.microscope_handler = None
         self._handler = _InventoryMicroscopeHandler(handler_result_dir)
         self._config = GlobalPipelineConfig()

@@ -131,7 +131,7 @@ class RuntimeObservationMode(Enum):
     def for_compiled_bundle(
         cls, bundle: "CompiledExecutionBundle"
     ) -> "RuntimeObservationMode":
-        """Consolidation carries rendered tables; only plate inputs need records."""
+        """Consolidation carries rendered tables; only dataset-scoped inputs need records."""
 
         if bundle.requires_parent_runtime_observation:
             return cls.MERGE_DATASET_INPUTS

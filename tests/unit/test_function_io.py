@@ -131,7 +131,7 @@ def test_runtime_axis_matching_preserves_numeric_filename_components() -> None:
             "/virtual/2_s001_w1_z001_t001.tif",
         ],
         variable_components=[Microscopy.Channel],
-        partition_filter=["1"],
+        partition_values=["1"],
     )
     assert tuple(patterns) == ("1",)
 

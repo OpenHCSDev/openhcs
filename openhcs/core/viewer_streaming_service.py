@@ -346,8 +346,8 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
     microscope_handler: DatasetSource
 
     def source_workspace_projection(self) -> VirtualWorkspaceSourceProjection:
-        return WorkspaceSourceProjections.from_plate_metadata(
-            plate_path=Path(self.plate_path),
+        return WorkspaceSourceProjections.from_dataset_metadata(
+            dataset_root=Path(self.plate_path),
             metadata_handler=self.microscope_handler.metadata_handler,
             filemanager=self.filemanager,
         ).projection_or_empty()

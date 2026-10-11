@@ -41,7 +41,7 @@ def _resolved_checkpoint(
         path_planning_config=LazyPathPlanningConfig(partition_filter=0),
     )
     orchestrator = SimpleNamespace(
-        plate_path=plate_path,
+        dataset_root=plate_path,
         pipeline_config=pipeline_config,
         get_component_keys=lambda _component, *, resolved_config: ["A01", "B02"],
         create_context=lambda axis_id, *, resolved_config: SimpleNamespace(

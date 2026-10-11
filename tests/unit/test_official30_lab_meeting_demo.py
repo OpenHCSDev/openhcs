@@ -47,16 +47,16 @@ def test_official30_lab_meeting_contributions_import_manifest_owned_cases(
         preparation_requests.append(request)
         assert request.selected_pipeline_path is not None
         assert request.workspace_root is not None
-        execution_plate_path = request.workspace_root / "returned_execution"
-        execution_plate_path.mkdir(parents=True)
-        (execution_plate_path / "openhcs_metadata.json").write_text(
+        execution_dataset_root = request.workspace_root / "returned_execution"
+        execution_dataset_root.mkdir(parents=True)
+        (execution_dataset_root / "openhcs_metadata.json").write_text(
             "prepared",
             encoding="utf-8",
         )
         target_name = target_steps[request.selected_pipeline_path.name]
         return InputWorkspacePreparationResult(
             original_source_root=request.selected_path,
-            execution_plate_path=execution_plate_path,
+            execution_dataset_root=execution_dataset_root,
             pipeline_path=request.selected_pipeline_path,
             pipeline_steps=[
                 FunctionStep(name="Preparation", func=percentile_normalize),
@@ -65,8 +65,8 @@ def test_official30_lab_meeting_contributions_import_manifest_owned_cases(
             pipeline_config=PipelineConfig(),
             materialization=SourceBindingWorkspaceMaterialization(
                 source_root=request.selected_path,
-                workspace_root=execution_plate_path,
-                metadata_path=execution_plate_path / "openhcs_metadata.json",
+                workspace_root=execution_dataset_root,
+                metadata_path=execution_dataset_root / "openhcs_metadata.json",
                 plane_mappings={},
                 artifact_mappings={},
                 source_metadata={

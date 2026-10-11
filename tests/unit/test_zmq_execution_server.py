@@ -416,7 +416,7 @@ def test_zmq_server_admits_compiled_declaration_without_reevaluating_source(
         subject_id=request_payload.subject_id,
         compilation_signature=request_payload.compilation_signature,
         debug_replay_signature=request_payload.debug_replay_signature,
-        compilation=ZMQCompilationResult(bundle, []),
+        compilation=ZMQCompilationResult(bundle),
         configs=configs,
     )
     monkeypatch.setattr(
@@ -681,7 +681,7 @@ def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_ga
     previous.filemanager.save("stale", str(tmp_path / "old.tif"), Backend.MEMORY.value)
     handler = OpenHCSDatasetSource(previous.filemanager)
     context = ProcessingContext(axis_id="A01", filemanager=previous.filemanager)
-    context.plate_path = tmp_path
+    context.dataset_root = tmp_path
     context.input_dir = tmp_path
     context.microscope_handler = handler
     transport = ProcessingContext(axis_id="A01")

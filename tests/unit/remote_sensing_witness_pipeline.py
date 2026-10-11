@@ -8,6 +8,7 @@ Prints one JSON line describing what was written.
 
 from __future__ import annotations
 
+from openhcs.core.progress import ProgressExecutionContext
 import json
 import sys
 from pathlib import Path
@@ -196,11 +197,10 @@ def run_pipeline(root: Path, output_root: Path) -> dict:
             execution_bundle=compiled,
             max_workers=1,
             progress_queue=queue,
-            progress_context={
-                "execution_id": str(root),
-                "subject_id": str(root),
-                "axis_id": "",
-            },
+            progress_context=ProgressExecutionContext(
+                execution_id=str(root),
+                subject_id=str(root),
+            ),
         )
     finally:
         set_progress_queue(None)

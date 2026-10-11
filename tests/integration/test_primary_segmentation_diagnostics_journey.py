@@ -4,6 +4,7 @@ Run only in the coordinator's serialized native-validation slot. There is no
 private plate, segmentation replacement, mocked runtime or biological verdict.
 """
 
+from openhcs.core.progress import ProgressExecutionContext
 import numpy as np
 import pytest
 from openhcs.interop.cellprofiler.object_label_variants import (
@@ -299,11 +300,10 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         max_workers=1,
         runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
         progress_queue=AgentProgressQueue(),
-        progress_context={
-            "execution_id": "primary-diagnostics-synthetic",
-            "subject_id": str(tmp_path),
-            "axis_id": "",
-        },
+        progress_context=ProgressExecutionContext(
+            execution_id="primary-diagnostics-synthetic",
+            subject_id=str(tmp_path),
+        ),
     )
     assert results["A01"].is_success(), results["A01"].error_message
     store = context.runtime_value_store

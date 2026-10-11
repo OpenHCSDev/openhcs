@@ -228,16 +228,12 @@ class PatternDiscoveryEngine:
         extensions: List[str] = None,
         group_by: type[GroupingDeclaration] | None = None,
         recursive: bool = False,
-        **kwargs,  # Dynamic filter parameters (e.g., partition_filter, site_filter)
+        partition_values: Sequence[str] | None = None,
     ) -> Dict[str, Any]:
-        """
-        Automatically detect image patterns in a folder.
-        """
-        axis_name = AxisFamily.active().partition_axis().name
-        axis_filter = kwargs.get(f"{axis_name}_filter")
+        """Detect image patterns in a folder, optionally for some partition values."""
 
         files_by_axis = self._find_and_filter_images(
-            folder_path, axis_filter, extensions, recursive, backend
+            folder_path, partition_values, extensions, recursive, backend
         )
 
         if not files_by_axis:
@@ -254,13 +250,11 @@ class PatternDiscoveryEngine:
         image_paths: List[Union[str, Path]],
         variable_components: Sequence[type[Axis]],
         group_by: type[GroupingDeclaration] | None = None,
-        **kwargs,
+        partition_values: Sequence[str] | None = None,
     ) -> Dict[str, Any]:
-        """Automatically detect image patterns from an authoritative file list."""
+        """Detect image patterns from an authoritative file list."""
 
-        axis_name = AxisFamily.active().partition_axis().name
-        axis_filter = kwargs.get(f"{axis_name}_filter")
-        files_by_axis = self._filter_images_by_axis(image_paths, axis_filter)
+        files_by_axis = self._filter_images_by_axis(image_paths, partition_values)
         if not files_by_axis:
             return {}
         return self._patterns_for_files_by_axis(

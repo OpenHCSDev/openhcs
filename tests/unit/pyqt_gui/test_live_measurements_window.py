@@ -34,7 +34,7 @@ def test_image_browser_is_created_only_when_its_results_tab_is_selected(
     monkeypatch,
 ) -> None:
     app = QApplication.instance() or QApplication([])
-    orchestrator = SimpleNamespace(plate_path="/tmp/live-measurement-plate")
+    orchestrator = SimpleNamespace(dataset_root="/tmp/live-measurement-plate")
     created_for: list[object] = []
     created_scope_parents: list[str] = []
     cleanup_calls = 0

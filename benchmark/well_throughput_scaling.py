@@ -2090,7 +2090,7 @@ def run_case_well_throughput(
             f"Case {case_name} has no source bindings; synthetic well expansion "
             "requires a materialized source-binding workspace."
         )
-    source_workspace_path = prepared.execution_plate_path
+    source_workspace_path = prepared.execution_dataset_root
     well_ids = _replicate_source_binding_workspace_wells(
         prepared.materialization.metadata_path,
         _synthetic_well_ids(mode.well_count),

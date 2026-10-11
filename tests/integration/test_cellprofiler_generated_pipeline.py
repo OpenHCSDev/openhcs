@@ -159,7 +159,7 @@ def _execute_imported_cppipe_via_zmq(
         workspace_root=tmp_path / f"{cppipe_path.stem}_source_workspace",
         pipeline_config=imported_config,
     )
-    execution_plate_path = (
+    execution_dataset_root = (
         source_root if workspace is None else workspace.workspace_root
     )
     global_config = GlobalPipelineConfig(
@@ -195,7 +195,7 @@ def _execute_imported_cppipe_via_zmq(
     }
     submission = OpenHCSExecutionSubmission(
         subject_id=source_root,
-        execution_subject_id=execution_plate_path,
+        execution_subject_id=execution_dataset_root,
         selected_pipeline_path=cppipe_path,
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
@@ -225,7 +225,7 @@ def _execute_imported_cppipe_via_zmq(
 
         execution_submission = OpenHCSExecutionSubmission(
             subject_id=source_root,
-            execution_subject_id=execution_plate_path,
+            execution_subject_id=execution_dataset_root,
             selected_pipeline_path=cppipe_path,
             pipeline_document=PipelineDocumentCodec.from_values(
                 pipeline_config=pipeline_config, pipeline_steps=pipeline_steps

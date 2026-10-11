@@ -405,7 +405,7 @@ class OpenHCSAdapter(ToolAdapter):
             raise ToolExecutionError(
                 f"CellProfiler pipeline preparation produced no pipeline: {cppipe_path}"
             )
-        execution_plate_path = ingestion.execution_plate_path
+        execution_dataset_root = ingestion.execution_dataset_root
         generated_pipeline_source = generated_source_path.read_text(encoding="utf-8")
         canonical_pipeline_source = FunctionStepTransportAuthority.source_from_pipeline(
             pipeline_steps
@@ -451,7 +451,7 @@ class OpenHCSAdapter(ToolAdapter):
             ):
                 server_execution, pipeline_source = _execute_pipeline_via_zmq_server(
                     subject_id=request.dataset_path,
-                    execution_subject_id=execution_plate_path,
+                    execution_subject_id=execution_dataset_root,
                     selected_pipeline_path=cppipe_path,
                     pipeline_steps=pipeline_steps,
                     global_config=global_config,

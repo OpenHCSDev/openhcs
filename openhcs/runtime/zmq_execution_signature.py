@@ -210,7 +210,7 @@ class OpenHCSExecutionConfigBundle:
 
 @dataclass(frozen=True, slots=True)
 class ZMQExecutionIdentity:
-    """Plate and source-selection identity shared by client and server."""
+    """Subject and source-selection identity shared by client and server."""
 
     subject_id: str
     execution_subject_id: str | None = None

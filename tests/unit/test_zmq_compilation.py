@@ -162,10 +162,7 @@ def test_reused_compile_artifact_reads_step_names_from_compiled_plans() -> None:
         worker_assignments={"worker_0": ["A01"]},
         runtime_environment=_runtime_environment(),
     )
-    compilation = ZMQCompilationResult(
-        execution_bundle=bundle,
-        compiled_axis_ids=["A01"],
-    )
+    compilation = ZMQCompilationResult(execution_bundle=bundle)
     artifacts = {
         "artifact-1": ZMQCompileArtifactRecord(
             configs=OpenHCSExecutionConfigBundle(
@@ -284,9 +281,7 @@ def test_rejected_reuse_preserves_artifact_for_a_valid_request(retain, invalid):
         subject_id="/plate",
         compilation_signature="signature",
         debug_replay_signature="debug-signature",
-        compilation=ZMQCompilationResult(
-            execution_bundle=bundle, compiled_axis_ids=["A01"]
-        ),
+        compilation=ZMQCompilationResult(execution_bundle=bundle),
     )
     if invalid == "signature":
         artifact = replace(

@@ -1,4 +1,5 @@
 """Default automatic/named publication through actual registered ImageMath."""
+from openhcs.core.progress import ProgressExecutionContext
 from dataclasses import replace
 from hashlib import sha256
 import json
@@ -65,8 +66,10 @@ def test_registered_mixed_image_math_publishes_once_in_both_operand_orders(tmp_p
         execution_bundle=bundle, max_workers=1,
         runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
         progress_queue=AgentProgressQueue(),
-        progress_context={'execution_id': 'engineering620-registered',
-                          'subject_id': str(source), 'axis_id': ''},
+        progress_context=ProgressExecutionContext(
+            execution_id='engineering620-registered',
+            subject_id=str(source),
+        ),
     )
     assert outcomes['A01'].is_success(), outcomes['A01'].error_message
     gray_expected = scalar.astype(np.float32) / 255

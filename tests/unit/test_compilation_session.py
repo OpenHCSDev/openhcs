@@ -279,7 +279,7 @@ def _resolved_step(
 def _context() -> SimpleNamespace:
     return SimpleNamespace(
         axis_id="A01",
-        plate_path=None,
+        dataset_root=None,
         current_sequential_combination=None,
         step_plans={
             0: CompiledStepPlan(
@@ -1010,13 +1010,13 @@ def test_compiler_pipeline_scope_prevents_cross_pipeline_source_binding_inherita
     ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
 
     first_orchestrator = SimpleNamespace(
-        plate_path=plate_path,
+        dataset_root=plate_path,
         pipeline_config=PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig(bindings=(binding,)),
         ),
     )
     second_orchestrator = SimpleNamespace(
-        plate_path=plate_path,
+        dataset_root=plate_path,
         pipeline_config=PipelineConfig(),
     )
     first_pipeline = [FunctionStep(func=_identity, name="first")]
@@ -1067,7 +1067,7 @@ def test_headless_resolution_preserves_saved_ui_ancestors_and_registrations(tmp_
     enabled_token = authored[1]._scope_token or "step_1"
     try:
         resolved = PipelineCompiler._resolve_pipeline_once(
-            SimpleNamespace(plate_path=plate_path, pipeline_config=PipelineConfig()),
+            SimpleNamespace(dataset_root=plate_path, pipeline_config=PipelineConfig()),
             authored,
         )
         assert len(resolved.steps) == 1

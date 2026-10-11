@@ -1,5 +1,6 @@
 """Canonical callable twice through document, compiler, execution and publication."""
 
+from openhcs.core.progress import ProgressExecutionContext
 from csv import DictReader
 from inspect import unwrap
 
@@ -138,11 +139,10 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
         max_workers=1,
         runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
         progress_queue=AgentProgressQueue(),
-        progress_context={
-            "execution_id": "chained-public-callable-synthetic",
-            "subject_id": str(plate),
-            "axis_id": "",
-        },
+        progress_context=ProgressExecutionContext(
+            execution_id="chained-public-callable-synthetic",
+            subject_id=str(plate),
+        ),
     )
     assert results["A01"].is_success(), results["A01"].error_message
     for step_plan in (first, second):

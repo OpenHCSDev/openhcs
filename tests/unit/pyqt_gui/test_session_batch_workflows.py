@@ -40,6 +40,7 @@ from openhcs.core.debug import (
 from openhcs.core.execution_state import ManagerExecutionState, TerminalExecutionStatus
 from openhcs.core.orchestrator.orchestrator import OrchestratorState
 from openhcs.core.progress import (
+    ProgressExecutionContext,
     ProgressEvent,
     ProgressPhase,
     ProgressStatus,
@@ -488,8 +489,7 @@ def _debug_progress_event(*, snapshot_id: str | None, event_type=None):
     return event, DebugProgressEventRequest(
         debug_session_id="debug-1",
         debug_event=event,
-        execution_id="exec-1",
-        subject_id="plate-1",
+        progress_context=ProgressExecutionContext("exec-1", "plate-1"),
         **(
             {}
             if snapshot_id is None
@@ -625,6 +625,8 @@ def test_server_queue_snapshot_projects_queued_executions(monkeypatch):
     from types import SimpleNamespace
 
     from zmqruntime.messages import QueuedExecutionInfo
+
+    from openhcs.core.progress.projection import QueuedSubjectRuntimeState
 
 
     with caller_session() as session:

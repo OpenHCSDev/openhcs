@@ -1,5 +1,6 @@
 """Structural, synthetic-only checks of embedded acquisition tile placement."""
 
+from openhcs.core.progress import ProgressExecutionContext
 import json
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -606,11 +607,10 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
         result = orchestrator.execute_compiled_bundle(
             execution_bundle=compilation,
             progress_queue=progress,
-            progress_context={
-                "execution_id": f"test::source-geometry::{embedded}",
-                "subject_id": str(plate),
-                "axis_id": "",
-            },
+            progress_context=ProgressExecutionContext(
+                execution_id=f"test::source-geometry::{embedded}",
+                subject_id=str(plate),
+            ),
         )
         assert result["A01"].is_success(), result["A01"].error_message
         if embedded:
@@ -693,11 +693,10 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
             replay_result = reopened.execute_compiled_bundle(
                 execution_bundle=replay,
                 progress_queue=progress,
-                progress_context={
-                    "execution_id": f"test::stitched-output-replay::{assembly_backend}",
-                    "subject_id": str(output_dataset),
-                    "axis_id": "",
-                },
+                progress_context=ProgressExecutionContext(
+                    execution_id=f"test::stitched-output-replay::{assembly_backend}",
+                    subject_id=str(output_dataset),
+                ),
             )
             assert replay_result["A01"].is_success(), replay_result["A01"].error_message
     finally:

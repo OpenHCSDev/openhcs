@@ -1,3 +1,4 @@
+import openhcs.core.progress.types as progress_types
 import weakref
 from types import SimpleNamespace
 
@@ -247,7 +248,7 @@ def test_axis_only_worker_lane_releases_runtime_values_after_each_axis(
         return ExecutionResult.success(context.axis_id)
 
     monkeypatch.setattr(worker_execution, "_execute_single_axis_static", execute_axis)
-    monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
+    monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
 
     results = worker_execution.execute_worker_lane(
         pipeline_definition=[object()],
@@ -371,7 +372,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
         "_execute_single_axis_static",
         execute_current_run,
     )
-    monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
+    monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
     context = ProcessingContext(
         axis_id="A01",
         step_plans={
@@ -432,7 +433,7 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
         ("image",), memory_type="numpy", stack=pixels
     )
     del pixels
-    monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
+    monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
     monkeypatch.setattr(
         worker_execution,
         "_execute_single_axis_static",
@@ -488,7 +489,7 @@ def test_worker_lane_releases_previous_axis_stack_before_next_axis(
         return ExecutionResult.success(context.axis_id)
 
     monkeypatch.setattr(worker_execution, "_execute_single_axis_static", execute_axis)
-    monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
+    monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
     results = worker_execution.execute_worker_lane(
         pipeline_definition=[object()],
         lane_axis_contexts=[
@@ -539,7 +540,7 @@ def test_worker_lane_releases_unconsumed_image_records_before_next_axis(
         return ExecutionResult.success(context.axis_id)
 
     monkeypatch.setattr(worker_execution, "_execute_single_axis_static", execute_axis)
-    monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
+    monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
     results = worker_execution.execute_worker_lane(
         pipeline_definition=[object()],
         lane_axis_contexts=[

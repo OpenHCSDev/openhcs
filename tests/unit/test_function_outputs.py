@@ -281,7 +281,7 @@ class StreamingConfigStub(ViewerDisplayConfigABC):
             display_config=self,
             source=ViewerStreamSourceIdentity(
                 microscope_handler=context.microscope_handler,
-                plate_path=context.plate_path,
+                plate_path=context.dataset_root,
             ),
         )
 
@@ -372,7 +372,7 @@ def context_stub(filemanager, parser=None):
             {"channel": {"1": "OrigDNA", "2": "OrigER", "3": "OrigRNA"}}
         ),
     )
-    context.plate_path = Path("/tmp/plate")
+    context.dataset_root = Path("/tmp/plate")
     context.input_dir = Path("/tmp/plate/images")
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
     context.axis_id = "A01"

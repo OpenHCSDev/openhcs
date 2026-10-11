@@ -1,4 +1,4 @@
-"""Compiled plate execution flow for :class:`PipelineOrchestrator`."""
+"""Execution of a compiled bundle for :class:`PipelineOrchestrator`."""
 
 from __future__ import annotations
 
@@ -151,7 +151,7 @@ class BundleExecutionResults(dict[str, ExecutionResult]):
 
 @dataclass(frozen=True, slots=True)
 class BundleExecutionRequest(ProgressExecutionContext):
-    """Public execute-compiled-plate call normalized into one request record."""
+    """Public execute-compiled-bundle call normalized into one request record."""
 
     execution_bundle: CompiledExecutionBundle
     max_workers: Optional[int]
@@ -205,7 +205,7 @@ def execute_bundle_request(
     orchestrator: "PipelineOrchestrator",
     request: BundleExecutionRequest,
 ) -> BundleExecutionResults:
-    """Execute compiled plate contexts through the runtime worker lanes."""
+    """Execute compiled contexts through the runtime worker lanes."""
 
     validated = validate_bundle_execution(orchestrator, request)
     if validated is None:
@@ -296,7 +296,7 @@ def execute_bundle_request(
                     f"pool (workers were killed externally): {exc}"
                 )
                 if not execution_results or execution_results.is_success():
-                    # A failed plate partition/finalizer after successful axes
+                    # A failed dataset-scoped partition/finalizer after successful axes
                     # must not become a successful pipeline without its output.
                     raise
             finally:
@@ -348,11 +348,11 @@ def execute_bundle_request(
         )
     except ExecutionCancelledError:
         orchestrator._state = OrchestratorState.READY
-        logger.info("Compiled plate execution cancelled")
+        logger.info("Compiled bundle execution cancelled")
         raise
     except Exception as exc:
         orchestrator._state = OrchestratorState.EXEC_FAILED
-        logger.error(f"Failed to execute compiled plate: {exc}")
+        logger.error(f"Failed to execute compiled bundle: {exc}")
         raise
     finally:
         try:
@@ -368,7 +368,7 @@ def validate_bundle_execution(
     orchestrator: "PipelineOrchestrator",
     request: BundleExecutionRequest,
 ) -> ValidatedBundleExecution | None:
-    """Validate execute-compiled-plate invariants before worker setup."""
+    """Validate execute-compiled-bundle invariants before worker setup."""
 
     pipeline_definition = request.pipeline_definition
     compiled_contexts = request.compiled_contexts
@@ -385,7 +385,7 @@ def validate_bundle_execution(
         and request.runtime_observation_mode is RuntimeObservationMode.OMIT
     ):
         raise ValueError(
-            "Plate-scoped FunctionSteps require RuntimeObservationMode."
+            "Dataset-scoped FunctionSteps require RuntimeObservationMode."
             "MERGE_INTO_PARENT so compiled artifact inputs are available after "
             "worker execution."
         )
@@ -407,7 +407,7 @@ def validate_bundle_execution(
 def validate_dataset_scoped_contexts(
     compiled_contexts: Mapping[str, ProcessingContext],
 ) -> tuple[int, ...]:
-    """Validate plate lifecycle invariants shared by compilation contexts."""
+    """Validate dataset-scoped lifecycle invariants shared by compilation contexts."""
 
     memberships = {
         context_key: tuple(
@@ -420,7 +420,7 @@ def validate_dataset_scoped_contexts(
     distinct_memberships = frozenset(memberships.values())
     if len(distinct_memberships) != 1:
         raise ValueError(
-            "Plate-scoped step membership drifted between compiled contexts: "
+            "Dataset-scoped step membership drifted between compiled contexts: "
             f"{memberships!r}."
         )
     (dataset_step_indexes,) = distinct_memberships
@@ -444,8 +444,8 @@ def validate_dataset_scoped_contexts(
     }
     if contexts_with_axis_successors:
         raise ValueError(
-            "Plate-scoped FunctionSteps must be terminal; axis-scoped successors "
-            "are not executable after post-plate processing: "
+            "Dataset-scoped FunctionSteps must be terminal; axis-scoped successors "
+            "are not executable after dataset-scoped processing: "
             f"{contexts_with_axis_successors!r}."
         )
 
@@ -463,13 +463,13 @@ def validate_dataset_scoped_contexts(
             else:
                 if invocations != baseline_invocations:
                     raise ValueError(
-                        "Plate-scoped compiled invocations drifted between contexts "
+                        "Dataset-scoped compiled invocations drifted between contexts "
                         f"for step {step_index} ({step_plan.step_name!r}); context "
                         f"{context_key!r} differs."
                     )
                 if step_plan.source_binding_plan != baseline_source_binding_plan:
                     raise ValueError(
-                        "Plate-scoped source-binding plan drifted between contexts "
+                        "Dataset-scoped source-binding plan drifted between contexts "
                         f"for step {step_index} ({step_plan.step_name!r}); context "
                         f"{context_key!r} differs."
                     )
@@ -477,7 +477,7 @@ def validate_dataset_scoped_contexts(
                 metadata_owners += 1
         if metadata_owners != 1:
             raise ValueError(
-                f"Plate-scoped step {step_index} requires exactly one "
+                f"Dataset-scoped step {step_index} requires exactly one "
                 f"metadata-writer output owner, got {metadata_owners}."
             )
     return dataset_step_indexes
@@ -491,7 +491,7 @@ def execute_dataset_scoped_steps(
     heartbeat_interval_seconds: float = DATASET_STEP_PROGRESS_HEARTBEAT_SECONDS,
     executor_resources: WorkerExecutorResources | None = None,
 ) -> RuntimeExecutionObservation:
-    """Invoke plate-scoped FunctionSteps once from merged runtime records."""
+    """Invoke dataset-scoped FunctionSteps once from merged runtime records."""
 
     observation_cursors = {
         context_key: context.runtime_value_store.observation_cursor()
@@ -551,7 +551,7 @@ def execute_dataset_scoped_steps(
                 conflicting_parameters = kwargs.keys() & runtime_kwargs.keys()
                 if conflicting_parameters:
                     raise ValueError(
-                        f"Plate-scoped callable "
+                        f"Dataset-scoped callable "
                         f"{owner_invocation.contract.function_name!r} cannot provide "
                         "runtime-owned kwargs "
                         f"{tuple(sorted(conflicting_parameters))!r}."
@@ -660,7 +660,7 @@ def execute_dataset_scoped_steps(
 
 @dataclass(slots=True)
 class _DatasetStepProgressHeartbeat:
-    """Keep one compiler-owned plate step visible while it is executing."""
+    """Keep one compiler-owned dataset-scoped step visible while it is executing."""
 
     progress_queue: ProgressQueue
     progress_context: ProgressExecutionContext
@@ -734,11 +734,11 @@ def _validate_dataset_step_plan(step_plan: CompiledStepPlan) -> None:
     pattern = step_plan.compiled_function_pattern
     if pattern is None:
         raise ValueError(
-            f"Plate-scoped step {step_plan.step_name!r} has no compiled pattern."
+            f"Dataset-scoped step {step_plan.step_name!r} has no compiled pattern."
         )
     if pattern.is_grouped or len(pattern.groups) != 1:
         raise ValueError(
-            f"Plate-scoped step {step_plan.step_name!r} must use one default group."
+            f"Dataset-scoped step {step_plan.step_name!r} must use one default group."
         )
     FuncStepContractValidator.validate_compiled_step_plan(step_plan)
     for invocation in pattern.default_group.invocations:
@@ -756,7 +756,7 @@ def _validate_dataset_invocation(
     )
     if invocation.runtime_parameter_bindings:
         raise ValueError(
-            f"Plate-scoped callable {contract.function_name!r} cannot declare "
+            f"Dataset-scoped callable {contract.function_name!r} cannot declare "
             "axis runtime parameter bindings."
         )
     declared_outputs = tuple(contract.artifact_outputs)
@@ -765,7 +765,7 @@ def _validate_dataset_invocation(
         or declared_outputs[0].artifact_type is not SpecialArtifactType
     ):
         raise ValueError(
-            f"Plate-scoped callable {contract.function_name!r} must declare "
+            f"Dataset-scoped callable {contract.function_name!r} must declare "
             "exactly one SpecialArtifactType output."
         )
 
@@ -783,7 +783,7 @@ def _validate_dataset_invocation(
     )
     if undeclared_input_refs or missing_required_input_refs:
         raise ValueError(
-            f"Plate-scoped invocation {invocation.key!r} artifact input refs drifted "
+            f"Dataset-scoped invocation {invocation.key!r} artifact input refs drifted "
             f"from its module contract; undeclared={undeclared_input_refs!r}, "
             f"missing_required={missing_required_input_refs!r}."
         )
@@ -795,7 +795,7 @@ def _validate_dataset_invocation(
     expected_output_refs = tuple(spec.ref() for spec in declared_outputs)
     if selected_output_refs != expected_output_refs:
         raise ValueError(
-            f"Plate-scoped invocation {invocation.key!r} compiled outputs drifted "
+            f"Dataset-scoped invocation {invocation.key!r} compiled outputs drifted "
             f"from declarations; expected={expected_output_refs!r}, "
             f"actual={selected_output_refs!r}."
         )
@@ -834,7 +834,7 @@ def _dataset_output_owner(
     )
     if len(owners) != 1:
         raise ValueError(
-            f"Plate-scoped step {step_index} requires exactly one output owner, "
+            f"Dataset-scoped step {step_index} requires exactly one output owner, "
             f"got {len(owners)}."
         )
     return owners[0]
@@ -888,7 +888,7 @@ def _dataset_artifact_batch(
             selected_for_spec += len(matches)
         if input_spec.required and selected_for_spec == 0:
             raise ValueError(
-                f"Plate-scoped callable {contract.function_name!r} is missing required "
+                f"Dataset-scoped callable {contract.function_name!r} is missing required "
                 f"input {input_spec.artifact_type.value}:"
                 f"{input_spec.name!r}."
             )

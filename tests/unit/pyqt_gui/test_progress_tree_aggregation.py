@@ -11,6 +11,7 @@ from openhcs.core.progress import (
     is_success_terminal_event,
     is_terminal_event,
 )
+from openhcs.core.progress.projection import CompiledSubjectRuntimeState
 from openhcs.pyqt_gui.widgets.shared.server_browser.progress_projection import (
     ExecutionProgressProjection,
     ExecutionServerProgressRenderer,

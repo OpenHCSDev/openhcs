@@ -995,7 +995,7 @@ class Session:
         logger.info("Initializing %s in workspace %s", source_root, workspace)
         return InputWorkspacePreparationResult(
             original_source_root=source_root,
-            execution_plate_path=workspace,
+            execution_dataset_root=workspace,
         )
 
     async def initialize_datasets(self, scope_ids: tuple[str, ...]) -> None:

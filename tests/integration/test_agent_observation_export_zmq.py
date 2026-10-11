@@ -442,7 +442,7 @@ def test_well_throughput_wrapper_runs_a_synthetic_ordinary_plate(
             pipeline_steps=pipeline.pipeline_steps,
             pipeline_config=pipeline.pipeline_config,
             materialization=SimpleNamespace(metadata_path=tmp_path / "metadata.json"),
-            execution_plate_path=plate,
+            execution_dataset_root=plate,
         ),
     )
     monkeypatch.setattr(
@@ -493,7 +493,7 @@ def test_paper_two_worker_geometry_uses_one_ordinary_measured_run(
             pipeline_steps=pipeline.pipeline_steps,
             pipeline_config=pipeline.pipeline_config,
             materialization=SimpleNamespace(metadata_path=tmp_path / "metadata.json"),
-            execution_plate_path=plate,
+            execution_dataset_root=plate,
         ),
     )
     monkeypatch.setattr(throughput, "_synthetic_well_ids", lambda _count: wells)

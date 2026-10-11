@@ -1,5 +1,6 @@
 """An image reduction must replace the routed source planes in main flow."""
 
+from openhcs.core.progress import ProgressExecutionContext
 from multiprocessing import SimpleQueue
 
 import numpy as np
@@ -156,11 +157,10 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
             execution_bundle=compiled,
             max_workers=1,
             progress_queue=queue,
-            progress_context={
-                "execution_id": str(tmp_path),
-                "subject_id": str(plate),
-                "axis_id": "",
-            },
+            progress_context=ProgressExecutionContext(
+                execution_id=str(tmp_path),
+                subject_id=str(plate),
+            ),
         )
     finally:
         set_progress_queue(None)

@@ -1,4 +1,4 @@
-"""Worker-lane execution runners for compiled plate execution."""
+"""Worker-lane execution runners for compiled bundle execution."""
 
 from __future__ import annotations
 
@@ -175,7 +175,7 @@ class WorkerExecutorResources(ABC):
     def map_partition_invocations(
         self, func: Callable[[object], object], requests: Sequence[object]
     ) -> tuple[object, ...]:
-        """Prepare plate partitions using this execution's existing resources."""
+        """Prepare dataset-scoped partitions using this execution's existing resources."""
         return tuple(func(request) for request in requests)
 
     def release_parent_runtime_resources(
@@ -1446,7 +1446,7 @@ def _completed_axis_step_count(
     context: ProcessingContext,
     total_steps: int,
 ) -> int:
-    """Return the pipeline position where terminal plate processing begins."""
+    """Return the pipeline position where terminal dataset-scoped processing begins."""
 
     return min(
         (

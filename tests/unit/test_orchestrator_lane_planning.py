@@ -1,3 +1,4 @@
+import openhcs.core.progress.types as progress_types
 from contextlib import nullcontext
 import multiprocessing
 import signal
@@ -64,7 +65,12 @@ from openhcs.core.orchestrator.worker_lanes import (
     WorkerLaneExecutionContext,
     WorkerLaneExecutionPlan,
 )
-from openhcs.core.progress import ProgressEvent, ProgressExecutionContext, ProgressPhase
+from openhcs.core.progress import (
+    ProgressEvent,
+    ProgressExecutionContext,
+    ProgressPhase,
+    ProgressStatus,
+)
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponse,
     ViewerPersistenceMode,
@@ -91,12 +97,14 @@ def test_fork_resources_reuse_lane_processes_for_ordered_plate_partitions(monkey
 
     monkeypatch.setattr(
         worker_execution_module,
-        "_execute_fork_inherited_worker_lane_static",
-        lambda keys, context, mode: {
-            axis: ExecutionResult.success(axis) for axis, _ in keys
+        "execute_worker_lane",
+        lambda *, lane_axis_contexts, **_kwargs: {
+            axis: ExecutionResult.success(axis) for axis, _ in lane_axis_contexts
         },
     )
-    ForkInheritedWorkerExecutionState.install(SimpleNamespace(runtime_contexts={}))
+    ForkInheritedWorkerExecutionState.install(
+        SimpleNamespace(runtime_contexts={}, pipeline_definition=())
+    )
     resources = ForkInheritedWorkerExecutorResources(
         multiprocessing_context=multiprocessing.get_context("fork"),
         use_multiprocessing=True,
@@ -124,7 +132,7 @@ def test_fork_resources_reuse_lane_processes_for_ordered_plate_partitions(monkey
                     parent_contexts={},
                 )
             ) == {"A01", "A02"}
-            processes = [process for _, process, _ in resources._runner._processes]
+            processes = [worker.process for worker in resources._runner.workers]
             assert all(process.is_alive() for process in processes)
             for requests in [(5, 2, 7, 1, 8, 4), (3, 9)]:
                 results = resources.map_partition_invocations(
@@ -146,12 +154,14 @@ def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure)
 
     monkeypatch.setattr(
         worker_execution_module,
-        "_execute_fork_inherited_worker_lane_static",
-        lambda keys, context, mode: {
-            axis: ExecutionResult.success(axis) for axis, _ in keys
+        "execute_worker_lane",
+        lambda *, lane_axis_contexts, **_kwargs: {
+            axis: ExecutionResult.success(axis) for axis, _ in lane_axis_contexts
         },
     )
-    ForkInheritedWorkerExecutionState.install(SimpleNamespace(runtime_contexts={}))
+    ForkInheritedWorkerExecutionState.install(
+        SimpleNamespace(runtime_contexts={}, pipeline_definition=())
+    )
     resources = ForkInheritedWorkerExecutorResources(
         multiprocessing_context=multiprocessing.get_context("fork"),
         use_multiprocessing=True,
@@ -181,7 +191,7 @@ def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure)
                     worker_lane_execution_plan=plan,
                     parent_contexts={},
                 )
-                processes = [p for _, p, _ in resources._runner._processes]
+                processes = [worker.process for worker in resources._runner.workers]
                 if failure == "cancel":
                     raise ExecutionCancelledError("cancelled")
                 resources.map_partition_invocations(
@@ -736,12 +746,13 @@ def test_fork_child_termination_cannot_run_inherited_parent_cleanup(
     fork = multiprocessing.get_context("fork")
     reader, writer = fork.Pipe(duplex=False)
 
-    def held_lane(_keys, _context, _mode):
+    def held_lane(**_kwargs):
         writer.send(tuple(signal.getsignal(sig) for sig in parent_handlers))
         signal.pause()
 
-    monkeypatch.setattr(
-        worker_execution_module, "_execute_fork_inherited_worker_lane_static", held_lane
+    monkeypatch.setattr(worker_execution_module, "execute_worker_lane", held_lane)
+    ForkInheritedWorkerExecutionState.install(
+        SimpleNamespace(runtime_contexts={}, pipeline_definition=())
     )
     lane = WorkerLaneExecutionContext(
         execution_id="signal-ownership",
@@ -751,8 +762,14 @@ def test_fork_child_termination_cannot_run_inherited_parent_cleanup(
         worker_assignments={"worker_0": ["A01"]},
     )
     process = fork.Process(
-        target=worker_execution_module._execute_fork_inherited_worker_lane_process,
-        args=(writer, [], lane, RuntimeObservationMode.OMIT, (reader,)),
+        target=worker_execution_module._serve_worker,
+        args=(
+            writer,
+            (reader,),
+            worker_execution_module.ExecuteInheritedLane(
+                [], lane, RuntimeObservationMode.OMIT
+            ),
+        ),
     )
     try:
         for sig in parent_handlers:
@@ -772,6 +789,7 @@ def test_fork_child_termination_cannot_run_inherited_parent_cleanup(
             process.join(timeout=5)
         reader.close()
         writer.close()
+        ForkInheritedWorkerExecutionState.clear()
         for sig, handler in parent_handlers.items():
             signal.signal(sig, handler)
 
@@ -1042,9 +1060,7 @@ def test_pooled_worker_lane_runner_emits_error_before_reraising(monkeypatch):
         lambda futures: list(futures),
     )
     monkeypatch.setattr(
-        worker_execution_module,
-        "emit",
-        lambda **kwargs: emitted.append(kwargs),
+        progress_types, "_progress_queue", SimpleNamespace(put=emitted.append)
     )
 
     execution_plan = WorkerLaneExecutionPlan(
@@ -1065,11 +1081,11 @@ def test_pooled_worker_lane_runner_emits_error_before_reraising(monkeypatch):
             parent_contexts={},
         )
 
-    assert emitted[0]["execution_id"] == "exec"
-    assert emitted[0]["subject_id"] == "plate"
-    assert emitted[0]["axis_id"] == "A01"
-    assert emitted[0]["worker_slot"] == "worker_0"
-    assert emitted[0]["owned_partition_values"] == ["A01"]
+    assert emitted[0].execution_id == "exec"
+    assert emitted[0].subject_id == "plate"
+    assert emitted[0].axis_id == "A01"
+    assert emitted[0].worker_slot == "worker_0"
+    assert emitted[0].owned_partition_values == ["A01"]
 
 
 def test_executor_shutdown_plan_swallows_broken_pool_errors(caplog):
@@ -1367,7 +1383,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
 
     progress_queue = SimpleNamespace(
         put=lambda raw_event: events.append(
-            ProgressEvent.from_dict(raw_event).phase.value
+            raw_event.phase.value
         )
     )
     results = _execute_with_visualizer(
@@ -1435,7 +1451,7 @@ def test_viewer_settlement_progress_throttles_unchanged_active_observations(
     )
 
     assert states == {5563: ViewerControlResponse(payload={"status": "success"})}
-    progress_events = [ProgressEvent.from_dict(event) for event in observed_events]
+    progress_events = list(observed_events)
     assert len(progress_events) == 3
     assert [
         event.context["active_route_work_unit_active"] for event in progress_events
@@ -1511,4 +1527,4 @@ def test_execution_visualizer_readiness_timeout_is_fatal(monkeypatch):
             progress_context=PROGRESS_CONTEXT,
         )
 
-    assert events[-1]["status"] == "failed"
+    assert events[-1].status is ProgressStatus.FAILED

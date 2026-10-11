@@ -130,7 +130,7 @@ class CellProfilerPlateWorkspacePreparer:
         if cppipe_path is None:
             return InputWorkspacePreparationResult(
                 original_source_root=plate_root,
-                execution_plate_path=plate_root,
+                execution_dataset_root=plate_root,
             )
         return prepare_cellprofiler_input_workspace(
             InputWorkspacePreparationRequest(
@@ -228,7 +228,7 @@ def prepare_cellprofiler_input_workspace(
     if cppipe_path is None:
         return InputWorkspacePreparationResult(
             original_source_root=plate_root,
-            execution_plate_path=plate_root,
+            execution_dataset_root=plate_root,
         )
 
     workspace_root = (
@@ -259,7 +259,7 @@ def prepare_cellprofiler_input_workspace(
         )
 
     materialization: SourceBindingWorkspaceMaterialization | None = None
-    execution_plate_path = plate_root
+    execution_dataset_root = plate_root
     if pipeline_config is not None:
         source_bindings = source_bindings_defaults_to_base(
             pipeline_config.source_bindings_config
@@ -285,11 +285,11 @@ def prepare_cellprofiler_input_workspace(
                 source_files=source_files,
                 parser=SourceSchemaFilenameParser(),
             )
-            execution_plate_path = materialization.workspace_root
+            execution_dataset_root = materialization.workspace_root
 
     return InputWorkspacePreparationResult(
         original_source_root=plate_root,
-        execution_plate_path=execution_plate_path,
+        execution_dataset_root=execution_dataset_root,
         pipeline_path=cppipe_path,
         pipeline_steps=pipeline_steps,
         pipeline_config=pipeline_config,

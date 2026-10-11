@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True, slots=True)
 class ZMQResultsSummaryEnricher:
-    """Projects OpenHCS output-plate metadata into execution summaries."""
+    """Projects OpenHCS output-dataset metadata into execution summaries."""
 
     active_executions: dict[str, Any]
 
@@ -50,7 +50,7 @@ class ZMQResultsSummaryEnricher:
             output_summary = ExecutionOutputSummary()
         elif not isinstance(output_summary, ExecutionOutputSummary):
             raise TypeError(
-                "Execution output-plate metadata must use "
+                "Execution output-dataset metadata must use "
                 f"{ExecutionOutputSummary.__name__}."
             )
         observation_export_path = record.get_extra(

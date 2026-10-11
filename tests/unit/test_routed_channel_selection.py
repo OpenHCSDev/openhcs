@@ -1,5 +1,6 @@
 """Channel selection must not relabel pixels from a different producer group."""
 
+from openhcs.core.progress import ProgressExecutionContext
 from multiprocessing import SimpleQueue
 from contextlib import nullcontext
 
@@ -68,11 +69,10 @@ def _execute_steps(plate, steps, output_root):
             execution_bundle=compiled,
             max_workers=1,
             progress_queue=queue,
-            progress_context={
-                "execution_id": str(output_root),
-                "subject_id": str(plate),
-                "axis_id": "",
-            },
+            progress_context=ProgressExecutionContext(
+                execution_id=str(output_root),
+                subject_id=str(plate),
+            ),
         )
     finally:
         set_progress_queue(None)

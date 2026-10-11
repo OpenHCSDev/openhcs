@@ -17,7 +17,7 @@ def test_close_releases_embedded_image_browser(qapp, monkeypatch) -> None:
     monkeypatch.setattr(PlateViewerWindow, "_setup_ui", lambda _window: None)
     monkeypatch.setattr(PlateViewerWindow, "init_scope_border", lambda _window: None)
     window = PlateViewerWindow(
-        orchestrator=SimpleNamespace(plate_path=Path("/tmp/plate-viewer-lifecycle")),
+        orchestrator=SimpleNamespace(dataset_root=Path("/tmp/plate-viewer-lifecycle")),
     )
     window.image_browser = ImageBrowser()
 

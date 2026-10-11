@@ -271,8 +271,8 @@ class PlateImageInventory:
         metadata_handler: "MetadataHandler",
         filemanager: "FileManager",
     ) -> VirtualWorkspaceSourceProjection | None:
-        return WorkspaceSourceProjections.from_plate_metadata(
-            plate_path=plate_path,
+        return WorkspaceSourceProjections.from_dataset_metadata(
+            dataset_root=plate_path,
             metadata_handler=metadata_handler,
             filemanager=filemanager,
         ).projection_if_available()

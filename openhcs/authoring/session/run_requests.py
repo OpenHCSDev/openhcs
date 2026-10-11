@@ -47,7 +47,7 @@ def dataset_pipeline_request(
     orchestrator = dataset_orchestrator(scope_id)
     workspace = orchestrator.input_workspace_preparation_result
     if workspace is not None:
-        execution_root = str(workspace.execution_plate_path)
+        execution_root = str(workspace.execution_dataset_root)
         pipeline_path = (
             None if workspace.pipeline_path is None else str(workspace.pipeline_path)
         )

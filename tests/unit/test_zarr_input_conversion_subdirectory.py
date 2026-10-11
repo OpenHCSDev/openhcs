@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from openhcs.core.progress import ProgressExecutionContext
 import json
 import queue
 from pathlib import Path
@@ -75,11 +76,10 @@ def test_zarr_conversion_keys_store_outputs_by_plate_relative_virtual_path(tmp_p
         results = orchestrator.execute_compiled_bundle(
             execution_bundle=bundle,
             progress_queue=progress_queue,
-            progress_context={
-                "execution_id": "zarr-conversion-subdirectory",
-                "subject_id": str(plate),
-                "axis_id": "",
-            },
+            progress_context=ProgressExecutionContext(
+                execution_id="zarr-conversion-subdirectory",
+                subject_id=str(plate),
+            ),
         )
     finally:
         set_progress_queue(None)

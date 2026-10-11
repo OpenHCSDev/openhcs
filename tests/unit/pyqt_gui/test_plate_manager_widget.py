@@ -158,7 +158,7 @@ def _names(steps) -> list[str]:
 def _workspace(steps, pipeline_config: PipelineConfig | None = None):
     return InputWorkspacePreparationResult(
         original_source_root=Path("/source"),
-        execution_plate_path=Path("/execution"),
+        execution_dataset_root=Path("/execution"),
         pipeline_path=Path("/source/pipeline.cppipe"),
         pipeline_steps=list(steps),
         pipeline_config=pipeline_config or PipelineConfig(),
@@ -334,7 +334,7 @@ def test_initialization_publishes_the_workspace_config_while_another_dataset_run
         session.add_dataset_roots((root,))
         workspace = InputWorkspacePreparationResult(
             original_source_root=root,
-            execution_plate_path=root,
+            execution_dataset_root=root,
             pipeline_path=root / "pipeline.cppipe",
             pipeline_steps=[FunctionStep(func=percentile_normalize, name="Imported")],
             pipeline_config=PipelineConfig(num_workers=3),
@@ -554,7 +554,7 @@ def test_source_binding_context_projects_the_current_orchestrator_config(
         orchestrator.bind_input_workspace(
             InputWorkspacePreparationResult(
                 original_source_root=source_root,
-                execution_plate_path=execution_root,
+                execution_dataset_root=execution_root,
                 pipeline_steps=[],
                 pipeline_config=orchestrator.pipeline_config,
             )
@@ -565,9 +565,9 @@ def test_source_binding_context_projects_the_current_orchestrator_config(
 
         before = orchestrator.source_binding_context(logical_scope)
         assert before is not None
-        assert before.logical_plate_id == logical_scope
-        assert before.display_plate_root == source_root
-        assert before.execution_plate_path == execution_root
+        assert before.logical_dataset_id == logical_scope
+        assert before.display_dataset_root == source_root
+        assert before.execution_dataset_root == execution_root
         assert tuple(b.alias for b in before.source_bindings.bindings) == ("Before",)
 
         orchestrator._state = state

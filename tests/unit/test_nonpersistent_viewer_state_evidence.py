@@ -1,3 +1,4 @@
+from openhcs.core.progress import ProgressExecutionContext
 from types import SimpleNamespace
 
 from zmqruntime.messages import (
@@ -90,7 +91,10 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
         orchestrator=Orchestrator(),
         execution_bundle=execution_bundle,
         runtime_observation_mode=RuntimeObservationMode.OMIT,
-        progress_context={"execution_id": "exec", "subject_id": "plate"},
+        progress_context=ProgressExecutionContext(
+            execution_id="exec",
+            subject_id="plate",
+        ),
         debug_execution_policy=object(),
         active_execution_record=record,
         forward_worker_progress=lambda _queue: None,

@@ -463,7 +463,7 @@ def _execute_plate_steps(
         ),
         heartbeat_interval_seconds=heartbeat_interval_seconds,
     )
-    return [ProgressEvent.from_dict(event) for event in progress_queue.events]
+    return list(progress_queue.events)
 
 
 def _record_measurements(
@@ -953,7 +953,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     assert table.csv_content == "ImageNumber,Count\r\n1,7\r\n"
     assert table.well_id == "A01"
     assert observation.contexts[0].outputs.runtime_export_paths == (table.path,)
-    events = [ProgressEvent.from_dict(event) for event in progress_queue.events]
+    events = list(progress_queue.events)
     assert events[-1].phase is ProgressPhase.STEP_COMPLETED
 
 

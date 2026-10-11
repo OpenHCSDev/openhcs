@@ -425,7 +425,7 @@ class ZMQCompiledPipelineRun:
 
     @property
     def output_dataset(self) -> ExecutionOutputSummary:
-        """Decode output-plate metadata through its shared typed authority."""
+        """Decode output-dataset metadata through its typed summary."""
 
         return ExecutionOutputSummary.from_results_summary(self.results_summary)
 
@@ -1020,7 +1020,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         request = request_builder.request()
         request_payload = request_builder.request_payload
         logger.info(
-            "Serialize task: plate=%s compile_only=%s artifact_id=%s pipeline_sha=%s config_sha=%s",
+            "Serialize task: subject=%s compile_only=%s artifact_id=%s pipeline_sha=%s config_sha=%s",
             request_builder.identity.subject_id,
             request_builder.compile_control.compile_only,
             request_builder.compile_control.compile_artifact_id,

@@ -1,5 +1,6 @@
 """Synthetic-plate integration coverage for 2D neurite outgrowth."""
 
+from openhcs.core.progress import ProgressExecutionContext
 import csv
 import io
 import json
@@ -209,11 +210,10 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         results = orchestrator.execute_compiled_bundle(
             execution_bundle=compilation,
             progress_queue=progress_queue,
-            progress_context={
-                "execution_id": f"test::{time.time_ns()}",
-                "subject_id": str(plate_dir),
-                "axis_id": "",
-            },
+            progress_context=ProgressExecutionContext(
+                execution_id=f"test::{time.time_ns()}",
+                subject_id=str(plate_dir),
+            ),
         )
         assert results["A01"].is_success(), results["A01"].error_message
 
@@ -221,7 +221,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         while True:
             try:
                 progress_events.append(
-                    ProgressEvent.from_dict(progress_queue.get_nowait())
+                    progress_queue.get_nowait()
                 )
             except queue.Empty:
                 break

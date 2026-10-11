@@ -396,7 +396,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         execution_id: str,
         request_payload: ZMQExecutionRequestPayload,
     ):
-        logger.info("[%s] Starting plate %s", execution_id, request_payload.subject_id)
+        logger.info("[%s] Starting subject %s", execution_id, request_payload.subject_id)
 
         request_payload.compile_control.validate()
         self._cleanup_compiled_artifacts()
@@ -466,7 +466,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         )
         request_context.validate_compile_request()
         logger.info(
-            "[%s] Request received: plate=%s compile_only=%s artifact_id=%s step_count=%d pipeline_sha=%s request_sig=%s",
+            "[%s] Request received: subject=%s compile_only=%s artifact_id=%s step_count=%d pipeline_sha=%s request_sig=%s",
             execution_id,
             request_context.subject_id,
             request_context.compile_only,
