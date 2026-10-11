@@ -23,10 +23,9 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
     WorkspaceSourceProjections,
 )
-from openhcs.core.virtual_workspace_metadata import (
-    JsonScalar,
-    JsonValue,
-)
+from python_introspect import JsonValue, to_jsonable
+
+import openhcs.core.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator import PipelineOrchestrator
@@ -621,12 +620,14 @@ class PlateResultFilePreviewReader:
     @staticmethod
     def _roi_shape_identity(shape: "ROIShape"):
         if not is_dataclass(shape):
-            return _hashable_jsonable_metadata_value(shape.shape_type.value)
-        return _hashable_jsonable_metadata_value(
-            {
-                "shape_type": shape.shape_type.value,
-                "fields": asdict(shape),
-            }
+            return _hashable(to_jsonable(shape.shape_type.value))
+        return _hashable(
+            to_jsonable(
+                {
+                    "shape_type": shape.shape_type.value,
+                    "fields": asdict(shape),
+                }
+            )
         )
 
     @staticmethod
@@ -637,7 +638,7 @@ class PlateResultFilePreviewReader:
         }
         for key in ("label", "area", "bbox", "centroid", "plane_indices"):
             if key in metadata:
-                example[key] = _jsonable_metadata_value(metadata[key])
+                example[key] = to_jsonable(metadata[key])
         return example
 
     @staticmethod
@@ -1396,7 +1397,7 @@ class PlateImageSampler:
         omitted_reason = None
         sample_values: JsonValue = ()
         if sample_included:
-            sample_values = _jsonable_array_values(sample)
+            sample_values = to_jsonable(sample)
         elif not include_array_values:
             omitted_reason = "include_array_values is false"
         else:
@@ -1411,12 +1412,12 @@ class PlateImageSampler:
             resolution_shape=tuple(int(value) for value in resolution_shape),
             dtype=str(sample.dtype),
             minimum=(
-                _jsonable_scalar(statistics_array.min())
+                to_jsonable(statistics_array.min())
                 if statistics_array.size
                 else None
             ),
             maximum=(
-                _jsonable_scalar(statistics_array.max())
+                to_jsonable(statistics_array.max())
                 if statistics_array.size
                 else None
             ),
@@ -1452,49 +1453,15 @@ def file_modified_label(file_path: Path) -> str:
     )
 
 
-def _jsonable_array_values(array: np.ndarray) -> JsonValue:
-    if array.ndim == 0:
-        return _jsonable_scalar(array.item())
-    return [_jsonable_array_values(np.asarray(value)) for value in array]
-
-
-def _jsonable_metadata_value(value) -> JsonValue:
-    if isinstance(value, np.generic):
-        return _jsonable_scalar(value.item())
-    if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    if isinstance(value, Mapping):
-        return {str(key): _jsonable_metadata_value(item) for key, item in value.items()}
-    if isinstance(value, list | tuple):
-        return tuple(_jsonable_metadata_value(item) for item in value)
-    return str(value)
-
-
 def semantic_roi_identity_from_metadata(metadata: Mapping):
     """Return a hashable semantic ROI identity from ROI metadata."""
-    return _hashable_jsonable_metadata_value(metadata)
+    return _hashable(to_jsonable(metadata))
 
 
-def _hashable_jsonable_metadata_value(value):
-    jsonable = _jsonable_metadata_value(value)
+def _hashable(jsonable: JsonValue):
+    """Freeze an encoded value: mappings become sorted pairs, lists tuples."""
     if isinstance(jsonable, Mapping):
-        return tuple(
-            sorted(
-                (
-                    str(key),
-                    _hashable_jsonable_metadata_value(item),
-                )
-                for key, item in jsonable.items()
-            )
-        )
-    if isinstance(jsonable, list | tuple):
-        return tuple(_hashable_jsonable_metadata_value(item) for item in jsonable)
+        return tuple(sorted((key, _hashable(item)) for key, item in jsonable.items()))
+    if isinstance(jsonable, list):
+        return tuple(_hashable(item) for item in jsonable)
     return jsonable
-
-
-def _jsonable_scalar(value: np.generic | JsonScalar) -> JsonLike:
-    if isinstance(value, np.generic):
-        value = value.item()
-    if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    return str(value)
