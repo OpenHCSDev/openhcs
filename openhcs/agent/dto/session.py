@@ -147,6 +147,8 @@ class DatasetRowState:
     debug_session_id: str | None = None
     finished_execution_id: str | None = None
     """The dataset's latest finished ordinary execution (its evidence id)."""
+    finished_execution_error: str | None = None
+    """The server's error for that execution, when it did not complete."""
     scope_accent_color: str | None = None
 
 
