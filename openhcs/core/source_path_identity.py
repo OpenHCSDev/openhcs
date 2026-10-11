@@ -19,15 +19,16 @@ from pathlib import Path
 @lru_cache(maxsize=65536)
 def _normal_form(path: str) -> Path:
     value = Path(path)
+    anchor = value.anchor
     parts: list[str] = []
-    for part in value.parts[1:] if value.anchor else value.parts:
+    for part in value.parts[1:] if anchor else value.parts:
         if part != "..":
             parts.append(part)
         elif parts and parts[-1] != "..":
             parts.pop()
-        elif not value.anchor:
+        elif not anchor:
             parts.append(part)
-    return Path(value.anchor, *parts)
+    return Path(anchor, *parts)
 
 
 def source_path_identity(path: str | PathLike[str]) -> Path:

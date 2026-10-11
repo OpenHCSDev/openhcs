@@ -777,14 +777,7 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
         return replace(
             self,
             bindings=tuple(
-                (
-                    replace(
-                        binding,
-                        explicit_source=binding.explicit_source.resolved(source_root),
-                    )
-                    if binding.explicit_source is not None
-                    else binding
-                )
+                binding.with_resolved_explicit_source(source_root)
                 for binding in self.binding_declarations
             ),
             image_plane_sources=tuple(
@@ -923,7 +916,7 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
 
     def compiled_plan_for_contracts(
         self,
-        contracts: Iterable["CallableContract"],
+        contracts: "Iterable[CallableContract]",
         main_input_dependency: "StepInputDependency",
         available_artifacts: ArtifactSpecCollection,
     ) -> CompiledSourceBindingPlan:

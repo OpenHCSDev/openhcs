@@ -352,13 +352,7 @@ class FunctionStepExecutor:
                 compiled_group,
                 component_value=component_value,
             )
-            if not bindings.binding_declarations:
-                return ()
-            return policy.select(
-                pattern_list,
-                bindings=bindings.binding_declarations,
-                source_context=source_context,
-            )
+            return bindings.select_anchors(pattern_list, policy, source_context)
 
         return self.apply(
             "step_filter_source_anchors",
@@ -396,7 +390,6 @@ class FunctionStepExecutor:
             requires_cross_group_resolution = (
                 execution_scope.component is not None
                 and target_key is not None
-                and bindings.binding_declarations
                 and bindings.requires_cross_group_candidate_resolution(
                     execution_scope.component,
                     str(target_key),
@@ -407,16 +400,8 @@ class FunctionStepExecutor:
                 if local_candidates is None or requires_cross_group_resolution
                 else local_candidates
             )
-            selected_groups[target_key] = (
-                ()
-                if not bindings.binding_declarations
-                else tuple(
-                    policy.select(
-                        candidates,
-                        bindings=bindings.binding_declarations,
-                        source_context=source_context,
-                    )
-                )
+            selected_groups[target_key] = bindings.select_anchors(
+                candidates, policy, source_context
             )
 
         filtered = selected_groups

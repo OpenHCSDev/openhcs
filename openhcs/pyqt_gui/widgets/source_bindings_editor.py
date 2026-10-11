@@ -164,11 +164,13 @@ class SourceSetPairingRow:
     @staticmethod
     def to_plan(
         rows: tuple["SourceSetPairingRow", ...],
-        unset: SourceSetPairing | None,
+        owner: SourceBindingsEditorRawValue,
     ) -> SourceSetPairing | None:
-        """The pairing the rows declare; ``unset`` (the field default) without rows."""
+        """The pairing the rows declare; ``owner``'s field default without rows."""
         if not rows:
-            return unset
+            return next(
+                item.default for item in fields(owner) if item.name == "match_plan"
+            )
         return rows[0].method.keyed_by(
             tuple(
                 SourceBindingMatchDimension(fields=row.fields)
@@ -1711,14 +1713,7 @@ class SourceBindingsEditorWidget(
         rows = self.match_plan_controller.rows()
         if any(row.fields for row in rows) and not all(row.fields for row in rows):
             return
-        match_plan = SourceSetPairingRow.to_plan(
-            rows,
-            unset=next(
-                item.default
-                for item in fields(self._bindings)
-                if item.name == "match_plan"
-            ),
-        )
+        match_plan = SourceSetPairingRow.to_plan(rows, self._bindings)
         self._bindings = replace_raw(
             self._bindings,
             match_plan=match_plan,

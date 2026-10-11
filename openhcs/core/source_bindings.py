@@ -48,6 +48,10 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_array_values import RuntimeArrayData
     from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.source_binding_selection import (
+        SourceBoundAnchorPatternPolicy,
+        SourcePatternResolutionContext,
+    )
     from openhcs.core.source_image_provenance import SourceImageProvenance
 
 SOURCE_ALIAS_PART_SEPARATOR = "__"
@@ -1018,6 +1022,15 @@ class NamedSourceBinding(SourceAssignmentBase):
                 return False
         return self.selector.path_filters_match(path_identities)
 
+    def with_resolved_explicit_source(self, source_root: Path) -> Self:
+        """Return this binding with its explicit source resolved to a local file."""
+
+        if self.explicit_source is None:
+            return self
+        return replace(
+            self, explicit_source=self.explicit_source.resolved(source_root)
+        )
+
     def source_channel_axis_for_shape(
         self,
         shape: tuple[int, ...],
@@ -1500,6 +1513,8 @@ class SourceBindingDeclarationsMixin:
     ) -> bool:
         """Return whether this semantic group must search other source groups."""
 
+        if not self.binding_declarations:
+            return False
         return any(
             binding.requires_cross_group_candidate_resolution(component, group_key)
             for binding in self.bindings_for_component_group(component, group_key)
@@ -1910,6 +1925,24 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
                 else self.for_component_group(component, group_key)
             )
         return self.for_artifact_refs(main_flow_refs)
+
+    def select_anchors(
+        self,
+        pattern_list: Sequence[str],
+        policy: SourceBoundAnchorPatternPolicy,
+        source_context: SourcePatternResolutionContext,
+    ) -> tuple[str, ...]:
+        """Anchors ``policy`` selects for these bindings; none when nothing is bound."""
+
+        if not self.bindings:
+            return ()
+        return tuple(
+            policy.select(
+                pattern_list,
+                bindings=self.bindings,
+                source_context=source_context,
+            )
+        )
 
     def __reduce__(
         self,
