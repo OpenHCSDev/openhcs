@@ -1286,7 +1286,7 @@ def step_function_scope(scope_id: str) -> FunctionScopeRef | None:
         scope = StepEditorScope.parse(scope_id)
     except ValueError:
         return None
-    if scope.child_scope_id is None or ScopeKey(scope.child_scope_id).depth != 1:
+    if not scope.is_function_scope or ScopeKey(scope.child_scope_id).depth != 1:
         return None
     return FunctionScopeRef(
         owner_scope_id=scope.step_scope_id,
@@ -1298,12 +1298,10 @@ def select_step_editor_tab_after_time_travel(
     scope_id: str,
     target: NavigationTarget | None,
 ) -> None:
-    """Show the function pattern tab when time travel targets a function."""
+    """Show the tab that holds the field or function time travel focused."""
 
     window = WindowManager.get_window(scope_id)
-    if not isinstance(window, DualEditorWindow) or window.tab_widget is None:
-        return
-    if target is not None and target.is_function_target:
-        DualEditorTab.FUNCTION_PATTERN.select(window.tab_widget)
-    else:
-        DualEditorTab.STEP_SETTINGS.select(window.tab_widget)
+    if isinstance(window, DualEditorWindow) and target is not None:
+        DualEditorWindowNavigationDriver(window).select_tab_for_field_path(
+            target.to_field_path()
+        )
