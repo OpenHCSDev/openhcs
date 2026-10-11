@@ -10,6 +10,7 @@ from collections.abc import Callable
 from functools import cache, singledispatchmethod
 
 
+from objectstate import ScopeKey
 from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QShowEvent
@@ -23,7 +24,9 @@ from PyQt6.QtWidgets import (
 from pyqt_reactive.forms.layout_constants import CURRENT_LAYOUT
 from pyqt_reactive.services.function_navigation import is_function_field_path
 from pyqt_reactive.services.scope_token_service import ScopeTokenService
+from pyqt_reactive.services.time_travel_navigation import FunctionScopeRef, NavigationTarget
 from pyqt_reactive.services.window_code_document import WindowCodeDocumentDriver
+from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.window_navigation import (
     FieldWindowNavigationDriver,
     NavigationWaitReason,
@@ -1274,3 +1277,33 @@ class DualEditorWindow(BaseFormDialog):
 
     # No need to override _get_form_managers() - BaseFormDialog automatically
     # discovers all ParameterFormManager instances recursively in the widget tree
+
+
+def step_function_scope(scope_id: str) -> FunctionScopeRef | None:
+    """A function child scope of a step editor, owned by the step's scope."""
+
+    try:
+        scope = StepEditorScope.parse(scope_id)
+    except ValueError:
+        return None
+    if scope.child_scope_id is None or ScopeKey(scope.child_scope_id).depth != 1:
+        return None
+    return FunctionScopeRef(
+        owner_scope_id=scope.step_scope_id,
+        function_token=scope.child_scope_id,
+    )
+
+
+def select_step_editor_tab_after_time_travel(
+    scope_id: str,
+    target: NavigationTarget | None,
+) -> None:
+    """Show the function pattern tab when time travel targets a function."""
+
+    window = WindowManager.get_window(scope_id)
+    if not isinstance(window, DualEditorWindow) or window.tab_widget is None:
+        return
+    if target is not None and target.is_function_target:
+        DualEditorTab.FUNCTION_PATTERN.select(window.tab_widget)
+    else:
+        DualEditorTab.STEP_SETTINGS.select(window.tab_widget)
