@@ -47,11 +47,9 @@ from openhcs.runtime.napari_viewer_server import (
 )
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemanticsFactory,
-    ViewerComponentNameMetadata,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
     ViewerLayerAxisProjection,
-    ViewerRouteComponentValueTracker,
 )
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
@@ -221,29 +219,33 @@ def test_conflicting_route_calibration_fails_closed():
 
 
 def test_native_display_handlers_apply_shared_calibration_after_wire_roundtrip():
-    from openhcs.runtime.napari_streaming_handlers import (
-        NapariLayerRouteStateStore,
-        NapariComponentGroupStore,
-    )
+    from zmqruntime.config import TransportMode
+
     from openhcs.runtime.napari_viewer_server import (
         NapariImageLayerDisplayHandler,
         NapariLayerDisplayRequest,
-        NapariLayerDisplayPipeline,
         NapariPointsLayerDisplayHandler,
         NapariShapesLayerDisplayHandler,
+        NapariViewerServer,
     )
+    from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
 
     viewer = ViewerModel()
-    routes = NapariLayerRouteStateStore.empty()
-    server = SimpleNamespace(
-        viewer=viewer,
-        layer_route_state=routes,
-        component_groups=NapariComponentGroupStore(),
-        component_values=ViewerRouteComponentValueTracker(),
-        component_name_metadata=ViewerComponentNameMetadata.empty(),
-        bind_result_selection_layer=lambda layer: None,
+    # The real server's stores and pipeline; construction opens no socket.
+    server = NapariViewerServer(
+        NapariViewerServerRequest(
+            port=45000,
+            viewer_title="calibration test",
+            replace_layers=False,
+            log_file_path=None,
+            transport_mode=TransportMode.IPC,
+        )
     )
-    pipeline = NapariLayerDisplayPipeline(server)
+    server.viewer = viewer
+    # A ViewerModel has no Qt window to dock the ROI manager into.
+    server.bind_result_selection_layer = lambda layer: None
+    routes = server.layer_route_state
+    pipeline = server.display_pipeline
     metadata = ImagePayloadMetadata(
         source_voxel_spacing=SourceVoxelSpacing((1.3556, 1.3556)),
         source_spatial_domain=SourceSpatialDomain((0, 0), (4, 5)),

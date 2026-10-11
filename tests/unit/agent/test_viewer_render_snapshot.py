@@ -242,7 +242,12 @@ def test_managed_reply_uses_real_qt_frame_through_original_capture_ancestor(tmp_
 
     request = _request(tmp_path)
     try:
-        ViewerWindowSnapshotService().request_viewer_capture(
+        service = ViewerWindowSnapshotService()
+        descriptor = ViewerWindowDescriptor(
+            viewer_type=ViewerType.NAPARI, title="Source snapshot"
+        )
+        # The viewer projects the managed reply from the Qt ancestor's snapshot.
+        service.request_capture(
             QtWindowSnapshotRequest(
                 widget=canvas,
                 capture=request,
@@ -250,10 +255,7 @@ def test_managed_reply_uses_real_qt_frame_through_original_capture_ancestor(tmp_
                 title="Source snapshot",
                 render_owner=NativePaintOwner(canvas),
             ),
-            ViewerWindowDescriptor(
-                viewer_type=ViewerType.NAPARI, title="Source snapshot"
-            ),
-            complete,
+            lambda snapshot: complete(service.snapshot_reply(descriptor, snapshot)),
             fail,
         )
         assert not completed and not failed

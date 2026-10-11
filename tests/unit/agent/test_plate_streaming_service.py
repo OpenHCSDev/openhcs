@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import tifffile
@@ -23,7 +24,7 @@ from openhcs.core.plate_image_inventory import (
     PlateImageRecord,
     PlateResultFileRecord,
 )
-from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core.streaming_config_declarations import NapariViewer, ViewerType
 from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_measurements import (
@@ -51,8 +52,13 @@ from openhcs.runtime.viewer_protocol import (
 from openhcs.domains.microscopy.axes import Microscopy
 
 
+# A metadata owner that anchors workspace-relative addresses at the plate.
+PLATE_ROOT_METADATA = SimpleNamespace(source_workspace_root=Path)
+
+
 class FakeHandler:
     source_name = "openhcsdata"
+    metadata_handler = PLATE_ROOT_METADATA
 
     def get_primary_backend(self, plate_path, filemanager):
         del plate_path, filemanager
@@ -110,7 +116,10 @@ def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp
     builder.record_source_metadata(filename, components)
     builder.ingest_source_projections(VirtualWorkspaceSourceProjectionEntries({filename: source}))
     filemanager = FileManager({"disk": DiskStorageBackend()})
-    handler = SimpleNamespace(parse_image_path=SourceSchemaFilenameParser().parse_filename)
+    handler = SimpleNamespace(
+        parse_image_path=SourceSchemaFilenameParser().parse_filename,
+        metadata_handler=PLATE_ROOT_METADATA,
+    )
     record = PlateImageInventory._record(
         plate_path=tmp_path, image_file=filename, handler=handler,
         projection=builder.projection(), filemanager=filemanager, backend="disk",
@@ -294,7 +303,7 @@ def test_plate_streaming_service_returns_typed_headless_result(monkeypatch):
     def reject_headless(**kwargs):
         assert kwargs["launch_context"] is headless_context
         raise ViewerGraphicalSessionUnavailableError(
-            viewer_type=ViewerType.NAPARI,
+            viewer_family=NapariViewer,
             port=5555,
         )
 
@@ -339,7 +348,7 @@ def test_plate_streaming_service_projects_detached_log_diagnostics(
     )
     log_file = tmp_path / "napari_detached_port_5555.log"
     failure = DetachedViewerLaunchFailure(
-        viewer_type=ViewerType.NAPARI,
+        viewer_family=NapariViewer,
         port=5555,
         cause=RuntimeError("Qt/xcb could not connect to display"),
         log_file=log_file,

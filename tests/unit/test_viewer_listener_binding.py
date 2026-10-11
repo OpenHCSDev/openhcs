@@ -73,8 +73,6 @@ def test_server_binds_both_real_sockets_to_declared_interface(
         for socket in sockets:
             socket.close(linger=0)
         context.term()
-        if server.ack_socket is not None:
-            server.ack_socket.close(linger=0)
         server.endpoint.cleanup(server.config)
 
 
