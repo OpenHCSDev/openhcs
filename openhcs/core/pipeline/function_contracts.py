@@ -404,7 +404,9 @@ def special_inputs(*parameter_names: str) -> Callable[[F], F]:
     )
 
     def decorator(func: F) -> F:
-        vars(func)[FunctionContractAttribute.artifact_input_parameter_names] = normalized
+        vars(func)[
+            FunctionContractAttribute.artifact_input_parameter_names
+        ] = normalized
         add_parameter_exclusions(func, normalized)
         return func
 

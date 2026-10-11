@@ -860,7 +860,10 @@ class OpenHCSMainWindow(QMainWindow):
         # Add time-travel controls to the ordinary left lane. Transient
         # QStatusBar messages hide ordinary widgets, so application status is
         # rendered by a permanent right-lane label below instead.
-        from pyqt_reactive.widgets.time_travel import TimeTravelCommands, TimeTravelWidget
+        from pyqt_reactive.widgets.time_travel import (
+            TimeTravelCommands,
+            TimeTravelWidget,
+        )
 
         from openhcs.authoring.session.datasets import DATASET_LIST_SCOPE_ID
 
