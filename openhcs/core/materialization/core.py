@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, ClassVar, TypeAlias
 import numpy as np
 import pandas as pd
 from metaclass_registry import AutoRegisterMeta
+from python_introspect import JsonValue, to_jsonable
 from polystore.config import TiffConfig
 from polystore.streaming.viewer_transport import (
     PathMappedViewerStreamSourceMetadata,
@@ -32,6 +33,7 @@ from polystore.streaming.viewer_transport import (
 )
 from zmqruntime.viewer_protocol import ViewerWireValue
 
+import openhcs.core.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
 from openhcs.core.source_path_identity import source_path_identity
 from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
 from openhcs.core.component_set import ComponentSet
@@ -3001,68 +3003,17 @@ def _render_json(data: MaterializationValue, options: JsonOptions) -> str:
     if options.wrap_list and isinstance(payload, list):
         payload = {"total_items": len(payload), "results": payload}
 
-    return json.dumps(JsonPayloadAuthority.jsonable(payload), indent=options.indent)
+    return json.dumps(to_jsonable(payload), indent=options.indent)
 
 
-class JsonPayloadAuthority:
-    """Convert materialized payloads into JSON-native values before encoding."""
-
-    @classmethod
-    def jsonable(cls, value: MaterializationValue) -> MaterializationValue:
-        return json_payload_value(value)
+@to_jsonable.register(pd.DataFrame)
+def _jsonable_dataframe(value: pd.DataFrame) -> JsonValue:
+    return to_jsonable(value.to_dict(orient="records"))
 
 
-@singledispatch
-def json_payload_value(value: MaterializationValue) -> MaterializationValue:
-    if supports_measurement_row_mapping(value):
-        return {
-            key: JsonPayloadAuthority.jsonable(item)
-            for key, item in measurement_row_mapping(value).items()
-        }
-    return value
-
-
-@json_payload_value.register(dict)
-def json_payload_mapping(value: dict) -> dict:
-    return {key: JsonPayloadAuthority.jsonable(item) for key, item in value.items()}
-
-
-@json_payload_value.register(ColumnarRows)
-def json_payload_columnar_rows(value: ColumnarRows) -> list[dict]:
-    return [
-        {key: JsonPayloadAuthority.jsonable(item) for key, item in row.items()}
-        for row in value.iter_row_mappings()
-    ]
-
-
-@json_payload_value.register(list)
-def json_payload_list(value: list) -> list:
-    return [JsonPayloadAuthority.jsonable(item) for item in value]
-
-
-@json_payload_value.register(tuple)
-def json_payload_tuple(value: tuple) -> tuple:
-    return tuple(JsonPayloadAuthority.jsonable(item) for item in value)
-
-
-@json_payload_value.register(pd.DataFrame)
-def json_payload_dataframe(value: pd.DataFrame) -> TabularRows:
-    return TabularRows(TabularRow(dict(row)) for row in value.to_dict(orient="records"))
-
-
-@json_payload_value.register(pd.Series)
-def json_payload_series(value: pd.Series) -> dict:
-    return value.to_dict()
-
-
-@json_payload_value.register(np.generic)
-def json_payload_numpy_scalar(value: np.generic) -> MaterializationValue:
-    return value.item()
-
-
-@json_payload_value.register(np.ndarray)
-def json_payload_numpy_array(value: np.ndarray) -> list:
-    return value.tolist()
+@to_jsonable.register(pd.Series)
+def _jsonable_series(value: pd.Series) -> JsonValue:
+    return to_jsonable(value.to_dict())
 
 
 class SingleFileWriterAuthority:

@@ -14,6 +14,9 @@ from types import UnionType
 from typing import Annotated, Any, Union, get_args, get_origin, get_type_hints
 
 import numpy as np
+from python_introspect import JsonValue, to_jsonable
+
+import openhcs.core.numpy_jsonable  # noqa: F401  (numpy values in to_jsonable)
 
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -301,6 +304,11 @@ class FieldSpec:
                         f"{previous!r} and {field_spec!r}."
                     )
         return tuple(merged)
+
+
+@to_jsonable.register(ColumnarRows)
+def _jsonable_columnar_rows(value: ColumnarRows) -> JsonValue:
+    return [to_jsonable(row) for row in value.iter_row_mappings()]
 
 
 def supports_measurement_row_mapping(row: object) -> bool:

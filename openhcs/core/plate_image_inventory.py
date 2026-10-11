@@ -14,9 +14,10 @@ import numpy as np
 from polystore.base import ImageSamplingRequest, ImageSamplingResult
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import Backend, FileFormat
+from openhcs.constants.constants import Backend
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.plate_file_inventory import PlateFileInventoryQuery, PlateFileKind
+from openhcs.core.result_file_formats import ResultFileFormat
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
@@ -379,7 +380,7 @@ class PlateResultFileRecord:
 
     relative_path: str
     full_path: str
-    file_format: FileFormat
+    file_format: type[ResultFileFormat]
     metadata: Mapping[str, JsonValue] = field(default_factory=dict)
     source_ref: SourcePixelRef | None = None
     source_projection: "SourceProjection | None" = None
@@ -401,7 +402,7 @@ class PlateFileRecord:
     source_path: str | None = None
     relative_path: str | None = None
     full_path: str | None = None
-    file_format: FileFormat | None = None
+    file_format: type[ResultFileFormat] | None = None
     source_ref: SourcePixelRef | None = None
     source_projection: "SourceProjection | None" = None
 
@@ -425,7 +426,11 @@ class PlateFileRecord:
     @property
     def streamable_roi_path(self) -> str | None:
         """Expose ROI artifacts through their declared result format."""
-        if self.kind is PlateFileKind.RESULT and self.file_format is FileFormat.ROI:
+        if (
+            self.kind is PlateFileKind.RESULT
+            and self.file_format is not None
+            and self.file_format.streams_rois
+        ):
             return self.full_path or self.key
         return None
 
@@ -525,18 +530,18 @@ class PlateResultFilePreviewReader:
         max_lines: int = DEFAULT_MAX_LINES,
         max_bytes: int = DEFAULT_MAX_BYTES,
     ) -> PlateResultFilePreview | None:
-        if record.file_format is FileFormat.ROI:
-            return cls._roi_preview(
-                record,
-                max_examples=max_lines,
-                max_bytes=max_bytes,
-            )
-        if record.file_format not in {
-            FileFormat.CSV,
-            FileFormat.JSON,
-            FileFormat.TEXT,
-        }:
-            return None
+        return record.file_format.preview(
+            cls, record, max_lines=max_lines, max_bytes=max_bytes
+        )
+
+    @classmethod
+    def _bounded_text_lines(
+        cls,
+        record: PlateResultFileRecord,
+        *,
+        max_lines: int,
+        max_bytes: int,
+    ) -> PlateResultFilePreview:
         path = record.full_path_obj
         if not path.exists():
             return PlateResultFilePreview(omitted_reason="file does not exist")
@@ -545,18 +550,43 @@ class PlateResultFilePreviewReader:
                 omitted_reason=f"file exceeds max preview bytes ({max_bytes})"
             )
         lines, truncated = cls._text_lines(path, max_lines=max_lines)
-        if record.file_format is not FileFormat.CSV:
-            return PlateResultFilePreview(text_lines=lines, truncated=truncated)
-        columns, rows = cls._csv_table_from_path(path, max_rows=max_lines)
+        return PlateResultFilePreview(text_lines=lines, truncated=truncated)
+
+    @classmethod
+    def text_preview(
+        cls,
+        record: PlateResultFileRecord,
+        *,
+        max_lines: int,
+        max_bytes: int,
+    ) -> PlateResultFilePreview:
+        return cls._bounded_text_lines(record, max_lines=max_lines, max_bytes=max_bytes)
+
+    @classmethod
+    def csv_preview(
+        cls,
+        record: PlateResultFileRecord,
+        *,
+        max_lines: int,
+        max_bytes: int,
+    ) -> PlateResultFilePreview:
+        preview = cls._bounded_text_lines(
+            record, max_lines=max_lines, max_bytes=max_bytes
+        )
+        if preview.omitted_reason is not None:
+            return preview
+        columns, rows = cls._csv_table_from_path(
+            record.full_path_obj, max_rows=max_lines
+        )
         return PlateResultFilePreview(
-            text_lines=lines,
+            text_lines=preview.text_lines,
             csv_columns=columns,
             csv_rows=rows,
-            truncated=truncated,
+            truncated=preview.truncated,
         )
 
     @classmethod
-    def _roi_preview(
+    def roi_preview(
         cls,
         record: PlateResultFileRecord,
         *,
@@ -998,16 +1028,10 @@ class PlateResultFileInventory:
         )
 
     @staticmethod
-    def _result_file_format(file_path: Path) -> FileFormat | None:
+    def _result_file_format(file_path: Path) -> type[ResultFileFormat] | None:
         if ImageFileFormat.is_image_path(file_path):
             return ImageFileFormat.require_path(file_path).browser_file_format
-        if file_path.name.endswith(FileFormat.ROI.value[0]):
-            return FileFormat.ROI
-        suffix = file_path.suffix.lower()
-        for file_format in (FileFormat.CSV, FileFormat.JSON, FileFormat.TEXT):
-            if suffix in file_format.value:
-                return file_format
-        return None
+        return ResultFileFormat.for_suffix_of(file_path)
 
 
 @dataclass(frozen=True, slots=True)

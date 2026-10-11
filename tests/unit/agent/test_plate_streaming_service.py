@@ -16,7 +16,13 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionContext
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.constants.constants import Backend, FileFormat
+from openhcs.constants.constants import Backend
+from openhcs.core.result_file_formats import (
+    CsvResultFile,
+    JsonResultFile,
+    RoiArchiveResultFile,
+    TiffResultFile,
+)
 from openhcs.core.plate_image_inventory import (
     PlateFileInventory,
     PlateFileRecord,
@@ -627,7 +633,7 @@ def test_plate_streaming_service_rejects_non_roi_result_files(monkeypatch):
             PlateResultFileRecord(
                 relative_path="images_results/A01_counts.csv",
                 full_path="/plate/images_results/A01_counts.csv",
-                file_format=FileFormat.CSV,
+                file_format=CsvResultFile,
                 metadata={"well": "A01"},
             ),
         ),
@@ -662,7 +668,7 @@ def test_plate_streaming_service_streams_roi_result_full_path_and_metadata(monke
             PlateResultFileRecord(
                 relative_path="images_results/A01_w1_rois.roi.zip",
                 full_path=roi_full_path,
-                file_format=FileFormat.ROI,
+                file_format=RoiArchiveResultFile,
                 metadata={
                     "well": "A01",
                     "site": 1,
@@ -728,7 +734,7 @@ def test_plate_streaming_service_reports_explicit_result_excluded_by_default_kin
             PlateResultFileRecord(
                 relative_path="images_results/A01_w1_rois.roi.zip",
                 full_path=roi_full_path,
-                file_format=FileFormat.ROI,
+                file_format=RoiArchiveResultFile,
                 metadata={"well": "A01", "channel": 1},
             ),
         ),
@@ -770,7 +776,7 @@ def test_explicit_stream_path_selects_its_declared_dual_projection():
             PlateResultFileRecord(
                 relative_path=relative_path,
                 full_path=full_path,
-                file_format=FileFormat.TIFF,
+                file_format=TiffResultFile,
             ),
         ),
     )
@@ -800,25 +806,25 @@ def test_plate_streaming_service_query_limit_counts_streamable_roi_results(monke
             PlateResultFileRecord(
                 relative_path="checkpoints_step7_results/A01_measurements.json",
                 full_path="/plate_openhcs/checkpoints_step7_results/A01_measurements.json",
-                file_format=FileFormat.JSON,
+                file_format=JsonResultFile,
                 metadata={"well": "A01"},
             ),
             PlateResultFileRecord(
                 relative_path="checkpoints_step7_results/A01_summary.csv",
                 full_path="/plate_openhcs/checkpoints_step7_results/A01_summary.csv",
-                file_format=FileFormat.CSV,
+                file_format=CsvResultFile,
                 metadata={"well": "A01"},
             ),
             PlateResultFileRecord(
                 relative_path="checkpoints_step7_results/A01_w1_rois.roi.zip",
                 full_path=roi_one_path,
-                file_format=FileFormat.ROI,
+                file_format=RoiArchiveResultFile,
                 metadata={"well": "A01", "channel": 1},
             ),
             PlateResultFileRecord(
                 relative_path="checkpoints_step7_results/A01_w2_rois.roi.zip",
                 full_path=roi_two_path,
-                file_format=FileFormat.ROI,
+                file_format=RoiArchiveResultFile,
                 metadata={"well": "A01", "channel": 2},
             ),
         ),
@@ -885,7 +891,7 @@ def test_plate_streaming_service_uses_context_plate_for_output_roi_stream(monkey
             PlateResultFileRecord(
                 relative_path="images_results/A01_w1_rois.roi.zip",
                 full_path=roi_full_path,
-                file_format=FileFormat.ROI,
+                file_format=RoiArchiveResultFile,
                 metadata={},
             ),
         ),
@@ -943,7 +949,7 @@ def test_explicit_result_route_keeps_source_context_and_requires_native_binding(
             PlateResultFileRecord(
                 relative_path="misleading_A01_w2.roi.zip",
                 full_path=path,
-                file_format=FileFormat.ROI,
+                file_format=RoiArchiveResultFile,
                 metadata={},
             ),
         ),

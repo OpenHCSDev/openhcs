@@ -39,8 +39,8 @@ from pyqt_reactive.widgets.shared.image_table_browser import (
     ImageTableValue,
 )
 
-from openhcs.constants.constants import FileFormat
 from openhcs.core.config import StreamingConfig
+from openhcs.core.result_file_formats import ResultFileFormat
 from openhcs.core.plate_image_inventory import (
     PlateFileInventory,
     PlateFileKind,
@@ -96,18 +96,6 @@ def _streaming_config_field_names() -> tuple[str, ...]:
     return StreamingConfig.supported_config_keys()
 
 
-@dataclass(frozen=True)
-class ResultFileAction:
-    """Double-click behavior for one result-file type."""
-
-    file_type: FileFormat
-    display_name: str
-    handle: Callable[["ImageBrowserWidget", Path], None]
-
-    def run(self, browser: "ImageBrowserWidget", file_path: Path) -> None:
-        self.handle(browser, file_path)
-
-
 @dataclass(slots=True)
 class ImageBrowserItem(Mapping[str, ImageTableValue]):
     """One image/result row plus optional result-file action metadata."""
@@ -116,7 +104,7 @@ class ImageBrowserItem(Mapping[str, ImageTableValue]):
     metadata: dict[str, ImageTableValue]
     file_kind: PlateFileKind = PlateFileKind.IMAGE
     streamable_image_path: str | None = None
-    result_file_type: FileFormat | None = None
+    result_file_type: type[ResultFileFormat] | None = None
     full_path: Path | None = None
 
     @property
@@ -140,38 +128,6 @@ class ImageBrowserItem(Mapping[str, ImageTableValue]):
 
     def __len__(self) -> int:
         return len(self.metadata)
-
-
-def _stream_roi_result(browser: "ImageBrowserWidget", file_path: Path) -> None:
-    browser._stream_roi_file(file_path)
-
-
-def _open_result_in_default_app(browser: "ImageBrowserWidget", file_path: Path) -> None:
-    subprocess.run(["xdg-open", str(file_path)], check=False)
-
-
-RESULT_FILE_ACTIONS = {
-    FileFormat.ROI: ResultFileAction(
-        file_type=FileFormat.ROI,
-        display_name="ROI",
-        handle=_stream_roi_result,
-    ),
-    FileFormat.CSV: ResultFileAction(
-        file_type=FileFormat.CSV,
-        display_name="CSV",
-        handle=_open_result_in_default_app,
-    ),
-    FileFormat.JSON: ResultFileAction(
-        file_type=FileFormat.JSON,
-        display_name="JSON",
-        handle=_open_result_in_default_app,
-    ),
-    FileFormat.TEXT: ResultFileAction(
-        file_type=FileFormat.TEXT,
-        display_name="TEXT",
-        handle=_open_result_in_default_app,
-    ),
-}
 
 
 @dataclass(frozen=True)
@@ -1018,10 +974,9 @@ class ImageBrowserWidget(QWidget):
                 and record.file_format is not None
                 and record.full_path is not None
             ):
-                action = RESULT_FILE_ACTIONS[record.file_format]
                 logger.info(
                     "IMAGE BROWSER RESULTS: matched as %s: %s",
-                    action.display_name,
+                    record.file_format.name,
                     record.key,
                 )
                 result_items[record.key] = ImageBrowserItem(
@@ -1253,7 +1208,13 @@ class ImageBrowserWidget(QWidget):
         """Handle double-click on a result file - stream ROIs or display CSV."""
         if item.result_file_type is None:
             raise RuntimeError(f"Image browser item {item.key!r} has no result type.")
-        RESULT_FILE_ACTIONS[item.result_file_type].run(self, item.result_path())
+        item.result_file_type.open_with(self, item.result_path())
+
+    def open_in_default_app(self, file_path: Path) -> None:
+        subprocess.run(["xdg-open", str(file_path)], check=False)
+
+    def stream_rois(self, file_path: Path) -> None:
+        self._stream_roi_file(file_path)
 
     def _view_selected_in_viewer(self, config_key: str):
         """View all selected images in the specified viewer as a batch (builds hyperstack)."""
@@ -1270,7 +1231,7 @@ class ImageBrowserWidget(QWidget):
         roi_filenames = [
             item.key
             for item in selected_items
-            if item.result_file_type is FileFormat.ROI
+            if item.result_file_type is not None and item.result_file_type.streams_rois
         ]
 
         logger.info(

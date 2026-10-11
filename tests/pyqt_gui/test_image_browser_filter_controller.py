@@ -4,7 +4,11 @@ from pathlib import Path
 from types import SimpleNamespace
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
-from openhcs.constants.constants import FileFormat
+from openhcs.core.result_file_formats import (
+    RoiArchiveResultFile,
+    TextResultFile,
+    TiffResultFile,
+)
 from openhcs.core.component_filters import ComponentFilters
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import GlobalPipelineConfig
@@ -245,7 +249,7 @@ def test_image_browser_projects_shared_result_inventory_records(tmp_path: Path):
             PlateResultFileRecord(
                 relative_path="results/A01.roi.zip",
                 full_path=str(roi_path),
-                file_format=FileFormat.ROI,
+                file_format=RoiArchiveResultFile,
                 metadata={
                     "filename": "results/A01.roi.zip",
                     "type": "ROI",
@@ -255,7 +259,7 @@ def test_image_browser_projects_shared_result_inventory_records(tmp_path: Path):
             PlateResultFileRecord(
                 relative_path="results/summary.txt",
                 full_path=str(text_path),
-                file_format=FileFormat.TEXT,
+                file_format=TextResultFile,
                 metadata={
                     "filename": "results/summary.txt",
                     "type": "TEXT",
@@ -268,11 +272,11 @@ def test_image_browser_projects_shared_result_inventory_records(tmp_path: Path):
     result_items = ImageBrowserWidget._result_items_from_inventory(inventory)
 
     item = result_items["results/A01.roi.zip"]
-    assert item.result_file_type is FileFormat.ROI
+    assert item.result_file_type is RoiArchiveResultFile
     assert item.full_path == roi_path
     assert item.metadata["type"] == "ROI"
     text_item = result_items["results/summary.txt"]
-    assert text_item.result_file_type is FileFormat.TEXT
+    assert text_item.result_file_type is TextResultFile
     assert text_item.full_path == text_path
     assert text_item.metadata["type"] == "TEXT"
 
@@ -288,7 +292,7 @@ def test_image_browser_projects_result_images_as_streamable_images(tmp_path: Pat
             PlateResultFileRecord(
                 relative_path="results/A01_labels.tif",
                 full_path=str(image_path),
-                file_format=FileFormat.TIFF,
+                file_format=TiffResultFile,
                 metadata={
                     "filename": "results/A01_labels.tif",
                     "type": "TIFF",
@@ -449,4 +453,4 @@ def test_plate_file_inventory_query_returns_unified_browser_records(
     assert query_result.total_count == 1
     assert query_result.records[0].key == "images/A01_w1.tif"
     assert image_items["images/A01_w1.tif"].metadata["well"] == "A01"
-    assert result_items["results/A01_summary.txt"].result_file_type is FileFormat.TEXT
+    assert result_items["results/A01_summary.txt"].result_file_type is TextResultFile
