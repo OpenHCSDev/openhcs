@@ -1600,10 +1600,6 @@ class SourceImageProvenance:
             source_image_names=self.source_image_names,
         )
 
-    @property
-    def source_component_identity(self) -> tuple[tuple[str, str], ...] | None:
-        return self.source_identity.identity[1]
-
 
 @dataclass(frozen=True, slots=True)
 class SourcePlaneIndexedMetadata:

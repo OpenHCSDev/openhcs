@@ -323,8 +323,139 @@ class PatternGroupExecutionScope:
         )
 
 
+class MainOutputSliceProjectionMixin:
+    """Project a function's main output into published slices and their producer contexts."""
+
+    __slots__ = ()
+
+    def _producer_output_contexts(
+        self,
+        matching_files: Sequence[str],
+    ) -> tuple[AlignedImageSliceContext, ...]:
+        """Resolve exact producer contexts for the loaded main-flow paths."""
+
+        return step_output_manifest(self.context).producer_output_contexts_for_paths(
+            self.execution_plan,
+            matching_files,
+            self.context.microscope_handler.parser,
+        )
+
+    def _producer_filename_qualifiers(
+        self,
+        matching_files: Sequence[str],
+    ) -> tuple[str | None, ...]:
+        """Resolve the filename qualifier each producer gave the loaded paths."""
+
+        records = step_output_manifest(self.context).producer_output_records_for_paths(
+            self.execution_plan,
+            matching_files,
+            self.context.microscope_handler.parser,
+        )
+        if records is None:
+            return (None,) * len(matching_files)
+        return tuple(record.filename_qualifier for record in records)
+
+    def _passes_producer_outputs_through(
+        self,
+        processed_stack: ImagePayload,
+        output_count: int,
+        input_count: int,
+    ) -> bool:
+        """Whether each published slice is the producer's aligned output, passed on.
+
+        A declared passthrough chain names no output of its own, so its slices
+        keep the exact producer declaration (context and filename qualifier)
+        of the input file they are aligned to.
+        """
+        if processed_stack.owns_output_surfaces:
+            return False
+        if self._unwrapped_main_flow_output_context() is not None:
+            return False
+        return output_count == input_count
+
+    def _project_output_slices(
+        self,
+        processed_stack: ImagePayload,
+        matching_files: Sequence[str],
+    ) -> tuple[tuple[ImagePayload, AlignedImageSliceContext | None], ...]:
+        """Split the function's main output into its published slices."""
+        if processed_stack.declares_whole_image_output:
+            output_context = self._unwrapped_main_flow_output_context()
+            if output_context is None and self._passes_producer_outputs_through(
+                processed_stack, 1, len(matching_files)
+            ):
+                output_context = self._producer_output_contexts(matching_files)[0]
+            if output_context is None:
+                output_context = AlignedImageSliceContext.anonymous_main_flow()
+            return ((processed_stack, output_context),)
+        unstack_started_at = time.perf_counter()
+        projected = processed_stack.main_output_slices(
+            lambda data: self._unstack_main_output(data, len(matching_files))
+        )
+        RuntimeProfileLogger.log(
+            logger,
+            "pattern_source_unstack",
+            time.perf_counter() - unstack_started_at,
+            step=self.execution_plan.step_index,
+            step_name=self.execution_plan.step_name,
+            slices=len(projected),
+        )
+        if processed_stack.owns_output_surfaces:
+            return projected
+        output_payloads = tuple(payload for payload, _context in projected)
+        if self._passes_producer_outputs_through(
+            processed_stack, len(output_payloads), len(matching_files)
+        ):
+            slice_contexts = self._producer_output_contexts(matching_files)
+        else:
+            output_context = self._unwrapped_main_flow_output_context()
+            if output_context is None:
+                output_context = AlignedImageSliceContext.anonymous_main_flow()
+            slice_contexts = (output_context,) * len(output_payloads)
+        return tuple(zip(output_payloads, slice_contexts, strict=True))
+
+    def _unstack_main_output(
+        self,
+        processed_data: Any,
+        expected_count: int,
+    ) -> tuple[Any, ...]:
+        """Split undeclared main-output pixels along their leading runtime-slice axis."""
+        try:
+            return unstack_runtime_slices(
+                processed_data,
+                self.execution_plan.output_memory_type,
+                self.execution_plan.device_id_for(
+                    self.execution_plan.output_memory_type
+                ),
+                expected_count=expected_count,
+            )
+        except ValueError as exc:
+            output_shape = np.shape(processed_data)
+            logger.error("Function output is not an OpenHCS image stack.")
+            logger.error("Output shape: %s", output_shape)
+            logger.error("Output ndim: %s", np.ndim(processed_data))
+            raise ValueError(
+                "Main processing must result in an image stack shaped "
+                f"(N, H, W) or (N, H, W, C), got "
+                f"{output_shape}"
+            ) from exc
+
+    def _unwrapped_main_flow_output_context(
+        self,
+    ) -> AlignedImageSliceContext | None:
+        ArtifactInputPlan.require_exact_map(
+            self.execution_plan.artifact_inputs,
+            boundary="Component artifact input",
+        )
+        return self.compiled_group.unwrapped_main_flow_output_context(
+            self.selected_artifact_output_plans()
+        )
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
-class PatternGroupExecutionRequest(PatternGroupExecutionScope):
+class PatternGroupExecutionRequest(
+    MainOutputSliceProjectionMixin, PatternGroupExecutionScope
+):
     """All runtime data needed to process one pattern group."""
 
     pattern_group_info: JsonValue
@@ -539,33 +670,6 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         else:
             records = tuple(record.passed_through(plan) for record in producer_records)
         manifest.record_outputs(plan, records)
-
-    def _producer_output_contexts(
-        self,
-        matching_files: Sequence[str],
-    ) -> tuple[AlignedImageSliceContext, ...]:
-        """Resolve exact producer contexts for the loaded main-flow paths."""
-
-        return step_output_manifest(self.context).producer_output_contexts_for_paths(
-            self.execution_plan,
-            matching_files,
-            self.context.microscope_handler.parser,
-        )
-
-    def _producer_filename_qualifiers(
-        self,
-        matching_files: Sequence[str],
-    ) -> tuple[str | None, ...]:
-        """Resolve the filename qualifier each producer gave the loaded paths."""
-
-        records = step_output_manifest(self.context).producer_output_records_for_paths(
-            self.execution_plan,
-            matching_files,
-            self.context.microscope_handler.parser,
-        )
-        if records is None:
-            return (None,) * len(matching_files)
-        return tuple(record.filename_qualifier for record in records)
 
     def load_input_stack(
         self,
@@ -1021,102 +1125,6 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 f"{alias!r}."
             )
         return binding.apply_loaded_payload(payload, source_context)
-
-    def _passes_producer_outputs_through(
-        self,
-        processed_stack: ImagePayload,
-        output_count: int,
-        input_count: int,
-    ) -> bool:
-        """Whether each published slice is the producer's aligned output, passed on.
-
-        A declared passthrough chain names no output of its own, so its slices
-        keep the exact producer declaration (context and filename qualifier)
-        of the input file they are aligned to.
-        """
-        if processed_stack.owns_output_surfaces:
-            return False
-        if self._unwrapped_main_flow_output_context() is not None:
-            return False
-        return output_count == input_count
-
-    def _project_output_slices(
-        self,
-        processed_stack: ImagePayload,
-        matching_files: Sequence[str],
-    ) -> tuple[tuple[ImagePayload, AlignedImageSliceContext | None], ...]:
-        """Split the function's main output into its published slices."""
-        if processed_stack.declares_whole_image_output:
-            output_context = self._unwrapped_main_flow_output_context()
-            if output_context is None and self._passes_producer_outputs_through(
-                processed_stack, 1, len(matching_files)
-            ):
-                output_context = self._producer_output_contexts(matching_files)[0]
-            if output_context is None:
-                output_context = AlignedImageSliceContext.anonymous_main_flow()
-            return ((processed_stack, output_context),)
-        unstack_started_at = time.perf_counter()
-        projected = processed_stack.main_output_slices(
-            lambda data: self._unstack_main_output(data, len(matching_files))
-        )
-        RuntimeProfileLogger.log(
-            logger,
-            "pattern_source_unstack",
-            time.perf_counter() - unstack_started_at,
-            step=self.execution_plan.step_index,
-            step_name=self.execution_plan.step_name,
-            slices=len(projected),
-        )
-        if processed_stack.owns_output_surfaces:
-            return projected
-        output_payloads = tuple(payload for payload, _context in projected)
-        if self._passes_producer_outputs_through(
-            processed_stack, len(output_payloads), len(matching_files)
-        ):
-            slice_contexts = self._producer_output_contexts(matching_files)
-        else:
-            output_context = self._unwrapped_main_flow_output_context()
-            if output_context is None:
-                output_context = AlignedImageSliceContext.anonymous_main_flow()
-            slice_contexts = (output_context,) * len(output_payloads)
-        return tuple(zip(output_payloads, slice_contexts, strict=True))
-
-    def _unstack_main_output(
-        self,
-        processed_data: Any,
-        expected_count: int,
-    ) -> tuple[Any, ...]:
-        """Split undeclared main-output pixels along their leading runtime-slice axis."""
-        try:
-            return unstack_runtime_slices(
-                processed_data,
-                self.execution_plan.output_memory_type,
-                self.execution_plan.device_id_for(
-                    self.execution_plan.output_memory_type
-                ),
-                expected_count=expected_count,
-            )
-        except ValueError as exc:
-            output_shape = np.shape(processed_data)
-            logger.error("Function output is not an OpenHCS image stack.")
-            logger.error("Output shape: %s", output_shape)
-            logger.error("Output ndim: %s", np.ndim(processed_data))
-            raise ValueError(
-                "Main processing must result in an image stack shaped "
-                f"(N, H, W) or (N, H, W, C), got "
-                f"{output_shape}"
-            ) from exc
-
-    def _unwrapped_main_flow_output_context(
-        self,
-    ) -> AlignedImageSliceContext | None:
-        ArtifactInputPlan.require_exact_map(
-            self.execution_plan.artifact_inputs,
-            boundary="Component artifact input",
-        )
-        return self.compiled_group.unwrapped_main_flow_output_context(
-            self.selected_artifact_output_plans()
-        )
 
     def _save_outputs(
         self,
@@ -1607,8 +1615,62 @@ def _save_artifact_value(
     return runtime_value.data
 
 
+class FunctionCoreDebugMixin:
+    """Expose one invocation's debug cursor, artifacts and events."""
+
+    __slots__ = ()
+
+    def debug_cursor(self) -> DebugCursor:
+        return DebugCursor.from_invocation(
+            step_index=self.group_data.execution_plan.step_index,
+            step_scope_id=self.group_data.execution_plan.step_scope_id,
+            invocation=self.invocation,
+            pattern_group_identity=str(self.group_data.runtime_plane_index),
+        )
+
+    def debug_artifacts(
+        self,
+        artifact_plans: ArtifactInputPlans | ArtifactOutputPlans,
+        artifact_values: Mapping[ArtifactSpecRef, object] | None = None,
+    ) -> DebugArtifactRefProjection:
+        return DebugArtifactRefProjection.from_artifact_plans(
+            artifact_plans=artifact_plans,
+            cursor=self.debug_cursor(),
+            artifact_values=artifact_values,
+        )
+
+    def debug_event(
+        self,
+        event_type: DebugEventType,
+        *,
+        exception: Exception | None = None,
+        timing_seconds: float | None = None,
+        invocation_parameters: tuple[DebugInvocationParameter, ...] = (),
+        input_artifact_values: Mapping[ArtifactSpecRef, object] | None = None,
+    ) -> DebugEvent:
+        return DebugEvent.for_invocation(
+            event_type=event_type,
+            cursor=self.debug_cursor(),
+            step_name=self.group_data.execution_plan.step_name,
+            callable_name=self.invocation.key.function_name,
+            axis_id=self.group_data.execution_plan.axis_id,
+            input_artifacts=self.debug_artifacts(
+                {
+                    edge.storage_plan.ref(): edge.storage_plan
+                    for edge in self.artifact_inputs.values()
+                    if edge.storage_plan is not None
+                },
+                input_artifact_values,
+            ),
+            output_artifacts=self.debug_artifacts(self.artifact_outputs),
+            exception=exception,
+            timing_seconds=timing_seconds,
+            invocation_parameters=invocation_parameters,
+        )
+
+
 @dataclass(frozen=True, slots=True)
-class FunctionCoreExecutor:
+class FunctionCoreExecutor(FunctionCoreDebugMixin):
     """Execute one scoped callable invocation and route declared artifact I/O."""
 
     group_data: PatternGroupData
@@ -1926,54 +1988,6 @@ class FunctionCoreExecutor:
             artifact_type=storage_plan.artifact_type.value,
         )
         return loaded_values
-
-    def debug_cursor(self) -> DebugCursor:
-        return DebugCursor.from_invocation(
-            step_index=self.group_data.execution_plan.step_index,
-            step_scope_id=self.group_data.execution_plan.step_scope_id,
-            invocation=self.invocation,
-            pattern_group_identity=str(self.group_data.runtime_plane_index),
-        )
-
-    def debug_artifacts(
-        self,
-        artifact_plans: ArtifactInputPlans | ArtifactOutputPlans,
-        artifact_values: Mapping[ArtifactSpecRef, object] | None = None,
-    ) -> DebugArtifactRefProjection:
-        return DebugArtifactRefProjection.from_artifact_plans(
-            artifact_plans=artifact_plans,
-            cursor=self.debug_cursor(),
-            artifact_values=artifact_values,
-        )
-
-    def debug_event(
-        self,
-        event_type: DebugEventType,
-        *,
-        exception: Exception | None = None,
-        timing_seconds: float | None = None,
-        invocation_parameters: tuple[DebugInvocationParameter, ...] = (),
-        input_artifact_values: Mapping[ArtifactSpecRef, object] | None = None,
-    ) -> DebugEvent:
-        return DebugEvent.for_invocation(
-            event_type=event_type,
-            cursor=self.debug_cursor(),
-            step_name=self.group_data.execution_plan.step_name,
-            callable_name=self.invocation.key.function_name,
-            axis_id=self.group_data.execution_plan.axis_id,
-            input_artifacts=self.debug_artifacts(
-                {
-                    edge.storage_plan.ref(): edge.storage_plan
-                    for edge in self.artifact_inputs.values()
-                    if edge.storage_plan is not None
-                },
-                input_artifact_values,
-            ),
-            output_artifacts=self.debug_artifacts(self.artifact_outputs),
-            exception=exception,
-            timing_seconds=timing_seconds,
-            invocation_parameters=invocation_parameters,
-        )
 
     def execute(
         self,

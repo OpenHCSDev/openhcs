@@ -80,7 +80,122 @@ class CustomFunctionInfo:
         return self.memory_type or self.contract.execution_scope.value
 
 
-class CustomFunctionManager:
+class CustomFunctionSourceFilesMixin:
+    """Persist custom-function sources as exact bytes and verify their revision snapshots."""
+
+    def _save_function_code(self, func_name: str, code: str) -> None:
+        """
+        Save function code to storage directory.
+
+        Args:
+            func_name: Name of function (used as filename)
+            code: Python source code
+        """
+        file_path = self.source_path_for_name(self.storage_dir, func_name)
+        temp_path = self._write_temporary_source(code)
+        try:
+            os.replace(temp_path, file_path)
+        finally:
+            temp_path.unlink(missing_ok=True)
+        logger.info(f"Saved custom function to: {file_path}")
+
+    def _snapshot_source(
+        self,
+        source_path: Path,
+    ) -> CustomFunctionSourceSnapshot | None:
+        """Read one exact persisted source without executing it."""
+
+        try:
+            source_bytes = source_path.read_bytes()
+        except FileNotFoundError:
+            return None
+        try:
+            code = source_bytes.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ValidationError(
+                f"Persisted custom function '{source_path.name}' is not UTF-8."
+            ) from exc
+        return CustomFunctionSourceSnapshot(
+            source=CustomFunctionSource(
+                function_name=source_path.stem,
+                content_sha256=CustomFunctionSource.content_digest(source_bytes),
+            ),
+            code=code,
+        )
+
+    def _snapshot_all_sources(
+        self,
+    ) -> tuple[
+        CustomFunctionSourceRevision,
+        tuple[CustomFunctionSourceSnapshot, ...],
+    ]:
+        """Read the persisted source set that one reconciliation will prepare."""
+
+        snapshots = []
+        for source_path in sorted(self.storage_dir.glob("*.py")):
+            snapshot = self._snapshot_source(source_path)
+            if snapshot is None:
+                raise ValidationError(
+                    "Persisted custom-function sources changed while being read; "
+                    "retry reconciliation."
+                )
+            snapshots.append(snapshot)
+        revision = CustomFunctionSourceRevision(
+            sources=tuple(snapshot.source for snapshot in snapshots)
+        )
+        return revision, tuple(snapshots)
+
+    def _require_snapshot(
+        self,
+        source_path: Path,
+        expected: CustomFunctionSourceSnapshot,
+    ) -> None:
+        """Fail loudly when one prepared source no longer owns the same bytes."""
+
+        current = self._snapshot_source(source_path)
+        if current is None or current.source != expected.source:
+            raise ValidationError(
+                f"Persisted custom function '{source_path.name}' changed during "
+                "preparation; retry the lifecycle operation."
+            )
+
+    def _require_revision(self, expected: CustomFunctionSourceRevision) -> None:
+        """Fail loudly unless the prepared persisted source set is still exact."""
+
+        try:
+            current = self.source_revision()
+        except FileNotFoundError as exc:
+            raise ValidationError(
+                "Persisted custom-function sources changed during preparation; "
+                "retry reconciliation."
+            ) from exc
+        if current != expected:
+            raise ValidationError(
+                "Persisted custom-function sources changed during preparation; "
+                "retry reconciliation."
+            )
+
+    def _write_temporary_source(self, code: str) -> Path:
+        """Write source beside its destination for an atomic replacement."""
+
+        file_descriptor, raw_path = tempfile.mkstemp(
+            suffix=".py",
+            dir=self.storage_dir,
+        )
+        try:
+            # Persist the exact bytes the revision digest was computed from;
+            # text-mode newline translation would change them on Windows.
+            with os.fdopen(file_descriptor, "wb") as stream:
+                stream.write(code.encode("utf-8"))
+                stream.flush()
+                os.fsync(stream.fileno())
+        except BaseException:
+            Path(raw_path).unlink(missing_ok=True)
+            raise
+        return Path(raw_path)
+
+
+class CustomFunctionManager(CustomFunctionSourceFilesMixin):
     """
     Manager for custom function lifecycle operations.
 
@@ -573,117 +688,6 @@ class CustomFunctionManager:
                 f"Function name {function_name!r} collides with a canonical "
                 "OpenHCS function. Please choose a different name."
             )
-
-    def _save_function_code(self, func_name: str, code: str) -> None:
-        """
-        Save function code to storage directory.
-
-        Args:
-            func_name: Name of function (used as filename)
-            code: Python source code
-        """
-        file_path = self.source_path_for_name(self.storage_dir, func_name)
-        temp_path = self._write_temporary_source(code)
-        try:
-            os.replace(temp_path, file_path)
-        finally:
-            temp_path.unlink(missing_ok=True)
-        logger.info(f"Saved custom function to: {file_path}")
-
-    def _snapshot_source(
-        self,
-        source_path: Path,
-    ) -> CustomFunctionSourceSnapshot | None:
-        """Read one exact persisted source without executing it."""
-
-        try:
-            source_bytes = source_path.read_bytes()
-        except FileNotFoundError:
-            return None
-        try:
-            code = source_bytes.decode("utf-8")
-        except UnicodeDecodeError as exc:
-            raise ValidationError(
-                f"Persisted custom function '{source_path.name}' is not UTF-8."
-            ) from exc
-        return CustomFunctionSourceSnapshot(
-            source=CustomFunctionSource(
-                function_name=source_path.stem,
-                content_sha256=CustomFunctionSource.content_digest(source_bytes),
-            ),
-            code=code,
-        )
-
-    def _snapshot_all_sources(
-        self,
-    ) -> tuple[
-        CustomFunctionSourceRevision,
-        tuple[CustomFunctionSourceSnapshot, ...],
-    ]:
-        """Read the persisted source set that one reconciliation will prepare."""
-
-        snapshots = []
-        for source_path in sorted(self.storage_dir.glob("*.py")):
-            snapshot = self._snapshot_source(source_path)
-            if snapshot is None:
-                raise ValidationError(
-                    "Persisted custom-function sources changed while being read; "
-                    "retry reconciliation."
-                )
-            snapshots.append(snapshot)
-        revision = CustomFunctionSourceRevision(
-            sources=tuple(snapshot.source for snapshot in snapshots)
-        )
-        return revision, tuple(snapshots)
-
-    def _require_snapshot(
-        self,
-        source_path: Path,
-        expected: CustomFunctionSourceSnapshot,
-    ) -> None:
-        """Fail loudly when one prepared source no longer owns the same bytes."""
-
-        current = self._snapshot_source(source_path)
-        if current is None or current.source != expected.source:
-            raise ValidationError(
-                f"Persisted custom function '{source_path.name}' changed during "
-                "preparation; retry the lifecycle operation."
-            )
-
-    def _require_revision(self, expected: CustomFunctionSourceRevision) -> None:
-        """Fail loudly unless the prepared persisted source set is still exact."""
-
-        try:
-            current = self.source_revision()
-        except FileNotFoundError as exc:
-            raise ValidationError(
-                "Persisted custom-function sources changed during preparation; "
-                "retry reconciliation."
-            ) from exc
-        if current != expected:
-            raise ValidationError(
-                "Persisted custom-function sources changed during preparation; "
-                "retry reconciliation."
-            )
-
-    def _write_temporary_source(self, code: str) -> Path:
-        """Write source beside its destination for an atomic replacement."""
-
-        file_descriptor, raw_path = tempfile.mkstemp(
-            suffix=".py",
-            dir=self.storage_dir,
-        )
-        try:
-            # Persist the exact bytes the revision digest was computed from;
-            # text-mode newline translation would change them on Windows.
-            with os.fdopen(file_descriptor, "wb") as stream:
-                stream.write(code.encode("utf-8"))
-                stream.flush()
-                os.fsync(stream.fileno())
-        except BaseException:
-            Path(raw_path).unlink(missing_ok=True)
-            raise
-        return Path(raw_path)
 
     def _clear_caches(self) -> None:
         """
