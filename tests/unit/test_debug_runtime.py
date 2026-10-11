@@ -177,6 +177,7 @@ class DebugRuntimeFixture:
             worker_slot="worker_0",
             worker_assignments={"worker_0": ("A01",)},
         )
+
     SEGMENT_NAME = "segment"
 
     @staticmethod
@@ -1006,8 +1007,7 @@ def test_debug_step_executes_one_function_pattern_invocation():
 
     np.testing.assert_array_equal(result, np.array([2, 4, 6]))
     assert [
-        DebugProgressContext.from_context(event.context).event_type
-        for event in emitted
+        DebugProgressContext.from_context(event.context).event_type for event in emitted
     ] == [DebugEventType.BEFORE_INVOCATION, DebugEventType.AFTER_INVOCATION]
 
 
@@ -1043,7 +1043,9 @@ def test_debug_step_can_advance_past_current_function_pattern_invocation():
 
     np.testing.assert_array_equal(result, np.array([2, 3, 4]))
     assert len(emitted) == 2
-    assert DebugProgressContext.from_context(emitted[0].context).cursor.invocation_key.endswith(":1:plus_one")
+    assert DebugProgressContext.from_context(
+        emitted[0].context
+    ).cursor.invocation_key.endswith(":1:plus_one")
 
 
 def test_execute_chain_emits_debug_exception_event():
@@ -1122,10 +1124,7 @@ def test_projection_exception_contains_complete_invocation_context_without_debug
         assert "declared_cardinality=2" in message
         assert "selected_runtime_plane=preserved_stack" in message
         assert "execution_axis_cardinality=3" in message
-        assert (
-            "image_payload_execution_mode=FullStackExecution"
-            in message
-        )
+        assert "image_payload_execution_mode=FullStackExecution" in message
         assert "processing_contract=Pure2DContract" in message
         assert isinstance(exc.__cause__, RuntimeSliceProjectionDeclarationError)
         assert str(exc.__cause__) == "projection preflight mismatch"
@@ -1311,7 +1310,8 @@ def test_progress_debug_event_sink_uses_injected_progress_emitter():
     assert emitted[0].status is ProgressStatus.STARTED
     assert emitted[0].context is not None
     assert (
-        emitted[0].context[DebugProgressContext.context_key]["debug_session_id"] == DebugRuntimeFixture.DEBUG_SESSION_ID
+        emitted[0].context[DebugProgressContext.context_key]["debug_session_id"]
+        == DebugRuntimeFixture.DEBUG_SESSION_ID
     )
     assert (
         emitted[0].context[DebugProgressContext.context_key]["snapshot_store_ref"]
@@ -1489,9 +1489,9 @@ def test_debug_execution_policy_skips_before_start_step_index():
 
 def test_debug_session_marks_current_cursor_dirty_nominally():
     cursor = DebugRuntimeFixture.cursor()
-    session = DebugSession.create(subject_id=DebugRuntimeFixture.SUBJECT_ID).with_cursor(
-        cursor
-    )
+    session = DebugSession.create(
+        subject_id=DebugRuntimeFixture.SUBJECT_ID
+    ).with_cursor(cursor)
 
     dirty_session = session.mark_dirty_from_cursor()
 
