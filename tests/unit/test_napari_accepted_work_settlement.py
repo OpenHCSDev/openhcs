@@ -37,6 +37,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerSettleProgress,
 )
 from openhcs.core.streaming_config_declarations import NapariViewer
+from tests.unit.native_opengl import native_opengl  # noqa: F401  (fixture)
 
 
 @pytest.fixture
@@ -163,6 +164,7 @@ def saved_roi_item(tmp_path):
 
 
 def test_saved_roi_reopen_reports_pre_route_failure_and_recovers(
+    native_opengl,
     receiver,
     wire_receiver,
     qtbot,
@@ -211,7 +213,7 @@ def test_previous_complete_cannot_settle_new_accepted_work(receiver):
 
 
 def test_initial_settlement_is_observable_before_qt_intake_and_completes(
-    receiver, wire_receiver, qtbot, tmp_path,
+    native_opengl, receiver, wire_receiver, qtbot, tmp_path,
 ):
     """Use actual transport, native layers and Qt service, without delayed mocks."""
     from qtpy.QtCore import QTimer
@@ -409,7 +411,7 @@ def test_payload_load_failure_is_rejected_before_route_creation(receiver):
 
 
 def test_pre_route_failure_survives_later_batch_before_settlement(
-    receiver, qtbot, tmp_path
+    native_opengl, receiver, qtbot, tmp_path
 ):
     assert (
         receiver.accept_stream_message(
@@ -451,6 +453,7 @@ def test_clear_state_discards_pre_route_failure(receiver, tmp_path):
 
 
 def test_active_settlement_rejects_admission_without_retaining_copies(
+    native_opengl,
     receiver,
     monkeypatch,
 ):

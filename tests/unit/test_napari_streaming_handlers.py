@@ -8,10 +8,11 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
-from napari.components import Camera, Dims
+from napari.components import Camera, Dims, ViewerModel
 from napari.layers.shapes._shapes_constants import ShapeType
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
+from zmqruntime.config import TransportMode
 
 from openhcs.core.axes import AxisFamily
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
@@ -39,6 +40,8 @@ from openhcs.runtime.viewer_protocol import (
     ViewerStateControlOptions,
     ViewerComponentValueOrdering,
 )
+from openhcs.runtime.napari_viewer_server import NapariViewerServer
+from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
 from openhcs.runtime.napari_streaming_handlers import (
     NapariAggregateAxisBinding,
     NapariAggregateAxisBindingBuilder,
@@ -3869,18 +3872,33 @@ def test_napari_roi_manager_selects_authoritative_shapes_members(qtbot):
     ] == [0]
 
 
-def _native_roi_selection_server(napari_viewer_server, viewer, layers):
-    server = napari_viewer_server.NapariViewerServer.__new__(
-        napari_viewer_server.NapariViewerServer
+def _napari_server(viewer):
+    """The real server's stores, pipeline and replies; construction opens no socket."""
+    server = NapariViewerServer(
+        NapariViewerServerRequest(
+            port=45000,
+            viewer_title="napari handler test",
+            replace_layers=False,
+            log_file_path=None,
+            transport_mode=TransportMode.IPC,
+        )
     )
     server.viewer = viewer
-    server.layer_route_state = NapariLayerRouteStateStore.empty()
+    return server
+
+
+def _native_roi_selection_server(napari_viewer_server, viewer, layers):
+    server = _napari_server(viewer)
     for route_key, layer, site_count in layers:
         has_stack_axis = layer.ndim > 2
         projected_axis_components = ("site",) if has_stack_axis else ()
         component_values = {"site": list(range(site_count))} if has_stack_axis else {}
         server.layer_route_state.set_title(route_key, layer.name)
         server.layer_route_state.set_layer(route_key, layer)
+        # Navigation reads the route's routed source items for its data type.
+        server.component_groups.items_for(route_key).append(
+            _layer_item({"site": 0}, stream_layer_data_type=StreamingDataType.SHAPES)
+        )
         server.layer_route_state.set_dimension_state(
             route_key,
             NapariDimensionLayerState(
@@ -3896,9 +3914,6 @@ def _native_roi_selection_server(napari_viewer_server, viewer, layers):
                 ),
             ),
         )
-    server.result_selection_controller = (
-        napari_viewer_server.NapariResultSelectionController(server)
-    )
     for _route_key, layer, _site_count in layers:
         server.result_selection_controller.bind(layer)
     return server
@@ -5048,13 +5063,9 @@ def test_napari_settlement_reports_incremental_qt_progress(monkeypatch):
         def get_or_create(self, **_kwargs):
             return SuccessfulProcessor()
 
-    server = _FakeNapariServer()
-    server.viewer = object()
-    server.layer_route_state = NapariLayerRouteStateStore.empty()
-    server.component_groups = NapariComponentGroupStore()
+    server = _napari_server(ViewerModel())
     server.batch_processors = BatchProcessors()
-    pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
-    server.display_pipeline = pipeline
+    pipeline = server.display_pipeline
     for route_key in ("first-route", "second-route"):
         server.component_groups.items_for(route_key).append(
             _layer_item({"site": 1}, data=np.ones((4, 4), dtype=np.uint8))
@@ -5130,10 +5141,7 @@ def test_napari_settlement_reports_progress_within_one_large_route(monkeypatch):
             return self.processor
 
     route_key = "large-shapes-route"
-    server = _FakeNapariServer()
-    server.viewer = object()
-    server.layer_route_state = NapariLayerRouteStateStore.empty()
-    server.component_groups = NapariComponentGroupStore()
+    server = _napari_server(ViewerModel())
     server.component_groups.items_for(route_key).append(
         _layer_item({"site": 1}, data=np.ones((4, 4), dtype=np.uint8))
     )
@@ -5146,8 +5154,7 @@ def test_napari_settlement_reports_progress_within_one_large_route(monkeypatch):
         items=server.component_groups.items_for(route_key),
     )
     server.layer_route_state.set_pending_update(route_key, update)
-    pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
-    server.display_pipeline = pipeline
+    pipeline = server.display_pipeline
     monkeypatch.setattr(napari_viewer_server, "QTimer", DeferredQtTimer)
     action = napari_viewer_server.NapariControlAction.for_message_type("settle")
 
@@ -5187,14 +5194,12 @@ def test_napari_scheduled_update_retains_failure_without_escaping_qt_callback():
         def get_or_create(self, **_kwargs):
             raise ValueError("invalid scheduled processor route")
 
-    server = _FakeNapariServer()
-    server.layer_route_state = NapariLayerRouteStateStore.empty()
-    server.component_groups = NapariComponentGroupStore()
+    server = _napari_server(ViewerModel())
     server.component_groups.items_for(route_key).append(
         _layer_item({"site": 1}, data=np.ones((4, 4), dtype=np.uint8))
     )
     server.batch_processors = BatchProcessors()
-    pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
+    pipeline = server.display_pipeline
 
     update = NapariPendingLayerUpdate.from_semantics(
         timer=_FakeTimer(),
