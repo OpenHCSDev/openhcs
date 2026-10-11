@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from openhcs.core.equivalence.measurement_features import (
+    RuntimeMeasurementRowIdentity,
+)
+
 from dataclasses import dataclass
 
 from openhcs.core.component_group_scope import ComponentGroupScope
@@ -12,8 +16,7 @@ from openhcs.core.equivalence.cells import (
 from openhcs.core.equivalence.keys import (
     RuntimeMeasurementSubjectKey,
 )
-from openhcs.core.equivalence.measurement_rows import (
-    RuntimeMeasurementRowIdentity,
+from benchmark.equivalence.measurement_rows import (
     RuntimeMeasurementRowMapping,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy

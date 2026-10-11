@@ -5,9 +5,10 @@ from __future__ import annotations
 import math
 from abc import ABC, abstractmethod
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 
@@ -24,9 +25,6 @@ from openhcs.core.equivalence.keys import (
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
-from openhcs.core.equivalence.measurement_facts import (
-    RuntimeMeasurementFactCounterMapping,
-)
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
     MostDerivedContextStrategyMixin,
@@ -47,8 +45,11 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementFeature,
 )
 
-if TYPE_CHECKING:
-    from openhcs.core.equivalence.measurement_rows import RuntimeMeasurementRowIdentity
+RuntimeMeasurementFactCounterMapping = Mapping[
+    RuntimeMeasurementFeatureKey,
+    Counter[RuntimeCellSignature],
+]
+RuntimeMeasurementRowIdentity = tuple[tuple[str, object], ...]
 
 
 @dataclass(frozen=True, slots=True)

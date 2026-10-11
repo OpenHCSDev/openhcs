@@ -33,7 +33,6 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.equivalence.measurement_rows import measurement_qualifier_field_names
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     MEASUREMENT_SPARSE_CELL,
@@ -815,9 +814,7 @@ def _measurement_tables(
                     default_subject=default_subject,
                     default_scope=table.subject.scope,
                     object_id_field=table.subject.object_id_field,
-                    qualifier_field_names=measurement_qualifier_field_names(
-                        CELLPROFILER_MEASUREMENT_DIALECT
-                    ),
+                    qualifier_field_names=CELLPROFILER_MEASUREMENT_DIALECT.row_qualifier_field_names(),
                 )
             else:
                 image_numbers.admit_measurement_references(
@@ -870,9 +867,7 @@ def _measurement_tables(
             default_subject=_measurement_subject_name(table),
             default_scope=table.subject.scope,
             object_id_field=table.subject.object_id_field,
-            qualifier_field_names=measurement_qualifier_field_names(
-                CELLPROFILER_MEASUREMENT_DIALECT
-            ),
+            qualifier_field_names=CELLPROFILER_MEASUREMENT_DIALECT.row_qualifier_field_names(),
         )
     source_metadata_rows = tuple(
         {
@@ -940,9 +935,7 @@ def _measurement_tables(
                     default_subject=default_subject,
                     default_scope=table.subject.scope,
                     object_id_field=table.subject.object_id_field,
-                    qualifier_field_names=measurement_qualifier_field_names(
-                        CELLPROFILER_MEASUREMENT_DIALECT
-                    ),
+                    qualifier_field_names=CELLPROFILER_MEASUREMENT_DIALECT.row_qualifier_field_names(),
                 )
             tables.update(
                 (subject, _cellprofiler_rows(rows))

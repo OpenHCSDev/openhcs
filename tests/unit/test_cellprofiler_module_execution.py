@@ -7468,12 +7468,12 @@ def test_measure_object_size_shape_zernikes_use_declared_label_id_domain() -> No
     assert np.isfinite(rows[0]["Zernike_0_0"])
     assert np.isnan(rows[1]["Zernike_0_0"])
     assert np.isfinite(rows[2]["Zernike_0_0"])
-    # Native Area/radius vectors use compact positions; Zernike/Feret retain label slots.
-    np.testing.assert_array_equal([row["Area"] for row in rows], [9.0, 16.0, np.nan])
+    # Every value stays on its label; radius and Feret are zero for the empty one.
+    np.testing.assert_array_equal([row["Area"] for row in rows], [9.0, np.nan, 16.0])
     assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert [row["slice_index"] for row in rows] == [0, 0, 0]
-    assert rows[1]["MaximumRadius"] > 0.0
-    assert rows[2]["MaximumRadius"] == 0.0
+    assert rows[1]["MaximumRadius"] == 0.0
+    assert rows[2]["MaximumRadius"] > 0.0
     assert rows[1]["MinFeretDiameter"] == 0.0
     assert rows[2]["MinFeretDiameter"] > 0.0
 
@@ -7499,7 +7499,7 @@ def test_measure_object_size_shape_backend_emits_concrete_cp_index_domain() -> N
     assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert [row["slice_index"] for row in rows] == [0] * 5
     np.testing.assert_array_equal(
-        [row["Area"] for row in rows], [9.0, 16.0, np.nan, np.nan, np.nan]
+        [row["Area"] for row in rows], [9.0, np.nan, 16.0, np.nan, np.nan]
     )
 
 

@@ -28,14 +28,14 @@ from openhcs.core.equivalence.measurement_features import (
     object_measurement_feature_matches_marker,
     object_measurement_feature_requires_sparse_boundary_object_count_stability,
 )
-from openhcs.core.equivalence.measurement_rows import (
+from benchmark.equivalence.measurement_rows import (
     RuntimeMeasurementRowMapping,
     measurement_row_sample_identity_key,
 )
 from benchmark.equivalence.object_label_measurements import (
     ObjectLabelMeasurementCompletion,
 )
-from openhcs.core.equivalence.relationships import (
+from benchmark.equivalence.exported_relationships import (
     ObjectInstanceKeyPlaneAlignmentStrategy,
 )
 from openhcs.core.measurement_row_materialization import (
