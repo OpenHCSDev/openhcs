@@ -63,7 +63,7 @@ The guards pass; the library PRs (python-introspect 0.2.6, zmqruntime 0.6.1) are
 
 ## Outcome and corrections
 
-Library PRs: python-introspect #20 (0.2.6), ZMQRuntime #30 (0.6.1); the submodules point at their branch heads.
+Library PRs: python-introspect #20 (0.2.6), ZMQRuntime #30 (0.6.1); the submodules point at their branch heads. Production (Python under `openhcs/`) −2167 +843; tests −505 +711. Guards 5/5. Structural ratchet (openhcs, scripts, benchmark) and NRA R1 exit 0. Official30 parity 30/30 on the third run: the first run lost 3 cases and a run of `origin/main` lost 1 to the same server-side "Execution was cancelled", and the second ran out of disk (the machine's `/home` was at 100%).
 
 Corrections to the plan above:
 
