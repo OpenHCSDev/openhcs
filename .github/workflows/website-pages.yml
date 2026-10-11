@@ -60,12 +60,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install the OpenHCS candidate the website imports
+      - name: Install the OpenHCS candidate and the repository's test extra
         run: |
-          python -m pip install --upgrade pip build pytest
+          python -m pip install --upgrade pip build
           python -m scripts.install_ci_candidate \
             --dependency-source submodules \
-            --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels"
+            --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels" \
+            --extras dev
 
       - name: Test, build, and validate landing page
         run: |

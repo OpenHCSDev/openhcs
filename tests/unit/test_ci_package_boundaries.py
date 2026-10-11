@@ -476,13 +476,16 @@ def test_website_source_validation_uses_local_candidate_owners() -> None:
     install_step = next(
         step
         for step in validate_job["steps"]
-        if step.get("name") == "Install the OpenHCS candidate the website imports"
+        if step.get("name")
+        == "Install the OpenHCS candidate and the repository's test extra"
     )
     install_script = install_step["run"]
 
     assert checkout_step["with"]["submodules"] == "recursive"
     assert "python -m scripts.install_ci_candidate" in install_script
     assert "--dependency-source submodules" in install_script
+    # pytest.ini's addopts need the dev extra's plugins (pytest-xdist).
+    assert "--extras dev" in install_script
 
 
 def test_publish_workflow_consumes_release_requirements_authority() -> None:

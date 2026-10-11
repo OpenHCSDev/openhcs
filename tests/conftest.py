@@ -26,6 +26,7 @@ FijiArchiveDistribution.configure_process_environment(
     default_download_policy=ImageJArchiveDownloadPolicy(allow_download=False)
 )
 
+
 def _missing_native_extensions() -> tuple[str, ...]:
     """Native modules declared by their sources (``<module>.cpp``) but not built.
 
