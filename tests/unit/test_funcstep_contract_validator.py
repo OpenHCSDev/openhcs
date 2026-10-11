@@ -518,13 +518,12 @@ def test_transport_preserves_decorator_owned_flexible_default():
 
 
 def test_registered_flexible_contract_preserves_explicit_false_override():
-    from openhcs.processing.backends.lib_registry.openhcs_registry import (
-        OpenHCSRegistry,
+    from openhcs.processing.custom_functions.runtime_registry import (
+        project_custom_function,
     )
 
-    metadata = OpenHCSRegistry.metadata_for_declared_callable(
-        _transported_flexible_2d_default
-    )
+    # A declaration outside the registry's modules registers as a custom function.
+    metadata = project_custom_function(_transported_flexible_2d_default)
     assert metadata is not None
     image = np.zeros((3, 4, 5), dtype=np.uint16)
 

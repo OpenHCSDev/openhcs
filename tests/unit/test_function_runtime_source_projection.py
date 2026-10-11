@@ -134,7 +134,8 @@ def _anchor_executor(
             parser=parser,
             source_bindings_still_required=lambda: None,
             metadata_handler=SimpleNamespace(
-                source_workspace_metadata_document=lambda _path: None
+                source_workspace_metadata_document=lambda _path: None,
+                source_workspace_root=Path,
             ),
         ),
         filemanager=SimpleNamespace(exists=lambda *_args: False),
@@ -2814,9 +2815,12 @@ def test_main_flow_input_owns_runtime_binding_scope_with_auxiliary_source() -> N
 
     source_binding_plan = CompiledSourceBindingPlan(
         bindings=(
+            # The auxiliary source reads original plate pixels; an unstored
+            # STEP_INPUT binding would consume current main-flow pixels (8c1ef0527).
             NamedSourceBinding(
                 alias="OrigStain1",
                 component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
+                origin=SourceBindingOrigin.PIPELINE_START,
             ),
             NamedSourceBinding(
                 alias="OrigStain2",

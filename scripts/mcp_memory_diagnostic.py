@@ -22,9 +22,10 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, get_args, get_type_hints
 
+# OpenHCS activates its checkout's first-party libraries; import it first.
+import openhcs
 from python_introspect import dataclass_from_mapping
 
-import openhcs
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 
 if TYPE_CHECKING:

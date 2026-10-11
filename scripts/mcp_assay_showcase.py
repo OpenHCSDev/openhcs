@@ -37,9 +37,7 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.steps.function_output_manifest import (
-    FunctionStepOutputProducerIdentityRequest,
-)
+from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.mcp.dev_client import McpDevClient
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -181,7 +179,7 @@ def _artifact_presentation(
     """Declare the exact compiled artifact intended for human presentation."""
 
     return StreamProducerIdentity.pipeline_output(
-        output_kind=FunctionStepOutputProducerIdentityRequest.ARTIFACT_OUTPUT_KIND,
+        output_kind=CompiledStepPlan.ARTIFACT_OUTPUT_KIND,
         output_key=output_key,
         projection_key=output_key,
         step_name=step_name,
@@ -419,7 +417,7 @@ per_plate_configs = {{
             partition_filter=0,
             global_output_folder=Path({str(output_path)!r}),
         ),
-        materialization_results_path=Path({str(output_path / "results")!r}),
+        materialization_results_path=Path("results"),
         materialize_runtime_artifacts=True,
     )
 }}

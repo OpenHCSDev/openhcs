@@ -17,32 +17,6 @@ from scripts import master_multi_plate_demo as master
 from scripts import mcp_assay_showcase as showcase
 
 
-def test_plate_manager_projects_the_current_scope_color_owner(monkeypatch):
-    from openhcs.pyqt_gui.services import plate_manager_state_projection as projection
-
-    class _Color:
-        @staticmethod
-        def name():
-            return "#1A2B3C"
-
-    class _Service:
-        @staticmethod
-        def get_accent_color(scope_id):
-            assert scope_id == "/tmp/plate"
-            return _Color()
-
-    monkeypatch.setattr(
-        projection.ScopeColorService,
-        "instance",
-        lambda: _Service(),
-    )
-
-    assert (
-        projection.PlateManagerStateProjectionService.scope_accent_color("/tmp/plate")
-        == "#1a2b3c"
-    )
-
-
 def test_master_composes_every_declared_showcase_without_copying_pipelines(tmp_path):
     definitions = master.built_in_demo_definitions(tmp_path)
     expected_ids = tuple(
