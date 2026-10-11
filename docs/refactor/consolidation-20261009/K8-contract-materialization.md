@@ -16,6 +16,8 @@ Nothing is left of the contract half.
 2. **A third value-to-JSON switch.** `json_payload_value` (`processing/materialization/core.py:3015-3064`, a `singledispatch` over dict, `ColumnarRows`, list, tuple, `DataFrame`, `Series`, NumPy scalars and arrays) and its forwarding wrapper `JsonPayloadAuthority`. **Target:** python-introspect `to_jsonable`, with the measurement-row and columnar-row cases registered on it.
 3. **`benchmark/validation/corpus.py:881` `_json_value`.** **Target:** `to_jsonable`.
 4. **Dead computation (done in this PR).** `identify_secondary_objects` built `SecondaryObjectStats` (`processing/backends/cellprofiler/secondary.py:1277`) only to time it under the profiler key `iso_stats`, and never read it. The class had no other user.
+5. **Template-crop file naming (coordinator-assigned; the test was stale, production is unchanged).** `tests/unit/test_template_crop_pipeline_execution.py` (16 cases) expected `images/A01_s001_w1_z001_t001_cropped_stack.tif`. Bisected at this head (multi-plane case, 1,435 revisions from `bb76b5e44`): the first failing commit is `0dd77da46` (2026-10-03, "separate ordinary checkpoint and named artifact identities"). It is a deliberate rule in `core/steps/function_runtime.py`, pinned by `test_function_runtime_source_projection.py::test_save_outputs_positional_lowering_preserves_explicit_payload_identity[unwrapped]`: a named image returned unwrapped keeps the source filename for its main-flow checkpoint, and the named artifact is materialized separately. So `images/` holds the crops under source names (the output plate re-opens with the same filename parser, like every other step; CellProfiler parity runs on this rule), and `results/` holds the `cropped_stack` artifact. `bb76b5e44` (#395, B5's bisect) changed only the singleton selection and is not the cause. The test now expects source names in `images/` and one `cropped_stack` file per channel in `results/`; the per-channel pixel assertion is unchanged, so a subset or reordered selection must still land on the right channel's file. Nothing in materialization or `path_planner.py` changed.
+   - **Open (owner):** the artifact copy in `results/` is named by position (`..._cropped_stack_step1_slice_000.tif`), so with `target_channels=[1]` channel 2 is `slice_000`; the channel is in the metadata document, not the name. Naming those slices by source plane is a `TiffStackOptions` naming change (`_tiff_stack_slice_path`) that E1 is rewriting (`MaterializedFilenameIdentity` to a family); do it after E1 if wanted. The crop is also written twice (checkpoint and artifact).
 
 ## Blocked
 
@@ -34,7 +36,7 @@ After items 1 to 3: no `openhcs.processing.materialization` import anywhere; no 
 
 ## Tests
 
-`tests/unit/test_cellprofiler_identify_secondary_replacement_primary.py`, `test_cellprofiler_secondary_distance_backend.py`; the 30-workflow parity check.
+`tests/unit/test_cellprofiler_identify_secondary_replacement_primary.py`, `test_cellprofiler_secondary_distance_backend.py`, `test_template_crop_pipeline_execution.py`; the 30-workflow parity check.
 
 ## Done when
 
@@ -44,4 +46,5 @@ The materialization package is in `openhcs/core/`, nothing imports the old path,
 
 - Done: receipt; item 4 (dead `SecondaryObjectStats` computation and class deleted).
 - Secondary tests (34 passed) and official30 parity (passed, after item 4).
-- Next: item 5, template-crop naming (coordinator-assigned); items 1 to 3 wait for E1.
+- Item 5: bisected, test corrected, 16 passed.
+- Next: items 1 to 3 after E1 (#1203) merges: rebase, move the package, replace the two JSON switches, add the guards, rerun parity.
