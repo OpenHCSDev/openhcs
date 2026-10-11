@@ -81,7 +81,7 @@ if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
-    from openhcs.core.source_bindings import StepSourceBindingsConfig
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
 

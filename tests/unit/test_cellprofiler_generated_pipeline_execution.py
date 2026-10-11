@@ -60,8 +60,8 @@ from openhcs.core.source_bindings import (
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock, ModuleSetting

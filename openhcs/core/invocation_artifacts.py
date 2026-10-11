@@ -18,7 +18,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
 )
 from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.source_bindings import EMPTY_SOURCE_BINDINGS
+from openhcs.core.config import EMPTY_SOURCE_BINDINGS
 from openhcs.core.axes import GroupingDeclaration, Ungrouped, is_grouping_declaration
 
 _ClaimValue = TypeVar("_ClaimValue")

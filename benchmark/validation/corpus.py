@@ -46,12 +46,12 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceBindingOrigin,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 

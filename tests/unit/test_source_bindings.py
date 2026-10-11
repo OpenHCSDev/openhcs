@@ -2,8 +2,6 @@ import ast
 import hashlib
 import io
 import pickle
-import subprocess
-import sys
 from dataclasses import fields as dataclass_fields
 from pathlib import Path
 from types import SimpleNamespace
@@ -38,8 +36,6 @@ from openhcs.core.source_binding_selection import (
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_bindings import (
-    EMPTY_SOURCE_BINDINGS,
-    CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
     ComponentSelector,
     ImagePlaneSource,
@@ -51,18 +47,21 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
+    PairByOrder,
     SourceBindingOrigin,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceProjectionRole,
     SourceSelector,
     SourceSetRole,
-    StepSourceBindingsConfig,
     source_binding_group_keys_for_group_by,
+)
+from openhcs.core.config import (
+    EMPTY_SOURCE_BINDINGS,
+    SourceBindingsConfig,
+    StepSourceBindingsConfig,
 )
 from openhcs.core.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
@@ -199,7 +198,7 @@ def test_step_source_bindings_global_config_merge_resolves_lazy_default():
     assert merged.step_source_bindings_config.is_empty
     assert merged.step_source_bindings_config.bindings == ()
     assert merged.step_source_bindings_config.metadata_rules == ()
-    assert merged.step_source_bindings_config.match_plan is None
+    assert merged.step_source_bindings_config.match_plan == PairByOrder()
 
 
 def test_lazy_step_source_bindings_preserve_inherited_payload_sentinels():
@@ -380,29 +379,6 @@ def test_production_code_has_no_unresolved_empty_step_source_config_shortcuts():
     assert violations == []
 
 
-def test_step_source_bindings_keeps_class_identity_after_config_import():
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            "\n".join(
-                [
-                    "from openhcs.core import invocation_artifacts, source_bindings",
-                    "from openhcs.core.config import StepSourceBindingsConfig as cfg_type",
-                    "obj = cfg_type()",
-                    "assert invocation_artifacts.StepSourceBindingsConfig is source_bindings.StepSourceBindingsConfig",
-                    "assert cfg_type is source_bindings.StepSourceBindingsConfig",
-                    "assert isinstance(obj, invocation_artifacts.StepSourceBindingsConfig)",
-                ]
-            ),
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, result.stderr
-
-
 def test_step_source_bindings_inherit_plate_source_bindings_for_snapshot():
     ObjectStateRegistry.clear()
     binding = NamedSourceBinding(alias="DNA")
@@ -438,9 +414,7 @@ def test_step_source_bindings_inherit_plate_source_bindings_for_snapshot():
     assert snapshot.source_bindings.source_stack_components == (Microscopy.ZIndex,)
     assert snapshot.source_bindings.grouping_metadata_fields == ("Plate",)
     assert snapshot.source_bindings.metadata_fields == metadata_fields
-    compiled = CompiledSourceBindingPlan.from_config(
-        snapshot.source_bindings,
-    )
+    compiled = snapshot.source_bindings.compiled_plan()
     assert compiled.bindings == (binding,)
     assert compiled.source_stack_components == (Microscopy.ZIndex,)
     assert compiled.metadata_fields == metadata_fields
@@ -458,9 +432,7 @@ def test_compiled_source_bindings_include_realized_original_metadata_schema():
         ),
     )
 
-    compiled = CompiledSourceBindingPlan.from_config(
-        config,
-        realized_source_metadata=(
+    compiled = config.compiled_plan(realized_source_metadata=(
             {
                 DECLARED_SOURCE_METADATA_FIELD: {
                     "Dose": "0.25",
@@ -477,8 +449,7 @@ def test_compiled_source_bindings_include_realized_original_metadata_schema():
                     "CSVWell": "A02",
                 }
             },
-        ),
-    )
+        ))
 
     assert compiled.metadata_fields == (
         FieldSpec("Dose", float, required=False),
@@ -516,9 +487,7 @@ def test_enabled_step_source_bindings_compile_inherited_bindings():
         ObjectStateRegistry.clear()
 
     assert snapshot.source_bindings.bindings == (binding,)
-    assert CompiledSourceBindingPlan.from_config(
-        snapshot.source_bindings,
-    ).bindings == (binding,)
+    assert snapshot.source_bindings.compiled_plan().bindings == (binding,)
 
 
 def test_pipeline_step_source_bindings_enabled_inherits_to_function_steps():
@@ -551,9 +520,7 @@ def test_pipeline_step_source_bindings_enabled_inherits_to_function_steps():
 
     assert snapshot.source_bindings.enabled is True
     assert snapshot.source_bindings.bindings == (binding,)
-    assert CompiledSourceBindingPlan.from_config(
-        snapshot.source_bindings,
-    ).bindings == (binding,)
+    assert snapshot.source_bindings.compiled_plan().bindings == (binding,)
 
 
 def test_pipeline_start_binding_groups_do_not_mutate_resolved_enabled_state():
@@ -568,9 +535,7 @@ def test_pipeline_start_binding_groups_do_not_mutate_resolved_enabled_state():
         bindings=(binding,),
     )
 
-    compiled = CompiledSourceBindingPlan.from_config(
-        source_bindings,
-    )
+    compiled = source_bindings.compiled_plan()
 
     assert compiled.bindings == (binding,)
     assert source_bindings.enabled is False
@@ -881,9 +846,7 @@ def test_compiled_source_binding_plan_preserves_named_selectors():
                 ),
             ),
         ),
-        match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=(
+        match_plan=PairByMetadata(dimensions=(
                 SourceBindingMatchDimension(
                     fields=(
                         SourceBindingMatchField(
@@ -896,20 +859,16 @@ def test_compiled_source_binding_plan_preserves_named_selectors():
                         ),
                     ),
                 ),
-            ),
-        ),
+            )),
         enabled=True,
     )
 
-    plan = CompiledSourceBindingPlan.from_config(
-        config,
-    )
+    plan = config.compiled_plan()
 
-    assert not plan.is_empty
+    assert plan.has_primary_content
     assert len(plan.bindings) == 1
     assert plan.metadata_rules[0].source is MetadataSource.FILE_NAME
-    assert plan.match_plan is not None
-    assert plan.match_plan.method is SourceBindingMatchMethod.METADATA
+    assert isinstance(plan.match_plan, PairByMetadata)
     binding = plan.bindings[0]
     assert binding.alias == "OrigBlue"
     assert binding.selector.components[0].component is Microscopy.Channel
@@ -919,8 +878,7 @@ def test_compiled_source_binding_plan_preserves_named_selectors():
 
 
 def test_pipeline_start_binding_does_not_force_full_source_universe():
-    binding_plan = CompiledSourceBindingPlan.from_config(
-        StepSourceBindingsConfig(
+    binding_plan = StepSourceBindingsConfig(
             bindings=(
                 NamedSourceBinding(
                     alias="OrigBlue",
@@ -931,8 +889,7 @@ def test_pipeline_start_binding_does_not_force_full_source_universe():
                 ),
             ),
             enabled=True,
-        ),
-    )
+        ).compiled_plan()
 
     universe_plan = CompiledSourceUniversePlan.from_source_binding_plan(binding_plan)
 
@@ -973,7 +930,7 @@ def test_matched_image_set_without_match_plan_uses_selector_compatible_sources()
                 origin=SourceBindingOrigin.PIPELINE_START,
             ),
         ),
-        match_plan=None,
+        match_plan=PairByOrder(),
         source_context=context,
         identity_policy=SourceImageSetIdentityPolicy(),
     )
@@ -1027,7 +984,7 @@ def test_alias_only_step_bindings_filter_and_order_workspace_projections() -> No
             NamedSourceBinding(alias="SMI312"),
             NamedSourceBinding(alias="Hoechst"),
         ),
-        match_plan=None,
+        match_plan=PairByOrder(),
         source_context=context,
         identity_policy=SourceImageSetIdentityPolicy(),
     )
@@ -1050,7 +1007,7 @@ def test_source_set_without_matched_bindings_preserves_anchor_candidates() -> No
                 source_set_role=SourceSetRole.BROADCAST,
             ),
         ),
-        match_plan=None,
+        match_plan=PairByOrder(),
         source_context=context,
         identity_policy=SourceImageSetIdentityPolicy(),
     )
@@ -1112,7 +1069,7 @@ def test_narrow_step_binding_uses_exact_workspace_provenance_identity():
     )
     matched_set = SourceBindingMatchedImageSet.from_plan(
         bindings=(bindings[2],),
-        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
         source_context=context,
         identity_policy=SourceImageSetIdentityPolicy.from_source_bindings(
             SourceBindingsConfig(bindings=bindings)
@@ -1237,7 +1194,7 @@ def test_source_binding_members_use_exact_source_identity_without_metadata_axes(
     assert not policy.identity_components()
     matched = SourceBindingMatchedImageSet.from_plan(
         bindings=(primary, objects),
-        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
         source_context=SourcePatternResolutionContext.from_projection(
             parser=SourceSchemaFilenameParser(), projection=projection
         ),
@@ -1290,7 +1247,7 @@ def test_source_binding_members_load_one_store_for_multiple_matching_identities(
     )
     matched_set = SourceBindingMatchedImageSet.from_plan(
         bindings=(binding,),
-        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
         source_context=SourcePatternResolutionContext.from_projection(
             parser=SourceSchemaFilenameParser(),
             projection=projection,
@@ -1342,7 +1299,7 @@ def test_source_binding_members_canonicalize_declared_physical_spellings(aliases
     )
     matched_set = SourceBindingMatchedImageSet.from_plan(
         bindings=bindings,
-        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
         source_context=context,
         identity_policy=SourceImageSetIdentityPolicy.from_source_bindings(
             SourceBindingsConfig(bindings=bindings)
@@ -1405,7 +1362,7 @@ def test_source_binding_members_collapse_lookup_aliases_of_same_projection():
         parser=SourceSchemaFilenameParser(), projection=workspace,
     )
     matched = SourceBindingMatchedImageSet.from_plan(
-        bindings=(binding,), match_plan=None, source_context=context,
+        bindings=(binding,), match_plan=PairByOrder(), source_context=context,
         identity_policy=SourceImageSetIdentityPolicy(),
     )
     candidates = (*typed, source_path)
@@ -1680,8 +1637,7 @@ def test_rule_metadata_preserves_original_source_metadata_mapping():
 
 
 def test_compiled_source_binding_plan_round_trips_through_pickle():
-    plan = CompiledSourceBindingPlan.from_config(
-        StepSourceBindingsConfig(
+    plan = StepSourceBindingsConfig(
             bindings=(
                 NamedSourceBinding(
                     alias="OrigBlue",
@@ -1698,9 +1654,7 @@ def test_compiled_source_binding_plan_round_trips_through_pickle():
                     pattern=r"(?P<plate>PlateA)",
                 ),
             ),
-            match_plan=SourceBindingMatchPlan(
-                method=SourceBindingMatchMethod.METADATA,
-                dimensions=(
+            match_plan=PairByMetadata(dimensions=(
                     SourceBindingMatchDimension(
                         fields=(
                             SourceBindingMatchField(
@@ -1709,10 +1663,8 @@ def test_compiled_source_binding_plan_round_trips_through_pickle():
                             ),
                         ),
                     ),
-                ),
-            ),
-        ),
-    )
+                )),
+        ).compiled_plan()
 
     restored = pickle.loads(pickle.dumps(plan))
 

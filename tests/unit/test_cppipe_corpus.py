@@ -14,7 +14,7 @@ from benchmark.converter.cppipe_corpus import (
 )
 from openhcs.core.config import PipelineConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.source_bindings import SourceBindingsConfig
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler import import_cellprofiler_pipeline
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule

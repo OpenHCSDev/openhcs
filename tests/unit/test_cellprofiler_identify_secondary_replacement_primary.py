@@ -35,7 +35,7 @@ from openhcs.core.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.source_bindings import StepSourceBindingsConfig
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 from openhcs.processing.backends.cellprofiler.secondary import (

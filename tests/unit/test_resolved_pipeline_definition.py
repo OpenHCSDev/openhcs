@@ -7,8 +7,8 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceSelector,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.domains.microscopy.axes import Microscopy

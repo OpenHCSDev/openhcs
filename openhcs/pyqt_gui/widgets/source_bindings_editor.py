@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
@@ -91,11 +91,11 @@ from pyqt_reactive.widgets.structural_table import (
 from python_introspect import (
     Enableable,
     FieldLabel,
+    RegisteredClassChoices,
     is_enableable,
 )
 
 from openhcs.core.source_bindings import (
-    EMPTY_SOURCE_BINDINGS,
     ComponentSelector,
     MetadataExtractionRule,
     MetadataSelector,
@@ -103,12 +103,16 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
+    SourceSetPairing,
+    PairByMetadata,
+    PairByOrder,
+)
+from openhcs.core.config import (
+    EMPTY_SOURCE_BINDINGS,
+    SourceBindingsConfig,
     StepSourceBindingsConfig,
 )
 from openhcs.core.source_bindings_preview import (
@@ -128,9 +132,13 @@ SourceBindingsEditorRawValue = SourceBindingsConfig | LazyDataclass
 
 @dataclass(frozen=True, slots=True)
 class SourceSetPairingRow:
-    """One row of the source-set pairing table: a match method and one shared key."""
+    """One row of the source-set pairing table: a pairing and one shared key."""
 
-    method: Annotated[SourceBindingMatchMethod, FieldLabel("Pairing Method")]
+    method: Annotated[
+        type[SourceSetPairing],
+        RegisteredClassChoices(SourceSetPairing),
+        FieldLabel("Pairing Method"),
+    ]
     """How selected aliases are grouped into one source set: by source order, or by declared metadata keys."""
 
     fields: Annotated[
@@ -141,30 +149,32 @@ class SourceSetPairingRow:
     @classmethod
     def from_plan(
         cls,
-        plan: SourceBindingMatchPlan | None,
+        plan: SourceSetPairing | None,
     ) -> tuple["SourceSetPairingRow", ...]:
-        if plan is None:
+        """Rows for one pairing; the default order pairing and an unset one show none."""
+        if plan is None or plan == PairByOrder():
             return ()
         if not plan.dimensions:
-            return (cls(method=plan.method),)
+            return (cls(method=type(plan)),)
         return tuple(
-            cls(method=plan.method, fields=dimension.fields)
+            cls(method=type(plan), fields=dimension.fields)
             for dimension in plan.dimensions
         )
 
     @staticmethod
     def to_plan(
         rows: tuple["SourceSetPairingRow", ...],
-    ) -> SourceBindingMatchPlan | None:
+        unset: SourceSetPairing | None,
+    ) -> SourceSetPairing | None:
+        """The pairing the rows declare; ``unset`` (the field default) without rows."""
         if not rows:
-            return None
-        return SourceBindingMatchPlan(
-            method=rows[0].method,
-            dimensions=tuple(
+            return unset
+        return rows[0].method.keyed_by(
+            tuple(
                 SourceBindingMatchDimension(fields=row.fields)
                 for row in rows
                 if row.fields
-            ),
+            )
         )
 
 
@@ -472,9 +482,9 @@ class SourceBindingsEditorValue:
         return tuple(self.raw_field_value("metadata_rules") or ())
 
     @property
-    def match_plan(self) -> SourceBindingMatchPlan | None:
+    def match_plan(self) -> SourceSetPairing | None:
         return cast(
-            SourceBindingMatchPlan | None,
+            SourceSetPairing | None,
             self.raw_field_value("match_plan"),
         )
 
@@ -1023,7 +1033,7 @@ class SourceBindingsEditorWidget(
                 tuple(
                     (
                         scope,
-                        pairing_columns.named("method").editor.display(plan.method),
+                        pairing_columns.named("method").editor.display(type(plan)),
                         str(len(plan.dimensions)),
                     )
                     for scope, plan in (
@@ -1354,7 +1364,7 @@ class SourceBindingsEditorWidget(
         self._updating_ui = True
         try:
             self.match_plan_controller.append(
-                row or SourceSetPairingRow(method=SourceBindingMatchMethod.METADATA)
+                row or SourceSetPairingRow(method=PairByMetadata)
             )
         finally:
             self._updating_ui = False
@@ -1701,7 +1711,14 @@ class SourceBindingsEditorWidget(
         rows = self.match_plan_controller.rows()
         if any(row.fields for row in rows) and not all(row.fields for row in rows):
             return
-        match_plan = SourceSetPairingRow.to_plan(rows)
+        match_plan = SourceSetPairingRow.to_plan(
+            rows,
+            unset=next(
+                item.default
+                for item in fields(self._bindings)
+                if item.name == "match_plan"
+            ),
+        )
         self._bindings = replace_raw(
             self._bindings,
             match_plan=match_plan,
@@ -1975,12 +1992,10 @@ def register_source_bindings_editor_widget() -> None:
         register_inline_dataclass_widget,
     )
 
-    for config_type in SourceBindingsConfig.registered_plan_types():
-        if issubclass(config_type, SourceBindingsConfig):
-            register_inline_dataclass_widget(
-                config_type,
-                create_source_bindings_editor_widget,
-            )
+    register_inline_dataclass_widget(
+        SourceBindingsConfig,
+        create_source_bindings_editor_widget,
+    )
 
 
 register_source_bindings_editor_widget()

@@ -72,8 +72,7 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByOrder,
     SourceBindingOrigin,
     SourceFilterClause,
     SourceFilterMatchType,
@@ -517,7 +516,7 @@ def test_workspace_replay_preserves_collapsed_semantic_identity(
 @pytest.mark.parametrize(
     "source_binding_plan",
     (
-        CompiledSourceBindingPlan.empty(),
+        CompiledSourceBindingPlan(),
         CompiledSourceBindingPlan(bindings=(NamedSourceBinding(alias="OrigBlue"),)),
     ),
 )
@@ -612,7 +611,7 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
     tifffile.imwrite(source_path, pixels, extratags=((281, "H", 1, 4095, False),))
     ensure_storage_registry()
     filemanager = FileManager(dict(storage_registry))
-    bindings = CompiledSourceBindingPlan.empty()
+    bindings = CompiledSourceBindingPlan()
     plan = CompiledStepPlan(
         step_index=0,
         step_name="Physical source",
@@ -934,7 +933,7 @@ def test_step_output_manifest_scopes_previous_step_inputs(tmp_path: Path) -> Non
             source_step_index=3,
             source_step_scope_id="enhance",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
     )
@@ -1022,7 +1021,7 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
             source_step_index=4,
             source_step_scope_id="mask_image",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
     )
@@ -1097,7 +1096,7 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
     consumer = SimpleNamespace(
         axis_id="A14",
         main_input_dependency=StepInputDependency.pipeline_start(),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={
             plan.ref(): plan
             for plan in (
@@ -1200,7 +1199,7 @@ def test_step_output_manifest_uses_declared_artifact_producer_scope(
             source_step_index=3,
             source_step_scope_id="crop_red",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={
             plan.ref(): plan
             for plan in (
@@ -1296,7 +1295,7 @@ def test_special_artifact_input_does_not_narrow_step_output_main_flow(
             source_step_index=2,
             source_step_scope_id="image_set",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={
             plan.ref(): plan
             for plan in (
@@ -1354,7 +1353,7 @@ def test_step_output_manifest_ignores_sidecar_artifact_for_anchor_filtering() ->
     consumer = SimpleNamespace(
         axis_id="A01",
         main_input_dependency=StepInputDependency.pipeline_start(),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={
             plan.ref(): plan
             for plan in (
@@ -1478,7 +1477,7 @@ def test_step_output_dispatch_projects_producer_group_before_pattern_selection(
             source_step_index=3,
             source_step_scope_id="identify_primary",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         execution_group_value="channel",
         execution_group_scope=ComponentGroupScope.from_raw(
             ("2",),
@@ -1552,7 +1551,7 @@ def test_artifact_managed_dispatch_validates_producer_before_group_projection() 
             source_step_index=1,
             source_step_scope_id="crop_green_red",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         execution_group_value="channel",
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1",),
@@ -1708,7 +1707,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
     )
     source_binding_plan = CompiledSourceBindingPlan(
         bindings=bindings,
-        match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
     )
 
     source_set_measurements = ArtifactSpec.output(
@@ -1900,7 +1899,7 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
                 component_identity=(ComponentSelector(Microscopy.Channel, "3"),),
             ),
         ),
-        match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
     )
     plan = SimpleNamespace(
         axis_id="A01",
@@ -1958,7 +1957,7 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
                 component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
-        match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
     )
     plan = SimpleNamespace(
         axis_id="A01",
@@ -2012,7 +2011,7 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
                 component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
-        match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
     )
     plan = SimpleNamespace(
         axis_id="A01",
@@ -2119,7 +2118,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     from openhcs.core.config import PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.progress import set_progress_queue
-    from openhcs.core.source_bindings import LazyStepSourceBindingsConfig
+    from openhcs.core.config import LazyStepSourceBindingsConfig
     from openhcs.core.steps.function_runtime import (
         PatternGroupExecutionScope,
         PatternGroupExecutionRequest,
@@ -2232,7 +2231,7 @@ def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
                 component_identity=(ComponentSelector(Microscopy.Channel, "1"),),
             ),
         ),
-        match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
     )
     compiled_pattern = compile_function_pattern(
         source_bound_module,
@@ -2723,7 +2722,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         step_scope_id="pipeline::step_0",
         step_name="record labels",
         execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         input_memory_type="numpy",
         variable_components=(Microscopy.Site,),
         artifact_inputs={},
@@ -3200,7 +3199,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     )
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.progress import set_progress_queue
-    from openhcs.core.source_bindings import (
+    from openhcs.core.config import (
         LazySourceBindingsConfig,
         LazyStepSourceBindingsConfig,
     )
@@ -3290,7 +3289,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     assert mask_edge.storage_plan is not None
     assert (mask_edge.main_flow_projection is not None) is False
     assert invocation.contract.accepts_implicit_main_flow_input is True
-    assert compiled_pattern.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) is None
+    assert compiled_pattern.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan()) is None
     assert tuple(
         binding.alias
         for binding in scope.main_flow_source_binding_plan.binding_declarations
@@ -3470,7 +3469,7 @@ def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
             artifact_inputs={},
             artifact_outputs=output_plans,
             execution_group_scope=ComponentGroupScope.ungrouped(),
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
         ),
         compiled_group=compiled_group,
         component_value="default",
@@ -3607,7 +3606,7 @@ def test_component_artifact_plans_reject_malformed_exact_plan_maps() -> None:
 def test_grouped_runtime_scope_preserves_empty_source_binding_plan() -> None:
     from openhcs.core.steps.function_runtime import PatternGroupExecutionScope
 
-    source_binding_plan = CompiledSourceBindingPlan.empty()
+    source_binding_plan = CompiledSourceBindingPlan()
     compiled_pattern = compile_function_pattern(lambda image: image, {}, {})
     scope = PatternGroupExecutionScope(
         context=SimpleNamespace(),
@@ -3925,7 +3924,7 @@ def test_empty_source_binding_plan_does_not_filter_runtime_inputs() -> None:
         axis_id="A01",
         execution_group_scope=ComponentGroupScope.ungrouped(),
         main_input_dependency=StepInputDependency.pipeline_start(),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
     )
     runtime = PatternGroupExecutionRequest(
         context=SimpleNamespace(),
@@ -4207,7 +4206,7 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
     runtime = PatternGroupExecutionRequest(
         context=context,
         execution_plan=replace(
-            plan, source_binding_plan=CompiledSourceBindingPlan.empty()
+            plan, source_binding_plan=CompiledSourceBindingPlan()
         ),
         compiled_group=plan.compiled_function_pattern.default_group,
         pattern_group_info="A01_s001_w2_z{iii}_t001.tif",
@@ -4315,7 +4314,7 @@ def test_step_output_manifest_does_not_filter_main_flow_by_artifact_input(
             source_step_index=1,
             source_step_scope_id="correct_illumination",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={
             plan.ref(): plan
             for plan in (
@@ -4434,7 +4433,7 @@ def test_step_output_manifest_filters_declared_main_flow_contract_identity(
             source_step_index=2,
             source_step_scope_id="align",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
         compiled_function_pattern=compiled_pattern,
     )
@@ -4503,7 +4502,7 @@ def test_step_output_manifest_updates_selected_slot_and_preserves_other_componen
             source_step_index=1,
             source_step_scope_id="producer",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
     )
@@ -4598,7 +4597,7 @@ def test_step_output_manifest_collapsed_domain_replaces_inherited_components(
             source_step_index=1,
             source_step_scope_id="producer",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
         compiled_function_pattern=compile_function_pattern(func, {}, {}),
     )
@@ -4669,7 +4668,7 @@ def test_step_output_manifest_new_output_address_replaces_inherited_components(
             source_step_index=1,
             source_step_scope_id="producer",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
     )
@@ -4753,7 +4752,7 @@ def test_step_output_manifest_grouped_subset_replaces_inherited_components(
             source_step_index=1,
             source_step_scope_id="producer",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={},
         compiled_function_pattern=compile_function_pattern(
             {"2": lambda image: image},
@@ -4821,7 +4820,7 @@ def test_step_output_manifest_preserves_anonymous_side_effect_main_flow(
             source_step_index=2,
             source_step_scope_id="identify_primary",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={
             plan.ref(): plan
             for plan in (
@@ -4882,7 +4881,7 @@ def test_step_output_manifest_accepts_source_anchor_for_qualified_output(
             source_step_index=4,
             source_step_scope_id="correct_illumination_apply",
         ),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         artifact_inputs={
             plan.ref(): plan
             for plan in (

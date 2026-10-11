@@ -71,13 +71,15 @@ from openhcs.core.source_binding_workspace import (
 )
 from openhcs.core.source_bindings import (
     ComponentSelector,
-    LazySourceBindingsConfig,
     NamedSourceBinding,
     SourceBindingOrigin,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
+)
+from openhcs.core.config import (
+    LazySourceBindingsConfig,
     source_bindings_defaults_to_base,
 )
 from openhcs.core.steps.function_step import FunctionStep

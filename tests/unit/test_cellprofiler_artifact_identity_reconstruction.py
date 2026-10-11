@@ -32,8 +32,8 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceProjectionRole,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_artifact_contracts import (
     CellProfilerModuleArtifactContracts,

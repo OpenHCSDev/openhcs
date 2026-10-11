@@ -14,6 +14,7 @@ from typing import NoReturn, Self, TYPE_CHECKING, TypeAlias, TypeVar
 
 from zmqruntime.viewer_protocol import ViewerWireField
 
+from openhcs.core.source_path_identity import source_path_identity_key
 from openhcs.core.axes import Axis, AxisFamily, ColourAxis, PartitionAxis, StackAxis
 
 if TYPE_CHECKING:
@@ -668,31 +669,11 @@ def normalized_path_metadata_value(value: str) -> str:
 
 @lru_cache(maxsize=65536)
 def _cached_normalized_path_metadata_value(value: str) -> str:
-    """Return the canonical absolute path spelling for path-like metadata."""
+    """Spell an absolute path-like value by its source-path identity."""
 
-    path = Path(value)
-    if path.is_absolute():
-        return str(path.resolve(strict=False))
+    if Path(value).is_absolute():
+        return source_path_identity_key(value)
     return value
-
-
-def path_metadata_values_equivalent(left: str, right: str) -> bool:
-    """Return whether two absolute path-like metadata values identify one path."""
-
-    return _cached_path_metadata_values_equivalent(left, right)
-
-
-@lru_cache(maxsize=65536)
-def _cached_path_metadata_values_equivalent(left: str, right: str) -> bool:
-    """Return cached absolute-path equivalence for source metadata values."""
-
-    left_path = Path(left)
-    right_path = Path(right)
-    return (
-        left_path.is_absolute()
-        and right_path.is_absolute()
-        and left_path.resolve(strict=False) == right_path.resolve(strict=False)
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -753,7 +734,8 @@ class DeclaredSourceMetadata:
                 and not (
                     isinstance(existing_value, str)
                     and isinstance(value, str)
-                    and path_metadata_values_equivalent(existing_value, value)
+                    and normalized_path_metadata_value(existing_value)
+                    == normalized_path_metadata_value(value)
                 )
             ):
                 raise RuntimeError(

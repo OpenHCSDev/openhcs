@@ -28,11 +28,8 @@ from openhcs.core.function_reference import (
     FunctionReferenceTransportAuthority,
 )
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
-from openhcs.core.source_bindings import (
-    NamedSourceBinding,
-    SourceBindingOrigin,
-    StepSourceBindingsConfig,
-)
+from openhcs.core.source_bindings import NamedSourceBinding, SourceBindingOrigin
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService

@@ -34,16 +34,15 @@ from openhcs.core.source_bindings import (
     MetadataSource,
     NamedSourceBinding,
     SourceBindingDeclarationsMixin,
-    SourceBindingMatchMethod,
+    PairByMetadata,
     SourceBindingOrigin,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceProjectionRole,
     SourceSetRole,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import SourceBindingsConfig, StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.parser import (
     CPPipeParser,
@@ -174,7 +173,7 @@ def test_compiled_source_binding_plan_owns_declarations_without_activation_mirro
         bindings=(NamedSourceBinding(alias="DNA"),),
     )
 
-    compiled = source_bindings_module.CompiledSourceBindingPlan.from_config(config)
+    compiled = config.compiled_plan()
 
     assert compiled.bindings == config.bindings
     assert compiled.has_primary_content
@@ -182,7 +181,7 @@ def test_compiled_source_binding_plan_owns_declarations_without_activation_mirro
     assert (
         "input_source"
         not in inspect.signature(
-            source_bindings_module.CompiledSourceBindingPlan.from_config
+            type(config).compiled_plan
         ).parameters
     )
 
@@ -728,7 +727,7 @@ def test_names_and_types_contributes_typed_bindings_and_metadata_match_plan() ->
     assert illumination.source_set_role is SourceSetRole.MATCHED
     assert illumination.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
     assert config.match_plan is not None
-    assert config.match_plan.method is SourceBindingMatchMethod.METADATA
+    assert isinstance(config.match_plan, PairByMetadata)
     assert config.match_plan.dimensions[0].field_for_alias("DAPI") == "folder"
     assert (
         config.match_plan.dimensions[0].field_for_alias("DAPIillum") == "folder_illum"

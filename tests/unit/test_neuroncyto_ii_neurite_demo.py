@@ -17,7 +17,7 @@ from openhcs.core.config import GlobalPipelineConfig, LazyNapariStreamingConfig
 from openhcs.core.function_patterns import get_core_callable
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
-from openhcs.core.source_bindings import source_bindings_defaults_to_base
+from openhcs.core.config import source_bindings_defaults_to_base
 from openhcs.core.source_workspace_projection import (
     WorkspaceSourceProjections,
 )

@@ -27,7 +27,7 @@ from openhcs.core.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_bindings import StepSourceBindingsConfig
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.runtime.object_measurement_vectors import (
     CellProfilerObjectMeasurementVectorBinding,
 )

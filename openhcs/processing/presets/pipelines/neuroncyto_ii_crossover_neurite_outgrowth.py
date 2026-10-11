@@ -38,13 +38,13 @@ from openhcs.core.config import (
 )
 from openhcs.core.source_bindings import (
     ComponentSelector,
-    LazySourceBindingsConfig,
     NamedSourceBinding,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.core.config import LazySourceBindingsConfig
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (

@@ -42,11 +42,8 @@ from openhcs.core.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
     materialize_source_binding_workspace,
 )
-from openhcs.core.source_bindings import (
-    ImportedMetadataTable,
-    SourceBindingsConfig,
-    source_bindings_defaults_to_base,
-)
+from openhcs.core.source_bindings import ImportedMetadataTable
+from openhcs.core.config import SourceBindingsConfig, source_bindings_defaults_to_base
 from openhcs.core.partition_filter import PartitionFilterProcessor
 from benchmark.equivalence.runtime import RuntimeOutputSnapshot
 from openhcs.interop.cellprofiler.parser import CPPipeParser

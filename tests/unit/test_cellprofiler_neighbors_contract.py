@@ -38,11 +38,8 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.source_bindings import (
-    NamedSourceBinding,
-    SourceProjectionRole,
-    StepSourceBindingsConfig,
-)
+from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.compile_time_contracts import (
     CellProfilerInvocationContractProviderFactory,

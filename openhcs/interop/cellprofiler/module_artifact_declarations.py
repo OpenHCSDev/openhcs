@@ -45,9 +45,7 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementFeature,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.source_bindings import (
-    SourceBindingsConfig,
-)
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     CurrentPayloadMeasurementRecordMixin,
     RelationshipMeasurementRecordRowsMixin,

@@ -31,12 +31,12 @@ from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.steps.function_io import (
     save_materialized_data,
     update_metadata_for_zarr_conversion,

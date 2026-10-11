@@ -116,8 +116,8 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceProjectionRole,
     SourceSelector,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
@@ -643,9 +643,7 @@ def _output_binding_for_spec(
 def _compiled_source_binding_plan(
     source_bindings: StepSourceBindingsConfig,
 ) -> CompiledSourceBindingPlan:
-    return CompiledSourceBindingPlan.from_config(
-        source_bindings,
-    )
+    return source_bindings.compiled_plan()
 
 
 def _adapter(

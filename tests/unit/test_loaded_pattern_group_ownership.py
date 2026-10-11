@@ -43,7 +43,7 @@ def _fixture():
         output_memory_type="numpy",
         execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         variable_components=(Microscopy.Site,),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
     )
     context = ProcessingContext(axis_id="A01")
     request = PatternGroupExecutionRequest(
@@ -877,7 +877,7 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
     from openhcs.core.source_binding_selection import SourceUniverseRequest
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
 
-    plan = CompiledSourceBindingPlan.empty()
+    plan = CompiledSourceBindingPlan()
     pixels = np.arange(12, dtype=np.uint16).reshape(3, 4)
     mask = pixels > 2
     scalar = ImagePayloadMetadata(

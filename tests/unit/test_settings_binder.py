@@ -283,7 +283,7 @@ def test_watershed_function_selection_follows_module_revision():
     )
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-    from openhcs.core.source_bindings import StepSourceBindingsConfig
+    from openhcs.core.config import StepSourceBindingsConfig
 
     legacy_module = ModuleBlock(
         name="Watershed",

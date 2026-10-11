@@ -40,18 +40,16 @@ from openhcs.core.pipeline.path_planner import (
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.source_bindings import (
-    EMPTY_SOURCE_BINDINGS,
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
     ComponentSelector,
     MetadataExtractionRule,
     MetadataSource,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByOrder,
     SourceSelector,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import EMPTY_SOURCE_BINDINGS, StepSourceBindingsConfig
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
@@ -301,12 +299,7 @@ def _compile_source_plans_for_contract(
     func,
     main_input_dependency: StepInputDependency = StepInputDependency.pipeline_start(),
 ):
-    execution_bindings = CompiledSourceBindingPlan.from_contracts(
-        snapshot.source_bindings,
-        (CallableContract.from_callable(func),),
-        main_input_dependency,
-        ArtifactDeclarationStepContext.empty().available_artifacts,
-    )
+    execution_bindings = snapshot.source_bindings.compiled_plan_for_contracts((CallableContract.from_callable(func),), main_input_dependency, ArtifactDeclarationStepContext.empty().available_artifacts)
     fields = snapshot.source_bindings.metadata_fields_for_literal_types(
         session.source_literal_field_types
     )
@@ -515,7 +508,7 @@ def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
         source=MetadataSource.FILE_NAME,
         pattern=r"(?P<well>[A-H]\d{2})\.tif",
     )
-    match_plan = SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER)
+    match_plan = PairByOrder()
     binding = NamedSourceBinding(
         alias="DNA",
         selector=SourceSelector(
@@ -655,7 +648,7 @@ def test_compiler_disabled_source_bindings_stay_inert_without_contract_requireme
 
     PipelineCompiler._supplement_step_plans(session)
 
-    assert session.plan(0).source_binding_plan.is_empty
+    assert session.plan(0).source_binding_plan == CompiledSourceBindingPlan()
 
 
 def test_path_planner_activates_declared_source_binding_for_pipeline_start():
@@ -787,7 +780,7 @@ def test_path_planner_preserves_pipeline_start_bindings_for_implicit_main_flow()
 
     assert execution_bindings.bindings == (binding,)
     assert source_binding_plan.bindings == (binding,)
-    assert source_universe_plan == source_universe_plan.empty()
+    assert source_universe_plan == CompiledSourceUniversePlan()
 
 
 def test_path_planner_step_output_projects_only_exact_source_artifacts() -> None:

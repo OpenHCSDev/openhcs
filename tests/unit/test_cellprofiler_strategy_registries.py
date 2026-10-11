@@ -27,7 +27,7 @@ from openhcs.processing.backends.cellprofiler.image_math import (
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.source_bindings import EMPTY_SOURCE_BINDINGS
+from openhcs.core.config import EMPTY_SOURCE_BINDINGS
 from openhcs.processing.backends.cellprofiler.grid import (
     DefineGridManualModule,
     IdentifyObjectsInGridModule,

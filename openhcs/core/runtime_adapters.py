@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from python_introspect import add_parameter_exclusions
 
-from openhcs.constants.constants import Backend
 from openhcs.core.artifact_key_selection import (
     ArtifactOutputPolicy,
     NativeReturnArtifactOutputPolicy,
@@ -76,7 +75,7 @@ class RuntimeAdapterRequest:
     artifact_outputs: Mapping[ArtifactSpecRef, ArtifactOutputPlan] = field(
         default_factory=dict
     )
-    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan.empty()
+    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan()
     group_key: str | None = None
     axis_scope: RuntimeExecutionAxisScope
     plane_projection: RuntimePlaneProjection = field(

@@ -32,14 +32,13 @@ from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
-    LazySourceBindingsConfig,
-    LazyStepSourceBindingsConfig,
     NamedSourceBinding,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.core.config import LazySourceBindingsConfig, LazyStepSourceBindingsConfig
 from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.dataset_sources.plane_stores import (

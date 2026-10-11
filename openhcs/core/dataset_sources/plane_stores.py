@@ -18,7 +18,7 @@ from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.dataset_sources.discovery import domain_registry_config
-from openhcs.core.source_bindings import SourceBindingsConfig
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_matching import merge_source_metadata
 from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_projection import (

@@ -26,11 +26,8 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerGroupScope,
 )
 from openhcs.core.progress import set_progress_queue
-from openhcs.core.source_bindings import (
-    NamedSourceBinding,
-    SourceProjectionRole,
-    StepSourceBindingsConfig,
-)
+from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.plate_workspace import (
     CellProfilerPlateWorkspacePreparer,

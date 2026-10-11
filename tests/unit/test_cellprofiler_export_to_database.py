@@ -64,8 +64,8 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
     SourceProjectionRole,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.interop.cellprofiler.analyst_export import (
     CPASQLiteRenderer,
@@ -148,7 +148,7 @@ REMOVED_EXPORT_FALSE_OPTIONS = {
 
 def _projection_builder() -> CellProfilerAnalystProjectionBuilder:
     return CellProfilerAnalystProjectionBuilder(
-        source_binding_plan=CompiledSourceBindingPlan.empty()
+        source_binding_plan=CompiledSourceBindingPlan()
     )
 
 
@@ -159,7 +159,7 @@ def _export_context() -> ProcessingContext:
                 step_index=0,
                 step_name="ExportToDatabase",
                 axis_id="A01",
-                source_binding_plan=CompiledSourceBindingPlan.empty(),
+                source_binding_plan=CompiledSourceBindingPlan(),
             )
         }
     )

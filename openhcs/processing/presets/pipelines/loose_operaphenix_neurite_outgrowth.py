@@ -39,14 +39,13 @@ from openhcs.core.function_patterns import get_core_callable
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.source_bindings import (
     ComponentSelector,
-    LazySourceBindingsConfig,
-    LazyStepSourceBindingsConfig,
     NamedSourceBinding,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.core.config import LazySourceBindingsConfig, LazyStepSourceBindingsConfig
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.steps.function_step import FunctionStep

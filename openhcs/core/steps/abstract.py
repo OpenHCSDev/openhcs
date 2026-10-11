@@ -28,9 +28,7 @@ from openhcs.core.config import (
 from openhcs.core.config import LazyStepPartitionFilterConfig
 from openhcs.core.config import LazyProcessingConfig, LazyDtypeConfig
 from openhcs.core.config import LazyStepSourceBindingsConfig
-from openhcs.core.source_bindings import (
-    StepSourceBindingsConfig,
-)
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,

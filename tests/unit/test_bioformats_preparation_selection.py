@@ -20,12 +20,12 @@ from openhcs.core.source_bindings import (
     ImagePlaneSource,
     MetadataSelector,
     NamedSourceBinding,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.microscopes.bioformats_adapter import BioFormatsJavaAdapter
 from tests.unit.bioformats_fixture import bioformats_filemanager

@@ -58,10 +58,9 @@ from openhcs.core.source_bindings import (
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
-    StepSourceBindingsConfig,
+    PairByOrder,
 )
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
@@ -501,7 +500,7 @@ def test_explicit_measurement_rosters_preserve_compiled_source_groups(
             original.pipeline_config,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(_source("DNA", "1"), _source("Actin", "2")),
-                match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+                match_plan=PairByOrder(),
             ),
         ),
         pipeline_steps=original.pipeline_steps,

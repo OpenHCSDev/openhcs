@@ -12,7 +12,7 @@ from collections.abc import Callable, Hashable, Iterable, Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Mapping, Optional
+from typing import Dict, Mapping, Optional
 
 from openhcs.constants.input_source import InputSource
 from openhcs.core.axis_filter import StepAxisFilterSet
@@ -64,11 +64,10 @@ from openhcs.core.pipeline.compilation_session import (
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
-    EMPTY_SOURCE_BINDINGS,
-    StepSourceBindingsConfig,
     SourceBindingDeclarationsMixin,
     source_binding_group_keys_for_group_by,
 )
+from openhcs.core.config import EMPTY_SOURCE_BINDINGS, StepSourceBindingsConfig
 from openhcs.core.step_dependencies import (
     StepInputDependency,
     StepInputDependencyKind,
@@ -666,12 +665,11 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             source_bindings
             if isinstance(source_bindings, CompiledSourceBindingPlan)
             else (
-                CompiledSourceBindingPlan.from_config(
-                    source_bindings,
+                source_bindings.compiled_plan(
                     realized_source_metadata=self.planner.session.realized_source_metadata,
                 )
                 if source_bindings.binding_declarations
-                else CompiledSourceBindingPlan.empty()
+                else CompiledSourceBindingPlan()
             )
         )
         source_universe_plan = CompiledSourceUniversePlan.from_source_binding_plan(
