@@ -344,7 +344,7 @@ class PipelineOrchestrator:
                     filemanager=self.filemanager,
                     source_bindings_config=shared_context.source_bindings_config,
                 )
-                self.microscope_handler.plate_folder = Path(self.dataset_root)
+                self.microscope_handler.dataset_root = Path(self.dataset_root)
                 self._microscope_handler_rebuild_type = None
             logger.info(
                 f"Initialized microscope handler: {type(self.microscope_handler).__name__}"
@@ -569,10 +569,9 @@ class PipelineOrchestrator:
         Skips remote-service handlers because they do not have local source
         directories.
         """
-        from openhcs.core.dataset_sources.openhcs_format import (
-            OpenHCSMetadataGenerator,
-            get_subdirectory_name,
-        )
+        from polystore.metadata_writer import get_subdirectory_name
+
+        from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataGenerator
 
         source_role = self.microscope_handler.source_selection_role()
         if not source_role.requires_local_directory:
@@ -601,7 +600,7 @@ class PipelineOrchestrator:
             str(self.input_dir),
             backend,
             is_main=True,
-            plate_root=str(self.dataset_root),
+            dataset_root=str(self.dataset_root),
             sub_dir=subdir_name,
             skip_if_complete=True,
         )

@@ -652,7 +652,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
 
     output_dir: Path
     backend: str
-    plate_root: str
+    dataset_root: str
     sub_dir: str
     results_dir: str | None
     artifact_materializations: tuple[MaterializedRuntimeArtifact, ...] = field(
@@ -778,13 +778,13 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         parser = handler.parser
         microscope_type = handler.source_name
         saved_image_paths = tuple(
-            str(Path(path).relative_to(self.plate_root))
+            str(Path(path).relative_to(self.dataset_root))
             for path in context.filemanager.list_image_files(
                 str(self.output_dir), self.backend
             )
         )
         return (metadata_writer or AtomicMetadataWriter()).publish_source_projection_metadata(
-            METADATA_CONFIG.metadata_path(self.plate_root),
+            METADATA_CONFIG.metadata_path(self.dataset_root),
             self.sub_dir,
             projection_entries,
             serializer=SourceProjectionMetadataSerializer(parser),
@@ -795,7 +795,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
             backend=self.backend,
             is_main=self.is_main,
             results_dir=(
-                str(Path(self.results_dir).relative_to(self.plate_root))
+                str(Path(self.results_dir).relative_to(self.dataset_root))
                 if self.results_dir is not None
                 else None
             ),
@@ -835,7 +835,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         declared_addresses: set[OpenHCSPlaneAddress] = set()
         for record, payload in zip(records, payloads, strict=True):
             destination = record.path_under(self.output_dir)
-            virtual_path = str(Path(destination).relative_to(self.plate_root))
+            virtual_path = str(Path(destination).relative_to(self.dataset_root))
             metadata = self.persisted_image_metadata(
                 context,
                 destination=destination,
@@ -941,7 +941,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
                         "metadata."
                     )
                 destination = output.path
-                virtual_path = str(Path(destination).relative_to(self.plate_root))
+                virtual_path = str(Path(destination).relative_to(self.dataset_root))
                 payload = output.metadata.attach_to(output.content)
                 metadata = self.persisted_image_metadata(
                     context,
@@ -1070,7 +1070,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
                 context = compiled_contexts[context_observation.context_key]
                 for target, entries in context_observation.outputs.source_projection_entries_by_target.items():
                     produced_by_document.setdefault(
-                        METADATA_CONFIG.metadata_path(target.plate_root), {}
+                        METADATA_CONFIG.metadata_path(target.dataset_root), {}
                     ).setdefault(target, []).append(entries)
                     if target.create_openhcs_metadata:
                         target_contexts.setdefault(target, context)
@@ -1080,10 +1080,10 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         ] = {}
         for owner, context in target_contexts.items():
             targets_by_document.setdefault(
-                METADATA_CONFIG.metadata_path(owner.plate_root), {}
+                METADATA_CONFIG.metadata_path(owner.dataset_root), {}
             )[owner] = context
         for metadata_path in dict.fromkeys((*targets_by_document, *produced_by_document)):
-            AtomicMetadataWriter().reconcile_completed_plate(
+            AtomicMetadataWriter().reconcile_completed_dataset(
                 metadata_path,
                 targets_by_document.get(metadata_path, {}),
                 produced_entries_by_target={
@@ -1137,7 +1137,7 @@ class PrimaryImageMetadataTarget(
         return cls(
             output_dir=plan.output_dir,
             backend=plan.write_backend,
-            plate_root=plan.output_dataset_root,
+            dataset_root=plan.output_dataset_root,
             sub_dir=plan.sub_dir,
             results_dir=plan.analysis_results_dir,
         )
@@ -1161,7 +1161,7 @@ class MaterializedImageMetadataTarget(
         return cls(
             output_dir=output.output_dir,
             backend=output.backend,
-            plate_root=output.plate_root,
+            dataset_root=output.dataset_root,
             sub_dir=output.sub_dir,
             results_dir=output.analysis_results_dir,
         )
@@ -1202,9 +1202,9 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
             raise ValueError("Reconciliation requires one document and its admitted entries.")
         handler = OpenHCSMetadataHandler(context.filemanager)
         directories = (
-            handler.reconciliation_directories(self.plate_root, self.backend)
+            handler.reconciliation_directories(self.dataset_root, self.backend)
             if document is None else handler.reconciliation_directories_from_document(
-                self.plate_root, self.backend, document, accepted_entries
+                self.dataset_root, self.backend, document, accepted_entries
             )
         )
         return tuple(
@@ -1219,7 +1219,7 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
 
     def for_directory(self, directory: Path) -> RuntimeArtifactMetadataTarget:
         """Retain the compiled plate/backend while projecting one declared directory."""
-        sub_dir = directory.relative_to(self.plate_root)
+        sub_dir = directory.relative_to(self.dataset_root)
         return replace(
             self, output_dir=directory, sub_dir=str(sub_dir), results_dir=str(directory)
         )
@@ -1230,11 +1230,11 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
         if not materialization.has_persistent_target:
             return None
         output_dir = plan.artifact_analysis_output_dir
-        plate_root = plan.artifact_output_dataset_root
+        dataset_root = plan.artifact_output_dataset_root
         return cls(
             output_dir=output_dir,
             backend=materialization.require_persistent_backend(),
-            plate_root=plate_root,
-            sub_dir=str(output_dir.relative_to(plate_root)),
+            dataset_root=dataset_root,
+            sub_dir=str(output_dir.relative_to(dataset_root)),
             results_dir=str(output_dir),
         )

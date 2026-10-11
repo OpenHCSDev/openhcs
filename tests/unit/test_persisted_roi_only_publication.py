@@ -52,13 +52,13 @@ def _publish_saved_step(context, plan, *, artifact_materializations=()):
         context, plan, artifact_materializations=artifact_materializations
     )
     for metadata_path in dict.fromkeys(
-        METADATA_CONFIG.metadata_path(target.plate_root) for target in facts
+        METADATA_CONFIG.metadata_path(target.dataset_root) for target in facts
     ):
         entries = {
             target: value for target, value in facts.items()
-            if METADATA_CONFIG.metadata_path(target.plate_root) == metadata_path
+            if METADATA_CONFIG.metadata_path(target.dataset_root) == metadata_path
         }
-        AtomicMetadataWriter().reconcile_completed_plate(
+        AtomicMetadataWriter().reconcile_completed_dataset(
             metadata_path,
             {target: context for target in entries if target.create_openhcs_metadata},
             produced_entries_by_target=entries,
@@ -337,7 +337,7 @@ def test_measurement_only_step_does_not_reconcile_pending_image_producer(
     assert table_output.path == str(plate / destination / "measurements.csv")
     assert (plate / destination / "measurements.csv").read_bytes() == b"ObjectNumber,Area\n1,6\n"
     with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
-        AtomicMetadataWriter().reconcile_completed_plate(
+        AtomicMetadataWriter().reconcile_completed_dataset(
             metadata_path, {target: publication_context},
             produced_entries_by_target=staged,
         )
@@ -464,7 +464,7 @@ def test_new_result_declaration_composes_cooperative_hooks_without_consumer_edit
                 return cls(
                     output_dir=plate / destination,
                     backend=Backend.DISK.value,
-                    plate_root=str(plate),
+                    dataset_root=str(plate),
                     sub_dir=destination,
                     results_dir=str(plate / destination),
                 )

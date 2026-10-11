@@ -87,11 +87,11 @@ def test_metadata_detection_uses_each_declared_owner(
     filemanager = bioformats_filemanager()
     metadata_type = handler_type.metadata_handler_class
 
-    def find_metadata_file(metadata, plate_folder):
-        observed.append((type(metadata), plate_folder))
+    def find_metadata_file(metadata, dataset_root):
+        observed.append((type(metadata), dataset_root))
         if missing:
             raise MetadataNotFoundError("declared metadata unavailable")
-        return plate_folder / "declared-metadata"
+        return dataset_root / "declared-metadata"
 
     monkeypatch.setattr(metadata_type, "find_metadata_file", find_metadata_file)
 

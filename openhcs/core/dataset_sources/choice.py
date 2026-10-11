@@ -111,7 +111,7 @@ class DatasetSourceChoice(ABC):
             pattern_format=pattern_format,
             source_bindings_config=source_bindings_config,
         )
-        source.plate_folder = root
+        source.dataset_root = root
         return source
 
 

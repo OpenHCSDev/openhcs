@@ -424,7 +424,7 @@ def _main_flow_materialization_summary(
     return MainFlowMaterializationPlanSummary(
         output_dir=str(plan.output_dir),
         backend=str(plan.backend),
-        plate_root=str(plan.plate_root),
+        plate_root=str(plan.dataset_root),
         sub_dir=str(plan.sub_dir),
         analysis_results_dir=(
             None

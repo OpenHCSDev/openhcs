@@ -187,7 +187,7 @@ class MaterializedOutputPlan:
 
     output_dir: Path
     backend: str
-    plate_root: str
+    dataset_root: str
     sub_dir: str
     analysis_results_dir: str | None
 
@@ -561,14 +561,14 @@ class CompiledStepPlan:
     @property
     def artifact_output_dataset_root(self) -> str:
         """Resolve artifact plate identity alongside its compiled directories."""
-        plate_root = self.output_dataset_root
+        dataset_root = self.output_dataset_root
         if self.materialized_output is not None:
-            plate_root = self.materialized_output.plate_root
-        if plate_root is None:
+            dataset_root = self.materialized_output.dataset_root
+        if dataset_root is None:
             raise ValueError(
                 f"Step {self.step_index} ({self.step_name}) has no artifact output plate root."
             )
-        return plate_root
+        return dataset_root
 
     @property
     def artifact_analysis_output_dir(self) -> Path:

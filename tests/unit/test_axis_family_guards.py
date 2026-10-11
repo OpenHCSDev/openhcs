@@ -227,19 +227,15 @@ RUNTIME_MODULE_ROOTS = (
 )
 RUNTIME_MODULE_GLOBS = ("openhcs/runtime/zmq_*.py",)
 
-# Names the runtime modules use but do not declare. Each is owned elsewhere:
-# FunctionStepExecutionScope.PLATE and the vfs Plate*Output path declarations
-# are also spelled by processing (P renames them with processing); the
-# source-binding, workspace-projection, dataset-source and metadata-writer
-# names belong to W's kernel-wide ratchet.
+# Names the runtime modules use but do not declare. FunctionStepExecutionScope.PLATE
+# and the vfs Plate*Output path declarations are also spelled by processing;
+# P renames them with processing.
 RUNTIME_FOREIGN_NAMES = frozenset(
     {
         ("openhcs/core/config.py", "PlateOutputDirectory"),
         ("openhcs/core/config.py", "PlateOutputFile"),
         ("openhcs/core/orchestrator/bundle_execution.py", "PLATE"),
         ("openhcs/core/orchestrator/worker_execution.py", "PLATE"),
-        ("openhcs/core/orchestrator/orchestrator.py", "plate_folder"),
-        ("openhcs/core/orchestrator/orchestrator.py", "plate_root"),
     }
 )
 
@@ -297,3 +293,178 @@ def test_runtime_modules_speak_no_microscopy_word() -> None:
 def test_runtime_foreign_names_name_existing_modules() -> None:
     for module, _name in RUNTIME_FOREIGN_NAMES:
         assert (REPO_ROOT / module).exists(), module
+
+
+# W: the kernel-wide ratchet. Until P creates openhcs/kernel/, the kernel is
+# these packages: the axis family, payloads, dataset sources, compiler,
+# runtime, viewers, storage and config. The authoring surfaces (agent, mcp,
+# authoring, pyqt_gui, ui), the processing function library and the domain
+# packages are not kernel.
+KERNEL_MODULE_ROOTS = (
+    "openhcs/core",
+    "openhcs/runtime",
+    "openhcs/constants",
+    "openhcs/formats",
+    "openhcs/serialization",
+    "openhcs/utils",
+)
+
+# "channel" is also the NGFF and ImageJ dimension name the kernel's Zarr layout
+# and viewers speak (see EXTERNAL_SPELLINGS), so its words are not counted.
+EXTERNAL_DIMENSION_WORDS = frozenset({"channel", "channels"})
+
+# Every (kernel module, identifier) that still speaks microscopy. The set may
+# only shrink: delete the entries a change removes, never add one. The ceiling
+# makes growing the pin itself a visible edit.
+KERNEL_DOMAIN_REFERENCE_CEILING = 72
+KERNEL_DOMAIN_REFERENCES = frozenset(
+    {
+        ("openhcs/core/artifacts.py", "PLATE"),
+        ("openhcs/core/callable_contract.py", "PLATE"),
+        ("openhcs/core/callable_contract.py", "plate"),
+        ("openhcs/core/components/parser_metaprogramming.py", "include_site"),
+        ("openhcs/core/components/parser_metaprogramming.py", "plate_name"),
+        ("openhcs/core/config.py", "PlateOutputDirectory"),
+        ("openhcs/core/config.py", "PlateOutputFile"),
+        ("openhcs/core/dataset_sources/openhcs_format.py", "PLATE_NAME"),
+        ("openhcs/core/dataset_sources/openhcs_format.py", "get_plate_acquisition_datetime"),
+        ("openhcs/core/dataset_sources/openhcs_format.py", "get_plate_name"),
+        ("openhcs/core/dataset_sources/source.py", "plate_root"),
+        ("openhcs/core/debug_session_projection.py", "NO_PLATE"),
+        ("openhcs/core/debug_session_projection.py", "NoPlateDebugSessionPhase"),
+        ("openhcs/core/debug_session_projection.py", "current_plate_scope_id"),
+        ("openhcs/core/debug_session_projection.py", "no_plate"),
+        ("openhcs/core/execution_state.py", "has_compiled_plate"),
+        ("openhcs/core/function_patterns.py", "PLATE"),
+        ("openhcs/core/orchestrator/bundle_execution.py", "PLATE"),
+        ("openhcs/core/orchestrator/worker_execution.py", "PLATE"),
+        ("openhcs/core/path_cache.py", "PLATE_IMPORT"),
+        ("openhcs/core/path_cache.py", "plate_import"),
+        ("openhcs/core/pipeline/artifact_planning.py", "PLATE"),
+        ("openhcs/core/pipeline/compilation_session.py", "PLATE"),
+        ("openhcs/core/pipeline/compiler.py", "PLATE"),
+        ("openhcs/core/pipeline/compiler.py", "all_wells"),
+        ("openhcs/core/pipeline/funcstep_contract_validator.py", "PLATE"),
+        ("openhcs/core/pipeline/funcstep_contract_validator.py", "plate_scope_started"),
+        ("openhcs/core/pipeline/path_planner.py", "PLATE"),
+        ("openhcs/core/plate_file_inventory.py", "ALL_PLATE_FILE_KINDS"),
+        ("openhcs/core/plate_file_inventory.py", "PlateFileInventoryQuery"),
+        ("openhcs/core/plate_file_inventory.py", "PlateFileKind"),
+        ("openhcs/core/plate_file_inventory.py", "PlateFileKindSelection"),
+        ("openhcs/core/plate_image_inventory.py", "PlateFileInventory"),
+        ("openhcs/core/plate_image_inventory.py", "PlateFileInventoryQuery"),
+        ("openhcs/core/plate_image_inventory.py", "PlateFileInventoryQueryResult"),
+        ("openhcs/core/plate_image_inventory.py", "PlateFileKind"),
+        ("openhcs/core/plate_image_inventory.py", "PlateFileRecord"),
+        ("openhcs/core/plate_image_inventory.py", "PlateFileRecordAmbiguityError"),
+        ("openhcs/core/plate_image_inventory.py", "PlateFileRecordNotFoundError"),
+        ("openhcs/core/plate_image_inventory.py", "PlateImageInventory"),
+        ("openhcs/core/plate_image_inventory.py", "PlateImageRecord"),
+        ("openhcs/core/plate_image_inventory.py", "PlateImageSample"),
+        ("openhcs/core/plate_image_inventory.py", "PlateImageSampler"),
+        ("openhcs/core/plate_image_inventory.py", "PlateResultFileInventory"),
+        ("openhcs/core/plate_image_inventory.py", "PlateResultFilePreview"),
+        ("openhcs/core/plate_image_inventory.py", "PlateResultFilePreviewReader"),
+        ("openhcs/core/plate_image_inventory.py", "PlateResultFileRecord"),
+        ("openhcs/core/plate_image_inventory.py", "plate_path"),
+        ("openhcs/core/source_binding_workspace.py", "_source_set_well"),
+        ("openhcs/core/source_binding_workspace.py", "well"),
+        ("openhcs/core/source_tile_geometry.py", "channel_sites"),
+        ("openhcs/core/source_tile_geometry.py", "site"),
+        ("openhcs/core/source_tile_geometry.py", "sites"),
+        ("openhcs/core/steps/stream_component_semantics.py", "plate_path"),
+        ("openhcs/core/streaming_config_factory.py", "plate_path"),
+        ("openhcs/core/synthetic_plate_generation.py", "SYNTHETIC_PLATE_GENERATION_PROFILE"),
+        ("openhcs/core/synthetic_plate_generation.py", "SyntheticPlateFormat"),
+        ("openhcs/core/synthetic_plate_generation.py", "SyntheticPlateGenerationBounds"),
+        ("openhcs/core/synthetic_plate_generation.py", "SyntheticPlateGenerationParameters"),
+        ("openhcs/core/synthetic_plate_generation.py", "SyntheticPlateGenerationProfile"),
+        ("openhcs/core/vfs_protocol.py", "PlateInputDirectory"),
+        ("openhcs/core/vfs_protocol.py", "PlateInputDirectoryDeclaration"),
+        ("openhcs/core/vfs_protocol.py", "PlateInputFile"),
+        ("openhcs/core/vfs_protocol.py", "PlateInputFileDeclaration"),
+        ("openhcs/core/vfs_protocol.py", "PlateOutputDirectory"),
+        ("openhcs/core/vfs_protocol.py", "PlateOutputDirectoryDeclaration"),
+        ("openhcs/core/vfs_protocol.py", "PlateOutputFile"),
+        ("openhcs/core/vfs_protocol.py", "PlateOutputFileDeclaration"),
+        ("openhcs/core/viewer_streaming_service.py", "plate_image_metadata"),
+        ("openhcs/core/viewer_streaming_service.py", "plate_path"),
+        ("openhcs/core/virtual_workspace_metadata.py", "PLATE_NAME"),
+        ("openhcs/core/virtual_workspace_metadata.py", "plate_name"),
+    }
+)
+
+
+def _kernel_domain_words() -> frozenset[str]:
+    """Microscopy's one-word axis spellings, and "plate", its dataset scope.
+
+    A multi-word spelling (``z_index``) has no word of its own to count.
+    """
+
+    words = {"plate", "plates"}
+    for axis in Microscopy.axes:
+        words.update(
+            spelling
+            for spelling in (axis.name, axis.metadata_collection_field)
+            if "_" not in spelling
+        )
+    return frozenset(words - EXTERNAL_DIMENSION_WORDS)
+
+
+def _kernel_modules() -> list[Path]:
+    return [
+        path
+        for root in KERNEL_MODULE_ROOTS
+        for path in sorted((REPO_ROOT / root).rglob("*.py"))
+        if not _relative(path).startswith(DOMAIN_MODULE_PREFIXES)
+    ]
+
+
+def test_kernel_domain_references_only_shrink() -> None:
+    domain_words = _kernel_domain_words()
+    found = {
+        (_relative(path), name)
+        for path in _kernel_modules()
+        for name in _names_and_identifier_literals(ast.parse(path.read_text()))
+        if _identifier_words(name) & domain_words
+    }
+    assert sorted(found - KERNEL_DOMAIN_REFERENCES) == [], "new domain word in the kernel"
+    assert sorted(KERNEL_DOMAIN_REFERENCES - found) == [], "removed: shrink the pin"
+    assert len(KERNEL_DOMAIN_REFERENCES) <= KERNEL_DOMAIN_REFERENCE_CEILING
+
+
+def test_kernel_ratchet_covers_the_runtime_guard() -> None:
+    """The runtime guard's modules are kernel modules; its exemptions are pinned here too."""
+
+    kernel = {_relative(path) for path in _kernel_modules()}
+    assert {_relative(path) for path in _runtime_modules()} <= kernel
+    assert RUNTIME_FOREIGN_NAMES <= KERNEL_DOMAIN_REFERENCES
+    for root in KERNEL_MODULE_ROOTS:
+        assert (REPO_ROOT / root).is_dir(), root
+
+
+# W renamed the kernel's dataset vocabulary with every caller; the old names
+# exist nowhere.
+RENAMED_DATASET_NAMES = frozenset(
+    {
+        "plate_folder",
+        "current_plate_folder",
+        "CompilationPlateScope",
+        "PlatePathDeclaration",
+        "reconcile_completed_plate",
+        "_resolve_plate_root",
+    }
+)
+
+
+def test_renamed_dataset_names_do_not_exist() -> None:
+    offenders = {
+        _relative(path): sorted(
+            RENAMED_DATASET_NAMES
+            & _names_and_identifier_literals(ast.parse(path.read_text()))
+        )
+        for path in _python_files("openhcs", "tests", "benchmark", "scripts")
+        if path.name != Path(__file__).name
+    }
+    assert {path: names for path, names in offenders.items() if names} == {}
+

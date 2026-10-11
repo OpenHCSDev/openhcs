@@ -32,7 +32,7 @@ def _identity(image):
 
 
 def _resolved_checkpoint(
-    plate_path: Path,
+    dataset_root: Path,
     *,
     checkpoint_filter: str | None = None,
 ):
@@ -41,7 +41,7 @@ def _resolved_checkpoint(
         path_planning_config=LazyPathPlanningConfig(partition_filter=0),
     )
     orchestrator = SimpleNamespace(
-        dataset_root=plate_path,
+        dataset_root=dataset_root,
         pipeline_config=pipeline_config,
         get_component_keys=lambda _component, *, resolved_config: ["A01", "B02"],
         create_context=lambda axis_id, *, resolved_config: SimpleNamespace(
@@ -101,7 +101,7 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
         materialized_output=MaterializedOutputPlan(
             output_dir=checkpoint_dir,
             backend=Backend.MEMORY.value,
-            plate_root=str(tmp_path),
+            dataset_root=str(tmp_path),
             sub_dir="checkpoints",
             analysis_results_dir=str(tmp_path / "checkpoint_results"),
         ),

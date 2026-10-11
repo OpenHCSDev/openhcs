@@ -10,7 +10,7 @@ from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
-    CompilationPlateScope,
+    CompilationDatasetScope,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.vfs_protocol import FileManagerLike
@@ -75,10 +75,10 @@ class FilesystemFileManager(FileManagerLike):
 def _compiled_template_path(
     step: FunctionStep,
     *,
-    plate_root: Path,
+    dataset_root: Path,
 ) -> Path:
     resolver = CompilationPathResolver(
-        plate_scope=CompilationPlateScope.from_path(plate_root),
+        dataset_scope=CompilationDatasetScope.from_path(dataset_root),
         filemanager=FilesystemFileManager(),
         backend="disk",
     )
@@ -97,8 +97,8 @@ def test_generated_relative_path_compiles_against_explicit_plate_not_cwd(
 ) -> None:
     plate_a = tmp_path / "plate-a"
     plate_b = tmp_path / "plate-b"
-    for plate_root in (plate_a, plate_b):
-        template = plate_root / "templates" / "template.tif"
+    for dataset_root in (plate_a, plate_b):
+        template = dataset_root / "templates" / "template.tif"
         template.parent.mkdir(parents=True)
         template.touch()
 
@@ -123,10 +123,10 @@ def test_generated_relative_path_compiles_against_explicit_plate_not_cwd(
     cwd_a.mkdir()
     cwd_b.mkdir()
     monkeypatch.chdir(cwd_a)
-    first = _compiled_template_path(step, plate_root=plate_a)
+    first = _compiled_template_path(step, dataset_root=plate_a)
     monkeypatch.chdir(cwd_b)
-    repeated = _compiled_template_path(step, plate_root=plate_a)
-    second_plate = _compiled_template_path(step, plate_root=plate_b)
+    repeated = _compiled_template_path(step, dataset_root=plate_a)
+    second_plate = _compiled_template_path(step, dataset_root=plate_b)
 
     assert first == repeated == plate_a / authored_path
     assert second_plate == plate_b / authored_path

@@ -24,7 +24,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.pipeline.compilation_session import (
     CompilationPathResolver,
-    CompilationPlateScope,
+    CompilationDatasetScope,
     resolve_declared_dataclass_paths,
 )
 from openhcs.core.pipeline.path_planner import _cached_output_dataset_root
@@ -37,7 +37,7 @@ from openhcs.core.vfs_protocol import (
     PlateOutputDirectoryDeclaration,
     PlateOutputFile,
     PlateOutputFileDeclaration,
-    PlatePathDeclaration,
+    DatasetPathDeclaration,
 )
 
 
@@ -128,14 +128,14 @@ def _path_callable(
 
 
 def _resolver() -> tuple[CompilationPathResolver, RecordingFileManager]:
-    plate_root = Path("/plates/plate-a")
+    dataset_root = Path("/plates/plate-a")
     filemanager = RecordingFileManager(
-        files=(plate_root / "templates/template.tif",),
-        directories=(plate_root / "templates",),
+        files=(dataset_root / "templates/template.tif",),
+        directories=(dataset_root / "templates",),
     )
     return (
         CompilationPathResolver(
-            plate_scope=CompilationPlateScope.from_path(plate_root),
+            dataset_scope=CompilationDatasetScope.from_path(dataset_root),
             filemanager=filemanager,
             backend="disk",
         ),
@@ -164,7 +164,7 @@ def test_plate_scope_delegates_relative_resolution_to_vfs_with_explicit_base() -
 
 def test_plate_scope_rejects_relative_compilation_root_at_construction() -> None:
     with pytest.raises(ValueError, match="must be absolute"):
-        CompilationPlateScope.from_path("relative/plate")
+        CompilationDatasetScope.from_path("relative/plate")
 
 
 def test_input_declarations_validate_kind_and_output_declarations_do_not_probe() -> (
@@ -279,14 +279,14 @@ def test_config_annotations_delegate_to_nominal_path_declarations() -> None:
     )
 
     assert isinstance(
-        PlatePathDeclaration.from_annotation(
+        DatasetPathDeclaration.from_annotation(
             path_planning_annotations["global_output_folder"]
         ),
         PlateOutputDirectoryDeclaration,
     )
-    assert PlatePathDeclaration.from_annotation(
+    assert DatasetPathDeclaration.from_annotation(
         debug_annotations["compiled_execution_bundle_path"]
-    ) == PlatePathDeclaration.from_annotation(PlateOutputFile)
+    ) == DatasetPathDeclaration.from_annotation(PlateOutputFile)
     assert CallableContract.from_callable(
         _path_callable
     ).declared_path_parameters.keys() == {"template_path"}
