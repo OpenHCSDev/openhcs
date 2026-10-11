@@ -264,16 +264,8 @@ class IntensityDistributionHeatmapObjectRelation(ArtifactSpecRelation):
     """Declare the exact object-label domain rendered by one heatmap."""
 
     relation_key: ClassVar[str] = "intensity_distribution_heatmap_object"
+    source_artifact_type = ObjectLabelsArtifactType
     target_artifact_type = ImageArtifactType
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
-        if self.source.artifact_type is not ObjectLabelsArtifactType:
-            raise ValueError(
-                "Intensity-distribution heatmap object relation requires an "
-                f"object source, got {self.source.artifact_type.value}:"
-                f"{self.source.name}."
-            )
 
 
 @dataclass(frozen=True, slots=True)
