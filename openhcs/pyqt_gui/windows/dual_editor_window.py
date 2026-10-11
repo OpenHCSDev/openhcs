@@ -7,10 +7,9 @@ Uses hybrid approach: extracted business logic + clean PyQt6 UI.
 
 import logging
 from collections.abc import Callable
-from functools import cache
+from functools import cache, singledispatchmethod
 
-from objectstate import is_global_config_instance
-from objectstate.global_config import get_current_global_config
+
 from objectstate.object_state import ObjectStateRegistry
 from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QShowEvent
@@ -45,7 +44,15 @@ from pyqt_reactive.widgets.shared import (
 
 from openhcs.authoring.session.compilation import CompiledDataset
 from openhcs.core.artifact_inspection import CompiledArtifactInspection
-from openhcs.core.config import PipelineConfig
+from openhcs.authoring.session.events import (
+    GlobalConfigChanged,
+    PipelineChanged,
+    PipelineImported,
+    SessionEvent,
+)
+from openhcs.authoring.session.session import Session
+from openhcs.pyqt_gui.session_rendering import QtSessionEventRelay
+from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from openhcs.core.source_binding_context import SourceBindingContext
 from openhcs.core.source_bindings import SourceBindingsConfig
 from openhcs.core.steps.abstract import AbstractStep
@@ -296,7 +303,8 @@ class DualEditorWindow(BaseFormDialog):
         self._save_button_base_style = ""
         self._function_pattern_controller = None
         self._time_travel_title_refresh_callback = None
-        self._event_bus = None
+        self._session = None
+        self._session_events = None
         self._orchestrator_config_signal = None
         self._compiled_artifact_signal = None
         self._runtime_artifact_signal = None
@@ -322,7 +330,11 @@ class DualEditorWindow(BaseFormDialog):
         if not self.scope_id:
             return
 
-        def refresh_after_time_travel(_dirty_states, _triggering_scope) -> None:
+        pipeline_scope = PipelineScopeIdentity.from_plate_scope(self.plate_scope).scope_id
+
+        def refresh_after_time_travel(dirty_states, _triggering_scope) -> None:
+            if any(scope_id == pipeline_scope for scope_id, _state in dirty_states or ()):
+                QTimer.singleShot(0, lambda: self._follow_pipeline(self.plate_scope))
             QTimer.singleShot(0, self._refresh_after_time_travel)
 
         ObjectStateRegistry.add_time_travel_complete_callback(refresh_after_time_travel)
@@ -699,19 +711,10 @@ class DualEditorWindow(BaseFormDialog):
         return build_step_scope_id(self.plate_scope, self.editing_step)
 
     def _on_pipeline_changed(self, new_pipeline_steps: list):
-        """Handle pipeline_changed signal from global event bus.
+        """Follow this editor's step through a changed pipeline.
 
-        CRITICAL: This is connected to the global event bus in setup_connections().
-        It receives updates from ANY window that modifies the pipeline:
-        - Pipeline editor code button
-        - Plate manager code button
-        - Pipeline editor UI
-        - Any future pipeline editing source
-
-        This is the OpenHCS "set and forget" pattern - one handler receives ALL updates.
-
-        Args:
-            new_pipeline_steps: Updated list of FunctionStep objects from the pipeline
+        Called for every pipeline change the session publishes for this plate and
+        after time travel restores the pipeline, whatever window made the change.
         """
         # Find our step in the new pipeline by matching scope token.
         window_scope_id = self.scope_id
@@ -775,62 +778,47 @@ class DualEditorWindow(BaseFormDialog):
             # Detect changes (might have unsaved changes now)
             self.detect_changes()
 
-    def _on_config_changed(self, config):
-        """Handle config_changed signal from global event bus.
+    def connect_session_events(self, session: Session) -> None:
+        """Follow pipeline and global-config changes the session publishes."""
 
-        CRITICAL: This is connected to the global event bus in setup_connections().
-        It receives updates from ANY window that modifies configs:
-        - PlateManager code button (GlobalPipelineConfig, PipelineConfig)
-        - ConfigWindow code button (GlobalPipelineConfig, PipelineConfig, StepConfig)
-        - Any future config editing source
+        self._session = session
+        self._session_events = QtSessionEventRelay(session, parent=self)
+        # A bound method, not a closure over self: PyQt holds bound-method
+        # slots weakly, so the connection does not keep this window alive.
+        self._session_events.published.connect(self._on_session_record)
 
-        This is the OpenHCS "set and forget" pattern - one handler receives ALL updates.
+    def _on_session_record(self, record) -> None:
+        self.on_session_event(record.event)
 
-        Args:
-            config: Updated config object (GlobalPipelineConfig, PipelineConfig, or StepConfig)
-        """
-        # Only care about global configs and PipelineConfig changes
-        # (StepConfig changes are handled by the step editor's own form manager)
-        is_global = is_global_config_instance(config)
-        is_pipeline = isinstance(config, PipelineConfig)
-        if not (is_global or is_pipeline):
-            return
+    @singledispatchmethod
+    def on_session_event(self, event: SessionEvent) -> None:
+        del event
 
-        # Only refresh if this is for our orchestrator
-        if not self.orchestrator:
-            return
+    @on_session_event.register
+    def _(self, event: PipelineChanged) -> None:
+        self._follow_pipeline(event.scope_id)
 
-        # Check if this config belongs to our orchestrator
-        if is_pipeline:
-            # Check if this is our orchestrator's pipeline config
-            if config is not self.orchestrator.pipeline_config:
-                return
-        elif is_global:
-            # Check if this is the current global config
-            current_global = get_current_global_config(type(config))
-            if config is not current_global:
-                return
+    @on_session_event.register
+    def _(self, event: PipelineImported) -> None:
+        self._follow_pipeline(event.scope_id)
 
-        logger.debug(f"Step editor received config change: {type(config).__name__}")
-
-        # Trigger cross-window refresh for all form managers
-        # This will update placeholders in the step editor to show new inherited values
+    @on_session_event.register
+    def _(self, event: GlobalConfigChanged) -> None:
+        del event
+        # Inherited placeholders in the step editor re-resolve against the new
+        # global config.
         ObjectStateRegistry.increment_token()
-        logger.debug("Triggered global cross-window refresh after config change")
+
+    def _follow_pipeline(self, scope_id: str) -> None:
+        if self._session is None or scope_id != self.plate_scope:
+            return
+        self._on_pipeline_changed(self._session.pipeline_steps(scope_id))
 
     def setup_connections(self):
         """Setup signal/slot connections."""
         # Tab change tracking
         self._tab_body.current_changed.connect(self.on_tab_changed)
 
-        # CRITICAL: Connect to global event bus for cross-window updates
-        # This is the OpenHCS "set and forget" pattern - one connection handles ALL sources
-        event_bus = self._get_event_bus()
-        if event_bus:
-            event_bus.pipeline_changed.connect(self._on_pipeline_changed)
-            event_bus.config_changed.connect(self._on_config_changed)
-            self._event_bus = event_bus
-            logger.debug("Connected to global event bus for cross-window updates")
 
     def connect_orchestrator_config_signal(self, signal) -> None:
         """Subscribe this editor to orchestrator config updates."""
@@ -855,17 +843,10 @@ class DualEditorWindow(BaseFormDialog):
 
     def _cleanup_managed_resources(self) -> None:
         """Release editor-owned subscriptions and generic form resources."""
-        event_bus = self._event_bus
-        if event_bus is not None:
-            try:
-                event_bus.pipeline_changed.disconnect(self._on_pipeline_changed)
-            except TypeError:
-                pass
-            try:
-                event_bus.config_changed.disconnect(self._on_config_changed)
-            except TypeError:
-                pass
-            self._event_bus = None
+        session_events = self._session_events
+        if session_events is not None:
+            session_events.close()
+            self._session_events = None
 
         orchestrator_signal = self._orchestrator_config_signal
         if orchestrator_signal is not None:
@@ -998,13 +979,6 @@ class DualEditorWindow(BaseFormDialog):
             logger.warning("Could not find service adapter for main window")
             return None
         return self.service_adapter.main_window
-
-    def _get_event_bus(self):
-        """Return the event bus from the editor service adapter."""
-        if self.service_adapter is None:
-            logger.warning("Could not find service adapter for event bus")
-            return None
-        return self.service_adapter.get_event_bus()
 
     # Old function pane methods removed - now using dedicated FunctionListEditorWidget
 

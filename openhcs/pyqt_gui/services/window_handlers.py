@@ -251,6 +251,7 @@ class OpenHCSWindowCreationAuthority:
             ),
             parent=None,
         )
+        window.connect_session_events(plate_manager.session)
         window.connect_artifact_signals(
             compiled_artifact_signal=(
                 plate_manager.compiled_artifact_inspection_changed

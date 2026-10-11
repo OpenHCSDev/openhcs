@@ -100,16 +100,12 @@ from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
 from openhcs.pyqt_gui.widgets.shared.openhcs_manager_mixins import (
     OpenHCSSingleRowActionManagerMixin,
 )
-from openhcs.pyqt_gui.widgets.shared.services.gui_event_bus_broadcast import (
-    GuiEventBusBroadcaster,
-)
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_editor_workflows import (
     PipelineEditorCodeWorkflow,
     PipelineEditorDebugWorkflow,
     PipelineEditorFunctionPresentation,
 )
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
-from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from openhcs.core.axes import Axis, GroupingDeclaration
 
 logger = logging.getLogger(__name__)
@@ -389,7 +385,6 @@ class PipelineEditorWidget(
         self._load_current_steps()
         self.update_item_list()
         self.update_button_states()
-        GuiEventBusBroadcaster(self.event_bus).pipeline_changed(self.displayed_steps)
 
     # -- UI -------------------------------------------------------------------
 
@@ -606,13 +601,8 @@ class PipelineEditorWidget(
         del triggering_scope
         self._load_current_steps()
         self.update_item_list()
+        del dirty_states
         self.update_button_states()
-        if self.current_plate and any(
-            scope_id
-            == PipelineScopeIdentity.from_plate_scope(self.current_plate).scope_id
-            for scope_id, _state in (dirty_states or ())
-        ):
-            GuiEventBusBroadcaster(self.event_bus).pipeline_changed(self.displayed_steps)
 
     # -- context for step editors ---------------------------------------------
 
@@ -683,6 +673,7 @@ class PipelineEditorWidget(
             **({} if step_index is None else {"step_index": step_index}),
         )
         editor.set_original_step_for_change_detection()
+        editor.connect_session_events(self.session)
         editor.connect_orchestrator_config_signal(
             plate_manager.orchestrator_config_changed
         )

@@ -98,9 +98,6 @@ from openhcs.pyqt_gui.session_rendering import (
 from openhcs.pyqt_gui.widgets.shared.openhcs_manager_mixins import (
     OpenHCSSingleRowActionManagerMixin,
 )
-from openhcs.pyqt_gui.widgets.shared.services.gui_event_bus_broadcast import (
-    GuiEventBusBroadcaster,
-)
 from openhcs.pyqt_gui.widgets.shared.services.plate_manager_workflows import (
     PlateManagerCodeWorkflow,
 )
@@ -339,7 +336,6 @@ class PlateManagerWidget(
     @on_session_event.register
     def _(self, event: GlobalConfigChanged) -> None:
         self.service_adapter.set_global_config(event.config)
-        GuiEventBusBroadcaster(self.event_bus).config_changed(event.config)
 
     # -- list rendering -------------------------------------------------------
 
