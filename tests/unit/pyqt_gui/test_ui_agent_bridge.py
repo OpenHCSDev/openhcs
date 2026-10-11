@@ -56,20 +56,22 @@ from pyqt_reactive.widgets.shared.list_item_delegate import (
 from zmqruntime import DataControlPortPairAuthority, EndpointApplication
 from zmqruntime.config import TransportMode
 
+from openhcs.core.selection import AllItems, SelectedItems
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.ui_bridge import (
-    UiBridgeOperationStatusRequest,
+    ActionAccepted,
+    ActionRejected,
+    DirtyFields,
     UiActionInvokeRequest,
     UiBranchSwitchRequest,
     UiBridgeConfirmationRequirement,
     UiBridgeConnectionSpec,
+    UiBridgeOperationStatusRequest,
     UiBridgeRequestEnvelope,
     UiCodeDocumentApplyRequest,
     UiCodeDocumentId,
     UiCodeDocumentRequest,
-    UiCodeDocumentSelectionMode,
     UiCodeDocumentValidationRequest,
-    UiObjectStateFieldFilter,
     UiObjectStateScopeListRequest,
     UiSelectedPlateWorkflowKind,
     UiSelectedPlateWorkflowRequest,
@@ -120,7 +122,7 @@ from openhcs.authoring.session.operations.pipelines import (
 )
 from openhcs.authoring.session.session import CallerThread, Renderer, Session
 from openhcs.authoring.session.views import DatasetListView, PipelineStepsView
-from openhcs.constants.constants import OrchestratorState
+from openhcs.constants.constants import OrchestratorExecuting, OrchestratorReady
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyNapariStreamingConfig,
@@ -208,7 +210,7 @@ from openhcs.pyqt_gui.session_rendering import GuiRenderer
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
-    DebugToolbarAuxiliaryAction,
+    InspectRuntimeValuesAction,
     PipelineDebugActionDeclarationBase,
     StepDebugAction,
 )
@@ -219,7 +221,6 @@ from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
-from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from tests.unit.pyqt_gui.session_harness import session_gui, session_port
 from openhcs.core.progress.types import (
@@ -238,8 +239,8 @@ DOCUMENT_ID = UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value
 PLATE_SCOPE_ID = "plate-1"
 DATASET_SCOPE_ID = "/tmp/openhcs-ui-bridge-test/plate-1"
 PLATE_NAME = "plate 1"
-ALL_SELECTION_MODE = UiCodeDocumentSelectionMode.ALL.value
-SELECTED_SELECTION_MODE = UiCodeDocumentSelectionMode.SELECTED.value
+ALL_SELECTION_MODE = AllItems.name
+SELECTED_SELECTION_MODE = SelectedItems.name
 BRIDGE_INSTANCE_ID = "bridge-test"
 BRIDGE_AUTH_TOKEN = "secret-token"
 VALID_SOURCE = (
@@ -2608,7 +2609,7 @@ def test_object_state_scope_fields_filter_before_pagination() -> None:
         UiObjectStateScopeListRequest(
             include_system_scopes=True,
             include_fields=True,
-            field_filter=UiObjectStateFieldFilter.DIRTY,
+            field_filter=DirtyFields,
             field_limit=1,
         )
     )
@@ -2696,7 +2697,7 @@ def test_managed_window_save_action_returns_before_deferred_save_runs() -> None:
         )
 
         assert action.invocation_mode == "async"
-        assert result.status == "accepted"
+        assert result.status is ActionAccepted
         assert result.receipt.bridge_operation_id is not None
         assert result.target_scope_ids == (window.scope_id,)
         assert window.save_count == 0
@@ -3631,11 +3632,7 @@ class FakePlateManager:
         return tuple(self.selected)
 
     def dataset_document(self, selection_mode) -> FakeCodeDocumentContext:
-        scope_ids = (
-            self.plate_scope_ids
-            if selection_mode is SelectedAllSelectionMode.ALL
-            else self.selected
-        )
+        scope_ids = selection_mode.pick(tuple(self.selected), tuple(self.plate_scope_ids))
         return FakeCodeDocumentContext(
             source=VALID_SOURCE, selected_scope_ids=tuple(scope_ids)
         )
@@ -3671,7 +3668,7 @@ def pipeline_gui(selected_steps: tuple[int, ...] = (0,), *, compiled: bool = Tru
     with session_gui() as gui:
         session = gui.session
         session.ensure_datasets((DATASET_SCOPE_ID,))
-        session.set_dataset_state(DATASET_SCOPE_ID, OrchestratorState.READY)
+        session.set_dataset_state(DATASET_SCOPE_ID, OrchestratorReady)
         session.set_pipeline(
             DATASET_SCOPE_ID,
             [
@@ -3801,7 +3798,7 @@ def test_main_window_actions_are_application_operations_presented_by_the_window(
                 ),
             )
         )
-        assert result.status == "accepted", result.errors
+        assert result.status is ActionAccepted, result.errors
         assert result.warnings == operation.warnings
         counts.append(
             (
@@ -3836,7 +3833,7 @@ def test_main_window_action_is_unavailable_while_its_window_action_is_disabled()
 
     assert action.enabled is False
     assert action.disabled_error.code == "update_check_in_progress"
-    assert result.status == "rejected"
+    assert result.status is ActionRejected
     assert main_window.update_check_count == 0
 
 
@@ -4090,7 +4087,7 @@ def test_plate_manager_state_ignores_stale_runtime_without_current_execution_id(
 def test_plate_manager_state_terminal_status_overrides_stale_executing_state() -> None:
     with dataset_gui(DATASET_SCOPE_ID) as (gui, _scope_ids):
         session = gui.session
-        session.orchestrator(DATASET_SCOPE_ID)._state = OrchestratorState.EXECUTING
+        session.orchestrator(DATASET_SCOPE_ID)._state = OrchestratorExecuting
         session.batch.begin_batch((DATASET_SCOPE_ID,))
         session.batch.record_execution(DATASET_SCOPE_ID, "failed-execution")
         session.batch.mark_terminal(DATASET_SCOPE_ID, "failed")
@@ -4141,12 +4138,12 @@ def test_plate_manager_action_catalog_token_can_guard_invoke() -> None:
 
         assert action.selection_revision_token
         assert action.target_scope_ids == (DATASET_SCOPE_ID,)
-        assert accepted.status == "accepted"
+        assert accepted.status is ActionAccepted
         assert accepted.selection_revision_token == action.selection_revision_token
         assert [operation for operation, _request in renderer.presented] == [
             ShowDatasetCode
         ]
-        assert stale.status == "rejected"
+        assert stale.status is ActionRejected
         assert stale.errors[0].code == "stale_ui_action_revision"
 
 
@@ -4182,7 +4179,7 @@ def test_selected_run_workflow_dispatches_stop_while_execution_is_active(
         assert action.enabled is True
         assert action.title == ManagerExecutionState.RUNNING.run_button_text
         assert action.disabled_error is None
-        assert result.action_result.status == "accepted"
+        assert result.action_result.status is ActionAccepted
         assert forces == [False]
         assert session.execution_state is ManagerExecutionState.FORCE_KILL_READY
 
@@ -4208,7 +4205,7 @@ def test_selected_workflow_returns_before_the_queued_operation_runs(
         )
 
         operation_id = result.action_result.receipt.bridge_operation_id
-        assert result.action_result.status == "accepted"
+        assert result.action_result.status is ActionAccepted
         assert operation_id is not None
         assert result.action_result.workflow_status_surface_ids == (
             "plate_manager.state",
@@ -4288,7 +4285,7 @@ def test_selected_compile_reports_the_init_precondition(monkeypatch) -> None:
             assert error.code == "dataset_not_initialized"
             assert InitializeDatasets.operation_id in error.hint
         assert not action.enabled
-        assert result.action_result.status == "rejected"
+        assert result.action_result.status is ActionRejected
 
 
 def test_selected_workflow_confirmation_rejection_avoids_ui_preflight(
@@ -4311,7 +4308,7 @@ def test_selected_workflow_confirmation_rejection_avoids_ui_preflight(
             )
         )
 
-        assert result.action_result.status == "rejected"
+        assert result.action_result.status is ActionRejected
         assert result.errors[0].code == "confirmation_required"
         assert result.action_result.workflow_status_surface_ids == (
             "plate_manager.state",
@@ -4397,10 +4394,10 @@ def test_pipeline_editor_action_invoke_uses_selection_token_and_confirmation() -
         edit_result = invoke(edit_action, confirm=True)
         stale_result = invoke(edit_action, confirm=False, targets=("wrong-target",))
 
-        assert code_result.status == "accepted"
-        assert edit_result.status == "rejected"
+        assert code_result.status is ActionAccepted
+        assert edit_result.status is ActionRejected
         assert edit_result.errors[0].code == "confirmation_required"
-        assert stale_result.status == "rejected"
+        assert stale_result.status is ActionRejected
         assert stale_result.errors[0].code == "stale_ui_action_selection"
         assert [operation for operation, _request in renderer.presented] == [
             ShowPipelineCode
@@ -4489,7 +4486,7 @@ def test_pipeline_debug_toolbar_actions_are_exposed_from_toolbar_declarations() 
         for action_id in (
             RestartDebugCommand.name,
             StopDebugCommand.name,
-            DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value,
+            InspectRuntimeValuesAction.action_id(),
         ):
             assert actions[action_id].enabled is False
             assert actions[action_id].disabled_error.code == "debug_session_required"
@@ -4537,9 +4534,9 @@ def test_pipeline_debug_toolbar_action_invoke_routes_to_the_session(
         rejected = invoke(True)
         accepted = invoke(False)
 
-        assert rejected.status == "rejected"
+        assert rejected.status is ActionRejected
         assert rejected.errors[0].code == "confirmation_required"
-        assert accepted.status == "accepted"
+        assert accepted.status is ActionAccepted
         ((work, args, kwargs),) = started
         assert work == gui.session.run_debug
         assert args == (DATASET_SCOPE_ID,)
@@ -4562,12 +4559,12 @@ def test_pipeline_debug_toolbar_runtime_values_action_requires_debug_session(
         )
         bridge = _pipeline_editor_bridge(gui.pipeline_editor)
         widget_id = PipelineDebugToolbarWidgetIdentity.require_value()
-        action = _debug_actions(bridge)[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]
+        action = _debug_actions(bridge)[InspectRuntimeValuesAction.action_id()]
 
         result = bridge.invoke_action(
             UiActionInvokeRequest(
                 widget_id=widget_id,
-                action_id=DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value,
+                action_id=InspectRuntimeValuesAction.action_id(),
                 selected_scope_ids=action.target_scope_ids,
                 observed_selection_revision_token=action.selection_revision_token,
                 confirmation_requirement=UiBridgeConfirmationRequirement.from_flag(
@@ -4578,7 +4575,7 @@ def test_pipeline_debug_toolbar_runtime_values_action_requires_debug_session(
 
         assert action.enabled is True
         assert action.confirmation_required is False
-        assert result.status == "accepted"
+        assert result.status is ActionAccepted
         assert len(inspections) == 1
 
 
@@ -4622,7 +4619,7 @@ def test_pipeline_debug_session_state_surface_projects_context_and_actions() -> 
         assert state.payload["cursor"]["step_scope_id"] == "plate-1::functionstep_1"
         assert actions[RestartDebugCommand.name]["enabled"] is True
         assert (
-            actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is True
+            actions[InspectRuntimeValuesAction.action_id()]["enabled"] is True
         )
         assert actions[StepDebugCommand.name]["label"] == StepDebugAction.label
 
@@ -4735,5 +4732,5 @@ def test_pipeline_debug_session_terminal_summary_retires_the_inspected_session()
         assert actions[RestartDebugCommand.name]["enabled"] is False
         assert actions[StopDebugCommand.name]["enabled"] is False
         assert (
-            actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is False
+            actions[InspectRuntimeValuesAction.action_id()]["enabled"] is False
         )

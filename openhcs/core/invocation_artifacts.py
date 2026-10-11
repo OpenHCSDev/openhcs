@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import InputSource, ReadPreviousStep
 from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
@@ -65,7 +65,7 @@ class ArtifactDeclarationStepContext:
     step_index: int | None = None
     source_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS
     group_by: type[GroupingDeclaration] = Ungrouped
-    input_source: InputSource = InputSource.PREVIOUS_STEP
+    input_source: type[InputSource] = ReadPreviousStep
     available_artifacts: ArtifactSpecCollection = field(
         default_factory=lambda: ArtifactSpecCollection(())
     )
@@ -95,11 +95,6 @@ class ArtifactDeclarationStepContext:
                 "ArtifactDeclarationStepContext.group_by must be an axis or "
                 f"Ungrouped, got {self.group_by!r}."
 
-            )
-        if not isinstance(self.input_source, InputSource):
-            raise TypeError(
-                "ArtifactDeclarationStepContext.input_source must be InputSource, got "
-                f"{type(self.input_source).__name__}."
             )
         for field_name, collection in (
             ("available_artifacts", self.available_artifacts),
@@ -147,7 +142,7 @@ class ArtifactDeclarationStepContext:
             binding.input_spec().ref()
             for binding in self.source_bindings.primary_plane_bindings
         )
-        if self.input_source is InputSource.PIPELINE_START or (
+        if self.input_source.reads_pipeline_start or (
             self.step_index == 0 and not main_flow_artifacts
         ):
             main_flow_artifacts = ArtifactSpecCollection(
@@ -209,7 +204,7 @@ class ArtifactDeclarationStepContext:
         *,
         source_bindings: StepSourceBindingsConfig,
         group_by: type[GroupingDeclaration],
-        input_source: InputSource,
+        input_source: type[InputSource],
         source_groups: tuple[str | None, ...] = (),
     ) -> "ArtifactDeclarationStepContext":
         """Apply one resolved step's source scope and declared source artifacts."""

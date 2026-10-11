@@ -16,7 +16,7 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpecCollection, MainFlowStackOutputSpec
 from openhcs.core.artifacts.kinds import (
@@ -41,7 +41,7 @@ from openhcs.core.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.measurement_feature_queries import measurement_values_for_feature
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.memory import numpy
-from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.pipeline.function_contracts import artifact_outputs
@@ -53,11 +53,11 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
-    SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
-    SourceSelector,
     PairByOrder,
+    SourceFileName,
+    SourceFilterClause,
+    SourceSelector,
+    TextContains,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.measurement_dialect import (
@@ -184,8 +184,8 @@ def _source(alias, channel):
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.CONTAINS,
+                    subject=SourceFileName,
+                    match_type=TextContains,
                     value=f"_w{channel}_",
                 ),
             ),
@@ -201,7 +201,7 @@ def _step(func, name, kwargs):
         processing_config=LazyProcessingConfig(
             variable_components=[Microscopy.Site],
             group_by=Ungrouped,
-            input_source=InputSource.PIPELINE_START,
+            input_source=ReadPipelineStart,
         ),
         source_bindings=StepSourceBindingsConfig(enabled=True),
     )
@@ -283,7 +283,7 @@ def _execute(path, document, bundle):
     return orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
         max_workers=1,
-        runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+        runtime_observation_mode=MergeAllRuntimeRecords,
         progress_queue=AgentProgressQueue(),
         progress_context=ProgressExecutionContext(
             execution_id="measurement-contract-synthetic",
@@ -322,7 +322,7 @@ def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(
         ))
         measurement = document.pipeline_steps[-1]
         measurement.processing_config = replace(
-            measurement.processing_config, input_source=InputSource.PREVIOUS_STEP,
+            measurement.processing_config, input_source=ReadPreviousStep,
         )
     document = PipelineDocumentCodec.from_source(PipelineDocumentCodec.render(document))
     bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))

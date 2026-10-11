@@ -78,7 +78,7 @@ from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyPartitionFilterConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     MultiprocessingStartMethod,
     PathPlanningConfig,
     PipelineConfig,
@@ -121,7 +121,7 @@ from openhcs.runtime.zmq_execution_client import (
 )
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
-    ZMQRuntimeObservationExportScope,
+    ExportRuntimeOutcomes,
 )
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
@@ -1112,7 +1112,7 @@ def _global_config(
             global_output_folder=output_dir,
             output_dir_suffix="_matched_pilot",
         ),
-        vfs_config=VFSConfig(materialization_backend=MaterializationBackend.DISK),
+        vfs_config=VFSConfig(materialization_backend=MaterializeToDisk),
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
         materialize_runtime_artifacts=False,
     )
@@ -1659,7 +1659,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient | None) -> in
         axis_events.clear()
         progress_events.clear()
         print(f"OpenHCS batch {repetition} starting.", flush=True)
-        export_scope = ZMQRuntimeObservationExportScope.OUTCOMES
+        export_scope = ExportRuntimeOutcomes
         evidence_dir = root / "candidate_evidence" / str(repetition)
         output_dir = root / "candidate" / str(repetition)
         global_config = _global_config(

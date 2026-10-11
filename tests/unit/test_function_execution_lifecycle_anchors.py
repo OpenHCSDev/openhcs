@@ -25,7 +25,7 @@ from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContex
 from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import NoMainFlowInput, StepOutputInput
 from openhcs.core.steps.function_execution import FunctionStepExecutor
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -69,11 +69,11 @@ def _anchor_filter(plan: object, output_manifest: object) -> FunctionStepExecuto
 @pytest.mark.parametrize(
     "dependency",
     (
-        StepInputDependency.step_output(
+        StepOutputInput(
             source_step_index=4,
             source_step_scope_id="non-adjacent-main-flow-producer",
         ),
-        StepInputDependency.no_main_flow(),
+        NoMainFlowInput(),
     ),
 )
 def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -> None:
@@ -173,7 +173,7 @@ def test_source_anchored_group_uses_exact_main_flow_producer_manifest() -> None:
     plan = SimpleNamespace(
         step_index=6,
         step_name="SourceConsumer",
-        main_input_dependency=StepInputDependency.step_output(
+        main_input_dependency=StepOutputInput(
             source_step_index=2,
             source_step_scope_id="exact-main-flow-producer",
         ),

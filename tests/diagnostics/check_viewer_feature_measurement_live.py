@@ -201,7 +201,7 @@ def main() -> None:
     from openhcs.core.streaming_config_declarations import NapariViewer
     from zmqruntime.config import TransportMode
     from python_introspect import to_jsonable
-    from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+    from openhcs.agent.runtime_platform import AgentRuntimePlatform
     from polystore.imagej_distribution import (
         FijiArchiveDistribution,
         ImageJArchiveDownloadPolicy,
@@ -309,7 +309,7 @@ def main() -> None:
                 owned_identity = heartbeat.process_identity
                 receipt["viewer_identity"] = to_jsonable(owned_identity)
                 receipt["heartbeat"] = to_jsonable(heartbeat)
-                child_environment = AgentRuntimePlatformAuthority.current().graphical_process_environment(
+                child_environment = AgentRuntimePlatform.current().graphical_process_environment(
                     owned_identity.pid,
                     additional_keys=(
                         FijiArchiveDistribution.cache_root_environment_key,
@@ -328,7 +328,7 @@ def main() -> None:
                 receipt["child_policy"] = {
                     "imagej_cache_root": str(child_cache),
                     "downloads_allowed": child_downloads,
-                    "owner": "AgentRuntimePlatformAuthority process environment + FijiArchiveDistribution/ImageJArchiveDownloadPolicy",
+                    "owner": "AgentRuntimePlatform process environment + FijiArchiveDistribution/ImageJArchiveDownloadPolicy",
                 }
                 save()
                 payloads = call(

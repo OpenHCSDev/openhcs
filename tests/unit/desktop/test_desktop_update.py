@@ -41,7 +41,8 @@ from openhcs.desktop.update import (
     DesktopRestartUiState,
     DesktopRuntimeEnvironment,
     DesktopUpdateCheckFailure,
-    DesktopUpdateCheckOrigin,
+    ExplicitUpdateCheck,
+    StartupUpdateCheck,
     DesktopUpdateCheckResult,
     DesktopUpdateDialogPresenter,
     DesktopUpdateError,
@@ -222,7 +223,7 @@ def test_unavailable_release_service_emits_failure_without_blocking() -> None:
     failures = []
     service.check_failed.connect(failures.append)
 
-    assert service.check_for_updates(DesktopUpdateCheckOrigin.STARTUP)
+    assert service.check_for_updates(StartupUpdateCheck)
     assert manager.request.url().toString() == LATEST_RELEASE_API_URL
     assert (
         manager.request.attribute(QNetworkRequest.Attribute.Http2AllowedAttribute)
@@ -235,7 +236,7 @@ def test_unavailable_release_service_emits_failure_without_blocking() -> None:
     assert failures == [
         DesktopUpdateCheckFailure(
             message="Host not found",
-            origin=DesktopUpdateCheckOrigin.STARTUP,
+            origin=StartupUpdateCheck,
         )
     ]
     assert reply.deleted
@@ -312,7 +313,7 @@ def test_main_window_starts_check_only_from_explicit_action() -> None:
 
     assert not action.enabled
     assert main_like.desktop_update_service.origins == [
-        DesktopUpdateCheckOrigin.EXPLICIT
+        ExplicitUpdateCheck
     ]
     assert status.messages == ["Checking for OpenHCS updates…"]
 
@@ -320,7 +321,7 @@ def test_main_window_starts_check_only_from_explicit_action() -> None:
 @pytest.mark.parametrize(
     ("enabled", "expected_origins", "expected_action_enabled"),
     [
-        (True, [DesktopUpdateCheckOrigin.STARTUP], False),
+        (True, [StartupUpdateCheck], False),
         (False, [], True),
     ],
 )
@@ -385,7 +386,7 @@ def test_main_window_available_update_saves_and_starts_restart(monkeypatch) -> N
         main_like,
         DesktopUpdateCheckResult(
             update=update,
-            origin=DesktopUpdateCheckOrigin.STARTUP,
+            origin=StartupUpdateCheck,
         ),
     )
 
@@ -421,14 +422,14 @@ def test_startup_check_is_quiet_when_current_or_unavailable() -> None:
         main_like,
         DesktopUpdateCheckResult(
             update=current,
-            origin=DesktopUpdateCheckOrigin.STARTUP,
+            origin=StartupUpdateCheck,
         ),
     )
     main_module.OpenHCSMainWindow._on_update_check_failed(
         main_like,
         DesktopUpdateCheckFailure(
             message="offline",
-            origin=DesktopUpdateCheckOrigin.STARTUP,
+            origin=StartupUpdateCheck,
         ),
     )
 

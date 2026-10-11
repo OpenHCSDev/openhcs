@@ -17,8 +17,8 @@ from openhcs.core.source_binding_selection import (
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
+    FromPipelineStart,
     NamedSourceBinding,
-    SourceBindingOrigin,
     SourceSelector,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -79,7 +79,7 @@ def test_step_input_selects_current_component_planes_not_original_aliases():
 def test_binding_origin_uses_existing_registered_universe_family():
     assert SourceUniverseRequest.for_binding(NamedSourceBinding(alias="Response")) is StepInputSourceUniverseRequest
     assert SourceUniverseRequest.for_binding(
-        NamedSourceBinding(alias="Raw", origin=SourceBindingOrigin.PIPELINE_START)
+        NamedSourceBinding(alias="Raw", origin=FromPipelineStart)
     ) is PipelineStartSourceUniverseRequest
 
 

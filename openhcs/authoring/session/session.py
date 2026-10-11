@@ -124,10 +124,14 @@ from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.core.xdg_paths import get_openhcs_data_dir
 from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentCodec
 from openhcs.core.pipeline_import import PipelineImporter
-from openhcs.core.orchestrator.orchestrator import (
+from openhcs.constants.constants import (
+    OrchestratorCreated,
+    OrchestratorExecuting,
+    OrchestratorInitFailed,
+    OrchestratorReady,
     OrchestratorState,
-    PipelineOrchestrator,
 )
+from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import registry
 from openhcs.core.progress.debug_projection import (
     DebugRuntimeProjection,
@@ -608,7 +612,7 @@ class Session:
             parent_state=ObjectStateRegistry.get_by_scope(""),
         )
         ObjectStateRegistry.register(state)
-        self.publish(DatasetStateChanged(scope.scope_id, OrchestratorState.CREATED))
+        self.publish(DatasetStateChanged(scope.scope_id, OrchestratorCreated))
         return state
 
     def _split_dataset_scopes(self) -> None:
@@ -827,9 +831,9 @@ class Session:
         if (
             orchestrator is not None
             and orchestrator.state.has_completed_initialization
-            and orchestrator.state is not OrchestratorState.READY
+            and orchestrator.state is not OrchestratorReady
         ):
-            self.set_dataset_state(scope_id, OrchestratorState.READY)
+            self.set_dataset_state(scope_id, OrchestratorReady)
 
     def import_workspace_pipeline(
         self,
@@ -923,7 +927,7 @@ class Session:
         self.publish(ExecutionStateChanged(state))
         self.publish(AvailabilityChanged())
 
-    def set_dataset_state(self, scope_id: str, state: OrchestratorState) -> None:
+    def set_dataset_state(self, scope_id: str, state: type[OrchestratorState]) -> None:
         orchestrator = ObjectStateRegistry.get_object(scope_id)
         if orchestrator is not None:
             orchestrator._state = state
@@ -1048,7 +1052,7 @@ class Session:
                         "Failed to initialize %s: %s", scope_id, error, exc_info=True
                     )
                     self.init_pending.discard(scope_id)
-                    self.set_dataset_state(scope_id, OrchestratorState.INIT_FAILED)
+                    self.set_dataset_state(scope_id, OrchestratorInitFailed)
                     self.publish(
                         InitializationFailed(scope_id, scope.display_name, str(error))
                     )
@@ -1057,7 +1061,7 @@ class Session:
                     self.main_thread.call(
                         lambda: self.import_workspace_pipeline(scope_id, workspace)
                     )
-                    self.set_dataset_state(scope_id, OrchestratorState.READY)
+                    self.set_dataset_state(scope_id, OrchestratorReady)
                     if scope_id == self.current_scope_id or not self.current_scope_id:
                         self.main_thread.call(
                             lambda: self._reselect(scope_id)
@@ -1077,8 +1081,8 @@ class Session:
             for scope_id in scope_ids
             if ObjectStateRegistry.get_object(scope_id) is not None
         ]
-        succeeded = sum(state is OrchestratorState.READY for state in states)
-        failed = sum(state is OrchestratorState.INIT_FAILED for state in states)
+        succeeded = sum(state is OrchestratorReady for state in states)
+        failed = sum(state is OrchestratorInitFailed for state in states)
         self.publish(
             StatusReported(
                 f"Successfully initialized {succeeded} dataset(s)"
@@ -1166,7 +1170,7 @@ class Session:
             await self.connect_client()
             for scope_id in scope_ids:
                 self.debug_terminal_summaries.pop(scope_id, None)
-                self.set_dataset_state(scope_id, OrchestratorState.EXECUTING)
+                self.set_dataset_state(scope_id, OrchestratorExecuting)
             self.publish(
                 StatusReported(
                     f"Compiling {len(scope_ids)} dataset(s) before execution..."
@@ -1200,14 +1204,13 @@ class Session:
     def observation_export_params(
         self,
         export_path: str | None,
-        export_scope: ZMQRuntimeObservationExportScope | str,
+        export_scope: type[ZMQRuntimeObservationExportScope],
     ) -> ZMQAuxiliaryExecutionParams | None:
         """Runtime observation export options for a run, under the access policy."""
 
-        scope = ZMQRuntimeObservationExportScope(export_scope)
+        scope = export_scope
+        scope.check_export_path(export_path)
         if export_path is None:
-            if scope is not ZMQRuntimeObservationExportScope.VALUES:
-                raise ValueError("Outcome observation requires an export path.")
             return None
         path = self.dataset_access.require_writable(Path(export_path))
         if path.exists():
@@ -1253,7 +1256,7 @@ class Session:
         scope_id: str,
     ) -> None:
         status = completion.status
-        logger.info("Dataset %s finished with status %s", scope_id, status.value)
+        logger.info("Dataset %s finished with status %s", scope_id, status.name)
         self.batch.mark_terminal(scope_id, status)
         try:
             self.set_dataset_state(scope_id, status.orchestrator_state)
@@ -1463,7 +1466,7 @@ class Session:
         else:
             summary = DebugTerminalSummary.from_session(
                 active,
-                terminal_status=terminal_status.value,
+                terminal_status=terminal_status.name,
                 completed_at_unix=time.time(),
             )
             snapshots = self.debug_snapshots.get(scope_id, ())
@@ -1490,7 +1493,7 @@ class Session:
                 terminal_status=(
                     None
                     if (status := self.batch.terminal_status(scope_id)) is None
-                    else status.value
+                    else status.name
                 ),
             ),
             session=self.displayed_debug_session(scope_id),

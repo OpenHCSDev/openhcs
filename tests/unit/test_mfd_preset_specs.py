@@ -3,7 +3,6 @@ from pathlib import Path
 
 from arraybridge.decorators import DtypeConversion
 
-from openhcs.constants.input_source import InputSource
 from openhcs.core.config import LazyDtypeConfig
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     DetectionMethod,
@@ -36,7 +35,10 @@ from openhcs.processing.backends.processors.cupy_processor import (
 )
 from openhcs.processing.presets.mfd_specs import (
     MFD_WHOLE_DEVICE_TEMPLATE_PATH,
-    MfdPresetKey,
+    MFD_CROP_ANALYZE,
+    MFD_CROP_ANALYZE_DAPI_FITC_CY5,
+    MFD_STITCH_ASHLAR_CPU,
+    MFD_STITCH_GPU,
     build_mfd_preset,
 )
 from openhcs.domains.microscopy.axes import Microscopy
@@ -80,7 +82,7 @@ def _normalize_call():
 
 
 def test_crop_analyze_spec_matches_expected_step_contract():
-    steps = build_mfd_preset(MfdPresetKey.CROP_ANALYZE)
+    steps = build_mfd_preset(MFD_CROP_ANALYZE)
 
     assert [step.name for step in steps] == [
         "crop_device",
@@ -142,8 +144,8 @@ def test_crop_analyze_spec_matches_expected_step_contract():
 
 
 def test_crop_analyze_cy5_overlay_adds_channel_4_cell_count():
-    base_steps = build_mfd_preset(MfdPresetKey.CROP_ANALYZE)
-    overlay_steps = build_mfd_preset(MfdPresetKey.CROP_ANALYZE_DAPI_FITC_CY5)
+    base_steps = build_mfd_preset(MFD_CROP_ANALYZE)
+    overlay_steps = build_mfd_preset(MFD_CROP_ANALYZE_DAPI_FITC_CY5)
 
     assert base_steps[0].func == overlay_steps[0].func
     assert base_steps[1].func == overlay_steps[1].func
@@ -162,8 +164,8 @@ def test_crop_analyze_cy5_overlay_adds_channel_4_cell_count():
 
 
 def test_stitch_specs_share_structure_and_vary_backend():
-    cpu_steps = build_mfd_preset(MfdPresetKey.STITCH_ASHLAR_CPU)
-    gpu_steps = build_mfd_preset(MfdPresetKey.STITCH_GPU)
+    cpu_steps = build_mfd_preset(MFD_STITCH_ASHLAR_CPU)
+    gpu_steps = build_mfd_preset(MFD_STITCH_GPU)
 
     assert [step.name for step in cpu_steps] == [
         "process",
@@ -185,8 +187,8 @@ def test_stitch_specs_share_structure_and_vary_backend():
         ashlar_compute_tile_positions_gpu,
         {"stitch_alpha": 0.2},
     )
-    assert cpu_steps[3].processing_config.input_source == InputSource.PIPELINE_START
-    assert gpu_steps[3].processing_config.input_source == InputSource.PIPELINE_START
+    assert cpu_steps[3].processing_config.input_source.reads_pipeline_start
+    assert gpu_steps[3].processing_config.input_source.reads_pipeline_start
     assert cpu_steps[4].func is assemble_stack_cupy
     assert gpu_steps[4].func is assemble_stack_cupy
     assert cpu_steps[0].func["1"] == [
@@ -199,10 +201,10 @@ def test_stitch_specs_share_structure_and_vary_backend():
 
 def test_preset_wrapper_files_materialize_pipeline_steps():
     expected_builders = {
-        "10x_mfd_crop_analyze.py": MfdPresetKey.CROP_ANALYZE,
-        "10x_mfd_crop_analyze_dapi-fitc-cy5.py": MfdPresetKey.CROP_ANALYZE_DAPI_FITC_CY5,
-        "10x_mfd_stitch_ashlar_cpu.py": MfdPresetKey.STITCH_ASHLAR_CPU,
-        "10x_mfd_stitch_gpu.py": MfdPresetKey.STITCH_GPU,
+        "10x_mfd_crop_analyze.py": MFD_CROP_ANALYZE,
+        "10x_mfd_crop_analyze_dapi-fitc-cy5.py": MFD_CROP_ANALYZE_DAPI_FITC_CY5,
+        "10x_mfd_stitch_ashlar_cpu.py": MFD_STITCH_ASHLAR_CPU,
+        "10x_mfd_stitch_gpu.py": MFD_STITCH_GPU,
     }
 
     for filename, preset_key in expected_builders.items():

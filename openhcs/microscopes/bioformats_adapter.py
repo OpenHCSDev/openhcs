@@ -28,6 +28,7 @@ from openhcs.core.source_matching import (
     with_source_component_metadata,
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_path_identity import absolute_source_path
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourceCandidate,
@@ -70,7 +71,7 @@ class BioFormatsPackedRgbSeriesExclusion(SourceDatasetDiagnostic):
     def __post_init__(self) -> None:
         source_files = tuple(
             sorted(
-                {Path(path).resolve(strict=False) for path in self.source_files},
+                {absolute_source_path(path) for path in self.source_files},
                 key=str,
             )
         )
@@ -400,14 +401,14 @@ class BioFormatsStoreMetadata:
         container_paths = tuple(
             sorted(
                 {
-                    image.source_path.resolve(strict=False),
-                    *(path.resolve(strict=False) for path in image.source_files),
+                    absolute_source_path(image.source_path),
+                    *(absolute_source_path(path) for path in image.source_files),
                 },
                 key=str,
             )
         )
-        normalized_source = image.source_path.resolve(strict=False)
-        backend_source = _relative_path(self.root, normalized_source)
+        source_path = absolute_source_path(image.source_path)
+        backend_source = _relative_path(self.root, source_path)
         filter_paths = tuple(
             value
             for path in container_paths
@@ -436,7 +437,7 @@ class BioFormatsStoreMetadata:
             if image.reader == "npy":
                 source_ref = SourcePixelRef(
                     backend=Backend.DISK.value,
-                    backend_address=_relative_path(self.root, normalized_source),
+                    backend_address=_relative_path(self.root, source_path),
                     source_axis_indices=(plane.t - 1, plane.z - 1, plane.c - 1),
                 )
                 source_axis_shape = (
@@ -457,7 +458,7 @@ class BioFormatsStoreMetadata:
             candidates.append(
                 SourceCandidate(
                     source_ref=source_ref,
-                    relative_path=_relative_path(self.root, normalized_source),
+                    relative_path=_relative_path(self.root, source_path),
                     metadata=metadata,
                     source_axis_shape=source_axis_shape,
                     source_filter_paths=filter_paths,
@@ -659,8 +660,7 @@ class BioFormatsJavaAdapter(SourcePlaneStoreAdapter):
         claimed_paths: set[Path] = set()
         container_claims: list[BioFormatsContainerClaim] = []
         for source_path in candidate_source_paths(root):
-            resolved_path = source_path.resolve(strict=False)
-            if resolved_path in claimed_paths:
+            if absolute_source_path(source_path) in claimed_paths:
                 continue
             if not self._declares_path(context, source_path):
                 continue
@@ -1176,7 +1176,7 @@ def _ngff_image_candidates(
     channel_count = shape[axes.index("c")] if "c" in axes else 1
     channel_labels = _ngff_channel_labels(attrs, channel_count)
     pixel_size = _ngff_pixel_size(dataset, len(axes), image_location.fmt)
-    container_paths = (store_root.resolve(strict=False),)
+    container_paths = (absolute_source_path(store_root),)
     filter_paths = _physical_path_identities(collection_root, store_root)
     candidates: list[SourceCandidate] = []
     for source_axis_indices in product(*(range(size) for size in source_axis_shape)):
@@ -1380,7 +1380,7 @@ class BioFormatsContainerClaim:
         """Project one successful dataset onto its physical container claim."""
 
         return cls(
-            entrypoint=entrypoint.resolve(strict=False),
+            entrypoint=absolute_source_path(entrypoint),
             container_paths=frozenset(
                 path
                 for candidate in dataset.candidates
@@ -1391,7 +1391,7 @@ class BioFormatsContainerClaim:
     def proves_redundant_failed_entrypoint(self, candidate: Path) -> bool:
         """Return whether this claim proves a failed nested descriptor is redundant."""
 
-        candidate = candidate.resolve(strict=False)
+        candidate = absolute_source_path(candidate)
         if (
             self.entrypoint.name != candidate.name
             or self.entrypoint.parent not in candidate.parents
@@ -1444,16 +1444,16 @@ def _physical_path_identities(root: Path, source_path: Path) -> tuple[str, ...]:
         dict.fromkeys(
             (
                 _relative_path(root, source_path),
-                str(source_path.resolve(strict=False)),
+                str(absolute_source_path(source_path)),
             )
         )
     )
 
 
 def _relative_path(root: Path, path: Path) -> str:
-    resolved_root = root.resolve(strict=False)
-    collection_root = resolved_root.parent if root.is_file() else resolved_root
-    return path.resolve(strict=False).relative_to(collection_root).as_posix()
+    root_path = absolute_source_path(root)
+    collection_root = root_path.parent if root.is_file() else root_path
+    return absolute_source_path(path).relative_to(collection_root).as_posix()
 
 
 def _absolute_path(root: Path, value: str) -> Path:

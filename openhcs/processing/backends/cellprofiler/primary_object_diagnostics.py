@@ -33,7 +33,7 @@ from openhcs.interop.cellprofiler.object_label_variants import (
 from openhcs.processing.materialization import (
     ImageFileOptions,
     TerminalMaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
 )
 
 @dataclass(frozen=True, slots=True)
@@ -203,7 +203,7 @@ class PrimaryObjectDiagnosticPlanes(NamedTuple):
                 materialization=TerminalMaterializationSpec(
                     ImageFileOptions(
                         filename_suffix=".tif",
-                        filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                        filename_identity=NameByArtifactName,
                     )
                 ),
                 relations=(

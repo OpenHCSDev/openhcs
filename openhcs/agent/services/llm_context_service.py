@@ -62,7 +62,7 @@ from openhcs.agent.ui_bridge_identities import (
     UiLiveOverviewStateSurfaceIdentityDeclaration,
 )
 from openhcs.ui.shared.plate_manager_code_document import (
-    PlateManagerCodeNamespaceField,
+    PlateManagerDocumentAssignments,
 )
 
 
@@ -199,9 +199,7 @@ class RuntimeUiCoordinationSection(
         del service
         code_document_id = PlateManagerOrchestratorCodeDocumentIdentity.require_value()
         state_surface_id = PlateManagerStateSurfaceIdentityDeclaration.require_value()
-        document_fields = ", ".join(
-            field.value for field in PlateManagerCodeNamespaceField
-        )
+        document_fields = ", ".join(PlateManagerDocumentAssignments.names())
         workflow_names = ", ".join(
             operation.operation_id
             for operation in SessionOperation.all()

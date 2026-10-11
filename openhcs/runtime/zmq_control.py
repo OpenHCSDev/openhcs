@@ -142,9 +142,9 @@ class ZMQControlMessageRouter:
 class CompiledArtifactInspectionMessageStrategy(ZMQControlMessageStrategy):
     """Read the exact artifact plans retained by one compile artifact."""
 
-    from openhcs.core.artifact_inspection import ArtifactInspectionControlMessageType
+    from openhcs.core.artifact_inspection import CompiledArtifactInspectionRequest
 
-    registry_key = ArtifactInspectionControlMessageType.READ_COMPILED.value
+    registry_key = CompiledArtifactInspectionRequest.wire_type
 
     def handle(
         self,
@@ -153,14 +153,12 @@ class CompiledArtifactInspectionMessageStrategy(ZMQControlMessageStrategy):
     ) -> dict:
         from openhcs.core.artifact_inspection import (
             CompiledArtifactInspection,
-            CompiledArtifactInspectionControlPayload,
+            CompiledArtifactInspectionRequest,
             CompiledArtifactInspectionResponse,
         )
 
         try:
-            request = CompiledArtifactInspectionControlPayload.from_dict(
-                message
-            ).to_request()
+            request = CompiledArtifactInspectionRequest.from_dict(message)
             record = context.compiled_artifacts.get(request.compile_artifact_id)
             if record is None:
                 raise KeyError(
@@ -221,7 +219,7 @@ class FunctionCatalogReadMessageStrategy(FunctionCatalogMessageStrategy):
     from openhcs.agent.dto.functions import FunctionCatalogControlRequest
 
     request_type = FunctionCatalogControlRequest
-    registry_key = request_type.message_type.value
+    registry_key = request_type.wire_type
 
     def handle_ready(
         self,
@@ -245,7 +243,7 @@ class FunctionCatalogSearchMessageStrategy(FunctionCatalogMessageStrategy):
     from openhcs.agent.dto.functions import FunctionSearchRequest
 
     request_type = FunctionSearchRequest
-    registry_key = request_type.message_type.value
+    registry_key = request_type.wire_type
 
     def handle_ready(
         self,
@@ -272,7 +270,7 @@ class FunctionDetailReadMessageStrategy(FunctionCatalogMessageStrategy):
     from openhcs.agent.dto.functions import FunctionDetailControlRequest
 
     request_type = FunctionDetailControlRequest
-    registry_key = request_type.message_type.value
+    registry_key = request_type.wire_type
 
     def handle_ready(
         self,
@@ -299,7 +297,7 @@ class FunctionReferenceReadMessageStrategy(FunctionCatalogMessageStrategy):
     from openhcs.agent.dto.functions import FunctionReferenceControlRequest
 
     request_type = FunctionReferenceControlRequest
-    registry_key = request_type.message_type.value
+    registry_key = request_type.wire_type
 
     def handle_ready(
         self,
@@ -321,7 +319,7 @@ class CustomFunctionRegistrationDestinationMessageStrategy(ZMQControlMessageStra
     from openhcs.agent.dto.functions import CustomFunctionRegistrationDestinationRequest
 
     request_type = CustomFunctionRegistrationDestinationRequest
-    registry_key = request_type.message_type.value
+    registry_key = request_type.wire_type
 
     def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
         from openhcs.agent.dto.functions import (
@@ -382,7 +380,7 @@ class StartFunctionCatalogPreparationStrategy(
     from openhcs.agent.dto.functions import FunctionCatalogPreparationStartRequest
 
     request_type = FunctionCatalogPreparationStartRequest
-    registry_key = request_type.message_type.value
+    registry_key = request_type.wire_type
 
     def preparation_state(
         self,
@@ -400,7 +398,7 @@ class ReadFunctionCatalogPreparationStrategy(
     from openhcs.agent.dto.functions import FunctionCatalogPreparationStatusRequest
 
     request_type = FunctionCatalogPreparationStatusRequest
-    registry_key = request_type.message_type.value
+    registry_key = request_type.wire_type
 
     def preparation_state(
         self,
@@ -418,7 +416,7 @@ class CancelFunctionCatalogPreparationStrategy(
     from openhcs.agent.dto.functions import FunctionCatalogPreparationCancelRequest
 
     request_type = FunctionCatalogPreparationCancelRequest
-    registry_key = request_type.message_type.value
+    registry_key = request_type.wire_type
 
     def preparation_state(
         self,
@@ -434,7 +432,7 @@ class CustomFunctionRegistrationMessageStrategy(ZMQControlMessageStrategy):
     from openhcs.agent.dto.functions import CustomFunctionRegistrationRequest
 
     request_type = CustomFunctionRegistrationRequest
-    registry_key = request_type.message_type.value
+    registry_key = request_type.wire_type
 
     def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
         from openhcs.agent.dto.functions import (
@@ -465,7 +463,7 @@ class CustomFunctionRegistrationObservationMessageStrategy(ZMQControlMessageStra
     from openhcs.agent.dto.functions import CustomFunctionRegistrationObservationRequest
 
     request_type = CustomFunctionRegistrationObservationRequest
-    registry_key = request_type.message_type.value
+    registry_key = request_type.wire_type
 
     def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
         from openhcs.agent.dto.functions import CustomFunctionRegistrationObservationControlResponse

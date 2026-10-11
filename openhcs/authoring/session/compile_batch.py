@@ -21,8 +21,8 @@ from openhcs.authoring.session.events import (
     StatusReported,
 )
 from openhcs.authoring.session.run_requests import dataset_pipeline_request
-from openhcs.core.execution_state import TerminalExecutionStatus
-from openhcs.constants.constants import OrchestratorState
+from openhcs.core.execution_state import ExecutionFailed
+from openhcs.constants.constants import OrchestratorCompileFailed, OrchestratorCompiled
 from openhcs.runtime.zmq_execution_signature import TransportValue
 
 if TYPE_CHECKING:
@@ -74,7 +74,7 @@ class CompileBatch:
                     )
 
             def on_wait_success(request, _execution_id, _index, _total) -> None:
-                session.set_dataset_state(request.scope_id, OrchestratorState.COMPILED)
+                session.set_dataset_state(request.scope_id, OrchestratorCompiled)
                 logger.info("Successfully compiled %s", request.scope_id)
 
             def on_failure(request, error, _index, _total) -> None:
@@ -139,7 +139,7 @@ class CompileBatch:
                 error,
                 exc_info=True,
             )
-            session.batch.mark_terminal(request.scope_id, TerminalExecutionStatus.FAILED)
+            session.batch.mark_terminal(request.scope_id, ExecutionFailed)
             session.publish(ErrorReported(f"Compile failed for {request.scope_id}: {error}"))
             session.publish(DatasetsChanged())
 
@@ -196,7 +196,7 @@ class CompileBatch:
         logger.error("COMPILATION ERROR: %s: %s", scope_id, error, exc_info=True)
         session = self._session
         session.clear_compile_pending((scope_id,))
-        session.set_dataset_state(scope_id, OrchestratorState.COMPILE_FAILED)
+        session.set_dataset_state(scope_id, OrchestratorCompileFailed)
         session.publish(
             CompilationFailed(scope_id, session.dataset_name(scope_id), str(error))
         )

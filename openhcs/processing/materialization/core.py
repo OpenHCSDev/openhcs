@@ -91,7 +91,8 @@ from openhcs.processing.materialization.options import (
     FileOutputOptions,
     ImageFileOptions,
     JsonOptions,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
+    NameBySourceIdentity,
     PointROIOptions,
     ROIOptions,
     SourceOptions,
@@ -2075,7 +2076,7 @@ class PathHelper:
         """Return the source-identity base path when it already names this output."""
         suffix = options.primary_output_suffix
         if (
-            options.filename_identity is MaterializedFilenameIdentity.SOURCE_IDENTITY
+            options.filename_identity is NameBySourceIdentity
             and suffix
             and self.base_path.name.endswith(suffix)
         ):
@@ -3309,7 +3310,7 @@ def write_image_file(
     paths = context.paths(options)
     source_stem_authority = SourceStemAuthority.from_processing_context(context.context)
     preserves_planned_path = (
-        options.filename_identity is MaterializedFilenameIdentity.ARTIFACT_NAME
+        options.filename_identity is NameByArtifactName
         or paths.source_identity_base_path(options) is not None
     )
     outputs = []
@@ -4215,7 +4216,7 @@ def image_file_emits_variable_component_planes(
     data: MaterializationValue,
 ) -> bool:
     if not (
-        options.filename_identity is MaterializedFilenameIdentity.SOURCE_IDENTITY
+        options.filename_identity is NameBySourceIdentity
         or _image_template_uses_source_metadata(options.relative_path_template)
         or _image_template_uses_sequence_index(options.relative_path_template)
     ):
@@ -4259,7 +4260,7 @@ def image_file_uses_filename_source_identity(
     data: MaterializationValue,
 ) -> bool:
     del data
-    return options.filename_identity is MaterializedFilenameIdentity.SOURCE_IDENTITY
+    return options.filename_identity is NameBySourceIdentity
 
 
 @writer_for(
@@ -4889,7 +4890,7 @@ class MaterializationSpec(ArtifactMaterializationPayload):
         """Return whether this spec materializes files by source identity."""
         return any(
             output_options.filename_identity
-            is MaterializedFilenameIdentity.SOURCE_IDENTITY
+            is NameBySourceIdentity
             for output_options in self.outputs
         )
 

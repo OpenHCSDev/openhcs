@@ -23,7 +23,7 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.function_patterns import MainFlowInputProjection
-from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
+from openhcs.core.orchestrator.execution_result import MergeAllRuntimeRecords
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.runtime_object_labels import object_label_dense_array
@@ -31,10 +31,10 @@ from openhcs.core.runtime_stores import RuntimeArtifactQuery
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextContains,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.custom_functions.runtime_registry import (
@@ -74,8 +74,8 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
         alias="label-fixture",
         selector=SourceSelector(filters=(
             SourceFilterClause(
-                subject=SourceFilterSubject.FILE,
-                match_type=SourceFilterMatchType.CONTAINS,
+                subject=SourceFileName,
+                match_type=TextContains,
                 value="label-fixture",
             ),
         )),
@@ -138,7 +138,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
     results = orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
         max_workers=1,
-        runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+        runtime_observation_mode=MergeAllRuntimeRecords,
         progress_queue=AgentProgressQueue(),
         progress_context=ProgressExecutionContext(
             execution_id="chained-public-callable-synthetic",

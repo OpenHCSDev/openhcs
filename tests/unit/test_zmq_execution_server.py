@@ -30,7 +30,7 @@ from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
-    RuntimeObservationMode,
+    MergeAllRuntimeRecords, MergeDatasetInputRecords, OmitRuntimeRecords,
 )
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.runtime.zmq_execution_observation import (
@@ -47,7 +47,7 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQExecutionConfigTransport,
     ZMQExecutionIdentity,
     ZMQExecutionRequestPayload,
-    ZMQRuntimeObservationExportScope,
+    ExportRuntimeOutcomes,
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.progress.types import (
@@ -131,7 +131,7 @@ def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed)
         compile_only=False,
         execution_id=record.execution_id,
         auxiliary_params=SimpleNamespace(
-            runtime_observation_mode_for=lambda bundle: RuntimeObservationMode.OMIT
+            runtime_observation_mode_for=lambda bundle: OmitRuntimeRecords
         ),
     )
     monkeypatch.setattr(
@@ -222,26 +222,26 @@ def test_terminal_notification_contains_openhcs_summary_before_cleanup(
 @pytest.mark.parametrize(
     ("compiled_mode", "export_path", "expected_mode"),
     (
-        (RuntimeObservationMode.OMIT, None, RuntimeObservationMode.OMIT),
+        (OmitRuntimeRecords, None, OmitRuntimeRecords),
         (
-            RuntimeObservationMode.OMIT,
+            OmitRuntimeRecords,
             "/tmp/runtime-observation.pkl",
-            RuntimeObservationMode.MERGE_INTO_PARENT,
+            MergeAllRuntimeRecords,
         ),
         (
-            RuntimeObservationMode.MERGE_DATASET_INPUTS,
+            MergeDatasetInputRecords,
             None,
-            RuntimeObservationMode.MERGE_DATASET_INPUTS,
+            MergeDatasetInputRecords,
         ),
         (
-            RuntimeObservationMode.MERGE_DATASET_INPUTS,
+            MergeDatasetInputRecords,
             "/tmp/runtime-observation.pkl",
-            RuntimeObservationMode.MERGE_INTO_PARENT,
+            MergeAllRuntimeRecords,
         ),
         (
-            RuntimeObservationMode.MERGE_INTO_PARENT,
+            MergeAllRuntimeRecords,
             None,
-            RuntimeObservationMode.MERGE_DATASET_INPUTS,
+            MergeDatasetInputRecords,
         ),
     ),
 )
@@ -256,7 +256,7 @@ def test_zmq_auxiliary_params_strengthen_compiled_observation_requirement(
         else None
     )
     execution_bundle = SimpleNamespace(
-        requires_parent_runtime_observation=compiled_mode.collects_records,
+        requires_parent_runtime_observation=compiled_mode is not OmitRuntimeRecords,
     )
 
     assert params.runtime_observation_mode_for(execution_bundle) is expected_mode
@@ -265,7 +265,7 @@ def test_zmq_auxiliary_params_strengthen_compiled_observation_requirement(
 def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> None:
     params = ZMQAuxiliaryExecutionParams(
         runtime_observation_export_path=Path("/tmp/outcomes.pkl.gz"),
-        runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+        runtime_observation_export_scope=ExportRuntimeOutcomes,
     )
     execution_bundle = SimpleNamespace(
         requires_parent_runtime_observation=False,
@@ -273,7 +273,7 @@ def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> 
 
     assert (
         params.runtime_observation_mode_for(execution_bundle)
-        is RuntimeObservationMode.OMIT
+        is OmitRuntimeRecords
     )
     assert ZMQAuxiliaryExecutionParams.from_transport(params.to_transport()) == params
 
@@ -281,7 +281,7 @@ def test_outcome_export_does_not_strengthen_worker_runtime_value_retention() -> 
 def test_outcome_export_requires_a_path() -> None:
     with pytest.raises(ValueError, match="requires an export path"):
         ZMQAuxiliaryExecutionParams(
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES
+            runtime_observation_export_scope=ExportRuntimeOutcomes
         )
 
 
@@ -302,7 +302,7 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
         execution_id=record.execution_id,
         auxiliary_params=ZMQAuxiliaryExecutionParams(
             runtime_observation_export_path=export_path,
-            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+            runtime_observation_export_scope=ExportRuntimeOutcomes,
         ),
     )
     compilation = SimpleNamespace(

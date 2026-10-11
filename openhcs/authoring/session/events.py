@@ -96,11 +96,11 @@ class SelectionChanged(SessionEvent):
 
 @dataclass(frozen=True, slots=True)
 class DatasetStateChanged(DatasetScopedEvent):
-    state: OrchestratorState
+    state: type[OrchestratorState]
 
     @property
     def message(self) -> str:
-        return f"{self.dataset_scope_id}: {self.state.value}"
+        return f"{self.dataset_scope_id}: {self.state.name}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,7 +155,7 @@ class DatasetExecutionFinished(DatasetScopedEvent):
 
     @property
     def message(self) -> str:
-        return f"{self.dataset_scope_id}: {self.completion.status.value}"
+        return f"{self.dataset_scope_id}: {self.completion.status.name}"
 
 
 @dataclass(frozen=True, slots=True)

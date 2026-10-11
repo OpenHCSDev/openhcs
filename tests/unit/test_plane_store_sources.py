@@ -21,7 +21,7 @@ from polystore.zarr_batch import (
     ZarrBatchLayout,
 )
 
-from openhcs.constants.constants import Backend, OrchestratorState
+from openhcs.constants.constants import Backend, OrchestratorCreated
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
@@ -32,10 +32,10 @@ from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
+    SourceFileName,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
     SourceSelector,
+    TextEquals,
 )
 from openhcs.core.steps.function_io import (
     save_materialized_data,
@@ -199,8 +199,8 @@ def _binding(alias: str, file_name: str) -> NamedSourceBinding:
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    SourceFilterSubject.FILE,
-                    SourceFilterMatchType.EQUALS,
+                    SourceFileName,
+                    TextEquals,
                     file_name,
                 ),
             ),
@@ -406,7 +406,7 @@ def test_saved_source_bindings_rebuild_canonical_store_projection(
     else:
         orchestrator.apply_pipeline_config(replacement)
 
-    assert orchestrator.state is OrchestratorState.CREATED
+    assert orchestrator.state is OrchestratorCreated
     assert not orchestrator.is_initialized()
     assert orchestrator.microscope_handler is None
     assert orchestrator.get_effective_config().source_bindings_config == edited_bindings

@@ -909,19 +909,12 @@ class NumpyThresholdDiagnosticsBackendStrategy(ThresholdDiagnosticsBackendStrate
         return _numpy_threshold_sum_of_entropies(image, mask, binary_image)
 
 
-class ThresholdDiagnosticDomain(Enum):
-    """Nominal image domains for CellProfiler threshold diagnostics."""
-
-    PLANAR_IMAGE = "planar_image"
-    ND_IMAGE = "nd_image"
-
-
 @dataclass(frozen=True, slots=True)
 class ThresholdDiagnosticRequest:
     """Typed inputs for one CellProfiler threshold diagnostic measurement."""
 
     backend: "NumbaNumpyThresholdDiagnosticsBackendStrategy"
-    domain: ThresholdDiagnosticDomain
+    domain: type[ThresholdDiagnosticDomain]
     image: np.ndarray
     mask: np.ndarray | None
     binary_image: np.ndarray
@@ -951,11 +944,7 @@ class ThresholdDiagnosticRequest:
         )
         return cls(
             backend=backend,
-            domain=(
-                ThresholdDiagnosticDomain.PLANAR_IMAGE
-                if image_array.ndim == 2
-                else ThresholdDiagnosticDomain.ND_IMAGE
-            ),
+            domain=ThresholdDiagnosticDomain.of_rank(image_array.ndim),
             image=image_array,
             mask=mask_array,
             binary_image=binary_array,
@@ -963,40 +952,46 @@ class ThresholdDiagnosticRequest:
         )
 
 
-class ThresholdDiagnosticDomainStrategy(
-    EnumKeyedStrategyMixin[ThresholdDiagnosticDomain],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Apply CellProfiler threshold diagnostics in the correct image domain."""
+class ThresholdDiagnosticDomain(ABC, metaclass=AutoRegisterMeta):
+    """Image domain CellProfiler threshold diagnostics are measured in.
 
-    __enum_member_attr__ = "domain"
-    domain: ClassVar[ThresholdDiagnosticDomain | None] = None
+    Each domain is a subclass that applies the diagnostics in that domain.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[ThresholdDiagnosticDomain]]] = {}
+
+    name: ClassVar[str | None] = None
+
+    @staticmethod
+    def of_rank(ndim: int) -> type[ThresholdDiagnosticDomain]:
+        """Planar images use the 2-D path; every other rank is one image."""
+        return PlanarThresholdDiagnostics if ndim == 2 else WholeImageThresholdDiagnostics
 
     @classmethod
-    def evaluate(cls, request: ThresholdDiagnosticRequest) -> tuple[float, float]:
-        return cls.for_enum_member(request.domain).diagnostics(request)
-
     @abstractmethod
-    def diagnostics(self, request: ThresholdDiagnosticRequest) -> tuple[float, float]:
+    def diagnostics(cls, request: ThresholdDiagnosticRequest) -> tuple[float, float]:
         """Return weighted variance and sum of entropies for ``request``."""
 
 
-class PlanarThresholdDiagnosticDomainStrategy(ThresholdDiagnosticDomainStrategy):
+class PlanarThresholdDiagnostics(ThresholdDiagnosticDomain):
     """Use the optimized 2-D backend path for planar CellProfiler images."""
 
-    domain = ThresholdDiagnosticDomain.PLANAR_IMAGE
+    name = "planar_image"
 
-    def diagnostics(self, request: ThresholdDiagnosticRequest) -> tuple[float, float]:
+    @classmethod
+    def diagnostics(cls, request: ThresholdDiagnosticRequest) -> tuple[float, float]:
         return request.backend.diagnostics_planar(request)
 
 
-class WholeImageThresholdDiagnosticDomainStrategy(ThresholdDiagnosticDomainStrategy):
+class WholeImageThresholdDiagnostics(ThresholdDiagnosticDomain):
     """Measure ND images as one CellProfiler image domain."""
 
-    domain = ThresholdDiagnosticDomain.ND_IMAGE
+    name = "nd_image"
 
-    def diagnostics(self, request: ThresholdDiagnosticRequest) -> tuple[float, float]:
+    @classmethod
+    def diagnostics(cls, request: ThresholdDiagnosticRequest) -> tuple[float, float]:
         return request.backend.diagnostics_whole_image(request)
 
 
@@ -1062,15 +1057,14 @@ class NumbaNumpyThresholdDiagnosticsBackendStrategy(
         *,
         proven_unit_interval_scale: int | None = None,
     ) -> tuple[float, float]:
-        return ThresholdDiagnosticDomainStrategy.evaluate(
-            ThresholdDiagnosticRequest.from_inputs(
-                backend=self,
-                image=image,
-                mask=mask,
-                binary_image=binary_image,
-                proven_unit_interval_scale=proven_unit_interval_scale,
-            )
+        request = ThresholdDiagnosticRequest.from_inputs(
+            backend=self,
+            image=image,
+            mask=mask,
+            binary_image=binary_image,
+            proven_unit_interval_scale=proven_unit_interval_scale,
         )
+        return request.domain.diagnostics(request)
 
     def diagnostics_planar(
         self,

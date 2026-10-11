@@ -24,7 +24,7 @@ from pathlib import Path
 from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.config import (
@@ -43,8 +43,8 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceFilterClause,
-    SourceFilterMatchType,
-    SourceFilterSubject,
+    SourceFileName,
+    TextEquals,
     SourceSelector,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -142,8 +142,8 @@ def _exact_image_binding(
         selector=SourceSelector(
             filters=(
                 SourceFilterClause(
-                    subject=SourceFilterSubject.FILE,
-                    match_type=SourceFilterMatchType.EQUALS,
+                    subject=SourceFileName,
+                    match_type=TextEquals,
                     value=source.filename,
                 ),
             ),
@@ -230,7 +230,7 @@ def build_loose_operaphenix_neurite_pipeline(
                 engine.body_detection_kwargs(),
             ),
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
             source_bindings=_named_source(inputs.cell_body_source.alias),
             napari_streaming_config=_qc_stream(inputs, "viridis"),
@@ -245,7 +245,7 @@ def build_loose_operaphenix_neurite_pipeline(
                 },
             ),
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
             source_bindings=_named_source(inputs.smi312.alias),
             step_materialization_config=_qc_checkpoint(
@@ -305,7 +305,7 @@ def build_loose_operaphenix_neurite_pipeline(
                 engine.secondary_kwargs(),
             ),
             processing_config=LazyProcessingConfig(
-                input_source=InputSource.PIPELINE_START,
+                input_source=ReadPipelineStart,
             ),
             source_bindings=_named_source(inputs.smi312.alias),
             napari_streaming_config=_qc_stream(inputs, "magma"),

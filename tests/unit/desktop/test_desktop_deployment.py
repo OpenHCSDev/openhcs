@@ -11,7 +11,10 @@ from pathlib import Path
 import pytest
 
 from openhcs.desktop import deployment as desktop_deployment
-from openhcs.agent.runtime_platform import AgentRuntimePlatformKey
+from openhcs.agent.runtime_platform import (
+    MacOSRuntimePlatform,
+    WindowsRuntimePlatform,
+)
 from openhcs.desktop.deployment import (
     DesktopDeployment,
     DesktopDeploymentContext,
@@ -33,7 +36,7 @@ def test_optional_skill_failure_retains_published_restart_target(
     tmp_path, monkeypatch, capsys
 ):
     report = DesktopDeploymentReport(
-        platform=AgentRuntimePlatformKey.MACOS,
+        platform=MacOSRuntimePlatform,
         launcher_path=str(tmp_path / "launcher"),
         desktop_shortcut_path=str(tmp_path / "shortcut"),
         application_path=None,
@@ -73,7 +76,7 @@ def test_desktop_refresh_runs_skill_updates_only_after_successful_publication(
     context = _context(tmp_path, pointer_name="current")
     events = []
     report = DesktopDeploymentReport(
-        platform=AgentRuntimePlatformKey.MACOS,
+        platform=MacOSRuntimePlatform,
         launcher_path=str(tmp_path / "launcher"),
         desktop_shortcut_path=str(tmp_path / "shortcut"),
         application_path=None,
@@ -135,7 +138,7 @@ def test_native_setup_can_explicitly_skip_receipt_enrolled_refresh(
 ):
     kwargs = {}
     report = DesktopDeploymentReport(
-        platform=AgentRuntimePlatformKey.MACOS,
+        platform=MacOSRuntimePlatform,
         launcher_path=str(tmp_path / "launcher"),
         desktop_shortcut_path=str(tmp_path / "shortcut"),
         application_path=None,
@@ -167,7 +170,7 @@ def test_unexpected_optional_refresh_error_cannot_invalidate_publication(
 ):
     context = _context(tmp_path, pointer_name="current")
     report = DesktopDeploymentReport(
-        platform=AgentRuntimePlatformKey.MACOS,
+        platform=MacOSRuntimePlatform,
         launcher_path=str(tmp_path / "launcher"),
         desktop_shortcut_path=str(tmp_path / "shortcut"),
         application_path=None,
@@ -237,16 +240,12 @@ def _context(tmp_path: Path, *, pointer_name: str) -> DesktopDeploymentContext:
 
 def test_desktop_deployment_platforms_use_the_registered_host_axis() -> None:
     assert (
-        DesktopDeployment.strategy_type_for_enum_member(
-            AgentRuntimePlatformKey.WINDOWS
-        )
-        is WindowsDesktopDeployment
+        DesktopDeployment.strategy_types_for_nominal_type(WindowsRuntimePlatform)
+        == (WindowsDesktopDeployment,)
     )
     assert (
-        DesktopDeployment.strategy_type_for_enum_member(
-            AgentRuntimePlatformKey.MACOS
-        )
-        is MacOSDesktopDeployment
+        DesktopDeployment.strategy_types_for_nominal_type(MacOSRuntimePlatform)
+        == (MacOSDesktopDeployment,)
     )
 
 

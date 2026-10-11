@@ -13,7 +13,7 @@ from openhcs.constants.constants import Backend
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyVFSConfig,
-    MaterializationBackend,
+    MaterializeToZarr,
     PipelineConfig,
     VFSConfig,
 )
@@ -56,13 +56,13 @@ def test_zarr_conversion_keys_store_outputs_by_plate_relative_virtual_path(tmp_p
             num_workers=1,
             use_threading=True,
             dataset_source=DatasetSourceChoice.named("openhcsdata"),
-            vfs_config=VFSConfig(materialization_backend=MaterializationBackend.ZARR),
+            vfs_config=VFSConfig(materialization_backend=MaterializeToZarr),
         ),
     )
     orchestrator = PipelineOrchestrator(
         plate,
         pipeline_config=PipelineConfig(
-            vfs_config=LazyVFSConfig(materialization_backend=MaterializationBackend.ZARR)
+            vfs_config=LazyVFSConfig(materialization_backend=MaterializeToZarr)
         ),
     ).initialize()
     wells = orchestrator.get_component_keys(AxisFamily.active().partition_axis())

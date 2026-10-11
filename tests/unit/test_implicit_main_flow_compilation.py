@@ -7,7 +7,7 @@ from objectstate import ObjectStateRegistry
 import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart, ReadPreviousStep
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -17,7 +17,7 @@ from openhcs.core.config import (
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline.path_planner import PathPlannerGroupScope
 from openhcs.core.progress import set_progress_queue
-from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.step_dependencies import StepOutputInput
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.cellprofiler.thresholding import threshold
 from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
@@ -45,12 +45,12 @@ def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
     pipeline_start_processing = LazyProcessingConfig(
         variable_components=[Microscopy.Site],
         group_by=Microscopy.Channel,
-        input_source=InputSource.PIPELINE_START,
+        input_source=ReadPipelineStart,
     )
     previous_step_processing = LazyProcessingConfig(
         variable_components=[Microscopy.Site],
         group_by=Microscopy.Channel,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=ReadPreviousStep,
     )
     steps = [
         FunctionStep(
@@ -84,7 +84,7 @@ def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
     context = compilation.runtime_contexts["A01"]
     native_plan = context.step_plans[0]
     threshold_plan = context.step_plans[1]
-    assert threshold_plan.main_input_dependency == StepInputDependency.step_output(
+    assert threshold_plan.main_input_dependency == StepOutputInput(
         source_step_index=0,
         source_step_scope_id=native_plan.step_scope_id,
     )

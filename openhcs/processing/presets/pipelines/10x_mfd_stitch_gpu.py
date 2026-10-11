@@ -1,5 +1,5 @@
 # Edit this pipeline and save to apply changes
 
-from openhcs.processing.presets.mfd_specs import MfdPresetKey, build_mfd_preset
+from openhcs.processing.presets.mfd_specs import MFD_STITCH_GPU, build_mfd_preset
 
-pipeline_steps = build_mfd_preset(MfdPresetKey.STITCH_GPU)
+pipeline_steps = build_mfd_preset(MFD_STITCH_GPU)

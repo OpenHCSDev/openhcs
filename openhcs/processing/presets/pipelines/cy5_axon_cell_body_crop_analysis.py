@@ -3,7 +3,7 @@
 # Automatically collected imports
 from pathlib import Path
 
-from openhcs.constants.input_source import InputSource
+from openhcs.constants.input_source import ReadPipelineStart
 from openhcs.core.config import LazyDtypeConfig, LazyStepMaterializationConfig
 from arraybridge.decorators import DtypeConversion
 from openhcs.core.steps.function_step import FunctionStep
@@ -106,7 +106,7 @@ step_5 = FunctionStep(
     ),
     name="crop_device",
     variable_components=[Microscopy.Channel],
-    input_source=InputSource.PIPELINE_START,
+    input_source=ReadPipelineStart,
 )
 pipeline_steps.append(step_5)
 

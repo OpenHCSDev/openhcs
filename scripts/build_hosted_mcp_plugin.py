@@ -239,19 +239,6 @@ def normalize_registered_app_id(app_id: str) -> str:
     return value
 
 
-def normalize_authentication_mode(
-    authentication_mode: str | McpHttpAuthenticationMode,
-) -> McpHttpAuthenticationMode:
-    """Resolve the package mode through the hosted-server mode authority."""
-    try:
-        return McpHttpAuthenticationMode(authentication_mode)
-    except ValueError as exc:
-        valid_modes = ", ".join(mode.value for mode in McpHttpAuthenticationMode)
-        raise ValueError(
-            f"Hosted MCP authentication mode must be one of: {valid_modes}"
-        ) from exc
-
-
 def validate_plugin_relative_path(path: str, *, label: str) -> str:
     """Validate one manifest path relative to the plugin root."""
     value = _required_text(path, label=label)
@@ -298,7 +285,7 @@ def _source_release_metadata(source_manifest: Path) -> dict[str, Any]:
 def _plugin_manifest(
     *,
     release_metadata: Mapping[str, Any],
-    authentication_mode: McpHttpAuthenticationMode,
+    authentication_mode: type[McpHttpAuthenticationMode],
     website_url: str,
     privacy_policy_url: str,
     terms_of_service_url: str,
@@ -348,7 +335,7 @@ def _submission_packet(
     manifest: Mapping[str, Any],
     remote_mcp_url: str,
     registered_app_id: str,
-    authentication_mode: McpHttpAuthenticationMode,
+    authentication_mode: type[McpHttpAuthenticationMode],
     website_url: str,
     support_url: str,
     privacy_policy_url: str,
@@ -416,11 +403,11 @@ def _submission_packet(
 
 
 def _submission_authentication(
-    authentication_mode: McpHttpAuthenticationMode,
+    authentication_mode: type[McpHttpAuthenticationMode],
 ) -> dict[str, object]:
     """Project the hosted auth owner into OpenAI reviewer metadata once."""
     return {
-        "mode": authentication_mode.value,
+        "mode": authentication_mode.name,
         "type": "oauth" if authentication_mode.requires_oauth else "none",
         "user_login_required": authentication_mode.requires_oauth,
     }
@@ -430,7 +417,7 @@ def build_hosted_plugin(
     *,
     remote_mcp_url: str,
     registered_app_id: str,
-    authentication_mode: str | McpHttpAuthenticationMode,
+    authentication_mode: str,
     website_url: str,
     support_url: str,
     privacy_policy_url: str,
@@ -442,7 +429,7 @@ def build_hosted_plugin(
     """Project release metadata into a registered web-plugin review bundle."""
     endpoint = validate_remote_mcp_url(remote_mcp_url)
     app_id = normalize_registered_app_id(registered_app_id)
-    auth_mode = normalize_authentication_mode(authentication_mode)
+    auth_mode = McpHttpAuthenticationMode.named(authentication_mode)
     website = validate_public_https_url(website_url, label="Public website URL")
     support = validate_public_https_url(support_url, label="Public support URL")
     privacy = validate_public_https_url(
@@ -517,7 +504,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument(
         "--authentication-mode",
-        choices=[mode.value for mode in McpHttpAuthenticationMode],
+        choices=list(McpHttpAuthenticationMode.__registry__),
         default=McpHttpAuthenticationMode.PUBLIC_READ_ONLY.value,
         help=(
             "Hosted server authentication contract. The initial public plugin "
