@@ -23,7 +23,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazyVFSConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     PipelineConfig,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
@@ -149,7 +149,7 @@ def _code_mode_round_trip(
             global_output_folder=output_root,
         ),
         vfs_config=LazyVFSConfig(
-            materialization_backend=MaterializationBackend.DISK,
+            materialization_backend=MaterializeToDisk,
         ),
     )
     payload = PlateManagerCodeDocumentAuthority.from_values(

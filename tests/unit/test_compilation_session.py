@@ -15,7 +15,7 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.config import (
     GlobalPipelineConfig,
-    MaterializationBackend,
+    MaterializeToDisk, MaterializeToZarr,
     LazyNapariStreamingConfig,
     LazyProcessingConfig,
     LazySourceBindingsConfig,
@@ -96,7 +96,7 @@ def test_shared_declaration_checks_full_plate_group_domain_with_held_config(
 
 
 @pytest.mark.parametrize(
-    "backend", [MaterializationBackend.DISK, MaterializationBackend.ZARR]
+    "backend", [MaterializeToDisk, MaterializeToZarr]
 )
 def test_zarr_store_planning_queries_whole_plate_only_for_zarr(backend):
     config = GlobalPipelineConfig()
@@ -123,7 +123,7 @@ def test_zarr_store_planning_queries_whole_plate_only_for_zarr(backend):
     )
     PipelineCompiler.declare_zarr_stores(session)
     assert plans[0].zarr_config is None
-    if backend is MaterializationBackend.ZARR:
+    if backend is MaterializeToZarr:
         assert plans[1].zarr_config == {
             "all_wells": ("A01", "A02"), "needs_initialization": True
         }

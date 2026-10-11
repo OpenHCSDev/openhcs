@@ -78,7 +78,7 @@ from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyPartitionFilterConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     MultiprocessingStartMethod,
     PathPlanningConfig,
     PipelineConfig,
@@ -1112,7 +1112,7 @@ def _global_config(
             global_output_folder=output_dir,
             output_dir_suffix="_matched_pilot",
         ),
-        vfs_config=VFSConfig(materialization_backend=MaterializationBackend.DISK),
+        vfs_config=VFSConfig(materialization_backend=MaterializeToDisk),
         analysis_consolidation_config=AnalysisConsolidationConfig(enabled=False),
         materialize_runtime_artifacts=False,
     )

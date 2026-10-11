@@ -43,7 +43,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazyVFSConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     NapariDisplayConfig,
     PathPlanningConfig,
     PipelineConfig,
@@ -121,7 +121,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
     source_stack = _write_known_neurite_images(plate_dir)
 
     suffix = "_neurite_test"
-    vfs_config = VFSConfig(materialization_backend=MaterializationBackend.DISK)
+    vfs_config = VFSConfig(materialization_backend=MaterializeToDisk)
     global_config = GlobalPipelineConfig(
         num_workers=1,
         dataset_source=ImageXpressHandler,

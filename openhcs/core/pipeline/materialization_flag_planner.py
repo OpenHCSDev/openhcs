@@ -15,7 +15,7 @@ from typing import Sequence
 from openhcs.constants.constants import Backend
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.abstract import AbstractStep
-from openhcs.core.config import GlobalPipelineConfig, MaterializationBackend
+from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.partition_filter import PartitionFilterProcessor
 
 from openhcs.core.vfs_protocol import FileManagerLike
@@ -57,7 +57,7 @@ class MaterializationFlagPlanner:
             ),
         )
 
-    def resolve_backend(self, declaration: Backend | MaterializationBackend) -> str:
+    def resolve_backend(self, declaration: Backend) -> str:
         """Resolve explicit declarations directly and admit AUTO once per submission."""
         if declaration.value != Backend.AUTO.value:
             return declaration.value
@@ -110,7 +110,7 @@ class MaterializationFlagPlanner:
                 or i == last_image_materialization_step
             ):
                 step_plan.write_backend = self.resolve_backend(
-                    vfs_config.materialization_backend,
+                    vfs_config.materialization_backend.backend,
                 )
             else:
                 step_plan.write_backend = Backend.MEMORY.value
@@ -118,7 +118,7 @@ class MaterializationFlagPlanner:
             if step_plan.materialized_output is not None:
                 step_plan.materialized_output = replace(
                     step_plan.materialized_output,
-                    backend=self.resolve_backend(vfs_config.materialization_backend),
+                    backend=self.resolve_backend(vfs_config.materialization_backend.backend),
                 )
 
         if not materializes_main_flow_axis:

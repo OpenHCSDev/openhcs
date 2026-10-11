@@ -42,7 +42,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyVFSConfig,
     LazyPartitionFilterConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     MultiprocessingStartMethod,
     PartitionFilterConfig,
 )
@@ -2122,7 +2122,7 @@ def run_case_well_throughput(
                 output_dir_suffix="_well_throughput",
             ),
             vfs_config=LazyVFSConfig(
-                materialization_backend=MaterializationBackend.DISK
+                materialization_backend=MaterializeToDisk
             ),
         ),
         global_config,

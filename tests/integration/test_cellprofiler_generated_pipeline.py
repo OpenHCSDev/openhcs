@@ -49,7 +49,7 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     LazyVFSConfig,
     LazyPartitionFilterConfig,
-    MaterializationBackend,
+    MaterializeToDisk,
     PipelineConfig,
     LazySourceBindingsConfig,
     source_bindings_defaults_to_base,
@@ -177,7 +177,7 @@ def _execute_imported_cppipe_via_zmq(
             output_dir_suffix="_imported_cppipe_zmq",
         ),
         vfs_config=LazyVFSConfig(
-            materialization_backend=MaterializationBackend.DISK,
+            materialization_backend=MaterializeToDisk,
         ),
         partition_filter_config=(
             LazyPartitionFilterConfig()
@@ -387,7 +387,7 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
             global_output_folder=tmp_path / "invalid_compile_outputs",
         ),
         vfs_config=LazyVFSConfig(
-            materialization_backend=MaterializationBackend.DISK,
+            materialization_backend=MaterializeToDisk,
         ),
     )
     observation_path = tmp_path / "invalid_compile_observation.pkl"

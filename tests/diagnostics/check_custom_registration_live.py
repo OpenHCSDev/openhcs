@@ -640,7 +640,7 @@ def run(args) -> None:
             LazyPathPlanningConfig,
             LazyStepMaterializationConfig,
             LazyVFSConfig,
-            MaterializationBackend,
+            MaterializeToDisk,
             PipelineConfig,
         )
         from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -655,7 +655,7 @@ def run(args) -> None:
                     global_output_folder=owned / "outputs"
                 ),
                 vfs_config=LazyVFSConfig(
-                    materialization_backend=MaterializationBackend.DISK
+                    materialization_backend=MaterializeToDisk
                 ),
             ),
             pipeline_steps=[

@@ -541,7 +541,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
         config = PipelineConfig(
             source_bindings_config=LazySourceBindingsConfig.from_config(_config()),
             vfs_config=LazyVFSConfig(
-                materialization_backend=MaterializationBackend(storage_backend)
+                materialization_backend=MaterializationBackend.__registry__[storage_backend]
             ),
         )
         orchestrator = PipelineOrchestrator(plate, pipeline_config=config).initialize()

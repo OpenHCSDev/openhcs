@@ -33,7 +33,7 @@ from openhcs.core.dataset_sources.interfaces import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from openhcs.core.config import MaterializationBackend, PipelineConfig
+    from openhcs.core.config import PipelineConfig
     from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
     from openhcs.core.config import SourceBindingsConfig
 
@@ -314,24 +314,6 @@ class DatasetSource(
     @abstractmethod
     def initialize_workspace(self, dataset_root: Path, filemanager: FileManager) -> Path:
         """Prepare the dataset for reading and return its image directory."""
-
-    def get_required_backend(self) -> Optional["MaterializationBackend"]:
-        """The materialization backend this source requires, when it has one."""
-        from openhcs.core.config import MaterializationBackend
-
-        if len(self.compatible_backends) == 1:
-            backend_value = self.compatible_backends[0].value
-            materialization_values = {
-                materialization_backend.value
-                for materialization_backend in MaterializationBackend
-            }
-            if backend_value not in materialization_values:
-                raise RuntimeError(
-                    f"{self.source_name} declares single backend "
-                    f"{backend_value!r}, but it is not a materialization backend."
-                )
-            return MaterializationBackend(backend_value)
-        return None
 
     def available_backends(self, dataset_root: Union[str, Path]) -> List[Backend]:
         """Backends available for this dataset (default: every compatible one)."""

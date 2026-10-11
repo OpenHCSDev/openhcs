@@ -505,7 +505,7 @@ def debug_global_config(execution_mode, backend_config):
             sub_dir="images",  # Default subdirectory for processed data
             output_dir_suffix="_outputs",  # Suffix for output directories
         ),
-        vfs=VFSConfig(materialization_backend=MaterializationBackend(backend_config)),
+        vfs=VFSConfig(materialization_backend=MaterializationBackend.__registry__[backend_config]),
         zarr=ZarrConfig(),
         use_threading=use_threading,
     )
