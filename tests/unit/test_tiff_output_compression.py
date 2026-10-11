@@ -16,7 +16,7 @@ from openhcs.core.steps.function_io import save_materialized_data
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
     materialize,
 )
 
@@ -55,7 +55,7 @@ def test_configured_named_artifact_tiff_output_is_lossless(tmp_path) -> None:
         MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             )
         ),
         pixels,

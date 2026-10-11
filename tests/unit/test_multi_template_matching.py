@@ -27,7 +27,7 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
     multi_template_crop_subset,
 )
 from openhcs.processing.materialization import materialization_outputs
-from openhcs.processing.materialization.options import MaterializedFilenameIdentity
+from openhcs.processing.materialization.options import NameByArtifactName
 
 
 @pytest.mark.parametrize(
@@ -81,7 +81,7 @@ def test_template_match_artifact_materializes_every_match_column() -> None:
     assert not artifact_spec.materialization.uses_source_identity_filename()
     assert (
         artifact_spec.materialization.outputs[0].filename_identity
-        is MaterializedFilenameIdentity.ARTIFACT_NAME
+        is NameByArtifactName
     )
     results = [
         TemplateMatchResult(

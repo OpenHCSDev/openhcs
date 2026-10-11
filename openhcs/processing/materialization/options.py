@@ -10,9 +10,11 @@ from __future__ import annotations
 import csv
 import io
 from dataclasses import dataclass, field
-from enum import Enum
+from abc import ABC
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, ClassVar, Dict, List, Optional
+
+from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_measurements import RuntimeMeasurementFeature
@@ -22,11 +24,26 @@ from openhcs.processing.materialization.path_scopes import (
 )
 
 
-class MaterializedFilenameIdentity(str, Enum):
-    """Semantic identity used to construct materialized artifact filenames."""
+class MaterializedFilenameIdentity(ABC, metaclass=AutoRegisterMeta):
+    """What a materialized artifact's filename is built from; ``name`` is its spelling."""
 
-    SOURCE_IDENTITY = "source_identity"
-    ARTIFACT_NAME = "artifact_name"
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["MaterializedFilenameIdentity"]]] = {}
+
+    name: ClassVar[str | None] = None
+
+
+class NameBySourceIdentity(MaterializedFilenameIdentity):
+    """The source image the artifact was computed from."""
+
+    name = "source_identity"
+
+
+class NameByArtifactName(MaterializedFilenameIdentity):
+    """The artifact's declared name."""
+
+    name = "artifact_name"
 
 
 @dataclass(frozen=True)
@@ -36,20 +53,7 @@ class FileOutputOptions:
     filename_suffix: str = ""
     strip_roi_suffix: bool = False
     strip_pkl: bool = True
-    filename_identity: MaterializedFilenameIdentity = (
-        MaterializedFilenameIdentity.SOURCE_IDENTITY
-    )
-
-    def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "filename_identity",
-            (
-                self.filename_identity
-                if isinstance(self.filename_identity, MaterializedFilenameIdentity)
-                else MaterializedFilenameIdentity(self.filename_identity)
-            ),
-        )
+    filename_identity: type[MaterializedFilenameIdentity] = NameBySourceIdentity
 
     @property
     def primary_output_suffix(self) -> str:
@@ -151,7 +155,6 @@ class PointROIOptions(FileOutputOptions, SourceOptions):
     filename_suffix: str = "_points.roi.zip"
 
     def __post_init__(self) -> None:
-        super().__post_init__()
         features = (self.z_feature, self.y_feature, self.x_feature)
         if not all(
             isinstance(feature, RuntimeMeasurementFeature) for feature in features
@@ -172,7 +175,6 @@ class SWCOptions(FileOutputOptions, SourceOptions):
     process_type: int = 2
 
     def __post_init__(self) -> None:
-        super().__post_init__()
         if self.root_type < 0 or self.process_type < 0:
             raise ValueError("SWC node type codes must be nonnegative integers.")
 
@@ -223,6 +225,4 @@ class ImageFileOptions(FileOutputOptions, SourceOptions):
 class FileBundleOptions(FileOutputOptions):
     """A validated mapping of relative output paths to bytes, text or typed outputs."""
 
-    filename_identity: MaterializedFilenameIdentity = (
-        MaterializedFilenameIdentity.ARTIFACT_NAME
-    )
+    filename_identity: type[MaterializedFilenameIdentity] = NameByArtifactName

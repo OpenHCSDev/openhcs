@@ -1,5 +1,6 @@
 """Issue435: real saved image occurrences projected through two existing owners."""
 
+from openhcs.processing.materialization.options import NameByArtifactName, NameBySourceIdentity
 from dataclasses import asdict, replace
 import json
 
@@ -40,7 +41,7 @@ from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from python_introspect import to_jsonable
 from openhcs.processing.materialization import (
-    ImageFileOptions, MaterializationSpec, MaterializedFilenameIdentity,
+    ImageFileOptions, MaterializationSpec,
 )
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -131,8 +132,8 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
             materialization=MaterializationSpec(ImageFileOptions(
                 filename_suffix=".tif",
                 filename_identity=(
-                    MaterializedFilenameIdentity.ARTIFACT_NAME if aggregate
-                    else MaterializedFilenameIdentity.SOURCE_IDENTITY
+                    NameByArtifactName if aggregate
+                    else NameBySourceIdentity
                 ),
                 relative_path_template=(filename if same_persisted_path else filename.replace(".tif", "_independent.tif")),
             )),
@@ -282,7 +283,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
                           "stored_key": repr(item.materialization.record.key)}
                          for item in saved for output in item.outputs_for_backend(Backend.DISK.value)],
         "artifact_projections": [{"path": path,
-                                 "role": projection.projection_role.value,
+                                 "role": projection.projection_role.name,
                                  "address": None if projection.address is None else projection.address.as_component_metadata(),
                                  "alias": projection.source_alias,
                                  "kind": projection.artifact_kind.value}

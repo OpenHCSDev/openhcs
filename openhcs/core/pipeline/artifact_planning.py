@@ -41,7 +41,7 @@ from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
     ROIOptions,
     TerminalMaterializationSpec,
 )
@@ -102,11 +102,11 @@ class AutomaticObjectLabelsArtifactOutputMaterializationStrategy(
         return TerminalMaterializationSpec(
             ROIOptions(
                 min_area=1,
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             ),
             ImageFileOptions(
                 filename_suffix=".labels.tif",
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             ),
         )
 
@@ -124,7 +124,7 @@ class AutomaticMeasurementsArtifactOutputMaterializationStrategy(
     def materialization(self) -> ArtifactMaterializationPayload:
         return TerminalMaterializationSpec(
             CsvOptions(
-                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                filename_identity=NameByArtifactName,
             )
         )
 

@@ -73,7 +73,7 @@ from openhcs.processing.materialization import (
     ExecutionAxisMaterializationRelativePathScope,
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameBySourceIdentity,
     WriteMode,
     materialize,
 )
@@ -770,7 +770,7 @@ def test_save_images_from_image_filename_uses_source_identity_and_suffix() -> No
 
     options = _image_file_options(_contract(module))
 
-    assert options.filename_identity is MaterializedFilenameIdentity.SOURCE_IDENTITY
+    assert options.filename_identity is NameBySourceIdentity
     assert options.filename_suffix == "_Overlay.png"
     assert options.relative_path_template is None
 

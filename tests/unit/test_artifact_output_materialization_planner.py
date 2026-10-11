@@ -18,7 +18,7 @@ from openhcs.core.runtime_exports import RuntimeExportExpectation
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
-    MaterializedFilenameIdentity,
+    NameByArtifactName,
     MaterializationSpec,
     ROIOptions,
     materialize,
@@ -78,11 +78,11 @@ def test_object_label_output_gets_terminal_roi_and_label_materialization() -> No
     assert materialization.outputs == (
         ROIOptions(
             min_area=1,
-            filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            filename_identity=NameByArtifactName,
         ),
         ImageFileOptions(
             filename_suffix=".labels.tif",
-            filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            filename_identity=NameByArtifactName,
         ),
     )
     assert materialization.participates_in_persistent_materialization()
@@ -111,7 +111,7 @@ def test_terminal_measurement_output_gets_artifact_named_csv_materialization() -
     assert isinstance(materialization, TerminalMaterializationSpec)
     assert materialization.outputs == (
         CsvOptions(
-            filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            filename_identity=NameByArtifactName,
         ),
     )
 

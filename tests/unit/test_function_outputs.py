@@ -105,7 +105,7 @@ from openhcs.processing.materialization.core import Output
 from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializationSpec,
-    MaterializedFilenameIdentity,
+    NameBySourceIdentity,
 )
 from openhcs.core.axes import Axis, AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
@@ -2334,7 +2334,7 @@ def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, conte
         materialization=MaterializationSpec(
             ImageFileOptions(
                 filename_suffix=".tif",
-                filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+                filename_identity=NameBySourceIdentity,
             )
         ),
     )
@@ -2449,7 +2449,7 @@ def test_declared_image_destinations_publish_and_reconcile_after_value_cleanup(
             materialization=MaterializationSpec(
                 ImageFileOptions(
                     filename_suffix=".tif",
-                    filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+                    filename_identity=NameBySourceIdentity,
                     relative_path_template=f"{directory}/A01_s001_w2_z001_t001.tif",
                 )
             ),
