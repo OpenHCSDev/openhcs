@@ -66,7 +66,7 @@ from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
 
 
 def test_function_parameter_source_owns_runtime_presentation() -> None:
-    assert SuppliedByAgent.runtime_description is None
+    assert SuppliedByAgent.runtime_description == ""
     assert "FunctionStep input image payload" in (
         SuppliedFromPrimaryInput.runtime_description or ""
     )
