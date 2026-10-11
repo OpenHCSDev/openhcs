@@ -5,57 +5,96 @@ from __future__ import annotations
 import hmac
 import os
 import time
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
-from typing import Any, Callable
+from typing import Any, Callable, ClassVar
 from urllib.parse import urlparse
+
+from metaclass_registry import AutoRegisterMeta
 
 
 class McpHttpConfigurationError(ValueError):
     """Raised when hosted MCP security configuration is incomplete or unsafe."""
 
 
-class McpHttpAuthenticationMode(str, Enum):
-    """Authentication contract for one hosted MCP deployment."""
+class McpHttpAuthenticationMode(ABC, metaclass=AutoRegisterMeta):
+    """Authentication contract for one hosted MCP deployment.
 
-    PUBLIC_READ_ONLY = "public_read_only"
-    OAUTH_INTROSPECTION = "oauth_introspection"
+    Each mode is a subclass; ``name`` is its spelling in
+    ``OPENHCS_MCP_HTTP_AUTH_MODE`` and in the hosted plugin packet.
+    """
 
-    @property
-    def requires_oauth(self) -> bool:
-        """Return whether this mode requires the nested OAuth policy."""
-        return self is McpHttpAuthenticationMode.OAUTH_INTROSPECTION
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
 
-    @property
-    def access_qualifier(self) -> str:
-        """Return auth-specific copy without restating capability access."""
-        if self.requires_oauth:
-            return "authenticated, subject-isolated"
-        return "public"
+    name: ClassVar[str | None] = None
+    requires_oauth: ClassVar[bool]
+    """This mode requires the nested OAuth policy."""
+    access_qualifier: ClassVar[str]
+    """Auth-specific copy without restating capability access."""
 
+    @classmethod
+    @abstractmethod
     def tool_security_schemes(
-        self,
+        cls,
         required_scopes: tuple[str, ...],
     ) -> tuple[dict[str, object], ...]:
         """Project this mode into MCP tool security-scheme metadata."""
-        if self.requires_oauth:
-            return (
-                {
-                    "type": "oauth2",
-                    "scopes": list(required_scopes),
-                },
-            )
-        return ({"type": "noauth"},)
 
-    @classmethod
+    @staticmethod
+    def named(name: str) -> type["McpHttpAuthenticationMode"]:
+        """Return the mode spelled ``name``."""
+        mode = McpHttpAuthenticationMode.__registry__.get(name)
+        if mode is None:
+            raise ValueError(
+                "Hosted MCP authentication mode must be one of: "
+                + ", ".join(McpHttpAuthenticationMode.__registry__)
+            )
+        return mode
+
+    @staticmethod
     def from_oauth_policy(
-        cls,
         oauth: "McpHttpOAuthSettings | None",
-    ) -> "McpHttpAuthenticationMode":
+    ) -> type["McpHttpAuthenticationMode"]:
         """Derive the mode from the materialized variant policy."""
         if oauth is None:
-            return cls.PUBLIC_READ_ONLY
-        return cls.OAUTH_INTROSPECTION
+            return PublicReadOnlyAccess
+        return OAuthIntrospectionAccess
+
+
+class PublicReadOnlyAccess(McpHttpAuthenticationMode):
+    """Anyone may call the read-only tools."""
+
+    name = "public_read_only"
+    requires_oauth = False
+    access_qualifier = "public"
+
+    @classmethod
+    def tool_security_schemes(
+        cls,
+        required_scopes: tuple[str, ...],
+    ) -> tuple[dict[str, object], ...]:
+        return ({"type": "noauth"},)
+
+
+class OAuthIntrospectionAccess(McpHttpAuthenticationMode):
+    """Callers present OAuth tokens checked by introspection."""
+
+    name = "oauth_introspection"
+    requires_oauth = True
+    access_qualifier = "authenticated, subject-isolated"
+
+    @classmethod
+    def tool_security_schemes(
+        cls,
+        required_scopes: tuple[str, ...],
+    ) -> tuple[dict[str, object], ...]:
+        return (
+            {
+                "type": "oauth2",
+                "scopes": list(required_scopes),
+            },
+        )
 
 
 def _required_environment(name: str) -> str:
@@ -202,7 +241,7 @@ class McpHttpResourceServerSettings:
             raise McpHttpConfigurationError("bind_port must be between 1 and 65535.")
 
     @property
-    def authentication_mode(self) -> McpHttpAuthenticationMode:
+    def authentication_mode(self) -> type[McpHttpAuthenticationMode]:
         return McpHttpAuthenticationMode.from_oauth_policy(self.oauth)
 
     @property
@@ -236,13 +275,13 @@ class McpHttpResourceServerSettings:
         )
         allowed_hosts = configured_hosts or ((public_host,) if public_host else ())
         try:
-            authentication_mode = McpHttpAuthenticationMode(
+            authentication_mode = McpHttpAuthenticationMode.named(
                 _required_environment("OPENHCS_MCP_HTTP_AUTH_MODE")
             )
         except ValueError as exc:
-            valid_modes = ", ".join(mode.value for mode in McpHttpAuthenticationMode)
             raise McpHttpConfigurationError(
-                "OPENHCS_MCP_HTTP_AUTH_MODE must be one of: " + valid_modes
+                "OPENHCS_MCP_HTTP_AUTH_MODE must be one of: "
+                + ", ".join(McpHttpAuthenticationMode.__registry__)
             ) from exc
         oauth = None
         if authentication_mode.requires_oauth:
