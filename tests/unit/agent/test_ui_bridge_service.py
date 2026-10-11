@@ -15,14 +15,19 @@ from zmqruntime import EndpointApplication, EndpointApplicationCompatibilityErro
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentResourceRef
 from openhcs.agent.dto.ui_bridge import (
+    ActionAccepted,
+    OperationCompleted,
+    OperationFailed,
+    OperationNotFound,
+    OperationRunning,
+    OperationUnavailable,
+    SemanticFields,
     UiActionCatalog,
     UiActionIdentity,
-    UiActionInvocationStatus,
     UiActionInvokeRequest,
     UiActionInvokeResult,
     UiBranchCatalog,
     UiBranchSwitchRequest,
-    UiBridgeOperationStatus,
     UiBridgeConfirmationRequirement,
     UiBridgeConnectionSpec,
     UiBridgeOperationIdentity,
@@ -91,7 +96,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
     UiWindowSummary,
 )
-from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+from openhcs.agent.runtime_platform import AgentRuntimePlatform
 from openhcs.agent.services.ui_bridge_service import (
     UI_BRIDGE_PROTOCOL_VERSION,
     UiBridgeApplyDocumentOperation,
@@ -331,7 +336,7 @@ class _FakeUiBridgeGateway(UiBridgeGatewayABC):
                 widget_id=request.widget_id,
                 action_id=request.action_id,
             ),
-            status=UiActionInvocationStatus.ACCEPTED.value,
+            status=ActionAccepted,
             receipt=UiMutationReceipt(
                 request_token=request.request_token,
                 accepted=True,
@@ -355,7 +360,7 @@ class _FakeUiBridgeGateway(UiBridgeGatewayABC):
                     widget_id=WIDGET_ID,
                     action_id=request.workflow.value,
                 ),
-                status=UiActionInvocationStatus.ACCEPTED.value,
+                status=ActionAccepted,
                 receipt=UiMutationReceipt(
                     request_token=request.request_token,
                     accepted=True,
@@ -880,7 +885,7 @@ def test_ui_bridge_service_resolves_projected_graphical_viewer_launch_context(
 
     monkeypatch.setattr(
         "openhcs.agent.runtime_platform."
-        "LinuxAgentRuntimePlatformAuthority._process_environment",
+        "LinuxRuntimePlatform._process_environment",
         lambda self, pid: (
             {
                 "DISPLAY": ":19",
@@ -1015,7 +1020,7 @@ def test_descriptor_resolver_rejects_dead_process(monkeypatch, tmp_path):
     ).write()
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "process_started_at_unix",
         staticmethod(lambda _pid: None),
     )
@@ -1054,7 +1059,7 @@ def test_descriptor_catalog_removes_dead_process_before_application_compatibilit
         classmethod(lambda cls: ()),
     )
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "process_started_at_unix",
         staticmethod(lambda _pid: None),
     )
@@ -1077,7 +1082,7 @@ def test_descriptor_resolver_rejects_reused_process_identity(monkeypatch, tmp_pa
     descriptor_path.write_text(json.dumps(payload), encoding="utf-8")
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "process_started_at_unix",
         staticmethod(lambda pid: 20.0 if pid == os.getpid() else None),
     )
@@ -1104,7 +1109,7 @@ def test_status_rechecks_descriptor_process_liveness_after_gateway_call(
     process_start_times = iter((descriptor_started_at - 1.0, None))
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
     monkeypatch.setattr(
-        AgentRuntimePlatformAuthority,
+        AgentRuntimePlatform,
         "process_started_at_unix",
         staticmethod(lambda _pid: next(process_start_times)),
     )
@@ -1500,7 +1505,7 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
     assert close_result.closed is True
     assert gateway.close_requests == [UiWindowCloseRequest(window_id=WINDOW_ID)]
     assert (
-        workflow_result.action_result.status == UiActionInvocationStatus.ACCEPTED.value
+        workflow_result.action_result.status is ActionAccepted
     )
     assert gateway.selected_plate_workflow_requests == [
         UiSelectedPlateWorkflowRequest(
@@ -1581,7 +1586,7 @@ def test_widget_action_resolves_accepted_receipt_to_terminal_invocation(
                 operation_id=request.operation_id,
                 route=UiBridgeOperationRoute(operation_name="invoke_widget_action"),
             ),
-            status=UiBridgeOperationStatus.COMPLETED.value,
+            status=OperationCompleted.name,
             started_at_unix=1.0,
             completed_at_unix=2.0,
             outcome="invoked",
@@ -1645,7 +1650,7 @@ def test_widget_action_projects_terminal_operation_failure(
                 operation_id=request.operation_id,
                 route=UiBridgeOperationRoute(operation_name="invoke_widget_action"),
             ),
-            status=UiBridgeOperationStatus.FAILED.value,
+            status=OperationFailed.name,
             started_at_unix=1.0,
             completed_at_unix=2.0,
             outcome="error",
@@ -1823,7 +1828,7 @@ def test_get_object_state_fields_projects_query_from_scope_catalog(
         )
     )
 
-    assert result.field_filter == "semantic"
+    assert result.field_filter is SemanticFields
     assert result.matched_field_count == 1
     assert result.returned_field_count == 1
     assert result.scopes[0].fields[0].field_path == "napari_streaming_config.enabled"
@@ -2073,24 +2078,24 @@ def test_ui_bridge_operation_status_owns_completion_selection():
     }
 
     assert (
-        UiBridgeOperationStatus.RUNNING.select_completion(**choices)
+        OperationRunning.select_completion(**choices)
         is choices["active"]
     )
     assert (
-        UiBridgeOperationStatus.COMPLETED.select_completion(**choices)
+        OperationCompleted.select_completion(**choices)
         is choices["succeeded"]
     )
     for status in (
-        UiBridgeOperationStatus.FAILED,
-        UiBridgeOperationStatus.NOT_FOUND,
-        UiBridgeOperationStatus.UNAVAILABLE,
+        OperationFailed,
+        OperationNotFound,
+        OperationUnavailable,
     ):
         assert status.select_completion(**choices) is choices["failed"]
 
-    assert UiBridgeOperationStatus.RUNNING.is_terminal is False
-    assert UiBridgeOperationStatus.COMPLETED.is_terminal is True
-    assert UiBridgeOperationStatus.RUNNING.live_overview_severity == "info"
-    assert UiBridgeOperationStatus.FAILED.live_overview_severity == "error"
+    assert OperationRunning.is_terminal is False
+    assert OperationCompleted.is_terminal is True
+    assert OperationRunning.live_overview_severity == "info"
+    assert OperationFailed.live_overview_severity == "error"
 
 
 def test_ui_requests_own_mcp_tool_argument_projection():

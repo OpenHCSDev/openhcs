@@ -11,7 +11,7 @@ from concurrent.futures import CancelledError
 from dataclasses import dataclass, replace
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from pyqt_reactive.services.help_document import HelpDocument
 from pyqt_reactive.services.parameter_help_service import (
@@ -30,15 +30,15 @@ from zmqruntime import OperationCancellation
 import openhcs.processing.custom_functions.manager as custom_function_manager
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.functions import (
-    DEFAULT_FUNCTION_DETAIL_DOC_CHARS,
     CellProfilerArtifactBindingSummary,
     CellProfilerModuleDeclarationSummary,
     CustomFunctionRegistrationDestination,
     CustomFunctionRegistrationDestinationRequest,
-    CustomFunctionRegistrationRequest,
-    CustomFunctionRegistrationResult,
     CustomFunctionRegistrationHandle,
     CustomFunctionRegistrationObservation,
+    CustomFunctionRegistrationRequest,
+    CustomFunctionRegistrationResult,
+    DEFAULT_FUNCTION_DETAIL_DOC_CHARS,
     FunctionArtifactSpec,
     FunctionCatalogEntry,
     FunctionCatalogPage,
@@ -46,6 +46,11 @@ from openhcs.agent.dto.functions import (
     FunctionParameterSource,
     FunctionParameterSpec,
     FunctionRuntimeContractSummary,
+    SuppliedAsRuntimeAdapter,
+    SuppliedByAgent,
+    SuppliedByRuntime,
+    SuppliedFromArtifactInput,
+    SuppliedFromPrimaryInput,
     catalog_page,
 )
 from openhcs.agent.exceptions import AgentFacingErrorMixin
@@ -82,35 +87,85 @@ class UnknownFunctionIdError(FunctionCatalogError):
         super().__init__(f"Unknown OpenHCS function_id: {function_id}")
 
 
-class CatalogSearchRank(Enum):
-    ALL_PASS = 0
-    EXACT_NAME = 10
-    PREFIX_NAME = 20
-    NAME_CONTAINS = 30
-    ID_CONTAINS = 40
-    IMPORT_CONTAINS = 50
-    TAG_CONTAINS = 60
-    PARAMETER_CONTAINS = 70
-    SUMMARY_CONTAINS = 80
-    DOC_CONTAINS = 90
-    NO_MATCH = 1000
+class CatalogSearchRank(ABC):
+    """Which catalog text a search matched; lower ``order`` ranks first."""
 
-    @property
-    def matched(self) -> bool:
-        return self is not CatalogSearchRank.NO_MATCH
+    order: ClassVar[int]
+    matched: ClassVar[bool] = True
 
 
-class SignatureView(Enum):
-    FULL = 10000
-    COMPACT = 4
+class AllPass(CatalogSearchRank):
+    order = 0
 
-    @property
-    def parameter_limit(self) -> int:
-        return self.value
 
-    @property
-    def compact(self) -> bool:
-        return self is SignatureView.COMPACT
+class ExactName(CatalogSearchRank):
+    order = 10
+
+
+class PrefixName(CatalogSearchRank):
+    order = 20
+
+
+class NameContains(CatalogSearchRank):
+    order = 30
+
+
+class IdContains(CatalogSearchRank):
+    order = 40
+
+
+class ImportContains(CatalogSearchRank):
+    order = 50
+
+
+class TagContains(CatalogSearchRank):
+    order = 60
+
+
+class ParameterContains(CatalogSearchRank):
+    order = 70
+
+
+class SummaryContains(CatalogSearchRank):
+    order = 80
+
+
+class DocContains(CatalogSearchRank):
+    order = 90
+
+
+class NoMatch(CatalogSearchRank):
+    order = 1000
+    matched = False
+
+
+class SignatureView(ABC):
+    """How much of a callable signature a catalog entry shows."""
+
+    @classmethod
+    @abstractmethod
+    def render(cls, signature: inspect.Signature, display_name: str) -> str:
+        """Render ``signature`` under ``display_name``."""
+
+
+class FullSignature(SignatureView):
+    @classmethod
+    def render(cls, signature: inspect.Signature, display_name: str) -> str:
+        return f"{display_name}{signature}"
+
+
+class CompactSignature(SignatureView):
+    parameter_limit: ClassVar[int] = 4
+
+    @classmethod
+    def render(cls, signature: inspect.Signature, display_name: str) -> str:
+        visible_parameters = tuple(signature.parameters.values())
+        if len(visible_parameters) <= cls.parameter_limit:
+            return f"{display_name}{signature}"
+        parameter_names = ", ".join(
+            parameter.name for parameter in visible_parameters[: cls.parameter_limit]
+        )
+        return f"{display_name}({parameter_names}, ...)"
 
 
 class AgentFunctionSearchPolicy:
@@ -201,11 +256,6 @@ class CatalogFilterText:
             _normalized_search_text(value) for value in (library, *backend_tags)
         }
 
-    def search_rank(
-        self, entry: FunctionCatalogEntry, metadata: FunctionMetadata
-    ) -> CatalogSearchRank:
-        return self.search_match(entry, metadata).rank
-
     def search_match(
         self,
         entry: FunctionCatalogEntry,
@@ -213,28 +263,28 @@ class CatalogFilterText:
         parameters: tuple[FunctionParameterSpec, ...] = (),
     ) -> "CatalogTextMatch":
         if not self.text:
-            return CatalogTextMatch(CatalogSearchRank.ALL_PASS, 0)
+            return CatalogTextMatch(AllPass, 0)
         name_text = _normalized_search_text(entry.name)
         function_id_text = _normalized_search_text(entry.function_id)
         import_path_text = _normalized_search_text(entry.import_path)
         tag_text = _normalized_search_text(" ".join(entry.backend_tags))
         if name_text == self.text:
-            return CatalogTextMatch(CatalogSearchRank.EXACT_NAME, 10000)
+            return CatalogTextMatch(ExactName, 10000)
         if name_text.startswith(self.text):
-            return CatalogTextMatch(CatalogSearchRank.PREFIX_NAME, 9000)
+            return CatalogTextMatch(PrefixName, 9000)
         matches = []
         for rank, value in (
-            (CatalogSearchRank.NAME_CONTAINS, name_text),
-            (CatalogSearchRank.ID_CONTAINS, function_id_text),
-            (CatalogSearchRank.IMPORT_CONTAINS, import_path_text),
-            (CatalogSearchRank.TAG_CONTAINS, tag_text),
+            (NameContains, name_text),
+            (IdContains, function_id_text),
+            (ImportContains, import_path_text),
+            (TagContains, tag_text),
             (
-                CatalogSearchRank.PARAMETER_CONTAINS,
+                ParameterContains,
                 _parameter_search_text(parameters),
             ),
-            (CatalogSearchRank.SUMMARY_CONTAINS, entry.summary or ""),
+            (SummaryContains, entry.summary or ""),
             (
-                CatalogSearchRank.DOC_CONTAINS,
+                DocContains,
                 PARAMETER_DOCUMENTATION_POLICY.detail_doc(metadata.func, metadata.doc) or "",
             ),
         ):
@@ -242,8 +292,8 @@ class CatalogFilterText:
             if score:
                 matches.append(CatalogTextMatch(rank, score))
         if not matches:
-            return CatalogTextMatch(CatalogSearchRank.NO_MATCH, 0)
-        return min(matches, key=lambda match: (-match.score, match.rank.value))
+            return CatalogTextMatch(NoMatch, 0)
+        return min(matches, key=lambda match: (-match.score, match.rank.order))
 
     def _matches_text(self, value: str) -> bool:
         return self._text_score(value) > 0
@@ -286,7 +336,7 @@ class CatalogFilterText:
 
 @dataclass(frozen=True, slots=True)
 class CatalogTextMatch:
-    rank: CatalogSearchRank
+    rank: type[CatalogSearchRank]
     score: int
 
     @property
@@ -294,22 +344,34 @@ class CatalogTextMatch:
         return self.rank.matched
 
 
-class SummaryView(Enum):
-    FULL = 10000
-    COMPACT = 180
+class SummaryView(ABC):
+    """How much of a callable summary a catalog entry shows."""
 
-    @property
-    def character_limit(self) -> int:
-        return self.value
+    @classmethod
+    @abstractmethod
+    def bounded(cls, text: str) -> str:
+        """Return ``text`` as this view shows it."""
 
-    @property
-    def compact(self) -> bool:
-        return self is SummaryView.COMPACT
+
+class FullSummary(SummaryView):
+    @classmethod
+    def bounded(cls, text: str) -> str:
+        return text
+
+
+class CompactSummary(SummaryView):
+    character_limit: ClassVar[int] = 180
+
+    @classmethod
+    def bounded(cls, text: str) -> str:
+        if len(text) <= cls.character_limit:
+            return text
+        return f"{text[: cls.character_limit - 3].rstrip()}..."
 
 
 @dataclass(frozen=True, slots=True)
 class CatalogSearchCandidate:
-    rank: CatalogSearchRank
+    rank: type[CatalogSearchRank]
     score: int
     entry: FunctionCatalogEntry
 
@@ -317,7 +379,7 @@ class CatalogSearchCandidate:
     def sort_key(self) -> tuple[int, int, str, str]:
         return (
             -self.score,
-            self.rank.value,
+            self.rank.order,
             self.entry.name.casefold(),
             self.entry.function_id,
         )
@@ -365,7 +427,7 @@ class ParameterDocumentationPolicy:
         self,
         func: Callable,
         metadata_doc: str | None,
-        view: SummaryView,
+        view: type[SummaryView],
         contract: CallableContract | None = None,
     ) -> str | None:
         doc = self.detail_doc(func, metadata_doc, contract)
@@ -374,7 +436,7 @@ class ParameterDocumentationPolicy:
         for line in doc.splitlines():
             stripped = line.strip()
             if stripped:
-                return _bounded_summary(stripped, view)
+                return view.bounded(stripped)
         return None
 
     def should_document(
@@ -404,25 +466,10 @@ class ParameterDocumentationPolicy:
                 if self.should_document(
                     name, parameter, skip_keyword_bag=True, hidden_names=hidden_names
                 )
-                and supplied_by.get(name) is FunctionParameterSource.AGENT
+                and supplied_by[name].agent_supplied
             )
         )
         return sig.replace(parameters=visible_parameters)
-
-    @staticmethod
-    def render_signature(
-        signature: inspect.Signature, display_name: str, view: SignatureView
-    ) -> str:
-        visible_parameters = tuple(signature.parameters.values())
-        if view.compact and len(visible_parameters) > view.parameter_limit:
-            parameter_names = ", ".join(
-                (
-                    parameter.name
-                    for parameter in visible_parameters[: view.parameter_limit]
-                )
-            )
-            return f"{display_name}({parameter_names}, ...)"
-        return f"{display_name}{signature}"
 
     def parameter_specs(
         self, func: Callable, contract: CallableContract | None = None
@@ -441,7 +488,7 @@ class ParameterDocumentationPolicy:
                     name=name,
                     annotation=_format_annotation(parameter.annotation),
                     default_repr=_format_default(parameter.default),
-                    required=supplier is FunctionParameterSource.AGENT
+                    required=supplier.agent_supplied
                     and parameter.default is inspect.Parameter.empty,
                     supplied_by=supplier,
                     description=self.parameter_description(
@@ -476,7 +523,7 @@ class ParameterDocumentationPolicy:
                 name
                 for name, parameter in sig.parameters.items()
                 if self.should_document(name, parameter, hidden_names=hidden_names)
-                and supplied_by[name] is FunctionParameterSource.AGENT
+                and supplied_by[name].agent_supplied
             )
         )
         runtime_names = (
@@ -498,26 +545,26 @@ class ParameterDocumentationPolicy:
         callable_contract = contract or CallableContract.from_callable(func)
         hidden_names = parameter_exclusions(func)
         supplied_by = {
-            name: FunctionParameterSource.AGENT
+            name: SuppliedByAgent
             for name, parameter in sig.parameters.items()
             if self.should_document(name, parameter)
         }
         for name in hidden_names:
             if name in supplied_by:
-                supplied_by[name] = FunctionParameterSource.RUNTIME_PARAMETER
+                supplied_by[name] = SuppliedByRuntime
         primary_input_name = callable_contract.primary_input_parameter_name
         if primary_input_name in supplied_by:
-            supplied_by[primary_input_name] = FunctionParameterSource.PRIMARY_INPUT
+            supplied_by[primary_input_name] = SuppliedFromPrimaryInput
         for name in callable_contract.artifact_input_parameter_names:
             if name in supplied_by:
-                supplied_by[name] = FunctionParameterSource.ARTIFACT_INPUT
+                supplied_by[name] = SuppliedFromArtifactInput
         for name in callable_contract.runtime_bound_parameters:
             if name in supplied_by:
-                supplied_by[name] = FunctionParameterSource.RUNTIME_PARAMETER
+                supplied_by[name] = SuppliedByRuntime
         runtime_context_parameter = callable_contract.runtime_context_parameter
         if runtime_context_parameter in supplied_by:
             supplied_by[runtime_context_parameter] = (
-                FunctionParameterSource.RUNTIME_PARAMETER
+                SuppliedByRuntime
             )
         runtime_adapter = callable_contract.runtime_adapter
         if (
@@ -525,7 +572,7 @@ class ParameterDocumentationPolicy:
             and runtime_adapter.parameter_name in supplied_by
         ):
             supplied_by[runtime_adapter.parameter_name] = (
-                FunctionParameterSource.RUNTIME_ADAPTER
+                SuppliedAsRuntimeAdapter
             )
         return supplied_by
 
@@ -584,11 +631,11 @@ class FunctionCatalogServiceABC(ABC):
     ) -> None:
         """Prepare both public views against the implementation's authority."""
         while True:
-            for signature_view in SignatureView:
+            for compact_signatures in (False, True):
                 if cancellation is not None and cancellation.requested():
                     raise CancelledError
                 self.catalog(
-                    compact_signatures=signature_view.compact,
+                    compact_signatures=compact_signatures,
                     status_callback=status_callback,
                     cancellation=cancellation,
                 )
@@ -934,7 +981,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                 metadata.func, contract
             )
             entry = self._entry(
-                function_id, metadata, SignatureView.FULL, SummaryView.FULL,
+                function_id, metadata, FullSignature, FullSummary,
                 contract=contract, visible_signature=signature,
             )
             projections.append(
@@ -947,12 +994,10 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                     ),
                     compact_entry=replace(
                         entry,
-                        signature=PARAMETER_DOCUMENTATION_POLICY.render_signature(
-                            signature, entry.name, SignatureView.COMPACT
-                        ),
+                        signature=CompactSignature.render(signature, entry.name),
                         summary=(
                             None if entry.summary is None
-                            else _bounded_summary(entry.summary, SummaryView.COMPACT)
+                            else CompactSummary.bounded(entry.summary)
                         ),
                     ),
                 )
@@ -988,9 +1033,9 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                 function_id,
                 metadata,
                 signature_view=(
-                    SignatureView.COMPACT if compact_signature else SignatureView.FULL
+                    CompactSignature if compact_signature else FullSignature
                 ),
-                summary_view=SummaryView.COMPACT,
+                summary_view=CompactSummary,
                 contract=contract,
             ),
             parameters=PARAMETER_DOCUMENTATION_POLICY.parameter_specs(func, contract),
@@ -1109,8 +1154,8 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         self,
         function_id: str,
         metadata: FunctionMetadata,
-        signature_view: SignatureView = SignatureView.FULL,
-        summary_view: SummaryView = SummaryView.FULL,
+        signature_view: type[SignatureView] = FullSignature,
+        summary_view: type[SummaryView] = FullSummary,
         contract: CallableContract | None = None,
         visible_signature: inspect.Signature | None = None,
     ) -> FunctionCatalogEntry:
@@ -1122,9 +1167,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             visible_signature = PARAMETER_DOCUMENTATION_POLICY.visible_signature(
                 metadata.func, callable_contract
             )
-        signature = PARAMETER_DOCUMENTATION_POLICY.render_signature(
-            visible_signature, name, signature_view
-        )
+        signature = signature_view.render(visible_signature, name)
         summary = PARAMETER_DOCUMENTATION_POLICY.summary(
             metadata.func, metadata.doc, summary_view, callable_contract
         )
@@ -1160,14 +1203,6 @@ def _format_default(default) -> str | None:
     if isinstance(default, Enum):
         return f"{type(default).__name__}.{default.name}"
     return repr(default)
-
-
-def _bounded_summary(text: str, view: SummaryView) -> str:
-    if not view.compact:
-        return text
-    if len(text) <= view.character_limit:
-        return text
-    return f"{text[: view.character_limit - 3].rstrip()}..."
 
 
 def _import_path(module: str, name: str) -> str:

@@ -476,7 +476,7 @@ def _mcp_server_health() -> McpServerHealthResult:
         server_current_mtime_ns=current_source_mtime_ns,
         server_source_changed_since_import=bool(stale_source_paths),
         stale_source_paths=tuple(str(source_path) for source_path in stale_source_paths),
-        recovery_reason=recovery.reason.value,
+        recovery_reason=recovery.reason.name,
         installation_pointer_path=recovery.installation_pointer_path,
         installation_pointer_changed_since_import=(
             recovery.installation_pointer_changed_since_import
@@ -907,7 +907,7 @@ def _mcp_server_stale_error(tool_name: str) -> JsonValue:
             stale_source_paths=tuple(
                 str(source_path) for source_path in stale_source_paths
             ),
-            recovery_reason=recovery.reason.value,
+            recovery_reason=recovery.reason.name,
             installation_pointer_path=recovery.installation_pointer_path,
             installation_pointer_changed_since_import=(
                 recovery.installation_pointer_changed_since_import

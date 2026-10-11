@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
-from enum import Enum, nonmember
+from enum import Enum
 from math import isfinite
-from typing import TYPE_CHECKING, ClassVar, TypeVar, cast
+from typing import TYPE_CHECKING, ClassVar, TypeVar
 
+from metaclass_registry import AutoRegisterMeta
 from objectstate import DottedFieldPath
 from pyqt_reactive.services.widget_tree_projection_config import (
     COMPACT_FIELD_PROJECTION_METADATA_KEY,
@@ -155,75 +157,72 @@ UiWidgetId = _identity_enum("UiWidgetId", UiWidgetIdentityDeclaration)
 UiSelectedPlateWorkflowKind = _dataset_workflow_enum()
 
 
-class UiBridgeOperationStatus(str, Enum):
-    """Closed operation state with declaration-owned completion semantics."""
+class UiBridgeOperationStatus(ABC, metaclass=AutoRegisterMeta):
+    """State of one bridge operation; each state is a subclass.
 
-    is_terminal: bool
-    live_overview_severity: str
-    _completion_selector: Callable[[object, object, object], object]
+    ``name`` is the state's spelling in ``UiBridgeOperationRef.status``. A
+    state that is not running or completed failed: it is terminal, reported as
+    an error, and selects the caller's failed output.
+    """
 
-    _select_active = nonmember(lambda active, _succeeded, _failed: active)
-    _select_succeeded = nonmember(lambda _active, succeeded, _failed: succeeded)
-    _select_failed = nonmember(lambda _active, _succeeded, failed: failed)
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
 
-    RUNNING = (
-        "running",
-        False,
-        UiLiveOverviewSeverity.INFO.value,
-        _select_active,
-    )
-    COMPLETED = (
-        "completed",
-        True,
-        UiLiveOverviewSeverity.INFO.value,
-        _select_succeeded,
-    )
-    FAILED = (
-        "failed",
-        True,
-        UiLiveOverviewSeverity.ERROR.value,
-        _select_failed,
-    )
-    NOT_FOUND = (
-        "not_found",
-        True,
-        UiLiveOverviewSeverity.ERROR.value,
-        _select_failed,
-    )
-    UNAVAILABLE = (
-        "unavailable",
-        True,
-        UiLiveOverviewSeverity.ERROR.value,
-        _select_failed,
-    )
+    name: ClassVar[str | None] = None
+    is_terminal: ClassVar[bool] = True
+    live_overview_severity: ClassVar[str] = UiLiveOverviewSeverity.ERROR.value
 
-    def __new__(
-        cls,
-        value: str,
-        is_terminal: bool,
-        live_overview_severity: str,
-        completion_selector: Callable[[object, object, object], object],
-    ) -> "UiBridgeOperationStatus":
-        member = str.__new__(cls, value)
-        member._value_ = value
-        member.is_terminal = is_terminal
-        member.live_overview_severity = live_overview_severity
-        member._completion_selector = completion_selector
-        return member
+    @staticmethod
+    def named(name: str) -> type["UiBridgeOperationStatus"]:
+        """Return the state spelled ``name``; ``ValueError`` when unknown."""
 
+        status = UiBridgeOperationStatus.__registry__.get(name)
+        if status is None:
+            raise ValueError(f"Unknown UI bridge operation status {name!r}.")
+        return status
+
+    @classmethod
     def select_completion(
-        self,
+        cls,
         *,
         active: _UiBridgeOperationSelectionT,
         succeeded: _UiBridgeOperationSelectionT,
         failed: _UiBridgeOperationSelectionT,
     ) -> _UiBridgeOperationSelectionT:
-        """Select caller-owned output through this status member's leaf."""
+        """Select caller-owned output for this state."""
 
-        return cast(
-            _UiBridgeOperationSelectionT,
-            self._completion_selector(active, succeeded, failed),
-        )
+        return failed
+
+
+class OperationRunning(UiBridgeOperationStatus):
+    name = "running"
+    is_terminal = False
+    live_overview_severity = UiLiveOverviewSeverity.INFO.value
+
+    @classmethod
+    def select_completion(cls, *, active, succeeded, failed):
+        return active
+
+
+class OperationCompleted(UiBridgeOperationStatus):
+    name = "completed"
+    live_overview_severity = UiLiveOverviewSeverity.INFO.value
+
+    @classmethod
+    def select_completion(cls, *, active, succeeded, failed):
+        return succeeded
+
+
+class OperationFailed(UiBridgeOperationStatus):
+    name = "failed"
+
+
+class OperationNotFound(UiBridgeOperationStatus):
+    name = "not_found"
+
+
+class OperationUnavailable(UiBridgeOperationStatus):
+    name = "unavailable"
 
 
 if TYPE_CHECKING:
@@ -320,15 +319,86 @@ class UiObjectStateScopeVisibility:
         return cls()
 
 
-class UiObjectStateFieldFilter(str, Enum):
-    """Agent-facing filters over existing ObjectState field semantics."""
+class UiObjectStateFieldFilter(ABC, metaclass=AutoRegisterMeta):
+    """Agent-facing filter over existing ObjectState field semantics.
 
-    ALL = "all"
-    DIRTY = "dirty"
-    DEFAULT_DIFF = "default_diff"
-    INHERITED = "inherited"
-    RAW_RESOLVED = "raw_resolved"
-    SEMANTIC = "semantic"
+    Each filter is a subclass; ``name`` is its spelling in tool arguments.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str | None] = None
+    keeps_every_field: ClassVar[bool] = False
+
+    @staticmethod
+    def named(name: str) -> type["UiObjectStateFieldFilter"]:
+        field_filter = UiObjectStateFieldFilter.__registry__.get(name)
+        if field_filter is None:
+            raise ValueError(
+                f"Unsupported ObjectState field filter {name!r}; expected one of "
+                f"{tuple(UiObjectStateFieldFilter.__registry__)!r}."
+            )
+        return field_filter
+
+    @classmethod
+    @abstractmethod
+    def matches(cls, field: "UiObjectStateFieldSummary") -> bool:
+        """Return whether ``field`` passes this filter."""
+
+
+class AllFields(UiObjectStateFieldFilter):
+    name = "all"
+    keeps_every_field = True
+
+    @classmethod
+    def matches(cls, field: "UiObjectStateFieldSummary") -> bool:
+        return True
+
+
+class DirtyFields(UiObjectStateFieldFilter):
+    name = "dirty"
+
+    @classmethod
+    def matches(cls, field: "UiObjectStateFieldSummary") -> bool:
+        return field.dirty
+
+
+class DefaultDiffFields(UiObjectStateFieldFilter):
+    name = "default_diff"
+
+    @classmethod
+    def matches(cls, field: "UiObjectStateFieldSummary") -> bool:
+        return field.signature_diff
+
+
+class InheritedFields(UiObjectStateFieldFilter):
+    name = "inherited"
+
+    @classmethod
+    def matches(cls, field: "UiObjectStateFieldSummary") -> bool:
+        return field.inherited_value
+
+
+class RawResolvedFields(UiObjectStateFieldFilter):
+    name = "raw_resolved"
+
+    @classmethod
+    def matches(cls, field: "UiObjectStateFieldSummary") -> bool:
+        return field.raw_value_is_none != field.resolved_value_is_none
+
+
+class SemanticFields(UiObjectStateFieldFilter):
+    name = "semantic"
+
+    @classmethod
+    def matches(cls, field: "UiObjectStateFieldSummary") -> bool:
+        return (
+            field.dirty
+            or field.signature_diff
+            or field.inherited_value
+            or RawResolvedFields.matches(field)
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -339,7 +409,7 @@ class UiObjectStateFieldListOptions:
     include_field_values: bool = False
     include_field_descriptions: bool = False
     field_paths: tuple[str, ...] = ()
-    field_filter: UiObjectStateFieldFilter = UiObjectStateFieldFilter.ALL
+    field_filter: type[UiObjectStateFieldFilter] = AllFields
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -959,10 +1029,27 @@ class UiStateSurfaceDocument(
     payload: JsonObject
 
 
-class UiActionInvocationStatus(str, Enum):
-    ACCEPTED = "accepted"
-    REJECTED = "rejected"
-    UNAVAILABLE = "unavailable"
+class UiActionInvocationStatus(ABC, metaclass=AutoRegisterMeta):
+    """Whether the UI took a requested action; ``name`` is its wire spelling."""
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str | None] = None
+    accepted: ClassVar[bool] = False
+
+
+class ActionAccepted(UiActionInvocationStatus):
+    name = "accepted"
+    accepted = True
+
+
+class ActionRejected(UiActionInvocationStatus):
+    name = "rejected"
+
+
+class ActionUnavailable(UiActionInvocationStatus):
+    name = "unavailable"
 
 
 class UiWidgetActionInvocationOutcome(str, Enum):
@@ -1219,7 +1306,7 @@ class UiActionInvokeRequest(
 class UiActionInvokeResult:
     schema_version: str
     identity: UiActionIdentity
-    status: str
+    status: type[UiActionInvocationStatus]
     receipt: UiMutationReceipt
     target_scope_ids: tuple[str, ...] = ()
     selection_revision_token: str | None = None
@@ -1247,10 +1334,6 @@ class UiWindowManagerScope:
     @classmethod
     def from_identity(cls, identity: UiWindowIdentity) -> "UiWindowManagerScope":
         return cls(value=identity.window_id)
-
-
-class UiWindowSemanticMarker(str, Enum):
-    ERROR_DIALOG = "error_dialog"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1283,6 +1366,8 @@ class UiWindowSummary(UiWindowSemanticCarrier):
     visible: bool
     focusable: bool
     manager_scope: UiWindowManagerScope | None = None
+    error_dialog: bool = False
+    """The window is a critical message box reporting an error."""
 
     @property
     def window_id(self) -> str:
@@ -1792,9 +1877,9 @@ class UiWidgetActionInvokeResult(
         """Resolve an accepted placeholder from its authoritative operation."""
 
         try:
-            status = UiBridgeOperationStatus(operation.status)
+            status = UiBridgeOperationStatus.named(operation.status)
         except ValueError:
-            status = UiBridgeOperationStatus.UNAVAILABLE
+            status = OperationUnavailable
         try:
             outcome = (
                 UiWidgetActionInvocationOutcome(operation.outcome)
@@ -1804,7 +1889,7 @@ class UiWidgetActionInvokeResult(
         except ValueError:
             outcome = None
         errors = operation.errors
-        if status is UiBridgeOperationStatus.COMPLETED and outcome is None:
+        if status is OperationCompleted and outcome is None:
             errors = (
                 *errors,
                 AgentError(
@@ -1817,7 +1902,7 @@ class UiWidgetActionInvokeResult(
             )
         invoked = (
             outcome.invoked
-            if status is UiBridgeOperationStatus.COMPLETED and outcome is not None
+            if status is OperationCompleted and outcome is not None
             else False
         )
         return replace(
@@ -2085,7 +2170,7 @@ class UiObjectStateScopeListRequest(
     include_field_values: bool = False
     include_field_descriptions: bool = False
     field_paths: tuple[str, ...] = ()
-    field_filter: UiObjectStateFieldFilter = UiObjectStateFieldFilter.ALL
+    field_filter: type[UiObjectStateFieldFilter] = AllFields
 
     @classmethod
     def from_visibility_options(
@@ -2115,7 +2200,7 @@ class UiObjectStateScopeListRequest(
         include_system_scopes: bool = False,
         include_fields: bool = False,
         include_field_values: bool = False,
-        field_filter: str = UiObjectStateFieldFilter.ALL.value,
+        field_filter: str = AllFields.name,
         field_limit: int = 200,
         field_offset: int = 0,
     ) -> "UiObjectStateScopeListRequest":
@@ -2128,7 +2213,7 @@ class UiObjectStateScopeListRequest(
                 include_field_values=include_field_values,
                 field_limit=field_limit,
                 field_offset=field_offset,
-                field_filter=UiObjectStateFieldFilter(field_filter),
+                field_filter=UiObjectStateFieldFilter.named(field_filter),
             ),
             scope_ids=tuple(scope_ids),
         )
@@ -2155,7 +2240,7 @@ class UiObjectStateScopeListRequest(
             "include_system_scopes": self.include_system_scopes,
             "include_fields": self.include_fields,
             "include_field_values": self.include_field_values,
-            "field_filter": self.field_filter.value,
+            "field_filter": self.field_filter.name,
             "field_limit": self.field_limit,
             "field_offset": self.field_offset,
         }
@@ -2196,7 +2281,7 @@ class UiObjectStateFieldListResult(AgentResultEnvelope):
     requested_scope_ids: tuple[str, ...]
     field_paths: tuple[str, ...]
     field_path_contains: tuple[str, ...]
-    field_filter: str
+    field_filter: type[UiObjectStateFieldFilter]
     include_container_fields: bool
     matched_scope_count: int
     matched_field_count: int
@@ -2220,7 +2305,7 @@ class UiObjectStateFieldListQuery(AgentCliRequest):
     include_system_scopes: bool = False
     include_clean_fields: bool = True
     include_container_fields: bool = False
-    field_filter: UiObjectStateFieldFilter = UiObjectStateFieldFilter.ALL
+    field_filter: type[UiObjectStateFieldFilter] = AllFields
     include_field_values: bool = False
     field_limit: int = 200
     field_offset: int = 0
@@ -2238,7 +2323,7 @@ class UiObjectStateFieldListQuery(AgentCliRequest):
         include_system_scopes: bool = False,
         include_clean_fields: bool = True,
         include_container_fields: bool = False,
-        field_filter: str = UiObjectStateFieldFilter.ALL.value,
+        field_filter: str = AllFields.name,
         include_field_values: bool = False,
         field_limit: int = 200,
         field_offset: int = 0,
@@ -2253,7 +2338,7 @@ class UiObjectStateFieldListQuery(AgentCliRequest):
             include_system_scopes=include_system_scopes,
             include_clean_fields=include_clean_fields,
             include_container_fields=include_container_fields,
-            field_filter=UiObjectStateFieldFilter(field_filter),
+            field_filter=UiObjectStateFieldFilter.named(field_filter),
             include_field_values=include_field_values,
             field_limit=field_limit,
             field_offset=field_offset,
@@ -2324,7 +2409,7 @@ class UiObjectStateFieldListQuery(AgentCliRequest):
             "include_system_scopes": self.include_system_scopes,
             "include_clean_fields": self.include_clean_fields,
             "include_container_fields": self.include_container_fields,
-            "field_filter": self.field_filter.value,
+            "field_filter": self.field_filter.name,
             "include_field_values": self.include_field_values,
             "field_limit": self.field_limit,
             "field_offset": self.field_offset,

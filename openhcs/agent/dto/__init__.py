@@ -277,7 +277,6 @@ __all__ = lazy_exports(
             "UiWindowFocusResult",
             "UiWindowIdentity",
             "UiWindowManagerScope",
-            "UiWindowSemanticMarker",
             "UiWindowNavigateRequest",
             "UiWindowNavigateResult",
             "UiWindowOpenPolicy",

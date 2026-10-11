@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from openhcs.agent.dto.ui_bridge import (
     UiCatalogPageMetadata,
-    UiObjectStateFieldFilter,
     UiObjectStateFieldHelpResult,
     UiObjectStateFieldListResult,
     UiObjectStateFieldMutationResult,
@@ -255,8 +254,8 @@ class ObjectStateFieldRenderer(ObjectStatePresentation):
             filters.append("field_paths=" + ",".join(payload.field_paths))
         if payload.field_path_contains:
             filters.append("contains=" + ",".join(payload.field_path_contains))
-        if payload.field_filter != UiObjectStateFieldFilter.ALL.value:
-            filters.append(f"field_filter={payload.field_filter}")
+        if not payload.field_filter.keeps_every_field:
+            filters.append(f"field_filter={payload.field_filter.name}")
         if payload.include_container_fields:
             filters.append("include_container_fields=True")
         return ("Filters: " + " ".join(filters),) if filters else ()

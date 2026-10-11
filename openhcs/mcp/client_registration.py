@@ -16,16 +16,19 @@ import sys
 import tempfile
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import asdict, dataclass
-from enum import Enum
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, ClassVar
 
 import tomlkit
-from metaclass_registry import AutoRegisterMeta
+from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 from tomlkit.items import InlineTable
 
-from openhcs.agent.runtime_platform import AgentRuntimePlatformKey
+from openhcs.agent.runtime_platform import (
+    AgentRuntimePlatform,
+    MacOSRuntimePlatform,
+    WindowsRuntimePlatform,
+)
 from openhcs.agent.skill_bundle import path_is_redirected
 from openhcs.agent.skill_sync import (
     SkillSyncPartialFailure,
@@ -34,20 +37,43 @@ from openhcs.agent.skill_sync import (
     installed_skill_bundle,
     sync_skills,
 )
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 
 CLIENT_REGISTRATION_SCHEMA_VERSION = "openhcs.mcp.client-registration.v1"
 OPENHCS_MCP_SERVER_NAME = "openhcs"
 _CONFIG_MODE = 0o600
 
 
-class ClientRegistrationStatus(str, Enum):
-    """Stable installer-facing result status."""
+class ClientRegistrationStatus(ABC, metaclass=AutoRegisterMeta):
+    """Installer-facing outcome of registering one client.
 
-    REGISTERED = "registered"
-    UPDATED = "updated"
-    UNCHANGED = "unchanged"
-    FAILED = "failed"
+    Each outcome is a subclass; ``name`` is its spelling in the installer
+    report.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str | None] = None
+    failed: ClassVar[bool] = False
+    """Registration did not happen; the report counts this result as failed."""
+
+
+class ClientRegistered(ClientRegistrationStatus):
+    name = "registered"
+
+
+class ClientUpdated(ClientRegistrationStatus):
+    name = "updated"
+
+
+class ClientUnchanged(ClientRegistrationStatus):
+    name = "unchanged"
+
+
+class ClientRegistrationFailed(ClientRegistrationStatus):
+    name = "failed"
+    failed = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,7 +109,7 @@ class ClientRegistrationEnvironment:
 
     home: Path
     environ: Mapping[str, str]
-    platform_key: AgentRuntimePlatformKey
+    platform: type[AgentRuntimePlatform]
     executable_resolver: ExecutableResolver
     process_runner: ProcessRunner
 
@@ -93,7 +119,7 @@ class ClientRegistrationEnvironment:
         return cls(
             home=Path.home(),
             environ=dict(os.environ),
-            platform_key=AgentRuntimePlatformKey.current(),
+            platform=AgentRuntimePlatform.current_type(),
             executable_resolver=shutil.which,
             process_runner=subprocess.run,
         )
@@ -108,14 +134,15 @@ class ClientRegistrationEnvironment:
 
 
 class ClaudeDesktopPlatformSemanticsABC(
-    EnumKeyedStrategyMixin[AgentRuntimePlatformKey],
+    NominalTypeKeyedStrategyMixin,
     ABC,
     metaclass=AutoRegisterMeta,
 ):
     """Registered owner of Claude Desktop paths for one supported platform."""
 
-    __enum_member_attr__ = "platform_key"
-    platform_key: ClassVar[AgentRuntimePlatformKey]
+    value_type: ClassVar[type[AgentRuntimePlatform] | None] = None
+    value_type_label: ClassVar[str | None] = None
+    __registry_family__ = RegistryFamily(RegistryKeyAttribute.VALUE_TYPE_LABEL)
 
     @abstractmethod
     def config_path(self, environment: ClientRegistrationEnvironment) -> Path:
@@ -141,7 +168,7 @@ class ClaudeDesktopPlatformSemanticsABC(
 class WindowsClaudeDesktopPlatformSemantics(ClaudeDesktopPlatformSemanticsABC):
     """Claude Desktop configuration and installation paths on Windows."""
 
-    platform_key = AgentRuntimePlatformKey.WINDOWS
+    value_type = WindowsRuntimePlatform
 
     def config_path(self, environment: ClientRegistrationEnvironment) -> Path:
         app_data = environment.environ.get("APPDATA")
@@ -195,7 +222,7 @@ class WindowsClaudeDesktopPlatformSemantics(ClaudeDesktopPlatformSemanticsABC):
 class MacOSClaudeDesktopPlatformSemantics(ClaudeDesktopPlatformSemanticsABC):
     """Claude Desktop configuration and installation paths on macOS."""
 
-    platform_key = AgentRuntimePlatformKey.MACOS
+    value_type = MacOSRuntimePlatform
 
     def config_path(self, environment: ClientRegistrationEnvironment) -> Path:
         return (
@@ -220,7 +247,7 @@ class MacOSClaudeDesktopPlatformSemantics(ClaudeDesktopPlatformSemanticsABC):
 class ClientConfigMutation:
     """Leaf-owned configuration mutation without duplicated client identity."""
 
-    status: ClientRegistrationStatus
+    status: type[ClientRegistrationStatus]
     config_path: str | None
     backup_path: str | None
     message: str
@@ -232,7 +259,7 @@ class ClientRegistrationResult:
 
     target_id: str
     display_name: str
-    status: str
+    status: type[ClientRegistrationStatus]
     required: bool
     detected: bool
     config_path: str | None
@@ -252,7 +279,7 @@ class ClientRegistrationResult:
         return cls(
             target_id=target.require_target_id(),
             display_name=target.display_name,
-            status=mutation.status.value,
+            status=mutation.status,
             required=required,
             detected=detected,
             config_path=mutation.config_path,
@@ -275,7 +302,7 @@ class ClientRegistrationResult:
         return cls(
             target_id=target_id,
             display_name=display_name,
-            status=ClientRegistrationStatus.FAILED.value,
+            status=ClientRegistrationFailed,
             required=required,
             detected=detected,
             config_path=os.fspath(config_path) if config_path is not None else None,
@@ -316,7 +343,7 @@ class ClientRegistrationReport:
         failed = tuple(
             result
             for result in frozen_results
-            if result.status == ClientRegistrationStatus.FAILED.value
+            if result.status.failed
         )
         return cls(
             schema_version=CLIENT_REGISTRATION_SCHEMA_VERSION,
@@ -335,13 +362,9 @@ class ClientRegistrationReport:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a JSON-native installer payload."""
-        return {
-            "schema_version": self.schema_version,
-            "ok": self.ok,
-            "required_ok": self.required_ok,
-            "results": [asdict(result) for result in self.results],
-            "skill_sync": [asdict(result) for result in self.skill_sync],
-        }
+        from python_introspect import to_jsonable
+
+        return dict(to_jsonable(self))
 
 
 class ClientConfigFormatError(ValueError):
@@ -536,12 +559,10 @@ class ClaudeDesktopClientRegistrationTarget(McpClientRegistrationTarget):
     def _platform_semantics(
         environment: ClientRegistrationEnvironment,
     ) -> ClaudeDesktopPlatformSemanticsABC | None:
-        try:
-            return ClaudeDesktopPlatformSemanticsABC.for_enum_member(
-                environment.platform_key
-            )
-        except KeyError:
-            return None
+        semantics = ClaudeDesktopPlatformSemanticsABC.strategy_types_for_nominal_type(
+            environment.platform
+        )
+        return semantics[0]() if semantics else None
 
     @classmethod
     def config_path(
@@ -717,7 +738,7 @@ class VsCodeClientRegistrationTarget(McpClientRegistrationTarget):
                 f"VS Code --add-mcp exited with {completed.returncode}{suffix}"
             )
         return ClientConfigMutation(
-            status=ClientRegistrationStatus.REGISTERED,
+            status=ClientRegistered,
             config_path=None,
             backup_path=None,
             message=f"Registered OpenHCS through {executable} --add-mcp.",
@@ -809,7 +830,7 @@ def _update_codex_toml(
 
     if _toml_server_matches(servers.get(OPENHCS_MCP_SERVER_NAME), launcher):
         return ClientConfigMutation(
-            status=ClientRegistrationStatus.UNCHANGED,
+            status=ClientUnchanged,
             config_path=os.fspath(path),
             backup_path=None,
             message="OpenHCS is already registered with ChatGPT desktop and Codex.",
@@ -825,9 +846,9 @@ def _update_codex_toml(
     backup_path = _atomic_config_write(path, rendered, original=original)
     return ClientConfigMutation(
         status=(
-            ClientRegistrationStatus.UPDATED
+            ClientUpdated
             if original is not None
-            else ClientRegistrationStatus.REGISTERED
+            else ClientRegistered
         ),
         config_path=os.fspath(path),
         backup_path=backup_path,
@@ -865,7 +886,7 @@ def _update_json_mcp_servers(
     desired = launcher.stdio_server_entry()
     if servers.get(OPENHCS_MCP_SERVER_NAME) == desired:
         return ClientConfigMutation(
-            status=ClientRegistrationStatus.UNCHANGED,
+            status=ClientUnchanged,
             config_path=os.fspath(path),
             backup_path=None,
             message="OpenHCS is already registered with this client.",
@@ -876,9 +897,9 @@ def _update_json_mcp_servers(
     backup_path = _atomic_config_write(path, rendered, original=original)
     return ClientConfigMutation(
         status=(
-            ClientRegistrationStatus.UPDATED
+            ClientUpdated
             if original is not None
-            else ClientRegistrationStatus.REGISTERED
+            else ClientRegistered
         ),
         config_path=os.fspath(path),
         backup_path=backup_path,
@@ -983,7 +1004,7 @@ def register_mcp_clients(
     skill_results: list[ClientSkillSyncResult] = []
     if sync_client_skills:
         for result in results:
-            if result.status == ClientRegistrationStatus.FAILED.value:
+            if result.status.failed:
                 continue
             target = McpClientRegistrationTarget.target_for_id(result.target_id)
             assert target is not None  # Successful results came from registered owners.
@@ -1099,10 +1120,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         for result in report.results:
             print(
-                f"{result.display_name}: {result.status} - {result.message}",
+                f"{result.display_name}: {result.status.name} - {result.message}",
                 file=(
                     sys.stderr
-                    if result.status == ClientRegistrationStatus.FAILED.value
+                    if result.status.failed
                     else sys.stdout
                 ),
             )

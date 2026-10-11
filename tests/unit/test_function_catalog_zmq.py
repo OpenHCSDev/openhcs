@@ -48,6 +48,8 @@ from openhcs.agent.dto.functions import (
     FunctionReferenceControlRequest,
     FunctionReferenceControlResponse,
     FunctionSearchRequest,
+    SuppliedByAgent,
+    SuppliedFromPrimaryInput,
     catalog_page,
 )
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
@@ -64,9 +66,9 @@ from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
 
 
 def test_function_parameter_source_owns_runtime_presentation() -> None:
-    assert FunctionParameterSource.AGENT.runtime_description is None
+    assert SuppliedByAgent.runtime_description is None
     assert "FunctionStep input image payload" in (
-        FunctionParameterSource.PRIMARY_INPUT.runtime_description or ""
+        SuppliedFromPrimaryInput.runtime_description or ""
     )
 
 
@@ -81,8 +83,8 @@ def test_function_parameter_spec_requires_nominal_source() -> None:
         )
 
 
-def test_function_catalog_control_request_requires_declared_message_type() -> None:
-    with pytest.raises(TypeError, match="message_type"):
+def test_function_catalog_control_request_requires_declared_wire_type() -> None:
+    with pytest.raises(TypeError, match="wire_type"):
 
         class MissingMessageType(FunctionCatalogControlRequestABC):
             pass

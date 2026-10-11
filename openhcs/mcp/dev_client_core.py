@@ -41,7 +41,12 @@ from openhcs.agent.capabilities import (
 from openhcs.agent.dto.common import AgentCliRequest, AgentError, AgentResultEnvelope
 from openhcs.agent.dto.mcp import McpBoundaryFailure, McpToolErrorResult
 from openhcs.agent.dto.ui_bridge import (
-    UiActionInvocationStatus,
+    AllFields,
+    DefaultDiffFields,
+    DirtyFields,
+    InheritedFields,
+    RawResolvedFields,
+    SemanticFields,
     UiBridgeOperationRef,
     UiBridgeOperationStatus,
     UiBridgeOperationWaitRequest,
@@ -54,7 +59,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiStateSurfaceRequest,
 )
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
+from openhcs.agent.runtime_platform import AgentRuntimePlatform
 from openhcs.agent.ui_bridge_environment import UiBridgeDescriptorEnvironment
 from openhcs.constants.constants import OrchestratorState
 from openhcs.core.execution_state import (
@@ -175,45 +180,63 @@ class McpDevProtocolError(RuntimeError):
     """Malformed or unsupported MCP wire response."""
 
 
-class WorkflowPollSummaryStatus(str, Enum):
-    """Machine-readable selected-workflow polling outcome."""
+class WorkflowPollSummaryStatus(ABC, metaclass=AutoRegisterMeta):
+    """Machine-readable selected-workflow polling outcome; ``name`` is its spelling."""
 
-    COMPLETED = "completed"
-    FAILED = "failed"
-    TIMEOUT = "timeout"
-    SKIPPED = "skipped"
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str | None] = None
+    completed: ClassVar[bool] = False
+
+
+class PollCompleted(WorkflowPollSummaryStatus):
+    name = "completed"
+    completed = True
+
+
+class PollFailed(WorkflowPollSummaryStatus):
+    name = "failed"
+
+
+class PollTimedOut(WorkflowPollSummaryStatus):
+    name = "timeout"
+
+
+class PollSkipped(WorkflowPollSummaryStatus):
+    name = "skipped"
 
 
 class WorkflowPollSkipReason(str, Enum):
     """Machine-readable reason selected-workflow polling did not start."""
 
-    poll_status: WorkflowPollSummaryStatus
+    poll_status: type[WorkflowPollSummaryStatus]
 
     WORKFLOW_NOT_ACCEPTED = (
         "workflow_not_accepted",
-        WorkflowPollSummaryStatus.SKIPPED,
+        PollSkipped,
     )
     WORKFLOW_TOOL_ERROR = (
         "workflow_tool_error",
-        WorkflowPollSummaryStatus.SKIPPED,
+        PollSkipped,
     )
     OPERATION_RECEIPT_MISSING = (
         "operation_receipt_missing",
-        WorkflowPollSummaryStatus.FAILED,
+        PollFailed,
     )
     OPERATION_RECEIPT_FAILED = (
         "operation_receipt_failed",
-        WorkflowPollSummaryStatus.FAILED,
+        PollFailed,
     )
     OPERATION_RECEIPT_TIMEOUT = (
         "operation_receipt_timeout",
-        WorkflowPollSummaryStatus.TIMEOUT,
+        PollTimedOut,
     )
 
     def __new__(
         cls,
         value: str,
-        poll_status: WorkflowPollSummaryStatus,
+        poll_status: type[WorkflowPollSummaryStatus],
     ) -> "WorkflowPollSkipReason":
         member = str.__new__(cls, value)
         member._value_ = value
@@ -309,7 +332,7 @@ class McpDevServerSpec:
     def environment(self) -> dict[str, str]:
         """Environment entries inherited by the fresh MCP subprocess."""
         return (
-            AgentRuntimePlatformAuthority.current().project_child_process_environment(
+            AgentRuntimePlatform.current().project_child_process_environment(
                 os.environ,
                 include_graphical_session=True,
                 additional_keys=(
@@ -632,7 +655,7 @@ class WorkflowPollSummary:
 
     tool_name: ClassVar[str] = "mcp_dev_selected_workflow_poll"
     workflow: str | None
-    status: WorkflowPollSummaryStatus
+    status: type[WorkflowPollSummaryStatus]
     poll_requested: bool
     poll_completed: bool
     poll_count: int
@@ -643,11 +666,11 @@ class WorkflowPollSummary:
 
     @property
     def mcp_error(self) -> bool:
-        return self.status is not WorkflowPollSummaryStatus.COMPLETED
+        return not self.status.completed
 
     def as_payload(self) -> dict[str, JsonValue]:
         payload: dict[str, JsonValue] = {
-            "poll_status": self.status.value,
+            "poll_status": self.status.name,
             "poll_requested": self.poll_requested,
             "poll_completed": self.poll_completed,
             "poll_count": self.poll_count,
@@ -2172,17 +2195,17 @@ def code_document_source_from_args(args: argparse.Namespace) -> str:
 
 def add_object_state_field_filter_options(parser: argparse.ArgumentParser) -> None:
     filter_group = parser.add_mutually_exclusive_group()
-    parser.set_defaults(field_filter=UiObjectStateFieldFilter.ALL.value)
+    parser.set_defaults(field_filter=AllFields.name)
     filter_group.add_argument(
         "--field-filter",
-        choices=tuple(field_filter.value for field_filter in UiObjectStateFieldFilter),
+        choices=tuple(UiObjectStateFieldFilter.__registry__),
         help="Return fields matching one ObjectState semantic filter.",
     )
     filter_group.add_argument(
         "--dirty-only",
         dest="field_filter",
         action="store_const",
-        const=UiObjectStateFieldFilter.DIRTY.value,
+        const=DirtyFields.name,
         help="Only return unsaved ObjectState fields marked with * semantics.",
     )
     filter_group.add_argument(
@@ -2190,7 +2213,7 @@ def add_object_state_field_filter_options(parser: argparse.ArgumentParser) -> No
         "--semantic-only",
         dest="field_filter",
         action="store_const",
-        const=UiObjectStateFieldFilter.SEMANTIC.value,
+        const=SemanticFields.name,
         help=(
             "Only return dirty, default-diff, inherited, or raw/resolved-none "
             "semantic fields."
@@ -2200,21 +2223,21 @@ def add_object_state_field_filter_options(parser: argparse.ArgumentParser) -> No
         "--default-diff-only",
         dest="field_filter",
         action="store_const",
-        const=UiObjectStateFieldFilter.DEFAULT_DIFF.value,
+        const=DefaultDiffFields.name,
         help="Only return fields that differ from constructor/default code mode.",
     )
     filter_group.add_argument(
         "--inherited-only",
         dest="field_filter",
         action="store_const",
-        const=UiObjectStateFieldFilter.INHERITED.value,
+        const=InheritedFields.name,
         help="Only return inherited/resolved ObjectState fields.",
     )
     filter_group.add_argument(
         "--raw-resolved-only",
         dest="field_filter",
         action="store_const",
-        const=UiObjectStateFieldFilter.RAW_RESOLVED.value,
+        const=RawResolvedFields.name,
         help="Only return fields whose raw None/resolved None state differs.",
     )
 
@@ -2306,14 +2329,13 @@ def state_surface_tool_arguments(
 
 
 def workflow_result_was_accepted(result: McpDevToolResult) -> bool:
-    return (
-        workflow_result_action_status(result) == UiActionInvocationStatus.ACCEPTED.value
-    )
+    payload = workflow_result_payload(result)
+    return payload is not None and payload.action_result.status.accepted
 
 
 def workflow_result_action_status(result: McpDevToolResult) -> str | None:
     payload = workflow_result_payload(result)
-    return None if payload is None else payload.action_result.status
+    return None if payload is None else payload.action_result.status.name
 
 
 def workflow_result_event_sequence(result: McpDevToolResult) -> int:
@@ -2362,7 +2384,7 @@ def workflow_operation_receipt_skip_reason(
     if operation is None or operation.errors:
         return WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
     try:
-        status = UiBridgeOperationStatus(operation.status)
+        status = UiBridgeOperationStatus.named(operation.status)
     except ValueError:
         return WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
     return status.select_completion(
@@ -2408,7 +2430,7 @@ def workflow_poll_terminal_status(
     *,
     target_scope_ids: tuple[str, ...],
     policy: WorkflowStatePollPolicy,
-) -> WorkflowPollSummaryStatus | None:
+) -> type[WorkflowPollSummaryStatus] | None:
     if not workflow_poll_manager_is_idle(result):
         return None
     rows = workflow_poll_target_rows(
@@ -2418,9 +2440,9 @@ def workflow_poll_terminal_status(
     if not rows:
         return None
     if any(policy.failed_for_row(row) for row in rows):
-        return WorkflowPollSummaryStatus.FAILED
+        return PollFailed
     if all(policy.terminal_for_row(row) for row in rows):
-        return WorkflowPollSummaryStatus.COMPLETED
+        return PollCompleted
     return None
 
 
@@ -2474,7 +2496,7 @@ def parse_orchestrator_state(
 def workflow_poll_summary_result(
     *,
     workflow: str | None = None,
-    status: WorkflowPollSummaryStatus | None = None,
+    status: type[WorkflowPollSummaryStatus] | None = None,
     poll_requested: bool,
     poll_completed: bool,
     poll_count: int,
@@ -2485,9 +2507,9 @@ def workflow_poll_summary_result(
 ) -> McpDevToolResult:
     if status is None:
         status = (
-            WorkflowPollSummaryStatus.COMPLETED
+            PollCompleted
             if poll_completed
-            else WorkflowPollSummaryStatus.TIMEOUT
+            else PollTimedOut
         )
     summary = WorkflowPollSummary(
         workflow=workflow,
