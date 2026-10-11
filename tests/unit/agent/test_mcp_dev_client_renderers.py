@@ -19,7 +19,7 @@ from dataclasses import MISSING, fields, is_dataclass
 import pytest
 from python_introspect import to_jsonable
 
-from openhcs.agent.dto.common import AgentError, AgentWarning
+from formbridge.contracts import AgentError, AgentWarning
 from openhcs.mcp.dev_client_core import (
     McpDevServerIdentity,
     McpDevToolBatchResponse,
@@ -169,7 +169,7 @@ def test_every_renderer_reports_a_missing_payload_as_unavailable(renderer):
 
 
 def test_base_appends_payload_warnings_and_declared_errors_once():
-    from openhcs.agent.dto.ui_bridge import UiCodeDocumentValidationResult
+    from formbridge.bridge.dto import UiCodeDocumentValidationResult
 
     payload = UiCodeDocumentValidationResult(
         document_id="doc",

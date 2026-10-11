@@ -813,7 +813,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
     def observe_custom_function_registration(
         self, handle: CustomFunctionRegistrationHandle,
     ) -> CustomFunctionRegistrationObservation:
-        from openhcs.agent.dto.common import AgentWarning
+        from formbridge.contracts import AgentWarning
         from openhcs.processing.custom_functions.runtime_registry import CustomFunctionRuntimeRegistry
 
         handle.require_current_owner()

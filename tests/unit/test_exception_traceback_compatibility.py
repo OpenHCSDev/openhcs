@@ -2,7 +2,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from openhcs.agent.services.ui_bridge_service import (
+from formbridge.bridge.service import (
     UiBridgeDescriptorProcessGoneError,
     UiBridgeDescriptorProcessIdentityError,
     UiBridgeGatewayResponseError,
@@ -10,10 +10,8 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeGatewayUnavailableError,
 )
 from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.pyqt_gui.services.ui_agent_bridge import UiCodeDocumentValidationError
-from openhcs.pyqt_gui.services.ui_bridge_server import (
-    UiBridgeUnsupportedOperationError,
-)
+from formbridge.bridge.in_process import UiCodeDocumentValidationError
+from formbridge.bridge.server import UiBridgeUnsupportedOperationError
 from openhcs.runtime.viewer_protocol import ViewerGraphicalSessionUnavailableError
 
 

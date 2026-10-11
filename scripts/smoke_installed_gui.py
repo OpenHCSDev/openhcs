@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from zmqruntime import OperationDeadline
 
     from openhcs.agent.dto.execution import RuntimeServerInfo
-    from openhcs.agent.dto.ui_bridge import UiWindowCatalog, UiWindowSnapshotResult
+    from formbridge.bridge.dto import UiWindowCatalog, UiWindowSnapshotResult
     from openhcs.agent.services.endpoint_function_catalog_service import (
         ZMQFunctionCatalogService,
     )
@@ -468,10 +468,10 @@ def _capture_installed_gui_snapshot(
 ) -> UiWindowSnapshotResult:
     """Capture one live window through the production MCP capability."""
 
-    from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+    from formbridge.services.window_snapshot import WindowSnapshotCaptureScope
 
     from openhcs.agent.capabilities import UiSnapshotWindowCapability
-    from openhcs.agent.dto.ui_bridge import UiWindowCatalog, UiWindowSnapshotResult
+    from formbridge.bridge.dto import UiWindowCatalog, UiWindowSnapshotResult
     from openhcs.mcp.dev_client_commands.ui import WindowSnapshotCommandSpec
 
     execution = client.execute(
@@ -553,7 +553,7 @@ def run_installed_live_mcp_smoke(
         agent_capabilities,
     )
     from openhcs.agent.dto.mcp import McpServerHealthResult
-    from openhcs.agent.dto.ui_bridge import (
+    from formbridge.bridge.dto import (
         UiActionInvocationStatus,
         UiActionInvokeResult,
         UiBridgeCatalog,
@@ -563,7 +563,7 @@ def run_installed_live_mcp_smoke(
     from openhcs.agent.services.runtime_server_service import RuntimeServerService
     from openhcs.agent.ui_bridge_identities import (
         MainWindowWidgetIdentity,
-        PlateManagerWidgetIdentity,
+        DatasetListWidgetIdentity,
     )
     from openhcs.mcp.dev_client import McpDevClient
     from openhcs.mcp.dev_client_commanding import CapabilityBackedCommandSpec
@@ -663,7 +663,7 @@ def run_installed_live_mcp_smoke(
 
         required_window_ids = {
             MainWindowWidgetIdentity.require_value(),
-            PlateManagerWidgetIdentity.require_value(),
+            DatasetListWidgetIdentity.require_value(),
         }
         observed_window_ids = _window_ids(windows_before)
         if not required_window_ids <= observed_window_ids:
@@ -677,7 +677,7 @@ def run_installed_live_mcp_smoke(
         action_execution = client.execute(
             (
                 InvokeActionCommandSpec.command,
-                PlateManagerWidgetIdentity.require_value(),
+                DatasetListWidgetIdentity.require_value(),
                 ShowDatasetCode.operation_id,
                 "--request-token",
                 "installed-gui-mcp-smoke",
@@ -794,7 +794,7 @@ def run_installed_gui_smoke(
     from zmqruntime import OperationDeadline
 
     import openhcs
-    from openhcs.agent.ui_bridge_environment import UiBridgeDescriptorEnvironment
+    from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
     from openhcs.core.config import GlobalPipelineConfig
     from openhcs.pyqt_gui.app import OpenHCSPyQtApp
     from openhcs.pyqt_gui.config import (
@@ -819,7 +819,7 @@ def run_installed_gui_smoke(
         ),
         descriptor_path=descriptor_path,
     )
-    os.environ[UiBridgeDescriptorEnvironment.descriptor_file_path_key] = str(
+    os.environ[OpenHCSUiBridgeApplication.descriptor_file_variable] = str(
         descriptor_path
     )
     runtime_context = PyQtGuiRuntimeContext(

@@ -20,7 +20,7 @@ from openhcs.agent.capabilities import (
     DesktopLocalCapabilitySurfaceProfile,
     get_capability_registry,
 )
-from openhcs.agent.dto.ui_bridge import UiWidgetActionSummary
+from formbridge.bridge.dto import UiWidgetActionSummary
 import openhcs.mcp.server as server
 
 

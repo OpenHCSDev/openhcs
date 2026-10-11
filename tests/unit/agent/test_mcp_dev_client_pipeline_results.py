@@ -13,12 +13,8 @@ import pytest
 from zmqruntime.execution import ExecutionProgressObservation
 
 from openhcs.agent.capabilities import agent_capabilities
-from openhcs.agent.dto.common import (
-    SCHEMA_VERSION,
-    AgentError,
-    AgentWarning,
-    RenderedSource,
-)
+from openhcs.agent.dto.common import SCHEMA_VERSION, RenderedSource
+from formbridge.contracts import AgentError, AgentWarning
 from openhcs.agent.dto.execution import (
     ArtifactInputPlanSummary,
     ArtifactMaterializationPathSummary,
@@ -671,11 +667,13 @@ def test_generic_call_cli_uses_nominal_typed_contract_without_json_roundtrip(
 
 
 def test_generic_call_preserves_pending_workflow_native_receipt(monkeypatch, capsys):
-    from openhcs.agent.dto.ui_bridge import (
+    from formbridge.bridge.dto import (
         UiActionIdentity,
         UiActionInvokeResult,
         UiMutationReceipt,
         UiMutationRequestToken,
+    )
+    from openhcs.agent.dto.ui_bridge import (
         UiSelectedPlateWorkflowKind,
         UiSelectedPlateWorkflowResult,
     )
@@ -685,7 +683,7 @@ def test_generic_call_preserves_pending_workflow_native_receipt(monkeypatch, cap
         UiSelectedPlateWorkflowKind("run_datasets"),
         UiActionInvokeResult(
             SCHEMA_VERSION,
-            UiActionIdentity(widget_id="plate_manager", action_id="run_datasets"),
+            UiActionIdentity(widget_id="datasets", action_id="run_datasets"),
             "accepted",
             UiMutationReceipt(UiMutationRequestToken(), accepted=True),
             target_scope_ids=("scope-1",),

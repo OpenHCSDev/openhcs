@@ -8822,11 +8822,13 @@
       "type": "string"
      },
      "surface_id": {
-      "default": "plate_manager.state",
       "title": "Surface Id",
       "type": "string"
      }
     },
+    "required": [
+     "surface_id"
+    ],
     "title": "openhcs_ui_get_state_surfaceArguments",
     "type": "object"
    },
@@ -13852,7 +13854,7 @@
       "type": "string"
      },
      "WindowSnapshotFrameCondition": {
-      "description": "Closed capture conditions evaluated from real renderer receipts.",
+      "description": "Capture conditions evaluated from real renderer receipts (wire spelling).",
       "enum": [
        "immediate",
        "flash_maximum_alpha",

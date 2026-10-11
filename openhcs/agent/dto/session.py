@@ -4,12 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from openhcs.agent.dto.common import (
-    SCHEMA_VERSION,
-    AgentDataclassCliRequest,
-    AgentError,
-    AgentWarning,
-)
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentDataclassCliRequest, AgentError, AgentWarning
 from enum import Enum
 
 from python_introspect import validate_annotated_dataclass

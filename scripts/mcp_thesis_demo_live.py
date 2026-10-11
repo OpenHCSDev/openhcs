@@ -60,19 +60,19 @@ from openhcs.agent.capabilities import (
     UiSnapshotWindowCapability,
     ValidateViewerWindowStateCapability,
 )
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     UiActionIdentity,
     UiActionSummary,
     UiCodeDocumentSummary,
     UiWindowSummary,
 )
 from python_introspect import dataclass_from_mapping
+from formbridge.bridge.identities import ManagedWindowWidgetIdentity
 from openhcs.agent.ui_bridge_identities import (
-    ManagedWindowWidgetIdentity,
     PipelineEditorStateSurfaceIdentityDeclaration,
-    PlateManagerOrchestratorCodeDocumentIdentity,
-    PlateManagerStateSurfaceIdentityDeclaration,
-    PlateManagerWidgetIdentity,
+    DatasetListCodeDocumentIdentity,
+    DatasetListStateSurfaceIdentity,
+    DatasetListWidgetIdentity,
 )
 from openhcs.core.config_cache import ConfigCacheSpec, save_config_sync
 from openhcs.ui.shared.plate_manager_code_document import PlateManagerDocumentAssignments
@@ -99,6 +99,7 @@ from openhcs.runtime.viewer_protocol import (
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.domains.microscopy.axes import Microscopy
+from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DEMO_ROOT = ROOT / "mcp_outputs" / "thesis_demo" / "live"
@@ -111,7 +112,7 @@ DEFAULT_TEST_PLATE_DIR = (
     / "test_main[ImageXpress]"
     / "zstack_plate"
 )
-ORCHESTRATOR_DOCUMENT_ID = PlateManagerOrchestratorCodeDocumentIdentity.require_value()
+ORCHESTRATOR_DOCUMENT_ID = DatasetListCodeDocumentIdentity.require_value()
 PYTHON = os.environ.get("PYTHON_BIN", sys.executable)
 FINAL_DEMO_STEP_DISPLAY_INDEX = 8
 FINAL_DEMO_STEP_ROUTE_INDEX = FINAL_DEMO_STEP_DISPLAY_INDEX - 1
@@ -984,7 +985,7 @@ def managed_window_action_target(
         )
     target_scope_ids = matches[0].target_scope_ids
     window_scopes = frozenset(
-        OpenHCSUiWindowId.manager_scopes_for_agent_window_id(window_id)
+        UiStableWindowIdentityDeclaration.manager_scopes_for_window_id(window_id)
     )
     advertised_targets = [
         scope_id
@@ -1850,7 +1851,7 @@ def inspect_and_apply_code_document(
         for doc in documents
     ):
         raise RehearsalFailure(
-            "Writable plate_manager.orchestrator_config document missing."
+            "Writable datasets.orchestrator_config document missing."
         )
 
     source_payload = command_json(
@@ -2542,7 +2543,7 @@ def selected_plate_state(ctx: RunContext) -> dict[str, Any]:
         "selected_plate_state",
         mcp_cmd(
             UiGetStateSurfaceCapability.cli_command,
-            PlateManagerStateSurfaceIdentityDeclaration.require_value(),
+            DatasetListStateSurfaceIdentity.require_value(),
             "--selection-mode",
             "selected",
             "--timeout-seconds",
@@ -2760,7 +2761,7 @@ def plate_action_summary(
         f"list_{action.operation_id}_action",
         mcp_cmd(
             UiListActionsCapability.cli_command,
-            PlateManagerWidgetIdentity.require_value(),
+            DatasetListWidgetIdentity.require_value(),
             descriptor=ctx.descriptor_path,
         ),
         timeout=30,
@@ -2774,7 +2775,7 @@ def plate_action_summary(
     matches = [
         row
         for row in summaries
-        if row.identity.widget_id == PlateManagerWidgetIdentity.require_value()
+        if row.identity.widget_id == DatasetListWidgetIdentity.require_value()
         and row.identity.action_id == action.operation_id
     ]
     if len(matches) != 1:
@@ -2794,7 +2795,7 @@ def invoke_plate_action(ctx: RunContext, action: type[SessionOperation]) -> dict
         mcp_call_tool_cmd(
             UiInvokeActionCapability.name,
             {
-                "widget_id": PlateManagerWidgetIdentity.require_value(),
+                "widget_id": DatasetListWidgetIdentity.require_value(),
                 "action_id": action.operation_id,
                 "target_scope_ids": list(summary.target_scope_ids),
                 "observed_selection_revision_token": summary.selection_revision_token,
@@ -4913,7 +4914,7 @@ def build_objective_evidence(report: Mapping[str, Any]) -> dict[str, Any]:
             "requirement": "ui_visible_hierarchical_configuration",
             "public_evidence": [
                 ORCHESTRATOR_DOCUMENT_ID,
-                PlateManagerStateSurfaceIdentityDeclaration.require_value(),
+                DatasetListStateSurfaceIdentity.require_value(),
             ],
             "satisfied": True,
         },

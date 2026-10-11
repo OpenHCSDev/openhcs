@@ -15,7 +15,8 @@ from openhcs.agent.capabilities import (
     InspectPipelineSourceArtifactPlanCapability,
     MainThreadProgressCapability,
 )
-from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
+from formbridge.contracts import AgentError
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.execution import ArtifactPlanInspection
 from openhcs.mcp.execution import (
     McpMainThreadDispatcher, McpQueuedCallNotStartedError, McpTransportExecutor,

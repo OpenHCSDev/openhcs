@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from openhcs.core.selection import AllItems, SelectedItems
+from formbridge.selection import AllItems, SelectedItems
 from openhcs.pyqt_gui.main import OpenHCSMainWindow
 
 

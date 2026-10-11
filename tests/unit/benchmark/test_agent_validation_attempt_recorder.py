@@ -31,11 +31,7 @@ from openhcs.agent.dto.session import (
     DatasetRowState,
     SessionOperationResult,
 )
-from openhcs.agent.dto.ui_bridge import (
-    UiCodeDocument,
-    UiCodeDocumentIdentity,
-    UiCodeDocumentSummary,
-)
+from formbridge.bridge.dto import UiCodeDocument, UiCodeDocumentIdentity, UiCodeDocumentSummary
 from openhcs.core.config import PipelineConfig
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep

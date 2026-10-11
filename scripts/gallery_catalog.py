@@ -37,9 +37,9 @@ from openhcs.agent.ui_bridge_identities import (
     LogViewerWindowIdentity,
     MainWindowWidgetIdentity,
     PipelineEditorWidgetIdentity,
-    PlateManagerWidgetIdentity,
-    UiStableWindowIdentityDeclaration,
+    DatasetListWidgetIdentity,
 )
+from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab, PlateViewerTab
 
@@ -425,8 +425,8 @@ class PlateManagerActionWindowCaptureTarget(UiContextCaptureTargetABC):
 
     action: type[SessionOperation]
     tab: PlateViewerTab | None = None
-    capture_widget_identity: ClassVar[type[PlateManagerWidgetIdentity]] = (
-        PlateManagerWidgetIdentity
+    capture_widget_identity: ClassVar[type[DatasetListWidgetIdentity]] = (
+        DatasetListWidgetIdentity
     )
 
     def capture_source(

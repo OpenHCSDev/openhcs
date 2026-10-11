@@ -8,7 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from openhcs.agent.exceptions import AgentFacingErrorMixin
-from openhcs.agent.runtime_platform import AgentRuntimePlatform
+from formbridge.bridge.service import UiBridgeOutputPathPolicy, UiBridgeRequestRejectedError
+from formbridge.runtime_platform import AgentRuntimePlatform
 
 
 class AgentPathLocationAuthority:
@@ -90,7 +91,7 @@ class AgentPathRootSet:
 
 
 @dataclass(frozen=True, slots=True)
-class AgentPathPolicy:
+class AgentPathPolicy(UiBridgeOutputPathPolicy):
     """Own the roots and environment contract for agent-visible paths."""
 
     readable_roots_environment_key = "OPENHCS_AGENT_READ_ROOTS"
@@ -188,6 +189,12 @@ class AgentPathPolicy:
                 f"Effective writable roots: {self.writable_roots.display()}."
             )
         return candidate
+
+    def writable_directory(self, path: str | Path) -> Path:
+        try:
+            return self.assert_writable(path)
+        except AgentPathPolicyError as exc:
+            raise UiBridgeRequestRejectedError((exc.to_agent_error(),)) from exc
 
 
 class AgentPathPolicyError(AgentFacingErrorMixin, ValueError):

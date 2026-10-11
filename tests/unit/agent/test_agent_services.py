@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 from formbridge.services.parameter_help_service import dataclass_parameter_descriptions
-from pyqt_reactive.services.window_snapshot import (
+from formbridge.services.window_snapshot import (
     WindowSnapshotCaptureScope,
     WindowSnapshotFrameCondition,
 )

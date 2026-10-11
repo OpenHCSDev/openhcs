@@ -7,6 +7,7 @@ from typing import Optional
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
 from formbridge.core.path_cache import PathCacheKey, cache_path, get_initial_path
 from formbridge.services.async_operation_executor import AsyncOperationExecutor
+from formbridge.services.host_services import UiHostServices
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
 from pyqt_reactive.theming import ColorScheme, ThemeManager
 
@@ -14,7 +15,7 @@ from pyqt_reactive.theming import ColorScheme, ThemeManager
 logger = logging.getLogger(__name__)
 
 
-class PyQtServiceAdapter:
+class PyQtServiceAdapter(UiHostServices):
     """Qt dialogs, async execution, theme and config access for GUI widgets."""
 
     def __init__(self, main_window: QWidget):

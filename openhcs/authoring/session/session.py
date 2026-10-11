@@ -152,7 +152,7 @@ from openhcs.core.debug import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.agent.dto.common import AgentError
+    from formbridge.contracts import AgentError
     from openhcs.authoring.session.operations import SessionOperation
     from openhcs.authoring.session.views import SessionView
     from zmqruntime.messages import PongResponse

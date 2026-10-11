@@ -15,14 +15,15 @@ from formbridge.services.parameter_help_service import (
 )
 from python_introspect import JsonValue, UnifiedParameterAnalyzer, enum_input_values
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentWarning
 from openhcs.agent.dto.functions import (
     FunctionArtifactSpec,
     FunctionDetail,
     SuppliedAtRuntime,
     SuppliedByAgent,
 )
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     UiBridgeConnectionSpec,
     UiObjectStateFieldHelpQuery,
     UiObjectStateFieldHelpRequest,
@@ -37,10 +38,7 @@ from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogService,
     FunctionCatalogServiceABC,
 )
-from openhcs.agent.services.ui_bridge_service import (
-    UiBridgeListObjectStateScopesOperation,
-    UiBridgeService,
-)
+from formbridge.bridge.service import UiBridgeListObjectStateScopesOperation, UiBridgeService
 
 
 @dataclass(frozen=True, slots=True)

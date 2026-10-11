@@ -84,7 +84,7 @@ from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
 from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
 )
-from openhcs.pyqt_gui.services.ui_bridge_contracts import (
+from formbridge.bridge.contracts import (
     UiOwnedStateSurfaceDeclaration,
     state_surface_declaration_for_identity,
 )

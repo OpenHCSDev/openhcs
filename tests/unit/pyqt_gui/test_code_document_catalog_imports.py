@@ -38,8 +38,8 @@ from openhcs.authoring.session.pipelines import (
 from openhcs.pyqt_gui.services.ui_agent_bridge import (
     UiCodeDocumentExecutionService,
     UiCodeDocumentSourcePolicy,
-    UiCodeDocumentValidationError,
 )
+from formbridge.bridge.in_process import UiCodeDocumentValidationError
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )

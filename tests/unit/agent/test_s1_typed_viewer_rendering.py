@@ -11,7 +11,8 @@ from openhcs.agent.capabilities import (
     ProbeViewerWindowCapability,
     ValidateViewerWindowStateCapability,
 )
-from openhcs.agent.dto.common import AgentError, AgentWarning, SCHEMA_VERSION
+from formbridge.contracts import AgentError, AgentWarning
+from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import (
     ViewerWindowDescriptor,

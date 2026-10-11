@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, ClassVar
 from metaclass_registry import AutoRegisterMeta
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from openhcs.agent.dto.common import AgentError
+from formbridge.contracts import AgentError
 from openhcs.agent.dto.session import SessionOperationResult
 from openhcs.authoring.session.operations import SessionOperation
 from openhcs.authoring.session.operations.datasets import PromptedOperation

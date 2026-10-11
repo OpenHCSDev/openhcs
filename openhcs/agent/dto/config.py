@@ -5,11 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Self
 
-from openhcs.agent.dto.common import (
-    AgentCliArgumentSpec,
-    AgentCliRequest,
-    AgentResultEnvelope,
-)
+from formbridge.contracts import AgentCliArgumentSpec, AgentCliRequest, AgentResultEnvelope
 from python_introspect import JsonObject
 
 

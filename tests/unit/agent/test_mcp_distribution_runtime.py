@@ -7,19 +7,19 @@ import sys
 import time
 from pathlib import Path
 
-from openhcs.agent.dto.common import SCHEMA_VERSION
-from openhcs.agent.runtime_platform import (
+from formbridge.contracts import SCHEMA_VERSION
+from formbridge.runtime_platform import (
     AgentRuntimePlatform,
     LinuxRuntimePlatform,
     WindowsRuntimePlatform,
 )
-from openhcs.agent.services.ui_bridge_service import (
-    UI_BRIDGE_PROTOCOL_VERSION,
+from formbridge.bridge.service import (
     UiBridgeDescriptorDirectoryAuthority,
     UiBridgeDescriptorReader,
 )
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from python_introspect import to_jsonable
+from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
 
 
 def _write_descriptor(path: Path) -> None:
@@ -27,7 +27,7 @@ def _write_descriptor(path: Path) -> None:
         json.dumps(
             {
                 "schema_version": SCHEMA_VERSION,
-                "bridge_protocol_version": UI_BRIDGE_PROTOCOL_VERSION,
+                "bridge_protocol_version": OpenHCSUiBridgeApplication.protocol_version,
                 "application": to_jsonable(OPENHCS_ENDPOINT_APPLICATION),
                 "bridge_instance_id": "windows-test-bridge",
                 "pid": os.getpid(),

@@ -23,7 +23,7 @@ from pyqt_reactive.widgets.shared.zmq_server_browser_widget import (
 from zmqruntime.progress import EventRegistryMutation
 from zmqruntime.viewer_state import ViewerStateManager
 
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     UiLiveOverviewItem,
     UiLiveOverviewMetric,
     UiLiveOverviewSection,
@@ -32,7 +32,7 @@ from openhcs.agent.dto.ui_bridge import (
 from openhcs.agent.ui_bridge_identities import ZmqServerManagerWindowIdentity
 from openhcs.core.progress import ProgressEvent, registry
 from openhcs.pyqt_gui.config import ProgressUIConfig
-from openhcs.pyqt_gui.services.ui_bridge_contracts import UiLiveOverviewWidget
+from formbridge.bridge.contracts import UiLiveOverviewWidget
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.pyqt_gui.widgets.shared.server_browser.live_tree_sync import (
     LaunchingViewerServerInfo,

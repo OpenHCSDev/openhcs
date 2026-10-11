@@ -7,10 +7,6 @@ Configuration is intended to be immutable and provided as Python objects.
 """
 
 import logging
-import os
-import secrets
-import uuid
-from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
@@ -21,7 +17,6 @@ from formbridge.services.system_monitor_config import PerformanceMonitorConfig
 from formbridge.strategies.preview_formatting import FormattingConfig
 from python_introspect import (
     EnvironmentVariable,
-    overlay_dataclass_from_environment,
     validate_annotated_dataclass,
 )
 from zmqruntime.config import (
@@ -33,12 +28,8 @@ from zmqruntime.config import (
 )
 from zmqruntime.transport import get_default_transport_mode
 
-from openhcs.agent.dto.execution import ExecutionConnectionSpec
-from openhcs.agent.runtime_platform import AgentRuntimePlatform
-from openhcs.agent.services.ui_bridge_service import (
-    UiBridgeDescriptorDirectoryAuthority,
-)
-from openhcs.agent.ui_bridge_environment import UiBridgeDescriptorEnvironment
+from formbridge.bridge.server import UiBridgeServerConfig
+from openhcs.agent.ui_bridge_application import OpenHCSUiBridgeApplication
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.config_cache import ConfigCacheSpec
 from openhcs.core.xdg_paths import get_openhcs_log_dir
@@ -200,7 +191,7 @@ class ProgressUIConfig:
 
 
 @dataclass(frozen=True, slots=True)
-class AgentUiBridgeConfig(ExecutionConnectionSpec):
+class AgentUiBridgeConfig(UiBridgeServerConfig):
     """Publish an authenticated local endpoint for inspecting the live PyQt UI.
 
     The bridge exposes ObjectState, window, widget, action, log, and viewer
@@ -236,8 +227,6 @@ class AgentUiBridgeConfig(ExecutionConnectionSpec):
     default selects the platform preference; an explicit ``None`` uses the
     bridge's TCP fallback.
     """
-    persistent: bool = True
-    """Advertise bridge connections as reusable across successive client requests."""
     enabled: Annotated[
         bool,
         EnvironmentVariable("OPENHCS_ENABLE_UI_BRIDGE"),
@@ -250,7 +239,7 @@ class AgentUiBridgeConfig(ExecutionConnectionSpec):
     descriptor_directory_path: Annotated[
         Path | None,
         EnvironmentVariable(
-            UiBridgeDescriptorEnvironment.descriptor_directory_path_key,
+            OpenHCSUiBridgeApplication.descriptor_directory_variable,
             clear_on_empty=True,
         ),
     ] = None
@@ -262,7 +251,7 @@ class AgentUiBridgeConfig(ExecutionConnectionSpec):
     descriptor_file_path: Annotated[
         Path | None,
         EnvironmentVariable(
-            UiBridgeDescriptorEnvironment.descriptor_file_path_key,
+            OpenHCSUiBridgeApplication.descriptor_file_variable,
             clear_on_empty=True,
         ),
     ] = None
@@ -271,59 +260,6 @@ class AgentUiBridgeConfig(ExecutionConnectionSpec):
     When set, this overrides ``descriptor_directory_path``. The server removes
     the descriptor during orderly shutdown.
     """
-    bridge_instance_id: NonBlankString | None = field(
-        default=None,
-        metadata={"ui_hidden": True},
-    )
-    """Stable bridge instance identifier. None generates a fresh ui-prefixed identifier at startup."""
-    auth_token: NonBlankString | None = field(
-        default=None,
-        metadata={"ui_hidden": True},
-    )
-    """Authentication token required by bridge clients. None generates a random token at startup."""
-    poll_timeout_ms: PositiveInteger = 100
-    """Maximum milliseconds the bridge server waits for socket activity per poll.
-
-    Lower values reduce shutdown latency while increasing idle wake-ups.
-    """
-    shutdown_timeout_seconds: PositiveFloat = 2.0
-    """Maximum seconds the GUI waits for the bridge thread during shutdown."""
-
-    @classmethod
-    def from_environment(
-        cls,
-        base: "AgentUiBridgeConfig | None" = None,
-    ) -> "AgentUiBridgeConfig":
-        if base is None:
-            base = cls()
-        return overlay_dataclass_from_environment(base)
-
-    def resolve_bridge_instance_id(self) -> str:
-        if self.bridge_instance_id is not None:
-            return self.bridge_instance_id
-        return f"ui-{uuid.uuid4()}"
-
-    def resolve_auth_token(self) -> str:
-        if self.auth_token is not None:
-            return self.auth_token
-        return secrets.token_urlsafe(32)
-
-    def descriptor_path_for(self, bridge_instance_id: str) -> Path:
-        if self.descriptor_file_path is not None:
-            return AgentRuntimePlatform.resolved_path(
-                self.descriptor_file_path
-            )
-        return (
-            self.descriptor_directory_or_default()
-            / f"ui_bridge_{bridge_instance_id}.json"
-        ).resolve(strict=False)
-
-    def descriptor_directory_or_default(self) -> Path:
-        if self.descriptor_directory_path is not None:
-            return AgentRuntimePlatform.resolved_path(
-                self.descriptor_directory_path
-            )
-        return UiBridgeDescriptorDirectoryAuthority.default_descriptor_dir()
 
 
 @dataclass(frozen=True)

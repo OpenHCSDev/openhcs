@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from openhcs import __version__ as OPENHCS_VERSION
-from openhcs.agent.ui_bridge_identities import UiStableWindowIdentityDeclaration
+from formbridge.bridge.identities import UiStableWindowIdentityDeclaration
 from openhcs.resources.brand import (
     BRAND_PRODUCT_NAME,
     BrandAsset,

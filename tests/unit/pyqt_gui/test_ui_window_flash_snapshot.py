@@ -6,16 +6,17 @@ import pytest
 from PyQt6.QtCore import QEvent
 from PyQt6.QtWidgets import QDialog, QVBoxLayout
 
-from openhcs.agent.dto.ui_bridge import (
+from formbridge.bridge.dto import (
     UiBridgeOperationStatusRequest,
     UiWindowSnapshotRequest,
     UiWindowSnapshotResult,
 )
-from openhcs.agent.services.ui_bridge_service import UiBridgeOperation
+from formbridge.bridge.service import UiBridgeOperation
 from python_introspect import dataclass_from_mapping, to_jsonable
-from openhcs.pyqt_gui.services.ui_agent_bridge import UiAgentBridgeService
-from openhcs.pyqt_gui.services.ui_bridge_windows import QtTopLevelWindowProjection
-from pyqt_reactive.services.window_snapshot import WindowSnapshotFrameCondition
+from formbridge.bridge.in_process import UiAgentBridgeService
+from pyqt_reactive.bridge.windows import QtTopLevelWindowProjection
+from formbridge.services.window_snapshot import WindowSnapshotFrameCondition
+from openhcs.pyqt_gui.services.ui_agent_bridge import OpenHCSUiAgentBridgeService
 
 
 @pytest.fixture
@@ -53,7 +54,7 @@ def native_snapshot_bridge(qapp):
     window.show()
     qapp.processEvents()
     projection = QtTopLevelWindowProjection(None)
-    bridge = UiAgentBridgeService()
+    bridge = OpenHCSUiAgentBridgeService()
     bridge.register_window_provider(projection)
     window_id = projection.summary(window).window_id
     yield bridge, form, window_id
@@ -199,7 +200,7 @@ def test_failed_observation_frame_and_existing_trace_decode_through_registered_o
     tmp_path,
 ):
     from formbridge.flash_trace import FlashTraceRecord
-    from pyqt_reactive.services.window_snapshot import FlashPaintFrame
+    from formbridge.services.window_snapshot import FlashPaintFrame
 
     bridge, form, window_id = native_snapshot_bridge
     accepted = bridge.snapshot_window(
@@ -261,14 +262,8 @@ def test_navigation_uses_existing_operation_with_terminal_native_driver_receipt(
     native_snapshot_bridge,
     prove_exposure,
 ):
-    from openhcs.agent.dto.ui_bridge import (
-        UiWindowNavigateRequest,
-        UiWindowNavigateResult,
-    )
-    from openhcs.pyqt_gui.services.ui_bridge_windows import (
-        UiWindowProjectionService,
-        WindowRouteIndex,
-    )
+    from formbridge.bridge.dto import UiWindowNavigateRequest, UiWindowNavigateResult
+    from pyqt_reactive.bridge.windows import UiWindowProjectionService, WindowRouteIndex
     from pyqt_reactive.services.window_manager import WindowManager
     from pyqt_reactive.services.window_navigation import FieldWindowNavigationDriver
 
@@ -326,7 +321,7 @@ def test_navigation_uses_existing_operation_with_terminal_native_driver_receipt(
 def test_unowned_target_navigation_is_terminal_failed_not_pending(
     native_snapshot_bridge,
 ):
-    from openhcs.agent.dto.ui_bridge import UiWindowNavigateRequest
+    from formbridge.bridge.dto import UiWindowNavigateRequest
 
     bridge, _, window_id = native_snapshot_bridge
     accepted = bridge.navigate_window(
@@ -344,7 +339,7 @@ def test_unowned_target_navigation_is_terminal_failed_not_pending(
 def test_tracker_observation_failure_uses_declared_operation_error_owner(
     native_snapshot_bridge,
 ):
-    from openhcs.agent.services.ui_bridge_service import UiBridgeNavigateWindowOperation
+    from formbridge.bridge.service import UiBridgeNavigateWindowOperation
 
     bridge, _, _ = native_snapshot_bridge
 
@@ -364,7 +359,7 @@ def test_tracker_observation_failure_uses_declared_operation_error_owner(
 
 def test_snapshot_tool_arguments_derive_capture_owner_fields(tmp_path):
     from python_introspect import project_dataclass
-    from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureSpec
+    from formbridge.services.window_snapshot import WindowSnapshotCaptureSpec
 
     request = UiWindowSnapshotRequest.from_fields(
         window_id="engineering-form",

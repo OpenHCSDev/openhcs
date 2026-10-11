@@ -38,7 +38,8 @@ from python_introspect import (
     resolve_optional,
 )
 
-from openhcs.agent.dto.common import AgentError, RenderedSource, SCHEMA_VERSION
+from formbridge.contracts import AgentError
+from openhcs.agent.dto.common import RenderedSource, SCHEMA_VERSION
 from openhcs.agent.dto.config import (
     ConfigFieldSchema,
     ConfigPatch,
