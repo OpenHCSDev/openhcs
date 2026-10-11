@@ -821,7 +821,7 @@ def require_single_image_payload(payload: Any) -> np.ndarray:
     if plane_axis is not None:
         raise ValueError(
             "Single-image raster serialization requires a payload projected off "
-            f"its declared {plane_axis.value!r} plane axis."
+            f"its declared {plane_axis.name!r} plane axis."
         )
     return np.asarray(payload.data)
 

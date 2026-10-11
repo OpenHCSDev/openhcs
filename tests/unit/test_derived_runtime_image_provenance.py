@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import numpy as np
 import pytest
@@ -7,7 +8,6 @@ from openhcs.core.artifacts.plans import ArtifactOutputPlan
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
@@ -137,7 +137,7 @@ def test_derived_singleton_runtime_plane_projects_by_output_name() -> None:
     metadata = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes((_source_plane(1),)),
         source_image_names=("OrigGreen",),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     derived = metadata.with_source_provenance(
@@ -155,7 +155,7 @@ def test_derived_singleton_runtime_plane_projects_by_output_name() -> None:
     assert derived.source_image_provenance_planes.runtime_source_image_names == (
         "OrigGreenOverlay",
     )
-    assert projected.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert projected.plane_axis is RuntimeSlicePlaneAxis
     assert projected_payload.data.shape == (1, 4, 5)
     assert projected.source_image_names == ("OrigGreenOverlay",)
     assert projected.source_provenance.represented_source_image_names == (
@@ -169,7 +169,7 @@ def test_declared_singleton_name_owns_projection_over_nested_source_name() -> No
     metadata = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes((_source_plane(1),)),
         source_image_names=("OrigGreenOverlay",),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     payload = metadata.payload_with(np.zeros((1, 4, 5), dtype=np.float32))
@@ -179,7 +179,7 @@ def test_declared_singleton_name_owns_projection_over_nested_source_name() -> No
     )
     projected = projected_payload.metadata
 
-    assert projected.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert projected.plane_axis is RuntimeSlicePlaneAxis
     assert projected_payload.data.shape == (1, 4, 5)
     assert projected.source_image_names == ("OrigGreenOverlay",)
     assert projected.source_provenance.represented_source_image_names == (
@@ -194,7 +194,7 @@ def test_one_derived_name_applies_to_every_declared_runtime_plane() -> None:
             (_source_plane(1), _source_plane(2))
         ),
         source_image_names=("OrigGreen", "OrigGreen"),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     derived = metadata.source_provenance.with_derived_source_image_names(
@@ -259,7 +259,7 @@ def test_source_name_projects_one_exact_named_runtime_slice() -> None:
             (_source_plane(1), _source_plane(2))
         ),
         source_image_names=("First", "Second"),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     payload = metadata.payload_with(np.zeros((2, 4, 5), dtype=np.float32))
 
@@ -288,7 +288,7 @@ def test_derived_plane_names_require_exact_declared_cardinality() -> None:
         source_image_provenance_planes=SourceImageProvenancePlanes(
             (_source_plane(1), _source_plane(2), _source_plane(3))
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     with pytest.raises(ValueError, match="one shared name or exactly one name"):
@@ -312,7 +312,7 @@ def test_scalar_contributors_survive_runtime_plane_projection() -> None:
             )
         ),
         source_image_names=("OrigOverlay",),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     projected = metadata.for_leading_source_plane(0)

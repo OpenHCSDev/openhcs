@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from dataclasses import dataclass
 from functools import wraps
@@ -37,7 +38,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
     SourceImageProvenancePlanes,
 )
@@ -196,7 +196,7 @@ def test_pure_2d_contract_slices_image_metadata_payload_nominally() -> None:
     payload = ImageMetadataPayload(
         data=stack,
         metadata=ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=(
                 SourceImageProvenancePlanes.from_components(paths=("z0.tif", "z1.tif"))
             ),
@@ -234,7 +234,7 @@ def test_native_flexible_callable_receives_declared_array_abi_and_keeps_slice_co
 ) -> None:
     stack = np.arange(40, dtype=np.float32).reshape(2, 4, 5)
     mask = np.ones_like(stack, dtype=bool)
-    payload = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(stack, mask)
+    payload = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis).payload_with(stack, mask)
     seen_shapes = []
 
     @numpy
@@ -281,7 +281,7 @@ def test_flexible_runtime_argument_preserves_plane_context_until_mode_selection(
     payload = ImageMetadataPayload(
         data=stack,
         metadata=ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("z0.tif", "z1.tif"),
             ),
@@ -304,7 +304,7 @@ def test_flexible_runtime_argument_preserves_plane_context_until_mode_selection(
     result = wrapped(call_argument, slice_by_slice=slice_by_slice)
     assert seen_shapes == ([(4, 5), (4, 5)] if slice_by_slice else [(2, 4, 5)])
     np.testing.assert_array_equal(result.data, stack + 1)
-    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimeSlicePlaneAxis
     assert result.metadata.source_image_provenance_planes.paths == (
         "z0.tif", "z1.tif",
     )
@@ -317,11 +317,11 @@ def test_pure_2d_contract_projects_stack_shaped_kwargs_per_slice() -> None:
     mask_data[1, 1, 1] = True
     stack = ImageMetadataPayload(
         data=stack_data,
-        metadata=ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
+        metadata=ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis),
     )
     mask = ImageMetadataPayload(
         data=mask_data,
-        metadata=ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
+        metadata=ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis),
     )
     seen_shapes: list[tuple[int, ...]] = []
     seen_true_indices: list[tuple[int, int]] = []
@@ -359,7 +359,7 @@ def test_pure_2d_contract_preserves_declared_source_binding_axis() -> None:
     stack = ImageMetadataPayload(
         data=np.arange(24, dtype=np.float32).reshape(2, 3, 4),
         metadata=ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+            plane_axis=SourceBindingPlaneAxis,
             source_image_names=source_aliases,
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=("blue.tif", "green.tif")
@@ -376,7 +376,7 @@ def test_pure_2d_contract_preserves_declared_source_binding_axis() -> None:
                 dtype=np.int32,
             )
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_image_names=source_aliases,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
@@ -402,7 +402,7 @@ def test_pure_2d_contract_preserves_declared_source_binding_axis() -> None:
     )
 
     assert seen_label_shapes == [(3, 4), (3, 4)]
-    assert result.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert result.metadata.plane_axis is SourceBindingPlaneAxis
     assert result.metadata.source_image_names == source_aliases
 
 
@@ -439,7 +439,7 @@ def test_volumetric_projection_accepts_metadata_payload_array_methods() -> None:
         data=stack,
         metadata=ImagePayloadMetadata(
             source_dtype="float32",
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ),
     )
 

@@ -910,7 +910,7 @@ class CellProfilerPlaneGeometry:
         if metadata.plane_axis is not None:
             raise ValueError(
                 "CellProfiler plane geometry requires an already-projected image; "
-                f"got declared {metadata.plane_axis.value!r} plane axis."
+                f"got declared {metadata.plane_axis.name!r} plane axis."
             )
         channel_axis = metadata.axis_index(ColourAxis, image_array)
         expected_rank = 2 if channel_axis is None else 3

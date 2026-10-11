@@ -4,6 +4,7 @@ Key idea: the abstraction boundary is the output *format* (writers), not per-ana
 """
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import copy
 import csv
@@ -44,7 +45,6 @@ from metaclass_registry.strategies import (
 from openhcs.core.runtime_array_values import runtime_array_operand
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -3728,7 +3728,7 @@ class ROIMaterializationPlaneMetadataAuthority:
 
         return ImagePayloadMetadata.compose(
             (item.value,),
-            mode=ImagePayloadMetadataCompositionMode.STACK,
+            mode=RuntimeSlicePlaneAxis,
             source_metadata=(metadata,),
         )
 

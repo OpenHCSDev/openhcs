@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import ast
 import json
 import threading
@@ -87,9 +88,6 @@ from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
     ObjectRelationship,
     ObjectRelationshipDeclaration,
-)
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_object_labels import (
@@ -714,7 +712,7 @@ def test_before_invocation_observes_exact_bound_call_boundary():
     context = DebugExecutionContextStub(debug_event_sink=sink)
     main_image = ImagePayloadMetadata(
         source_image_names=("Orig",),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.arange(6, dtype=np.uint16).reshape(1, 2, 3), None)
     auxiliary_output = ArtifactOutputPlan(
         name="auxiliary",
@@ -1063,7 +1061,7 @@ def test_projection_exception_contains_complete_invocation_context_without_debug
     )
     image = ImagePayloadMetadata(
         source_image_names=("OrigStain1", "OrigStain2"),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
     try:
         DebugRuntimeFixture.execute_function_chain(

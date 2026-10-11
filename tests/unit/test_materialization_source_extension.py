@@ -1,5 +1,6 @@
 """Issues257/264: preserve source identity into ordinary image publication."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from pathlib import Path
 from dataclasses import replace
 from types import SimpleNamespace
@@ -11,7 +12,6 @@ from polystore.memory import MemoryStorageBackend
 
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
@@ -248,7 +248,7 @@ def test_issue264_header_only_metadata_reaches_actual_image_writer():
 @pytest.mark.parametrize("well", ("A01", "image.ome.tif"))
 @pytest.mark.parametrize("extension", (".tif", ".ome.tif"))
 @pytest.mark.parametrize("retain_declared_extension", (False, True))
-@pytest.mark.parametrize("mode", tuple(ImagePayloadMetadataCompositionMode))
+@pytest.mark.parametrize("mode", (RuntimeSlicePlaneAxis, SourceBindingPlaneAxis))
 def test_real_source_schema_composition_to_named_output_and_image_materializer(
     well,
     extension,

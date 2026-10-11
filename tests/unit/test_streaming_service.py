@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
 from pathlib import Path
@@ -47,7 +48,6 @@ from openhcs.core.runtime_measurements import (
     ObjectCoreMeasurementFeature,
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source_projection import SourceArtifactProjection
@@ -690,7 +690,7 @@ def test_stream_images_routes_aggregate_channel_through_payload_plane_axis(
             ),
         ),
         source_dtype="int32",
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     projection = SourceArtifactProjection(
         address=None,

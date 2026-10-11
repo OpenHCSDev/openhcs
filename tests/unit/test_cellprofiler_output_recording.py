@@ -1,3 +1,5 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -171,19 +173,19 @@ def test_relationship_recording_uses_exact_artifact_relation() -> None:
         (None, (4, 5, 3), None),
         (
             RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 axis_size=1,
             ),
             (1, 4, 5, 3),
-            RuntimePlaneAxis.RUNTIME_SLICE,
+            RuntimeSlicePlaneAxis,
         ),
         (
             RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.SOURCE_BINDING,
+                axis=SourceBindingPlaneAxis,
                 axis_size=3,
             ),
             (3, 4, 5, 3),
-            RuntimePlaneAxis.RUNTIME_SLICE,
+            RuntimeSlicePlaneAxis,
         ),
     ),
 )
@@ -191,7 +193,7 @@ def test_image_output_recording_uses_exact_invocation_projection_for_rgb(
     monkeypatch: pytest.MonkeyPatch,
     plane_projection: RuntimePlaneAxisValueProjection | None,
     output_shape: tuple[int, ...],
-    expected_plane_axis: RuntimePlaneAxis | None,
+    expected_plane_axis: type[RuntimePlaneAxis] | None,
 ) -> None:
     measured_objects = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
     output = ArtifactSpec.output(
@@ -268,7 +270,7 @@ def test_output_recording_carries_exact_invocation_plane_projection(
     adapter.request = SimpleNamespace(artifact_outputs={output_plan.ref(): output_plan})
     image = np.zeros((2, 2), dtype=np.float32)
     invocation_projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=2,
     )
     recorder = Mock()

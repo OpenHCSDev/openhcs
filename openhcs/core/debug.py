@@ -1,6 +1,7 @@
 """Typed debug/test-mode substrate for OpenHCS runtime execution."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import json
 import hashlib
@@ -33,7 +34,6 @@ from openhcs.core.artifacts.kinds import (
 from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.core.function_patterns import CompiledFunctionInvocation
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
@@ -541,7 +541,7 @@ class DebugInvocationParameter:
             facts.extend(
                 (
                     "declared_plane_axis="
-                    f"{None if value.plane_axis is None else value.plane_axis.value!r}",
+                    f"{None if value.plane_axis is None else value.plane_axis.name!r}",
                     "declared_cardinality="
                     f"{None if projection is None else projection.axis_size!r}",
                 )
@@ -571,7 +571,7 @@ class DebugInvocationParameter:
             if metadata.plane_axis is not None:
                 payload_shape = tuple(int(axis_size) for axis_size in value.shape)
                 if plane_projector is not None and (
-                    metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+                    metadata.plane_axis is RuntimeSlicePlaneAxis
                     or not isinstance(plane_projector, RuntimePlaneProjection)
                 ):
                     projection = RuntimePlaneAxisValueProjection.from_projector(
@@ -580,10 +580,10 @@ class DebugInvocationParameter:
                         metadata.source_image_names,
                     )
                 if projection is None:
-                    facts.append(f"plane_axis={metadata.plane_axis.value!r}")
+                    facts.append(f"plane_axis={metadata.plane_axis.name!r}")
                 facts.extend(
                     (
-                        f"declared_plane_axis={metadata.plane_axis.value!r}",
+                        f"declared_plane_axis={metadata.plane_axis.name!r}",
                         f"declared_cardinality={payload_shape[0]}",
                     )
                 )
@@ -634,7 +634,7 @@ class DebugInvocationParameter:
                 else str(projection.plane_index)
             )
             projection_facts = (
-                f"plane_axis={projection.axis.value!r}",
+                f"plane_axis={projection.axis.name!r}",
                 f"plane_index={plane_coordinate}",
                 f"axis_size={projection.axis_size}",
                 f"source_alias_count={len(projection.source_aliases)}",

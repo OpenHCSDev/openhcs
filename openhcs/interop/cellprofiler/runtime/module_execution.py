@@ -1,6 +1,7 @@
 """Execution bridge from generated CellProfiler modules to OpenHCS runtime state."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import logging
 import time
@@ -51,7 +52,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
@@ -798,7 +798,7 @@ class CellProfilerModuleExecutor:
             )
             runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
                 adapter,
-                RuntimePlaneAxis.RUNTIME_SLICE,
+                RuntimeSlicePlaneAxis,
                 (),
             )
             projected_binding = (
@@ -1268,7 +1268,7 @@ class CellProfilerModuleExecutor:
         )
         runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
             adapter,
-            RuntimePlaneAxis.RUNTIME_SLICE,
+            RuntimeSlicePlaneAxis,
             (),
         )
         current_runtime_payload = current_image
@@ -1480,7 +1480,7 @@ class CellProfilerModuleExecutor:
             phase_started_at = time.perf_counter()
         runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
             adapter,
-            RuntimePlaneAxis.RUNTIME_SLICE,
+            RuntimeSlicePlaneAxis,
             (),
         )
         if (

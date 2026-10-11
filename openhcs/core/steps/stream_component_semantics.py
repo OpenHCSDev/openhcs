@@ -188,7 +188,7 @@ class StreamImagePayloadMetadataProjector:
         if metadata.plane_axis is None:
             return item_fields
 
-        item_fields[ViewerWireField.PLANE_AXIS.value] = metadata.plane_axis.value
+        item_fields[ViewerWireField.PLANE_AXIS.value] = metadata.plane_axis.name
         plane_component_values = metadata.retained_plane_component_values()
         if (
             not plane_component_values

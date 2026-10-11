@@ -1,5 +1,6 @@
 """Lightweight ownership/payload checks; these do not execute segmentation."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import ast
 from openhcs.interop.cellprofiler.object_label_variants import (
     SmallRemovedLabels,
@@ -69,17 +70,17 @@ def _objects(source):
 
 def test_selected_response_keeps_source_frame_without_acquisition_intensity_scale():
     from openhcs.core.runtime_plane_projection import (
-        RuntimePlaneAxis, RuntimePlaneAxisValueProjection,
+        RuntimePlaneAxisValueProjection,
     )
 
     source = _source()
     stack = source.metadata.replace_fields(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_dtype="uint16",
     ).payload_with(source.data[None])
     pixels = np.linspace(0, 3, 30, dtype=np.float32).reshape(1, 5, 6)
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=1
+        axis=RuntimeSlicePlaneAxis, axis_size=1
     )
     output = SelectedDiagnosticPlaneImageOutput(pixels, (0,))
     resolved = output.resolve_source_context(stack, projection)
@@ -204,7 +205,6 @@ def test_ordinary_image_contextualization_preserves_unexecuted_masks():
 
 
 def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identity():
-    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
     from openhcs.core.processing_contracts import (
         Pure2DAuxiliaryOutputAggregator,
     )
@@ -221,7 +221,7 @@ def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identi
     planes = [DiagnosticPlaneSource.from_image(source).plane(source.data)
               for source in (first, second)]
     value = Pure2DAuxiliaryOutputAggregator.aggregate(
-        planes, "numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        planes, "numpy", plane_axis=RuntimeSlicePlaneAxis
     )
     import pickle
     from openhcs.core.aligned_image_payload import ProducedImageStack
@@ -236,7 +236,7 @@ def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identi
     assert RuntimeSliceProjection.full_stack_value(value) is composed
     np.testing.assert_array_equal(composed.data, np.stack([first.data, second.data]))
     np.testing.assert_array_equal(composed.mask, np.stack([first.mask, second.mask]))
-    assert value.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert value.metadata.plane_axis is RuntimeSlicePlaneAxis
     assert value.metadata.source_provenance.source_plane_count == 2
     reloaded = pickle.loads(pickle.dumps(value))
     assert np.shares_memory(reloaded.slices[0].data, reloaded.compose().data)
@@ -251,7 +251,6 @@ def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identi
 def test_produced_input_snapshot_owns_canonical_pixels_and_masks(shared_mask, spatial_mask):
     import pickle
     from openhcs.core.aligned_image_payload import ProducedImageStack
-    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 
     pixels = (np.full((3, 4), 7, dtype=np.uint16),
               np.full((3, 4), 0.25, dtype=np.float32))
@@ -264,8 +263,8 @@ def test_produced_input_snapshot_owns_canonical_pixels_and_masks(shared_mask, sp
         tuple(MaskedImagePayload(data, mask, metadata)
               for data, mask in zip(pixels, masks, strict=True)),
         memory_type="numpy", plane_axis=(
-            RuntimePlaneAxis.SOURCE_BINDING if spatial_mask
-            else RuntimePlaneAxis.RUNTIME_SLICE
+            SourceBindingPlaneAxis if spatial_mask
+            else RuntimeSlicePlaneAxis
         ),
     )
     expected = np.stack(pixels)

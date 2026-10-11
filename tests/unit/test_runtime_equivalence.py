@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from openhcs.interop.cellprofiler.measurement_dialect import CellProfilerEquivalencePolicy
 
@@ -107,9 +108,6 @@ from openhcs.core.runtime_relationships import (
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
-)
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
@@ -823,7 +821,7 @@ def test_runtime_reference_artifact_equivalence_projects_object_numbers_per_plan
             declared_object_id_domains=((1, 2), (1, 2)),
             scope=ObjectLabelDomainScope.PLANE,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     payload = label_set
     value = RuntimeValue(
@@ -4853,7 +4851,7 @@ def test_runtime_reference_artifact_equivalence_derives_relationship_child_locat
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     store.record(
         RuntimeValue(
@@ -7703,7 +7701,7 @@ def test_runtime_measurement_snapshot_uses_declared_plane_object_domains(
                         declared_object_id_domains=((1, 2), (1, 2, 3, 4)),
                         scope=ObjectLabelDomainScope.PLANE,
                     ),
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                 ),
             ),
         ),
@@ -7766,7 +7764,7 @@ def test_runtime_measurement_snapshot_preserves_multi_source_declared_object_dom
                 "SSC",
                 ObjectLabelPayload(
                     variant_data=ObjectLabelVariantData(labels=labels),
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                     source_image_names=("BF_image", "MorphBf"),
                     domain=ObjectLabelDomain(
                         declared_object_id_domains=((1, 2), (1, 2, 3, 4)),
@@ -7923,7 +7921,7 @@ def test_runtime_measurement_snapshot_preserves_repeated_declared_plane_domains(
                 "SSC",
                 ObjectLabelPayload(
                     variant_data=ObjectLabelVariantData(labels=labels),
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    plane_axis=RuntimeSlicePlaneAxis,
                     domain=ObjectLabelDomain(
                         declared_object_id_domains=((1, 2), (1, 2)),
                         scope=ObjectLabelDomainScope.PLANE,

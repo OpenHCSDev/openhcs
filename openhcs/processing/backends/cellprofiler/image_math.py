@@ -1,6 +1,7 @@
 """ImageMath operation semantics for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -25,7 +26,6 @@ from openhcs.core.runtime_image_values import (
     project_image_mask_to_data_domain,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
@@ -827,7 +827,7 @@ class ImageMathPreparedOperands:
         image: RuntimeArrayData,
     ) -> tuple[RuntimeArrayData, ...]:
         metadata = image.metadata
-        if metadata.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING:
+        if metadata.plane_axis is not SourceBindingPlaneAxis:
             return (image,)
         axis_size = metadata.source_provenance.source_plane_count
         if axis_size <= 0:
@@ -836,7 +836,7 @@ class ImageMathPreparedOperands:
                 "plane provenance."
             )
         projection = RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.SOURCE_BINDING,
+            axis=SourceBindingPlaneAxis,
             axis_size=axis_size,
             source_aliases=metadata.source_image_names,
         )
@@ -877,7 +877,7 @@ class ImageMathPreparedOperands:
         metadata = self.source_image.metadata
         if metadata.unit_interval_intensity is not None:
             metadata = metadata.without_unit_interval_intensity_scale()
-        if metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING:
+        if metadata.plane_axis is SourceBindingPlaneAxis:
             return metadata.collapse_leading_plane_axis()
         return metadata
 

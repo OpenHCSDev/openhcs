@@ -1,5 +1,6 @@
 """Receiving #134: actual graph context/writer/ZIP, without a native process."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.kinds import ImageArtifactType
 
 from pathlib import Path
@@ -23,7 +24,6 @@ from openhcs.core.artifacts.kinds import (
 from openhcs.core.config import NapariStreamingConfig
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_spatial_graph import (
     SpatialGraph,
     SpatialGraphEdge,
@@ -117,7 +117,7 @@ def graph_and_plan(*, plane, graph_type=SpatialGraph, extra_features=None):
 
 def contextualize(graph, plan):
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/engineering/nuclear.tif", "/engineering/body.tif"),
             component_metadata=tuple(

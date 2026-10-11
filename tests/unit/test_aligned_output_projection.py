@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from types import SimpleNamespace
 
 import numpy as np
@@ -14,7 +15,6 @@ from openhcs.core.aligned_image_payload import (
 )
 from openhcs.core.memory import MemoryType
 from openhcs.core.runtime_image_values import ImagePayload, ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 
 
@@ -24,10 +24,10 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
     mask = first > 3
     payloads = (
         ImagePayloadMetadata(
-            source_path="first.tif", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+            source_path="first.tif", plane_axis=RuntimeSlicePlaneAxis
         ).payload_with(first, mask),
         ImagePayloadMetadata(
-            source_path="second.tif", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+            source_path="second.tif", plane_axis=RuntimeSlicePlaneAxis
         ).payload_with(second, None),
     )
     contexts = tuple(AlignedImageSliceContext.main_flow(name) for name in ("A", "B"))
@@ -74,7 +74,7 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
 def test_shared_projection_retains_nesting_and_fresh_metadata_snapshots():
     array = np.ones((2, 2, 2), dtype=np.float32)
     metadata = ImagePayloadMetadata(
-        source_path="first.tif", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        source_path="first.tif", plane_axis=RuntimeSlicePlaneAxis
     )
     payload = metadata.payload_with(array, None)
     stack = AlignedImageStack((payload,))

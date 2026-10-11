@@ -1,5 +1,6 @@
 """Named source origins select pixel authority, not just a provenance alias."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from types import SimpleNamespace
 
 import numpy as np
@@ -8,7 +9,6 @@ import pytest
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_binding_selection import (
     PipelineStartSourceUniverseRequest,
     SourceUniverseRequest,
@@ -51,7 +51,7 @@ def test_step_input_names_current_pixels_without_loading_workspace(alias):
 def test_step_input_selects_current_component_planes_not_original_aliases():
     data = np.stack((np.full((4, 5), 7), np.full((4, 5), 91)))
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_names=("Raw1", "Raw2"),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/synthetic/ch1.tif", "/synthetic/ch2.tif"),
@@ -83,7 +83,7 @@ def test_binding_origin_uses_existing_registered_universe_family():
     ) is PipelineStartSourceUniverseRequest
 
 
-@pytest.mark.parametrize("axis", (RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING))
+@pytest.mark.parametrize("axis", (RuntimeSlicePlaneAxis, SourceBindingPlaneAxis))
 @pytest.mark.parametrize("aliases", (("Process", "Nuclear"), ("Nuclear", "Process")))
 def test_named_step_inputs_select_distinct_current_pixels_independent_of_order(axis, aliases):
     values = {"Process": 7, "Nuclear": 91}
@@ -116,7 +116,7 @@ def test_named_step_inputs_select_distinct_current_pixels_independent_of_order(a
 
 def test_existing_alias_and_explicit_selector_must_agree():
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_names=("Raw1", "Raw2"),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/synthetic/ch1.tif", "/synthetic/ch2.tif"),
@@ -134,7 +134,7 @@ def test_existing_alias_and_explicit_selector_must_agree():
 def test_named_step_input_preserves_all_planes_of_a_multi_plane_image():
     data = np.stack(tuple(np.full((4, 5), value) for value in (7, 11, 91)))
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_names=("Volume", "Volume", "Other"),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/synthetic/z1.tif", "/synthetic/z2.tif", "/synthetic/other.tif"),
@@ -145,14 +145,14 @@ def test_named_step_input_preserves_all_planes_of_a_multi_plane_image():
     result = NamedSourceBinding(alias="Volume").project_step_input_payload(payload)
 
     np.testing.assert_array_equal(result.data, data[:2])
-    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimeSlicePlaneAxis
     assert result.metadata.source_provenance.source_plane_count == 2
 
 
 def test_new_alias_without_selectors_still_names_the_complete_current_stack():
     data = np.ones((2, 4, 5))
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_names=("Raw1", "Raw2"),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/synthetic/ch1.tif", "/synthetic/ch2.tif"),

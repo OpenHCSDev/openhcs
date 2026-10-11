@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import importlib
 from openhcs.interop.cellprofiler.object_label_variants import (
     SmallRemovedLabels,
@@ -163,7 +164,6 @@ from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -1317,7 +1317,7 @@ def test_runtime_batch_projects_singleton_aligned_axis_before_colocalization() -
         },
         execution_mode=AlignedStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=1,
         ),
         batch_index=0,
@@ -1451,7 +1451,7 @@ def test_colocalization_batches_preserve_step_thresholds_and_live_source_epoch(
     payload = MaskedImagePayload(
         data=image,
         mask=mask,
-        metadata=ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.SOURCE_BINDING),
+        metadata=ImagePayloadMetadata(plane_axis=SourceBindingPlaneAxis),
     )
     label_sets = tuple(
         ObjectLabelPayload(
@@ -1761,7 +1761,7 @@ def test_measure_colocalization_respects_masked_payload_pixels():
             data=image,
             mask=np.stack((mask, mask)),
             metadata=ImagePayloadMetadata(
-                plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+                plane_axis=SourceBindingPlaneAxis,
             ),
         ),
         do_costes=False,
@@ -2688,7 +2688,7 @@ def test_measure_texture_objects_rejects_unprojected_plane_domain_stack():
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)), scope=ObjectLabelDomainScope.PLANE
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     with pytest.raises(ValueError, match="runtime-projected 2-D"):
         measure_texture_objects(image, labels, scale=1, dtype_config=DtypeConfig())
@@ -2750,14 +2750,14 @@ def test_measure_texture_objects_preserves_runtime_projected_label_domain():
             declared_object_id_domains=((1, 2), (3, 4)),
             scope=ObjectLabelDomainScope.PLANE,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     results = []
     for slice_index in range(2):
         projected = RuntimeSliceProjection.value_for_slice(
             labels,
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 plane_index=slice_index,
                 axis_size=2,
             ),
@@ -3618,7 +3618,7 @@ def test_correct_illumination_apply_projects_runtime_slice_artifact_stack() -> N
                 np.full((2, 2), 0.6, dtype=np.float32),
             )
         ),
-        metadata=ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
+        metadata=ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis),
     )
     illumination = ImageMetadataPayload(
         data=np.stack(
@@ -3627,7 +3627,7 @@ def test_correct_illumination_apply_projects_runtime_slice_artifact_stack() -> N
                 np.full((2, 2), 0.3, dtype=np.float32),
             )
         ),
-        metadata=ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
+        metadata=ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis),
     )
     result = correct_illumination_apply(
         image,
@@ -3660,7 +3660,7 @@ def test_measure_colocalization_uses_payload_metadata_for_costes_scale() -> None
         mask=np.ones(image.shape, dtype=bool),
         metadata=ImagePayloadMetadata(
             source_plane_intensity_scales=(65535.0, 65535.0),
-            plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+            plane_axis=SourceBindingPlaneAxis,
         ),
     )
     _, metadata_measurements = measure_colocalization(
@@ -4325,7 +4325,7 @@ def test_pure_2d_contract_wrapper_aggregates_illumination_outputs_per_slice():
         ImageMetadataPayload(
             data=image,
             metadata=ImagePayloadMetadata(
-                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                plane_axis=RuntimeSlicePlaneAxis,
             ),
         ),
         dtype_config=DtypeConfig(),
@@ -4661,7 +4661,7 @@ def test_mask_image_uses_aligned_mask_stack_planes():
             RuntimeSliceProjection.value_for_slice(
                 image,
                 RuntimePlaneAxisValueProjection.from_selected_plane(
-                    axis=RuntimePlaneAxis.SOURCE_BINDING,
+                    axis=SourceBindingPlaneAxis,
                     plane_index=index,
                     axis_size=2,
                 ),
@@ -4669,7 +4669,7 @@ def test_mask_image_uses_aligned_mask_stack_planes():
             RuntimeSliceProjection.value_for_slice(
                 mask,
                 RuntimePlaneAxisValueProjection.from_selected_plane(
-                    axis=RuntimePlaneAxis.SOURCE_BINDING,
+                    axis=SourceBindingPlaneAxis,
                     plane_index=index,
                     axis_size=2,
                 ),
@@ -4694,7 +4694,7 @@ def test_mask_image_rejects_unprojected_object_label_stack():
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     with pytest.raises(ValueError, match="cardinalities must exactly match"):
         mask_image(
@@ -4716,7 +4716,7 @@ def test_relate_objects_rejects_mixed_object_label_domain_scopes():
             declared_object_id_domains=((1, 2), (1, 2)),
             scope=ObjectLabelDomainScope.PLANE,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     child_payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=child_plane)
@@ -4768,7 +4768,7 @@ def test_relate_objects_uses_explicitly_projected_plane_identity():
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     child_stack = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(
@@ -4780,12 +4780,12 @@ def test_relate_objects_uses_explicitly_projected_plane_identity():
             declared_object_id_domains=((1,), (1,)),
             scope=ObjectLabelDomainScope.PLANE,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     relationships = []
     for slice_index in range(2):
         axis = RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=slice_index, axis_size=2
+            axis=RuntimeSlicePlaneAxis, plane_index=slice_index, axis_size=2
         )
         _output, relationship, _reverse_relationship, _measurements = (
             relate_objects.__wrapped__(
@@ -4861,7 +4861,7 @@ def test_align_returns_two_registered_images_and_shift_measurements():
                     paths=("/input/first.tif", "/input/second.tif")
                 )
             ),
-            plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+            plane_axis=SourceBindingPlaneAxis,
         ).payload_with(image, None),
         crop_mode=AlignModule.CropMode.KEEP_SIZE,
         dtype_config=DtypeConfig(),
@@ -4915,7 +4915,7 @@ def test_align_applies_similar_shift_to_additional_images():
                     )
                 )
             ),
-            plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+            plane_axis=SourceBindingPlaneAxis,
         ).payload_with(image, None),
         crop_mode=AlignModule.CropMode.KEEP_SIZE,
         additional_alignment_modes=(AlignModule.AdditionalMode.SIMILARLY,),
@@ -5026,7 +5026,7 @@ def test_overlay_outlines_rejects_unprojected_object_label_stack():
             declared_object_id_domains=((1,), (1,)),
             scope=ObjectLabelDomainScope.PLANE,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     with pytest.raises(ValueError, match="runtime-projected 2-D"):
@@ -5048,12 +5048,12 @@ def test_overlay_outlines_renders_exact_projected_empty_label_plane():
             declared_object_id_domains=((), ()),
             scope=ObjectLabelDomainScope.PLANE,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     projected = RuntimeSliceProjection.value_for_slice(
         payload,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=1,
             axis_size=2,
         ),
@@ -5089,7 +5089,7 @@ def test_measurement_batch_admission_uses_declared_processing_domain(
         kwargs={"slice_by_slice": slice_by_slice},
         execution_mode=mode,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
         batch_index=0,

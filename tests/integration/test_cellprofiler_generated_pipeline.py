@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 
 import ast
@@ -64,7 +65,6 @@ from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_tabular_values import measurement_row_mapping
 from openhcs.core.runtime_stores import StoredRuntimeValue
 from openhcs.core.source_binding_workspace import (
@@ -847,7 +847,7 @@ def test_official_colocalization_preserves_relationships_and_configured_export(
                 Microscopy.Channel,
                 "1",
                 (2, 1040, 1392),
-                RuntimePlaneAxis.RUNTIME_SLICE,
+                RuntimeSlicePlaneAxis,
             ),
         ),
         "Objects2": (
@@ -855,7 +855,7 @@ def test_official_colocalization_preserves_relationships_and_configured_export(
                 Microscopy.Channel,
                 "2",
                 (2, 1040, 1392),
-                RuntimePlaneAxis.RUNTIME_SLICE,
+                RuntimeSlicePlaneAxis,
             ),
         ),
         "ColocalizedRegion": (
@@ -863,7 +863,7 @@ def test_official_colocalization_preserves_relationships_and_configured_export(
                 Microscopy.Channel,
                 "1",
                 (2, 1040, 1392),
-                RuntimePlaneAxis.RUNTIME_SLICE,
+                RuntimeSlicePlaneAxis,
             ),
         ),
     }

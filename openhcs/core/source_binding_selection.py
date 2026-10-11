@@ -1,6 +1,7 @@
 """Shared source-binding candidate selection for planning and runtime."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
@@ -60,8 +61,6 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
 )
 from openhcs.core.aligned_image_payload import stack_image_payloads
-from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.steps.function_io import get_all_image_paths
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
@@ -1689,9 +1688,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
             and projected_payloads[0].metadata.persists_whole_image()
             else stack_image_payloads(
                 projected_payloads,
-                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
-                    RuntimePlaneAxis.RUNTIME_SLICE
-                ),
+                metadata_mode=RuntimeSlicePlaneAxis,
             )
         )
         return cls.admit_source_artifact_cohort(
@@ -1721,9 +1718,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                 )
             payload = stack_image_payloads(
                 (payload,),
-                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
-                    RuntimePlaneAxis.RUNTIME_SLICE
-                ),
+                metadata_mode=RuntimeSlicePlaneAxis,
             )
             metadata = payload.metadata
         domain = source_binding_plan.source_spatial_domain.with_source_cohort(

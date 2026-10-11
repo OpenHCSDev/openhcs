@@ -1,11 +1,11 @@
 """Real source-owner projection of one field fitted from all observations."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
 
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -15,7 +15,7 @@ from openhcs.processing.backends.enhance.flatfield import FittedIlluminationFiel
 def observation_source(components):
     count = len(components)
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         intensity_scale=65535.0,
         source_dtype="uint16",
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -41,7 +41,7 @@ def test_field_collapses_pixels_not_contributor_history():
     result = field.resolve_source_context(
         source,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=3,
         ),
     )
@@ -91,7 +91,7 @@ def test_z_only_stack_is_not_an_observation_ensemble():
     [
         None,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=0,
             axis_size=3,
         ),
@@ -114,7 +114,7 @@ def test_field_keeps_observation_count_through_real_array_conversion():
 def test_field_rejects_wrong_grid_or_observation_count():
     source = cross_site_source()
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=3,
     )
     with pytest.raises(ValueError, match="spatial grid"):

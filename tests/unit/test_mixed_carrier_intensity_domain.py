@@ -1,5 +1,7 @@
 """Current intensity units survive composition, projection and native storage."""
 
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import dataclass
 
 import numpy as np
@@ -12,7 +14,6 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.image_file_serialization import ImageFileFormat, ImageFileSourceMetadata
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
     ImageUnitIntervalIntensityMetadata,
 )
 from openhcs.core.source_bindings import NamedSourceBinding
@@ -33,7 +34,7 @@ def source(data, *, scale=255, channel_axis=None):
 
 @pytest.mark.parametrize('reverse', (False, True))
 @pytest.mark.parametrize('color', ('replicated', 'distinct'))
-@pytest.mark.parametrize('mode', tuple(ImagePayloadMetadataCompositionMode))
+@pytest.mark.parametrize('mode', (RuntimeSlicePlaneAxis, SourceBindingPlaneAxis))
 def test_original_source_binding_composition_and_selected_cp_units(reverse, color, mode):
     from openhcs.interop.cellprofiler.image_normalization import normalize_cellprofiler_image_payload
 
@@ -72,7 +73,7 @@ def test_raw_heterogeneous_declared_scales_survive_integer_float_promotion(rever
               source(np.full((2, 3), 15, dtype=np.float32), scale=30)]
     if reverse:
         inputs.reverse()
-    stack = stack_image_payloads(inputs, metadata_mode=ImagePayloadMetadataCompositionMode.STACK)
+    stack = stack_image_payloads(inputs, metadata_mode=RuntimeSlicePlaneAxis)
     assert stack.metadata.unit_interval_intensity is None
     np.testing.assert_allclose(stack.normalize_intensity_payload(), 0.5)
     for index, original in enumerate(inputs):
@@ -153,7 +154,7 @@ def test_independent_normalization_and_composition_capabilities_use_cooperative_
         np.full((2, 3), 32, dtype=np.uint8))
     processed = ImagePayloadMetadata(unit_interval_intensity=ImageUnitIntervalIntensityMetadata()).payload_with(
         np.full((2, 3), 0.5, dtype=np.float32))
-    result = DeclaredComposition((raw, processed), ImagePayloadMetadataCompositionMode.STACK).compose()
+    result = DeclaredComposition((raw, processed), RuntimeSlicePlaneAxis).compose()
     np.testing.assert_array_equal(result.data, 0.5)
     assert calls == ['normalization', 'pixels', 'mask']
     assert DeclaredMetadata.__mro__[:3] == (DeclaredMetadata, NormalizationAudit, ImagePayloadMetadata)
@@ -171,7 +172,7 @@ def test_saved_output_context_retains_the_independent_composed_buffer_domain():
     raw = source(np.full((2, 3), 128, dtype=np.uint8))
     normalized = raw.normalize_intensity_payload()
     inputs = (raw, normalized)
-    copied = stack_image_payloads(inputs, metadata_mode=ImagePayloadMetadataCompositionMode.STACK)
+    copied = stack_image_payloads(inputs, metadata_mode=RuntimeSlicePlaneAxis)
     restored = ImagePayloadStackComposition.with_saved_output_context(
         copied, inputs, tuple(value.metadata for value in inputs),
         single_output_plane_axis=None,
@@ -189,7 +190,7 @@ def test_common_quantization_requires_every_current_plane_not_only_known_members
     normalized = raw.normalize_intensity_payload()
     remapped = normalized.metadata.without_unit_interval_intensity_scale().payload_with(
         np.full((2, 3), 0.123456, dtype=np.float32))
-    mixed = stack_image_payloads((raw, remapped), metadata_mode=ImagePayloadMetadataCompositionMode.STACK)
+    mixed = stack_image_payloads((raw, remapped), metadata_mode=RuntimeSlicePlaneAxis)
     assert mixed.metadata.common_unit_interval_intensity_scale() is None
     assert mixed.metadata.for_leading_source_plane(0).unit_interval_intensity_scale == 255
 

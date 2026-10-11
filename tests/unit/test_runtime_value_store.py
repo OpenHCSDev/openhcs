@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.measurement_dialect import PlainMeasurementDialect
 from dataclasses import replace
 import pickle
@@ -60,9 +61,6 @@ from openhcs.core.measurement_feature_queries import (
     RuntimeObjectLabelMeasurementQueryCache,
 )
 from openhcs.core.runtime_artifact_queries import RuntimeMeasurementTablesQueryCache
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
-)
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.runtime_artifact_values import ArtifactKey, RuntimeValue
 from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
@@ -911,7 +909,7 @@ def test_runtime_artifact_input_projection_transposes_producer_stack_axis() -> N
     for channel_index, channel in enumerate(("1", "2", "3"), start=1):
         group_plan = output_plan.for_group(channel)
         payload = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=(
                 SourceImageProvenancePlanes.from_components(
                     paths=tuple(f"/source/site_{site}.tif" for site in (1, 2, 3)),
@@ -999,7 +997,7 @@ def test_artifact_candidate_scopes_preserve_projected_site_time_correlation() ->
         variable_components=variables,
     )
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/source/original_first.tif", "/source/original_second.tif"),
             component_metadata=(
@@ -1173,7 +1171,7 @@ def test_runtime_artifact_input_projection_ignores_scalar_pixel_contributors() -
 
     stacked_store = RuntimeValueStore()
     stacked_payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=runtime_planes,
     ).payload_with(
         np.stack(
@@ -1216,7 +1214,7 @@ def test_runtime_artifact_input_projection_collapses_excluded_singleton_axis() -
     for site_index, site in enumerate(("1", "2"), start=1):
         group_plan = output_plan.for_group(site)
         payload = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_image_provenance_planes=(
                 SourceImageProvenancePlanes.from_components(
                     paths=(f"/source/site_{site}.tif",),
@@ -1276,7 +1274,7 @@ def test_runtime_artifact_input_projection_collapses_excluded_singleton_axis() -
             )
         ),
     )
-    assert payload.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert payload.metadata.plane_axis is RuntimeSlicePlaneAxis
 
 
 def test_runtime_artifact_input_reconstructs_singleton_producer_group_axis() -> None:
@@ -1330,7 +1328,7 @@ def test_runtime_artifact_input_reconstructs_singleton_producer_group_axis() -> 
         payload.data,
         np.full((1, 2, 2), 1, dtype=np.float32),
     )
-    assert payload.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert payload.metadata.plane_axis is RuntimeSlicePlaneAxis
 
 
 def test_runtime_artifact_input_keeps_singleton_scalar_selection_unstacked() -> None:

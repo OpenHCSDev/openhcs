@@ -8,6 +8,7 @@ policy used by those algorithms live here too.
 """
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import inspect
 from abc import ABC, abstractmethod
@@ -497,7 +498,7 @@ class Pure2DAuxiliaryOutputAggregator(
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis = RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis: type[RuntimePlaneAxis] = RuntimeSlicePlaneAxis,
     ) -> Any:
         if not values:
             raise ValueError("PURE_2D auxiliary aggregation requires output values.")
@@ -548,7 +549,7 @@ class Pure2DAuxiliaryOutputAggregator(
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         """Aggregate compatible per-slice auxiliary values."""
 
@@ -563,7 +564,7 @@ class DirectedRelationshipPure2DOutputAggregator(Pure2DAuxiliaryOutputAggregator
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> DirectedObjectRelationshipPayload:
         del memory_type, plane_axis
         return DirectedObjectRelationshipPayload(
@@ -592,7 +593,7 @@ class SpatialGridPure2DOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> RuntimeSliceAlignedValues[SpatialGrid]:
         del memory_type, plane_axis
         return RuntimeSliceAlignedValues(tuple(values))
@@ -608,7 +609,7 @@ class AlignedImageStackPure2DOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> AlignedImageStack:
         aligned_values = tuple(values)
         first = aligned_values[0]
@@ -662,7 +663,7 @@ class RuntimeArrayPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         del values, memory_type, plane_axis
         raise NotImplementedError(
@@ -694,7 +695,7 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         return ImagePayloadSliceStack.from_output_slices(
             values, memory_type=memory_type, plane_axis=plane_axis,
@@ -733,7 +734,7 @@ class ObjectLabelPayloadPure2DAuxiliaryOutputAggregator(
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         return ObjectLabelPure2DSliceAggregator.aggregate(
             values,
@@ -760,7 +761,7 @@ class NumPyPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         return ImagePayloadSliceStack.from_output_slices(
             values, memory_type=memory_type, plane_axis=plane_axis,
@@ -777,7 +778,7 @@ class ColumnarRowsPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> ColumnarRows:
         del memory_type, plane_axis
         if len(values) == 1:
@@ -824,7 +825,7 @@ class FlatSequencePure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
         values: list[Any],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> Any:
         del memory_type, plane_axis
         flattened: list[Any] = []
@@ -857,7 +858,7 @@ class PlaneSplit:
     """A main-flow value split into the planes of its declared plane axis."""
 
     slices: tuple[Any, ...]
-    plane_axis: RuntimePlaneAxis
+    plane_axis: type[RuntimePlaneAxis]
     memory_type: str
     kwargs: dict[str, Any]
     source_aliases: tuple[str, ...] = ()

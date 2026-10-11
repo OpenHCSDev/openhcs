@@ -1,6 +1,7 @@
 """Colocalization backends for CellProfiler-compatible measurements."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Mapping
@@ -61,7 +62,6 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementFeatureRelation,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimeSliceInvariantValue,
     RuntimeSliceIndexedValue,
 )
@@ -234,7 +234,7 @@ class ColocalizationThresholdMaskRuntimeOutput(RuntimeSliceIndexedValue):
         if self.object_labels is None:
             return self
         projection = self.object_labels.declared_plane_projection()
-        if projection is None or projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+        if projection is None or projection.axis is not RuntimeSlicePlaneAxis:
             return self
         projected = RuntimeSliceProjection.value_for_slice(
             self.object_labels,
@@ -2991,10 +2991,10 @@ def _colocalization_source_plane_output(
             source_channel_index,
             channel_data=output_data,
         )
-    if metadata.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING:
+    if metadata.plane_axis is not SourceBindingPlaneAxis:
         raise ValueError(
             "MeasureColocalization source channels require the declared "
-            f"source-binding plane axis, got {metadata.plane_axis.value!r}."
+            f"source-binding plane axis, got {metadata.plane_axis.name!r}."
         )
     source_plane = image.slice_payload(image_data[source_channel_index],
         source_channel_index,)

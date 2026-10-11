@@ -87,7 +87,7 @@ def measurement_source_image_name_for_slice(
         if source_metadata.plane_axis is not None:
             raise ValueError(
                 "Measurement source metadata declares plane axis "
-                f"{source_metadata.plane_axis.value!r} without a runtime projection."
+                f"{source_metadata.plane_axis.name!r} without a runtime projection."
             )
         if slice_index != 0:
             raise ValueError(

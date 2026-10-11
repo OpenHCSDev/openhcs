@@ -1,6 +1,8 @@
 """Nominal measurement-image alignment contracts."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import logging
 from abc import ABC, abstractmethod
@@ -23,7 +25,6 @@ from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileTim
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.runtime_object_labels import ObjectLabelRepresentation
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
 )
@@ -143,7 +144,7 @@ class MeasurementImageLabelAlignmentRequest:
         """Return this request with only the measurement image source-projected."""
         projection = RuntimePlaneAxisValueProjection.from_projector(
             self.plane_projector,
-            RuntimePlaneAxis.SOURCE_BINDING,
+            SourceBindingPlaneAxis,
             self.source_aliases,
         )
         if projection is None or projection.plane_index is None:
@@ -374,7 +375,7 @@ class MeasurementImageLabelAlignmentRequest:
         if domain.scope is not ObjectLabelDomainScope.PAYLOAD and not (
             domain.scope is ObjectLabelDomainScope.PLANE
             and label_payload.plane_axis
-            in (RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING)
+            in (RuntimeSlicePlaneAxis, SourceBindingPlaneAxis)
         ):
             raise ValueError(
                 "Object-label reference alignment has no behavior declared for "

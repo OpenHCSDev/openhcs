@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 
 import numpy as np
@@ -16,7 +17,6 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
@@ -26,7 +26,7 @@ from openhcs.core.runtime_slice_projection import (
 )
 
 
-def _resolver(*, axis=RuntimePlaneAxis.RUNTIME_SLICE, size=2, index=1):
+def _resolver(*, axis=RuntimeSlicePlaneAxis, size=2, index=1):
     return AlignedImageStackKwargResolver(
         RuntimePlaneAxisValueProjection.from_selected_plane(
             axis=axis, plane_index=index, axis_size=size,
@@ -57,7 +57,7 @@ def test_unknown_aligned_value_passes_through_but_ordinary_projection_stays_stri
 
 
 def test_image_aligned_operation_does_not_remove_runtime_plane_axis():
-    value = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(
+    value = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis).payload_with(
         np.arange(24, dtype=np.float32).reshape(2, 3, 4),
     )
     resolver = _resolver()
@@ -67,21 +67,21 @@ def test_image_aligned_operation_does_not_remove_runtime_plane_axis():
     assert ordinary.data.shape == (3, 4)
 
 
-@pytest.mark.parametrize("axis", (RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING))
+@pytest.mark.parametrize("axis", (RuntimeSlicePlaneAxis, SourceBindingPlaneAxis))
 def test_produced_literal_stack_uses_image_aligned_operation_without_selecting_a_plane(axis):
     value = ProducedImageStack(
         tuple(np.full((3, 4), index, dtype=np.float32) for index in (1, 2, 3)),
-        memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        memory_type="numpy", plane_axis=RuntimeSlicePlaneAxis,
     )
     assert _resolver(axis=axis).resolve(value) is value
     assert value._composed_payload is None
 
 
 @pytest.mark.parametrize("inner_count", (1, 2, 3))
-@pytest.mark.parametrize("axis", (RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING))
+@pytest.mark.parametrize("axis", (RuntimeSlicePlaneAxis, SourceBindingPlaneAxis))
 def test_image_output_bundle_aligned_operation_selects_outer_member_then_recurses(inner_count, axis):
     first, second = tuple(
-        ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(
+        ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis).payload_with(
             np.full((inner_count, 3, 4), index, dtype=np.float32),
         ) for index in (1, 2)
     )
@@ -100,7 +100,7 @@ def test_image_output_bundle_aligned_operation_selects_outer_member_then_recurse
 
 
 def test_image_output_bundle_aligned_operation_checks_outer_cardinality_before_inner_planes():
-    value = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(
+    value = ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis).payload_with(
         np.ones((3, 3, 4), dtype=np.float32),
     )
     bundle = ImageOutputBundle(
@@ -113,7 +113,7 @@ def test_image_output_bundle_aligned_operation_checks_outer_cardinality_before_i
 
 def test_image_output_bundle_aligned_operation_recurses_through_selected_bundle():
     values = tuple(
-        ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(
+        ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis).payload_with(
             np.full((3, 3, 4), index, dtype=np.float32),
         ) for index in (1, 2)
     )
@@ -125,13 +125,13 @@ def test_image_output_bundle_aligned_operation_recurses_through_selected_bundle(
     assert _resolver().resolve(outer) is values[1]
 
 
-@pytest.mark.parametrize("axis", (RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING))
+@pytest.mark.parametrize("axis", (RuntimeSlicePlaneAxis, SourceBindingPlaneAxis))
 def test_aligned_capability_owns_outer_count_for_both_declared_axes(axis):
     first, second = object(), object()
     value = RuntimeSliceAlignedValues((first, second))
     resolver = _resolver(axis=axis)
     assert resolver.resolve(value) is second
-    if axis is RuntimePlaneAxis.SOURCE_BINDING:
+    if axis is SourceBindingPlaneAxis:
         assert RuntimeSliceProjection.value_for_slice(value, resolver.projection_axis) is value
     with pytest.raises(ValueError, match="count must exactly match"):
         _resolver(axis=axis, size=3).resolve(value)
@@ -140,7 +140,7 @@ def test_aligned_capability_owns_outer_count_for_both_declared_axes(axis):
 def test_object_label_count_is_checked_before_projection_and_spatial_alignment(monkeypatch):
     labels = ObjectLabelSet(
         name="Labels", variant_data=ObjectLabelVariantData(labels=np.ones((2, 3, 4), dtype=np.int32)),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
             scope=ObjectLabelDomainScope.PLANE,

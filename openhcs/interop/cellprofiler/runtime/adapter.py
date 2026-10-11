@@ -1,6 +1,8 @@
 """Thin CellProfiler-style view over OpenHCS runtime artifacts."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 import time
 from collections.abc import Sequence
@@ -42,7 +44,6 @@ from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
 )
@@ -292,7 +293,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
         data = edge.composed_value(records)
         projected: RuntimeArrayData = data
         source_metadata = projected.metadata
-        if source_metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING:
+        if source_metadata.plane_axis is SourceBindingPlaneAxis:
             source_projection = preserved_image_plane_projection(
                 projected,
                 self,
@@ -311,7 +312,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
                 )
         runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
             self,
-            RuntimePlaneAxis.RUNTIME_SLICE,
+            RuntimeSlicePlaneAxis,
             (),
         )
         if runtime_projection is None or runtime_projection.plane_index is None:
@@ -385,12 +386,12 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
                 ObjectLabelsArtifactType,
             ).composed_value(records),
         )
-        if objects.plane_axis is RuntimePlaneAxis.SOURCE_BINDING:
+        if objects.plane_axis is SourceBindingPlaneAxis:
             declared_projection = objects.declared_plane_projection()
             if declared_projection is None:
                 raise ValueError(
                     "Current-source object-label selection requires a declared "
-                    "RuntimePlaneAxis.SOURCE_BINDING payload."
+                    "SourceBindingPlaneAxis payload."
                 )
             source_plane_index = objects.source_alias_plane_index(
                 objects.source_image_names,

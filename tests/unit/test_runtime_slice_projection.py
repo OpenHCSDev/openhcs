@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import dataclass
 import inspect
 from typing import Any, get_args, get_origin
@@ -30,7 +31,6 @@ from openhcs.core.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
@@ -109,7 +109,7 @@ def test_cellprofiler_runtime_parameter_types_declare_slice_projection() -> None
 
 def _declared_plane_metadata(count: int) -> ImagePayloadMetadata:
     return ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(f"/tmp/source_{index}.tif" for index in range(count)),
             component_metadata=tuple(
@@ -127,7 +127,7 @@ def test_runtime_slice_projection_rejects_undeclared_value_type() -> None:
         RuntimeSliceProjection.value_for_slice(
             UndeclaredValue(),
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1,
+                axis=RuntimeSlicePlaneAxis, plane_index=0, axis_size=1,
             ),
         )
 
@@ -148,7 +148,7 @@ def test_runtime_slice_projection_accepts_arraybridge_payloads(monkeypatch) -> N
         RuntimeSliceProjection.value_for_slice(
             value,
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 plane_index=1,
                 axis_size=2,
             ),
@@ -170,7 +170,7 @@ def test_spatial_graph_declares_scalar_pass_through_projection() -> None:
         RuntimeSliceProjection.value_for_slice(
             graph,
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 plane_index=1,
                 axis_size=2,
             ),
@@ -181,7 +181,7 @@ def test_spatial_graph_declares_scalar_pass_through_projection() -> None:
         RuntimeSliceProjection.identity_projected_value(
             graph,
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 plane_index=1,
                 axis_size=2,
             ),
@@ -200,7 +200,7 @@ def test_object_label_payload_selects_nominal_object_label_projection() -> None:
     projected = RuntimeSliceProjection.value_for_slice(
         payload,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1,
+            axis=RuntimeSlicePlaneAxis, plane_index=0, axis_size=1,
         ),
     )
     assert projected is payload
@@ -211,7 +211,7 @@ def test_runtime_slice_projection_preserves_nominal_dtype_config() -> None:
     projected = RuntimeSliceProjection.kwargs_for_slice(
         {"dtype_config": PRESERVE_INPUT_DTYPE_CONFIG},
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=1, axis_size=2
+            axis=RuntimeSlicePlaneAxis, plane_index=1, axis_size=2
         ),
     )
 
@@ -229,7 +229,7 @@ def test_runtime_slice_projection_projects_all_columnar_row_carriers() -> None:
     projected = RuntimeSliceProjection.value_for_slice(
         rows,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=1,
             axis_size=2,
         ),
@@ -242,11 +242,11 @@ def test_runtime_slice_projection_projects_all_columnar_row_carriers() -> None:
 
 def test_runtime_slice_projection_selects_runtime_plane_projection_parameter() -> None:
     preserved = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=2,
     )
     selected = RuntimePlaneAxisValueProjection.from_selected_plane(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         plane_index=1,
         axis_size=2,
     )
@@ -267,7 +267,7 @@ def test_runtime_slice_projection_does_not_infer_high_rank_array_axis() -> None:
         RuntimeSliceProjection.value_for_slice(
             value,
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=2, axis_size=3
+                axis=RuntimeSlicePlaneAxis, plane_index=2, axis_size=3
             ),
         )
         is value
@@ -279,14 +279,14 @@ def test_runtime_slice_projection_projects_declared_color_image_stack() -> None:
         tuple(np.full((4, 5, 3), index, dtype=np.float32) for index in range(2))
     )
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         axes=PayloadAxes.colour_samples(-1),
     ).payload_with(data, None)
 
     projected = RuntimeSliceProjection.value_for_slice(
         payload,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=1,
             axis_size=2,
         ),
@@ -296,7 +296,7 @@ def test_runtime_slice_projection_projects_declared_color_image_stack() -> None:
     assert projected.metadata.plane_axis is None
     assert RuntimeSliceProjection.preserved_context_for_value(payload) == (
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         )
     )
@@ -326,14 +326,14 @@ def test_runtime_slice_projection_preserves_device_array_without_host_conversion
 
     data = DeviceArray(np.zeros((2, 4, 5), dtype=np.float32))
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        plane_axis=RuntimeSlicePlaneAxis
     ).payload_with(data, None)
 
     assert RuntimeSliceProjection.slice_count_from_values((payload,)) == 2
     projected = RuntimeSliceProjection.value_for_slice(
         payload,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=1,
             axis_size=2,
         ),
@@ -345,7 +345,7 @@ def test_runtime_slice_projection_preserves_device_array_without_host_conversion
 def test_aligned_image_stack_projects_inner_source_axis_across_runtime_slices() -> None:
     runtime_slices = tuple(
         ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+            plane_axis=SourceBindingPlaneAxis,
             source_image_provenance_planes=(
                 SourceImageProvenancePlanes.from_components(
                     component_metadata=(
@@ -370,7 +370,7 @@ def test_aligned_image_stack_projects_inner_source_axis_across_runtime_slices() 
     selected_source = RuntimeSliceProjection.value_for_slice(
         aligned,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.SOURCE_BINDING,
+            axis=SourceBindingPlaneAxis,
             plane_index=0,
             axis_size=2,
         ),
@@ -413,7 +413,7 @@ def test_image_output_bundle_projects_shared_runtime_axis_not_output_count() -> 
     projected = RuntimeSliceProjection.value_for_slice(
         bundle,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=1,
             axis_size=3,
         ),
@@ -449,7 +449,7 @@ def test_image_output_bundle_uses_outer_axis_without_inner_declaration() -> None
         execution_mode=AlignedStackExecution,
     )
 
-    assert composition.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert composition.plane_axis is RuntimeSlicePlaneAxis
     assert RuntimeSliceProjection.slice_count_from_values((bundle,)) == 2
     assert RuntimeSliceProjection.preserved_context_for_value(bundle) == (
         RuntimePlaneAxisValueProjection.preserve(
@@ -461,7 +461,7 @@ def test_image_output_bundle_uses_outer_axis_without_inner_declaration() -> None
         RuntimeSliceProjection.value_for_slice(
             bundle,
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 plane_index=1,
                 axis_size=2,
             ),
@@ -476,7 +476,7 @@ def test_selected_image_projection_stays_consumed_on_derived_output() -> None:
     )
     payload = _declared_plane_metadata(2).payload_with(data, None)
     projection = RuntimePlaneAxisValueProjection.from_selected_plane(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         plane_index=1,
         axis_size=2,
     )
@@ -495,14 +495,14 @@ def test_selected_image_projection_stays_consumed_on_derived_output() -> None:
 
 def test_runtime_slice_projection_validates_declared_image_cardinality() -> None:
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((3, 4, 5), dtype=np.float32), None)
 
     with pytest.raises(ValueError, match="axis of size 2"):
         RuntimeSliceProjection.value_for_slice(
             payload,
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 plane_index=1,
                 axis_size=2,
             ),
@@ -524,7 +524,7 @@ def test_runtime_plane_projection_owns_dense_axis_shape_validation(
     expected: bool,
 ) -> None:
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=axis_size,
     )
 
@@ -566,7 +566,7 @@ def test_runtime_slice_projection_projects_aligned_kwargs_from_one_coordinate() 
             "shape_choice": "natural_shape_and_location",
         },
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=1,
             axis_size=2,
         ),
@@ -582,7 +582,7 @@ def test_runtime_slice_projection_rejects_aligned_kwarg_cardinality_mismatch() -
         RuntimeSliceProjection.kwargs_for_slice(
             {"values": RuntimeSliceAlignedValues((np.asarray([1.0]),))},
             RuntimePlaneAxisValueProjection.from_selected_plane(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 plane_index=1,
                 axis_size=2,
             ),
@@ -599,7 +599,7 @@ def test_runtime_slice_projection_projects_declared_object_label_plane() -> None
     labels = ObjectLabelSet(
         name="Cells",
         variant_data=ObjectLabelVariantData(labels=label_planes),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             scope=ObjectLabelDomainScope.PLANE,
             declared_object_id_domains=((3,), (7,)),
@@ -609,7 +609,7 @@ def test_runtime_slice_projection_projects_declared_object_label_plane() -> None
     projected = RuntimeSliceProjection.value_for_slice(
         labels,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=1,
             axis_size=2,
         ),
@@ -633,7 +633,7 @@ def test_runtime_slice_projection_preserves_image_mask_and_plane_metadata() -> N
     projected = RuntimeSliceProjection.value_for_slice(
         payload,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=1,
             axis_size=2,
         ),
@@ -670,7 +670,7 @@ def test_variable_component_projection_validates_declared_cardinality() -> None:
         source_description="mismatched image stack",
         variable_components=(Microscopy.Site,),
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=2,
         ),
     )
@@ -690,7 +690,7 @@ def test_variable_component_projection_rejects_expanded_source_provenance() -> N
         source_description="expanded-provenance image stack",
         variable_components=(Microscopy.Site,),
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=3,
         ),
     )
@@ -717,7 +717,7 @@ def test_variable_component_projection_uses_declared_plane_axis() -> None:
                 source_description="declared image stack",
                 variable_components=(Microscopy.Site,),
                 plane_projection=RuntimePlaneAxisValueProjection.preserve(
-                    axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    axis=RuntimeSlicePlaneAxis,
                     axis_size=2,
                 ),
             )
@@ -744,7 +744,7 @@ def test_source_binding_projection_projects_object_labels_through_same_axis() ->
     labels = ObjectLabelSet(
         name="Objects",
         variant_data=ObjectLabelVariantData(labels=planes),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_image_names=("First", "Second"),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
@@ -752,7 +752,7 @@ def test_source_binding_projection_projects_object_labels_through_same_axis() ->
         ),
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         axis_size=2,
         source_aliases=("First", "Second"),
     ).selected_plane(1)
@@ -777,7 +777,7 @@ def test_source_identity_request_projects_explicit_source_binding_label_planes()
     labels = ObjectLabelSet(
         name="Objects",
         variant_data=ObjectLabelVariantData(labels=planes),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_image_names=("First", "Second"),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
@@ -840,7 +840,7 @@ def test_axisless_object_measurement_is_not_runtime_slice_projected() -> None:
         subject=MeasurementSubject(MeasurementScope.OBJECT, name="Objects"),
     )
     projection = RuntimePlaneAxisValueProjection.from_selected_plane(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         plane_index=0,
         axis_size=1,
     )

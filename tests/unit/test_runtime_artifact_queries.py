@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import dataclass
 import weakref
@@ -49,7 +50,6 @@ from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneProjection,
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
@@ -192,7 +192,7 @@ def object_labels(
             scope=ObjectLabelDomainScope.PLANE,
             declared_object_id_domains=declared_object_id_domains,
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
 

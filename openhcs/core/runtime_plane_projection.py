@@ -4,9 +4,7 @@ from __future__ import annotations
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
-from enum import Enum
 from metaclass_registry import AutoRegisterMeta
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from collections.abc import Callable, Sequence
 from typing import Any, ClassVar
 from typing import Self
@@ -118,7 +116,7 @@ class RuntimeSliceIndexedValue(RuntimeSliceProjectableValue):
         """Return the value represented by one runtime-slice index."""
 
     def value_for_slice(self, context: "RuntimePlaneAxisValueProjection") -> object:
-        if context.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+        if context.axis is not RuntimeSlicePlaneAxis:
             return self
         return self.project_runtime_slice(context.require_plane_index())
 
@@ -150,7 +148,7 @@ class RuntimeSliceIdentityProjectableValue(RuntimeSliceProjectableValue):
     def identity_projected_value(
         self, context: "RuntimePlaneAxisValueProjection"
     ) -> object:
-        if context.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+        if context.axis is not RuntimeSlicePlaneAxis:
             return self
         return self.with_runtime_slice_identity(
             slice_index=context.require_plane_index(),
@@ -158,65 +156,110 @@ class RuntimeSliceIdentityProjectableValue(RuntimeSliceProjectableValue):
         )
 
 
-class RuntimePlaneAxis(str, Enum):
-    """Semantic meaning of the leading plane axis on runtime array stacks."""
+class RuntimePlaneAxis(ABC, metaclass=AutoRegisterMeta):
+    """What the leading plane axis of a runtime array stack counts.
 
-    RUNTIME_SLICE = "runtime_slice"
-    SOURCE_BINDING = "source_binding"
+    Each kind of axis is a subclass, used as a class; ``name`` is its spelling
+    in viewer messages, saved metadata and error text.
+    """
 
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[RuntimePlaneAxis]]] = {}
 
-class RuntimePlaneAxisStrategy(
-    EnumKeyedStrategyMixin[RuntimePlaneAxis], ABC, metaclass=AutoRegisterMeta
-):
-    """Own all behavior for one nominal runtime plane axis."""
+    name: ClassVar[str | None] = None
+    one_plane_per_runtime_slice: ClassVar[bool] = False
+    """Each plane is one runtime slice of the invocation."""
+    one_plane_per_source_binding: ClassVar[bool] = False
+    """Each plane is one bound source image."""
 
-    __enum_member_attr__ = "axis"
-    axis: ClassVar[RuntimePlaneAxis]
-    strategy_label: ClassVar[str | None] = None
+    @classmethod
+    def leading_axes(cls) -> tuple[type[RuntimePlaneAxis], ...]:
+        """Return every axis that puts a leading plane dimension on the data."""
+        return tuple(cls.__registry__.values())
 
+    @classmethod
+    def named(cls, name: object) -> type[RuntimePlaneAxis]:
+        """Return the axis a viewer message or saved record spells as ``name``."""
+        try:
+            return cls.__registry__[name]
+        except (KeyError, TypeError):
+            raise ValueError(f"Unknown runtime plane axis {name!r}.") from None
+
+    @classmethod
     @abstractmethod
     def plane_index(
-        self,
+        cls,
         projector: "RuntimePlaneAxisProjector",
         source_aliases: tuple[str, ...],
     ) -> int | None:
         """Resolve this axis against an execution-local projector."""
 
+    @classmethod
     @abstractmethod
     def axis_size(
-        self,
+        cls,
         projector: "RuntimePlaneAxisProjector",
         source_aliases: tuple[str, ...],
     ) -> int | None:
         """Resolve this axis cardinality against an execution-local projector."""
 
+    @classmethod
     @abstractmethod
-    def projected_axis(self, projected_plane_count: int) -> RuntimePlaneAxis | None:
+    def projected_axis(
+        cls, projected_plane_count: int
+    ) -> type[RuntimePlaneAxis] | None:
         """Return the axis retained after an exact runtime projection."""
 
+    @classmethod
+    def keeps_planes_of(cls, plane_axis: type[RuntimePlaneAxis] | None) -> bool:
+        """Whether composing along this axis keeps a member's existing plane axis."""
+        return plane_axis is cls
 
-class RuntimeSlicePlaneAxisStrategy(RuntimePlaneAxisStrategy):
-    """Runtime-slice axis behavior."""
+    @classmethod
+    @abstractmethod
+    def compose_provenance(
+        cls,
+        provenances: "Sequence[SourceImageProvenance]",
+        *,
+        scalar_sources: "Sequence[SourceImageProvenance]",
+        **topology: bool,
+    ) -> "SourceImageProvenance":
+        """Return the source provenance of members composed along this axis.
 
-    axis = RuntimePlaneAxis.RUNTIME_SLICE
+        ``topology`` forwards ``preserve_single_topology``; each axis has its
+        own default for a single member.
+        """
 
+
+class RuntimeSlicePlaneAxis(RuntimePlaneAxis):
+    """One plane per runtime slice; composing along it stacks the slices."""
+
+    name = "runtime_slice"
+    one_plane_per_runtime_slice = True
+
+    @classmethod
     def plane_index(
-        self,
+        cls,
         projector: "RuntimePlaneAxisProjector",
         source_aliases: tuple[str, ...],
     ) -> int | None:
         del source_aliases
         return projector.runtime_slice_plane_index()
 
+    @classmethod
     def axis_size(
-        self,
+        cls,
         projector: "RuntimePlaneAxisProjector",
         source_aliases: tuple[str, ...],
     ) -> int | None:
         del source_aliases
         return projector.runtime_slice_axis_size()
 
-    def projected_axis(self, projected_plane_count: int) -> RuntimePlaneAxis | None:
+    @classmethod
+    def projected_axis(
+        cls, projected_plane_count: int
+    ) -> type[RuntimePlaneAxis] | None:
         if projected_plane_count != 1:
             raise ValueError(
                 "Runtime-slice object-label projection must select exactly one "
@@ -224,34 +267,72 @@ class RuntimeSlicePlaneAxisStrategy(RuntimePlaneAxisStrategy):
             )
         return None
 
+    @classmethod
+    def keeps_planes_of(cls, plane_axis: type[RuntimePlaneAxis] | None) -> bool:
+        return plane_axis is None or plane_axis is cls
 
-class SourceBindingPlaneAxisStrategy(RuntimePlaneAxisStrategy):
-    """Source-binding axis behavior."""
+    @classmethod
+    def compose_provenance(
+        cls,
+        provenances: "Sequence[SourceImageProvenance]",
+        *,
+        scalar_sources: "Sequence[SourceImageProvenance]",
+        **topology: bool,
+    ) -> "SourceImageProvenance":
+        from openhcs.core.source_image_provenance import SourceImageProvenance
 
-    axis = RuntimePlaneAxis.SOURCE_BINDING
+        return SourceImageProvenance.stack(
+            provenances, scalar_sources=scalar_sources, **topology
+        )
 
+
+class SourceBindingPlaneAxis(RuntimePlaneAxis):
+    """One plane per bound source image; composing along it bundles the sources."""
+
+    name = "source_binding"
+    one_plane_per_source_binding = True
+
+    @classmethod
     def plane_index(
-        self,
+        cls,
         projector: "RuntimePlaneAxisProjector",
         source_aliases: tuple[str, ...],
     ) -> int | None:
         return projector.source_binding_axis_plane_index(source_aliases)
 
+    @classmethod
     def axis_size(
-        self,
+        cls,
         projector: "RuntimePlaneAxisProjector",
         source_aliases: tuple[str, ...],
     ) -> int | None:
         return projector.source_binding_axis_size(source_aliases)
 
-    def projected_axis(self, projected_plane_count: int) -> RuntimePlaneAxis | None:
+    @classmethod
+    def projected_axis(
+        cls, projected_plane_count: int
+    ) -> type[RuntimePlaneAxis] | None:
         if projected_plane_count <= 0:
             raise ValueError(
                 "Source-binding object-label projection must select at least one plane."
             )
         if projected_plane_count == 1:
             return None
-        return RuntimePlaneAxis.SOURCE_BINDING
+        return cls
+
+    @classmethod
+    def compose_provenance(
+        cls,
+        provenances: "Sequence[SourceImageProvenance]",
+        *,
+        scalar_sources: "Sequence[SourceImageProvenance]",
+        **topology: bool,
+    ) -> "SourceImageProvenance":
+        from openhcs.core.source_image_provenance import SourceImageProvenance
+
+        return SourceImageProvenance.bundle(
+            provenances, scalar_sources=scalar_sources, **topology
+        )
 
 
 class RuntimePlaneAxisProjector(ABC):
@@ -338,9 +419,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
     axis_size: int
 
     def __post_init__(self) -> None:
-        axis = RuntimePlaneAxis(
-            self.axis,
-        )
+        axis = self.axis
         source_aliases = tuple(self.source_aliases)
         if any(not isinstance(alias, str) or not alias for alias in source_aliases):
             raise ValueError(
@@ -399,16 +478,14 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
             raise TypeError(
                 f"Runtime plane-axis projection requires RuntimePlaneAxisProjector, got {type(projector).__name__}."
             )
-        axis = RuntimePlaneAxis(axis)
         source_aliases = tuple(source_aliases)
-        strategy = RuntimePlaneAxisStrategy.for_enum_member(axis)
-        axis_size = strategy.axis_size(projector, source_aliases)
+        axis_size = axis.axis_size(projector, source_aliases)
         if axis_size is None:
             return None
         return cls(
             axis=axis,
             source_aliases=source_aliases,
-            plane_index=strategy.plane_index(projector, source_aliases),
+            plane_index=axis.plane_index(projector, source_aliases),
             axis_size=axis_size,
         )
 
@@ -439,7 +516,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
         projection = cls.from_projector(projector, axis, source_aliases)
         if projection is None:
             raise ValueError(
-                f"Declared {axis.value!r} image axis has no runtime cardinality."
+                f"Declared {axis.name!r} image axis has no runtime cardinality."
             )
         return projection
 
@@ -521,7 +598,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
         value_name: str,
     ) -> "RuntimePlaneAxisValueProjection":
         """Require the runtime-slice axis, declared with ``slice_count`` planes."""
-        if projection is None or projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+        if projection is None or projection.axis is not RuntimeSlicePlaneAxis:
             raise ValueError(
                 f"{value_name} requires an exact runtime slice projection."
             )
@@ -573,7 +650,7 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceIndexedValue):
         shape = tuple(int(size) for size in shape)
         if not self.dense_shape_carries_axis(shape):
             raise ValueError(
-                f"{value_name} does not match its declared {self.axis.value!r} "
+                f"{value_name} does not match its declared {self.axis.name!r} "
                 f"axis of size {self.axis_size}: shape {shape!r}."
             )
 

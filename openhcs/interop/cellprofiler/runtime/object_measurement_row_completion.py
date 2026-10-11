@@ -1,6 +1,7 @@
 """Object-measurement row identity and completion semantics."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import abstractmethod
 from collections.abc import Mapping, Sequence
@@ -34,9 +35,6 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomainScope,
     ObjectLabelPlaneDomainStrategy,
-)
-from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -460,7 +458,7 @@ class ObjectMeasurementRowCompletionSchema:
         if label_domain.scope is ObjectLabelDomainScope.PAYLOAD:
             return ()
         slice_axis_name = MeasurementRowAxisField.SLICE_INDEX.value
-        if label_payload.plane_axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+        if label_payload.plane_axis is not RuntimeSlicePlaneAxis:
             raise ValueError(
                 "Plane-scoped measurement domains require the runtime-slice axis."
             )

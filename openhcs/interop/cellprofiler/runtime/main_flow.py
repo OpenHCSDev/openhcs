@@ -26,8 +26,8 @@ def cellprofiler_main_flow_output(
     if output_axis is not plane_projection.axis:
         raise ValueError(
             "CellProfiler main-flow output axis conflicts with the invocation "
-            f"projection: {output_axis.value!r} != "
-            f"{plane_projection.axis.value!r}."
+            f"projection: {output_axis.name!r} != "
+            f"{plane_projection.axis.name!r}."
         )
     plane_projection.validate_shape(
         array_geometry(output_image).shape,
@@ -38,8 +38,8 @@ def cellprofiler_main_flow_output(
         if input_axis is not plane_projection.axis:
             raise ValueError(
                 "CellProfiler main-flow input axis conflicts with the output "
-                f"projection: {input_axis.value!r} != "
-                f"{plane_projection.axis.value!r}."
+                f"projection: {input_axis.name!r} != "
+                f"{plane_projection.axis.name!r}."
             )
         plane_projection.validate_shape(
             array_geometry(input_image).shape,

@@ -1,6 +1,7 @@
 """Nominal runtime image payload values and metadata."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from abc import ABC, abstractmethod
 from collections.abc import (
@@ -9,7 +10,6 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass, field, fields
-from enum import Enum
 from typing import Any, TypeVar
 
 import numpy as np
@@ -22,7 +22,6 @@ from zmqruntime.viewer_protocol import (
 )
 from collections.abc import Mapping
 
-from openhcs.core.alias_property import AliasProperty
 from openhcs.core.payload_axes import (
     AxisSpec,
     PayloadAxes,
@@ -349,7 +348,7 @@ class ImagePayloadAxisFields(ABC):
 
     @property
     @abstractmethod
-    def plane_axis(self) -> RuntimePlaneAxis | None: ...
+    def plane_axis(self) -> type[RuntimePlaneAxis] | None: ...
 
     @property
     @abstractmethod
@@ -422,7 +421,7 @@ class ImagePayloadAxisFields(ABC):
         if self.plane_axis is not None:
             if 0 in resolved:
                 raise ValueError("Image metadata declares its leading plane axis twice.")
-            resolved[0] = RuntimePlaneAxisSpec(self.plane_axis.value)
+            resolved[0] = RuntimePlaneAxisSpec(self.plane_axis.name)
         candidates = tuple(axis for axis in range(ndim) if axis not in resolved)
         names = self.source_spatial_domain.axis_names
         spatial = candidates[len(candidates) - len(names):] if names else ()
@@ -475,7 +474,7 @@ class ImagePayloadMetadata(
     axes: PayloadAxes = field(
         default_factory=PayloadAxes, metadata={ViewerWireField.IMAGE_METADATA: True}
     )
-    plane_axis: RuntimePlaneAxis | None = field(
+    plane_axis: type[RuntimePlaneAxis] | None = field(
         default=None, metadata={ViewerWireField.IMAGE_METADATA: True}
     )
 
@@ -614,8 +613,6 @@ class ImagePayloadMetadata(
         self.normalize_source_voxel_spacing_fields()
         if not isinstance(self.axes, PayloadAxes):
             raise TypeError("ImagePayloadMetadata.axes must be PayloadAxes.")
-        if self.plane_axis is not None:
-            self.plane_axis = RuntimePlaneAxis(self.plane_axis)
 
 
     @property
@@ -704,7 +701,7 @@ class ImagePayloadMetadata(
             raise ValueError(
                 "Derived image payload carries a declared plane axis but the "
                 "invocation supplied no plane projection: "
-                f"{declared_axis.value!r}."
+                f"{declared_axis.name!r}."
             )
         if plane_projection is not None and plane_projection.plane_index is None:
             for owner_name, metadata in (
@@ -718,8 +715,8 @@ class ImagePayloadMetadata(
                     raise ValueError(
                         f"Derived image {owner_name} metadata axis conflicts with "
                         "the invocation projection: "
-                        f"{metadata.plane_axis.value!r} != "
-                        f"{plane_projection.axis.value!r}."
+                        f"{metadata.plane_axis.name!r} != "
+                        f"{plane_projection.axis.name!r}."
                     )
             source_metadata = source_metadata.with_indexed_source_plane_provenance(
                 plane_projection.axis_size
@@ -740,7 +737,7 @@ class ImagePayloadMetadata(
                 if metadata.plane_axis is not None:
                     raise ValueError(
                         f"Derived image {owner_name} metadata retains an unconsumed "
-                        f"{metadata.plane_axis.value!r} axis after the invocation "
+                        f"{metadata.plane_axis.name!r} axis after the invocation "
                         "selected one plane."
                     )
         # Read current source fields before deriving the output. This private
@@ -844,12 +841,12 @@ class ImagePayloadMetadata(
         cls,
         payloads: Sequence["ImagePayload"],
         *,
-        mode: "ImagePayloadMetadataCompositionMode | None" = None,
+        mode: type[RuntimePlaneAxis] | None = None,
         source_metadata: Sequence["ImagePayloadMetadata"] | None = None,
     ) -> "ImagePayloadMetadata":
         """Compose metadata for payloads assembled on a new leading axis."""
         resolved_mode = (
-            ImagePayloadMetadataCompositionMode.STACK if mode is None else mode
+            RuntimeSlicePlaneAxis if mode is None else mode
         )
         return _ImagePayloadMetadataComposer(
             payloads=tuple(payloads),
@@ -878,7 +875,7 @@ class ImagePayloadMetadata(
         """Keep intrinsic pixels whole, excluding a distinct image-binding axis."""
         return (
             self.source_spatial_domain.persists_whole_image()
-            and self.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING
+            and self.plane_axis is not SourceBindingPlaneAxis
         )
 
     def for_leading_source_plane(self, plane_index: int) -> "ImagePayloadMetadata":
@@ -898,7 +895,7 @@ class ImagePayloadMetadata(
         projected = projection.project_source_provenance(
             self, self.source_provenance.with_runtime_planes_as_contributors()
         )
-        if self.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
+        if self.plane_axis is RuntimeSlicePlaneAxis:
             projected.source_spatial_domain = (
                 projected.source_spatial_domain.for_intrinsic_plane()
             )
@@ -1069,8 +1066,8 @@ class ImagePayloadMetadata(
                 "plane or channel axis."
             )
         if self.plane_axis not in (
-            RuntimePlaneAxis.RUNTIME_SLICE,
-            RuntimePlaneAxis.SOURCE_BINDING,
+            RuntimeSlicePlaneAxis,
+            SourceBindingPlaneAxis,
         ):
             raise ValueError(
                 "Source-image identity projection requires a runtime-slice, "
@@ -1098,9 +1095,7 @@ class ImagePayloadMetadata(
             return projected_planes[0]
         return stack_image_payloads(
             projected_planes,
-            metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
-                self.plane_axis
-            ),
+            metadata_mode=self.plane_axis,
         )
 
     def with_indexed_source_plane_provenance(
@@ -1221,7 +1216,7 @@ class ImagePayloadMetadata(
         elif source.plane_axis is not None and source.plane_axis is not plane_axis:
             raise ValueError(
                 "Cannot combine image metadata with conflicting plane axes: "
-                f"{plane_axis.value!r} != {source.plane_axis.value!r}."
+                f"{plane_axis.name!r} != {source.plane_axis.name!r}."
             )
         return self.replace_fields(
             source_provenance=source_provenance,
@@ -1405,11 +1400,11 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         return False
 
     @property
-    def declared_plane_axis(self) -> RuntimePlaneAxis | None:
+    def declared_plane_axis(self) -> type[RuntimePlaneAxis] | None:
         return self.metadata.plane_axis
 
     @property
-    def invocation_plane_axis(self) -> RuntimePlaneAxis | None:
+    def invocation_plane_axis(self) -> type[RuntimePlaneAxis] | None:
         """Return the plane axis a callable invocation iterates over."""
         return self.metadata.plane_axis
 
@@ -1484,16 +1479,15 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         data: Any,
         plane_index: int,
         *,
-        plane_axis: RuntimePlaneAxis | None = None,
+        plane_axis: type[RuntimePlaneAxis] | None = None,
     ) -> "ImagePayload":
         """Attach one source plane of this payload's context to slice pixels."""
         metadata = self.metadata
         if plane_axis is not None:
-            plane_axis = RuntimePlaneAxis(plane_axis)
             if metadata.plane_axis is not None and metadata.plane_axis is not plane_axis:
                 raise ValueError(
                     "Image slice projection axis conflicts with payload metadata: "
-                    f"{plane_axis.value!r} != {metadata.plane_axis.value!r}."
+                    f"{plane_axis.name!r} != {metadata.plane_axis.name!r}."
                 )
             if metadata.plane_axis is not plane_axis:
                 metadata = metadata.replace_fields(plane_axis=plane_axis)
@@ -1529,7 +1523,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         return self.metadata.plane_axis is None or self.metadata.persists_whole_image()
 
     def keeps_whole_as_single_member(
-        self, *, declared_plane_axis: RuntimePlaneAxis | None,
+        self, *, declared_plane_axis: type[RuntimePlaneAxis] | None,
     ) -> bool:
         """Whether this payload, alone in a cohort, is passed on without a new leading axis.
 
@@ -1549,7 +1543,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         """Whether this output names its own output surfaces (filename qualifiers)."""
         return False
 
-    def plane_axis_for_output_context(self, context: Any) -> RuntimePlaneAxis | None:
+    def plane_axis_for_output_context(self, context: Any) -> type[RuntimePlaneAxis] | None:
         """Return the plane axis one published output slice was taken along."""
         del context
         return self.metadata.plane_axis
@@ -1578,7 +1572,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
             for payload in unstack_image_payload_context(
                 self,
                 unstack(self.data),
-                default_plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                default_plane_axis=RuntimeSlicePlaneAxis,
             )
         )
 
@@ -1685,7 +1679,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
         if slice_count is None:
             return (self,)
         projection = RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=slice_count,
+            axis=RuntimeSlicePlaneAxis, axis_size=slice_count,
         )
         return tuple(
             self.value_for_slice(projection.selected_plane(index))
@@ -1695,7 +1689,7 @@ class ImagePayload(RuntimeArrayPayload, RuntimeSliceProjectableValue, SpatiallyP
     # -- RuntimeSliceProjectableValue -------------------------------------
 
     def runtime_slice_count(self) -> int | None:
-        if self.metadata.plane_axis is not RuntimePlaneAxis.RUNTIME_SLICE:
+        if self.metadata.plane_axis is not RuntimeSlicePlaneAxis:
             return None
         geometry = self.geometry
         if geometry.ndim <= AxisFamily.active().payload_spatial_rank:
@@ -1785,9 +1779,9 @@ class PlainImagePayload(DataBackedRuntimeArrayPayload, ImagePayload):
         """An undeclared main-flow output stacks runtime slices on its leading axis."""
         return False
 
-    def plane_axis_for_output_context(self, context: Any) -> RuntimePlaneAxis:
+    def plane_axis_for_output_context(self, context: Any) -> type[RuntimePlaneAxis]:
         del context
-        return RuntimePlaneAxis.RUNTIME_SLICE
+        return RuntimeSlicePlaneAxis
 
     def with_data(self, data: Any) -> "PlainImagePayload":
         return type(self)(data)
@@ -1902,7 +1896,7 @@ def preserved_image_plane_projection(
     plane_axis = RuntimeSliceProjection.declared_plane_axis(value)
     if plane_axis is None:
         return RuntimeSliceProjection.preserved_context_for_value(value)
-    if plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
+    if plane_axis is RuntimeSlicePlaneAxis:
         invocation_projection = RuntimePlaneAxisValueProjection.from_projector(
             projector,
             plane_axis,
@@ -1929,7 +1923,7 @@ def preserved_image_plane_projection(
         )
     axis_size = shape[0]
     return RuntimePlaneAxisValueProjection(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         source_aliases=source_aliases,
         plane_index=value.metadata.source_provenance.source_alias_plane_index(
             source_aliases,
@@ -1949,7 +1943,7 @@ def preserve_declared_image_payload_axis(
 
     from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
-    def declared_axis(value: Any) -> RuntimePlaneAxis | None:
+    def declared_axis(value: Any) -> type[RuntimePlaneAxis] | None:
         plane_axis = RuntimeSliceProjection.declared_plane_axis(value)
         if plane_axis is not None:
             return plane_axis
@@ -2168,7 +2162,7 @@ class ImagePayloadSliceProjector:
             return None
         mask_array = np.asarray(self.mask)
         if (
-            self.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+            self.metadata.plane_axis is SourceBindingPlaneAxis
             and slice_metadata.mask_domain(data_slice).accepts(mask_array.shape)
         ):
             candidate = mask_array
@@ -2190,56 +2184,12 @@ class ImagePayloadSliceProjector:
         )
 
 
-class ImagePayloadMetadataCompositionMode(Enum):
-    """Source-provenance topology for composed image metadata."""
-
-    def __new__(
-        cls,
-        value: str,
-        plane_axis: RuntimePlaneAxis,
-    ):
-        member = object.__new__(cls)
-        member._value_ = value
-        member._plane_axis = plane_axis
-        return member
-
-    STACK = ("stack", RuntimePlaneAxis.RUNTIME_SLICE)
-    BUNDLE = ("bundle", RuntimePlaneAxis.SOURCE_BINDING)
-    plane_axis = AliasProperty[RuntimePlaneAxis]("_plane_axis")
-
-    @classmethod
-    def for_plane_axis(
-        cls,
-        plane_axis: RuntimePlaneAxis,
-    ) -> "ImagePayloadMetadataCompositionMode":
-        """Return the unique composition operation that creates an axis."""
-
-        matches = tuple(mode for mode in cls if mode.plane_axis is plane_axis)
-        if len(matches) != 1:
-            raise ValueError(
-                f"No unique image composition mode owns {plane_axis.value!r}."
-            )
-        return matches[0]
-
-    def preserves_plane_topology(
-        self,
-        plane_axis: RuntimePlaneAxis | None,
-    ) -> bool:
-        """Return whether composition retains an existing runtime-plane axis."""
-
-        return plane_axis is self.plane_axis or (
-            plane_axis is None and self.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-        )
-
-
 @dataclass(slots=True)
 class _ImagePayloadMetadataComposer:
     """Stateful implementation for composing image metadata on a leading axis."""
 
     payloads: tuple["ImagePayload", ...]
-    mode: ImagePayloadMetadataCompositionMode = (
-        ImagePayloadMetadataCompositionMode.STACK
-    )
+    mode: type[RuntimePlaneAxis] = RuntimeSlicePlaneAxis
     source_metadata_override: Sequence[ImagePayloadMetadata] | None = None
     metadata_type: type[ImagePayloadMetadata] = ImagePayloadMetadata
 
@@ -2275,17 +2225,12 @@ class _ImagePayloadMetadataComposer:
     def compose(self) -> ImagePayloadMetadata:
         metadata_by_payload = self.source_metadata
         if not any(metadata.has_values for metadata in metadata_by_payload):
-            return self.metadata_type(plane_axis=self.mode.plane_axis)
+            return self.metadata_type(plane_axis=self.mode)
         source_metadata_by_payload = tuple(
             self.source_plane_metadata_for_payload(metadata)
             for metadata in metadata_by_payload
         )
-        compose_provenance = (
-            SourceImageProvenance.stack
-            if self.mode is ImagePayloadMetadataCompositionMode.STACK
-            else SourceImageProvenance.bundle
-        )
-        source_provenance = compose_provenance(
+        source_provenance = self.mode.compose_provenance(
             tuple(
                 metadata.source_provenance for metadata in source_metadata_by_payload
             ),
@@ -2294,7 +2239,7 @@ class _ImagePayloadMetadataComposer:
             ),
             preserve_single_topology=(
                 len(source_metadata_by_payload) == 1
-                and self.mode.preserves_plane_topology(
+                and self.mode.keeps_planes_of(
                     source_metadata_by_payload[0].plane_axis
                 )
             ),
@@ -2333,7 +2278,7 @@ class _ImagePayloadMetadataComposer:
                     self.payloads, metadata_by_payload, strict=True,
                 )
             ),
-            plane_axis=self.mode.plane_axis,
+            plane_axis=self.mode,
         )
 
     @staticmethod
@@ -2404,7 +2349,7 @@ class ImageMaskDomain:
 
     data_shape: tuple[int, ...]
     declared_axes: tuple[int, ...] = ()
-    plane_axis: RuntimePlaneAxis | None = None
+    plane_axis: type[RuntimePlaneAxis] | None = None
     placement_axes: tuple[int, ...] | None = None
 
     def __post_init__(self) -> None:
@@ -2477,7 +2422,7 @@ class ImageMaskDomain:
     def shared_spatial_mask_shape(self) -> tuple[int, ...] | None:
         """Return a mask domain shared by declared source-binding planes."""
         if (
-            self.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING
+            self.plane_axis is not SourceBindingPlaneAxis
             or self.placement_axes is None
         ):
             return None

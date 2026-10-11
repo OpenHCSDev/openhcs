@@ -1,6 +1,8 @@
 """Typed CellProfiler invocation records and execution-mode utilities."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
@@ -24,7 +26,6 @@ from openhcs.core.runtime_adapters import (
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelMeasurementSource,
@@ -142,7 +143,7 @@ class CellProfilerSourceIdentityMixin:
         cls,
         sources: tuple["CellProfilerSourceIdentityMixin", ...],
         *,
-        mode: ImagePayloadMetadataCompositionMode | None = None,
+        mode: type[RuntimePlaneAxis] | None = None,
     ) -> ImagePayloadMetadata | None:
         """Return source metadata composed in runtime source order."""
         if not sources:
@@ -165,13 +166,9 @@ class CellProfilerSourceIdentityMixin:
             for provenance in scalar_sources
         )
         if not any(provenance.has_values for provenance in provenances):
-            return ImagePayloadMetadata(plane_axis=mode.plane_axis)
-        provenance = (
-            SourceImageProvenance.stack(provenances, scalar_sources=scalar_sources)
-            if mode is ImagePayloadMetadataCompositionMode.STACK
-            else SourceImageProvenance.bundle(
-                provenances, scalar_sources=scalar_sources
-            )
+            return ImagePayloadMetadata(plane_axis=mode)
+        provenance = mode.compose_provenance(
+            provenances, scalar_sources=scalar_sources
         )
         return cls.metadata_for_source_provenance(provenance, mode=mode)
 
@@ -179,12 +176,12 @@ class CellProfilerSourceIdentityMixin:
     def metadata_for_source_provenance(
         provenance: SourceImageProvenance,
         *,
-        mode: ImagePayloadMetadataCompositionMode,
+        mode: type[RuntimePlaneAxis],
     ) -> ImagePayloadMetadata:
         """Carry a composed source axis without projecting its image pixels."""
         return ImagePayloadMetadata(
             source_provenance=provenance,
-            plane_axis=mode.plane_axis,
+            plane_axis=mode,
         )
 
     @classmethod
@@ -216,7 +213,7 @@ class CellProfilerSourceIdentityMixin:
         )
         return cls.metadata_for_source_provenance(
             provenance,
-            mode=ImagePayloadMetadataCompositionMode.STACK,
+            mode=RuntimeSlicePlaneAxis,
         )
 
     @classmethod
@@ -262,7 +259,7 @@ class CellProfilerSourceIdentityMixin:
         preserve_topology = (
             len(metadata) == 1
             and metadata[0].plane_axis
-            is ImagePayloadMetadataCompositionMode.BUNDLE.plane_axis
+            is SourceBindingPlaneAxis
         )
         scalar_sources = tuple(fields.source_provenance for fields in metadata)
         provenance = SourceImageProvenance.bundle(
@@ -278,10 +275,10 @@ class CellProfilerSourceIdentityMixin:
     def source_metadata_composition_mode(
         cls,
         sources: tuple["CellProfilerSourceIdentityMixin", ...],
-    ) -> ImagePayloadMetadataCompositionMode:
+    ) -> type[RuntimePlaneAxis]:
         """Return the source-axis topology owned by this source class."""
         del sources
-        return ImagePayloadMetadataCompositionMode.STACK
+        return RuntimeSlicePlaneAxis
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -471,11 +468,11 @@ class CellProfilerMeasurementImage(
     def source_metadata_composition_mode(
         cls,
         sources: tuple["CellProfilerMeasurementImage", ...],
-    ) -> ImagePayloadMetadataCompositionMode:
+    ) -> type[RuntimePlaneAxis]:
         """Return source metadata topology declared by measurement reference domains."""
         if all(source.reference_domain.bundles_source_metadata for source in sources):
-            return ImagePayloadMetadataCompositionMode.BUNDLE
-        return ImagePayloadMetadataCompositionMode.STACK
+            return SourceBindingPlaneAxis
+        return RuntimeSlicePlaneAxis
 
     @property
     def alignment_image(self) -> RuntimeCallableArgument:
@@ -530,8 +527,8 @@ class CellProfilerMeasurementImage(
                 elif image_plane_axis is not plane_projection.axis:
                     raise ValueError(
                         "Aligned measurement image plane axis conflicts with its "
-                        f"execution projection: {image_plane_axis.value!r} != "
-                        f"{plane_projection.axis.value!r}."
+                        f"execution projection: {image_plane_axis.name!r} != "
+                        f"{plane_projection.axis.name!r}."
                     )
                 else:
                     plane_projection.validate_shape(

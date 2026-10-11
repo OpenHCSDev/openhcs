@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 import pytest
 
@@ -8,7 +9,6 @@ from openhcs.core.memory import (
     unstack_runtime_slices,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
@@ -18,7 +18,6 @@ from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.runtime_image_values import (
     ImagePayloadSliceProjector,
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
     MaskedImagePayload,
 )
 from openhcs.core.payload_axes import PayloadAxes
@@ -90,13 +89,13 @@ def test_runtime_plane_projection_requires_matching_payload_axis() -> None:
     )
     mask = np.ones_like(data, dtype=bool)
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(data, mask)
 
     selected = RuntimeSliceProjection.value_for_slice(
         payload,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=1,
             axis_size=2,
         ),
@@ -112,7 +111,7 @@ def test_source_binding_slice_projection_preserves_shared_spatial_mask() -> None
     mask = np.ones((4, 5), dtype=bool)
     mask[1, 2] = False
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_spatial_domain=SourceSpatialDomain(source_shape_yx=(4, 5)),
     )
 
@@ -127,7 +126,7 @@ def test_source_binding_slice_projection_preserves_shared_spatial_mask() -> None
 def test_scalar_and_batch_projection_preserve_distinct_mask_contracts() -> None:
     data = np.zeros((2, 4, 5), dtype=np.float32)
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_spatial_domain=SourceSpatialDomain(source_shape_yx=(4, 5)),
     )
     shared_mask = np.ones((4, 5), dtype=np.uint8)
@@ -154,7 +153,7 @@ def test_batch_projection_checks_mask_cardinality_before_child_axis_errors(
     mask_shape: tuple[int, ...],
 ) -> None:
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         axes=PayloadAxes.colour_samples(0),
     )
     projector = ImagePayloadSliceProjector(
@@ -192,7 +191,7 @@ def test_slice_projection_keeps_fresh_source_metadata_across_calls(batch: bool) 
     data = np.zeros((2, 4, 5), dtype=np.float32)
     masks = np.ones(data.shape, dtype=bool)
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_component_metadata={"well": "A01"},
     )
     payload = metadata.payload_with(data, masks)
@@ -201,7 +200,7 @@ def test_slice_projection_keeps_fresh_source_metadata_across_calls(batch: bool) 
     def project():
         if batch:
             return projector.payloads_for_slices(tuple(data))[1]
-        return payload.slice_payload(data[1], 1, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
+        return payload.slice_payload(data[1], 1, plane_axis=RuntimeSlicePlaneAxis)
 
     first = project()
     metadata.source_component_metadata = {"well": "B02"}
@@ -220,14 +219,14 @@ def test_source_binding_runtime_projection_preserves_shared_spatial_mask() -> No
     mask = np.ones((4, 5), dtype=bool)
     mask[1, 2] = False
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_spatial_domain=SourceSpatialDomain(source_shape_yx=(4, 5)),
     ).payload_with(data, mask)
 
     projected = RuntimeSliceProjection.value_for_slice(
         payload,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.SOURCE_BINDING,
+            axis=SourceBindingPlaneAxis,
             plane_index=1,
             axis_size=2,
         ),
@@ -243,7 +242,7 @@ def test_runtime_plane_projection_does_not_infer_undeclared_ndarray_axis() -> No
     projected = RuntimeSliceProjection.value_for_slice(
         value,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=0,
             axis_size=2,
         ),
@@ -276,14 +275,14 @@ def test_image_bundle_composition_declares_source_binding_axis() -> None:
 
     assert composition.execution_mode is FullStackExecution
     assert composition.payload.metadata.plane_axis is (
-        RuntimePlaneAxis.SOURCE_BINDING
+        SourceBindingPlaneAxis
     )
     assert composition.payload.data.shape == (2, 4, 5)
 
 
 def test_single_runtime_slice_payload_is_not_repacked_as_source_binding() -> None:
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((2, 4, 5), dtype=np.uint16), None)
 
     composition = compose_aligned_image_payload("MeasureImage", (payload,))
@@ -291,14 +290,14 @@ def test_single_runtime_slice_payload_is_not_repacked_as_source_binding() -> Non
     assert composition.execution_mode is NaturalExecution
     assert composition.payload is payload
     assert composition.payload.metadata.plane_axis is (
-        RuntimePlaneAxis.RUNTIME_SLICE
+        RuntimeSlicePlaneAxis
     )
 
 
 def test_composed_runtime_slice_projection_ignores_outer_file_cardinality() -> None:
     payloads = tuple(
         ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(np.zeros((2, 4, 5), dtype=np.uint16), None)
         for _ in range(2)
     )
@@ -310,7 +309,7 @@ def test_composed_runtime_slice_projection_ignores_outer_file_cardinality() -> N
     )
 
     assert projection is not None
-    assert projection.axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert projection.axis is RuntimeSlicePlaneAxis
     assert projection.axis_size == 2
     assert projection.source_aliases == ()
 
@@ -349,7 +348,7 @@ def test_source_bundle_projection_uses_payload_cardinality_not_outer_bindings() 
     )
 
     assert projection is not None
-    assert projection.axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert projection.axis is SourceBindingPlaneAxis
     assert projection.axis_size == 2
     assert projection.source_aliases == ("CropBlue", "CropGreen")
 
@@ -454,7 +453,7 @@ def test_named_outputs_keep_active_identity_when_restacked_for_adjacent_step() -
 
     restacked = stack_image_payloads(
         packed.slices,
-        metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        metadata_mode=RuntimeSlicePlaneAxis,
     )
     provenance = restacked.metadata.source_provenance
 

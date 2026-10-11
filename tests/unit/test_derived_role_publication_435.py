@@ -1,5 +1,6 @@
 """Issue435: real saved image occurrences projected through two existing owners."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.processing.materialization.options import NameByArtifactName, NameBySourceIdentity
 from dataclasses import asdict, replace
 import json
@@ -23,7 +24,7 @@ from openhcs.core.component_group_scope import ComponentGroupScope, RuntimeExecu
 from openhcs.core.compiled_step_plan import RuntimeArtifactMaterializationPlan
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import (
-    ImageMetadataPayload, ImagePayloadMetadata, ImagePayloadMetadataCompositionMode,
+    ImageMetadataPayload, ImagePayloadMetadata,
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
@@ -39,7 +40,7 @@ from openhcs.core.steps.function_outputs import (
 )
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from python_introspect import to_jsonable
 from openhcs.processing.materialization import (
     ImageFileOptions, MaterializationSpec,
@@ -109,7 +110,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
                 source_voxel_spacing=SourceVoxelSpacing((2.0, 0.65, 0.65)),
             ).payload_with(filemanager.load(str(path), Backend.DISK.value)))
         source_stack = stack_image_payloads(
-            source_planes, metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+            source_planes, metadata_mode=RuntimeSlicePlaneAxis,
         )
         roles = (("fixture_image_494", 1.0),)
     for role, scale in roles:
@@ -181,7 +182,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         if aggregate:
             payload = ImageArtifactType.contextualize_output(
                 source_stack, pixels.copy(), output_plan,
-                RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, 4),
+                RuntimePlaneAxisValueProjection(RuntimeSlicePlaneAxis, (), None, 4),
             )
         if aggregate:
             execution_scope = RuntimeExecutionAxisScope.from_raw(

@@ -1,6 +1,7 @@
 """Nominal runtime object label domains semantics."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from abc import ABC
 from abc import abstractmethod
 from collections.abc import Iterable
@@ -508,8 +509,8 @@ class ObjectLabelPlaneDomainStrategy(
     @abstractmethod
     def value_plane_axis(
         self,
-        plane_axis: RuntimePlaneAxis | None,
-    ) -> RuntimePlaneAxis | None:
+        plane_axis: type[RuntimePlaneAxis] | None,
+    ) -> type[RuntimePlaneAxis] | None:
         """Return the plane axis valid for this declared domain scope."""
 
     @abstractmethod
@@ -578,13 +579,13 @@ class PayloadObjectLabelPlaneDomainStrategy(ObjectLabelPlaneDomainStrategy):
     ) -> RuntimePlaneAxisValueProjection:
         projection = RuntimePlaneAxisValueProjection.require_from_projector(
             projector,
-            RuntimePlaneAxis.RUNTIME_SLICE,
+            RuntimeSlicePlaneAxis,
         )
         if projection.plane_index is None and projection.axis_size != 1:
             raise ValueError(
                 "Payload-scoped object-label measurement lookup requires one "
                 "selected runtime slice, but the invocation preserves "
-                f"{projection.axis_size} {projection.axis.value!r} plane(s)."
+                f"{projection.axis_size} {projection.axis.name!r} plane(s)."
             )
         return projection
 
@@ -624,7 +625,7 @@ class PayloadObjectLabelPlaneDomainStrategy(ObjectLabelPlaneDomainStrategy):
 
     def value_plane_axis(
         self,
-        plane_axis: RuntimePlaneAxis | None,
+        plane_axis: type[RuntimePlaneAxis] | None,
     ) -> None:
         del plane_axis
         return None
@@ -794,8 +795,8 @@ class PlaneObjectLabelPlaneDomainStrategy(ObjectLabelPlaneDomainStrategy):
 
     def value_plane_axis(
         self,
-        plane_axis: RuntimePlaneAxis | None,
-    ) -> RuntimePlaneAxis:
+        plane_axis: type[RuntimePlaneAxis] | None,
+    ) -> type[RuntimePlaneAxis]:
         if plane_axis is None:
             raise ValueError(
                 "Plane-scoped object labels require a declared runtime plane axis."

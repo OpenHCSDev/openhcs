@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import json
 from pathlib import Path
 from functools import partial
@@ -78,7 +79,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
@@ -151,7 +151,7 @@ def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_p
     labels[1, 6, 7] = 2
     spacing = SourceVoxelSpacing((1.3556, 1.3556))
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_voxel_spacing=spacing,
         source_spatial_domain=SourceSpatialDomain(
             origin_yx=(0, 0), source_shape_yx=(8, 9)
@@ -183,7 +183,7 @@ def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_p
         image=metadata.payload_with(np.zeros_like(labels)),
         labels=labels,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
+            axis=SourceBindingPlaneAxis, axis_size=2
         ),
     ).payload()
     filemanager = FileManager({"memory": MemoryStorageBackend()})
@@ -556,7 +556,7 @@ def test_indexed_image_materialization_streams_each_declared_component_plane(
     payload = ImageMetadataPayload(
         data=data,
         metadata=ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             axes=PayloadAxes.colour_samples(-1),
             source_image_provenance_planes=(
                 SourceImageProvenancePlanes.from_components(
@@ -656,7 +656,7 @@ def _addressable_roi_label_payload(
 ):
     return ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=_two_plane_roi_labels()),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -671,7 +671,7 @@ def _addressable_roi_label_payload(
 def _unaddressed_roi_label_payload():
     return ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=_two_plane_roi_labels()),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -910,7 +910,7 @@ def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
     metadata = ROIArchiveSourceMetadata.decode(rois)
     assert payload.plane_axis is None
     assert metadata.plane_axis is (
-        RuntimePlaneAxis.RUNTIME_SLICE if variable_components else None
+        RuntimeSlicePlaneAxis if variable_components else None
     )
     assert metadata.source_voxel_spacing.values_zyx == (2.0, 0.65, 0.65)
     domain = ROIArchiveSourceMetadata.source_component_domain(rois, metadata)
@@ -1176,7 +1176,7 @@ def test_tiff_stack_splits_scalar_3d_stack_by_plane() -> None:
     stack = ImageMetadataPayload(
         data=np.zeros((3, 5, 7), dtype=np.uint8),
         metadata=ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ),
     )
 
@@ -1201,7 +1201,7 @@ def test_tiff_stack_streaming_saves_per_slice_component_metadata() -> None:
     fm = _RecordingFileManager()
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.zeros((2, 5, 7), dtype=np.int32)),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             scope=ObjectLabelDomainScope.PLANE,
             declared_object_id_domains=((), ()),
@@ -1242,7 +1242,7 @@ def test_tiff_stack_streaming_projects_scalar_metadata_over_declared_stack_axis(
     payload = ImageMetadataPayload(
         data=np.zeros((2, 5, 7), dtype=np.float32),
         metadata=ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             source_component_metadata={
                 "well": "A01",
                 "site": 1,
@@ -1365,7 +1365,7 @@ def test_tiff_stack_projection_uses_artifact_scalar_z_origin() -> None:
 def test_tiff_stack_streaming_preserves_runtime_source_plane_metadata() -> None:
     fm = _RecordingFileManager()
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_path="/tmp/A01_s001_w3_z001_t001.tif",
         source_component_metadata={
             "well": "A01",
@@ -1413,7 +1413,7 @@ def test_tiff_stack_streaming_projects_artifact_identity_over_declared_stack_axi
         data=ImageMetadataPayload(
             data=np.zeros((2, 5, 7), dtype=np.float32),
             metadata=ImagePayloadMetadata(
-                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                plane_axis=RuntimeSlicePlaneAxis,
             ),
         ),
         path="/tmp/A01_s001_w3_z001_t001_DerivedStack_step6",
@@ -1611,7 +1611,7 @@ def test_roi_materialization_extracts_each_plane_from_object_label_stack() -> No
     labels[1, 4:7, 4:7] = 2
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -1711,7 +1711,7 @@ def test_roi_streaming_maps_payload_scoped_volume_planes_from_provenance(viewer_
     roi_content, roi_path, _backend, stream_kwargs = roi_saves[0]
     stream_request = stream_kwargs["stream_request"]
     item_fields = stream_request.source.item_fields
-    assert item_fields["plane_axis"] == RuntimePlaneAxis.RUNTIME_SLICE.value
+    assert item_fields["plane_axis"] == RuntimeSlicePlaneAxis.name
     assert item_fields["plane_component_values"] == {"z_index": ["1", "2"]}
 
     napari_backend = NapariStreamingBackend()
@@ -1728,7 +1728,7 @@ def test_roi_streaming_maps_payload_scoped_volume_planes_from_provenance(viewer_
             display_payload_extra=napari_backend.display_payload_extra(stream_request),
         ),
     ).batch_images[0]
-    assert streamed_item["plane_axis"] == RuntimePlaneAxis.RUNTIME_SLICE.value
+    assert streamed_item["plane_axis"] == RuntimeSlicePlaneAxis.name
     assert streamed_item["plane_component_values"] == {"z_index": ["1", "2"]}
 
 
@@ -1739,7 +1739,7 @@ def test_roi_materialization_projects_singleton_object_label_stack() -> None:
     labels[0, 2:6, 3:7] = 1
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
             scope=ObjectLabelDomainScope.PLANE,
@@ -1770,7 +1770,7 @@ def test_roi_streaming_preserves_singleton_projected_source_metadata() -> None:
     labels[0, 2:6, 3:7] = 1
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
             scope=ObjectLabelDomainScope.PLANE,
@@ -1833,7 +1833,7 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component(
     roi_content, roi_path, _backend, stream_kwargs = roi_saves[0]
     stream_request = stream_kwargs["stream_request"]
     assert stream_request.source.item_fields == {
-        "plane_axis": RuntimePlaneAxis.RUNTIME_SLICE.value,
+        "plane_axis": RuntimeSlicePlaneAxis.name,
         "plane_component_values": {"site": ["1"]},
         "spatial_origin_yx": [0, 0],
         "source_spatial_shape_yx": [8, 8],
@@ -1843,7 +1843,7 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component(
                 source_shape_yx=(8, 8),
                 value_name="ROI materialization source image",
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).to_viewer_image_metadata(),
     }
 
@@ -1861,7 +1861,7 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component(
             display_payload_extra=napari_backend.display_payload_extra(stream_request),
         ),
     ).batch_images[0]
-    assert streamed_item["plane_axis"] == RuntimePlaneAxis.RUNTIME_SLICE.value
+    assert streamed_item["plane_axis"] == RuntimeSlicePlaneAxis.name
     assert streamed_item["plane_component_values"] == {"site": ["1"]}
 
 
@@ -1929,7 +1929,7 @@ def test_roi_materialization_splits_addressable_label_planes_for_streaming() -> 
     labels[1, 4:7, 4:7] = 2
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -1983,7 +1983,7 @@ def test_roi_materialization_replaces_parser_equivalent_reference_source_prefix(
     labels[1, 4:7, 4:7] = 2
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -2130,7 +2130,7 @@ def test_roi_streaming_applies_target_metadata_without_scalar_stream_metadata() 
     labels[1, 4:7, 4:7] = 2
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -2171,7 +2171,7 @@ def test_roi_materialization_coalesces_duplicate_stream_targets() -> None:
     labels[1, 4:7, 4:7] = 2
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -2221,7 +2221,7 @@ def test_roi_materialization_coalesces_source_stack_archive_with_artifact_identi
     labels[1, 4:7, 4:7] = 2
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -2482,7 +2482,7 @@ def test_roi_materialization_spec_reports_projected_source_identities() -> None:
     labels[1, 4:7, 4:7] = 2
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -2590,7 +2590,7 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
         else SourceSpatialDomain(source_shape_yx=(4, 5), origin_yx=(0, 0))
     )
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_spatial_domain=domain,
         source_voxel_spacing=SourceVoxelSpacing((2.0, 1.0, 0.5)),
         source_image_names=("DNA",),
@@ -2687,7 +2687,7 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
         plane = RuntimeSliceProjection.value_for_slice(
             reloaded,
             RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=3
+                axis=RuntimeSlicePlaneAxis, axis_size=3
             ).selected_plane(index),
         )
         np.testing.assert_array_equal(plane.data, pixels[index])

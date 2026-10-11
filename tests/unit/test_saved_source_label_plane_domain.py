@@ -1,6 +1,7 @@
 """Saved label admission retains declared runtime axes, never guessed Z axes."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import numpy as np
 import pytest
@@ -26,7 +27,7 @@ from openhcs.core.image_payload_execution_mode import (
 )
 
 
-def _source(labels, *, axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_count=None, spacing=(1.3556, 1.3556)):
+def _source(labels, *, axis=RuntimeSlicePlaneAxis, plane_count=None, spacing=(1.3556, 1.3556)):
     count = labels.shape[0] if plane_count is None else plane_count
     return ImagePayloadMetadata(
         plane_axis=axis,
@@ -46,7 +47,7 @@ def _saved_label_input(source):
     )
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 @pytest.mark.parametrize("plane_count", (1, 2))
 def test_explicit_object_projection_preserves_axis_without_acquisition_provenance(
     axis, plane_count,
@@ -64,7 +65,7 @@ def test_explicit_object_projection_preserves_axis_without_acquisition_provenanc
     assert payload.domain.declared_object_id_domains == ((1,),) * plane_count
     assert payload.source_provenance == source.metadata.source_provenance
     np.testing.assert_array_equal(payload.labels, labels)
-    other_axis = next(member for member in RuntimePlaneAxis if member is not axis)
+    other_axis = next(member for member in RuntimePlaneAxis.leading_axes() if member is not axis)
     with pytest.raises(ValueError, match="conflicts with the source-image axis"):
         SourceImageObjectLabelBuildRequest(
             image=source, labels=labels,
@@ -74,7 +75,7 @@ def test_explicit_object_projection_preserves_axis_without_acquisition_provenanc
         ).payload()
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
     labels = np.zeros((2, 8, 9), dtype=np.int32)
     labels[0, 1:3, 2:5] = 29
@@ -176,7 +177,7 @@ def test_explicit_projection_conflicting_with_source_declaration_is_rejected():
     with pytest.raises(ValueError, match="conflicts"):
         SourceImageObjectLabelBuildRequest(
             image=_source(labels), labels=labels,
-            plane_projection=RuntimePlaneAxisValueProjection.preserve(axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2),
+            plane_projection=RuntimePlaneAxisValueProjection.preserve(axis=SourceBindingPlaneAxis, axis_size=2),
         ).payload()
 
 
@@ -221,7 +222,7 @@ class PairedSourceProjection(PairedSourceAdmission, RuntimePlaneAxisValueProject
     """An independent projection leaf using the unchanged source constructor."""
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 def test_source_constructor_admits_a_new_cooperative_projection_capability(axis):
     source = _source(np.ones((2, 6, 7), dtype=np.int32), axis=axis)
     value = PairedSourceProjection.from_source_declaration(axis, source.metadata.source_provenance)
@@ -237,7 +238,7 @@ def test_source_constructor_admits_a_new_cooperative_projection_capability(axis)
     assert PairedSourceProjection.from_source_declaration(None, bigger.metadata.source_provenance) is None
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 def test_produced_volume_global_object_domain_is_independent_of_source_plane_axis(axis):
     labels = np.ones((2, 6, 7), dtype=np.int32)
     source = _source(labels, axis=axis, spacing=(2.0, 1.3556, 1.3556))
@@ -259,7 +260,7 @@ def test_produced_volume_global_object_domain_is_independent_of_source_plane_axi
     assert value.parent_image_source_voxel_spacing == source.metadata.source_voxel_spacing
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 def test_produced_volume_without_explicit_ids_keeps_one_global_present_id_domain(axis):
     labels = np.zeros((2, 6, 7), dtype=np.int32)
     labels[0, 1:3, 2:4] = 29
@@ -276,7 +277,7 @@ def test_produced_volume_without_explicit_ids_keeps_one_global_present_id_domain
     assert len(value.measurement_planes()) == 1
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 def test_explicit_plane_domain_still_requires_projection_and_rejects_global_count(axis):
     labels = np.ones((2, 6, 7), dtype=np.int32)
     source = _source(labels, axis=axis)
@@ -294,7 +295,7 @@ def test_explicit_plane_domain_still_requires_projection_and_rejects_global_coun
         ).payload()
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 def test_generic_output_context_uses_execution_projection_not_image_storage_axis(axis):
     from openhcs.core.runtime_image_values import ImagePayload
 

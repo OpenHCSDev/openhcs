@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from openhcs.core.steps.abstract import StepExecutionObservation
 from tests.artifact_graphs import admitted_graph
 from openhcs.processing.backends.cellprofiler.crop import CropMask
@@ -61,9 +62,7 @@ from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPol
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
 from openhcs.core.source_binding_selection import SourcePatternResolutionContext
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
@@ -442,7 +441,7 @@ def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance
     )
 
     assert stack.metadata.source_image_names == ("Raw", "Illum")
-    assert stack.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert stack.metadata.plane_axis is SourceBindingPlaneAxis
 
 
 def test_workspace_replay_preserves_collapsed_semantic_identity(
@@ -466,7 +465,7 @@ def test_workspace_replay_preserves_collapsed_semantic_identity(
                 for site in (1, 2)
             ),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).collapse_leading_plane_axis()
     projection_set = SourceProjectionSet(
         (
@@ -850,7 +849,7 @@ def test_stack_payload_context_promotes_single_channel_slice_metadata() -> None:
 
     payload = stack_image_payloads(
         (first, second),
-        metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        metadata_mode=RuntimeSlicePlaneAxis,
     )
     metadata = payload.metadata
 
@@ -4179,7 +4178,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     assert data.shape == (2, 4, 5, 3)
     np.testing.assert_array_equal(data[1], np.full((4, 5, 3), 7, dtype=np.float32))
     assert metadata.source_image_names == aliases
-    assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert metadata.plane_axis is SourceBindingPlaneAxis
     assert metadata.axis_position(ColourAxis) == 3
     assert metadata.source_component_metadata["specimen"] == "sample"
 
@@ -5324,7 +5323,7 @@ def test_collapsed_output_identity_uses_retained_source_contributors(
                 },
             ),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     collapsed_metadata = stack_metadata.collapse_leading_plane_axis()
     payload = collapsed_metadata.payload_with(
@@ -5388,7 +5387,7 @@ def test_composite_then_z_collapse_uses_current_scalar_identity(
                     ),
                 )
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )
         composite_payloads.append(
             channel_stack_metadata.collapse_leading_plane_axis().payload_with(
@@ -6034,7 +6033,7 @@ def test_whole_volume_checkpoint_load_preserves_depth_and_independent_buffers():
     pixels = np.arange(3 * 4 * 5, dtype=np.float32).reshape(3, 4, 5)
     mask = pixels % 2 == 0
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_spatial_domain=VolumeSourceSpatialDomain(source_depth=3),
     )
     source = metadata.payload_with(pixels, mask)

@@ -1,6 +1,7 @@
 """Object-label reduction and PURE_2D slice aggregation."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -90,7 +91,7 @@ class ObjectLabelPure2DSliceAggregator:
         values: Sequence[ObjectLabelValue],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> None:
         self.values: tuple[ObjectLabelValue, ...] = tuple(values)
         self.memory_type = memory_type
@@ -102,7 +103,7 @@ class ObjectLabelPure2DSliceAggregator:
         values: Sequence[ObjectLabelValue],
         memory_type: str,
         *,
-        plane_axis: RuntimePlaneAxis,
+        plane_axis: type[RuntimePlaneAxis],
     ) -> ObjectLabelValue:
         values_tuple = tuple(values)
         if not values_tuple:
@@ -165,7 +166,7 @@ class ObjectLabelPure2DSliceAggregator:
         )
 
     @property
-    def plane_axis(self) -> RuntimePlaneAxis:
+    def plane_axis(self) -> type[RuntimePlaneAxis]:
         return self.requested_plane_axis
 
     @property
@@ -262,7 +263,7 @@ class ObjectLabelPure2DSliceAggregator:
         """Build the aggregated object-label value."""
         metadata = runtime_image_values.ImagePayloadMetadata.compose(
             self.values,
-            mode=runtime_image_values.ImagePayloadMetadataCompositionMode.STACK,
+            mode=RuntimeSlicePlaneAxis,
         )
         return self.first.with_variants(
             variants,

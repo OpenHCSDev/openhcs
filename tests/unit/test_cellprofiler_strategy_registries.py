@@ -1,5 +1,6 @@
 """Regression tests for JSON-safe CellProfiler compatibility registries."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 
 from openhcs.processing.backends.cellprofiler.alignment import AlignCropModeStrategy
@@ -56,7 +57,6 @@ from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
@@ -171,7 +171,7 @@ def test_measurement_execution_mode_follows_callable_declaration():
 
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.zeros((3, 8, 8), dtype=np.int32)),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((), (), ()),
             scope=ObjectLabelDomainScope.PLANE,
@@ -198,7 +198,7 @@ def test_measurement_execution_mode_follows_callable_declaration():
                 variant_data=ObjectLabelVariantData(
                     labels=np.zeros((3, 8, 8), dtype=np.int32)
                 ),
-                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                plane_axis=RuntimeSlicePlaneAxis,
                 domain=ObjectLabelDomain(
                     declared_object_id_domains=((), (), ()),
                     scope=ObjectLabelDomainScope.PLANE,
@@ -215,7 +215,7 @@ def test_measurement_execution_mode_follows_callable_declaration():
                 variant_data=ObjectLabelVariantData(
                     labels=np.zeros((3, 8, 8), dtype=np.int32)
                 ),
-                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                plane_axis=RuntimeSlicePlaneAxis,
                 domain=ObjectLabelDomain(
                     declared_object_id_domains=((), (), ()),
                     scope=ObjectLabelDomainScope.PLANE,
@@ -232,7 +232,7 @@ def test_measurement_execution_mode_follows_callable_declaration():
                 variant_data=ObjectLabelVariantData(
                     labels=np.zeros((3, 8, 8), dtype=np.int32)
                 ),
-                plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+                plane_axis=SourceBindingPlaneAxis,
                 domain=ObjectLabelDomain(
                     declared_object_id_domains=((), (), ()),
                     scope=ObjectLabelDomainScope.PLANE,

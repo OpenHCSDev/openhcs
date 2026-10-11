@@ -1,6 +1,8 @@
 """Runtime artifact binding authorities for CellProfiler modules."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
@@ -43,8 +45,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
-    RuntimePlaneAxisStrategy,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.variable_component_stack_requirement import (
@@ -400,9 +400,7 @@ class RuntimeInputBindingRequest:
             raise ValueError(
                 "Slice-aligned object labels require a declared plane count."
             )
-        plane_index = RuntimePlaneAxisStrategy.for_enum_member(
-            payload.plane_axis
-        ).plane_index(
+        plane_index = payload.plane_axis.plane_index(
             self.adapter,
             payload.source_aliases,
         )
@@ -485,7 +483,7 @@ class RuntimeInputBindingRequest:
         """Return whether object inputs are already scoped by source binding."""
         for spec in self.object_inputs:
             labels = self.label_payload_for(spec)
-            if labels.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING:
+            if labels.plane_axis is not SourceBindingPlaneAxis:
                 continue
             aliases = labels.source_aliases
             if not aliases:
@@ -536,7 +534,7 @@ class RuntimeInputBindingRequest:
             return value
         runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
             self.adapter,
-            RuntimePlaneAxis.RUNTIME_SLICE,
+            RuntimeSlicePlaneAxis,
             (),
         )
         if (
@@ -584,7 +582,7 @@ class RuntimeInputBindingRequest:
             RuntimeSliceProjection.value_for_slice(
                 value,
                 RuntimePlaneAxisValueProjection.from_selected_plane(
-                    axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    axis=RuntimeSlicePlaneAxis,
                     plane_index=selected_indices[0],
                     axis_size=slice_count,
                 ),

@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
 
@@ -7,7 +8,6 @@ from openhcs.core.artifacts.relations import GroupLineageSourceRelation
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
@@ -82,7 +82,7 @@ def test_projected_variable_stack_proves_source_ownership_once(
     output = (
         source.metadata
         .replace_fields(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )
         .payload_with(
             np.ones((2, 4, 5), dtype=np.uint16),
@@ -108,12 +108,12 @@ def test_projected_variable_stack_proves_source_ownership_once(
     assert len(proof_calls) == 1
     projection = proof_calls[0][3]
     assert isinstance(projection, RuntimePlaneAxisValueProjection)
-    assert projection.axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert projection.axis is RuntimeSlicePlaneAxis
     assert projection.axis_size == 2
     np.testing.assert_array_equal(
         result.data, output.data
     )
-    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimeSlicePlaneAxis
 
 
 def test_derived_2d_image_does_not_inherit_input_runtime_plane_axis() -> None:
@@ -130,7 +130,7 @@ def test_derived_2d_image_does_not_inherit_input_runtime_plane_axis() -> None:
                 {"well": "A01", "z_index": "2"},
             ),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
     output_plan = ArtifactOutputPlan(
         name="Projection",
@@ -158,7 +158,7 @@ def test_bare_full_stack_image_inherits_source_runtime_plane_axis() -> None:
     source_spec = ArtifactSpec.input("Volume", ImageArtifactType)
     source = ImagePayloadMetadata(
         source_image_names=(source_spec.name,),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
     output_plan = ArtifactOutputPlan(
         name="FilteredVolume",
@@ -176,17 +176,17 @@ def test_bare_full_stack_image_inherits_source_runtime_plane_axis() -> None:
     )
 
     assert result.data.shape == (2, 4, 5)
-    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimeSlicePlaneAxis
 
 
 def test_derived_image_preserves_explicit_output_runtime_plane_axis() -> None:
     source_spec = ArtifactSpec.input("Volume", ImageArtifactType)
     source = ImagePayloadMetadata(
         source_image_names=(source_spec.name,),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
     output = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
     output_plan = ArtifactOutputPlan(
         name="FilteredVolume",
@@ -204,7 +204,7 @@ def test_derived_image_preserves_explicit_output_runtime_plane_axis() -> None:
     )
 
     assert result.data.shape == (2, 4, 5)
-    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimeSlicePlaneAxis
 
 
 def test_projected_crop_preserves_complete_spatial_domain_after_plane_composition() -> (
@@ -223,7 +223,7 @@ def test_projected_crop_preserves_complete_spatial_domain_after_plane_compositio
                 {"well": "A01", "site": "2", "channel": "1"},
             ),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
     source = source_metadata.payload_with(
         np.ones((2, 10, 12), dtype=np.float32),
@@ -281,7 +281,7 @@ def test_projected_scalar_rgb_proves_complete_identity_once(
     assert len(proof_calls) == 1
     projection = proof_calls[0][3]
     assert isinstance(projection, RuntimePlaneAxisValueProjection)
-    assert projection.axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert projection.axis is RuntimeSlicePlaneAxis
     assert projection.axis_size == 1
     assert result is output
     assert result.metadata.plane_axis is None

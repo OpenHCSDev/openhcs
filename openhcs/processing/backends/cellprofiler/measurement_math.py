@@ -1,6 +1,7 @@
 """CalculateMath measurement semantics for CellProfiler-compatible processing."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.plans import ArtifactInputPlan
 
 from abc import ABC, abstractmethod
@@ -51,7 +52,6 @@ from openhcs.core.runtime_slice_alignment import (
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_tabular_values import (
@@ -1113,7 +1113,7 @@ class MathOperandSliceAlignment:
             for slice_index in range(slice_count)
             for projection in (
                 RuntimePlaneAxisValueProjection.from_selected_plane(
-                    axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    axis=RuntimeSlicePlaneAxis,
                     plane_index=slice_index,
                     axis_size=slice_count,
                 ),

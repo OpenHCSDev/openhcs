@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
@@ -71,7 +72,6 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
@@ -91,7 +91,6 @@ from openhcs.core.aligned_image_payload import (
     unstack_image_payload_context,
 )
 from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadataCompositionMode,
     ImagePayloadMetadata,
 )
 from openhcs.core.runtime_object_labels import (
@@ -275,7 +274,7 @@ def test_function_core_passes_payload_data_to_array_callable_and_restores_contex
     tiles = np.arange(2 * 4 * 4, dtype=np.uint16).reshape(2, 4, 4)
     payload = ImagePayloadMetadata(
         source_path="/input/A01_s001_w1_z001_t001.tif",
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(tiles, None)
     positions = np.array([[0, 0], [4, 0]], dtype=np.float32)
 
@@ -310,7 +309,7 @@ def test_function_core_preserves_output_declared_runtime_slice_axis():
 
     def produce_runtime_slice_stack(_image):
         return ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
 
     result = _execute_function_core(
@@ -325,7 +324,7 @@ def test_function_core_preserves_output_declared_runtime_slice_axis():
     )
 
     assert result.data.shape == (1, 4, 5)
-    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimeSlicePlaneAxis
 
 
 def test_image_output_context_preserves_stack_after_exact_source_projection():
@@ -333,10 +332,10 @@ def test_image_output_context_preserves_stack_after_exact_source_projection():
     source = ImagePayloadMetadata(
         source_path="/input/A01_s001_w1_z001_t001.tif",
         source_image_names=(source_spec.name,),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
     output = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
     output_plan = ArtifactOutputPlan(
         name="CorrGray",
@@ -351,13 +350,13 @@ def test_image_output_context_preserves_stack_after_exact_source_projection():
         output,
         output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=1,
         ),
     )
 
     assert result.data.shape == (1, 4, 5)
-    assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result.metadata.plane_axis is RuntimeSlicePlaneAxis
     assert result.metadata.source_image_names == (source_spec.name,)
 
 
@@ -414,7 +413,7 @@ def test_image_output_context_does_not_infer_axis_for_unmarked_payload():
 def test_image_output_context_rejects_declared_output_axis_shape_drift():
     source_spec = ArtifactSpec.input("NucleiImage", ImageArtifactType)
     output = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 4, 5), dtype=np.uint16), None)
     output_plan = ArtifactOutputPlan(
         name="SavedNuclei",
@@ -433,7 +432,7 @@ def test_image_output_context_rejects_declared_output_axis_shape_drift():
             output,
             output_plan or MAIN_FLOW,
             RuntimePlaneAxisValueProjection.preserve(
-                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis=RuntimeSlicePlaneAxis,
                 axis_size=2,
             ),
         )
@@ -486,7 +485,7 @@ def test_image_output_context_preserves_target_axis_across_source_rank_change() 
     output = ImagePayloadMetadata(
         source_path="/input/A01_s001_color.tif",
         axes=PayloadAxes.colour_samples(4),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 2, 4, 5, 3), dtype=np.float32), None)
 
     result = ImageArtifactType.contextualize_output(
@@ -498,7 +497,7 @@ def test_image_output_context_preserves_target_axis_across_source_rank_change() 
 
     metadata = result.metadata
     assert metadata.axis_index(ColourAxis, result) == 4
-    assert metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert metadata.plane_axis is RuntimeSlicePlaneAxis
     assert dict(metadata.source_component_metadata or {}) == {
         "well": "A01",
         "site": "1",
@@ -535,7 +534,7 @@ def test_image_output_context_projects_complete_multi_plane_identity() -> None:
     )
     source = metadata.payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
     output = metadata.replace_fields(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(
         np.ones((2, 4, 5), dtype=np.uint16),
         None,
@@ -556,13 +555,13 @@ def test_image_output_context_projects_complete_multi_plane_identity() -> None:
     )
 
     result_metadata = result.metadata
-    assert result_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert result_metadata.plane_axis is RuntimeSlicePlaneAxis
     assert result_metadata.source_image_provenance_planes.count == 2
 
 
 def test_named_image_outputs_bypass_unrelated_source_axis_projection():
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/red.tif", "/input/green.tif"),
             component_metadata=(
@@ -613,7 +612,7 @@ def test_image_output_context_projector_proves_source_ownership_once(
                 {"well": "A01", "z_index": "2"},
             ),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((2, 4, 5), dtype=np.uint16), None)
     output = np.ones((2, 4, 5), dtype=np.uint8)
     ownership_proofs = []
@@ -646,7 +645,7 @@ def test_image_output_context_projector_proves_source_ownership_once(
 def test_composed_function_output_owns_collapsed_source_identity():
     source = ImagePayloadMetadata(
         source_path="/input/A01_s001_w1_z001_t001.tif",
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
     output = ImagePayloadMetadata(
         source_path="/input/A01_s001_w1_z001_t001.tif",
@@ -687,7 +686,7 @@ def test_unstack_payload_context_slices_volume_stack_mask_with_volume_data():
     [slice_payload] = unstack_image_payload_context(
         payload,
         [data[0]],
-        default_plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        default_plane_axis=RuntimeSlicePlaneAxis,
     )
 
     assert slice_payload.mask.shape == data[0].shape
@@ -763,13 +762,13 @@ def test_unstack_payload_context_preserves_declared_axis_over_default():
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/dna.tif", "/input/actin.tif"),
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     ).payload_with(data, None)
 
     slices = unstack_image_payload_context(
         payload,
         list(data),
-        default_plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        default_plane_axis=RuntimeSlicePlaneAxis,
     )
 
     assert [
@@ -789,7 +788,7 @@ def test_stack_payload_context_projects_single_payload_mask_to_stack_domain():
 
     stacked = stack_image_payloads(
         (payload,),
-        metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        metadata_mode=RuntimeSlicePlaneAxis,
     )
 
     assert stacked.mask.shape == stack.shape
@@ -807,7 +806,7 @@ def test_stack_image_payloads_uses_payload_memory_and_preserves_masks():
 
     stacked = stack_image_payloads(
         payloads,
-        metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        metadata_mode=RuntimeSlicePlaneAxis,
     )
 
     np.testing.assert_array_equal(
@@ -825,11 +824,11 @@ def test_stack_image_payloads_preserves_declared_singleton_stack_axis():
 
     stacked = stack_image_payloads(
         (payload,),
-        metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        metadata_mode=RuntimeSlicePlaneAxis,
     )
 
     assert stacked.data.shape == (1, 4, 5)
-    assert stacked.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert stacked.metadata.plane_axis is RuntimeSlicePlaneAxis
     np.testing.assert_array_equal(stacked.data[0], payload)
 
 
@@ -849,7 +848,7 @@ def test_stack_payload_context_preserves_single_volumetric_payload_identity():
 
     stacked_payload = stack_image_payloads(
         (payload,),
-        metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        metadata_mode=RuntimeSlicePlaneAxis,
     )
     stacked_metadata = stacked_payload.metadata
 
@@ -876,12 +875,12 @@ def test_stack_payload_context_nests_incompatible_singleton_plane_topology():
             paths=("/input/A01_w1.tif", "/input/A01_w2.tif"),
             component_metadata=plane_metadata,
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     ).payload_with(data, None)
 
     stacked_payload = stack_image_payloads(
         (payload,),
-        metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        metadata_mode=RuntimeSlicePlaneAxis,
     )
     provenance_planes = stacked_payload.metadata.source_image_provenance_planes
 
@@ -900,12 +899,12 @@ def test_stack_payload_context_preserves_singleton_stack_payload_mask_domain():
     data = np.ones((1, 4, 5), dtype=np.float32)
     mask = np.ones_like(data, dtype=bool)
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(data, mask)
 
     stacked_payload = stack_image_payloads(
         (payload,),
-        metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        metadata_mode=RuntimeSlicePlaneAxis,
     )
 
     np.testing.assert_array_equal(
@@ -922,7 +921,7 @@ def test_stack_payload_context_composes_single_image_slice_mask_axis():
 
     stacked_payload = stack_image_payloads(
         (payload,),
-        metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+        metadata_mode=RuntimeSlicePlaneAxis,
     )
 
     np.testing.assert_array_equal(
@@ -1398,7 +1397,7 @@ def test_saved_canonical_source_projection_survives_main_flow_return():
     pixels = np.arange(12, dtype=np.uint16).reshape(2, 2, 3)
     paths = ("/source/A01_s001_w2_z001_t001.tif", "/source/A01_s002_w2_z001_t001.tif")
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=paths,
             component_metadata=tuple(
@@ -1656,7 +1655,7 @@ def test_managed_runtime_adapter_output_preserves_authoritative_source_metadata(
                 },
             ),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.zeros((1, 2, 3), dtype=np.uint16), None)
     adapter_output = ImagePayloadMetadata(
         source_path="/input/A01_s1_w3.tif",
@@ -1786,7 +1785,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
 
 def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
     declared_output = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
 
     runtime = PatternGroupExecutionRequest(
@@ -1818,7 +1817,7 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
     assert output[0][0].data.shape == (4, 5)
     assert (
         declared_output.metadata.plane_axis
-        is RuntimePlaneAxis.RUNTIME_SLICE
+        is RuntimeSlicePlaneAxis
     )
 
 
@@ -1833,7 +1832,7 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
     declared_output = ObjectLabelSet(
         name="SavedChildren",
         variant_data=ObjectLabelVariantData(labels=label_planes),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -2316,7 +2315,7 @@ def test_execute_function_core_aggregates_and_names_slice_aligned_object_labels(
     label_set = stored.data
     assert isinstance(label_set, ObjectLabelSet)
     assert label_set.name == output_spec.name
-    assert label_set.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert label_set.plane_axis is RuntimeSlicePlaneAxis
     assert label_set.declared_plane_count() == 2
     np.testing.assert_array_equal(
         label_set.labels,

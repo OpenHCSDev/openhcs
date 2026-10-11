@@ -1,5 +1,6 @@
 """Selected image declarations must materialize with their exact source identity."""
 
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from openhcs.core.artifacts.kinds import ImageArtifactType
 
 from pathlib import Path
@@ -92,7 +93,7 @@ def _source_stack(axis, component=Microscopy.Channel.name):
     return metadata.payload_with(np.arange(112, dtype=np.uint16).reshape(2, 7, 8))
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 @pytest.mark.parametrize(
     "output_type,artifact_name,dtype",
     (
@@ -182,12 +183,12 @@ def test_public_selected_checkpoint_materializes_and_streams_without_storage_axe
 def test_selection_contract_keeps_exact_source_order_without_channel_inference(
     component, indices
 ):
-    source = _source_stack(RuntimePlaneAxis.SOURCE_BINDING, component)
+    source = _source_stack(SourceBindingPlaneAxis, component)
     pixels = np.arange(len(indices) * 56).reshape(len(indices), 7, 8)
     payload = SelectedPlaneImageOutput(pixels, indices).resolve_source_context(
         source,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
+            axis=SourceBindingPlaneAxis, axis_size=2
         ),
     )
     metadata = payload.metadata
@@ -197,7 +198,7 @@ def test_selection_contract_keeps_exact_source_order_without_channel_inference(
         assert dict(metadata.source_component_metadata)[component] == "2"
     else:
         assert payload.shape == (2, 7, 8)
-        assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+        assert metadata.plane_axis is SourceBindingPlaneAxis
         assert metadata.retained_plane_component_values() == {component: ("2", "1")}
     assert metadata.source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
     np.testing.assert_array_equal(np.asarray(payload).reshape(-1), pixels.reshape(-1))
@@ -232,11 +233,11 @@ def test_independent_leaf_and_capabilities_execute_cooperative_selection_hooks()
     selected = DeclaredCrop(np.arange(112).reshape(2, 7, 8))
     calls.clear()
     payload = ImageArtifactType.contextualize_output(
-        _source_stack(RuntimePlaneAxis.SOURCE_BINDING),
+        _source_stack(SourceBindingPlaneAxis),
         selected,
         MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
+            axis=SourceBindingPlaneAxis, axis_size=2
         ),
     )
     assert calls == ["observe", "reverse", "declaration"]
@@ -264,14 +265,14 @@ def test_new_diagnostic_leaf_composes_cooperative_hooks_without_consumer_edits()
     class DeclaredResponse(ObservedProjection, SelectedDiagnosticPlaneImageOutput):
         pass
 
-    source = _source_stack(RuntimePlaneAxis.SOURCE_BINDING)
+    source = _source_stack(SourceBindingPlaneAxis)
     pixels = np.full((1, 7, 8), .75, dtype=np.float32)
     response = DeclaredResponse(pixels, (1,))
     calls.clear()
     payload = ImageArtifactType.contextualize_output(
         source, response, MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
+            axis=SourceBindingPlaneAxis, axis_size=2
         ),
     )
     assert calls == ["before", "selection", "after"]
@@ -284,9 +285,9 @@ def test_new_diagnostic_leaf_composes_cooperative_hooks_without_consumer_edits()
 def test_all_public_declared_outputs_persist_with_selected_qa_streams(
     tmp_path, monkeypatch, viewer_ack_return_route
 ):
-    source = _source_stack(RuntimePlaneAxis.SOURCE_BINDING)
+    source = _source_stack(SourceBindingPlaneAxis)
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
+        axis=SourceBindingPlaneAxis, axis_size=2
     )
     labels = np.zeros((2, 7, 8), dtype=np.int32)
     labels[1, 2:5, 3:6] = 1

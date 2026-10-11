@@ -1,5 +1,6 @@
 """Request-owned display projection uses declarations, never array-rank guesses."""
 
+from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from types import SimpleNamespace
 from dataclasses import replace
 
@@ -68,7 +69,7 @@ def request(request_type=ImageStreamingRequest):
     )
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 @pytest.mark.parametrize("color,masked", ((False, False), (False, True), (True, True)))
 def test_declared_singleton_projection_retains_color_mask_and_source_context(
     axis, color, masked
@@ -94,7 +95,7 @@ def test_declared_singleton_projection_retains_color_mask_and_source_context(
         )
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 def test_multi_plane_stack_is_not_collapsed(axis):
     original = image_with_declaration(axis, count=2)
     assert request().project_image(original) is original
@@ -112,7 +113,7 @@ def test_unbound_arrays_are_never_reinterpreted_as_source_planes(shape):
     assert request().project_image(original) is original
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 def test_singleton_declaration_rejects_mismatched_native_shape(axis):
     original = image_with_declaration(axis)
     metadata = original.metadata
@@ -123,7 +124,7 @@ def test_singleton_declaration_rejects_mismatched_native_shape(axis):
 
 def test_declared_axis_without_runtime_provenance_is_not_fabricated():
     original = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING
+        plane_axis=SourceBindingPlaneAxis
     ).payload_with(np.zeros((1, 5, 6)))
     assert request().project_image(original) is original
 
@@ -145,7 +146,7 @@ def test_independent_metadata_capabilities_execute_original_owner_hook():
     class CalibratedMetadata(ObservedProof, PhysicalProof, ImagePayloadMetadata):
         pass
 
-    original = image_with_declaration(RuntimePlaneAxis.SOURCE_BINDING, masked=True)
+    original = image_with_declaration(SourceBindingPlaneAxis, masked=True)
     metadata = CalibratedMetadata.from_mapping(
         to_jsonable(original.metadata)
     )
@@ -188,7 +189,7 @@ def test_independent_capabilities_cooperate_with_full_native_window_admission(tm
     ):
         pass
 
-    image = image_with_declaration(RuntimePlaneAxis.SOURCE_BINDING, masked=True)
+    image = image_with_declaration(SourceBindingPlaneAxis, masked=True)
     metadata = image.metadata
     filename = "image.tif"
     declaration = SourcePlaneProjection(

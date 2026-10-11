@@ -1,5 +1,6 @@
 """Declaration-owned admission to the unchanged source-bundle algorithm."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import replace
 
 import numpy as np
@@ -22,7 +23,6 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
@@ -66,11 +66,11 @@ from openhcs.core.image_payload_execution_mode import (
 @numpy_contract(contract=Pure3DContract)
 def independently_declared_source_echo(image):
     """A new source consumer, not a GrayToColor alias or special-case branch."""
-    assert image.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert image.metadata.plane_axis is SourceBindingPlaneAxis
     return RuntimeSliceProjection.value_for_slice(
         image,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.SOURCE_BINDING,
+            axis=SourceBindingPlaneAxis,
             plane_index=0,
             axis_size=1,
             source_aliases=("FITC",),
@@ -90,7 +90,7 @@ def _runtime_source(slice_count):
     masks = np.ones_like(pixels, dtype=bool)
     masks[:, 0, 0] = False
     metadata = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         source_image_names=("FITC",),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(
@@ -116,7 +116,7 @@ def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
     original_pixels = source.data.copy()
     original_masks = source.mask.copy()
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=slice_count,
     )
     planes = tuple(
@@ -191,7 +191,7 @@ def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
     assert payload.slice_contexts == (contexts if aligned else ())
     for index, plane in enumerate(payload.slices):
         metadata = plane.metadata
-        assert metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+        assert metadata.plane_axis is SourceBindingPlaneAxis
         assert metadata.source_image_names == ("FITC",)
         assert metadata.source_component_metadata["channel"] == "2"
         assert metadata.source_image_paths == (f"/synthetic/A01_s{index + 1}_w2.tif",)
@@ -238,7 +238,7 @@ def test_declared_composed_scalar_introduces_one_source_axis():
     scalar = RuntimeSliceProjection.value_for_slice(
         source,
         RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=0,
             axis_size=1,
         ),
@@ -252,7 +252,7 @@ def test_declared_composed_scalar_introduces_one_source_axis():
     assert composition.execution_mode is FullStackExecution
     assert (
         composition.payload.metadata.plane_axis
-        is RuntimePlaneAxis.SOURCE_BINDING
+        is SourceBindingPlaneAxis
     )
     contract = CallableContract.from_callable(independently_declared_source_echo)
     result = CellProfilerFunctionContractExecutor().execute(
@@ -299,7 +299,7 @@ def test_natural_declaration_retains_exact_singleton(aligned):
             result.mask, source.mask
         )
         assert (
-            result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+            result.metadata.plane_axis is RuntimeSlicePlaneAxis
         )
 
 

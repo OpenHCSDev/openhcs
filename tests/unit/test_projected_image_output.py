@@ -1,5 +1,6 @@
 """Reject ambiguous or invalid image-source selections at their owner."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
 
@@ -10,7 +11,7 @@ from openhcs.core.runtime_plane_projection import (
 )
 
 
-@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("axis", RuntimePlaneAxis.leading_axes())
 def test_complete_projection_admission_is_owned_by_each_runtime_axis(axis):
     projection = RuntimePlaneAxisValueProjection.preserve(axis=axis, axis_size=3)
     assert RuntimePlaneAxisValueProjection.require_complete_projection(
@@ -42,7 +43,7 @@ def test_selected_output_requires_complete_projection(selected_plane):
         None
         if selected_plane is None
         else RuntimePlaneAxisValueProjection(
-            RuntimePlaneAxis.RUNTIME_SLICE, (), selected_plane, 2
+            RuntimeSlicePlaneAxis, (), selected_plane, 2
         )
     )
     with pytest.raises(ValueError, match="complete input stack projection"):
@@ -52,7 +53,7 @@ def test_selected_output_requires_complete_projection(selected_plane):
 def test_selected_output_rejects_out_of_range_source_plane():
     output = SelectedPlaneImageOutput(np.zeros((1, 3, 4)), (2,))
     projection = RuntimePlaneAxisValueProjection(
-        RuntimePlaneAxis.RUNTIME_SLICE, (), None, 2
+        RuntimeSlicePlaneAxis, (), None, 2
     )
     with pytest.raises(ValueError, match="outside the input stack"):
         output.resolve_source_context(np.zeros((2, 3, 4)), projection)

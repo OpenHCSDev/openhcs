@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
 from unittest.mock import patch
@@ -47,7 +48,6 @@ from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneProjection,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
@@ -278,7 +278,7 @@ def test_straighten_worms_policy_consumes_declared_singleton_label_plane() -> No
         variant_data=ObjectLabelVariantData(
             labels=np.array([[[0, 1], [0, 0]]], dtype=np.int32)
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
             scope=ObjectLabelDomainScope.PLANE,
@@ -308,7 +308,7 @@ def test_straighten_worms_callable_rejects_unselected_label_stack() -> None:
                 dtype=np.int32,
             )
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,

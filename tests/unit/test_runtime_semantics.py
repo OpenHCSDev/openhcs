@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import numpy as np
 import pytest
@@ -32,7 +33,6 @@ from openhcs.core.runtime_relationships import (
     object_label_parent_child_payload,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
@@ -78,7 +78,7 @@ def test_runtime_plane_projection_is_nominal_and_validated() -> None:
 
 def test_runtime_plane_projection_preserves_payload_declared_axis() -> None:
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
 
     projection = preserve_declared_image_payload_axis(
@@ -87,14 +87,14 @@ def test_runtime_plane_projection_preserves_payload_declared_axis() -> None:
     )
 
     assert projection == RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=2,
     )
 
 
 def test_runtime_plane_projection_preserves_payload_owned_axis_cardinality() -> None:
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
 
     projection = preserve_declared_image_payload_axis(
@@ -103,17 +103,17 @@ def test_runtime_plane_projection_preserves_payload_owned_axis_cardinality() -> 
     )
 
     assert projection == RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=1,
     )
 
 
 def test_runtime_plane_projection_prefers_declared_output_axis_cardinality() -> None:
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
     output = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
 
     projection = preserve_declared_image_payload_axis(
@@ -123,7 +123,7 @@ def test_runtime_plane_projection_prefers_declared_output_axis_cardinality() -> 
     )
 
     assert projection == RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=1,
     )
 
@@ -142,14 +142,14 @@ def test_runtime_plane_projection_preserves_nominal_aligned_output_axis() -> Non
     )
 
     assert projection == RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis=RuntimeSlicePlaneAxis,
         axis_size=2,
     )
 
 
 def test_runtime_plane_projection_does_not_preserve_selected_payload_axis() -> None:
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
 
     projection = preserve_declared_image_payload_axis(
@@ -162,7 +162,7 @@ def test_runtime_plane_projection_does_not_preserve_selected_payload_axis() -> N
 
 def test_runtime_plane_projection_preserves_source_binding_axis_from_payload() -> None:
     payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
         source_image_names=("DNA", "RNA"),
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
 
@@ -172,17 +172,17 @@ def test_runtime_plane_projection_preserves_source_binding_axis_from_payload() -
     )
 
     assert projection == RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         axis_size=2,
     )
 
 
 def test_runtime_plane_projection_preserves_output_axis_over_source_axis() -> None:
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
     output = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
 
     projection = preserve_declared_image_payload_axis(
@@ -192,7 +192,7 @@ def test_runtime_plane_projection_preserves_output_axis_over_source_axis() -> No
     )
 
     assert projection == RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.SOURCE_BINDING,
+        axis=SourceBindingPlaneAxis,
         axis_size=2,
     )
 
@@ -293,7 +293,7 @@ def test_plane_domain_strategy_rejects_mismatched_single_output_plane() -> None:
     with pytest.raises(ValueError, match=r"declares 3 plane\(s\)"):
         ObjectLabelPayload(
             variant_data=ObjectLabelVariantData(labels=labels),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
             domain=ObjectLabelDomain(
                 scope=ObjectLabelDomainScope.PLANE,
                 declared_object_id_domains=((1,), (2,), (3,)),
@@ -352,7 +352,7 @@ def test_aligned_image_stack_kwarg_resolver_selects_nominal_stack_slice() -> Non
 
     resolved = AlignedImageStackKwargResolver(
         projection_axis=RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=1, axis_size=2
+            axis=RuntimeSlicePlaneAxis, plane_index=1, axis_size=2
         ),
         reference_payload=second,
     ).resolve(stack)
@@ -364,7 +364,7 @@ def test_aligned_image_stack_kwarg_resolver_requires_exact_cardinality() -> None
     stack = AlignedImageStack((np.zeros((3, 4), dtype=np.int32),))
     resolver = AlignedImageStackKwargResolver(
         projection_axis=RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=2
+            axis=RuntimeSlicePlaneAxis, plane_index=0, axis_size=2
         ),
     )
 
@@ -389,7 +389,7 @@ def test_aligned_kwarg_resolution_preserves_image_payload_metadata() -> None:
 
     resolved = AlignedImageStackKwargResolver(
         projection_axis=RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1
+            axis=RuntimeSlicePlaneAxis, plane_index=0, axis_size=1
         ),
         reference_payload=reference,
     ).resolve(source)
@@ -418,7 +418,7 @@ def test_aligned_kwarg_resolution_preserves_image_payload_mask() -> None:
 
     resolved = AlignedImageStackKwargResolver(
         projection_axis=RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1
+            axis=RuntimeSlicePlaneAxis, plane_index=0, axis_size=1
         ),
         reference_payload=reference,
     ).resolve(source)
@@ -500,7 +500,7 @@ def test_object_label_parent_child_payload_preserves_plane_scoped_stack_identity
                 dtype=np.int32,
             )
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -516,7 +516,7 @@ def test_object_label_parent_child_payload_preserves_plane_scoped_stack_identity
                 dtype=np.int32,
             )
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -844,7 +844,7 @@ def test_dense_object_label_plane_id_domains_use_explicit_plane_declarations() -
                 dtype=np.int32,
             )
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 3), (2,)),
             scope=ObjectLabelDomainScope.PLANE,
@@ -870,7 +870,7 @@ def test_dense_object_label_plane_id_domains_preserve_explicit_single_plane() ->
                 dtype=np.int32,
             )
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 3),),
             scope=ObjectLabelDomainScope.PLANE,

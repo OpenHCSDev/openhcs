@@ -1,6 +1,7 @@
 """Nominal runtime-slice projection contracts."""
 
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -66,7 +67,7 @@ class RuntimeProjectionSourceIdentityRequest:
             return None
         raise RuntimeSliceProjectionDeclarationError(
             "Variable-component runtime projection requires a nominal payload "
-            "with RuntimePlaneAxis.RUNTIME_SLICE; source provenance and ndarray "
+            "with RuntimeSlicePlaneAxis; source provenance and ndarray "
             "shape cannot declare the runtime axis."
         )
 
@@ -192,7 +193,7 @@ class RuntimeProjectionSourceIdentityRequirement(ABC):
             source_description=request.source_description,
         )
         projection = request.plane_projection or RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=slice_count,
         )
         items: list[RuntimeProjectedPayloadItem] = []
@@ -357,7 +358,7 @@ class RuntimeSliceProjection:
         return value
 
     @classmethod
-    def declared_plane_axis(cls, value: RuntimeProjectionData) -> RuntimePlaneAxis | None:
+    def declared_plane_axis(cls, value: RuntimeProjectionData) -> type[RuntimePlaneAxis] | None:
         """Return the leading plane axis a value declares; foreign values declare none."""
         if isinstance(value, RuntimeSliceProjectableValue):
             return value.declared_plane_axis
@@ -421,7 +422,7 @@ class RuntimeSliceProjection:
         if slice_count is None:
             return None
         return RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=slice_count,
         )
 
@@ -462,7 +463,7 @@ class RuntimeSliceProjection:
         if effective_slice_count is None:
             return None
         return RuntimePlaneAxisValueProjection.from_selected_plane(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             plane_index=slice_index,
             axis_size=effective_slice_count,
         )

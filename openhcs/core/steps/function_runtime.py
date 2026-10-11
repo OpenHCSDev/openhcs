@@ -4,6 +4,7 @@ This module owns callable invocation, artifact routing, and pattern-group stack
 execution. FunctionStep remains responsible for step-level orchestration.
 """
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import logging
 import time
 from dataclasses import dataclass, replace
@@ -123,7 +124,6 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
@@ -1703,7 +1703,7 @@ class FunctionCoreExecutor:
         metadata = payload.metadata
         if (
             not metadata.persists_whole_image()
-            and metadata.plane_axis not in (None, RuntimePlaneAxis.RUNTIME_SLICE)
+            and metadata.plane_axis not in (None, RuntimeSlicePlaneAxis)
         ):
             # A remaining binding axis does not prove this source's ordered
             # physical members. Resolve it through its declared origin owner.
@@ -1715,7 +1715,7 @@ class FunctionCoreExecutor:
             member_count=member_count if member_count is not None else 1,
         )
         projection = RuntimePlaneAxisValueProjection.from_projector(
-            request.plane_projection, RuntimePlaneAxis.RUNTIME_SLICE, (),
+            request.plane_projection, RuntimeSlicePlaneAxis, (),
         )
         if projection is not None and projection.plane_index is not None:
             payload = RuntimeSliceProjection.value_for_slice(payload, projection)

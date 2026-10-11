@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 
 from openhcs.core.artifacts.specs import ArtifactSpec
@@ -16,7 +17,6 @@ from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
     RuntimePlaneAxisValueProjection,
 )
@@ -41,13 +41,13 @@ class _SingletonRuntimePlaneProjector(RuntimePlaneAxisProjector):
 
 def test_singleton_object_projection_consumes_measurement_image_plane_proof() -> None:
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(
             labels=np.ones((1, 4, 5), dtype=np.int32),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             scope=ObjectLabelDomainScope.PLANE,
             declared_object_id_domains=((1,),),
@@ -57,7 +57,7 @@ def test_singleton_object_projection_consumes_measurement_image_plane_proof() ->
         source_image_name=None,
         payload=image,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis=RuntimeSlicePlaneAxis,
             axis_size=1,
         ),
         reference_domain=ObjectLabelsReference,

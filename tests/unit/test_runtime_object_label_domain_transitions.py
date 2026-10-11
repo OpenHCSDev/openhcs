@@ -1,3 +1,4 @@
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 import pytest
 
@@ -13,9 +14,7 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
     RuntimeSourceImageProvenancePlane,
     SourceImageIdentity,
@@ -39,7 +38,7 @@ def test_payload_domain_replacement_drops_inherited_plane_axis() -> None:
             scope=ObjectLabelDomainScope.PLANE,
             declared_object_id_domains=((1,), (1, 2)),
         ),
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        plane_axis=RuntimeSlicePlaneAxis,
     )
 
     transformed = object_label_value_with_dense_labels(
@@ -70,7 +69,7 @@ def test_explicit_payload_domain_plane_axis_remains_invalid() -> None:
                 scope=ObjectLabelDomainScope.PAYLOAD,
                 declared_object_count=0,
             ),
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         )
 
 
@@ -109,12 +108,12 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
     )
     composed = ImagePayloadMetadata.compose(
         (reference_image,),
-        mode=ImagePayloadMetadataCompositionMode.BUNDLE,
+        mode=SourceBindingPlaneAxis,
     )
     assert composed.source_provenance.represented_source_image_names == ("MembFinal",)
 
 
-@pytest.mark.parametrize("axis", [RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING])
+@pytest.mark.parametrize("axis", [RuntimeSlicePlaneAxis, SourceBindingPlaneAxis])
 @pytest.mark.parametrize("plane_count", [1, 2])
 def test_sparse_label_slice_projection_preserves_overlap_and_axis_domain(
     monkeypatch, axis, plane_count

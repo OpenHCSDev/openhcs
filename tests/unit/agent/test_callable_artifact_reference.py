@@ -1,5 +1,6 @@
 """Execute the canonical public usage code, rather than a copied example."""
 
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import re
 import runpy
 import sys
@@ -40,7 +41,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
 
@@ -330,7 +330,7 @@ def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypa
     assert returned[2].row_mappings()[0]["pixel_count"] == 16
     stack = ImageMetadataPayload(
         data=np.stack((fixture, fixture)),
-        metadata=ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE),
+        metadata=ImagePayloadMetadata(plane_axis=RuntimeSlicePlaneAxis),
     )
     stacked = metadata.func(stack)
     assert stacked[2].row_mappings() == (
@@ -453,7 +453,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
         metadata=ImagePayloadMetadata(
             source_dtype="uint16",
             source_path="/synthetic/label-fixture.tif",
-            plane_axis=None if plane_count is None else RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=None if plane_count is None else RuntimeSlicePlaneAxis,
         ),
     )
     call_argument = contract.main_flow_call_argument(stack)
@@ -467,7 +467,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
     )
     projection = (
         None if plane_count is None else RuntimePlaneAxisValueProjection(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, source_aliases=(),
+            axis=RuntimeSlicePlaneAxis, source_aliases=(),
             plane_index=None, axis_size=plane_count,
         )
     )
@@ -475,7 +475,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
     assert isinstance(label_payload, ObjectLabelPayload)
     np.testing.assert_array_equal(label_payload.labels, stack.data)
     assert label_payload.plane_axis is (
-        None if plane_count is None else RuntimePlaneAxis.RUNTIME_SLICE
+        None if plane_count is None else RuntimeSlicePlaneAxis
     )
     assert label_payload.source_provenance == stack.metadata.source_provenance
     assert label_payload.source_spatial_domain.source_shape_yx == (8, 8)
@@ -486,7 +486,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
     if plane_count is not None:
         assert label_payload.domain.declared_object_id_domains == ((1,),) * plane_count
         wrong_spatial_shape = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_axis=RuntimeSlicePlaneAxis,
         ).payload_with(stack.data[:, :-1, :])
         with pytest.raises(ValueError, match="Object-label spatial shape"):
             ObjectLabelsArtifactType.contextualize_output(stack, wrong_spatial_shape, MAIN_FLOW, projection)

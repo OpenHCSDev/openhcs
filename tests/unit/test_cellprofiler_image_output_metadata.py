@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import inspect
 
@@ -63,7 +64,7 @@ def _source_binding_payload(
                 {"channel": str(index)} for index in range(plane_count)
             ),
         ),
-        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        plane_axis=SourceBindingPlaneAxis,
     ).payload_with(data, None)
 
 
@@ -200,10 +201,10 @@ def test_worm_outline_images_declare_rgb_and_scalar_channel_semantics() -> None:
 
 @pytest.mark.parametrize(
     "plane_axis",
-    (RuntimePlaneAxis.SOURCE_BINDING, RuntimePlaneAxis.RUNTIME_SLICE),
+    (SourceBindingPlaneAxis, RuntimeSlicePlaneAxis),
 )
 def test_straighten_worms_projects_sources_into_warped_spatial_domain(
-    plane_axis: RuntimePlaneAxis,
+    plane_axis: type[RuntimePlaneAxis],
 ) -> None:
     source_payloads = tuple(
         ImagePayloadMetadata(
@@ -218,9 +219,9 @@ def test_straighten_worms_projects_sources_into_warped_spatial_domain(
     )
     image = (
         ImagePayloadBundleContext.from_payloads(source_payloads).compose()
-        if plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+        if plane_axis is SourceBindingPlaneAxis
         else ImagePayloadMetadata.compose(source_payloads)
-        .replace_fields(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
+        .replace_fields(plane_axis=RuntimeSlicePlaneAxis)
         .payload_with(
             np.stack(tuple(payload.data for payload in source_payloads)),
             None,
