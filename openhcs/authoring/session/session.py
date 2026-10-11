@@ -299,7 +299,204 @@ class FinishedExecution:
     endpoint: "PongResponse | None"
 
 
-class Session:
+class SessionDebugMixin:
+    """Run, inspect and close one dataset's debug session."""
+
+    async def run_debug(
+        self,
+        scope_id: str,
+        *,
+        command_type: DebugCommandType = DebugCommandType.RUN,
+        snapshot_store_backend: str | None = None,
+        selected_source_group: str | None = None,
+        pause_step_indices: tuple[int, ...] = (),
+        start_step_index: int = 0,
+        start_after_invocation_key: str | None = None,
+    ) -> None:
+        """Start a debug run, or send a command to the dataset's debug worker."""
+
+        active = self.debug_sessions.get(scope_id)
+        if active is not None:
+            self.debug_sessions[scope_id] = active.with_command(command_type)
+            await self.debug_runs.send_worker_command(
+                debug_session_id=active.debug_session_id,
+                command_type=command_type,
+            )
+            if command_type is DebugCommandType.STOP:
+                self.debug_sessions.pop(scope_id, None)
+            return
+
+        self.require_execution_allowed((scope_id,))
+        debug_session = DebugSession.create(
+            subject_id=scope_id, command_type=command_type
+        )
+        self.debug_sessions[scope_id] = debug_session
+        root = DatasetScope.parse(scope_id).root
+        snapshot_root = (root if root.is_dir() else root.parent) / ".openhcs_debug"
+        self._begin_batch((scope_id,))
+        try:
+            await self.connect_client()
+            self.progress.reset_for_new_batch()
+            self.publish(StatusReported(f"Compiling debug run for {scope_id}..."))
+            debug_request = DebugRunRequest(
+                debug_session_id=debug_session.debug_session_id,
+                snapshot_store_ref=str(snapshot_root),
+                snapshot_store_backend=snapshot_store_backend,
+                command_type=DebugCommandType(command_type),
+                selected_source_group=selected_source_group,
+                pause_step_indices=tuple(pause_step_indices),
+                start_step_index=start_step_index,
+                start_after_invocation_key=start_after_invocation_key,
+                replay_mode=DebugReplayMode.PERSISTENT_PAUSED_WORKER,
+            )
+            request = dataset_pipeline_request(scope_id, self.global_config)
+            artifact_id = await self.debug_runs.compile_artifact_id(
+                request, debug_request
+            )
+            self.publish(StatusReported(f"Submitting debug run for {scope_id}..."))
+            await self.debug_runs.submit(
+                request,
+                compile_artifact_id=artifact_id,
+                debug_request=debug_request,
+            )
+        except Exception as error:
+            logger.error("Failed to execute debug run: %s", error, exc_info=True)
+            self.publish(ErrorReported(f"Failed to execute debug run: {error}"))
+            await self.execution_control.handle_execution_failure()
+
+    def record_debug_snapshot(
+        self,
+        notification: DebugSnapshotAvailableNotification,
+    ) -> None:
+        scope_id = notification.progress_event.subject_id
+        if notification.snapshot is not None:
+            retained = tuple(
+                snapshot
+                for snapshot in self.debug_snapshots.get(scope_id, ())
+                if snapshot.snapshot_id != notification.snapshot.snapshot_id
+            )
+            self.debug_snapshots[scope_id] = (*retained, notification.snapshot)
+        active = self.debug_sessions.get(scope_id)
+        if active is not None:
+            context = notification.debug_context
+            self.debug_sessions[scope_id] = active.with_snapshot_store(
+                snapshot_store_ref=context.snapshot_store_ref,
+                snapshot_store_backend=context.snapshot_store_backend,
+                axis_id=notification.progress_event.axis_id,
+            ).with_cursor(context.cursor)
+        self.publish(DebugSnapshotAvailable(notification))
+
+    def displayed_debug_session(self, scope_id: str) -> DebugSession | None:
+        """The running debug session, else the one loaded from a snapshot."""
+
+        active = self.debug_sessions.get(scope_id)
+        if active is not None:
+            return active
+        if scope_id in self.debug_terminal_summaries:
+            return None
+        return self.inspected_debug_sessions.get(scope_id)
+
+    def inspect_debug_snapshot(
+        self,
+        notification: DebugSnapshotAvailableNotification,
+        snapshot: DebugSnapshot | None,
+    ) -> None:
+        """Move the displayed debug cursor to a snapshot a client opened."""
+
+        event = notification.progress_event
+        context = notification.debug_context
+        scope_id = event.subject_id
+        active = self.debug_sessions.get(scope_id)
+        summary = self.debug_terminal_summaries.get(scope_id)
+        if active is not None:
+            self.debug_sessions[scope_id] = active.with_snapshot_store(
+                snapshot_store_ref=context.snapshot_store_ref,
+                snapshot_store_backend=context.snapshot_store_backend,
+                axis_id=event.axis_id,
+            ).with_cursor(context.cursor)
+        elif (
+            summary is not None and summary.debug_session_id == context.debug_session_id
+        ):
+            self.inspected_debug_sessions.pop(scope_id, None)
+            if snapshot is not None:
+                self.debug_terminal_summaries[scope_id] = summary.with_snapshot(
+                    snapshot=snapshot,
+                    snapshot_id=context.snapshot_id,
+                    snapshot_store_ref=context.snapshot_store_ref,
+                    snapshot_store_backend=context.snapshot_store_backend,
+                )
+        else:
+            self.inspected_debug_sessions[scope_id] = DebugSession(
+                debug_session_id=context.debug_session_id,
+                subject_id=scope_id,
+                axis_id=event.axis_id,
+                snapshot_store_ref=context.snapshot_store_ref,
+                snapshot_store_backend=context.snapshot_store_backend,
+            ).with_cursor(context.cursor)
+        self.refresh()
+
+    def _close_debug_session(self, scope_id: str) -> None:
+        active = self.debug_sessions.pop(scope_id, None)
+        if active is None or active.subject_id != scope_id:
+            return
+        terminal_status = self.batch.terminal_status(scope_id)
+        if terminal_status is None:
+            self.debug_terminal_summaries.pop(scope_id, None)
+        else:
+            summary = DebugTerminalSummary.from_session(
+                active,
+                terminal_status=terminal_status.value,
+                completed_at_unix=time.time(),
+            )
+            snapshots = self.debug_snapshots.get(scope_id, ())
+            latest = snapshots[-1] if snapshots else None
+            self.debug_terminal_summaries[scope_id] = (
+                summary
+                if latest is None
+                else summary.with_snapshot(
+                    snapshot=latest,
+                    snapshot_id=latest.snapshot_id,
+                    snapshot_store_ref=active.snapshot_store_ref,
+                    snapshot_store_backend=active.snapshot_store_backend,
+                )
+            )
+        self.publish(ExecutionStateChanged(self.execution_state))
+
+    def debug_context(self, scope_id: str) -> DebugSessionProjectionContext:
+        return DebugSessionProjectionContext(
+            target=DebugSessionTargetState(
+                current_plate_scope_id=scope_id,
+                pipeline_scope_id=PipelineScopeIdentity.from_plate_scope(
+                    scope_id
+                ).scope_id,
+                initialized=self.is_initialized(scope_id),
+                compiled=scope_id in self.compiled,
+                terminal_status=(
+                    None
+                    if (status := self.batch.terminal_status(scope_id)) is None
+                    else status.value
+                ),
+            ),
+            session=self.displayed_debug_session(scope_id),
+            terminal_summary=self.debug_terminal_summaries.get(scope_id),
+            pause_boundaries=DebugPauseBoundaryState(
+                pause_step_indices=tuple(
+                    index
+                    for index, step in enumerate(self.pipeline_steps(scope_id))
+                    if step.debug_pause
+                )
+            ),
+            snapshots=self.debug_snapshots.get(scope_id, ()),
+            manager_execution_state=self.execution_state,
+        )
+
+    def current_debug_context(self) -> DebugSessionProjectionContext | None:
+        if not self.current_scope_id:
+            return None
+        return self.debug_context(self.current_scope_id)
+
+
+class Session(SessionDebugMixin):
     """Datasets, their pipelines and executions, and the events they emit."""
 
     def __init__(
@@ -1370,196 +1567,3 @@ class Session:
         self.refresh()
 
     # -- debug ----------------------------------------------------------------
-
-    async def run_debug(
-        self,
-        scope_id: str,
-        *,
-        command_type: DebugCommandType = DebugCommandType.RUN,
-        snapshot_store_backend: str | None = None,
-        selected_source_group: str | None = None,
-        pause_step_indices: tuple[int, ...] = (),
-        start_step_index: int = 0,
-        start_after_invocation_key: str | None = None,
-    ) -> None:
-        """Start a debug run, or send a command to the dataset's debug worker."""
-
-        active = self.debug_sessions.get(scope_id)
-        if active is not None:
-            self.debug_sessions[scope_id] = active.with_command(command_type)
-            await self.debug_runs.send_worker_command(
-                debug_session_id=active.debug_session_id,
-                command_type=command_type,
-            )
-            if command_type is DebugCommandType.STOP:
-                self.debug_sessions.pop(scope_id, None)
-            return
-
-        self.require_execution_allowed((scope_id,))
-        debug_session = DebugSession.create(
-            subject_id=scope_id, command_type=command_type
-        )
-        self.debug_sessions[scope_id] = debug_session
-        root = DatasetScope.parse(scope_id).root
-        snapshot_root = (root if root.is_dir() else root.parent) / ".openhcs_debug"
-        self._begin_batch((scope_id,))
-        try:
-            await self.connect_client()
-            self.progress.reset_for_new_batch()
-            self.publish(StatusReported(f"Compiling debug run for {scope_id}..."))
-            debug_request = DebugRunRequest(
-                debug_session_id=debug_session.debug_session_id,
-                snapshot_store_ref=str(snapshot_root),
-                snapshot_store_backend=snapshot_store_backend,
-                command_type=DebugCommandType(command_type),
-                selected_source_group=selected_source_group,
-                pause_step_indices=tuple(pause_step_indices),
-                start_step_index=start_step_index,
-                start_after_invocation_key=start_after_invocation_key,
-                replay_mode=DebugReplayMode.PERSISTENT_PAUSED_WORKER,
-            )
-            request = dataset_pipeline_request(scope_id, self.global_config)
-            artifact_id = await self.debug_runs.compile_artifact_id(
-                request, debug_request
-            )
-            self.publish(StatusReported(f"Submitting debug run for {scope_id}..."))
-            await self.debug_runs.submit(
-                request,
-                compile_artifact_id=artifact_id,
-                debug_request=debug_request,
-            )
-        except Exception as error:
-            logger.error("Failed to execute debug run: %s", error, exc_info=True)
-            self.publish(ErrorReported(f"Failed to execute debug run: {error}"))
-            await self.execution_control.handle_execution_failure()
-
-    def record_debug_snapshot(
-        self,
-        notification: DebugSnapshotAvailableNotification,
-    ) -> None:
-        scope_id = notification.progress_event.subject_id
-        if notification.snapshot is not None:
-            retained = tuple(
-                snapshot
-                for snapshot in self.debug_snapshots.get(scope_id, ())
-                if snapshot.snapshot_id != notification.snapshot.snapshot_id
-            )
-            self.debug_snapshots[scope_id] = (*retained, notification.snapshot)
-        active = self.debug_sessions.get(scope_id)
-        if active is not None:
-            context = notification.debug_context
-            self.debug_sessions[scope_id] = active.with_snapshot_store(
-                snapshot_store_ref=context.snapshot_store_ref,
-                snapshot_store_backend=context.snapshot_store_backend,
-                axis_id=notification.progress_event.axis_id,
-            ).with_cursor(context.cursor)
-        self.publish(DebugSnapshotAvailable(notification))
-
-    def displayed_debug_session(self, scope_id: str) -> DebugSession | None:
-        """The running debug session, else the one loaded from a snapshot."""
-
-        active = self.debug_sessions.get(scope_id)
-        if active is not None:
-            return active
-        if scope_id in self.debug_terminal_summaries:
-            return None
-        return self.inspected_debug_sessions.get(scope_id)
-
-    def inspect_debug_snapshot(
-        self,
-        notification: DebugSnapshotAvailableNotification,
-        snapshot: DebugSnapshot | None,
-    ) -> None:
-        """Move the displayed debug cursor to a snapshot a client opened."""
-
-        event = notification.progress_event
-        context = notification.debug_context
-        scope_id = event.subject_id
-        active = self.debug_sessions.get(scope_id)
-        summary = self.debug_terminal_summaries.get(scope_id)
-        if active is not None:
-            self.debug_sessions[scope_id] = active.with_snapshot_store(
-                snapshot_store_ref=context.snapshot_store_ref,
-                snapshot_store_backend=context.snapshot_store_backend,
-                axis_id=event.axis_id,
-            ).with_cursor(context.cursor)
-        elif (
-            summary is not None and summary.debug_session_id == context.debug_session_id
-        ):
-            self.inspected_debug_sessions.pop(scope_id, None)
-            if snapshot is not None:
-                self.debug_terminal_summaries[scope_id] = summary.with_snapshot(
-                    snapshot=snapshot,
-                    snapshot_id=context.snapshot_id,
-                    snapshot_store_ref=context.snapshot_store_ref,
-                    snapshot_store_backend=context.snapshot_store_backend,
-                )
-        else:
-            self.inspected_debug_sessions[scope_id] = DebugSession(
-                debug_session_id=context.debug_session_id,
-                subject_id=scope_id,
-                axis_id=event.axis_id,
-                snapshot_store_ref=context.snapshot_store_ref,
-                snapshot_store_backend=context.snapshot_store_backend,
-            ).with_cursor(context.cursor)
-        self.refresh()
-
-    def _close_debug_session(self, scope_id: str) -> None:
-        active = self.debug_sessions.pop(scope_id, None)
-        if active is None or active.subject_id != scope_id:
-            return
-        terminal_status = self.batch.terminal_status(scope_id)
-        if terminal_status is None:
-            self.debug_terminal_summaries.pop(scope_id, None)
-        else:
-            summary = DebugTerminalSummary.from_session(
-                active,
-                terminal_status=terminal_status.value,
-                completed_at_unix=time.time(),
-            )
-            snapshots = self.debug_snapshots.get(scope_id, ())
-            latest = snapshots[-1] if snapshots else None
-            self.debug_terminal_summaries[scope_id] = (
-                summary
-                if latest is None
-                else summary.with_snapshot(
-                    snapshot=latest,
-                    snapshot_id=latest.snapshot_id,
-                    snapshot_store_ref=active.snapshot_store_ref,
-                    snapshot_store_backend=active.snapshot_store_backend,
-                )
-            )
-        self.publish(ExecutionStateChanged(self.execution_state))
-
-    def debug_context(self, scope_id: str) -> DebugSessionProjectionContext:
-        return DebugSessionProjectionContext(
-            target=DebugSessionTargetState(
-                current_plate_scope_id=scope_id,
-                pipeline_scope_id=PipelineScopeIdentity.from_plate_scope(
-                    scope_id
-                ).scope_id,
-                initialized=self.is_initialized(scope_id),
-                compiled=scope_id in self.compiled,
-                terminal_status=(
-                    None
-                    if (status := self.batch.terminal_status(scope_id)) is None
-                    else status.value
-                ),
-            ),
-            session=self.displayed_debug_session(scope_id),
-            terminal_summary=self.debug_terminal_summaries.get(scope_id),
-            pause_boundaries=DebugPauseBoundaryState(
-                pause_step_indices=tuple(
-                    index
-                    for index, step in enumerate(self.pipeline_steps(scope_id))
-                    if step.debug_pause
-                )
-            ),
-            snapshots=self.debug_snapshots.get(scope_id, ()),
-            manager_execution_state=self.execution_state,
-        )
-
-    def current_debug_context(self) -> DebugSessionProjectionContext | None:
-        if not self.current_scope_id:
-            return None
-        return self.debug_context(self.current_scope_id)
