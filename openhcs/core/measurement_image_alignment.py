@@ -5,8 +5,10 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
+from typing import ClassVar
 
 import numpy as np
+from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle
 from openhcs.core.runtime_array_values import RuntimeArrayData
@@ -29,7 +31,6 @@ from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomainAdapter
 
-from enum import Enum
 from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
 
 logger = logging.getLogger(__name__)
@@ -44,9 +45,9 @@ class MeasurementImageAlignmentSource(ABC):
         """Return the image-like payload used for measurement alignment."""
 
     @property
-    def alignment_reference_domain(self) -> MeasurementImageReferenceDomain:
+    def alignment_reference_domain(self) -> type[MeasurementImageReferenceDomain]:
         """Return the domain that owns alignment shape decisions."""
-        return MeasurementImageReferenceDomain.SOURCE_IMAGE
+        return SourceImageReference
 
     @property
     def alignment_source_aliases(self) -> tuple[str, ...]:
@@ -119,11 +120,9 @@ class MeasurementImageLabelAlignmentRequest:
         return self.image.data
 
     @property
-    def reference_domain(self) -> MeasurementImageReferenceDomain:
+    def reference_domain(self) -> type[MeasurementImageReferenceDomain]:
         """Return the source-owned alignment reference domain."""
-        return MeasurementImageReferenceDomain(
-            self.source.alignment_reference_domain,
-        )
+        return self.source.alignment_reference_domain
 
     @property
     def source_aliases(self) -> tuple[str, ...]:
@@ -322,17 +321,7 @@ class MeasurementImageLabelAlignmentRequest:
 
     def _with_aligned_source(self) -> "MeasurementImageLabelAlignmentRequest":
         """Align an already projected request without repeating label projection."""
-        request = self
-        if request.reference_domain is MeasurementImageReferenceDomain.SOURCE_IMAGE:
-            request = request.with_source_projected_image()
-            image = request.image
-        elif request.reference_domain is MeasurementImageReferenceDomain.OBJECT_LABELS:
-            image = request.object_label_reference_image()
-        else:
-            raise ValueError(
-                "Measurement image alignment has no declared reference-domain behavior "
-                f"for {request.reference_domain!r}."
-            )
+        request, image = self.reference_domain.reference_image(self)
         label_payload = request.label_payload
         image_runtime_projection = RuntimeSliceProjection.preserved_context_for_value(
             image
@@ -354,7 +343,7 @@ class MeasurementImageLabelAlignmentRequest:
                 request.labels,
                 label_payload=label_payload,
             )
-            if request.reference_domain is MeasurementImageReferenceDomain.SOURCE_IMAGE
+            if request.reference_domain.labels_follow_image
             else request.labels
         )
         self.validate_alignment(
@@ -575,7 +564,7 @@ class PreparedMeasurementObjectLabels:
                 logger,
                 "measurement_object_labels_source_projection",
                 source_projection_timer.elapsed(),
-                reference_domain=request.reference_domain.value,
+                reference_domain=request.reference_domain.name,
                 source_type=type(request.image).__name__,
                 labels_type=type(request.labels).__name__,
                 source_aliases=request.source_aliases,
@@ -591,7 +580,7 @@ class PreparedMeasurementObjectLabels:
                 logger,
                 "measurement_object_labels_source_context",
                 source_context_timer.elapsed(),
-                reference_domain=request.reference_domain.value,
+                reference_domain=request.reference_domain.name,
                 payload_reused=source_projected_payload is source_payload,
             )
         image_request = replace(
@@ -612,7 +601,7 @@ class PreparedMeasurementObjectLabels:
                 logger,
                 "measurement_object_labels_image_alignment",
                 image_align_timer.elapsed(),
-                reference_domain=request.reference_domain.value,
+                reference_domain=request.reference_domain.name,
                 align_image_to_labels=request.align_image_to_labels,
                 aligned_type=type(aligned_image).__name__,
             )
@@ -620,7 +609,7 @@ class PreparedMeasurementObjectLabels:
         aligned_measurement_labels = (
             aligned_request.labels
             if request.align_image_to_labels
-            and request.reference_domain is MeasurementImageReferenceDomain.SOURCE_IMAGE
+            and request.reference_domain.labels_follow_image
             else image_request.labels_for_image(
                 aligned_image,
                 source_projected_labels,
@@ -637,7 +626,7 @@ class PreparedMeasurementObjectLabels:
                 logger,
                 "measurement_object_labels_label_alignment",
                 label_align_timer.elapsed(),
-                reference_domain=request.reference_domain.value,
+                reference_domain=request.reference_domain.name,
                 labels_reused=aligned_measurement_labels is source_projected_labels,
             )
         completion_timer = RuntimeProfileTimer.start()
@@ -649,7 +638,7 @@ class PreparedMeasurementObjectLabels:
                 logger,
                 "measurement_object_labels_completion_payload",
                 completion_timer.elapsed(),
-                reference_domain=request.reference_domain.value,
+                reference_domain=request.reference_domain.name,
                 payload_reused=completion_payload is source_projected_payload,
             )
         return cls(
@@ -743,8 +732,51 @@ def measurement_image_source_spatial_adapter(
     return SourceSpatialDomainAdapter.for_value(image)
 
 
-class MeasurementImageReferenceDomain(str, Enum):
-    """Semantic image domain used as the reference for object measurement."""
+class MeasurementImageReferenceDomain(ABC, metaclass=AutoRegisterMeta):
+    """The image whose shape object measurement aligns to.
 
-    SOURCE_IMAGE = "source_image"
-    OBJECT_LABELS = "object_labels"
+    Each domain is a subclass; ``name`` is its spelling in profiles.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["MeasurementImageReferenceDomain"]]] = {}
+
+    name: ClassVar[str | None] = None
+    labels_follow_image: ClassVar[bool]
+    """Object labels are projected onto the measurement image's shape."""
+    bundles_source_metadata: ClassVar[bool]
+    """Several measurement images keep their source metadata side by side."""
+
+    @classmethod
+    @abstractmethod
+    def reference_image(
+        cls,
+        request: MeasurementImageLabelAlignmentRequest,
+    ) -> tuple[MeasurementImageLabelAlignmentRequest, RuntimeArrayData | AlignedImageStack]:
+        """Return the request projected for this domain and its reference image."""
+
+
+class SourceImageReference(MeasurementImageReferenceDomain):
+    """The source image owns the shape; labels follow it."""
+
+    name = "source_image"
+    labels_follow_image = True
+    bundles_source_metadata = False
+
+    @classmethod
+    def reference_image(cls, request):
+        projected = request.with_source_projected_image()
+        return projected, projected.image
+
+
+class ObjectLabelsReference(MeasurementImageReferenceDomain):
+    """The object labels own the shape; the image is read in label space."""
+
+    name = "object_labels"
+    labels_follow_image = False
+    bundles_source_metadata = True
+
+    @classmethod
+    def reference_image(cls, request):
+        return request, request.object_label_reference_image()

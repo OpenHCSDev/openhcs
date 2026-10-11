@@ -14,7 +14,7 @@ from benchmark.converter.compatibility_matrix import (
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.interop.cellprofiler.module_settings import (
-    ModuleSettingCoverageStatus,
+    SettingBound,
 )
 
 
@@ -164,12 +164,12 @@ def test_compatibility_matrix_summarizes_benchmark_coverage(
         (
             "IdentifyPrimaryObjects",
             "Select the input image",
-            ModuleSettingCoverageStatus.BOUND,
+            SettingBound,
         ),
         (
             "IdentifyPrimaryObjects",
             "Name the primary objects to be identified",
-            ModuleSettingCoverageStatus.BOUND,
+            SettingBound,
         ),
     }
 

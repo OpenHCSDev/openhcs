@@ -1945,11 +1945,12 @@ def test_module_settings_binding_rejects_unmapped_settings():
 
 
 def test_module_setting_coverage_has_only_explicit_final_states():
-    assert [(member.name, member.value) for member in ModuleSettingCoverageStatus] == [
-        ("BOUND", "bound"),
-        ("IGNORED", "ignored"),
-        ("UNMAPPED", "unmapped"),
-    ]
+    statuses = ModuleSettingCoverageStatus.__registry__
+    assert {name: status.is_covered for name, status in statuses.items()} == {
+        "bound": True,
+        "ignored": True,
+        "unmapped": False,
+    }
 
 
 def test_setting_to_keyword_binding_owns_keyword_derivation_and_row_reconstruction():

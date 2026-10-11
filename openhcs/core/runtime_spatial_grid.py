@@ -54,10 +54,21 @@ class SpatialGridAxis:
 
 
 class SpatialGridOrdering(str, Enum):
-    """Primary axis used when numbering positions in a spatial grid."""
+    """Primary axis used when numbering positions in a spatial grid.
 
-    BY_ROWS = "rows"
-    BY_COLUMNS = "columns"
+    The members are DefineGrid's spot-ordering choices; each carries whether
+    object numbers fill one grid row before the next.
+    """
+
+    def __new__(cls, value: str, fills_each_row_first: bool):
+        obj = str.__new__(cls, value)
+        obj._value_ = value
+        obj._fills_each_row_first = fills_each_row_first
+        return obj
+
+    BY_ROWS = ("rows", False)
+    BY_COLUMNS = ("columns", True)
+    fills_each_row_first = AliasProperty[bool]("_fills_each_row_first")
 
 
 class SpatialGridOrigin(str, Enum):
@@ -389,7 +400,7 @@ class SpatialGrid(SourceImageProvenanceFields, NamedArtifactPayload):
     def derived_spot_table(self) -> tuple[tuple[int, ...], ...]:
         """Return the object-number topology declared by this grid."""
         object_ids = np.arange(1, self.rows * self.columns + 1, dtype=np.int32)
-        if self.ordering is SpatialGridOrdering.BY_COLUMNS:
+        if self.ordering.fills_each_row_first:
             table = object_ids.reshape(self.rows, self.columns)
         else:
             table = object_ids.reshape(self.columns, self.rows).T

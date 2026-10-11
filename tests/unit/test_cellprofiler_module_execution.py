@@ -192,8 +192,11 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
 from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerImageRequest,
     CellProfilerMeasurementImage,
-    CellProfilerMeasurementImageDomain,
     CellProfilerSliceAlignedValues,
+)
+from openhcs.core.measurement_image_alignment import (
+    ObjectLabelsReference,
+    SourceImageReference,
 )
 from openhcs.interop.cellprofiler.runtime.main_flow import (
     cellprofiler_main_flow_output,
@@ -962,7 +965,7 @@ def _measurement_image_for_labels(
     label_payload=None,
     plane_projector=None,
     source_aliases=(),
-    reference_domain=CellProfilerMeasurementImageDomain.SOURCE_IMAGE,
+    reference_domain=SourceImageReference,
 ):
     source = CellProfilerMeasurementImage(
         source_image_name=None,
@@ -6764,7 +6767,7 @@ def test_resolved_measurement_image_preserves_runtime_slice_projection() -> None
         runtime,
         image,
         ("DNA",),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     assert measurement_image.plane_projection == (
@@ -6806,7 +6809,7 @@ def test_multi_image_photometry_consumes_each_named_current_source(aliases):
     )
     measurement_images = executor._resolved_measurement_images(
         image_specs, runtime, payload,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
     labels = ObjectLabelSet(
         name="Cells", variant_data=ObjectLabelVariantData(labels=np.ones((4, 5), dtype=np.int32)),
@@ -9304,12 +9307,12 @@ def test_object_label_measurement_images_bundle_source_metadata() -> None:
             CellProfilerMeasurementImage(
                 source_image_name=None,
                 payload=dna_payload,
-                reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+                reference_domain=ObjectLabelsReference,
             ),
             CellProfilerMeasurementImage(
                 source_image_name=None,
                 payload=rna_payload,
-                reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+                reference_domain=ObjectLabelsReference,
             ),
         )
     )
@@ -11285,11 +11288,11 @@ def test_object_only_measurement_carrier_preserves_color_stack() -> None:
         source_image_name=None,
         source_aliases=(),
         payload=color_stack,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     assert carrier.payload.data is color_stack
-    assert carrier.reference_domain is CellProfilerMeasurementImageDomain.OBJECT_LABELS
+    assert carrier.reference_domain is ObjectLabelsReference
 
 
 def test_compose_image_payload_rejects_unowned_singleton_broadcast():
@@ -12695,7 +12698,7 @@ def test_object_only_measurement_carrier_preserves_payload_stack_context() -> No
         source_image_name=None,
         source_aliases=(),
         payload=payload,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     assert carrier.payload is payload
@@ -12720,7 +12723,7 @@ def test_object_only_measurement_carrier_preserves_aligned_stack() -> None:
         source_image_name=None,
         source_aliases=(),
         payload=payload,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
         execution_mode=AlignedStackExecution,
     )
 
@@ -12752,7 +12755,7 @@ def test_literal_measurement_stack_preserves_pixels_in_object_reference_domain(
     )
     carrier = CellProfilerMeasurementImage(
         source_image_name="Source", payload=stack,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
         execution_mode=execution_mode,
     )
     prepared = carrier.prepare_object_labels(labels)
@@ -15650,7 +15653,7 @@ def test_measurement_image_for_labels_rejects_undeclared_object_domain_stack() -
         _measurement_image_for_labels(
             image,
             labels,
-            reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+            reference_domain=ObjectLabelsReference,
         )
 
 
@@ -15662,7 +15665,7 @@ def test_measurement_image_for_labels_rejects_undeclared_object_domain_shape() -
         _measurement_image_for_labels(
             image,
             labels,
-            reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+            reference_domain=ObjectLabelsReference,
         )
 
 
@@ -16695,7 +16698,7 @@ def test_measurement_labels_project_runtime_slice_stack_for_object_domain() -> N
         source_image_name=None,
         source_aliases=(),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     measurement_labels = _prepared_measurement_labels(
@@ -16731,7 +16734,7 @@ def test_measurement_labels_reject_runtime_slice_stack_without_projection() -> N
         source_image_name=None,
         source_aliases=(),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     with pytest.raises(ValueError, match="Measurement image alignment"):
@@ -16766,7 +16769,7 @@ def test_measurement_labels_project_runtime_slice_stack_for_unrelated_source_ima
         source_image_name="DF_image",
         source_aliases=("DF_image",),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     measurement_labels = _prepared_measurement_labels(
@@ -16803,7 +16806,7 @@ def test_measurement_labels_project_source_binding_stack_for_object_domain() -> 
         source_image_name=None,
         source_aliases=(),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     measurement_labels = _prepared_measurement_labels(
@@ -16838,7 +16841,7 @@ def test_measurement_labels_project_repeated_source_binding_stack_for_object_dom
         source_image_name=None,
         source_aliases=(),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     measurement_labels = _prepared_measurement_labels(
@@ -16876,7 +16879,7 @@ def test_measurement_labels_reject_undeclared_nested_runtime_stack_axis() -> Non
         source_image_name=None,
         source_aliases=(),
         payload=np.ones((4, 5), dtype=np.float32),
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     with pytest.raises(ValueError, match="Measurement image alignment"):
@@ -17206,7 +17209,7 @@ def test_measurement_image_for_labels_uses_object_label_source_spatial_crop() ->
         image,
         label_payload.labels,
         label_payload=label_payload,
-        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     np.testing.assert_array_equal(

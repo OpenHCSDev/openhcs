@@ -9,7 +9,7 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.measurement_image_alignment import MeasurementImageReferenceDomain
+from openhcs.core.measurement_image_alignment import ObjectLabelsReference
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
@@ -59,7 +59,7 @@ def test_singleton_object_projection_consumes_measurement_image_plane_proof() ->
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=1,
         ),
-        reference_domain=MeasurementImageReferenceDomain.OBJECT_LABELS,
+        reference_domain=ObjectLabelsReference,
     )
 
     (
