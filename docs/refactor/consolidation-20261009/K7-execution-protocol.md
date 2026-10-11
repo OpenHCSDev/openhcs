@@ -44,14 +44,14 @@ Production (Python under `openhcs/`): −1331 +1248. The net is small because th
 | `context.visualizer_config` and the `vis_config` argument at the one call | **derived** (it was always `None`, the parameter's default) |
 | `ExecutionStatus`, `is_error`, `is_cancelled`, `ExecutionResult.success/error/cancelled` | **derived** (the result subclasses) |
 | `ZMQExecutionAxisOutcome` | **derived** (`ExecutionResult.without_runtime_observation`) |
-| `RuntimeObservationMode.from_parent_requirement` | **unused** |
+| `NamedSourceBinding.input_plan` (`core/source_bindings.py`) | **unused** (no caller in `openhcs/`, tests, benchmark or scripts) |
 | `openhcs.core.context.ProcessingContext` re-export | **contract** (no re-exports) |
 
 **Tests-only** (behaviour the interface admits that no test exercises):
 - `ComponentGroupScope.of` removes duplicate keys and reads an empty key tuple as "no named keys"; `from_raw` kept duplicates and rejected an empty tuple. No producer of duplicate or empty keys is tested.
 - `RuntimeArtifactInput.records` no longer special-cases an ungrouped producer; the general path selects the same record. A relation that declares a complete-producer selection on an ungrouped producer now runs the declaration check it previously skipped.
 - `ArtifactInputProjectionPlan.validate_storage_plan` raises one message for every out-of-scope selection (three before).
-- Runtime caches (`runtime_image_stack_cache`, pattern-discovery, source-binding, output-identity) now live for one execution of a compiled context. Before, in-process lanes and repeated executions of one bundle shared them through the compiled context. Reuse across executions of one bundle is untested; correctness does not depend on it, timing might.
+- Runtime caches (`runtime_image_stack_cache`, pattern-discovery, source-binding, output-identity) now live for one execution of a compiled context. They were already per compiled context (one per axis value, or per axis value and sequential combination), so no cache that axes shared is now rebuilt per axis; every reader is axis-scoped step execution (`function_execution.py`, `function_runtime.py`, `source_binding_selection.py`). What is lost: when one in-memory bundle is executed again with inline or thread lanes, the pattern-discovery, source-binding and output-identity caches used to start warm (the image cache and the value store were cleared each time already). Process lanes always started cold, from the pickled bundle. Re-execution of one bundle with warm caches is untested.
 - Thread and inline lanes no longer execute on the parent's context object; they get their own `ExecutingContext` like process lanes, and only returned observations reach the parent. Code that read a parent context's store mid-execution from another thread is untested (none found).
 - A cancelled or failed axis reports `type(result).__name__` in `require_success` and export messages (`ExecutionFailed: …`), not `error: …`.
 
@@ -59,10 +59,9 @@ Production (Python under `openhcs/`): −1331 +1248. The net is small because th
 
 | Item | Evidence | Belongs to |
 |---|---|---|
-| `NamedSourceBinding.input_plan(group_keys=, group_component=)` has no caller and names the deleted plan fields | `core/source_bindings.py:1298` | E1 (owns the file in #1203): delete |
 | Annotations `ProcessingContext` on functions that read `execution_runtime` | `processing/materialization/core.py`, `path_scopes.py` | K8: annotate `ExecutingContext` |
-| `RuntimeExecutionAxisScope(component=None, value=None)` packs "no group coordinate" the same way the scope did | `core/component_group_scope.py` | not assigned; for the session lead |
-| E1 (#1203) also converts `ExecutionStatus` and `RuntimeObservationMode`; this surface uses E1's mode names and replaces the status family with result subclasses | `execution_result.py` | whichever merges second resolves in favour of the result family |
+| `RuntimeExecutionAxisScope(component=None, value=None)` packs "no group coordinate" the same way the scope did. Not small: 88 production references in 16 files and 388 test references, and it is the `scope` of every runtime record key (`key.scope.component` is compared across `runtime_stores.py`, `kinds.py`, materialization) | `core/component_group_scope.py` | follow-up surface, not started here |
+| E1 (#1203, merged first) converted `ExecutionStatus` and `RuntimeObservationMode` | `execution_result.py` | resolved in the merge of `625150118`: E1's observation-mode family is kept as written; its `ExecutionStatus`/`AxisSucceeded`/`AxisFailed`/`AxisCancelled` family is deleted for the result subclasses and its readers migrated. E1's guard table had no row for anything deleted here |
 | `PipelineOrchestrator.execute_compiled_bundle(runtime_observation_mode=None)` derives the mode when `None` | `orchestrator.py:765` | G7 follow-up, not assigned |
 
 ## Guards
