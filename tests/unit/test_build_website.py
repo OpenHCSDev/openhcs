@@ -949,8 +949,9 @@ def test_website_source_and_workflow_follow_package_metadata_authorities():
     assert RELEASE_VERSION_TOKEN in source_html
     assert "0.5.21" not in source_html
     assert "0.5.22" not in source_html
-    assert workflow.count('      - "openhcs/__init__.py"') == 2
-    assert workflow.count('      - "openhcs/resources/assets/openhcs-*.svg"') == 2
+    # The site imports openhcs (version, assets, session operations), so any
+    # change under the package re-validates it.
+    assert workflow.count('      - "openhcs/**"') == 2
     for page_name in ("privacy.html", "support.html", "terms.html"):
         page_source = (REPO_ROOT / "website" / page_name).read_text(encoding="utf-8")
         assert CONTACT_EMAIL_TOKEN in page_source

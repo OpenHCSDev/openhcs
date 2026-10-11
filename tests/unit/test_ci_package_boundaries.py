@@ -476,14 +476,13 @@ def test_website_source_validation_uses_local_candidate_owners() -> None:
     install_step = next(
         step
         for step in validate_job["steps"]
-        if step.get("name") == "Install website test dependencies"
+        if step.get("name") == "Install the OpenHCS candidate the website imports"
     )
     install_script = install_step["run"]
 
     assert checkout_step["with"]["submodules"] == "recursive"
-    assert "discover_local_projects" in install_script
-    assert 'python -m pip install "${local_project_paths[@]}"' in install_script
-    assert 'python -m pip install "${declared_requirements[@]}"' not in install_script
+    assert "python -m scripts.install_ci_candidate" in install_script
+    assert "--dependency-source submodules" in install_script
 
 
 def test_publish_workflow_consumes_release_requirements_authority() -> None:

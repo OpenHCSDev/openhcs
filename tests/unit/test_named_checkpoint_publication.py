@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 import tifffile
 
-from test_artifact_publication_journey import _plate, progress_events
+from tests.unit.test_artifact_publication_journey import _plate, progress_events
 from openhcs.core.artifacts import (
     QaCheckpoint, ImageArtifactType, MainFlowPlaneProjectionOutputSpec,
     MainFlowStackOutputSpec,

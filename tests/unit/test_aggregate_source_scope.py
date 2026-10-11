@@ -35,7 +35,7 @@ from openhcs.processing.materialization.core import Output, materialization_outp
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from test_materialization_core import _viewer_stream_backend_kwargs
+from tests.unit.test_materialization_core import _viewer_stream_backend_kwargs
 
 
 def _source(sites):

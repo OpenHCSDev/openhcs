@@ -30,7 +30,7 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )
 from openhcs.processing.backends.cellprofiler.color import GrayToColorModule, gray_to_color
-from test_cellprofiler_generic_special_input_binding import _compile_public_step
+from tests.unit.test_cellprofiler_generic_special_input_binding import _compile_public_step
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes import ColourAxis

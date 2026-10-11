@@ -4,34 +4,36 @@ on:
   pull_request:
     paths:
       - "website/**"
-      - "openhcs/resources/assets/openhcs-*.svg"
+      - "openhcs/**"
+      - "external/**"
+      - "scripts/install_ci_candidate.py"
+      - "scripts/validate_local_release_floors.py"
       - "docs/source/_static/ui.png"
       - "scripts/build_website.py"
       - "scripts/capture_media_gallery.py"
       - "scripts/gallery_catalog.py"
       - "scripts/website_gallery_projection.py"
-      - "scripts/validate_local_release_floors.py"
       - "docs/media_gallery_capture.md"
       - "tests/unit/test_build_website.py"
       - "tests/unit/test_capture_media_gallery.py"
-      - "openhcs/__init__.py"
       - "pyproject.toml"
       - ".github/workflows/website-pages.yml"
   push:
     branches: [main]
     paths:
       - "website/**"
-      - "openhcs/resources/assets/openhcs-*.svg"
+      - "openhcs/**"
+      - "external/**"
+      - "scripts/install_ci_candidate.py"
+      - "scripts/validate_local_release_floors.py"
       - "docs/source/_static/ui.png"
       - "scripts/build_website.py"
       - "scripts/capture_media_gallery.py"
       - "scripts/gallery_catalog.py"
       - "scripts/website_gallery_projection.py"
-      - "scripts/validate_local_release_floors.py"
       - "docs/media_gallery_capture.md"
       - "tests/unit/test_build_website.py"
       - "tests/unit/test_capture_media_gallery.py"
-      - "openhcs/__init__.py"
       - "pyproject.toml"
       - ".github/workflows/website-pages.yml"
   workflow_dispatch:
@@ -46,7 +48,7 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -58,57 +60,12 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install website test dependencies
+      - name: Install the OpenHCS candidate the website imports
         run: |
-          python -m pip install pytest
-          mapfile -t local_project_paths < <(
-            python - <<'PY'
-          from pathlib import Path
-
-          from packaging.utils import canonicalize_name
-
-          from scripts.validate_local_release_floors import (
-              discover_local_projects,
-              read_project,
-          )
-
-          project = read_project(Path("pyproject.toml"))
-          required_names = {
-              canonicalize_name(name)
-              for name in (
-                  "metaclass-registry",
-                  "polystore",
-                  "python-introspect",
-                  "zmqruntime",
-              )
-          }
-          declared_names = {
-              canonicalize_name(requirement.name)
-              for requirement in project.dependencies
-          }
-          undeclared_names = required_names - declared_names
-          if undeclared_names:
-              raise SystemExit(
-                  "Missing website dependencies in project metadata: "
-                  + ", ".join(sorted(undeclared_names))
-              )
-          local_projects = {
-              candidate.canonical_name: candidate
-              for candidate in discover_local_projects()
-          }
-          missing_sources = required_names - local_projects.keys()
-          if missing_sources:
-              raise SystemExit(
-                  "Missing website dependency submodules: "
-                  + ", ".join(sorted(missing_sources))
-              )
-          print(
-              *(local_projects[name].path.parent for name in sorted(required_names)),
-              sep="\n",
-          )
-          PY
-          )
-          python -m pip install "${local_project_paths[@]}"
+          python -m pip install --upgrade pip build pytest
+          python -m scripts.install_ci_candidate \
+            --dependency-source submodules \
+            --wheel-directory "$RUNNER_TEMP/openhcs-candidate-wheels"
 
       - name: Test, build, and validate landing page
         run: |

@@ -10,7 +10,7 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
-from test_function_outputs import (
+from tests.unit.test_function_outputs import (
     context_stub, function_step_plan, record_output_path,
 )
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser

@@ -25,8 +25,8 @@ from openhcs.processing.backends.cellprofiler.color import (
     ColorToGrayMode, ImageChannelType, color_to_gray, gray_to_color,
     split_color_to_gray,
 )
-from test_gray_to_color_binding_axis_432 import _execute_bound_stack, _source_plane
-from test_payload_axis_compile_gate import _compiled_pattern, _session
+from tests.unit.test_gray_to_color_binding_axis_432 import _execute_bound_stack, _source_plane
+from tests.unit.test_payload_axis_compile_gate import _compiled_pattern, _session
 from openhcs.core.payload_axes import ColourSampleAxisSpec
 from openhcs.core.axes import ColourAxis
 

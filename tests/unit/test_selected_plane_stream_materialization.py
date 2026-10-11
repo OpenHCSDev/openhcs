@@ -55,12 +55,12 @@ from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import 
 )
 from openhcs.processing.materialization import materialize
 
-from test_function_artifact_materialization import (
+from tests.unit.test_function_artifact_materialization import (
     _context,
     _plan,
     streaming_config_stub,
 )
-from test_materialization_core import _viewer_stream_backend_kwargs
+from tests.unit.test_materialization_core import _viewer_stream_backend_kwargs
 from openhcs.domains.microscopy.axes import Microscopy
 
 
