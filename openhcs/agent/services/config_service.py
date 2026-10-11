@@ -51,7 +51,7 @@ from openhcs.agent.dto.config import (
     ConfigValidationResult,
 )
 from openhcs.agent.exceptions import AgentFacingErrorMixin
-from openhcs.core.artifacts import ArtifactType
+from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.dataset_sources.choice import DatasetSourceChoices
 from openhcs.core.config import (
     GlobalPipelineConfig,

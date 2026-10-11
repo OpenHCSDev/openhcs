@@ -43,6 +43,7 @@ from tests.unit.test_bioformats_java_adapter import (
     PhysicalSize,
 )
 from tests.unit.bioformats_fixture import write_bioformats_manifest_fixture
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 class _Header(FakeBioFormatsMetadata):
@@ -148,7 +149,7 @@ def test_nonplate_calibration_survives_preparation_and_native_roi_roundtrip(
         path=str(path),
         filemanager=filemanager,
         backends=[Backend.DISK.value],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     decoded = ROIArchiveSourceMetadata.decode(load_rois_from_zip(Path(path)))
     assert decoded.source_voxel_spacing == expected

@@ -4,7 +4,10 @@ These source controls do not prove BioFormats discovery, compilation, native
 execution, saved CSV/ROI publication, an installed MCP journey, or biology.
 """
 
-from openhcs.core.artifacts import MeasurementsArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import (
+    MeasurementsArtifactType,
+    ObjectLabelsArtifactType,
+)
 
 import importlib.util
 from pathlib import Path
@@ -13,7 +16,9 @@ import sys
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ArtifactSpecCollection, ImageArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection

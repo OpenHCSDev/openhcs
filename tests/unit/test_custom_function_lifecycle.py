@@ -30,7 +30,8 @@ def _source(name: str, expression: str = "image") -> str:
 
 
 def _plate_source(name: str) -> str:
-    return f'''from openhcs.core.artifacts import ArtifactSpec, SpecialArtifactType
+    return f'''from openhcs.core.artifacts.kinds import SpecialArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.pipeline.function_contracts import (
     artifact_outputs, execution_scope, runtime_bound_parameters,
@@ -120,9 +121,8 @@ def test_custom_plate_does_not_admit_axis_memory_contract(
 
 def _measurement_source(name: str) -> str:
     return f"""from dataclasses import dataclass
-from openhcs.core.artifacts import (
-    ArtifactSpec, MainFlowStackOutputSpec, ImageArtifactType, MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, MainFlowStackOutputSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_measurements import (
@@ -162,7 +162,7 @@ def test_compiled_inspection_preserves_custom_helper_identity_and_source_isolati
     isolated_custom_runtime,
 ) -> None:
     from openhcs.core.artifact_inspection import CompiledArtifactInvocationInspection
-    from openhcs.core.artifacts import ArtifactOutputPlan
+    from openhcs.core.artifacts.plans import ArtifactOutputPlan
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.function_patterns import (
         DEFAULT_GROUP_KEY,

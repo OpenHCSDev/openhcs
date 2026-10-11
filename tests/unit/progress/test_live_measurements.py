@@ -2,7 +2,8 @@ from dataclasses import dataclass
 
 import pytest
 
-from openhcs.core.artifacts import ArtifactOutputPlan, MeasurementsArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.progress import ProgressEvent
 from openhcs.core.progress.live_measurements import (
     LiveMeasurementPayloadError,

@@ -23,6 +23,7 @@ from openhcs.processing.materialization import (
     ROIOptions,
     materialize,
 )
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 def main() -> None:
@@ -79,7 +80,7 @@ def main() -> None:
         path=str(target / "misleading_B99_w7_labels.roi.zip"),
         filemanager=FileManager({"disk": disk}),
         backends=["disk"],
-        backend_kwargs={},
+        backend_kwargs={}, output_plan=materialization_output_plan()
     )
     restored = ROIArchiveSourceMetadata.decode(load_rois_from_zip(Path(materialized)))
     assert restored.source_provenance == metadata.source_provenance

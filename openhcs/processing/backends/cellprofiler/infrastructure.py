@@ -11,7 +11,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, ClassVar
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
     ObjectLabelsArtifactType,

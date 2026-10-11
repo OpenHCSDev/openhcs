@@ -2,7 +2,7 @@ from inspect import unwrap
 
 import numpy as np
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )

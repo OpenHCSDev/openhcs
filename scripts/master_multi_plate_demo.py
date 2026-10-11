@@ -37,9 +37,7 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
 )
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.artifacts import (
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
@@ -163,7 +161,7 @@ def compiled_presentation_contract(
             and output.get("kind") == target.artifact_kind
         ]
         if target.output_kind == artifact_output_kind:
-            if target.artifact_kind == MeasurementsArtifactType.require_value():
+            if target.artifact_kind == MeasurementsArtifactType.value:
                 raise MasterDemoFailure(
                     "Declared visual cannot be a Measurements artifact table."
                 )
@@ -182,7 +180,7 @@ def compiled_presentation_contract(
             named_artifact_main = (
                 target.output_key
                 != AlignedImageSliceContext.ANONYMOUS_MAIN_FLOW_OUTPUT_KEY
-                and target.artifact_kind != MeasurementsArtifactType.require_value()
+                and target.artifact_kind != MeasurementsArtifactType.value
                 and len(target_outputs) == 1
             )
             if not anonymous_main and not named_artifact_main:

@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from polystore.bioformats_storage import BioFormatsPlaneRef
 
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
     DECLARED_SOURCE_METADATA_FIELD,

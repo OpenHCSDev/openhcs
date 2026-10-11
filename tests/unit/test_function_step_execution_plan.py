@@ -17,15 +17,16 @@ from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputProjectionPlan,
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.input_projection import ArtifactInputProjectionPlan
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
-    InputStackBroadcastSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
+)
+from openhcs.core.artifacts.relations import (
+    InputStackBroadcastSourceRelation,
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.function_patterns import (
@@ -46,6 +47,7 @@ from openhcs.core.steps.function_artifact_materialization import (
 )
 from openhcs.core.steps.function_runtime import PatternGroupExecutionScope
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 def noop(image):
@@ -401,6 +403,7 @@ def test_build_analysis_filename_falls_back_to_axis_and_pipeline_position_withou
             "measurements",
             plan,
             context=context,
+            output_plan=materialization_output_plan("measurements"),
         )[0]
         == "A01_measurements_step7.roi.zip"
     )

@@ -13,25 +13,31 @@ from typing import (
 )
 
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
+    ArtifactSpecRef,
+)
+from openhcs.core.artifacts.specs import (
     ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactSpecAccumulator,
-    ArtifactSpecRef,
+)
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
-    ImageArtifactType,
     ImageMeasurementSubjectRelation,
     InputGroupLineageSourceRelation,
     InputImageSetContextSourceRelation,
     InputObjectMeasurementSourceRelation,
+    ObjectMeasurementSubjectRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
-    ObjectMeasurementSubjectRelation,
-    SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import (
     CallableContract,

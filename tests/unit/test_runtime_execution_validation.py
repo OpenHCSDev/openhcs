@@ -8,8 +8,8 @@ import numpy as np
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,

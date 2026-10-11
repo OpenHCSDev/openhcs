@@ -6,18 +6,21 @@ from collections.abc import Iterable
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSidecarSourceRelation,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ArtifactSpecRef,
+)
+from openhcs.core.artifacts.relations import (
+    ArtifactSidecarSourceRelation,
     ArtifactSpecRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
     MeasurementsArtifactType,
-    SourceStackLineageSourceRelation,
 )
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY
@@ -646,7 +649,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
                 f"{cls.__name__} requires an integer step index to derive output "
                 "artifact identity."
             )
-        suffix = artifact_type.require_value()
+        suffix = artifact_type.value
         ordinal = output_position + block_position + 1
         return f"{cls.require_module_name()}_{step_index + 1}_{suffix}_{ordinal}"
 
@@ -665,7 +668,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
                 f"{cls.__name__} requires a numbered module block to derive an "
                 "occurrence-owned output artifact identity."
             )
-        suffix = artifact_type.require_value()
+        suffix = artifact_type.value
         return (
             f"{cls.require_module_name()}_{module.module_num}_{suffix}_"
             f"{output_position + 1}"
@@ -891,7 +894,7 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
         if len(candidates) > 1:
             raise ValueError(
                 f"Module {module.name} has conflicting context declarations for "
-                f"{artifact_type.require_value()} artifact {name!r}: {candidates!r}."
+                f"{artifact_type.value} artifact {name!r}: {candidates!r}."
             )
 
         matching_available_spec = (
@@ -907,14 +910,14 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
             )
             raise ValueError(
                 f"Module {module.name} references available "
-                f"{artifact_type.require_value()} artifact {name!r}, but no exact "
+                f"{artifact_type.value} artifact {name!r}, but no exact "
                 "source binding, scoped main-flow declaration, or ArtifactProducer "
                 f"owns it; candidates={producers!r}."
             )
 
         conflicting_types = tuple(
             dict.fromkeys(
-                spec.artifact_type.require_value()
+                spec.artifact_type.value
                 for spec in (
                     *step_context.available_artifacts.specs,
                     *step_context.main_flow_artifacts.specs,
@@ -925,12 +928,12 @@ class CellProfilerModuleArtifactContracts(UniqueReturnSlots):
         if conflicting_types:
             raise ValueError(
                 f"Module {module.name} references {name!r} as "
-                f"{artifact_type.require_value()}, but current artifacts "
+                f"{artifact_type.value}, but current artifacts "
                 f"declare types {conflicting_types!r}."
             )
         raise ValueError(
             f"Module {module.name} references unknown "
-            f"{artifact_type.require_value()} artifact {name!r}."
+            f"{artifact_type.value} artifact {name!r}."
         )
 
     @classmethod

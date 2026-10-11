@@ -10,12 +10,9 @@ from skimage.segmentation import find_boundaries
 centrosome = pytest.importorskip("centrosome")
 pytest.importorskip("centrosome.cpmorphology")
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,

@@ -1,9 +1,17 @@
 from dataclasses import dataclass
 import numpy as np
 from openhcs.core.memory import numpy
-from openhcs.core.artifacts import (ArtifactSpec, ImageArtifactType, MainFlowStackOutputSpec,
-    MeasurementsArtifactType, ObjectLabelsArtifactType, ObjectMeasurementSubjectRelation,
-    InputImageSetContextSourceRelation, ImageMeasurementSubjectRelation)
+from openhcs.core.artifacts.specs import ArtifactSpec, MainFlowStackOutputSpec
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
+    MeasurementsArtifactType,
+    ObjectLabelsArtifactType,
+)
+from openhcs.core.artifacts.relations import (
+    ObjectMeasurementSubjectRelation,
+    InputImageSetContextSourceRelation,
+    ImageMeasurementSubjectRelation,
+)
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.runtime_object_labels import ObjectLabelValue

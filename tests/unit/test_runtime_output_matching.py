@@ -7,9 +7,9 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
 )
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,

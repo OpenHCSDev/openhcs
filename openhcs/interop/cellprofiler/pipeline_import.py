@@ -15,13 +15,12 @@ from objectstate.lazy_factory import (
 
 from openhcs.constants import Backend
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ArtifactSpecRef,
 )
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.config import (
     LazyProcessingConfig,

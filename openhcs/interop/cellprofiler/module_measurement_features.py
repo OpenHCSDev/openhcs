@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.measurement_rows import (
         FormattingMeasurementFeatureTemplate,
     )
-    from openhcs.core.artifacts import ArtifactSpec
+    from openhcs.core.artifacts.specs import ArtifactSpec
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.runtime_measurements import MeasurementTable
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule

@@ -7,14 +7,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    InputStackBroadcastSourceRelation,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.relations import InputStackBroadcastSourceRelation
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,

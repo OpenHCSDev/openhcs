@@ -4,10 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 import pickle
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,

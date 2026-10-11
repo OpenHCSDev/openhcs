@@ -51,7 +51,7 @@ from openhcs.core.config import (
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.artifacts import ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload

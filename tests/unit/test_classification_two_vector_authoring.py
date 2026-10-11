@@ -16,7 +16,7 @@ from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringS
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.memory.decorators import numpy as numpy_function
 from openhcs.core.measurement_row_materialization import (

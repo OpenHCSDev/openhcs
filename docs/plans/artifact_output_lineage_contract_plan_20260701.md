@@ -583,7 +583,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from typing import TypeVar
 
-from openhcs.core.artifacts import ArtifactPlan, ArtifactSpecCollection
+from openhcs.core.artifacts.plans import ArtifactPlan
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
 
 ArtifactPlanT = TypeVar("ArtifactPlanT", bound=ArtifactPlan)
 

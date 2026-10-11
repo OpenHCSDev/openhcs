@@ -8,13 +8,13 @@ from enum import Enum
 from pathlib import Path
 from typing import Generic, TypeVar
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactPlan,
-    ArtifactSidecarRole,
-    ArtifactType,
 )
+from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
+from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.source_bindings import resolve_source_file
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
     cellprofiler_setting_literal,

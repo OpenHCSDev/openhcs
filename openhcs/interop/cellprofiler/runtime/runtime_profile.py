@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
 
-from openhcs.core.artifacts import ArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ArtifactType, ObjectLabelsArtifactType
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
 from openhcs.interop.cellprofiler.runtime.profile_fields import (

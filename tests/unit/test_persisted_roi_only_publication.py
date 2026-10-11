@@ -19,7 +19,8 @@ from openhcs.agent.services.plate_inspection_service import (
     PlateInspectionService,
 )
 from openhcs.constants.constants import Backend
-from openhcs.core.artifacts import ArtifactOutputPlan, MetadataArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import MetadataArtifactType
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,
@@ -44,6 +45,7 @@ from openhcs.processing.materialization.core import (
 )
 from openhcs.processing.materialization.options import FileBundleOptions
 from openhcs.domains.microscopy.axes import Microscopy
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 def _publish_saved_step(context, plan, *, artifact_materializations=()):
@@ -116,7 +118,7 @@ def save_archive_outcome(
         payload,
         str(base_path),
         context.filemanager,
-        (backend,),
+        (backend,), output_plan=materialization_output_plan()
     )
     saved = batch.save()
     (output,) = saved.outputs_for_backend(backend)
@@ -309,7 +311,7 @@ def test_measurement_only_step_does_not_reconcile_pending_image_producer(
 ):
     from polystore.virtual_workspace import SourcePixelRef
 
-    from openhcs.core.artifacts import ImageArtifactType
+    from openhcs.core.artifacts.kinds import ImageArtifactType
     from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection
     from openhcs.core.virtual_workspace_metadata import (
         AtomicMetadataWriter, FIELDS, VirtualWorkspaceSourceProjectionEntries,

@@ -20,9 +20,9 @@ from skimage.morphology import remove_small_objects, disk
 from skimage.measure import label, regionprops, regionprops_table
 
 # OpenHCS imports
-from openhcs.core.artifacts import (
-    ArtifactMeasurementSubjectRelation,
-    ArtifactSpec,
+from openhcs.core.artifacts.relations import ArtifactMeasurementSubjectRelation
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )

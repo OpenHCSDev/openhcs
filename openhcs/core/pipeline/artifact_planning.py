@@ -7,14 +7,18 @@ from dataclasses import dataclass, field, replace
 from typing import Any, ClassVar, Iterable, Mapping, Optional, TYPE_CHECKING
 
 from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.plans import (
     ArtifactInputPlan,
-    ArtifactMaterializationPayload,
     ArtifactOutputPlan,
+    ArtifactSpecRef,
+)
+from openhcs.core.artifacts.payloads import ArtifactMaterializationPayload
+from openhcs.core.artifacts.specs import (
     ArtifactSpec,
     ArtifactSpecAccumulator,
     ArtifactSpecCollection,
-    ArtifactSpecRef,
+)
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ArtifactTypeStrategyMatchMixin,
     ImageArtifactType,
@@ -546,7 +550,7 @@ class ArtifactGraph:
                 (
                     ref.name
                     if name_counts[ref.name] == 1
-                    else f"{ref.name}__{ref.artifact_type.require_value()}"
+                    else f"{ref.name}__{ref.artifact_type.value}"
                 ),
             )
             for ref in output_refs

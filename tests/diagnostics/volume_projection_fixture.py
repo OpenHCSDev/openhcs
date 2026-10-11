@@ -10,14 +10,16 @@ from dataclasses import dataclass
 from arraybridge import ArrayPayload
 import numpy as np
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
-    MainFlowPlaneProjectionOutputSpec,
-    MainFlowStackOutputSpec,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
-    ObjectMeasurementSubjectRelation,
 )
+from openhcs.core.artifacts.specs import (
+    MainFlowPlaneProjectionOutputSpec,
+    MainFlowStackOutputSpec,
+)
+from openhcs.core.artifacts.relations import ObjectMeasurementSubjectRelation
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs

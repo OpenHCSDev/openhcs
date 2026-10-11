@@ -13,7 +13,8 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     CompileInspectionInput,
     InProcessCompileInspectionGateway,
 )
-from openhcs.core.artifacts import ArtifactInputPlan, ImageArtifactType
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,

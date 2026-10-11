@@ -14,7 +14,7 @@ from urllib.parse import quote
 
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.artifacts import ArtifactType, ImageArtifactType
+from openhcs.core.artifacts.kinds import ArtifactType, ImageArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.component_values import AxisValues
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -905,12 +905,12 @@ class SourceArtifactProjection(SourceProjection):
     ) -> None:
         """Declare this source artifact's nominal kind in metadata."""
 
-        metadata.setdefault("source_artifact_type", self.artifact_kind.require_value())
+        metadata.setdefault("source_artifact_type", self.artifact_kind.value)
 
     def extend_serialized_payload(self, payload: dict[str, Any]) -> None:
         """Declare this source artifact's nominal kind in its wire payload."""
 
-        payload["artifact_kind"] = self.artifact_kind.require_value()
+        payload["artifact_kind"] = self.artifact_kind.value
         if self.image_metadata is not None:
             payload[SourcePlaneProjection.image_metadata_wire_field()] = to_jsonable(
                 self.image_metadata

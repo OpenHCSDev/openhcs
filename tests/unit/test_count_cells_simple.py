@@ -8,7 +8,7 @@ from scipy import ndimage as ndi
 from skimage.draw import disk, ellipse
 from skimage.measure import regionprops
 
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )

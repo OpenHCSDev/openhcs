@@ -15,7 +15,7 @@ from polystore.streaming_constants import StreamingDataType
 from zmqruntime.config import TransportMode
 
 from openhcs.core.axes import AxisFamily
-from openhcs.core.artifacts import ObjectArtifactSubjectBinding
+from openhcs.core.artifacts.relations import ObjectArtifactSubjectBinding
 from openhcs.core.config import (
     NapariDisplayConfig,
     NapariDimensionMode,

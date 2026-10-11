@@ -113,12 +113,8 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         InProcessCompileInspectionGateway,
     )
     from openhcs.constants.input_source import InputSource
-    from openhcs.core.artifacts import (
-        ArtifactInputPlan,
-        ArtifactOutputPlan,
-        ImageArtifactType,
-        ObjectLabelsArtifactType,
-    )
+    from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+    from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
     from openhcs.core.config import (
         GlobalPipelineConfig,
         LazyProcessingConfig,

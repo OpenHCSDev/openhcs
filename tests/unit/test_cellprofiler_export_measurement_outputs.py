@@ -9,13 +9,11 @@ from types import SimpleNamespace
 import numpy as np
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    MaterializedImageCopy,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRelation,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.sidecars import MaterializedImageCopy
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import ArtifactSpecRelation
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementsArtifactType,
     SpecialArtifactType,
@@ -58,6 +56,7 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     save_images,
     save_images_with_measurements,
 )
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 def _module(name: str, **settings: str) -> ModuleBlock:
@@ -385,7 +384,7 @@ def test_save_images_file_measurement_output_and_rows_are_conditional() -> None:
         ImageArtifactType
         if measurement_plan is None
         else measurement_plan.artifact_type
-    ).contextualize_output(source, rows, measurement_plan, None)
+    ).contextualize_output(source, rows, measurement_plan or MAIN_FLOW, None)
 
     assert isinstance(contextualized, MeasurementTable)
     assert contextualized.name == measurement.name

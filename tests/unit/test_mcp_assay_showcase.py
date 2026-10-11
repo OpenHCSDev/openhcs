@@ -12,7 +12,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from polystore.streaming.identity import StreamProducerOrigin
 
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
@@ -53,13 +53,13 @@ def test_showcase_sources_are_seven_bounded_distinct_pipeline_documents(tmp_path
             "Segment nucleus-like primary objects",
             "artifact",
             "segmentation_masks",
-            ObjectLabelsArtifactType.require_value(),
+            ObjectLabelsArtifactType.value,
         ),
         "dual_channel_phenotype": (
             "Classify dual-channel reporter phenotype",
             "artifact",
             "w2_stain",
-            ObjectLabelsArtifactType.require_value(),
+            ObjectLabelsArtifactType.value,
         ),
         "image_colocalization": (
             "Render shared-intensity colocalization",
@@ -71,25 +71,25 @@ def test_showcase_sources_are_seven_bounded_distinct_pipeline_documents(tmp_path
             "Segment nuclei for morphology",
             "artifact",
             "segmentation_masks",
-            ObjectLabelsArtifactType.require_value(),
+            ObjectLabelsArtifactType.value,
         ),
         "spatial_neighbors": (
             "Measure cell-neighbor topology",
             AlignedImageSliceContext.MAIN_FLOW_OUTPUT_KIND,
             "MeasureObjectNeighbors_2_image_1",
-            ImageArtifactType.require_value(),
+            ImageArtifactType.value,
         ),
         "radial_intensity_distribution": (
             "Segment nuclei for radial intensity",
             "artifact",
             "segmentation_masks",
-            ObjectLabelsArtifactType.require_value(),
+            ObjectLabelsArtifactType.value,
         ),
         "foreground_skeleton_topology": (
             "Measure foreground skeleton topology",
             "artifact",
             "skeleton_rois",
-            ObjectLabelsArtifactType.require_value(),
+            ObjectLabelsArtifactType.value,
         ),
     }
 

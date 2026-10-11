@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-from openhcs.core.artifacts import ArtifactSpec
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.callable_contract import KeywordRuntimeParameter
 from openhcs.core.pipeline.function_contracts import (
     annotation_accepts_runtime_type,

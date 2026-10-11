@@ -13,13 +13,9 @@ from metaclass_registry import AutoRegisterMeta
 import numpy as np
 import scipy.ndimage
 from skimage.feature import peak_local_max
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    ImageMeasurementSubjectRelation,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.relations import ImageMeasurementSubjectRelation
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )

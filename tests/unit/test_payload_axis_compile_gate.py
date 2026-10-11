@@ -13,7 +13,8 @@ from openhcs.core.callable_contract import (
     PreservedPayloadAxes,
     preserves_payload_axes,
 )
-from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import ProcessingContext
