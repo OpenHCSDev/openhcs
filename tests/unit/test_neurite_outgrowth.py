@@ -471,6 +471,8 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         "minimum_cell_growth_to_log_as_significant",
         "candidate_threshold_correction_factor",
         "candidate_hysteresis_seed_correction_factor",
+        "minimum_terminal_branch_length",
+        "minimum_process_length",
     ]
     assert [field.name for field in fields(MetaXpressNuclearSettings)] == [
         "channel_index",
@@ -2849,3 +2851,55 @@ def test_morphology_retains_topology_owners_when_shared_endpoints_collide():
             pytest.approx(expected_length)
         )
         assert np.asarray(owned_edges[0].coordinates) == pytest.approx(paths[owner - 1])
+
+
+def test_optional_minimum_lengths_prune_spurs_and_soma_stubs_only_when_declared():
+    image = _with_separate_body_channel(_draw_fluorescent_neuron())
+    for start, end in (
+        ((64, 75), (35, 105)),  # substantial daughter: a genuine branch
+        ((64, 45), (70, 45)),  # short free-tip shaft spur
+        ((55, 20), (48, 20)),  # short soma stub
+    ):
+        rows, columns = line(*start, *end)
+        image[1, rows, columns] = 700
+    body = MetaXpressCellBodySettings(
+        approximate_max_width=40.0,
+        minimum_area=40.0,
+        intensity_above_local_background=100.0,
+        channel_index=0,
+    )
+
+    def measure(**lengths):
+        _, _, cell_rows, *_ = _implementation()(
+            image,
+            neurite_channel_index=1,
+            cell_body=body,
+            outgrowth=replace(_outgrowth_settings(), **lengths),
+            pixel_size=1.0,
+        )
+        return _rows(cell_rows)[0]
+
+    default = measure()
+    explicit_zero = measure(
+        minimum_terminal_branch_length=0.0, minimum_process_length=0.0,
+    )
+    assert default == explicit_zero
+    assert (default["processes"], default["branches"]) == (2, 2)
+
+    spur_pruned = measure(minimum_terminal_branch_length=8.0)
+    assert (spur_pruned["processes"], spur_pruned["branches"]) == (2, 1)
+
+    stub_dropped = measure(minimum_process_length=8.0)
+    assert (stub_dropped["processes"], stub_dropped["branches"]) == (1, 2)
+    assert stub_dropped["total_outgrowth"] < default["total_outgrowth"]
+
+    both = measure(minimum_terminal_branch_length=8.0, minimum_process_length=8.0)
+    assert (both["processes"], both["branches"]) == (1, 1)
+
+
+@pytest.mark.parametrize(
+    "name", ["minimum_terminal_branch_length", "minimum_process_length"],
+)
+def test_minimum_lengths_reject_negative_values(name):
+    with pytest.raises(ValueError, match=name):
+        replace(_outgrowth_settings(), **{name: -1.0}).validate()
