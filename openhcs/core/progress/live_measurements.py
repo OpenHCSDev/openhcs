@@ -6,11 +6,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, is_dataclass
 import math
 from types import MappingProxyType
-from typing import cast, Any
+from typing import Any, ClassVar, cast
 
 import numpy as np
 
 from openhcs.core.artifacts import MeasurementsArtifactType
+from openhcs.core.progress.types import ProgressContextPayload
 from openhcs.core.measurement_row_materialization import (
     is_structural_missing_measurement_cell,
 )
@@ -26,7 +27,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
 
-LIVE_MEASUREMENTS_CONTEXT_KEY = "live_measurements"
 DEFAULT_LIVE_MEASUREMENT_ROW_LIMIT = 50
 DEFAULT_LIVE_MEASUREMENT_COLUMN_LIMIT = 64
 DEFAULT_LIVE_MEASUREMENT_PREVIEW_LIMIT = 8
@@ -139,8 +139,11 @@ class LiveMeasurementTablePreview:
 
 
 @dataclass(frozen=True, slots=True)
-class LiveMeasurementProgressPayload:
+class LiveMeasurementProgressPayload(ProgressContextPayload):
     """Live measurement preview payload stored inside ProgressEvent.context."""
+
+    context_key: ClassVar[str] = "live_measurements"
+    malformed_error: ClassVar[type[ValueError]] = LiveMeasurementPayloadError
 
     previews: tuple[LiveMeasurementTablePreview, ...]
     preview_count: int
@@ -184,17 +187,10 @@ class LiveMeasurementProgressPayload:
         )
 
     @classmethod
-    def from_context(
+    def from_context_body(
         cls,
-        context: Mapping[str, Any] | None,
-    ) -> "LiveMeasurementProgressPayload | None":
-        if not context or LIVE_MEASUREMENTS_CONTEXT_KEY not in context:
-            return None
-        data = context[LIVE_MEASUREMENTS_CONTEXT_KEY]
-        if not isinstance(data, Mapping):
-            raise LiveMeasurementPayloadError(
-                f"{LIVE_MEASUREMENTS_CONTEXT_KEY!r} must be a mapping."
-            )
+        data: Mapping[str, Any],
+    ) -> "LiveMeasurementProgressPayload":
         raw_previews = data.get("previews")
         if not isinstance(raw_previews, Sequence) or isinstance(
             raw_previews, (str, bytes, bytearray)
@@ -211,36 +207,12 @@ class LiveMeasurementProgressPayload:
             truncated_previews=bool(data.get("truncated_previews", False)),
         )
 
-    def to_context(self) -> dict[str, Any]:
+    def context_body(self) -> dict[str, Any]:
         return {
-            LIVE_MEASUREMENTS_CONTEXT_KEY: {
-                "previews": [preview.to_dict() for preview in self.previews],
-                "preview_count": self.preview_count,
-                "truncated_previews": self.truncated_previews,
-            }
+            "previews": [preview.to_dict() for preview in self.previews],
+            "preview_count": self.preview_count,
+            "truncated_previews": self.truncated_previews,
         }
-
-
-def live_measurement_context_for_records(
-    records: Sequence[StoredRuntimeValue],
-    *,
-    row_limit: int = DEFAULT_LIVE_MEASUREMENT_ROW_LIMIT,
-    column_limit: int = DEFAULT_LIVE_MEASUREMENT_COLUMN_LIMIT,
-    preview_limit: int = DEFAULT_LIVE_MEASUREMENT_PREVIEW_LIMIT,
-    materialized_locations_by_address: Mapping[
-        RuntimeArtifactAddress,
-        tuple[RuntimeArtifactLocation, ...],
-    ] = NO_MATERIALIZED_ARTIFACT_LOCATIONS,
-) -> dict[str, Any] | None:
-    """Return a progress context containing bounded measurement previews."""
-    payload = LiveMeasurementProgressPayload.from_records(
-        records,
-        row_limit=row_limit,
-        column_limit=column_limit,
-        preview_limit=preview_limit,
-        materialized_locations_by_address=materialized_locations_by_address,
-    )
-    return None if payload is None else payload.to_context()
 
 
 def _measurement_row_preview(

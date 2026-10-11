@@ -41,6 +41,7 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.progress import (
+    DeclaredProgressContextPayload,
     ProgressEvent,
     ProgressExecutionContext,
     ProgressPhase,
@@ -1761,10 +1762,10 @@ class DebugEvent(DebugBoundaryState):
 
 
 @dataclass(frozen=True, slots=True)
-class DebugProgressContext:
+class DebugProgressContext(DeclaredProgressContextPayload):
     """Small debug context intended for ProgressEvent.context transport."""
 
-    progress_context_discriminator: ClassVar[str] = "debug_session_id"
+    context_key: ClassVar[str] = "debug"
 
     debug_session_id: str
     snapshot_id: str | None
@@ -1793,34 +1794,6 @@ class DebugProgressContext:
             snapshot_store_ref=snapshot_store_ref,
             snapshot_store_backend=snapshot_store_backend,
         )
-
-    def to_progress_context(self) -> dict[str, Any]:
-        return {
-            "debug_session_id": self.debug_session_id,
-            "snapshot_id": self.snapshot_id,
-            "cursor": to_jsonable(self.cursor),
-            "event_type": self.event_type.value,
-            "snapshot_store_ref": self.snapshot_store_ref,
-            "snapshot_store_backend": self.snapshot_store_backend,
-        }
-
-    @classmethod
-    def from_progress_context(
-        cls,
-        context: Mapping[str, Any],
-    ) -> "DebugProgressContext":
-        return cls(
-            debug_session_id=str(context["debug_session_id"]),
-            snapshot_id=context.get("snapshot_id"),
-            cursor=dataclass_from_mapping(DebugCursor, context["cursor"]),
-            event_type=DebugEventType(context["event_type"]),
-            snapshot_store_ref=context.get("snapshot_store_ref"),
-            snapshot_store_backend=context.get("snapshot_store_backend"),
-        )
-
-    @classmethod
-    def is_progress_context(cls, context: Mapping[str, Any]) -> bool:
-        return cls.progress_context_discriminator in context
 
 
 @dataclass(frozen=True, slots=True)
@@ -1869,7 +1842,7 @@ class DebugProgressEventRequest(DebugSessionRequest):
             completed=self.completed,
             total=self.total,
             message=self.debug_event.event_type.value,
-            context=self.debug_progress_context().to_progress_context(),
+            context=self.debug_progress_context().to_context(),
             error=self.debug_event.exception,
             traceback=self.debug_event.traceback_text,
         )

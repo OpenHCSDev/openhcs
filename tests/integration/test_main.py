@@ -618,7 +618,7 @@ def _execute_pipeline_phases(
     """Execute compilation and execution phases of the pipeline (direct mode)."""
     import multiprocessing
     import threading
-    from openhcs.core.progress import set_progress_queue
+    from openhcs.core.progress import ProgressExecutionContext, set_progress_queue
     import logging
 
     logger = logging.getLogger(__name__)
@@ -666,11 +666,10 @@ def _execute_pipeline_phases(
         # Execution phase - pass the progress queue
         import time
 
-        progress_context = {
-            "execution_id": f"direct::{int(time.time() * 1_000_000)}",
-            "subject_id": str(orchestrator.dataset_root),
-            "axis_id": "",
-        }
+        progress_context = ProgressExecutionContext(
+            execution_id=f"direct::{int(time.time() * 1_000_000)}",
+            subject_id=str(orchestrator.dataset_root),
+        )
 
         results = orchestrator.execute_compiled_bundle(
             execution_bundle=execution_bundle,

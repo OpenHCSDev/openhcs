@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
+from openhcs.core.progress.types import ProgressContextPayload
 from openhcs.core.runtime_stores import RuntimeArtifactAddress, StoredRuntimeValue
-
-RUNTIME_ARTIFACTS_CONTEXT_KEY = "runtime_artifacts"
 
 
 class RuntimeArtifactPayloadError(ValueError):
@@ -16,8 +15,11 @@ class RuntimeArtifactPayloadError(ValueError):
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeArtifactProgressPayload:
+class RuntimeArtifactProgressPayload(ProgressContextPayload):
     """Transport addresses for runtime values written by one step event."""
+
+    context_key: ClassVar[str] = "runtime_artifacts"
+    malformed_error: ClassVar[type[ValueError]] = RuntimeArtifactPayloadError
 
     addresses: tuple[RuntimeArtifactAddress, ...]
 
@@ -32,18 +34,11 @@ class RuntimeArtifactProgressPayload:
         return None if not addresses else cls(addresses=addresses)
 
     @classmethod
-    def from_context(
+    def from_context_body(
         cls,
-        context: Mapping[str, Any] | None,
-    ) -> "RuntimeArtifactProgressPayload | None":
-        if not context or RUNTIME_ARTIFACTS_CONTEXT_KEY not in context:
-            return None
-        data = context[RUNTIME_ARTIFACTS_CONTEXT_KEY]
-        if not isinstance(data, Mapping):
-            raise RuntimeArtifactPayloadError(
-                f"{RUNTIME_ARTIFACTS_CONTEXT_KEY!r} must be a mapping."
-            )
-        raw_addresses = data.get("addresses")
+        body: Mapping[str, Any],
+    ) -> "RuntimeArtifactProgressPayload":
+        raw_addresses = body.get("addresses")
         if not isinstance(raw_addresses, Sequence) or isinstance(
             raw_addresses,
             (str, bytes, bytearray),
@@ -63,18 +58,5 @@ class RuntimeArtifactProgressPayload:
                 f"Malformed runtime artifact address: {error}"
             ) from error
 
-    def to_context(self) -> dict[str, Any]:
-        return {
-            RUNTIME_ARTIFACTS_CONTEXT_KEY: {
-                "addresses": [address.to_dict() for address in self.addresses],
-            }
-        }
-
-
-def runtime_artifact_context_for_records(
-    records: Sequence[StoredRuntimeValue],
-) -> dict[str, Any] | None:
-    """Return a progress context for every runtime artifact observation."""
-
-    payload = RuntimeArtifactProgressPayload.from_records(records)
-    return None if payload is None else payload.to_context()
+    def context_body(self) -> dict[str, Any]:
+        return {"addresses": [address.to_dict() for address in self.addresses]}

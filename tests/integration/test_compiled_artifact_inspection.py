@@ -38,10 +38,7 @@ from openhcs.core.progress import (
     ProgressPhase,
     ProgressStatus,
 )
-from openhcs.core.progress.runtime_artifacts import (
-    RuntimeArtifactProgressPayload,
-    runtime_artifact_context_for_records,
-)
+from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
 from openhcs.core.runtime_artifact_values import ArtifactKey, RuntimeValue
 from openhcs.core.runtime_stores import (
     RuntimeArtifactAddress,
@@ -125,7 +122,9 @@ def _emit_spawned_runtime_observation(worker_queue) -> None:
         path="/memory/ResultImage.pkl",
         backend="memory",
     )
-    context = runtime_artifact_context_for_records(store.observed_values_after(cursor))
+    context = RuntimeArtifactProgressPayload.from_records(
+        store.observed_values_after(cursor)
+    ).to_context()
     worker_queue.put(
         ProgressEvent(
             execution_id="run-1",
@@ -142,7 +141,7 @@ def _emit_spawned_runtime_observation(worker_queue) -> None:
             worker_slot="worker_0",
             owned_partition_values=["A01"],
             context=context,
-        ).to_dict()
+        )
     )
 
 
@@ -201,7 +200,6 @@ def _compiled_record() -> tuple[ZMQCompileArtifactRecord, ArtifactOutputPlan]:
             debug_replay_signature="debug",
             compilation=ZMQCompilationResult(
                 execution_bundle=bundle,
-                compiled_axis_ids=["A01"],
             ),
         ),
         output_plan,

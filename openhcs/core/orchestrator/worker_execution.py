@@ -50,18 +50,15 @@ from openhcs.core.orchestrator.worker_lanes import (
 )
 from openhcs.core.orchestrator.worker_profiling import CProfileWorkerProfilingPolicy
 from openhcs.core.progress import (
+    ProgressContextPayload,
     ProgressEvent,
     ProgressPhase,
     ProgressQueue,
     ProgressStatus,
     set_progress_queue,
 )
-from openhcs.core.progress.live_measurements import (
-    live_measurement_context_for_records,
-)
-from openhcs.core.progress.runtime_artifacts import (
-    runtime_artifact_context_for_records,
-)
+from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
+from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
 from openhcs.core.runtime_stores import (
     StoredRuntimeValue,
     RuntimeArtifactAddress,
@@ -86,16 +83,13 @@ def _runtime_observation_progress_context(
 ) -> dict | None:
     """Project one RuntimeValueStore observation delta through owned payloads."""
 
-    runtime_artifacts = runtime_artifact_context_for_records(records)
-    live_measurements = live_measurement_context_for_records(
-        records,
-        materialized_locations_by_address=materialized_locations_by_address,
+    return ProgressContextPayload.context_of(
+        RuntimeArtifactProgressPayload.from_records(records),
+        LiveMeasurementProgressPayload.from_records(
+            records,
+            materialized_locations_by_address=materialized_locations_by_address,
+        ),
     )
-    if runtime_artifacts is None:
-        return live_measurements
-    if live_measurements is None:
-        return runtime_artifacts
-    return {**runtime_artifacts, **live_measurements}
 
 
 @dataclass(frozen=True, slots=True)

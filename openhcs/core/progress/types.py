@@ -8,10 +8,11 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
 from dataclasses import replace as dataclass_replace
 from enum import Enum
-from typing import Any, ClassVar
+from collections.abc import Mapping
+from typing import Any, ClassVar, Self
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import project_dataclass
+from python_introspect import dataclass_from_mapping, project_dataclass, to_jsonable
 from zmqruntime.messages import TaskProgress
 
 from .exceptions import ProgressError
@@ -498,6 +499,62 @@ class ProgressEvent(TaskProgress):
     def is_complete(self) -> bool:
         """Whether the event is in a terminal phase or status."""
         return is_terminal_event(self)
+
+
+class ProgressContextPayload(ABC, metaclass=AutoRegisterMeta):
+    """One typed entry of ``ProgressEvent.context``, stored under its key."""
+
+    __registry_key__ = "context_key"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["ProgressContextPayload"]]] = {}
+
+    context_key: ClassVar[str | None] = None
+    malformed_error: ClassVar[type[ValueError]] = ValueError
+
+    @abstractmethod
+    def context_body(self) -> dict[str, Any]:
+        """This payload's wire body."""
+
+    @classmethod
+    @abstractmethod
+    def from_context_body(cls, body: Mapping[str, Any]) -> Self:
+        """Decode this payload's wire body."""
+
+    def to_context(self) -> dict[str, Any]:
+        return {self.context_key: self.context_body()}
+
+    @classmethod
+    def from_context(cls, context: Mapping[str, Any] | None) -> Self | None:
+        """This payload out of an event context, if the context carries one."""
+
+        if not context or cls.context_key not in context:
+            return None
+        body = context[cls.context_key]
+        if not isinstance(body, Mapping):
+            raise cls.malformed_error(f"{cls.context_key!r} must be a mapping.")
+        return cls.from_context_body(body)
+
+    @staticmethod
+    def context_of(*payloads: "ProgressContextPayload | None") -> dict[str, Any] | None:
+        """The event context carrying these payloads."""
+
+        context = {
+            payload.context_key: payload.context_body()
+            for payload in payloads
+            if payload is not None
+        }
+        return context or None
+
+
+class DeclaredProgressContextPayload(ProgressContextPayload):
+    """A payload whose wire body is its declared dataclass fields."""
+
+    def context_body(self) -> dict[str, Any]:
+        return dict(to_jsonable(self))
+
+    @classmethod
+    def from_context_body(cls, body: Mapping[str, Any]) -> Self:
+        return dataclass_from_mapping(cls, body)
 
 
 class ProgressQueue(ABC):

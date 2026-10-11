@@ -61,7 +61,7 @@ def _debug_context(
         cursor=_cursor(),
         event_type=event_type,
         snapshot_store_ref="/tmp/debug",
-    ).to_progress_context()
+    ).to_context()
 
 
 def test_debug_progress_record_ignores_normal_progress_context() -> None:
@@ -75,10 +75,10 @@ def test_debug_progress_record_ignores_normal_progress_context() -> None:
 
 
 def test_debug_progress_record_fails_loudly_for_malformed_debug_context() -> None:
-    with pytest.raises(KeyError):
+    with pytest.raises(ValueError, match="missing required field"):
         DebugProgressRecord.from_progress_event(
             _event(
-                context={DebugProgressContext.progress_context_discriminator: "debug-1"}
+                context={DebugProgressContext.context_key: {"debug_session_id": "debug-1"}}
             )
         )
 

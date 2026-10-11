@@ -4647,7 +4647,7 @@ def test_pipeline_debug_session_state_surface_projects_runtime_frame() -> None:
                 cursor=_debug_cursor(),
                 event_type=DebugEventType.AFTER_INVOCATION,
                 snapshot_store_ref="/debug",
-            ).to_progress_context(),
+            ).to_context(),
         )
         gui.session.debug_sessions[DATASET_SCOPE_ID] = debug_session
         gui.session.debug_runtime_projection = (

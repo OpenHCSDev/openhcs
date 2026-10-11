@@ -1001,7 +1001,7 @@ def test_debug_step_executes_one_function_pattern_invocation():
 
     np.testing.assert_array_equal(result, np.array([2, 4, 6]))
     assert [
-        DebugProgressContext.from_progress_context(event.context).event_type
+        DebugProgressContext.from_context(event.context).event_type
         for event in emitted
     ] == [DebugEventType.BEFORE_INVOCATION, DebugEventType.AFTER_INVOCATION]
 
@@ -1038,9 +1038,7 @@ def test_debug_step_can_advance_past_current_function_pattern_invocation():
 
     np.testing.assert_array_equal(result, np.array([2, 3, 4]))
     assert len(emitted) == 2
-    assert DebugProgressContext.from_progress_context(
-        emitted[0].context
-    ).cursor.invocation_key.endswith(":1:plus_one")
+    assert DebugProgressContext.from_context(emitted[0].context).cursor.invocation_key.endswith(":1:plus_one")
 
 
 def test_execute_chain_emits_debug_exception_event():
@@ -1247,13 +1245,11 @@ def test_debug_progress_context_round_trips_through_progress_event():
         total=2,
         timestamp=1.0,
         pid=123,
-        context=event_context.to_progress_context(),
+        context=event_context.to_context(),
     )
 
     restored = ProgressEvent.from_dict(progress.to_dict())
-    restored_context = DebugProgressContext.from_progress_context(
-        restored.context or {}
-    )
+    restored_context = DebugProgressContext.from_context(restored.context or {})
 
     assert restored_context == event_context
 
@@ -1275,9 +1271,7 @@ def test_debug_progress_event_request_builds_lightweight_progress_event():
     )
 
     progress = request.to_progress_event()
-    restored_context = DebugProgressContext.from_progress_context(
-        progress.context or {}
-    )
+    restored_context = DebugProgressContext.from_context(progress.context or {})
 
     assert debug_event.event_type is DebugEventType.AFTER_INVOCATION
     assert progress.phase is ProgressPhase.PATTERN_GROUP
@@ -1312,14 +1306,14 @@ def test_progress_debug_event_sink_uses_injected_progress_emitter():
     assert emitted[0].status is ProgressStatus.STARTED
     assert emitted[0].context is not None
     assert (
-        emitted[0].context["debug_session_id"] == DebugRuntimeFixture.DEBUG_SESSION_ID
+        emitted[0].context[DebugProgressContext.context_key]["debug_session_id"] == DebugRuntimeFixture.DEBUG_SESSION_ID
     )
     assert (
-        emitted[0].context["snapshot_store_ref"]
+        emitted[0].context[DebugProgressContext.context_key]["snapshot_store_ref"]
         == DebugRuntimeFixture.SNAPSHOT_STORE_REF
     )
     assert (
-        emitted[0].context["snapshot_store_backend"]
+        emitted[0].context[DebugProgressContext.context_key]["snapshot_store_backend"]
         == DebugRuntimeFixture.DEBUG_SNAPSHOT_BACKEND
     )
     assert emitted[0].worker_slot == "worker_0"
@@ -1356,9 +1350,7 @@ def test_local_snapshot_progress_sink_writes_snapshot_and_emits_id(tmp_path):
         DebugRuntimeFixture.debug_event(event_type=DebugEventType.AFTER_INVOCATION)
     )
 
-    restored_context = DebugProgressContext.from_progress_context(
-        emitted[0].context or {}
-    )
+    restored_context = DebugProgressContext.from_context(emitted[0].context or {})
     assert restored_context.snapshot_id is not None
     assert store.list_snapshot_ids() == (restored_context.snapshot_id,)
     assert store.read_snapshot(restored_context.snapshot_id).step_name == (

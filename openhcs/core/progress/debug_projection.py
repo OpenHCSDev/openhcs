@@ -40,15 +40,10 @@ class DebugProgressRecord:
         cls,
         event: ProgressEvent,
     ) -> "DebugProgressRecord | None":
-        context = event.context
+        context = DebugProgressContext.from_context(event.context)
         if context is None:
             return None
-        if not DebugProgressContext.is_progress_context(context):
-            return None
-        return cls(
-            event=event,
-            context=DebugProgressContext.from_progress_context(context),
-        )
+        return cls(event=event, context=context)
 
     def with_snapshot(self, snapshot: DebugSnapshot | None) -> "DebugProgressRecord":
         return DebugProgressRecord(

@@ -682,7 +682,7 @@ def debug_snapshot_notification(
             total=1,
             timestamp=1.0,
             pid=123,
-            context=debug_context.to_progress_context(),
+            context=debug_context.to_context(),
         ),
         debug_context=debug_context,
     )
