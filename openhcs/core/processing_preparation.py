@@ -312,6 +312,18 @@ class PreparationCacheWorker:
             self.result_connection.close()
 
 
+def _schedulable_cpu_count() -> int:
+    """CPUs this process may run on.
+
+    Linux exposes the scheduler's affinity set. macOS has no affinity API:
+    every online CPU is schedulable there.
+    """
+    try:
+        return len(os.sched_getaffinity(0))
+    except AttributeError:
+        return os.cpu_count() or 1
+
+
 @dataclass(frozen=True, slots=True)
 class PreparationCacheBatch:
     """Schedule derived cache operations without interpreting backend families."""
@@ -340,14 +352,7 @@ class PreparationCacheBatch:
             raise ValueError("Preparation worker budget must be positive.")
         if "fork" not in multiprocessing.get_all_start_methods():
             return
-        try:
-            worker_capacity = min(max_workers, len(os.sched_getaffinity(0)))
-        except AttributeError:
-            # Without an affinity witness there is no admitted parallel cache
-            # work. The existing parent preparation still owns readiness.
-            return
-        if worker_capacity < 1:
-            return
+        worker_capacity = min(max_workers, _schedulable_cpu_count())
         operations = {
             operation.identity: operation
             for preparation in self.preparations
