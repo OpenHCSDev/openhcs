@@ -412,6 +412,9 @@ class CellProfilerNeuriteEngineProfile:
             topology,
         )
         crossing_core_mask = topology.crossing_core_mask(outgrowth_skeleton.shape)
+        crossing_span_mask = topology.crossing_span_mask(
+            outgrowth_skeleton.shape, outgrowth_width_px,
+        )
         resolved_crossovers = topology.multi_owner_crossing_count
         owner_skeleton = _repair_signal_supported_skeleton(
             owner_skeleton,
@@ -455,7 +458,7 @@ class CellProfilerNeuriteEngineProfile:
         topology_dropped_trace = (
             (pre_topology_owner_skeleton > 0)
             & (neurite_skeleton == 0)
-            & ~crossing_core_mask
+            & ~crossing_span_mask
         )
         topology_added_trace = (neurite_skeleton > 0) & (pre_topology_owner_skeleton == 0)
         final_topology_owned_trace_pixels = int(np.count_nonzero(neurite_skeleton))
@@ -1360,6 +1363,16 @@ class _ResolvedCrossing:
             for path, endpoint in self.arms
         ]
 
+    def replaced_span(
+        self, path_coordinates: tuple[np.ndarray, ...], lookahead: int,
+    ) -> np.ndarray:
+        """The core and each arm's first ``lookahead`` pixels: the span whose
+        medial axis the crossing distorts, which the owners' routes replace."""
+        return np.concatenate([
+            self.core_coordinates(path_coordinates),
+            *(arm[:lookahead] for arm in self.outward_arms(path_coordinates)),
+        ])
+
     def arm_owners(
         self, owner_skeleton: np.ndarray, path_coordinates: tuple[np.ndarray, ...],
         lookahead: int,
@@ -1393,7 +1406,7 @@ class _ResolvedCrossing:
         """
         core = self.core_coordinates(path_coordinates)
         outward = self.outward_arms(path_coordinates)
-        replaced = np.concatenate([core, *(arm[:lookahead] for arm in outward)])
+        replaced = self.replaced_span(path_coordinates, lookahead)
         outer_by_owner: dict[int, list[np.ndarray]] = defaultdict(list)
         for owner, arm in zip(arm_owners, outward):
             if owner > 0:
@@ -1730,6 +1743,16 @@ class _TopologyResult:
             arm_owners = self.path_owners[list(crossing.arm_paths)]
             coordinates = coordinates[(current == 0) | np.isin(current, arm_owners)]
             mask[tuple(coordinates.T)] = True
+        return mask
+
+    def crossing_span_mask(
+        self, shape: tuple[int, int], outgrowth_width_px: float,
+    ) -> np.ndarray:
+        """Pixels of every resolved crossing's replaced span."""
+        lookahead = self.crossing_lookahead(outgrowth_width_px)
+        mask = np.zeros(shape, dtype=bool)
+        for crossing in self.resolved_crossings:
+            mask[tuple(crossing.replaced_span(self.path_coordinates, lookahead).T)] = True
         return mask
 
     def crossing_routes(
