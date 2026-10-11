@@ -83,8 +83,8 @@ def test_function_parameter_spec_requires_nominal_source() -> None:
         )
 
 
-def test_function_catalog_control_request_requires_declared_message_type() -> None:
-    with pytest.raises(TypeError, match="message_type"):
+def test_function_catalog_control_request_requires_declared_wire_type() -> None:
+    with pytest.raises(TypeError, match="wire_type"):
 
         class MissingMessageType(FunctionCatalogControlRequestABC):
             pass
