@@ -2491,9 +2491,12 @@ class BackendSaver:
 
     def _prepare_path(self, backend: str, backend_instance, path: str) -> None:
         if backend_instance.requires_filesystem_validation:
-            self.filemanager.ensure_directory(
-                str(source_path_identity(path).parent), backend
-            )
+            self._prepare_filesystem_path(backend, path)
+
+    def _prepare_filesystem_path(self, backend: str, path: str) -> None:
+        self.filemanager.ensure_directory(
+            str(source_path_identity(path).parent), backend
+        )
 
         if not self.filemanager.exists(path, backend):
             return
