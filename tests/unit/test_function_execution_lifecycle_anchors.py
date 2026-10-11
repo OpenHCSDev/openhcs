@@ -8,6 +8,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
@@ -104,7 +105,7 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -
         paths_by_group={"2": "/memory/measurements_w2.pkl"},
     )
     compiled_pattern = compile_function_pattern(
-        consume_measurements,
+        admitted_graph(consume_measurements),
         {plan.ref(): plan for plan in (measurements_plan,)},
         {},
     )
@@ -164,7 +165,11 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -
 
 
 def test_source_anchored_group_uses_exact_main_flow_producer_manifest() -> None:
-    compiled_pattern = compile_function_pattern(lambda image: image, {}, {})
+    compiled_pattern = compile_function_pattern(
+        admitted_graph(lambda image: image),
+        {},
+        {},
+    )
     invocation = next(compiled_pattern.iter_invocations())
     assert invocation.runtime_domain is RuntimeInvocationDomain.SOURCE_ANCHORED
     plan = SimpleNamespace(

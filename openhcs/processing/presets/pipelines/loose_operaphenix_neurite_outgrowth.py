@@ -37,7 +37,7 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
 )
-from openhcs.core.function_patterns import get_core_callable
+from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -407,12 +407,12 @@ def loose_operaphenix_neurite_demo_contribution(
     analysis_matches = tuple(
         step
         for step in pipeline_steps
-        if get_core_callable(step.func) is identify_secondary_objects
+        if AuthoredFunctionPattern.first_callable(step.func) is identify_secondary_objects
     )
     topology_matches = tuple(
         step
         for step in pipeline_steps
-        if get_core_callable(step.func)
+        if AuthoredFunctionPattern.first_callable(step.func)
         is measure_object_skeleton_with_branchpoint_image
     )
     if len(analysis_matches) != 1 or len(topology_matches) != 1:

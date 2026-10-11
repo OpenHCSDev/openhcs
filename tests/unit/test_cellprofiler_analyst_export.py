@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     ArtifactOutputPlan,
@@ -346,7 +347,7 @@ def _export_context() -> ProcessingContext:
                 axis_id=AXIS_ID,
                 source_binding_plan=CompiledSourceBindingPlan(),
                 compiled_function_pattern=compile_function_pattern(
-                    export_to_database,
+                    admitted_graph(export_to_database),
                     {},
                     {},
                 ),
@@ -1672,7 +1673,7 @@ def test_module_contract_selects_ordered_tables_and_cpa_images_and_declares_bund
     assert callable_contract.execution_scope is FunctionStepExecutionScope.PLATE
     assert callable_contract.processing_contract is None
     assert callable_contract.runtime_adapter is None
-    assert callable_contract.metadata.runtime_bound_parameters == (
+    assert callable_contract.runtime_bound_parameter_types == (
         RuntimeArtifactBatch,
     )
 
@@ -1712,7 +1713,7 @@ def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step(
             metadata_fields=(FieldSpec("SiblingOnly", str, required=False),),
         ),
         compiled_function_pattern=compile_function_pattern(
-            export_to_database,
+            admitted_graph(export_to_database),
             {},
             {},
         ),

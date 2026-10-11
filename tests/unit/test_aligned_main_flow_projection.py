@@ -459,11 +459,7 @@ def test_active_publisher_uses_exact_canonical_artifact_kind() -> None:
     contract = CallableContract.from_callable(color_to_gray)
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            artifact_outputs=(image, measurements, labels),
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        artifact_outputs=(image, measurements, labels), runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     executor = CellProfilerModuleExecutor(color_to_gray, contract)
     image_plan = ArtifactOutputPlan(

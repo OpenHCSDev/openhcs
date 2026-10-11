@@ -1,5 +1,6 @@
 """Compile invariants apply independently of artifact recording ownership."""
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 
 from dataclasses import replace
@@ -126,12 +127,12 @@ def test_new_output_kind_invariant_is_not_exempted_by_recording_owner(
 
     def validate(func):
         contract = CallableContract.from_callable(func)
-        assert contract.metadata.artifact_output_policy is output_policy
+        assert contract.artifact_output_policy is output_policy
         assert contract.artifact_output_policy is output_policy
         if boundary == "contract":
             contract.validate_artifact_output_declarations()
         else:
-            compile_function_pattern(func, {}, {})
+            compile_function_pattern(admitted_graph(func), {}, {})
 
     with pytest.raises(ValueError, match="requires declared materialization"):
         validate(declared(spec))
@@ -156,7 +157,7 @@ def test_single_subject_output_policy_rejects_missing_measurement_subject(
         raise AssertionError("Invalid declarations must not execute")
 
     with pytest.raises(ValueError, match="no declared measurement subject"):
-        compile_function_pattern(count, {}, {})
+        compile_function_pattern(admitted_graph(count), {}, {})
 
 
 @pytest.mark.parametrize(
@@ -191,7 +192,7 @@ def test_scalar_input_ambiguity_precedes_dependent_output_subject_validation(
         raise AssertionError("Invalid declarations must not execute")
 
     with pytest.raises(ValueError, match="labels.*multiple exact artifact occurrences"):
-        compile_function_pattern(measure, {}, {})
+        compile_function_pattern(admitted_graph(measure), {}, {})
 
     # Output obligations remain mandatory once input selection is unambiguous.
     obligation = (
@@ -224,7 +225,7 @@ def test_cellprofiler_recording_policy_still_rejects_conflicting_explicit_subjec
         raise AssertionError("Invalid declarations must not execute")
 
     with pytest.raises(ValueError, match="multiple measurement subjects"):
-        compile_function_pattern(count, {}, {})
+        compile_function_pattern(admitted_graph(count), {}, {})
 
 
 def test_cellprofiler_recording_requires_its_declared_measurement_row_owner():
@@ -238,7 +239,7 @@ def test_cellprofiler_recording_requires_its_declared_measurement_row_owner():
         raise AssertionError("Invalid declarations must not execute")
 
     with pytest.raises(ValueError, match="declared measurement_feature_owner"):
-        compile_function_pattern(measure, {}, {})
+        compile_function_pattern(admitted_graph(measure), {}, {})
 
 
 @pytest.mark.parametrize(
@@ -265,7 +266,7 @@ def test_table_wide_subject_owner_rejects_distinct_named_image_subjects(output_p
         raise AssertionError("Invalid declarations must not execute")
 
     with pytest.raises(ValueError, match="multiple measurement subjects"):
-        compile_function_pattern(measure, {}, {})
+        compile_function_pattern(admitted_graph(measure), {}, {})
 
 
 def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
@@ -295,7 +296,7 @@ def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
     def measure(image, *, runtime):
         raise AssertionError("Compile admission must not execute a callable")
 
-    compiled = compile_function_pattern(measure, {}, {})
+    compiled = compile_function_pattern(admitted_graph(measure), {}, {})
     subjects = ArtifactSpecRelation.measurement_subjects_for_output(measurements)
     assert tuple(subject.name for subject in subjects) == ("Stain1", "Stain2")
     assert len({subject.row_identity_domain for subject in subjects}) == 1
@@ -329,9 +330,9 @@ def test_measurement_row_owner_controls_named_object_roster_admission(policy):
 
     if policy is not CellProfilerRecordedArtifactOutputPolicy:
         with pytest.raises(ValueError, match="multiple measurement subjects"):
-            compile_function_pattern(measure, {}, {})
+            compile_function_pattern(admitted_graph(measure), {}, {})
         return
-    compiled = compile_function_pattern(measure, {}, {})
+    compiled = compile_function_pattern(admitted_graph(measure), {}, {})
     subjects = ArtifactSpecRelation.measurement_subjects_for_output(measurements)
     assert tuple(subject.name for subject in subjects) == ("Nuclei", "Cells")
     assert len({subject.row_identity_domain for subject in subjects}) == 2
@@ -410,7 +411,7 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     contract = provider.plans[(0, authored.key)].contract
     assert contract.artifact_output_policy is CellProfilerRecordedArtifactOutputPolicy
     assert (
-        contract.metadata.artifact_output_policy
+        contract.artifact_output_policy
         is CellProfilerRecordedArtifactOutputPolicy
     )
     (measurement,) = contract.artifact_outputs.of_artifact_type(
@@ -423,20 +424,22 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     assert ArtifactSpecRelation.measurement_subject_for_output(measurement) is None
 
     compiled = compile_function_pattern(
-        step.func,
-        {},
-        {},
-        invocation_contract_provider=provider,
-        step_context=ArtifactDeclarationStepContext(
+        admitted_graph(
+            step.func,
+            invocation_contract_provider=provider,
+            step_context=ArtifactDeclarationStepContext(
             step_index=0, source_bindings=step.source_bindings
         ),
+        ),
+        {},
+        {},
     )
     assert compiled.default_group.invocations[0].contract is contract
 
     # The same declaration is not valid under the native return carrier's
     # single-subject obligation. Only that obligation differs between owners.
     native = replace(
-        contract, metadata=replace(contract.metadata, runtime_adapter=None)
+        contract, runtime_adapter=None
     )
     with pytest.raises(ValueError, match="no declared measurement subject"):
         native.validate_artifact_output_declarations()

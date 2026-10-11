@@ -14,7 +14,7 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_output_matching import (
@@ -155,10 +155,7 @@ def test_cellprofiler_execution_names_each_multi_canonical_stack_slice() -> None
         func=process,
         function_name="process",
         module_name="TestModule",
-        metadata=CallableMetadata(
-            artifact_outputs=(first, second),
-            processing_contract=Pure3DContract,
-        ),
+        artifact_outputs=(first, second), processing_contract=Pure3DContract,
     )
     returned = CellProfilerFunctionContractExecutor().execute(
         contract,

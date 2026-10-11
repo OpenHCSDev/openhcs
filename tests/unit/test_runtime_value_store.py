@@ -1994,7 +1994,7 @@ def test_paired_channel_declaration_reaches_both_adapter_input_consumers():
     contract = replace(
         contract,
         module_name="SecondaryConsumer",
-        metadata=replace(contract.metadata, artifact_inputs=(edge.spec, source_spec)),
+        artifact_inputs=(edge.spec, source_spec),
     )
     adapter = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=store,

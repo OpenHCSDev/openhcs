@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 
 import inspect
@@ -184,11 +185,13 @@ def _compiled_neighbor_invocation():
         for spec in plan.contract.artifact_outputs
     }
     compiled = compile_function_pattern(
-        step.func,
+        admitted_graph(
+            step.func,
+            invocation_contract_provider=provider,
+            step_context=step_context,
+        ),
         {},
         output_plans,
-        invocation_contract_provider=provider,
-        step_context=step_context,
     )
     return next(compiled.iter_invocations())
 

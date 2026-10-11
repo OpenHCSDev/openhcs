@@ -13,6 +13,7 @@ import pytest
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -34,12 +35,11 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.post_execute import PostExecuteHook
 from openhcs.core.function_patterns import (
+    normalize_function_pattern,
     compile_function_pattern,
-    resolve_function_pattern_execution_scope,
 )
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
-    CompositeInvocationContractProvider,
 )
 from openhcs.core.orchestrator.bundle_execution import (
     _dataset_artifact_batch,
@@ -323,10 +323,11 @@ def test_mixed_axis_and_plate_pattern_fails_before_path_planning() -> None:
         return artifact_batch
 
     with pytest.raises(ValueError, match="mixed|uniform|scope"):
-        resolve_function_pattern_execution_scope(
-            [axis_callable, plate_callable],
-            CompositeInvocationContractProvider(()),
-            ArtifactDeclarationStepContext(step_index=0),
+        FunctionStepExecutionScope.require_uniform(
+            item.contract
+            for item in normalize_function_pattern(
+                [axis_callable, plate_callable]
+            ).iter_items()
         )
 
 
@@ -342,7 +343,7 @@ def test_compiled_pattern_derives_uniform_scope_from_callable_contracts() -> Non
         return artifact_batch
 
     compiled = compile_function_pattern(
-        [first, second],
+        admitted_graph([first, second]),
         {},
         {},
     )
@@ -391,7 +392,7 @@ def _plate_step_plan(
     input_plans = OrderedDict((plan.ref(), plan) for plan in artifact_inputs)
     output_plans = OrderedDict(((artifact_output.ref(), artifact_output),))
     compiled_pattern = compile_function_pattern(
-        func,
+        admitted_graph(func),
         input_plans,
         output_plans,
     )
@@ -1281,7 +1282,7 @@ def test_plate_scope_rejects_context_invocation_drift() -> None:
             artifact_type=SpecialArtifactType,
         )
         compiled = compile_function_pattern(
-            (export, {"prefix": prefix}),
+            admitted_graph((export, {"prefix": prefix})),
             {},
             {plan.ref(): plan for plan in (output_plan,)},
         )
@@ -1326,7 +1327,7 @@ def test_plate_scope_rejects_context_output_plan_drift() -> None:
             metadata_writer=axis_id == "A01",
         )
         plan.compiled_function_pattern = compile_function_pattern(
-            export,
+            admitted_graph(export),
             {},
             {plan.ref(): plan for plan in (output_plan,)},
         )

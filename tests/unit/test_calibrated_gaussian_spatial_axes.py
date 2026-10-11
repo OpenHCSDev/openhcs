@@ -26,9 +26,7 @@ from openhcs.core.image_payload_execution_mode import (
 
 def _execute(source):
     contract = CallableContract.from_callable(gaussian_filter).with_prepared_signature()
-    contract = replace(contract, metadata=replace(
-        contract.metadata, runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-    ))
+    contract = replace(contract, runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec())
     return CellProfilerFunctionContractExecutor().execute(
         contract, contract.resolve_canonical_raw_callable(), source, {"sigma": 1.5},
         execution_mode=FullStackExecution,

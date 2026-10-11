@@ -18,7 +18,7 @@ from openhcs.core.config import (
     LazyNapariStreamingConfig,
     source_bindings_defaults_to_base,
 )
-from openhcs.core.function_patterns import get_core_callable
+from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.source_workspace_projection import (
@@ -92,7 +92,7 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
 
     assert len(steps) == 1
     step = steps[0]
-    assert get_core_callable(step.func) is neurite_outgrowth_metaxpress_pixels
+    assert AuthoredFunctionPattern.first_callable(step.func) is neurite_outgrowth_metaxpress_pixels
     assert step.processing_config.variable_components == [Microscopy.Channel]
     assert step.processing_config.group_by is Ungrouped
     assert step.processing_config.input_source is InputSource.PIPELINE_START
@@ -350,9 +350,9 @@ def test_neuroncyto_demo_contributor_prepares_only_declared_pair(
     )
     assert len(contribution.pipeline_steps) == 2
     contrast_step, analysis_step = contribution.pipeline_steps
-    assert get_core_callable(contrast_step.func) is percentile_normalize_plane
+    assert AuthoredFunctionPattern.first_callable(contrast_step.func) is percentile_normalize_plane
     assert contrast_step.processing_config.input_source is InputSource.PIPELINE_START
-    assert get_core_callable(analysis_step.func) is neurite_outgrowth_metaxpress_pixels
+    assert AuthoredFunctionPattern.first_callable(analysis_step.func) is neurite_outgrowth_metaxpress_pixels
     assert analysis_step.processing_config.input_source is InputSource.PREVIOUS_STEP
     assert contribution.presentation_identity.output_key == "neurite_morphology"
     assert contribution.presentation_identity.artifact_kind == "spatial_graph"

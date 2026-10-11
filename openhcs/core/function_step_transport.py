@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from copy import copy
 from dataclasses import replace
-from types import ModuleType
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
-    CompiledFunctionInvocation,
     CompiledFunctionPattern,
+    AuthoredFunctionPattern,
     NormalizedFunctionPattern,
     NormalizedFunctionItem,
 )
@@ -22,6 +21,7 @@ from openhcs.core.function_reference import (
 )
 from openhcs.core.pipeline_document_fields import PipelineDocumentField
 from openhcs.core.steps.function_step import FunctionStep
+
 
 
 class FunctionStepTransportAuthority:
@@ -140,69 +140,38 @@ class FunctionStepTransportAuthority:
                     for group in func_spec.groups
                 ),
             )
-        if isinstance(func_spec, FunctionReference):
-            return cls.normalize_function_reference(func_spec)
-        if isinstance(func_spec, list):
-            normalized_items = [cls.normalize_function_spec(item) for item in func_spec]
-            if all(
-                normalized is original
-                for normalized, original in zip(normalized_items, func_spec)
-            ):
-                return func_spec
-            return normalized_items
-        if isinstance(func_spec, dict):
-            normalized_items = {
-                key: cls.normalize_function_spec(item)
-                for key, item in func_spec.items()
-            }
-            if all(normalized_items[key] is item for key, item in func_spec.items()):
-                return func_spec
-            return normalized_items
-        if isinstance(func_spec, tuple) and func_spec:
-            normalized_func = cls.normalize_function_spec(func_spec[0])
-            if normalized_func is func_spec[0]:
-                return func_spec
-            return (normalized_func, *func_spec[1:])
-        if isinstance(func_spec, ModuleType):
-            raise TypeError(
-                "Pipeline contains a module object where a callable is required: "
-                f"{func_spec.__name__}. Reload or edit the step to select a function."
-            )
-        if callable(func_spec):
+        return AuthoredFunctionPattern.map_leaves(func_spec, cls._normalize_leaf)
+
+    @classmethod
+    def _normalize_leaf(cls, leaf: Any, func: Any, kwargs: Any) -> Any:
+        normalized = cls.normalize_callable(func)
+        if normalized is func:
+            return leaf
+        return normalized if kwargs is None else (normalized, kwargs)
+
+    @classmethod
+    def normalize_callable(cls, func: Any) -> Any:
+        if isinstance(func, FunctionReference):
+            return cls.normalize_function_reference(func)
+        if callable(func):
             from openhcs.processing.backends.lib_registry.registry_service import (
                 RegistryService,
             )
 
-            return RegistryService.registered_callable(func_spec)
-        return func_spec
+            return RegistryService.registered_callable(func)
+        return func
 
     @classmethod
     def normalize_function_reference(
         cls,
         reference: FunctionReference,
     ) -> FunctionReference:
-        metadata = cls.normalize_callable_metadata(reference.metadata)
-        if metadata is reference.metadata:
-            return reference
-        return replace(reference, metadata=metadata)
-
-    @classmethod
-    def normalize_callable_metadata(cls, metadata: CallableMetadata) -> CallableMetadata:
-        """Derive declaration-only transport from one captured metadata owner."""
-        metadata = FunctionReferenceTransportAuthority.reference_metadata(metadata)
-        raw_processing_function = metadata.raw_processing_function
-        normalized_raw = (
-            cls.normalize_function_reference(raw_processing_function)
-            if isinstance(raw_processing_function, FunctionReference)
-            else raw_processing_function
+        declaration = FunctionReferenceTransportAuthority.with_raw_function_reference(
+            reference.declaration
         )
-        raw_is_normalized = normalized_raw is raw_processing_function
-        if metadata.prepare is None and raw_is_normalized:
-            return metadata
-        metadata = metadata.without_prepare()
-        if not raw_is_normalized:
-            metadata = metadata.with_raw_processing_function(normalized_raw)
-        return metadata
+        if declaration is reference.declaration:
+            return reference
+        return replace(reference, declaration=declaration)
 
     @classmethod
     def normalize_compiled_pattern(
@@ -269,13 +238,12 @@ class FunctionStepTransportAuthority:
     ) -> CallableContract:
         if contracts is not None and id(contract) in contracts:
             return contracts[id(contract)]
-        normalized_func = cls.normalize_function_spec(contract.func)
-        metadata = cls.normalize_callable_metadata(contract.metadata)
-        normalized = (
+        normalized_func = cls.normalize_callable(contract.func)
+        normalized = FunctionReferenceTransportAuthority.with_raw_function_reference(
             contract
-            if normalized_func is contract.func and metadata is contract.metadata
-            else replace(contract, func=normalized_func, metadata=metadata)
         )
+        if normalized_func is not contract.func:
+            normalized = replace(normalized, func=normalized_func)
         if contracts is not None:
             contracts[id(contract)] = normalized
         return normalized

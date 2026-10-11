@@ -9,7 +9,7 @@ from polystore.virtual_workspace import SourcePixelRef
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import get_core_callable
+from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.source_bindings import ComponentSelector
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
@@ -160,10 +160,10 @@ def test_czi_demo_declares_bounded_three_channel_analysis_and_artifacts(
         "CZI Axon Background Correction",
         "CZI Full-Field Axon Network",
     ]
-    assert get_core_callable(steps[0].func) is tophat
-    assert get_core_callable(steps[1].func) is count_neuronal_cell_bodies_metaxpress
-    assert get_core_callable(steps[2].func) is tophat
-    assert get_core_callable(steps[3].func) is skan_axon_skeletonize_and_analyze
+    assert AuthoredFunctionPattern.first_callable(steps[0].func) is tophat
+    assert AuthoredFunctionPattern.first_callable(steps[1].func) is count_neuronal_cell_bodies_metaxpress
+    assert AuthoredFunctionPattern.first_callable(steps[2].func) is tophat
+    assert AuthoredFunctionPattern.first_callable(steps[3].func) is skan_axon_skeletonize_and_analyze
 
     assert steps[0].processing_config.variable_components == [
         Microscopy.Channel

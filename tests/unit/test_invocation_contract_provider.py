@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 
 from dataclasses import fields, replace
@@ -475,11 +476,13 @@ def test_classification_rules_remain_public_while_declaring_prior_measurements()
     }
 
     compiled = compile_function_pattern(
-        pattern,
+        admitted_graph(
+            pattern,
+            invocation_contract_provider=_FirstClaimingProvider(contract_plan),
+            step_context=step_context,
+        ),
         input_plans,
         output_plans,
-        invocation_contract_provider=_FirstClaimingProvider(contract_plan),
-        step_context=step_context,
     ).default_group.invocations[0]
 
     assert consumed_names == ()
@@ -565,11 +568,19 @@ def test_callable_contract_exposes_compile_time_public_kwarg_validation() -> Non
 
 def test_compile_function_pattern_rejects_unknown_public_kwarg() -> None:
     with pytest.raises(TypeError, match="unexpected|unknown"):
-        compile_function_pattern((_identity, {"not_a_parameter": 2}), {}, {})
+        compile_function_pattern(
+            admitted_graph((_identity, {"not_a_parameter": 2})),
+            {},
+            {},
+        )
 
 
 def test_compile_function_pattern_preserves_validated_kwargs_exactly() -> None:
-    compiled = compile_function_pattern((_identity, {"sigma": 2.5}), {}, {})
+    compiled = compile_function_pattern(
+        admitted_graph((_identity, {"sigma": 2.5})),
+        {},
+        {},
+    )
 
     assert compiled.default_group.invocations[0].kwargs == (("sigma", 2.5),)
 
@@ -590,7 +601,11 @@ def test_adapter_var_kwargs_cannot_admit_unknown_behavior_kwargs() -> None:
         return image
 
     with pytest.raises(TypeError, match="invalid public kwargs"):
-        compile_function_pattern((strict, {"adapter_only": True}), {}, {})
+        compile_function_pattern(
+            admitted_graph((strict, {"adapter_only": True})),
+            {},
+            {},
+        )
 
 
 def test_invocation_contract_plan_consumes_only_authored_compile_time_kwargs() -> None:
@@ -599,14 +614,16 @@ def test_invocation_contract_plan_consumes_only_authored_compile_time_kwargs() -
         consumed_kwarg_names=("compile_only",),
     )
     compiled = compile_function_pattern(
-        (_identity, {"compile_only": "declared"}),
-        {},
-        {},
-        invocation_contract_provider=_FirstClaimingProvider(plan),
-        step_context=ArtifactDeclarationStepContext(
+        admitted_graph(
+            (_identity, {"compile_only": "declared"}),
+            invocation_contract_provider=_FirstClaimingProvider(plan),
+            step_context=ArtifactDeclarationStepContext(
             step_name="CompileOnly",
             step_index=4,
         ),
+        ),
+        {},
+        {},
     )
 
     assert compiled.default_group.invocations[0].kwargs == ()
@@ -625,14 +642,16 @@ def test_invocation_contract_plan_rejects_unwritten_consumed_kwarg_with_context(
         match=r"step 4.*CompileOnly.*FunctionInvocationKey.*compile_only",
     ):
         compile_function_pattern(
-            _identity,
-            {},
-            {},
-            invocation_contract_provider=_FirstClaimingProvider(plan),
-            step_context=ArtifactDeclarationStepContext(
+            admitted_graph(
+                _identity,
+                invocation_contract_provider=_FirstClaimingProvider(plan),
+                step_context=ArtifactDeclarationStepContext(
                 step_name="CompileOnly",
                 step_index=4,
             ),
+            ),
+            {},
+            {},
         )
 
 

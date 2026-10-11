@@ -1,6 +1,6 @@
 import pickle
 import sys
-from dataclasses import field, make_dataclass
+from dataclasses import field, make_dataclass, replace
 from enum import Enum
 from inspect import Parameter, signature
 from types import MappingProxyType, ModuleType
@@ -14,8 +14,9 @@ from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparatio
 from openhcs.core.callable_contract import (
     CallableContract,
     CallableImportIdentity,
-    CallableMetadata,
-    CallableMetadataReader,
+    CallableDeclaration,
+    FunctionStepExecutionScope,
+    ImagePayloadConsumption,
     CompilerPreparedAutoRegisterFamily,
     PayloadAxisRequirement,
     PayloadAxisTransition,
@@ -152,7 +153,7 @@ def test_callable_contract_preserves_payload_axis_requirement() -> None:
         == PayloadAxisRequirement(ColourAxis)
     )
     assert (
-        contract.metadata.as_namespace()[
+        contract.as_namespace()[
             FunctionContractAttribute.payload_axis_requirement
         ]
         == PayloadAxisRequirement(ColourAxis)
@@ -161,7 +162,7 @@ def test_callable_contract_preserves_payload_axis_requirement() -> None:
 
 def test_callable_metadata_rejects_string_payload_axis_requirement() -> None:
     with pytest.raises(TypeError, match="PayloadAxisRequirement"):
-        CallableMetadata(payload_axis_requirement="source_channel_axis")
+        CallableDeclaration(payload_axis_requirement="source_channel_axis")
 
 
 def test_callable_metadata_reader_rejects_wrong_requirement_kind() -> None:
@@ -176,30 +177,33 @@ def test_callable_metadata_reader_rejects_wrong_requirement_kind() -> None:
         CallableContract.from_callable(process)
 
 
-def test_callable_metadata_reader_returns_declared_requirement_kinds() -> None:
-    reader = CallableMetadataReader(
-        {
-            FunctionContractAttribute.payload_axis_requirement: (
-                PayloadAxisRequirement(ColourAxis)
-            ),
-            FunctionContractAttribute.payload_axis_transition: (
-                PreservedPayloadAxes()
-            ),
-        },
-        "process",
+def test_callable_declaration_round_trips_every_declared_field_through_its_namespace() -> None:
+    declaration = CallableDeclaration(
+        input_memory_type="numpy",
+        output_memory_type="numpy",
+        execution_memory_type="numpy",
+        artifact_parameters=("labels",),
+        runtime_bound_parameter_types=(SliceIndexRuntimeParameter,),
+        required_axis_roles=(ColourAxis,),
+        allowed_group_by_roles=(ColourAxis,),
+        runtime_context_parameter="context",
+        execution_scope=FunctionStepExecutionScope.PLATE,
+        processing_contract=Pure2DContract,
+        runtime_image_execution_mode=FullStackExecution,
+        image_payload_consumption=ImagePayloadConsumption.COMPOSED,
+        payload_axis_requirement=PayloadAxisRequirement(ColourAxis),
+        payload_axis_transition=PreservedPayloadAxes(),
+        repeated_return_slots=(1,),
     )
 
-    requirement = reader.optional_instance(
-        FunctionContractAttribute.payload_axis_requirement,
-        PayloadAxisRequirement,
-    )
-    transition = reader.optional_instance(
-        FunctionContractAttribute.payload_axis_transition,
-        PayloadAxisTransition,
-    )
+    namespace = declaration.as_namespace()
 
-    assert requirement == PayloadAxisRequirement(ColourAxis)
-    assert transition == PreservedPayloadAxes()
+    assert CallableDeclaration.from_namespace(namespace, "process") == declaration
+    assert FunctionContractAttribute.execution_scope in namespace
+    assert CallableDeclaration.from_namespace({}, "process") == CallableDeclaration()
+    assert CallableDeclaration().as_namespace() == {
+        FunctionContractAttribute.runtime_context_parameter: None,
+    }
 
 
 def test_callable_contract_preserves_declared_payload_axis_transition() -> None:
@@ -214,7 +218,7 @@ def test_callable_contract_preserves_declared_payload_axis_transition() -> None:
         == PreservedPayloadAxes()
     )
     assert (
-        contract.metadata.as_namespace()[
+        contract.as_namespace()[
             FunctionContractAttribute.payload_axis_transition
         ]
         == PreservedPayloadAxes()
@@ -242,9 +246,9 @@ def test_callable_contract_reads_runtime_bound_parameters() -> None:
 
     contract = CallableContract.from_callable(process)
 
-    assert contract.runtime_bound_parameters == ("slice_index",)
+    assert contract.runtime_bound_parameter_names == ("slice_index",)
     assert contract.runtime_bound_parameter_types == (SliceIndexRuntimeParameter,)
-    assert CallableMetadata.from_callable(process).as_namespace()[
+    assert CallableContract.from_callable(process).declaration.as_namespace()[
         FunctionContractAttribute.runtime_bound_parameters
     ] == (SliceIndexRuntimeParameter,)
 
@@ -362,7 +366,7 @@ def test_callable_contract_preserves_arraybridge_execution_declaration() -> None
         return image
 
     contract = CallableContract.from_callable(process)
-    namespace = contract.metadata.as_namespace()
+    namespace = contract.as_namespace()
 
     assert contract.input_memory_type == "numpy"
     assert contract.output_memory_type == "numpy"
@@ -401,7 +405,7 @@ def test_callable_contract_reads_required_axis_roles() -> None:
     contract = CallableContract.from_callable(process)
 
     assert contract.required_axis_roles == (TimeAxis,)
-    assert CallableMetadata.from_callable(process).as_namespace()[
+    assert CallableContract.from_callable(process).declaration.as_namespace()[
         FunctionContractAttribute.required_axis_roles
     ] == (TimeAxis,)
 
@@ -415,7 +419,7 @@ def test_callable_contract_reads_runtime_image_execution_mode_from_function_refe
             function_name="_function_with_runtime_batch_executor",
         ),
         composite_key=f"{__name__}:_function_with_runtime_batch_executor",
-        metadata=CallableMetadata(
+        declaration=CallableDeclaration(
             runtime_image_execution_mode=FullStackExecution,
         ),
     )
@@ -600,9 +604,12 @@ def test_function_reference_preserves_batching_through_compiler_and_transport(
     contract = normalized.groups[0].items[0].contract
     restored = pickle.loads(pickle.dumps(contract))
     assert restored.func == reference
-    expected_metadata = reference.metadata.with_prepared_signatures(func, func)
-    assert restored.metadata.canonical_signature == expected_metadata.canonical_signature
-    assert restored.metadata == expected_metadata
+    expected_declaration = replace(
+        reference.declaration,
+        prepared_canonical_signature=restored.resolve_signature(func),
+        prepared_runtime_signature=None,
+    )
+    assert restored.declaration == expected_declaration
     assert restored.runtime_batch_executor(
         RuntimeBatchExecutionDomain.PURE_2D_SLICES
     ) is _batch_executor
@@ -623,7 +630,7 @@ def test_reference_batch_family_preserves_wrapper_precedence_and_raw_inheritance
     prepare_processing_callable(wrapper)
     reference = FunctionReferenceTransportAuthority.function_reference(wrapper)
     assert isinstance(
-        reference.metadata.raw_processing_function, ImportableFunctionReference
+        reference.declaration.raw_processing_function, ImportableFunctionReference
     )
 
     contract = normalize_function_pattern(reference).groups[0].items[0].contract

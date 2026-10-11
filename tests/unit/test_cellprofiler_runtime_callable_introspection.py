@@ -1,5 +1,6 @@
 """CellProfiler runtime callable introspection behavior."""
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 
 import subprocess
@@ -221,11 +222,13 @@ def test_public_compile_time_provider_binds_cellprofiler_runtime_from_step_decla
     )
 
     compiled = compile_function_pattern(
-        step.func,
+        admitted_graph(
+            step.func,
+            invocation_contract_provider=provider,
+            step_context=step_context,
+        ),
         {},
         _compiled_output_plans(provider, step.func, step_context),
-        invocation_contract_provider=provider,
-        step_context=step_context,
     )
     invocation = next(compiled.iter_invocations())
 
@@ -360,11 +363,13 @@ def test_public_compile_time_provider_uses_step_order_for_repeated_modules():
     )
 
     compiled = compile_function_pattern(
-        steps[1].func,
+        admitted_graph(
+            steps[1].func,
+            invocation_contract_provider=provider,
+            step_context=step_context,
+        ),
         {},
         _compiled_output_plans(provider, steps[1].func, step_context),
-        invocation_contract_provider=provider,
-        step_context=step_context,
     )
     invocation = next(compiled.iter_invocations())
 
@@ -517,15 +522,17 @@ def test_compile_time_provider_derives_group_contracts_from_public_pattern_after
         input_source=InputSource.PIPELINE_START,
     )
     compiled = compile_function_pattern(
-        module.pipeline_steps[0].func,
+        admitted_graph(
+            module.pipeline_steps[0].func,
+            invocation_contract_provider=provider,
+            step_context=step_context,
+        ),
         {},
         _compiled_output_plans(
             provider,
             module.pipeline_steps[0].func,
             step_context,
         ),
-        invocation_contract_provider=provider,
-        step_context=step_context,
     )
     assert {
         invocation.key.group_key: [

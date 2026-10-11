@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 import numpy as np
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
@@ -230,13 +231,11 @@ def _compile_metadata_pattern(planner, pattern):
     compiled = planner.artifacts.build_step_compiled_function_pattern(
         snapshot,
         3,
-        True,
-        planner.artifacts.inject_metadata(pattern, declarations.inputs),
         input_plans,
         {},
         {},
         PathPlannerGroupScope.ungrouped(),
-        declarations=declarations,
+        declarations=planner.artifacts.inject_metadata(declarations),
     )
     return compiled, input_plans
 
@@ -401,13 +400,11 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
     compiled = planner.artifacts.build_step_compiled_function_pattern(
         snapshot,
         3,
-        True,
-        planner.artifacts.inject_metadata(pattern, declarations.inputs),
         runtime_input_plans,
         {},
         {},
         PathPlannerGroupScope.ungrouped(),
-        declarations=declarations,
+        declarations=planner.artifacts.inject_metadata(declarations),
     )
 
     assert execution_bindings == CompiledSourceBindingPlan()
@@ -641,8 +638,6 @@ def test_plate_artifact_consumer_omits_inherited_source_plans():
     compiled = planner.artifacts.build_step_compiled_function_pattern(
         snapshot,
         3,
-        True,
-        pattern,
         maps.inputs,
         maps.outputs,
         maps.relation_source_scopes,
@@ -712,7 +707,7 @@ def test_plate_artifact_output_plan_is_independent_of_axis_context():
             step_name="PlateExporter",
         )
         compiled_by_axis[axis_id] = compile_function_pattern(
-            export_measurements,
+            admitted_graph(export_measurements),
             {},
             output_plans,
         ).default_group.invocations[0]
@@ -754,10 +749,7 @@ def test_compiled_pattern_rejects_accumulator_owned_output_conflict():
     contracts = tuple(
         replace(
             base_contract,
-            metadata=replace(
-                base_contract.metadata,
-                artifact_outputs=(output,),
-            ),
+            artifact_outputs=(output,),
         )
         for output in (crop_mask_measurements, image_copy_measurements)
     )
@@ -779,11 +771,15 @@ def test_compiled_pattern_rejects_accumulator_owned_output_conflict():
 
     with pytest.raises(
         ValueError,
-        match="Conflicting compiled invocation output artifact sidecar role",
+        match="Conflicting (producer|compiled invocation output) artifact sidecar role",
     ):
         compile_function_pattern(
-            pattern, {}, output_plans,
-            invocation_contract_provider=planner.invocation_contract_provider,
+            admitted_graph(
+                pattern,
+                invocation_contract_provider=planner.invocation_contract_provider,
+            ),
+            {},
+            output_plans,
         ).coalesced_artifact_output_specs()
 
 
@@ -894,8 +890,6 @@ def test_same_name_typed_artifacts_compile_through_producer_and_consumer_plans()
     producer_compiled = planner.artifacts.build_step_compiled_function_pattern(
         producer_snapshot,
         2,
-        True,
-        producer_pattern,
         producer_maps.inputs,
         producer_maps.outputs,
         producer_maps.relation_source_scopes,
@@ -959,8 +953,6 @@ def test_same_name_typed_artifacts_compile_through_producer_and_consumer_plans()
     consumer_compiled = planner.artifacts.build_step_compiled_function_pattern(
         consumer_snapshot,
         3,
-        True,
-        consumer_pattern,
         consumer_maps.inputs,
         consumer_maps.outputs,
         consumer_maps.relation_source_scopes,
@@ -1131,7 +1123,7 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow(
         return image
 
     compiled = compile_function_pattern(
-        combine_sources,
+        admitted_graph(combine_sources),
         {},
         {plan.ref(): plan for plan in (output_plan,)},
     )
@@ -1240,7 +1232,11 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
         axis_id="A01",
         execution_group_scope=channel_scope,
     )
-    native_pattern = compile_function_pattern(percentile_normalize, {}, {})
+    native_pattern = compile_function_pattern(
+        admitted_graph(percentile_normalize),
+        {},
+        {},
+    )
     native_invocation = next(native_pattern.iter_invocations())
     planner.artifact_context = (
         extract_artifact_declarations(percentile_normalize).advance_declaration_context(
@@ -1301,11 +1297,13 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
     assert compiled_inputs == {}
 
     compiled_consumer = compile_function_pattern(
-        steps[1].func,
+        admitted_graph(
+            steps[1].func,
+            invocation_contract_provider=provider,
+            step_context=consumer_context,
+        ),
         {},
         {},
-        invocation_contract_provider=provider,
-        step_context=consumer_context,
     )
     compiled_consumer = planner.artifacts.compile_invocation_input_edges(
         compiled_consumer,
@@ -1603,8 +1601,6 @@ def test_artifact_lineage_projects_exact_source_binding_component():
     compiled = planner.artifacts.build_step_compiled_function_pattern(
         snapshot,
         3,
-        True,
-        identify,
         maps.inputs,
         maps.outputs,
         maps.relation_source_scopes,
@@ -1748,7 +1744,7 @@ def test_fixed_source_component_domain_survives_produced_artifact_lineage(
     )
     compiled = planner.artifacts.compile_invocation_input_edges(
         compile_function_pattern(
-            {"2": consume},
+            admitted_graph({"2": consume}),
             {plan.ref(): plan for plan in (input_plan,)},
             {},
         ),
@@ -2238,8 +2234,6 @@ def test_measurement_output_scope_compiles_exact_cross_group_consumer_edge():
     compiled = planner.artifacts.build_step_compiled_function_pattern(
         consumer_snapshot,
         3,
-        True,
-        filter_objects,
         consumer_maps.inputs,
         consumer_maps.outputs,
         consumer_maps.relation_source_scopes,
@@ -2691,7 +2685,11 @@ def test_planner_derived_group_lineage_selects_exact_managed_invocation():
         execution_scope,
         source_bindings=source_bindings,
     )
-    compiled = compile_function_pattern(functions, maps.inputs, maps.outputs)
+    compiled = compile_function_pattern(
+        admitted_graph(functions),
+        maps.inputs,
+        maps.outputs,
+    )
     compiled = planner.artifacts.compile_invocation_input_edges(
         compiled,
         artifact_inputs=maps.inputs,
@@ -2834,11 +2832,13 @@ def test_real_object_measurement_preserves_selected_labels_group_scope(
         "2": (labels_input.ref(),),
     }
     compiled = compile_function_pattern(
-        pattern,
+        admitted_graph(
+            pattern,
+            invocation_contract_provider=provider,
+            step_context=step_context,
+        ),
         maps.inputs,
         maps.outputs,
-        invocation_contract_provider=provider,
-        step_context=step_context,
     )
     (invocation,) = tuple(compiled.iter_invocations())
     assert selector not in dict(invocation.kwargs)
@@ -3414,8 +3414,6 @@ def test_resolved_pipeline_owns_invocation_aware_artifact_declarations():
     compiled = planner.artifacts.build_step_compiled_function_pattern(
         snapshot,
         2,
-        True,
-        func_pattern,
         {},
         {output_plan.ref(): output_plan},
         {},
@@ -3529,7 +3527,11 @@ def test_adapter_managed_edges_bind_only_compatible_special_parameters():
         )
         for spec in (labels, measurements)
     }
-    compiled = compile_function_pattern(consume, input_plans, {})
+    compiled = compile_function_pattern(
+        admitted_graph(consume),
+        input_plans,
+        {},
+    )
     compiled = _artifact_planner_stub().artifacts.compile_invocation_input_edges(
         compiled,
         artifact_inputs=input_plans,
@@ -4170,13 +4172,10 @@ def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
     source_contract = CallableContract.from_callable(lambda image: image)
     source_contract = replace(
         source_contract,
-        metadata=replace(
-            source_contract.metadata,
-            artifact_inputs=(
+        artifact_inputs=(
                 ArtifactSpec.input("BF_image", ImageArtifactType),
                 ArtifactSpec.input("DF_image", ImageArtifactType),
             ),
-        ),
     )
 
     contract_bindings = snapshot.source_bindings.compiled_plan_for_contracts((source_contract,), StepInputDependency.pipeline_start(), planner.artifact_context.available_artifacts)
@@ -4262,8 +4261,6 @@ def test_site_execution_preserves_channel_grouped_producer_and_output_lineage():
     compiled = planner.artifacts.build_step_compiled_function_pattern(
         snapshot,
         3,
-        True,
-        measure,
         maps.inputs,
         maps.outputs,
         maps.relation_source_scopes,
@@ -4325,10 +4322,7 @@ def test_execution_anchor_ignores_source_artifact_lineage():
     source_contract = CallableContract.from_callable(lambda image: image)
     source_contract = replace(
         source_contract,
-        metadata=replace(
-            source_contract.metadata,
-            artifact_inputs=(original_blue, rgb_image),
-        ),
+        artifact_inputs=(original_blue, rgb_image),
     )
 
     contract_bindings = snapshot.source_bindings.compiled_plan_for_contracts((source_contract,), StepInputDependency.pipeline_start(), planner.artifact_context.available_artifacts)
@@ -4926,8 +4920,6 @@ def test_compilation_rejects_ambiguous_cross_component_artifact_selection():
         planner.artifacts.build_step_compiled_function_pattern(
             snapshot,
             3,
-            True,
-            consume,
             maps.inputs,
             maps.outputs,
             maps.relation_source_scopes,
@@ -4988,8 +4980,6 @@ def test_compilation_selects_exact_singleton_cross_component_artifact():
     compiled = planner.artifacts.build_step_compiled_function_pattern(
         snapshot,
         3,
-        True,
-        consume,
         maps.inputs,
         maps.outputs,
         maps.relation_source_scopes,
@@ -5023,7 +5013,7 @@ def test_compilation_accepts_exact_single_artifact_from_another_group():
         paths_by_group={"2": "/memory/relationships_channel_2.pkl"},
     )
     compiled = compile_function_pattern(
-        consume,
+        admitted_graph(consume),
         {plan.ref(): plan for plan in (input_plan,)},
         {},
     )
@@ -5153,7 +5143,11 @@ def test_realized_source_scopes_compile_cross_group_artifact_consumption():
         declarations,
         broad_channel_scope,
     )
-    compiled = compile_function_pattern(consume, maps.inputs, maps.outputs)
+    compiled = compile_function_pattern(
+        admitted_graph(consume),
+        maps.inputs,
+        maps.outputs,
+    )
     compiled = planner.artifacts.compile_invocation_input_edges(
         compiled,
         artifact_inputs=maps.inputs,
@@ -5210,7 +5204,11 @@ def test_compilation_rejects_declared_lineage_from_multi_group_producer():
         image_plan.ref(): image_plan,
         source_plan.ref(): source_plan,
     }
-    compiled = compile_function_pattern(consume, input_plans, {})
+    compiled = compile_function_pattern(
+        admitted_graph(consume),
+        input_plans,
+        {},
+    )
     planner = _artifact_planner_stub()
 
     with pytest.raises(ValueError, match="no exact relation-owned selection"):
@@ -5313,7 +5311,7 @@ def test_realized_component_domain_does_not_replace_dynamic_projection_coordinat
         },
     )
     compiled = compile_function_pattern(
-        apply,
+        admitted_graph(apply),
         {plan.ref(): plan for plan in (input_plan,)},
         {},
     )
@@ -5385,7 +5383,7 @@ def test_runtime_selects_inputs_from_exact_grouped_invocation_edges():
     )
     storage = {first.ref(): first, second.ref(): second}
     compiled = compile_function_pattern(
-        {"1": apply_first, "2": apply_second},
+        admitted_graph({"1": apply_first, "2": apply_second}),
         storage,
         {},
     )
@@ -5465,7 +5463,7 @@ def test_grouped_invocation_is_independent_of_source_artifact_domain():
     )
     invocation = next(
         compile_function_pattern(
-            {"1": consume},
+            admitted_graph({"1": consume}),
             {plan.ref(): plan for plan in (input_plan,)},
             {},
         ).iter_invocations()
@@ -5498,7 +5496,7 @@ def test_fixed_producer_coordinate_precedes_consumer_group_lineage():
     )
     invocation = next(
         compile_function_pattern(
-            {"2": consume},
+            admitted_graph({"2": consume}),
             {plan.ref(): plan for plan in (input_plan,)},
             {},
         ).iter_invocations()
@@ -5539,7 +5537,7 @@ def test_relation_selects_one_coordinate_from_multi_coordinate_producer_domain()
     )
     invocation = next(
         compile_function_pattern(
-            {"2": consume},
+            admitted_graph({"2": consume}),
             {plan.ref(): plan for plan in (input_plan,)},
             {},
         ).iter_invocations()
@@ -5587,7 +5585,7 @@ def test_produced_artifact_projection_does_not_revalidate_source_binding_domain(
         source_step_id=4,
     )
     compiled = compile_function_pattern(
-        {"5": relate_objects},
+        admitted_graph({"5": relate_objects}),
         {plan.ref(): plan for plan in (input_plan,)},
         {},
     )
@@ -5637,7 +5635,7 @@ def test_non_dict_artifact_input_uses_function_step_execution_scope():
     )
     execution_scope = PathPlannerGroupScope.dynamic(Microscopy.Channel)
     compiled = compile_function_pattern(
-        assemble,
+        admitted_graph(assemble),
         {plan.ref(): plan for plan in (input_plan,)},
         {},
     )
@@ -5683,7 +5681,7 @@ def test_grouped_invocations_keep_distinct_edges_for_same_artifact_ref():
         },
     )
     compiled = compile_function_pattern(
-        {"2": crop_green, "3": crop_red},
+        admitted_graph({"2": crop_green, "3": crop_red}),
         {plan.ref(): plan for plan in (input_plan,)},
         {},
     )

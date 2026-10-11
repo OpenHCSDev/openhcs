@@ -16,7 +16,7 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.callable_contract import (
     CallableContract,
-    CallableMetadata,
+    CallableDeclaration,
     FunctionStepExecutionScope,
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -42,11 +42,7 @@ def _contract(
         func=lambda value: value,
         function_name="process",
         module_name=None,
-        metadata=CallableMetadata(
-            artifact_inputs=inputs,
-            artifact_outputs=outputs,
-            execution_scope=execution_scope,
-        ),
+        artifact_inputs=inputs, artifact_outputs=outputs, execution_scope=execution_scope,
     )
 
 

@@ -1,6 +1,7 @@
 """Transport boundaries for public FunctionStep declarations."""
 
 from __future__ import annotations
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 
 import ast
@@ -146,7 +147,7 @@ def test_compiler_referenced_steps_render_only_public_callables() -> None:
     restored = FunctionStepTransportAuthority.pipeline_steps_from_namespace(namespace)
 
     assert "FunctionReference" not in source
-    assert "CallableMetadata" not in source
+    assert "CallableDeclaration" not in source
     assert restored[0].func[0] is RegistryService.registered_callable(
         cellprofiler_backend.correct_illumination_apply
     )
@@ -319,19 +320,19 @@ def test_cellprofiler_callable_uses_registered_function_reference() -> None:
     func = cellprofiler_backend.crop
     registered = RegistryService.registered_callable(func)
     reference = FunctionReferenceTransportAuthority.function_reference(func)
-    declared_metadata = CallableContract.from_callable(registered).metadata
+    declared_metadata = CallableContract.from_callable(registered).declaration
 
     assert reference.function_name == "crop"
     assert reference.original_module == "openhcs.processing.backends.cellprofiler.crop"
     assert reference.resolve() is registered
-    assert isinstance(reference.metadata.raw_processing_function, FunctionReference)
+    assert isinstance(reference.declaration.raw_processing_function, FunctionReference)
     assert (
-        reference.metadata.raw_processing_function.resolve()
+        reference.declaration.raw_processing_function.resolve()
         is declared_metadata.raw_processing_function
     )
     assert (
         replace(
-            reference.metadata,
+            reference.declaration,
             raw_processing_function=declared_metadata.raw_processing_function,
         )
         == declared_metadata
@@ -365,10 +366,7 @@ def test_registered_reference_preserves_raw_cellprofiler_declaration_owner(
     contract = CallableContract.from_callable(normalized)
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     contract = FunctionStepTransportAuthority.normalize_callable_contract(contract)
 
@@ -406,42 +404,10 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     reference = FunctionReferenceTransportAuthority.function_reference(
         cellprofiler_backend.crop
     )
-    reference = replace(
-        reference, metadata=replace(reference.metadata, prepare=lambda: None)
-    )
     captured = normalize_function_pattern(reference)
     captured_item = next(captured.iter_items())
-    captured = replace(
-        captured,
-        groups=(
-            replace(
-                captured.groups[0],
-                items=(
-                    replace(
-                        captured_item,
-                        contract=replace(
-                            captured_item.contract,
-                            metadata=replace(
-                                captured_item.contract.metadata, prepare=lambda: None
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-        ),
-    )
-    pattern = compile_function_pattern(captured, {}, {})
+    pattern = compile_function_pattern(admitted_graph(captured), {}, {})
     (invocation,) = tuple(pattern.iter_invocations())
-    invocation = replace(
-        invocation,
-        contract=replace(
-            invocation.contract,
-            metadata=replace(invocation.contract.metadata, prepare=lambda: None),
-        ),
-    )
-    pattern = replace(
-        pattern, groups=(replace(pattern.groups[0], invocations=(invocation,)),)
-    )
     shared_items = replace(
         captured,
         groups=(replace(
@@ -502,10 +468,6 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     assert transport_invocation.func is second_transport_invocation.func
     assert transport_invocation.kwargs != second_transport_invocation.kwargs
     assert second_transport_invocation.kwargs == second_invocation.kwargs
-    assert transport_invocation.contract.metadata.prepare is None
-    assert invocation.contract.metadata.prepare is not None
-    assert reference.metadata.prepare is not None
-    assert next(captured.iter_items()).contract.metadata.prepare is not None
     assert plan.compiled_function_pattern is pattern
     assert invocation.contract.resolve_runtime_callable() is prepared_callable
     assert transport_context.runtime_value_store is context.runtime_value_store
