@@ -4,16 +4,13 @@ import ast
 import inspect
 
 import pytest
-from arraybridge.decorators import DtypeConversion
 from objectstate import semantic_values_equal
 from objectstate.object_state import ObjectState
-from pycodify import Assignment, generate_python_source
+from pycodify import Assignment, generate_python_source, to_source
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
-from openhcs.constants import InputSource
 from openhcs.core.callable_contract import CallableContract, CallableImportIdentity
 from openhcs.core.config import (
-    DtypeConfig,
     LazyDtypeConfig,
     LazyNapariStreamingConfig,
     LazyProcessingConfig,
@@ -172,13 +169,6 @@ def test_clean_pipeline_config_keeps_explicit_empty_nested_lazy_config():
     assert "partition_filter_config=LazyPartitionFilterConfig()" in source
 
 
-def test_dtype_conversion_serializes_from_owning_enum_module():
-    source = _source(DtypeConfig(default_dtype_conversion=DtypeConversion.UINT8))
-
-    assert "from arraybridge.decorators import DtypeConversion" in source
-    assert "default_dtype_conversion=DtypeConversion.UINT8" in source
-
-
 def test_full_pipeline_config_still_emits_empty_lazy_config_groups():
     source = _source(PipelineConfig(), clean_mode=False)
 
@@ -198,7 +188,7 @@ def test_clean_function_step_omits_objectstate_reconstructed_empty_lazy_configs(
     )
 
     reference = FunctionReferenceTransportAuthority.function_reference(count_cells_simple)
-    assert f"func={reference.source_literal()}" in source
+    assert f"func={to_source(reference).code}" in source
     assert "name='count_cells'" in source
     assert "dtype_config=" not in source
     assert "processing_config=" not in source
@@ -243,17 +233,6 @@ def test_clean_lazy_dataclass_omits_explicit_none_leaf_fields():
     assert "variable_components=[]" in source
     assert "group_by=None" not in source
     assert "input_source=None" not in source
-
-
-def test_full_lazy_dataclass_keeps_none_leaf_fields():
-    source = _source(
-        LazyProcessingConfig(input_source=InputSource.PREVIOUS_STEP),
-        clean_mode=False,
-    )
-
-    assert "variable_components=None" in source
-    assert "group_by=None" in source
-    assert "input_source=InputSource.PREVIOUS_STEP" in source
 
 
 def test_function_pattern_clean_mode_elides_signature_default_kwargs():

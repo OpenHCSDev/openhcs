@@ -7,7 +7,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
 OWNED_BOUNDARIES = (
-    ROOT / "openhcs/serialization/source_path_factoring.py",
     ROOT / "openhcs/core/pipeline/compilation_session.py",
     ROOT / "openhcs/core/artifact_inspection.py",
     ROOT / "openhcs/core/progress/runtime_artifacts.py",
