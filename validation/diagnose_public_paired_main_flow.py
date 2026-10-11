@@ -6,7 +6,9 @@ from dataclasses import replace
 
 import numpy as np
 
-from openhcs.core.artifacts import ArtifactInputPlan, ArtifactOutputPlan, ArtifactSpecCollection, MeasurementsArtifactType
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey

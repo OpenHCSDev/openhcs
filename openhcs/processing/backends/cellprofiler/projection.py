@@ -29,7 +29,7 @@ from openhcs.interop.cellprofiler.settings_binder import (
     coerce_cellprofiler_enum,
     parse_cellprofiler_float,
 )
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 
 
 class ProjectionType(Enum):

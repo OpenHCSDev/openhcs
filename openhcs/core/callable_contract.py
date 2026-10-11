@@ -45,13 +45,9 @@ from openhcs.core.artifact_key_selection import (
     ArtifactPlanKeySelector,
     NativeReturnArtifactOutputPolicy,
 )
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRef,
-    ImageArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan, ArtifactSpecRef
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirement,
@@ -1673,7 +1669,7 @@ class CallableContract(CallableDeclaration, ArtifactPlanKeySelector):
                 raise TypeError(
                     f"Callable {self.function_name!r} parameter "
                     f"{parameter_name!r} does not accept "
-                    f"{spec.artifact_type.require_value()} artifact payloads."
+                    f"{spec.artifact_type.value} artifact payloads."
                 )
             specs_by_parameter.setdefault(parameter_name, []).append(spec)
 

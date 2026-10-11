@@ -18,7 +18,7 @@ from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
 )
-from openhcs.core.artifacts import ArtifactInputPlan
+from openhcs.core.artifacts.plans import ArtifactInputPlan
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.compiled_step_plan import (
     FrameworkDeviceAssignment,

@@ -19,13 +19,13 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     pack_aligned_image_outputs,
 )
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
-    ImageArtifactType,
 )
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import (
     creates_payload_axis,
     requires_payload_axis,

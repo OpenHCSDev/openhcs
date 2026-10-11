@@ -20,9 +20,7 @@ from typing import (
 )
 
 from openhcs.constants.constants import Backend, OrchestratorState
-from openhcs.core.artifacts import (
-    SpecialArtifactType,
-)
+from openhcs.core.artifacts.kinds import SpecialArtifactType
 from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,

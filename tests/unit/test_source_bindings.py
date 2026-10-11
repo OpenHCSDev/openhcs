@@ -14,14 +14,10 @@ from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.input_source import InputSource
 from openhcs.core import source_bindings as source_bindings_module
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    GroupLineageSourceRelation,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import GroupLineageSourceRelation
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,

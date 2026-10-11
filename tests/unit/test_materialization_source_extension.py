@@ -33,6 +33,7 @@ from openhcs.processing.materialization.core import (
     materialization_outputs,
 )
 from python_introspect import to_jsonable
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 COMPONENTS = {
     "well": "image.ome.tif",
@@ -102,7 +103,7 @@ def test_native_header_only_workspace_keeps_loaded_source_identity(extension):
         FileManager({"memory": MemoryStorageBackend()}),
         context=SimpleNamespace(
             microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser())
-        ),
+        ), output_plan=materialization_output_plan()
     )
     assert tuple(output.path for output in outputs) == (
         f"/analysis/{Path(source_path).stem}_labels.tif",
@@ -237,7 +238,7 @@ def test_issue264_header_only_metadata_reaches_actual_image_writer():
         filemanager,
         context=SimpleNamespace(
             microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser())
-        ),
+        ), output_plan=materialization_output_plan()
     )
     assert tuple(output.path for output in outputs) == (
         "/analysis/A01_s001_w1_z001_t001_labels.tif",
@@ -293,7 +294,7 @@ def test_real_source_schema_composition_to_named_output_and_image_materializer(
         scalar.payload_with(pixels),
         "/analysis/fixture",
         FileManager({"memory": MemoryStorageBackend()}),
-        context=SimpleNamespace(microscope_handler=SimpleNamespace(parser=parser)),
+        context=SimpleNamespace(microscope_handler=SimpleNamespace(parser=parser)), output_plan=materialization_output_plan()
     )
     assert tuple(output.path for output in outputs) == (f"/analysis/{filename}",)
 

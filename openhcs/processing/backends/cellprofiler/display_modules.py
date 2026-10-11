@@ -12,7 +12,7 @@ import numpy as np
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.callable_contract import KeywordRuntimeParameter
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,

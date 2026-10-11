@@ -22,10 +22,9 @@ from typing import cast, TYPE_CHECKING, ClassVar, TypeVar
 import numpy as np
 
 from openhcs.core._tabular_native import render_csv as _render_native_csv
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     MeasurementBearingArtifactType,
     RelationshipsArtifactType,

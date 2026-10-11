@@ -39,7 +39,9 @@ show("CompiledSourceUniversePlan fields", tuple(f.name for f in fields(CompiledS
 show("SourceLoadPlan fields", tuple(f.name for f in fields(SourceLoadPlan)))
 show("SourceUniverseRequest types", tuple(t.__name__ for t in SourceUniverseRequest.registered_request_types()))
 
-from openhcs.core.artifacts import ArtifactSidecarRole, ArtifactSpec, ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.sidecars import ArtifactSidecarRole
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 show("ArtifactSidecarRole values", tuple(role.value for role in ArtifactSidecarRole))
 show("ArtifactSpec fields", tuple(f.name for f in fields(ArtifactSpec)))
 show("ArtifactInputPlan fields", tuple(f.name for f in fields(ArtifactInputPlan)))

@@ -24,7 +24,7 @@ from openhcs.agent.dto.common import (
 from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.core.artifacts import ArtifactViewerStreaming
+from openhcs.core.artifacts.streaming import AutomaticStreaming
 from openhcs.core.function_reference import FunctionReference
 from openhcs.processing.custom_functions.source_namespace import CustomFunctionSource
 
@@ -486,14 +486,8 @@ class FunctionArtifactSpec:
     required: bool = True
     sidecar_role: str | None = None
     materialization_uses_source_identity_filename: bool = False
-    viewer_streaming: ArtifactViewerStreaming = ArtifactViewerStreaming.AUTOMATIC
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.viewer_streaming, ArtifactViewerStreaming):
-            raise TypeError(
-                "FunctionArtifactSpec.viewer_streaming requires "
-                f"ArtifactViewerStreaming, got {type(self.viewer_streaming).__name__}."
-            )
+    viewer_streaming: str = AutomaticStreaming.name
+    """The declared ``ViewerStreaming`` member's registered name."""
 
 
 @dataclass(frozen=True, slots=True)

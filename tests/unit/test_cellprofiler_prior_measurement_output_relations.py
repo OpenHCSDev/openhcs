@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
-    ImageArtifactType,
     InputGroupLineageSourceRelation,
-    MeasurementsArtifactType,
 )
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY, FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.interop.cellprofiler.parser import ModuleBlock

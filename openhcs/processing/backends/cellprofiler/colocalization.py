@@ -18,13 +18,12 @@ import numpy as np
 from openhcs.core.axes import ColourAxis, TileAxis
 from openhcs.constants.constants import MemoryType
 from openhcs.core.aligned_image_payload import (AlignedImageStack, pack_aligned_image_outputs)
-from openhcs.core.artifacts import (
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
     SourceStackLineageSourceRelation,
 )
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import (
     KeywordRuntimeParameter,
     runtime_image_execution_mode,
@@ -216,15 +215,8 @@ class ColocalizationThresholdMaskObjectRelation(ArtifactSpecRelation):
     """Declare the optional object-label domain used to threshold one mask."""
 
     relation_key: ClassVar[str] = "colocalization_threshold_mask_object"
+    source_artifact_type = ObjectLabelsArtifactType
     target_artifact_type = ImageArtifactType
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
-        if self.source.artifact_type is not ObjectLabelsArtifactType:
-            raise ValueError(
-                "Colocalization threshold-mask object relation requires an object "
-                f"source, got {self.source.artifact_type.value}:{self.source.name}."
-            )
 
 
 @dataclass(frozen=True, slots=True)

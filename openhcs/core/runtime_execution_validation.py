@@ -10,7 +10,8 @@ from types import MappingProxyType
 
 from polystore.streaming.identity import StreamProducerIdentity
 
-from openhcs.core.artifacts import ArtifactSpec, ArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 from openhcs.core.runtime_exports import (

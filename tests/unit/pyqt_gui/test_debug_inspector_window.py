@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PyQt6.QtWidgets import QApplication, QPushButton
 
-from openhcs.core.artifacts import ImageArtifactType, MeasurementsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.debug import (
     DebugArtifactRef,
     DebugCursor,

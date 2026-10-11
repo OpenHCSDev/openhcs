@@ -10,23 +10,23 @@ from python_introspect import parameter_exclusions
 
 from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.core.aligned_image_payload import AlignedImageStack
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    QaCheckpoint,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.sidecars import QaCheckpoint
+from openhcs.core.artifacts.relations import (
     ArtifactSidecarSourceRelation,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     GroupLineageSourceRelation,
-    ImageArtifactType,
     InputGroupLineageSourceRelation,
     InputImageSetContextSourceRelation,
     InputStackBroadcastSourceRelation,
+    SourceStackLineageSourceRelation,
+)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
     RelationshipsArtifactType,
-    SourceStackLineageSourceRelation,
     SpatialGridArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract

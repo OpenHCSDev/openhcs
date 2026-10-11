@@ -12,17 +12,17 @@ import tifffile
 
 from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import (
     ArtifactSpecRelation,
-    ArtifactType,
     GroupLineageSourceRelation,
-    ImageArtifactType,
     InputGroupLineageSourceRelation,
     InputStackBroadcastSourceRelation,
+)
+from openhcs.core.artifacts.kinds import (
+    ArtifactType,
+    ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,

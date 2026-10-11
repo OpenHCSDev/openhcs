@@ -4,7 +4,8 @@ from pathlib import Path
 
 from openhcs.constants import AllComponents, GroupBy, VariableComponents
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
-from openhcs.core.artifacts import ArtifactInputPlan, ArtifactOutputPlan, ImageArtifactType
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule

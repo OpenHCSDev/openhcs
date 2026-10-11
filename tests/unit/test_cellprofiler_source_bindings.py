@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 import openhcs.core.source_bindings as source_bindings_module
-from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.config import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
@@ -260,7 +260,7 @@ def test_complete_lazy_setup_facts_pycodify_and_reconstruct_in_fresh_process() -
         (
             source,
             "from openhcs.domains.microscopy.axes import Microscopy",
-            "from openhcs.core.artifacts import ObjectLabelsArtifactType",
+            "from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType",
             "cfg = pipeline_config.source_bindings_config",
             "assert cfg.bindings[0].artifact_kind is ObjectLabelsArtifactType",
             "assert cfg.bindings[0].load_as_mask is True",

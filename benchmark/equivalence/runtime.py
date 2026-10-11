@@ -32,7 +32,7 @@ import benchmark.equivalence.exported_relationships as exported_relationships
 import benchmark.equivalence.row_identity as equivalence_row_identity
 import benchmark.equivalence.table_snapshots as table_snapshots
 import openhcs.core.runtime_measurements as runtime_measurements
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ArtifactTypeStrategyMatchMixin,
     ObjectLabelsArtifactType,
@@ -2036,7 +2036,7 @@ def _artifact_type_counts_repr(counts: Mapping[type[ArtifactType], int]) -> str:
                 (ArtifactType.coerce(artifact_type), count)
                 for artifact_type, count in counts.items()
             ),
-            key=lambda item: item[0].require_value(),
+            key=lambda item: item[0].value,
         )
     )
     return "{" + ", ".join(rendered_items) + "}"

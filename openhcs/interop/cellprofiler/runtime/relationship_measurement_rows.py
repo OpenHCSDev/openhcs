@@ -5,9 +5,7 @@ from dataclasses import dataclass, field, replace
 import time
 from typing import TYPE_CHECKING
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementSparseColumnarRows,

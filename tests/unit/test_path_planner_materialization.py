@@ -9,21 +9,21 @@ import numpy as np
 from tests.artifact_graphs import admitted_graph
 from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.relations import (
     ArtifactMeasurementSubjectRelation,
-    ArtifactInputPlan,
-    ArtifactOutputPlan,
-    MaterializedImageCopy,
-    ArtifactSpec,
-    ArtifactSpecCollection,
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
-    ImageArtifactType,
     ImageMeasurementSubjectRelation,
     InputGroupLineageSourceRelation,
     InputStackBroadcastSourceRelation,
-    ObjectLabelsArtifactType,
     ObjectMeasurementSubjectRelation,
+)
+from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+from openhcs.core.artifacts.sidecars import MaterializedImageCopy
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
+    ObjectLabelsArtifactType,
     MeasurementsArtifactType,
     RelationshipsArtifactType,
     SpecialArtifactType,
@@ -2808,7 +2808,7 @@ def test_real_object_measurement_preserves_selected_labels_group_scope(
     assert measurement.name == "MeasureCells_4_measurements"
     assert measurement.group_scope_sources() == (labels_input.ref(),)
     assert (
-        MeasurementsArtifactType.require_output_subject(measurement)
+        measurement.require_measurement_subject()
         == ObjectMeasurementSubjectRelation(labels_input.ref()).measurement_subject()
     )
     assert selector in consumed_names

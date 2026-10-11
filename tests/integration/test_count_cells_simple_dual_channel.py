@@ -16,7 +16,7 @@ from zmqruntime.execution.responses import (
 )
 
 from objectstate.lazy_factory import ensure_global_config_context
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     SpecialArtifactType,

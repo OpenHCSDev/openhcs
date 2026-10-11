@@ -57,7 +57,8 @@ OWNED_MODULES = (
     "core/runtime_array_values.py",
     "core/source_spatial_domain.py",
     "core/payload_axes.py",
-    "core/artifacts.py",
+    "core/artifacts/kinds.py",
+    "core/artifacts/plans.py",
     "core/steps/function_runtime.py",
 )
 

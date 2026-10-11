@@ -9,11 +9,8 @@ import pytest
 from openhcs.agent.dto.pipeline import FunctionSpecRef, FunctionStepSpec
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.agent.services.pipeline_authoring_service import PipelineAuthoringService
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ImageArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,

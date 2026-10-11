@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any, TypeAlias, overload
@@ -369,6 +369,40 @@ class RuntimeSliceProjection:
         if isinstance(value, RuntimeSliceProjectableValue):
             return value.alignment_slices()
         return (value,)
+
+    @classmethod
+    def stored_slices(cls, value: RuntimeProjectionData) -> tuple[Any, ...]:
+        """Return the members a value stores separately; a foreign value is one."""
+        if isinstance(value, RuntimeSliceProjectableValue):
+            return value.stored_slices()
+        return (value,)
+
+    @classmethod
+    def match_alignment(
+        cls,
+        value: RuntimeProjectionData,
+        *,
+        scalar: Callable[[Any], Any],
+        aligned: Callable[[Any], Any],
+    ) -> Any:
+        """Answer for one value, or for one value per runtime slice."""
+        if isinstance(value, RuntimeSliceProjectableValue):
+            return value.match_alignment(scalar=scalar, aligned=aligned)
+        return scalar(value)
+
+    @classmethod
+    def contextualized_output(
+        cls,
+        kind: Any,
+        value: RuntimeProjectionData,
+        source: object,
+        target: Any,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> object:
+        """Contextualize a returned value as ``kind``'s output; foreign values are plain."""
+        if isinstance(value, RuntimeSliceProjectableValue):
+            return value.contextualized_output(kind, source, target, plane_projection)
+        return kind.contextualize_value(source, value, target, plane_projection)
 
     @classmethod
     def output_slices(cls, value: RuntimeProjectionData) -> tuple[Any, ...]:

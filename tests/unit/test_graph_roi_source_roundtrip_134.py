@@ -1,6 +1,6 @@
 """Receiving #134: actual graph context/writer/ZIP, without a native process."""
 
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 
 from pathlib import Path
 
@@ -10,11 +10,13 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.roi import load_rois_from_zip
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.relations import (
     ObjectArtifactMemberSubjectRelation,
     ObjectArtifactSubjectBinding,
+)
+from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
 )
@@ -37,6 +39,7 @@ from openhcs.processing.materialization import (
     materialization_outputs,
     materialize,
 )
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 @pytest.fixture(autouse=True)
@@ -133,7 +136,7 @@ def contextualize(graph, plan):
     )
     source = metadata.payload_with(np.zeros((2, 16, 16), dtype=np.uint8))
     result = (ImageArtifactType if plan is None else plan.artifact_type).contextualize_output(
-        source, graph, plan, None
+        source, graph, plan or MAIN_FLOW, None
     )
     assert result.source_provenance == metadata.source_provenance.for_source_plane(
         graph.source_plane_index

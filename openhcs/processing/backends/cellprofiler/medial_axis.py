@@ -4,7 +4,7 @@ Original: medialaxis
 """
 
 import numpy as np
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.memory.decorators import numpy as numpy_backend
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,

@@ -27,10 +27,9 @@ from typing import cast, Any, ClassVar, Literal
 import numpy as np
 from PIL import Image
 
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    ArtifactSpecCollection,
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import (
     ImageArtifactType,
     MeasurementBearingArtifactType,
     RelationshipsArtifactType,
@@ -523,7 +522,7 @@ class CPAImageChannelSpec:
             if spec.artifact_type is not ImageArtifactType:
                 raise TypeError(
                     "CPAImageChannelSpec.defaults_for_artifacts requires image "
-                    f"artifacts, got {spec.artifact_type.require_value()}:{spec.name}."
+                    f"artifacts, got {spec.artifact_type.value}:{spec.name}."
                 )
         specs_by_ref = {
             spec.ref().for_plan_type(ArtifactInputPlan): spec for spec in specs

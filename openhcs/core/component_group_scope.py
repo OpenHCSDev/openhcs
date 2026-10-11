@@ -90,8 +90,45 @@ class ComponentGroupScope:
         return self.component is None
 
     @property
+    def is_grouped(self) -> bool:
+        return self.component is not None
+
+    @property
     def is_dynamic(self) -> bool:
         return self.component is not None and self.keys == (None,)
+
+    @property
+    def is_static(self) -> bool:
+        """Whether this grouped scope names its coordinates at compile time."""
+        return self.is_grouped and not self.is_dynamic
+
+    def excludes(self, other: "ComponentGroupScope") -> bool:
+        """Whether two static scopes of one component share no coordinate."""
+        if self.is_dynamic or other.is_dynamic:
+            return False
+        return set(self.keys).isdisjoint(other.keys)
+
+    @classmethod
+    def one_per_component(
+        cls,
+        scopes: Iterable["ComponentGroupScope"],
+        *,
+        owner: str,
+    ) -> tuple["ComponentGroupScope", ...]:
+        """Normalize grouped scopes, allowing one consistent scope per component."""
+        by_component: dict[type[Axis], ComponentGroupScope] = {}
+        for scope in scopes:
+            if scope.is_ungrouped:
+                raise ValueError(f"{owner} component scopes cannot be ungrouped.")
+            normalized = cls.from_raw(scope.keys, component=scope.component)
+            existing = by_component.get(scope.component)
+            if existing is not None and existing != normalized:
+                raise ValueError(
+                    f"{owner} declares conflicting scopes for component "
+                    f"{scope.component.name!r}: {existing!r} and {normalized!r}."
+                )
+            by_component[scope.component] = normalized
+        return tuple(by_component.values())
 
     @property
     def has_single_static_key(self) -> bool:

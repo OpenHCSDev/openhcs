@@ -92,11 +92,8 @@ from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.artifacts import (
-    ArtifactSpecCollection,
-    ImageArtifactType,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpecCollection
+from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.runtime_image_values import ImagePayload
 
 if TYPE_CHECKING:

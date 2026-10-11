@@ -33,7 +33,7 @@ from benchmark.datasets.cache import (
 )
 from openhcs.constants import Backend
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import (
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
     ImageArtifactType,
     MeasurementsArtifactType,

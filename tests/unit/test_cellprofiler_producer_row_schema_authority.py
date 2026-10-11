@@ -5,11 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ImageArtifactType,
-    MeasurementsArtifactType,
-)
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ImageArtifactType, MeasurementsArtifactType
 from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,

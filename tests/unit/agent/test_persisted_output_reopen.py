@@ -18,7 +18,7 @@ from openhcs.agent.dto.plate import (
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
-from openhcs.core.artifacts import ImageArtifactType
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.plate_file_inventory import PlateFileKind

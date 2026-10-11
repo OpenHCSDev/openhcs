@@ -23,6 +23,7 @@ from openhcs.processing.materialization import (
     ROIOptions,
     materialization_outputs,
 )
+from tests.materialization_plans import output_plan as materialization_output_plan
 
 
 def fragmented_labels():
@@ -53,7 +54,7 @@ def test_archive_fragments_keep_parent_label_and_source_geometry(tmp_path):
         MaterializationSpec(ROIOptions(min_area=1)),
         _payload(),
         str(tmp_path / "fragmented"),
-        filemanager,
+        filemanager, output_plan=materialization_output_plan()
     )
     archive = next(output for output in outputs if output.path.endswith(".roi.zip"))
     summary = next(output for output in outputs if output.path.endswith(".txt"))
@@ -112,7 +113,7 @@ def test_declared_raster_selection_preserves_parent_labels_without_roi_extractio
         _payload(labels),
         str(tmp_path / "fragmented"),
         filemanager,
-        output_path_filter=lambda path: path.suffix == ".tif",
+        output_path_filter=lambda path: path.suffix == ".tif", output_plan=materialization_output_plan()
     )
     assert len(outputs) == 1
     filemanager.save(outputs[0].content, outputs[0].path, "disk")

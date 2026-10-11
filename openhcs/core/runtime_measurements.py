@@ -6,9 +6,7 @@ from collections.abc import Iterable
 from functools import lru_cache
 from dataclasses import dataclass
 
-from openhcs.core.artifacts import (
-    NamedArtifactPayload,
-)
+from openhcs.core.artifacts.payloads import NamedArtifactPayload
 from openhcs.core.runtime_tabular_values import (
     ColumnarRows,
     FieldSpec,
@@ -81,7 +79,7 @@ class MeasurementTable(
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_source_provenance_fields()
-        self.validate_artifact_name()
+        self.require_name()
         if self.source_image_name == "":
             raise ValueError("MeasurementTable.source_image_name cannot be empty.")
         if not isinstance(self.subject, MeasurementSubject):

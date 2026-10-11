@@ -47,7 +47,7 @@ from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.runtime_image_values import image_metadata_of
 
 if TYPE_CHECKING:
-    from openhcs.core.artifacts import ArtifactSpec
+    from openhcs.core.artifacts.specs import ArtifactSpec
     from openhcs.interop.cellprofiler.runtime.measurement_rows import (
         CellProfilerResultMeasurementRows,
     )
@@ -671,7 +671,7 @@ class ProducedImageMeasurementRecordMixin(CellProfilerMeasurementTableModule):
     def primary_image_output_spec(
         cls, request: CellProfilerOutputRecordRequest
     ) -> ArtifactSpec | None:
-        from openhcs.core.artifacts import ImageArtifactType
+        from openhcs.core.artifacts.kinds import ImageArtifactType
 
         image_specs = tuple(
             spec
@@ -733,7 +733,7 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
     def measurement_record_source_metadata(
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
     ) -> ImagePayloadMetadata:
-        from openhcs.core.artifacts import ImageArtifactType
+        from openhcs.core.artifacts.kinds import ImageArtifactType
         from openhcs.core.runtime_image_values import ImagePayloadMetadata
         from openhcs.core.source_matching import SourceImageSetIdentityPolicy
         from openhcs.core.source_plane_alignment import (
@@ -821,9 +821,7 @@ class SourceQualifiedInputPayloadMeasurementRecordMixin(
     def measurement_record_source_metadata(
         cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
     ) -> ImagePayloadMetadata:
-        from openhcs.core.artifacts import (
-            ArtifactSpecCollection,
-        )
+        from openhcs.core.artifacts.specs import ArtifactSpecCollection
 
         source_names = cls.measurement_record_source_names(rows)
         if not source_names:

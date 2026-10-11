@@ -19,11 +19,9 @@ from openhcs.core.config import (
 )
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    MaterializedImageCopy,
-    ImageArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.sidecars import MaterializedImageCopy
+from openhcs.core.artifacts.kinds import ImageArtifactType
 from openhcs.core.function_patterns import (
     compile_function_pattern,
     normalize_function_pattern,

@@ -23,12 +23,15 @@ from polystore.streaming.viewer_transport import (
 )
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
-    ArtifactSpec,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.streaming import ViewerStreaming
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
-    ImageArtifactType,
     MaterializationSourceIdentityRelation,
+)
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
     MeasurementsArtifactType,
     MetadataArtifactType,
     ObjectLabelsArtifactType,
@@ -172,6 +175,8 @@ from openhcs.core.streaming_config_declarations import NapariViewer
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
 from openhcs.core.config import IncludePartitions
+from tests.materialization_plans import output_plan as materialization_output_plan
+from openhcs.core.artifacts.plans import MAIN_FLOW
 
 
 class StreamingConfigStub(ViewerDisplayConfigABC):
@@ -561,6 +566,33 @@ def test_named_artifact_streaming_respects_compiled_streaming_filter():
     assert tuple(included) == ("napari_stream",)
 
 
+@pytest.mark.parametrize("streaming", tuple(ViewerStreaming.__registry__.values()))
+def test_declared_viewer_streaming_selects_automatic_viewer_surfaces(streaming):
+    output_plan = ArtifactOutputPlan(
+        name="diagnostic_labels",
+        path="/memory/diagnostic_labels.pkl",
+        artifact_type=ObjectLabelsArtifactType,
+        materialization=roi_zip(),
+        viewer_streaming=streaming,
+    )
+    config = streaming_config_stub()
+    plan = _plan(output_plan, streaming_configs={"napari_stream": config})
+    context = _context(FileManagerStub())
+    materialization = SimpleNamespace(
+        output_plan=output_plan,
+        record=SimpleNamespace(
+            key=SimpleNamespace(scope=SimpleNamespace(value_text=None))
+        ),
+    )
+
+    surfaces = StreamingOnlyArtifactMaterializationTargetPlan().streaming_viewer_surfaces(
+        plan, context, materialization
+    )
+
+    expected = ("napari_stream",) if streaming.automatically_streams else ()
+    assert tuple(surfaces) == expected
+
+
 def test_viewer_output_expectation_omits_empty_stream_payload() -> None:
     filemanager = FileManager({"napari_stream": NapariStreamingBackend()})
     context = _context(filemanager)
@@ -653,7 +685,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         label_slices,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -732,7 +764,7 @@ def test_image_outputs_merge_source_provenance_when_output_already_has_metadata(
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         output,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -788,7 +820,7 @@ def test_object_label_payload_stack_preserves_source_slice_metadata():
     contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         labels,
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneAxisValueProjection.preserve(
             axis=RuntimePlaneAxis.RUNTIME_SLICE,
             axis_size=2,
@@ -961,7 +993,7 @@ def test_materialize_artifact_outputs_uses_output_plan_axes_for_source_named_run
                 manager,
                 context=kwargs["context"],
                 artifact_source_identity=kwargs["artifact_source_identity"],
-                variable_components=kwargs["variable_components"],
+                variable_components=kwargs["variable_components"], output_plan=materialization_output_plan()
             )
         )
 
@@ -4105,7 +4137,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
             np.ones((2, 5, 7), dtype=np.uint16),
             None,
         ),
-        output_plan,
+        output_plan or MAIN_FLOW,
         RuntimePlaneProjection.stack(2),
     )
     filename_source_metadata = ImagePayloadMetadata(

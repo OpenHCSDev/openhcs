@@ -4,16 +4,20 @@ from dataclasses import replace
 
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import (
     ArtifactSpec,
     ArtifactSpecAccumulator,
     ArtifactSpecCollection,
+    MainFlowPlaneProjectionOutputSpec,
+)
+from openhcs.core.artifacts.relations import (
     GroupLineageSourceRelation,
-    ImageArtifactType,
     InputImageSetContextSourceRelation,
     InputStackBroadcastSourceRelation,
-    MainFlowPlaneProjectionOutputSpec,
+)
+from openhcs.core.artifacts.kinds import (
+    ImageArtifactType,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
@@ -89,7 +93,7 @@ def test_stack_broadcast_indices_use_exact_ordered_occurrences() -> None:
             InputStackBroadcastSourceRelation(source=other.ref()),
         ),
     )
-    with pytest.raises(ValueError, match="multiple stack-broadcast owners"):
+    with pytest.raises(ValueError, match="multiple stack-broadcast sources"):
         ArtifactSpecCollection(
             (primary, other, multiple_owners)
         ).stack_broadcast_source_indices()
@@ -119,7 +123,7 @@ def test_input_image_set_context_does_not_regroup_or_broadcast(artifact_type) ->
     ),
 )
 def test_input_image_set_context_requires_an_input_image_source(source) -> None:
-    with pytest.raises(ValueError, match="requires an input image source"):
+    with pytest.raises(ValueError, match="requires an ArtifactInputPlan source of kind ImageArtifactType"):
         InputImageSetContextSourceRelation(source.ref())
 
 

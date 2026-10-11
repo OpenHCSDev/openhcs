@@ -1,7 +1,7 @@
 """CalculateMath measurement semantics for CellProfiler-compatible processing."""
 
 from __future__ import annotations
-from openhcs.core.artifacts import ArtifactInputPlan
+from openhcs.core.artifacts.plans import ArtifactInputPlan
 
 from abc import ABC, abstractmethod
 import time
@@ -13,10 +13,9 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
-    ArtifactSpecCollection,
-    ArtifactSpecRelation,
+from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
+from openhcs.core.artifacts.relations import ArtifactSpecRelation
+from openhcs.core.artifacts.kinds import (
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
 )

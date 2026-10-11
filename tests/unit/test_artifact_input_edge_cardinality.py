@@ -3,12 +3,10 @@ from __future__ import annotations
 from dataclasses import replace
 
 from tests.artifact_graphs import admitted_graph
-from openhcs.core.artifacts import (
-    ArtifactInputPlan,
-    ArtifactSpec,
-    InputGroupLineageSourceRelation,
-    ObjectLabelsArtifactType,
-)
+from openhcs.core.artifacts.plans import ArtifactInputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.relations import InputGroupLineageSourceRelation
+from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.callable_contract import CallableContract

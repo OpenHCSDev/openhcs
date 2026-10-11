@@ -8,14 +8,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from openhcs.core.artifacts import (
-    ArtifactSpec,
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import (
     ArtifactType,
-    ArtifactMeasurementSubjectRelation,
     ImageArtifactType,
-    ImageMeasurementSubjectRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
+)
+from openhcs.core.artifacts.relations import (
+    ArtifactMeasurementSubjectRelation,
+    ImageMeasurementSubjectRelation,
     ObjectMeasurementSubjectRelation,
 )
 from openhcs.core.artifact_key_selection import (
@@ -270,7 +272,7 @@ def test_table_wide_subject_owner_rejects_distinct_named_image_subjects(output_p
 
 
 def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
-    from openhcs.core.artifacts import ArtifactSpecRelation
+    from openhcs.core.artifacts.relations import ArtifactSpecRelation
     from openhcs.processing.backends.cellprofiler.image_quality import (
         MeasureImageQualityModule,
     )
@@ -297,7 +299,7 @@ def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
         raise AssertionError("Compile admission must not execute a callable")
 
     compiled = compile_function_pattern(admitted_graph(measure), {}, {})
-    subjects = ArtifactSpecRelation.measurement_subjects_for_output(measurements)
+    subjects = measurements.measurement_subjects()
     assert tuple(subject.name for subject in subjects) == ("Stain1", "Stain2")
     assert len({subject.row_identity_domain for subject in subjects}) == 1
     assert compiled is not None
@@ -309,7 +311,7 @@ def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
     CellProfilerRecordedArtifactOutputPolicy,
 ])
 def test_measurement_row_owner_controls_named_object_roster_admission(policy):
-    from openhcs.core.artifacts import ArtifactSpecRelation
+    from openhcs.core.artifacts.relations import ArtifactSpecRelation
     from openhcs.processing.backends.cellprofiler.intensity import MeasureObjectIntensityModule
 
     objects = tuple(
@@ -333,7 +335,7 @@ def test_measurement_row_owner_controls_named_object_roster_admission(policy):
             compile_function_pattern(admitted_graph(measure), {}, {})
         return
     compiled = compile_function_pattern(admitted_graph(measure), {}, {})
-    subjects = ArtifactSpecRelation.measurement_subjects_for_output(measurements)
+    subjects = measurements.measurement_subjects()
     assert tuple(subject.name for subject in subjects) == ("Nuclei", "Cells")
     assert len({subject.row_identity_domain for subject in subjects}) == 2
     assert compiled.default_group.invocations[0].contract.artifact_outputs.specs == (measurements,)
@@ -356,12 +358,9 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
         IdentifyPrimaryObjectsModule,
         identify_primary_objects,
     )
-    from openhcs.core.artifacts import (
-        ArtifactInputPlan,
-        ArtifactOutputPlan,
-        ArtifactSpecRelation,
-        ObjectLabelsArtifactType,
-    )
+    from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
+    from openhcs.core.artifacts.relations import ArtifactSpecRelation
+    from openhcs.core.artifacts.kinds import ObjectLabelsArtifactType
 
     (input_binding,) = IdentifyPrimaryObjectsModule.declared_artifact_bindings(
         plan_type=ArtifactInputPlan,
@@ -421,7 +420,7 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     assert (
         measurement.require_measurement_feature_owner() is IdentifyPrimaryObjectsModule
     )
-    assert ArtifactSpecRelation.measurement_subject_for_output(measurement) is None
+    assert measurement.measurement_subject() is None
 
     compiled = compile_function_pattern(
         admitted_graph(

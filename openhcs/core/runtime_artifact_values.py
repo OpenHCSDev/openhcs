@@ -6,7 +6,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
-from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ArtifactType
+from openhcs.core.artifacts.plans import ArtifactOutputPlan
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import ArtifactType
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
@@ -50,6 +52,11 @@ class RuntimeValue:
     key: ArtifactKey
     data: Any
     materialization_source_metadata: "ImagePayloadMetadata | None" = None
+
+    @staticmethod
+    def payload_of(value: Any) -> Any:
+        """Return the payload of a returned value, unwrapping a stored record."""
+        return value.data if isinstance(value, RuntimeValue) else value
 
     @staticmethod
     def from_output_plan(

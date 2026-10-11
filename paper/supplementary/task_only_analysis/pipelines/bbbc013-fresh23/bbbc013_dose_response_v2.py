@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from typing import cast
 import math
 import statistics
-from openhcs.core.artifacts import ArtifactSpec, MeasurementsArtifactType, SpecialArtifactType
+from openhcs.core.artifacts.specs import ArtifactSpec
+from openhcs.core.artifacts.kinds import MeasurementsArtifactType, SpecialArtifactType
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs, execution_scope, runtime_bound_parameters
