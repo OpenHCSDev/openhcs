@@ -34,7 +34,9 @@ def test_agent_dtos_declare_no_well_or_microscope_type_field() -> None:
                     and isinstance(statement.target, ast.Name)
                     and statement.target.id in {"well", "microscope_type"}
                 ):
-                    offenders.append(f"{path.relative_to(ROOT)}:{node.name}.{statement.target.id}")
+                    offenders.append(
+                        f"{path.relative_to(ROOT)}:{node.name}.{statement.target.id}"
+                    )
     assert offenders == []
 
 
@@ -43,10 +45,9 @@ def test_gui_restates_no_plate_grid_default_or_row_letter_decode() -> None:
     for path in _modules("pyqt_gui"):
         tree = ast.parse(path.read_text())
         for node in ast.walk(tree):
-            if (
-                isinstance(node, ast.Tuple)
-                and [getattr(element, "value", None) for element in node.elts] == [8, 12]
-            ):
+            if isinstance(node, ast.Tuple) and [
+                getattr(element, "value", None) for element in node.elts
+            ] == [8, 12]:
                 offenders.append(f"{path.relative_to(ROOT)}:{node.lineno} (8, 12)")
             if (
                 isinstance(node, ast.BinOp)
@@ -56,7 +57,9 @@ def test_gui_restates_no_plate_grid_default_or_row_letter_decode() -> None:
                     for side in (node.left, node.right)
                 )
             ):
-                offenders.append(f"{path.relative_to(ROOT)}:{node.lineno} base-26 decode")
+                offenders.append(
+                    f"{path.relative_to(ROOT)}:{node.lineno} base-26 decode"
+                )
     assert offenders == []
 
 
@@ -76,6 +79,10 @@ def test_grid_placement_is_declared_only_by_grid_addressed_axes() -> None:
                 base.id if isinstance(base, ast.Name) else getattr(base, "attr", "")
                 for base in node.bases
             }
-            if declares and node.name != "GridAddressed" and "GridAddressed" not in bases:
+            if (
+                declares
+                and node.name != "GridAddressed"
+                and "GridAddressed" not in bases
+            ):
                 offenders.append(f"{path.relative_to(ROOT)}:{node.name}")
     assert offenders == []

@@ -9,7 +9,9 @@ from openhcs.core.measurement_feature_queries import (
     MeasurementFeatureQuery,
     MeasurementFeatureValueIndex,
 )
-from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
+from openhcs.core.pipeline.function_contracts import (
+    object_label_input_execution_mode_from_callable,
+)
 from openhcs.core.measurement_row_materialization import columnar_row_values
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import (

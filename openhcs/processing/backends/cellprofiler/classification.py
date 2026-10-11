@@ -111,7 +111,9 @@ class _ClassificationRuntimeInputParameter(KeywordRuntimeParameter, ABC):
 
     @classmethod
     def bind_runtime_inputs(
-        cls, request: RuntimeInputBindingRequest, object_spec: ArtifactSpec,
+        cls,
+        request: RuntimeInputBindingRequest,
+        object_spec: ArtifactSpec,
         labels: ObjectLabelValue,
     ) -> dict[str, RuntimeCallableArgument]:
         if not cls.runtime_binding_active(request):
@@ -125,7 +127,9 @@ class _ClassificationRuntimeInputParameter(KeywordRuntimeParameter, ABC):
     @classmethod
     @abstractmethod
     def runtime_input_values(
-        cls, request: RuntimeInputBindingRequest, object_spec: ArtifactSpec,
+        cls,
+        request: RuntimeInputBindingRequest,
+        object_spec: ArtifactSpec,
         labels: ObjectLabelValue,
     ) -> dict[str, RuntimeCallableArgument]:
         """Bind this declaration's contribution, cooperatively where composed."""
@@ -149,7 +153,9 @@ class _ClassifiedImageRuleIndicesRuntimeParameter(_ClassificationRuntimeInputPar
 
     @classmethod
     def runtime_input_values(
-        cls, request: RuntimeInputBindingRequest, object_spec: ArtifactSpec,
+        cls,
+        request: RuntimeInputBindingRequest,
+        object_spec: ArtifactSpec,
         labels: ObjectLabelValue,
     ) -> dict[str, RuntimeCallableArgument]:
         image_outputs = request.adapter.request.require_callable_contract().artifact_outputs.of_artifact_type(
@@ -172,7 +178,9 @@ class _ClassifiedImageRuleIndicesRuntimeParameter(_ClassificationRuntimeInputPar
         return {cls.require_parameter_name(): tuple(indices)}
 
 
-class _ClassificationMeasurementVectorRuntimeParameter(_ClassificationRuntimeInputParameter):
+class _ClassificationMeasurementVectorRuntimeParameter(
+    _ClassificationRuntimeInputParameter
+):
     """Bind a declared feature through the original object-vector authority."""
 
     annotation_type = np.ndarray | None
@@ -248,7 +256,9 @@ class _ClassificationMeasurementValuesRuntimeParameter(
 
     @classmethod
     def runtime_binding_active(cls, request: RuntimeInputBindingRequest) -> bool:
-        return not _ClassificationRuleValuesRuntimeParameter.runtime_binding_active(request)
+        return not _ClassificationRuleValuesRuntimeParameter.runtime_binding_active(
+            request
+        )
 
     @classmethod
     def measurement_feature_binding(cls) -> MeasurementFeatureSettingBinding:
@@ -315,7 +325,9 @@ class _ClassificationRuleValuesRuntimeParameter(_ClassificationRuntimeInputParam
 
     @classmethod
     def runtime_input_values(
-        cls, request: RuntimeInputBindingRequest, object_spec: ArtifactSpec,
+        cls,
+        request: RuntimeInputBindingRequest,
+        object_spec: ArtifactSpec,
         labels: ObjectLabelValue,
     ) -> dict[str, RuntimeCallableArgument]:
         return {
@@ -324,10 +336,13 @@ class _ClassificationRuleValuesRuntimeParameter(_ClassificationRuntimeInputParam
                     request,
                     object_ref=object_spec,
                     feature_name=_classification_rule_measurement_feature(
-                        rule, request.adapter.request.require_callable_contract().module_name
+                        rule,
+                        request.adapter.request.require_callable_contract().module_name,
                     ),
                     labels=labels,
-                ).vector().runtime_value
+                )
+                .vector()
+                .runtime_value
                 for rule in cls.rules_for_request(request)
             )
         }
@@ -641,7 +656,9 @@ class ClassifyObjectsSingleMeasurementModule(
     def _classification_kwargs(
         cls, module: "ModuleBlock", binder: "SettingsBinder"
     ) -> "RuntimeCallableKwargs":
-        return ClassificationMethod.from_module(cls, module).bind_settings(cls, module, binder)
+        return ClassificationMethod.from_module(cls, module).bind_settings(
+            cls, module, binder
+        )
 
     @classmethod
     def bind_settings(cls, module, *, binder):
@@ -722,9 +739,9 @@ class ClassifyObjectsSingleMeasurementModule(
             invocation=invocation,
             step_context=step_context,
         )
-        return ClassificationMethod.from_callable_contract(invocation.contract).finalize_module_blocks(
-            cls, blocks, invocation
-        )
+        return ClassificationMethod.from_callable_contract(
+            invocation.contract
+        ).finalize_module_blocks(cls, blocks, invocation)
 
     @classmethod
     def _block_with_scalar_classification_output(
@@ -1124,7 +1141,9 @@ class ClassifyObjectsSingleMeasurementModule(
     ) -> tuple[ClassifiedImageOutput, ...]:
         """Return every active repeated classified-image row in rule order."""
 
-        return ClassificationMethod.from_module(cls, module).classified_image_outputs(cls, module)
+        return ClassificationMethod.from_module(cls, module).classified_image_outputs(
+            cls, module
+        )
 
     @classmethod
     def _single_measurement_classified_image_outputs(
@@ -1311,21 +1330,27 @@ class _ClassificationMethodBehavior(ABC):
 
     @abstractmethod
     def bind_settings(
-        self, module_type: type[ClassifyObjectsSingleMeasurementModule],
-        module: ModuleBlock, binder: SettingsBinder,
+        self,
+        module_type: type[ClassifyObjectsSingleMeasurementModule],
+        module: ModuleBlock,
+        binder: SettingsBinder,
     ) -> RuntimeCallableKwargs:
         """Bind this mode through the concrete module's existing setting hook."""
 
     @abstractmethod
     def classified_image_outputs(
-        self, module_type: type[ClassifyObjectsSingleMeasurementModule], module: ModuleBlock,
+        self,
+        module_type: type[ClassifyObjectsSingleMeasurementModule],
+        module: ModuleBlock,
     ) -> tuple[ClassifiedImageOutput, ...]:
         """Project this mode's concrete module image-output hook."""
 
     @abstractmethod
     def finalize_mode_blocks(
-        self, module_type: type[ClassifyObjectsSingleMeasurementModule],
-        blocks: tuple[ModuleBlock, ...], invocation: NormalizedFunctionItem,
+        self,
+        module_type: type[ClassifyObjectsSingleMeasurementModule],
+        blocks: tuple[ModuleBlock, ...],
+        invocation: NormalizedFunctionItem,
     ) -> tuple[ModuleBlock, ...]:
         """Complete this mode after the shared template emits its literal."""
 
@@ -1343,7 +1368,8 @@ class _SingleMeasurementClassificationMethodBehavior(_ClassificationMethodBehavi
         rules = invocation.kwargs_dict.get("classification_rules")
         if rules is not None:
             if not isinstance(rules, tuple) or any(
-                not isinstance(rule, SingleMeasurementClassificationRule) for rule in rules
+                not isinstance(rule, SingleMeasurementClassificationRule)
+                for rule in rules
             ):
                 raise TypeError(
                     "ClassifyObjects classification_rules must be a tuple of "
@@ -1401,7 +1427,9 @@ class ClassificationMethod(Enum):
     cellprofiler_literals: tuple[str, ...]
 
     def __new__(
-        cls, absorbed_value: str, behavior: _ClassificationMethodBehavior,
+        cls,
+        absorbed_value: str,
+        behavior: _ClassificationMethodBehavior,
         *cellprofiler_literals: str,
     ) -> "ClassificationMethod":
         member = enum_member_with_payload(
@@ -1427,7 +1455,9 @@ class ClassificationMethod(Enum):
 
     @classmethod
     def from_module(
-        cls, module_type: type[ClassifyObjectsSingleMeasurementModule], module: ModuleBlock,
+        cls,
+        module_type: type[ClassifyObjectsSingleMeasurementModule],
+        module: ModuleBlock,
     ) -> ClassificationMethod:
         return coerce_cellprofiler_enum(
             cls,
@@ -1452,14 +1482,18 @@ class ClassificationMethod(Enum):
         return next(iter(methods))
 
     def require_callable(
-        self, module_type: type[ClassifyObjectsSingleMeasurementModule],
+        self,
+        module_type: type[ClassifyObjectsSingleMeasurementModule],
     ) -> Callable[..., object]:
         matches = tuple(
             func
             for name in module_type.declared_function_names()
             if self.from_callable_contract(
-                CallableContract.from_callable(func := module_type.require_callable(name))
-            ) is self
+                CallableContract.from_callable(
+                    func := module_type.require_callable(name)
+                )
+            )
+            is self
         )
         if len(matches) != 1:
             raise ValueError(
@@ -1468,19 +1502,25 @@ class ClassificationMethod(Enum):
         return matches[0]
 
     def bind_settings(
-        self, module_type: type[ClassifyObjectsSingleMeasurementModule],
-        module: ModuleBlock, binder: SettingsBinder,
+        self,
+        module_type: type[ClassifyObjectsSingleMeasurementModule],
+        module: ModuleBlock,
+        binder: SettingsBinder,
     ) -> RuntimeCallableKwargs:
         return self._behavior.bind_settings(module_type, module, binder)
 
     def classified_image_outputs(
-        self, module_type: type[ClassifyObjectsSingleMeasurementModule], module: ModuleBlock,
+        self,
+        module_type: type[ClassifyObjectsSingleMeasurementModule],
+        module: ModuleBlock,
     ) -> tuple[ClassifiedImageOutput, ...]:
         return self._behavior.classified_image_outputs(module_type, module)
 
     def finalize_module_blocks(
-        self, module_type: type[ClassifyObjectsSingleMeasurementModule],
-        blocks: tuple[ModuleBlock, ...], invocation: NormalizedFunctionItem,
+        self,
+        module_type: type[ClassifyObjectsSingleMeasurementModule],
+        blocks: tuple[ModuleBlock, ...],
+        invocation: NormalizedFunctionItem,
     ) -> tuple[ModuleBlock, ...]:
         blocks = tuple(
             replace(
@@ -1491,9 +1531,11 @@ class ClassificationMethod(Enum):
                         cellprofiler_setting_literal(self.cellprofiler_literals[1]),
                     ),
                     *(
-                        record for record in block.iter_settings()
+                        record
+                        for record in block.iter_settings()
                         if not setting_name_matches(
-                            record.name, module_type.classification_decision_count_setting
+                            record.name,
+                            module_type.classification_decision_count_setting,
                         )
                     ),
                 ],
@@ -1949,7 +1991,6 @@ class ObjectClassificationBackendStrategy(
 ):
     """Object classification primitives keyed by memory type/provider."""
 
-
     @abstractmethod
     def positive_label_ids(self, labels: np.ndarray) -> np.ndarray:
         """Return positive label ids present in ``labels``."""
@@ -2106,8 +2147,10 @@ def classify_objects_single_measurement(
                 measurement_values=rule_values,
             ).classify(image, labels, backend)
             classified_images.append(
-                image.with_pixels(classification_rgb_image(classified_labels),
-                    metadata=classified_image_metadata,)
+                image.with_pixels(
+                    classification_rgb_image(classified_labels),
+                    metadata=classified_image_metadata,
+                )
             )
             results.append(result)
         configured_output_indices = tuple(
@@ -2154,8 +2197,10 @@ def classify_objects_single_measurement(
             f"{configured_output_indices!r}."
         )
     output = (
-        image.with_pixels(classification_rgb_image(classified_labels),
-            metadata=classified_image_metadata,)
+        image.with_pixels(
+            classification_rgb_image(classified_labels),
+            metadata=classified_image_metadata,
+        )
         if classified_image_rule_indices
         else labels
     )

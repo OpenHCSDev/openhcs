@@ -171,7 +171,8 @@ class ProcessMemoryReceipt:
             for name, value in (line.split(":", 1),)
         }
         full_pressure = next(
-            line for line in Path("/proc/pressure/memory").read_text().splitlines()
+            line
+            for line in Path("/proc/pressure/memory").read_text().splitlines()
             if line.startswith("full ")
         )
         pressure = dict(part.split("=", 1) for part in full_pressure.split()[1:])
@@ -211,11 +212,11 @@ class ProcessMemoryReceipt:
                 if memory_type.loaded_module() is not None
             ),
             catalog_entries=catalog_entries,
-            custom_declarations=len(
-                custom.CustomFunctionRuntimeRegistry.metadata_by_name()
-            )
-            if custom
-            else 0,
+            custom_declarations=(
+                len(custom.CustomFunctionRuntimeRegistry.metadata_by_name())
+                if custom
+                else 0
+            ),
             history_snapshots=len(state.ObjectStateRegistry._snapshots) if state else 0,
             imported_source_paths=tuple(
                 modules[name].__file__
@@ -270,7 +271,10 @@ class MemoryDiagnosticReport:
     def __post_init__(self) -> None:
         if self.rounds < 2:
             raise ValueError("A retention slope requires at least two repeated rounds.")
-        if not math.isfinite(self.round_interval_seconds) or self.round_interval_seconds < 0:
+        if (
+            not math.isfinite(self.round_interval_seconds)
+            or self.round_interval_seconds < 0
+        ):
             raise ValueError("Round interval must be finite and nonnegative.")
 
     def write(self, output: Path) -> None:
@@ -395,8 +399,10 @@ async def diagnose(
     )
 
     report = MemoryDiagnosticReport(
-        rounds=rounds, request_sequence=sequence,
-        round_interval_seconds=round_interval_seconds, gc_at_end=gc_at_end,
+        rounds=rounds,
+        request_sequence=sequence,
+        round_interval_seconds=round_interval_seconds,
+        gc_at_end=gc_at_end,
     )
     output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -515,14 +521,14 @@ def main() -> None:
         return
     report = asyncio.run(
         diagnose(
-                args.rounds,
-                args.timeout,
-                args.output,
-                surface_profile=surface_profile,
-                scratch_root=args.scratch_root,
-                sequence_path=args.sequence_json,
-                round_interval_seconds=args.round_interval_seconds,
-                gc_at_end=args.gc_at_end,
+            args.rounds,
+            args.timeout,
+            args.output,
+            surface_profile=surface_profile,
+            scratch_root=args.scratch_root,
+            sequence_path=args.sequence_json,
+            round_interval_seconds=args.round_interval_seconds,
+            gc_at_end=args.gc_at_end,
         )
     )
     print(

@@ -653,12 +653,15 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
                 )
             group_lineage_refs = source_refs or object_refs
             for producer in feature_matches:
-                object_subjects = tuple(dict.fromkeys(
-                    InputObjectMeasurementSourceRelation(relation.source)
-                    for relation in producer.spec.relations
-                    if relation.source.artifact_type is ObjectLabelsArtifactType
-                    and relation.source.for_plan_type(ArtifactInputPlan) in object_refs
-                ))
+                object_subjects = tuple(
+                    dict.fromkeys(
+                        InputObjectMeasurementSourceRelation(relation.source)
+                        for relation in producer.spec.relations
+                        if relation.source.artifact_type is ObjectLabelsArtifactType
+                        and relation.source.for_plan_type(ArtifactInputPlan)
+                        in object_refs
+                    )
+                )
                 if object_subjects:
                     measurement_input = object_subjects[0].input_spec_for_output(
                         producer.spec
@@ -1232,9 +1235,11 @@ class ImageMeasurementInputModule(
             for spec in inputs.of_artifact_type(ImageArtifactType)
         )
         return tuple(
-            replace(spec, relations=(*spec.relations, *image_contexts))
-            if spec.artifact_type is ObjectLabelsArtifactType and image_contexts
-            else spec
+            (
+                replace(spec, relations=(*spec.relations, *image_contexts))
+                if spec.artifact_type is ObjectLabelsArtifactType and image_contexts
+                else spec
+            )
             for spec in inputs
         )
 
@@ -1252,8 +1257,11 @@ class ImageMeasurementInputModule(
         )
         if any(
             spec.ref() not in produced_refs
-            and step_context.source_bindings.binding_for_artifact_ref(spec.ref()) is not None
-            for spec in callable_contract.artifact_inputs.of_artifact_type(ImageArtifactType)
+            and step_context.source_bindings.binding_for_artifact_ref(spec.ref())
+            is not None
+            for spec in callable_contract.artifact_inputs.of_artifact_type(
+                ImageArtifactType
+            )
         ):
             return InputSource.PIPELINE_START
         return super().input_source_for_contract(
@@ -1372,7 +1380,9 @@ class ObjectMeasurementInputModule(
         """Require selection intent before reconstructing multiple object subjects."""
 
         blocks = super().finalize_module_blocks_for_invocation(
-            blocks, invocation=invocation, step_context=step_context,
+            blocks,
+            invocation=invocation,
+            step_context=step_context,
         )
         binding = cls.object_measurement_binding
         selector = binding.require_parameter_name()
@@ -1390,7 +1400,8 @@ class ObjectMeasurementInputModule(
     ) -> tuple[ArtifactSpec, ...]:
         """Keep all declared measurement subjects in one logical module batch."""
         source_refs = frozenset(
-            spec.ref() for spec in (
+            spec.ref()
+            for spec in (
                 *super().processing_group_scope_inputs(callable_contract),
                 *callable_contract.group_scope_inputs,
             )

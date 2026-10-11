@@ -1061,9 +1061,7 @@ def _lower_module_batch(
                     if group_key in grouped_items and not preserves_input_main_flow:
                         return None
                     grouped_items.setdefault(group_key, []).append(leaf)
-                    target_units_by_group_key.setdefault(group_key, []).append(
-                        unit
-                    )
+                    target_units_by_group_key.setdefault(group_key, []).append(unit)
             public_pattern = {
                 group_key: items[0] if len(items) == 1 else items
                 for group_key, items in grouped_items.items()
@@ -1104,7 +1102,8 @@ def _lower_module_batch(
                 return None
             invocation_target_contract = (
                 invocation_target_units[0].contract
-                if len(invocation_target_units) == 1 else target_contract
+                if len(invocation_target_units) == 1
+                else target_contract
             )
             # Projection may omit a selector only in its original context.
             # Reuse the binding-owned occurrence relation after earlier calls
@@ -1114,7 +1113,8 @@ def _lower_module_batch(
                     module_type,
                     invocation_target_units,
                     candidate_group_keys=(
-                        () if invocation.key.group_key == DEFAULT_GROUP_KEY
+                        ()
+                        if invocation.key.group_key == DEFAULT_GROUP_KEY
                         else (invocation.key.group_key,)
                     ),
                     step_context=group_context,

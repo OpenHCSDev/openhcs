@@ -129,7 +129,9 @@ class CellProfilerContractCall(ContractCall):
     def stack_reduction_output(self, result):
         result_2d = ImagePayload.of(result)
         stacked = stack_slices(
-            [result_2d.data], detect_memory_type(result_2d.data), 0,
+            [result_2d.data],
+            detect_memory_type(result_2d.data),
+            0,
         )
         return result_2d.metadata.payload_with(stacked, mask=result_2d.mask)
 
@@ -290,9 +292,7 @@ class CellProfilerFunctionContractExecutor:
             plane_projection,
         )
         execute_started_at = time.perf_counter()
-        with executing_measurement_dialect(
-            CELLPROFILER_MEASUREMENT_DIALECT
-        ):
+        with executing_measurement_dialect(CELLPROFILER_MEASUREMENT_DIALECT):
             result = execution_mode.execute(
                 processing_contract, call, image, dict(kwargs)
             )

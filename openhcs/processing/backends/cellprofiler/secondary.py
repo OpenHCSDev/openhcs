@@ -535,7 +535,6 @@ class SecondaryDistanceTransformBackendStrategy(
 ):
     """Distance transform operations used by secondary segmentation."""
 
-
     @abstractmethod
     def distance_to_foreground(self, labels: np.ndarray) -> np.ndarray:
         """Return Euclidean distance to the nearest positive label."""
@@ -615,7 +614,6 @@ class SecondaryPropagationBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Regularized label propagation backend for secondary segmentation."""
-
 
     @abstractmethod
     def propagate_result(

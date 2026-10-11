@@ -51,7 +51,10 @@ def _carriers():
             subject=MeasurementSubject(MeasurementScope.SAMPLE, "DNA"),
         ),
         partial(
-            SpatialGraph, name="Graph", nodes=(), edges=(),
+            SpatialGraph,
+            name="Graph",
+            nodes=(),
+            edges=(),
             coordinate_spacing=SourceVoxelSpacing((1.0, 1.0)),
         ),
         partial(

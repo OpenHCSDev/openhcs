@@ -278,7 +278,9 @@ class OMEROMetadataHandler(MetadataHandler):
             all_subdirs: Unused for OMERO (no subdirectories), kept for interface compatibility
         """
         plate_id = (
-            dataset_root if isinstance(dataset_root, int) else int(Path(dataset_root).name)
+            dataset_root
+            if isinstance(dataset_root, int)
+            else int(Path(dataset_root).name)
         )
 
         # Get OMERO backend from registry
@@ -343,7 +345,6 @@ class OMEROFilenameParser(FilenameParser):
             extension=components.extension,
         ).filename()
 
-
     def extract_component_coordinates(self, component_value: str) -> tuple[str, str]:
         """Extract coordinates from well identifier (e.g., 'A01' → ('A', '01'))."""
 
@@ -356,7 +357,6 @@ class OMEROHandler(RemoteServiceSource, DatasetSource):
 
     source_name = "omero"
     metadata_handler_class = OMEROMetadataHandler
-
 
     @classmethod
     def source_selection_guidance(cls) -> str:
@@ -390,8 +390,6 @@ class OMEROHandler(RemoteServiceSource, DatasetSource):
         Returns "Images" for path compatibility with OMERO virtual paths.
         """
         return "Images"
-
-
 
     @property
     def compatible_backends(self) -> list[Backend]:

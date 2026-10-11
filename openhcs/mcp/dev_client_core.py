@@ -16,7 +16,16 @@ from dataclasses import dataclass, field, fields, is_dataclass, replace
 from enum import Enum
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Self, TextIO, TypeVar, cast, get_args, get_type_hints
+from typing import (
+    TYPE_CHECKING,
+    ClassVar,
+    Self,
+    TextIO,
+    TypeVar,
+    cast,
+    get_args,
+    get_type_hints,
+)
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import (
@@ -1156,7 +1165,9 @@ def _agent_errors(value: object) -> tuple[AgentError, ...]:
         return tuple(
             error
             for declaration in fields(value)
-            if not isinstance(field_value := getattr(value, declaration.name), AgentError)
+            if not isinstance(
+                field_value := getattr(value, declaration.name), AgentError
+            )
             for error in _agent_errors(field_value)
         )
     return ()

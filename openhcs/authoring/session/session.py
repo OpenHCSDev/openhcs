@@ -310,7 +310,9 @@ class Session:
         self.global_config = global_config
         self.client = ZMQClientService(
             config=transport_config,
-            status_callback=lambda status: self.publish(ServerConnectionChanged(status)),
+            status_callback=lambda status: self.publish(
+                ServerConnectionChanged(status)
+            ),
             compatibility_callback=lambda compatibility: self.publish(
                 ServerCompatibilityObserved(compatibility)
             ),
@@ -345,7 +347,9 @@ class Session:
         self.submission = ExecutionSubmission(self)
         self.execution_control = ExecutionControl(self)
         self.debug_runs = DebugRuns(self)
-        self.progress = ExecutionProgress(self, interval_seconds=progress_interval_seconds)
+        self.progress = ExecutionProgress(
+            self, interval_seconds=progress_interval_seconds
+        )
         self._work = AsyncOperationExecutor()
         self._closed = False
 
@@ -357,7 +361,9 @@ class Session:
     def publish(self, event: SessionEvent) -> SessionEventRecord:
         return self.event_log.publish(event)
 
-    def subscribe(self, listener: Callable[[SessionEventRecord], None]) -> Callable[[], None]:
+    def subscribe(
+        self, listener: Callable[[SessionEventRecord], None]
+    ) -> Callable[[], None]:
         return self.event_log.subscribe(listener)
 
     def events_after(
@@ -507,7 +513,9 @@ class Session:
         on that separately prepared root.
         """
 
-        roots = tuple(self.dataset_access.require_readable(Path(root)) for root in roots)
+        roots = tuple(
+            self.dataset_access.require_readable(Path(root)) for root in roots
+        )
         if execution_root is not None:
             if len(roots) != 1:
                 raise ValueError("A prepared execution root needs exactly one root.")
@@ -522,7 +530,9 @@ class Session:
             )
         else:
             offers = tuple(
-                offer for root in roots for offer in DatasetScopeKind.offers_for_root(root)
+                offer
+                for root in roots
+                for offer in DatasetScopeKind.offers_for_root(root)
             )
         added = self._add_scopes(
             tuple(offer.scope for offer in offers),
@@ -636,7 +646,9 @@ class Session:
 
     def delete_datasets(self, scope_ids: Iterable[str]) -> None:
         doomed = {str(scope_id) for scope_id in scope_ids}
-        active = sorted(scope_id for scope_id in doomed if self.has_active_work(scope_id))
+        active = sorted(
+            scope_id for scope_id in doomed if self.has_active_work(scope_id)
+        )
         if active:
             raise RuntimeError(
                 "Cannot delete a dataset with active initialization, compilation, "
@@ -704,7 +716,9 @@ class Session:
         PipelineObjectStateBinding.commit_plate_state(scope_id)
         self.pipeline_changed(scope_id)
         self.publish(
-            StatusReported(f"Pipeline updated with {len(document.pipeline_steps)} steps")
+            StatusReported(
+                f"Pipeline updated with {len(document.pipeline_steps)} steps"
+            )
         )
 
     def set_pipeline_source(self, scope_id: str, source: str) -> None:
@@ -748,7 +762,9 @@ class Session:
         edited_step: FunctionStep,
     ) -> None:
         self.require_definition_mutation_allowed(scope_id)
-        PipelineObjectStateBinding.replace_plate_step(scope_id, current_step, edited_step)
+        PipelineObjectStateBinding.replace_plate_step(
+            scope_id, current_step, edited_step
+        )
         self.pipeline_changed(scope_id)
         self.publish(StatusReported(f"Updated step: {edited_step.name}"))
 
@@ -780,7 +796,9 @@ class Session:
         doomed = set(step_scope_ids)
         self.require_definition_mutation_allowed(scope_id)
         steps = self.pipeline_steps(scope_id)
-        kept = [step for step in steps if self.step_scope_id(scope_id, step) not in doomed]
+        kept = [
+            step for step in steps if self.step_scope_id(scope_id, step) not in doomed
+        ]
         names = [step.name for step in steps if step not in kept]
         with ObjectStateRegistry.atomic(f"delete steps {', '.join(names)}"):
             for step_scope_id in doomed:
@@ -883,7 +901,9 @@ class Session:
                 "active initialization or compilation. Other datasets remain editable."
             )
 
-    def require_definition_mutation_allowed_for_object_scope(self, scope_id: str) -> None:
+    def require_definition_mutation_allowed_for_object_scope(
+        self, scope_id: str
+    ) -> None:
         """Authorize an ObjectState mutation that may belong to a dataset."""
 
         if scope_id == "":
@@ -1024,10 +1044,13 @@ class Session:
                 self.publish(DatasetsChanged())
 
                 def run() -> InputWorkspacePreparationResult | None:
-                    ensure_global_config_context(GlobalPipelineConfig, self.global_config)
+                    ensure_global_config_context(
+                        GlobalPipelineConfig, self.global_config
+                    )
                     workspace = scope.prepare_input_workspace()
-                    if workspace is None and not self.dataset_access.initializes_in_place(
-                        scope.root
+                    if (
+                        workspace is None
+                        and not self.dataset_access.initializes_in_place(scope.root)
                     ):
                         workspace = self.mirrored_workspace(scope.root)
                     if workspace is not None:
@@ -1055,9 +1078,7 @@ class Session:
                     )
                     self.set_dataset_state(scope_id, OrchestratorState.READY)
                     if scope_id == self.current_scope_id or not self.current_scope_id:
-                        self.main_thread.call(
-                            lambda: self._reselect(scope_id)
-                        )
+                        self.main_thread.call(lambda: self._reselect(scope_id))
             done += 1
             self.publish(ProgressAdvanced(done))
 
@@ -1122,7 +1143,9 @@ class Session:
         timer = threading.Timer(
             wait_timeout_ms / 1000,
             lambda: self.main_thread.post(
-                lambda: self._run_deadline_passed(batch_number, scope_ids, wait_timeout_ms)
+                lambda: self._run_deadline_passed(
+                    batch_number, scope_ids, wait_timeout_ms
+                )
             ),
         )
         timer.daemon = True
@@ -1207,7 +1230,9 @@ class Session:
             return None
         path = self.dataset_access.require_writable(Path(export_path))
         if path.exists():
-            raise FileExistsError(f"Runtime observation export path already exists: {path}")
+            raise FileExistsError(
+                f"Runtime observation export path already exists: {path}"
+            )
         return ZMQAuxiliaryExecutionParams(
             runtime_observation_export_path=path,
             runtime_observation_export_scope=scope,
@@ -1241,7 +1266,9 @@ class Session:
     ) -> None:
         """Record one dataset's terminal status (from any thread)."""
 
-        self.main_thread.post(lambda: self._finish_dataset_execution(completion, scope_id))
+        self.main_thread.post(
+            lambda: self._finish_dataset_execution(completion, scope_id)
+        )
 
     def _finish_dataset_execution(
         self,
@@ -1273,7 +1300,9 @@ class Session:
         if status.emit_failure:
             detail = completion.traceback_text or completion.message
             separator = ":\n\n" if completion.traceback_text else ": "
-            self.publish(ErrorReported(f"Execution failed for {scope_id}{separator}{detail}"))
+            self.publish(
+                ErrorReported(f"Execution failed for {scope_id}{separator}{detail}")
+            )
 
     def _add_output_dataset(
         self,
@@ -1309,12 +1338,17 @@ class Session:
     def finish_batch(self, completed_count: int, failed_count: int) -> None:
         self.execution_state = ManagerExecutionState.IDLE
         summary = f"All done: {completed_count} completed, {failed_count} failed"
-        if completed_count > 1 and self.global_config.analysis_consolidation_config.enabled:
+        if (
+            completed_count > 1
+            and self.global_config.analysis_consolidation_config.enabled
+        ):
             try:
                 consolidate_batch_results(self)
                 summary += ". Global summary created."
             except Exception as error:
-                logger.error("Failed to create global summary: %s", error, exc_info=True)
+                logger.error(
+                    "Failed to create global summary: %s", error, exc_info=True
+                )
                 summary += ". Global summary failed."
         self.publish(StatusReported(summary))
         self.publish(BatchFinished(completed_count, failed_count))
@@ -1347,7 +1381,9 @@ class Session:
             return
 
         self.require_execution_allowed((scope_id,))
-        debug_session = DebugSession.create(subject_id=scope_id, command_type=command_type)
+        debug_session = DebugSession.create(
+            subject_id=scope_id, command_type=command_type
+        )
         self.debug_sessions[scope_id] = debug_session
         root = DatasetScope.parse(scope_id).root
         snapshot_root = (root if root.is_dir() else root.parent) / ".openhcs_debug"
@@ -1368,7 +1404,9 @@ class Session:
                 replay_mode=DebugReplayMode.PERSISTENT_PAUSED_WORKER,
             )
             request = dataset_pipeline_request(scope_id, self.global_config)
-            artifact_id = await self.debug_runs.compile_artifact_id(request, debug_request)
+            artifact_id = await self.debug_runs.compile_artifact_id(
+                request, debug_request
+            )
             self.publish(StatusReported(f"Submitting debug run for {scope_id}..."))
             await self.debug_runs.submit(
                 request,
@@ -1430,7 +1468,9 @@ class Session:
                 snapshot_store_backend=context.snapshot_store_backend,
                 axis_id=event.axis_id,
             ).with_cursor(context.cursor)
-        elif summary is not None and summary.debug_session_id == context.debug_session_id:
+        elif (
+            summary is not None and summary.debug_session_id == context.debug_session_id
+        ):
             self.inspected_debug_sessions.pop(scope_id, None)
             if snapshot is not None:
                 self.debug_terminal_summaries[scope_id] = summary.with_snapshot(
@@ -1480,7 +1520,9 @@ class Session:
         return DebugSessionProjectionContext(
             target=DebugSessionTargetState(
                 current_plate_scope_id=scope_id,
-                pipeline_scope_id=PipelineScopeIdentity.from_plate_scope(scope_id).scope_id,
+                pipeline_scope_id=PipelineScopeIdentity.from_plate_scope(
+                    scope_id
+                ).scope_id,
                 initialized=self.is_initialized(scope_id),
                 compiled=scope_id in self.compiled,
                 terminal_status=(
@@ -1506,4 +1548,3 @@ class Session:
         if not self.current_scope_id:
             return None
         return self.debug_context(self.current_scope_id)
-

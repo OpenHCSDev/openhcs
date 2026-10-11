@@ -1,4 +1,5 @@
 from openhcs.core.measurement_dialect import PlainMeasurementDialect
+
 """Runtime equivalence package boundary tests."""
 
 import ast
@@ -45,10 +46,10 @@ from openhcs.core.runtime_measurements import MeasurementScope
 PROJECT_ROOT = Path(__file__).parents[2]
 
 
-
-
 def test_runtime_equivalence_policy_types_have_package_owner() -> None:
-    policy = RuntimeEquivalencePolicy(measurement_dialect=PlainMeasurementDialect.shared())
+    policy = RuntimeEquivalencePolicy(
+        measurement_dialect=PlainMeasurementDialect.shared()
+    )
 
     assert policy.measurement_dialect is not None
     assert normalize_runtime_identifier("MeanIntensity_OrigBlue") == (
@@ -178,8 +179,6 @@ def test_runtime_equivalence_cell_counter_comparison_has_package_owner() -> None
         Counter((signature,)),
         RuntimeEquivalencePolicy(),
     )
-
-
 
 
 def test_runtime_equivalence_array_payloads_use_canonical_equivalence_surface() -> None:

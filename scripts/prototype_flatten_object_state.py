@@ -320,7 +320,8 @@ def test_reconstruction():
         == original.partition_filter_config.partition_filter
     )
     assert (
-        reconstructed.partition_filter_config.enabled == original.partition_filter_config.enabled
+        reconstructed.partition_filter_config.enabled
+        == original.partition_filter_config.enabled
     )
     assert (
         reconstructed.napari_streaming_config.window_size
@@ -465,7 +466,9 @@ def test_none_handling():
     print(
         f"  partition_filter_config.partition_filter: {reconstructed.partition_filter_config.partition_filter}"
     )
-    print(f"  partition_filter_config.enabled: {reconstructed.partition_filter_config.enabled}")
+    print(
+        f"  partition_filter_config.enabled: {reconstructed.partition_filter_config.enabled}"
+    )
 
     # The reconstructed object should have None for partition_filter (not set in filtered_fields)
     assert reconstructed.partition_filter_config.partition_filter is None

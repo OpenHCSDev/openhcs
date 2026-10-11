@@ -63,6 +63,7 @@ from openhcs.core.runtime_measurements import (
     RuntimeMeasurementFeatureSemanticMarker,
 )
 from openhcs.core.runtime_stores import StoredRuntimeValue
+
 if TYPE_CHECKING:
     pass
 from types import MappingProxyType
@@ -76,7 +77,6 @@ from openhcs.core.runtime_relationships import (
     ObjectInstanceKey,
     ObjectLabelInstanceDomains,
 )
-
 
 RuntimeObjectValuesByLabel = dict[
     RuntimeMeasurementFeatureKey,
@@ -570,10 +570,6 @@ def _object_location_mean_feature_fact(
         return ()
     key = RuntimeMeasurementFeatureKey(subject, feature_name, "mean")
     return ((key, runtime_cell_signature(str(float(np.mean(finite_values))), policy)),)
-
-
-
-
 
 
 @dataclass(frozen=True, slots=True)

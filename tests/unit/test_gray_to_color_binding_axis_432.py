@@ -6,7 +6,10 @@ import numpy as np
 import pytest
 
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.aligned_image_payload import (AlignedImageStack, ImagePayloadBundleContext)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    ImagePayloadBundleContext,
+)
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.config import StepSourceBindingsConfig
@@ -25,13 +28,22 @@ from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdap
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
-from openhcs.interop.cellprofiler.runtime.module_execution import CellProfilerModuleExecutor
+from openhcs.interop.cellprofiler.runtime.module_execution import (
+    CellProfilerModuleExecutor,
+)
 from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )
-from openhcs.processing.backends.cellprofiler.color import GrayToColorModule, gray_to_color
-from tests.unit.test_cellprofiler_generic_special_input_binding import _compile_public_step
-from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
+from openhcs.processing.backends.cellprofiler.color import (
+    GrayToColorModule,
+    gray_to_color,
+)
+from tests.unit.test_cellprofiler_generic_special_input_binding import (
+    _compile_public_step,
+)
+from tests.unit.cellprofiler_runtime_test_support import (
+    cellprofiler_runtime_adapter_for_test,
+)
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.axes import ColourAxis
 from openhcs.core.image_payload_execution_mode import (
@@ -41,7 +53,9 @@ from openhcs.core.image_payload_execution_mode import (
 
 
 @pytest.mark.parametrize("explicit_selector", [False, True])
-def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explicit_selector):
+def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(
+    explicit_selector,
+):
     kwargs = {
         "color_scheme": GrayToColorModule.Scheme.STACK,
         "rescale_intensity": False,
@@ -50,40 +64,64 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
     if explicit_selector:
         kwargs["image_name"] = ("FITC",)
     step = FunctionStep(
-        func=(gray_to_color, kwargs), name="RetainRawReference",
+        func=(gray_to_color, kwargs),
+        name="RetainRawReference",
         source_bindings=StepSourceBindingsConfig(
-            enabled=True, bindings=(NamedSourceBinding("FITC"),),
+            enabled=True,
+            bindings=(NamedSourceBinding("FITC"),),
         ),
     )
     invocation = _compile_public_step(step)
-    contract = replace(invocation.contract, metadata=replace(
-        invocation.contract.metadata,
-        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-    ))
+    contract = replace(
+        invocation.contract,
+        metadata=replace(
+            invocation.contract.metadata,
+            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
+        ),
+    )
     pixels = np.arange(20, dtype=np.float32).reshape(4, 5) * 1000
-    physical = {"well": "A01", "site": "1", "channel": "2", "z_index": "1", "timepoint": "1"}
+    physical = {
+        "well": "A01",
+        "site": "1",
+        "channel": "2",
+        "z_index": "1",
+        "timepoint": "1",
+    }
     metadata = ImagePayloadMetadata(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-            paths=("/synthetic/A01_s1_w2_z1_t1.tif",), component_metadata=(physical,),
+            paths=("/synthetic/A01_s1_w2_z1_t1.tif",),
+            component_metadata=(physical,),
         ),
         source_image_names=("FITC",),
         source_voxel_spacing=SourceVoxelSpacing((1.0, 1.0)),
-        source_spatial_domain=SourceSpatialDomain(origin_yx=(0, 0), source_shape_yx=(4, 5)),
+        source_spatial_domain=SourceSpatialDomain(
+            origin_yx=(0, 0), source_shape_yx=(4, 5)
+        ),
     )
     source = metadata.payload_with(pixels[None], None)
     runtime = cellprofiler_runtime_adapter_for_test(
-        runtime_value_store=RuntimeValueStore(), callable_contract=contract,
+        runtime_value_store=RuntimeValueStore(),
+        callable_contract=contract,
         variable_components=(Microscopy.Channel,),
-        axis_scope=RuntimeExecutionAxisScope.from_raw("synthetic", component=None, value=None),
-        artifact_inputs={edge.key: InvocationArtifactInputEdgePlan.from_source_declarations(
-            key=edge.key, spec=edge.spec, main_flow_artifacts=contract.artifact_inputs,
-            invocation_sources=contract.artifact_inputs,
-        ) for edge in invocation.artifact_input_edges},
+        axis_scope=RuntimeExecutionAxisScope.from_raw(
+            "synthetic", component=None, value=None
+        ),
+        artifact_inputs={
+            edge.key: InvocationArtifactInputEdgePlan.from_source_declarations(
+                key=edge.key,
+                spec=edge.spec,
+                main_flow_artifacts=contract.artifact_inputs,
+                invocation_sources=contract.artifact_inputs,
+            )
+            for edge in invocation.artifact_input_edges
+        },
     )
     executor = CellProfilerModuleExecutor(gray_to_color, contract)
     request = executor._image_request(
-        source, runtime, module_type=GrayToColorModule,
+        source,
+        runtime,
+        module_type=GrayToColorModule,
         active_input_specs=contract.artifact_inputs.specs,
     )
     assert contract.artifact_inputs.names() == ("FITC",)
@@ -95,22 +133,38 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
     assert request.plane_projection.axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert request.plane_projection.axis_size == 1
     assert request.plane_projection.plane_index is None
-    assert request.payload.slices[0].metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    assert (
+        request.payload.slices[0].metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    )
     assert request.payload.slices[0].metadata.source_image_names == ("FITC",)
     execution = executor._invocation_request(
-        image_request=request, adapter=runtime, current_image=source,
+        image_request=request,
+        adapter=runtime,
+        current_image=source,
         module_type=GrayToColorModule,
-        kwargs={"color_scheme": GrayToColorModule.Scheme.STACK, "rescale_intensity": False},
+        kwargs={
+            "color_scheme": GrayToColorModule.Scheme.STACK,
+            "rescale_intensity": False,
+        },
     )
     result = CellProfilerFunctionContractExecutor().execute(
-        contract, contract.resolve_canonical_raw_callable(), execution.payload, execution.kwargs,
-        execution_mode=execution.execution_mode, plane_projection=execution.plane_projection,
+        contract,
+        contract.resolve_canonical_raw_callable(),
+        execution.payload,
+        execution.kwargs,
+        execution_mode=execution.execution_mode,
+        plane_projection=execution.plane_projection,
     )
     # Float32 is the original Stack runner's output contract, not unit normalization.
     assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    plane = RuntimeSliceProjection.value_for_slice(result, RuntimePlaneAxisValueProjection.from_selected_plane(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1,
-    ))
+    plane = RuntimeSliceProjection.value_for_slice(
+        result,
+        RuntimePlaneAxisValueProjection.from_selected_plane(
+            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_index=0,
+            axis_size=1,
+        ),
+    )
     assert plane.data.shape == (4, 5, 1)
     np.testing.assert_array_equal(plane.data[..., 0], pixels)
     np.testing.assert_array_equal(source.data[0], pixels)
@@ -124,17 +178,27 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
 def _source_plane(pixels, alias):
     return ImagePayloadMetadata(
         source_path="/synthetic/A01_s1_w2_z1_t1.tif",
-        source_component_metadata={"well": "A01", "site": "1", "channel": "2", "z_index": "1", "timepoint": "1"},
+        source_component_metadata={
+            "well": "A01",
+            "site": "1",
+            "channel": "2",
+            "z_index": "1",
+            "timepoint": "1",
+        },
         source_image_names=(alias,),
         source_voxel_spacing=SourceVoxelSpacing((1.0, 1.0)),
-        source_spatial_domain=SourceSpatialDomain(origin_yx=(0, 0), source_shape_yx=pixels.shape[:2]),
+        source_spatial_domain=SourceSpatialDomain(
+            origin_yx=(0, 0), source_shape_yx=pixels.shape[:2]
+        ),
     ).payload_with(pixels, None)
 
 
 def _execute_bound_stack(bundle):
     contract = CallableContract.from_callable(gray_to_color)
     return CellProfilerFunctionContractExecutor().execute(
-        contract, contract.resolve_canonical_raw_callable(), bundle,
+        contract,
+        contract.resolve_canonical_raw_callable(),
+        bundle,
         {"color_scheme": GrayToColorModule.Scheme.STACK, "rescale_intensity": False},
         execution_mode=FullStackExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
@@ -145,11 +209,17 @@ def _execute_bound_stack(bundle):
     )
 
 
-@pytest.mark.parametrize("aliases", [("RawBody", "CappedOutgrowth"), ("IndependentRoleA", "IndependentRoleB")])
+@pytest.mark.parametrize(
+    "aliases",
+    [("RawBody", "CappedOutgrowth"), ("IndependentRoleA", "IndependentRoleB")],
+)
 def test_two_processing_roles_share_physical_channel_without_fabrication(aliases):
     raw = np.arange(20, dtype=np.float32).reshape(4, 5) * 1000
     capped = np.clip(raw / 6000, 0, 1)
-    inputs = tuple(_source_plane(pixels, alias) for pixels, alias in zip((raw, capped), aliases, strict=True))
+    inputs = tuple(
+        _source_plane(pixels, alias)
+        for pixels, alias in zip((raw, capped), aliases, strict=True)
+    )
     bundle = ImagePayloadBundleContext.from_payloads(inputs).compose()
     assert bundle.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
     result = _execute_bound_stack(bundle)
@@ -169,10 +239,17 @@ def test_projected_runtime_plane_needs_a_separate_named_binding_axis():
     pixels = np.arange(20, dtype=np.float32).reshape(4, 5) * 1000
     scalar = _source_plane(pixels, "FITC")
     metadata = scalar.metadata
-    retained = replace(metadata, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(pixels[None], None)
-    projected = RuntimeSliceProjection.value_for_slice(retained, RuntimePlaneAxisValueProjection.from_selected_plane(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=0, axis_size=1,
-    ))
+    retained = replace(
+        metadata, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+    ).payload_with(pixels[None], None)
+    projected = RuntimeSliceProjection.value_for_slice(
+        retained,
+        RuntimePlaneAxisValueProjection.from_selected_plane(
+            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            plane_index=0,
+            axis_size=1,
+        ),
+    )
     assert projected.metadata.plane_axis is None
     bundle = ImagePayloadBundleContext.from_payloads((projected,)).compose()
     assert bundle.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
@@ -184,7 +261,9 @@ def test_projected_runtime_plane_needs_a_separate_named_binding_axis():
 
 def test_stack_color_output_is_not_a_second_scalar_gray_binding():
     pixels = np.arange(20, dtype=np.float32).reshape(4, 5)
-    named = ImagePayloadBundleContext.from_payloads((_source_plane(pixels, "FITC"),)).compose()
+    named = ImagePayloadBundleContext.from_payloads(
+        (_source_plane(pixels, "FITC"),)
+    ).compose()
     color = _execute_bound_stack(named)
     # The existing STACK contract emits YXC even for one role. A second grayscale
     # binding introduces C,Y,X,source-color rather than the required C,Y,X.

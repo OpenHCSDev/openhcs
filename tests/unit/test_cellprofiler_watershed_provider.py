@@ -6,7 +6,9 @@ import numpy as np
 import pytest
 
 from openhcs.constants.constants import MemoryType
-from openhcs.processing.backends.cellprofiler._backend import CellProfilerBackendProvider
+from openhcs.processing.backends.cellprofiler._backend import (
+    CellProfilerBackendProvider,
+)
 from openhcs.processing.backends.cellprofiler.watershed import (
     LegacyWatershedBackendStrategy,
     NumbaNumpyLegacyWatershedBackendStrategy,
@@ -31,8 +33,9 @@ def test_explicit_centrosome_watershed_executes_absorbed_reference_without_depen
         MemoryType.NUMPY, backend_provider=provider
     )
     assert strategy.backend_provider is provider.provider
-    assert provider.provider in LegacyWatershedBackendStrategy.available_backend_providers(
-        MemoryType.NUMPY
+    assert (
+        provider.provider
+        in LegacyWatershedBackendStrategy.available_backend_providers(MemoryType.NUMPY)
     )
     image = np.array([[0.0, 1.0, 0.0]])
     markers = marker_sign * np.array([[1, 0, 2]], dtype=np.int32)
@@ -132,25 +135,27 @@ def test_real_primary_callable_declumps_through_selected_signed_watershed(
         )
     ).astype(np.float32)
     original_image = image.copy()
-    returned_image, measurements, payload, *_diagnostic_planes = identify_primary_objects(
-        image,
-        min_diameter=4,
-        max_diameter=14,
-        exclude_size=False,
-        exclude_border_objects=False,
-        unclump_method=UnclumpMethod.INTENSITY,
-        watershed_method=WatershedMethod.INTENSITY,
-        automatic_smoothing=False,
-        smoothing_filter_size=0,
-        automatic_suppression=False,
-        maxima_suppression_size=3,
-        low_res_maxima=False,
-        fill_holes=FillHolesOption.NEVER,
-        threshold_method=CellProfilerThresholdMethod.MANUAL,
-        manual_threshold=0.2,
-        threshold_smoothing_scale=0,
-        morphology_backend_provider=CellProfilerBackendProvider.CENTROSOME,
-        watershed_backend_provider=provider,
+    returned_image, measurements, payload, *_diagnostic_planes = (
+        identify_primary_objects(
+            image,
+            min_diameter=4,
+            max_diameter=14,
+            exclude_size=False,
+            exclude_border_objects=False,
+            unclump_method=UnclumpMethod.INTENSITY,
+            watershed_method=WatershedMethod.INTENSITY,
+            automatic_smoothing=False,
+            smoothing_filter_size=0,
+            automatic_suppression=False,
+            maxima_suppression_size=3,
+            low_res_maxima=False,
+            fill_holes=FillHolesOption.NEVER,
+            threshold_method=CellProfilerThresholdMethod.MANUAL,
+            manual_threshold=0.2,
+            threshold_smoothing_scale=0,
+            morphology_backend_provider=CellProfilerBackendProvider.CENTROSOME,
+            watershed_backend_provider=provider,
+        )
     )
     (selected_backend,) = selected
     (request,) = requests
@@ -161,7 +166,10 @@ def test_real_primary_callable_declumps_through_selected_signed_watershed(
     assert labels.dtype == np.int32
     assert labels.shape == image.shape
     assert np.unique(labels).tolist() == [0, 1, 2]
-    assert payload.domain.require_explicit_id_domain(context="primary journey") == (1, 2)
+    assert payload.domain.require_explicit_id_domain(context="primary journey") == (
+        1,
+        2,
+    )
     np.testing.assert_array_equal(labels > 0, image > 0.2)
     np.testing.assert_array_equal(returned_image, original_image)
     np.testing.assert_array_equal(image, original_image)

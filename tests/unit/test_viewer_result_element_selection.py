@@ -174,13 +174,17 @@ def _viewer_server(viewer, layer, route_key: str = "result-rois", group_binding=
             NapariStreamLayerItem(
                 data=layer.data,
                 producer=StreamProducerIdentity(
-                    origin="manual", output_kind="fixture", output_key=route_key,
+                    origin="manual",
+                    output_kind="fixture",
+                    output_key=route_key,
                     projection_key=route_key,
                 ),
                 address=NapariStreamLayerAddress(
-                    components={}, path=f"fixture/{route_key}",
+                    components={},
+                    path=f"fixture/{route_key}",
                     stream_layer_data_type=(
-                        StreamingDataType.POINTS if isinstance(layer, Points)
+                        StreamingDataType.POINTS
+                        if isinstance(layer, Points)
                         else StreamingDataType.SHAPES
                     ),
                 ),
@@ -242,7 +246,9 @@ def test_linked_selection_projects_off_slice_members_without_changing_subject(qt
     paths = [np.array([[0, i, i], [0, i + 1, i + 1]], dtype=float) for i in range(2)]
     layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8]})
     linked_paths = [coordinates + [1, 0, 0] for coordinates in paths]
-    linked = viewer.add_shapes(linked_paths, shape_type="path", features={"owner": [8, 8]})
+    linked = viewer.add_shapes(
+        linked_paths, shape_type="path", features={"owner": [8, 8]}
+    )
     viewer.dims.current_step = (0, 0, 0)
     binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
     server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
@@ -254,7 +260,8 @@ def test_linked_selection_projects_off_slice_members_without_changing_subject(qt
     assert state.selected_data_indices == (0, 1)
     assert linked.selected_data == set()
     assert server.result_selection_controller._linked_group_members(layer, 1) == (
-        (layer, (0, 1)), (linked, (0, 1)),
+        (layer, (0, 1)),
+        (linked, (0, 1)),
     )
     assert viewer.dims.current_step == (0, 0, 0)
     for before, after in zip(original_data, linked.data, strict=True):
@@ -268,10 +275,12 @@ def test_linked_points_use_the_same_native_slice_projection(qtbot):
     viewer.add_image(np.zeros((2, 8, 8), dtype=np.uint8))
     layer = viewer.add_shapes(
         [np.array([[0, 0, 0], [0, 1, 1]], dtype=float)],
-        shape_type="path", features={"owner": [8]},
+        shape_type="path",
+        features={"owner": [8]},
     )
     linked = viewer.add_points(
-        np.array([[0, 2, 2], [1, 3, 3]], dtype=float), features={"owner": [8, 8]},
+        np.array([[0, 2, 2], [1, 3, 3]], dtype=float),
+        features={"owner": [8, 8]},
     )
     viewer.dims.current_step = (0, 0, 0)
     binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
@@ -283,7 +292,8 @@ def test_linked_points_use_the_same_native_slice_projection(qtbot):
     assert state.selected_data_indices == (0,)
     assert linked.selected_data == {0}
     assert server.result_selection_controller._linked_group_members(layer, 0) == (
-        (layer, (0,)), (linked, (0, 1)),
+        (layer, (0,)),
+        (linked, (0, 1)),
     )
 
 
@@ -681,8 +691,10 @@ def test_point_coordinate_owner_preserves_strict_acquisition_admission(coordinat
 def test_shapes_coordinate_owner_stays_strict_for_hidden_spatial_axes(displayed):
     with pytest.raises(ValueError, match="integral slice"):
         ViewerResultElementCoordinates.axis_indices(
-            coordinates=((1.5, 2.5, 3.5),), axis_labels=("z_index", "y", "x"),
-            displayed_axis_indices=displayed, spatial_axis_labels=("z_index", "y", "x"),
+            coordinates=((1.5, 2.5, 3.5),),
+            axis_labels=("z_index", "y", "x"),
+            displayed_axis_indices=displayed,
+            spatial_axis_labels=("z_index", "y", "x"),
         )
 
 

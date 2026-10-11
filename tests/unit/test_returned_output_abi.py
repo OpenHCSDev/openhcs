@@ -6,7 +6,11 @@ import numpy as np
 import pytest
 
 from openhcs.processing.backends.cellprofiler.crop import CropMask
-from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    AlignedImageStack,
+    ImageOutputBundle,
+)
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,

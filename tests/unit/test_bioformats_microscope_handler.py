@@ -217,7 +217,9 @@ def test_openhcs_replay_registers_declared_source_handler_backends(
     reopened_filemanager = bioformats_filemanager()
     assert Backend.BIOFORMATS.value not in reopened_filemanager.registry
 
-    handler = DatasetSourceChoice.named("auto").open(tmp_path, filemanager=reopened_filemanager)
+    handler = DatasetSourceChoice.named("auto").open(
+        tmp_path, filemanager=reopened_filemanager
+    )
     assert handler.dataset_root == tmp_path
     handler.initialize_workspace(tmp_path, reopened_filemanager)
 
@@ -304,7 +306,9 @@ def test_openhcs_output_subdirectory_initializes_from_metadata_root(
 
 
 def test_create_microscope_handler_supports_explicit_bioformats(tmp_path: Path) -> None:
-    handler = DatasetSourceChoice.named("bioformats").open(tmp_path, filemanager=bioformats_filemanager())
+    handler = DatasetSourceChoice.named("bioformats").open(
+        tmp_path, filemanager=bioformats_filemanager()
+    )
 
     assert isinstance(handler, BioFormatsHandler)
 

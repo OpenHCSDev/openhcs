@@ -13,7 +13,11 @@ import pytest
 from arraybridge import ArrayPayload
 import openhcs.core.callable_contract as callable_contract_module
 
-from openhcs.core.aligned_image_payload import (AlignedImageStack, ImageOutputBundle, compose_aligned_image_payload)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    ImageOutputBundle,
+    compose_aligned_image_payload,
+)
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactSpec,
@@ -66,14 +70,16 @@ from openhcs.core.image_payload_execution_mode import (
 )
 
 
-
-def _execute_one_slice(contract, raw, projection, value, kwargs, slice_index, slice_count):
+def _execute_one_slice(
+    contract, raw, projection, value, kwargs, slice_index, slice_count
+):
     """Run one plane of a per-plane contract in the CellProfiler environment."""
     call = CellProfilerContractCall(contract, raw, projection)
     return contextualize_main_image_output(
         value,
         call.invoke(value, call.slice_kwargs(None, kwargs, slice_index, slice_count)),
     )
+
 
 def _compiled_contract(
     func: Callable[..., object],
@@ -112,7 +118,9 @@ def test_morphological_skeleton_executes_one_planar_runtime_image() -> None:
     assert result.data.shape == image.shape
 
 
-def test_registered_morph_distance_projects_raw_abi_and_retains_source_context() -> None:
+def test_registered_morph_distance_projects_raw_abi_and_retains_source_context() -> (
+    None
+):
     contract = CallableContract.from_callable(morph)
     contract = replace(
         contract,
@@ -144,7 +152,8 @@ def test_registered_morph_distance_projects_raw_abi_and_retains_source_context()
         {"operation": MorphOperation.DISTANCE},
         execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=1,
+            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis_size=1,
         ),
     )
 
@@ -174,7 +183,8 @@ def test_raw_slice_abi_retains_declared_payloads_and_projects_kwargs(
         assert isinstance(image, ArrayPayload)
         seen.append((image, labels))
         return image.metadata.payload_with(
-            image.data + labels, image.mask,
+            image.data + labels,
+            image.mask,
         )
 
     raw = payload_raw if payload_annotation else array_raw
@@ -187,19 +197,29 @@ def test_raw_slice_abi_retains_declared_payloads_and_projects_kwargs(
         ),
     )
     source = ImagePayloadMetadata(source_image_names=("DNA",)).payload_with(
-        np.ones((3, 4), dtype=np.float32), np.ones((3, 4), dtype=bool),
+        np.ones((3, 4), dtype=np.float32),
+        np.ones((3, 4), dtype=bool),
     )
     selected_labels = np.full((3, 4), 5, dtype=np.float32)
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=2,
+        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis_size=2,
     )
 
     assert contract.runtime_main_flow_call_argument(source) is source
     result = _execute_one_slice(
-        contract, raw, projection, source,
-        {"labels": RuntimeSliceAlignedValues(slices=(np.zeros((3, 4)), selected_labels)),
-         "adapter_only_control": 1},
-        1, 2,
+        contract,
+        raw,
+        projection,
+        source,
+        {
+            "labels": RuntimeSliceAlignedValues(
+                slices=(np.zeros((3, 4)), selected_labels)
+            ),
+            "adapter_only_control": 1,
+        },
+        1,
+        2,
     )
 
     assert seen[0][0] is (source if payload_annotation else source.data)
@@ -216,10 +236,12 @@ def test_raw_slice_abi_does_not_relax_output_mask_shape_validation() -> None:
 
     contract = _compiled_contract(bad_shape, Pure2DContract)
     source = ImagePayloadMetadata(source_image_names=("DNA",)).payload_with(
-        np.ones((3, 4)), np.ones((3, 4), dtype=bool),
+        np.ones((3, 4)),
+        np.ones((3, 4), dtype=bool),
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=1,
+        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis_size=1,
     )
     with pytest.raises(ValueError, match="[Mm]ask.*shape|shape.*[Mm]ask"):
         _execute_one_slice(contract, bad_shape, projection, source, {}, 0, 1)
@@ -263,11 +285,16 @@ def test_raw_abi_projection_matches_declared_argument_in_single_and_full_stack_m
         ),
     )
     source = ImagePayloadMetadata(source_image_names=("DNA",)).payload_with(
-        np.ones((3, 4)), None,
+        np.ones((3, 4)),
+        None,
     )
 
     result = CellProfilerFunctionContractExecutor().execute(
-        contract, raw, source, {}, execution_mode=execution_mode,
+        contract,
+        raw,
+        source,
+        {},
+        execution_mode=execution_mode,
     )
 
     assert seen == [source if payload_annotation else source.data]
@@ -294,7 +321,8 @@ def test_raw_abi_projection_matches_declared_argument_in_single_and_full_stack_m
     ),
 )
 def test_canonical_argument_projection_uses_declared_nominal_annotation(
-    annotation: object, retains_payload: bool,
+    annotation: object,
+    retains_payload: bool,
 ) -> None:
     def raw(image):
         return image
@@ -303,7 +331,8 @@ def test_canonical_argument_projection_uses_declared_nominal_annotation(
         raw.__annotations__["image"] = annotation
     contract = _compiled_contract(raw, Pure2DContract)
     source = ImagePayloadMetadata(source_image_names=("DNA",)).payload_with(
-        np.ones((3, 4)), None,
+        np.ones((3, 4)),
+        None,
     )
     expected = source if retains_payload else source.data
 
@@ -320,7 +349,9 @@ def test_canonical_argument_projection_uses_declared_nominal_annotation(
     assert adapted.runtime_main_flow_call_argument(source) is source
 
 
-def test_raw_slice_argument_retains_buffer_identity_for_inplace_array_callable() -> None:
+def test_raw_slice_argument_retains_buffer_identity_for_inplace_array_callable() -> (
+    None
+):
     def inplace(image: np.ndarray) -> np.ndarray:
         image[0, 0] = 7
         return image
@@ -328,10 +359,12 @@ def test_raw_slice_argument_retains_buffer_identity_for_inplace_array_callable()
     contract = _compiled_contract(inplace, Pure2DContract)
     pixels = np.zeros((3, 4))
     source = ImagePayloadMetadata(source_image_names=("DNA",)).payload_with(
-        pixels, None,
+        pixels,
+        None,
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=1,
+        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis_size=1,
     )
     result = _execute_one_slice(contract, inplace, projection, source, {}, 0, 1)
 
@@ -349,14 +382,17 @@ def test_prepared_raw_abi_performs_no_introspection_until_explicit_refresh(
         return image
 
     contract = _compiled_contract(
-        raw, Pure2DContract,
+        raw,
+        Pure2DContract,
         artifact_outputs=(ArtifactSpec.output("Result", ImageArtifactType),),
     )
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE, source_image_names=("DNA",),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_names=("DNA",),
     ).payload_with(np.ones((12, 3, 4)), None)
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=12,
+        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis_size=12,
     )
     executor = CellProfilerFunctionContractExecutor()
     hints = []
@@ -381,7 +417,10 @@ def test_prepared_raw_abi_performs_no_introspection_until_explicit_refresh(
         raw.__annotations__["image"] = annotation
         contract = contract.with_prepared_signature()
         result = executor.execute(
-            contract, raw, source, {},
+            contract,
+            raw,
+            source,
+            {},
             execution_mode=NaturalExecution,
             plane_projection=projection,
         )
@@ -403,23 +442,31 @@ def test_raw_abi_derivation_follows_existing_input_guards(monkeypatch) -> None:
         raise AssertionError("Input guard resolved the raw ABI prematurely")
 
     monkeypatch.setattr(
-        CallableContract, "canonical_parameter_declarations",
+        CallableContract,
+        "canonical_parameter_declarations",
         property(reject_premature_annotations),
     )
     with pytest.raises(TypeError, match="requires AlignedImageStack"):
         CellProfilerFunctionContractExecutor().execute(
-            contract, raw, np.zeros((2, 3)), {},
+            contract,
+            raw,
+            np.zeros((2, 3)),
+            {},
             execution_mode=AlignedStackExecution,
         )
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=2,
+        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis_size=2,
     )
     mismatched_image = ImagePayloadMetadata(
         plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
     ).payload_with(np.zeros((2, 3, 4)), None)
     with pytest.raises(RuntimeSliceProjectionDeclarationError, match="conflicts"):
         CellProfilerFunctionContractExecutor().execute(
-            contract, raw, mismatched_image, {},
+            contract,
+            raw,
+            mismatched_image,
+            {},
             execution_mode=NaturalExecution,
             plane_projection=projection,
         )
@@ -434,16 +481,25 @@ def test_per_plane_execution_passes_each_plane_through_the_raw_abi() -> None:
         return image
 
     contract = _compiled_contract(
-        raw, Pure2DContract,
+        raw,
+        Pure2DContract,
         artifact_outputs=(ArtifactSpec.output("Result", ImageArtifactType),),
     )
-    source = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(
-        np.ones((2, 3, 4)), None,
+    source = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+    ).payload_with(
+        np.ones((2, 3, 4)),
+        None,
     )
     result = CellProfilerFunctionContractExecutor().execute(
-        contract, raw, source, {}, execution_mode=NaturalExecution,
+        contract,
+        raw,
+        source,
+        {},
+        execution_mode=NaturalExecution,
         plane_projection=RuntimePlaneAxisValueProjection.preserve(
-            axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=2,
+            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis_size=2,
         ),
     )
 
@@ -456,66 +512,107 @@ def test_per_plane_execution_passes_each_plane_through_the_raw_abi() -> None:
 
     foreign_contract = _compiled_contract(foreign_raw, Pure2DContract)
     policy = RuntimeCallablePolicy(kwarg_policy=SignatureFilteredKwargs)
-    assert policy.contract_invocation(foreign_contract, foreign_raw, source, {}).call() is source
+    assert (
+        policy.contract_invocation(foreign_contract, foreign_raw, source, {}).call()
+        is source
+    )
 
 
-def test_actual_prepared_executor_planes_make_no_signature_or_hint_queries(monkeypatch) -> None:
+def test_actual_prepared_executor_planes_make_no_signature_or_hint_queries(
+    monkeypatch,
+) -> None:
     calls = []
+
     def raw(image: np.ndarray, scale: int = 2) -> np.ndarray:
         calls.append(image.shape)
         return image * scale
+
     CallableProjection.from_callable(raw).warm_canonical_signature()
     contract = _compiled_contract(
-        raw, Pure2DContract,
-        artifact_outputs=(ArtifactSpec.output("Result",ImageArtifactType),),
+        raw,
+        Pure2DContract,
+        artifact_outputs=(ArtifactSpec.output("Result", ImageArtifactType),),
     )
     source = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,source_image_names=("DNA",),
-    ).payload_with(np.ones((12,3,4)),None)
-    projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimePlaneAxis.RUNTIME_SLICE,axis_size=12)
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_names=("DNA",),
+    ).payload_with(np.ones((12, 3, 4)), None)
+    projection = RuntimePlaneAxisValueProjection.preserve(
+        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=12
+    )
+
     def forbidden(*args, **kwargs):
         raise AssertionError("Prepared execution introspected a live callable")
-    monkeypatch.setattr(inspect,"signature",forbidden)
-    monkeypatch.setattr(callable_contract_module,"get_type_hints",forbidden)
+
+    monkeypatch.setattr(inspect, "signature", forbidden)
+    monkeypatch.setattr(callable_contract_module, "get_type_hints", forbidden)
     result = CellProfilerFunctionContractExecutor().execute(
-        contract,raw,source,{},execution_mode=NaturalExecution,
+        contract,
+        raw,
+        source,
+        {},
+        execution_mode=NaturalExecution,
         plane_projection=projection,
     )
-    np.testing.assert_array_equal(result.data,np.full((12,3,4),2))
-    assert calls == [(3,4)]*12
+    np.testing.assert_array_equal(result.data, np.full((12, 3, 4), 2))
+    assert calls == [(3, 4)] * 12
 
 
-def test_authored_distinct_raw_abi_batch_has_no_runtime_queries_and_filters_controls(monkeypatch) -> None:
+def test_authored_distinct_raw_abi_batch_has_no_runtime_queries_and_filters_controls(
+    monkeypatch,
+) -> None:
     from openhcs.core.processing_preparation import CallablePreparation
+
     calls = []
+
     def raw(image: np.ndarray, scale: int = 2) -> np.ndarray:
         calls.append(image.shape)
         return image * scale
+
     @wraps(raw)
     def wrapper(*args, **kwargs):
         return raw(*args, **kwargs)
-    wrapper.__signature__ = inspect.signature(raw).replace(parameters=[
-        *inspect.signature(raw).parameters.values(),
-        inspect.Parameter("injected",inspect.Parameter.KEYWORD_ONLY,default=False),
-    ])
-    monkeypatch.setattr(CallablePreparation,"prepare",lambda self:None)
+
+    wrapper.__signature__ = inspect.signature(raw).replace(
+        parameters=[
+            *inspect.signature(raw).parameters.values(),
+            inspect.Parameter(
+                "injected", inspect.Parameter.KEYWORD_ONLY, default=False
+            ),
+        ]
+    )
+    monkeypatch.setattr(CallablePreparation, "prepare", lambda self: None)
     contract = CallableContract.from_prepared_callable(wrapper)
-    contract = replace(contract,metadata=replace(
-        contract.metadata,processing_contract=Pure2DContract,
-        artifact_outputs=(ArtifactSpec.output("Result",ImageArtifactType),),
-    ))
-    source = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,source_image_names=("DNA",)).payload_with(np.ones((12,3,4)),None)
-    projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimePlaneAxis.RUNTIME_SLICE,axis_size=12)
+    contract = replace(
+        contract,
+        metadata=replace(
+            contract.metadata,
+            processing_contract=Pure2DContract,
+            artifact_outputs=(ArtifactSpec.output("Result", ImageArtifactType),),
+        ),
+    )
+    source = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE, source_image_names=("DNA",)
+    ).payload_with(np.ones((12, 3, 4)), None)
+    projection = RuntimePlaneAxisValueProjection.preserve(
+        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=12
+    )
+
     def forbidden(*args, **kwargs):
         raise AssertionError("Prepared authored raw target queried a live signature")
-    monkeypatch.setattr(inspect,"signature",forbidden)
-    monkeypatch.setattr(callable_contract_module,"get_type_hints",forbidden)
+
+    monkeypatch.setattr(inspect, "signature", forbidden)
+    monkeypatch.setattr(callable_contract_module, "get_type_hints", forbidden)
     result = CellProfilerFunctionContractExecutor().execute(
-        contract,wrapper,source,{"injected":True},
-        execution_mode=NaturalExecution,plane_projection=projection,
+        contract,
+        wrapper,
+        source,
+        {"injected": True},
+        execution_mode=NaturalExecution,
+        plane_projection=projection,
     )
-    np.testing.assert_array_equal(result.data,np.full((12,3,4),2))
-    assert calls == [(3,4)]*12
+    np.testing.assert_array_equal(result.data, np.full((12, 3, 4), 2))
+    assert calls == [(3, 4)] * 12
 
 
 def test_compiled_slice_execution_resolves_raw_target_once_and_preserves_request_binding(
@@ -601,9 +698,11 @@ def test_flexible_dispatch_preserves_canonical_signature_control_defaults(
     signature = inspect.signature(raw)
     decorated.__signature__ = signature.replace(
         parameters=(
-            parameter.replace(default=canonical_default)
-            if parameter.name == "slice_by_slice"
-            else parameter
+            (
+                parameter.replace(default=canonical_default)
+                if parameter.name == "slice_by_slice"
+                else parameter
+            )
             for parameter in signature.parameters.values()
         )
     )
@@ -624,14 +723,12 @@ def test_flexible_dispatch_preserves_canonical_signature_control_defaults(
         ),
     )
 
-    assert seen == (
-        [((4, 5), True)] * 3
-        if canonical_default
-        else [((3, 4, 5), False)]
-    )
+    assert seen == ([((4, 5), True)] * 3 if canonical_default else [((3, 4, 5), False)])
 
 
-@pytest.mark.parametrize("processing_contract", tuple(ProcessingContract.__registry__.values()))
+@pytest.mark.parametrize(
+    "processing_contract", tuple(ProcessingContract.__registry__.values())
+)
 @pytest.mark.parametrize(
     ("image_mode", "expected_call_count"),
     (
@@ -671,10 +768,7 @@ def test_executor_owns_the_closed_mode_processing_contract_matrix(
         )
     )
 
-    if (
-        image_mode is AlignedStackExecution
-        and processing_contract is Pure3DContract
-    ):
+    if image_mode is AlignedStackExecution and processing_contract is Pure3DContract:
         with pytest.raises(
             ValueError,
             match=(

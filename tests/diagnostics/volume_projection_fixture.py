@@ -18,15 +18,24 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     ObjectMeasurementSubjectRelation,
 )
-from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
+from openhcs.core.measurement_row_materialization import (
+    DataclassMeasurementColumnarRows,
+)
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.projected_image_output import SelectedPlaneImageOutput
-from openhcs.core.runtime_measurements import RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner
+from openhcs.core.runtime_measurements import (
+    RuntimeMeasurementFeature,
+    RuntimeMeasurementFeatureOwner,
+)
 from openhcs.core.processing_contracts import (
     Pure3DContract,
 )
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec, ROIOptions
+from openhcs.processing.materialization import (
+    CsvOptions,
+    MaterializationSpec,
+    ROIOptions,
+)
 
 
 class VolumeProjectionFixtureFeature(RuntimeMeasurementFeature):
@@ -36,7 +45,10 @@ class VolumeProjectionFixtureFeature(RuntimeMeasurementFeature):
 class VolumeProjectionFixtureFeatureOwner(RuntimeMeasurementFeatureOwner):
     @classmethod
     def owns_measurement_feature_name(cls, feature_name: str) -> bool:
-        return any(feature.feature_name == feature_name for feature in VolumeProjectionFixtureFeature)
+        return any(
+            feature.feature_name == feature_name
+            for feature in VolumeProjectionFixtureFeature
+        )
 
     @classmethod
     def owns_primary_measurement_feature_name(cls, feature_name: str) -> bool:
@@ -51,17 +63,26 @@ class VolumeProjectionFixtureRow:
 
 
 SELECTED_VOLUME = MainFlowPlaneProjectionOutputSpec.output(
-    "selected_volume_fixture_v2", ImageArtifactType,
+    "selected_volume_fixture_v2",
+    ImageArtifactType,
 )
-VOLUME_IMAGE = MainFlowStackOutputSpec.output("volume_fixture_image_v2", ImageArtifactType)
+VOLUME_IMAGE = MainFlowStackOutputSpec.output(
+    "volume_fixture_image_v2", ImageArtifactType
+)
 VOLUME_LABELS = MainFlowStackOutputSpec.output(
-    "volume_fixture_labels_v2", ObjectLabelsArtifactType,
+    "volume_fixture_labels_v2",
+    ObjectLabelsArtifactType,
     materialization=MaterializationSpec(ROIOptions(min_area=0)),
 )
 VOLUME_ROWS = MainFlowStackOutputSpec.output(
-    "volume_fixture_rows_v2", MeasurementsArtifactType,
+    "volume_fixture_rows_v2",
+    MeasurementsArtifactType,
     measurement_feature_owner=VolumeProjectionFixtureFeatureOwner,
-    relations=(ObjectMeasurementSubjectRelation(source=VOLUME_LABELS.ref(), id_field="object_label"),),
+    relations=(
+        ObjectMeasurementSubjectRelation(
+            source=VOLUME_LABELS.ref(), id_field="object_label"
+        ),
+    ),
     materialization=MaterializationSpec(CsvOptions()),
 )
 
@@ -94,7 +115,9 @@ def inspect_volume_fixture_v2(
     metadata = image.metadata
     labels = pixels.astype(np.int32, copy=True)
     rows = tuple(
-        VolumeProjectionFixtureRow(index, int(label), int(np.count_nonzero(plane == label)))
+        VolumeProjectionFixtureRow(
+            index, int(label), int(np.count_nonzero(plane == label))
+        )
         for index, plane in enumerate(labels)
         for label in np.unique(plane)
         if label != 0

@@ -12,7 +12,9 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     SourceStackLineageSourceRelation,
 )
-from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
+from openhcs.processing.backends.cellprofiler.morphology import (
+    MorphologyBackendStrategy,
+)
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
 )
@@ -1625,7 +1627,9 @@ class NumpyLegacyWatershedBackendStrategy(LegacyWatershedBackendStrategy):
     prefer_fast = False
 
 
-class CentrosomeNumpyLegacyWatershedBackendStrategy(NumpyLegacyWatershedBackendStrategy):
+class CentrosomeNumpyLegacyWatershedBackendStrategy(
+    NumpyLegacyWatershedBackendStrategy
+):
     """Centrosome provider using the absorbed CellProfiler reference semantics."""
 
     memory_type = MemoryType.NUMPY
@@ -1654,7 +1658,6 @@ class CellProfiler4DistanceMarkerBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Build CellProfiler 4 distance-watershed markers through a typed backend."""
-
 
     @abstractmethod
     def distance_markers(

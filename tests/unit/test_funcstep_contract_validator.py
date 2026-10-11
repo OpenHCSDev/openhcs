@@ -326,7 +326,8 @@ def test_validate_required_axis_roles_rejects_missing_role():
     contract = CallableContract.from_callable(process)
 
     with pytest.raises(
-        ValueError, match=r"requires variable_components with role TimeAxis \(timepoint\)"
+        ValueError,
+        match=r"requires variable_components with role TimeAxis \(timepoint\)",
     ):
         FuncStepContractValidator.validate_required_axis_roles(
             (),
@@ -776,5 +777,7 @@ def test_validate_funcstep_enforces_required_axis_roles():
         ),
     )
 
-    with pytest.raises(ValueError, match="requires variable_components with role TimeAxis"):
+    with pytest.raises(
+        ValueError, match="requires variable_components with role TimeAxis"
+    ):
         FuncStepContractValidator.validate_funcstep(step)

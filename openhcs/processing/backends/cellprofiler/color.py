@@ -110,8 +110,10 @@ class DerivedColorChannelProjection(ColorToGrayScalarOutputProjection):
         self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
     ) -> RuntimeArrayData:
         del channel_index
-        return image.with_pixels(output,
-            metadata=image.metadata.without_axis(ColourAxis),)
+        return image.with_pixels(
+            output,
+            metadata=image.metadata.without_axis(ColourAxis),
+        )
 
 
 class ImageChannelType(Enum):
@@ -382,7 +384,8 @@ class ColorToGrayModule(
             return tuple(f"{base_name}Channel{index + 1}" for index in channel_indices)
         declaration = cls.fixed_image_type(image_type)
         if any(
-            index < 0 or index >= len(declaration.fixed_channels) for index in channel_indices
+            index < 0 or index >= len(declaration.fixed_channels)
+            for index in channel_indices
         ):
             raise ValueError(
                 f"ColorToGray channel indices must address {image_type.value} "
@@ -872,7 +875,8 @@ class GrayToColorModule(
         from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
         inherited = super().authoring_default_kwargs(
-            module, authored_kwargs=authored_kwargs,
+            module,
+            authored_kwargs=authored_kwargs,
         )
         if not any(
             binding.require_parameter_name() in authored_kwargs
@@ -1651,13 +1655,17 @@ def color_to_gray(
     """
     if mode is ColorToGrayMode.COMBINE:
         output = combine_color_to_gray(image, channel_indices, contributions)
-        return image.with_pixels(output,
-            metadata=color_to_gray_combine_output_metadata(image),)
+        return image.with_pixels(
+            output,
+            metadata=color_to_gray_combine_output_metadata(image),
+        )
     outputs = split_color_to_gray(image, image_type, channel_indices)
     return pack_aligned_image_outputs(
         tuple(
             image_type.scalar_output_projection.channel_output(
-                image, channel_index=channel_index, output=output,
+                image,
+                channel_index=channel_index,
+                output=output,
             )
             for channel_index, output in zip(channel_indices, outputs, strict=True)
         )
@@ -1736,8 +1744,10 @@ def _invert_for_printing_result(
     )
     if output_mode is OutputMode.COLOR:
         outputs = (
-            image.with_pixels(np.stack(inverted_channels, axis=-1),
-                metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),),
+            image.with_pixels(
+                np.stack(inverted_channels, axis=-1),
+                metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),
+            ),
         )
         output_names = (color_output_name,)
     else:
@@ -1753,8 +1763,10 @@ def _invert_for_printing_result(
         )
         output_metadata = image.metadata.without_axis(ColourAxis)
         outputs = tuple(
-            image.with_pixels(output,
-                metadata=output_metadata,)
+            image.with_pixels(
+                output,
+                metadata=output_metadata,
+            )
             for enabled, output in zip(
                 enabled_outputs,
                 inverted_channels,
@@ -1909,22 +1921,25 @@ def combine_color_to_gray(
     channels = np.asarray(channel_indices, dtype=int)
     weights = np.asarray(contributions, dtype=float) / float(sum(contributions))
     result = _indexed_weighted_projection(
-        color_stack, channels, weights, axis=-1,
+        color_stack,
+        channels,
+        weights,
+        axis=-1,
     )
     return restore_color_to_gray_shape(image, result)
 
 
 def color_to_gray_combine_output_metadata(image: RuntimeArrayData):
     """Return metadata for a color-to-grayscale semantic collapse."""
-    return (
-        image.metadata
-        .without_unit_interval_intensity_scale()
-        .without_axis(ColourAxis)
+    return image.metadata.without_unit_interval_intensity_scale().without_axis(
+        ColourAxis
     )
 
 
 def split_color_to_gray(
-    image: RuntimeArrayData, image_type: ImageChannelType, channel_indices: tuple[int, ...]
+    image: RuntimeArrayData,
+    image_type: ImageChannelType,
+    channel_indices: tuple[int, ...],
 ) -> tuple[np.ndarray, ...]:
     color_stack = nhwc_color_stack(image).astype(np.float32)
     source_stack = (
@@ -1981,7 +1996,9 @@ def nhwc_color_stack(image: RuntimeArrayData) -> np.ndarray:
     return channel_last
 
 
-def restore_color_to_gray_shape(original: RuntimeArrayData, stack: np.ndarray) -> np.ndarray:
+def restore_color_to_gray_shape(
+    original: RuntimeArrayData, stack: np.ndarray
+) -> np.ndarray:
     metadata = original.metadata
     if metadata.declares_colour_samples_plane(original):
         if stack.shape[0] != 1:
@@ -2084,8 +2101,10 @@ def unmix_colors(
     if stain_names:
         return pack_aligned_image_outputs(
             tuple(
-                image.with_pixels(output,
-                    metadata=output_metadata,)
+                image.with_pixels(
+                    output,
+                    metadata=output_metadata,
+                )
                 for output in _unmix_stain_outputs(
                     rgb_image,
                     _stain_definitions(stain_names, custom_absorbances),
@@ -2119,8 +2138,10 @@ def unmix_colors(
         raise ValueError(
             f"output_stain_index must be in [0, {len(outputs) - 1}], got {output_stain_index}."
         )
-    return image.with_pixels(outputs[output_stain_index],
-        metadata=output_metadata,)
+    return image.with_pixels(
+        outputs[output_stain_index],
+        metadata=output_metadata,
+    )
 
 
 def _stain_definitions(

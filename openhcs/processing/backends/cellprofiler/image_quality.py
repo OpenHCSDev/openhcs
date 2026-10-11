@@ -772,7 +772,6 @@ class ImageQualityBackendStrategy(
 ):
     """Image-quality primitives keyed by OpenHCS memory type/provider."""
 
-
     @abstractmethod
     def haralick_h3(self, image: np.ndarray, *, scale: int) -> float:
         """Return CP-style Haralick H3 correlation for one image plane."""

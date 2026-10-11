@@ -1125,7 +1125,9 @@ def test_analysis_consolidation_propagates_runtime_failures(monkeypatch):
         "consolidate_runtime_analysis_table_output_groups",
         lambda **kwargs: ([], [("results", "invalid CSV")]),
     )
-    hook = AnalysisConsolidationHook(AnalysisConsolidationConfig(), PlateMetadataConfig())
+    hook = AnalysisConsolidationHook(
+        AnalysisConsolidationConfig(), PlateMetadataConfig()
+    )
 
     with pytest.raises(RuntimeError, match="invalid CSV"):
         hook.run({"A01": context}, inputs)
@@ -1381,9 +1383,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
             self.running = False
 
     progress_queue = SimpleNamespace(
-        put=lambda raw_event: events.append(
-            raw_event.phase.value
-        )
+        put=lambda raw_event: events.append(raw_event.phase.value)
     )
     results = _execute_with_visualizer(
         monkeypatch,

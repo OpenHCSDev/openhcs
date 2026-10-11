@@ -104,7 +104,12 @@ from openhcs.core.processing_contracts import (
     FlexibleContract,
     Pure2DContract,
 )
-from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, required_axis_roles, runtime_bound_parameters, special_inputs)
+from openhcs.core.pipeline.function_contracts import (
+    object_label_input_execution_mode,
+    required_axis_roles,
+    runtime_bound_parameters,
+    special_inputs,
+)
 from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.interop.cellprofiler.module_settings import (
@@ -3000,8 +3005,10 @@ def _overlapping_worm_outline(
         local_mask[label_y - y_start, label_x - x_start] = True
         local_outline = find_boundaries(local_mask, mode="inner")
         output[y_start:y_stop, x_start:x_stop][local_outline] = colors[label_id]
-    return source_image.with_pixels(output,
-        metadata=source_image.metadata.with_axis(ColourSampleAxisSpec(), -1),)
+    return source_image.with_pixels(
+        output,
+        metadata=source_image.metadata.with_axis(ColourSampleAxisSpec(), -1),
+    )
 
 
 def _nonoverlapping_worm_outline(
@@ -3016,8 +3023,10 @@ def _nonoverlapping_worm_outline(
         object_label_dense_array(labels, dtype=np.int32),
         mode="inner",
     )
-    return source_image.with_pixels(outline,
-        metadata=source_image.metadata.without_axis(ColourAxis),)
+    return source_image.with_pixels(
+        outline,
+        metadata=source_image.metadata.without_axis(ColourAxis),
+    )
 
 
 def _reconstructed_worm_pixels(

@@ -1655,7 +1655,7 @@ class RuntimeMeasurementSnapshot:
                     for value in table.measurement_image_number_values(
                         policy.measurement_dialect
                     )
-                )
+                ),
             )
             identity = tuple(
                 table.measurement_input_key(policy, image_offset)

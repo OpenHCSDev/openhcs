@@ -840,9 +840,11 @@ def test_code_document_driver_reads_validates_and_applies(tmp_path) -> None:
         harness.set_steps([FunctionStep(name="Original")])
         changed = []
         harness.session.subscribe(
-            lambda record: changed.append(record.event.scope_id)
-            if isinstance(record.event, PipelineChanged)
-            else None
+            lambda record: (
+                changed.append(record.event.scope_id)
+                if isinstance(record.event, PipelineChanged)
+                else None
+            )
         )
         driver = harness.editor.code_document_driver()
         assert driver is not None
@@ -1023,7 +1025,12 @@ def test_time_travel_broadcasts_only_pipeline_level_restores(
         assert broadcasts == []
 
         harness.editor.on_time_travel_complete(
-            [(PipelineScopeIdentity.from_plate_scope(harness.scope_id).scope_id, object())],
+            [
+                (
+                    PipelineScopeIdentity.from_plate_scope(harness.scope_id).scope_id,
+                    object(),
+                )
+            ],
             None,
         )
         assert [[step.name for step in steps] for steps in broadcasts] == [
@@ -1254,7 +1261,9 @@ def test_step_partition_filter_live_resolution_is_visible_in_the_row(tmp_path) -
         )
         dataset_state = ObjectStateRegistry.get_by_scope(harness.scope_id)
 
-        dataset_state.update_parameter("partition_filter_config.partition_filter", "A01")
+        dataset_state.update_parameter(
+            "partition_filter_config.partition_filter", "A01"
+        )
         ObjectStateRegistry._notify_change()
         (step,) = harness.editor.displayed_steps
         styled_text, _ = harness.editor.format_item_for_display(step, step_index=0)
@@ -1264,7 +1273,9 @@ def test_step_partition_filter_live_resolution_is_visible_in_the_row(tmp_path) -
             for segment in styled_text.layout.preview_segments
             if segment.field_path
         }
-        assert preview_by_path["step_partition_filter_config.partition_filter"] == ":A01"
+        assert (
+            preview_by_path["step_partition_filter_config.partition_filter"] == ":A01"
+        )
 
 
 def test_a_pipeline_config_scope_is_not_a_current_orchestrator() -> None:

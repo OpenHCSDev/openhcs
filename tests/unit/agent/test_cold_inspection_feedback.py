@@ -8,17 +8,24 @@ import pytest
 from zmqruntime.startup import EndpointStartupStatus
 
 from openhcs.agent.capabilities import (
-    MainThreadProgressCapability, QueryPlateFilesCapability, SamplePlateImageCapability,
+    MainThreadProgressCapability,
+    QueryPlateFilesCapability,
+    SamplePlateImageCapability,
     InspectPipelineSourceArtifactPlanCapability,
 )
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.artifact_plan_inspection_service import (
-    AgentProgressQueue, CompileInspectionGatewayABC, ArtifactPlanInspectionService,
+    AgentProgressQueue,
+    CompileInspectionGatewayABC,
+    ArtifactPlanInspectionService,
 )
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.core.progress import (
-    ProgressEvent, ProgressExecutionContext, ProgressPhase, ProgressStatus,
+    ProgressEvent,
+    ProgressExecutionContext,
+    ProgressPhase,
+    ProgressStatus,
 )
 from openhcs.mcp.execution import McpTransportExecutor
 from openhcs.mcp.server import build_server
@@ -27,7 +34,9 @@ from tests.unit.agent.test_agent_services import _FakeCompileInspectionGateway
 from tests.unit.agent.test_plate_inspection_service import ImageXpressPlateFixture
 
 
-@pytest.mark.parametrize("declaration", (QueryPlateFilesCapability, SamplePlateImageCapability))
+@pytest.mark.parametrize(
+    "declaration", (QueryPlateFilesCapability, SamplePlateImageCapability)
+)
 def test_physical_reader_declarations_inherit_original_affine_progress(declaration):
     assert issubclass(declaration, MainThreadProgressCapability)
     assert declaration.progress_heartbeat_seconds == 1.0
@@ -38,9 +47,13 @@ def test_physical_reader_declarations_inherit_original_affine_progress(declarati
 def test_original_progress_codec_is_the_only_event_store_and_rejects_bad_enum():
     queue = AgentProgressQueue()
     event = ProgressExecutionContext("inspection", "/source").event(
-        axis_id="A01", step_name="new-declared-step",
-        phase=ProgressPhase.COMPILE, status=ProgressStatus.RUNNING, percent=25,
-        completed=1, total=4,
+        axis_id="A01",
+        step_name="new-declared-step",
+        phase=ProgressPhase.COMPILE,
+        status=ProgressStatus.RUNNING,
+        percent=25,
+        completed=1,
+        total=4,
     )
     statuses = []
     with EndpointStartupStatus.callback_scope(statuses.append):
@@ -57,7 +70,9 @@ def test_original_progress_codec_is_the_only_event_store_and_rejects_bad_enum():
 
 
 @pytest.mark.parametrize("fails", (False, True))
-def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(tmp_path, fails):
+def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(
+    tmp_path, fails
+):
     """Independent audit capability needs no edits to service or MCP consumers."""
     identity = ContextVar("cold-feedback-request", default="outside")
     calls, messages = [], []
@@ -77,7 +92,9 @@ def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(tmp_pat
             assert threading.current_thread() is threading.main_thread()
             compile_entered.set()
             self.emit_progress(request)
-            assert release.wait(3), "Actual stage relay was not delivered during held work"
+            assert release.wait(
+                3
+            ), "Actual stage relay was not delivered during held work"
             if fails:
                 raise error
             return super()._compile(request)
@@ -107,30 +124,43 @@ def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(tmp_pat
             gateway = gateway_type()
             service = ArtifactPlanInspectionService(
                 path_policy=AgentPathPolicy.with_roots(
-                    readable_roots=(tmp_path,), writable_roots=(tmp_path,),
+                    readable_roots=(tmp_path,),
+                    writable_roots=(tmp_path,),
                 ),
-                config_service=config, compile_inspection_gateway=gateway,
+                config_service=config,
+                compile_inspection_gateway=gateway,
             )
-            built = build_server(SimpleNamespace(artifact_plan_service=service),
-                                 main_thread_dispatcher=executor.dispatcher)
-            tool = built._tool_manager.get_tool(InspectPipelineSourceArtifactPlanCapability.name)
+            built = build_server(
+                SimpleNamespace(artifact_plan_service=service),
+                main_thread_dispatcher=executor.dispatcher,
+            )
+            tool = built._tool_manager.get_tool(
+                InspectPipelineSourceArtifactPlanCapability.name
+            )
 
             async def exercise():
                 token = identity.set("original-request")
                 try:
-                    return await tool.fn(mcp_context=StageContext(), plate_path=str(tmp_path),
-                                         pipeline_source="pipeline_steps = []")
+                    return await tool.fn(
+                        mcp_context=StageContext(),
+                        plate_path=str(tmp_path),
+                        pipeline_source="pipeline_steps = []",
+                    )
                 finally:
                     identity.reset(token)
 
             before = len(messages)
             result = executor.run(exercise)
             observed = messages[before:]
-            assert any("Preparing source inspection compiler" in item for item in observed)
+            assert any(
+                "Preparing source inspection compiler" in item for item in observed
+            )
             if fails:
                 assert result["errors"][0]["exception_type"] == "ValueError"
                 assert result["errors"][0]["message"] == str(error)
-                assert any("Source inspection compiler failed" in item for item in observed)
+                assert any(
+                    "Source inspection compiler failed" in item for item in observed
+                )
                 assert not any("projection completed" in item for item in observed)
             else:
                 assert result["errors"] == []
@@ -145,9 +175,12 @@ def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(tmp_pat
 
 def test_real_inventory_binding_relays_shared_reader_preparation(tmp_path):
     plate = ImageXpressPlateFixture.write(tmp_path)
-    service = PlateInspectionService(AgentPathPolicy.with_roots(
-        readable_roots=(tmp_path,), writable_roots=(),
-    ))
+    service = PlateInspectionService(
+        AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,),
+            writable_roots=(),
+        )
+    )
     messages = []
 
     class StageContext:
@@ -158,13 +191,19 @@ def test_real_inventory_binding_relays_shared_reader_preparation(tmp_path):
             messages.append(message)
 
     executor = McpTransportExecutor()
-    built = build_server(SimpleNamespace(plate_inspection_service=service),
-                         main_thread_dispatcher=executor.dispatcher)
+    built = build_server(
+        SimpleNamespace(plate_inspection_service=service),
+        main_thread_dispatcher=executor.dispatcher,
+    )
     tool = built._tool_manager.get_tool(QueryPlateFilesCapability.name)
 
     async def exercise():
-        return await tool.fn(mcp_context=StageContext(), plate_path=str(plate),
-                             source_format="imagexpress", include_previews=False)
+        return await tool.fn(
+            mcp_context=StageContext(),
+            plate_path=str(plate),
+            source_format="imagexpress",
+            include_previews=False,
+        )
 
     try:
         result = executor.run(exercise)

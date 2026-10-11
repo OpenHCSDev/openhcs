@@ -45,4 +45,3 @@ class SourceSchemaFilenameParser(FilenameParser):
             for component, _value in components.declared_values()
         )
         return address.filename(extension=components.extension)
-

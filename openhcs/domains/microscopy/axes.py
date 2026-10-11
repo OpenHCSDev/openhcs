@@ -86,7 +86,9 @@ class Microscopy(AxisFamily):
 
             match = re.match(r"^([A-Za-z]+)([0-9]+)$", str(value))
             if match is None:
-                raise ValueError(f"{value!r} is not a well spelled <row letters><column>.")
+                raise ValueError(
+                    f"{value!r} is not a well spelled <row letters><column>."
+                )
             return match.group(1), match.group(2)
 
         @classmethod
@@ -94,7 +96,9 @@ class Microscopy(AxisFamily):
             """Rows count A=1 … Z=26, AA=27; columns are the column number."""
 
             if not row_label.isalpha() or not column_label.isdecimal():
-                raise ValueError(f"Not a well row and column: {row_label!r}, {column_label!r}.")
+                raise ValueError(
+                    f"Not a well row and column: {row_label!r}, {column_label!r}."
+                )
             row = 0
             for letter in row_label.upper():
                 row = row * 26 + (ord(letter) - ord("A") + 1)

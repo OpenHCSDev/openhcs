@@ -56,9 +56,11 @@ def test_no_widget_holds_session_state() -> None:
             targets = (
                 node.targets
                 if isinstance(node, ast.Assign)
-                else [node.target]
-                if isinstance(node, (ast.AnnAssign, ast.AugAssign))
-                else []
+                else (
+                    [node.target]
+                    if isinstance(node, (ast.AnnAssign, ast.AugAssign))
+                    else []
+                )
             )
             for target in targets:
                 if (
@@ -67,7 +69,9 @@ def test_no_widget_holds_session_state() -> None:
                     and target.value.id == "self"
                     and target.attr in SESSION_STATE_ATTRIBUTES
                 ):
-                    offenders.append(f"{path.relative_to(PACKAGE)}:{node.lineno} self.{target.attr}")
+                    offenders.append(
+                        f"{path.relative_to(PACKAGE)}:{node.lineno} self.{target.attr}"
+                    )
     assert offenders == []
 
 
@@ -78,13 +82,13 @@ def test_session_package_imports_no_qt_and_no_gui() -> None:
             names = (
                 [alias.name for alias in node.names]
                 if isinstance(node, ast.Import)
-                else [node.module or ""]
-                if isinstance(node, ast.ImportFrom)
-                else []
+                else [node.module or ""] if isinstance(node, ast.ImportFrom) else []
             )
             for name in names:
                 if name.split(".")[0] == "PyQt6" or name.startswith("openhcs.pyqt_gui"):
-                    offenders.append(f"{path.relative_to(PACKAGE)}:{node.lineno} {name}")
+                    offenders.append(
+                        f"{path.relative_to(PACKAGE)}:{node.lineno} {name}"
+                    )
     assert offenders == []
 
 
@@ -115,7 +119,9 @@ def test_actions_are_operation_classes_not_enum_rosters() -> None:
                 if isinstance(node, ast.Lambda) and [
                     argument.arg for argument in node.args.args
                 ] in (["widget"], ["window"], ["manager"]):
-                    offenders.append(f"{path.relative_to(PACKAGE)}:{node.lineno} lambda")
+                    offenders.append(
+                        f"{path.relative_to(PACKAGE)}:{node.lineno} lambda"
+                    )
     for path, tree in _modules(SESSION_PACKAGE):
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef) and any(
@@ -129,12 +135,19 @@ def test_actions_are_operation_classes_not_enum_rosters() -> None:
 def test_every_operation_declares_itself_and_headless_ones_are_tools() -> None:
     from openhcs.agent.capabilities import get_capability_registry
 
-    tools = {capability.name: capability for capability in get_capability_registry().capabilities}
+    tools = {
+        capability.name: capability
+        for capability in get_capability_registry().capabilities
+    }
     for operation in SessionOperation.all():
-        assert operation.label and operation.tooltip and operation.description, operation
+        assert (
+            operation.label and operation.tooltip and operation.description
+        ), operation
         assert isinstance(operation.request, type), operation
         tool_name = f"openhcs_{operation.operation_id}"
-        assert (tool_name in tools) is issubclass(operation, HeadlessOperation), operation
+        assert (tool_name in tools) is issubclass(
+            operation, HeadlessOperation
+        ), operation
         if issubclass(operation, RendererOperation):
             assert not issubclass(operation, HeadlessOperation), operation
         if tool_name in tools:
@@ -147,7 +160,7 @@ def test_pipeline_formats_are_importers_not_suffix_branches() -> None:
     for root in (PACKAGE / "pyqt_gui", SESSION_PACKAGE):
         for path in sorted(root.rglob("*.py")):
             text = path.read_text(encoding="utf-8")
-            for marker in ('== ".cppipe"', '!= ".cppipe"', '#openhcs-cppipe='):
+            for marker in ('== ".cppipe"', '!= ".cppipe"', "#openhcs-cppipe="):
                 if marker in text:
                     offenders.append(f"{path.relative_to(PACKAGE)} {marker}")
     assert offenders == []

@@ -133,8 +133,11 @@ def test_xy_alignment_preserves_intrinsic_volume_owner(as_labels):
         ),
     ).payload_with(pixels, mask)
     value = (
-        SourceImageObjectLabelBuildRequest(image=source, labels=pixels).label_set(name="Objects")
-        if as_labels else source
+        SourceImageObjectLabelBuildRequest(image=source, labels=pixels).label_set(
+            name="Objects"
+        )
+        if as_labels
+        else source
     )
     target = ImagePayloadMetadata(
         source_spatial_domain=SourceSpatialDomain(

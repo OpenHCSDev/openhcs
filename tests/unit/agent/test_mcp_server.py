@@ -110,22 +110,28 @@ from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
-from openhcs.runtime.viewer_protocol import ViewerPayloadSummary, ViewerArrayValueSummary
+from openhcs.runtime.viewer_protocol import (
+    ViewerPayloadSummary,
+    ViewerArrayValueSummary,
+)
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-
 
 
 class _OperationMethodsBridgeService:
     """Fake bridge service answering each operation from the method named for it."""
 
     def invoke(self, operation, request=None, connection=None):
-        name = operation.name or re.sub(
-            r"(?<!^)(?=[A-Z])",
-            "_",
-            operation.__name__.removeprefix("UiBridge").removesuffix("Operation"),
-        ).lower()
+        name = (
+            operation.name
+            or re.sub(
+                r"(?<!^)(?=[A-Z])",
+                "_",
+                operation.__name__.removeprefix("UiBridge").removesuffix("Operation"),
+            ).lower()
+        )
         answer = getattr(self, name)
         return answer(connection) if request is None else answer(request, connection)
+
 
 def _direct_tool_text(result) -> str:
     """Return first text block from FastMCP structured or legacy direct calls."""
@@ -1222,10 +1228,7 @@ def test_mcp_ui_catalog_invocations_preserve_declared_identity(
     )
 
     assert payload == to_jsonable(catalog)
-    assert (
-        dataclass_from_mapping(capability.output_contract, payload)
-        == catalog
-    )
+    assert dataclass_from_mapping(capability.output_contract, payload) == catalog
 
 
 def test_mcp_widget_tree_projection_can_return_full_action_fields():
@@ -2180,7 +2183,9 @@ def test_mcp_object_state_field_search_supports_exact_paths_and_leaf_default():
                             field_summary("napari_streaming_config.enabled"),
                             field_summary("napari_streaming_config.port"),
                             field_summary("partition_filter_config.partition_filter"),
-                            field_summary("partition_filter_config.partition_filter_mode"),
+                            field_summary(
+                                "partition_filter_config.partition_filter_mode"
+                            ),
                         ),
                     ),
                 ),
@@ -5618,7 +5623,9 @@ def test_mcp_dev_client_object_state_set_command_projects_tool_arguments():
 
     assert reset_call.name == "openhcs_ui_mutate_object_state_field"
     assert reset_call.arguments["object_state_scope_id"] == "global_config"
-    assert reset_call.arguments["field_path"] == "partition_filter_config.partition_filter"
+    assert (
+        reset_call.arguments["field_path"] == "partition_filter_config.partition_filter"
+    )
     assert reset_call.arguments["value"] is None
     assert reset_call.arguments["reset"] is True
     assert reset_call.arguments["include_field_values"] is False
@@ -5873,15 +5880,29 @@ def test_mcp_dev_client_workflow_poll_terminal_state_policy():
     from dataclasses import replace
 
     import openhcs.mcp.dev_client as dev_client
-    
+
     idle = DatasetRowState(
-        scope_id="scope", name="plate", root="/plate", pipeline_path=None,
-        selected=True, initialized=False, compiled=False, init_pending=False,
-        compile_pending=False, execution_active=False, status_prefix="",
-        orchestrator_state=None, execution_id=None, terminal_status=None,
-        runtime_state=None, runtime_percent=None, queue_position=None,
+        scope_id="scope",
+        name="plate",
+        root="/plate",
+        pipeline_path=None,
+        selected=True,
+        initialized=False,
+        compiled=False,
+        init_pending=False,
+        compile_pending=False,
+        execution_active=False,
+        status_prefix="",
+        orchestrator_state=None,
+        execution_id=None,
+        terminal_status=None,
+        runtime_state=None,
+        runtime_percent=None,
+        queue_position=None,
     )
-    init_policy = dev_client.WorkflowStatePollPolicy.from_workflow_text("initialize_datasets")
+    init_policy = dev_client.WorkflowStatePollPolicy.from_workflow_text(
+        "initialize_datasets"
+    )
     compile_policy = dev_client.WorkflowStatePollPolicy.from_workflow_text(
         "compile_datasets"
     )
@@ -5904,20 +5925,42 @@ def _complete_plate_manager_state(sparse):
     from openhcs.agent.dto.ui_bridge import UiPlateManagerState
 
     summary = UiStateSurfaceSummary(
-        SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-        "Plate Manager", True, widget_id="plate_manager",
+        SCHEMA_VERSION,
+        UiStateSurfaceIdentity(surface_id="plate_manager.state"),
+        "Plate Manager",
+        True,
+        widget_id="plate_manager",
     )
-    row = to_jsonable(DatasetRowState(
-        scope_id="scope", name="plate", root="/plate", pipeline_path=None,
-        selected=False, initialized=False, compiled=False, init_pending=False,
-        compile_pending=False, execution_active=False, status_prefix="",
-        orchestrator_state=None, execution_id=None, terminal_status=None,
-        runtime_state=None, runtime_percent=None, queue_position=None,
-    ))
-    state = to_jsonable(UiPlateManagerState(
-        schema_version=SCHEMA_VERSION, summary=summary, object_state_token=0,
-        manager_execution_state="idle", rows=(),
-    ))
+    row = to_jsonable(
+        DatasetRowState(
+            scope_id="scope",
+            name="plate",
+            root="/plate",
+            pipeline_path=None,
+            selected=False,
+            initialized=False,
+            compiled=False,
+            init_pending=False,
+            compile_pending=False,
+            execution_active=False,
+            status_prefix="",
+            orchestrator_state=None,
+            execution_id=None,
+            terminal_status=None,
+            runtime_state=None,
+            runtime_percent=None,
+            queue_position=None,
+        )
+    )
+    state = to_jsonable(
+        UiPlateManagerState(
+            schema_version=SCHEMA_VERSION,
+            summary=summary,
+            object_state_token=0,
+            manager_execution_state="idle",
+            rows=(),
+        )
+    )
     return {
         **state,
         **sparse,
@@ -5927,14 +5970,20 @@ def _complete_plate_manager_state(sparse):
 
 def _state_surface_dev_wire(dev_client):
     """Declare the complete wire envelope; each poll test supplies its body."""
-    return to_jsonable(UiStateSurfaceDocument(
-        schema_version=SCHEMA_VERSION,
-        summary=UiStateSurfaceSummary(
-            SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-            "Plate Manager", True, widget_id="plate_manager",
-        ),
-        payload_schema="openhcs.ui.plate_manager_state.v1", payload={},
-    ))
+    return to_jsonable(
+        UiStateSurfaceDocument(
+            schema_version=SCHEMA_VERSION,
+            summary=UiStateSurfaceSummary(
+                SCHEMA_VERSION,
+                UiStateSurfaceIdentity(surface_id="plate_manager.state"),
+                "Plate Manager",
+                True,
+                widget_id="plate_manager",
+            ),
+            payload_schema="openhcs.ui.plate_manager_state.v1",
+            payload={},
+        )
+    )
 
 
 def test_mcp_dev_client_workflow_poll_filters_target_scope_ids():
@@ -5946,21 +5995,23 @@ def test_mcp_dev_client_workflow_poll_filters_target_scope_ids():
         payloads=(
             {
                 **_state_surface_dev_wire(dev_client),
-                "payload": _complete_plate_manager_state({
-                    "manager_execution_state": "idle",
-                    "rows": [
-                        {
-                            "scope_id": "scope-a",
-                            "compile_pending": False,
-                            "compiled": True,
-                        },
-                        {
-                            "scope_id": "scope-b",
-                            "compile_pending": True,
-                            "compiled": False,
-                        },
-                    ],
-                })
+                "payload": _complete_plate_manager_state(
+                    {
+                        "manager_execution_state": "idle",
+                        "rows": [
+                            {
+                                "scope_id": "scope-a",
+                                "compile_pending": False,
+                                "compiled": True,
+                            },
+                            {
+                                "scope_id": "scope-b",
+                                "compile_pending": True,
+                                "compiled": False,
+                            },
+                        ],
+                    }
+                ),
             },
         ),
     )
@@ -5992,16 +6043,18 @@ def test_mcp_dev_client_workflow_poll_waits_for_manager_finalization():
         payloads=(
             {
                 **_state_surface_dev_wire(dev_client),
-                "payload": _complete_plate_manager_state({
-                    "manager_execution_state": "running",
-                    "rows": [
-                        {
-                            "scope_id": "scope-a",
-                            "compile_pending": False,
-                            "compiled": True,
-                        }
-                    ],
-                })
+                "payload": _complete_plate_manager_state(
+                    {
+                        "manager_execution_state": "running",
+                        "rows": [
+                            {
+                                "scope_id": "scope-a",
+                                "compile_pending": False,
+                                "compiled": True,
+                            }
+                        ],
+                    }
+                ),
             },
         ),
     )
@@ -6035,17 +6088,19 @@ def test_mcp_dev_client_workflow_poll_reports_failed_terminal_rows():
         payloads=(
             {
                 **_state_surface_dev_wire(dev_client),
-                "payload": _complete_plate_manager_state({
-                    "manager_execution_state": "idle",
-                    "rows": [
-                        {
-                            "scope_id": "scope-a",
-                            "execution_active": False,
-                            "queue_position": None,
-                            "terminal_status": "failed",
-                        }
-                    ],
-                })
+                "payload": _complete_plate_manager_state(
+                    {
+                        "manager_execution_state": "idle",
+                        "rows": [
+                            {
+                                "scope_id": "scope-a",
+                                "execution_active": False,
+                                "queue_position": None,
+                                "terminal_status": "failed",
+                            }
+                        ],
+                    }
+                ),
             },
         ),
     )
@@ -6055,17 +6110,19 @@ def test_mcp_dev_client_workflow_poll_reports_failed_terminal_rows():
         payloads=(
             {
                 **_state_surface_dev_wire(dev_client),
-                "payload": _complete_plate_manager_state({
-                    "manager_execution_state": "idle",
-                    "rows": [
-                        {
-                            "scope_id": "scope-a",
-                            "compile_pending": False,
-                            "compiled": False,
-                            "orchestrator_state": "compile_failed",
-                        }
-                    ],
-                })
+                "payload": _complete_plate_manager_state(
+                    {
+                        "manager_execution_state": "idle",
+                        "rows": [
+                            {
+                                "scope_id": "scope-a",
+                                "compile_pending": False,
+                                "compiled": False,
+                                "orchestrator_state": "compile_failed",
+                            }
+                        ],
+                    }
+                ),
             },
         ),
     )
@@ -6122,23 +6179,29 @@ def test_mcp_dev_client_selected_workflow_poll_composes_followup_state_calls(
                 {
                     **_state_surface_dev_wire(dev_client),
                     "current_revision_token": f"rev-{state_call_count}",
-                    "payload": _complete_plate_manager_state({
-                        "manager_execution_state": ("idle" if compiled else "running"),
-                        "object_state_token": state_call_count,
-                        "rows": [
-                            {
-                                "scope_id": "scope-a",
-                                "compile_pending": False,
-                                "compiled": compiled,
-                            }
-                        ],
-                    }),
+                    "payload": _complete_plate_manager_state(
+                        {
+                            "manager_execution_state": (
+                                "idle" if compiled else "running"
+                            ),
+                            "object_state_token": state_call_count,
+                            "rows": [
+                                {
+                                    "scope_id": "scope-a",
+                                    "compile_pending": False,
+                                    "compiled": compiled,
+                                }
+                            ],
+                        }
+                    ),
                 },
             ),
         )
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
 
     parser = dev_client._build_parser()
@@ -6251,13 +6314,17 @@ def test_mcp_dev_client_selected_workflow_receipt_owns_poll_continuation(
                 {
                     **_state_surface_dev_wire(dev_client),
                     "current_revision_token": "baseline",
-                    "payload": _complete_plate_manager_state({"object_state_token": 1, "rows": []}),
+                    "payload": _complete_plate_manager_state(
+                        {"object_state_token": 1, "rows": []}
+                    ),
                 },
             ),
         )
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
 
     args = dev_client._build_parser().parse_args(
@@ -6331,13 +6398,17 @@ def test_mcp_dev_client_selected_workflow_completed_rejection_stops_polling(
                 {
                     **_state_surface_dev_wire(dev_client),
                     "current_revision_token": "baseline",
-                    "payload": _complete_plate_manager_state({"object_state_token": 1, "rows": []}),
+                    "payload": _complete_plate_manager_state(
+                        {"object_state_token": 1, "rows": []}
+                    ),
                 },
             ),
         )
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
     args = dev_client._build_parser().parse_args(
         ("selected-workflow", "compile_datasets", "--wait")
@@ -6355,9 +6426,16 @@ def test_mcp_dev_client_selected_workflow_completed_rejection_stops_polling(
         "openhcs_ui_selected_plate_workflow",
         "openhcs_ui_wait_for_operation_receipt",
     ]
-    assert response.results[-1].payloads[0].status is dev_client.WorkflowPollSummaryStatus.FAILED
+    assert (
+        response.results[-1].payloads[0].status
+        is dev_client.WorkflowPollSummaryStatus.FAILED
+    )
     from openhcs.mcp.dev_client_core import WorkflowPollSkipReason
-    assert response.results[-1].payloads[0].skip_reason is WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
+
+    assert (
+        response.results[-1].payloads[0].skip_reason
+        is WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
+    )
 
 
 def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
@@ -6377,17 +6455,19 @@ def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
             {
                 **_state_surface_dev_wire(dev_client),
                 "current_revision_token": "prior-completed-run",
-                "payload": _complete_plate_manager_state({
-                    "manager_execution_state": "idle",
-                    "object_state_token": 1,
-                    "rows": [
-                        {
-                            "scope_id": "scope-a",
-                            "compile_pending": False,
-                            "compiled": True,
-                        }
-                    ],
-                }),
+                "payload": _complete_plate_manager_state(
+                    {
+                        "manager_execution_state": "idle",
+                        "object_state_token": 1,
+                        "rows": [
+                            {
+                                "scope_id": "scope-a",
+                                "compile_pending": False,
+                                "compiled": True,
+                            }
+                        ],
+                    }
+                ),
             },
         ),
     )
@@ -6404,7 +6484,9 @@ def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
         return stale_state
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
 
     args = dev_client._build_parser().parse_args(
@@ -6454,17 +6536,19 @@ def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state
             {
                 **_state_surface_dev_wire(dev_client),
                 "current_revision_token": "already-initialized",
-                "payload": _complete_plate_manager_state({
-                    "manager_execution_state": "idle",
-                    "object_state_token": 1,
-                    "rows": [
-                        {
-                            "scope_id": "scope-a",
-                            "init_pending": False,
-                            "initialized": True,
-                        }
-                    ],
-                }),
+                "payload": _complete_plate_manager_state(
+                    {
+                        "manager_execution_state": "idle",
+                        "object_state_token": 1,
+                        "rows": [
+                            {
+                                "scope_id": "scope-a",
+                                "init_pending": False,
+                                "initialized": True,
+                            }
+                        ],
+                    }
+                ),
             },
         ),
     )
@@ -6485,7 +6569,9 @@ def test_mcp_dev_client_selected_workflow_accepts_idempotent_init_terminal_state
         return initialized_state
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
 
     args = dev_client._build_parser().parse_args(
@@ -6568,23 +6654,29 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_read_time
                 {
                     **_state_surface_dev_wire(dev_client),
                     "current_revision_token": f"rev-{state_call_count}",
-                    "payload": _complete_plate_manager_state({
-                        "manager_execution_state": ("idle" if compiled else "running"),
-                        "object_state_token": state_call_count,
-                        "rows": [
-                            {
-                                "scope_id": "scope-a",
-                                "compile_pending": False,
-                                "compiled": compiled,
-                            }
-                        ],
-                    }),
+                    "payload": _complete_plate_manager_state(
+                        {
+                            "manager_execution_state": (
+                                "idle" if compiled else "running"
+                            ),
+                            "object_state_token": state_call_count,
+                            "rows": [
+                                {
+                                    "scope_id": "scope-a",
+                                    "compile_pending": False,
+                                    "compiled": compiled,
+                                }
+                            ],
+                        }
+                    ),
                 },
             ),
         )
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
 
     parser = dev_client._build_parser()
@@ -6678,23 +6770,27 @@ def test_mcp_dev_client_selected_workflow_poll_recovers_from_transient_baseline_
                 {
                     **_state_surface_dev_wire(dev_client),
                     "current_revision_token": "terminal",
-                    "payload": _complete_plate_manager_state({
-                        "manager_execution_state": "idle",
-                        "object_state_token": 2,
-                        "rows": [
-                            {
-                                "scope_id": "scope-a",
-                                "compile_pending": False,
-                                "compiled": True,
-                            }
-                        ],
-                    }),
+                    "payload": _complete_plate_manager_state(
+                        {
+                            "manager_execution_state": "idle",
+                            "object_state_token": 2,
+                            "rows": [
+                                {
+                                    "scope_id": "scope-a",
+                                    "compile_pending": False,
+                                    "compiled": True,
+                                }
+                            ],
+                        }
+                    ),
                 },
             ),
         )
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
 
     parser = dev_client._build_parser()
@@ -6772,7 +6868,9 @@ def test_mcp_dev_client_selected_workflow_poll_exhausts_transient_read_timeout(
                     {
                         **_state_surface_dev_wire(dev_client),
                         "current_revision_token": "baseline",
-                        "payload": _complete_plate_manager_state({"object_state_token": 1, "rows": []}),
+                        "payload": _complete_plate_manager_state(
+                            {"object_state_token": 1, "rows": []}
+                        ),
                     },
                 ),
             )
@@ -6792,7 +6890,9 @@ def test_mcp_dev_client_selected_workflow_poll_exhausts_transient_read_timeout(
         )
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
 
     parser = dev_client._build_parser()
@@ -6865,27 +6965,33 @@ def test_mcp_dev_client_selected_workflow_poll_summary_reports_failure(
                 {
                     **_state_surface_dev_wire(dev_client),
                     "current_revision_token": f"rev-{state_call_count}",
-                    "payload": _complete_plate_manager_state({
-                        "manager_execution_state": ("idle" if failed else "running"),
-                        "object_state_token": state_call_count,
-                        "rows": [
-                            {
-                                "scope_id": "scope-a",
-                                "execution_active": False,
-                                "queue_position": None,
-                                "terminal_status": ("failed" if failed else None),
-                                "orchestrator_state": (
-                                    "exec_failed" if failed else "compiled"
-                                ),
-                            }
-                        ],
-                    }),
+                    "payload": _complete_plate_manager_state(
+                        {
+                            "manager_execution_state": (
+                                "idle" if failed else "running"
+                            ),
+                            "object_state_token": state_call_count,
+                            "rows": [
+                                {
+                                    "scope_id": "scope-a",
+                                    "execution_active": False,
+                                    "queue_position": None,
+                                    "terminal_status": ("failed" if failed else None),
+                                    "orchestrator_state": (
+                                        "exec_failed" if failed else "compiled"
+                                    ),
+                                }
+                            ],
+                        }
+                    ),
                 },
             ),
         )
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
 
     parser = dev_client._build_parser()
@@ -6955,10 +7061,12 @@ def test_mcp_dev_client_selected_workflow_poll_stops_on_agent_error(
                     {
                         **_state_surface_dev_wire(dev_client),
                         "current_revision_token": "rev-1",
-                        "payload": _complete_plate_manager_state({
-                            "object_state_token": 1,
-                            "rows": [],
-                        }),
+                        "payload": _complete_plate_manager_state(
+                            {
+                                "object_state_token": 1,
+                                "rows": [],
+                            }
+                        ),
                     },
                 ),
             )
@@ -6978,7 +7086,9 @@ def test_mcp_dev_client_selected_workflow_poll_stops_on_agent_error(
         )
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
 
     parser = dev_client._build_parser()
@@ -7026,22 +7136,33 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
     import openhcs.mcp.dev_client as dev_client
     import openhcs.mcp.dev_client_commands.ui as ui_commands
     from openhcs.agent.dto.ui_bridge import (
-        UiPlateManagerState, UiStateSurfaceDocument,
-        UiStateSurfaceIdentity, UiStateSurfaceSummary,
+        UiPlateManagerState,
+        UiStateSurfaceDocument,
+        UiStateSurfaceIdentity,
+        UiStateSurfaceSummary,
     )
 
     surface_summary = UiStateSurfaceSummary(
-        "test", UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-        "Plate Manager", True, widget_id="plate_manager",
+        "test",
+        UiStateSurfaceIdentity(surface_id="plate_manager.state"),
+        "Plate Manager",
+        True,
+        widget_id="plate_manager",
     )
     baseline = UiPlateManagerState(
-        schema_version="test", summary=surface_summary, object_state_token=1,
-        manager_execution_state="idle", rows=(), current_revision_token="rev-1",
+        schema_version="test",
+        summary=surface_summary,
+        object_state_token=1,
+        manager_execution_state="idle",
+        rows=(),
+        current_revision_token="rev-1",
     )
     baseline_document = UiStateSurfaceDocument(
-        schema_version="test", summary=surface_summary,
+        schema_version="test",
+        summary=surface_summary,
         payload_schema="openhcs.ui.plate_manager_state.v1",
-        payload=to_jsonable(baseline), current_revision_token="rev-1",
+        payload=to_jsonable(baseline),
+        current_revision_token="rev-1",
     )
 
     calls: list[dev_client.McpDevToolCall] = []
@@ -7060,7 +7181,9 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
         )
 
     monkeypatch.setattr(
-        ui_commands, "call_mcp_tool", _answering_session_events(dev_client, fake_call_tool)
+        ui_commands,
+        "call_mcp_tool",
+        _answering_session_events(dev_client, fake_call_tool),
     )
 
     parser = dev_client._build_parser()
@@ -7099,9 +7222,9 @@ def test_mcp_dev_client_selected_workflow_poll_summarizes_rejection(
         "action_status": "rejected",
     }
 
-    rendered = dev_client.McpDevCommandSpec.for_name(
-        "selected-workflow"
-    ).render_result(response, args)
+    rendered = dev_client.McpDevCommandSpec.for_name("selected-workflow").render_result(
+        response, args
+    )
 
     assert "Workflow: compile_datasets" in rendered
     assert "Skip reason: workflow_not_accepted" in rendered
@@ -7947,7 +8070,8 @@ def test_mcp_viewer_rois_collapses_duplicate_member_metadata():
                                 path="/tmp/A01_w2_rois.roi.zip",
                                 components={"well": "A01", "channel": 2},
                                 summary=ViewerPayloadSummary(
-                                    shape_payload_count=3, shape_coordinate_count=12,
+                                    shape_payload_count=3,
+                                    shape_coordinate_count=12,
                                 ),
                                 shape_payloads=(
                                     {
@@ -8045,10 +8169,15 @@ def test_mcp_sample_viewer_image_auto_selects_single_image_layer():
                                 components={"well": "A01", "channel": 1},
                                 axis_indices=(index,),
                                 summary=ViewerPayloadSummary(
-                                    shape=(96, 96), dtype="uint16", min=1, max=4,
+                                    shape=(96, 96),
+                                    dtype="uint16",
+                                    min=1,
+                                    max=4,
                                     nonzero_count=10,
                                 ),
-                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
+                                array_value_summary=ViewerArrayValueSummary(
+                                    requested=True, included=False
+                                ),
                             )
                             for index in range(5)
                         ),
@@ -8123,7 +8252,9 @@ def test_mcp_sample_viewer_image_ambiguous_route_returns_no_records():
                                 components={"well": "A01"},
                                 axis_indices=(0,),
                                 summary=ViewerPayloadSummary(shape=(8, 8)),
-                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
+                                array_value_summary=ViewerArrayValueSummary(
+                                    requested=True, included=False
+                                ),
                             ),
                         ),
                     ),
@@ -8140,7 +8271,9 @@ def test_mcp_sample_viewer_image_ambiguous_route_returns_no_records():
                                 components={"well": "A01"},
                                 axis_indices=(0,),
                                 summary=ViewerPayloadSummary(shape=(8, 8)),
-                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
+                                array_value_summary=ViewerArrayValueSummary(
+                                    requested=True, included=False
+                                ),
                             ),
                         ),
                     ),
@@ -8204,7 +8337,9 @@ def test_mcp_sample_viewer_image_axis_filter_preserves_route_filter():
                                 components={"well": "A01"},
                                 axis_indices=(0,),
                                 summary=ViewerPayloadSummary(shape=(8, 8)),
-                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
+                                array_value_summary=ViewerArrayValueSummary(
+                                    requested=True, included=False
+                                ),
                             ),
                         ),
                     ),
@@ -8221,7 +8356,9 @@ def test_mcp_sample_viewer_image_axis_filter_preserves_route_filter():
                                 components={"well": "A01"},
                                 axis_indices=(0,),
                                 summary=ViewerPayloadSummary(shape=(8, 8)),
-                                array_value_summary=ViewerArrayValueSummary(requested=True, included=False),
+                                array_value_summary=ViewerArrayValueSummary(
+                                    requested=True, included=False
+                                ),
                             ),
                         ),
                     ),
@@ -8720,7 +8857,10 @@ def test_mcp_bootstrap_wraps_server_run_failure(monkeypatch):
 
     class FailingRunServer:
         def __init__(self, *args, **kwargs):
-            assert kwargs["main_thread_dispatcher"] is recording_transport.execution.dispatcher
+            assert (
+                kwargs["main_thread_dispatcher"]
+                is recording_transport.execution.dispatcher
+            )
 
         def run(self, *, transport: str) -> None:
             transports.append(transport)
@@ -8837,9 +8977,14 @@ def test_mcp_server_exposes_session_tools_and_no_job_tools():
     tool_names = {tool.name for tool in tools}
 
     for operation_id in (
-        "add_datasets", "connect_server", "set_dataset_pipeline",
-        "initialize_datasets", "compile_datasets", "run_datasets",
-        "stop_execution", "delete_datasets",
+        "add_datasets",
+        "connect_server",
+        "set_dataset_pipeline",
+        "initialize_datasets",
+        "compile_datasets",
+        "run_datasets",
+        "stop_execution",
+        "delete_datasets",
     ):
         assert f"openhcs_{operation_id}" in tool_names
     for state in ("datasets", "pipeline", "events"):
@@ -9001,9 +9146,7 @@ def test_mcp_run_datasets_projects_observation_export_request():
     tools = (
         asyncio.run(listed_tools) if inspect.isawaitable(listed_tools) else listed_tools
     )
-    schema = {tool.name: tool.inputSchema for tool in tools}[
-        "openhcs_run_datasets"
-    ]
+    schema = {tool.name: tool.inputSchema for tool in tools}["openhcs_run_datasets"]
 
     assert "runtime_observation_export_path" in schema["properties"]
     assert "runtime_observation_export_path" not in schema["required"]

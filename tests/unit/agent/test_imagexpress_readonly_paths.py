@@ -67,7 +67,9 @@ def inspect_plate(plate: Path, source_format="imagexpress", **bounds):
 def inventory_for(plate: Path):
     ensure_storage_registry()
     filemanager = FileManager(dict(storage_registry))
-    handler = DatasetSourceChoice.named("imagexpress").open(plate, filemanager=filemanager)
+    handler = DatasetSourceChoice.named("imagexpress").open(
+        plate, filemanager=filemanager
+    )
     return (
         handler,
         filemanager,
@@ -81,9 +83,10 @@ def inventory_for(plate: Path):
 
 
 def identity(record):
-    return frozenset(
-        (c, record.metadata[c.name]) for c in AxisFamily.active().axes
-    ), record.source_path
+    return (
+        frozenset((c, record.metadata[c.name]) for c in AxisFamily.active().axes),
+        record.source_path,
+    )
 
 
 def test_raw_inspection_retains_folder_z_and_never_initializes(tmp_path: Path):
@@ -268,7 +271,9 @@ def test_new_declared_capability_through_unchanged_consumers_in_both_mro_orders(
         assert result.image_files.count == result.parse_summary.parsed_file_count == 4
         summaries = {item.component: item for item in result.components}
         assert tuple(v.key for v in summaries[Microscopy.Site.name].values) == ("7",)
-        assert tuple(v.key for v in summaries[Microscopy.Timepoint.name].values) == ("3",)
+        assert tuple(v.key for v in summaries[Microscopy.Timepoint.name].values) == (
+            "3",
+        )
         assert summaries[Microscopy.ZIndex.name].count == 2
         query = service_for(plate).query_files(
             PlateFileQueryRequest.from_fields(

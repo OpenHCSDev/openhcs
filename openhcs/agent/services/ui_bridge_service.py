@@ -400,7 +400,9 @@ class UiBridgeStatusOperation(UiBridgeRequestlessOperation):
     @classmethod
     def failed(cls, request, errors):
         del request
-        return UiBridgeStatus(schema_version=SCHEMA_VERSION, reachable=False, errors=errors)
+        return UiBridgeStatus(
+            schema_version=SCHEMA_VERSION, reachable=False, errors=errors
+        )
 
     @staticmethod
     def _unreachable(resolution: "UiBridgeConnectionResolution") -> UiBridgeStatus:
@@ -1065,7 +1067,6 @@ class UiBridgeGatewayABC(ABC):
         request,
     ):
         raise NotImplementedError
-
 
 
 class UiBridgeGatewayErrorABC(ABC):
@@ -1789,7 +1790,9 @@ class UiBridgeService:
         """Run one operation; failures come back as the operation's own result."""
         return operation.respond(self, connection, request)
 
-    def resolve(self, connection: UiBridgeConnectionSpec) -> UiBridgeConnectionResolution:
+    def resolve(
+        self, connection: UiBridgeConnectionSpec
+    ) -> UiBridgeConnectionResolution:
         return self._descriptor_resolver.resolve(connection)
 
     def connection_from_args(

@@ -26,7 +26,9 @@ class SourceBindingContext:
     source_backend: str
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "display_dataset_root", Path(self.display_dataset_root))
+        object.__setattr__(
+            self, "display_dataset_root", Path(self.display_dataset_root)
+        )
         object.__setattr__(
             self, "execution_dataset_root", Path(self.execution_dataset_root)
         )

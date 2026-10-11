@@ -174,7 +174,11 @@ class DatasetActivity:
         if terminal is not None:
             return terminal.orchestrator_state
         orchestrator = ObjectStateRegistry.get_object(self.scope_id)
-        return orchestrator.state if isinstance(orchestrator, PipelineOrchestrator) else None
+        return (
+            orchestrator.state
+            if isinstance(orchestrator, PipelineOrchestrator)
+            else None
+        )
 
     @property
     def execution_id(self) -> str | None:
@@ -255,7 +259,9 @@ class DatasetListView(SessionView):
         selected = set(session.selected_scope_ids)
         return DatasetListState(
             rows=tuple(
-                cls.row_state(session, row, relations[row.scope_id], row.scope_id in selected)
+                cls.row_state(
+                    session, row, relations[row.scope_id], row.scope_id in selected
+                )
                 for row in rows
             ),
             selected_scope_ids=session.selected_scope_ids,
@@ -328,7 +334,9 @@ class DatasetListView(SessionView):
 def _function_entries(function_spec) -> tuple:
     if function_spec is None:
         return ()
-    entries = tuple(function_spec) if isinstance(function_spec, list) else (function_spec,)
+    entries = (
+        tuple(function_spec) if isinstance(function_spec, list) else (function_spec,)
+    )
     functions = []
     for entry in entries:
         function = entry[0] if isinstance(entry, tuple) else entry
@@ -393,7 +401,9 @@ class PipelineStepsView(SessionView):
                     selected=step_scope_id in selected,
                     dirty=bool(state.dirty_fields) if state is not None else False,
                     default_diff=(
-                        bool(state.signature_diff_fields) if state is not None else False
+                        bool(state.signature_diff_fields)
+                        if state is not None
+                        else False
                     ),
                     description=step.description,
                     debug_pause=step.debug_pause,

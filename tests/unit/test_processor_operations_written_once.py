@@ -117,7 +117,9 @@ def test_projection_choices_are_served_by_the_projection_family() -> None:
     }
     for backend in BACKENDS:
         create_projection = _processor_module(backend).create_projection
-        method_type = type(inspect.signature(create_projection).parameters["method"].default)
+        method_type = type(
+            inspect.signature(create_projection).parameters["method"].default
+        )
         assert {member.value for member in method_type} <= served, backend
 
 
@@ -125,7 +127,11 @@ def test_numpy_registrations_compute_the_shared_operations() -> None:
     numpy_processor = _processor_module("numpy")
     stack = np.arange(2 * 4 * 4, dtype=np.uint16).reshape(2, 4, 4)
 
-    assert numpy_processor.spatial_bin_2d(stack, 2, SpatialBinMethod.MEAN).shape == (2, 2, 2)
+    assert numpy_processor.spatial_bin_2d(stack, 2, SpatialBinMethod.MEAN).shape == (
+        2,
+        2,
+        2,
+    )
     np.testing.assert_array_equal(
         numpy_processor.spatial_bin_3d(stack, 2, SpatialBinMethod.MAX),
         stack.reshape(1, 2, 2, 2, 2, 2).max(axis=(1, 3, 5)),
@@ -138,12 +144,15 @@ def test_numpy_registrations_compute_the_shared_operations() -> None:
             numpy_processor.create_projection(stack, method), reduce(stack, axis=0)
         )
     np.testing.assert_array_equal(
-        numpy_processor.create_projection(stack, numpy_processor.NumpyStackProjectionMethod.MEAN),
+        numpy_processor.create_projection(
+            stack, numpy_processor.NumpyStackProjectionMethod.MEAN
+        ),
         stack.mean(axis=0).astype(stack.dtype),
     )
     assert (
-        CallableContract.from_callable(numpy_processor.create_projection)
-        .require_processing_contract()
+        CallableContract.from_callable(
+            numpy_processor.create_projection
+        ).require_processing_contract()
         is VolumetricToSliceContract
     )
     mask = np.array([[1, 0, 1, 0]] * 4, dtype=np.uint16)

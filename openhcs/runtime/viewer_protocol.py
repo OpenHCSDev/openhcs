@@ -195,7 +195,8 @@ class ViewerProjectionRecord(ViewerDeclaredWireValue):
             return value
 
         return core_schema.no_info_before_validator_function(
-            descend, super().__get_pydantic_core_schema__(source_type, handler),
+            descend,
+            super().__get_pydantic_core_schema__(source_type, handler),
         )
 
     def __post_init__(self) -> None:
@@ -211,7 +212,8 @@ class ViewerProjectionRecord(ViewerDeclaredWireValue):
 
     def to_wire_mapping(self) -> JsonObject:
         return {
-            name: value for name, value in super().to_wire_mapping().items()
+            name: value
+            for name, value in super().to_wire_mapping().items()
             if value is not VIEWER_FIELD_ABSENT
         } | self.wire_overrides()
 
@@ -288,9 +290,15 @@ class ViewerArrayStatistics(ViewerProjectionRecord):
     nonzero_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
     min: JsonScalar | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
     max: JsonScalar | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
-    nonzero_min_coordinate: tuple[StrictInt, ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
-    nonzero_max_coordinate: tuple[StrictInt, ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
-    nonzero_example_coordinates: tuple[tuple[StrictInt, ...], ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    nonzero_min_coordinate: tuple[StrictInt, ...] | ViewerFieldAbsent = (
+        VIEWER_FIELD_ABSENT
+    )
+    nonzero_max_coordinate: tuple[StrictInt, ...] | ViewerFieldAbsent = (
+        VIEWER_FIELD_ABSENT
+    )
+    nonzero_example_coordinates: (
+        tuple[tuple[StrictInt, ...], ...] | ViewerFieldAbsent
+    ) = VIEWER_FIELD_ABSENT
     nonzero_coordinate_omission_reason: str | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
 
     @property
@@ -320,28 +328,45 @@ class ViewerShapeCoordinateBounds(ViewerProjectionRecord):
 class ViewerShapeStatistics(ViewerProjectionRecord):
     item_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
     shape_payload_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
-    missing_source_spatial_shape_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    missing_source_spatial_shape_count: StrictInt | ViewerFieldAbsent = (
+        VIEWER_FIELD_ABSENT
+    )
     shape_coordinate_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
-    shape_out_of_source_bounds_count: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
-    shape_coordinate_bounds_yx: ViewerShapeCoordinateBounds | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    shape_out_of_source_bounds_count: StrictInt | ViewerFieldAbsent = (
+        VIEWER_FIELD_ABSENT
+    )
+    shape_coordinate_bounds_yx: ViewerShapeCoordinateBounds | ViewerFieldAbsent = (
+        VIEWER_FIELD_ABSENT
+    )
 
     def returned_member_count(self, returned_count: int) -> int:
-        return (returned_count if self.shape_payload_count is VIEWER_FIELD_ABSENT
-                else self.shape_payload_count)
+        return (
+            returned_count
+            if self.shape_payload_count is VIEWER_FIELD_ABSENT
+            else self.shape_payload_count
+        )
 
     def wire_overrides(self) -> JsonObject:
         overrides = super().wire_overrides()
         if self.shape_coordinate_bounds_yx is not VIEWER_FIELD_ABSENT:
-            overrides["shape_coordinate_bounds_yx"] = self.shape_coordinate_bounds_yx.to_wire_mapping()
+            overrides["shape_coordinate_bounds_yx"] = (
+                self.shape_coordinate_bounds_yx.to_wire_mapping()
+            )
         return overrides
 
 
 @dataclass(frozen=True, kw_only=True)
 class ViewerSourceSpatialSummary(ViewerProjectionRecord):
-    source_voxel_spacing: SourceVoxelSpacing | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    source_voxel_spacing: SourceVoxelSpacing | None | ViewerFieldAbsent = (
+        VIEWER_FIELD_ABSENT
+    )
 
-    spatial_origin_yx: tuple[StrictInt, StrictInt] | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
-    source_spatial_shape_yx: tuple[StrictInt, StrictInt] | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    spatial_origin_yx: tuple[StrictInt, StrictInt] | None | ViewerFieldAbsent = (
+        VIEWER_FIELD_ABSENT
+    )
+    source_spatial_shape_yx: tuple[StrictInt, StrictInt] | None | ViewerFieldAbsent = (
+        VIEWER_FIELD_ABSENT
+    )
 
     @property
     def voxel_spacing(self) -> SourceVoxelSpacing:
@@ -358,12 +383,17 @@ class ViewerSourceSpatialSummary(ViewerProjectionRecord):
     def require_uncropped_source_shape(self) -> tuple[int, int]:
         domain = self.source_domain
         if domain.origin_yx != (0, 0):
-            raise ValueError("Image record requires explicit uncropped pixel placement.")
+            raise ValueError(
+                "Image record requires explicit uncropped pixel placement."
+            )
         return domain.required_source_shape_yx(source_label="image record")
+
 
 @dataclass(frozen=True, kw_only=True)
 class ViewerAggregateComponentSummary(ViewerProjectionRecord):
-    aggregate_component_values: Mapping[str, tuple[ViewerComponentValue, ...]] | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    aggregate_component_values: (
+        Mapping[str, tuple[ViewerComponentValue, ...]] | None | ViewerFieldAbsent
+    ) = VIEWER_FIELD_ABSENT
 
     @property
     def aggregate_values(self) -> Mapping[str, tuple[ViewerComponentValue, ...]]:
@@ -374,16 +404,25 @@ class ViewerAggregateComponentSummary(ViewerProjectionRecord):
         if any(not values for values in self.aggregate_values.values()):
             raise ValueError("Viewer aggregate component domains must not be empty.")
 
-    def require_plane_components(self) -> Mapping[str, tuple[ViewerComponentValue, ...]]:
-        if self.aggregate_component_values is VIEWER_FIELD_ABSENT or self.aggregate_component_values is None:
-            raise ValueError("Image record requires its explicit plane component domain.")
+    def require_plane_components(
+        self,
+    ) -> Mapping[str, tuple[ViewerComponentValue, ...]]:
+        if (
+            self.aggregate_component_values is VIEWER_FIELD_ABSENT
+            or self.aggregate_component_values is None
+        ):
+            raise ValueError(
+                "Image record requires its explicit plane component domain."
+            )
         return self.aggregate_component_values
 
 
 @dataclass(frozen=True, kw_only=True)
 class ViewerPayloadSummary(
-    ViewerAggregateComponentSummary, ViewerSourceSpatialSummary,
-    ViewerShapeStatistics, ViewerArrayStatistics,
+    ViewerAggregateComponentSummary,
+    ViewerSourceSpatialSummary,
+    ViewerShapeStatistics,
+    ViewerArrayStatistics,
 ):
     """One original native summary; no agent-side mirror or raw-map carrier."""
 
@@ -393,12 +432,15 @@ class ViewerPayloadSummary(
     payload_type: str | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
 
     def coordinate_components(self) -> Mapping[str, ViewerComponentValue]:
-        from openhcs.runtime.viewer_component_system import ViewerComponentMetadataPayload
+        from openhcs.runtime.viewer_component_system import (
+            ViewerComponentMetadataPayload,
+        )
 
         if self.components is VIEWER_FIELD_ABSENT:
             raise ValueError("Viewer payload summary missing components.")
         return ViewerComponentMetadataPayload.component_map(
-            self.components, context="viewer payload summary",
+            self.components,
+            context="viewer payload summary",
         )
 
     @property
@@ -410,9 +452,13 @@ class ViewerPayloadSummary(
             shape = self.require_positive_shape(rank=3)
             source_shape = self.require_uncropped_source_shape()
         except ValueError as error:
-            raise ValueError("Image record requires an explicit full three-axis image window.") from error
+            raise ValueError(
+                "Image record requires an explicit full three-axis image window."
+            ) from error
         if source_shape != shape[-2:]:
-            raise ValueError("Image record requires an explicit full three-axis image window.")
+            raise ValueError(
+                "Image record requires an explicit full three-axis image window."
+            )
 
     @property
     def full_image_plane_count(self) -> int:
@@ -428,8 +474,12 @@ class ViewerArrayValueSummary(ViewerArrayStatistics):
     included: bool | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
     omitted_reason: str | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
     max_array_elements: StrictInt | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
-    slice_ranges: tuple[tuple[StrictInt, StrictInt], ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
-    requested_slice_ranges: tuple[tuple[StrictInt, StrictInt], ...] | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+    slice_ranges: tuple[tuple[StrictInt, StrictInt], ...] | ViewerFieldAbsent = (
+        VIEWER_FIELD_ABSENT
+    )
+    requested_slice_ranges: (
+        tuple[tuple[StrictInt, StrictInt], ...] | ViewerFieldAbsent
+    ) = VIEWER_FIELD_ABSENT
 
     @property
     def protocol_supported(self) -> bool:
@@ -449,10 +499,15 @@ class ViewerArrayValueSummary(ViewerArrayStatistics):
             count *= value
         return count
 
-    def presentation_omission_reason(self, *, include_requested: bool | None) -> str | None:
+    def presentation_omission_reason(
+        self, *, include_requested: bool | None
+    ) -> str | None:
         reason = self.optional(self.omitted_reason)
-        if (include_requested is False and reason == "max_array_elements_exceeded"
-                and self.max_array_elements == 0):
+        if (
+            include_requested is False
+            and reason == "max_array_elements_exceeded"
+            and self.max_array_elements == 0
+        ):
             return "array_values_not_requested"
         return reason
 
@@ -468,7 +523,9 @@ class ViewerPayloadContent(ViewerProjectionRecord):
     aggregate_axis_indices: tuple[StrictInt, ...] = ()
     summary: ViewerPayloadSummary = field(default_factory=ViewerPayloadSummary)
     array_values: tuple[JsonValue, ...] = ()
-    array_value_summary: ViewerArrayValueSummary = field(default_factory=ViewerArrayValueSummary)
+    array_value_summary: ViewerArrayValueSummary = field(
+        default_factory=ViewerArrayValueSummary
+    )
 
     @property
     def is_image(self) -> bool:
@@ -780,9 +837,9 @@ class ViewerSettleProgress:
                 payload[ViewerSettleField.ACTIVE_ROUTE_WORK_UNIT_COUNT.value]
             ),
             active_route_work_unit_active=active_work_unit_value,
-            processed_intake_item_count=cast(int, payload[
-                ViewerSettleField.PROCESSED_INTAKE_ITEM_COUNT.value
-            ]),
+            processed_intake_item_count=cast(
+                int, payload[ViewerSettleField.PROCESSED_INTAKE_ITEM_COUNT.value]
+            ),
             intake_item_active=payload[ViewerSettleField.INTAKE_ITEM_ACTIVE.value],
         )
 
@@ -1671,7 +1728,9 @@ class ViewerControlMessageRequest:
         if self.timeout <= 0:
             raise ValueError("Viewer control timeout must be positive.")
 
-    def to_wire_mapping(self, *, deadline: OperationDeadline | None = None) -> dict[str, object]:
+    def to_wire_mapping(
+        self, *, deadline: OperationDeadline | None = None
+    ) -> dict[str, object]:
         """Project this typed request to primitive wire fields at send."""
 
         request: dict[str, object] = {
@@ -1687,8 +1746,13 @@ class ViewerControlMessageRequest:
             if isinstance(payload, ViewerWindowControlRequest):
                 payload = replace(payload, operation_deadline=None)
             request[ViewerControlResponseField.PAYLOAD.value] = payload
-        deadline = deadline or self.operation_deadline or OperationDeadline.after_milliseconds(
-            max(1, int(self.timeout * 1000)), operation="viewer control request",
+        deadline = (
+            deadline
+            or self.operation_deadline
+            or OperationDeadline.after_milliseconds(
+                max(1, int(self.timeout * 1000)),
+                operation="viewer control request",
+            )
         )
         return ControlRequestHeader.with_observation_budget(request, deadline)
 
@@ -1701,7 +1765,8 @@ class ViewerControlMessageRequest:
         socket = None
         try:
             deadline = self.operation_deadline or OperationDeadline.after_milliseconds(
-                max(1, int(self.timeout * 1000)), operation="viewer control request",
+                max(1, int(self.timeout * 1000)),
+                operation="viewer control request",
             )
             context = zmq.Context()
             socket = context.socket(zmq.REQ)
@@ -1828,7 +1893,9 @@ class ManagedViewerLifecycleMixin(
             port = self.required_port
             self.prepare_fresh_viewer_start()
             if self.lifecycle_state.is_active:
-                logger.warning("%s viewer is already running.", self.viewer_process_label)
+                logger.warning(
+                    "%s viewer is already running.", self.viewer_process_label
+                )
                 return
             logger.info(
                 "🔬 VISUALIZER: Starting %s %s viewer (detached) on port %s",
@@ -1962,12 +2029,15 @@ class ManagedViewerLifecycleMixin(
         """
         owns_process = self.owned_viewer_process_is_alive()
         try:
-            active = self.process_launch if owns_process else self.active_process_launch()
+            active = (
+                self.process_launch if owns_process else self.active_process_launch()
+            )
             return requested.matches_existing_viewer(active, owns_process=owns_process)
         except (RuntimeError, TypeError, ValueError, KeyError, zmq.ZMQError) as error:
             logging.getLogger(type(self).__module__).warning(
                 "%s viewer process-launch check failed: %s",
-                self.viewer_process_label, error,
+                self.viewer_process_label,
+                error,
             )
             return False
 

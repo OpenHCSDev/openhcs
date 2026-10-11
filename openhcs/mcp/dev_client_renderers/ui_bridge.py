@@ -157,20 +157,28 @@ class UiSmokeRenderer:
         return "\n".join(
             (
                 f"UI smoke: results={len(decoded.results)} mcp_errors={mcp_errors}",
-                "Health: missing"
-                if health is None
-                else f"Health: status={health.status} "
-                f"restart_required={health.restart_required} "
-                f"stale_paths={len(health.stale_source_paths)}",
-                UiBridgeStatusRenderer.unavailable_summary
-                if status is None
-                else McpDevOutputRenderer.render_payload_value(status, options),
-                "Bridges: missing"
-                if bridges is None
-                else f"Bridges: live={len(bridges.bridges)} errors={len(bridges.errors)}",
-                UiWindowCatalogRenderer.unavailable_summary
-                if windows is None
-                else McpDevOutputRenderer.render_payload_value(windows, options),
+                (
+                    "Health: missing"
+                    if health is None
+                    else f"Health: status={health.status} "
+                    f"restart_required={health.restart_required} "
+                    f"stale_paths={len(health.stale_source_paths)}"
+                ),
+                (
+                    UiBridgeStatusRenderer.unavailable_summary
+                    if status is None
+                    else McpDevOutputRenderer.render_payload_value(status, options)
+                ),
+                (
+                    "Bridges: missing"
+                    if bridges is None
+                    else f"Bridges: live={len(bridges.bridges)} errors={len(bridges.errors)}"
+                ),
+                (
+                    UiWindowCatalogRenderer.unavailable_summary
+                    if windows is None
+                    else McpDevOutputRenderer.render_payload_value(windows, options)
+                ),
                 *McpDevOutputRenderer.diagnostic_lines(decoded.diagnostic_errors()),
             )
         )
@@ -220,7 +228,9 @@ class UiStateSurfaceStateRenderer(McpDevOutputRenderer):
     surface_identity: ClassVar[type[UiStateSurfaceIdentityDeclarationBase]]
 
     @classmethod
-    def for_surface_id(cls, surface_id: str) -> type["UiStateSurfaceStateRenderer"] | None:
+    def for_surface_id(
+        cls, surface_id: str
+    ) -> type["UiStateSurfaceStateRenderer"] | None:
         return next(
             (
                 renderer
@@ -308,7 +318,9 @@ class UiLiveOverviewStateSurfaceRenderer(UiStateSurfaceStateRenderer):
                 ("surface", item.source_surface_id),
                 ("window", item.source_window_id),
             ):
-                parts.extend(cls.optional_lines(value, lambda text: (f"{label}={text}",)))
+                parts.extend(
+                    cls.optional_lines(value, lambda text: (f"{label}={text}",))
+                )
             lines.append(f"- {item.label}: " + " ".join(parts))
         return lines
 
@@ -353,7 +365,9 @@ class PlateManagerStateSurfaceRenderer(UiStateSurfaceStateRenderer):
                 ("output", row.output_root),
                 ("source", row.source_root),
             ):
-                parts.extend(cls.optional_lines(value, lambda text: (f"{label}={text}",)))
+                parts.extend(
+                    cls.optional_lines(value, lambda text: (f"{label}={text}",))
+                )
             lines.append(f"- {row.name}: " + ", ".join(parts))
         return lines
 
@@ -484,7 +498,9 @@ class WidgetTreeOutlineRenderer(McpDevOutputRenderer):
     output_contract = UiWidgetTreeResult
     render_options_type = WidgetTreeRenderOptions
     MAX_LABEL_CHARS = 96
-    TECHNICAL_WIDGET_CLASSES = frozenset({"QHeaderView", "QScrollBar", "QSplitterHandle"})
+    TECHNICAL_WIDGET_CLASSES = frozenset(
+        {"QHeaderView", "QScrollBar", "QSplitterHandle"}
+    )
     TECHNICAL_OBJECT_NAME_PREFIX = "qt_scrollarea_"
 
     @classmethod
@@ -575,9 +591,7 @@ class WidgetTreeOutlineRenderer(McpDevOutputRenderer):
         parts = [part for part in (node.class_name,) if part]
         if node.object_name:
             parts.append(f"#{node.object_name}")
-        addressable = node.actionable or (
-            node.visible and any(node.action_kinds)
-        )
+        addressable = node.actionable or (node.visible and any(node.action_kinds))
         path_id = node.path_id if addressable else ""
         action = actions[path_id] if path_id in actions else None
         semantic_parts = [] if action is None else cls._semantic_parts(action)

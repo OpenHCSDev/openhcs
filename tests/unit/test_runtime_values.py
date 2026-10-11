@@ -240,7 +240,9 @@ def test_object_label_set_rejects_nested_payload_and_implicit_authority_merge() 
     labels = np.array([[0, 1], [2, 0]], dtype=np.int16)
     unedited = np.array([[0, 1], [1, 0]], dtype=np.int16)
     payload = ObjectLabelPayload(
-        variant_data=ObjectLabelVariantData(labels=labels, variants={UneditedLabels: unedited}),
+        variant_data=ObjectLabelVariantData(
+            labels=labels, variants={UneditedLabels: unedited}
+        ),
         domain=ObjectLabelDomain(
             declared_object_ids=(1, 2),
         ),
@@ -396,8 +398,9 @@ def test_object_label_pure_2d_aggregator_preserves_dense_payload_domains() -> No
     assert aggregated.domain.declared_object_id_domains == ((1,), (2,))
 
 
-
-def test_object_label_aggregation_preserves_variant_plane_writes_and_transport() -> None:
+def test_object_label_aggregation_preserves_variant_plane_writes_and_transport() -> (
+    None
+):
     planes = (np.array([[0, 1]], dtype=np.int16), np.array([[0, 2]], dtype=np.int32))
     values = tuple(
         ObjectLabelPayload(
@@ -409,7 +412,9 @@ def test_object_label_aggregation_preserves_variant_plane_writes_and_transport()
         for index, plane in enumerate(planes)
     )
     aggregate = ObjectLabelPure2DSliceAggregator.aggregate(
-        values, "numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        values,
+        "numpy",
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     )
     assert aggregate.shape == (2, 1, 2)
     assert aggregate.dtype == np.dtype(np.int32)
@@ -939,7 +944,9 @@ def test_object_label_source_plane_projection_preserves_projected_variants() -> 
     projected = source.project_source_plane(1, labels=labels[1])
 
     np.testing.assert_array_equal(projected.labels, labels[1])
-    np.testing.assert_array_equal(projected.variant_labels(SmallRemovedLabels), small_removed[1])
+    np.testing.assert_array_equal(
+        projected.variant_labels(SmallRemovedLabels), small_removed[1]
+    )
     assert projected.domain.scope is ObjectLabelDomainScope.PAYLOAD
     assert projected.domain.declared_object_ids == (2, 3)
     assert projected.source_image_names == ("rawGFP",)
@@ -959,7 +966,9 @@ def test_object_label_replacement_identity_preserves_planar_variants() -> None:
     projected = source.with_measurement_labels(labels)
 
     np.testing.assert_array_equal(projected.labels, labels)
-    np.testing.assert_array_equal(projected.variant_labels(SmallRemovedLabels), small_removed)
+    np.testing.assert_array_equal(
+        projected.variant_labels(SmallRemovedLabels), small_removed
+    )
 
 
 def test_object_label_plane_projection_preserves_ordered_domains_and_variants() -> None:
@@ -1138,9 +1147,7 @@ def test_empty_sparse_ijv_stack_preserves_runtime_slice_count() -> None:
         np.zeros((2, *shape), dtype=np.int32),
     )
 
-    projected_items = (
-        OptionalSourceIdentity
-    ).project_payload_items(
+    projected_items = (OptionalSourceIdentity).project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=aggregated,
             source_description="empty sparse labels",
@@ -1203,7 +1210,9 @@ def test_shape_object_feature_table_rejects_undeclared_dense_feature_domain() ->
         table.rows()
 
 
-def test_shape_descriptors_align_with_measured_ids_not_missing_declared_labels() -> None:
+def test_shape_descriptors_align_with_measured_ids_not_missing_declared_labels() -> (
+    None
+):
     table = ShapeObjectFeatureValueTable.from_feature_arrays(
         {
             MeasureObjectSizeShapeModule.MeasurementFeature.MAX_FERET_DIAMETER.value: np.asarray(
@@ -1527,11 +1536,9 @@ def test_source_context_preserves_target_payload_channel_axis_domain() -> None:
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.zeros((1, 2, 4, 5, 3), dtype=np.float32), None)
 
-    contextualized = (
-        target.metadata
-        .with_source_context_from(source.metadata)
-        .attach_source_context_to(target)
-    )
+    contextualized = target.metadata.with_source_context_from(
+        source.metadata
+    ).attach_source_context_to(target)
 
     metadata = contextualized.metadata
     assert metadata.axis_index(ColourAxis, contextualized) == 4
@@ -2527,7 +2534,8 @@ def test_object_label_payload_with_measurement_labels_preserves_domain_and_varia
     small_removed = np.full_like(labels, 2)
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(
-            labels=labels, variants={UneditedLabels: unedited, SmallRemovedLabels: small_removed}
+            labels=labels,
+            variants={UneditedLabels: unedited, SmallRemovedLabels: small_removed},
         ),
         source_spatial_domain=SourceSpatialDomain(
             origin_yx=(4, 5),
@@ -2587,9 +2595,7 @@ def test_runtime_projection_requirement_projects_singleton_object_label_stack() 
         ),
     )
 
-    (item,) = (
-        OptionalSourceIdentity
-    ).project_payload_items(
+    (item,) = (OptionalSourceIdentity).project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload,
             source_description="singleton labels",
@@ -2624,9 +2630,7 @@ def test_runtime_projection_requirement_tracks_multi_plane_runtime_coordinates()
         ),
     )
 
-    first, second = (
-        OptionalSourceIdentity
-    ).project_payload_items(
+    first, second = (OptionalSourceIdentity).project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload,
             source_description="labels",
@@ -2669,9 +2673,7 @@ def test_runtime_projection_does_not_expand_indexed_scalar_source_metadata() -> 
         },
     ).payload_with(np.arange(12, dtype=np.uint16).reshape(3, 2, 2), None)
 
-    projected = (
-        RequiredSourceComponentMetadata
-    ).project_payload_items(
+    projected = (RequiredSourceComponentMetadata).project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload,
             source_description=source_path,
@@ -2696,9 +2698,7 @@ def test_runtime_projection_keeps_unindexed_scalar_volume_as_one_payload() -> No
         },
     ).payload_with(np.arange(8, dtype=np.uint16).reshape(2, 2, 2), None)
 
-    (projected,) = (
-        RequiredSourceComponentMetadata
-    ).project_payload_items(
+    (projected,) = (RequiredSourceComponentMetadata).project_payload_items(
         RuntimeProjectionSourceIdentityRequest(
             value=payload,
             source_description=source_path,
@@ -2945,9 +2945,7 @@ def test_group_scoped_stack_artifact_preserves_declared_payload_axis() -> None:
     )
 
     assert value.data.data.shape == (2, 4, 5)
-    assert (
-        value.data.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    )
+    assert value.data.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_group_scoped_measurements_preserve_runtime_row_axis() -> None:
@@ -3321,12 +3319,14 @@ def test_spatial_grid_normalizes_pure_2d_sequence_from_canonical_mappings():
     value = RuntimeValue.normalize(output_plan, list(grids), axis_id="A01")
 
     assert isinstance(value.data, RuntimeSliceAlignedValues)
-    assert [
-        value.data.value_at(slice_index).name for slice_index in range(2)
-    ] == ["Grid", "Grid"]
-    assert [
-        value.data.value_at(slice_index).x_origin for slice_index in range(2)
-    ] == [1.0, 2.0]
+    assert [value.data.value_at(slice_index).name for slice_index in range(2)] == [
+        "Grid",
+        "Grid",
+    ]
+    assert [value.data.value_at(slice_index).x_origin for slice_index in range(2)] == [
+        1.0,
+        2.0,
+    ]
     assert [mapping["x_origin"] for mapping in value.materialization_payload()] == [
         1.0,
         2.0,
@@ -3540,16 +3540,14 @@ def test_derived_image_payload_context_preserves_declared_resized_spatial_domain
             source_shape_yx=(4, 5),
         )
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
-    output = (
-        source.metadata
-        .with_spatial_resize((4, 15))
-        .payload_with(
-            np.ones((4, 15), dtype=np.float32),
-            None,
-        )
+    output = source.metadata.with_spatial_resize((4, 15)).payload_with(
+        np.ones((4, 15), dtype=np.float32),
+        None,
     )
 
-    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    result = source.metadata.derive_payload(
+        ImagePayload.of(source), ImagePayload.of(output)
+    )
 
     assert result.metadata.source_spatial_domain == SourceSpatialDomain(
         origin_yx=(0, 0),
@@ -3580,7 +3578,9 @@ def test_derived_image_payload_context_merges_source_provenance_into_output_meta
         metadata=ImagePayloadMetadata(source_dtype="float32"),
     )
 
-    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    result = source.metadata.derive_payload(
+        ImagePayload.of(source), ImagePayload.of(output)
+    )
 
     result_metadata = result.metadata
     assert result_metadata.source_dtype == "float32"
@@ -3677,7 +3677,9 @@ def test_derived_image_payload_context_replaces_stale_scalar_source_with_planes(
         ),
     )
 
-    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    result = source.metadata.derive_payload(
+        ImagePayload.of(source), ImagePayload.of(output)
+    )
     metadata = result.metadata
 
     assert metadata.source_path is None
@@ -3731,7 +3733,9 @@ def test_derived_image_payload_context_preserves_output_name_while_replacing_sta
         ),
     )
 
-    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    result = source.metadata.derive_payload(
+        ImagePayload.of(source), ImagePayload.of(output)
+    )
     metadata = result.metadata
 
     assert metadata.source_image_provenance_planes.paths == (
@@ -3768,7 +3772,9 @@ def test_derived_image_payload_context_preserves_output_name_while_replacing_sta
         ),
     )
 
-    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    result = source.metadata.derive_payload(
+        ImagePayload.of(source), ImagePayload.of(output)
+    )
     metadata = result.metadata
 
     assert metadata.source_path == "/input/A01_s001_w3_z001_t001.tif"
@@ -3817,7 +3823,9 @@ def test_derived_image_payload_context_preserves_output_name_while_replacing_sin
         ),
     )
 
-    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    result = source.metadata.derive_payload(
+        ImagePayload.of(source), ImagePayload.of(output)
+    )
     metadata = result.metadata
 
     assert metadata.source_path == "/input/Sequence1_s001_w1_z001_t007.tif"
@@ -3858,7 +3866,9 @@ def test_derived_image_payload_context_expands_indexed_scalar_source_metadata_fo
     )
     output = np.ones((3, 4, 5), dtype=np.float32)
 
-    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    result = source.metadata.derive_payload(
+        ImagePayload.of(source), ImagePayload.of(output)
+    )
     metadata = result.metadata
 
     assert metadata.source_image_provenance_planes.paths == (
@@ -3997,7 +4007,9 @@ def test_derived_image_payload_context_uses_source_provenance_atomically() -> No
         ),
     )
 
-    result = source.metadata.derive_payload(ImagePayload.of(source), ImagePayload.of(output))
+    result = source.metadata.derive_payload(
+        ImagePayload.of(source), ImagePayload.of(output)
+    )
     metadata = result.metadata
 
     assert metadata.source_path is None
@@ -4470,9 +4482,7 @@ def test_object_label_runtime_slice_projection_projects_source_path() -> None:
         "channel": "1",
     }
     assert projected.source_image_provenance_planes.paths == ()
-    assert projected.metadata.source_path == (
-        "/input/A01_s002_w1_z001_t001.TIF"
-    )
+    assert projected.metadata.source_path == ("/input/A01_s002_w1_z001_t001.TIF")
 
 
 def test_runtime_slice_projection_does_not_infer_raw_array_axis() -> None:
@@ -4528,9 +4538,7 @@ def test_object_label_set_runtime_slice_projection_projects_source_path() -> Non
         "channel": "1",
     }
     assert projected.source_image_provenance_planes.paths == ()
-    assert projected.metadata.source_path == (
-        "/input/A01_s003_w1_z001_t001.TIF"
-    )
+    assert projected.metadata.source_path == ("/input/A01_s003_w1_z001_t001.TIF")
 
 
 def test_measurement_table_runtime_slice_projection_projects_source_identity() -> None:
@@ -4671,9 +4679,7 @@ def test_pure_2d_auxiliary_aggregator_preserves_image_payload_metadata() -> None
     # PURE2D image stacks stay deferred slices (70a79fa38); any ImagePayload.
     assert isinstance(stacked, ImagePayload)
     assert stacked.data.shape == (2, 2, 3)
-    assert (
-        stacked.metadata.for_source_plane(0).intensity_scale == 65535.0
-    )
+    assert stacked.metadata.for_source_plane(0).intensity_scale == 65535.0
     assert stacked.metadata.for_source_plane(1).source_dtype == "uint8"
 
 
@@ -4749,8 +4755,7 @@ def test_pure_2d_auxiliary_aggregator_preserves_slice_aligned_spatial_grids() ->
 
     assert isinstance(aggregated, RuntimeSliceAlignedValues)
     assert tuple(
-        aggregated.value_at(index).x_origin
-        for index in range(aggregated.slice_count)
+        aggregated.value_at(index).x_origin for index in range(aggregated.slice_count)
     ) == (1.0, 3.0)
 
 
@@ -4969,7 +4974,10 @@ def test_normalize_object_label_set_preserves_dense_label_variants():
             name="Nuclei",
             variant_data=ObjectLabelVariantData(
                 labels=labels,
-                variants={UneditedLabels: unedited_labels, SmallRemovedLabels: small_removed_labels},
+                variants={
+                    UneditedLabels: unedited_labels,
+                    SmallRemovedLabels: small_removed_labels,
+                },
             ),
         ),
         axis_id="A01",
@@ -4982,8 +4990,12 @@ def test_normalize_object_label_set_preserves_dense_label_variants():
         UneditedLabels,
     )
     np.testing.assert_array_equal(restored.labels, labels)
-    np.testing.assert_array_equal(restored.variant_labels(UneditedLabels), unedited_labels)
-    np.testing.assert_array_equal(restored.variant_labels(SmallRemovedLabels), small_removed_labels)
+    np.testing.assert_array_equal(
+        restored.variant_labels(UneditedLabels), unedited_labels
+    )
+    np.testing.assert_array_equal(
+        restored.variant_labels(SmallRemovedLabels), small_removed_labels
+    )
 
 
 def test_normalize_object_label_set_accepts_sparse_ijv_representation():

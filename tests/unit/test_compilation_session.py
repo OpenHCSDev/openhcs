@@ -126,7 +126,8 @@ def test_zarr_store_planning_queries_whole_plate_only_for_zarr(backend):
     assert plans[0].zarr_config is None
     if backend is MaterializationBackend.ZARR:
         assert plans[1].zarr_config == {
-            "all_wells": ("A01", "A02"), "needs_initialization": True
+            "all_wells": ("A01", "A02"),
+            "needs_initialization": True,
         }
         assert len(requests) == 1 and requests[0][1] is config
     else:
@@ -312,7 +313,8 @@ def _compile_source_plans_for_contract(
     )
     compiled = (
         replace(execution_bindings, metadata_fields=fields)
-        if execution_bindings.bindings else execution_bindings
+        if execution_bindings.bindings
+        else execution_bindings
     )
     return execution_bindings, (
         compiled,
@@ -357,12 +359,14 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
-            steps=(_resolved_step(
-                step,
-                source_bindings=StepSourceBindingsConfig(
-                    enabled=True, bindings=(NamedSourceBinding(alias="DNA"),)
+            steps=(
+                _resolved_step(
+                    step,
+                    source_bindings=StepSourceBindingsConfig(
+                        enabled=True, bindings=(NamedSourceBinding(alias="DNA"),)
+                    ),
                 ),
-            ),),
+            ),
             step_scope_ids={0: step_state.scope_id},
             step_provenance={0: {}},
         ),
@@ -413,9 +417,9 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
             source_workspace_projection=VirtualWorkspaceSourceProjection(
                 source_refs_by_virtual_path={},
                 source_metadata_by_path={
-                    "image": DurableSourceMetadata.from_mapping({
-                        DECLARED_SOURCE_METADATA_FIELD: {"Dose": value}
-                    }),
+                    "image": DurableSourceMetadata.from_mapping(
+                        {DECLARED_SOURCE_METADATA_FIELD: {"Dose": value}}
+                    ),
                 },
             ),
         )
@@ -426,7 +430,9 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkey
     assert len(calls) == 2
 
 
-def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(monkeypatch):
+def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(
+    monkeypatch,
+):
     from openhcs.core.invocation_artifacts import InvocationContractPlan
     from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 
@@ -496,9 +502,7 @@ def test_compiler_keeps_variable_components_as_stack_source():
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
-            steps=(
-                _resolved_step(step, variable_components=(Microscopy.Channel,)),
-            ),
+            steps=(_resolved_step(step, variable_components=(Microscopy.Channel,)),),
             step_scope_ids={0: "plate::functionstep_0"},
             step_provenance={0: {}},
         ),
@@ -688,7 +692,9 @@ def test_path_planner_activates_declared_source_binding_for_pipeline_start():
     assert source_binding_plan.bindings == (binding,)
 
 
-def test_plate_export_contract_construction_projects_inputs_to_runtime_batch(monkeypatch):
+def test_plate_export_contract_construction_projects_inputs_to_runtime_batch(
+    monkeypatch,
+):
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
     )
@@ -729,7 +735,9 @@ def test_plate_export_contract_construction_projects_inputs_to_runtime_batch(mon
         classmethod(counted_provider),
     )
     final_pipeline = replace(session.pipeline)
-    assert calls == []  # Intermediate saved/path-resolved owners do not build providers.
+    assert (
+        calls == []
+    )  # Intermediate saved/path-resolved owners do not build providers.
     session.pipeline = final_pipeline
     other_context = _context()
     other_context.axis_id = "B01"

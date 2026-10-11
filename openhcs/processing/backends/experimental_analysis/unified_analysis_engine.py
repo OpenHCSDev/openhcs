@@ -4,7 +4,9 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 
 from openhcs.domains.microscopy.config import ExperimentalAnalysisConfig
-from openhcs.processing.backends.experimental_analysis.layout_rows import ExperimentalAnalysisScope
+from openhcs.processing.backends.experimental_analysis.layout_rows import (
+    ExperimentalAnalysisScope,
+)
 from openhcs.processing.backends.experimental_analysis.result_formats import (
     ExperimentalResultFormatStrategy,
 )
@@ -17,7 +19,9 @@ class DataProcessingError(RuntimeError):
 class ExperimentalAnalysisEngine:
     """Coordinate analysis through the result scope's nominal strategy."""
 
-    def __init__(self, config: ExperimentalAnalysisConfig = ExperimentalAnalysisConfig()):
+    def __init__(
+        self, config: ExperimentalAnalysisConfig = ExperimentalAnalysisConfig()
+    ):
         """Initialize the engine with a configuration (default: the declared defaults)."""
         self.config = config
 
@@ -218,7 +222,9 @@ class ExperimentalAnalysisEngine:
         Returns:
             Tuple of (scope, plate_layout, conditions, ctrl_positions, excluded_positions, per_well_datapoints)
         """
-        from openhcs.processing.backends.experimental_analysis.analysis import read_plate_layout
+        from openhcs.processing.backends.experimental_analysis.analysis import (
+            read_plate_layout,
+        )
 
         return read_plate_layout(
             config_path,
@@ -235,7 +241,9 @@ class ExperimentalAnalysisEngine:
         Returns:
             Plate groups dictionary
         """
-        from openhcs.processing.backends.experimental_analysis.analysis import load_plate_groups
+        from openhcs.processing.backends.experimental_analysis.analysis import (
+            load_plate_groups,
+        )
 
         return load_plate_groups(
             config_path,
@@ -246,7 +254,9 @@ class ExperimentalAnalysisEngine:
         self, plate_groups: Dict, plate_layout: Dict, conditions: List
     ) -> Dict:
         """Create experiment location mapping."""
-        from openhcs.processing.backends.experimental_analysis.analysis import make_experiment_dict_locations
+        from openhcs.processing.backends.experimental_analysis.analysis import (
+            make_experiment_dict_locations,
+        )
 
         return make_experiment_dict_locations(plate_groups, plate_layout, conditions)
 
@@ -259,7 +269,9 @@ class ExperimentalAnalysisEngine:
         per_well_datapoints: bool = False,
     ) -> Dict:
         """Map experimental design to measured values."""
-        from openhcs.processing.backends.experimental_analysis.analysis import make_experiment_dict_values
+        from openhcs.processing.backends.experimental_analysis.analysis import (
+            make_experiment_dict_values,
+        )
 
         return make_experiment_dict_values(
             plates_dict,
@@ -299,7 +311,9 @@ class ExperimentalAnalysisEngine:
         plate_groups: Dict,
     ) -> Dict:
         """Apply normalization using control wells."""
-        from openhcs.processing.backends.experimental_analysis.analysis import normalize_experiment
+        from openhcs.processing.backends.experimental_analysis.analysis import (
+            normalize_experiment,
+        )
 
         return normalize_experiment(
             experiment_dict_values,
@@ -317,7 +331,9 @@ class ExperimentalAnalysisEngine:
         per_well_datapoints: bool = False,
     ) -> Dict:
         """Create feature tables for export."""
-        from openhcs.processing.backends.experimental_analysis.analysis import create_all_feature_tables
+        from openhcs.processing.backends.experimental_analysis.analysis import (
+            create_all_feature_tables,
+        )
 
         return create_all_feature_tables(
             experiment_dict_values, features, per_well_datapoints
@@ -325,7 +341,9 @@ class ExperimentalAnalysisEngine:
 
     def _export_results(self, feature_tables: Dict, output_path: str):
         """Export results to Excel file."""
-        from openhcs.processing.backends.experimental_analysis.analysis import feature_tables_to_excel
+        from openhcs.processing.backends.experimental_analysis.analysis import (
+            feature_tables_to_excel,
+        )
 
         feature_tables_to_excel(feature_tables, output_path)
 

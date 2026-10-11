@@ -31,7 +31,9 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
 )
-from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
+from openhcs.core.virtual_workspace_metadata import (
+    VirtualWorkspaceSourceProjectionEntries,
+)
 from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
@@ -62,7 +64,15 @@ def _projection(
     source_metadata: Mapping[str, object] | None = None,
 ) -> SourcePlaneProjection:
     return SourcePlaneProjection(
-        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+        address=OpenHCSPlaneAddress(
+            (
+                (Microscopy.Well, "A01"),
+                (Microscopy.Site, 1),
+                (Microscopy.Channel, 1),
+                (Microscopy.ZIndex, 1),
+                (Microscopy.Timepoint, 1),
+            )
+        ),
         ref=SourcePixelRef("disk", VIRTUAL_PATH),
         image_metadata=image_metadata,
         source_metadata={} if source_metadata is None else source_metadata,
@@ -135,7 +145,9 @@ def test_publication_retains_typed_provenance_and_exact_wire_document() -> None:
     original = json.dumps(subdirectory)
     typed = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
     retained = typed.publish_into_subdirectory(
-        subdirectory, saved_image_paths=(VIRTUAL_PATH,), reconcile_directory=".",
+        subdirectory,
+        saved_image_paths=(VIRTUAL_PATH,),
+        reconcile_directory=".",
         accepted_entries=typed,
     )
 
@@ -164,7 +176,15 @@ def test_image_artifact_projection_round_trips_typed_pixel_metadata() -> None:
         source_dtype="uint8",
     )
     projection = SourceArtifactProjection(
-        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+        address=OpenHCSPlaneAddress(
+            (
+                (Microscopy.Well, "A01"),
+                (Microscopy.Site, 1),
+                (Microscopy.Channel, 2),
+                (Microscopy.ZIndex, 1),
+                (Microscopy.Timepoint, 1),
+            )
+        ),
         ref=SourcePixelRef("disk", "analysis/A01_candidate.checkpoint.tif"),
         source_alias="neurite_candidate_mask",
         artifact_kind=ImageArtifactType,

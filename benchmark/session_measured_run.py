@@ -70,7 +70,9 @@ class SessionMeasuredRun:
             AddDatasets,
             DatasetRootsRequest(
                 roots=(str(plate),),
-                execution_root=None if execution_plate is None else str(execution_plate),
+                execution_root=(
+                    None if execution_plate is None else str(execution_plate)
+                ),
             ),
         )
         (self.scope_id,) = result.target_scope_ids
@@ -79,7 +81,9 @@ class SessionMeasuredRun:
     def set_pipeline_source(self, source: str) -> None:
         self._require(
             SetDatasetPipeline,
-            DatasetPipelineSourceRequest(scope_id=self._scope_id, pipeline_source=source),
+            DatasetPipelineSourceRequest(
+                scope_id=self._scope_id, pipeline_source=source
+            ),
         )
 
     def initialize(self) -> DatasetRowState:

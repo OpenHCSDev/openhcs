@@ -79,11 +79,13 @@ class FunctionReference(PythonSourceLiteral, ABC):
         return self.source_expression(self.source_import_identity.function_name)
 
     def source_literal_with_names(
-        self, name_mappings: Mapping[tuple[str, str], str],
+        self,
+        name_mappings: Mapping[tuple[str, str], str],
     ) -> str:
         identity = self.source_import_identity
         imported_name = name_mappings.get(
-            (identity.module_name, identity.function_name), identity.function_name,
+            (identity.module_name, identity.function_name),
+            identity.function_name,
         )
         return self.source_expression(imported_name)
 
@@ -176,7 +178,8 @@ class RegistryFunctionReference(FunctionReference):
 
 @dataclass(frozen=True, kw_only=True)
 class ModuleExportRegistryFunctionReference(
-    ModuleExportFunctionSource, RegistryFunctionReference,
+    ModuleExportFunctionSource,
+    RegistryFunctionReference,
 ):
     """Direct source import with registry-owned transport and wrapper identity."""
 
@@ -412,7 +415,8 @@ class FunctionReferenceTransportAuthority:
             )
         identity = function_metadata.import_identity
         exported = FunctionReferenceTransportAuthority.importable_function(
-            identity.module_name, identity.function_name,
+            identity.module_name,
+            identity.function_name,
         )
         reference_type = (
             ModuleExportRegistryFunctionReference

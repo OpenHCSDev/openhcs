@@ -150,10 +150,14 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
         "neurite_secondary_ownership": ArtifactViewerStreaming.ON_DEMAND,
         "neurite_topology_dropped_trace": ArtifactViewerStreaming.ON_DEMAND,
         "neurite_topology_added_trace": ArtifactViewerStreaming.ON_DEMAND,
-        **{spec.name: ArtifactViewerStreaming.ON_DEMAND
-           for spec in NeuriteAdmissionPlanes.artifact_specs()},
-        **{spec.name: ArtifactViewerStreaming.ON_DEMAND
-           for spec in NeuriteOwnershipPlanes.artifact_specs()},
+        **{
+            spec.name: ArtifactViewerStreaming.ON_DEMAND
+            for spec in NeuriteAdmissionPlanes.artifact_specs()
+        },
+        **{
+            spec.name: ArtifactViewerStreaming.ON_DEMAND
+            for spec in NeuriteOwnershipPlanes.artifact_specs()
+        },
         "neurite_morphology": ArtifactViewerStreaming.AUTOMATIC,
     }
 
@@ -208,10 +212,14 @@ def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
         "neurite_secondary_ownership": ArtifactViewerStreaming.ON_DEMAND,
         "neurite_topology_dropped_trace": ArtifactViewerStreaming.ON_DEMAND,
         "neurite_topology_added_trace": ArtifactViewerStreaming.ON_DEMAND,
-        **{spec.name: ArtifactViewerStreaming.ON_DEMAND
-           for spec in NeuriteAdmissionPlanes.artifact_specs()},
-        **{spec.name: ArtifactViewerStreaming.ON_DEMAND
-           for spec in NeuriteOwnershipPlanes.artifact_specs()},
+        **{
+            spec.name: ArtifactViewerStreaming.ON_DEMAND
+            for spec in NeuriteAdmissionPlanes.artifact_specs()
+        },
+        **{
+            spec.name: ArtifactViewerStreaming.ON_DEMAND
+            for spec in NeuriteOwnershipPlanes.artifact_specs()
+        },
         "neurite_morphology": ArtifactViewerStreaming.AUTOMATIC,
     }
 

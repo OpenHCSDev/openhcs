@@ -688,9 +688,7 @@ class ObjectStateFieldMutationService:
         self,
         request: UiObjectStateFieldMutationRequest,
     ) -> UiObjectStateFieldMutationResult:
-        state = object_state_for_agent_scope_id(
-            request.object_state_scope_id
-        )
+        state = object_state_for_agent_scope_id(request.object_state_scope_id)
         if state is None:
             return self._error_result(
                 request,

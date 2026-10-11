@@ -79,10 +79,16 @@ def test_public_preparation_covers_canonical_metric_states_and_scopes(tmp_path):
     """)
     environment = os.environ.copy()
     environment.update(
-        OPENHCS_CPU_ONLY="true", NUMBA_CACHE_DIR=str(tmp_path / "kernels"),
+        OPENHCS_CPU_ONLY="true",
+        NUMBA_CACHE_DIR=str(tmp_path / "kernels"),
     )
     result = subprocess.run(
-        (sys.executable, "-c", script), cwd=Path(__file__).parents[2],
-        env=environment, check=False, capture_output=True, text=True, timeout=90,
+        (sys.executable, "-c", script),
+        cwd=Path(__file__).parents[2],
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=90,
     )
     assert result.returncode == 0, result.stdout + result.stderr

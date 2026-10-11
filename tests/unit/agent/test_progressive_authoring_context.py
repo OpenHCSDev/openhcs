@@ -193,7 +193,9 @@ def test_task_authorization_routes_to_the_existing_canonical_knowledge_owner() -
     assert document.selected_section_id == target.section_id
     assert document.document.source_path == "docs/source/architecture/quick_start.rst"
     for kind in ("first_use", "ui_visible_workflow"):
-        context = service.get_bounded_authoring_context(AuthoringContextRequest(kind=kind))
+        context = service.get_bounded_authoring_context(
+            AuthoringContextRequest(kind=kind)
+        )
         assert context == service.get_authoring_context(kind)
         assert target.document_id in context.content
         assert agent_capabilities.get_knowledge_document.name in context.content
@@ -241,9 +243,10 @@ def test_claim_scope_is_retrievable_through_composed_context_declarations() -> N
         source = Path(__file__).resolve().parents[3] / document.document.source_path
         lines = tuple(source.read_text(encoding="utf-8").splitlines())
         section = target.find_section(document.sections)
-        assert document.content.strip() == "\n".join(
-            section.span.line_slice(lines)
-        ).strip()
+        assert (
+            document.content.strip()
+            == "\n".join(section.span.line_slice(lines)).strip()
+        )
         for declaration in (
             ImageAnalysisWorkflowAuthoringContext,
             ViewerReviewAuthoringContext,
@@ -284,10 +287,7 @@ def test_knowledge_summary_growth_does_not_expand_context_deepening_links() -> N
             target_id = target.document_id
             if target.section_id is not None:
                 target_id = f"{target_id}#{target.section_id}"
-            assert (
-                f"{target_id} — Title for {target.document_id}"
-                in delivered.content
-            )
+            assert f"{target_id} — Title for {target.document_id}" in delivered.content
 
 
 @pytest.mark.parametrize("kind", ("first_use", "pipeline"))
@@ -552,7 +552,10 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "openhcs_get_viewer_window_payloads" in debugging
     assert "openhcs_summarize_viewer_window_rois" in debugging
     assert "schema-bearing per-object measurement rows" in debugging
-    assert "follow the 'show_live_results' action's `related_state_surface_ids`" in debugging
+    assert (
+        "follow the 'show_live_results' action's `related_state_surface_ids`"
+        in debugging
+    )
     assert "never guess from a title substring" in debugging
     assert "bounded retained-table authority" in debugging
     assert "row/object cardinality" in debugging

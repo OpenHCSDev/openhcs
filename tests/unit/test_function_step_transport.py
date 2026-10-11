@@ -22,7 +22,10 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import CompiledFunctionInvocation, FunctionInvocationKey
+from openhcs.core.function_patterns import (
+    CompiledFunctionInvocation,
+    FunctionInvocationKey,
+)
 from openhcs.core.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,
@@ -312,9 +315,7 @@ def test_transport_preserves_explicit_lazy_processing_defaults() -> None:
     exec(compile(source, "<pipeline>", "exec"), namespace)
     restored = FunctionStepTransportAuthority.pipeline_steps_from_namespace(namespace)
 
-    assert restored[0].processing_config.variable_components == [
-        Microscopy.Channel
-    ]
+    assert restored[0].processing_config.variable_components == [Microscopy.Channel]
     assert restored[0].processing_config.group_by is Microscopy.Site
 
 
@@ -400,7 +401,10 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     )
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.core.function_patterns import compile_function_pattern, normalize_function_pattern
+    from openhcs.core.function_patterns import (
+        compile_function_pattern,
+        normalize_function_pattern,
+    )
     from openhcs.core.orchestrator.execution_result import (
         RuntimeExecutionTransportSerialization,
     )
@@ -447,59 +451,85 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     )
     shared_items = replace(
         captured,
-        groups=(replace(
-            captured.groups[0],
-            items=(captured_item, replace(captured_item, key=replace(captured_item.key, position=1))),
-        ),),
+        groups=(
+            replace(
+                captured.groups[0],
+                items=(
+                    captured_item,
+                    replace(captured_item, key=replace(captured_item.key, position=1)),
+                ),
+            ),
+        ),
     )
     first_item, second_item = tuple(
-        FunctionStepTransportAuthority.normalize_function_spec(shared_items).iter_items()
+        FunctionStepTransportAuthority.normalize_function_spec(
+            shared_items
+        ).iter_items()
     )
     assert first_item.contract is second_item.contract
     repeated_group = replace(
         pattern.groups[0],
-        invocations=(invocation, replace(invocation, key=replace(invocation.key, position=1))),
+        invocations=(
+            invocation,
+            replace(invocation, key=replace(invocation.key, position=1)),
+        ),
     )
     first_invocation, second_invocation = (
-        FunctionStepTransportAuthority.normalize_compiled_group(repeated_group).invocations
+        FunctionStepTransportAuthority.normalize_compiled_group(
+            repeated_group
+        ).invocations
     )
     assert first_invocation.contract is second_invocation.contract
     prepared_callable = invocation.contract.resolve_runtime_callable()
     plan = CompiledStepPlan(
-        step_index=0, step_name="Crop", axis_id="A01",
+        step_index=0,
+        step_name="Crop",
+        axis_id="A01",
         compiled_function_pattern=pattern,
     )
     context = ProcessingContext(
-        axis_id="A01", step_plans={0: plan},
+        axis_id="A01",
+        step_plans={0: plan},
         filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
     )
     context.freeze()
     second_invocation = replace(
-        invocation, kwargs=(("left_right_rectangle_positions", (2, 5)),),
+        invocation,
+        kwargs=(("left_right_rectangle_positions", (2, 5)),),
     )
     second_pattern = replace(
-        pattern, groups=(replace(pattern.groups[0], invocations=(second_invocation,)),),
+        pattern,
+        groups=(replace(pattern.groups[0], invocations=(second_invocation,)),),
     )
     second_plan = replace(plan, axis_id="A02", compiled_function_pattern=second_pattern)
     second_context = ProcessingContext(
-        axis_id="A02", step_plans={0: second_plan}, filemanager=context.filemanager,
+        axis_id="A02",
+        step_plans={0: second_plan},
+        filemanager=context.filemanager,
     )
     second_context.freeze()
     contexts = {"A01": context, "A02": second_context}
     bundle = CompiledExecutionBundle.from_runtime_contexts(
-        pipeline_definition=(), runtime_contexts=contexts,
+        pipeline_definition=(),
+        runtime_contexts=contexts,
         worker_assignments={"worker_0": ["A01", "A02"]},
         runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
-            GlobalPipelineConfig(), compiled_contexts=contexts, server_mode=False,
+            GlobalPipelineConfig(),
+            compiled_contexts=contexts,
+            server_mode=False,
         ),
     )
     transport_context = bundle.transport_contexts["A01"]
     transport_plan = transport_context.step_plans[0]
     assert transport_context is not context
     assert transport_plan is not plan
-    (transport_invocation,) = tuple(transport_plan.compiled_function_pattern.iter_invocations())
+    (transport_invocation,) = tuple(
+        transport_plan.compiled_function_pattern.iter_invocations()
+    )
     second_transport_invocation = next(
-        bundle.transport_contexts["A02"].step_plans[0].compiled_function_pattern.iter_invocations()
+        bundle.transport_contexts["A02"]
+        .step_plans[0]
+        .compiled_function_pattern.iter_invocations()
     )
     assert transport_invocation.contract is second_transport_invocation.contract
     assert transport_invocation.func is second_transport_invocation.func
@@ -512,7 +542,9 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     assert plan.compiled_function_pattern is pattern
     assert invocation.contract.resolve_runtime_callable() is prepared_callable
     assert transport_context.runtime_value_store is context.runtime_value_store
-    assert transport_context.runtime_image_stack_cache is context.runtime_image_stack_cache
+    assert (
+        transport_context.runtime_image_stack_cache is context.runtime_image_stack_cache
+    )
     assert transport_context.filemanager is context.filemanager
     transport_plan.step_name = "Transport-only name"
     assert plan.step_name == "Crop"
@@ -537,10 +569,15 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
         is restored_invocation.contract.resolve_runtime_callable()
     )
     second_restored_invocation = next(
-        restored.runtime_contexts["A02"].step_plans[0].compiled_function_pattern.iter_invocations()
+        restored.runtime_contexts["A02"]
+        .step_plans[0]
+        .compiled_function_pattern.iter_invocations()
     )
     assert restored_invocation.contract is second_restored_invocation.contract
-    assert restored_invocation.runtime_callable is second_restored_invocation.runtime_callable
+    assert (
+        restored_invocation.runtime_callable
+        is second_restored_invocation.runtime_callable
+    )
     assert second_restored_invocation.kwargs == second_invocation.kwargs
     assert restored_invocation.contract is not transport_invocation.contract
     assert (
@@ -569,7 +606,9 @@ def test_generated_source_resolves_catalog_owned_cellprofiler_callable() -> None
     restored = FunctionStepTransportAuthority.pipeline_steps_from_namespace(namespace)
     assert len(restored) == 1
     assert restored[0].name == "Crop"
-    assert restored[0].func is RegistryService.registered_callable(cellprofiler_backend.crop)
+    assert restored[0].func is RegistryService.registered_callable(
+        cellprofiler_backend.crop
+    )
 
 
 def test_registered_custom_function_is_function_step_picklable() -> None:
@@ -620,7 +659,10 @@ def codex_pickle_probe(image):
             restored_invocation = pickle.loads(pickle.dumps(invocation))
             assert restored_invocation.runtime_callable is custom_func
             assert restored_invocation.contract is not contract
-            assert restored_invocation.artifact_input_edges == invocation.artifact_input_edges
+            assert (
+                restored_invocation.artifact_input_edges
+                == invocation.artifact_input_edges
+            )
             assert (
                 CellProfilerModule.require_module("Crop").require_callable()
                 is canonical_crop
@@ -648,7 +690,9 @@ def codex_lazy_import_probe(image):
         encoding="utf-8",
     )
     vars(custom_functions).pop(func_name, None)
-    monkeypatch.setattr(manager_module, "get_data_file_path", lambda _name, *, create=True: storage_dir)
+    monkeypatch.setattr(
+        manager_module, "get_data_file_path", lambda _name, *, create=True: storage_dir
+    )
 
     namespace: dict[str, object] = {}
     try:

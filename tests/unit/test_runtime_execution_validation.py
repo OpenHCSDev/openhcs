@@ -519,8 +519,7 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
     assert observation.exports.table_outputs == (contracted_output,)
     assert expectation.artifact_kinds == frozenset((MeasurementsArtifactType,))
     assert tuple(
-        (item.axis_id, item.artifact_kinds)
-        for item in expectation.axis_expectations
+        (item.axis_id, item.artifact_kinds) for item in expectation.axis_expectations
     ) == (
         ("A01", frozenset((MeasurementsArtifactType,))),
         ("A02", frozenset()),

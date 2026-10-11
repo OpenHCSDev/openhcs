@@ -369,7 +369,9 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
         poll_deadline = loop.time() + args.poll_timeout_seconds
 
         async def await_events(after_sequence: int) -> int:
-            connection_seconds = (args.timeout_ms or DEFAULT_UI_BRIDGE_TIMEOUT_MS) / 1000
+            connection_seconds = (
+                args.timeout_ms or DEFAULT_UI_BRIDGE_TIMEOUT_MS
+            ) / 1000
             wait_seconds = min(
                 max(poll_deadline - loop.time(), 0.0), 0.8 * connection_seconds
             )
@@ -462,7 +464,9 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
             lines.append(f"Targets: {', '.join(summary.target_scope_ids)}")
         if summary.skip_reason is not None:
             lines.append(f"Skip reason: {summary.skip_reason.value}")
-        lines.extend(McpDevOutputRenderer.diagnostic_lines(response.diagnostic_errors()))
+        lines.extend(
+            McpDevOutputRenderer.diagnostic_lines(response.diagnostic_errors())
+        )
         final_rows = self._final_state_rows(response)
         if final_rows:
             lines.append("Rows:")
@@ -538,7 +542,9 @@ class CodeDocumentCommandSpec(CapabilityBackedCommandSpec):
         )
 
 
-class ValidateCodeDocumentCommandSpec(StdinSourceCommandSpec, CapabilityBackedCommandSpec):
+class ValidateCodeDocumentCommandSpec(
+    StdinSourceCommandSpec, CapabilityBackedCommandSpec
+):
     capability = agent_capabilities.ui_validate_code_document
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:

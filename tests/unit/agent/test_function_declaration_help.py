@@ -249,8 +249,7 @@ def test_registered_neurite_metadata_preserves_declared_field_help(
     )
     assert isinstance(metadata, FunctionMetadata)
     assert (
-        metadata.composite_key
-        == f"openhcs:analysis_neurite_outgrowth_{func.__name__}"
+        metadata.composite_key == f"openhcs:analysis_neurite_outgrowth_{func.__name__}"
     )
     assert metadata.func is not func
     monkeypatch.setattr(
@@ -276,11 +275,14 @@ def test_registered_neurite_metadata_preserves_declared_field_help(
                 docstring_info_for_target(analyzed[parameter.name].param_type)
             )
             assert document.content in parameter.description
-            assert next(
-                value["description"]
-                for value in to_jsonable(detail)["parameters"]
-                if value["name"] == parameter.name
-            ) == parameter.description
+            assert (
+                next(
+                    value["description"]
+                    for value in to_jsonable(detail)["parameters"]
+                    if value["name"] == parameter.name
+                )
+                == parameter.description
+            )
     assert not detail.doc_truncated
     import json
 

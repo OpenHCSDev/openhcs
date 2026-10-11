@@ -461,7 +461,8 @@ class NonExpertCapabilitySurfaceMixin:
     def includes(self, capability: type["AgentCapabilityDeclaration"]) -> bool:
         return (
             capability.exposition.visibility is not CapabilityVisibility.EXPERT
-            and capability.exposition.role not in (CapabilityRole.EXPERT, CapabilityRole.FALLBACK)
+            and capability.exposition.role
+            not in (CapabilityRole.EXPERT, CapabilityRole.FALLBACK)
             and super().includes(capability)
         )
 
@@ -472,8 +473,9 @@ class WorkflowGroupCapabilitySurfaceMixin:
     workflow_groups: ClassVar[frozenset[CapabilityWorkflowGroup]]
 
     def includes(self, capability: type["AgentCapabilityDeclaration"]) -> bool:
-        return capability.exposition.workflow_group in self.workflow_groups and super().includes(
-            capability
+        return (
+            capability.exposition.workflow_group in self.workflow_groups
+            and super().includes(capability)
         )
 
 
@@ -654,7 +656,9 @@ def require_agent_type_contract(contract: AgentContract | None) -> type:
 
 
 def _keyword_parameter(name: str, annotation: object, default: object) -> Parameter:
-    return Parameter(name, Parameter.KEYWORD_ONLY, default=default, annotation=annotation)
+    return Parameter(
+        name, Parameter.KEYWORD_ONLY, default=default, annotation=annotation
+    )
 
 
 class AgentCapabilityInvocation(ABC):
@@ -785,7 +789,6 @@ class AgentResourceInvocationMixin:
     __slots__ = ()
 
     kind: ClassVar[CapabilityKind] = CapabilityKind.RESOURCE
-
 
     def bind_mcp(
         self,
@@ -1036,8 +1039,12 @@ class AgentCompactActionsProjectionMixin:
         )
 
     def invoke(self, declaration, binder, arguments):
-        return super().invoke(declaration, binder, arguments).as_jsonable(
-            compact_actions=bool(arguments["compact_actions"]),
+        return (
+            super()
+            .invoke(declaration, binder, arguments)
+            .as_jsonable(
+                compact_actions=bool(arguments["compact_actions"]),
+            )
         )
 
 
@@ -1152,15 +1159,12 @@ class AgentConfigPatchServiceInvocation(
     __slots__ = ()
 
 
-
-
 class AgentConnectionRequestServiceInvocation(
     AgentUiConnectionMixin,
     AgentFromFieldsInputMixin,
     AgentServiceInvocation,
 ):
     __slots__ = ()
-
 
 
 class AgentViewerWindowConnectionServiceInvocation(
@@ -1194,6 +1198,7 @@ class AgentCapabilityRegistryRequestInvocation(
             binder.selected_registry,
             *self.call_arguments(declaration, binder, arguments),
         )
+
 
 @dataclass(frozen=True, slots=True)
 class AgentCapabilitySearchRequest:
@@ -2162,7 +2167,9 @@ class ObserveCustomFunctionRegistrationCapability(FunctionCatalogCapability):
     output_contract = CustomFunctionRegistrationObservation
     invocation = AgentDataclassRequestServiceInvocation(
         service=lambda context: context.function_catalog,
-        method=lambda service, request: service.observe_custom_function_registration(request),
+        method=lambda service, request: service.observe_custom_function_registration(
+            request
+        ),
     )
 
 
@@ -2381,7 +2388,9 @@ class SamplePlateImageCapability(MainThreadProgressCapability, PlatePathCapabili
     )
 
 
-class StreamPlateFilesToViewerCapability(MainThreadProgressCapability, PlatePathCapability):
+class StreamPlateFilesToViewerCapability(
+    MainThreadProgressCapability, PlatePathCapability
+):
     name = "openhcs_stream_plate_files_to_viewer"
     cli_command = "stream-plate-files"
     title = "Stream plate files to viewer"
@@ -2510,7 +2519,9 @@ class UiSampleSelectedPlateImageCapability(UiSelectedPlateCapability):
     )
 
 
-class UiStreamSelectedPlateFilesToViewerCapability(MainThreadProgressCapability, UiSelectedPlateCapability):
+class UiStreamSelectedPlateFilesToViewerCapability(
+    MainThreadProgressCapability, UiSelectedPlateCapability
+):
     name = "openhcs_ui_stream_selected_plate_files_to_viewer"
     cli_command = "selected-plate-stream"
     title = "Stream selected plate files to viewer"

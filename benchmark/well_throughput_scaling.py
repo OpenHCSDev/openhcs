@@ -706,7 +706,9 @@ class WellThroughputPresentationReport:
                     for row in metric_rows
                 ),
                 filename_stem="03_core_scaling_average_with_pipeline_points_speedup",
-                methods=methods, output_dir=self.output_dir, output_formats=self.output_formats,
+                methods=methods,
+                output_dir=self.output_dir,
+                output_formats=self.output_formats,
                 title="Average execution speedup by core count",
                 ylabel="Execution speedup vs CellProfiler (x)",
                 value_key="speedup",
@@ -737,7 +739,9 @@ class WellThroughputPresentationReport:
         outputs.extend(
             FIGURE_STYLE.generate_average_point_figures(
                 metric_rows,
-                methods=methods, output_dir=self.output_dir, output_formats=self.output_formats,
+                methods=methods,
+                output_dir=self.output_dir,
+                output_formats=self.output_formats,
                 filename_stem="04_core_scaling_average_with_pipeline_points_ram",
                 title="Average RAM usage by core count",
                 ylabel="Peak process-tree RSS (MB)",
@@ -2111,7 +2115,9 @@ def run_case_well_throughput(
             use_threading=None,
             multiprocessing_start_method=None,
             materialize_runtime_artifacts=False,
-            partition_filter_config=LazyPartitionFilterConfig(partition_filter=list(well_ids)),
+            partition_filter_config=LazyPartitionFilterConfig(
+                partition_filter=list(well_ids)
+            ),
             path_planning_config=LazyPathPlanningConfig(
                 partition_filter=0,
                 global_output_folder=output_root,
@@ -3144,7 +3150,10 @@ def _replicate_source_binding_workspace_wells(
             if projection.address is not None
         )
     )
-    if source_partition_filter is None or source_partition_filter.partition_filter is None:
+    if (
+        source_partition_filter is None
+        or source_partition_filter.partition_filter is None
+    ):
         selected_source_wells = available_source_wells
     else:
         selected_source_wells = tuple(
@@ -3242,7 +3251,9 @@ def _replicate_source_binding_workspace_wells(
         )
     )
     main_metadata[FIELDS.IMAGE_FILES] = expanded_image_files
-    main_metadata[Microscopy.Well.metadata_collection_field] = {well_id: None for well_id in target_wells}
+    main_metadata[Microscopy.Well.metadata_collection_field] = {
+        well_id: None for well_id in target_wells
+    }
     AtomicMetadataWriter().replace_subdirectory_metadata(
         metadata_path, FIELDS.DEFAULT_SUBDIRECTORY, main_metadata
     )

@@ -142,7 +142,10 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
     ) -> FieldSpec | None:
         calls.append((table.name, subject, field_name))
         return original(
-            self, table, field_name, subject=subject,
+            self,
+            table,
+            field_name,
+            subject=subject,
             project_database_field=project_database_field,
         )
 
@@ -168,7 +171,9 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
         subject=subject,
     )
 
-    first_subject, first_rows, first_fields = next(projection.measurement_projections(first, scope=None))
+    first_subject, first_rows, first_fields = next(
+        projection.measurement_projections(first, scope=None)
+    )
     assert first_subject == subject
     assert first_fields == (FieldSpec("Count_Nuclei", int),)
     assert first_rows.row_mappings() == (
@@ -176,7 +181,9 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
         {"Count_Nuclei": 2},
         {"Count_Nuclei": 3},
     )
-    second_subject, second_rows, second_fields = next(projection.measurement_projections(second, scope=None))
+    second_subject, second_rows, second_fields = next(
+        projection.measurement_projections(second, scope=None)
+    )
     assert second_subject == subject
     assert second_fields == (FieldSpec("Count_Nuclei", float),)
     assert second_rows.row_mappings() == (
@@ -203,7 +210,9 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
     ).row_mappings()[0] == {"Cells_AreaShape_Area": 1.0}
     assert projection._project_runtime_rows(
         object_table,
-        MeasurementProjectedColumnarRows({"AreaShape_Area": (2.0,)}, fields=(FieldSpec("AreaShape_Area", float),)),
+        MeasurementProjectedColumnarRows(
+            {"AreaShape_Area": (2.0,)}, fields=(FieldSpec("AreaShape_Area", float),)
+        ),
         subject=nuclei,
         field_projection_cache=object_field_cache,
         project_database_field=None,
@@ -244,16 +253,21 @@ def test_database_field_projection_refreshes_declarations_and_live_dtype_hooks(
     table = MeasurementTable(
         name="EmptyDistances",
         rows=MeasurementProjectedColumnarRows(
-            {field.name: ()}, fields=(field,),
+            {field.name: ()},
+            fields=(field,),
         ),
         subject=MeasurementSubject(MeasurementScope.RUN),
         measurement_feature_owner=RelateObjectsModule,
     )
-    _subject, actual_rows, actual_fields = next(projection.measurement_projections(table, scope=None))
+    _subject, actual_rows, actual_fields = next(
+        projection.measurement_projections(table, scope=None)
+    )
     assert actual_rows.row_mappings() == ()
     assert actual_fields == (field,)
     monkeypatch.undo()
-    _subject, actual_rows, actual_fields = next(projection.measurement_projections(table, scope=None))
+    _subject, actual_rows, actual_fields = next(
+        projection.measurement_projections(table, scope=None)
+    )
     assert actual_rows.row_mappings() == ()
     assert actual_fields == (replace(field, dtype=int),)
 
@@ -265,7 +279,9 @@ def test_database_field_projection_refreshes_declarations_and_live_dtype_hooks(
             return lambda source_field: replace(source_field, dtype=str)
 
     custom_table = replace(table, measurement_feature_owner=CustomFieldOwner)
-    _subject, actual_rows, actual_fields = next(projection.measurement_projections(custom_table, scope=None))
+    _subject, actual_rows, actual_fields = next(
+        projection.measurement_projections(custom_table, scope=None)
+    )
     assert actual_rows.row_mappings() == ()
     assert actual_fields == (replace(field, dtype=str),)
     assert CustomFieldOwner.database_measurement_field(field).dtype is str
@@ -858,13 +874,29 @@ def _borrowed_source_export_fixture(
         sources.extend(
             (
                 SourcePlaneProjection(
-                    address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, site), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+                    address=OpenHCSPlaneAddress(
+                        (
+                            (Microscopy.Well, "A01"),
+                            (Microscopy.Site, site),
+                            (Microscopy.Channel, 1),
+                            (Microscopy.ZIndex, 1),
+                            (Microscopy.Timepoint, 1),
+                        )
+                    ),
                     ref=SourcePixelRef("disk", str(original)),
                     source_alias="DNA",
                     source_metadata=metadata,
                 ),
                 SourceArtifactProjection(
-                    address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, site), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+                    address=OpenHCSPlaneAddress(
+                        (
+                            (Microscopy.Well, "A01"),
+                            (Microscopy.Site, site),
+                            (Microscopy.Channel, 2),
+                            (Microscopy.ZIndex, 1),
+                            (Microscopy.Timepoint, 1),
+                        )
+                    ),
                     ref=SourcePixelRef(
                         "disk", str(calibration), (site - 1,) if embedded_tiff else ()
                     ),
@@ -894,7 +926,7 @@ def _borrowed_source_export_fixture(
         metadata_handler=SimpleNamespace(
             source_workspace_root=lambda _plate_path: tmp_path,
             source_workspace_metadata_document=lambda _plate_path: document,
-        )
+        ),
     )
     context.filemanager = SimpleNamespace(
         exists=lambda *_args: False,
@@ -963,7 +995,10 @@ def test_source_only_calibration_occurrences_export_each_executed_site(
         tmp_path
     )
     assert batch.records_of_type(ImageArtifactType)["A01"] == ()
-    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceSourceProjection,
+    )
+
     monkeypatch.setattr(
         VirtualWorkspaceSourceProjection,
         "load_binding_payloads",
@@ -1936,13 +1971,27 @@ def _record_relationship(
 def _external_rows(
     table: CellProfilerProjectedTable,
 ) -> tuple[dict[str, object], ...]:
-    return tuple(dict(row) for row in (table.rows.iter_row_mappings() if isinstance(table.rows, ColumnarRows) else table.rows))
+    return tuple(
+        dict(row)
+        for row in (
+            table.rows.iter_row_mappings()
+            if isinstance(table.rows, ColumnarRows)
+            else table.rows
+        )
+    )
 
 
 def _field_rows(
     table: CellProfilerProjectedTable,
 ) -> tuple[dict[str, object], ...]:
-    return tuple(dict(row) for row in (table.rows.iter_row_mappings() if isinstance(table.rows, ColumnarRows) else table.rows))
+    return tuple(
+        dict(row)
+        for row in (
+            table.rows.iter_row_mappings()
+            if isinstance(table.rows, ColumnarRows)
+            else table.rows
+        )
+    )
 
 
 def test_database_projection_includes_derived_grid_measurements() -> None:
@@ -1990,7 +2039,8 @@ def test_database_projection_includes_derived_grid_measurements() -> None:
 
 
 def test_source_digest_is_shared_across_image_numbers_and_channel_aliases(
-    tmp_path, monkeypatch,
+    tmp_path,
+    monkeypatch,
 ):
     from collections import defaultdict
     from hashlib import md5
@@ -2046,8 +2096,10 @@ def test_source_projection_frame_error_precedes_digest_read(tmp_path, monkeypatc
 
     source = tmp_path / "source.tif"
     tifffile.imwrite(
-        source, np.zeros((3, 4, 5), dtype=np.uint16),
-        photometric="minisblack", metadata={"axes": "ZYX"},
+        source,
+        np.zeros((3, 4, 5), dtype=np.uint16),
+        photometric="minisblack",
+        metadata={"axes": "ZYX"},
     )
 
     def forbidden_read(self):
@@ -2057,7 +2109,9 @@ def test_source_projection_frame_error_precedes_digest_read(tmp_path, monkeypatc
     monkeypatch.setattr(Path, "read_bytes", forbidden_read)
     with pytest.raises(ValueError, match="Source frame index True"):
         export._source_image_projection_values(
-            source, "DNA", CellProfilerDatabaseColumnDialect(),
+            source,
+            "DNA",
+            CellProfilerDatabaseColumnDialect(),
             source_axis_indices=(True,),
         )
     assert ImageFileRevision.md5_digest.cache_info().currsize == 0
@@ -2071,12 +2125,16 @@ def test_repeated_source_contributors_share_physical_projection(tmp_path, monkey
 
     source = tmp_path / "DNA.tif"
     import tifffile
+
     tifffile.imwrite(
-        source, np.arange(192, dtype=np.uint16).reshape(3, 8, 8),
-        photometric="minisblack", metadata={"axes": "ZYX"},
+        source,
+        np.arange(192, dtype=np.uint16).reshape(3, 8, 8),
+        photometric="minisblack",
+        metadata={"axes": "ZYX"},
     )
     provenance = SourceImageProvenance(
-        source_path=str(source), source_component_metadata={"well": "A01", "site": "1"},
+        source_path=str(source),
+        source_component_metadata={"well": "A01", "site": "1"},
         source_image_names=("DNA",),
     )
     owner = CPATableRowProjection(
@@ -2086,77 +2144,126 @@ def test_repeated_source_contributors_share_physical_projection(tmp_path, monkey
     rows, metadata = {}, defaultdict(list)
     manufacture = export._source_image_projection_values
     calls = []
+
     def counted(*args, **kwargs):
         calls.append(args[0])
         return manufacture(*args, **kwargs)
+
     monkeypatch.setattr(export, "_source_image_projection_values", counted)
     for _ in range(3):
         owner.collect_image_provenance(
-            provenance, scope=RuntimeExecutionAxisScope(AXIS_ID), source_image_name="DNA",
-            image_rows_by_number=rows, source_metadata_by_image_number=metadata,
+            provenance,
+            scope=RuntimeExecutionAxisScope(AXIS_ID),
+            source_image_name="DNA",
+            image_rows_by_number=rows,
+            source_metadata_by_image_number=metadata,
         )
     assert calls == [source]
     assert len(metadata[1]) == 3  # Every contributor's correlation evidence survives.
     conflicting = provenance.with_source_path(str(tmp_path / "other.tif"))
     with pytest.raises(ValueError, match="conflicting values"):
         owner.collect_image_provenance(
-            conflicting, scope=RuntimeExecutionAxisScope(AXIS_ID), source_image_name="DNA",
-            image_rows_by_number=rows, source_metadata_by_image_number=metadata,
+            conflicting,
+            scope=RuntimeExecutionAxisScope(AXIS_ID),
+            source_image_name="DNA",
+            image_rows_by_number=rows,
+            source_metadata_by_image_number=metadata,
         )
 
     with pytest.raises(ValueError, match="conflicting values"):
         owner.collect_image_provenance(
-            provenance, scope=RuntimeExecutionAxisScope(AXIS_ID), source_image_name="DNA",
-            image_rows_by_number=rows, source_metadata_by_image_number=metadata,
+            provenance,
+            scope=RuntimeExecutionAxisScope(AXIS_ID),
+            source_image_name="DNA",
+            image_rows_by_number=rows,
+            source_metadata_by_image_number=metadata,
             source_axis_indices=(1,),
         )
     assert calls == [source]  # Explicit frame admission still rejects contradiction.
 
 
-def test_produced_thumbnail_uses_named_pixels_not_measurement_source(tmp_path, monkeypatch):
+def test_produced_thumbnail_uses_named_pixels_not_measurement_source(
+    tmp_path, monkeypatch
+):
     import openhcs.interop.cellprofiler.analyst_export as export
+
     source = tmp_path / "DNA.tif"
     Image.fromarray(np.arange(64, dtype=np.uint8).reshape(8, 8)).save(source)
     store = RuntimeValueStore()
-    dna = _record_image(store, name="DNA", source_path=str(source), metadata={"well": "A01", "site": "1"})
-    planes = SourceImageProvenancePlanes.from_components(
-        paths=(str(source),), component_metadata=({"well": "A01", "site": "1"},),
+    dna = _record_image(
+        store,
+        name="DNA",
+        source_path=str(source),
+        metadata={"well": "A01", "site": "1"},
     )
-    measurements = tuple(_record_measurements(
-        store, table=MeasurementTable(
-            name=f"Measurements{index}", source_image_names=("DNA",),
-            subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
-            rows=MeasurementSparseColumnarRows.from_rows(
-                ({RUNTIME_IMAGE_FIELD: 0, f"Value{index}": float(index)},),
-                fields=(FieldSpec(RUNTIME_IMAGE_FIELD, int), FieldSpec(f"Value{index}", float)),
+    planes = SourceImageProvenancePlanes.from_components(
+        paths=(str(source),),
+        component_metadata=({"well": "A01", "site": "1"},),
+    )
+    measurements = tuple(
+        _record_measurements(
+            store,
+            table=MeasurementTable(
+                name=f"Measurements{index}",
+                source_image_names=("DNA",),
+                subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
+                rows=MeasurementSparseColumnarRows.from_rows(
+                    ({RUNTIME_IMAGE_FIELD: 0, f"Value{index}": float(index)},),
+                    fields=(
+                        FieldSpec(RUNTIME_IMAGE_FIELD, int),
+                        FieldSpec(f"Value{index}", float),
+                    ),
+                ),
             ),
-        ), source_image_provenance_planes=planes,
-    ) for index in range(3))
+            source_image_provenance_planes=planes,
+        )
+        for index in range(3)
+    )
     batch = RuntimeArtifactBatch(
-        input_specs=(dna, *measurements), records_by_axis={AXIS_ID: store.values()},
+        input_specs=(dna, *measurements),
+        records_by_axis={AXIS_ID: store.values()},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
-    settings = replace(_settings(), write_image_thumbnails=True, thumbnail_image_names=("DNA",), auto_scale_thumbnail_intensities=False)
+    settings = replace(
+        _settings(),
+        write_image_thumbnails=True,
+        thumbnail_image_names=("DNA",),
+        auto_scale_thumbnail_intensities=False,
+    )
     encode = export._thumbnail_png_base64
     pixels = []
+
     def counted(image, **kwargs):
         pixels.append(np.asarray(image).copy())
         return encode(image, **kwargs)
+
     monkeypatch.setattr(export, "_thumbnail_png_base64", counted)
-    projection = _projection_builder().build(batch, settings, (CPAImageChannelSpec(alias="DNA", image_name="DNA", channel_color="none"),))
+    projection = _projection_builder().build(
+        batch,
+        settings,
+        (CPAImageChannelSpec(alias="DNA", image_name="DNA", channel_color="none"),),
+    )
     assert len(pixels) == 1
     assert np.array_equal(pixels[0], np.zeros((8, 8), dtype=np.uint8))
-    assert _external_rows(projection.image_table)[0]["Image_Thumbnail_DNA"] == encode(pixels[0], auto_scale=False)
+    assert _external_rows(projection.image_table)[0]["Image_Thumbnail_DNA"] == encode(
+        pixels[0], auto_scale=False
+    )
 
 
 def test_source_bound_thumbnail_only_ref_preserves_executed_sites(tmp_path):
-    builder, batch, _channels, calibration, _document = _borrowed_source_export_fixture(tmp_path)
+    builder, batch, _channels, calibration, _document = _borrowed_source_export_fixture(
+        tmp_path
+    )
     builder.context.filemanager.load_batch = lambda paths, _backend: [
         np.load(calibration) for _path in paths
     ]
-    builder.context.filemanager.physical_source_path = lambda address, _backend, *, base_path: address
+    builder.context.filemanager.physical_source_path = (
+        lambda address, _backend, *, base_path: address
+    )
     settings = replace(
-        _settings(), write_image_thumbnails=True, thumbnail_image_names=("IllumDNA",),
+        _settings(),
+        write_image_thumbnails=True,
+        thumbnail_image_names=("IllumDNA",),
         auto_scale_thumbnail_intensities=False,
     )
     projection = builder.build(batch, settings, ())
@@ -2164,5 +2271,7 @@ def test_source_bound_thumbnail_only_ref_preserves_executed_sites(tmp_path):
     assert len(rows) == 2  # The third declared source occurrence was not executed.
     assert all(row["Image_Thumbnail_IllumDNA"] for row in rows)
     assert all("Image_FileName_IllumDNA" not in row for row in rows)
-    disabled = replace(settings, write_image_thumbnails=False, thumbnail_image_names=("Missing",))
+    disabled = replace(
+        settings, write_image_thumbnails=False, thumbnail_image_names=("Missing",)
+    )
     assert len(_external_rows(builder.build(batch, disabled, ()).image_table)) == 2

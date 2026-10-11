@@ -771,7 +771,9 @@ class WorkerProcess:
     def send(self, command: WorkerCommand) -> None:
         self.connection.send(command)
 
-    def receive(self, progress_queue: ProgressQueue | None = None) -> WorkerResult | None:
+    def receive(
+        self, progress_queue: ProgressQueue | None = None
+    ) -> WorkerResult | None:
         """Read one reply; return the result it completes, if any."""
 
         try:
@@ -980,7 +982,9 @@ class PreparedForkWorkerLaneRunner(ForkInheritedWorkerLaneRunner):
                 worker.process.join()
                 worker.connection.close()
                 self.workers = [
-                    owned for owned in self.workers if owned.process is not worker.process
+                    owned
+                    for owned in self.workers
+                    if owned.process is not worker.process
                 ]
 
     def close(self) -> None:
@@ -1631,12 +1635,13 @@ def execute_worker_lane(
 ) -> Dict[str, ExecutionResult]:
     """Execute a deterministic worker lane: its partitions in order, in one slot."""
 
-    with CProfileWorkerProfilingPolicy.from_environment().profile(
-        lane_context
-    ), RuntimeProfileLogger.run(
-        execution_id=lane_context.execution_id,
-        worker_slot=lane_context.worker_slot,
-        owned_partition_values=tuple(lane_context.owned_partition_values),
+    with (
+        CProfileWorkerProfilingPolicy.from_environment().profile(lane_context),
+        RuntimeProfileLogger.run(
+            execution_id=lane_context.execution_id,
+            worker_slot=lane_context.worker_slot,
+            owned_partition_values=tuple(lane_context.owned_partition_values),
+        ),
     ):
         lane_results: Dict[str, ExecutionResult] = {}
         for axis_id, axis_contexts in lane_axis_contexts:

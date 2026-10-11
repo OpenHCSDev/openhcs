@@ -108,7 +108,9 @@ def _component_name_metadata(payload, context="test component metadata"):
 
 
 def _component_value_domain(payload, context="test component value domain"):
-    return ViewerComponentValueDomainPayload.from_wire_mapping(payload, context=context, declared_axes=STREAM_AXES)
+    return ViewerComponentValueDomainPayload.from_wire_mapping(
+        payload, context=context, declared_axes=STREAM_AXES
+    )
 
 
 def _layer_item(
@@ -879,7 +881,12 @@ class _FakeViewer:
         )
 
     def _add_layer(self, layer_type, data, name, kwargs):
-        layer_attributes = {"name": name, "data": data, "kwargs": kwargs, "visible": True}
+        layer_attributes = {
+            "name": name,
+            "data": data,
+            "kwargs": kwargs,
+            "visible": True,
+        }
         if layer_type == "shapes":
             layer_attributes.update(
                 {
@@ -1350,7 +1357,12 @@ def test_napari_layer_update_authority_replaces_existing_image_without_global_ax
         "image",
         "image-1",
         "Nuclei",
-        {"blending": "additive", "rgb": False, "colormap": "gray", "axis_labels": ("z", "y", "x")},
+        {
+            "blending": "additive",
+            "rgb": False,
+            "colormap": "gray",
+            "axis_labels": ("z", "y", "x"),
+        },
     )
     assert viewer.calls[1] == (
         "image",
@@ -1480,7 +1492,9 @@ def test_napari_image_display_stacks_sites_without_rebasing_payload_color_axis()
                 _layer_item(
                     {"site": site},
                     data=np.full((16, 16, 3), site, dtype=np.uint8),
-                    image_metadata=ImagePayloadMetadata(axes=PayloadAxes.colour_samples(2)),
+                    image_metadata=ImagePayloadMetadata(
+                        axes=PayloadAxes.colour_samples(2)
+                    ),
                 )
                 for site in (1, 2)
             ],
@@ -1588,7 +1602,10 @@ def test_napari_viewer_model_keeps_declared_plate_axis_sizes_across_routes() -> 
         layout=ViewerComponentLayout.from_parts(
             component_modes={
                 **ALL_STACKED,
-                **{component: NapariSlots.Stack.wire_value for component in full_route_axes},
+                **{
+                    component: NapariSlots.Stack.wire_value
+                    for component in full_route_axes
+                },
             },
             component_order=full_route_axes,
             declared_axes=STREAM_AXES,
@@ -1617,7 +1634,10 @@ def test_napari_viewer_model_keeps_declared_plate_axis_sizes_across_routes() -> 
         layout=ViewerComponentLayout.from_parts(
             component_modes={
                 **ALL_STACKED,
-                **{component: NapariSlots.Stack.wire_value for component in reduced_route_axes},
+                **{
+                    component: NapariSlots.Stack.wire_value
+                    for component in reduced_route_axes
+                },
             },
             component_order=reduced_route_axes,
             declared_axes=STREAM_AXES,
@@ -1735,7 +1755,8 @@ def test_napari_display_pipeline_rejects_unbound_payload_local_image_axes():
     )
     assert (
         policy.axis_labels(
-            np.zeros((16, 16, 3)), ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1))
+            np.zeros((16, 16, 3)),
+            ImagePayloadMetadata(axes=PayloadAxes.colour_samples(-1)),
         )
         == ()
     )
@@ -1785,17 +1806,15 @@ def test_napari_display_pipeline_projects_route_axes_locally():
     component_value_domain = _component_value_domain(
         {"channel": [1, 2, 3, 4, 5], "site": [1, 2]}
     )
-    component_axis_semantics = (
-        ViewerComponentAxisSemanticsFactory.from_display_config(
-            ViewerMappingDisplayConfigInput(
-                {
-                    "component_modes": {"channel": "stack", "site": "stack"},
-                    "component_order": ["channel", "site"],
-                    "declared_axes": STREAM_AXES.to_wire(),
-                }
-            ),
-            component_value_domain,
-        )
+    component_axis_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
+        ViewerMappingDisplayConfigInput(
+            {
+                "component_modes": {"channel": "stack", "site": "stack"},
+                "component_order": ["channel", "site"],
+                "declared_axes": STREAM_AXES.to_wire(),
+            }
+        ),
+        component_value_domain,
     )
 
     first = pipeline.display_axis_projection(
@@ -1836,17 +1855,15 @@ def test_napari_display_pipeline_projects_route_axes_locally():
 def test_napari_display_pipeline_uses_declared_domain_independent_of_arrival_order():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
-    component_axis_semantics = (
-        ViewerComponentAxisSemanticsFactory.from_display_config(
-            ViewerMappingDisplayConfigInput(
-                {
-                    "component_modes": {"channel": "stack"},
-                    "component_order": ["channel"],
-                    "declared_axes": STREAM_AXES.to_wire(),
-                }
-            ),
-            _component_value_domain({"channel": [1, 2, 4]}),
-        )
+    component_axis_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
+        ViewerMappingDisplayConfigInput(
+            {
+                "component_modes": {"channel": "stack"},
+                "component_order": ["channel"],
+                "declared_axes": STREAM_AXES.to_wire(),
+            }
+        ),
+        _component_value_domain({"channel": [1, 2, 4]}),
     )
 
     derived = pipeline.display_axis_projection(
@@ -2022,51 +2039,77 @@ def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordina
     server.viewer = ViewerModel()
     pipeline = NapariLayerDisplayPipeline(server)
     for origin in (("raw", "pipeline") if raw_first else ("pipeline", "raw")):
-        config = config_type(**{
-            mode_field: (
-                NapariDimensionMode.STACK if origin == stack_origin
-                else NapariDimensionMode.LAYER
-            )
-        })
-        producer = StreamProducerIdentity("manual", "image", "raw", "raw") if origin == "raw" else None
+        config = config_type(
+            **{
+                mode_field: (
+                    NapariDimensionMode.STACK
+                    if origin == stack_origin
+                    else NapariDimensionMode.LAYER
+                )
+            }
+        )
+        producer = (
+            StreamProducerIdentity("manual", "image", "raw", "raw")
+            if origin == "raw"
+            else None
+        )
         for channel in (1, 2):
             route = f"{origin}-{channel}"
             item = _layer_item(
-                {"site": 1, "channel": 1, "z_index": 1,
-                 "timepoint": 1, "well": "A01", component: channel},
+                {
+                    "site": 1,
+                    "channel": 1,
+                    "z_index": 1,
+                    "timepoint": 1,
+                    "well": "A01",
+                    component: channel,
+                },
                 data=np.full((4, 4), channel, dtype=np.uint16),
                 producer=producer,
             )
             semantics = ViewerComponentAxisSemantics(
-                entries=_component_value_domain({
-                    component: [value] for component, value in item.address.components.items()
-                }).entries,
+                entries=_component_value_domain(
+                    {
+                        component: [value]
+                        for component, value in item.address.components.items()
+                    }
+                ).entries,
                 layout=ViewerObjectDisplayConfigInput(config).layout(),
             )
             server.layer_route_state.set_title(route, route)
             work = pipeline.display_layer_batch(
-                layer_key=route, items=[item],
+                layer_key=route,
+                items=[item],
                 display_payload=NapariPendingLayerUpdate.from_semantics(
-                    timer=_FakeTimer(), data_type=StreamingDataType.IMAGE,
-                    semantics=semantics, display_config=config,
+                    timer=_FakeTimer(),
+                    data_type=StreamingDataType.IMAGE,
+                    semantics=semantics,
+                    display_config=config,
                 ),
                 component_names_metadata=ViewerComponentNameMetadata.empty(),
             )
             assert work.advance()
             assert ViewerObjectDisplayConfigInput(config).layout() == semantics.layout
     for channel in (1, 2):
-        raw = server.layer_route_state.dimension_state_for(f"raw-{channel}").presentation
-        result = server.layer_route_state.dimension_state_for(f"pipeline-{channel}").presentation
+        raw = server.layer_route_state.dimension_state_for(
+            f"raw-{channel}"
+        ).presentation
+        result = server.layer_route_state.dimension_state_for(
+            f"pipeline-{channel}"
+        ).presentation
         axis = raw.display_axis_components.index(component)
         assert result.display_axis_components == raw.display_axis_components
         assert raw.viewer_step(0, axis) == result.viewer_step(0, axis) == channel - 1
         assert raw.projection.routed_component_values[component] == [channel]
         assert result.projection.routed_component_values[component] == [channel]
         assert np.max(server.layer_route_state.layer(f"raw-{channel}").data) == channel
-        assert np.max(server.layer_route_state.layer(f"pipeline-{channel}").data) == channel
-        assert tuple(server.layer_route_state.layer(f"raw-{channel}").translate) == tuple(
-            server.layer_route_state.layer(f"pipeline-{channel}").translate
+        assert (
+            np.max(server.layer_route_state.layer(f"pipeline-{channel}").data)
+            == channel
         )
+        assert tuple(
+            server.layer_route_state.layer(f"raw-{channel}").translate
+        ) == tuple(server.layer_route_state.layer(f"pipeline-{channel}").translate)
 
 
 def test_display_batch_composes_domain_and_names_for_new_declared_component():
@@ -2184,17 +2227,15 @@ def test_napari_display_pipeline_projects_aggregate_payload_axes_into_route_doma
     component_value_domain = _component_value_domain(
         {"channel": [1], "z_index": [1, 2]}
     )
-    component_axis_semantics = (
-        ViewerComponentAxisSemanticsFactory.from_display_config(
-            ViewerMappingDisplayConfigInput(
-                {
-                    "component_modes": {"channel": "stack", "z_index": "stack"},
-                    "component_order": ["z_index", "channel"],
-                    "declared_axes": STREAM_AXES.to_wire(),
-                }
-            ),
-            component_value_domain,
-        )
+    component_axis_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
+        ViewerMappingDisplayConfigInput(
+            {
+                "component_modes": {"channel": "stack", "z_index": "stack"},
+                "component_order": ["z_index", "channel"],
+                "declared_axes": STREAM_AXES.to_wire(),
+            }
+        ),
+        component_value_domain,
     )
 
     projection = pipeline.display_axis_projection(
@@ -3407,10 +3448,16 @@ def test_clear_state_preserves_mounted_payload_and_domains_until_native_removal(
     server.component_groups.items_for("cancelled").append(_layer_item({"well": "A14"}))
     server.component_values = ViewerRouteComponentValueTracker()
     server.component_values.update("retained", ["well"], [item])
-    server.component_values.declare_component_values("retained", ["well"], {"well": ["A01", "A02"]})
-    server.component_values.update("cancelled", ["well"], [_layer_item({"well": "A14"})])
+    server.component_values.declare_component_values(
+        "retained", ["well"], {"well": ["A01", "A02"]}
+    )
+    server.component_values.update(
+        "cancelled", ["well"], [_layer_item({"well": "A14"})]
+    )
     domain = server.component_values.domain_for("retained", ["well"])
-    server.component_name_metadata = _component_name_metadata({"well": {"A01": "source well"}})
+    server.component_name_metadata = _component_name_metadata(
+        {"well": {"A01": "source well"}}
+    )
     server.layer_batch_processor_debounce_policy = NapariLayerBatchDebouncePolicy()
     server.display_pipeline = NapariLayerDisplayPipeline(server)
     server.batch_processors = NapariBatchProcessorStore()
@@ -3421,7 +3468,9 @@ def test_clear_state_preserves_mounted_payload_and_domains_until_native_removal(
     assert server.component_groups.existing_items_for("cancelled") is None
     assert server.component_values.domain_for("retained", ["well"]) is domain
     assert domain.coordinate_values("well") == {"A01", "A02"}
-    assert server.component_values.shared_values_for(["well"]) == {"well": ["A01", "A02"]}
+    assert server.component_values.shared_values_for(["well"]) == {
+        "well": ["A01", "A02"]
+    }
     assert server.component_name_metadata.display_name("well", "A01") == "source well"
 
     server.viewer.layers.remove(layer)
@@ -3484,7 +3533,8 @@ def _run_fake_napari_entrypoint(
                 )
                 events.append("result_selection_surface_open")
                 napari_viewer_server._install_result_selection_toolbar(
-                    self.result_selection_surface, self.result_selection_controller,
+                    self.result_selection_surface,
+                    self.result_selection_controller,
                 )
             return self.result_selection_surface
 
@@ -4196,7 +4246,9 @@ def test_roi_selection_toolbar_adjusts_native_highlight_setting(qtbot, monkeypat
     server = type("ResultSelectionServer", (), {"viewer": None})()
     controller = napari_viewer_server.NapariResultSelectionController(server)
 
-    surface = napari_viewer_server.NapariResultSelectionSurface(result_selection_dock, object())
+    surface = napari_viewer_server.NapariResultSelectionSurface(
+        result_selection_dock, object()
+    )
     qt_window.destroyed.connect(surface.release)
     toolbar = napari_viewer_server._install_result_selection_toolbar(
         surface,
@@ -4263,7 +4315,9 @@ def test_roi_layer_color_button_recolors_every_shape(qtbot, monkeypatch):
         lambda *_args, **_kwargs: QColor.fromRgbF(0.2, 0.8, 0.3, 1.0),
     )
 
-    surface = napari_viewer_server.NapariResultSelectionSurface(result_selection_dock, object())
+    surface = napari_viewer_server.NapariResultSelectionSurface(
+        result_selection_dock, object()
+    )
     qt_window.destroyed.connect(surface.release)
     toolbar = napari_viewer_server._install_result_selection_toolbar(
         surface,
@@ -4331,8 +4385,6 @@ def test_napari_entrypoint_bind_failure_quits_event_loop_and_stops_server(monkey
     assert "destroyed_connect" not in events
     assert events.count("server_stop") == 1
     assert events[-1] == "server_stop"
-
-
 
 
 @pytest.mark.parametrize("message_type", ("shutdown", "force_shutdown"))
@@ -4406,12 +4458,6 @@ def test_napari_shutdown_cancels_pending_updates_before_scheduling_viewer_close(
 
     assert events[-1] == "viewer_close"
     assert not any(event.startswith("display:") for event in events)
-
-
-
-
-
-
 
 
 def test_napari_axis_projector_drops_only_globally_singleton_axes():
@@ -4537,7 +4583,9 @@ def test_napari_component_display_coordinator_purges_deleted_route_domain():
             self.component_groups = NapariComponentGroupStore()
             self.component_values = ViewerRouteComponentValueTracker()
             self.batch_processors = napari_viewer_server.NapariBatchProcessorStore()
-            self.display_pipeline = napari_viewer_server.NapariLayerDisplayPipeline(self)
+            self.display_pipeline = napari_viewer_server.NapariLayerDisplayPipeline(
+                self
+            )
 
     server = _FakeServer()
     route_key = "deleted-channel-1"
@@ -4634,11 +4682,9 @@ def test_napari_component_display_coordinator_splits_declared_image_layouts():
         "component_order": ["well"],
         "declared_axes": STREAM_AXES.to_wire(),
     }
-    component_axis_semantics = (
-        ViewerComponentAxisSemanticsFactory.from_display_config(
-            ViewerMappingDisplayConfigInput(display_config),
-            _component_value_domain({"well": ["A01"]}),
-        )
+    component_axis_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
+        ViewerMappingDisplayConfigInput(display_config),
+        _component_value_domain({"well": ["A01"]}),
     )
 
     for data, image_metadata in (
@@ -4716,17 +4762,15 @@ def test_napari_component_display_coordinator_preserves_declared_singleton_stack
         step_name="OverlayOutlines",
         pipeline_position=7,
     )
-    component_axis_semantics = (
-        ViewerComponentAxisSemanticsFactory.from_display_config(
-            ViewerMappingDisplayConfigInput(
-                {
-                    "component_modes": {"well": "stack", "channel": "stack"},
-                    "component_order": ["well", "channel"],
-                    "declared_axes": STREAM_AXES.to_wire(),
-                }
-            ),
-            _component_value_domain({"well": ["A01"], "channel": [2]}),
-        )
+    component_axis_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
+        ViewerMappingDisplayConfigInput(
+            {
+                "component_modes": {"well": "stack", "channel": "stack"},
+                "component_order": ["well", "channel"],
+                "declared_axes": STREAM_AXES.to_wire(),
+            }
+        ),
+        _component_value_domain({"well": ["A01"], "channel": [2]}),
     )
 
     coordinator.display(
@@ -5393,17 +5437,15 @@ def test_napari_display_projection_derives_sparse_coordinates_from_routed_items(
         "well": ["A02", "B04", "B12", "B17"],
         "site": [1, 2, 4, 7],
     }
-    component_axis_semantics = (
-        ViewerComponentAxisSemanticsFactory.from_display_config(
-            ViewerMappingDisplayConfigInput(
-                {
-                    "component_modes": {"well": "stack", "site": "stack"},
-                    "component_order": ["well", "site"],
-                    "declared_axes": STREAM_AXES.to_wire(),
-                }
-            ),
-            _component_value_domain(component_values),
-        )
+    component_axis_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
+        ViewerMappingDisplayConfigInput(
+            {
+                "component_modes": {"well": "stack", "site": "stack"},
+                "component_order": ["well", "site"],
+                "declared_axes": STREAM_AXES.to_wire(),
+            }
+        ),
+        _component_value_domain(component_values),
     )
 
     projection = pipeline.display_axis_projection(
@@ -5767,7 +5809,9 @@ def test_napari_shape_feature_columns_fill_sparse_late_columns_in_order():
     columns = NapariShapeFeatureColumns()
 
     columns.append({"area": 4.0}, label=1, path="first", element_identity="first:0")
-    columns.append({"circularity": 0.8}, label=2, path="second", element_identity="second:0")
+    columns.append(
+        {"circularity": 0.8}, label=2, path="second", element_identity="second:0"
+    )
     columns.append(
         {"area": 9.0, "circularity": 0.6},
         label=3,
@@ -5779,7 +5823,11 @@ def test_napari_shape_feature_columns_fill_sparse_late_columns_in_order():
         "area": [4.0, None, 9.0],
         "label": [1, 2, 3],
         "path": ["first", "second", "third"],
-        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: ["first:0", "second:0", "third:0"],
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: [
+            "first:0",
+            "second:0",
+            "third:0",
+        ],
         "circularity": [None, 0.8, 0.6],
     }
 
@@ -5823,17 +5871,15 @@ def test_napari_aggregate_axis_binding_uses_declared_component_not_equal_extent(
     component_value_domain = _component_value_domain(
         {"site": [1, 2], "channel": [1, 2]}
     )
-    component_axis_semantics = (
-        ViewerComponentAxisSemanticsFactory.from_display_config(
-            ViewerMappingDisplayConfigInput(
-                {
-                    "component_modes": {"site": "stack", "channel": "stack"},
-                    "component_order": ["site", "channel"],
-                    "declared_axes": STREAM_AXES.to_wire(),
-                }
-            ),
-            component_value_domain,
-        )
+    component_axis_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
+        ViewerMappingDisplayConfigInput(
+            {
+                "component_modes": {"site": "stack", "channel": "stack"},
+                "component_order": ["site", "channel"],
+                "declared_axes": STREAM_AXES.to_wire(),
+            }
+        ),
+        component_value_domain,
     )
     items = [
         _layer_item(
@@ -5878,17 +5924,15 @@ def test_napari_shape_plane_metadata_requires_declared_component_axis():
     component_value_domain = _component_value_domain(
         {"site": [1, 2], "channel": [1, 2]}
     )
-    component_axis_semantics = (
-        ViewerComponentAxisSemanticsFactory.from_display_config(
-            ViewerMappingDisplayConfigInput(
-                {
-                    "component_modes": {"site": "stack", "channel": "stack"},
-                    "component_order": ["site", "channel"],
-                    "declared_axes": STREAM_AXES.to_wire(),
-                }
-            ),
-            component_value_domain,
-        )
+    component_axis_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
+        ViewerMappingDisplayConfigInput(
+            {
+                "component_modes": {"site": "stack", "channel": "stack"},
+                "component_order": ["site", "channel"],
+                "declared_axes": STREAM_AXES.to_wire(),
+            }
+        ),
+        component_value_domain,
     )
 
     with pytest.raises(ValueError, match="plane_component_values"):
@@ -5918,17 +5962,15 @@ def test_napari_shape_label_rasterizer_rejects_mixed_aggregate_plane_metadata():
     component_value_domain = _component_value_domain(
         {"channel": [1], "z_index": [1, 2]}
     )
-    component_axis_semantics = (
-        ViewerComponentAxisSemanticsFactory.from_display_config(
-            ViewerMappingDisplayConfigInput(
-                {
-                    "component_modes": {"channel": "stack", "z_index": "stack"},
-                    "component_order": ["z_index", "channel"],
-                    "declared_axes": STREAM_AXES.to_wire(),
-                }
-            ),
-            component_value_domain,
-        )
+    component_axis_semantics = ViewerComponentAxisSemanticsFactory.from_display_config(
+        ViewerMappingDisplayConfigInput(
+            {
+                "component_modes": {"channel": "stack", "z_index": "stack"},
+                "component_order": ["z_index", "channel"],
+                "declared_axes": STREAM_AXES.to_wire(),
+            }
+        ),
+        component_value_domain,
     )
 
     with pytest.raises(ValueError, match="mixes plane-indexed and unindexed"):
@@ -6166,8 +6208,13 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
     )
     item = _layer_item(
         {"channel": 4},
-        [{"type": "points", "coordinates": [[1, 2]],
-          "metadata": {"label": 7, "component": 4}}],
+        [
+            {
+                "type": "points",
+                "coordinates": [[1, 2]],
+                "metadata": {"label": 7, "component": 4},
+            }
+        ],
         stream_layer_data_type=StreamingDataType.POINTS,
     )
 
@@ -6188,7 +6235,8 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
     assert layer_kwargs["axis_labels"] == ("channel", "y", "x")
     assert layer_kwargs["translate"] == (3.0, 0.0, 0.0)
     assert layer_kwargs["properties"] == {
-        "label": [7], "component": [4],
+        "label": [7],
+        "component": [4],
         NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: [item.element_identity(0)],
     }
 
@@ -6243,14 +6291,30 @@ def test_napari_points_layer_uses_exact_fractional_z_from_native_roi_metadata():
 @pytest.mark.parametrize(
     "values,unit,expected_scale,expected_units",
     (
-        ((2.0, 0.65, 0.65), "micrometers", (1.0, 2.0, 0.65, 0.65),
-         ("dimensionless", "micrometer", "micrometer", "micrometer")),
-        ((2.0, 1.0, 1.0), "relative", (1.0, 2.0, 1.0, 1.0),
-         ("dimensionless", "dimensionless", "dimensionless", "dimensionless")),
-        ((0.65, 0.65), "micrometers", (1.0, 1.0, 0.65, 0.65),
-         ("dimensionless", "dimensionless", "micrometer", "micrometer")),
-        ((), "micrometers", (1.0, 1.0, 1.0, 1.0),
-         ("dimensionless", "dimensionless", "pixel", "pixel")),
+        (
+            (2.0, 0.65, 0.65),
+            "micrometers",
+            (1.0, 2.0, 0.65, 0.65),
+            ("dimensionless", "micrometer", "micrometer", "micrometer"),
+        ),
+        (
+            (2.0, 1.0, 1.0),
+            "relative",
+            (1.0, 2.0, 1.0, 1.0),
+            ("dimensionless", "dimensionless", "dimensionless", "dimensionless"),
+        ),
+        (
+            (0.65, 0.65),
+            "micrometers",
+            (1.0, 1.0, 0.65, 0.65),
+            ("dimensionless", "dimensionless", "micrometer", "micrometer"),
+        ),
+        (
+            (),
+            "micrometers",
+            (1.0, 1.0, 1.0, 1.0),
+            ("dimensionless", "dimensionless", "pixel", "pixel"),
+        ),
     ),
 )
 def test_spatial_presentation_owns_scale_and_world_translation(
@@ -6264,19 +6328,26 @@ def test_spatial_presentation_owns_scale_and_world_translation(
         component_values={"channel": [4], "z_index": [2, 3, 4, 5]},
         axis_offsets=(3, 2),
     )
-    item = _layer_item(
-        {"channel": 4, "z_index": 2}, np.zeros((5, 7), dtype=np.uint16)
+    item = _layer_item({"channel": 4, "z_index": 2}, np.zeros((5, 7), dtype=np.uint16))
+    item = replace(
+        item,
+        image_metadata=ImagePayloadMetadata(
+            source_voxel_spacing=SourceVoxelSpacing(
+                values, SourceVoxelSpacingUnit(unit)
+            )
+        ),
     )
-    item = replace(item, image_metadata=ImagePayloadMetadata(
-        source_voxel_spacing=SourceVoxelSpacing(values, SourceVoxelSpacingUnit(unit))
-    ))
     kwargs = presentation.spatial_layer_kwargs([item])
     assert kwargs["scale"] == expected_scale
     assert kwargs["units"] == expected_units
     assert kwargs["translate"] == (3.0, 2 * expected_scale[1], 0.0, 0.0)
     payload_kwargs = presentation.spatial_layer_kwargs([item], ("band",))
     assert payload_kwargs["scale"] == (*expected_scale[:2], 1.0, *expected_scale[2:])
-    assert payload_kwargs["units"] == (*expected_units[:2], "dimensionless", *expected_units[2:])
+    assert payload_kwargs["units"] == (
+        *expected_units[:2],
+        "dimensionless",
+        *expected_units[2:],
+    )
 
 
 def test_calibrated_native_image_point_and_semantic_navigation_agree_without_qt():
@@ -6317,12 +6388,17 @@ def test_calibrated_native_image_point_and_semantic_navigation_agree_without_qt(
 def test_shape_features_exclude_source_transport_without_mutating_payload():
     from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 
-    full_metadata = {"label": 7, "response": 0.25,
-                     ROIArchiveSourceMetadata.FIELD: {"source_provenance": "retained"}}
+    full_metadata = {
+        "label": 7,
+        "response": 0.25,
+        ROIArchiveSourceMetadata.FIELD: {"source_provenance": "retained"},
+    }
     features = NapariShapeFeatureColumns()
     item = _layer_item({}, stream_layer_data_type=StreamingDataType.SHAPES)
     features.append(
-        full_metadata, label=7, path=item.address.path,
+        full_metadata,
+        label=7,
+        path=item.address.path,
         element_identity=item.element_identity(0),
     )
     assert ROIArchiveSourceMetadata.FIELD in full_metadata
@@ -6358,7 +6434,9 @@ def test_napari_fractional_z_points_are_relative_to_the_declared_anchor():
     )
     projection = pipeline.display_axis_projection("centres", semantics, [item])
     assert projection.component_values == {"z_index": [2, 3, 4]}
-    points, _properties = napari_viewer_server._build_nd_points([item], projection, ("z_index",))
+    points, _properties = napari_viewer_server._build_nd_points(
+        [item], projection, ("z_index",)
+    )
     assert tuple(points[0]) == (1.25, 1.25, 3.5)
     assert projection.axis_offsets == (2,)
 

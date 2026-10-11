@@ -1,7 +1,14 @@
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (AlignedImageStack, AlignedImageSliceContext, ImageOutputBundle, compose_aligned_image_payload, pack_aligned_image_outputs, stack_image_payloads)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    AlignedImageSliceContext,
+    ImageOutputBundle,
+    compose_aligned_image_payload,
+    pack_aligned_image_outputs,
+    stack_image_payloads,
+)
 from openhcs.core.memory import (
     MEMORY_TYPE_NUMPY,
     stack_runtime_slices,
@@ -76,9 +83,12 @@ def test_aligned_image_stack_nominally_declares_runtime_alignment() -> None:
     )
     payload = AlignedImageStack(slices)
 
-    assert tuple(
-        member.data for member in RuntimeSliceProjection.alignment_slices(payload)
-    ) == slices
+    assert (
+        tuple(
+            member.data for member in RuntimeSliceProjection.alignment_slices(payload)
+        )
+        == slices
+    )
 
 
 def test_runtime_plane_projection_requires_matching_payload_axis() -> None:
@@ -182,9 +192,10 @@ def test_scalar_mask_projection_requires_metadata_owner_to_declare_plane_axis(
         else:
             metadata.payload_with(data, mask).slice_payload(data, 0)
 
-    assert ImagePayloadSliceProjector(mask=None, metadata=metadata).mask_for_slice(
-        data, 0
-    ) is None
+    assert (
+        ImagePayloadSliceProjector(mask=None, metadata=metadata).mask_for_slice(data, 0)
+        is None
+    )
 
 
 @pytest.mark.parametrize("batch", (False, True))
@@ -201,7 +212,9 @@ def test_slice_projection_keeps_fresh_source_metadata_across_calls(batch: bool) 
     def project():
         if batch:
             return projector.payloads_for_slices(tuple(data))[1]
-        return payload.slice_payload(data[1], 1, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
+        return payload.slice_payload(
+            data[1], 1, plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+        )
 
     first = project()
     metadata.source_component_metadata = {"well": "B02"}
@@ -275,9 +288,7 @@ def test_image_bundle_composition_declares_source_binding_axis() -> None:
     composition = compose_aligned_image_payload("ImageMath", (first, second))
 
     assert composition.execution_mode is FullStackExecution
-    assert composition.payload.metadata.plane_axis is (
-        RuntimePlaneAxis.SOURCE_BINDING
-    )
+    assert composition.payload.metadata.plane_axis is (RuntimePlaneAxis.SOURCE_BINDING)
     assert composition.payload.data.shape == (2, 4, 5)
 
 
@@ -290,9 +301,7 @@ def test_single_runtime_slice_payload_is_not_repacked_as_source_binding() -> Non
 
     assert composition.execution_mode is NaturalExecution
     assert composition.payload is payload
-    assert composition.payload.metadata.plane_axis is (
-        RuntimePlaneAxis.RUNTIME_SLICE
-    )
+    assert composition.payload.metadata.plane_axis is (RuntimePlaneAxis.RUNTIME_SLICE)
 
 
 def test_composed_runtime_slice_projection_ignores_outer_file_cardinality() -> None:
@@ -364,9 +373,7 @@ def test_single_aligned_payload_is_preserved_without_rebundling() -> None:
 
     composition = compose_aligned_image_payload("MeasureImage", (payload,))
 
-    assert composition.execution_mode is (
-        AlignedStackExecution
-    )
+    assert composition.execution_mode is (AlignedStackExecution)
     assert composition.payload is payload
 
 
@@ -386,9 +393,7 @@ def test_declared_output_contexts_preserve_aligned_multi_image_payloads() -> Non
         slice_contexts=contexts,
     )
 
-    assert composition.execution_mode is (
-        AlignedStackExecution
-    )
+    assert composition.execution_mode is (AlignedStackExecution)
     assert isinstance(composition.payload, ImageOutputBundle)
     assert tuple(member.data for member in composition.payload.slices) == payloads
     assert composition.payload.slice_contexts == contexts

@@ -441,9 +441,7 @@ def loose_operaphenix_neurite_demo_contribution(
         pipeline_config=pipeline_config,
         pipeline_steps=tuple(pipeline_steps),
         presentation_identity=StreamProducerIdentity.pipeline_output(
-            output_kind=(
-                CompiledStepPlan.ARTIFACT_OUTPUT_KIND
-            ),
+            output_kind=(CompiledStepPlan.ARTIFACT_OUTPUT_KIND),
             output_key=secondary_output_name,
             projection_key=secondary_output_name,
             step_name=analysis_step.name,

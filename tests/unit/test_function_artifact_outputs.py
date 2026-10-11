@@ -299,9 +299,7 @@ def test_function_core_passes_payload_data_to_array_callable_and_restores_contex
 
     assert result.data.shape == (4, 8)
     assert result.data.dtype == tiles.dtype
-    assert result.metadata.source_path == (
-        "/input/A01_s001_w1_z001_t001.tif"
-    )
+    assert result.metadata.source_path == ("/input/A01_s001_w1_z001_t001.tif")
 
 
 def test_function_core_preserves_output_declared_runtime_slice_axis():
@@ -345,7 +343,9 @@ def test_image_output_context_preserves_stack_after_exact_source_projection():
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
+    result = (
+        ImageArtifactType if output_plan is None else output_plan.artifact_type
+    ).contextualize_output(
         source,
         output,
         output_plan,
@@ -395,7 +395,9 @@ def test_image_output_context_does_not_infer_axis_for_unmarked_payload():
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
+    result = (
+        ImageArtifactType if output_plan is None else output_plan.artifact_type
+    ).contextualize_output_from_projector(
         source,
         np.ones((2, 4, 5), dtype=np.uint16),
         output_plan,
@@ -427,7 +429,9 @@ def test_image_output_context_rejects_declared_output_axis_shape_drift():
         ValueError,
         match="declared 'runtime_slice' axis of size 2",
     ):
-        (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
+        (
+            ImageArtifactType if output_plan is None else output_plan.artifact_type
+        ).contextualize_output(
             np.ones((1, 4, 5), dtype=np.float32),
             output,
             output_plan,
@@ -452,7 +456,9 @@ def test_image_output_context_preserves_complete_scalar_rgb_identity() -> None:
         source_image_names=(source_spec.name,),
         axes=PayloadAxes.colour_samples(2),
     ).payload_with(np.ones((4, 5, 3), dtype=np.float32), None)
-    output = source.with_pixels(np.ones((4, 5, 3), dtype=np.uint8),)
+    output = source.with_pixels(
+        np.ones((4, 5, 3), dtype=np.uint8),
+    )
     output_plan = ArtifactOutputPlan(
         name="SavedColorNeighbors",
         path="/memory/SavedColorNeighbors.png",
@@ -461,7 +467,9 @@ def test_image_output_context_preserves_complete_scalar_rgb_identity() -> None:
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
+    result = (
+        ImageArtifactType if output_plan is None else output_plan.artifact_type
+    ).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -547,7 +555,9 @@ def test_image_output_context_projects_complete_multi_plane_identity() -> None:
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
+    result = (
+        ImageArtifactType if output_plan is None else output_plan.artifact_type
+    ).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -673,9 +683,7 @@ def test_composed_function_output_owns_collapsed_source_identity():
 
 
 def test_crop_mask_sidecar_names_derive_from_core_artifact_role():
-    assert CropMask.name_for("CroppedImage") == (
-        "CroppedImage__crop_mask"
-    )
+    assert CropMask.name_for("CroppedImage") == ("CroppedImage__crop_mask")
 
 
 def test_unstack_payload_context_slices_volume_stack_mask_with_volume_data():
@@ -771,10 +779,10 @@ def test_unstack_payload_context_preserves_declared_axis_over_default():
         default_plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     )
 
-    assert [
-        slice_payload.metadata.source_image_names
-        for slice_payload in slices
-    ] == [("DNA",), ("Actin",)]
+    assert [slice_payload.metadata.source_image_names for slice_payload in slices] == [
+        ("DNA",),
+        ("Actin",),
+    ]
 
 
 def test_stack_payload_context_projects_single_payload_mask_to_stack_domain():
@@ -1385,9 +1393,7 @@ def test_execute_function_core_saves_single_image_artifact_output_to_main_flow()
     stored = context.runtime_value_store.find(name="CorrectedImage", axis_id="A01")
     assert len(stored) == 1
     np.testing.assert_array_equal(stored[0].data.data, output)
-    assert stored[0].data.metadata.source_image_names == (
-        "CorrectedImage",
-    )
+    assert stored[0].data.metadata.source_image_names == ("CorrectedImage",)
 
 
 def test_saved_canonical_source_projection_survives_main_flow_return():
@@ -1401,22 +1407,37 @@ def test_saved_canonical_source_projection_survives_main_flow_return():
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=paths,
             component_metadata=tuple(
-                {"well": "A01", "site": site, "channel": "2", "z_index": "1", "timepoint": "1"}
+                {
+                    "well": "A01",
+                    "site": site,
+                    "channel": "2",
+                    "z_index": "1",
+                    "timepoint": "1",
+                }
                 for site in ("1", "2")
             ),
         ),
     ).payload_with(pixels)
     output = ArtifactSpec.output("Selected", ImageArtifactType)
-    plan = ArtifactOutputPlan(name=output.name, path="/memory/selected.pkl", artifact_type=ImageArtifactType)
+    plan = ArtifactOutputPlan(
+        name=output.name, path="/memory/selected.pkl", artifact_type=ImageArtifactType
+    )
 
     @artifact_outputs(output)
     def select_second_plane(image):
         return SelectedPlaneImageOutput(image[1:2], (1,))
 
-    result = _execute_function_core(CoreExecutionRequest(
-        func_callable=select_second_plane, main_data_arg=source, base_kwargs={}, context=context,
-        artifact_inputs={}, artifact_outputs={plan.ref(): plan}, runtime_plane_count=2,
-    ))
+    result = _execute_function_core(
+        CoreExecutionRequest(
+            func_callable=select_second_plane,
+            main_data_arg=source,
+            base_kwargs={},
+            context=context,
+            artifact_inputs={},
+            artifact_outputs={plan.ref(): plan},
+            runtime_plane_count=2,
+        )
+    )
     stored = context.runtime_value_store.find(name=output.name, axis_id="A01")
     assert len(stored) == 1
     for payload in (result, stored[0].data):
@@ -1430,7 +1451,9 @@ def test_saved_canonical_source_projection_survives_main_flow_return():
 
 
 @pytest.mark.parametrize("declared_canonical", [False, True])
-def test_unsaved_main_return_reads_source_context_after_artifact_save(declared_canonical):
+def test_unsaved_main_return_reads_source_context_after_artifact_save(
+    declared_canonical,
+):
     context = ContextStub()
     source = ImagePayloadMetadata(
         source_path="/source/before.tif",
@@ -1438,13 +1461,21 @@ def test_unsaved_main_return_reads_source_context_after_artifact_save(declared_c
     ).payload_with(np.zeros((2, 3), dtype=np.float32))
     sidecar = ArtifactSpec.output("Sidecar", MetadataArtifactType)
     canonical = ArtifactSpec.output("Unselected", ImageArtifactType)
-    plan = ArtifactOutputPlan(name=sidecar.name, path="/memory/sidecar.pkl", artifact_type=MetadataArtifactType)
+    plan = ArtifactOutputPlan(
+        name=sidecar.name,
+        path="/memory/sidecar.pkl",
+        artifact_type=MetadataArtifactType,
+    )
     original_save = context.filemanager.save
 
     def save_and_change_source(value, path, backend):
         original_save(value, path, backend)
         source.metadata.source_path = "/source/after.tif"
-        source.metadata.source_component_metadata = {"well": "A01", "site": "9", "channel": "2"}
+        source.metadata.source_component_metadata = {
+            "well": "A01",
+            "site": "9",
+            "channel": "2",
+        }
 
     context.filemanager.save = save_and_change_source
 
@@ -1452,10 +1483,16 @@ def test_unsaved_main_return_reads_source_context_after_artifact_save(declared_c
     def produce(image):
         return image + 1, {"note": "saved"}
 
-    result = _execute_function_core(CoreExecutionRequest(
-        func_callable=produce, main_data_arg=source, base_kwargs={}, context=context,
-        artifact_inputs={}, artifact_outputs={plan.ref(): plan},
-    ))
+    result = _execute_function_core(
+        CoreExecutionRequest(
+            func_callable=produce,
+            main_data_arg=source,
+            base_kwargs={},
+            context=context,
+            artifact_inputs={},
+            artifact_outputs={plan.ref(): plan},
+        )
+    )
     np.testing.assert_array_equal(result.data, np.ones((2, 3)))
     assert result.metadata.source_path == "/source/after.tif"
     assert result.metadata.source_component_metadata["site"] == "9"
@@ -1521,9 +1558,7 @@ def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
             output_payload.data,
             output_slices[index],
         )
-        assert (
-            metadata.source_path == source_payload.metadata.source_path
-        )
+        assert metadata.source_path == source_payload.metadata.source_path
         assert metadata.source_image_names == (output_spec.name,)
         assert metadata.source_provenance.represented_source_image_names == (
             output_spec.name,
@@ -1775,8 +1810,10 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
     )
     from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
 
-    stack_payload = (scalar_output).copied(memory_type=MEMORY_TYPE_NUMPY,
-        device_id=None,)
+    stack_payload = (scalar_output).copied(
+        memory_type=MEMORY_TYPE_NUMPY,
+        device_id=None,
+    )
     assert stack_payload.data.shape == (2, 3, 3)
     stack_metadata = stack_payload.metadata
     assert stack_metadata.plane_axis is None
@@ -1811,10 +1848,7 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
     )
     assert len(output) == 1
     assert output[0][0].data.shape == (4, 5)
-    assert (
-        declared_output.metadata.plane_axis
-        is RuntimePlaneAxis.RUNTIME_SLICE
-    )
+    assert declared_output.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_pattern_group_runtime_projects_nominal_object_label_stack():
@@ -2311,9 +2345,7 @@ def test_execute_function_core_aggregates_and_names_slice_aligned_object_labels(
     assert label_set.declared_plane_count() == 2
     np.testing.assert_array_equal(
         label_set.labels,
-        np.stack(
-            tuple(labels.value_at(index) for index in range(labels.slice_count))
-        ),
+        np.stack(tuple(labels.value_at(index) for index in range(labels.slice_count))),
     )
     assert label_set.source_provenance.source_image_provenance_planes.paths == tuple(
         item.metadata.source_path for item in source_slices
@@ -2338,11 +2370,15 @@ def test_measurement_subject_is_required_before_schema_rows_execute(boundary):
     def count(image):
         raise AssertionError("Invalid measurement declarations must not execute")
 
-    with pytest.raises(ValueError, match="cell_counts.*no declared measurement subject") as exc:
+    with pytest.raises(
+        ValueError, match="cell_counts.*no declared measurement subject"
+    ) as exc:
         if boundary == "contract":
             from openhcs.core.callable_contract import CallableContract
 
-            CallableContract.from_callable(count).validate_artifact_output_declarations()
+            CallableContract.from_callable(
+                count
+            ).validate_artifact_output_declarations()
         else:
             compile_function_pattern(count, {}, {})
     assert "ImageMeasurementSubjectRelation" in str(exc.value)
@@ -2925,7 +2961,9 @@ def _declared_source_executor(
                 value=None,
             ),
             execution_plan=CompiledStepPlan(
-                step_index=0, step_name="source-bound", axis_id="A01",
+                step_index=0,
+                step_name="source-bound",
+                axis_id="A01",
                 variable_components=(),
             ),
         ),
@@ -3135,5 +3173,6 @@ def test_declared_source_payload_rejects_ambiguous_stored_and_source_bound_origi
         np.zeros((1, 2, 3), dtype=np.uint16)
     )
     with pytest.raises(ValueError, match="must resolve to exactly one .* resolved 2"):
-        executor.declared_source_payload(spec.ref(), primary,
-                                        loaded_artifact_payloads={spec.ref(): primary})
+        executor.declared_source_payload(
+            spec.ref(), primary, loaded_artifact_payloads={spec.ref(): primary}
+        )

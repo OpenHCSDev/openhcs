@@ -217,7 +217,9 @@ def test_save_images_is_an_adapter_free_executable_axis_module() -> None:
     assert callable_contract.processing_contract is Pure3DContract
     assert callable_contract.runtime_adapter is None
     assert callable_contract.resolve_runtime_callable() is save_images
-    assert CallableContract.from_callable(save_images).artifact_input_parameter_names == ("image_to_save",)
+    assert CallableContract.from_callable(
+        save_images
+    ).artifact_input_parameter_names == ("image_to_save",)
 
 
 def test_save_images_contract_consumes_runtime_image_and_declares_export_only() -> None:
@@ -267,7 +269,9 @@ def test_save_images_selected_image_binding_is_runtime_special_identity() -> Non
     assert bound.kwargs["file_format"] is SaveImagesFileFormat.PNG
     assert bound.kwargs["bit_depth"] is SaveImagesBitDepth.UINT8
     assert bound.kwargs["filename_method"] is SaveImagesFilenameMethod.SINGLE_NAME
-    assert CallableContract.from_callable(save_images).artifact_input_parameter_names == ("image_to_save",)
+    assert CallableContract.from_callable(
+        save_images
+    ).artifact_input_parameter_names == ("image_to_save",)
 
 
 def test_save_images_public_contract_selects_upstream_runtime_image() -> None:
@@ -954,8 +958,12 @@ def test_image_output_context_projects_declared_group_lineage_source() -> None:
         ),
     )
 
-    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
-        (source_slices).project_declared_source((output_plan.source_context_source()).name),
+    contextualized = (
+        ImageArtifactType if output_plan is None else output_plan.artifact_type
+    ).contextualize_output(
+        (source_slices).project_declared_source(
+            (output_plan.source_context_source()).name
+        ),
         np.zeros((3, 2, 2, 3), dtype=np.uint8),
         output_plan,
         RuntimePlaneAxisValueProjection.preserve(
@@ -1029,8 +1037,12 @@ def test_declared_group_lineage_source_overrides_complete_output_identity() -> N
         ),
     )
 
-    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
-        (source_slices).project_declared_source((output_plan.source_context_source()).name),
+    contextualized = (
+        ImageArtifactType if output_plan is None else output_plan.artifact_type
+    ).contextualize_output(
+        (source_slices).project_declared_source(
+            (output_plan.source_context_source()).name
+        ),
         complete_output,
         output_plan,
         RuntimePlaneAxisValueProjection.preserve(
@@ -1072,7 +1084,9 @@ def test_planned_image_output_restores_axis_without_duplicate_provenance() -> No
         ),
     )
 
-    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
+    contextualized = (
+        ImageArtifactType if output_plan is None else output_plan.artifact_type
+    ).contextualize_output(
         source_payload,
         source_payload,
         output_plan,
@@ -1120,8 +1134,12 @@ def test_image_output_context_removes_selected_source_runtime_axis() -> None:
         ),
     )
 
-    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
-        (source_payload).project_declared_source((output_plan.source_context_source()).name),
+    contextualized = (
+        ImageArtifactType if output_plan is None else output_plan.artifact_type
+    ).contextualize_output(
+        (source_payload).project_declared_source(
+            (output_plan.source_context_source()).name
+        ),
         np.zeros((2, 2, 3), dtype=np.uint8),
         output_plan,
         RuntimePlaneAxisValueProjection.preserve(
@@ -1157,8 +1175,12 @@ def test_image_output_context_preserves_repeated_declared_source_planes() -> Non
         ),
     )
 
-    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
-        (source_payload).project_declared_source((output_plan.source_context_source()).name),
+    contextualized = (
+        ImageArtifactType if output_plan is None else output_plan.artifact_type
+    ).contextualize_output(
+        (source_payload).project_declared_source(
+            (output_plan.source_context_source()).name
+        ),
         np.zeros((2, 2, 2), dtype=np.uint8),
         output_plan,
         RuntimePlaneAxisValueProjection.preserve(
@@ -1192,7 +1214,9 @@ def test_image_output_context_accepts_exact_loaded_derived_artifact() -> None:
         relations=(SourceStackLineageSourceRelation(source=selected_artifact.ref()),),
     )
 
-    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
+    contextualized = (
+        ImageArtifactType if output_plan is None else output_plan.artifact_type
+    ).contextualize_output(
         source_payload,
         np.ones((2, 2), dtype=np.uint8),
         output_plan,

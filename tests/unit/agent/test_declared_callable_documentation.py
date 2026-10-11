@@ -57,7 +57,9 @@ def test_installed_witness_declaration_doc_and_parameter_contract_agree(monkeypa
 
 
 @pytest.mark.parametrize("contract", (Pure2DContract, Pure3DContract))
-def test_new_declaration_preserves_authored_prose_without_consumer_edits(monkeypatch, contract):
+def test_new_declaration_preserves_authored_prose_without_consumer_edits(
+    monkeypatch, contract
+):
     @numpy_contract(contract=contract)
     def independent_doc_probe(image: np.ndarray, *, offset: float = 0.75) -> np.ndarray:
         """Authored plane/volume operation.
@@ -73,35 +75,50 @@ def test_new_declaration_preserves_authored_prose_without_consumer_edits(monkeyp
         """
         return image + offset
 
-    catalog, metadata = _catalog(monkeypatch, project_custom_function(independent_doc_probe))
+    catalog, metadata = _catalog(
+        monkeypatch, project_custom_function(independent_doc_probe)
+    )
     detail = catalog.get(metadata.composite_key, max_doc_chars=None)
     assert detail.doc == inspect.getdoc(inspect.unwrap(independent_doc_probe))
     assert "Additional Parameters is an authored heading" in detail.doc
     assert "discussion of slice_by_slice" in detail.doc
     assert "slice_by_slice" not in {parameter.name for parameter in detail.parameters}
-    offset = next(parameter for parameter in detail.parameters if parameter.name == "offset")
+    offset = next(
+        parameter for parameter in detail.parameters if parameter.name == "offset"
+    )
     assert offset.default_repr == "0.75"
     assert offset.supplied_by is FunctionParameterSource.AGENT
     assert offset.description == "Declared intensity offset in original image units."
     assert catalog.search(query="original image units").total == 1
 
 
-def test_flexible_controls_remain_typed_and_existing_mro_behavior_is_unchanged(monkeypatch):
+def test_flexible_controls_remain_typed_and_existing_mro_behavior_is_unchanged(
+    monkeypatch,
+):
     seen = []
 
     @numpy_contract
-    def independent_flexible_doc_probe(image: np.ndarray, *, offset: float = 0.5) -> np.ndarray:
+    def independent_flexible_doc_probe(
+        image: np.ndarray, *, offset: float = 0.5
+    ) -> np.ndarray:
         """Apply an offset with declaration-owned dimensional selection."""
         seen.append(image.shape)
         return image + offset
 
-    catalog, metadata = _catalog(monkeypatch, project_custom_function(independent_flexible_doc_probe))
+    catalog, metadata = _catalog(
+        monkeypatch, project_custom_function(independent_flexible_doc_probe)
+    )
     detail = catalog.get(metadata.composite_key, max_doc_chars=None)
     assert detail.doc == inspect.getdoc(inspect.unwrap(independent_flexible_doc_probe))
     parameters = {parameter.name: parameter for parameter in detail.parameters}
     assert parameters["slice_by_slice"].default_repr == "False"
-    assert "Process 3D arrays slice-by-slice" in parameters["slice_by_slice"].description
-    assert parameters["dtype_config"].supplied_by is FunctionParameterSource.RUNTIME_PARAMETER
+    assert (
+        "Process 3D arrays slice-by-slice" in parameters["slice_by_slice"].description
+    )
+    assert (
+        parameters["dtype_config"].supplied_by
+        is FunctionParameterSource.RUNTIME_PARAMETER
+    )
     pixels = np.zeros((2, 4, 6))
     result = metadata.func(pixels, slice_by_slice=True)
     assert seen == [(4, 6), (4, 6)]
@@ -118,7 +135,9 @@ class IndependentDocRequest:
     offset: float = 0.5
 
 
-def test_nominal_request_boundary_is_not_unwrapped_to_private_implementation(monkeypatch):
+def test_nominal_request_boundary_is_not_unwrapped_to_private_implementation(
+    monkeypatch,
+):
     @callable_request(IndependentDocRequest)
     def implementation(request: IndependentDocRequest):
         """Private implementation prose."""
@@ -140,14 +159,23 @@ def test_no_doc_metadata_and_empty_metadata_remain_external_optional_contracts()
     policy = PARAMETER_DOCUMENTATION_POLICY
     assert policy.detail_doc(no_doc, None) is None
     assert policy.detail_doc(no_doc, "   ") is None
-    assert policy.detail_doc(no_doc, "External metadata documentation.") == "External metadata documentation."
+    assert (
+        policy.detail_doc(no_doc, "External metadata documentation.")
+        == "External metadata documentation."
+    )
 
 
-def test_cellprofiler_setting_help_remains_on_final_typed_parameter_projection(monkeypatch):
+def test_cellprofiler_setting_help_remains_on_final_typed_parameter_projection(
+    monkeypatch,
+):
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
-    from openhcs.processing.backends.cellprofiler.classification import classify_objects_single_measurement
+    from openhcs.processing.backends.cellprofiler.classification import (
+        classify_objects_single_measurement,
+    )
 
-    module = CellProfilerModule.for_callable_contract(CallableContract.from_callable(classify_objects_single_measurement))
+    module = CellProfilerModule.for_callable_contract(
+        CallableContract.from_callable(classify_objects_single_measurement)
+    )
     assert module is not None
     implementation = module.require_callable()
     catalog, metadata = _catalog(
@@ -167,6 +195,12 @@ def test_cellprofiler_setting_help_remains_on_final_typed_parameter_projection(m
 
 def test_doc_projection_has_no_leaf_control_dispatch_or_text_surgery():
     tree = ast.parse(inspect.getsource(type(PARAMETER_DOCUMENTATION_POLICY)))
-    literals = {node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)}
+    literals = {
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    }
     assert {"slice_by_slice", "PURE_2D", "PURE_3D", "FLEXIBLE"}.isdisjoint(literals)
-    assert "resolve_raw_runtime_callable" in inspect.getsource(type(PARAMETER_DOCUMENTATION_POLICY).detail_doc)
+    assert "resolve_raw_runtime_callable" in inspect.getsource(
+        type(PARAMETER_DOCUMENTATION_POLICY).detail_doc
+    )

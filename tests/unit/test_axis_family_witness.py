@@ -66,7 +66,10 @@ def test_child_processes_serve_the_parent_family(remote_sensing) -> None:
         capture_output=True,
         text=True,
         timeout=300,
-        env={**os.environ, "PYTHONPATH": os.pathsep.join(map(str, (import_root, repo_root)))},
+        env={
+            **os.environ,
+            "PYTHONPATH": os.pathsep.join(map(str, (import_root, repo_root))),
+        },
         check=True,
     )
     assert child.stdout.strip().splitlines()[-1] == RemoteSensing.family_name
@@ -147,9 +150,9 @@ def test_viewer_decodes_a_stream_by_its_own_declared_axes(remote_sensing) -> Non
     assert fiji.components_in(FijiSlots.HyperstackChannel) == ("band",)
     assert fiji.components_in(FijiSlots.HyperstackSlice) == ()
     assert fiji.components_in(FijiSlots.HyperstackFrame) == ("tile", "date", "scene")
-    assert FijiDisplaySettings.from_display_payload(fiji_payload) == FijiDisplaySettings(
-        lut="Fire"
-    )
+    assert FijiDisplaySettings.from_display_payload(
+        fiji_payload
+    ) == FijiDisplaySettings(lut="Fire")
 
     napari = ViewerMappingDisplayConfigInput(napari_payload).layout()
     assert napari.components_in(NapariSlots.Stack) == ("tile", "band", "date", "scene")
@@ -239,8 +242,12 @@ def test_step_validation_and_compiler_axis_resolution(remote_sensing) -> None:
     )
 
     validator = GenericValidator(AxisFamily.active())
-    assert validator.validate_step([RemoteSensing.Tile], RemoteSensing.Band, True, "s").is_valid
-    rejected = validator.validate_step([RemoteSensing.Band], RemoteSensing.Band, True, "s")
+    assert validator.validate_step(
+        [RemoteSensing.Tile], RemoteSensing.Band, True, "s"
+    ).is_valid
+    rejected = validator.validate_step(
+        [RemoteSensing.Band], RemoteSensing.Band, True, "s"
+    )
     assert not rejected.is_valid
     partition = validator.validate_step([RemoteSensing.Scene], Ungrouped, False, "s")
     assert "multiprocessing axis: scene" in partition.error_message
@@ -334,7 +341,10 @@ def test_pipeline_runs_end_to_end_through_the_kernel(
         timeout=900,
         # The kernel this test imports, then the checkout for the witness domain;
         # processes the kernel spawns inherit both.
-        env={**os.environ, "PYTHONPATH": os.pathsep.join(map(str, (import_root, repo_root)))},
+        env={
+            **os.environ,
+            "PYTHONPATH": os.pathsep.join(map(str, (import_root, repo_root))),
+        },
         check=False,
     )
     assert completed.returncode == 0, completed.stderr[-4000:]

@@ -555,7 +555,10 @@ class GlobalThresholdSourceSelection:
 
 def normalize_cellprofiler_image(image: RuntimeArrayData) -> np.ndarray:
     """Return an image in CellProfiler's normalized pixel-data convention."""
-    return normalize_cellprofiler_image_payload( image, dtype=np.float32, ).data
+    return normalize_cellprofiler_image_payload(
+        image,
+        dtype=np.float32,
+    ).data
 
 
 def unit_interval_scale_for_threshold_selection(
@@ -755,7 +758,6 @@ class ThresholdSmoothingBackendStrategy(
 ):
     """Memory-backend-specific threshold smoothing."""
 
-
     @abstractmethod
     def smooth_threshold_image(
         self,
@@ -863,7 +865,6 @@ class ThresholdDiagnosticsBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Memory-backend-specific threshold diagnostic measurements."""
-
 
     def diagnostics(
         self,
@@ -1271,7 +1272,6 @@ class ThresholdPrimitiveBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Small threshold helper primitives supplied by an explicit provider."""
-
 
     @abstractmethod
     def log_transform(self, values: np.ndarray) -> tuple[np.ndarray, object]:
@@ -2637,9 +2637,9 @@ def threshold(
         proven_unit_interval_scale=proven_unit_interval_scale,
     ).calculate()
     output_image = (
-        source_payload.metadata
-        .without_unit_interval_intensity_scale()
-        .payload_with(threshold_result.mask.astype(np.float32), mask)
+        source_payload.metadata.without_unit_interval_intensity_scale().payload_with(
+            threshold_result.mask.astype(np.float32), mask
+        )
     )
     return (
         output_image,

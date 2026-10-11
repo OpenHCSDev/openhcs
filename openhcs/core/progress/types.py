@@ -224,25 +224,33 @@ class StatusTerminatedProgressPhase:
 class InitChannelProgressPhase:
     """Trait for progress phases carried on the init channel."""
 
-    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = InitProgressChannel
+    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = (
+        InitProgressChannel
+    )
 
 
 class CompileChannelProgressPhase:
     """Trait for progress phases carried on the compile channel."""
 
-    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = CompileProgressChannel
+    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = (
+        CompileProgressChannel
+    )
 
 
 class PipelineChannelProgressPhase:
     """Trait for progress phases carried on the pipeline execution channel."""
 
-    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = PipelineProgressChannel
+    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = (
+        PipelineProgressChannel
+    )
 
 
 class StepChannelProgressPhase:
     """Trait for progress phases carried on the step execution channel."""
 
-    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = StepProgressChannel
+    progress_channel: ClassVar[type[ProgressChannelDeclarationBase]] = (
+        StepProgressChannel
+    )
 
 
 class InitProgressPhase(InitChannelProgressPhase, ProgressPhaseDeclarationBase):
@@ -404,7 +412,9 @@ class QueuedProgressStatus(ProgressStatusDeclarationBase):
 
 def phase_channel(phase: ProgressPhase) -> ProgressChannel:
     """Classify phase to semantic channel."""
-    return ProgressPhaseDeclarationBase.for_phase(phase).progress_channel.require_channel()
+    return ProgressPhaseDeclarationBase.for_phase(
+        phase
+    ).progress_channel.require_channel()
 
 
 def progress_channel_role(channel: ProgressChannel) -> ProgressChannelRole:

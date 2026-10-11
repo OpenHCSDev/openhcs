@@ -827,8 +827,8 @@ class SelectedWellNativeCellProfilerInputDomainStrategy(
         selected_input_dir = selected_input_path.input_dir()
         file_list_path = None
         if requires_flat_input_dir:
-            selected_source_universe = selected_source_universe.materialize_flat_input_dir(
-                selected_input_dir
+            selected_source_universe = (
+                selected_source_universe.materialize_flat_input_dir(selected_input_dir)
             )
         else:
             file_list_path = self._write_file_list(
@@ -1285,7 +1285,8 @@ def native_cellprofiler_partition_filter_scope_slug(
         filter_slug = _scope_slug_fragment(partition_filter)
     else:
         filter_slug = (
-            "_".join(_scope_slug_fragment(value) for value in partition_filter) or "empty"
+            "_".join(_scope_slug_fragment(value) for value in partition_filter)
+            or "empty"
         )
     return f"wells_{partition_filter_config.partition_filter_mode.value}_{filter_slug}"
 

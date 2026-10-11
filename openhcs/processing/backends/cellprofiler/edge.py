@@ -116,9 +116,7 @@ class EdgeEnhancementStrategyKey:
 
     @property
     def label(self) -> str:
-        return (
-            f"{self.backend_provider.selection_name}:{self.method.value}:{self.direction.value}"
-        )
+        return f"{self.backend_provider.selection_name}:{self.method.value}:{self.direction.value}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -553,9 +551,11 @@ def enhance_edges(
     output = (
         EdgeEnhancementStrategy.for_request(request).enhance(request).astype(np.float32)
     )
-    return image.with_pixels(output,
+    return image.with_pixels(
+        output,
         mask=operation_mask if payload_mask is not None else None,
-        metadata=image.metadata.without_unit_interval_intensity_scale(),)
+        metadata=image.metadata.without_unit_interval_intensity_scale(),
+    )
 
 
 @njit(cache=True)

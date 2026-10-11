@@ -21,7 +21,9 @@ def _torch_nlm():
 @pytest.mark.parametrize(
     ("func", "expected_default"),
     (
-        pytest.param(lambda: jax_nlm_processor.non_local_means_denoise_jax, False, id="jax"),
+        pytest.param(
+            lambda: jax_nlm_processor.non_local_means_denoise_jax, False, id="jax"
+        ),
         pytest.param(
             lambda: _torch_nlm().non_local_means_denoise_torch,
             True,

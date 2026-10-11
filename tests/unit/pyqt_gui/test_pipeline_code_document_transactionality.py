@@ -22,9 +22,11 @@ def _editor(tmp_path):
         gui.settle()
         changes = []
         gui.session.subscribe(
-            lambda record: changes.append(record.event.scope_id)
-            if isinstance(record.event, PipelineChanged)
-            else None
+            lambda record: (
+                changes.append(record.event.scope_id)
+                if isinstance(record.event, PipelineChanged)
+                else None
+            )
         )
         yield gui, scope_id, gui.pipeline_editor.code_document_driver(), changes
 

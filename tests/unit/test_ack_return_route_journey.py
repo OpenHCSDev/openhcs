@@ -49,10 +49,15 @@ def stream_producer(pipe, port, mode, config):
             identity=ViewerStreamSourceIdentity(SyntheticMicroscope(), None),
             metadata=BatchViewerStreamSourceMetadata({"well": "synthetic"}),
         ),
-        producer=ViewerStreamProducer.from_identity(StreamProducerIdentity.pipeline_output(
-            output_kind="main", output_key="main", projection_key="main",
-            step_name="SyntheticTransport", pipeline_position=0,
-        )),
+        producer=ViewerStreamProducer.from_identity(
+            StreamProducerIdentity.pipeline_output(
+                output_kind="main",
+                output_key="main",
+                projection_key="main",
+                step_name="SyntheticTransport",
+                pipeline_position=0,
+            )
+        ),
     )
     try:
         for _ in range(2):
@@ -62,10 +67,19 @@ def stream_producer(pipe, port, mode, config):
                 break
             assert command == "send"
             completed.clear()
-            backend.save_batch([np.arange(12, dtype=np.uint16).reshape(3, 4)],
-                               ["synthetic.tif"], stream_request=request)
+            backend.save_batch(
+                [np.arange(12, dtype=np.uint16).reshape(3, 4)],
+                ["synthetic.tif"],
+                stream_request=request,
+            )
             tracker = GlobalQueueTrackerRegistry().get_tracker(port)
-            pipe.send((listener.return_route, tracker.get_progress(), len(backend._shared_memory_blocks)))
+            pipe.send(
+                (
+                    listener.return_route,
+                    tracker.get_progress(),
+                    len(backend._shared_memory_blocks),
+                )
+            )
             assert pipe.poll(6), "No controlled ACK check"
             command = pipe.recv()
             if command == "close":
@@ -88,9 +102,13 @@ def test_two_native_stream_producers_keep_deferred_ack_ownership(mode, unix_sock
     directory = unix_socket_dir
     config = ZMQConfig(default_port=48000, ipc_socket_dir=str(directory))
     pair = DataControlPortPairAuthority.acquire(config, transport_mode=mode)
-    server = NapariViewerServer(NapariViewerServerRequest(
-        port=pair.data_port, viewer_title="synthetic ACK transport", transport_mode=mode,
-    ))
+    server = NapariViewerServer(
+        NapariViewerServerRequest(
+            port=pair.data_port,
+            viewer_title="synthetic ACK transport",
+            transport_mode=mode,
+        )
+    )
     server.config = config
     server._running = True
     owners = []
@@ -100,9 +118,17 @@ def test_two_native_stream_producers_keep_deferred_ack_ownership(mode, unix_sock
             parent, child = Pipe()
             # Separate native interpreters, like the application: multiprocessing
             # siblings would share one resource-tracker and invalidate this proof.
-            process = Popen([sys.executable, __file__, str(child.fileno()),
-                             str(pair.data_port), mode.value, str(directory)],
-                            pass_fds=(child.fileno(),))
+            process = Popen(
+                [
+                    sys.executable,
+                    __file__,
+                    str(child.fileno()),
+                    str(pair.data_port),
+                    mode.value,
+                    str(directory),
+                ],
+                pass_fds=(child.fileno(),),
+            )
             child.close()
             owners.append((process, parent))
         routes = []
@@ -115,7 +141,9 @@ def test_two_native_stream_producers_keep_deferred_ack_ownership(mode, unix_sock
             accepted = server.accepted_stream_batches.get(timeout=3)
             item = accepted.items[0]
             assert item.payload.transfer.return_route == route
-            np.testing.assert_array_equal(item.data, np.arange(12, dtype=np.uint16).reshape(3, 4))
+            np.testing.assert_array_equal(
+                item.data, np.arange(12, dtype=np.uint16).reshape(3, 4)
+            )
             with pytest.raises(FileNotFoundError):
                 SharedMemory(name=item.payload.shm_name)
             assert server.send_ack(item.payload.transfer)
@@ -124,7 +152,9 @@ def test_two_native_stream_producers_keep_deferred_ack_ownership(mode, unix_sock
             if index == 0:
                 pipe.send("send")
                 route_again, progress, remaining_memory = receive(pipe)
-                assert route_again == route  # One warm process owner, not a port per batch.
+                assert (
+                    route_again == route
+                )  # One warm process owner, not a port per batch.
                 assert progress == (1, 2)
                 second = server.accepted_stream_batches.get(timeout=3).items[0]
                 assert server.send_ack(second.payload.transfer)
@@ -157,5 +187,9 @@ def test_two_native_stream_producers_keep_deferred_ack_ownership(mode, unix_sock
 
 
 if __name__ == "__main__":
-    stream_producer(Connection(int(sys.argv[1])), int(sys.argv[2]),
-                    TransportMode(sys.argv[3]), ZMQConfig(ipc_socket_dir=sys.argv[4]))
+    stream_producer(
+        Connection(int(sys.argv[1])),
+        int(sys.argv[2]),
+        TransportMode(sys.argv[3]),
+        ZMQConfig(ipc_socket_dir=sys.argv[4]),
+    )

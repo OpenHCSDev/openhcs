@@ -255,7 +255,10 @@ class InvocationArtifactInputEdgePlan:
     ) -> MainFlowInputProjection | None:
         """Derive the primary source role independently of its pixel producer."""
         main_flow_refs = main_flow_artifacts.ref_set()
-        if spec.ref() not in main_flow_refs or spec.ref() not in invocation_sources.ref_set():
+        if (
+            spec.ref() not in main_flow_refs
+            or spec.ref() not in invocation_sources.ref_set()
+        ):
             return None
         return (
             MainFlowInputProjection.COMPLETE_PAYLOAD
@@ -277,11 +280,15 @@ class InvocationArtifactInputEdgePlan:
         """Project one unstored source occurrence from its exact declarations."""
 
         main_flow_projection = cls.source_projection(
-            spec, main_flow_artifacts, invocation_sources,
+            spec,
+            main_flow_artifacts,
+            invocation_sources,
         )
         edge_type = (
             CompiledMetadataArtifactInputEdgePlan
-            if metadata_available and main_flow_projection is None and not source_binding_available
+            if metadata_available
+            and main_flow_projection is None
+            and not source_binding_available
             else cls
         )
         return edge_type(
@@ -297,7 +304,8 @@ class InvocationArtifactInputEdgePlan:
         return self.storage_plan is not None
 
     def requires_current_image_carrier(
-        self, source_bindings: CompiledSourceBindingPlan,
+        self,
+        source_bindings: CompiledSourceBindingPlan,
     ) -> bool:
         """Whether this unstored input consumes declared current source pixels."""
         if self.uses_runtime_storage():
@@ -321,13 +329,16 @@ class InvocationArtifactInputEdgePlan:
         """Admit pre-call input pixels through their exact compiled origin."""
         request = (
             scope.runtime_adapter_request(primary_source_payload)
-            if request is None else request
+            if request is None
+            else request
         )
         loaded_payload = scope.loaded_source_artifact_payload(request, self)
         if loaded_payload is not None:
             return loaded_payload
         return scope.declared_source_payload(
-            self.spec.ref(), primary_source_payload, loaded_artifact_payloads={},
+            self.spec.ref(),
+            primary_source_payload,
+            loaded_artifact_payloads={},
             request=request,
         )
 
@@ -394,9 +405,13 @@ class NormalizedFunctionItem:
         for parameter_name, value in self.kwargs:
             if parameter_name == spec.parameter_name:
                 if value is None and spec.required:
-                    raise ValueError(f"Required metadata artifact {spec.ref()!r} has no value.")
+                    raise ValueError(
+                        f"Required metadata artifact {spec.ref()!r} has no value."
+                    )
                 return value
-        raise ValueError(f"Metadata artifact {spec.ref()!r} has no compiled parameter value.")
+        raise ValueError(
+            f"Metadata artifact {spec.ref()!r} has no compiled parameter value."
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -691,13 +706,18 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         source = MemoryType(source_memory_type)
         if source is self._input_memory_type and not source.is_gpu:
             mask = payload.mask
-            if project_image_mask_to_data_domain(
-                mask, payload, metadata=payload.metadata
-            ) is mask:
+            if (
+                project_image_mask_to_data_domain(
+                    mask, payload, metadata=payload.metadata
+                )
+                is mask
+            ):
                 return payload
-        return payload.with_pixels(source.convert_to(
+        return payload.with_pixels(
+            source.convert_to(
                 payload.data, self._input_memory_type, self.input_device_id
-            ),)
+            ),
+        )
 
     def main_flow_call_argument(self, source_payload: object) -> object:
         """Apply the captured processing declaration to current request pixels."""
@@ -853,7 +873,9 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
             else compiled_output_plans
         )
         if any(not isinstance(plan, ArtifactOutputPlan) for plan in active_outputs):
-            raise TypeError("Compiled artifact outputs must be ArtifactOutputPlan values.")
+            raise TypeError(
+                "Compiled artifact outputs must be ArtifactOutputPlan values."
+            )
         selected: dict[ArtifactSpecRef, ArtifactOutputPlan] = {}
         for compiled_plan in active_outputs:
             runtime_plan = output_plans.get(compiled_plan.ref())
@@ -933,7 +955,8 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         artifact_graph: "ArtifactGraph | None" = None,
     ) -> "CompiledFunctionInvocation":
         contract_plan = (
-            invocation_contract_provider(item, step_context) if artifact_graph is None
+            invocation_contract_provider(item, step_context)
+            if artifact_graph is None
             else artifact_graph.invocation_contract_plans[item.key]
         )
         if contract_plan is None:
@@ -945,7 +968,8 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
             )
             item = replace(item, contract=contract_plan.contract)
         artifact_selector = (
-            declaration_provider(item, step_context) if artifact_graph is None
+            declaration_provider(item, step_context)
+            if artifact_graph is None
             else artifact_graph.invocation_declarations[item.key]
         )
         if artifact_graph is None:
@@ -983,7 +1007,9 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
                     f"paths {relative_parameters!r} but compilation supplied no "
                     "CompilationPathResolver."
                 )
-        runtime_loaded_input_refs = frozenset(plan.ref() for plan in artifact_input_plans)
+        runtime_loaded_input_refs = frozenset(
+            plan.ref() for plan in artifact_input_plans
+        )
         validated_kwargs = item.contract.validate_public_kwargs(
             public_kwargs,
             runtime_loaded_artifact_parameter_names=(
@@ -1018,7 +1044,9 @@ class CompiledFunctionGroup:
         return RuntimeInvocationDomain.from_invocations(self.invocations)
 
     def main_flow_input_refs(
-        self, *, source_bindings: CompiledSourceBindingPlan,
+        self,
+        *,
+        source_bindings: CompiledSourceBindingPlan,
     ) -> tuple[ArtifactSpecRef, ...] | None:
         """Return exact main-flow refs, or None for an implicit image argument."""
 
@@ -1026,14 +1054,16 @@ class CompiledFunctionGroup:
             tuple(
                 (invocation, invocation.artifact_input_edges)
                 for invocation in self.invocations
-            ), source_bindings=source_bindings,
+            ),
+            source_bindings=source_bindings,
         )
 
     def main_flow_input_refs_for_component(
         self,
         execution_scope: ComponentGroupScope,
         component_key: str | None,
-        *, source_bindings: CompiledSourceBindingPlan,
+        *,
+        source_bindings: CompiledSourceBindingPlan,
     ) -> tuple[ArtifactSpecRef, ...] | None:
         """Return main-flow refs active for one compiled component execution."""
 
@@ -1049,7 +1079,8 @@ class CompiledFunctionGroup:
             is not None
         )
         return self._main_flow_input_refs(
-            invocations_and_edges, source_bindings=source_bindings,
+            invocations_and_edges,
+            source_bindings=source_bindings,
         )
 
     @staticmethod
@@ -1060,7 +1091,8 @@ class CompiledFunctionGroup:
                 Sequence[InvocationArtifactInputEdgePlan],
             ]
         ],
-        *, source_bindings: CompiledSourceBindingPlan,
+        *,
+        source_bindings: CompiledSourceBindingPlan,
     ) -> tuple[ArtifactSpecRef, ...] | None:
         """Return exact main-flow refs for the supplied active invocations."""
 
@@ -1099,9 +1131,11 @@ class CompiledFunctionGroup:
             for invocation in self.invocations
             if (
                 active_outputs := invocation.output_plans_for_component(
-                    execution_scope, component_key,
+                    execution_scope,
+                    component_key,
                 )
-            ) is not None
+            )
+            is not None
         )
         if not active or any(
             invocation.contract.accepts_implicit_main_flow_input
@@ -1130,10 +1164,11 @@ class CompiledFunctionGroup:
             primary_edges = tuple(
                 edge
                 for invocation, edges in active
-                for domain_refs in (invocation.contract.invocation_domain_inputs.ref_set(),)
+                for domain_refs in (
+                    invocation.contract.invocation_domain_inputs.ref_set(),
+                )
                 for edge in edges
-                if edge.spec.ref()
-                in domain_refs
+                if edge.spec.ref() in domain_refs
                 and edge.spec.artifact_type.carries_source_image_context
             )
         if not primary_edges or any(

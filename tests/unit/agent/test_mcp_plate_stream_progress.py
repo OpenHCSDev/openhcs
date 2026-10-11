@@ -18,8 +18,10 @@ from polystore.roi import PointShape, ROI
 from polystore.streaming.viewer_transport import ViewerStreamKwarg
 
 from openhcs.agent.capabilities import (
-    AgentCapabilityDeclaration, MainThreadProgressCapability,
-    StreamPlateFilesToViewerCapability, UiStreamSelectedPlateFilesToViewerCapability,
+    AgentCapabilityDeclaration,
+    MainThreadProgressCapability,
+    StreamPlateFilesToViewerCapability,
+    UiStreamSelectedPlateFilesToViewerCapability,
 )
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
@@ -30,7 +32,10 @@ from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.mcp.server import build_server
 from openhcs.mcp.socket import McpSocketTransport, wait_for_socket
 
-from tests.unit.agent.test_persisted_output_reopen import NoRuntimeBridge, declared_output
+from tests.unit.agent.test_persisted_output_reopen import (
+    NoRuntimeBridge,
+    declared_output,
+)
 from tests.unit.test_streaming_service import FakeViewer
 
 
@@ -44,19 +49,26 @@ def saved_roi_stream(tmp_path, monkeypatch):
     archive = result_root / "not-an-acquisition.roi.zip"
     geometry = [ROI([PointShape(12.5, 8.25)], {"label": 7})]
     DiskStorageBackend().save(
-        ROIArchiveSourceMetadata.bind(geometry, projection.image_metadata), archive,
+        ROIArchiveSourceMetadata.bind(geometry, projection.image_metadata),
+        archive,
     )
     persisted = ROIArchiveSourceMetadata.decode(DiskStorageBackend().load(archive))
     assert persisted.source_provenance == projection.image_metadata.source_provenance
-    assert persisted.source_voxel_spacing == projection.image_metadata.source_voxel_spacing
+    assert (
+        persisted.source_voxel_spacing == projection.image_metadata.source_voxel_spacing
+    )
     unsigned = result_root / "missing-source.roi.zip"
     DiskStorageBackend().save(geometry, unsigned)
     # Reuse the original path authority, explicitly adding this synthetic root.
     from openhcs.agent.path_policy import AgentPathPolicy
     from openhcs.agent.services.plate_inspection_service import PlateInspectionService
-    inspection = PlateInspectionService(AgentPathPolicy.with_roots(
-        readable_roots=(tmp_path,), writable_roots=(),
-    ))
+
+    inspection = PlateInspectionService(
+        AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,),
+            writable_roots=(),
+        )
+    )
     viewer = FakeViewer()
     received = []
     timings = []
@@ -75,12 +87,21 @@ def saved_roi_stream(tmp_path, monkeypatch):
         restored = ImagePayloadMetadata.from_viewer_image_metadata(
             request.source.item_fields["image_metadata"]
         )
-        assert restored.to_viewer_image_metadata() == projection.image_metadata.to_viewer_image_metadata()
+        assert (
+            restored.to_viewer_image_metadata()
+            == projection.image_metadata.to_viewer_image_metadata()
+        )
         assert request.source.metadata.metadata_by_path[str(archive)] == dict(
             persisted.source_provenance.scalar_source_identity.component_metadata,
         )
-        assert restored.source_voxel_spacing == projection.image_metadata.source_voxel_spacing
-        assert restored.source_spatial_domain == projection.image_metadata.source_spatial_domain
+        assert (
+            restored.source_voxel_spacing
+            == projection.image_metadata.source_voxel_spacing
+        )
+        assert (
+            restored.source_spatial_domain
+            == projection.image_metadata.source_spatial_domain
+        )
         # The archive travels as saved: its geometry plus the bound source
         # declaration, which the viewer reads and keeps out of the feature table.
         assert [ROIArchiveSourceMetadata.geometry(rois) for rois in data] == [geometry]
@@ -98,22 +119,30 @@ def saved_roi_stream(tmp_path, monkeypatch):
         return True
 
     monkeypatch.setattr(
-        "openhcs.agent.services.plate_streaming_service.StreamingViewerLifecycle.get_or_create_visualizer", acquire,
+        "openhcs.agent.services.plate_streaming_service.StreamingViewerLifecycle.get_or_create_visualizer",
+        acquire,
     )
     monkeypatch.setattr(FileManager, "save_batch", receive)
     monkeypatch.setattr(viewer, "settle_viewer_state", settle)
     service = PlateStreamingService(inspection, NoRuntimeBridge())
     arguments = {
         "plate_path": str(source_path.parent.parent),
-        "result_directory": str(result_root), "kind": "result", "limit": 1,
-        "file_paths": [archive.name], "fresh_viewer": False,
+        "result_directory": str(result_root),
+        "kind": "result",
+        "limit": 1,
+        "file_paths": [archive.name],
+        "fresh_viewer": False,
     }
     return service, arguments, identity, received, timings, unsigned
 
 
-@pytest.mark.parametrize("declaration", (
-    StreamPlateFilesToViewerCapability, UiStreamSelectedPlateFilesToViewerCapability,
-))
+@pytest.mark.parametrize(
+    "declaration",
+    (
+        StreamPlateFilesToViewerCapability,
+        UiStreamSelectedPlateFilesToViewerCapability,
+    ),
+)
 def test_stream_declaration_composes_original_progress_and_main_affinity(declaration):
     assert issubclass(declaration, MainThreadProgressCapability)
     spec = declaration
@@ -124,12 +153,15 @@ def test_stream_declaration_composes_original_progress_and_main_affinity(declara
 
 
 def test_saved_roi_continuous_sdk_receipt_error_reuse_beyond_ordinary_idle(
-    unix_socket_dir, saved_roi_stream,
+    unix_socket_dir,
+    saved_roi_stream,
 ):
     service, arguments, identity, received, timings, unsigned = saved_roi_stream
     transport = McpSocketTransport(unix_socket_dir / "stream.sock")
-    built = build_server(OpenHCSAgentContext(plate_streaming_service=service),
-                         main_thread_dispatcher=transport.execution.dispatcher)
+    built = build_server(
+        OpenHCSAgentContext(plate_streaming_service=service),
+        main_thread_dispatcher=transport.execution.dispatcher,
+    )
     clients = AsyncOperationExecutor(max_workers=1)
     diagnostics = io.StringIO()
     events = []
@@ -138,37 +170,72 @@ def test_saved_roi_continuous_sdk_receipt_error_reuse_beyond_ordinary_idle(
         def record_progress_notification(self, notification):
             super().record_progress_notification(notification)
             assert threading.current_thread() is not threading.main_thread()
-            events.append((time.monotonic(), notification.params.progressToken, notification.params.message))
+            events.append(
+                (
+                    time.monotonic(),
+                    notification.params.progressToken,
+                    notification.params.message,
+                )
+            )
 
     async def exercise():
-        assert await asyncio.to_thread(wait_for_socket, transport.socket_path, timeout_seconds=10)
+        assert await asyncio.to_thread(
+            wait_for_socket, transport.socket_path, timeout_seconds=10
+        )
         try:
-            async with ObservedSession(McpDevServerSpec(sys.executable), diagnostics, transport.socket_path) as session:
+            async with ObservedSession(
+                McpDevServerSpec(sys.executable), diagnostics, transport.socket_path
+            ) as session:
                 await session.initialize(timeout_seconds=10)
-                for index, paths in enumerate((arguments["file_paths"], [unsigned.name], arguments["file_paths"])):
+                for index, paths in enumerate(
+                    (arguments["file_paths"], [unsigned.name], arguments["file_paths"])
+                ):
                     before = len(events)
                     request_id = session.request_id + 1
                     started = time.monotonic()
-                    result = await session.call_tool(StreamPlateFilesToViewerCapability.name,
-                        {**arguments, "file_paths": paths}, timeout_seconds=10)
+                    result = await session.call_tool(
+                        StreamPlateFilesToViewerCapability.name,
+                        {**arguments, "file_paths": paths},
+                        timeout_seconds=10,
+                    )
                     elapsed = time.monotonic() - started
                     progress = events[before:]
                     assert progress and progress[0][0] - started < 1
                     assert all(event[1] == request_id for event in progress)
                     payload = result["structuredContent"]
                     if index == 1:
-                        assert payload["errors"][0]["code"] == "plate_file_stream_failed"
-                        assert "Native ROI source metadata is required" in payload["errors"][0]["message"]
+                        assert (
+                            payload["errors"][0]["code"] == "plate_file_stream_failed"
+                        )
+                        assert (
+                            "Native ROI source metadata is required"
+                            in payload["errors"][0]["message"]
+                        )
                         assert len(received) == 1
                     else:
                         assert payload["errors"] == []
-                        assert payload["streamed_roi_paths"] == [str(Path(arguments["result_directory"]) / paths[0])]
+                        assert payload["streamed_roi_paths"] == [
+                            str(Path(arguments["result_directory"]) / paths[0])
+                        ]
                         assert payload["streamed_image_paths"] == []
                     if index == 0:
                         assert elapsed >= 12
-                        assert any(event[0] - started > 10 and "still running" in event[2] for event in progress)
-                        assert any("Streaming 1 ROI file(s)" in event[2] for event in progress)
-                    print("ROI_STREAM_TERMINAL", index, elapsed, "idle10", "token", request_id, flush=True)
+                        assert any(
+                            event[0] - started > 10 and "still running" in event[2]
+                            for event in progress
+                        )
+                        assert any(
+                            "Streaming 1 ROI file(s)" in event[2] for event in progress
+                        )
+                    print(
+                        "ROI_STREAM_TERMINAL",
+                        index,
+                        elapsed,
+                        "idle10",
+                        "token",
+                        request_id,
+                        flush=True,
+                    )
         finally:
             transport._stop.set()
             if transport._listener is not None:
@@ -185,7 +252,9 @@ def test_saved_roi_continuous_sdk_receipt_error_reuse_beyond_ordinary_idle(
         clients.close()
 
 
-def test_independent_stream_leaf_cooperative_hook_uses_generated_consumer(saved_roi_stream):
+def test_independent_stream_leaf_cooperative_hook_uses_generated_consumer(
+    saved_roi_stream,
+):
     service, arguments, identity, received, timings, _unsigned = saved_roi_stream
     timings.append(0.0)  # This declaration test does not repeat the slow experiment.
     hooks = []
@@ -219,15 +288,18 @@ def test_independent_stream_leaf_cooperative_hook_uses_generated_consumer(saved_
             hooks.append(message)
 
     executor = McpTransportExecutor()
-    built = build_server(OpenHCSAgentContext(plate_streaming_service=service),
-                         main_thread_dispatcher=executor.dispatcher)
+    built = build_server(
+        OpenHCSAgentContext(plate_streaming_service=service),
+        main_thread_dispatcher=executor.dispatcher,
+    )
 
     async def exercise():
         token = identity.set("stream-request")
         try:
             for declaration in (IndependentStream, IndependentStreamAfter):
                 result = await built._tool_manager.get_tool(declaration.name).fn(
-                    mcp_context=ProgressContext(), **arguments)
+                    mcp_context=ProgressContext(), **arguments
+                )
                 assert result["errors"] == []
                 assert received[-1][3] == "stream-request"
         finally:
@@ -238,7 +310,9 @@ def test_independent_stream_leaf_cooperative_hook_uses_generated_consumer(saved_
         assert len(received) == 2
         assert hooks.count("enter") == hooks.count("exit") == 2
         assert hooks.index("enter") < hooks.index("exit")
-        assert any("published and viewer settlement completed" in message for message in hooks)
+        assert any(
+            "published and viewer settlement completed" in message for message in hooks
+        )
     finally:
         executor.close()
         for declaration in (IndependentStream, IndependentStreamAfter):

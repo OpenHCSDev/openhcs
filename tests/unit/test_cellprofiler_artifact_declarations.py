@@ -596,30 +596,35 @@ def test_calculate_math_retains_measurement_subjects_across_producer_channels() 
         ),
     )
     contract = _callable_contract(
-        _module(8, "CalculateMath", {
-            "Name the output measurement": "Ratio",
-            "Operation": "Divide",
-            "Select the numerator objects": "Nuclei",
-            "Select the numerator measurement": "Intensity_MeanIntensity_CorrProtein",
-            "Select the denominator objects": "Cells",
-            "Select the denominator measurement": "Intensity_MeanIntensity_CorrProtein",
-        }),
+        _module(
+            8,
+            "CalculateMath",
+            {
+                "Name the output measurement": "Ratio",
+                "Operation": "Divide",
+                "Select the numerator objects": "Nuclei",
+                "Select the numerator measurement": "Intensity_MeanIntensity_CorrProtein",
+                "Select the denominator objects": "Cells",
+                "Select the denominator measurement": "Intensity_MeanIntensity_CorrProtein",
+            },
+        ),
         step_index=7,
         available_artifacts=ArtifactSpecCollection((image, *objects, measurements)),
         main_flow_artifacts=ArtifactSpecCollection((image,)),
         available_artifact_producers=artifact_producers_for_outputs(
             (measurements,),
             groups=("2", "1"),
-            invocation_keys=(FunctionInvocationKey(
-                "measure_object_intensity", DEFAULT_GROUP_KEY, 0
-            ),),
+            invocation_keys=(
+                FunctionInvocationKey("measure_object_intensity", DEFAULT_GROUP_KEY, 0),
+            ),
         ),
     )
     (measurement_input,) = contract.artifact_inputs.of_artifact_type(
         MeasurementsArtifactType
     )
     assert tuple(
-        relation.source.name for relation in measurement_input.relations
+        relation.source.name
+        for relation in measurement_input.relations
         if isinstance(relation, InputObjectMeasurementSourceRelation)
     ) == ("Nuclei", "Cells")
     storage = ArtifactInputPlan(

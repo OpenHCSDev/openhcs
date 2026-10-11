@@ -43,7 +43,8 @@ class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def batch_request(
-        cls, request: "RuntimeBatchInvocationRequest",
+        cls,
+        request: "RuntimeBatchInvocationRequest",
     ) -> "RuntimeBatchInvocationRequest | None":
         """Project a request into a batch executor's image domain, or ``None``."""
         return request
@@ -57,7 +58,8 @@ class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def for_payload_scoped_labels(
-        cls, runtime_slice_count: int | None,
+        cls,
+        runtime_slice_count: int | None,
     ) -> type[ImagePayloadExecutionMode]:
         """Return the mode for labels whose domain is the whole payload."""
         del runtime_slice_count
@@ -65,7 +67,8 @@ class ImagePayloadExecutionMode(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def for_plane_scoped_labels(
-        cls, projection: "RuntimePlaneAxisValueProjection | None",
+        cls,
+        projection: "RuntimePlaneAxisValueProjection | None",
     ) -> type[ImagePayloadExecutionMode]:
         """Return the mode for labels that still carry an unprojected plane axis."""
         del projection
@@ -237,7 +240,11 @@ class AlignedStackExecution(ImagePayloadExecutionMode):
                 )
 
         def execute_aligned_stack_slice(
-            slice_func, slice_payload, slice_kwargs, slice_index, slice_count,
+            slice_func,
+            slice_payload,
+            slice_kwargs,
+            slice_index,
+            slice_count,
         ):
             return call.invoke(
                 slice_payload,

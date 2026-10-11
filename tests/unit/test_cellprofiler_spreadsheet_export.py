@@ -108,6 +108,7 @@ from openhcs.processing.materialization import (
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
 
+
 def test_export_to_spreadsheet_declares_exact_plate_callable_abi() -> None:
     contract = CallableContract.from_callable(export_to_spreadsheet)
     parameter = inspect.signature(export_to_spreadsheet).parameters["artifact_batch"]
@@ -421,136 +422,176 @@ def test_export_to_spreadsheet_renders_only_declared_batch_records() -> None:
 @pytest.mark.parametrize("add_files", (False, True))
 @pytest.mark.parametrize("axisless", (False, True))
 def test_spreadsheet_projects_source_identity_without_upstream_image_features(
-    add_metadata: bool, add_files: bool, axisless: bool,
+    add_metadata: bool,
+    add_files: bool,
+    axisless: bool,
 ) -> None:
-    provenance = SourceImageProvenancePlanes((
-        RuntimeSourceImageProvenancePlane(
-            SourceImageIdentity('/acquisition/body.tif', {
-                'well': 'A01', 'site': '2', 'channel': '3', 'z_index': '4',
-                'timepoint': '5', DECLARED_SOURCE_METADATA_FIELD: {'Treatment': 'control'},
-            }),
-            source_image_name='Body',
-        ),
-    ))
+    provenance = SourceImageProvenancePlanes(
+        (
+            RuntimeSourceImageProvenancePlane(
+                SourceImageIdentity(
+                    "/acquisition/body.tif",
+                    {
+                        "well": "A01",
+                        "site": "2",
+                        "channel": "3",
+                        "z_index": "4",
+                        "timepoint": "5",
+                        DECLARED_SOURCE_METADATA_FIELD: {"Treatment": "control"},
+                    },
+                ),
+                source_image_name="Body",
+            ),
+        )
+    )
     cells = _measurement_record(
-        'cells', axis_id='A01',
-        subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
-        rows=({**({} if axisless else {'slice_index': 0}), 'object_number': 7, 'Area': 12.0},),
+        "cells",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_number"),
+        rows=(
+            {
+                **({} if axisless else {"slice_index": 0}),
+                "object_number": 7,
+                "Area": 12.0,
+            },
+        ),
         source_image_provenance_planes=provenance,
     )
     bundle = render_spreadsheet_bundle(
         artifact_batch=RuntimeArtifactBatch(
-            input_specs=(ArtifactSpec.input('cells', MeasurementsArtifactType),),
-            records_by_axis={'A01': (cells,)},
+            input_specs=(ArtifactSpec.input("cells", MeasurementsArtifactType),),
+            records_by_axis={"A01": (cells,)},
             source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
         ),
-        add_image_metadata=add_metadata, add_image_file_names=add_files,
+        add_image_metadata=add_metadata,
+        add_image_file_names=add_files,
         add_filename_prefix=False,
     )
-    image, = csv.DictReader(io.StringIO(bundle['Image.csv']))
-    cell, = csv.DictReader(io.StringIO(bundle['Cells.csv']))
-    assert image['Metadata_Treatment'] == 'control'
-    assert ('Metadata_site' in image) is add_metadata
-    assert ('FileName_Body' in image) is add_files
+    (image,) = csv.DictReader(io.StringIO(bundle["Image.csv"]))
+    (cell,) = csv.DictReader(io.StringIO(bundle["Cells.csv"]))
+    assert image["Metadata_Treatment"] == "control"
+    assert ("Metadata_site" in image) is add_metadata
+    assert ("FileName_Body" in image) is add_files
     if add_metadata:
-        assert image['Metadata_well'] == 'A01'
-        assert image['Metadata_site'] == '2'
-        assert image['Metadata_z_index'] == '4'
-        assert image['Metadata_timepoint'] == '5'
+        assert image["Metadata_well"] == "A01"
+        assert image["Metadata_site"] == "2"
+        assert image["Metadata_z_index"] == "4"
+        assert image["Metadata_timepoint"] == "5"
     if add_files:
-        assert image['FileName_Body'] == 'body.tif'
-        assert image['PathName_Body'] == '/acquisition'
-    assert cell['object_number'] == '7'
-    assert cell['Area'] == '12.0'
-    assert ('Metadata_site' in cell) is add_metadata
-    assert ('Image_FileName_Body' in cell) is add_files
+        assert image["FileName_Body"] == "body.tif"
+        assert image["PathName_Body"] == "/acquisition"
+    assert cell["object_number"] == "7"
+    assert cell["Area"] == "12.0"
+    assert ("Metadata_site" in cell) is add_metadata
+    assert ("Image_FileName_Body" in cell) is add_files
     if add_files:
-        assert cell['Image_FileName_Body'] == 'body.tif'
-        assert cell['Image_PathName_Body'] == '/acquisition'
+        assert cell["Image_FileName_Body"] == "body.tif"
+        assert cell["Image_PathName_Body"] == "/acquisition"
 
 
-@pytest.mark.parametrize('names', (('Body', 'Nuclear'), ('Nuclear', 'Body')))
-def test_spreadsheet_preserves_independent_contributor_filenames(names: tuple[str, ...]) -> None:
-    provenance = SourceImageProvenancePlanes((
-        RuntimeSourceImageProvenancePlane(
-            SourceImageIdentity(component_metadata={'well': 'A01', 'site': '2'}),
-            contributors=tuple(
-                SourceImageProvenanceContributor(
-                    SourceImageIdentity(f'/acquisition/{name}.tif', {'well': 'A01', 'site': '2'}),
-                    source_image_name=name,
-                )
-                for name in names
+@pytest.mark.parametrize("names", (("Body", "Nuclear"), ("Nuclear", "Body")))
+def test_spreadsheet_preserves_independent_contributor_filenames(
+    names: tuple[str, ...],
+) -> None:
+    provenance = SourceImageProvenancePlanes(
+        (
+            RuntimeSourceImageProvenancePlane(
+                SourceImageIdentity(component_metadata={"well": "A01", "site": "2"}),
+                contributors=tuple(
+                    SourceImageProvenanceContributor(
+                        SourceImageIdentity(
+                            f"/acquisition/{name}.tif", {"well": "A01", "site": "2"}
+                        ),
+                        source_image_name=name,
+                    )
+                    for name in names
+                ),
             ),
-        ),
-    ))
+        )
+    )
     record = _measurement_record(
-        'cells', axis_id='A01',
-        subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
-        rows=({'slice_index': 0, 'object_number': 1, 'Area': 12.0},),
+        "cells",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_number"),
+        rows=({"slice_index": 0, "object_number": 1, "Area": 12.0},),
         source_image_provenance_planes=provenance,
     )
     bundle = render_spreadsheet_bundle(
         artifact_batch=RuntimeArtifactBatch(
-            input_specs=(ArtifactSpec.input('cells', MeasurementsArtifactType),),
-            records_by_axis={'A01': (record,)},
+            input_specs=(ArtifactSpec.input("cells", MeasurementsArtifactType),),
+            records_by_axis={"A01": (record,)},
             source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
         ),
-        add_image_metadata=True, add_image_file_names=True, add_filename_prefix=False,
+        add_image_metadata=True,
+        add_image_file_names=True,
+        add_filename_prefix=False,
     )
-    row, = csv.DictReader(io.StringIO(bundle['Cells.csv']))
+    (row,) = csv.DictReader(io.StringIO(bundle["Cells.csv"]))
     for name in names:
-        assert row[f'Image_FileName_{name}'] == f'{name}.tif'
-        assert row[f'Image_PathName_{name}'] == '/acquisition'
-    assert 'Metadata_channel' not in row
-    assert 'Metadata_z_index' not in row
+        assert row[f"Image_FileName_{name}"] == f"{name}.tif"
+        assert row[f"Image_PathName_{name}"] == "/acquisition"
+    assert "Metadata_channel" not in row
+    assert "Metadata_z_index" not in row
 
 
 def test_requested_source_columns_preserve_original_extraction_path_template() -> None:
     image = _measurement_record(
-        'image', axis_id='A01',
-        subject=MeasurementSubject(MeasurementScope.SAMPLE, 'Image'),
-        rows=({'slice_index': 0, 'Count_Cells': 1},),
+        "image",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
+        rows=({"slice_index": 0, "Count_Cells": 1},),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-            component_metadata=({'site': '1', DECLARED_SOURCE_METADATA_FIELD: {'Run': 'run1'}},),
+            component_metadata=(
+                {"site": "1", DECLARED_SOURCE_METADATA_FIELD: {"Run": "run1"}},
+            ),
         ),
     )
     cells = _measurement_record(
-        'cells', axis_id='A01',
-        subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
-        rows=({'slice_index': 0, 'object_number': 1, 'Area': 12.0},),
+        "cells",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_number"),
+        rows=({"slice_index": 0, "object_number": 1, "Area": 12.0},),
     )
     bundle = render_spreadsheet_bundle(
         artifact_batch=RuntimeArtifactBatch(
-            input_specs=tuple(ArtifactSpec.input(record.key.name, MeasurementsArtifactType) for record in (image, cells)),
-            records_by_axis={'A01': (image, cells)},
+            input_specs=tuple(
+                ArtifactSpec.input(record.key.name, MeasurementsArtifactType)
+                for record in (image, cells)
+            ),
+            records_by_axis={"A01": (image, cells)},
             source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
         ),
-        add_image_metadata=True, add_image_file_names=True,
-        output_directory='{Run}', add_filename_prefix=False,
+        add_image_metadata=True,
+        add_image_file_names=True,
+        output_directory="{Run}",
+        add_filename_prefix=False,
     )
-    assert set(bundle) == {'run1/Image.csv', 'run1/Cells.csv'}
-    row, = csv.DictReader(io.StringIO(bundle['run1/Cells.csv']))
-    assert row['Metadata_Run'] == 'run1'
-    assert row['Metadata_site'] == '1'
+    assert set(bundle) == {"run1/Image.csv", "run1/Cells.csv"}
+    (row,) = csv.DictReader(io.StringIO(bundle["run1/Cells.csv"]))
+    assert row["Metadata_Run"] == "run1"
+    assert row["Metadata_site"] == "1"
 
 
 def test_spreadsheet_rejects_existing_filename_conflicting_with_provenance() -> None:
     record = _measurement_record(
-        'image', axis_id='A01',
-        subject=MeasurementSubject(MeasurementScope.SAMPLE, 'Image'),
-        rows=({'slice_index': 0, 'FileName_Body': 'other.tif'},),
-        source_image_provenance_planes=SourceImageProvenancePlanes((
-            RuntimeSourceImageProvenancePlane(
-                SourceImageIdentity('/acquisition/body.tif', {'site': '1'}),
-                source_image_name='Body',
-            ),
-        )),
+        "image",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.SAMPLE, "Image"),
+        rows=({"slice_index": 0, "FileName_Body": "other.tif"},),
+        source_image_provenance_planes=SourceImageProvenancePlanes(
+            (
+                RuntimeSourceImageProvenancePlane(
+                    SourceImageIdentity("/acquisition/body.tif", {"site": "1"}),
+                    source_image_name="Body",
+                ),
+            )
+        ),
     )
-    with pytest.raises(ValueError, match='Conflicting sparse measurement values'):
+    with pytest.raises(ValueError, match="Conflicting sparse measurement values"):
         render_spreadsheet_bundle(
             artifact_batch=RuntimeArtifactBatch(
-                input_specs=(ArtifactSpec.input('image', MeasurementsArtifactType),),
-                records_by_axis={'A01': (record,)},
+                input_specs=(ArtifactSpec.input("image", MeasurementsArtifactType),),
+                records_by_axis={"A01": (record,)},
                 source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
             ),
             add_image_file_names=True,
@@ -582,6 +623,7 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
             context=context,
         )
         from openhcs.processing.materialization.core import ColumnarCsvOutput
+
         assert all(isinstance(output, ColumnarCsvOutput) for output in bundle.values())
         outputs = materialization_outputs(
             MaterializationSpec(FileBundleOptions()),
@@ -1902,11 +1944,11 @@ def _measurement_record(
         axis_id=axis_id,
     )
     return StoredRuntimeValue(
-               key=value.key,
-               data=value.data,
-               materialization_source_metadata=value.materialization_source_metadata,
-               location=RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
-           )
+        key=value.key,
+        data=value.data,
+        materialization_source_metadata=value.materialization_source_metadata,
+        location=RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
+    )
 
 
 def _fixture_field_dtype(
@@ -1953,11 +1995,11 @@ def _relationship_record(name: str, *, axis_id: str) -> StoredRuntimeValue:
         axis_id=axis_id,
     )
     return StoredRuntimeValue(
-               key=value.key,
-               data=value.data,
-               materialization_source_metadata=value.materialization_source_metadata,
-               location=RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
-           )
+        key=value.key,
+        data=value.data,
+        materialization_source_metadata=value.materialization_source_metadata,
+        location=RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
+    )
 
 
 @pytest.mark.parametrize("cycle_aligned", (False, True))
@@ -2077,19 +2119,26 @@ def test_image_number_references_follow_exact_source_numbering(
     from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRows
 
     fields = tuple(
-        FieldSpec(name, int)
-        if name in ("slice_index", "object_number")
-        else FieldSpec(name, required=False)
+        (
+            FieldSpec(name, int)
+            if name in ("slice_index", "object_number")
+            else FieldSpec(name, required=False)
+        )
         for name in columns
     )
     source_rows = (
-        ConcatenatedColumnarRows(tuple(
-            MeasurementSparseColumnarRows(
-                {name: values[start:start + 3] for name, values in columns.items()},
-                fields=fields,
+        ConcatenatedColumnarRows(
+            tuple(
+                MeasurementSparseColumnarRows(
+                    {
+                        name: values[start : start + 3]
+                        for name, values in columns.items()
+                    },
+                    fields=fields,
+                )
+                for start in (0, 3)
             )
-            for start in (0, 3)
-        ))
+        )
         if concatenated
         else MeasurementSparseColumnarRows(columns, fields=fields)
     )
@@ -2136,9 +2185,7 @@ def test_declared_reference_mean_uses_full_projected_objects_after_selection() -
     name = "Mean_Cells_Tracking_ParentImageNumber_50"
     source = OrderedDict(
         Image=columns(image_number=(23,), **{name: (0.5,)}),
-        Cells=columns(
-            image_number=(23, 23), Tracking_ParentImageNumber_50=(0, 22)
-        ),
+        Cells=columns(image_number=(23, 23), Tracking_ParentImageNumber_50=(0, 22)),
     )
     selected = OrderedDict(Image=source["Image"])
     result = _with_requested_aggregates(

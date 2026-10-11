@@ -50,7 +50,9 @@ class CompileBatch:
         try:
             client = await session.connect_client()
             session.publish(
-                StatusReported(f"Queueing compilation for {len(scope_ids)} dataset(s)...")
+                StatusReported(
+                    f"Queueing compilation for {len(scope_ids)} dataset(s)..."
+                )
             )
             requests: list[DatasetPipelineRequest] = []
             for scope_id in scope_ids:
@@ -129,7 +131,9 @@ class CompileBatch:
             session.publish(DatasetsChanged())
 
         def on_wait_success(request, _execution_id, index, total) -> None:
-            session.publish(StatusReported(f"Compiled {index}/{total}: {request.scope_id}"))
+            session.publish(
+                StatusReported(f"Compiled {index}/{total}: {request.scope_id}")
+            )
             session.publish(DatasetsChanged())
 
         def on_failure(request, error, _index, _total) -> None:
@@ -139,8 +143,12 @@ class CompileBatch:
                 error,
                 exc_info=True,
             )
-            session.batch.mark_terminal(request.scope_id, TerminalExecutionStatus.FAILED)
-            session.publish(ErrorReported(f"Compile failed for {request.scope_id}: {error}"))
+            session.batch.mark_terminal(
+                request.scope_id, TerminalExecutionStatus.FAILED
+            )
+            session.publish(
+                ErrorReported(f"Compile failed for {request.scope_id}: {error}")
+            )
             session.publish(DatasetsChanged())
 
         return await self._engine.run(
@@ -174,7 +182,9 @@ class CompileBatch:
         self._session.set_compiled(request.scope_id, None)
         return await submit_compile(client, request)
 
-    async def _wait(self, client, execution_id: str, request: DatasetPipelineRequest) -> None:
+    async def _wait(
+        self, client, execution_id: str, request: DatasetPipelineRequest
+    ) -> None:
         try:
             inspection = await wait_for_compile(
                 client,

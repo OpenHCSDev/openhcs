@@ -112,7 +112,9 @@ class RuntimeExportObservation:
     table_headers_by_path: Mapping[Path, tuple[str, ...]]
     table_row_counts_by_path: Mapping[Path, int]
     output_files: tuple[Path, ...] = ()
-    outputs: StepExecutionObservation = field(default_factory=StepExecutionObservation.empty)
+    outputs: StepExecutionObservation = field(
+        default_factory=StepExecutionObservation.empty
+    )
 
     @classmethod
     def from_runtime_observations(

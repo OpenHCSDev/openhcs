@@ -37,7 +37,10 @@ from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.steps.function_runtime import RuntimeCallableKwargs
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, special_inputs)
+from openhcs.core.pipeline.function_contracts import (
+    object_label_input_execution_mode,
+    special_inputs,
+)
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -690,7 +693,6 @@ class ObjectOutlineBackendStrategy(
 ):
     """Object outline operations keyed by OpenHCS memory type/provider."""
 
-
     @abstractmethod
     def outline(self, labels: np.ndarray) -> np.ndarray:
         """Return a labeled inner outline image."""
@@ -904,13 +906,15 @@ def overlay_outlines(
         image, blank_image=context.blank_image, image_row_count=context.image_row_count
     )
     output = context.render(image_sources)
-    return image.with_pixels(output,
+    return image.with_pixels(
+        output,
         metadata=replace(
             image.metadata,
             axes=PayloadAxes.colour_samples(
                 -1 if context.display_mode is OutlineDisplayMode.COLOR else None
             ),
-        ),)
+        ),
+    )
 
 
 @numpy(contract=FlexibleContract)
@@ -955,8 +959,10 @@ def overlay_objects(
         seed=seed,
         colormap_value=colormap,
     )
-    return image.with_pixels(overlay,
-        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),)
+    return image.with_pixels(
+        overlay,
+        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),
+    )
 
 
 def _runtime_rows(
@@ -1060,7 +1066,8 @@ def _draw_object_labels(
     else:
         outline_color = outline_intensity
     for label_plane in ObjectLabelStorageStrategy.for_value(labels).rendering_layers(
-        labels, source_spatial_shape_yx=labels.source_spatial_shape_yx,
+        labels,
+        source_spatial_shape_yx=labels.source_spatial_shape_yx,
     ):
         if label_plane.ndim != 2:
             raise ValueError(
@@ -1103,9 +1110,7 @@ def _draw_outline_image(
 def _outline_image_mask(outline_image: RuntimeArrayData) -> np.ndarray:
     outline_image = ImagePayload.of(outline_image)
     mask = np.asarray(outline_image.data) > 0
-    channel_axis = outline_image.metadata.axis_index(ColourAxis, 
-        outline_image
-    )
+    channel_axis = outline_image.metadata.axis_index(ColourAxis, outline_image)
     if channel_axis is not None:
         return np.any(mask, axis=channel_axis)
     return mask

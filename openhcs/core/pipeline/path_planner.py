@@ -286,7 +286,9 @@ class PathPlannerExecutionGroups:
                 output_plan, source_component
             )
         if producer.producer_step_index is not None:
-            scope = self.planner.plans[producer.producer_step_index].execution_group_scope
+            scope = self.planner.plans[
+                producer.producer_step_index
+            ].execution_group_scope
             return PathPlannerGroupScope.from_raw(scope.keys, component=scope.component)
         if producer.spec.ref() != PIPELINE_INPUT_ARTIFACT.ref():
             return PathPlannerGroupScope.from_raw(
@@ -301,7 +303,8 @@ class PathPlannerExecutionGroups:
         )
         return (
             PathPlannerGroupScope.from_raw(source_keys, component=source_component)
-            if source_keys else PathPlannerGroupScope.dynamic(source_component)
+            if source_keys
+            else PathPlannerGroupScope.dynamic(source_component)
         )
 
     def get_execution_groups(
@@ -431,7 +434,8 @@ class PathPlannerExecutionGroups:
                 continue
 
             has_source_lineage = (
-                contract_source_bindings.binding_for_artifact_ref(spec.ref()) is not None
+                contract_source_bindings.binding_for_artifact_ref(spec.ref())
+                is not None
                 or available_artifacts.by_name_and_artifact_type(
                     spec.name,
                     spec.artifact_type,
@@ -505,7 +509,9 @@ class PathPlannerExecutionGroups:
         group_by: type[GroupingDeclaration] | None,
     ) -> PathPlannerGroupScope:
         """Return a typed runtime-discovered scope for a concrete group axis."""
-        group_by_component = PathPlannerComponentScopes.component_from_group_by(group_by)
+        group_by_component = PathPlannerComponentScopes.component_from_group_by(
+            group_by
+        )
         if group_by_component is None:
             return PathPlannerGroupScope.ungrouped()
         source_keys = (
@@ -535,7 +541,9 @@ class PathPlannerExecutionGroups:
         source_bindings: SourceBindingDeclarationsMixin | None = None,
     ) -> PathPlannerGroupScope:
         """Derive execution groups declared by source-binding component identity."""
-        group_by_component = PathPlannerComponentScopes.component_from_group_by(group_by)
+        group_by_component = PathPlannerComponentScopes.component_from_group_by(
+            group_by
+        )
         if group_by_component is None:
             return PathPlannerGroupScope.ungrouped()
 
@@ -567,7 +575,6 @@ class PathPlannerExecutionGroups:
                 "Ungrouped is only valid for non-dict function patterns."
             )
         return grouping_axes[0]
-
 
     @staticmethod
     def normalized_group_by(step: AbstractStep) -> type[GroupingDeclaration]:
@@ -603,9 +610,10 @@ class PathPlannerMetadataArtifactInjection:
     ) -> FunctionPatternSyntax:
         """Inject values once; compiled metadata edges reference these kwargs."""
         for spec in inputs.values():
-            if (
-                spec.ref().for_plan_type(ArtifactOutputPlan) not in self.planner.declared
-                and self.metadata_artifact_available(spec.name)
+            if spec.ref().for_plan_type(
+                ArtifactOutputPlan
+            ) not in self.planner.declared and self.metadata_artifact_available(
+                spec.name
             ):
                 value = self.planner.ctx.microscope_handler.resolve_metadata_artifact(
                     spec.name,
@@ -641,11 +649,13 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             PathPlannerGroupScope.from_raw(values, component=component)
             for component in AxisFamily.active().axes
             for values in (
-                tuple(dict.fromkeys(
-                    value
-                    for domains in binding_domains
-                    for value in domains.get(component, ())
-                )),
+                tuple(
+                    dict.fromkeys(
+                        value
+                        for domains in binding_domains
+                        for value in domains.get(component, ())
+                    )
+                ),
             )
             if values
         )
@@ -657,7 +667,9 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         declarations: ArtifactGraph,
         group_scope: PathPlannerGroupScope,
         execution_scope: FunctionStepExecutionScope = FunctionStepExecutionScope.AXIS,
-        source_bindings: StepSourceBindingsConfig | CompiledSourceBindingPlan = EMPTY_SOURCE_BINDINGS,
+        source_bindings: (
+            StepSourceBindingsConfig | CompiledSourceBindingPlan
+        ) = EMPTY_SOURCE_BINDINGS,
     ) -> ArtifactPlanMaps:
         """Compile artifact declarations into runtime I/O maps."""
         step_name = step.name
@@ -1084,7 +1096,9 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         ],
         execution_group_scope: PathPlannerGroupScope,
         consumer_variable_components: ComponentSet,
-        source_bindings: StepSourceBindingsConfig | CompiledSourceBindingPlan = EMPTY_SOURCE_BINDINGS,
+        source_bindings: (
+            StepSourceBindingsConfig | CompiledSourceBindingPlan
+        ) = EMPTY_SOURCE_BINDINGS,
         available_artifacts: ArtifactSpecCollection = ArtifactSpecCollection(()),
         main_flow_artifacts: ArtifactSpecCollection = ArtifactSpecCollection(()),
         metadata_artifact_available: Callable[[str], bool] = lambda _name: False,
@@ -1131,8 +1145,9 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                     adapter is not None and adapter.manages_artifact_inputs
                 )
                 raw_main_flow_refs = (
-                    main_flow_artifacts.ref_set()
-                    .intersection(invocation.contract.output_group_scope_sources)
+                    main_flow_artifacts.ref_set().intersection(
+                        invocation.contract.output_group_scope_sources
+                    )
                     if not owns_artifact_inputs
                     else frozenset()
                 )
@@ -1143,7 +1158,8 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                     strict=True,
                 ):
                     storage_plan = (
-                        None if input_spec.ref() in raw_main_flow_refs
+                        None
+                        if input_spec.ref() in raw_main_flow_refs
                         else selected_plans_by_ref.get(input_spec.ref())
                     )
                     if storage_plan is None:
@@ -1153,8 +1169,12 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                                 spec=input_spec,
                                 main_flow_artifacts=main_flow_artifacts,
                                 invocation_sources=invocation.contract.group_scope_inputs,
-                                metadata_available=metadata_artifact_available(input_spec.name),
-                                source_binding_available=source_bindings.declares_artifact_ref(input_spec.ref()),
+                                metadata_available=metadata_artifact_available(
+                                    input_spec.name
+                                ),
+                                source_binding_available=source_bindings.declares_artifact_ref(
+                                    input_spec.ref()
+                                ),
                             )
                         )
                         continue
@@ -1169,11 +1189,15 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                             consumer_variable_components=consumer_variable_components,
                             source_bindings=source_bindings,
                             available_artifacts=available_artifacts,
-                            main_flow_projection=InvocationArtifactInputEdgePlan.source_projection(
-                                input_spec,
-                                main_flow_artifacts,
-                                invocation.contract.group_scope_inputs,
-                            ) if owns_artifact_inputs else None,
+                            main_flow_projection=(
+                                InvocationArtifactInputEdgePlan.source_projection(
+                                    input_spec,
+                                    main_flow_artifacts,
+                                    invocation.contract.group_scope_inputs,
+                                )
+                                if owns_artifact_inputs
+                                else None
+                            ),
                         )
                     )
                 invocations.append(invocation.with_artifact_input_edges(tuple(edges)))
@@ -1258,13 +1282,15 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             invocation=invocation,
             artifact_ref=artifact_ref,
         )
-        producer_selection_scope = ArtifactInputProjectionPlan.producer_selection_for_invocation(
-            input_spec=input_spec,
-            storage_plan=storage_plan,
-            component_scopes=component_scopes,
-            consumer_variable_components=consumer_variable_components,
-            invocation_key=invocation.key,
-            execution_scope=invocation.contract.execution_scope,
+        producer_selection_scope = (
+            ArtifactInputProjectionPlan.producer_selection_for_invocation(
+                input_spec=input_spec,
+                storage_plan=storage_plan,
+                component_scopes=component_scopes,
+                consumer_variable_components=consumer_variable_components,
+                invocation_key=invocation.key,
+                execution_scope=invocation.contract.execution_scope,
+            )
         )
 
         projection = ArtifactInputProjectionPlan(
@@ -1769,7 +1795,9 @@ class PathPlannerMaterializationStage:
             step_index,
             StepAxisFilterSet.empty(),
         )
-        if not step_axis_filters.allows(materialization_config, self.planner.ctx.axis_id):
+        if not step_axis_filters.allows(
+            materialization_config, self.planner.ctx.axis_id
+        ):
             logger.debug(
                 "Skipping materialization for step %s, axis %s (filtered out)",
                 step.name,
@@ -1856,7 +1884,9 @@ class PathPlannerValidationStage:
             ):
                 continue
             if dependency.kind is not StepInputDependencyKind.STEP_OUTPUT:
-                raise ValueError(f"Step {curr.name} has unresolved main input dependency.")
+                raise ValueError(
+                    f"Step {curr.name} has unresolved main input dependency."
+                )
             source_step_index = dependency.source_step_index
             if source_step_index is None:
                 raise ValueError(
@@ -1889,7 +1919,8 @@ class PathPlannerValidationStage:
                 self.planner.paths.build_output_path(step.step_materialization_config),
             )
             for i, step in enumerate(self.planner.session.pipeline.steps)
-            if step.step_materialization_config and step.step_materialization_config.enabled
+            if step.step_materialization_config
+            and step.step_materialization_config.enabled
         ]
 
         path_groups = defaultdict(list)
@@ -2083,7 +2114,8 @@ class PathPlannerStepAssemblyStage:
         declarations = pipeline.artifact_graphs[step_index]
         func_pattern = declarations.pattern
         contracts = (
-            () if func_pattern is None
+            ()
+            if func_pattern is None
             else tuple(item.contract for item in func_pattern.iter_items())
         )
         execution_scope = FunctionStepExecutionScope.require_uniform(contracts)
@@ -2147,7 +2179,9 @@ class PathPlannerStepAssemblyStage:
         self.planner.materialization.apply_materialization_plan(
             step,
             step_index,
-            self.planner.materialization.materialized_output_dir_for_step(step, step_index),
+            self.planner.materialization.materialized_output_dir_for_step(
+                step, step_index
+            ),
         )
         self.planner.materialization.apply_input_conversion_plan(
             step_index,
@@ -2207,7 +2241,9 @@ class PathPlannerStepAssemblyStage:
         step_plan.main_input_dependency = main_input_dependency
         step_plan.artifact_inputs = artifact_maps.inputs
         step_plan.artifact_outputs = artifact_maps.outputs
-        step_plan.future_artifact_inputs = self.planner.future_artifact_inputs[step_index]
+        step_plan.future_artifact_inputs = self.planner.future_artifact_inputs[
+            step_index
+        ]
         step_plan.execution_group_scope = artifact_maps.group_scope
         step_plan.compiled_function_pattern = compiled_function_pattern
         step_plan.source_binding_plan = artifact_maps.source_binding_plan
@@ -2220,11 +2256,16 @@ class PathPlannerStepAssemblyStage:
         *,
         declarations: ArtifactGraph = ArtifactGraph(),
         execution_scope: FunctionStepExecutionScope = FunctionStepExecutionScope.AXIS,
-        source_bindings: StepSourceBindingsConfig | CompiledSourceBindingPlan = EMPTY_SOURCE_BINDINGS,
+        source_bindings: (
+            StepSourceBindingsConfig | CompiledSourceBindingPlan
+        ) = EMPTY_SOURCE_BINDINGS,
     ) -> StepInputDependency:
         """Resolve the explicit main-input edge for one step."""
         existing_plan = self.planner.plans.get(step_index)
-        if existing_plan is not None and existing_plan.main_input_dependency.is_resolved:
+        if (
+            existing_plan is not None
+            and existing_plan.main_input_dependency.is_resolved
+        ):
             return existing_plan.main_input_dependency
 
         previous = self.planner.plans.get(step_index - 1)
@@ -2387,7 +2428,6 @@ class PipelinePathPlanner:
             Filename string (e.g., "R02C02_match_results_step3.pkl")
         """
         return _cached_axis_filename(axis_id, key, extension, step_index)
-
 
 
 @lru_cache(maxsize=65536)

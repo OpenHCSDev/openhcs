@@ -169,7 +169,9 @@ class ZMQCompilationRequest:
                 output_dataset_root=(
                     None if output_dataset_root is None else str(output_dataset_root)
                 ),
-                auto_add_output_dataset=bool(self.resolved_config.auto_add_output_dataset),
+                auto_add_output_dataset=bool(
+                    self.resolved_config.auto_add_output_dataset
+                ),
             ),
         )
         self.progress_emitter.compiled_init_started(

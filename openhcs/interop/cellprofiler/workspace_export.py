@@ -70,7 +70,10 @@ class CPAImageWorkspaceAxis(CPAWorkspaceAxis):
 
     def field_name(self, dialect):
         return dialect.measurement_field(
-            MeasurementSubject(MeasurementScope.SAMPLE, CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE]),
+            MeasurementSubject(
+                MeasurementScope.SAMPLE,
+                CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE],
+            ),
             FieldSpec(self.measurement, None),
         ).name
 

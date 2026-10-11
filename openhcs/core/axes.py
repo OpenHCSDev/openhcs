@@ -351,8 +351,17 @@ class Axis(GroupingDeclaration):
         if issubclass(cls, GridAddressed):
             undeclared = [
                 member
-                for member in ("default_grid", "grid_coordinates", "grid_position", "row_label")
-                if not any(member in base.__dict__ for base in cls.__mro__ if base is not GridAddressed)
+                for member in (
+                    "default_grid",
+                    "grid_coordinates",
+                    "grid_position",
+                    "row_label",
+                )
+                if not any(
+                    member in base.__dict__
+                    for base in cls.__mro__
+                    if base is not GridAddressed
+                )
             ]
             if undeclared:
                 raise TypeError(
@@ -394,7 +403,6 @@ class Axis(GroupingDeclaration):
         if cls.filename_padding and text.isdecimal():
             text = f"{int(text):0{cls.filename_padding}d}"
         return f"{cls.filename_prefix}{text}"
-
 
 
 class Ungrouped(GroupingDeclaration):
@@ -498,21 +506,28 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
                 f"Axis family {cls.__qualname__} must declare exactly one PartitionAxis."
             )
         spatial_rank = cls.__dict__.get("payload_spatial_rank")
-        if not isinstance(spatial_rank, int) or isinstance(spatial_rank, bool) or spatial_rank < 0:
+        if (
+            not isinstance(spatial_rank, int)
+            or isinstance(spatial_rank, bool)
+            or spatial_rank < 0
+        ):
             raise TypeError(
                 f"Axis family {cls.__qualname__} must declare payload_spatial_rank "
                 "as a nonnegative int."
             )
         for axis in declared:
             if "family" in axis.__dict__:
-                raise TypeError(f"Axis {axis.__qualname__} already belongs to a family.")
+                raise TypeError(
+                    f"Axis {axis.__qualname__} already belongs to a family."
+                )
             axis.family = cls
         cls.axes = declared
         cls.family_name = f"{cls.__module__}:{cls.__qualname__}"
 
-
     def __new__(cls, *args: object, **kwargs: object):
-        raise TypeError(f"{cls.__qualname__} is a family declaration, not a value type.")
+        raise TypeError(
+            f"{cls.__qualname__} is a family declaration, not a value type."
+        )
 
     # -- activation ---------------------------------------------------------
 
@@ -539,7 +554,9 @@ class AxisFamily(metaclass=AxisDeclarationMeta):
         """
 
         inherited = os.environ.get(ACTIVE_FAMILY_VARIABLE)
-        (cls if inherited is None else AxisFamily.from_family_name(inherited)).activate()
+        (
+            cls if inherited is None else AxisFamily.from_family_name(inherited)
+        ).activate()
 
     @staticmethod
     def from_family_name(family_name: str) -> type[AxisFamily]:

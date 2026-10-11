@@ -562,8 +562,10 @@ def display_data_on_image(
     )
 
     output = DisplayDataOnImageRenderer(request).render_slice()
-    return image.with_pixels(output,
-        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),)
+    return image.with_pixels(
+        output,
+        metadata=image.metadata.with_axis(ColourSampleAxisSpec(), -1),
+    )
 
 
 class DensityPlotScaleType(Enum):

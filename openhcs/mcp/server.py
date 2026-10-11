@@ -434,7 +434,9 @@ async def _report_progress_if_available(
 
 
 @contextmanager
-def _verbose_blocking_operation_diagnostics(capability: type[AgentCapabilityDeclaration]):
+def _verbose_blocking_operation_diagnostics(
+    capability: type[AgentCapabilityDeclaration],
+):
     """Dump a blocked invocation without affecting normal MCP output."""
 
     heartbeat_seconds = capability.progress_heartbeat_seconds
@@ -475,7 +477,9 @@ def _mcp_server_health() -> McpServerHealthResult:
         server_import_mtime_ns=MCP_SERVER_IMPORT_MTIME_NS,
         server_current_mtime_ns=current_source_mtime_ns,
         server_source_changed_since_import=bool(stale_source_paths),
-        stale_source_paths=tuple(str(source_path) for source_path in stale_source_paths),
+        stale_source_paths=tuple(
+            str(source_path) for source_path in stale_source_paths
+        ),
         recovery_reason=recovery.reason.value,
         installation_pointer_path=recovery.installation_pointer_path,
         installation_pointer_changed_since_import=(
@@ -613,14 +617,18 @@ class McpCapabilityBinder:
             annotation=McpUiBridgeConnectionRequest | None,
         )
 
-    def ui_connection(self, arguments: Mapping[str, JsonValue]) -> UiBridgeConnectionSpec:
+    def ui_connection(
+        self, arguments: Mapping[str, JsonValue]
+    ) -> UiBridgeConnectionSpec:
         return UiBridgeConnectionToolArgs.from_request(arguments["connection"]).resolve(
             self.context
         )
 
     @staticmethod
     def viewer_connection_parameters() -> tuple[Parameter, ...]:
-        return McpViewerConnectionToolFields.signature_parameters(McpViewerTimeoutPolicy)
+        return McpViewerConnectionToolFields.signature_parameters(
+            McpViewerTimeoutPolicy
+        )
 
     @staticmethod
     def viewer_control(

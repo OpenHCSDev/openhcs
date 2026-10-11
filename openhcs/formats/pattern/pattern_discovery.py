@@ -97,7 +97,9 @@ class PatternDiscoveryEngine:
         logger.debug("Using pattern template: %s", pattern_str)
 
         # Parse pattern template to get expected structure
-        pattern_metadata = self.pattern_cache.metadata_for_filename(self.parser, pattern_str)
+        pattern_metadata = self.pattern_cache.metadata_for_filename(
+            self.parser, pattern_str
+        )
         if not pattern_metadata:
             logger.error("Failed to parse pattern template: %s", pattern_str)
             return []
@@ -117,7 +119,9 @@ class PatternDiscoveryEngine:
                 continue
 
             # Parse the actual filename
-            file_metadata = self.pattern_cache.metadata_for_filename(self.parser, filename)
+            file_metadata = self.pattern_cache.metadata_for_filename(
+                self.parser, filename
+            )
             if not file_metadata:
                 continue
 
@@ -185,7 +189,9 @@ class PatternDiscoveryEngine:
             # The has_placeholders() check is only relevant when using patterns as concrete filenames
             # For pattern discovery and grouping, we WANT patterns with placeholders
 
-            metadata = self.pattern_cache.metadata_for_filename(self.parser, pattern_str)
+            metadata = self.pattern_cache.metadata_for_filename(
+                self.parser, pattern_str
+            )
 
             if metadata is None or metadata.value_for(component_declaration) is None:
                 raise ValueError(
@@ -208,7 +214,9 @@ class PatternDiscoveryEngine:
         subdivided = defaultdict(list)
         component_declarations = tuple(components)
         for pattern in patterns:
-            metadata = self.pattern_cache.metadata_for_filename(self.parser, str(pattern))
+            metadata = self.pattern_cache.metadata_for_filename(
+                self.parser, str(pattern)
+            )
             if not metadata:
                 raise ValueError(f"Failed to parse pattern: {pattern}")
             key = tuple(

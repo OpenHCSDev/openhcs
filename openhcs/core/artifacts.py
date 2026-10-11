@@ -658,7 +658,8 @@ class ImageArtifactType(ImagePayloadArtifactKind):
                 tuple(
                     cls.contextualize_output(
                         RuntimeSliceProjection.value_for_slice(
-                            source_payload, plane_projection.selected_plane(slice_index),
+                            source_payload,
+                            plane_projection.selected_plane(slice_index),
                         ),
                         item.data if isinstance(item, RuntimeValue) else item,
                         output_plan,
@@ -684,7 +685,9 @@ class ImageArtifactType(ImagePayloadArtifactKind):
                 output_metadata.plane_axis is None
                 and output_metadata.source_provenance.source_plane_count
                 == plane_projection.axis_size
-                and plane_projection.dense_shape_carries_axis(output_value.geometry.shape)
+                and plane_projection.dense_shape_carries_axis(
+                    output_value.geometry.shape
+                )
             ):
                 output_value = output_metadata.replace_fields(
                     plane_axis=plane_projection.axis,
@@ -831,7 +834,9 @@ class ImageArtifactType(ImagePayloadArtifactKind):
 
         from openhcs.core.aligned_image_payload import stack_image_payloads
         from openhcs.core.memory import detect_memory_type
-        from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
+        from openhcs.core.runtime_image_values import (
+            ImagePayloadMetadataCompositionMode,
+        )
         from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 
         components = {value.key.scope.component for value in values}
@@ -3649,7 +3654,6 @@ class ArtifactOutputPlan(ArtifactPlan):
         value: "RuntimeValue",
     ) -> "ImagePayloadMetadata":
         """Derive filename metadata from the declared naming source."""
-
 
         payload_metadata = self.artifact_type.materialization_image_metadata(value)
         materialization_source = self.materialization_source()

@@ -48,7 +48,9 @@ class BenchmarkControlService:
         """Write benchmark evidence from the ordinary job's exact completion."""
 
         if self._session is None:
-            raise RuntimeError("Measured run finalization requires the OpenHCS session.")
+            raise RuntimeError(
+                "Measured run finalization requires the OpenHCS session."
+            )
         from benchmark.openhcs_measured_run import (
             measured_endpoint_provenance,
             retain_measured_openhcs_completion,

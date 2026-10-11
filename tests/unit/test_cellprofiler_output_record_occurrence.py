@@ -269,13 +269,18 @@ def _image_record_request() -> tuple[CellProfilerOutputRecordRequest, ArtifactSp
     spec = ArtifactSpec.input("Original", ImageArtifactType)
     request, (edge,) = _output_record_request((spec,), ((0, spec),))
     edge = replace(edge, main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD)
-    adapter = SimpleNamespace(request=replace(
-        request.adapter.request, artifact_inputs={edge.key: edge}
-    ))
-    return replace(
-        request, adapter=adapter, active_input_edges=(edge,),
-        current_image=np.zeros((3, 4), dtype=np.float32),
-    ), spec
+    adapter = SimpleNamespace(
+        request=replace(request.adapter.request, artifact_inputs={edge.key: edge})
+    )
+    return (
+        replace(
+            request,
+            adapter=adapter,
+            active_input_edges=(edge,),
+            current_image=np.zeros((3, 4), dtype=np.float32),
+        ),
+        spec,
+    )
 
 
 def test_record_binding_keeps_output_admission_before_live_input_validation(
@@ -287,7 +292,9 @@ def test_record_binding_keeps_output_admission_before_live_input_validation(
     def fail_selection(_self):
         raise error
 
-    monkeypatch.setattr(RuntimeAdapterRequest, "selected_artifact_input_specs", fail_selection)
+    monkeypatch.setattr(
+        RuntimeAdapterRequest, "selected_artifact_input_specs", fail_selection
+    )
     # Output-only recording does not observe input declaration callbacks.
     assert replace(request).output_value is request.output_value
     with pytest.raises(ValueError, match="does not match active output"):
@@ -299,17 +306,23 @@ def test_record_binding_keeps_output_admission_before_live_input_validation(
         assert caught.value is error
 
 
-def test_record_binding_reads_current_pixels_and_mutable_kwargs_without_holder_aliases() -> None:
+def test_record_binding_reads_current_pixels_and_mutable_kwargs_without_holder_aliases() -> (
+    None
+):
     request, spec = _image_record_request()
     assert isinstance(request, RuntimeInputBindingRequest)
     assert "call_kwargs" not in {item.name for item in fields(request)}
     assert not hasattr(request, "__dict__")
     with pytest.raises(TypeError):
         CellProfilerOutputRecordRequest(
-            request.callable_contract, request.active_input_edges,
-            adapter=request.adapter, kwargs=request.kwargs,
-            current_image=request.current_image, spec=request.spec,
-            output_plan=request.output_plan, output_value=request.output_value,
+            request.callable_contract,
+            request.active_input_edges,
+            adapter=request.adapter,
+            kwargs=request.kwargs,
+            current_image=request.current_image,
+            spec=request.spec,
+            output_plan=request.output_plan,
+            output_value=request.output_value,
             source=request.source,
         )
     with pytest.raises(FrozenInstanceError):
@@ -350,9 +363,7 @@ def test_record_source_binds_current_image_once_and_preserves_intensity_mask_lin
         binding_inputs.append(value)
         return original_bind(strategy, input_spec, value)
 
-    monkeypatch.setattr(
-        ImageOutputRecorder, "raw_runtime_input_value", observe_bind
-    )
+    monkeypatch.setattr(ImageOutputRecorder, "raw_runtime_input_value", observe_bind)
     for pixel_value in (65535, 32768):
         pixels[:] = pixel_value
         binding_inputs.clear()
@@ -360,18 +371,22 @@ def test_record_source_binds_current_image_once_and_preserves_intensity_mask_lin
         assert binding_inputs == [payload]
         assert source.data.dtype == np.float32
         np.testing.assert_allclose(
-            source.data, np.float32(pixel_value) / 65535,
+            source.data,
+            np.float32(pixel_value) / 65535,
         )
         assert source.mask is mask
         metadata = source.metadata
         assert metadata.source_image_names == (spec.name,)
         assert metadata.source_image_provenance_planes.paths == ("/input/actual.tif",)
         assert set(metadata.source_provenance.represented_source_image_names) == {
-            "Acquired", spec.name,
+            "Acquired",
+            spec.name,
         }
 
 
-def test_record_source_returns_the_actual_bound_value_without_rebinding(monkeypatch) -> None:
+def test_record_source_returns_the_actual_bound_value_without_rebinding(
+    monkeypatch,
+) -> None:
     request, _spec = _image_record_request()
     bound = ImagePayloadMetadata(
         source_image_names=("Original",),
@@ -394,7 +409,9 @@ def test_record_source_returns_the_actual_bound_value_without_rebinding(monkeypa
     assert reads == [(edge, edge.spec.parameter_name)]
 
 
-def test_record_endpoint_identity_does_not_change_reference_broadcast_selection() -> None:
+def test_record_endpoint_identity_does_not_change_reference_broadcast_selection() -> (
+    None
+):
     request, spec = _image_record_request()
     equivalent = replace(spec)
     with pytest.raises(RuntimeError, match="has no exact compiled input edge"):
@@ -425,7 +442,8 @@ def test_record_input_selection_effects_remain_at_each_read_epoch(monkeypatch) -
         request.kwargs["epoch"] = epoch
         events.clear()
         original = RuntimeInputBindingRequest(
-            adapter=request.adapter, kwargs=request.kwargs,
+            adapter=request.adapter,
+            kwargs=request.kwargs,
             current_image=request.current_image,
         ).runtime_value(request.active_input_edges[0])
         expected_events = tuple(events)
@@ -439,7 +457,9 @@ def test_record_input_selection_effects_remain_at_each_read_epoch(monkeypatch) -
     # in the map cannot excuse a live selector removing its declaration.
     edge = request.active_input_edges[0]
     output = ArtifactSpec.output_preserving_source_stack_scope(
-        request.spec.name, request.spec.artifact_type, spec,
+        request.spec.name,
+        request.spec.artifact_type,
+        spec,
     )
     consumed = CellProfilerImageRequest(
         source_image_name=spec.name,
@@ -452,12 +472,14 @@ def test_record_input_selection_effects_remain_at_each_read_epoch(monkeypatch) -
         primary_input_edges=(edge,),
     )
     request = replace(
-        request, spec=output,
+        request,
+        spec=output,
         output_plan=replace(request.output_plan, relations=output.relations),
         source=consumed,
     )
     monkeypatch.setattr(
-        RuntimeAdapterRequest, "selected_artifact_input_specs",
+        RuntimeAdapterRequest,
+        "selected_artifact_input_specs",
         lambda _adapter_request: ArtifactSpecCollection(()),
     )
     with pytest.raises(ValueError, match="does not declare artifact input"):
@@ -469,7 +491,9 @@ def test_record_explicit_object_subset_preserves_binding_admission() -> None:
     second = ArtifactSpec.input("Second", ObjectLabelsArtifactType)
     request, _edges = _output_record_request((first, second), ((0, first), (1, second)))
     standalone = RuntimeInputBindingRequest(
-        adapter=request.adapter, kwargs=request.kwargs, current_image=request.current_image,
+        adapter=request.adapter,
+        kwargs=request.kwargs,
+        current_image=request.current_image,
     )
     for subset in ((first,), (replace(second),), ()):
         actual = request.with_object_inputs(subset)
@@ -495,11 +519,15 @@ def test_record_subset_validation_runs_after_output_admission_and_preserves_erro
     def fail_selection(_self):
         raise error
 
-    monkeypatch.setattr(RuntimeAdapterRequest, "selected_artifact_input_specs", fail_selection)
+    monkeypatch.setattr(
+        RuntimeAdapterRequest, "selected_artifact_input_specs", fail_selection
+    )
     for change in (
         lambda: RuntimeInputBindingRequest(
-            adapter=request.adapter, kwargs=request.kwargs,
-            current_image=request.current_image, selected_object_inputs=(),
+            adapter=request.adapter,
+            kwargs=request.kwargs,
+            current_image=request.current_image,
+            selected_object_inputs=(),
         ),
         lambda: request.with_object_inputs(()),
     ):
@@ -508,7 +536,8 @@ def test_record_subset_validation_runs_after_output_admission_and_preserves_erro
         assert caught.value is error
     with pytest.raises(ValueError, match="does not match active output"):
         replace(
-            request, selected_object_inputs=(),
+            request,
+            selected_object_inputs=(),
             output_plan=replace(request.output_plan, name="Wrong"),
         )
     # The ordinary post-call record still observes no input selector at birth.

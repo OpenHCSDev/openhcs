@@ -2419,7 +2419,6 @@ def measurement_rows_with_source_provenance(
         if not all(is_structural_missing_measurement_cell(value) for value in values):
             coordinate_columns[component.name] = values
 
-
     def source_names_for_row(row_index: int) -> tuple[str, ...]:
         if slice_values is None:
             return source_provenance.represented_source_image_names

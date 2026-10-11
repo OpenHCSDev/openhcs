@@ -31,7 +31,6 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
 
         return True
 
-
     @classmethod
     def source_selection_guidance(cls) -> str:
         """Explain when declarations, rather than a vendor/store owner, ingest files."""
@@ -96,8 +95,6 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
     def root_dir(self) -> str:
         return FIELDS.DEFAULT_SUBDIRECTORY
 
-
-
     @property
     def compatible_backends(self) -> list[Backend]:
         return [Backend.DISK]
@@ -133,7 +130,9 @@ class SourceBindingsSource(DeclaredFileSource, DatasetSource):
             VirtualWorkspaceSourceProjection,
         )
 
-        metadata = self.metadata_handler.source_workspace_metadata_document(dataset_root)
+        metadata = self.metadata_handler.source_workspace_metadata_document(
+            dataset_root
+        )
         workspace_metadata = self.metadata_handler.workspace_mapping_metadata(
             dataset_root
         )

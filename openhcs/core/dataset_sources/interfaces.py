@@ -29,7 +29,6 @@ from polystore.filemanager import FileManager
 from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.axes import Axis, AxisFamily
 
-
 if TYPE_CHECKING:
     from openhcs.core.source_projection import SourcePlaneDataset, SourceProjection
     from openhcs.core.source_workspace_projection import (
@@ -408,9 +407,7 @@ class FilenameParserCapability(ABC):
             else parsed.with_values(self.image_path_components(path))
         )
 
-    def image_path_components(
-        self, path: Path
-    ) -> tuple[tuple[type[Axis], int], ...]:
+    def image_path_components(self, path: Path) -> tuple[tuple[type[Axis], int], ...]:
         """Identity terminus for cooperative acquisition-coordinate capabilities."""
         return ()
 
@@ -577,7 +574,9 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         """
         return self.get_pixel_size(dataset_root)
 
-    def source_voxel_spacing(self, dataset_root: Union[str, Path]) -> SourceVoxelSpacing:
+    def source_voxel_spacing(
+        self, dataset_root: Union[str, Path]
+    ) -> SourceVoxelSpacing:
         """Project this acquisition's physical calibration into source coordinates."""
 
         pixel_size = self.get_pixel_size(dataset_root)

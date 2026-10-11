@@ -75,7 +75,9 @@ from openhcs.core.steps.function_artifact_materialization import (
     MaterializedRuntimeArtifact,
     RuntimeArtifactMaterialization,
 )
-from openhcs.core.steps.function_artifact_materialization import ArtifactMaterializationTargetPlan
+from openhcs.core.steps.function_artifact_materialization import (
+    ArtifactMaterializationTargetPlan,
+)
 from openhcs.core.steps.function_outputs import (
     MaterializedImageOutputWriter,
     MemoryOutputWriter,
@@ -123,7 +125,8 @@ def _publish_saved_step(context, plan, *, artifact_materializations=()):
         METADATA_CONFIG.metadata_path(target.dataset_root) for target in facts
     ):
         entries = {
-            target: value for target, value in facts.items()
+            target: value
+            for target, value in facts.items()
             if METADATA_CONFIG.metadata_path(target.dataset_root) == metadata_path
         }
         AtomicMetadataWriter().reconcile_completed_dataset(
@@ -174,7 +177,8 @@ def test_function_step_metadata_follows_runtime_artifact_persistence(
             authority,
             method_name,
             lambda _context, _plan, event=event, **_kwargs: (
-                events.append(event), {} if event == "metadata" else ()
+                events.append(event),
+                {} if event == "metadata" else (),
             )[1],
         )
 
@@ -305,7 +309,10 @@ class ParserStub:
             }
         )
         return FilenameParseResult(
-            ((component, metadata.get(component.name)) for component in AxisFamily.active().axes),
+            (
+                (component, metadata.get(component.name))
+                for component in AxisFamily.active().axes
+            ),
             extension=str(metadata["extension"]),
         )
 
@@ -510,7 +517,9 @@ def test_memory_output_writer_materializes_preserved_source_at_current_destinati
 
 
 @pytest.mark.parametrize("source_extension", (None, ".czi"))
-def test_function_output_identity_preserves_non_axis_source_metadata(source_extension) -> None:
+def test_function_output_identity_preserves_non_axis_source_metadata(
+    source_extension,
+) -> None:
     identity = FunctionOutputIdentity(
         component_values={"channel": "2", "site": "1"},
         extension=".tif",
@@ -518,10 +527,10 @@ def test_function_output_identity_preserves_non_axis_source_metadata(source_exte
     )
 
     source_metadata = {
-            "Run": "Sequence1",
-            "Specimen": "DrosophilaEmbryo",
-            "ChannelNumber": "1",
-            "OpenHCSOriginalSourceMetadata": {"FrameNumber": "0007"},
+        "Run": "Sequence1",
+        "Specimen": "DrosophilaEmbryo",
+        "ChannelNumber": "1",
+        "OpenHCSOriginalSourceMetadata": {"FrameNumber": "0007"},
     }
     if source_extension is not None:
         source_metadata["extension"] = source_extension
@@ -536,7 +545,9 @@ def test_function_output_identity_preserves_non_axis_source_metadata(source_exte
         **({"extension": source_extension} if source_extension is not None else {}),
     }
     assert identity.filename_component_metadata() == {
-        "channel": "2", "site": "1", "extension": ".tif",
+        "channel": "2",
+        "site": "1",
+        "extension": ".tif",
     }
     assert source_metadata["ChannelNumber"] == "1"
     assert source_metadata.get("extension") == source_extension
@@ -1665,7 +1676,9 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     assert len(restored.source_provenance.represented_source_identities) == 2
     assert record["address"] is None
     assert record["execution_scope"]["fixed_component_values"] == [
-        ["channel", "1"], ["z_index", "1"], ["timepoint", "1"],
+        ["channel", "1"],
+        ["z_index", "1"],
+        ["timepoint", "1"],
     ]
     assert "site" not in record["source_metadata"]
     assert "site" not in subdirectory[FIELDS.SOURCE_METADATA]["images/A01_s1_w1.tif"]
@@ -1944,7 +1957,10 @@ class _QualifierIgnoringParserStub:
             }
         )
         return FilenameParseResult(
-            ((component, metadata.get(component.name)) for component in AxisFamily.active().axes),
+            (
+                (component, metadata.get(component.name))
+                for component in AxisFamily.active().axes
+            ),
             extension=str(metadata["extension"]),
         )
 
@@ -2084,9 +2100,7 @@ def test_produced_address_publication_never_parses_generated_filenames(
             },
             source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
         )
-        identity = FunctionOutputIdentity.from_metadata(
-            parser, metadata
-        )
+        identity = FunctionOutputIdentity.from_metadata(parser, metadata)
         assert identity is not None
         assert identity.extension == extension
         identity = identity.with_filename_qualifier("centre_dots")
@@ -2258,11 +2272,15 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     follower_plan.create_openhcs_metadata = True
     filemanager.save(first_pixels, str(later_image), Backend.MEMORY.value)
     record_output_path(follower_context, follower_plan, str(later_image))
-    later_facts = OpenHCSMetadataTarget.observe_for_step(follower_context, follower_plan)
+    later_facts = OpenHCSMetadataTarget.observe_for_step(
+        follower_context, follower_plan
+    )
     combined_facts = {
         target: VirtualWorkspaceSourceProjectionEntries.combine(
-            (first_facts.get(target, VirtualWorkspaceSourceProjectionEntries({})),
-             later_facts.get(target, VirtualWorkspaceSourceProjectionEntries({})))
+            (
+                first_facts.get(target, VirtualWorkspaceSourceProjectionEntries({})),
+                later_facts.get(target, VirtualWorkspaceSourceProjectionEntries({})),
+            )
         )
         for target in dict.fromkeys((*first_facts, *later_facts))
     }
@@ -2389,7 +2407,9 @@ def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, conte
         context, plan, artifact_materializations=saved_artifacts
     )
     if contents == "images":
-        assert selected == (replace(target, create_openhcs_metadata=plan.create_openhcs_metadata),)
+        assert selected == (
+            replace(target, create_openhcs_metadata=plan.create_openhcs_metadata),
+        )
     else:
         assert selected == ()
         plan.create_openhcs_metadata = True
@@ -2459,12 +2479,8 @@ def test_declared_image_destinations_publish_and_reconcile_after_value_cleanup(
             path=output_plan.path,
             backend=Backend.MEMORY.value,
         )
-    materializations = ArtifactMaterializationTargetPlan.materialize(
-        context, plan
-    )
-    _publish_saved_step(
-        context, plan, artifact_materializations=materializations
-    )
+    materializations = ArtifactMaterializationTargetPlan.materialize(context, plan)
+    _publish_saved_step(context, plan, artifact_materializations=materializations)
     context.runtime_value_store.clear()
     if stray_image:
         tifffile.imwrite(tmp_path / "images/review/unowned.tif", pixels)
@@ -2556,9 +2572,7 @@ def test_actual_array_exports_only_publish_declared_raster_inventory(
             backend=Backend.MEMORY.value,
         )
 
-    materializations = ArtifactMaterializationTargetPlan.materialize(
-        context, plan
-    )
+    materializations = ArtifactMaterializationTargetPlan.materialize(context, plan)
     saved_outputs = tuple(
         output
         for artifact in materializations
@@ -2576,15 +2590,15 @@ def test_actual_array_exports_only_publish_declared_raster_inventory(
         location
         for artifact in materializations
         for locations in (
-            artifact.observation(plan, context).materialized_locations_by_address.values()
+            artifact.observation(
+                plan, context
+            ).materialized_locations_by_address.values()
         )
         for location in locations
     )
     assert {Path(location.path) for location in observed_locations} == expected_paths
 
-    _publish_saved_step(
-        context, plan, artifact_materializations=materializations
-    )
+    _publish_saved_step(context, plan, artifact_materializations=materializations)
     context.runtime_value_store.clear()
     OpenHCSMetadataTarget.finalize_completed_dataset({"A01": context})
     metadata_path = tmp_path / "openhcs_metadata.json"
@@ -2623,8 +2637,13 @@ def test_actual_array_exports_only_publish_declared_raster_inventory(
 
 def _stream_batch_sources(projections):
     plan = function_step_plan("StreamOwned")
-    arrays = [np.full((2, 3), index, dtype=np.float32) for index in range(len(projections))]
-    paths = [str(plan.output_dir / f"A01_s1_w{index}.tif") for index in range(len(projections))]
+    arrays = [
+        np.full((2, 3), index, dtype=np.float32) for index in range(len(projections))
+    ]
+    paths = [
+        str(plan.output_dir / f"A01_s1_w{index}.tif")
+        for index in range(len(projections))
+    ]
     records = tuple(
         ProducedOutputSemantics.from_output(
             plan,
@@ -2635,7 +2654,8 @@ def _stream_batch_sources(projections):
                 source="stream source",
             ),
             output_context=AlignedImageSliceContext.main_flow(
-                output_key=f"image-{index}", projection_key=projection,
+                output_key=f"image-{index}",
+                projection_key=projection,
                 artifact_kind=ImageArtifactType.value,
             ),
         )
@@ -2644,8 +2664,12 @@ def _stream_batch_sources(projections):
     return arrays, paths, records
 
 
-def test_stream_batch_owns_correlated_projection_order_and_frozen_input_lists(monkeypatch):
-    arrays, paths, records = _stream_batch_sources(("second", "first", "second", "first"))
+def test_stream_batch_owns_correlated_projection_order_and_frozen_input_lists(
+    monkeypatch,
+):
+    arrays, paths, records = _stream_batch_sources(
+        ("second", "first", "second", "first")
+    )
     expected_arrays, expected_paths = tuple(arrays), tuple(paths)
     observed = []
     original_project = StreamOutputBatch.project_item
@@ -2658,7 +2682,9 @@ def test_stream_batch_owns_correlated_projection_order_and_frozen_input_lists(mo
 
     monkeypatch.setattr(StreamOutputBatch, "project_item", staticmethod(project))
     batches = StreamOutputBatch.from_projection_groups(
-        parser=ImageXpressFilenameParser(), payloads=arrays, paths=paths,
+        parser=ImageXpressFilenameParser(),
+        payloads=arrays,
+        paths=paths,
         produced_outputs=records,
     )
     assert observed == [expected_paths[index] for index in (0, 2, 1, 3)]
@@ -2668,14 +2694,20 @@ def test_stream_batch_owns_correlated_projection_order_and_frozen_input_lists(mo
         records[index].producer_identity for index in (0, 2, 1, 3)
     ]
     for item, index in zip(
-        (item for batch in batches for item in batch.items), (0, 2, 1, 3), strict=True,
+        (item for batch in batches for item in batch.items),
+        (0, 2, 1, 3),
+        strict=True,
     ):
         assert item.data is expected_arrays[index]
         assert item.source_component_metadata["channel"] == str(index)
 
 
-def test_stream_batch_keeps_first_projection_error_and_prior_callback_effects(monkeypatch):
-    arrays, paths, records = _stream_batch_sources(("first", "second", "first", "second"))
+def test_stream_batch_keeps_first_projection_error_and_prior_callback_effects(
+    monkeypatch,
+):
+    arrays, paths, records = _stream_batch_sources(
+        ("first", "second", "first", "second")
+    )
     observed = []
     failure = ValueError("actual projector failure")
     original_project = StreamOutputBatch.project_item
@@ -2689,7 +2721,9 @@ def test_stream_batch_keeps_first_projection_error_and_prior_callback_effects(mo
     monkeypatch.setattr(StreamOutputBatch, "project_item", staticmethod(project))
     with pytest.raises(ValueError) as raised:
         StreamOutputBatch.from_projection_groups(
-            parser=ImageXpressFilenameParser(), payloads=arrays, paths=paths,
+            parser=ImageXpressFilenameParser(),
+            payloads=arrays,
+            paths=paths,
             produced_outputs=records,
         )
     assert raised.value is failure
@@ -2702,23 +2736,37 @@ def test_stream_batch_validates_cardinality_and_routes_before_projecting(monkeyp
     def forbidden_project(request):
         raise AssertionError("invalid inputs reached projection")
 
-    monkeypatch.setattr(StreamOutputBatch, "project_item", staticmethod(forbidden_project))
+    monkeypatch.setattr(
+        StreamOutputBatch, "project_item", staticmethod(forbidden_project)
+    )
     parser = ImageXpressFilenameParser()
     with pytest.raises(ValueError, match="payload/path cardinality mismatch"):
         StreamOutputBatch.from_projection_groups(
-            parser=parser, payloads=arrays, paths=paths[:1], produced_outputs=(),
+            parser=parser,
+            payloads=arrays,
+            paths=paths[:1],
+            produced_outputs=(),
         )
     with pytest.raises(ValueError, match="payload/output-record cardinality mismatch"):
         StreamOutputBatch.from_projection_groups(
-            parser=parser, payloads=arrays, paths=paths, produced_outputs=records[:1],
+            parser=parser,
+            payloads=arrays,
+            paths=paths,
+            produced_outputs=records[:1],
         )
     with pytest.raises(ValueError, match="at least one produced output record"):
         StreamOutputBatch.from_projection_groups(
-            parser=parser, payloads=(), paths=(), produced_outputs=(),
+            parser=parser,
+            payloads=(),
+            paths=(),
+            produced_outputs=(),
         )
     with pytest.raises(ValueError, match="cannot mix producer projections"):
         StreamOutputBatch.from_projection(
-            parser=parser, payloads=arrays, paths=paths, produced_outputs=records,
+            parser=parser,
+            payloads=arrays,
+            paths=paths,
+            produced_outputs=records,
         )
 
 
@@ -2780,7 +2828,10 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
     )
     assert str(contextualized.source_component_metadata["timepoint"]) == "1"
     assert "z_index" not in contextualized.source_component_metadata
-    assert contextualized.source_image_provenance_planes == metadata.source_image_provenance_planes
+    assert (
+        contextualized.source_image_provenance_planes
+        == metadata.source_image_provenance_planes
+    )
     manager = FileManager(
         {"disk": DiskStorageBackend(), "memory": MemoryStorageBackend()}
     )
@@ -2850,9 +2901,7 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
             path=output_plan.path,
             backend=Backend.MEMORY.value,
         )
-        materializations = ArtifactMaterializationTargetPlan.materialize(
-            context, plan
-        )
+        materializations = ArtifactMaterializationTargetPlan.materialize(context, plan)
         assert {
             Path(output.path)
             for artifact in materializations
@@ -2866,19 +2915,14 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
     assert projection.address is None
     assert projection.source_alias == "DNA"
     assert (
-        projection.execution_scope.value_text_for_component(Microscopy.Channel)
-        == "2"
+        projection.execution_scope.value_text_for_component(Microscopy.Channel) == "2"
+    )
+    assert projection.execution_scope.value_text_for_component(Microscopy.Site) == "1"
+    assert (
+        projection.execution_scope.value_text_for_component(Microscopy.Timepoint) == "1"
     )
     assert (
-        projection.execution_scope.value_text_for_component(Microscopy.Site) == "1"
-    )
-    assert (
-        projection.execution_scope.value_text_for_component(Microscopy.Timepoint)
-        == "1"
-    )
-    assert (
-        projection.execution_scope.value_text_for_component(Microscopy.ZIndex)
-        is None
+        projection.execution_scope.value_text_for_component(Microscopy.ZIndex) is None
     )
     assert (
         projection.image_metadata.source_image_provenance_planes.component_metadata

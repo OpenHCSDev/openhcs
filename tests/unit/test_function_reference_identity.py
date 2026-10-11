@@ -99,8 +99,7 @@ def test_cold_external_resolution_retains_registry_classified_contract(
     resolved = reference.resolve()
 
     assert (
-        CallableContract.from_callable(resolved).processing_contract
-        is FlexibleContract
+        CallableContract.from_callable(resolved).processing_contract is FlexibleContract
     )
 
 
@@ -143,11 +142,14 @@ def test_module_export_source_keeps_exact_registry_transport_identity(monkeypatc
     metadata = RegistryService.declared_metadata_for_callable(
         cellprofiler_backend.crop
     )[1]
-    monkeypatch.setattr(RegistryService, "_metadata_cache", {metadata.composite_key: metadata})
+    monkeypatch.setattr(
+        RegistryService, "_metadata_cache", {metadata.composite_key: metadata}
+    )
     monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})
     reference = FunctionReferenceTransportAuthority.function_reference(metadata.func)
     exported = FunctionReferenceTransportAuthority.importable_function(
-        metadata.import_identity.module_name, metadata.import_identity.function_name,
+        metadata.import_identity.module_name,
+        metadata.import_identity.function_name,
     )
     if exported is metadata.func:
         assert isinstance(reference, ModuleExportRegistryFunctionReference)

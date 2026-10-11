@@ -56,11 +56,11 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
         main_thread=DispatcherThread(dispatcher),
     )
     services = GuiServiceStub()
-    manager = PlateManagerWidget(
-        services, session, gui_config=get_default_ui_config()
-    )
+    manager = PlateManagerWidget(services, session, gui_config=get_default_ui_config())
     try:
-        assert session.invoke(AddDatasets, AddDatasets.request(roots=(str(root),))).accepted
+        assert session.invoke(
+            AddDatasets, AddDatasets.request(roots=(str(root),))
+        ).accepted
         (scope_id,) = session.dataset_scope_ids()
         session.set_pipeline_source(scope_id, source)
         application.processEvents()
@@ -81,7 +81,8 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
             (CompileDatasets, lambda row: row.compiled and not row.compile_pending),
             (
                 RunDatasets,
-                lambda row: row.terminal_status is not None and not row.execution_active,
+                lambda row: row.terminal_status is not None
+                and not row.execution_active,
             ),
         ):
             if operation is CompileDatasets:

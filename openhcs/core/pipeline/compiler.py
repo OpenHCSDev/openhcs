@@ -283,9 +283,7 @@ class PipelineCompiler:
         if vfs_config.materialization_backend != MaterializationBackend.ZARR:
             return
 
-        available_backends = context.microscope_handler.available_backends(
-            dataset_root
-        )
+        available_backends = context.microscope_handler.available_backends(dataset_root)
         if Backend.ZARR in available_backends:
             return
 
@@ -507,7 +505,8 @@ class PipelineCompiler:
         last_step_index = session.step_count - 1
         session.plan(last_step_index).zarr_config = {
             "all_wells": session.orchestrator.get_component_keys(
-                AxisFamily.active().partition_axis(), resolved_config=session.global_config
+                AxisFamily.active().partition_axis(),
+                resolved_config=session.global_config,
             ),
             "needs_initialization": True,
         }
@@ -560,7 +559,8 @@ class PipelineCompiler:
                     f"Missing required keys: {missing_keys}."
                 )
         PipelineCompiler._compile_runtime_artifact_materialization_plans(
-            session, materialization_planner,
+            session,
+            materialization_planner,
         )
 
     @staticmethod
@@ -582,10 +582,8 @@ class PipelineCompiler:
                 persistent_step_indexes.add(step_index)
 
         if persistent_step_indexes:
-            persistent_backend = (
-                materialization_planner.resolve_backend(
-                    session.global_config.vfs_config.materialization_backend,
-                )
+            persistent_backend = materialization_planner.resolve_backend(
+                session.global_config.vfs_config.materialization_backend,
             )
         for step_index, step_plan in session.plans.items():
             persistent_enabled = step_index in persistent_step_indexes
@@ -678,7 +676,6 @@ class PipelineCompiler:
                 component_values = orchestrator.get_component_keys(
                     seq_comp, resolved_config=global_config
                 )
-
 
                 if not component_values:
                     logger.warning(f"No {seq_comp} values found in orchestrator cache")
@@ -892,7 +889,10 @@ class PipelineCompiler:
         partition_filter_config = (
             effective_config.partition_filter_config if effective_config else None
         )
-        if partition_filter_config and partition_filter_config.partition_filter is not None:
+        if (
+            partition_filter_config
+            and partition_filter_config.partition_filter is not None
+        ):
             available_values = orchestrator.get_component_keys(
                 AxisFamily.active().partition_axis(), resolved_config=effective_config
             )
@@ -1088,7 +1088,8 @@ class PipelineCompiler:
             )
             PipelineCompiler.declare_zarr_stores(session)
             PipelineCompiler.plan_materialization_flags(
-                session, request.materialization_planner,
+                session,
+                request.materialization_planner,
             )
             PipelineCompiler._run_post_plan_compile_stages(
                 session,
@@ -1161,11 +1162,9 @@ class PipelineCompiler:
                         f"{group.group_key!r}, invocation "
                         f"{invocation.contract.function_name!r}"
                     )
-                    prefix_proof = (
-                        group.payload_axis_proof(
-                            requirement,
-                            stop_before=invocation_index,
-                        )
+                    prefix_proof = group.payload_axis_proof(
+                        requirement,
+                        stop_before=invocation_index,
                     )
                     prefix_proof.validate_obligation(
                         failure_message=lambda unproved: (
@@ -1249,8 +1248,11 @@ class PipelineCompiler:
             and source_binding_plan.primary_plane_bindings
         ):
             PipelineCompiler._validate_pipeline_start_payload_axis_requirement(
-                session=session, source_binding_plan=source_binding_plan,
-                owner=owner, requirement=requirement, failures=failures,
+                session=session,
+                source_binding_plan=source_binding_plan,
+                owner=owner,
+                requirement=requirement,
+                failures=failures,
             )
             return True
         if plan.requires_terminal_source_projection:
@@ -1273,9 +1275,13 @@ class PipelineCompiler:
         """Validate inheritance until a declaration creates the required payload axis."""
 
         if PipelineCompiler._validate_payload_axis_source_anchor(
-            plan, group, session=session, owner=owner,
+            plan,
+            group,
+            session=session,
+            owner=owner,
             grouped_pattern=plan.compiled_function_pattern.is_grouped,
-            requirement=requirement, failures=failures,
+            requirement=requirement,
+            failures=failures,
         ):
             return True
         try:
@@ -1317,9 +1323,7 @@ class PipelineCompiler:
                     f"empty producer group at step {producer.step_index}."
                 )
                 return True
-            proof = producer_group.payload_axis_proof(
-                requirement
-            )
+            proof = producer_group.payload_axis_proof(requirement)
             if proof.validate_obligation(
                 failure_message=lambda unproved: (
                     f"{owner}: requirement {requirement.label} is not "
@@ -1327,9 +1331,13 @@ class PipelineCompiler:
                     f"{unproved.contract.function_name!r}."
                 ),
                 source_validation=lambda: PipelineCompiler._validate_payload_axis_source_anchor(
-                    producer, producer_group, session=session, owner=owner,
+                    producer,
+                    producer_group,
+                    session=session,
+                    owner=owner,
                     grouped_pattern=producer.compiled_function_pattern.is_grouped,
-                    requirement=requirement, failures=failures,
+                    requirement=requirement,
+                    failures=failures,
                 ),
                 failures=failures,
             ):
@@ -1600,7 +1608,9 @@ class PipelineCompiler:
                     ),
                 )
             path_resolver = CompilationPathResolver(
-                dataset_scope=CompilationDatasetScope.from_path(orchestrator.dataset_root),
+                dataset_scope=CompilationDatasetScope.from_path(
+                    orchestrator.dataset_root
+                ),
                 filemanager=orchestrator.filemanager,
                 backend=Backend.DISK.value,
             )
@@ -1627,10 +1637,12 @@ class PipelineCompiler:
                 orchestrator,
                 effective_config.vfs_config,
             )
-            global_step_axis_filters = PipelineCompiler._resolve_global_step_axis_filters(
-                orchestrator,
-                pipeline_inputs,
-                effective_config,
+            global_step_axis_filters = (
+                PipelineCompiler._resolve_global_step_axis_filters(
+                    orchestrator,
+                    pipeline_inputs,
+                    effective_config,
+                )
             )
             axis_request = AxisCompilationRequest(
                 orchestrator=orchestrator,
@@ -1644,7 +1656,8 @@ class PipelineCompiler:
                     filemanager=orchestrator.filemanager,
                     input_dir=orchestrator.input_dir,
                     available_axis_values=orchestrator.get_component_keys(
-                        AxisFamily.active().partition_axis(), resolved_config=effective_config
+                        AxisFamily.active().partition_axis(),
+                        resolved_config=effective_config,
                     ),
                 ),
                 source_projections_by_axis=DEFAULT_SOURCE_PROJECTION_CACHE.partition_by_axes(
@@ -1753,7 +1766,10 @@ def _resolve_step_axis_filters(
     for step_index, step in enumerate(pipeline.steps):
         step_filters: dict[type[PartitionFilterConfig], StepAxisFilterResolution] = {}
         for field_name, config in vars(step).items():
-            if not isinstance(config, PartitionFilterConfig) or config.partition_filter is None:
+            if (
+                not isinstance(config, PartitionFilterConfig)
+                or config.partition_filter is None
+            ):
                 continue
             provenance = pipeline.step_provenance[step_index].get(
                 f"{field_name}.partition_filter"

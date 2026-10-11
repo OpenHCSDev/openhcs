@@ -71,11 +71,22 @@ def render(value) -> str:
 def row(**changes) -> DatasetRowState:
     return replace(
         DatasetRowState(
-            scope_id="/plates/a", name="plate-a", root="/plates/a",
-            pipeline_path=None, selected=True, initialized=True, compiled=False,
-            init_pending=False, compile_pending=False, execution_active=False,
-            status_prefix="", orchestrator_state=None, execution_id=None,
-            terminal_status=None, runtime_state=None, runtime_percent=None,
+            scope_id="/plates/a",
+            name="plate-a",
+            root="/plates/a",
+            pipeline_path=None,
+            selected=True,
+            initialized=True,
+            compiled=False,
+            init_pending=False,
+            compile_pending=False,
+            execution_active=False,
+            status_prefix="",
+            orchestrator_state=None,
+            execution_id=None,
+            terminal_status=None,
+            runtime_state=None,
+            runtime_percent=None,
             queue_position=None,
         ),
         **changes,
@@ -96,11 +107,15 @@ def inspection(**changes) -> PlatePathInspectionResult:
                 count=2,
                 sampled_records=(
                     PlateInspectionImageRecordSummary(
-                        "A01_w1.tif", "/plates/a/A01_w1.tif", "/src/A01_w1.tif",
+                        "A01_w1.tif",
+                        "/plates/a/A01_w1.tif",
+                        "/src/A01_w1.tif",
                         {"modified": "2026-01-01", "size": "1 KB"},
                     ),
                     PlateInspectionImageRecordSummary(
-                        "A01_w2.tif", "/plates/a/A01_w2.tif", "A01_w2.tif",
+                        "A01_w2.tif",
+                        "/plates/a/A01_w2.tif",
+                        "A01_w2.tif",
                         {"modified": "2026-01-02"},
                     ),
                 ),
@@ -110,7 +125,9 @@ def inspection(**changes) -> PlatePathInspectionResult:
                 scanned_file_count=1,
                 sampled_records=(
                     PlateInspectionResultFileRecordSummary(
-                        "results/counts.csv", "/plates/a/results/counts.csv", "CSV",
+                        "results/counts.csv",
+                        "/plates/a/results/counts.csv",
+                        "CSV",
                         preview=PlateInspectionResultFilePreview(
                             csv_columns=("well", "count"),
                             csv_rows=({"well": "A01", "count": "11"},),
@@ -120,19 +137,32 @@ def inspection(**changes) -> PlatePathInspectionResult:
             ),
             components=(
                 PlateInspectionComponentSummary(
-                    "well", PlateInspectionValueSource.METADATA, 1,
+                    "well",
+                    PlateInspectionValueSource.METADATA,
+                    1,
                     (PlateInspectionComponentValue("A01"),),
                 ),
                 PlateInspectionComponentSummary(
-                    "channel", PlateInspectionValueSource.PARSED_FILENAMES, 2,
-                    (PlateInspectionComponentValue("1", "DAPI"),
-                     PlateInspectionComponentValue("2")),
+                    "channel",
+                    PlateInspectionValueSource.PARSED_FILENAMES,
+                    2,
+                    (
+                        PlateInspectionComponentValue("1", "DAPI"),
+                        PlateInspectionComponentValue("2"),
+                    ),
                 ),
             ),
             format_specific_handler_candidates=(
                 PlateInspectionHandlerCandidate(
-                    "opera_phenix", "OperaPhenixHandler", "OperaPhenixParser",
-                    "Images", 3, 2, False, True, False,
+                    "opera_phenix",
+                    "OperaPhenixHandler",
+                    "OperaPhenixParser",
+                    "Images",
+                    3,
+                    2,
+                    False,
+                    True,
+                    False,
                 ),
             ),
             source_diagnostics=({"diagnostic_type": "scene", "message": "two scenes"},),
@@ -149,14 +179,22 @@ def query(**changes) -> PlateFileQueryResult:
             plate_path="/plates/a",
             requested_source_format="auto",
             detected_source_format="imagexpress",
-            total_count=3, returned_count=2, offset=0, limit=2, truncated_count=1,
+            total_count=3,
+            returned_count=2,
+            offset=0,
+            limit=2,
+            truncated_count=1,
             records=(
                 PlateFileQueryRecordSummary(
-                    PlateFileKind.IMAGE, "A01_w1.tif", {"modified": "2026-02-01"},
+                    PlateFileKind.IMAGE,
+                    "A01_w1.tif",
+                    {"modified": "2026-02-01"},
                     source_path="/src/A01_w1.tif",
                 ),
                 PlateFileQueryRecordSummary(
-                    PlateFileKind.RESULT, "results/summary.csv", {"modified": "2026-01-01"},
+                    PlateFileKind.RESULT,
+                    "results/summary.csv",
+                    {"modified": "2026-01-01"},
                     relative_path="results/summary.csv",
                     full_path="/plates/a_out/results/summary.csv",
                     file_format="CSV",
@@ -182,11 +220,15 @@ def stream(**changes) -> PlateFileStreamResult:
             requested_source_format="auto",
             viewer_type=ViewerType.NAPARI,
             viewer_config_key="napari_streaming_config",
-            connection=ExecutionConnectionSpec(port=5555, transport_mode=TransportMode.IPC),
+            connection=ExecutionConnectionSpec(
+                port=5555, transport_mode=TransportMode.IPC
+            ),
             requested_paths=("a.tif", "a.roi.zip"),
             streamed_image_paths=tuple(f"/src/{index}.tif" for index in range(10)),
             streamed_roi_paths=("/plates/a_out/a.roi.zip",),
-            skipped_records=(PlateFileQueryRecordSummary(PlateFileKind.IMAGE, "missing.tif"),),
+            skipped_records=(
+                PlateFileQueryRecordSummary(PlateFileKind.IMAGE, "missing.tif"),
+            ),
             status_messages=("streamed 11 files",),
         ),
         **changes,
@@ -197,25 +239,34 @@ def test_every_plate_renderer_presents_its_declared_dto_and_failure():
     """One family check: each renderer is registered for its DTO and none reads a dict."""
     fixtures = (
         SyntheticPlateGenerationResult(
-            schema_version=SCHEMA_VERSION, output_dir="/plates/synthetic",
+            schema_version=SCHEMA_VERSION,
+            output_dir="/plates/synthetic",
             requested_format=SyntheticPlateFormat.IMAGE_XPRESS,
-            grid_size=(2, 2), partition_values=("A01", "B02"), sampled_image_files=("a.tif",),
+            grid_size=(2, 2),
+            partition_values=("A01", "B02"),
+            sampled_image_files=("a.tif",),
         ),
         inspection(),
         query(),
         stream(),
         SelectedPlateImageInspectionResult(
-            schema_version=SCHEMA_VERSION, selected_plate=to_jsonable(row()),
+            schema_version=SCHEMA_VERSION,
+            selected_plate=to_jsonable(row()),
             inspection=inspection(),
         ),
         SelectedPlateFileQueryResult(
-            schema_version=SCHEMA_VERSION, selected_plate=to_jsonable(row()), query=query(),
+            schema_version=SCHEMA_VERSION,
+            selected_plate=to_jsonable(row()),
+            query=query(),
         ),
         SelectedPlateImageSampleResult(
-            schema_version=SCHEMA_VERSION, selected_plate=to_jsonable(row()),
+            schema_version=SCHEMA_VERSION,
+            selected_plate=to_jsonable(row()),
         ),
         SelectedPlateFileStreamResult(
-            schema_version=SCHEMA_VERSION, selected_plate=to_jsonable(row()), stream=stream(),
+            schema_version=SCHEMA_VERSION,
+            selected_plate=to_jsonable(row()),
+            stream=stream(),
         ),
     )
     for value in fixtures:
@@ -230,7 +281,10 @@ def test_every_plate_renderer_presents_its_declared_dto_and_failure():
             McpDevServerSpec(sys.executable),
             (McpDevToolResult(CAPABILITY[type(value)].name, True, ()),),
         )
-        assert renderer.render(tool_failure).splitlines()[0] == renderer.unavailable_summary
+        assert (
+            renderer.render(tool_failure).splitlines()[0]
+            == renderer.unavailable_summary
+        )
 
 
 def test_inspection_presents_axes_records_previews_and_next_sample():
@@ -238,12 +292,22 @@ def test_inspection_presents_axes_records_previews_and_next_sample():
     assert "Status: ok confidence=none microscope=imagexpress" in text
     assert "Geometry: grid=2x3 pixel_size=<none>" in text
     assert "Axis sizes: well=1 site=<unknown> channel=2" in text
-    assert "profile=unknown-site,multi-channel,unknown-z_index,unknown-timepoint" in text
+    assert (
+        "profile=unknown-site,multi-channel,unknown-z_index,unknown-timepoint" in text
+    )
     assert "Metadata sources: well=metadata, channel=parsed_filenames" in text
-    assert "- channel: count=2 source=parsed_filenames values=1 (DAPI), 2 truncated=0" in text
-    assert "  - opera_phenix parser=OperaPhenixParser recognized=2/3 root=Images" in text
+    assert (
+        "- channel: count=2 source=parsed_filenames values=1 (DAPI), 2 truncated=0"
+        in text
+    )
+    assert (
+        "  - opera_phenix parser=OperaPhenixParser recognized=2/3 root=Images" in text
+    )
     assert "- scene: two scenes" in text
-    assert "Sampled artifacts modified: mixed latest=2026-01-02 earliest=2026-01-01" in text
+    assert (
+        "Sampled artifacts modified: mixed latest=2026-01-02 earliest=2026-01-01"
+        in text
+    )
     assert "- A01_w1.tif -> /src/A01_w1.tif modified=2026-01-01 size=1 KB" in text
     assert "- A01_w2.tif modified=2026-01-02" in text
     # The most recently modified record is the one suggested for sampling.
@@ -251,7 +315,10 @@ def test_inspection_presents_axes_records_previews_and_next_sample():
         "Next: sample-plate-image /plates/a A01_w2.tif "
         "--height 8 --width 8 --no-array-values"
     ) in text
-    assert "- results/counts.csv type=CSV\n  csv columns: well, count\n  csv row: well=A01, count=11" in text
+    assert (
+        "- results/counts.csv type=CSV\n  csv columns: well, count\n  csv row: well=A01, count=11"
+        in text
+    )
     assert text.count("plate_parse_failures") == 1
     assert text.index("Warnings:") > text.index("Result records:")
 
@@ -260,7 +327,10 @@ def test_query_presents_previews_pages_staleness_roots_and_result_hint():
     text = render(query())
     assert "Result: returned=2 total=3 offset=0 limit=2 truncated=1" in text
     assert "- image A01_w1.tif -> /src/A01_w1.tif modified=2026-02-01" in text
-    assert "- result results/summary.csv type=CSV -> /plates/a_out/results/summary.csv" in text
+    assert (
+        "- result results/summary.csv type=CSV -> /plates/a_out/results/summary.csv"
+        in text
+    )
     assert "  csv row: well=A00; omitted wide cells: notes" in text
     assert "  csv preview: showing 3/5 rows; 2 more in payload" in text
     assert "Next page: rerun with --offset 2 --limit 2" in text
@@ -272,7 +342,9 @@ def test_query_presents_previews_pages_staleness_roots_and_result_hint():
             records=(),
             truncated_count=0,
             warnings=(
-                AgentWarning(PlateInspectionIssueCode.RESULT_FILES_AVAILABLE.value, "results"),
+                AgentWarning(
+                    PlateInspectionIssueCode.RESULT_FILES_AVAILABLE.value, "results"
+                ),
             ),
         )
     )
@@ -286,7 +358,10 @@ def test_query_presents_previews_pages_staleness_roots_and_result_hint():
 
 def test_stream_bounds_paths_and_suggests_viewer_commands():
     text = render(stream())
-    assert "Viewer: napari config=napari_streaming_config host=localhost port=5555 transport=ipc persistent=True" in text
+    assert (
+        "Viewer: napari config=napari_streaming_config host=localhost port=5555 transport=ipc persistent=True"
+        in text
+    )
     assert "Files: requested=2 resolved=0 images=10 rois=1 skipped=1" in text
     assert "- ... 2 more" in text
     assert "Skipped:\n- image missing.tif" in text
@@ -302,18 +377,28 @@ def test_stream_bounds_paths_and_suggests_viewer_commands():
 @pytest.mark.parametrize(
     "target,command",
     [
-        (SelectedPlateFileQueryTarget.SELECTED, "Next: selected-plate-sample A01_w2.tif"),
-        (SelectedPlateFileQueryTarget.OUTPUT, "Next: selected-plate-sample --target output A01_w2.tif"),
+        (
+            SelectedPlateFileQueryTarget.SELECTED,
+            "Next: selected-plate-sample A01_w2.tif",
+        ),
+        (
+            SelectedPlateFileQueryTarget.OUTPUT,
+            "Next: selected-plate-sample --target output A01_w2.tif",
+        ),
     ],
 )
 def test_selected_plate_images_render_the_nested_inspection(target, command):
     text = render(
         SelectedPlateImageInspectionResult(
-            schema_version=SCHEMA_VERSION, selected_plate=to_jsonable(row()),
-            target=target, inspection=inspection(),
+            schema_version=SCHEMA_VERSION,
+            selected_plate=to_jsonable(row()),
+            target=target,
+            inspection=inspection(),
         )
     )
-    assert text.startswith(f"Selected plate: plate-a root=/plates/a target={target.value}\nPlate: /plates/a")
+    assert text.startswith(
+        f"Selected plate: plate-a root=/plates/a target={target.value}\nPlate: /plates/a"
+    )
     assert command in text
     assert "sample-plate-image" not in text
     assert text.count("plate_parse_failures") == 1
@@ -324,18 +409,27 @@ def test_selected_plate_files_hint_related_output_only_for_an_empty_selected_que
     empty = query(total_count=0, returned_count=0, truncated_count=0, records=())
     text = render(
         SelectedPlateFileQueryResult(
-            schema_version=SCHEMA_VERSION, selected_plate=selected_row, query=empty,
+            schema_version=SCHEMA_VERSION,
+            selected_plate=selected_row,
+            query=empty,
         )
     )
     assert "Plate file query: /plates/a" in text
-    assert "Related output: /plates/a_out\nNext: selected-plate-files --target output --kind result" in text
+    assert (
+        "Related output: /plates/a_out\nNext: selected-plate-files --target output --kind result"
+        in text
+    )
     assert "Related output" not in render(
         SelectedPlateFileQueryResult(
-            schema_version=SCHEMA_VERSION, selected_plate=selected_row, query=query(),
+            schema_version=SCHEMA_VERSION,
+            selected_plate=selected_row,
+            query=query(),
         )
     )
     assert "Query: <none>" in render(
-        SelectedPlateFileQueryResult(schema_version=SCHEMA_VERSION, selected_plate=selected_row)
+        SelectedPlateFileQueryResult(
+            schema_version=SCHEMA_VERSION, selected_plate=selected_row
+        )
     )
 
 
@@ -343,8 +437,11 @@ def test_selected_plate_sample_and_stream_keep_target_context_on_failure():
     error = AgentError("ui_selected_plate_count_not_one", "two plates selected")
     sample_text = render(
         SelectedPlateImageSampleResult(
-            schema_version=SCHEMA_VERSION, selected_plate=to_jsonable(row()),
-            target=SelectedPlateFileQueryTarget.OUTPUT, image_path="a.tif", errors=(error,),
+            schema_version=SCHEMA_VERSION,
+            selected_plate=to_jsonable(row()),
+            target=SelectedPlateFileQueryTarget.OUTPUT,
+            image_path="a.tif",
+            errors=(error,),
         )
     )
     assert sample_text.startswith(
@@ -361,7 +458,8 @@ def test_selected_plate_sample_and_stream_keep_target_context_on_failure():
     assert stream_text.count("two plates selected") == 1
     nested = render(
         SelectedPlateFileStreamResult(
-            schema_version=SCHEMA_VERSION, selected_plate=to_jsonable(row()),
+            schema_version=SCHEMA_VERSION,
+            selected_plate=to_jsonable(row()),
             target=SelectedPlateFileQueryTarget.OUTPUT,
             stream=stream(warnings=(AgentWarning("viewer_slow", "slow start"),)),
         )
@@ -373,10 +471,16 @@ def test_selected_plate_sample_and_stream_keep_target_context_on_failure():
 def test_synthetic_generation_suggests_inspection_and_query():
     text = render(
         SyntheticPlateGenerationResult(
-            schema_version=SCHEMA_VERSION, output_dir="/plates/synthetic",
+            schema_version=SCHEMA_VERSION,
+            output_dir="/plates/synthetic",
             requested_format=SyntheticPlateFormat.IMAGE_XPRESS,
-            grid_size=(2, 2), tile_size=(64, 64), overlap_percent=10, partition_values=("A01", "B02"),
-            wavelengths=2, image_count=8, sampled_image_files=tuple(f"{i}.tif" for i in range(14)),
+            grid_size=(2, 2),
+            tile_size=(64, 64),
+            overlap_percent=10,
+            partition_values=("A01", "B02"),
+            wavelengths=2,
+            image_count=8,
+            sampled_image_files=tuple(f"{i}.tif" for i in range(14)),
             truncated_image_count=0,
         )
     )

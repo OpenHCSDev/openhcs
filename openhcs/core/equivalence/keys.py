@@ -674,9 +674,7 @@ class SemanticCoreFeatureAndSourceNameProjection:
             return aggregate_feature
         parts_projection = parts_projection.strip_category_prefix_for_core()
 
-        direct_alias = self.dialect.feature_part_aliases().get(
-            parts_projection.parts
-        )
+        direct_alias = self.dialect.feature_part_aliases().get(parts_projection.parts)
         if direct_alias is not None:
             return "_".join(direct_alias), None
 

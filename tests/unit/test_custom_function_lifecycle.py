@@ -30,7 +30,7 @@ def _source(name: str, expression: str = "image") -> str:
 
 
 def _plate_source(name: str) -> str:
-    return f'''from openhcs.core.artifacts import ArtifactSpec, SpecialArtifactType
+    return f"""from openhcs.core.artifacts import ArtifactSpec, SpecialArtifactType
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.pipeline.function_contracts import (
     artifact_outputs, execution_scope, runtime_bound_parameters,
@@ -42,22 +42,32 @@ from openhcs.core.runtime_stores import RuntimeArtifactBatch
 @artifact_outputs(ArtifactSpec.output("EngineeringBundle", SpecialArtifactType))
 def {name}(*, artifact_batch: RuntimeArtifactBatch):
     return {{"engineering.txt": b"independent ABI fixture"}}
-'''
+"""
 
 
 @pytest.mark.parametrize("persist", (True, False))
 def test_custom_plate_uses_native_abi_projection_and_source_lifecycle(
-    isolated_custom_runtime, persist,
+    isolated_custom_runtime,
+    persist,
 ) -> None:
-    from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-    from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
-    from openhcs.processing.custom_functions.runtime_registry import CustomFunctionMetadata
+    from openhcs.core.callable_contract import (
+        CallableContract,
+        FunctionStepExecutionScope,
+    )
+    from openhcs.core.pipeline.funcstep_contract_validator import (
+        FuncStepContractValidator,
+    )
+    from openhcs.processing.custom_functions.runtime_registry import (
+        CustomFunctionMetadata,
+    )
     from openhcs.processing.func_registry import get_function
 
     source = _plate_source("engineering_plate_probe")
     manager = CustomFunctionManager()
     [function] = manager.register_from_code(source, persist=persist)
-    metadata = CustomFunctionRuntimeRegistry.metadata_by_name()["engineering_plate_probe"]
+    metadata = CustomFunctionRuntimeRegistry.metadata_by_name()[
+        "engineering_plate_probe"
+    ]
     assert isinstance(metadata, CustomFunctionMetadata)
     assert get_function(metadata.composite_key) is function
     contract = CallableContract.from_callable(function)
@@ -65,7 +75,9 @@ def test_custom_plate_uses_native_abi_projection_and_source_lifecycle(
     assert not contract.declared_memory_types
     assert contract.processing_contract is None
     assert metadata.tags == ["openhcs", "custom"]
-    FuncStepContractValidator.validate_dataset_callable_contracts((contract,), "engineering")
+    FuncStepContractValidator.validate_dataset_callable_contracts(
+        (contract,), "engineering"
+    )
     reference = FunctionReferenceTransportAuthority.function_reference(function)
     assert reference.resolve() is function
 
@@ -79,7 +91,9 @@ def test_custom_plate_uses_native_abi_projection_and_source_lifecycle(
         assert manager.load_all_custom_functions() == 1
         reloaded = get_function(metadata.composite_key)
         assert CallableContract.from_callable(reloaded).processing_contract is None
-        manager.update_custom_function("engineering_plate_probe", source.replace("fixture", "replacement"))
+        manager.update_custom_function(
+            "engineering_plate_probe", source.replace("fixture", "replacement")
+        )
         with pytest.raises(RuntimeError, match="changed"):
             reference.resolve()
     else:
@@ -95,7 +109,8 @@ def test_custom_plate_uses_native_abi_projection_and_source_lifecycle(
     ),
 )
 def test_custom_plate_rejects_invalid_original_batch_abi_without_publication(
-    isolated_custom_runtime, replacement,
+    isolated_custom_runtime,
+    replacement,
 ) -> None:
     source = _plate_source("engineering_invalid_plate_probe")
     source = source.replace("*, artifact_batch: RuntimeArtifactBatch", replacement)
@@ -110,7 +125,8 @@ def test_custom_plate_does_not_admit_axis_memory_contract(
     isolated_custom_runtime,
 ) -> None:
     source = _plate_source("engineering_mixed_scope_probe").replace(
-        "@execution_scope", "@numpy\n@execution_scope",
+        "@execution_scope",
+        "@numpy\n@execution_scope",
     )
     with pytest.raises(ValidationError, match="cannot declare axis-local"):
         CustomFunctionManager().register_from_code(source)
@@ -401,7 +417,9 @@ def test_pending_resolution_rejects_retired_source_without_poisoning_current_own
 def isolated_custom_runtime(monkeypatch, tmp_path):
     storage_dir = tmp_path / "custom_functions"
     storage_dir.mkdir()
-    monkeypatch.setattr(manager_module, "get_data_file_path", lambda _name, *, create=True: storage_dir)
+    monkeypatch.setattr(
+        manager_module, "get_data_file_path", lambda _name, *, create=True: storage_dir
+    )
     monkeypatch.setattr(CustomFunctionRuntimeRegistry, "_declarations_by_name", {})
     monkeypatch.setattr(CustomFunctionRuntimeRegistry, "_published_exports", {})
     monkeypatch.setattr(CustomFunctionRuntimeRegistry, "_preparation_outcomes", {})
@@ -413,11 +431,14 @@ def isolated_custom_runtime(monkeypatch, tmp_path):
 
 @pytest.mark.parametrize("persist", (False, True))
 def test_registration_observation_uses_current_owners_without_loading(
-    isolated_custom_runtime, monkeypatch, persist,
+    isolated_custom_runtime,
+    monkeypatch,
+    persist,
 ):
     from dataclasses import replace
     from openhcs.agent.dto.functions import (
-        CustomFunctionRegistrationHandle, CustomFunctionRegistrationRequest,
+        CustomFunctionRegistrationHandle,
+        CustomFunctionRegistrationRequest,
         CustomFunctionRegistrationObservationOutcome,
     )
     from openhcs.agent.path_policy import AgentPathPolicy
@@ -428,29 +449,60 @@ def test_registration_observation_uses_current_owners_without_loading(
     policy = AgentPathPolicy.with_roots(readable_roots=(root,), writable_roots=(root,))
     manager = CustomFunctionManager(create_storage=False)
     request = CustomFunctionRegistrationRequest.from_fields(
-        source_code=_source("observation_probe"), function_name="observation_probe",
-        persist=persist, storage_dir=str(root), port=22319,
+        source_code=_source("observation_probe"),
+        function_name="observation_probe",
+        persist=persist,
+        storage_dir=str(root),
+        port=22319,
     )
-    handle = CustomFunctionRegistrationHandle.from_request(replace(request, server_identity=ProcessIdentity.current()))
+    handle = CustomFunctionRegistrationHandle.from_request(
+        replace(request, server_identity=ProcessIdentity.current())
+    )
     service = FunctionCatalogService(path_policy=policy)
     before = service.observe_custom_function_registration(handle)
     assert before.outcome is CustomFunctionRegistrationObservationOutcome.NOT_OBSERVED
-    [function] = manager.register_from_code(request.source_code, persist=persist, clear_caches=False, emit_signal=False)
-    monkeypatch.setattr(CustomFunctionManager, "_prepare_source", lambda *_: pytest.fail("Read-only observation cannot evaluate source"))
-    monkeypatch.setattr(CustomFunctionManager, "load_custom_function", lambda *_a, **_k: pytest.fail("Read-only observation cannot lazy load"))
+    [function] = manager.register_from_code(
+        request.source_code, persist=persist, clear_caches=False, emit_signal=False
+    )
+    monkeypatch.setattr(
+        CustomFunctionManager,
+        "_prepare_source",
+        lambda *_: pytest.fail("Read-only observation cannot evaluate source"),
+    )
+    monkeypatch.setattr(
+        CustomFunctionManager,
+        "load_custom_function",
+        lambda *_a, **_k: pytest.fail("Read-only observation cannot lazy load"),
+    )
     observed = service.observe_custom_function_registration(handle)
     assert observed.outcome is CustomFunctionRegistrationObservationOutcome.REGISTERED
     assert observed.published_sources == (handle.require_named_source(),)
-    assert CustomFunctionRuntimeRegistry.metadata_by_name()["observation_probe"].func is function
-    assert observed.persisted_source == (handle.require_named_source() if persist else None)
-    changed = service.observe_custom_function_registration(replace(handle, content_sha256="0" * 64))
+    assert (
+        CustomFunctionRuntimeRegistry.metadata_by_name()["observation_probe"].func
+        is function
+    )
+    assert observed.persisted_source == (
+        handle.require_named_source() if persist else None
+    )
+    changed = service.observe_custom_function_registration(
+        replace(handle, content_sha256="0" * 64)
+    )
     assert changed.outcome is CustomFunctionRegistrationObservationOutcome.NOT_OBSERVED
     assert not changed.published_sources
     with pytest.raises(RuntimeError, match="stale"):
-        service.observe_custom_function_registration(replace(handle, server_identity=replace(ProcessIdentity.current(), create_time=0)))
+        service.observe_custom_function_registration(
+            replace(
+                handle,
+                server_identity=replace(ProcessIdentity.current(), create_time=0),
+            )
+        )
     CustomFunctionRuntimeRegistry.remove("observation_probe")
     after = service.observe_custom_function_registration(handle)
-    assert after.outcome is (CustomFunctionRegistrationObservationOutcome.PERSISTED_ONLY if persist else CustomFunctionRegistrationObservationOutcome.NOT_OBSERVED)
+    assert after.outcome is (
+        CustomFunctionRegistrationObservationOutcome.PERSISTED_ONLY
+        if persist
+        else CustomFunctionRegistrationObservationOutcome.NOT_OBSERVED
+    )
 
 
 def test_register_rejects_multi_declaration_source_without_partial_publication(
@@ -667,7 +719,9 @@ def test_concurrent_failed_loads_share_one_exact_source_outcome(
 def test_failed_preparation_keeps_evidence_not_payload_or_reader_frames(
     isolated_custom_runtime,
 ) -> None:
-    from openhcs.processing.custom_functions.source_namespace import CustomFunctionSource
+    from openhcs.processing.custom_functions.source_namespace import (
+        CustomFunctionSource,
+    )
 
     source = CustomFunctionSource("failed_payload_probe", "failure-revision")
     references = []
@@ -691,7 +745,9 @@ def test_failed_preparation_keeps_evidence_not_payload_or_reader_frames(
         errors.append(error)
         assert str(error) == "source failed | Line 7 | Code: raise cause"
         assert (error.message, error.line_number, error.code_snippet) == (
-            "source failed", 7, "raise cause",
+            "source failed",
+            7,
+            "raise cause",
         )
         assert "ValueError: original source cause" in error.__notes__[0]
         assert "raise ValidationError" in error.__notes__[0]
@@ -1086,11 +1142,17 @@ def nested_helper_transport_probe(image):
         pickle.dumps(helper)
 
 
-@pytest.mark.parametrize("operation", ["replace", "remove", "reconcile", "clear", "stale_preparation"])
+@pytest.mark.parametrize(
+    "operation", ["replace", "remove", "reconcile", "clear", "stale_preparation"]
+)
 def test_source_retirement_thaws_before_dropping_captured_owners(
-    isolated_custom_runtime, monkeypatch, operation,
+    isolated_custom_runtime,
+    monkeypatch,
+    operation,
 ):
-    from openhcs.processing.custom_functions.source_namespace import CustomFunctionSource
+    from openhcs.processing.custom_functions.source_namespace import (
+        CustomFunctionSource,
+    )
 
     manager = CustomFunctionManager()
     name = "startup_gc_retirement_probe"
@@ -1104,7 +1166,10 @@ def test_source_retirement_thaws_before_dropping_captured_owners(
         assert vars(custom_functions)[name] is previous.func
         calls.append("thaw")
 
-    monkeypatch.setattr("openhcs.processing.backends.lib_registry.registry_service.gc.unfreeze", unfreeze)
+    monkeypatch.setattr(
+        "openhcs.processing.backends.lib_registry.registry_service.gc.unfreeze",
+        unfreeze,
+    )
     if operation == "replace":
         manager.update_custom_function(name, _source(name, "image + 1"))
     elif operation == "remove":

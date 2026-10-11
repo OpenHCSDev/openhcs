@@ -318,20 +318,27 @@ class CompiledStepPlan:
     error: str | None = None
 
     def stored_primary_input_edges_for_group(
-        self, group: CompiledFunctionGroup, component_key: str | None,
+        self,
+        group: CompiledFunctionGroup,
+        component_key: str | None,
     ) -> tuple[InvocationArtifactInputEdgePlan, ...] | None:
         """Admit exact producer transport only without path-based transforms."""
         if self.input_conversion is not None or self.sequential_filter_plan.enabled:
             return None
         edges = group.stored_primary_input_edges_for_component(
-            self.execution_group_scope, component_key,
+            self.execution_group_scope,
+            component_key,
             source_bindings=self.source_binding_plan,
         )
         if edges and any(
-            edge.storage_plan.source_step_scope_id == self.step_scope_id
-            if edge.storage_plan.source_step_scope_id is not None
-            else edge.storage_plan.source_step_id in (
-                self.step_index, self.step_scope_id,
+            (
+                edge.storage_plan.source_step_scope_id == self.step_scope_id
+                if edge.storage_plan.source_step_scope_id is not None
+                else edge.storage_plan.source_step_id
+                in (
+                    self.step_index,
+                    self.step_scope_id,
+                )
             )
             for edge in edges
         ):
@@ -339,7 +346,8 @@ class CompiledStepPlan:
         return edges
 
     def requires_main_flow_checkpoint(
-        self, plans: Mapping[int, "CompiledStepPlan"],
+        self,
+        plans: Mapping[int, "CompiledStepPlan"],
     ) -> bool:
         """Follow this value's consumers through preserved input lifetimes."""
         if not plans or self.step_index not in plans:
@@ -371,8 +379,10 @@ class CompiledStepPlan:
                 if pattern is None or any(
                     (group := pattern.group_for_component(component_key)) is None
                     or consumer.stored_primary_input_edges_for_group(
-                        group, component_key,
-                    ) is None
+                        group,
+                        component_key,
+                    )
+                    is None
                     for component_key in consumer.execution_group_scope.keys
                 ):
                     return True
@@ -551,7 +561,6 @@ class CompiledStepPlan:
         """Return the compiled declaration-owned framework device scope."""
 
         return self.device_assignment.scope_for(declaration)
-
 
     @property
     def execution_group_value(self) -> str | None:

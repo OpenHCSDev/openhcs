@@ -321,7 +321,9 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
                 )
                 return 130
             except MeasuredRunEnded as ended:
-                print(json.dumps(to_jsonable(ended.row), sort_keys=True), file=sys.stderr)
+                print(
+                    json.dumps(to_jsonable(ended.row), sort_keys=True), file=sys.stderr
+                )
                 raise RuntimeError(
                     f"Ordinary pipeline run did not complete: {ended}"
                 ) from ended
@@ -824,7 +826,9 @@ class PlotMeasuredBenchmarkCommand(BenchmarkCliCommand):
             required=True,
             help="MODE_LABEL=qualified_summary.csv; repeat for measured well/worker modes.",
         )
-        parser.add_argument("--scope", choices=("execution", "total", "amortization"), required=True)
+        parser.add_argument(
+            "--scope", choices=("execution", "total", "amortization"), required=True
+        )
         parser.add_argument("--output-dir", type=Path, required=True)
         return parser
 

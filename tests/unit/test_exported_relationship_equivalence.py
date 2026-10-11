@@ -1,5 +1,5 @@
-
 from tests.unit.saved_output_dialect import SAVED_OUTPUT_POLICY
+
 """Saved directed edges must retain the native object-row correlations."""
 
 from dataclasses import replace
@@ -61,12 +61,17 @@ def _edit_table(snapshot: RuntimeOutputSnapshot, stem: str, **changes):
     return replace(
         snapshot,
         tables=tuple(
-            replace(
-                table,
-                **{name: change(getattr(table, name)) for name, change in changes.items()},
+            (
+                replace(
+                    table,
+                    **{
+                        name: change(getattr(table, name))
+                        for name, change in changes.items()
+                    },
+                )
+                if table.path.stem == stem
+                else table
             )
-            if table.path.stem == stem
-            else table
             for table in snapshot.tables
         ),
     )
@@ -85,7 +90,9 @@ def test_saved_relationship_edges_join_native_parent_and_zero_child_counts(
     candidate = RuntimeMeasurementSnapshot.from_output_snapshot(
         _saved_outputs(tmp_path / "openhcs", edges=True), policy=SAVED_OUTPUT_POLICY
     )
-    assert runtime_measurement_equivalence(reference, candidate, policy=SAVED_OUTPUT_POLICY).is_equivalent
+    assert runtime_measurement_equivalence(
+        reference, candidate, policy=SAVED_OUTPUT_POLICY
+    ).is_equivalent
 
 
 def test_relationship_endpoint_permutation_cannot_hide_in_equal_value_histograms(
@@ -95,9 +102,12 @@ def test_relationship_endpoint_permutation_cannot_hide_in_equal_value_histograms
         _saved_outputs(tmp_path / "native", edges=False), policy=SAVED_OUTPUT_POLICY
     )
     candidate = RuntimeMeasurementSnapshot.from_output_snapshot(
-        _saved_outputs(tmp_path / "openhcs", edges=True, swapped=True), policy=SAVED_OUTPUT_POLICY
+        _saved_outputs(tmp_path / "openhcs", edges=True, swapped=True),
+        policy=SAVED_OUTPUT_POLICY,
     )
-    assert not runtime_measurement_equivalence(reference, candidate, policy=SAVED_OUTPUT_POLICY).is_equivalent
+    assert not runtime_measurement_equivalence(
+        reference, candidate, policy=SAVED_OUTPUT_POLICY
+    ).is_equivalent
 
 
 def test_relationship_rows_must_agree_with_explicit_parent_measurements(
@@ -115,7 +125,9 @@ def test_relationship_rows_must_agree_with_explicit_parent_measurements(
         ),
     )
     with pytest.raises(ValueError, match="relationship|Relationship"):
-        RuntimeMeasurementSnapshot.from_output_snapshot(snapshot, policy=SAVED_OUTPUT_POLICY)
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            snapshot, policy=SAVED_OUTPUT_POLICY
+        )
 
 
 def test_ordinary_image_row_conflicts_remain_rejected(tmp_path: Path) -> None:
@@ -210,7 +222,9 @@ def test_saved_edge_schema_and_coverage_rejects_malformed_inputs(
         snapshot, "Relationships", header=lambda _: header, rows=lambda _: rows
     )
     with pytest.raises((ValueError, TypeError), match=message):
-        RuntimeMeasurementSnapshot.from_output_snapshot(snapshot, policy=SAVED_OUTPUT_POLICY)
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            snapshot, policy=SAVED_OUTPUT_POLICY
+        )
 
 
 def test_saved_relationship_counts_include_noncontiguous_zero_child_parents(
@@ -223,19 +237,28 @@ def test_saved_relationship_counts_include_noncontiguous_zero_child_parents(
             snapshot,
             "Cells",
             rows=lambda rows: tuple(
-                tuple("30" if i == 1 and value == "3" else value for i, value in enumerate(row))
+                tuple(
+                    "30" if i == 1 and value == "3" else value
+                    for i, value in enumerate(row)
+                )
                 for row in rows
             ),
         )
         for snapshot in (native, candidate)
     )
-    a = RuntimeMeasurementSnapshot.from_output_snapshot(native, policy=SAVED_OUTPUT_POLICY)
-    b = RuntimeMeasurementSnapshot.from_output_snapshot(candidate, policy=SAVED_OUTPUT_POLICY)
+    a = RuntimeMeasurementSnapshot.from_output_snapshot(
+        native, policy=SAVED_OUTPUT_POLICY
+    )
+    b = RuntimeMeasurementSnapshot.from_output_snapshot(
+        candidate, policy=SAVED_OUTPUT_POLICY
+    )
     assert (
         a.correlated_relationships is not None
         and b.correlated_relationships is not None
     )
-    assert runtime_measurement_equivalence(a, b, policy=SAVED_OUTPUT_POLICY).is_equivalent
+    assert runtime_measurement_equivalence(
+        a, b, policy=SAVED_OUTPUT_POLICY
+    ).is_equivalent
 
 
 def test_snapshot_cache_retains_known_correlations_and_unknown_typed_scope(
@@ -290,7 +313,9 @@ def test_saved_relationship_omitted_slice_count_preserves_optional_payload_contr
         header=lambda header: header[:-1],
         rows=lambda rows: tuple(row[:-1] for row in rows),
     )
-    result = RuntimeMeasurementSnapshot.from_output_snapshot(snapshot, policy=SAVED_OUTPUT_POLICY)
+    result = RuntimeMeasurementSnapshot.from_output_snapshot(
+        snapshot, policy=SAVED_OUTPUT_POLICY
+    )
     assert result.correlated_relationships is not None
 
 
@@ -305,8 +330,12 @@ def test_saved_relationship_row_order_does_not_change_directed_correlation(
         "Relationships",
         rows=lambda rows: rows[:4] + rows[4:][::-1],
     )
-    result = RuntimeMeasurementSnapshot.from_output_snapshot(snapshot, policy=SAVED_OUTPUT_POLICY)
-    assert runtime_measurement_equivalence(native, result, policy=SAVED_OUTPUT_POLICY).is_equivalent
+    result = RuntimeMeasurementSnapshot.from_output_snapshot(
+        snapshot, policy=SAVED_OUTPUT_POLICY
+    )
+    assert runtime_measurement_equivalence(
+        native, result, policy=SAVED_OUTPUT_POLICY
+    ).is_equivalent
 
 
 def test_unparented_zero_edges_still_validate_actual_child_domain(
@@ -322,7 +351,9 @@ def test_unparented_zero_edges_still_validate_actual_child_domain(
         "Relationships",
         rows=lambda rows: tuple((*row[:6], "0", *row[7:]) for row in rows),
     )
-    result = RuntimeMeasurementSnapshot.from_output_snapshot(snapshot, policy=SAVED_OUTPUT_POLICY)
+    result = RuntimeMeasurementSnapshot.from_output_snapshot(
+        snapshot, policy=SAVED_OUTPUT_POLICY
+    )
     assert result.correlated_relationships is not None
     assert all(
         not graph.source_keys for graph in result.correlated_relationships.values()
@@ -333,7 +364,9 @@ def test_unparented_zero_edges_still_validate_actual_child_domain(
         rows=lambda rows: tuple((*row[:7], "999", *row[8:]) for row in rows),
     )
     with pytest.raises(ValueError, match="absent child"):
-        RuntimeMeasurementSnapshot.from_output_snapshot(snapshot, policy=SAVED_OUTPUT_POLICY)
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            snapshot, policy=SAVED_OUTPUT_POLICY
+        )
 
 
 @pytest.mark.parametrize(
@@ -348,7 +381,9 @@ def test_unparented_zero_edges_still_validate_actual_child_domain(
 def test_child_count_parser_and_core_declaration_share_original_grammar(
     feature: str, identity: str | None
 ) -> None:
-    from openhcs.interop.cellprofiler.measurement_lookup import ChildCountFeatureDeclaration
+    from openhcs.interop.cellprofiler.measurement_lookup import (
+        ChildCountFeatureDeclaration,
+    )
     from openhcs.interop.cellprofiler.measurement_lookup import (
         CellProfilerChildCountFeatureParser,
     )
@@ -397,7 +432,9 @@ def test_native_parent_rows_require_real_integral_parent_domain(
         rows=lambda rows: tuple((*row[:2], parent_value) for row in rows),
     )
     with pytest.raises(ValueError, match=message):
-        RuntimeMeasurementSnapshot.from_output_snapshot(snapshot, policy=SAVED_OUTPUT_POLICY)
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            snapshot, policy=SAVED_OUTPUT_POLICY
+        )
 
 
 def test_native_child_count_permutation_cannot_hide_in_equal_histograms(
@@ -406,10 +443,14 @@ def test_native_child_count_permutation_cannot_hide_in_equal_histograms(
     snapshot = _edit_table(
         _saved_outputs(tmp_path / "native", edges=False),
         "Cells",
-        rows=lambda rows: tuple((*row[:2], "0" if row[1] == "1" else "1") for row in rows),
+        rows=lambda rows: tuple(
+            (*row[:2], "0" if row[1] == "1" else "1") for row in rows
+        ),
     )
     with pytest.raises(ValueError, match="disagree with.*children_nuclei_count"):
-        RuntimeMeasurementSnapshot.from_output_snapshot(snapshot, policy=SAVED_OUTPUT_POLICY)
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            snapshot, policy=SAVED_OUTPUT_POLICY
+        )
 
 
 def test_snapshot_json_cache_retains_correlation_scope(tmp_path: Path) -> None:

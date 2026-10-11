@@ -25,7 +25,9 @@ class ComponentFilters:
         if not self.by_axis:
             return
         family = AxisFamily.active()
-        unknown = sorted(name for name, _values in self.by_axis if name not in family.names())
+        unknown = sorted(
+            name for name, _values in self.by_axis if name not in family.names()
+        )
         if unknown:
             raise ValueError(
                 f"component_filters name unknown axes {unknown}; the "
@@ -45,7 +47,11 @@ class ComponentFilters:
             by_axis=tuple(
                 (
                     str(name),
-                    (values,) if isinstance(values, str) else tuple(str(value) for value in values),
+                    (
+                        (values,)
+                        if isinstance(values, str)
+                        else tuple(str(value) for value in values)
+                    ),
                 )
                 for name, values in mapping.items()
             )

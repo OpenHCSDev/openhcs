@@ -54,9 +54,9 @@ def test_absent_declaration_retains_signature_inference():
     assert FunctionContractAttribute.runtime_context_parameter not in vars(
         _inferred_context
     )
-    assert CallableContract.from_callable(_inferred_context).runtime_context_parameter == (
-        "context"
-    )
+    assert CallableContract.from_callable(
+        _inferred_context
+    ).runtime_context_parameter == ("context")
 
 
 def test_none_declaration_preserves_callable_identity_and_public_signature():
@@ -75,8 +75,11 @@ def test_none_declaration_preserves_callable_identity_and_public_signature():
 
 @pytest.mark.parametrize(
     ("func", "expected"),
-    [(_inferred_context, "context"), (_without_context, None),
-     (_named_context, "execution_context")],
+    [
+        (_inferred_context, "context"),
+        (_without_context, None),
+        (_named_context, "execution_context"),
+    ],
 )
 def test_namespace_reconstruction_retains_captured_selection(func, expected):
     metadata = CallableMetadata.from_callable(func)
@@ -96,9 +99,9 @@ def test_reference_and_pickle_reconstruction_retain_selection(func):
     reference = FunctionReferenceTransportAuthority.function_reference(func)
     restored_reference = pickle.loads(pickle.dumps(reference))
     assert restored_reference.resolve() is func
-    assert CallableContract.from_callable(restored_reference).runtime_context_parameter == (
-        expected
-    )
+    assert CallableContract.from_callable(
+        restored_reference
+    ).runtime_context_parameter == (expected)
     contract = CallableContract.from_callable(restored_reference)
     assert pickle.loads(pickle.dumps(contract)).runtime_context_parameter == expected
 
@@ -115,9 +118,12 @@ def test_wrapper_preparation_does_not_resurrect_context_inference():
     assert contract.runtime_context_parameter is None
     assert "context" not in contract.runtime_owned_parameter_names
     assert "context" not in parameter_exclusions(process)
-    assert inspect.signature(contract.resolve_canonical_raw_callable()).parameters[
-        "context"
-    ].default is None
+    assert (
+        inspect.signature(contract.resolve_canonical_raw_callable())
+        .parameters["context"]
+        .default
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -168,7 +174,10 @@ def test_save_images_variants_keep_independent_injection_declarations():
     for func in (save_images, save_images_with_measurements):
         reference = FunctionReferenceTransportAuthority.function_reference(func)
         expected = CallableContract.from_callable(func).runtime_context_parameter
-        assert CallableContract.from_callable(reference).runtime_context_parameter == expected
+        assert (
+            CallableContract.from_callable(reference).runtime_context_parameter
+            == expected
+        )
 
 
 def test_measurement_variant_keeps_real_axis_scoped_filename_context():
@@ -202,8 +211,12 @@ def test_named_context_declaration_does_not_resolve_unrelated_forward_references
     assert inspect.signature(process).parameters["image"].annotation == (
         "DefinedAfterDeclaration"
     )
-    assert vars(process)[FunctionContractAttribute.runtime_context_parameter] == "context"
-    assert CallableMetadata.from_callable(process).runtime_context_parameter == "context"
+    assert (
+        vars(process)[FunctionContractAttribute.runtime_context_parameter] == "context"
+    )
+    assert (
+        CallableMetadata.from_callable(process).runtime_context_parameter == "context"
+    )
     marker = namespace["DefinedAfterDeclaration"]()
     assert process(marker, context=marker) == (marker, marker)
 

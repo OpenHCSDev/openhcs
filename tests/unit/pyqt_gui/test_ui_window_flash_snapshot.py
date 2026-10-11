@@ -94,24 +94,24 @@ def test_async_snapshot_uses_existing_operation_and_registered_response_contract
     bridge._mutation_gate._lock.release()
     form.update_parameter("number", 8)
     qtbot.waitUntil(
-        lambda: bridge.get_operation_status(UiBridgeOperationStatusRequest(accepted.operation_id)).completed_at_unix
+        lambda: bridge.get_operation_status(
+            UiBridgeOperationStatusRequest(accepted.operation_id)
+        ).completed_at_unix
         is not None,
         timeout=2000,
     )
-    operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(accepted.operation_id))
+    operation = bridge.get_operation_status(
+        UiBridgeOperationStatusRequest(accepted.operation_id)
+    )
     assert operation.status == "completed"
     contract = UiBridgeOperation.for_name(operation.identity.operation_name)
-    result = dataclass_from_mapping(
-        contract.result_type, operation.result_payload
-    )
+    result = dataclass_from_mapping(contract.result_type, operation.result_payload)
     assert isinstance(result, UiWindowSnapshotResult)
     assert result.captured
     assert result.frame_condition is request.frame_condition
     assert result.observation.frame.has_maximum_alpha
     assert result.resource.path.endswith(".png")
-    wire_operation = dataclass_from_mapping(
-        type(operation), to_jsonable(operation)
-    )
+    wire_operation = dataclass_from_mapping(type(operation), to_jsonable(operation))
     assert wire_operation == operation
     wire_result = dataclass_from_mapping(
         contract.result_type,
@@ -152,7 +152,12 @@ def test_async_snapshot_invalid_baseline_is_terminal_failed(
     )
     assert not result.captured
     assert result.errors
-    assert bridge.get_operation_status(UiBridgeOperationStatusRequest(result.operation_id)).status == "failed"
+    assert (
+        bridge.get_operation_status(
+            UiBridgeOperationStatusRequest(result.operation_id)
+        ).status
+        == "failed"
+    )
 
 
 def test_noop_reset_quiet_operation_preserves_actual_interval_receipt(
@@ -171,15 +176,17 @@ def test_noop_reset_quiet_operation_preserves_actual_interval_receipt(
     )
     form.reset_buttons["number"].click()
     qtbot.waitUntil(
-        lambda: bridge.get_operation_status(UiBridgeOperationStatusRequest(accepted.operation_id)).completed_at_unix
+        lambda: bridge.get_operation_status(
+            UiBridgeOperationStatusRequest(accepted.operation_id)
+        ).completed_at_unix
         is not None,
         timeout=2000,
     )
-    operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(accepted.operation_id))
-    contract = UiBridgeOperation.for_name(operation.identity.operation_name)
-    result = dataclass_from_mapping(
-        contract.result_type, operation.result_payload
+    operation = bridge.get_operation_status(
+        UiBridgeOperationStatusRequest(accepted.operation_id)
     )
+    contract = UiBridgeOperation.for_name(operation.identity.operation_name)
+    result = dataclass_from_mapping(contract.result_type, operation.result_payload)
     assert result.captured
     assert (
         result.observation.flash_start_count
@@ -212,26 +219,25 @@ def test_failed_observation_frame_and_existing_trace_decode_through_registered_o
     )
     form.update_parameter("number", 8)
     qtbot.waitUntil(
-        lambda: bridge.get_operation_status(UiBridgeOperationStatusRequest(accepted.operation_id)).completed_at_unix
+        lambda: bridge.get_operation_status(
+            UiBridgeOperationStatusRequest(accepted.operation_id)
+        ).completed_at_unix
         is not None,
         timeout=2000,
     )
-    operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(accepted.operation_id))
+    operation = bridge.get_operation_status(
+        UiBridgeOperationStatusRequest(accepted.operation_id)
+    )
     assert operation.status == "failed"
     contract = UiBridgeOperation.for_name(operation.identity.operation_name)
-    result = dataclass_from_mapping(
-        contract.result_type, operation.result_payload
-    )
+    result = dataclass_from_mapping(contract.result_type, operation.result_payload)
     assert not result.captured and result.resource is None
     assert isinstance(result.observation.frame, FlashPaintFrame)
     assert result.observation.trace and len(result.observation.trace) <= 300
     assert all(
         isinstance(record, FlashTraceRecord) for record in result.observation.trace
     )
-    assert (
-        dataclass_from_mapping(type(result), to_jsonable(result))
-        == result
-    )
+    assert dataclass_from_mapping(type(result), to_jsonable(result)) == result
 
 
 def test_snapshot_cli_derives_typed_observation_arguments(tmp_path):
@@ -303,16 +309,16 @@ def test_navigation_uses_existing_operation_with_terminal_native_driver_receipt(
         assert not accepted.navigated
         assert accepted.target_exposed is None
         qtbot.waitUntil(
-            lambda: bridge.get_operation_status(UiBridgeOperationStatusRequest(accepted.operation_id)).completed_at_unix
+            lambda: bridge.get_operation_status(
+                UiBridgeOperationStatusRequest(accepted.operation_id)
+            ).completed_at_unix
             is not None
         )
-        operation = bridge.get_operation_status(UiBridgeOperationStatusRequest(accepted.operation_id))
-        contract = UiBridgeOperation.for_name(
-            operation.identity.operation_name
+        operation = bridge.get_operation_status(
+            UiBridgeOperationStatusRequest(accepted.operation_id)
         )
-        result = dataclass_from_mapping(
-            contract.result_type, operation.result_payload
-        )
+        contract = UiBridgeOperation.for_name(operation.identity.operation_name)
+        result = dataclass_from_mapping(contract.result_type, operation.result_payload)
         assert isinstance(result, UiWindowNavigateResult)
         assert operation.status == "completed"
         assert selected == ["number"]
@@ -338,7 +344,12 @@ def test_unowned_target_navigation_is_terminal_failed_not_pending(
     )
     assert accepted.errors
     assert accepted.operation_id
-    assert bridge.get_operation_status(UiBridgeOperationStatusRequest(accepted.operation_id)).status == "failed"
+    assert (
+        bridge.get_operation_status(
+            UiBridgeOperationStatusRequest(accepted.operation_id)
+        ).status
+        == "failed"
+    )
 
 
 def test_tracker_observation_failure_uses_declared_operation_error_owner(

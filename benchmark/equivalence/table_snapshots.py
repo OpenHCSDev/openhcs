@@ -460,10 +460,10 @@ class RuntimeTableSnapshot:
         normalized_name = normalize_runtime_identifier(self.path.stem)
         if normalized_name == _scope_token(dialect, MeasurementScope.RUN):
             return MeasurementSubject(MeasurementScope.RUN)
-        if (
-            normalized_name != _scope_token(dialect, MeasurementScope.SAMPLE)
-            and normalized_header
-            & frozenset(MeasurementRowAxisField.object_id_field_names())
+        if normalized_name != _scope_token(
+            dialect, MeasurementScope.SAMPLE
+        ) and normalized_header & frozenset(
+            MeasurementRowAxisField.object_id_field_names()
         ):
             return self._object_subject(
                 self.path.stem,

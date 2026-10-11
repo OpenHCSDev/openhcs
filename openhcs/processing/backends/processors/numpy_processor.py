@@ -329,14 +329,16 @@ def _indexed_weighted_projection(
         preserve_numpy_sum_order and not values.flags.c_contiguous
     )
     if (
-        not supported or pairwise
+        not supported
+        or pairwise
         or dtype not in (np.dtype(np.float32), np.dtype(np.float64))
     ):
         if preserve_numpy_sum_order:
             converted = members.astype(dtype)
             factors = weights.reshape((len(weights),) + (1,) * (members.ndim - 1))
             selected_members = (
-                converted if np.array_equal(selected, np.arange(count))
+                converted
+                if np.array_equal(selected, np.arange(count))
                 else converted[selected]
             )
             return np.sum(selected_members * factors, axis=0)
@@ -367,12 +369,16 @@ class NumpyWeightedProjectionKernelPreparation(
                 for shape in ((3, 2, 2), (3, 2, 2, 2)):
                     values = np.ones(shape, dtype=source_dtype)
                     strided = np.moveaxis(
-                        np.moveaxis(values, 0, -1).copy(), -1, 0,
+                        np.moveaxis(values, 0, -1).copy(),
+                        -1,
+                        0,
                     )
                     for members in (values, np.asfortranarray(values), strided):
                         for writable in (True, False):
                             members.flags.writeable = writable
-                            _indexed_weighted_projection(members, indices, weights, axis=0)
+                            _indexed_weighted_projection(
+                                members, indices, weights, axis=0
+                            )
 
 
 @numpy_func(contract=VolumetricToSliceContract)
@@ -399,8 +405,11 @@ def create_composite(
     weights_array = np.array(normalized_weights, dtype=np.float32)
 
     composite_slice = _indexed_weighted_projection(
-        stack, np.arange(n_slices, dtype=np.int64), weights_array,
-        axis=0, preserve_numpy_sum_order=True,
+        stack,
+        np.arange(n_slices, dtype=np.int64),
+        weights_array,
+        axis=0,
+        preserve_numpy_sum_order=True,
     )
 
     # Convert back to original dtype
@@ -439,7 +448,9 @@ def create_weight_mask(shape: Tuple[int, int], margin_ratio: float = 0.1) -> np.
     Returns:
         2D NumPy weight mask of shape (Y, X)
     """
-    return create_linear_weight_mask(*operations.weight_mask_extent(shape), margin_ratio)
+    return create_linear_weight_mask(
+        *operations.weight_mask_extent(shape), margin_ratio
+    )
 
 
 @numpy_func

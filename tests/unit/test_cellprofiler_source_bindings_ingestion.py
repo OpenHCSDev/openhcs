@@ -134,9 +134,12 @@ def test_axis_projection_reads_each_axis_through_its_declarations() -> None:
             assert source_metadata_component(alias) is axis
         primary = axis.metadata_aliases[0]
         assert SourceAxisProjection.project(axis, {primary: "B07"}, 0) == "B07"
-    assert SourceAxisProjection.project(
-        Microscopy.Well, {"Metadata_Row": "c", "Metadata_Column": "4"}, 0
-    ) == "C04"
+    assert (
+        SourceAxisProjection.project(
+            Microscopy.Well, {"Metadata_Row": "c", "Metadata_Column": "4"}, 0
+        )
+        == "C04"
+    )
     assert SourceAxisProjection.project(Microscopy.Well, {}, 3) == "A01"
     assert SourceAxisProjection.project(Microscopy.Channel, {}, 3) == "4"
     assert SourceAxisProjection.project(Microscopy.ZIndex, {}, 3) == "1"

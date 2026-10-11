@@ -5,7 +5,14 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle, ImagePayloadStackComposition, ImagePayloadSliceStack, compose_aligned_image_payload)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    AlignedImageStack,
+    ImageOutputBundle,
+    ImagePayloadStackComposition,
+    ImagePayloadSliceStack,
+    compose_aligned_image_payload,
+)
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.callable_contract import CallableContract, CallableMetadata
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
@@ -14,7 +21,10 @@ from openhcs.core.runtime_measurements import (
     MeasurementSubject,
     MeasurementTable,
 )
-from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
+from openhcs.core.runtime_object_labels import (
+    ObjectLabelPayload,
+    ObjectLabelVariantData,
+)
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -31,7 +41,10 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
 from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity
-from openhcs.processing.backends.cellprofiler.morphology import remove_holes, remove_holes_3d
+from openhcs.processing.backends.cellprofiler.morphology import (
+    remove_holes,
+    remove_holes_3d,
+)
 from openhcs.core.processing_contracts import (
     ProcessingContract,
     Pure3DContract,
@@ -65,7 +78,9 @@ def test_real_rescale_full_stack_materializes_composed_runtime_sources():
 
 
 @pytest.mark.parametrize("function", (remove_holes, remove_holes_3d))
-def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classification(function):
+def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classification(
+    function,
+):
     pixels = np.ones((60, 6, 8), dtype=np.float32)
     pixels[20:22, 2:4, 3:5] = 0
     mask = np.ones(pixels.shape, dtype=bool)
@@ -73,7 +88,8 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
     metadata = ImagePayloadMetadata(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         source_voxel_spacing=SourceVoxelSpacing(
-            (1.25, 2.5, 3.0), SourceVoxelSpacingUnit.MICROMETERS,
+            (1.25, 2.5, 3.0),
+            SourceVoxelSpacingUnit.MICROMETERS,
         ),
         source_spatial_domain=SourceSpatialDomain(source_shape_yx=(6, 8)),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -83,12 +99,18 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
     )
     dense = metadata.payload_with(pixels, mask)
     projection = RuntimePlaneAxisValueProjection.preserve(
-        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=60,
+        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis_size=60,
     )
     literal = ImagePayloadSliceStack.from_output_slices(
-        tuple(RuntimeSliceProjection.value_for_slice(dense, projection.selected_plane(index))
-              for index in range(60)),
-        memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        tuple(
+            RuntimeSliceProjection.value_for_slice(
+                dense, projection.selected_plane(index)
+            )
+            for index in range(60)
+        ),
+        memory_type="numpy",
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     )
     assert not isinstance(literal, AlignedImageStack)
     composition = compose_aligned_image_payload("literal volume", (literal,))
@@ -96,24 +118,39 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
     assert composition.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert literal._composed_payload is None
     contract = CallableContract.from_callable(function)
-    contract = replace(contract, metadata=replace(
-        contract.metadata, artifact_outputs=(ArtifactSpec.output("Filled", ImageArtifactType),),
-    ))
+    contract = replace(
+        contract,
+        metadata=replace(
+            contract.metadata,
+            artifact_outputs=(ArtifactSpec.output("Filled", ImageArtifactType),),
+        ),
+    )
     executor = CellProfilerFunctionContractExecutor()
     outputs = tuple(
         executor.execute(
-            contract, contract.resolve_canonical_raw_callable(), value, {},
-            execution_mode=compose_aligned_image_payload("volume", (value,)).execution_mode,
+            contract,
+            contract.resolve_canonical_raw_callable(),
+            value,
+            {},
+            execution_mode=compose_aligned_image_payload(
+                "volume", (value,)
+            ).execution_mode,
             plane_projection=projection,
         )
         for value in (dense, literal)
     )
-    np.testing.assert_array_equal(ImagePayload.of(outputs[1]).data, ImagePayload.of(outputs[0]).data)
-    np.testing.assert_array_equal(ImagePayload.of(outputs[1]).mask, ImagePayload.of(outputs[0]).mask)
+    np.testing.assert_array_equal(
+        ImagePayload.of(outputs[1]).data, ImagePayload.of(outputs[0]).data
+    )
+    np.testing.assert_array_equal(
+        ImagePayload.of(outputs[1]).mask, ImagePayload.of(outputs[0]).mask
+    )
     assert ImagePayload.of(outputs[1]).metadata == ImagePayload.of(outputs[0]).metadata
 
 
-@pytest.mark.parametrize("processing_contract", tuple(ProcessingContract.__registry__.values()))
+@pytest.mark.parametrize(
+    "processing_contract", tuple(ProcessingContract.__registry__.values())
+)
 @pytest.mark.parametrize("slice_count", (1, 2))
 def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
     processing_contract, slice_count
@@ -213,12 +250,7 @@ def test_aligned_materialization_retains_masks_calibration_and_exact_contributor
     } == set(expected_paths)
     np.testing.assert_array_equal(
         dense.mask,
-        np.stack(
-            [
-                np.broadcast_to(plane.mask, (2, 3, 4))
-                for plane in composed.slices
-            ]
-        ),
+        np.stack([np.broadcast_to(plane.mask, (2, 3, 4)) for plane in composed.slices]),
     )
     for index in range(2):
         projected = RuntimeSliceProjection.value_for_slice(
@@ -227,9 +259,7 @@ def test_aligned_materialization_retains_masks_calibration_and_exact_contributor
                 axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_index=index, axis_size=2
             ),
         )
-        np.testing.assert_array_equal(
-            projected.data, composed.slices[index].data
-        )
+        np.testing.assert_array_equal(projected.data, composed.slices[index].data)
         expected = {f"/synthetic/A01_s{index + 1}_w{channel}.tif" for channel in (1, 2)}
         assert {
             identity.path
@@ -248,7 +278,10 @@ def test_named_output_bundle_materializes_its_own_source_binding_axis():
     )
     dense = RuntimeSliceProjection.full_stack_value(bundle)
     assert dense.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-    assert dense.metadata.source_provenance.represented_source_image_names == ("red", "green")
+    assert dense.metadata.source_provenance.represented_source_image_names == (
+        "red",
+        "green",
+    )
     np.testing.assert_array_equal(dense.data, np.stack(planes))
     assert all(
         slice_payload.data is plane
@@ -289,9 +322,7 @@ def test_named_bundle_preserves_outer_aliases_with_real_inner_plane_provenance()
                 axis=RuntimePlaneAxis.SOURCE_BINDING, plane_index=index, axis_size=2
             ),
         )
-        np.testing.assert_array_equal(
-            selected.data, payloads[index].data
-        )
+        np.testing.assert_array_equal(selected.data, payloads[index].data)
         selected_metadata = selected.metadata
         assert selected_metadata.source_image_names == (alias,)
         assert {
@@ -307,8 +338,10 @@ def test_new_calibrated_nominal_stack_reaches_real_callable_without_dispatch_edi
         """A generated acquisition grid owns one additional metadata fact."""
 
         def composition_payload_metadata(self, metadata):
-            return super().composition_payload_metadata(metadata).replace_fields(
-                source_voxel_spacing=spacing
+            return (
+                super()
+                .composition_payload_metadata(metadata)
+                .replace_fields(source_voxel_spacing=spacing)
             )
 
     data = np.arange(24, dtype=np.float32).reshape(2, 3, 4)
@@ -384,7 +417,9 @@ def test_full_stack_preserves_nonimage_identity_domains_and_dense_images():
         assert materialized[name] is value
 
 
-@pytest.mark.parametrize("processing_contract", tuple(ProcessingContract.__registry__.values()))
+@pytest.mark.parametrize(
+    "processing_contract", tuple(ProcessingContract.__registry__.values())
+)
 def test_full_stack_raw_callable_keeps_opaque_nonimage_kwargs(processing_contract):
     opaque = object()
     image = np.ones((2, 3, 4), dtype=np.float32)

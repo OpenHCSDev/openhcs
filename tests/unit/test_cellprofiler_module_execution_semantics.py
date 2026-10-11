@@ -40,7 +40,9 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_stores import RuntimeValueStore
-from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
+from openhcs.core.pipeline.function_contracts import (
+    object_label_input_execution_mode_from_callable,
+)
 from openhcs.interop.cellprofiler.runtime.module_execution import (
     CellProfilerModuleExecutor,
 )
@@ -246,8 +248,7 @@ def test_composed_image_measurement_callable_retains_standard_execution() -> Non
     raw_func = MeasureColocalizationModule.require_callable()
 
     assert (
-        object_label_input_execution_mode_from_callable(raw_func)
-        is SliceAlignedLabels
+        object_label_input_execution_mode_from_callable(raw_func) is SliceAlignedLabels
     )
     assert not MeasureColocalizationModule.executes_per_image_measurements(
         raw_func,

@@ -276,7 +276,11 @@ from openhcs.core.alias_property import AliasProperty
 from openhcs.constants.constants import MemoryType
 from openhcs.core.callable_contract import runtime_image_execution_mode
 from openhcs.core.memory import numpy as numpy_decorator
-from openhcs.core.pipeline.function_contracts import (object_label_input_execution_mode, runtime_bound_parameters, special_inputs)
+from openhcs.core.pipeline.function_contracts import (
+    object_label_input_execution_mode,
+    runtime_bound_parameters,
+    special_inputs,
+)
 from openhcs.core.runtime_batch_contracts import (
     RuntimePure2DSliceBatchRequest,
     SliceIndexRuntimeParameter,
@@ -415,9 +419,7 @@ class RescaleIntensityModule(CellProfilerModule):
     confidence = 1.0
     setting_bindings = (
         SettingToKeywordBinding.input("Select the input image", ImageArtifactType),
-        ModuleOnlySettingBinding(
-            "Select image to match in maximum intensity"
-        ),
+        ModuleOnlySettingBinding("Select image to match in maximum intensity"),
         SettingToKeywordBinding.output("Name the output image", ImageArtifactType),
         SettingToKeywordBinding(
             "Rescaling method",
@@ -905,9 +907,7 @@ class ObjectIntensityMeasurementContext(ObjectIntensityMeasurementAxisContext):
     ) -> "ObjectIntensityMeasurementContext":
         return cls(
             labels=labels,
-            backend_provider=CellProfilerBackendSelection.from_input(
-                backend_provider
-            ),
+            backend_provider=CellProfilerBackendSelection.from_input(backend_provider),
             slice_index=int(slice_index),
             object_domain=object_domain,
             object_row_identity=object_row_identity,
@@ -1025,7 +1025,6 @@ class ObjectIntensityBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Object-intensity operations keyed by OpenHCS memory type/provider."""
-
 
     @abstractmethod
     def measure(
@@ -1456,9 +1455,7 @@ def measure_object_intensity_measurement_image_batch(
                 first_request
             ).backend_provider
         )
-        images = tuple(
-            (np.asarray(request.image.data) for _index, request in group)
-        )
+        images = tuple((np.asarray(request.image.data) for _index, request in group))
         batch_started_at = time.perf_counter()
         measurement_batches = backend.measure_prepared_batch(images, prepared_labels)
         RuntimeProfileLogger.log(

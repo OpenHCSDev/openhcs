@@ -144,7 +144,8 @@ class OpenHCSAgentContext:
 
             endpoint = load_cached_ui_execution_endpoint_sync()
             self._endpoint_function_catalog = ZMQFunctionCatalogService(
-                lambda: endpoint, path_policy=self.path_policy,
+                lambda: endpoint,
+                path_policy=self.path_policy,
             )
         return self._endpoint_function_catalog
 
@@ -281,7 +282,9 @@ class OpenHCSAgentContext:
                 RuntimeServerService,
             )
 
-            self._runtime_server_service = RuntimeServerService(path_policy=self.path_policy)
+            self._runtime_server_service = RuntimeServerService(
+                path_policy=self.path_policy
+            )
         return self._runtime_server_service
 
     @property
@@ -339,7 +342,8 @@ def create_agent_context() -> OpenHCSAgentContext:
     endpoint_config = load_cached_ui_execution_endpoint_sync()
     path_policy = AgentPathPolicy.from_environment()
     catalog = ZMQFunctionCatalogService(
-        lambda: endpoint_config, path_policy=path_policy,
+        lambda: endpoint_config,
+        path_policy=path_policy,
     )
     return OpenHCSAgentContext(
         path_policy=path_policy,

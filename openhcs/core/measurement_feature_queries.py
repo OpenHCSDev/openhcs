@@ -635,8 +635,8 @@ class ColumnarMeasurementTableSchema:
                     row_indices[effective_mask], object_values, strict=True
                 ):
                     if row_index not in object_labels_by_row:
-                        object_labels_by_row[row_index] = measurement_object_label_value(
-                            object_ids[row_index]
+                        object_labels_by_row[row_index] = (
+                            measurement_object_label_value(object_ids[row_index])
                         )
                     object_label = object_labels_by_row[row_index]
                     if object_label is not None:
@@ -693,9 +693,7 @@ class MeasurementFeatureQuery:
 
     feature_name: str
     object_name: str | None = None
-    dialect: MeasurementDialectLike = (
-        EXECUTING_MEASUREMENT_DIALECT
-    )
+    dialect: MeasurementDialectLike = EXECUTING_MEASUREMENT_DIALECT
 
     def __post_init__(self) -> None:
         if not self.feature_name:
@@ -907,9 +905,7 @@ class MeasurementObjectFeatureVectorBatchQuery:
 
     feature_name: str
     object_names: tuple[str, ...]
-    dialect: MeasurementDialectLike = (
-        EXECUTING_MEASUREMENT_DIALECT
-    )
+    dialect: MeasurementDialectLike = EXECUTING_MEASUREMENT_DIALECT
 
     def __post_init__(self) -> None:
         if not self.feature_name:
@@ -932,9 +928,9 @@ class MeasurementObjectFeatureVectorBatchQuery:
     ) -> MeasurementValueIndexesByObject:
         """Return current object-feature indexes from one correlated table pass."""
         object_names = self.normalized_object_names
-        lookup = resolve_measurement_dialect(
-            self.dialect
-        ).feature_lookup(self.feature_name)
+        lookup = resolve_measurement_dialect(self.dialect).feature_lookup(
+            self.feature_name
+        )
         query_objects_by_requested_object = {
             object_name: lookup.query_object_name(object_name)
             for object_name in object_names
@@ -990,9 +986,9 @@ class MeasurementObjectFeatureVectorBatchQuery:
     ) -> dict[int, MeasurementValueIndexesByObject] | None:
         """Return current feature indexes preserving complete object/axis rows."""
         object_names = self.normalized_object_names
-        lookup = resolve_measurement_dialect(
-            self.dialect
-        ).feature_lookup(self.feature_name)
+        lookup = resolve_measurement_dialect(self.dialect).feature_lookup(
+            self.feature_name
+        )
         query_objects_by_requested_object = {
             object_name: lookup.query_object_name(object_name)
             for object_name in object_names
@@ -1091,9 +1087,9 @@ class MeasurementObjectFeatureVectorBatchQuery:
         semantics = ColumnarMeasurementTableSchema.from_table(table)
         if not semantics.object_names(table):
             return requested_object_names
-        feature_lookup = resolve_measurement_dialect(
-            self.dialect
-        ).feature_lookup(self.feature_name)
+        feature_lookup = resolve_measurement_dialect(self.dialect).feature_lookup(
+            self.feature_name
+        )
         return tuple(
             object_name
             for object_name in requested_object_names
@@ -1388,15 +1384,11 @@ def normalize_measurement_token(value: object) -> str:
 def ordered_measurement_feature_candidates(
     feature_name: str,
     *,
-    dialect: MeasurementDialectLike = (
-        EXECUTING_MEASUREMENT_DIALECT
-    ),
+    dialect: MeasurementDialectLike = (EXECUTING_MEASUREMENT_DIALECT),
 ) -> tuple[str, ...]:
     """Return schema-safe feature-field aliases from most specific to least specific."""
     return (
-        resolve_measurement_dialect(dialect)
-        .feature_lookup(feature_name)
-        .field_aliases
+        resolve_measurement_dialect(dialect).feature_lookup(feature_name).field_aliases
     )
 
 
@@ -1457,9 +1449,7 @@ def measurement_values_for_feature(
     object_count: int,
     object_ids: Sequence[int] | None = None,
     object_name: str | None = None,
-    dialect: MeasurementDialectLike = (
-        EXECUTING_MEASUREMENT_DIALECT
-    ),
+    dialect: MeasurementDialectLike = (EXECUTING_MEASUREMENT_DIALECT),
 ) -> Any:
     """Return object-indexed measurement values for one feature."""
     query = MeasurementFeatureQuery(

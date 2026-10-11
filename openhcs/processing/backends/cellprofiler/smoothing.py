@@ -396,7 +396,9 @@ class OpenCVMaskedGaussianFilterRequest(MaskedFilterRequest):
         if width <= kernel.size:
             np.divide(filtered, weights, out=filtered)
         else:
-            np.divide(filtered[:, :radius], weights[:, :radius], out=filtered[:, :radius])
+            np.divide(
+                filtered[:, :radius], weights[:, :radius], out=filtered[:, :radius]
+            )
             np.divide(
                 filtered[:, radius : width - radius],
                 weights[:, radius : radius + 1],
@@ -871,10 +873,8 @@ def smooth_image(
         clip_polynomial=bool(clip_polynomial),
     )
     output = SmoothingStrategy.for_request(request).smooth(request)
-    return (
-        image.metadata
-        .without_unit_interval_intensity_scale()
-        .payload_with(np.asarray(output, dtype=np.float32), mask)
+    return image.metadata.without_unit_interval_intensity_scale().payload_with(
+        np.asarray(output, dtype=np.float32), mask
     )
 
 
@@ -931,10 +931,7 @@ def smooth_batch(request: RuntimePure2DSliceBatchRequest) -> list[Any]:
     smoothing_method = kwargs.get("smoothing_method", SmoothingMethod.GAUSSIAN_FILTER)
     pixel_stack = np.ascontiguousarray(
         np.stack(
-            [
-                np.asarray(slice_2d.data, dtype=np.float32)
-                for slice_2d in slices_2d
-            ],
+            [np.asarray(slice_2d.data, dtype=np.float32) for slice_2d in slices_2d],
             axis=0,
         )
     )
@@ -974,9 +971,9 @@ def smooth_batch(request: RuntimePure2DSliceBatchRequest) -> list[Any]:
         pixel_stack, mask_stack, float(selection_request.sigma)
     ).astype(np.float32, copy=False)
     return [
-        slice_2d.metadata
-        .without_unit_interval_intensity_scale()
-        .payload_with(output_stack[slice_index], masks[slice_index])
+        slice_2d.metadata.without_unit_interval_intensity_scale().payload_with(
+            output_stack[slice_index], masks[slice_index]
+        )
         for slice_index, slice_2d in enumerate(slices_2d)
     ]
 

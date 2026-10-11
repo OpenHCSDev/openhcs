@@ -785,7 +785,6 @@ class ShapeZernikeBackendStrategy(
 ):
     """Shape Zernike moment backends keyed by OpenHCS memory type."""
 
-
     @abstractmethod
     def shape_zernike_moments(
         self,

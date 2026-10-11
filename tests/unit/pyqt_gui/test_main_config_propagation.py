@@ -437,11 +437,13 @@ def test_lifecycle_workflow_adopts_a_saved_global_config_into_the_session(
         (scope_id,) = add_datasets(session, Path(tempfile.mkdtemp()), "plate")
         changed = []
         session.subscribe(
-            lambda record: changed.append(
-                (record.event.scope_id, record.event.effective_config.num_workers)
+            lambda record: (
+                changed.append(
+                    (record.event.scope_id, record.event.effective_config.num_workers)
+                )
+                if isinstance(record.event, DatasetConfigChanged)
+                else None
             )
-            if isinstance(record.event, DatasetConfigChanged)
-            else None
         )
 
         workflow.propagate_config(new_config)

@@ -187,7 +187,9 @@ def test_step_invocation_contract_provider_validates_public_cellprofiler_config(
         ValueError,
         match="unknown object_labels artifact 'Objects1'",
     ):
-        CellProfilerInvocationContractProviderFactory.provider_for_pipeline(session.pipeline)
+        CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+            session.pipeline
+        )
 
 
 def test_public_compile_time_provider_binds_cellprofiler_runtime_from_step_declarations():

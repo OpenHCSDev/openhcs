@@ -235,7 +235,8 @@ class CatalogFilterText:
             (CatalogSearchRank.SUMMARY_CONTAINS, entry.summary or ""),
             (
                 CatalogSearchRank.DOC_CONTAINS,
-                PARAMETER_DOCUMENTATION_POLICY.detail_doc(metadata.func, metadata.doc) or "",
+                PARAMETER_DOCUMENTATION_POLICY.detail_doc(metadata.func, metadata.doc)
+                or "",
             ),
         ):
             score = self._text_score(value)
@@ -486,7 +487,9 @@ class ParameterDocumentationPolicy:
         )
         compile_only = tuple(
             name
-            for name in PipelineInvocationContractProviderAuthority.compile_time_parameter_names(contract)
+            for name in PipelineInvocationContractProviderAuthority.compile_time_parameter_names(
+                contract
+            )
             if name not in runtime_names
         )
         return tuple(dict.fromkeys((*ordinary, *compile_only)))
@@ -606,7 +609,8 @@ class FunctionCatalogServiceABC(ABC):
 
     @abstractmethod
     def observe_custom_function_registration(
-        self, handle: CustomFunctionRegistrationHandle,
+        self,
+        handle: CustomFunctionRegistrationHandle,
     ) -> CustomFunctionRegistrationObservation:
         """Observe exact existing publication/persistence without evaluating source."""
 
@@ -710,17 +714,21 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         request.admitted(self._path_policy)
         server_identity = request.require_server_identity()
         manager = custom_function_manager.CustomFunctionManager(create_storage=False)
-        if request.persist and manager.storage_dir.resolve(strict=False) != Path(request.storage_dir).resolve(strict=False):
+        if request.persist and manager.storage_dir.resolve(strict=False) != Path(
+            request.storage_dir
+        ).resolve(strict=False):
             raise ValueError(
                 f"Selected endpoint owns custom storage {manager.storage_dir}, "
                 f"not requested {request.storage_dir}; no source was evaluated."
             )
+
         def admit_write(path: Path) -> Path:
             self._path_policy.assert_writable(path)
             return request.admission_policy.assert_writable(path)
 
         registered_functions = manager.register_from_code(
-            request.source_code, persist=request.persist,
+            request.source_code,
+            persist=request.persist,
             expected_function_name=request.function_name,
             write_admission=admit_write,
         )
@@ -764,33 +772,53 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         )
 
     def observe_custom_function_registration(
-        self, handle: CustomFunctionRegistrationHandle,
+        self,
+        handle: CustomFunctionRegistrationHandle,
     ) -> CustomFunctionRegistrationObservation:
         from openhcs.agent.dto.common import AgentWarning
-        from openhcs.processing.custom_functions.runtime_registry import CustomFunctionRuntimeRegistry
+        from openhcs.processing.custom_functions.runtime_registry import (
+            CustomFunctionRuntimeRegistry,
+        )
 
         handle.require_current_owner()
         published = CustomFunctionRuntimeRegistry.published_sources_for_content(
-            handle.content_sha256, function_name=handle.function_name,
+            handle.content_sha256,
+            function_name=handle.function_name,
         )
         persisted = None
         warnings = ()
         if handle.persist:
-            manager = custom_function_manager.CustomFunctionManager(create_storage=False)
-            if handle.require_storage_dir().resolve(strict=False) != manager.storage_dir.resolve(strict=False):
-                raise ValueError("Registration observation reached a different native source store.")
+            manager = custom_function_manager.CustomFunctionManager(
+                create_storage=False
+            )
+            if handle.require_storage_dir().resolve(
+                strict=False
+            ) != manager.storage_dir.resolve(strict=False):
+                raise ValueError(
+                    "Registration observation reached a different native source store."
+                )
             source = handle.require_named_source()
-            self._path_policy.assert_readable_location(manager.source_path_for_name(manager.storage_dir, source.function_name))
+            self._path_policy.assert_readable_location(
+                manager.source_path_for_name(manager.storage_dir, source.function_name)
+            )
             try:
                 manager.require_source(source)
             except (OSError, RuntimeError) as error:
-                warnings = (AgentWarning("registration_source_not_observed", str(error),
-                    "Missing/changed current source is not proof of no original mutation; do not replay."),)
+                warnings = (
+                    AgentWarning(
+                        "registration_source_not_observed",
+                        str(error),
+                        "Missing/changed current source is not proof of no original mutation; do not replay.",
+                    ),
+                )
             else:
                 persisted = source
         return CustomFunctionRegistrationObservation(
-            schema_version=SCHEMA_VERSION, handle=handle, published_sources=published,
-            persisted_source=persisted, warnings=warnings,
+            schema_version=SCHEMA_VERSION,
+            handle=handle,
+            published_sources=published,
+            persisted_source=persisted,
+            warnings=warnings,
         )
 
     def custom_function_registration_destination(
@@ -802,8 +830,13 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         return CustomFunctionRegistrationDestination(
             storage_dir=str(storage_dir),
             source_file_path=(
-                str(manager_type.source_path_for_name(storage_dir, request.function_name))
-                if request.function_name is not None else None
+                str(
+                    manager_type.source_path_for_name(
+                        storage_dir, request.function_name
+                    )
+                )
+                if request.function_name is not None
+                else None
             ),
         )
 
@@ -934,8 +967,12 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                 metadata.func, contract
             )
             entry = self._entry(
-                function_id, metadata, SignatureView.FULL, SummaryView.FULL,
-                contract=contract, visible_signature=signature,
+                function_id,
+                metadata,
+                SignatureView.FULL,
+                SummaryView.FULL,
+                contract=contract,
+                visible_signature=signature,
             )
             projections.append(
                 CatalogSearchProjection(
@@ -951,7 +988,8 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                             signature, entry.name, SignatureView.COMPACT
                         ),
                         summary=(
-                            None if entry.summary is None
+                            None
+                            if entry.summary is None
                             else _bounded_summary(entry.summary, SummaryView.COMPACT)
                         ),
                     ),
@@ -1252,7 +1290,8 @@ def _runtime_contract_summary(
     return FunctionRuntimeContractSummary(
         callable_kind=callable_kind,
         processing_contract=(
-            None if contract.processing_contract is None
+            None
+            if contract.processing_contract is None
             else contract.processing_contract.key
         ),
         runtime_bound_parameters=contract.runtime_bound_parameters,

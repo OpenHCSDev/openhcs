@@ -277,7 +277,9 @@ class CellProfilerNeuriteEngineProfile:
         if use_nuclear_stain:
             nuclear_stain.validate("nuclear_stain")
             if not 0 <= nuclear_stain.channel_index < image_array.shape[0]:
-                raise ValueError("nuclear_stain.channel_index is outside the input stack")
+                raise ValueError(
+                    "nuclear_stain.channel_index is outside the input stack"
+                )
             if nuclear_stain.channel_index == neurite_channel_index:
                 raise ValueError(
                     "nuclear_stain.channel_index must differ from neurite_channel_index"
@@ -454,14 +456,18 @@ class CellProfilerNeuriteEngineProfile:
         physically_soma_rooted_trace = _physically_soma_rooted_owner_mask(
             pre_topology_owner_skeleton,
             cell_body_labels,
-            maximum_root_distance=_TopologyResult.soma_attachment_radius(outgrowth_width_px),
+            maximum_root_distance=_TopologyResult.soma_attachment_radius(
+                outgrowth_width_px
+            ),
         )
         topology_dropped_trace = (
             (pre_topology_owner_skeleton > 0)
             & (neurite_skeleton == 0)
             & ~crossing_core_mask
         )
-        topology_added_trace = (neurite_skeleton > 0) & (pre_topology_owner_skeleton == 0)
+        topology_added_trace = (neurite_skeleton > 0) & (
+            pre_topology_owner_skeleton == 0
+        )
         final_topology_owned_trace_pixels = int(np.count_nonzero(neurite_skeleton))
         # A physical crossing core supports two logical paths, but an object-label
         # raster can store only one identity per pixel. The topology above remains
@@ -501,7 +507,9 @@ class CellProfilerNeuriteEngineProfile:
         )
         secondary_owned_unrooted_trace_pixels = int(
             np.count_nonzero(
-                candidate_trace_mask & ~rooted_trace_mask & (secondary_owner_regions > 0)
+                candidate_trace_mask
+                & ~rooted_trace_mask
+                & (secondary_owner_regions > 0)
             )
         )
         candidate_mask_pixels = int(np.count_nonzero(candidate_neurite_mask))
@@ -509,7 +517,9 @@ class CellProfilerNeuriteEngineProfile:
             np.count_nonzero(candidate_neurite_mask & rooted_mask)
         )
         unrooted_residual_pixels = int(np.count_nonzero(unrooted_residual))
-        secondary_owned_residual_pixels = int(np.count_nonzero(secondary_owned_residual))
+        secondary_owned_residual_pixels = int(
+            np.count_nonzero(secondary_owned_residual)
+        )
 
         cell_results = _build_cell_results(
             cell_body_labels,
@@ -574,10 +584,14 @@ class CellProfilerNeuriteEngineProfile:
             final_topology_dropped_unrepresented_trace_pixels=int(
                 np.count_nonzero(topology_dropped_trace & ~topology_path_mask)
             ),
-            final_topology_added_trace_pixels=int(np.count_nonzero(topology_added_trace)),
+            final_topology_added_trace_pixels=int(
+                np.count_nonzero(topology_added_trace)
+            ),
             final_topology_owned_trace_pixels=final_topology_owned_trace_pixels,
             published_owned_trace_pixels=int(np.count_nonzero(rooted_trace_mask)),
-            secondary_owned_unrooted_trace_pixels=(secondary_owned_unrooted_trace_pixels),
+            secondary_owned_unrooted_trace_pixels=(
+                secondary_owned_unrooted_trace_pixels
+            ),
             secondary_unowned_unrooted_trace_pixels=(
                 candidate_trace_pixels
                 - rooted_candidate_trace_pixels
@@ -651,11 +665,12 @@ class CellProfilerNeuriteEngineProfile:
             ),
             *admission.planes.selected_outputs(neurite_channel_index),
             *NeuriteOwnershipPlanes(
-                initial_owned_trace, adopted_owned_trace, pre_topology_owner_skeleton,
+                initial_owned_trace,
+                adopted_owned_trace,
+                pre_topology_owner_skeleton,
             ).selected_outputs(neurite_channel_index),
             neurite_morphology,
         )
-
 
 
 class PixelMetricCoordinates:
@@ -764,7 +779,8 @@ class MetaXpressCellBodySettings:
 
     @staticmethod
     def _inscribed_disc_support(
-        radius: np.ndarray, medial_support: np.ndarray,
+        radius: np.ndarray,
+        medial_support: np.ndarray,
     ) -> np.ndarray:
         """Project original medial discs without adding a new geometric rule."""
         support = np.zeros(radius.shape, dtype=bool)
@@ -772,10 +788,12 @@ class MetaXpressCellBodySettings:
             disc_radius = float(radius[row, column])
             extent = int(np.ceil(disc_radius))
             row_start, row_stop = (
-                max(0, row - extent), min(radius.shape[0], row + extent + 1),
+                max(0, row - extent),
+                min(radius.shape[0], row + extent + 1),
             )
             column_start, column_stop = (
-                max(0, column - extent), min(radius.shape[1], column + extent + 1),
+                max(0, column - extent),
+                min(radius.shape[1], column + extent + 1),
             )
             rows, columns = np.ogrid[row_start:row_stop, column_start:column_stop]
             disc = (rows - row) ** 2 + (columns - column) ** 2 < disc_radius**2
@@ -806,9 +824,12 @@ class MetaXpressCellBodySettings:
         """
         body = np.asarray(body, dtype=bool)
         radius = ndi.distance_transform_edt(np.pad(body, 1))[1:-1, 1:-1]
-        skeleton = _raw_processing_leaf(medialaxis)(
-            np.pad(body, 1).astype(np.float32, copy=False)
-        )[1:-1, 1:-1] > 0
+        skeleton = (
+            _raw_processing_leaf(medialaxis)(
+                np.pad(body, 1).astype(np.float32, copy=False)
+            )[1:-1, 1:-1]
+            > 0
+        )
         distance_to_nucleus = ndi.distance_transform_edt(~nuclear_seed)
         broad_medial = skeleton & (
             (2.0 * radius - 1.0 > maximum_shaft_width_px)
@@ -820,9 +841,12 @@ class MetaXpressCellBodySettings:
         nuclear_regions = np.unique(broad_regions[broad_support & nuclear_seed])
         soma_support = broad_support & np.isin(broad_regions, nuclear_regions)
         protected = skeleton & soma_support
-        degrees = ndi.convolve(
-            skeleton.astype(np.int32), connectivity, mode="constant", cval=0
-        ) - skeleton
+        degrees = (
+            ndi.convolve(
+                skeleton.astype(np.int32), connectivity, mode="constant", cval=0
+            )
+            - skeleton
+        )
         thin_components, count = ndi.label(skeleton & ~protected, connectivity)
         removed_medial = np.zeros(body.shape, dtype=bool)
         for component_id in range(1, count + 1):
@@ -840,7 +864,8 @@ class MetaXpressCellBodySettings:
             return body
 
         retained_support = self._inscribed_disc_support(
-            radius, skeleton & ~removed_medial,
+            radius,
+            skeleton & ~removed_medial,
         )
         removed_support = self._inscribed_disc_support(radius, removed_medial)
         retained = body & (~removed_support | retained_support | nuclear_seed)
@@ -1229,7 +1254,8 @@ class NeuriteDiagnosticPlanes:
     ) -> tuple[SelectedDiagnosticPlaneImageOutput, ...]:
         return tuple(
             SelectedDiagnosticPlaneImageOutput(
-                getattr(self, field.name)[None], (source_index,),
+                getattr(self, field.name)[None],
+                (source_index,),
             )
             for field in fields(self)
         )
@@ -1251,7 +1277,6 @@ class NeuriteAdmissionPlanes(NeuriteDiagnosticPlanes):
     local_response: np.ndarray
     local_support: np.ndarray
     soma_attachment_response: np.ndarray
-
 
 
 @dataclass(frozen=True)
@@ -1281,7 +1306,9 @@ class NeuriteAdmissionResult:
         return self.planes.local_response
 
     def soma_attachment_labels(
-        self, cell_body_labels: np.ndarray, minimum_response: float,
+        self,
+        cell_body_labels: np.ndarray,
+        minimum_response: float,
     ) -> np.ndarray:
         """Qualify the declared root neighborhood at the soma signal scale.
 
@@ -1290,11 +1317,13 @@ class NeuriteAdmissionResult:
         neighborhood and nearest accepted soma; it cannot admit remote tracks.
         """
         _, neighborhood = _TopologyResult.soma_neighborhood(
-            cell_body_labels, self.outgrowth_width_px,
+            cell_body_labels,
+            self.outgrowth_width_px,
         )
         return np.where(
             self.planes.soma_attachment_response >= minimum_response,
-            neighborhood, 0,
+            neighborhood,
+            0,
         ).astype(np.int32, copy=False)
 
     def skeleton_for(self, cell_body_labels: np.ndarray) -> np.ndarray:
@@ -1316,15 +1345,31 @@ class NeuriteAdmissionResult:
 
 
 # Both callable ABIs derive diagnostic slots from the same stage declaration.
-NeuriteOutgrowthRuntimeTuple = Tuple[(
-    np.ndarray, DataclassMeasurementColumnarRows, DataclassMeasurementColumnarRows,
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray,
-    SelectedPlaneImageOutput, SelectedPlaneImageOutput, SelectedPlaneImageOutput,
-    SelectedPlaneImageOutput, SelectedPlaneImageOutput,
-    *(SelectedDiagnosticPlaneImageOutput for _ in get_type_hints(NeuriteAdmissionPlanes)),
-    *(SelectedDiagnosticPlaneImageOutput for _ in get_type_hints(NeuriteOwnershipPlanes)),
-    SpatialGraph,
-)]
+NeuriteOutgrowthRuntimeTuple = Tuple[
+    (
+        np.ndarray,
+        DataclassMeasurementColumnarRows,
+        DataclassMeasurementColumnarRows,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        SelectedPlaneImageOutput,
+        SelectedPlaneImageOutput,
+        SelectedPlaneImageOutput,
+        SelectedPlaneImageOutput,
+        SelectedPlaneImageOutput,
+        *(
+            SelectedDiagnosticPlaneImageOutput
+            for _ in get_type_hints(NeuriteAdmissionPlanes)
+        ),
+        *(
+            SelectedDiagnosticPlaneImageOutput
+            for _ in get_type_hints(NeuriteOwnershipPlanes)
+        ),
+        SpatialGraph,
+    )
+]
 
 
 @dataclass(frozen=True)
@@ -1339,9 +1384,12 @@ class _ResolvedCrossing:
         return any(int(path_owners[path]) == owner for path in self.arm_paths)
 
     def crossover_paths(self, path_owners: np.ndarray) -> tuple[int, ...]:
-        owners = Counter(int(path_owners[path]) for path in self.arm_paths
-                         if path_owners[path] > 0)
-        return tuple(path for path in self.arm_paths if owners[int(path_owners[path])] == 2)
+        owners = Counter(
+            int(path_owners[path]) for path in self.arm_paths if path_owners[path] > 0
+        )
+        return tuple(
+            path for path in self.arm_paths if owners[int(path_owners[path])] == 2
+        )
 
     def core_coordinates(self, path_coordinates: tuple[np.ndarray, ...]) -> np.ndarray:
         if not self.core_paths:
@@ -1349,7 +1397,9 @@ class _ResolvedCrossing:
         return np.concatenate([path_coordinates[path] for path in self.core_paths])
 
     def regional_core_coordinates(
-        self, path_coordinates: tuple[np.ndarray, ...], shape: tuple[int, int],
+        self,
+        path_coordinates: tuple[np.ndarray, ...],
+        shape: tuple[int, int],
         origin: tuple[int, int],
     ) -> np.ndarray:
         coordinates = self.core_coordinates(path_coordinates) - origin
@@ -1378,20 +1428,26 @@ class _TopologyResult:
 
     @classmethod
     def soma_neighborhood(
-        cls, cell_body_labels: np.ndarray, outgrowth_width_px: float,
+        cls,
+        cell_body_labels: np.ndarray,
+        outgrowth_width_px: float,
     ) -> tuple[np.ndarray, np.ndarray]:
         distance, nearest = ndi.distance_transform_edt(
-            cell_body_labels == 0, return_indices=True,
+            cell_body_labels == 0,
+            return_indices=True,
         )
         labels = np.where(
             distance <= cls.soma_attachment_radius(outgrowth_width_px),
-            cell_body_labels[tuple(nearest)], 0,
+            cell_body_labels[tuple(nearest)],
+            0,
         )
         return distance, labels
 
     @classmethod
     def soma_ownership_seeds(
-        cls, cell_body_labels: np.ndarray, outgrowth_width_px: float,
+        cls,
+        cell_body_labels: np.ndarray,
+        outgrowth_width_px: float,
         path_coordinates: Sequence[np.ndarray],
     ) -> dict[int, tuple[int, ...]]:
         """Near-body evidence seeds ownership, not biological process count."""
@@ -1401,12 +1457,16 @@ class _TopologyResult:
             labels = neighborhood[tuple(coordinates.T)]
             labels = labels[labels > 0]
             if labels.size:
-                roots[path] = tuple(label for label, _ in Counter(map(int, labels)).most_common())
+                roots[path] = tuple(
+                    label for label, _ in Counter(map(int, labels)).most_common()
+                )
         return roots
 
     @classmethod
     def soma_process_roots(
-        cls, cell_body_labels: np.ndarray, outgrowth_width_px: float,
+        cls,
+        cell_body_labels: np.ndarray,
+        outgrowth_width_px: float,
         path_coordinates: Sequence[np.ndarray],
         transitions: Mapping[int, Iterable[int]],
         path_owners: np.ndarray,
@@ -1419,7 +1479,8 @@ class _TopologyResult:
         distinct exits separated by a more distal junction remain separate.
         """
         distance, neighborhood = cls.soma_neighborhood(
-            cell_body_labels, outgrowth_width_px,
+            cell_body_labels,
+            outgrowth_width_px,
         )
         proximity_by_owner: dict[int, dict[int, float]] = defaultdict(dict)
         for path, coordinates in enumerate(path_coordinates):
@@ -1443,7 +1504,8 @@ class _TopologyResult:
                 while frontier:
                     path = frontier.pop()
                     adjacent = {
-                        neighbor for neighbor in transitions[path]
+                        neighbor
+                        for neighbor in transitions[path]
                         if neighbor in remaining
                         and proximity[neighbor] == proximity[seed]
                     }
@@ -1451,9 +1513,9 @@ class _TopologyResult:
                     plateau.update(adjacent)
                     frontier.extend(sorted(adjacent))
                 if any(
-                    neighbor in proximity
-                    and proximity[neighbor] < proximity[seed]
-                    for path in plateau for neighbor in transitions[path]
+                    neighbor in proximity and proximity[neighbor] < proximity[seed]
+                    for path in plateau
+                    for neighbor in transitions[path]
                 ):
                     continue
                 roots[owner].append(min(plateau))
@@ -1499,12 +1561,15 @@ class _TopologyResult:
         branch_groups: dict[int, list[int]] = defaultdict(list)
         for owner, owner_paths in owned_paths.items():
             candidates = {
-                group: paths for (cell, group), paths in endpoint_paths.items()
+                group: paths
+                for (cell, group), paths in endpoint_paths.items()
                 if cell == owner and len(paths) >= 3
             }
             if not candidates:
                 continue
-            coordinates = np.concatenate([self.path_coordinates[path] for path in owner_paths])
+            coordinates = np.concatenate(
+                [self.path_coordinates[path] for path in owner_paths]
+            )
             lower, upper = coordinates.min(axis=0), coordinates.max(axis=0) + 1
             body_slice = body_slices[owner - 1] if owner <= len(body_slices) else None
             if body_slice is not None:
@@ -1513,7 +1578,9 @@ class _TopologyResult:
             margin = self.soma_attachment_radius(outgrowth_width_px)
             lower = np.maximum(0, lower - margin)
             upper = np.minimum(cell_body_labels.shape, upper + margin)
-            region = tuple(slice(int(start), int(stop)) for start, stop in zip(lower, upper))
+            region = tuple(
+                slice(int(start), int(stop)) for start, stop in zip(lower, upper)
+            )
             local_bodies = cell_body_labels[region]
             own_trace = np.zeros(local_bodies.shape, dtype=np.int32)
             own_trace[tuple((coordinates - lower).T)] = owner
@@ -1526,24 +1593,54 @@ class _TopologyResult:
             foreground_radius = ndi.distance_transform_edt(foreground)
             for group, paths in candidates.items():
                 # Sample physical endpoints, not fractional exported centroids.
-                centers = np.unique(np.asarray([
-                    self.path_coordinates[path][0 if endpoint == 0 else -1] - lower
-                    for path in paths for endpoint in (0, 1)
-                    if self.path_endpoint_groups[path][endpoint] == group
-                ]), axis=0)
+                centers = np.unique(
+                    np.asarray(
+                        [
+                            self.path_coordinates[path][0 if endpoint == 0 else -1]
+                            - lower
+                            for path in paths
+                            for endpoint in (0, 1)
+                            if self.path_endpoint_groups[path][endpoint] == group
+                        ]
+                    ),
+                    axis=0,
+                )
                 radii = foreground_radius[tuple(centers.T)]
                 neighborhood_radii = radii + outgrowth_width_px
-                ring_lower = np.maximum(0, np.floor((centers - neighborhood_radii[:, None]).min(axis=0)).astype(int) - 2)
-                ring_upper = np.minimum(local_bodies.shape, np.ceil((centers + neighborhood_radii[:, None]).max(axis=0)).astype(int) + 3)
-                ring_slice = tuple(slice(int(start), int(stop)) for start, stop in zip(ring_lower, ring_upper))
-                grid = np.moveaxis(np.indices(tuple(ring_upper - ring_lower)), 0, -1) + ring_lower
+                ring_lower = np.maximum(
+                    0,
+                    np.floor(
+                        (centers - neighborhood_radii[:, None]).min(axis=0)
+                    ).astype(int)
+                    - 2,
+                )
+                ring_upper = np.minimum(
+                    local_bodies.shape,
+                    np.ceil((centers + neighborhood_radii[:, None]).max(axis=0)).astype(
+                        int
+                    )
+                    + 3,
+                )
+                ring_slice = tuple(
+                    slice(int(start), int(stop))
+                    for start, stop in zip(ring_lower, ring_upper)
+                )
+                grid = (
+                    np.moveaxis(np.indices(tuple(ring_upper - ring_lower)), 0, -1)
+                    + ring_lower
+                )
                 distances = np.linalg.norm(grid[:, :, None] - centers, axis=3)
                 for expansion in range(int(np.floor(outgrowth_width_px)) + 1):
                     perimeter_radii = radii + expansion
                     core = np.any(distances <= perimeter_radii, axis=2)
-                    ring = ndi.binary_dilation(core, structure=np.ones((3, 3), dtype=bool)) & ~core
+                    ring = (
+                        ndi.binary_dilation(core, structure=np.ones((3, 3), dtype=bool))
+                        & ~core
+                    )
                     ring &= foreground[ring_slice] & (local_bodies[ring_slice] == 0)
-                    corridors, _ = ndi.label(ring, structure=np.ones((3, 3), dtype=bool))
+                    corridors, _ = ndi.label(
+                        ring, structure=np.ones((3, 3), dtype=bool)
+                    )
                     resolved_corridors: set[int] = set()
                     proximal_arm = False
                     for path in paths:
@@ -1551,26 +1648,44 @@ class _TopologyResult:
                         for endpoint in (0, 1):
                             if groups[endpoint] != group:
                                 continue
-                            arm = self.path_coordinates[path][::1 if endpoint == 0 else -1] - lower
-                            inside_core = np.any(np.linalg.norm(arm[:, None] - centers, axis=2) <= perimeter_radii, axis=1)
+                            arm = (
+                                self.path_coordinates[path][
+                                    :: 1 if endpoint == 0 else -1
+                                ]
+                                - lower
+                            )
+                            inside_core = np.any(
+                                np.linalg.norm(arm[:, None] - centers, axis=2)
+                                <= perimeter_radii,
+                                axis=1,
+                            )
                             departures = np.flatnonzero(~inside_core)
                             if departures.size:
                                 first_exit = arm[departures[0]] - ring_lower
-                                if np.all((first_exit >= 0) & (first_exit < corridors.shape)):
+                                if np.all(
+                                    (first_exit >= 0) & (first_exit < corridors.shape)
+                                ):
                                     corridor = int(corridors[tuple(first_exit)])
                                     if corridor:
                                         resolved_corridors.add(corridor)
                             elif groups[0] != groups[1]:
                                 # Only the opposite endpoint can be a short root.
                                 neighbors = arm[-1] + body_neighbor_offsets
-                                inside = np.all((neighbors >= 0) & (neighbors < local_bodies.shape), axis=1)
-                                if np.any(local_bodies[tuple(neighbors[inside].T)] == owner):
+                                inside = np.all(
+                                    (neighbors >= 0) & (neighbors < local_bodies.shape),
+                                    axis=1,
+                                )
+                                if np.any(
+                                    local_bodies[tuple(neighbors[inside].T)] == owner
+                                ):
                                     proximal_arm = True
                     if len(resolved_corridors) + int(proximal_arm) >= 3:
                         branch_groups[owner].append(group)
                         break
         qualified_groups = {
-            (owner, group) for owner, groups in branch_groups.items() for group in groups
+            (owner, group)
+            for owner, groups in branch_groups.items()
+            for group in groups
         }
         branch_types = np.zeros(len(self.path_owners), dtype=np.int32)
         for path_index, groups in enumerate(self.path_endpoint_groups):
@@ -1578,9 +1693,9 @@ class _TopologyResult:
             if owner <= 0 or path_index in crossing_core_paths:
                 continue
             branch_types[path_index] = (
-                3 if groups[0] == groups[1] else sum(
-                    (owner, group) in qualified_groups for group in groups
-                )
+                3
+                if groups[0] == groups[1]
+                else sum((owner, group) in qualified_groups for group in groups)
             )
         coordinates = {
             group: np.asarray(coordinate)
@@ -1597,35 +1712,50 @@ class _TopologyResult:
 
     @property
     def crossing_paths(self) -> frozenset[int]:
-        return frozenset(path for crossing in self.resolved_crossings
-                         for path in crossing.crossover_paths(self.path_owners))
+        return frozenset(
+            path
+            for crossing in self.resolved_crossings
+            for path in crossing.crossover_paths(self.path_owners)
+        )
 
     @property
     def crossing_core_paths(self) -> frozenset[int]:
-        return frozenset(path for crossing in self.resolved_crossings
-                         for path in crossing.core_paths)
+        return frozenset(
+            path for crossing in self.resolved_crossings for path in crossing.core_paths
+        )
 
     def crossing_core_coordinates(self, *, owner: int) -> np.ndarray:
-        coordinates = [crossing.core_coordinates(self.path_coordinates)
-                       for crossing in self.resolved_crossings
-                       if crossing.supports_owner(owner, self.path_owners)]
-        return np.concatenate(coordinates) if coordinates else np.empty((0, 2), dtype=int)
+        coordinates = [
+            crossing.core_coordinates(self.path_coordinates)
+            for crossing in self.resolved_crossings
+            if crossing.supports_owner(owner, self.path_owners)
+        ]
+        return (
+            np.concatenate(coordinates) if coordinates else np.empty((0, 2), dtype=int)
+        )
 
     def crossing_core_mask(
-        self, shape: tuple[int, int], *,
+        self,
+        shape: tuple[int, int],
+        *,
         origin: tuple[int, int] = (0, 0),
     ) -> np.ndarray:
         """Project the physical cores reserved by resolved logical crossings."""
         mask = np.zeros(shape, dtype=bool)
         for crossing in self.resolved_crossings:
             coordinates = crossing.regional_core_coordinates(
-                self.path_coordinates, shape, origin,
+                self.path_coordinates,
+                shape,
+                origin,
             )
             mask[tuple(coordinates.T)] = True
         return mask
 
     def crossing_support_mask(
-        self, occupied_owners: np.ndarray, *, owner: int,
+        self,
+        occupied_owners: np.ndarray,
+        *,
+        owner: int,
         origin: tuple[int, int],
     ) -> np.ndarray:
         """Project one logical owner's core without overwriting foreign input."""
@@ -1634,7 +1764,9 @@ class _TopologyResult:
             if not crossing.supports_owner(owner, self.path_owners):
                 continue
             coordinates = crossing.regional_core_coordinates(
-                self.path_coordinates, occupied_owners.shape, origin,
+                self.path_coordinates,
+                occupied_owners.shape,
+                origin,
             )
             current = occupied_owners[tuple(coordinates.T)]
             arm_owners = self.path_owners[list(crossing.arm_paths)]
@@ -2067,8 +2199,7 @@ def _cell_body_contract_candidates(
         )
         if (
             region.area >= minimum_area_px
-            and maximum_inscribed_diameter_px
-            >= minimum_inscribed_diameter_px
+            and maximum_inscribed_diameter_px >= minimum_inscribed_diameter_px
             and region.axis_minor_length <= maximum_width_px
             and region_response.size
             and float(np.mean(region_response)) >= intensity_threshold
@@ -2176,14 +2307,20 @@ def _identify_neurites_cellprofiler(
     )
     local_support = response >= settings.intensity_above_local_background
     soma_attachment_response = local_background_response(
-        image, object_width_px=body_width_px, bright_objects=bright_objects,
+        image,
+        object_width_px=body_width_px,
+        bright_objects=bright_objects,
     )
     outgrowth_mask = cp_mask & local_support
     return NeuriteAdmissionResult(
         outgrowth_mask,
         NeuriteAdmissionPlanes(
-            np.asarray(enhanced), threshold_support, cp_mask,
-            response, local_support, soma_attachment_response,
+            np.asarray(enhanced),
+            threshold_support,
+            cp_mask,
+            response,
+            local_support,
+            soma_attachment_response,
         ),
         outgrowth_width_px,
     )
@@ -2462,7 +2599,13 @@ def _repair_signal_supported_skeleton(
     shaft_support = np.asarray(admission.mask, dtype=bool)
     regions = np.asarray(owner_regions, dtype=np.int32)
     bodies = np.asarray(cell_body_labels, dtype=np.int32)
-    if not repaired.shape == response.shape == shaft_support.shape == regions.shape == bodies.shape:
+    if (
+        not repaired.shape
+        == response.shape
+        == shaft_support.shape
+        == regions.shape
+        == bodies.shape
+    ):
         raise ValueError(
             "labels, admission, owner_regions, and cell_body_labels must "
             "have the same shape"
@@ -2508,14 +2651,18 @@ def _repair_signal_supported_skeleton(
         original_owner = (local_repaired == owner) & ~body_mask
         origin = (owner_slice[0].start, owner_slice[1].start)
         local_core = crossing_topology.crossing_core_mask(
-            local_repaired.shape, origin=origin,
+            local_repaired.shape,
+            origin=origin,
         )
         local_shared_core = crossing_topology.crossing_support_mask(
-            labels[owner_slice], owner=owner, origin=origin,
+            labels[owner_slice],
+            owner=owner,
+            origin=origin,
         )
         original_core_values = local_repaired[local_shared_core].copy()
         shared_signal_support = (
-            local_shared_core & (local_response >= minimum_response)
+            local_shared_core
+            & (local_response >= minimum_response)
             & ((local_bodies == 0) | body_mask)
         )
         local_repaired[(local_repaired == owner) & body_mask] = 0
@@ -2543,9 +2690,16 @@ def _repair_signal_supported_skeleton(
         signal_support = local_shaft_support & (local_regions == owner)
         root_support = soma_attachments[owner_slice] == owner
         allowed = (
-            signal_support | original_owner | body_mask | shared_signal_support | root_support
-        ) & ~occupied_by_other_owner & ~foreign_body & (
-            ~local_core | shared_signal_support | original_owner | body_mask
+            (
+                signal_support
+                | original_owner
+                | body_mask
+                | shared_signal_support
+                | root_support
+            )
+            & ~occupied_by_other_owner
+            & ~foreign_body
+            & (~local_core | shared_signal_support | original_owner | body_mask)
         )
 
         while True:
@@ -2833,7 +2987,9 @@ def _analyze_topology(
                 transitions[second].add(first)
 
     root_labels_by_path = _TopologyResult.soma_ownership_seeds(
-        cell_body_labels, outgrowth_width_px, path_coordinates,
+        cell_body_labels,
+        outgrowth_width_px,
+        path_coordinates,
     )
 
     path_owners, path_distances = _propagate_path_owners(
@@ -2893,11 +3049,16 @@ def _analyze_topology(
         roots_by_cell,
     )
     process_roots = _TopologyResult.soma_process_roots(
-        cell_body_labels, outgrowth_width_px, path_coordinates, transitions, path_owners,
+        cell_body_labels,
+        outgrowth_width_px,
+        path_coordinates,
+        transitions,
+        path_owners,
     )
     resolved_crossings = tuple(
-        _ResolvedCrossing(node, crossing_paths_by_node[node],
-                          crossing_core_paths_by_node[node])
+        _ResolvedCrossing(
+            node, crossing_paths_by_node[node], crossing_core_paths_by_node[node]
+        )
         for node in sorted(crossing_nodes)
     )
     topology = _TopologyResult(
@@ -2915,15 +3076,22 @@ def _analyze_topology(
         root_paths_by_cell=process_roots,
         branch_nodes_by_cell={},
         resolved_crossings=tuple(
-            crossing for crossing in resolved_crossings
+            crossing
+            for crossing in resolved_crossings
             if crossing.crossover_paths(path_owners)
         ),
     )
     path_branch_types, branch_nodes_by_cell = topology.classify_owned_endpoints(
-        branch_support=branch_support, cell_body_labels=cell_body_labels,
-        outgrowth_width_px=outgrowth_width_px, merge_radius=max(1.0, outgrowth_width_px),
+        branch_support=branch_support,
+        cell_body_labels=cell_body_labels,
+        outgrowth_width_px=outgrowth_width_px,
+        merge_radius=max(1.0, outgrowth_width_px),
     )
-    return replace(topology, path_branch_types=path_branch_types, branch_nodes_by_cell=branch_nodes_by_cell)
+    return replace(
+        topology,
+        path_branch_types=path_branch_types,
+        branch_nodes_by_cell=branch_nodes_by_cell,
+    )
 
 
 def _analyze_owned_topology(
@@ -2989,7 +3157,8 @@ def _analyze_owned_topology(
         )
         local_owner_mask = owned[owner_slice] == owner
         local_owner_mask |= crossing_topology.crossing_support_mask(
-            owned[owner_slice], owner=owner,
+            owned[owner_slice],
+            owner=owner,
             origin=(owner_slice[0].start, owner_slice[1].start),
         )
         local_owned = np.where(local_owner_mask, owner, 0).astype(
@@ -3056,9 +3225,11 @@ def _analyze_owned_topology(
             }
         )
         resolved_crossings.extend(
-            _ResolvedCrossing(crossing.node + node_offset,
-                              tuple(path + path_offset for path in crossing.arm_paths),
-                              tuple(path + path_offset for path in crossing.core_paths))
+            _ResolvedCrossing(
+                crossing.node + node_offset,
+                tuple(path + path_offset for path in crossing.arm_paths),
+                tuple(path + path_offset for path in crossing.core_paths),
+            )
             for crossing in local.resolved_crossings
         )
 
@@ -3417,9 +3588,7 @@ def _build_neurite_morphology_graph(
             root_node = SpatialGraphNode.from_features(
                 node_id=next_node_id,
                 coordinates=root_coordinate,
-                radius=(
-                    soma_radius if root_role == "soma_root" else process_radius
-                ),
+                radius=(soma_radius if root_role == "soma_root" else process_radius),
                 features={
                     "label": owner,
                     "neuron_label": owner,
@@ -3507,9 +3676,7 @@ def _build_neurite_morphology_graph(
                     target_node = nodes_by_group[target_group]
                     coordinates[-1] = target_node.coordinates
                 branch_distance = float(topology.path_lengths[path_index])
-                euclidean_distance = float(
-                    topology.path_euclidean_lengths[path_index]
-                )
+                euclidean_distance = float(topology.path_euclidean_lengths[path_index])
                 graph_edges.append(
                     SpatialGraphEdge.from_features(
                         edge_id=next_edge_id,
@@ -3883,9 +4050,7 @@ def _build_summary(
         number_of_cells=cell_count,
         coordinate_unit=coordinate_unit,
         total_outgrowth=total_outgrowth,
-        mean_outgrowth_per_cell=(
-            total_outgrowth / cell_count if cell_count else 0.0
-        ),
+        mean_outgrowth_per_cell=(total_outgrowth / cell_count if cell_count else 0.0),
         total_processes=total_processes,
         mean_processes_per_cell=(total_processes / cell_count if cell_count else 0.0),
         total_branches=total_branches,

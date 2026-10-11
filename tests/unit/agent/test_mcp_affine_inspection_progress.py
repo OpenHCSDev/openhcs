@@ -19,19 +19,26 @@ from openhcs.agent.capabilities import (
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.execution import ArtifactPlanInspection
 from openhcs.mcp.execution import (
-    McpMainThreadDispatcher, McpQueuedCallNotStartedError, McpTransportExecutor,
+    McpMainThreadDispatcher,
+    McpQueuedCallNotStartedError,
+    McpTransportExecutor,
 )
 from pyqt_reactive.services.ui_thread_dispatch import (
-    UiThreadDispatchError, UiThreadDispatcherClosedError, UiThreadDispatchTimeoutError,
+    UiThreadDispatchError,
+    UiThreadDispatcherClosedError,
+    UiThreadDispatchTimeoutError,
 )
 from openhcs.mcp.server import build_server
 from python_introspect import to_jsonable
 
 
-@pytest.mark.parametrize("declaration", (
-    InspectPipelineSourceArtifactPlanCapability,
-    GetKnowledgeDocumentCapability,
-))
+@pytest.mark.parametrize(
+    "declaration",
+    (
+        InspectPipelineSourceArtifactPlanCapability,
+        GetKnowledgeDocumentCapability,
+    ),
+)
 def test_source_leaf_composes_original_progress_and_affinity(declaration):
     assert issubclass(declaration, MainThreadProgressCapability)
     spec = declaration
@@ -58,7 +65,9 @@ class AffineInspectionService:
             EndpointStartupPhase.PREPARING_CAPABILITIES,
             "Source inspection on original main thread",
         ).publish()
-        assert self.wait_for_completion(), "SDK heartbeat was starved by main-affine work"
+        assert (
+            self.wait_for_completion()
+        ), "SDK heartbeat was starved by main-affine work"
         if self.error is not None:
             raise self.error
         return ArtifactPlanInspection(
@@ -83,7 +92,9 @@ class InspectionProgressContext:
             self.service.release.set()
 
 
-@pytest.mark.parametrize("error", (None, ValueError("original"), asyncio.CancelledError("original")))
+@pytest.mark.parametrize(
+    "error", (None, ValueError("original"), asyncio.CancelledError("original"))
+)
 def test_generated_inspection_main_thread_context_progress_and_terminal(error):
     identity = ContextVar("affine-inspection-identity", default="outside")
     service = AffineInspectionService(identity, error=error)
@@ -92,7 +103,9 @@ def test_generated_inspection_main_thread_context_progress_and_terminal(error):
         SimpleNamespace(artifact_plan_service=service),
         main_thread_dispatcher=executor.dispatcher,
     )
-    tool = built._tool_manager.get_tool(InspectPipelineSourceArtifactPlanCapability.name)
+    tool = built._tool_manager.get_tool(
+        InspectPipelineSourceArtifactPlanCapability.name
+    )
     context = InspectionProgressContext(service)
 
     async def exercise():
@@ -100,10 +113,18 @@ def test_generated_inspection_main_thread_context_progress_and_terminal(error):
         try:
             if isinstance(error, asyncio.CancelledError):
                 with pytest.raises(asyncio.CancelledError) as caught:
-                    await tool.fn(mcp_context=context, plate_path="/synthetic", pipeline_source="pipeline_steps = []")
+                    await tool.fn(
+                        mcp_context=context,
+                        plate_path="/synthetic",
+                        pipeline_source="pipeline_steps = []",
+                    )
                 assert caught.value is error
                 return None
-            return await tool.fn(mcp_context=context, plate_path="/synthetic", pipeline_source="pipeline_steps = []")
+            return await tool.fn(
+                mcp_context=context,
+                plate_path="/synthetic",
+                pipeline_source="pipeline_steps = []",
+            )
         finally:
             identity.reset(token)
 
@@ -114,16 +135,24 @@ def test_generated_inspection_main_thread_context_progress_and_terminal(error):
     assert len(service.calls) == 1
     assert service.calls[0][1] == "original-request"
     assert identity.get() == "outside"
-    assert any("Source inspection on original main thread" in message for message in context.messages)
+    assert any(
+        "Source inspection on original main thread" in message
+        for message in context.messages
+    )
     assert any("still running" in message for message in context.messages)
     if error is None:
         assert result["plate_path"] == "/synthetic"
         assert result["errors"] == []
     elif isinstance(error, ValueError):
-        assert result["errors"] == [to_jsonable(AgentError.from_exception(
-            "mcp_tool_failed", error,
-            hint="The MCP server caught this exception at the tool boundary.",
-        ))]
+        assert result["errors"] == [
+            to_jsonable(
+                AgentError.from_exception(
+                    "mcp_tool_failed",
+                    error,
+                    hint="The MCP server caught this exception at the tool boundary.",
+                )
+            )
+        ]
 
 
 def test_independent_new_leaf_cooperative_hooks_need_no_consumer_edits():
@@ -164,20 +193,31 @@ def test_independent_new_leaf_cooperative_hooks_need_no_consumer_edits():
     identity = ContextVar("new-affine-declaration", default="new-case")
     service = AffineInspectionService(identity)
     executor = McpTransportExecutor()
-    built = build_server(SimpleNamespace(artifact_plan_service=service), main_thread_dispatcher=executor.dispatcher)
+    built = build_server(
+        SimpleNamespace(artifact_plan_service=service),
+        main_thread_dispatcher=executor.dispatcher,
+    )
 
     async def exercise():
         for declaration in (NewBefore, NewAfter):
             service.release.clear()
             context = InspectionProgressContext(service)
             tool = built._tool_manager.get_tool(declaration.name)
-            result = await tool.fn(mcp_context=context, plate_path="/new-case", pipeline_source="pipeline_steps = []")
+            result = await tool.fn(
+                mcp_context=context,
+                plate_path="/new-case",
+                pipeline_source="pipeline_steps = []",
+            )
             assert result["plate_path"] == "/new-case"
             assert any("still running" in message for message in context.messages)
 
     try:
         executor.run(exercise)
-        assert calls == [(stage, declaration.name) for declaration in (NewBefore, NewAfter) for stage in ("audit-enter", "audit-exit")]
+        assert calls == [
+            (stage, declaration.name)
+            for declaration in (NewBefore, NewAfter)
+            for stage in ("audit-enter", "audit-exit")
+        ]
         assert len(service.calls) == 2
     finally:
         executor.close()
@@ -219,7 +259,11 @@ def test_not_started_dispatch_is_cancelled_without_invoking_callback():
         assert await asyncio.to_thread(entered.wait, 1)
         try:
             with pytest.raises(McpQueuedCallNotStartedError) as cancelled:
-                await asyncio.to_thread(executor.dispatcher.call, lambda: calls.append("forbidden"), timeout_ms=1)
+                await asyncio.to_thread(
+                    executor.dispatcher.call,
+                    lambda: calls.append("forbidden"),
+                    timeout_ms=1,
+                )
             assert cancelled.value.to_agent_error().code == "mcp_call_not_started"
         finally:
             second_finished.set()
@@ -340,7 +384,11 @@ class WireInspectionService(AffineInspectionService):
         return True
 
     def inspect(self, request):
-        self.error = ValueError("Original controlled source error") if request.pipeline_source == "failed" else None
+        self.error = (
+            ValueError("Original controlled source error")
+            if request.pipeline_source == "failed"
+            else None
+        )
         return super().inspect(request)
 
 
@@ -349,18 +397,30 @@ def serve_stdio_inspection_fixture(*, work_seconds=2.4):
 
     identity = ContextVar("wire-source-identity", default="wire")
     with McpStdioTransport.reserve_process_stdio() as transport:
-        transport.run(build_server(
-            SimpleNamespace(artifact_plan_service=WireInspectionService(identity, work_seconds=work_seconds)),
-            main_thread_dispatcher=transport.execution.dispatcher,
-        ))
+        transport.run(
+            build_server(
+                SimpleNamespace(
+                    artifact_plan_service=WireInspectionService(
+                        identity, work_seconds=work_seconds
+                    )
+                ),
+                main_thread_dispatcher=transport.execution.dispatcher,
+            )
+        )
 
 
-@pytest.mark.parametrize("work_seconds,idle_seconds,connection_count", (
-    pytest.param(2.4, 1.6, 2, id="original-continuous"),
-    pytest.param(12.0, 10.0, 1, id="ordinary-ten-second-idle"),
-))
+@pytest.mark.parametrize(
+    "work_seconds,idle_seconds,connection_count",
+    (
+        pytest.param(2.4, 1.6, 2, id="original-continuous"),
+        pytest.param(12.0, 10.0, 1, id="ordinary-ten-second-idle"),
+    ),
+)
 def test_resident_continuous_connections_keep_affinity_and_wire_progress(
-    unix_socket_dir, work_seconds, idle_seconds, connection_count,
+    unix_socket_dir,
+    work_seconds,
+    idle_seconds,
+    connection_count,
 ):
     from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
     from openhcs.mcp.dev_client_core import McpDevServerSpec, McpDevSocketSession
@@ -370,9 +430,13 @@ def test_resident_continuous_connections_keep_affinity_and_wire_progress(
 
     transport = McpSocketTransport(unix_socket_dir / "affine.sock")
     service = WireInspectionService(
-        ContextVar("resident-source-identity", default="resident"), work_seconds=work_seconds,
+        ContextVar("resident-source-identity", default="resident"),
+        work_seconds=work_seconds,
     )
-    built = build_server(SimpleNamespace(artifact_plan_service=service), main_thread_dispatcher=transport.execution.dispatcher)
+    built = build_server(
+        SimpleNamespace(artifact_plan_service=service),
+        main_thread_dispatcher=transport.execution.dispatcher,
+    )
     clients = AsyncOperationExecutor(max_workers=1)
     diagnostics = io.StringIO()
 
@@ -384,10 +448,14 @@ def test_resident_continuous_connections_keep_affinity_and_wire_progress(
     progress = []
 
     async def exercise():
-        assert await asyncio.to_thread(wait_for_socket, transport.socket_path, timeout_seconds=10)
+        assert await asyncio.to_thread(
+            wait_for_socket, transport.socket_path, timeout_seconds=10
+        )
         try:
             for connection in range(connection_count):
-                async with ObservedSession(McpDevServerSpec(sys.executable), diagnostics, transport.socket_path) as session:
+                async with ObservedSession(
+                    McpDevServerSpec(sys.executable), diagnostics, transport.socket_path
+                ) as session:
                     await session.initialize(timeout_seconds=10)
                     for source in ("cold", "failed"):
                         started = time.monotonic()
@@ -401,13 +469,24 @@ def test_resident_continuous_connections_keep_affinity_and_wire_progress(
                         elapsed = time.monotonic() - started
                         assert elapsed >= work_seconds > idle_seconds
                         events = progress[before:]
-                        assert events and all(token == request_id for _, token in events)
+                        assert events and all(
+                            token == request_id for _, token in events
+                        )
                         assert events[0][0] - started < 1
                         assert events[-1][0] - started > idle_seconds
-                        print("RESIDENT_AFFINE_TERMINAL", source, elapsed, idle_seconds, flush=True)
+                        print(
+                            "RESIDENT_AFFINE_TERMINAL",
+                            source,
+                            elapsed,
+                            idle_seconds,
+                            flush=True,
+                        )
                         payload = result["structuredContent"]
                         if source == "failed":
-                            assert payload["errors"][0]["message"] == "Original controlled source error"
+                            assert (
+                                payload["errors"][0]["message"]
+                                == "Original controlled source error"
+                            )
                         else:
                             assert payload["plate_path"] == "/synthetic"
                             assert payload["errors"] == []

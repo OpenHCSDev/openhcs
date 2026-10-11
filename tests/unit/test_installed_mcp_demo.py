@@ -74,7 +74,9 @@ def _execution(capability, payload, *, returncode: int = 0) -> McpDevCommandExec
     response = McpDevToolBatchResponse(
         server=McpDevServerIdentity(command="python", module="openhcs.mcp"),
         results=(
-            McpDevToolResult(tool=capability.name, mcp_error=False, payloads=(payload,)),
+            McpDevToolResult(
+                tool=capability.name, mcp_error=False, payloads=(payload,)
+            ),
         ),
     )
     return McpDevCommandExecution(
@@ -335,11 +337,23 @@ def test_command_payload_rejects_a_missing_declared_result() -> None:
 
 def _dataset_row(root: Path, terminal_status: str | None) -> DatasetRowState:
     return DatasetRowState(
-        scope_id=str(root), name=root.name, root=str(root), pipeline_path=None,
-        selected=True, initialized=True, compiled=True, init_pending=False,
-        compile_pending=False, execution_active=False, status_prefix="",
-        orchestrator_state=None, execution_id=None, terminal_status=terminal_status,
-        runtime_state=None, runtime_percent=None, queue_position=None,
+        scope_id=str(root),
+        name=root.name,
+        root=str(root),
+        pipeline_path=None,
+        selected=True,
+        initialized=True,
+        compiled=True,
+        init_pending=False,
+        compile_pending=False,
+        execution_active=False,
+        status_prefix="",
+        orchestrator_state=None,
+        execution_id=None,
+        terminal_status=terminal_status,
+        runtime_state=None,
+        runtime_percent=None,
+        queue_position=None,
     )
 
 
@@ -359,7 +373,9 @@ def test_execute_pipeline_runs_the_session_journey_and_reads_its_row(
     def fake_run_mcp(client, argv, *, capability, payload_type, timeout_seconds):
         calls.append((client, tuple(argv), capability, payload_type, timeout_seconds))
         return DatasetListState(
-            rows=rows, selected_scope_ids=(str(plate),), execution_state="idle",
+            rows=rows,
+            selected_scope_ids=(str(plate),),
+            execution_state="idle",
         )
 
     monkeypatch.setattr(installed_demo, "_run_mcp", fake_run_mcp)

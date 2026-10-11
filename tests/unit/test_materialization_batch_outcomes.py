@@ -174,7 +174,9 @@ def test_worker_exports_actual_step_outcomes_after_resource_release(
         worker_slot="worker-0",
         worker_assignments={"worker-0": ("A01",)},
     )
-    monkeypatch.setattr(progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None))
+    monkeypatch.setattr(
+        progress_types, "_progress_queue", SimpleNamespace(put=lambda _event: None)
+    )
 
     def forbidden_reconstruction(*_args, **_kwargs):
         pytest.fail("Ordinary execution must consume actual step outcomes")
@@ -195,7 +197,9 @@ def test_worker_exports_actual_step_outcomes_after_resource_release(
 
     assert context.released
     assert transported.is_success()
-    assert transported.runtime_observation.contexts[0].outputs.runtime_export_paths == (path,)
+    assert transported.runtime_observation.contexts[0].outputs.runtime_export_paths == (
+        path,
+    )
     assert transported.runtime_observation.contexts[0].records == ()
     assert RuntimeExportObservation.from_runtime_observations(
         (transported.runtime_observation,)
@@ -209,10 +213,18 @@ def test_parent_and_worker_exports_share_existing_observation_authority(tmp_path
     for path in (worker_path, plate_path, unrelated):
         path.write_text("Area\n42\n")
     worker = RuntimeExecutionObservation(
-        contexts=(RuntimeContextObservation("A01", (), StepExecutionObservation({}, (worker_path,))),)
+        contexts=(
+            RuntimeContextObservation(
+                "A01", (), StepExecutionObservation({}, (worker_path,))
+            ),
+        )
     )
     parent = RuntimeExecutionObservation(
-        contexts=(RuntimeContextObservation("A01", (), StepExecutionObservation({}, (plate_path,))),)
+        contexts=(
+            RuntimeContextObservation(
+                "A01", (), StepExecutionObservation({}, (plate_path,))
+            ),
+        )
     )
     results = BundleExecutionResults(
         {"A01": ExecutionResult.success("A01", runtime_observation=worker)},

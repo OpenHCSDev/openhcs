@@ -67,7 +67,9 @@ from openhcs.core.vfs_protocol import FileManagerLike
 from openhcs.core.axes import AxisFamily, ColourAxis, PartitionAxis
 
 if TYPE_CHECKING:
-    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceSourceProjection,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -647,26 +649,39 @@ class SourceBindingWorkspaceProjector:
                 VirtualWorkspacePathLookup.from_paths(path, path)
             )
             filter_paths = (
-                () if metadata is None else SourceMetadataFields.source_filter_paths(metadata)
+                ()
+                if metadata is None
+                else SourceMetadataFields.source_filter_paths(metadata)
             ) or (ref.backend_address, path)
             if self.source_bindings.source_path_filters_match(filter_paths):
                 selected_paths.add(path)
                 selected_metadata_paths.update((path, ref.backend_address))
         if not selected_paths:
-            raise ValueError("Declared source filters matched no prepared workspace sources.")
+            raise ValueError(
+                "Declared source filters matched no prepared workspace sources."
+            )
         return VirtualWorkspaceSourceProjection(
-            source_refs_by_virtual_path=MappingProxyType({
-                path: ref for path, ref in projection.source_refs_by_virtual_path.items()
-                if path in selected_paths
-            }),
-            source_metadata_by_path=MappingProxyType({
-                path: metadata for path, metadata in projection.source_metadata_by_path.items()
-                if path in selected_metadata_paths
-            }),
-            source_projections_by_virtual_path=MappingProxyType({
-                path: source for path, source in projection.source_projections_by_virtual_path.items()
-                if path in selected_paths
-            }),
+            source_refs_by_virtual_path=MappingProxyType(
+                {
+                    path: ref
+                    for path, ref in projection.source_refs_by_virtual_path.items()
+                    if path in selected_paths
+                }
+            ),
+            source_metadata_by_path=MappingProxyType(
+                {
+                    path: metadata
+                    for path, metadata in projection.source_metadata_by_path.items()
+                    if path in selected_metadata_paths
+                }
+            ),
+            source_projections_by_virtual_path=MappingProxyType(
+                {
+                    path: source
+                    for path, source in projection.source_projections_by_virtual_path.items()
+                    if path in selected_paths
+                }
+            ),
             workspace_root=projection.workspace_root,
         )
 
@@ -1023,21 +1038,14 @@ class SourceBindingWorkspaceProjector:
         ):
             return False
         selector = binding.selector
-        return (
-            all(
-                (
-                    value := semantic_source_metadata_value(
-                        candidate.metadata, item.field
-                    )
-                )
-                is not None
-                and source_metadata_values_equal(value, item.value)
-                for item in selector.metadata
-            )
-            and all(
-                self._component_is_compatible(candidate.metadata, item)
-                for item in selector.components
-            )
+        return all(
+            (value := semantic_source_metadata_value(candidate.metadata, item.field))
+            is not None
+            and source_metadata_values_equal(value, item.value)
+            for item in selector.metadata
+        ) and all(
+            self._component_is_compatible(candidate.metadata, item)
+            for item in selector.components
         )
 
     @staticmethod
@@ -1204,14 +1212,16 @@ class SourceBindingWorkspaceProjector:
                     address = OpenHCSPlaneAddress(
                         (
                             axis,
-                            well
-                            if issubclass(axis, PartitionAxis)
-                            else SourceAxisProjection.project_bound(
-                                axis,
-                                set_metadata=source_set.metadata,
-                                set_index=source_set.index,
-                                candidate_metadata=candidate.metadata,
-                                candidate_index=projection_index,
+                            (
+                                well
+                                if issubclass(axis, PartitionAxis)
+                                else SourceAxisProjection.project_bound(
+                                    axis,
+                                    set_metadata=source_set.metadata,
+                                    set_index=source_set.index,
+                                    candidate_metadata=candidate.metadata,
+                                    candidate_index=projection_index,
+                                )
                             ),
                         )
                         for axis in AxisFamily.active().axes
@@ -1258,12 +1268,12 @@ class SourceBindingWorkspaceProjector:
 
         partition_axis = AxisFamily.active().partition_axis()
         fields_are_partition_identity = all(
-            source_metadata_component(field)
-            is partition_axis
-            for field in fields
+            source_metadata_component(field) is partition_axis for field in fields
         )
         if fields_are_partition_identity:
-            partition_value = SourceMetadataFields.component_value(group_metadata, partition_axis)
+            partition_value = SourceMetadataFields.component_value(
+                group_metadata, partition_axis
+            )
             if partition_value is None:
                 raise ValueError(
                     f"Source grouping fields declared {partition_axis.name} identity "
@@ -1427,7 +1437,9 @@ def _projected_candidate_components(
             value
             for candidate in candidates
             if (
-                value := SourceMetadataFields.component_value(candidate.metadata, component)
+                value := SourceMetadataFields.component_value(
+                    candidate.metadata, component
+                )
             )
             is not None
         }

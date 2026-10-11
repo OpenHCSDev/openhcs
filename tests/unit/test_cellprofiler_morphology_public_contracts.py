@@ -266,7 +266,10 @@ def test_registry_morphology_owners_compile_exact_public_function_step_abi(
     assert tuple(spec.artifact_type for spec in contract.artifact_outputs) == (
         case.output_types
     )
-    assert CallableContract.from_callable(case.function).artifact_input_parameter_names == case.special_inputs
+    assert (
+        CallableContract.from_callable(case.function).artifact_input_parameter_names
+        == case.special_inputs
+    )
 
 
 def test_fill_objects_returns_its_declared_object_label_artifact() -> None:

@@ -367,7 +367,9 @@ def create_weight_mask(
     Returns:
         2D TensorFlow weight mask of shape (Y, X)
     """
-    return create_linear_weight_mask(*operations.weight_mask_extent(shape), margin_ratio)
+    return create_linear_weight_mask(
+        *operations.weight_mask_extent(shape), margin_ratio
+    )
 
 
 @tensorflow_func

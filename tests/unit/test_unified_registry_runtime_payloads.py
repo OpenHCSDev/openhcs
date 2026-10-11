@@ -233,7 +233,9 @@ def test_native_flexible_callable_receives_declared_array_abi_and_keeps_slice_co
 ) -> None:
     stack = np.arange(40, dtype=np.float32).reshape(2, 4, 5)
     mask = np.ones_like(stack, dtype=bool)
-    payload = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(stack, mask)
+    payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+    ).payload_with(stack, mask)
     seen_shapes = []
 
     @numpy
@@ -243,10 +245,13 @@ def test_native_flexible_callable_receives_declared_array_abi_and_keeps_slice_co
         return image + 1
 
     invocation = compile_function_pattern(
-        (native_image_operation, {"slice_by_slice": slice_by_slice}), {}, {},
+        (native_image_operation, {"slice_by_slice": slice_by_slice}),
+        {},
+        {},
     ).default_group.invocations[0]
     result = invocation.runtime_callable(
-        invocation.main_flow_call_argument(payload), **dict(invocation.runtime_kwargs),
+        invocation.main_flow_call_argument(payload),
+        **dict(invocation.runtime_kwargs),
     )
     assert seen_shapes == ([(4, 5), (4, 5)] if slice_by_slice else [(2, 4, 5)])
     np.testing.assert_array_equal(result, stack + 1)
@@ -254,13 +259,17 @@ def test_native_flexible_callable_receives_declared_array_abi_and_keeps_slice_co
 
 
 def test_native_flexible_callable_preserves_explicitly_declared_carrier_abi() -> None:
-    payload = ImagePayloadMetadata().payload_with(np.ones((2, 4, 5)), np.ones((2, 4, 5), dtype=bool))
+    payload = ImagePayloadMetadata().payload_with(
+        np.ones((2, 4, 5)), np.ones((2, 4, 5), dtype=bool)
+    )
 
     @numpy
     def carrier_operation(image: RuntimeArrayPayload) -> RuntimeArrayPayload:
         return image
 
-    invocation = compile_function_pattern(carrier_operation, {}, {}).default_group.invocations[0]
+    invocation = compile_function_pattern(
+        carrier_operation, {}, {}
+    ).default_group.invocations[0]
     assert invocation.main_flow_call_argument(payload) is payload
 
 
@@ -287,7 +296,8 @@ def test_flexible_runtime_argument_preserves_plane_context_until_mode_selection(
         return image + 1
 
     wrapped = MinimalRegistry("minimal").apply_contract_wrapper(
-        add_one, FlexibleContract,
+        add_one,
+        FlexibleContract,
     )
     contract = CallableContract.from_callable(wrapped)
     call_argument = contract.main_flow_call_argument(payload)
@@ -297,7 +307,8 @@ def test_flexible_runtime_argument_preserves_plane_context_until_mode_selection(
     np.testing.assert_array_equal(result.data, stack + 1)
     assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert result.metadata.source_image_provenance_planes.paths == (
-        "z0.tif", "z1.tif",
+        "z0.tif",
+        "z1.tif",
     )
 
 
@@ -327,7 +338,9 @@ def test_pure_2d_contract_projects_stack_shaped_kwargs_per_slice() -> None:
         seen_shapes.append(mask_data.shape)
         true_y, true_x = np.argwhere(mask_data)[0]
         seen_true_indices.append((int(true_y), int(true_x)))
-        return image.with_pixels(np.where(mask_data, image_data + 100, image_data),)
+        return image.with_pixels(
+            np.where(mask_data, image_data + 100, image_data),
+        )
 
     apply_mask.output_memory_type = MEMORY_TYPE_NUMPY
 
@@ -456,7 +469,9 @@ def test_with_pixels_rejects_implicit_channel_mask_collapse() -> None:
     )
 
     with pytest.raises(ValueError, match="does not match declared image mask domain"):
-        source.with_pixels(np.ones((4, 5), dtype=np.float32),)
+        source.with_pixels(
+            np.ones((4, 5), dtype=np.float32),
+        )
 
 
 def test_runtime_callable_invocation_can_call_raw_signature_filtered_callable() -> None:
@@ -466,9 +481,7 @@ def test_runtime_callable_invocation_can_call_raw_signature_filtered_callable() 
 
     def raw(image: RuntimeArrayPayload, *, scale: int) -> RuntimeArrayPayload:
         assert isinstance(image, RuntimeArrayPayload)
-        return image.metadata.payload_with(
-            image.data * scale, image.mask
-        )
+        return image.metadata.payload_with(image.data * scale, image.mask)
 
     @wraps(raw)
     def decorated(image: Any, **kwargs: Any) -> np.ndarray:
@@ -484,9 +497,7 @@ def test_runtime_callable_invocation_can_call_raw_signature_filtered_callable() 
 
     assert isinstance(result, RuntimeArrayPayload)
     np.testing.assert_array_equal(result.data, np.full((4, 5), 3.0))
-    np.testing.assert_array_equal(
-        result.mask, np.ones((4, 5), dtype=bool)
-    )
+    np.testing.assert_array_equal(result.mask, np.ones((4, 5), dtype=bool))
 
 
 def test_raw_runtime_callable_preserves_request_binding_semantics() -> None:

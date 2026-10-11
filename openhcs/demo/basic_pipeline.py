@@ -45,9 +45,7 @@ pipeline_steps.append(step_1)
 step_2 = FunctionStep(
     func=create_composite,
     name="create_composite",
-    processing_config=LazyProcessingConfig(
-        variable_components=[Microscopy.Channel]
-    ),
+    processing_config=LazyProcessingConfig(variable_components=[Microscopy.Channel]),
 )
 pipeline_steps.append(step_2)
 
@@ -55,9 +53,7 @@ pipeline_steps.append(step_2)
 step_3 = FunctionStep(
     func=create_projection,
     name="Z-Stack Flattening",
-    processing_config=LazyProcessingConfig(
-        variable_components=[Microscopy.ZIndex]
-    ),
+    processing_config=LazyProcessingConfig(variable_components=[Microscopy.ZIndex]),
     step_materialization_config=LazyStepMaterializationConfig(),
 )
 pipeline_steps.append(step_3)
@@ -84,9 +80,7 @@ pipeline_steps.append(step_6)
 step_7 = FunctionStep(
     func=create_projection,
     name="Z-Stack Flattening",
-    processing_config=LazyProcessingConfig(
-        variable_components=[Microscopy.ZIndex]
-    ),
+    processing_config=LazyProcessingConfig(variable_components=[Microscopy.ZIndex]),
     napari_streaming_config=LazyNapariStreamingConfig(),
     fiji_streaming_config=LazyFijiStreamingConfig(),
 )

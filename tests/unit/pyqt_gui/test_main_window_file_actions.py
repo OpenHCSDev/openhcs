@@ -21,8 +21,14 @@ class _PlateManagerProbe:
 @pytest.mark.parametrize(
     "action, mode",
     (
-        (OpenHCSMainWindow.load_orchestrator_configuration, SelectedAllSelectionMode.SELECTED),
-        (OpenHCSMainWindow.save_orchestrator_configuration, SelectedAllSelectionMode.ALL),
+        (
+            OpenHCSMainWindow.load_orchestrator_configuration,
+            SelectedAllSelectionMode.SELECTED,
+        ),
+        (
+            OpenHCSMainWindow.save_orchestrator_configuration,
+            SelectedAllSelectionMode.ALL,
+        ),
     ),
 )
 def test_file_actions_open_the_dataset_code_document(action, mode) -> None:

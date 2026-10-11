@@ -1020,7 +1020,9 @@ def test_descriptor_resolver_rejects_dead_process(monkeypatch, tmp_path):
         staticmethod(lambda _pid: None),
     )
 
-    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(UiBridgeStatusOperation)
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(
+        UiBridgeStatusOperation
+    )
 
     assert status.reachable is False
     assert status.descriptor_status == "stale_ui_bridge_descriptor"
@@ -1109,7 +1111,9 @@ def test_status_rechecks_descriptor_process_liveness_after_gateway_call(
         staticmethod(lambda _pid: next(process_start_times)),
     )
 
-    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(UiBridgeStatusOperation)
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(
+        UiBridgeStatusOperation
+    )
 
     assert status.reachable is False
     assert status.descriptor_status == "stale_ui_bridge_descriptor"
@@ -1136,7 +1140,9 @@ def test_status_rejects_response_from_non_owner_endpoint(monkeypatch, tmp_path):
     ).write()
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", str(descriptor_path))
 
-    status = UiBridgeService(gateway=MismatchedIdentityGateway()).invoke(UiBridgeStatusOperation)
+    status = UiBridgeService(gateway=MismatchedIdentityGateway()).invoke(
+        UiBridgeStatusOperation
+    )
 
     assert status.reachable is False
     assert status.descriptor_status == "ui_bridge_endpoint_identity_mismatch"
@@ -1270,7 +1276,9 @@ def test_configured_descriptor_directory_includes_process_advertised_descriptor(
         proc_root,
     )
 
-    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(UiBridgeStatusOperation)
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(
+        UiBridgeStatusOperation
+    )
 
     assert status.reachable is True
     assert status.descriptor_status == "ok"
@@ -1308,7 +1316,9 @@ def test_descriptor_catalog_unions_default_and_process_advertised_live_bridges(
     )
 
     catalog = UiBridgeService().list_bridges()
-    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(UiBridgeStatusOperation)
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).invoke(
+        UiBridgeStatusOperation
+    )
 
     assert [bridge.bridge_instance_id for bridge in catalog.bridges] == [
         "default-bridge",
@@ -1372,7 +1382,9 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
     )
 
     catalog = service.invoke(UiBridgeListDocumentsOperation, connection=connection)
-    state_catalog = service.invoke(UiBridgeListStateSurfacesOperation, connection=connection)
+    state_catalog = service.invoke(
+        UiBridgeListStateSurfacesOperation, connection=connection
+    )
     document = service.invoke(
         UiBridgeGetDocumentOperation,
         UiCodeDocumentRequest(document_id=DOCUMENT_ID),
@@ -1820,7 +1832,7 @@ def test_get_object_state_fields_projects_query_from_scope_catalog(
             scope_ids=("global_config",),
             field_path_contains=("napari_streaming_config",),
             field_filter="semantic",
-        )
+        ),
     )
 
     assert result.field_filter == "semantic"
@@ -1849,9 +1861,7 @@ def test_unsupported_ui_bridge_operation_error_mentions_restart(monkeypatch, tmp
                 errors=(
                     AgentError(
                         code="unsupported_ui_bridge_operation",
-                        message=(
-                            "Unsupported UI bridge operation: close_window"
-                        ),
+                        message=("Unsupported UI bridge operation: close_window"),
                         exception_type="UiBridgeUnsupportedOperationError",
                     ),
                 )
@@ -1881,7 +1891,7 @@ def test_restore_request_rejects_multiple_selectors(monkeypatch, tmp_path):
 
     result = service.invoke(
         UiBridgeRestoreSnapshotOperation,
-        UiSnapshotRestoreRequest(snapshot_id="snap-1", index=0)
+        UiSnapshotRestoreRequest(snapshot_id="snap-1", index=0),
     )
 
     assert result.restored is False

@@ -65,17 +65,20 @@ def test_compile_heartbeat_emits_running_pipeline_compile_event():
     _emitter(emitted).compile_heartbeat(step_count=18)
 
     assert len(emitted) == 1
-    assert emitted[0].identity == ProgressExecutionContext(
-        "exec-1", "/tmp/plate"
-    ).event(
-        axis_id="",
-        step_name="pipeline",
-        phase=ProgressPhase.COMPILE,
-        status=ProgressStatus.RUNNING,
-        percent=0.0,
-        completed=0,
-        total=18,
-    ).identity
+    assert (
+        emitted[0].identity
+        == ProgressExecutionContext("exec-1", "/tmp/plate")
+        .event(
+            axis_id="",
+            step_name="pipeline",
+            phase=ProgressPhase.COMPILE,
+            status=ProgressStatus.RUNNING,
+            percent=0.0,
+            completed=0,
+            total=18,
+        )
+        .identity
+    )
     assert emitted[0].phase is ProgressPhase.COMPILE
     assert emitted[0].status is ProgressStatus.RUNNING
     assert emitted[0].total == 18

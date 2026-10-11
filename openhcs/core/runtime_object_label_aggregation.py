@@ -182,9 +182,13 @@ class ObjectLabelPure2DSliceAggregator:
             and MemoryType(self.memory_type) is MemoryType.NUMPY
         ):
             declared = self.declared_variants()
-            final_planes = tuple(self.slice_labels(value, FinalLabels) for value in self.values)
+            final_planes = tuple(
+                self.slice_labels(value, FinalLabels) for value in self.values
+            )
             variant_planes = {
-                variant: tuple(self.slice_labels(value, variant) for value in self.values)
+                variant: tuple(
+                    self.slice_labels(value, variant) for value in self.values
+                )
                 for variant in declared
             }
             return self.output_value(

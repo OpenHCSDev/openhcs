@@ -847,7 +847,9 @@ class GalleryUiBridgeSession:
         )
 
     def windows(self) -> UiWindowCatalog:
-        result = self._service.invoke(UiBridgeListWindowsOperation, connection=self.connection)
+        result = self._service.invoke(
+            UiBridgeListWindowsOperation, connection=self.connection
+        )
         if result.errors:
             raise MediaGalleryError(f"UI window catalogue failed: {result.errors!r}")
         return result
@@ -859,7 +861,9 @@ class GalleryUiBridgeSession:
 
     def object_state_scopes(self) -> UiObjectStateScopeCatalog:
         request = UiObjectStateScopeListRequest.from_fields()
-        result = self._service.invoke(UiBridgeListObjectStateScopesOperation, request, self.connection)
+        result = self._service.invoke(
+            UiBridgeListObjectStateScopesOperation, request, self.connection
+        )
         if result.errors:
             raise MediaGalleryError(
                 f"ObjectState scope catalogue failed: {result.errors!r}"
@@ -876,7 +880,9 @@ class GalleryUiBridgeSession:
             field_path=role.navigation_field_path,
             create_if_missing=True,
         )
-        result = self._service.invoke(UiBridgeNavigateWindowOperation, request, self.connection)
+        result = self._service.invoke(
+            UiBridgeNavigateWindowOperation, request, self.connection
+        )
         if (
             result.errors
             or not result.focused
@@ -888,7 +894,9 @@ class GalleryUiBridgeSession:
         return result
 
     def action_catalog(self) -> UiActionCatalog:
-        result = self._service.invoke(UiBridgeListActionsOperation, connection=self.connection)
+        result = self._service.invoke(
+            UiBridgeListActionsOperation, connection=self.connection
+        )
         if result.errors:
             raise MediaGalleryError(f"UI action catalogue failed: {result.errors!r}")
         return result
@@ -917,7 +925,9 @@ class GalleryUiBridgeSession:
             observed_selection_revision_token=summary.selection_revision_token,
             require_confirmation=False,
         )
-        result = self._service.invoke(UiBridgeInvokeActionOperation, request, self.connection)
+        result = self._service.invoke(
+            UiBridgeInvokeActionOperation, request, self.connection
+        )
         if result.errors or not result.receipt.accepted:
             raise MediaGalleryError(
                 f"UI action {target.action.operation_id!r} was rejected: {result!r}"
@@ -938,7 +948,9 @@ class GalleryUiBridgeSession:
             max_depth=None,
             max_nodes=2000,
         )
-        result = self._service.invoke(UiBridgeWidgetTreeOperation, request, self.connection)
+        result = self._service.invoke(
+            UiBridgeWidgetTreeOperation, request, self.connection
+        )
         if result.errors or not result.projected:
             raise MediaGalleryError(
                 f"Widget-tree projection failed for {window_id!r}: {result!r}"
@@ -1003,7 +1015,9 @@ class GalleryUiBridgeSession:
             action_kind=action_kind.value,
             target_index=target_index,
         )
-        result = self._service.invoke(UiBridgeInvokeWidgetActionOperation, request, self.connection)
+        result = self._service.invoke(
+            UiBridgeInvokeWidgetActionOperation, request, self.connection
+        )
         if result.errors or not result.receipt.accepted:
             raise MediaGalleryError(
                 f"Widget action {summary.path_id!r} was rejected: {result!r}"
@@ -1119,7 +1133,9 @@ class GalleryUiBridgeSession:
 
     def close_window(self, window_id: str) -> None:
         request = UiWindowCloseRequest.from_fields(window_id=window_id)
-        result = self._service.invoke(UiBridgeCloseWindowOperation, request, self.connection)
+        result = self._service.invoke(
+            UiBridgeCloseWindowOperation, request, self.connection
+        )
         if result.errors or not result.closed:
             raise MediaGalleryError(
                 f"Could not close UI window {window_id!r}: {result!r}"
@@ -1142,7 +1158,9 @@ class GalleryUiBridgeSession:
             output_dir_path=str(target_path.parent),
             create_if_missing=create_if_missing,
         )
-        response = self._service.invoke(UiBridgeSnapshotWindowOperation, snapshot_request, self.connection)
+        response = self._service.invoke(
+            UiBridgeSnapshotWindowOperation, snapshot_request, self.connection
+        )
         return retain_native_snapshot_source(self.request, response)
 
 

@@ -153,21 +153,24 @@ class BasicPySourceTests(unittest.TestCase):
             for node in ast.walk(owner)
             if isinstance(node, ast.Call)
         ]
-        self.assertIn(
-            "source.metadata.collapse_leading_plane_axis", calls
-        )
+        self.assertIn("source.metadata.collapse_leading_plane_axis", calls)
         self.assertIn("source.metadata.require_independent_observation_axis", calls)
-        metadata_tree = ast.parse((ROOT / "openhcs/core/runtime_image_values.py").read_text())
+        metadata_tree = ast.parse(
+            (ROOT / "openhcs/core/runtime_image_values.py").read_text()
+        )
         metadata_owner = next(
-            node for node in metadata_tree.body
+            node
+            for node in metadata_tree.body
             if isinstance(node, ast.ClassDef) and node.name == "ImagePayloadMetadata"
         )
         metadata_calls = {
-            ast.unparse(node.func) for node in ast.walk(metadata_owner)
+            ast.unparse(node.func)
+            for node in ast.walk(metadata_owner)
             if isinstance(node, ast.Call)
         }
         declared_method_names = [
-            node.name for node in metadata_owner.body
+            node.name
+            for node in metadata_owner.body
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         ]
         self.assertEqual(len(declared_method_names), len(set(declared_method_names)))

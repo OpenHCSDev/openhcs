@@ -94,7 +94,8 @@ def pipeline_steps(napari_streaming_config=None) -> list:
     )
 
     streaming = (
-        {} if napari_streaming_config is None
+        {}
+        if napari_streaming_config is None
         else {"napari_streaming_config": napari_streaming_config}
     )
     return [

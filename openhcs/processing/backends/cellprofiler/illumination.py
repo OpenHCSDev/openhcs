@@ -15,7 +15,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import (AlignedImageStack)
+from openhcs.core.aligned_image_payload import AlignedImageStack
 from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
 from openhcs.core.artifacts import (
     ArtifactSpec,
@@ -1086,12 +1086,8 @@ def correct_illumination_apply(
     if truncate_high:
         np.minimum(output_pixels, 1.0, out=output_pixels)
     mask = image.mask
-    return (
-        image.metadata
-        .without_unit_interval_intensity_scale()
-        .payload_with(
-            output_pixels, None if mask is None else np.asarray(mask, dtype=bool)
-        )
+    return image.metadata.without_unit_interval_intensity_scale().payload_with(
+        output_pixels, None if mask is None else np.asarray(mask, dtype=bool)
     )
 
 
@@ -1409,7 +1405,6 @@ class ConvexHullSmoothingBackendStrategy(
 ):
     """Convex-hull illumination smoothing keyed by OpenHCS memory/provider."""
 
-
     @abstractmethod
     def smooth_background_plane(
         self,
@@ -1426,7 +1421,6 @@ class RankMedianSmoothingBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Rank-median illumination smoothing keyed by OpenHCS memory/provider."""
-
 
     @staticmethod
     def disk_rows(footprint: np.ndarray) -> tuple[np.ndarray, np.ndarray]:

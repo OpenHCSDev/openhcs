@@ -183,12 +183,12 @@ class ZarrComponentAxisProjection(AxisRoleKeyedStrategyMixin, ABC):
                 "Parsed output identities disagree on component "
                 f"{component.name!r}; missing from item indices {missing_indices!r}"
             )
-        return tuple(cls.item_value(identity, component) for identity in item_identities)
+        return tuple(
+            cls.item_value(identity, component) for identity in item_identities
+        )
 
     @classmethod
-    def item_value(
-        cls, identity: ZarrBatchItemIdentity, component: type[Axis]
-    ) -> str:
+    def item_value(cls, identity: ZarrBatchItemIdentity, component: type[Axis]) -> str:
         value = identity.component_values.value_for(component)
         if value is None:
             raise ValueError(
@@ -216,9 +216,7 @@ class ColourZarrAxisProjection(ZarrComponentAxisProjection):
     axis_name = "c"
 
     @classmethod
-    def item_value(
-        cls, identity: ZarrBatchItemIdentity, component: type[Axis]
-    ) -> str:
+    def item_value(cls, identity: ZarrBatchItemIdentity, component: type[Axis]) -> str:
         value = super().item_value(identity, component)
         qualifier = identity.filename_qualifier
         return value if qualifier is None else f"{value}:{qualifier}"

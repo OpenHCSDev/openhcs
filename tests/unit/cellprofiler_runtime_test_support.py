@@ -48,7 +48,7 @@ class CellProfilerRuntimeTestContext:
     filemanager: object | None
     microscope_handler: object
     source_image_set_identity_policy: SourceImageSetIdentityPolicy
-    dataset_root: Path = Path('/plate/Images')
+    dataset_root: Path = Path("/plate/Images")
     completed_step_outputs: StepExecutionObservation = field(
         default_factory=StepExecutionObservation.empty,
     )

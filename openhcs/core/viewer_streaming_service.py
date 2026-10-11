@@ -412,9 +412,7 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
             source_address=source_address,
         ).metadata(image)
         metadata = self.calibrated_metadata(metadata)
-        return metadata.payload_with(
-            image.data, image.mask
-        )
+        return metadata.payload_with(image.data, image.mask)
 
     def component_metadata_by_path(
         self,
@@ -604,7 +602,9 @@ class StreamingService:
                     f"{config.viewer_family.display_name} viewer on port {viewer.port} failed to become ready"
                 )
 
-            logger.info(f"{config.viewer_family.display_name} viewer on port {viewer.port} is ready")
+            logger.info(
+                f"{config.viewer_family.display_name} viewer on port {viewer.port} is ready"
+            )
 
     @staticmethod
     def _require_viewer_settled(request: ViewerStreamingContext) -> None:
@@ -843,7 +843,9 @@ class StreamingService:
                 )
             archive_metadata.append(metadata)
             if metadata is not None:
-                geometric_domain = ROIArchiveSourceMetadata.source_component_domain(rois, metadata)
+                geometric_domain = ROIArchiveSourceMetadata.source_component_domain(
+                    rois, metadata
+                )
                 if geometric_domain is not None:
                     geometric_domains[filename] = geometric_domain
             data_list.append(rois)
@@ -922,7 +924,9 @@ class StreamingService:
         source_metadata_items = StreamSourceComponentMetadataItems.from_values(
             component_metadata
             for path in paths
-            for component_metadata in geometric_domains.get(path, (metadata_by_path[path],))
+            for component_metadata in geometric_domains.get(
+                path, (metadata_by_path[path],)
+            )
         )
         message_authority = StreamComponentMessageExtraAuthority.from_viewer_surface(
             viewer_surface,
@@ -944,12 +948,17 @@ class StreamingService:
         component_order = message_authority.layout.component_order
         item_fields_by_archive = tuple(
             ROIArchiveSourceMetadata.stream_item_fields(
-                rois, metadata,
-                StreamImagePayloadMetadataProjector.item_fields(metadata, component_order),
+                rois,
+                metadata,
+                StreamImagePayloadMetadataProjector.item_fields(
+                    metadata, component_order
+                ),
             )
             for rois, metadata in zip(data_list, payload_metadata, strict=True)
         )
-        for indices in StreamImagePayloadMetadataProjector.partition_item_fields(item_fields_by_archive):
+        for indices in StreamImagePayloadMetadataProjector.partition_item_fields(
+            item_fields_by_archive
+        ):
             item_fields = item_fields_by_archive[indices[0]]
             stream_backend_kwargs = message_authority.viewer_backend_kwargs(
                 producer=producer.for_indices(

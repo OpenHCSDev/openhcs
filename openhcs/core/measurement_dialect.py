@@ -71,16 +71,12 @@ class RuntimeMeasurementSourceQualifiedFeature:
         )
 
 
-
-
 class RuntimeMeasurementQualifierValueMode(str, Enum):
     """How a row qualifier value is rendered into a feature suffix."""
 
     IDENTIFIER = "identifier"
     TWO_DIGIT_INTEGER = "two_digit_integer"
     FRACTION_OF_COUNT = "fraction_of_count"
-
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -260,7 +256,6 @@ _DEFAULT_MEASUREMENT_ROW_QUALIFIER_SEQUENCES = (
 )
 
 
-
 def _parts(prefix: Iterable[str]) -> FeatureParts:
     return tuple(part for part in prefix if part)
 
@@ -314,7 +309,9 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
     source_qualifier_suffix_tokens: ClassVar[frozenset[str]] = frozenset()
 
     _declaration_generation: ClassVar[int] = 0
-    _shared_instances: ClassVar[dict[type["MeasurementDialect"], "MeasurementDialect"]] = {}
+    _shared_instances: ClassVar[
+        dict[type["MeasurementDialect"], "MeasurementDialect"]
+    ] = {}
 
     def __init__(self) -> None:
         self._cached_values: dict[str, object] = {}
@@ -357,7 +354,9 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def unqualified_sample_names(cls) -> frozenset[str]:
         """Source names that mean "the sample itself" in any registered dialect."""
-        return _unqualified_sample_names(tuple(MeasurementDialect.__registry__.values()))
+        return _unqualified_sample_names(
+            tuple(MeasurementDialect.__registry__.values())
+        )
 
     @classmethod
     def for_active_family(cls) -> "MeasurementDialect":
@@ -451,7 +450,9 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         del key
         return ()
 
-    def indexed_descriptor_suffix_width(self, feature_parts: FeatureParts) -> int | None:
+    def indexed_descriptor_suffix_width(
+        self, feature_parts: FeatureParts
+    ) -> int | None:
         """Trailing descriptor-index token width of one feature, if indexed."""
         del feature_parts
         return None
@@ -706,14 +707,21 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
         """Return dialect-normalized feature parts for one lookup token."""
         resolved_parts = parts
         for prefix in self.category_prefixes():
-            if len(resolved_parts) > len(prefix) and resolved_parts[: len(prefix)] == prefix:
+            if (
+                len(resolved_parts) > len(prefix)
+                and resolved_parts[: len(prefix)] == prefix
+            ):
                 resolved_parts = resolved_parts[len(prefix) :]
                 break
         return self.feature_part_aliases().get(resolved_parts, resolved_parts)
 
-    def alternative_feature_parts(self, parts: FeatureParts) -> tuple[FeatureParts, ...]:
+    def alternative_feature_parts(
+        self, parts: FeatureParts
+    ) -> tuple[FeatureParts, ...]:
         """Return ordered semantic fallback fields for one lookup token."""
-        return self.alternative_feature_part_aliases().get(self.feature_parts(parts), ())
+        return self.alternative_feature_part_aliases().get(
+            self.feature_parts(parts), ()
+        )
 
     def feature_lookup(self, feature_name: str) -> "RuntimeMeasurementFeatureLookup":
         """Return the lookup identity for one external feature name."""
@@ -928,8 +936,7 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
             return True
         base_tokens = feature_tokens[: len(feature_tokens) - len(suffix_tokens)]
         return any(
-            base_tokens == prefix
-            for prefix in self.scale_qualified_feature_prefixes()
+            base_tokens == prefix for prefix in self.scale_qualified_feature_prefixes()
         )
 
     def feature_suffix_source_insertion_index(
@@ -990,7 +997,6 @@ class MeasurementDialect(ABC, metaclass=AutoRegisterMeta):
                     normalized_feature_name[len(prefix) :],
                 )
         return None
-
 
 
 @lru_cache(maxsize=8)

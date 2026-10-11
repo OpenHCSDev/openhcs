@@ -813,9 +813,7 @@ class ImageMathPreparedOperands:
                 f"ImageMath {operation_strategy.operation.value!r} requires exactly "
                 f"one declared image operand, got {len(source_payloads)}."
             )
-        operand_pixels = tuple(
-            np.asarray(payload.data) for payload in source_payloads
-        )
+        operand_pixels = tuple(np.asarray(payload.data) for payload in source_payloads)
         return cls(
             source_image=image,
             source_payloads=source_payloads,

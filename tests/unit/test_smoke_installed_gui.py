@@ -174,7 +174,9 @@ def test_gui_smoke_waits_for_gui_endpoint_before_reading_catalog() -> None:
     class UnreachableFunctionCatalogService:
         @staticmethod
         def prepare() -> Future[FunctionCatalogPage]:
-            raise AssertionError("The catalog attaches only after the GUI endpoint starts.")
+            raise AssertionError(
+                "The catalog attaches only after the GUI endpoint starts."
+            )
 
     with pytest.raises(
         OperationTimeoutError,

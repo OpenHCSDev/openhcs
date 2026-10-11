@@ -9,7 +9,7 @@ from typing import ClassVar
 import numpy as np
 
 from openhcs.core.alias_property import AliasProperty
-from openhcs.core.aligned_image_payload import (AlignedImageStack, ImageOutputBundle)
+from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
 from openhcs.core.measurement_image_alignment import (
     MeasurementImageAlignmentSource,
@@ -199,7 +199,9 @@ class CellProfilerSourceIdentityMixin:
         """
         if not sources:
             raise ValueError("Aligned measurement metadata requires source images.")
-        source_axes = tuple(cls.source_provenances(source.payload) for source in sources)
+        source_axes = tuple(
+            cls.source_provenances(source.payload) for source in sources
+        )
         planes = tuple(
             SourceImageProvenance.bundle(
                 tuple(source.with_runtime_planes_as_contributors() for source in plane)
@@ -228,7 +230,9 @@ class CellProfilerSourceIdentityMixin:
                 cls.scalar_source_provenance(value) for value in payload.slices
             )
         if isinstance(payload, RuntimeSliceAlignedValueSet):
-            return tuple(cls.scalar_source_provenance(value) for value in payload.values)
+            return tuple(
+                cls.scalar_source_provenance(value) for value in payload.values
+            )
         count = RuntimeSliceProjection.slice_count_from_values((payload,))
         metadata = image_metadata_of(payload)
         provenance = metadata.source_provenance
@@ -307,7 +311,9 @@ class CellProfilerImageRequest(
         if self.primary_input_payloads and (
             len(self.primary_input_payloads) != len(self.primary_input_edges)
         ):
-            raise ValueError("Primary input contexts must preserve exact binding order.")
+            raise ValueError(
+                "Primary input contexts must preserve exact binding order."
+            )
 
     def consumed_input_value(
         self,

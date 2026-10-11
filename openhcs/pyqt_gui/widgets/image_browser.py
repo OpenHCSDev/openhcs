@@ -58,7 +58,6 @@ from openhcs.pyqt_gui.widgets.shared.plate_view_widget import (
 logger = logging.getLogger(__name__)
 
 
-
 def _streaming_config_field_names() -> tuple[str, ...]:
     """Registered streaming-config field names used by image-browser controls."""
     return StreamingConfig.supported_config_keys()
@@ -1305,7 +1304,9 @@ class ImageBrowserWidget(QWidget):
                 read_backend=read_backend,
             )
         )
-        logger.info(f"Streaming {len(filenames)} images to {config.viewer_family.display_name}...")
+        logger.info(
+            f"Streaming {len(filenames)} images to {config.viewer_family.display_name}..."
+        )
 
     def _show_streaming_error(self, viewer_name: str, error_msg: str):
         """Show streaming error in UI thread."""
@@ -1512,7 +1513,9 @@ class ImageBrowserWidget(QWidget):
         grid_axis = require_grid_axis()
         parser = self.orchestrator.microscope_handler.parser
         coord_to_well = {
-            grid_axis.grid_position(*parser.extract_component_coordinates(well_id)): well_id
+            grid_axis.grid_position(
+                *parser.extract_component_coordinates(well_id)
+            ): well_id
             for well_id in well_ids
         }
         plate_dimensions = (

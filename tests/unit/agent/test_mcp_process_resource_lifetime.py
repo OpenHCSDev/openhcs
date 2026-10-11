@@ -35,7 +35,9 @@ def test_original_resource_declaration_and_cooperative_close(monkeypatch, failur
         context.ij = Gateway()
         resource_patch.setattr(BioFormatsJavaContext, "_instance", context)
         resource_patch.setattr(backend_registry, "_cleanup_callbacks", [])
-        backend_registry.register_cleanup_callback(BioFormatsJavaContext.shutdown_instance)
+        backend_registry.register_cleanup_callback(
+            BioFormatsJavaContext.shutdown_instance
+        )
 
         class AuditCloseCapability:
             def close(self):
@@ -68,7 +70,10 @@ def test_original_resource_declaration_and_cooperative_close(monkeypatch, failur
         assert BioFormatsJavaContext._instance is None
         assert context.ij is None
         assert calls[:4] == [
-            "cooperative enter", "gateway disposed", "JVM stopped", "independent resource"
+            "cooperative enter",
+            "gateway disposed",
+            "JVM stopped",
+            "independent resource",
         ]
         assert calls.count("cooperative exit") == int(failure is None)
         executor.close()
@@ -79,7 +84,9 @@ def test_original_resource_declaration_and_cooperative_close(monkeypatch, failur
 
 def test_off_main_close_rejected_before_resource_release(monkeypatch):
     calls = []
-    monkeypatch.setattr(backend_registry, "_cleanup_callbacks", [lambda: calls.append("closed")])
+    monkeypatch.setattr(
+        backend_registry, "_cleanup_callbacks", [lambda: calls.append("closed")]
+    )
     executor = McpTransportExecutor()
     failures = []
 
@@ -121,7 +128,8 @@ def test_stdio_eof_retains_exact_normal_child_exit(tmp_path, exit_code):
 
     async def journey():
         session = McpDevStdioSession(
-            ScriptServerSpec(python_executable=sys.executable, script=script), io.StringIO()
+            ScriptServerSpec(python_executable=sys.executable, script=script),
+            io.StringIO(),
         )
         with (tmp_path / "diagnostic.log").open("w+") as diagnostic:
             session.server_stderr = diagnostic
@@ -145,7 +153,8 @@ def test_stdio_stuck_child_uses_unchanged_forced_reap_budget(tmp_path):
     async def journey():
         with (tmp_path / "diagnostic.log").open("w+") as diagnostic:
             session = McpDevStdioSession(
-                ScriptServerSpec(python_executable=sys.executable, script=script), diagnostic
+                ScriptServerSpec(python_executable=sys.executable, script=script),
+                diagnostic,
             )
             assert session.teardown_timeout_seconds == 2.0
             async with session:
@@ -157,7 +166,9 @@ def test_stdio_stuck_child_uses_unchanged_forced_reap_budget(tmp_path):
 
 
 @pytest.mark.parametrize("fail_cleanup", (False, True))
-def test_real_sdk_stdio_declared_resource_closes_before_child_exit(tmp_path, fail_cleanup):
+def test_real_sdk_stdio_declared_resource_closes_before_child_exit(
+    tmp_path, fail_cleanup
+):
     from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 
     source_root = OpenHCSRuntimeImportAuthority.current().import_root
@@ -175,7 +186,11 @@ def test_real_sdk_stdio_declared_resource_closes_before_child_exit(tmp_path, fai
         "def close_resource():\n"
         "    assert threading.current_thread() is threading.main_thread()\n"
         f"    Path({str(closed)!r}).write_text('main-thread resource closed')\n"
-        + ("    raise ValueError('original declared cleanup error')\n" if fail_cleanup else "")
+        + (
+            "    raise ValueError('original declared cleanup error')\n"
+            if fail_cleanup
+            else ""
+        )
         + "register_cleanup_callback(close_resource)\n"
         "with McpStdioTransport.reserve_process_stdio() as transport:\n"
         "    transport.run(server)\n"
@@ -184,21 +199,32 @@ def test_real_sdk_stdio_declared_resource_closes_before_child_exit(tmp_path, fai
     async def journey():
         with (tmp_path / "sdk-diagnostic.log").open("w+") as diagnostic:
             session = McpDevStdioSession(
-                ScriptServerSpec(python_executable=sys.executable, script=script), diagnostic
+                ScriptServerSpec(python_executable=sys.executable, script=script),
+                diagnostic,
             )
             async with session:
                 process = session.require_process()
                 await session.initialize(timeout_seconds=10)
                 first = await session.call_tool("health", {}, timeout_seconds=10)
                 second = await session.call_tool("health", {}, timeout_seconds=10)
-                assert first["structuredContent"] == second["structuredContent"] == {"ok": True}
+                assert (
+                    first["structuredContent"]
+                    == second["structuredContent"]
+                    == {"ok": True}
+                )
             assert process.returncode == int(fail_cleanup)
             assert closed.read_text() == "main-thread resource closed"
             diagnostic.seek(0)
             text = diagnostic.read()
             assert "Fatal error" not in text
             assert ("original declared cleanup error" in text) is fail_cleanup
-            print("SDK_STDIO_DECLARED_RESOURCE", process.pid, process.returncode, fail_cleanup, flush=True)
+            print(
+                "SDK_STDIO_DECLARED_RESOURCE",
+                process.pid,
+                process.returncode,
+                fail_cleanup,
+                flush=True,
+            )
 
     asyncio.run(journey())
 
@@ -228,11 +254,15 @@ def test_resident_connection_close_preserves_resource_until_process_owner_close(
     clients = AsyncOperationExecutor(max_workers=1)
 
     async def journey():
-        assert await asyncio.to_thread(wait_for_socket, transport.socket_path, timeout_seconds=10)
+        assert await asyncio.to_thread(
+            wait_for_socket, transport.socket_path, timeout_seconds=10
+        )
         try:
             for connection in range(2):
                 async with McpDevSocketSession(
-                    McpDevServerSpec(sys.executable), io.StringIO(), transport.socket_path
+                    McpDevServerSpec(sys.executable),
+                    io.StringIO(),
+                    transport.socket_path,
                 ) as session:
                     await session.initialize(timeout_seconds=10)
                     result = await session.call_tool("health", {}, timeout_seconds=10)

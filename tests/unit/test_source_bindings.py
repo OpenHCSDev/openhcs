@@ -703,7 +703,8 @@ def test_orchestrator_microscope_init_uses_saved_resolved_pipeline_config(
 
 
 def test_admitted_request_config_survives_next_live_global_context(
-    tmp_path, monkeypatch,
+    tmp_path,
+    monkeypatch,
 ):
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.pipeline.compiler import AxisCompilationRequest
@@ -732,7 +733,9 @@ def test_admitted_request_config_survives_next_live_global_context(
         ),
     )
     orchestrator = PipelineOrchestrator(
-        tmp_path, pipeline_config=authored, resolved_config=admitted,
+        tmp_path,
+        pipeline_config=authored,
+        resolved_config=admitted,
     )
     orchestrator.initialize_microscope_handler(admitted)
     assert received["source_bindings_config"] is admitted.source_bindings_config
@@ -744,8 +747,10 @@ def test_admitted_request_config_survives_next_live_global_context(
     request = AxisCompilationRequest(
         orchestrator=orchestrator,
         global_config=admitted,
-        pipeline=SimpleNamespace(), path_resolver=SimpleNamespace(),
-        global_step_axis_filters={}, enable_visualizer_override=False,
+        pipeline=SimpleNamespace(),
+        path_resolver=SimpleNamespace(),
+        global_step_axis_filters={},
+        enable_visualizer_override=False,
         source_projections_by_axis={},
         materialization_planner=MaterializationFlagPlanner(
             pipeline_config=admitted,
@@ -761,7 +766,9 @@ def test_admitted_request_config_survives_next_live_global_context(
     assert context.tiff_config is admitted.tiff_config
 
     # The next authored request admits current global and local changes.
-    orchestrator.pipeline_config = PipelineConfig(dataset_source=OpenHCSDatasetSource, num_workers=3)
+    orchestrator.pipeline_config = PipelineConfig(
+        dataset_source=OpenHCSDatasetSource, num_workers=3
+    )
     next_request = orchestrator.get_effective_config()
     assert next_request.num_workers == 3
     assert next_request.auto_add_output_dataset is False
@@ -830,9 +837,7 @@ def test_realized_component_values_are_scoped_by_source_selector(monkeypatch) ->
         {"channel": 2, "site": 7, "z_index": 9},
     ]
     expected = {
-        component: binding.component_values(
-            component, realized_source_metadata=records
-        )
+        component: binding.component_values(component, realized_source_metadata=records)
         for component in AxisFamily.active().axes
     }
     matched = []
@@ -842,9 +847,13 @@ def test_realized_component_values_are_scoped_by_source_selector(monkeypatch) ->
         matched.append(metadata)
         return original_match(owner, metadata)
 
-    monkeypatch.setattr(NamedSourceBinding, "matches_realized_source_metadata", record_match)
+    monkeypatch.setattr(
+        NamedSourceBinding, "matches_realized_source_metadata", record_match
+    )
     domains = binding.component_domains(realized_source_metadata=iter(records))
-    assert {component: domains.get(component, ()) for component in AxisFamily.active().axes} == expected
+    assert {
+        component: domains.get(component, ()) for component in AxisFamily.active().axes
+    } == expected
     assert matched == records
     assert domains[Microscopy.Site] == ("3",)
     assert domains[Microscopy.ZIndex] == ("4", "5")
@@ -999,7 +1008,15 @@ def test_alias_only_step_bindings_filter_and_order_workspace_projections() -> No
     )
     source_projections = {
         virtual_path: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(((Microscopy.Well, "R04C09"), (Microscopy.Site, "11"), (Microscopy.Channel, channel), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
+            address=OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, "R04C09"),
+                    (Microscopy.Site, "11"),
+                    (Microscopy.Channel, channel),
+                    (Microscopy.ZIndex, "1"),
+                    (Microscopy.Timepoint, "1"),
+                )
+            ),
             ref=SourcePixelRef("disk", f"/source/ch{channel}.tiff"),
             source_alias=binding.alias,
         )
@@ -1335,7 +1352,9 @@ def test_source_binding_members_canonicalize_declared_physical_spellings(aliases
             selector=SourceSelector(metadata=(MetadataSelector("channel", channel),)),
             component_identity=(ComponentSelector(Microscopy.Channel, channel),),
         )
-        for alias, channel in zip(aliases, map(str, range(1, len(aliases) + 1)), strict=True)
+        for alias, channel in zip(
+            aliases, map(str, range(1, len(aliases) + 1)), strict=True
+        )
     )
     context = SourcePatternResolutionContext.from_sources(
         parser=SourceSchemaFilenameParser(), source_paths_by_virtual_path=paths
@@ -1351,19 +1370,23 @@ def test_source_binding_members_canonicalize_declared_physical_spellings(aliases
     for binding, virtual_path in zip(bindings[1:], virtual_paths[1:], strict=True):
         assert matched_set.members_for_binding(
             binding,
-            anchor_provenance=SourceImageProvenance(source_path=paths[virtual_paths[0]]),
+            anchor_provenance=SourceImageProvenance(
+                source_path=paths[virtual_paths[0]]
+            ),
             source_universe=tuple(paths.values()),
         ) == (paths[virtual_path],)
 
 
 def test_declared_positions_keep_store_planes_and_same_basename_sources_distinct():
     positions = (
-        "A01_s001_w1_z001_t001.tif", "A01_s001_w1_z002_t001.tif",
+        "A01_s001_w1_z001_t001.tif",
+        "A01_s001_w1_z002_t001.tif",
         "A02_s001_w1_z001_t001.tif",
     )
     paths = dict(zip(positions, ("/a/raw.tif", "/a/raw.tif", "/b/raw.tif")))
     context = SourceIdentityResolutionContext.from_sources(
-        parser=SourceSchemaFilenameParser(), source_paths_by_virtual_path=paths,
+        parser=SourceSchemaFilenameParser(),
+        source_paths_by_virtual_path=paths,
     )
     candidates = (*positions, *paths.values())
     assert context.virtual_paths_for_sources(
@@ -1371,12 +1394,14 @@ def test_declared_positions_keep_store_planes_and_same_basename_sources_distinct
     ) == (positions[:2], (positions[2],), ())
     assert context.declared_positions_for_candidates(candidates) == positions
     assert context.matching_candidates_for_source_identities(
-        (SourceImageIdentity("/a/raw.tif"),
-         SourceImageIdentity("/a/raw.tif", {"z_index": "2"}),
-         SourceImageIdentity("/b/raw.tif"), SourceImageIdentity("/elsewhere/raw.tif")),
+        (
+            SourceImageIdentity("/a/raw.tif"),
+            SourceImageIdentity("/a/raw.tif", {"z_index": "2"}),
+            SourceImageIdentity("/b/raw.tif"),
+            SourceImageIdentity("/elsewhere/raw.tif"),
+        ),
         candidates,
     ) == (positions[:2], (positions[1],), (positions[2],), ())
-
 
 
 def test_source_binding_members_collapse_lookup_aliases_of_same_projection():
@@ -1386,8 +1411,17 @@ def test_source_binding_members_collapse_lookup_aliases_of_same_projection():
     binding = NamedSourceBinding(alias="OriginalPhysical")
     projections = tuple(
         SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, z), (Microscopy.Timepoint, "1"))),
-            ref=SourcePixelRef("disk", source_path), source_alias=binding.alias,
+            address=OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, "A01"),
+                    (Microscopy.Site, "1"),
+                    (Microscopy.Channel, "1"),
+                    (Microscopy.ZIndex, z),
+                    (Microscopy.Timepoint, "1"),
+                )
+            ),
+            ref=SourcePixelRef("disk", source_path),
+            source_alias=binding.alias,
         )
         for z in (0, 1)
     )
@@ -1397,15 +1431,20 @@ def test_source_binding_members_collapse_lookup_aliases_of_same_projection():
         for spelling in (path, loadable)
     }
     workspace = VirtualWorkspaceSourceProjection(
-        source_refs_by_virtual_path={path: projection.ref for path, projection in typed.items()},
+        source_refs_by_virtual_path={
+            path: projection.ref for path, projection in typed.items()
+        },
         source_metadata_by_path={full[0]: {"channel": "9"}},
         source_projections_by_virtual_path=typed,
     )
     context = SourcePatternResolutionContext.from_projection(
-        parser=SourceSchemaFilenameParser(), projection=workspace,
+        parser=SourceSchemaFilenameParser(),
+        projection=workspace,
     )
     matched = SourceBindingMatchedImageSet.from_plan(
-        bindings=(binding,), match_plan=None, source_context=context,
+        bindings=(binding,),
+        match_plan=None,
+        source_context=context,
         identity_policy=SourceImageSetIdentityPolicy(),
     )
     candidates = (*typed, source_path)
@@ -1415,12 +1454,18 @@ def test_source_binding_members_collapse_lookup_aliases_of_same_projection():
         source_universe=candidates,
     ) == (relative[0],)
     assert matched.matching_candidates_for_source_identities(
-        (SourceImageIdentity(source_path), SourceImageIdentity(full[0]),
-         SourceImageIdentity(source_path, {"channel": "9"})), candidates,
+        (
+            SourceImageIdentity(source_path),
+            SourceImageIdentity(full[0]),
+            SourceImageIdentity(source_path, {"channel": "9"}),
+        ),
+        candidates,
     ) == (relative, (relative[0],), (relative[0],))
     # A later declaration replacement is a new position even with equal fields.
     typed[full[0]] = SourcePlaneProjection(
-        address=projections[0].address, ref=projections[0].ref, source_alias=binding.alias,
+        address=projections[0].address,
+        ref=projections[0].ref,
+        source_alias=binding.alias,
     )
     with pytest.raises(ValueError, match="one exact declared source-set position"):
         matched.members_for_binding(
@@ -1428,6 +1473,7 @@ def test_source_binding_members_collapse_lookup_aliases_of_same_projection():
             anchor_provenance=SourceImageProvenance(source_path, {"z_index": "0"}),
             source_universe=candidates,
         )
+
 
 def test_source_binding_exact_position_projection_inherits_owning_context():
     """Surface policy guard: declaration resolution is not reimplemented in leaves."""
@@ -1616,7 +1662,15 @@ def test_virtual_workspace_source_matching_uses_declared_filter_identity():
 
 
 def test_virtual_workspace_source_matching_requires_exact_projection_binding():
-    address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")))
+    address = OpenHCSPlaneAddress(
+        (
+            (Microscopy.Well, "A01"),
+            (Microscopy.Site, "1"),
+            (Microscopy.Channel, "1"),
+            (Microscopy.ZIndex, "1"),
+            (Microscopy.Timepoint, "1"),
+        )
+    )
     original_path = "A01_s001_w1_z001_t001.tif"
     illumination_path = f"_source/Illumination/{original_path}"
     original = SourcePlaneProjection(

@@ -17,7 +17,10 @@ import numpy as np
 
 from openhcs.core.axes import ColourAxis, TileAxis
 from openhcs.constants.constants import MemoryType
-from openhcs.core.aligned_image_payload import (AlignedImageStack, pack_aligned_image_outputs)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    pack_aligned_image_outputs,
+)
 from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ArtifactSpecRelation,
@@ -36,7 +39,14 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
     ObjectMeasurementColumnarRows,
 )
-from openhcs.core.pipeline.function_contracts import (composed_image_payload, object_label_input_execution_mode, required_axis_roles, resolved_callable_parameter, runtime_bound_parameters, special_inputs)
+from openhcs.core.pipeline.function_contracts import (
+    composed_image_payload,
+    object_label_input_execution_mode,
+    required_axis_roles,
+    resolved_callable_parameter,
+    runtime_bound_parameters,
+    special_inputs,
+)
 from python_introspect import public_names_from_objects
 from openhcs.core.runtime_batch_contracts import (
     RuntimeBatchInvocationRequest,
@@ -333,7 +343,11 @@ class MeasureColocalizationMeasurementRowPolicy(
         func = request.callable_contract.resolve_canonical_raw_callable()
         source_names = request.source.source_aliases
         channel_indexes = tuple(
-            int(request.kwargs.get(name, resolved_callable_parameter(func, name).default))
+            int(
+                request.kwargs.get(
+                    name, resolved_callable_parameter(func, name).default
+                )
+            )
             for name in ("channel_1", "channel_2")
         )
         first_index, second_index = channel_indexes
@@ -1287,7 +1301,6 @@ class ColocalizationCostesBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Costes thresholding primitives keyed by OpenHCS memory/provider."""
-
 
     @abstractmethod
     def linear_costes(
@@ -2619,9 +2632,7 @@ def measure_colocalization(
         time.perf_counter() - phase_started_at,
         function="measure_colocalization",
         scale_max=options.scale_max,
-        source_plane_intensity_scales=(
-            image.metadata.source_plane_intensity_scales
-        ),
+        source_plane_intensity_scales=(image.metadata.source_plane_intensity_scales),
         intensity_scale=image.metadata.intensity_scale,
         payload_type=type(image).__name__,
     )
@@ -3004,8 +3015,10 @@ def _colocalization_source_plane_output(
             "MeasureColocalization source channels require the declared "
             f"source-binding plane axis, got {metadata.plane_axis.value!r}."
         )
-    source_plane = image.slice_payload(image_data[source_channel_index],
-        source_channel_index,)
+    source_plane = image.slice_payload(
+        image_data[source_channel_index],
+        source_channel_index,
+    )
     return source_plane.with_pixels(output_data)
 
 

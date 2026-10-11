@@ -1065,18 +1065,28 @@ def test_setup_fold_is_source_ordered_and_uses_module_registry() -> None:
     )
 
 
-@pytest.mark.parametrize("dtype,foreground", [(np.uint8, 255), (np.uint16, 65535), (np.float32, 0.25)])
-def test_declared_binary_source_preserves_foreground_through_cp_normalization(dtype, foreground):
-    from openhcs.interop.cellprofiler.image_normalization import normalize_cellprofiler_image_payload
-    from openhcs.processing.backends.cellprofiler.image_geometry import binary_mask_plane
+@pytest.mark.parametrize(
+    "dtype,foreground", [(np.uint8, 255), (np.uint16, 65535), (np.float32, 0.25)]
+)
+def test_declared_binary_source_preserves_foreground_through_cp_normalization(
+    dtype, foreground
+):
+    from openhcs.interop.cellprofiler.image_normalization import (
+        normalize_cellprofiler_image_payload,
+    )
+    from openhcs.processing.backends.cellprofiler.image_geometry import (
+        binary_mask_plane,
+    )
 
     raw = np.asarray([[0, foreground], [foreground, 0]], dtype=dtype)
-    context = ImagePayloadSourceMetadataContext(SourceImageIdentity('/input/mask.tif'))
-    loaded = NamedSourceBinding(alias='Mask', load_as_mask=True).apply_loaded_payload(raw, context)
+    context = ImagePayloadSourceMetadataContext(SourceImageIdentity("/input/mask.tif"))
+    loaded = NamedSourceBinding(alias="Mask", load_as_mask=True).apply_loaded_payload(
+        raw, context
+    )
     source_metadata = loaded.metadata
     normalized = normalize_cellprofiler_image_payload(loaded)
     np.testing.assert_array_equal(normalized.data, raw != 0)
     np.testing.assert_array_equal(binary_mask_plane(normalized), raw != 0)
     assert source_metadata.unit_interval_intensity.scale == 1
     assert normalized.metadata.source_provenance == source_metadata.source_provenance
-    assert source_metadata.source_path == '/input/mask.tif'
+    assert source_metadata.source_path == "/input/mask.tif"

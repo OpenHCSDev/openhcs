@@ -26,10 +26,14 @@ class VirtualMappingSource(DatasetSource):
     """
 
     @abstractmethod
-    def _build_virtual_mapping(self, dataset_root: Path, filemanager: FileManager) -> Path:
+    def _build_virtual_mapping(
+        self, dataset_root: Path, filemanager: FileManager
+    ) -> Path:
         """Write this layout's mapping to metadata and return the image directory."""
 
-    def initialize_workspace(self, dataset_root: Path, filemanager: FileManager) -> Path:
+    def initialize_workspace(
+        self, dataset_root: Path, filemanager: FileManager
+    ) -> Path:
         dataset_root = Path(dataset_root)
         self.dataset_root = dataset_root
         self._build_virtual_mapping(dataset_root, filemanager)
@@ -101,4 +105,3 @@ class VirtualMappingSource(DatasetSource):
             except Exception as e:
                 logger.error("Error renaming %s to %s: %s", listed_path, new_path, e)
         return image_dir
-

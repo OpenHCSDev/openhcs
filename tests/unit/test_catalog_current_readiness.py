@@ -26,7 +26,9 @@ from openhcs.core.processing_contracts import (
     FlexibleContract,
 )
 from openhcs.processing.custom_functions.manager import CustomFunctionManager
-from openhcs.processing.custom_functions.runtime_registry import CustomFunctionRuntimeRegistry
+from openhcs.processing.custom_functions.runtime_registry import (
+    CustomFunctionRuntimeRegistry,
+)
 from openhcs.runtime.function_catalog_preparation import FunctionCatalogPreparation
 
 
@@ -40,13 +42,19 @@ def catalog(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     manager = CustomFunctionManager()
     metadata = FunctionMetadata(
-        name="declaration", func=declaration,
+        name="declaration",
+        func=declaration,
         contract=FlexibleContract,
         registry=SimpleNamespace(library_name="probe"),
-        module=__name__, doc=declaration.__doc__,
+        module=__name__,
+        doc=declaration.__doc__,
     )
-    monkeypatch.setattr(RegistryService, "_metadata_cache", {"probe:declaration": metadata})
-    monkeypatch.setattr(CustomFunctionRuntimeRegistry, "_source_revision", manager.source_revision())
+    monkeypatch.setattr(
+        RegistryService, "_metadata_cache", {"probe:declaration": metadata}
+    )
+    monkeypatch.setattr(
+        CustomFunctionRuntimeRegistry, "_source_revision", manager.source_revision()
+    )
 
     def projected_metadata(self, **kwargs):
         # Model the original registry/source owners publishing their revision.
@@ -56,7 +64,8 @@ def catalog(monkeypatch, tmp_path):
     monkeypatch.setattr(FunctionCatalogService, "_all_metadata", projected_metadata)
     kernel_calls = []
     monkeypatch.setattr(
-        RegistryService, "prepare_persistent_catalog",
+        RegistryService,
+        "prepare_persistent_catalog",
         lambda **kwargs: kernel_calls.append("kernel"),
     )
     return FunctionCatalogService(), manager, kernel_calls
@@ -73,7 +82,10 @@ def test_both_public_views_are_warm(catalog, monkeypatch):
     service, _, _ = catalog
     calls = []
     original = service._entry
-    from openhcs.agent.services.function_catalog_service import PARAMETER_DOCUMENTATION_POLICY
+    from openhcs.agent.services.function_catalog_service import (
+        PARAMETER_DOCUMENTATION_POLICY,
+    )
+
     parameter_calls = []
     original_parameters = PARAMETER_DOCUMENTATION_POLICY.parameter_specs
 
@@ -81,7 +93,9 @@ def test_both_public_views_are_warm(catalog, monkeypatch):
         parameter_calls.append(args[0])
         return original_parameters(*args, **kwargs)
 
-    monkeypatch.setattr(PARAMETER_DOCUMENTATION_POLICY, "parameter_specs", parameter_specs)
+    monkeypatch.setattr(
+        PARAMETER_DOCUMENTATION_POLICY, "parameter_specs", parameter_specs
+    )
 
     def entry(*args, **kwargs):
         calls.append(args[2:4])
@@ -94,7 +108,10 @@ def test_both_public_views_are_warm(catalog, monkeypatch):
     assert len(calls) == 1
     for compact in (False, True, False, True):
         page = service.catalog(compact_signatures=compact)
-        assert service.search(query="declaration", compact_signatures=compact).items == page.items
+        assert (
+            service.search(query="declaration", compact_signatures=compact).items
+            == page.items
+        )
         service.require_revision(page.revision)
     assert len(calls) == 1
     assert parameter_calls == [declaration]
@@ -112,16 +129,21 @@ def test_stale_success_refreshes_without_kernel_rewarm(catalog, mutation):
     assert preparation.observe(handle()).outcome is Outcome.READY
     old = RegistryService._metadata_cache
     if mutation == "body_only":
-        manager.storage_dir.joinpath("source_probe.py").write_text("# source revision changed\n")
+        manager.storage_dir.joinpath("source_probe.py").write_text(
+            "# source revision changed\n"
+        )
     elif mutation == "delete":
         RegistryService._metadata_cache = {}
     elif mutation == "update":
         RegistryService._metadata_cache = {
-            "probe:declaration": replace(old["probe:declaration"], doc="Updated declaration")
+            "probe:declaration": replace(
+                old["probe:declaration"], doc="Updated declaration"
+            )
         }
     else:
         RegistryService._metadata_cache = {
-            **old, "probe:second": replace(old["probe:declaration"], name="second")
+            **old,
+            "probe:second": replace(old["probe:declaration"], name="second"),
         }
     state = preparation.observe(handle())
     assert state.outcome is Outcome.NOT_STARTED
@@ -216,7 +238,9 @@ def test_midprojection_change_rebuilds_both_views_before_ready(
                 "probe:declaration": replace(old, doc="Current declaration prose")
             }
             if source_change:
-                manager.storage_dir.joinpath("midway.py").write_text("# current source\n")
+                manager.storage_dir.joinpath("midway.py").write_text(
+                    "# current source\n"
+                )
             changed.set()
         return result
 
@@ -255,7 +279,9 @@ def test_cancel_during_last_entry_cancels_future_without_ready(catalog, monkeypa
     preparation.cancel_and_join()
 
 
-def test_overlapping_projection_cannot_commit_old_view_into_new_metadata(catalog, monkeypatch):
+def test_overlapping_projection_cannot_commit_old_view_into_new_metadata(
+    catalog, monkeypatch
+):
     service, _, _ = catalog
     changed = Event()
     original = service._entry
@@ -279,7 +305,10 @@ def test_overlapping_projection_cannot_commit_old_view_into_new_metadata(catalog
     assert service.projections_current()
     assert all(projection.metadata is current for projection in service._projections)
     for compact in (False, True):
-        assert service.catalog(compact_signatures=compact).items[0].summary == declaration.__doc__
+        assert (
+            service.catalog(compact_signatures=compact).items[0].summary
+            == declaration.__doc__
+        )
     preparation.cancel_and_join()
 
 
@@ -311,7 +340,8 @@ def test_startup_uses_original_main_thread_warmup(catalog, monkeypatch):
     service, _, child_kernels = catalog
     main_kernels = []
     monkeypatch.setattr(
-        FunctionCatalogPreparation, "prepare_persistent_catalog",
+        FunctionCatalogPreparation,
+        "prepare_persistent_catalog",
         staticmethod(lambda **kwargs: main_kernels.append("main")),
     )
     preparation = FunctionCatalogPreparation(service)
@@ -324,22 +354,40 @@ def test_startup_uses_original_main_thread_warmup(catalog, monkeypatch):
 
 
 def test_original_abc_owns_refresh_and_both_implementations_are_concrete():
-    from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
-    from openhcs.agent.services.endpoint_function_catalog_service import ZMQFunctionCatalogService
+    from openhcs.agent.services.function_catalog_service import (
+        FunctionCatalogServiceABC,
+    )
+    from openhcs.agent.services.endpoint_function_catalog_service import (
+        ZMQFunctionCatalogService,
+    )
 
     assert "projections_current" in FunctionCatalogServiceABC.__abstractmethods__
-    assert FunctionCatalogService.prepare_projections is FunctionCatalogServiceABC.prepare_projections
-    assert ZMQFunctionCatalogService.prepare_projections is FunctionCatalogServiceABC.prepare_projections
+    assert (
+        FunctionCatalogService.prepare_projections
+        is FunctionCatalogServiceABC.prepare_projections
+    )
+    assert (
+        ZMQFunctionCatalogService.prepare_projections
+        is FunctionCatalogServiceABC.prepare_projections
+    )
     assert not FunctionCatalogService.__abstractmethods__
     assert not ZMQFunctionCatalogService.__abstractmethods__
 
 
-@pytest.mark.parametrize("native_outcome", (Outcome.READY, Outcome.PENDING, Outcome.FAILED))
+@pytest.mark.parametrize(
+    "native_outcome", (Outcome.READY, Outcome.PENDING, Outcome.FAILED)
+)
 def test_endpoint_current_readiness_uses_bound_native_status(native_outcome):
     from openhcs.agent.dto.common import SCHEMA_VERSION
-    from openhcs.agent.dto.functions import FunctionCatalogPreparationState, FunctionCatalogEntry, catalog_page
+    from openhcs.agent.dto.functions import (
+        FunctionCatalogPreparationState,
+        FunctionCatalogEntry,
+        catalog_page,
+    )
     from openhcs.agent.services.endpoint_function_catalog_service import (
-        FunctionCatalogClientSession, FunctionCatalogProjection, ZMQFunctionCatalogService,
+        FunctionCatalogClientSession,
+        FunctionCatalogProjection,
+        ZMQFunctionCatalogService,
     )
     from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
     from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
@@ -350,11 +398,14 @@ def test_endpoint_current_readiness_uses_bound_native_status(native_outcome):
     def status(request):
         seen.append(request)
         return FunctionCatalogPreparationState(
-            schema_version=SCHEMA_VERSION, handle=request.handle,
+            schema_version=SCHEMA_VERSION,
+            handle=request.handle,
             outcome=native_outcome,
             progress=EndpointStartupStatus(
-                sequence=1, phase=EndpointStartupPhase.PREPARING_CAPABILITIES,
-                message="Native readiness witness", timestamp=0,
+                sequence=1,
+                phase=EndpointStartupPhase.PREPARING_CAPABILITIES,
+                message="Native readiness witness",
+                timestamp=0,
             ),
         )
 
@@ -362,20 +413,34 @@ def test_endpoint_current_readiness_uses_bound_native_status(native_outcome):
         connected_endpoint=SimpleNamespace(process_identity=ProcessIdentity.current()),
         function_catalog_preparation=status,
     )
-    service = ZMQFunctionCatalogService(lambda: endpoint, client_factory=lambda _: client)
+    service = ZMQFunctionCatalogService(
+        lambda: endpoint, client_factory=lambda _: client
+    )
     assert not service.projections_current()
     assert not seen
     entry = FunctionCatalogEntry(
-        function_id="probe:declaration", import_path=__name__ + ".declaration",
-        name="declaration", module=__name__, library="probe",
-        signature="declaration(image)", summary="Witness", backend_tags=(),
+        function_id="probe:declaration",
+        import_path=__name__ + ".declaration",
+        name="declaration",
+        module=__name__,
+        library="probe",
+        signature="declaration(image)",
+        summary="Witness",
+        backend_tags=(),
     )
     page = catalog_page(
-        items=(entry,), catalog_items=(entry,), total=1, limit=1, query=None, library=None,
+        items=(entry,),
+        catalog_items=(entry,),
+        total=1,
+        limit=1,
+        query=None,
+        library=None,
     )
     service._client_session = FunctionCatalogClientSession(endpoint, client)
     service._endpoint_state = FunctionCatalogProjection.from_page(
-        endpoint, page, compact_signatures=True,
+        endpoint,
+        page,
+        compact_signatures=True,
     )
     assert service.projections_current() is (native_outcome is Outcome.READY)
     assert len(seen) == 1
@@ -387,11 +452,17 @@ def test_original_control_family_stays_pending_during_refresh(
     catalog, monkeypatch, request_kind
 ):
     from openhcs.agent.dto.functions import (
-        FunctionCatalogControlPayload, FunctionCatalogControlRequest,
-        FunctionCatalogPreparationControlResponse, FunctionDetailControlRequest,
-        FunctionReferenceControlRequest, FunctionSearchRequest,
+        FunctionCatalogControlPayload,
+        FunctionCatalogControlRequest,
+        FunctionCatalogPreparationControlResponse,
+        FunctionDetailControlRequest,
+        FunctionReferenceControlRequest,
+        FunctionSearchRequest,
     )
-    from openhcs.runtime.zmq_control import ZMQControlMessageRouter, ZMQControlRequestContext
+    from openhcs.runtime.zmq_control import (
+        ZMQControlMessageRouter,
+        ZMQControlRequestContext,
+    )
 
     service, _, _ = catalog
     preparation = FunctionCatalogPreparation(service)
@@ -425,13 +496,18 @@ def test_original_control_family_stays_pending_during_refresh(
     try:
         assert entered.wait(timeout=2)
         response = ZMQControlMessageRouter.handle(
-            FunctionCatalogControlPayload.from_request(requests[request_kind]).to_dict(),
+            FunctionCatalogControlPayload.from_request(
+                requests[request_kind]
+            ).to_dict(),
             ZMQControlRequestContext(
-                compiled_artifacts={}, function_catalog=service,
+                compiled_artifacts={},
+                function_catalog=service,
                 function_catalog_preparation=preparation,
             ),
         )
-        pending = FunctionCatalogPreparationControlResponse.from_control_response(response)
+        pending = FunctionCatalogPreparationControlResponse.from_control_response(
+            response
+        )
         assert pending.status is not None
         assert not future.done()
     finally:

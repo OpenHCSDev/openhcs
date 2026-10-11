@@ -222,7 +222,6 @@ class CellProfilerModuleArtifactContracts:
             ):
                 raise ValueError(
                     f"No source binding declares {grouped_component.name} "
-
                     f"group {group_key!r}."
                 )
             source_bindings = replace(

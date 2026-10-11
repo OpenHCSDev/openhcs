@@ -130,7 +130,9 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     )
     # This opens the persisted projection; it does not ingest workspace files
     # as a new raw source folder. Physical inputs remain in source_root.
-    microscope_handler = DatasetSourceChoice.named("auto").open(workspace_root, filemanager=filemanager, source_bindings_config=source_bindings)
+    microscope_handler = DatasetSourceChoice.named("auto").open(
+        workspace_root, filemanager=filemanager, source_bindings_config=source_bindings
+    )
     assert isinstance(microscope_handler, OpenHCSDatasetSource)
     microscope_handler.initialize_workspace(workspace_root, filemanager)
     projection_cache = VirtualWorkspaceSourceProjectionCache()
@@ -144,8 +146,11 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
             frozenset((Microscopy.Channel,))
         ),
     )
-    context.runtime_source_workspace_projections = WorkspaceSourceProjections.from_context(
-        context, cache=projection_cache,
+    context.runtime_source_workspace_projections = (
+        WorkspaceSourceProjections.from_context(
+            context,
+            cache=projection_cache,
+        )
     )
     projection = WorkspaceSourceProjections.from_context(
         context,
@@ -229,9 +234,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     labels_payload = labels_request.source_artifact_payload(labels_spec.ref())
     label_set = CellProfilerOutputRecorder.for_artifact_type(
         ObjectLabelsArtifactType
-    ).raw_runtime_input_value(
-        spec=labels_spec, value=labels_payload
-    )
+    ).raw_runtime_input_value(spec=labels_spec, value=labels_payload)
     assert isinstance(label_set, ObjectLabelSet)
     np.testing.assert_array_equal(label_set.labels, labels[np.newaxis, ...])
 
@@ -254,9 +257,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
         (illumination_payload, live_illumination),
         (labels_payload, live_labels),
     ):
-        np.testing.assert_array_equal(
-            produced.data, live.data
-        )
+        np.testing.assert_array_equal(produced.data, live.data)
         produced_metadata = produced.metadata
         live_metadata = live.metadata
         assert produced_metadata == live_metadata
@@ -274,6 +275,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
 def test_workspace_materialization_preserves_declared_source_pixels(tmp_path, mode):
     from PIL import Image
     from skimage.color import rgb2gray
+
     source_root, workspace_root = tmp_path / "source", tmp_path / "workspace"
     source_root.mkdir()
     path = source_root / "A01_s1_w1_z001_t001.tif"
@@ -282,26 +284,51 @@ def test_workspace_materialization_preserves_declared_source_pixels(tmp_path, mo
         pixels = pixels[..., 0]
     Image.fromarray(pixels).save(path)
     binding = NamedSourceBinding(
-        alias="Raw", load_as_monochrome=mode == "monochrome", load_as_mask=mode == "mask",
+        alias="Raw",
+        load_as_monochrome=mode == "monochrome",
+        load_as_mask=mode == "mask",
     )
     bindings = SourceBindingsConfig(bindings=(binding,))
     filemanager = _filemanager()
-    SourceBindingWorkspaceProjector(bindings, parser=SourceSchemaFilenameParser()).materialize(
-        source_root, workspace_root, filemanager=filemanager,
-        source_backend=Backend.DISK, workspace_backend=Backend.DISK, source_files=(path,),
+    SourceBindingWorkspaceProjector(
+        bindings, parser=SourceSchemaFilenameParser()
+    ).materialize(
+        source_root,
+        workspace_root,
+        filemanager=filemanager,
+        source_backend=Backend.DISK,
+        workspace_backend=Backend.DISK,
+        source_files=(path,),
     )
-    microscope = DatasetSourceChoice.named("auto").open(workspace_root, filemanager=filemanager, source_bindings_config=bindings)
+    microscope = DatasetSourceChoice.named("auto").open(
+        workspace_root, filemanager=filemanager, source_bindings_config=bindings
+    )
     microscope.initialize_workspace(workspace_root, filemanager)
     cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(
         completed_step_outputs=StepExecutionObservation.empty(),
-        dataset_root=workspace_root, filemanager=filemanager, microscope_handler=microscope,
+        dataset_root=workspace_root,
+        filemanager=filemanager,
+        microscope_handler=microscope,
     )
-    workspace = WorkspaceSourceProjections.from_context(context, cache=cache).projection_or_empty()
-    paths = tuple(path for path, _projection in workspace.source_occurrences_for_binding(binding, axis_id="A01"))
+    workspace = WorkspaceSourceProjections.from_context(
+        context, cache=cache
+    ).projection_or_empty()
+    paths = tuple(
+        path
+        for path, _projection in workspace.source_occurrences_for_binding(
+            binding, axis_id="A01"
+        )
+    )
     assert len(paths) == 1
-    (payload,) = workspace.load_binding_payloads(paths, binding=binding, filemanager=filemanager)
-    expected = rgb2gray(pixels.astype(np.float32) / 255) if mode == "monochrome" else pixels.astype(bool) if mode == "mask" else pixels
+    (payload,) = workspace.load_binding_payloads(
+        paths, binding=binding, filemanager=filemanager
+    )
+    expected = (
+        rgb2gray(pixels.astype(np.float32) / 255)
+        if mode == "monochrome"
+        else pixels.astype(bool) if mode == "mask" else pixels
+    )
     assert np.allclose(payload.data, expected)
     metadata = payload.metadata
     assert metadata.axis_position(ColourAxis) == (-1 if mode == "rgb" else None)

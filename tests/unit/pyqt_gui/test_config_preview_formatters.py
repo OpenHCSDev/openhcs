@@ -24,7 +24,10 @@ def test_partition_filter_preview_label_is_owned_by_config_declaration() -> None
 
 
 def test_plain_partition_filter_preview_requires_a_selection() -> None:
-    assert format_partition_filter_config(PartitionFilterConfig(), "partition_filter") is None
+    assert (
+        format_partition_filter_config(PartitionFilterConfig(), "partition_filter")
+        is None
+    )
     assert (
         format_partition_filter_config(
             PartitionFilterConfig(
@@ -42,7 +45,10 @@ def test_lazy_plain_partition_filter_preserves_base_preview_policy() -> None:
 
     assert resolution is not None
     assert resolution.owner is PartitionFilterConfig
-    assert format_partition_filter_config(LazyPartitionFilterConfig(), "partition_filter") is None
+    assert (
+        format_partition_filter_config(LazyPartitionFilterConfig(), "partition_filter")
+        is None
+    )
 
 
 def test_lazy_specialized_config_uses_its_declared_preview_policy() -> None:

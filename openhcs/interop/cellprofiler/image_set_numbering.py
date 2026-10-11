@@ -270,8 +270,12 @@ class CellProfilerImageSetNumbering:
                         reference_indices.append(index)
         reference_numbers: dict[int, int] = {}
         for name in table.rows.columns:
-            wide_reference = CellProfilerMeasurementDialect.row_identity_contract.is_sample_number_reference(name)
-            if CellProfilerMeasurementDialect.row_identity_contract.is_aggregate_sample_number_reference(name):
+            wide_reference = CellProfilerMeasurementDialect.row_identity_contract.is_sample_number_reference(
+                name
+            )
+            if CellProfilerMeasurementDialect.row_identity_contract.is_aggregate_sample_number_reference(
+                name
+            ):
                 continue
             if not wide_reference and (
                 name not in value_fields or not reference_indices
@@ -323,8 +327,8 @@ class CellProfilerImageSetNumbering:
         )
         if not projection.has_axisless_rows(MeasurementRowAxisField.SLICE_INDEX):
             return indices
-        source_indices = (
-            tuple(range(table.source_provenance.source_plane_count)) or (0,)
+        source_indices = tuple(range(table.source_provenance.source_plane_count)) or (
+            0,
         )
         return tuple(dict.fromkeys((*indices, *source_indices)))
 

@@ -30,6 +30,7 @@ dependency_root = os.environ.get("OPENHCS_SOURCE_VALIDATION_EXTERNAL_ROOT")
 if dependency_root:
     sys.path.insert(0, str(WORKTREE))
     from openhcs._source_dependencies import ensure_source_checkout_external_paths
+
     ensure_source_checkout_external_paths(Path(dependency_root))
 
 
@@ -84,9 +85,9 @@ def _run_child(env, *arguments):
             while True:
                 remaining = deadline - time.monotonic()
                 assert remaining > 0, f"Child exceeded 30s: {arguments!r}"
-                assert os.fstat(output_file.fileno()).st_size < OUTPUT_LIMIT, (
-                    f"Child output exceeded {OUTPUT_LIMIT} bytes: {arguments!r}"
-                )
+                assert (
+                    os.fstat(output_file.fileno()).st_size < OUTPUT_LIMIT
+                ), f"Child output exceeded {OUTPUT_LIMIT} bytes: {arguments!r}"
                 try:
                     returncode = process.wait(timeout=min(remaining, 0.1))
                 except subprocess.TimeoutExpired:
@@ -94,9 +95,9 @@ def _run_child(env, *arguments):
                 break
             output_file.seek(0)
             captured.extend(output_file.read(OUTPUT_LIMIT))
-            assert len(captured) < OUTPUT_LIMIT, (
-                f"Child output exceeded {OUTPUT_LIMIT} bytes: {arguments!r}"
-            )
+            assert (
+                len(captured) < OUTPUT_LIMIT
+            ), f"Child output exceeded {OUTPUT_LIMIT} bytes: {arguments!r}"
         finally:
             if process.poll() is None:
                 process.kill()
@@ -417,8 +418,13 @@ def _spawned_custom_task(payload, execution_id, subject_id):
         owner = reference.metadata.artifact_outputs[0].measurement_feature_owner
         results.append(owner.make_row(2.5))
     ProgressExecutionContext(execution_id, subject_id).emit(
-        axis_id="synthetic", step_name="custom", phase=ProgressPhase.STEP_COMPLETED,
-        status=ProgressStatus.SUCCESS, percent=100, completed=1, total=1,
+        axis_id="synthetic",
+        step_name="custom",
+        phase=ProgressPhase.STEP_COMPLETED,
+        status=ProgressStatus.SUCCESS,
+        percent=100,
+        completed=1,
+        total=1,
     )
     return os.getpid(), tuple(results)
 
@@ -448,7 +454,8 @@ def _compiled_custom_contexts(payload, runtime):
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.function_patterns import (
-        compile_function_pattern, normalize_function_pattern,
+        compile_function_pattern,
+        normalize_function_pattern,
     )
     from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 
@@ -464,11 +471,14 @@ def _compiled_custom_contexts(payload, runtime):
         assert callable(invocation.contract.raw_processing_function)
         prepared = invocation.contract.resolve_runtime_callable()
         plan = CompiledStepPlan(
-            step_index=0, step_name="Synthetic custom",
-            axis_id=axis_id, compiled_function_pattern=pattern,
+            step_index=0,
+            step_name="Synthetic custom",
+            axis_id=axis_id,
+            compiled_function_pattern=pattern,
         )
         context = ProcessingContext(
-            axis_id=axis_id, step_plans={0: plan},
+            axis_id=axis_id,
+            step_plans={0: plan},
             filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
         )
         context.freeze()
@@ -480,11 +490,15 @@ def _compiled_custom_contexts(payload, runtime):
         assert transported.contract is not invocation.contract
         assert invocation.contract.resolve_runtime_callable() is prepared
         assert callable(invocation.contract.raw_processing_function)
-        assert FunctionStepTransportAuthority.normalize_callable_contract(
-            transported.contract
-        ) is transported.contract
+        assert (
+            FunctionStepTransportAuthority.normalize_callable_contract(
+                transported.contract
+            )
+            is transported.contract
+        )
     return CompiledExecutionBundle.from_runtime_contexts(
-        pipeline_definition=(), runtime_contexts=contexts,
+        pipeline_definition=(),
+        runtime_contexts=contexts,
         worker_assignments={f"worker_{i}": [axis] for i, axis in enumerate(contexts)},
         runtime_environment=runtime,
     ).transport_contexts
@@ -493,7 +507,8 @@ def _compiled_custom_contexts(payload, runtime):
 def _spawn(path):
     import multiprocessing
     from openhcs.core.compiled_execution import (
-        CompiledRuntimeEnvironmentPlan, CompiledWorkerStartPlan,
+        CompiledRuntimeEnvironmentPlan,
+        CompiledWorkerStartPlan,
     )
     from openhcs.core.config import MultiprocessingStartMethod
     from openhcs.core.orchestrator.cancellation import ExecutionCancellationSignal
@@ -511,19 +526,25 @@ def _spawn(path):
     payload = _load(path)
     method = MultiprocessingStartMethod.SPAWN
     runtime = CompiledRuntimeEnvironmentPlan(
-        worker_start=CompiledWorkerStartPlan(method, method, "source fixture", False, False),
-        use_threading=False, configured_num_workers=2,
+        worker_start=CompiledWorkerStartPlan(
+            method, method, "source fixture", False, False
+        ),
+        use_threading=False,
+        configured_num_workers=2,
     )
     queue = multiprocessing.get_context(method.value).Queue()
     resources = WorkerExecutorFactory(
-        log_file_base=None, progress_queue=queue,
+        log_file_base=None,
+        progress_queue=queue,
         cancellation=ExecutionCancellationSignal(),
     ).create(runtime_environment=runtime, actual_max_workers=2)
     contexts = _compiled_custom_contexts(payload, runtime)
     try:
         with resources.execution_context():
             tasks = tuple(
-                resources.executor.submit(_spawned_compiled_custom_task, lane_context, helpers)
+                resources.executor.submit(
+                    _spawned_compiled_custom_task, lane_context, helpers
+                )
                 for lane_context, (_reference, helpers) in zip(
                     contexts.values(), payload, strict=True
                 )
@@ -537,7 +558,10 @@ def _spawn(path):
                 assert values == [[0, 1, 2], [3, 4, 5]]
                 assert type(row) is helpers[4] and row == helpers[5]
             pid, rows = resources.executor.submit(
-                _spawned_custom_task, payload, context.execution_id, context.subject_id,
+                _spawned_custom_task,
+                payload,
+                context.execution_id,
+                context.subject_id,
             ).result(timeout=15)
         assert pid != os.getpid()
         for row, (_reference, helpers) in zip(rows, payload, strict=True):
@@ -623,10 +647,20 @@ def test_persisted_payload_preserves_nominal_helpers_in_independent_consumer(
 
 
 def test_persisted_custom_revision_executes_in_original_spawn_factory(
-    tmp_path, transport_environment,
+    tmp_path,
+    transport_environment,
 ):
-    print(_run_child(transport_environment, "spawn", str(tmp_path / "spawn.pkl"),
-                     "reference", "cold", "unchanged"), end="")
+    print(
+        _run_child(
+            transport_environment,
+            "spawn",
+            str(tmp_path / "spawn.pkl"),
+            "reference",
+            "cold",
+            "unchanged",
+        ),
+        end="",
+    )
 
 
 @pytest.mark.parametrize("mutation", ["changed", "deleted", "renamed"])

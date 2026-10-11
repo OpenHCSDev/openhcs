@@ -150,7 +150,9 @@ class SignatureFilteredKwargs(RuntimeInvocationKwargPolicy):
         from openhcs.core.callable_contract import CallableMetadata
 
         parameters = (
-            CallableMetadata.callable_signature(func) if signature is None else signature
+            CallableMetadata.callable_signature(func)
+            if signature is None
+            else signature
         ).parameters
         if any(
             parameter.kind is inspect.Parameter.VAR_KEYWORD
@@ -278,8 +280,7 @@ def contextualize_main_image_output(source_image: Any, result: Any) -> Any:
         return result
     source_image = owned_runtime_value(source_image)
     if not isinstance(source_image, ImagePayload) or (
-        source_image.mask is None
-        and not source_image.metadata.has_values
+        source_image.mask is None and not source_image.metadata.has_values
     ):
         return result
     return source_image.with_pixels(result)
@@ -444,7 +445,9 @@ class ProducedImageStackPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
 
     value_type = ProducedImageStack
 
-    def slice_value(self, value: ProducedImageStack, memory_type: str) -> tuple[Any, ...]:
+    def slice_value(
+        self, value: ProducedImageStack, memory_type: str
+    ) -> tuple[Any, ...]:
         del memory_type
         return tuple(
             RuntimeSliceProjection.value_for_slice(
@@ -697,7 +700,9 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
         plane_axis: RuntimePlaneAxis,
     ) -> Any:
         return ImagePayloadSliceStack.from_output_slices(
-            values, memory_type=memory_type, plane_axis=plane_axis,
+            values,
+            memory_type=memory_type,
+            plane_axis=plane_axis,
         )
 
 
@@ -763,7 +768,9 @@ class NumPyPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         plane_axis: RuntimePlaneAxis,
     ) -> Any:
         return ImagePayloadSliceStack.from_output_slices(
-            values, memory_type=memory_type, plane_axis=plane_axis,
+            values,
+            memory_type=memory_type,
+            plane_axis=plane_axis,
         )
 
 
@@ -845,8 +852,6 @@ class TuplePure2DAuxiliaryOutputAggregator(FlatSequencePure2DAuxiliaryOutputAggr
     value_type = tuple
 
 
-
-
 # ---------------------------------------------------------------------------
 # The contract family
 # ---------------------------------------------------------------------------
@@ -909,13 +914,17 @@ class ContractCall(ABC):
         """Call once with the value as the stack holds it."""
 
     def full_stack_inputs(
-        self, image: Any, kwargs: Mapping[str, Any],
+        self,
+        image: Any,
+        kwargs: Mapping[str, Any],
     ) -> tuple[Any, Mapping[str, Any]]:
         """Return the image and kwargs a whole-stack call receives."""
         return image, kwargs
 
     def validate_full_stack_kwargs(
-        self, contract: type["ProcessingContract"], kwargs: Mapping[str, Any],
+        self,
+        contract: type["ProcessingContract"],
+        kwargs: Mapping[str, Any],
     ) -> None:
         """Reject whole-stack kwargs this environment cannot hand ``contract``."""
 
@@ -947,7 +956,9 @@ class ContractCall(ABC):
 
     @abstractmethod
     def aggregate_slices(
-        self, split: PlaneSplit, batch: "Pure2DSliceResultBatch",
+        self,
+        split: PlaneSplit,
+        batch: "Pure2DSliceResultBatch",
     ) -> Any:
         """Restack per-plane results."""
 
@@ -989,7 +1000,8 @@ class ProcessingContract(ABC, metaclass=AutoRegisterMeta):
     def for_probe(cls, probe: ContractProbe) -> type["ProcessingContract"] | None:
         """Return the contract whose declaration explains a probe outcome."""
         explaining = tuple(
-            contract for contract in cls.__registry__.values()
+            contract
+            for contract in cls.__registry__.values()
             if contract.explains_probe(probe)
         )
         if len(explaining) > 1:
@@ -1019,7 +1031,8 @@ class ProcessingContract(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def supports_measurement_image_batch(
-        cls, request: RuntimeBatchInvocationRequest,
+        cls,
+        request: RuntimeBatchInvocationRequest,
     ) -> bool:
         """Whether the request already occupies this callable's image domain."""
         return True
@@ -1063,7 +1076,9 @@ class ProcessingContract(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def main_flow_call_argument(
-        cls, callable_contract: "CallableContract", source_payload: Any,
+        cls,
+        callable_contract: "CallableContract",
+        source_payload: Any,
     ) -> Any:
         """Expose the raw ABI when this contract needs no earlier plane slicing."""
         return callable_contract.runtime_main_flow_call_argument(source_payload)
@@ -1081,7 +1096,8 @@ class ProcessingContract(ABC, metaclass=AutoRegisterMeta):
             from openhcs.core.callable_contract import CallableMetadata
 
             parameters = (
-                {} if func is None
+                {}
+                if func is None
                 else CallableMetadata.callable_signature(func).parameters
             )
         values: dict[str, Any] = {}
@@ -1112,13 +1128,19 @@ class ProcessingContract(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     @abstractmethod
     def execute(
-        cls, call: ContractCall, image: Any, kwargs: dict[str, Any],
+        cls,
+        call: ContractCall,
+        image: Any,
+        kwargs: dict[str, Any],
     ) -> Any:
         """Execute ``call.func`` on ``image`` under this contract."""
 
     @classmethod
     def execute_whole_stack(
-        cls, call: ContractCall, image: Any, kwargs: dict[str, Any],
+        cls,
+        call: ContractCall,
+        image: Any,
+        kwargs: dict[str, Any],
     ) -> Any:
         """Call once on the whole stack."""
         projected_image, projected_kwargs = call.full_stack_inputs(image, kwargs)
@@ -1162,7 +1184,8 @@ class Pure2DContract(ProcessingContract):
 
     @classmethod
     def supports_measurement_image_batch(
-        cls, request: RuntimeBatchInvocationRequest,
+        cls,
+        request: RuntimeBatchInvocationRequest,
     ) -> bool:
         """Leave preserved per-plane domains to the plane slicer."""
         return (
@@ -1173,7 +1196,9 @@ class Pure2DContract(ProcessingContract):
 
     @classmethod
     def main_flow_call_argument(
-        cls, callable_contract: "CallableContract", source_payload: Any,
+        cls,
+        callable_contract: "CallableContract",
+        source_payload: Any,
     ) -> Any:
         """Retain plane context only for the declared contract execution wrapper."""
         if callable_contract.raw_processing_function is not None:
@@ -1186,7 +1211,10 @@ class Pure2DContract(ProcessingContract):
 
     @classmethod
     def execute_per_plane(
-        cls, call: ContractCall, image: Any, kwargs: dict[str, Any],
+        cls,
+        call: ContractCall,
+        image: Any,
+        kwargs: dict[str, Any],
     ) -> Any:
         """Call once per plane and restack the results."""
         split = call.plane_split(image, kwargs)
@@ -1218,7 +1246,9 @@ class Pure2DContract(ProcessingContract):
                 signature=call.signature,
             )
         )
-        return call.aggregate_slices(split, Pure2DSliceResultBatch.from_results(results))
+        return call.aggregate_slices(
+            split, Pure2DSliceResultBatch.from_results(results)
+        )
 
 
 class FlexibleContract(Pure2DContract, Pure3DContract):
@@ -1237,13 +1267,15 @@ class FlexibleContract(Pure2DContract, Pure3DContract):
 
     @classmethod
     def supports_measurement_image_batch(
-        cls, request: RuntimeBatchInvocationRequest,
+        cls,
+        request: RuntimeBatchInvocationRequest,
     ) -> bool:
-        controls = cls.consume_semantic_controls(dict(request.kwargs), func=request.func)
-        return (
-            not any(bool(value) for value in controls.values())
-            or super().supports_measurement_image_batch(request)
+        controls = cls.consume_semantic_controls(
+            dict(request.kwargs), func=request.func
         )
+        return not any(
+            bool(value) for value in controls.values()
+        ) or super().supports_measurement_image_batch(request)
 
     @classmethod
     def runtime_parameter_types(
@@ -1346,16 +1378,29 @@ class LibraryContractCall(ContractCall):
         *,
         func: Callable[..., Any] | None = None,
     ) -> Any:
-        return RuntimeCallablePolicy().invocation(
-            self.func if func is None else func,
-            (self.callable_contract.runtime_main_flow_call_argument(value), *self.args),
-            kwargs,
-        ).call()
+        return (
+            RuntimeCallablePolicy()
+            .invocation(
+                self.func if func is None else func,
+                (
+                    self.callable_contract.runtime_main_flow_call_argument(value),
+                    *self.args,
+                ),
+                kwargs,
+            )
+            .call()
+        )
 
     def invoke_unbound(self, value: Any, kwargs: Mapping[str, Any]) -> Any:
-        return RuntimeCallablePolicy().invocation(
-            self.func, (value, *self.args), kwargs,
-        ).call()
+        return (
+            RuntimeCallablePolicy()
+            .invocation(
+                self.func,
+                (value, *self.args),
+                kwargs,
+            )
+            .call()
+        )
 
     def whole_output(self, image: Any, result: Any) -> Any:
         return contextualize_main_image_output(image, result)
@@ -1383,7 +1428,8 @@ class LibraryContractCall(ContractCall):
             return False
         positional = (
             dict(zip((p.name for p in self._positional_parameters()), self.args))
-            if self.args else {}
+            if self.args
+            else {}
         )
         return {**positional, **kwargs}.get("labels") is not None
 
@@ -1418,7 +1464,7 @@ class LibraryContractCall(ContractCall):
                 )
             for parameter, value in zip(positional_parameters, self.args):
                 kwargs.setdefault(parameter.name, value)
-            self.args = self.args[len(positional_parameters):]
+            self.args = self.args[len(positional_parameters) :]
         return PlaneSplit(
             slices=tuple(slicer.slice_value(image, input_memory_type)),
             plane_axis=plane_axis,
@@ -1450,7 +1496,9 @@ class LibraryContractCall(ContractCall):
         )
 
     def aggregate_slices(
-        self, split: PlaneSplit, batch: "Pure2DSliceResultBatch",
+        self,
+        split: PlaneSplit,
+        batch: "Pure2DSliceResultBatch",
     ) -> Any:
         stacked_main_output = Pure2DAuxiliaryOutputAggregator.aggregate(
             batch.main_outputs,

@@ -5,7 +5,10 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageSliceContext,
+    AlignedImageStack,
+)
 from openhcs.core.callable_contract import CallableContract, ImagePayloadConsumption
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import (
@@ -197,9 +200,7 @@ def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
         assert metadata.source_image_names == ("FITC",)
         assert metadata.source_component_metadata["channel"] == "2"
         assert metadata.source_image_paths == (f"/synthetic/A01_s{index + 1}_w2.tif",)
-        np.testing.assert_array_equal(
-            plane.data[0], original_pixels[index]
-        )
+        np.testing.assert_array_equal(plane.data[0], original_pixels[index])
         np.testing.assert_array_equal(plane.mask, original_masks[index])
     result = CellProfilerFunctionContractExecutor().execute(
         contract,
@@ -214,23 +215,13 @@ def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
         result_plane = RuntimeSliceProjection.value_for_slice(
             result, projection.selected_plane(index)
         )
-        np.testing.assert_array_equal(
-            result_plane.data, original_pixels[index]
-        )
-        np.testing.assert_array_equal(
-            result_plane.mask, original_masks[index]
-        )
+        np.testing.assert_array_equal(result_plane.data, original_pixels[index])
+        np.testing.assert_array_equal(result_plane.mask, original_masks[index])
         metadata = result_plane.metadata
         assert metadata.plane_axis is None
         assert metadata.axis_position(ColourAxis) is None
-        assert (
-            metadata.source_voxel_spacing
-            == source.metadata.source_voxel_spacing
-        )
-        assert (
-            metadata.source_spatial_domain
-            == source.metadata.source_spatial_domain
-        )
+        assert metadata.source_voxel_spacing == source.metadata.source_voxel_spacing
+        assert metadata.source_spatial_domain == source.metadata.source_spatial_domain
     np.testing.assert_array_equal(source.data, original_pixels)
     np.testing.assert_array_equal(source.mask, original_masks)
 
@@ -252,10 +243,7 @@ def test_declared_composed_scalar_introduces_one_source_axis():
         (scalar,),
     )
     assert composition.execution_mode is FullStackExecution
-    assert (
-        composition.payload.metadata.plane_axis
-        is RuntimePlaneAxis.SOURCE_BINDING
-    )
+    assert composition.payload.metadata.plane_axis is RuntimePlaneAxis.SOURCE_BINDING
     contract = CallableContract.from_callable(independently_declared_source_echo)
     result = CellProfilerFunctionContractExecutor().execute(
         contract,
@@ -264,9 +252,7 @@ def test_declared_composed_scalar_introduces_one_source_axis():
         {},
         execution_mode=composition.execution_mode,
     )
-    np.testing.assert_array_equal(
-        result.data, source.data[0]
-    )
+    np.testing.assert_array_equal(result.data, source.data[0])
 
 
 @pytest.mark.parametrize("aligned", (False, True))
@@ -280,9 +266,7 @@ def test_natural_declaration_retains_exact_singleton(aligned):
     )
     assert composition.payload is current
     assert composition.execution_mode is (
-        AlignedStackExecution
-        if aligned
-        else NaturalExecution
+        AlignedStackExecution if aligned else NaturalExecution
     )
     if not aligned:
         result = CellProfilerFunctionContractExecutor().execute(
@@ -297,12 +281,8 @@ def test_natural_declaration_retains_exact_singleton(aligned):
             result.data,
             source.data * source.mask,
         )
-        np.testing.assert_array_equal(
-            result.mask, source.mask
-        )
-        assert (
-            result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-        )
+        np.testing.assert_array_equal(result.mask, source.mask)
+        assert result.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_kernel_still_rejects_unprojected_runtime_axis():

@@ -16,9 +16,7 @@ __all__ = lazy_exports(
             "AgentWarning",
             "RenderedSource",
         ),
-        "openhcs.agent.dto.mcp": (
-            "McpServerHealthResult",
-        ),
+        "openhcs.agent.dto.mcp": ("McpServerHealthResult",),
         "pyqt_reactive.services.window_snapshot": (
             "WindowSnapshotCaptureScope",
             "WindowSnapshotCaptureSpec",
@@ -93,9 +91,7 @@ __all__ = lazy_exports(
             "SourceWorkspaceSummary",
             "ViewerStreamingPlanSummary",
         ),
-        "openhcs.agent.dto.execution_connection": (
-            "ExecutionConnectionSpec",
-        ),
+        "openhcs.agent.dto.execution_connection": ("ExecutionConnectionSpec",),
         "openhcs.agent.dto.pipeline": (
             "CreatePipelineRequest",
             "FunctionSpecRef",

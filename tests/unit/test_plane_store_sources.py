@@ -321,7 +321,9 @@ def test_mixed_plane_stores_bind_and_load_through_virtual_workspace(
         )
     )
     filemanager = _filemanager()
-    handler = DatasetSourceChoice.named("auto").open(tmp_path, filemanager=filemanager, source_bindings_config=source_bindings)
+    handler = DatasetSourceChoice.named("auto").open(
+        tmp_path, filemanager=filemanager, source_bindings_config=source_bindings
+    )
     assert isinstance(handler, BioFormatsHandler)
     assert handler.parser.extract_component_coordinates("plain.tif") == (
         "S",
@@ -354,7 +356,9 @@ def test_saved_source_bindings_rebuild_canonical_store_projection(
     replace_config: str,
 ) -> None:
     def reject_editor(*args, **kwargs):
-        raise AssertionError("Saved runtime config capture must not construct an editor")
+        raise AssertionError(
+            "Saved runtime config capture must not construct an editor"
+        )
 
     if replace_config != "delegate":
         monkeypatch.setattr(ObjectState, "__init__", reject_editor)

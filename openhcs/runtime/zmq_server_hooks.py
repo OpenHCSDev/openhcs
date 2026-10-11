@@ -43,9 +43,7 @@ class ZMQResultsSummaryEnricher:
             summary = {}
             record.results_summary = summary
 
-        output_summary = record.get_extra(
-            ExecutionOutputSummary.EXECUTION_RECORD_KEY
-        )
+        output_summary = record.get_extra(ExecutionOutputSummary.EXECUTION_RECORD_KEY)
         if output_summary is None:
             output_summary = ExecutionOutputSummary()
         elif not isinstance(output_summary, ExecutionOutputSummary):

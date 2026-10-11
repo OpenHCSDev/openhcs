@@ -221,11 +221,15 @@ class PipelineEditorDebugWorkflow:
     ) -> None:
         scope_id = self.editor.current_plate
         if not scope_id:
-            self.editor.status_message.emit("Select a dataset before running debug mode.")
+            self.editor.status_message.emit(
+                "Select a dataset before running debug mode."
+            )
             return
         session = self.editor.session
         command_label = command_type.value.replace("_", " ")
-        self.editor.status_message.emit(f"Submitting debug {command_label} for {scope_id}")
+        self.editor.status_message.emit(
+            f"Submitting debug {command_label} for {scope_id}"
+        )
         cursor = self._replay_cursor(command_type)
         session.debug_terminal_summaries.pop(scope_id, None)
         session.start(
@@ -234,7 +238,9 @@ class PipelineEditorDebugWorkflow:
             command_type=command_type,
             pause_step_indices=self.pause_step_indices(),
             start_step_index=0 if cursor is None else cursor.step_index,
-            start_after_invocation_key=None if cursor is None else cursor.invocation_key,
+            start_after_invocation_key=(
+                None if cursor is None else cursor.invocation_key
+            ),
         )
 
     def pause_step_indices(self) -> tuple[int, ...]:
@@ -278,7 +284,9 @@ class PipelineEditorDebugWorkflow:
             view_model = await session.debug_runs.inspect_runtime(
                 debug_session_id=active.debug_session_id,
             )
-            session.main_thread.post(lambda: self._render_runtime_inspection(view_model))
+            session.main_thread.post(
+                lambda: self._render_runtime_inspection(view_model)
+            )
 
         session.start(inspect)
 

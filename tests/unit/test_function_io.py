@@ -307,7 +307,8 @@ def test_bulk_preload_preserves_nested_virtual_workspace_paths(tmp_path: Path) -
     assert virtual_paths == expected_paths
 
     SourceFileUniverse(
-        tuple(expected_paths), Backend.VIRTUAL_WORKSPACE,
+        tuple(expected_paths),
+        Backend.VIRTUAL_WORKSPACE,
     ).load_images(filemanager)
 
     loaded = filemanager.load_batch(expected_paths, Backend.MEMORY.value)
@@ -526,7 +527,9 @@ def test_bulk_preload_loads_matlab_pixels_through_declared_vfs_backend(
         str(workspace_root / virtual_path)
         for virtual_path in materialization.plane_mappings
     )
-    SourceFileUniverse(virtual_paths, Backend.VIRTUAL_WORKSPACE).load_images(filemanager)
+    SourceFileUniverse(virtual_paths, Backend.VIRTUAL_WORKSPACE).load_images(
+        filemanager
+    )
 
     loaded = filemanager.load_batch(
         list(virtual_paths),

@@ -51,7 +51,9 @@ def test_submission_uses_declared_timeout_for_progress_registration():
         observed.append(("progress", timeout_ms))
 
     def serialize_task(self, _task, _config=None):
-        return ExecuteRequest(subject_id="subject", pipeline_code="pass", config_code="")
+        return ExecuteRequest(
+            subject_id="subject", pipeline_code="pass", config_code=""
+        )
 
     def send_control_request(self, request, *, timeout_ms: int):
         observed.append((request[MessageFields.TYPE], timeout_ms))
@@ -67,7 +69,9 @@ def test_submission_uses_declared_timeout_for_progress_registration():
         client,
     )
 
-    client._submit_submission(lambda: client.serialize_task(_Submission().to_task()), timeout_ms=15000)
+    client._submit_submission(
+        lambda: client.serialize_task(_Submission().to_task()), timeout_ms=15000
+    )
 
     assert [phase for phase, _timeout_ms in observed] == [
         "progress",
@@ -117,7 +121,9 @@ def test_submission_uses_declared_client_connection_timeout() -> None:
     client.connect = MethodType(connect, client)
 
     try:
-        client._submit_submission(lambda: client.serialize_task(_Submission().to_task()), timeout_ms=15000)
+        client._submit_submission(
+            lambda: client.serialize_task(_Submission().to_task()), timeout_ms=15000
+        )
     except RuntimeError as error:
         assert str(error) == "Failed to connect to execution server"
     else:
@@ -164,7 +170,9 @@ def test_submission_deadline_prevents_request_after_slow_connection() -> None:
         ExecutionSubmissionPreparationTimeoutError,
         match="no execute request was sent",
     ):
-        client._submit_submission(lambda: client.serialize_task(_Submission().to_task()), timeout_ms=10)
+        client._submit_submission(
+            lambda: client.serialize_task(_Submission().to_task()), timeout_ms=10
+        )
 
     assert observed == ["connect"]
 

@@ -119,7 +119,15 @@ def _session(
     )
     projections = {
         path.name: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, index), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+            address=OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, "A01"),
+                    (Microscopy.Site, index),
+                    (Microscopy.Channel, 1),
+                    (Microscopy.ZIndex, 1),
+                    (Microscopy.Timepoint, 1),
+                )
+            ),
             ref=SourcePixelRef("disk", str(path)),
             source_alias=binding.alias,
         )
@@ -202,9 +210,7 @@ def test_all_rgb_sources_prove_color_to_gray_payload_axis_requirement(
             photometric="rgb",
         )
 
-    PipelineCompiler.validate_payload_axis_requirements(
-        _session(tmp_path, paths)
-    )
+    PipelineCompiler.validate_payload_axis_requirements(_session(tmp_path, paths))
 
 
 def test_grouped_color_requirement_inspects_only_compatible_binding(
@@ -248,7 +254,15 @@ def test_grouped_color_requirement_inspects_only_compatible_binding(
     )
     projections = {
         path.name: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, index), (Microscopy.Channel, binding.component_identity[0].value), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+            address=OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, "A01"),
+                    (Microscopy.Site, index),
+                    (Microscopy.Channel, binding.component_identity[0].value),
+                    (Microscopy.ZIndex, 1),
+                    (Microscopy.Timepoint, 1),
+                )
+            ),
             ref=SourcePixelRef("disk", str(path)),
             source_alias=binding.alias,
         )
@@ -339,9 +353,7 @@ def test_unknown_or_unreadable_exact_source_fails_compile_closed(
     path.write_bytes(b"not an image header")
 
     with pytest.raises(ValueError, match="failed before execution") as error:
-        PipelineCompiler.validate_payload_axis_requirements(
-            _session(tmp_path, (path,))
-        )
+        PipelineCompiler.validate_payload_axis_requirements(_session(tmp_path, (path,)))
 
     assert str(path) in str(error.value) or str(path.name) in str(error.value)
     assert "ColourAxis" in str(error.value)
@@ -613,12 +625,28 @@ def test_unknown_routed_group_cannot_fall_back_to_all_primary_sources(
     )
     projections = {
         grayscale_path.name: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+            address=OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, "A01"),
+                    (Microscopy.Site, 1),
+                    (Microscopy.Channel, 1),
+                    (Microscopy.ZIndex, 1),
+                    (Microscopy.Timepoint, 1),
+                )
+            ),
             ref=SourcePixelRef("disk", str(grayscale_path)),
             source_alias=grayscale_binding.alias,
         ),
         rgb_path.name: SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 2), (Microscopy.Channel, 2), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+            address=OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, "A01"),
+                    (Microscopy.Site, 2),
+                    (Microscopy.Channel, 2),
+                    (Microscopy.ZIndex, 1),
+                    (Microscopy.Timepoint, 1),
+                )
+            ),
             ref=SourcePixelRef("disk", str(rgb_path)),
             source_alias=rgb_binding.alias,
         ),

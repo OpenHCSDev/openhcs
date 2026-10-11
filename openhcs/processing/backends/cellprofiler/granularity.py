@@ -712,7 +712,6 @@ class GranularityReconstructionBackendStrategy(
 ):
     """Exact grayscale reconstruction backend used by MeasureGranularity."""
 
-
     @abstractmethod
     def reconstruct_radius_one(
         self,

@@ -60,7 +60,9 @@ class RuntimeContextObservation:
 
     context_key: str
     records: tuple[StoredRuntimeValue, ...]
-    outputs: StepExecutionObservation = field(default_factory=StepExecutionObservation.empty)
+    outputs: StepExecutionObservation = field(
+        default_factory=StepExecutionObservation.empty
+    )
 
     @classmethod
     def from_context(
@@ -91,15 +93,17 @@ class RuntimeExecutionObservation:
         cls, contexts: Mapping[str, ProcessingContext]
     ) -> "RuntimeExecutionObservation":
         """Project saved facts independently of retained runtime pixel records."""
-        return cls(contexts=tuple(
-            RuntimeContextObservation(
-                context_key=context_key,
-                records=(),
-                outputs=context.completed_step_outputs,
+        return cls(
+            contexts=tuple(
+                RuntimeContextObservation(
+                    context_key=context_key,
+                    records=(),
+                    outputs=context.completed_step_outputs,
+                )
+                for context_key, context in contexts.items()
+                if not context.completed_step_outputs.is_empty
             )
-            for context_key, context in contexts.items()
-            if not context.completed_step_outputs.is_empty
-        ))
+        )
 
     def merge_into(self, execution_contexts: Mapping[str, ProcessingContext]) -> None:
         """Merge returned runtime records into parent-owned compiled contexts."""
@@ -249,7 +253,8 @@ class ExecutionResult:
             error_message=error_message,
             runtime_observation=(
                 RuntimeExecutionObservation()
-                if runtime_observation is None else runtime_observation
+                if runtime_observation is None
+                else runtime_observation
             ),
         )
 
@@ -268,6 +273,7 @@ class ExecutionResult:
             error_message=error_message,
             runtime_observation=(
                 RuntimeExecutionObservation()
-                if runtime_observation is None else runtime_observation
+                if runtime_observation is None
+                else runtime_observation
             ),
         )

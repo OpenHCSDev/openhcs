@@ -1164,7 +1164,9 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
         ValueError,
         match=r"Align.*cannot reconstruct an exact module block",
     ):
-        CellProfilerInvocationContractProviderFactory.provider_for_pipeline(session.pipeline)
+        CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+            session.pipeline
+        )
 
 
 def test_cellprofiler_invocation_contract_allows_source_binding_supersets() -> None:

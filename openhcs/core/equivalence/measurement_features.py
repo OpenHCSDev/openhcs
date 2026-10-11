@@ -91,9 +91,7 @@ class RuntimeMeasurementFeatureSemanticProfile(
         key = RuntimeMeasurementFeatureKey.from_cache_payload(key_payload)
         context = RuntimeMeasurementFeatureSemanticContext(
             key,
-            RuntimeEquivalencePolicy(
-                measurement_dialect=dialect
-            ),
+            RuntimeEquivalencePolicy(measurement_dialect=dialect),
         )
         strategy = cls.for_context(
             context,
@@ -489,9 +487,7 @@ def _object_measurement_feature_matches_marker_cached(
     dialect: MeasurementDialect,
 ) -> bool:
     key = RuntimeMeasurementFeatureKey.from_cache_payload(key_payload)
-    policy = RuntimeEquivalencePolicy(
-        measurement_dialect=dialect
-    )
+    policy = RuntimeEquivalencePolicy(measurement_dialect=dialect)
     provider_marker_types = policy.measurement_dialect.measurement_feature_marker_types(
         key
     )

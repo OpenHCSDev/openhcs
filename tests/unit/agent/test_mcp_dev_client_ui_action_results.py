@@ -1,4 +1,5 @@
 from openhcs.agent.dto.session import DatasetRowState
+
 """Real CLI/codec action-family checks without a server or UI mutation."""
 import sys
 import json
@@ -28,12 +29,16 @@ from openhcs.agent.dto.ui_bridge import (
 )
 from openhcs.mcp import dev_client
 from openhcs.mcp.dev_client_core import (
-    McpDevServerSpec, McpDevToolBatchResponse, McpDevToolResult,
-    workflow_result_action_status, workflow_result_target_scope_ids,
+    McpDevServerSpec,
+    McpDevToolBatchResponse,
+    McpDevToolResult,
+    workflow_result_action_status,
+    workflow_result_target_scope_ids,
     workflow_poll_summary_result,
 )
 from openhcs.mcp.dev_client_rendering import (
-    McpDevOutputRenderer, McpDevOutputRenderOptions,
+    McpDevOutputRenderer,
+    McpDevOutputRenderOptions,
 )
 from openhcs.mcp.dev_client_renderers.ui_bridge import UiActionInvokeRenderer
 from python_introspect import to_jsonable
@@ -50,55 +55,92 @@ def action_fixture():
 
 
 def action_result(capability, value):
-    return McpDevToolResult.from_payload(capability.name, {
-        "isError": False, "structuredContent": to_jsonable(value), "content": [],
-    })
+    return McpDevToolResult.from_payload(
+        capability.name,
+        {
+            "isError": False,
+            "structuredContent": to_jsonable(value),
+            "content": [],
+        },
+    )
 
 
 def state_fixture(compiled, revision):
     summary = UiStateSurfaceSummary(
-        SCHEMA_VERSION, UiStateSurfaceIdentity(surface_id="plate_manager.state"),
-        "Plate Manager", True, widget_id="plate_manager",
+        SCHEMA_VERSION,
+        UiStateSurfaceIdentity(surface_id="plate_manager.state"),
+        "Plate Manager",
+        True,
+        widget_id="plate_manager",
     )
     row = DatasetRowState(
-        scope_id="scope-1", name="plate-one", root="/plate-one",
-        pipeline_path=None, selected=True, initialized=True, compiled=compiled,
-        init_pending=False, compile_pending=False, execution_active=False,
+        scope_id="scope-1",
+        name="plate-one",
+        root="/plate-one",
+        pipeline_path=None,
+        selected=True,
+        initialized=True,
+        compiled=compiled,
+        init_pending=False,
+        compile_pending=False,
+        execution_active=False,
         status_prefix="Compiled" if compiled else "Created",
         orchestrator_state="compiled" if compiled else "created",
-        execution_id=None, terminal_status=None,
-        runtime_state=None, runtime_percent=None, queue_position=None,
+        execution_id=None,
+        terminal_status=None,
+        runtime_state=None,
+        runtime_percent=None,
+        queue_position=None,
     )
     state = UiPlateManagerState(
-        schema_version=SCHEMA_VERSION, summary=summary, object_state_token=revision,
-        manager_execution_state="idle", rows=(row,),
+        schema_version=SCHEMA_VERSION,
+        summary=summary,
+        object_state_token=revision,
+        manager_execution_state="idle",
+        rows=(row,),
         current_revision_token=f"rev-{revision}",
     )
     return UiStateSurfaceDocument(
-        schema_version=SCHEMA_VERSION, summary=summary,
-        payload_schema="openhcs.ui.plate_manager_state.v1", payload=to_jsonable(state),
+        schema_version=SCHEMA_VERSION,
+        summary=summary,
+        payload_schema="openhcs.ui.plate_manager_state.v1",
+        payload=to_jsonable(state),
         current_revision_token=state.current_revision_token,
     )
 
 
 @pytest.mark.parametrize("json_output", (False, True))
 def test_named_cli_wait_preserves_action_receipt_poll_and_final_rows(
-    monkeypatch, capsys, json_output,
+    monkeypatch,
+    capsys,
+    json_output,
 ):
     """Actual CLI/controller/codec chain, with only the MCP wire controlled."""
     native = UiSelectedPlateWorkflowResult(
-        SCHEMA_VERSION, UiSelectedPlateWorkflowKind("compile_datasets"),
-        replace(action_fixture(),
-                identity=UiActionIdentity(widget_id="plate_manager", action_id="compile_datasets"),
-                receipt=UiMutationReceipt(UiMutationRequestToken(), "operation-one", True)),
+        SCHEMA_VERSION,
+        UiSelectedPlateWorkflowKind("compile_datasets"),
+        replace(
+            action_fixture(),
+            identity=UiActionIdentity(
+                widget_id="plate_manager", action_id="compile_datasets"
+            ),
+            receipt=UiMutationReceipt(UiMutationRequestToken(), "operation-one", True),
+        ),
     )
     receipt = UiBridgeOperationRef(
-        schema_version=SCHEMA_VERSION, status="completed", started_at_unix=1.0,
-        completed_at_unix=2.0, outcome="completed",
-        identity=UiBridgeOperationIdentity("operation-one", UiBridgeOperationRoute("invoke_action")),
+        schema_version=SCHEMA_VERSION,
+        status="completed",
+        started_at_unix=1.0,
+        completed_at_unix=2.0,
+        outcome="completed",
+        identity=UiBridgeOperationIdentity(
+            "operation-one", UiBridgeOperationRoute("invoke_action")
+        ),
     )
     calls = []
-    wire_values = iter((state_fixture(False, 1), native, receipt, state_fixture(True, 2)))
+    wire_values = iter(
+        (state_fixture(False, 1), native, receipt, state_fixture(True, 2))
+    )
     wire_payloads = tuple(to_jsonable(value) for value in wire_values)
 
     class ControlledWireSession:
@@ -106,27 +148,43 @@ def test_named_cli_wait_preserves_action_receipt_poll_and_final_rows(
 
         async def call_tool(self, name, arguments, *, timeout_seconds):
             calls.append(name)
-            return {"isError": False, "structuredContent": wire_payloads[len(calls)-1], "content": []}
+            return {
+                "isError": False,
+                "structuredContent": wire_payloads[len(calls) - 1],
+                "content": [],
+            }
 
     async def controlled_session(args):
         return await dev_client.McpDevCommandSpec.for_name(args.command).run_session(
-            ControlledWireSession(), args,
+            ControlledWireSession(),
+            args,
         )
 
     import python_introspect.jsonable as serialization
+
     monkeypatch.setattr(dev_client, "_run_async", controlled_session)
     if not json_output:
+
         def forbidden_serialization(value):
             raise AssertionError("Compact polling must retain its typed summary")
+
         monkeypatch.setattr(serialization, "to_jsonable", forbidden_serialization)
-    argv = ["selected-workflow", "compile_datasets", "--wait", "--wait-interval-seconds", "0"]
+    argv = [
+        "selected-workflow",
+        "compile_datasets",
+        "--wait",
+        "--wait-interval-seconds",
+        "0",
+    ]
     if json_output:
         argv.append("--json")
     assert dev_client.main(argv) == 0
-    assert calls == [agent_capabilities.ui_get_state_surface.name,
-                     agent_capabilities.ui_selected_plate_workflow.name,
-                     agent_capabilities.ui_wait_for_operation_receipt.name,
-                     agent_capabilities.ui_get_state_surface.name]
+    assert calls == [
+        agent_capabilities.ui_get_state_surface.name,
+        agent_capabilities.ui_selected_plate_workflow.name,
+        agent_capabilities.ui_wait_for_operation_receipt.name,
+        agent_capabilities.ui_get_state_surface.name,
+    ]
     rendered = capsys.readouterr().out
     if json_output:
         response = json.loads(rendered)
@@ -143,13 +201,17 @@ def test_named_cli_wait_preserves_action_receipt_poll_and_final_rows(
         assert "terminal=<none>, selected=True, root=/plate-one" in rendered
 
 
-def test_malformed_action_is_nonzero_and_preserves_invalid_wire_payload(monkeypatch, capsys):
+def test_malformed_action_is_nonzero_and_preserves_invalid_wire_payload(
+    monkeypatch, capsys
+):
     malformed = {"workflow": "run_datasets", "action_result": {"status": "accepted"}}
     result = McpDevToolResult.from_payload(
         agent_capabilities.ui_selected_plate_workflow.name,
         {"isError": False, "structuredContent": malformed, "content": []},
     )
-    response = McpDevToolBatchResponse.from_results(McpDevServerSpec(sys.executable), (result,))
+    response = McpDevToolBatchResponse.from_results(
+        McpDevServerSpec(sys.executable), (result,)
+    )
 
     async def controlled_wire(args):
         return response
@@ -168,23 +230,38 @@ def test_poll_presentation_rejects_row_missing_declared_state_field():
     del state.payload["rows"][0]["initialized"]
     response = McpDevToolBatchResponse.from_results(
         McpDevServerSpec(sys.executable),
-        (action_result(agent_capabilities.ui_get_state_surface, state),
-         workflow_poll_summary_result(
-             workflow="compile_datasets", poll_requested=True,
-             poll_completed=True, poll_count=1, action_status="accepted",
-         )),
+        (
+            action_result(agent_capabilities.ui_get_state_surface, state),
+            workflow_poll_summary_result(
+                workflow="compile_datasets",
+                poll_requested=True,
+                poll_completed=True,
+                poll_count=1,
+                action_status="accepted",
+            ),
+        ),
     )
-    args = dev_client._build_parser().parse_args(["selected-workflow", "compile_datasets", "--wait"])
+    args = dev_client._build_parser().parse_args(
+        ["selected-workflow", "compile_datasets", "--wait"]
+    )
     with pytest.raises(ValueError, match="missing required field.*initialized"):
-        dev_client.McpDevCommandSpec.for_name("selected-workflow").render_result(response, args)
+        dev_client.McpDevCommandSpec.for_name("selected-workflow").render_result(
+            response, args
+        )
 
 
-def test_actual_generic_cli_retains_nested_action_without_json_roundtrip(monkeypatch, capsys):
+def test_actual_generic_cli_retains_nested_action_without_json_roundtrip(
+    monkeypatch, capsys
+):
     native = UiSelectedPlateWorkflowResult(
-        SCHEMA_VERSION, UiSelectedPlateWorkflowKind("run_datasets"), action_fixture(),
+        SCHEMA_VERSION,
+        UiSelectedPlateWorkflowKind("run_datasets"),
+        action_fixture(),
     )
     result = action_result(agent_capabilities.ui_selected_plate_workflow, native)
-    response = McpDevToolBatchResponse.from_results(McpDevServerSpec(sys.executable), (result,))
+    response = McpDevToolBatchResponse.from_results(
+        McpDevServerSpec(sys.executable), (result,)
+    )
 
     async def controlled_wire(args):
         return response
@@ -193,12 +270,20 @@ def test_actual_generic_cli_retains_nested_action_without_json_roundtrip(monkeyp
         raise AssertionError("Compact presentation must retain the decoded result")
 
     import python_introspect.jsonable as serialization
+
     monkeypatch.setattr(dev_client, "_run_async", controlled_wire)
     monkeypatch.setattr(serialization, "to_jsonable", forbidden_serialization)
-    assert dev_client.main([
-        "call", agent_capabilities.ui_selected_plate_workflow.name,
-        "--arguments", '{"workflow":"run_datasets"}',
-    ]) == 0
+    assert (
+        dev_client.main(
+            [
+                "call",
+                agent_capabilities.ui_selected_plate_workflow.name,
+                "--arguments",
+                '{"workflow":"run_datasets"}',
+            ]
+        )
+        == 0
+    )
     rendered = capsys.readouterr().out
     assert "action=plate_manager/run_datasets status=accepted" in rendered
     assert "accepted=True" in rendered and "targets=scope-1" in rendered
@@ -206,20 +291,32 @@ def test_actual_generic_cli_retains_nested_action_without_json_roundtrip(monkeyp
     assert workflow_result_target_scope_ids(result) == ("scope-1",)
 
 
-@pytest.mark.parametrize("presentation", ((), ("--output", "outline"),
-    ("--output", "json"), ("--json",)))
+@pytest.mark.parametrize(
+    "presentation", ((), ("--output", "outline"), ("--output", "json"), ("--json",))
+)
 def test_actual_widget_tree_cli_uses_its_declared_output_format(
-    monkeypatch, capsys, presentation,
+    monkeypatch,
+    capsys,
+    presentation,
 ):
     """The real CLI must not require a second undeclared args.json flag."""
     native = UiWidgetTreeResult(
-        schema_version=SCHEMA_VERSION, window_id="main_window", projected=True,
-        summary=UiWindowSummary(SCHEMA_VERSION, UiWindowIdentity(window_id="main_window"),
-            "OpenHCS regression window", "qt_top_level", True, True),
+        schema_version=SCHEMA_VERSION,
+        window_id="main_window",
+        projected=True,
+        summary=UiWindowSummary(
+            SCHEMA_VERSION,
+            UiWindowIdentity(window_id="main_window"),
+            "OpenHCS regression window",
+            "qt_top_level",
+            True,
+            True,
+        ),
     )
     result = action_result(agent_capabilities.ui_get_widget_tree, native)
     response = McpDevToolBatchResponse.from_results(
-        McpDevServerSpec(sys.executable), (result,),
+        McpDevServerSpec(sys.executable),
+        (result,),
     )
 
     async def controlled_wire(args):
@@ -239,21 +336,39 @@ def test_actual_widget_tree_cli_uses_its_declared_output_format(
 
 def test_generic_widget_tree_call_uses_the_same_output_declaration(monkeypatch, capsys):
     native = UiWidgetTreeResult(
-        schema_version=SCHEMA_VERSION, window_id="main_window", projected=True,
-        summary=UiWindowSummary(SCHEMA_VERSION, UiWindowIdentity(window_id="main_window"),
-            "OpenHCS regression window", "qt_top_level", True, True),
+        schema_version=SCHEMA_VERSION,
+        window_id="main_window",
+        projected=True,
+        summary=UiWindowSummary(
+            SCHEMA_VERSION,
+            UiWindowIdentity(window_id="main_window"),
+            "OpenHCS regression window",
+            "qt_top_level",
+            True,
+            True,
+        ),
     )
     result = action_result(agent_capabilities.ui_get_widget_tree, native)
     response = McpDevToolBatchResponse.from_results(
-        McpDevServerSpec(sys.executable), (result,),
+        McpDevServerSpec(sys.executable),
+        (result,),
     )
 
     async def controlled_wire(args):
         return response
 
     monkeypatch.setattr(dev_client, "_run_async", controlled_wire)
-    assert dev_client.main(["call", agent_capabilities.ui_get_widget_tree.name,
-        "--arguments", '{"window_id":"main_window"}']) == 0
+    assert (
+        dev_client.main(
+            [
+                "call",
+                agent_capabilities.ui_get_widget_tree.name,
+                "--arguments",
+                '{"window_id":"main_window"}',
+            ]
+        )
+        == 0
+    )
     assert "Window: OpenHCS regression window" in capsys.readouterr().out
 
 
@@ -277,21 +392,35 @@ def test_independent_presentation_capabilities_cooperate_in_both_mro_orders(reve
     class ExtendedAction(UiActionInvokeResult):
         annotation: str = "new declared fact"
 
-    bases = ((SecondCapability, FirstCapability) if reverse else
-             (FirstCapability, SecondCapability))
-    extension = type("ExtendedActionRenderer", (*bases, UiActionInvokeRenderer),
-                     {"output_contract": ExtendedAction})
+    bases = (
+        (SecondCapability, FirstCapability)
+        if reverse
+        else (FirstCapability, SecondCapability)
+    )
+    extension = type(
+        "ExtendedActionRenderer",
+        (*bases, UiActionInvokeRenderer),
+        {"output_contract": ExtendedAction},
+    )
     try:
         assert McpDevOutputRenderer.for_output_contract(ExtendedAction) is extension
         value = ExtendedAction(
-            SCHEMA_VERSION, UiActionIdentity(widget_id="plate_manager", action_id="run_datasets"),
-            "accepted", UiMutationReceipt(UiMutationRequestToken(), accepted=True),
+            SCHEMA_VERSION,
+            UiActionIdentity(widget_id="plate_manager", action_id="run_datasets"),
+            "accepted",
+            UiMutationReceipt(UiMutationRequestToken(), accepted=True),
         )
-        decoded = McpDevToolResult._decode_payload(to_jsonable(value), (ExtendedAction,))
+        decoded = McpDevToolResult._decode_payload(
+            to_jsonable(value), (ExtendedAction,)
+        )
         assert decoded.annotation == "new declared fact"
         rendered = extension.render_payload_value(decoded, McpDevOutputRenderOptions())
         assert events == (["second", "first"] if reverse else ["first", "second"])
-        assert rendered.count("first capability") == rendered.count("second capability") == 1
+        assert (
+            rendered.count("first capability")
+            == rendered.count("second capability")
+            == 1
+        )
         assert rendered.count("UI action invoke:") == 1
     finally:
         del McpDevOutputRenderer.__registry__[ExtendedAction]

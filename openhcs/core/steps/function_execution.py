@@ -523,8 +523,10 @@ class FunctionStepExecutor:
     def source_pattern_context(self) -> SourcePatternResolutionContext:
         """Return source-path context used to filter source-bound anchors."""
 
-        projection = self.context.runtime_source_workspace_projections.projection_or_empty(
-            axis_id=self.plan.axis_id,
+        projection = (
+            self.context.runtime_source_workspace_projections.projection_or_empty(
+                axis_id=self.plan.axis_id,
+            )
         )
         return self.context.runtime_source_binding_context_cache.source_pattern_context(
             parser=self.context.microscope_handler.parser,
@@ -804,7 +806,9 @@ class FunctionStepExecutor:
         plan = self.plan
         source_files = step_output_manifest(self.context).producer_paths_for(plan)
         if source_files is None:
-            source_projection = self.context.runtime_source_workspace_projections.projection_if_available()
+            source_projection = (
+                self.context.runtime_source_workspace_projections.projection_if_available()
+            )
             if (
                 plan.main_input_dependency.kind
                 is StepInputDependencyKind.PIPELINE_START

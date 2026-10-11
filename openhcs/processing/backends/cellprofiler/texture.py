@@ -230,7 +230,6 @@ class ObjectTextureCropBackendStrategy(
 ):
     """Extract masked object intensity crops for texture measurement."""
 
-
     @abstractmethod
     def object_intensity_crops(
         self, image: np.ndarray, labels: np.ndarray
@@ -242,7 +241,6 @@ class HaralickTextureBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
     """Compute CP-compatible 2-D Haralick feature matrices."""
-
 
     @abstractmethod
     def haralick_features(

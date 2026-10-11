@@ -46,7 +46,9 @@ def test_path_planner_scopes_source_metadata_to_compilation_axis() -> None:
             ).source_metadata_by_path.values()
         ),
         step_count=0,
-        pipeline=ResolvedPipelineDefinition(steps=(), step_scope_ids={}, step_provenance={}),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(), step_scope_ids={}, step_provenance={}
+        ),
     )
 
     planner = PathPlanner(session)

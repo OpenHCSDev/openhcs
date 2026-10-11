@@ -49,7 +49,12 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
     measurement_rows,
 )
-from openhcs.core.pipeline.function_contracts import (composed_image_payload, object_label_input_execution_mode, runtime_bound_parameters, special_inputs)
+from openhcs.core.pipeline.function_contracts import (
+    composed_image_payload,
+    object_label_input_execution_mode,
+    runtime_bound_parameters,
+    special_inputs,
+)
 from openhcs.core.runtime_artifact_queries import (
     MeasurementLabelSliceFeatureQuery,
     MeasurementTableAxisProjection,
@@ -382,8 +387,6 @@ def runtime_axis_scope(
     )
 
 
-
-
 @dataclass(frozen=True)
 class StaticFilenameParser:
     metadata: Mapping[str, object]
@@ -695,44 +698,52 @@ def _pipeline_start_contains_binding(alias):
 def _source_bound_image_adapter(output_bindings, images):
     from polystore.virtual_workspace import SourcePixelRef
     from openhcs.core.source_projection import (
-        OpenHCSPlaneAddress, SourcePlaneProjection, SourceProjectionSet,
+        OpenHCSPlaneAddress,
+        SourcePlaneProjection,
+        SourceProjectionSet,
     )
-    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceSourceProjection,
+    )
     from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParser
 
     filemanager = FileManagerStub()
     for alias, image in images.items():
         filemanager.saved[("memory", f"/src/{alias}.tif")] = image
     context = ContextStub(filemanager)
-    projections = SourceProjectionSet(tuple(
-        SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(
-                (
-                    (Microscopy.Well, 'A01'),
-                    (Microscopy.Site, '1'),
-                    (Microscopy.Channel, str(index)),
-                    (Microscopy.ZIndex, '1'),
-                    (Microscopy.Timepoint, '1'),
-                )
-            ),
-            ref=SourcePixelRef('memory', f'/src/{alias}.tif'),
-            source_alias=alias,
+    projections = SourceProjectionSet(
+        tuple(
+            SourcePlaneProjection(
+                address=OpenHCSPlaneAddress(
+                    (
+                        (Microscopy.Well, "A01"),
+                        (Microscopy.Site, "1"),
+                        (Microscopy.Channel, str(index)),
+                        (Microscopy.ZIndex, "1"),
+                        (Microscopy.Timepoint, "1"),
+                    )
+                ),
+                ref=SourcePixelRef("memory", f"/src/{alias}.tif"),
+                source_alias=alias,
+            )
+            for index, alias in enumerate(images, start=1)
         )
-        for index, alias in enumerate(images, start=1)
-    ))
+    )
     subdirectory = projections.metadata_dict(
         parser=SourceSchemaFilenameParser(),
-        microscope_handler_name='SourceBindingsSource',
-        source_filename_parser_name='SourceSchemaFilenameParser',
-        grid_dimensions=[1, 1], pixel_size=1.,
+        microscope_handler_name="SourceBindingsSource",
+        source_filename_parser_name="SourceSchemaFilenameParser",
+        grid_dimensions=[1, 1],
+        pixel_size=1.0,
     )
-    document = {'subdirectories': {'.': subdirectory}}
+    document = {"subdirectories": {".": subdirectory}}
     context.microscope_handler.metadata_handler = SimpleNamespace(
         source_workspace_root=lambda _plate: Path(context.input_dir),
         source_workspace_metadata_document=lambda _plate: document,
     )
     workspace = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
-        Path(context.input_dir), document,
+        Path(context.input_dir),
+        document,
     )
     for path, projection in workspace.source_projections_by_virtual_path.items():
         pixels = images[projection.source_alias]
@@ -740,11 +751,14 @@ def _source_bound_image_adapter(output_bindings, images):
             source_path=projection.ref.backend_address,
             source_image_names=(projection.source_alias,),
             source_spatial_domain=SourceSpatialDomain(
-                origin_yx=(0, 0), source_shape_yx=pixels.shape[-2:],
+                origin_yx=(0, 0),
+                source_shape_yx=pixels.shape[-2:],
             ),
         ).payload_with(pixels)
-        filemanager.saved[('virtual_workspace', path)] = payload
-        filemanager.saved[('virtual_workspace', str(Path(context.input_dir) / path))] = payload
+        filemanager.saved[("virtual_workspace", path)] = payload
+        filemanager.saved[
+            ("virtual_workspace", str(Path(context.input_dir) / path))
+        ] = payload
     return cellprofiler_runtime_adapter_for_test(
         runtime_value_store=RuntimeValueStore(),
         axis_scope=runtime_axis_scope(AXIS_ID),
@@ -1247,9 +1261,7 @@ def test_cellprofiler_adapter_rejects_unaddressable_source_aligned_label_stack()
 def test_cellprofiler_adapter_does_not_cache_current_image_object_selection():
     store = RuntimeValueStore()
     outputs = {
-        NUCLEI: _plan(
-            NUCLEI, ObjectLabelsArtifactType, group_component=Microscopy.Site
-        )
+        NUCLEI: _plan(NUCLEI, ObjectLabelsArtifactType, group_component=Microscopy.Site)
     }
     output_bindings = (
         _output_binding(
@@ -1415,9 +1427,7 @@ def test_cellprofiler_adapter_does_not_select_relationship_from_current_source_p
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
-                        ("1", "2"), component=Microscopy.Site
-                    ),
+                    ComponentGroupScope.from_raw(("1", "2"), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -1515,9 +1525,7 @@ def test_cellprofiler_adapter_aligns_grouped_relationships_to_runtime_slices():
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
-                        ("1", "2"), component=Microscopy.Site
-                    ),
+                    ComponentGroupScope.from_raw(("1", "2"), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -1550,9 +1558,7 @@ def test_cellprofiler_adapter_aligns_grouped_relationships_to_runtime_slices():
 def test_cellprofiler_adapter_does_not_source_scope_default_image_records():
     store = RuntimeValueStore()
     outputs = {
-        DNA_IMAGE: _plan(
-            DNA_IMAGE, ImageArtifactType, group_component=Microscopy.Site
-        )
+        DNA_IMAGE: _plan(DNA_IMAGE, ImageArtifactType, group_component=Microscopy.Site)
     }
     output_bindings = (
         _output_binding(DNA_IMAGE, ImageArtifactType, plan=outputs[DNA_IMAGE]),
@@ -1589,9 +1595,7 @@ def test_cellprofiler_adapter_does_not_source_scope_default_image_records():
                     group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
-                    Microscopy.Site
-                ),
+                producer_selection_scope=ComponentGroupScope.dynamic(Microscopy.Site),
                 component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -1678,13 +1682,9 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
                 invocation_scope=ComponentGroupScope.from_raw(
                     (AXIS_ID,), component=Microscopy.Well
                 ),
-                producer_selection_scope=ComponentGroupScope.dynamic(
-                    Microscopy.Site
-                ),
+                producer_selection_scope=ComponentGroupScope.dynamic(Microscopy.Site),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
-                        (AXIS_ID,), component=Microscopy.Well
-                    ),
+                    ComponentGroupScope.from_raw((AXIS_ID,), component=Microscopy.Well),
                     ComponentGroupScope.dynamic(Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
@@ -1778,9 +1778,7 @@ def test_cellprofiler_adapter_keeps_multisource_current_image_grouped_when_files
                     group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
-                    Microscopy.Site
-                ),
+                producer_selection_scope=ComponentGroupScope.dynamic(Microscopy.Site),
                 component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -1869,9 +1867,7 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
                     group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
-                    Microscopy.Site
-                ),
+                producer_selection_scope=ComponentGroupScope.dynamic(Microscopy.Site),
                 component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -2292,12 +2288,8 @@ def test_cellprofiler_adapter_uses_grouped_input_when_consumer_group_is_differen
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
-                        ("1",), component=Microscopy.Channel
-                    ),
-                    ComponentGroupScope.from_raw(
-                        ("1", "2"), component=Microscopy.Site
-                    ),
+                    ComponentGroupScope.from_raw(("1",), component=Microscopy.Channel),
+                    ComponentGroupScope.from_raw(("1", "2"), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -2602,9 +2594,7 @@ def test_cellprofiler_adapter_does_not_select_image_record_from_current_source_s
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
-                        ("1", "2"), component=Microscopy.Site
-                    ),
+                    ComponentGroupScope.from_raw(("1", "2"), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -2664,9 +2654,7 @@ def test_cellprofiler_adapter_does_not_select_image_record_from_current_source_s
 def test_cellprofiler_adapter_keeps_template_scoped_object_records_grouped():
     store = RuntimeValueStore()
     outputs = {
-        NUCLEI: _plan(
-            NUCLEI, ObjectLabelsArtifactType, group_component=Microscopy.Site
-        )
+        NUCLEI: _plan(NUCLEI, ObjectLabelsArtifactType, group_component=Microscopy.Site)
     }
     output_bindings = (
         _output_binding(
@@ -2710,9 +2698,7 @@ def test_cellprofiler_adapter_keeps_template_scoped_object_records_grouped():
                     group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
-                    Microscopy.Site
-                ),
+                producer_selection_scope=ComponentGroupScope.dynamic(Microscopy.Site),
                 component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -3065,9 +3051,7 @@ def test_cellprofiler_adapter_availability_accepts_grouped_runtime_inputs():
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
-                        ("1", "2"), component=Microscopy.Site
-                    ),
+                    ComponentGroupScope.from_raw(("1", "2"), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -3335,9 +3319,7 @@ def test_cellprofiler_adapter_composes_object_input_across_declared_site_axis():
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
-                        ("1", "2"), component=Microscopy.Site
-                    ),
+                    ComponentGroupScope.from_raw(("1", "2"), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -3429,9 +3411,7 @@ def test_cellprofiler_adapter_does_not_resolve_object_input_from_source_context(
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
-                        ("1", "2"), component=Microscopy.Site
-                    ),
+                    ComponentGroupScope.from_raw(("1", "2"), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -3515,9 +3495,7 @@ def test_cellprofiler_adapter_preserves_ungrouped_runtime_slice_output_stack():
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.ungrouped(),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
-                        ("1", "2"), component=Microscopy.Site
-                    ),
+                    ComponentGroupScope.from_raw(("1", "2"), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -3608,9 +3586,7 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                     paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
-                    Microscopy.Site
-                ),
+                producer_selection_scope=ComponentGroupScope.dynamic(Microscopy.Site),
                 component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -4011,17 +3987,18 @@ def test_cellprofiler_adapter_adds_and_reads_slice_aligned_spatial_grids():
 
     assert isinstance(stored, RuntimeSliceAlignedValues)
     assert stored.slice_count == 2
-    assert [
-        stored.value_at(index).name for index in range(stored.slice_count)
-    ] == ["Grid", "Grid"]
-    assert [
-        stored.value_at(index).x_origin for index in range(stored.slice_count)
-    ] == [1.0, 2.0]
+    assert [stored.value_at(index).name for index in range(stored.slice_count)] == [
+        "Grid",
+        "Grid",
+    ]
+    assert [stored.value_at(index).x_origin for index in range(stored.slice_count)] == [
+        1.0,
+        2.0,
+    ]
     saved_grids = filemanager.saved[("memory", "/memory/Grid.pkl")]
     assert isinstance(saved_grids, RuntimeSliceAlignedValues)
     assert [
-        saved_grids.value_at(index).x_origin
-        for index in range(saved_grids.slice_count)
+        saved_grids.value_at(index).x_origin for index in range(saved_grids.slice_count)
     ] == [
         1.0,
         2.0,
@@ -4380,9 +4357,7 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
                     ("1", "2"), component=Microscopy.Site
                 ),
                 component_scopes=(
-                    ComponentGroupScope.from_raw(
-                        ("1", "2"), component=Microscopy.Site
-                    ),
+                    ComponentGroupScope.from_raw(("1", "2"), component=Microscopy.Site),
                 ),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -4849,9 +4824,7 @@ def test_cellprofiler_adapter_aligns_multiplane_measurements_across_groups():
                     group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
-                    Microscopy.Site
-                ),
+                producer_selection_scope=ComponentGroupScope.dynamic(Microscopy.Site),
                 component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -5277,9 +5250,7 @@ def test_cellprofiler_adapter_multiplane_measurement_alignment_is_feature_scoped
                     group_component=Microscopy.Site,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
-                producer_selection_scope=ComponentGroupScope.dynamic(
-                    Microscopy.Site
-                ),
+                producer_selection_scope=ComponentGroupScope.dynamic(Microscopy.Site),
                 component_scopes=(ComponentGroupScope.dynamic(Microscopy.Site),),
                 consumer_variable_components=(Microscopy.Site,),
             ),
@@ -6109,9 +6080,7 @@ def test_cellprofiler_module_executor_reads_objects_for_measurements(
     def measure_object_size_shape(
         image_arg: ImagePayload, *, labels: ObjectLabelValue
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
-        np.testing.assert_array_equal(
-            image_arg.data, image.data
-        )
+        np.testing.assert_array_equal(image_arg.data, image.data)
         np.testing.assert_array_equal(object_label_dense_array(labels), labels_array)
         return image_arg, rows
 
@@ -6266,7 +6235,10 @@ def test_cellprofiler_object_only_pure_2d_module_executes_label_runtime_slices(
     @runtime_bound_parameters(SliceIndexRuntimeParameter)
     @with_processing_contract(Pure2DContract)
     def measure_object_size_shape(
-        image_arg: ImagePayload, *, labels: ObjectLabelValue, slice_index: int | None = None
+        image_arg: ImagePayload,
+        *,
+        labels: ObjectLabelValue,
+        slice_index: int | None = None,
     ) -> tuple[object, DataclassMeasurementColumnarRows]:
         image_pixels = np.asarray(image_arg.data)
         label_pixels = object_label_dense_array(labels)
@@ -6981,9 +6953,7 @@ def test_measurement_lookup_uses_canonical_runtime_identifier_for_numbered_featu
 
 
 def test_cellprofiler_child_count_lookup_uses_parent_row_domain():
-    lookup = CELLPROFILER_MEASUREMENT_DIALECT.feature_lookup(
-        "Children_PH3_Count"
-    )
+    lookup = CELLPROFILER_MEASUREMENT_DIALECT.feature_lookup("Children_PH3_Count")
 
     assert lookup.query_object_name(NUCLEI) is None
 
@@ -9685,9 +9655,7 @@ def test_cellprofiler_module_executor_records_relationship_and_measurement_outpu
         ),
         calculate_per_parent_means: bool = False,
     ):
-        np.testing.assert_array_equal(
-            image_arg.data, image.data
-        )
+        np.testing.assert_array_equal(image_arg.data, image.data)
         np.testing.assert_array_equal(object_label_dense_array(parent_labels), cells)
         np.testing.assert_array_equal(object_label_dense_array(child_labels), nuclei)
         return (

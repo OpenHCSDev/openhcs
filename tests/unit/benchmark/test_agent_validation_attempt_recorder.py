@@ -160,20 +160,35 @@ def _ui_pipeline_document(source: str) -> UiCodeDocument:
 
 def _accepted(operation_id: str) -> SessionOperationResult:
     return SessionOperationResult(
-        operation_id=operation_id, status="accepted", target_scope_ids=("/plate",),
+        operation_id=operation_id,
+        status="accepted",
+        target_scope_ids=("/plate",),
     )
 
 
 def _finished_datasets() -> DatasetListState:
     row = DatasetRowState(
-        scope_id="/plate", name="plate", root="/plate", pipeline_path=None,
-        selected=True, initialized=True, compiled=True, init_pending=False,
-        compile_pending=False, execution_active=False, status_prefix="",
-        orchestrator_state="completed", execution_id="execution-1",
-        terminal_status="complete", runtime_state=None, runtime_percent=None,
+        scope_id="/plate",
+        name="plate",
+        root="/plate",
+        pipeline_path=None,
+        selected=True,
+        initialized=True,
+        compiled=True,
+        init_pending=False,
+        compile_pending=False,
+        execution_active=False,
+        status_prefix="",
+        orchestrator_state="completed",
+        execution_id="execution-1",
+        terminal_status="complete",
+        runtime_state=None,
+        runtime_percent=None,
         queue_position=None,
     )
-    return DatasetListState(rows=(row,), selected_scope_ids=("/plate",), execution_state="idle")
+    return DatasetListState(
+        rows=(row,), selected_scope_ids=("/plate",), execution_state="idle"
+    )
 
 
 def test_attempt_recorder_derives_dsl_evidence_from_mcp_receipts(tmp_path: Path):

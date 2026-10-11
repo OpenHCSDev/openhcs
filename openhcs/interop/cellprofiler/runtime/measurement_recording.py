@@ -149,7 +149,8 @@ class CellProfilerMeasurementTableModule(ABC):
             if object_name is not None
             else MeasurementSubject(
                 MeasurementScope.SAMPLE,
-                source_image_name or CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE].casefold(),
+                source_image_name
+                or CELLPROFILER_SCOPE_NAMES[MeasurementScope.SAMPLE].casefold(),
             )
         )
         return MeasurementTable(
@@ -712,9 +713,11 @@ class ProducedImageMeasurementRecordMixin(CellProfilerMeasurementTableModule):
     ) -> ImagePayloadMetadata:
         del rows
         source_spec = cls.primary_image_output_spec(request)
-        return (request.source.payload
+        return (
+            request.source.payload
             if source_spec is None
-            else request.artifact_output_value(source_spec)).metadata
+            else request.artifact_output_value(source_spec)
+        ).metadata
 
 
 class ProducedImagePayloadMeasurementRecordMixin(
@@ -759,9 +762,7 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
             request.adapter.request.source_binding_plan
         )
         identity_axes = tuple(
-            payload.metadata.source_provenance.image_set_axis(
-                identity_policy
-            )
+            payload.metadata.source_provenance.image_set_axis(identity_policy)
             for payload in source_payloads
         )
         missing_identity_specs = tuple(
@@ -786,9 +787,7 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
             )
         source_metadata = ImagePayloadMetadata.compose(
             source_payloads,
-            source_metadata=tuple(
-                payload.metadata for payload in source_payloads
-            ),
+            source_metadata=tuple(payload.metadata for payload in source_payloads),
         ).collapse_leading_plane_axis()
         return source_metadata
 

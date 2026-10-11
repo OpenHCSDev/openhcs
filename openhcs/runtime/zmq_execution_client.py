@@ -777,6 +777,7 @@ class FunctionCatalogExecutionClient(
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationDestinationControlResponse,
         )
+
         response = self._send_function_catalog_exchange(
             request,
             operation_deadline=operation_deadline,
@@ -788,17 +789,23 @@ class FunctionCatalogExecutionClient(
         )
 
     def observe_custom_function_registration(
-        self, handle: CustomFunctionRegistrationHandle,
+        self,
+        handle: CustomFunctionRegistrationHandle,
     ) -> CustomFunctionRegistrationObservation:
         """One read-only exchange; never register/load the requested source."""
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationObservationRequest,
             CustomFunctionRegistrationObservationControlResponse,
         )
+
         response = self._send_function_catalog_exchange(
             CustomFunctionRegistrationObservationRequest(handle),
         )
-        return CustomFunctionRegistrationObservationControlResponse.from_control_response(response).value
+        return (
+            CustomFunctionRegistrationObservationControlResponse.from_control_response(
+                response
+            ).value
+        )
 
     def function_catalog_preparation(
         self,
@@ -1012,7 +1019,9 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         task: OpenHCSExecutionSubmission,
         config=None,
     ) -> ExecuteRequest:
-        return self.serialize_prepared_request(ZMQExecutionRequestBuilder.from_task(task))
+        return self.serialize_prepared_request(
+            ZMQExecutionRequestBuilder.from_task(task)
+        )
 
     def serialize_prepared_request(
         self, request_builder: ZMQExecutionRequestBuilder

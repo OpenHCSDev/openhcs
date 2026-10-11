@@ -143,7 +143,8 @@ def _anchor_executor(
     )
     executor.context.runtime_source_workspace_projections = (
         WorkspaceSourceProjections.from_context(
-            executor.context, cache=source_workspace_projection_cache,
+            executor.context,
+            cache=source_workspace_projection_cache,
         )
     )
     if output_manifest is not None:
@@ -295,7 +296,15 @@ def test_workspace_source_files_select_exact_projection_roles(
     plate_path = tmp_path / "plate"
     canonical_path = "A01_s001_w1_z001_t001.tif"
     artifact_path = f"_source/Illumination/{canonical_path}"
-    address = OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1")))
+    address = OpenHCSPlaneAddress(
+        (
+            (Microscopy.Well, "A01"),
+            (Microscopy.Site, "1"),
+            (Microscopy.Channel, "1"),
+            (Microscopy.ZIndex, "1"),
+            (Microscopy.Timepoint, "1"),
+        )
+    )
     plane_projection = SourcePlaneProjection(
         address=address,
         ref=SourcePixelRef("disk", "/source/image.tif"),
@@ -334,7 +343,15 @@ def test_workspace_logical_identity_requires_paired_projection_declaration(
     path = "A01_s001_w1_z001_t001.tif"
     full_path = str(tmp_path / path)
     first = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+        address=OpenHCSPlaneAddress(
+            (
+                (Microscopy.Well, "A01"),
+                (Microscopy.Site, 1),
+                (Microscopy.Channel, 1),
+                (Microscopy.ZIndex, 1),
+                (Microscopy.Timepoint, 1),
+            )
+        ),
         ref=SourcePixelRef("disk", "/physical/shared.tif"),
         source_alias="Original",
     )
@@ -350,7 +367,16 @@ def test_workspace_logical_identity_requires_paired_projection_declaration(
 
     # Sharing a backend reference does not prove a shared logical declaration.
     declarations[full_path] = replace(
-        first, address=OpenHCSPlaneAddress(((Microscopy.Well, "B01"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1)))
+        first,
+        address=OpenHCSPlaneAddress(
+            (
+                (Microscopy.Well, "B01"),
+                (Microscopy.Site, 1),
+                (Microscopy.Channel, 1),
+                (Microscopy.ZIndex, 1),
+                (Microscopy.Timepoint, 1),
+            )
+        ),
     )
     assert projection.logical_path_for(lookup) == full_path
     assert projection.source_path_for(lookup) == "/physical/shared.tif"
@@ -367,7 +393,15 @@ def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance
     projection_set = SourceProjectionSet(
         tuple(
             SourcePlaneProjection(
-                address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, str(channel)), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
+                address=OpenHCSPlaneAddress(
+                    (
+                        (Microscopy.Well, "A01"),
+                        (Microscopy.Site, "1"),
+                        (Microscopy.Channel, str(channel)),
+                        (Microscopy.ZIndex, "1"),
+                        (Microscopy.Timepoint, "1"),
+                    )
+                ),
                 ref=SourcePixelRef("disk", str(source_path)),
                 source_alias=alias,
             )
@@ -424,12 +458,10 @@ def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance
         for virtual_path in subdirectory["image_files"]
     ) == ("Raw", "Illum")
     assert tuple(
-        payload.metadata.source_image_names
-        for payload in projected_payloads
+        payload.metadata.source_image_names for payload in projected_payloads
     ) == (("Raw",), ("Illum",))
     assert all(
-        "source_alias"
-        not in (payload.metadata.source_component_metadata or {})
+        "source_alias" not in (payload.metadata.source_component_metadata or {})
         for payload in projected_payloads
     )
 
@@ -468,7 +500,15 @@ def test_workspace_replay_preserves_collapsed_semantic_identity(
     projection_set = SourceProjectionSet(
         (
             SourcePlaneProjection(
-                address=OpenHCSPlaneAddress(((Microscopy.Well, "A14"), (Microscopy.Site, 1), (Microscopy.Channel, 1), (Microscopy.ZIndex, 1), (Microscopy.Timepoint, 1))),
+                address=OpenHCSPlaneAddress(
+                    (
+                        (Microscopy.Well, "A14"),
+                        (Microscopy.Site, 1),
+                        (Microscopy.Channel, 1),
+                        (Microscopy.ZIndex, 1),
+                        (Microscopy.Timepoint, 1),
+                    )
+                ),
                 ref=SourcePixelRef("disk", "/outputs/A14_mosaic.tif"),
                 source_alias="neurite",
                 image_metadata=persisted_metadata,
@@ -538,7 +578,15 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
     )
     virtual_path = "A01_s001_w1_z001_t001.tif"
     source_plane = SourcePlaneProjection(
-        address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
+        address=OpenHCSPlaneAddress(
+            (
+                (Microscopy.Well, "A01"),
+                (Microscopy.Site, "1"),
+                (Microscopy.Channel, "1"),
+                (Microscopy.ZIndex, "1"),
+                (Microscopy.Timepoint, "1"),
+            )
+        ),
         ref=SourcePixelRef("disk", str(source_path)),
         source_alias="OrigBlue",
     )
@@ -1066,9 +1114,10 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
     )
 
     index = store.producer_record_index_for(consumer, SourceSchemaFilenameParser())
-    assert [record.output_path for record in index.matching_records(
-        "A14_s{iii}_w3_z001_t001.tif"
-    )] == [
+    assert [
+        record.output_path
+        for record in index.matching_records("A14_s{iii}_w3_z001_t001.tif")
+    ] == [
         str(output_dir / "A14_s001_w3_z001_t001.tif"),
         str(output_dir / "A14_s002_w3_z001_t001.tif"),
     ]
@@ -2848,7 +2897,11 @@ def test_main_flow_input_owns_runtime_binding_scope_with_auxiliary_source() -> N
                 spec=spec,
                 storage_plan=None,
                 projection=None,
-                main_flow_projection=(MainFlowInputProjection.DECLARED_SOURCE_IMAGE if input_index == 0 else None),
+                main_flow_projection=(
+                    MainFlowInputProjection.DECLARED_SOURCE_IMAGE
+                    if input_index == 0
+                    else None
+                ),
             )
             for input_index, (edge_key, spec) in enumerate(
                 zip(
@@ -3152,7 +3205,6 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
                 spec=pixel_size_spec,
                 storage_plan=None,
                 projection=None,
-
             ),
         )
     )
@@ -3290,7 +3342,12 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     assert mask_edge.storage_plan is not None
     assert (mask_edge.main_flow_projection is not None) is False
     assert invocation.contract.accepts_implicit_main_flow_input is True
-    assert compiled_pattern.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) is None
+    assert (
+        compiled_pattern.default_group.main_flow_input_refs(
+            source_bindings=CompiledSourceBindingPlan.empty()
+        )
+        is None
+    )
     assert tuple(
         binding.alias
         for binding in scope.main_flow_source_binding_plan.binding_declarations
@@ -3733,7 +3790,15 @@ def test_alias_only_workspace_filter_excludes_unselected_source_and_orders_stack
     )
     source_planes = tuple(
         SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(((Microscopy.Well, "R04C09"), (Microscopy.Site, "11"), (Microscopy.Channel, channel), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
+            address=OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, "R04C09"),
+                    (Microscopy.Site, "11"),
+                    (Microscopy.Channel, channel),
+                    (Microscopy.ZIndex, "1"),
+                    (Microscopy.Timepoint, "1"),
+                )
+            ),
             ref=SourcePixelRef("disk", f"/source/ch{channel}.tiff"),
             source_alias=binding.alias,
         )
@@ -3819,7 +3884,15 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
         source_metadata_by_path={virtual_path: source_metadata},
         source_projections_by_virtual_path={
             virtual_path: SourcePlaneProjection(
-                address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "2"), (Microscopy.Channel, "1"), (Microscopy.ZIndex, "3"), (Microscopy.Timepoint, "4"))),
+                address=OpenHCSPlaneAddress(
+                    (
+                        (Microscopy.Well, "A01"),
+                        (Microscopy.Site, "2"),
+                        (Microscopy.Channel, "1"),
+                        (Microscopy.ZIndex, "3"),
+                        (Microscopy.Timepoint, "4"),
+                    )
+                ),
                 ref=source_ref,
                 source_alias="OrigDNA",
                 source_metadata=source_metadata,
@@ -3882,7 +3955,9 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
         Microscopy.Well.name: "A01",
         SourceFilterSubject.EXTENSION.value: ".tif",
     }
-    assert projected.metadata.source_provenance.represented_source_image_names == ("OrigDNA",)
+    assert projected.metadata.source_provenance.represented_source_image_names == (
+        "OrigDNA",
+    )
 
 
 def test_step_output_load_filter_skips_source_binding_filter() -> None:
@@ -3966,7 +4041,15 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     )
     source_planes = tuple(
         SourcePlaneProjection(
-            address=OpenHCSPlaneAddress(((Microscopy.Well, "A01"), (Microscopy.Site, "1"), (Microscopy.Channel, str(channel)), (Microscopy.ZIndex, "1"), (Microscopy.Timepoint, "1"))),
+            address=OpenHCSPlaneAddress(
+                (
+                    (Microscopy.Well, "A01"),
+                    (Microscopy.Site, "1"),
+                    (Microscopy.Channel, str(channel)),
+                    (Microscopy.ZIndex, "1"),
+                    (Microscopy.Timepoint, "1"),
+                )
+            ),
             ref=SourcePixelRef("disk", str(source_path)),
             source_alias=alias,
         )
@@ -4044,7 +4127,9 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         "source_workspace_projection_authority",
         lambda _self: SimpleNamespace(
             projection_if_available=lambda: projection,
-            projection_or_empty=lambda *, axis_id=None: projection.filtered_by_axis(axis_id=axis_id),
+            projection_or_empty=lambda *, axis_id=None: projection.filtered_by_axis(
+                axis_id=axis_id
+            ),
         ),
     )
 
@@ -4944,12 +5029,14 @@ def test_function_output_path_uses_payload_identity_over_input_carrier(
         },
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
 
-    output_path = FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
+    output_path = FunctionOutputIdentity.path_from_request(
+        FunctionOutputPathRequest(
             parser=SourceSchemaFilenameParser(),
             output_dir=tmp_path,
             output_payload=payload,
             input_path="A14_s001_w1_z001_t001.tif",
-        ))
+        )
+    )
 
     assert output_path.name == "A14_s002_w3_z001_t001.tif"
 
@@ -4968,12 +5055,14 @@ def test_function_output_path_uses_payload_identity_without_input_path(
         },
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
 
-    output_path = FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
+    output_path = FunctionOutputIdentity.path_from_request(
+        FunctionOutputPathRequest(
             parser=SourceSchemaFilenameParser(),
             output_dir=tmp_path,
             output_payload=payload,
             input_path=None,
-        ))
+        )
+    )
 
     assert output_path.name == "A14_s001_w5_z001_t001.tif"
 
@@ -4999,10 +5088,7 @@ def test_function_output_identity_completes_partial_payload_metadata_from_fallba
     )
 
     assert identity is not None
-    assert (
-        identity.filename(parser)
-        == "Sequence1_s001_w1_z001_t000.tif"
-    )
+    assert identity.filename(parser) == "Sequence1_s001_w1_z001_t000.tif"
 
 
 def test_function_output_identity_uses_fallback_path_extension_for_payload_identity() -> (
@@ -5026,10 +5112,7 @@ def test_function_output_identity_uses_fallback_path_extension_for_payload_ident
     )
 
     assert identity is not None
-    assert (
-        identity.filename(parser)
-        == "A01_s001_w2_z001_t001.png"
-    )
+    assert identity.filename(parser) == "A01_s001_w2_z001_t001.png"
 
 
 @pytest.mark.parametrize(
@@ -5048,9 +5131,7 @@ def test_source_stack_output_takes_image_extension_not_artifact_key(
     metadata = ImagePayloadMetadata(
         source_provenance=SourceImageProvenance(
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-                paths=tuple(
-                    f"A01_s001_w0_z{z:03d}_t001.tif" for z in (1, 2, 3)
-                ),
+                paths=tuple(f"A01_s001_w0_z{z:03d}_t001.tif" for z in (1, 2, 3)),
                 component_metadata=tuple(
                     {
                         "well": "A01",
@@ -5099,12 +5180,14 @@ def test_function_output_path_uses_input_identity_for_multi_plane_carrier(
         ),
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
-    output_path = FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
+    output_path = FunctionOutputIdentity.path_from_request(
+        FunctionOutputPathRequest(
             parser=SourceSchemaFilenameParser(),
             output_dir=tmp_path,
             output_payload=payload,
             input_path="A14_s001_w1_z001_t001.tif",
-        ))
+        )
+    )
 
     assert output_path.name == "A14_s001_w1_z001_t001.tif"
 
@@ -5122,12 +5205,14 @@ def test_function_output_path_rejects_multi_plane_carrier_without_input_path(
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
     with pytest.raises(ValueError, match="multi-plane source provenance"):
-        FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
+        FunctionOutputIdentity.path_from_request(
+            FunctionOutputPathRequest(
                 parser=SourceSchemaFilenameParser(),
                 output_dir=tmp_path,
                 output_payload=payload,
                 input_path=None,
-            ))
+            )
+        )
 
 
 def test_function_output_path_uses_variable_component_identity(
@@ -5239,10 +5324,7 @@ def test_collapsed_output_identity_uses_retained_source_contributors(
     assert identity.filename_component_values is not None
     assert identity.filename_component_values["site"] == 1
     assert filename_identity is not None
-    assert (
-        filename_identity.filename(request.parser)
-        == "A14_s001_w1_z001_t001.tif"
-    )
+    assert filename_identity.filename(request.parser) == "A14_s001_w1_z001_t001.tif"
 
 
 def test_composite_then_z_collapse_uses_current_scalar_identity(
@@ -5386,10 +5468,7 @@ def test_function_output_path_rejects_variation_outside_identity_components(
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
     assert payload.metadata.source_provenance.source_plane_count == 2
-    assert (
-        payload.metadata.source_image_provenance_planes.contributor_count
-        == 0
-    )
+    assert payload.metadata.source_image_provenance_planes.contributor_count == 0
 
     with pytest.raises(ValueError, match="varies outside identity components"):
         FunctionOutputIdentity.from_request(
@@ -5602,15 +5681,14 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
         expected += "_Corrected"
     assert Path(filemanager.saved_paths[0]).name == expected + ".tif"
     assert (
-        filemanager.saved_payloads[0].metadata.source_component_metadata[
-            "site"
-        ]
-        == "1"
+        filemanager.saved_payloads[0].metadata.source_component_metadata["site"] == "1"
     )
     assert records[0].component_values["site"] == 1
     if named_topology != "anonymous":
         assert records[0].output_context == named_context
-        assert filemanager.saved_payloads[0].metadata.source_image_names == ("Corrected",)
+        assert filemanager.saved_payloads[0].metadata.source_image_names == (
+            "Corrected",
+        )
     assert filemanager.saved_payloads[0].data is payload.data
 
 
@@ -5644,8 +5722,7 @@ def qualified_producer_manifest(tmp_path):
         records.append(
             ProducedOutputSemantics.from_output(
                 producer,
-                tmp_path
-                / identity.filename(parser),
+                tmp_path / identity.filename(parser),
                 identity,
                 output_context=AlignedImageSliceContext.main_flow(
                     output_key=f"Output{plane}",
@@ -5671,9 +5748,7 @@ def test_step_output_manifest_batch_lookup_preserves_aliases_order_and_duplicate
         calls.append(identity)
         return original(identity, parser)
 
-    monkeypatch.setattr(
-        FunctionOutputIdentity, "filename", count_filename
-    )
+    monkeypatch.setattr(FunctionOutputIdentity, "filename", count_filename)
     paths = (
         records[1].output_path,
         "A01_s001_w2_z001_t001.tif",
@@ -5795,7 +5870,9 @@ def test_producer_admission_rederives_live_storage_aliases_each_epoch(
 ):
     store, producer, consumer, records, parser = qualified_producer_manifest
     storage_components = dict(records[0].filename_values)
-    record = replace(records[0], filename_component_values=storage_components).published()
+    record = replace(
+        records[0], filename_component_values=storage_components
+    ).published()
     store.record_outputs(producer, (record,))
     old_index = store.producer_record_index_for(consumer, parser)
     old_alias = record.without_filename_qualifier().filename(parser)

@@ -1120,9 +1120,9 @@ def mask_image(
     output_mask = restore_image_mask_planes(
         image.data, tuple((result[1] for result in masked_plane_results))
     )
-    return replace(
-        image.metadata, mask_defines_border=True
-    ).payload_with(masked_data, output_mask)
+    return replace(image.metadata, mask_defines_border=True).payload_with(
+        masked_data, output_mask
+    )
 
 
 def masked_image_plane(
@@ -1141,7 +1141,8 @@ def masked_image_plane(
     existing_mask = image.mask
     if existing_mask is not None:
         existing_projected_mask = bare_image.mask_for_data(
-            image_data, mask=existing_mask,
+            image_data,
+            mask=existing_mask,
         )
         if existing_projected_mask is not None:
             binary_mask = binary_mask & np.asarray(existing_projected_mask, dtype=bool)
@@ -1396,9 +1397,9 @@ def flip_and_rotate(
                         max_j = max_area_idx[1] + 1
                         pixel_data = pixel_data[min_i:max_i, min_j:max_j]
     return (
-        image.metadata
-        .with_spatial_resize(pixel_data.shape[:2])
-        .payload_with(pixel_data.astype(np.float32), None),
+        image.metadata.with_spatial_resize(pixel_data.shape[:2]).payload_with(
+            pixel_data.astype(np.float32), None
+        ),
         DataclassMeasurementColumnarRows(
             (RotationResult(slice_index=0, rotation_angle=angle),),
             row_type=RotationResult,

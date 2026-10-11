@@ -3,7 +3,9 @@
 from pathlib import Path
 
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.pipeline.function_contracts import object_label_input_execution_mode_from_callable
+from openhcs.core.pipeline.function_contracts import (
+    object_label_input_execution_mode_from_callable,
+)
 from openhcs.processing.backends.cellprofiler.area_occupied import (
     measure_image_volume_occupied_binary,
     measure_image_volume_occupied_objects,

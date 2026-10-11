@@ -109,7 +109,10 @@ from openhcs.processing.materialization import (
     WriteMode,
 )
 
-from openhcs.processing.materialization.core import ColumnarCsvOutput, RenderedColumnarCsvOutput
+from openhcs.processing.materialization.core import (
+    ColumnarCsvOutput,
+    RenderedColumnarCsvOutput,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -226,7 +229,9 @@ class SpreadsheetFileSelection:
     file_name: str
 
     relationship_subject_name: ClassVar[str] = "Object relationships"
-    experiment_subject_name: ClassVar[str] = CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.RUN)
+    experiment_subject_name: ClassVar[str] = (
+        CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.RUN)
+    )
 
     @classmethod
     def for_subject(
@@ -285,7 +290,9 @@ class SpreadsheetFileSelection:
         references = tuple(
             name
             for name in (() if image_rows is None else image_rows.columns)
-            if CellProfilerMeasurementDialect.row_identity_contract.is_aggregate_sample_number_reference(name)
+            if CellProfilerMeasurementDialect.row_identity_contract.is_aggregate_sample_number_reference(
+                name
+            )
         )
         return frozenset(
             subject
@@ -407,7 +414,10 @@ class SpreadsheetFileSelection:
         )
 
     def header_rows(
-        self, rows: ColumnarRows, *, active_subjects: tuple[str, ...],
+        self,
+        rows: ColumnarRows,
+        *,
+        active_subjects: tuple[str, ...],
     ) -> tuple[tuple[str, ...], ...]:
         """Derive native headers in their existing first-present field order."""
 
@@ -492,7 +502,9 @@ class SpreadsheetFileSelection:
     ) -> str:
         """Realized view of this selection's canonical typed CSV output."""
         output = self.prepare_csv(
-            rows, active_subjects=active_subjects, delimiter=delimiter,
+            rows,
+            active_subjects=active_subjects,
+            delimiter=delimiter,
             nan_representation=nan_representation,
         )
         return output.options.render(output.content)
@@ -508,7 +520,8 @@ class CellProfilerSpreadsheetCsvOptions(CsvOptions):
     nan_representation: SpreadsheetNanRepresentation
 
     def csv_schema(
-        self, rows: ColumnarRows,
+        self,
+        rows: ColumnarRows,
     ) -> tuple[tuple[str, ...], tuple[tuple[str, ...], ...]]:
         columns, headers = self.selection.csv_schema(
             rows,
@@ -731,7 +744,8 @@ def prepare_spreadsheet_bundle(
 
 
 def render_spreadsheet_bundle(
-    artifact_batch: RuntimeArtifactBatch, **kwargs: object,
+    artifact_batch: RuntimeArtifactBatch,
+    **kwargs: object,
 ) -> dict[str, str | bytes]:
     """Realized view of the canonical schema-bearing spreadsheet bundle."""
     return {
@@ -987,7 +1001,8 @@ def _source_metadata_measurement_rows(
     ] = []
     dialect = CellProfilerDatabaseColumnDialect()
     image_subject = MeasurementSubject(
-        MeasurementScope.SAMPLE, CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.SAMPLE)
+        MeasurementScope.SAMPLE,
+        CELLPROFILER_MEASUREMENT_DIALECT.scope_name(MeasurementScope.SAMPLE),
     )
     for slice_index in image_numbers_by_slice:
         provenance = table.source_provenance.for_source_plane(slice_index)
@@ -1003,8 +1018,11 @@ def _source_metadata_measurement_rows(
             acquisition.update(
                 dialect.source_metadata_values(
                     None,
-                    Path(provenance.source_path)
-                    if provenance.source_path is not None else None,
+                    (
+                        Path(provenance.source_path)
+                        if provenance.source_path is not None
+                        else None
+                    ),
                 )
             )
         file_values: dict[str, str] = {}
@@ -1028,7 +1046,12 @@ def _source_metadata_measurement_rows(
             )
         if metadata or acquisition or file_values:
             rows.append(
-                (image_numbers_by_slice[slice_index], metadata, acquisition, file_values)
+                (
+                    image_numbers_by_slice[slice_index],
+                    metadata,
+                    acquisition,
+                    file_values,
+                )
             )
     return tuple(rows)
 
@@ -1175,7 +1198,9 @@ def _with_requested_aggregates(
     reference_means = frozenset(
         name
         for name in (() if source_image is None else source_image.columns)
-        if CellProfilerMeasurementDialect.row_identity_contract.is_aggregate_sample_number_reference(name)
+        if CellProfilerMeasurementDialect.row_identity_contract.is_aggregate_sample_number_reference(
+            name
+        )
     )
     if not (mean or median or standard_deviation or reference_means):
         return tables
@@ -1558,8 +1583,10 @@ def _prepare_spreadsheet_partition(
             )
             for path, output in bundle.items()
         }
-    return {path: output.realized_for_composition(partition_fields=request.partition_fields)
-        for path, output in bundle.items()}
+    return {
+        path: output.realized_for_composition(partition_fields=request.partition_fields)
+        for path, output in bundle.items()
+    }
 
 
 def _partitioned_spreadsheet_export(

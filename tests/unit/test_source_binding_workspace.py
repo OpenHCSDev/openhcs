@@ -11,7 +11,9 @@ import tifffile
 
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
-from openhcs.processing.backends.cellprofiler.infrastructure import relative_voxel_spacing
+from openhcs.processing.backends.cellprofiler.infrastructure import (
+    relative_voxel_spacing,
+)
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
@@ -69,29 +71,46 @@ def test_transient_axis_views_observe_each_new_projection_without_reusing_releas
     cache = VirtualWorkspaceSourceProjectionCache()
     refs = MappingProxyType({"A01.tif": SourcePixelRef("disk", "source.tif")})
     for generation in range(20):
-        metadata = MappingProxyType({"A01.tif": MappingProxyType({
-            "well": "A01", "generation": str(generation),
-        })})
+        metadata = MappingProxyType(
+            {
+                "A01.tif": MappingProxyType(
+                    {
+                        "well": "A01",
+                        "generation": str(generation),
+                    }
+                )
+            }
+        )
         projection = VirtualWorkspaceSourceProjection(refs, metadata, "/plate")
         filtered = cache.filtered_by_axis(projection, axis_id="A01")
-        assert filtered.source_metadata_by_path["A01.tif"]["generation"] == str(generation)
+        assert filtered.source_metadata_by_path["A01.tif"]["generation"] == str(
+            generation
+        )
         del projection
 
 
-def test_source_projection_document_replacement_preserves_absence_and_schema_rejection(tmp_path):
+def test_source_projection_document_replacement_preserves_absence_and_schema_rejection(
+    tmp_path,
+):
     cache = VirtualWorkspaceSourceProjectionCache()
-    native_document = {FIELDS.SUBDIRECTORIES: {
-        "images": {FIELDS.IMAGE_FILES: ["native.tif"]},
-    }}
-    empty_workspace = {FIELDS.SUBDIRECTORIES: {
-        "images": {FIELDS.WORKSPACE_MAPPING: {}},
-    }}
+    native_document = {
+        FIELDS.SUBDIRECTORIES: {
+            "images": {FIELDS.IMAGE_FILES: ["native.tif"]},
+        }
+    }
+    empty_workspace = {
+        FIELDS.SUBDIRECTORIES: {
+            "images": {FIELDS.WORKSPACE_MAPPING: {}},
+        }
+    }
     for document in (native_document, empty_workspace):
         assert cache.projection_for(tmp_path, document) is None
         assert cache.projection_for(tmp_path, document) is None
-    malformed_document = {FIELDS.SUBDIRECTORIES: {
-        "images": {FIELDS.WORKSPACE_MAPPING: []},
-    }}
+    malformed_document = {
+        FIELDS.SUBDIRECTORIES: {
+            "images": {FIELDS.WORKSPACE_MAPPING: []},
+        }
+    }
     with pytest.raises(RuntimeError, match="workspace_mapping must be a mapping"):
         cache.projection_for(tmp_path, malformed_document)
     assert cache.projection_for(tmp_path, native_document) is None
@@ -110,68 +129,113 @@ def _filemanager() -> FileManager:
     return FileManager(dict(storage_registry))
 
 
-@pytest.mark.parametrize("selection,expected_sites", ((None, tuple(range(1, 10))), (7, (7,)), (3, (3,))))
+@pytest.mark.parametrize(
+    "selection,expected_sites", ((None, tuple(range(1, 10))), (7, (7,)), (3, (3,)))
+)
 def test_prepared_workspace_admits_declared_source_universe_without_rewriting_provenance(
-    tmp_path, monkeypatch, selection, expected_sites,
+    tmp_path,
+    monkeypatch,
+    selection,
+    expected_sites,
 ):
     source = tmp_path / "source"
     source.mkdir()
-    files = tuple(source / f"A01_s{site:03}_w{channel}.tif"
-                  for site in range(1, 10) for channel in (1, 2))
+    files = tuple(
+        source / f"A01_s{site:03}_w{channel}.tif"
+        for site in range(1, 10)
+        for channel in (1, 2)
+    )
     for path in files:
         _write_tiff_stack(path, (11,))
     filemanager = _filemanager()
     workspace = tmp_path / "prepared"
     materialization = SourceBindingWorkspaceProjector(
-        SourceBindingsConfig(metadata_rules=(MetadataExtractionRule(
-            source=MetadataSource.FILE_NAME,
-            pattern=r"(?P<well>A\d+)_s(?P<site>\d+)_w(?P<channel>\d+)",
-        ),)),
+        SourceBindingsConfig(
+            metadata_rules=(
+                MetadataExtractionRule(
+                    source=MetadataSource.FILE_NAME,
+                    pattern=r"(?P<well>A\d+)_s(?P<site>\d+)_w(?P<channel>\d+)",
+                ),
+            )
+        ),
         parser=SourceSchemaFilenameParser(),
-    ).materialize(source, workspace, filemanager=filemanager,
-                  source_backend=Backend.DISK, workspace_backend=Backend.DISK,
-                  source_files=files)
+    ).materialize(
+        source,
+        workspace,
+        filemanager=filemanager,
+        source_backend=Backend.DISK,
+        workspace_backend=Backend.DISK,
+        source_files=files,
+    )
     (workspace / FIELDS.DEFAULT_SUBDIRECTORY).mkdir(exist_ok=True)
     original_bytes = materialization.metadata_path.read_bytes()
-    config = SourceBindingsConfig(source_filters=() if selection is None else (
-        SourceFilterClause(subject=SourceFilterSubject.FILE,
-                          match_type=SourceFilterMatchType.CONTAINS,
-                          value=f"_s{selection:03}_"),
-    ))
-    handler = DatasetSourceChoice.named("auto").open(workspace, filemanager=filemanager, source_bindings_config=config)
+    config = SourceBindingsConfig(
+        source_filters=(
+            ()
+            if selection is None
+            else (
+                SourceFilterClause(
+                    subject=SourceFilterSubject.FILE,
+                    match_type=SourceFilterMatchType.CONTAINS,
+                    value=f"_s{selection:03}_",
+                ),
+            )
+        )
+    )
+    handler = DatasetSourceChoice.named("auto").open(
+        workspace, filemanager=filemanager, source_bindings_config=config
+    )
     from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
+
     assert isinstance(handler, OpenHCSDatasetSource)
     handler.initialize_workspace(workspace, filemanager)
     cache = VirtualWorkspaceSourceProjectionCache()
     full = WorkspaceSourceProjections.from_dataset_metadata(
-        dataset_root=workspace, metadata_handler=handler.metadata_handler,
-        filemanager=filemanager, cache=cache,
+        dataset_root=workspace,
+        metadata_handler=handler.metadata_handler,
+        filemanager=filemanager,
+        cache=cache,
     ).projection_or_empty()
     admissions = []
     original_admit = SourceBindingWorkspaceProjector.accept_prepared_projection
+
     def observe_admission(projector, projection):
         admissions.append(projection)
         return original_admit(projector, projection)
-    monkeypatch.setattr(SourceBindingWorkspaceProjector, "accept_prepared_projection", observe_admission)
+
+    monkeypatch.setattr(
+        SourceBindingWorkspaceProjector, "accept_prepared_projection", observe_admission
+    )
     selected = WorkspaceSourceProjections.from_dataset_metadata(
-        dataset_root=workspace, metadata_handler=handler.metadata_handler,
-        filemanager=filemanager, cache=cache, source_bindings=config,
+        dataset_root=workspace,
+        metadata_handler=handler.metadata_handler,
+        filemanager=filemanager,
+        cache=cache,
+        source_bindings=config,
     ).projection_or_empty()
-    assert set(selected.component_values(Microscopy.Site)) == set(map(str, expected_sites))
+    assert set(selected.component_values(Microscopy.Site)) == set(
+        map(str, expected_sites)
+    )
     assert set(selected.component_values(Microscopy.Channel)) == {"1", "2"}
     assert len(selected.pipeline_start_files()) == len(expected_sites) * 2
     for path in selected.pipeline_start_files():
         lookup = VirtualWorkspacePathLookup.from_paths(path, path)
         assert selected.source_ref_for(lookup) is full.source_ref_for(lookup)
-        assert selected.require_source_projection_for(lookup) is full.require_source_projection_for(lookup)
+        assert selected.require_source_projection_for(
+            lookup
+        ) is full.require_source_projection_for(lookup)
         assert selected.source_metadata_for(lookup) == full.source_metadata_for(lookup)
     assert len(full.pipeline_start_files()) == 18
     from openhcs.core.context.processing_context import ProcessingContext
+
     context = ProcessingContext(filemanager=filemanager, axis_id="A01")
     context.dataset_root = workspace
     context.microscope_handler = handler
     from openhcs.core import source_workspace_projection
-    monkeypatch.setattr(source_workspace_projection, "DEFAULT_SOURCE_PROJECTION_CACHE", cache)
+
+    monkeypatch.setattr(
+        source_workspace_projection, "DEFAULT_SOURCE_PROJECTION_CACHE", cache
+    )
     runtime_projection = WorkspaceSourceProjections.from_context(
         context,
     ).projection_or_empty()
@@ -180,70 +244,129 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     other = ProcessingContext(filemanager=filemanager, axis_id="A01")
     other.dataset_root = workspace
     other.microscope_handler = handler
-    assert context.runtime_source_workspace_projections.cache is other.runtime_source_workspace_projections.cache is cache
+    assert (
+        context.runtime_source_workspace_projections.cache
+        is other.runtime_source_workspace_projections.cache
+        is cache
+    )
     assert other.runtime_source_workspace_projections.projection_or_empty() is selected
     equivalent = WorkspaceSourceProjections.from_dataset_metadata(
-        dataset_root=workspace, metadata_handler=handler.metadata_handler,
-        filemanager=filemanager, cache=cache, source_bindings=replace(config),
+        dataset_root=workspace,
+        metadata_handler=handler.metadata_handler,
+        filemanager=filemanager,
+        cache=cache,
+        source_bindings=replace(config),
     ).projection_or_empty()
     assert equivalent is selected
     compiled_views = cache.partition_by_axes(selected, axis_ids=("A01",))
-    assert context.runtime_source_workspace_projections.projection_or_empty(axis_id="A01") is compiled_views["A01"]
+    assert (
+        context.runtime_source_workspace_projections.projection_or_empty(axis_id="A01")
+        is compiled_views["A01"]
+    )
     assert len(admissions) == (0 if selection is None else 1)
     with monkeypatch.context() as admitted_query:
+
         def reject_redecode(_cls, _subdirectory):
-            raise AssertionError("An admitted document must not decode its whole workspace again.")
-        admitted_query.setattr(VirtualWorkspaceMapping, "from_subdirectory", classmethod(reject_redecode))
-        assert context.runtime_source_workspace_projections.projection_or_empty() is selected
-        assert context.runtime_source_workspace_projections.projection_or_empty(axis_id="A01") is compiled_views["A01"]
+            raise AssertionError(
+                "An admitted document must not decode its whole workspace again."
+            )
+
+        admitted_query.setattr(
+            VirtualWorkspaceMapping, "from_subdirectory", classmethod(reject_redecode)
+        )
+        assert (
+            context.runtime_source_workspace_projections.projection_or_empty()
+            is selected
+        )
+        assert (
+            context.runtime_source_workspace_projections.projection_or_empty(
+                axis_id="A01"
+            )
+            is compiled_views["A01"]
+        )
     prior_authority = context.runtime_source_workspace_projections
-    handler._source_bindings_config = replace(config, source_filters=(
-        SourceFilterClause(subject=SourceFilterSubject.FILE,
-                          match_type=SourceFilterMatchType.CONTAINS, value="_s008_"),
-    ))
+    handler._source_bindings_config = replace(
+        config,
+        source_filters=(
+            SourceFilterClause(
+                subject=SourceFilterSubject.FILE,
+                match_type=SourceFilterMatchType.CONTAINS,
+                value="_s008_",
+            ),
+        ),
+    )
     changed = context.runtime_source_workspace_projections
     assert changed is not prior_authority
     assert changed.projection_or_empty().component_values(Microscopy.Site) == ("8",)
     handler._source_bindings_config = replace(config, source_filters=())
     assert context.runtime_source_workspace_projections.projection_or_empty() is full
-    handler._source_bindings_config = replace(config, source_filters=(
-        SourceFilterClause(subject=SourceFilterSubject.FILE,
-                          match_type=SourceFilterMatchType.CONTAINS, value="_s099_"),
-    ))
+    handler._source_bindings_config = replace(
+        config,
+        source_filters=(
+            SourceFilterClause(
+                subject=SourceFilterSubject.FILE,
+                match_type=SourceFilterMatchType.CONTAINS,
+                value="_s099_",
+            ),
+        ),
+    )
     with pytest.raises(ValueError, match="matched no prepared workspace sources"):
         context.runtime_source_workspace_projections.projection_or_empty()
     handler._source_bindings_config = config
-    assert context.runtime_source_workspace_projections.projection_or_empty() is selected
+    assert (
+        context.runtime_source_workspace_projections.projection_or_empty() is selected
+    )
     handler.metadata_handler.invalidate_metadata_cache()
-    replacement = context.runtime_source_workspace_projections.projection_or_empty(axis_id="A01")
+    replacement = context.runtime_source_workspace_projections.projection_or_empty(
+        axis_id="A01"
+    )
     assert replacement is not compiled_views["A01"]
-    assert replacement.source_metadata_by_path == compiled_views["A01"].source_metadata_by_path
+    assert (
+        replacement.source_metadata_by_path
+        == compiled_views["A01"].source_metadata_by_path
+    )
     from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+
     orchestrator = PipelineOrchestrator(
-        workspace, pipeline_config=PipelineConfig(
-            source_bindings_config=LazySourceBindingsConfig(source_filters=config.source_filters),
+        workspace,
+        pipeline_config=PipelineConfig(
+            source_bindings_config=LazySourceBindingsConfig(
+                source_filters=config.source_filters
+            ),
         ),
     ).initialize()
     assert orchestrator.source_workspace_files() == selected.pipeline_start_files()
-    assert set(orchestrator.get_component_keys(Microscopy.Site)) == set(map(str, expected_sites))
-    assert orchestrator.get_component_keys(Microscopy.Site, [str(expected_sites[0])]) == [str(expected_sites[0])]
+    assert set(orchestrator.get_component_keys(Microscopy.Site)) == set(
+        map(str, expected_sites)
+    )
+    assert orchestrator.get_component_keys(
+        Microscopy.Site, [str(expected_sites[0])]
+    ) == [str(expected_sites[0])]
     assert orchestrator.get_component_keys(Microscopy.Site, ["99"]) == []
     from tests.unit.test_completed_output_publication_lifecycle import _facts
+
     context.record_completed_step_outputs(_facts(workspace))
     with_output = WorkspaceSourceProjections.from_context(context).projection_or_empty()
     assert set(with_output.pipeline_start_files()) == {
-        *selected.pipeline_start_files(), str(workspace / "images/saved.tif"),
+        *selected.pipeline_start_files(),
+        str(workspace / "images/saved.tif"),
     }
     assert materialization.metadata_path.read_bytes() == original_bytes
     with pytest.raises(ValueError, match="matched no prepared workspace sources"):
         WorkspaceSourceProjections.from_dataset_metadata(
-            dataset_root=workspace, metadata_handler=handler.metadata_handler,
-            filemanager=filemanager, source_bindings=SourceBindingsConfig(source_filters=(
-                SourceFilterClause(subject=SourceFilterSubject.FILE,
-                                  match_type=SourceFilterMatchType.CONTAINS,
-                                  value="_s099_"),
-            )),
+            dataset_root=workspace,
+            metadata_handler=handler.metadata_handler,
+            filemanager=filemanager,
+            source_bindings=SourceBindingsConfig(
+                source_filters=(
+                    SourceFilterClause(
+                        subject=SourceFilterSubject.FILE,
+                        match_type=SourceFilterMatchType.CONTAINS,
+                        value="_s099_",
+                    ),
+                )
+            ),
         ).projection_if_available()
 
 
@@ -627,7 +750,10 @@ def test_source_binding_workspace_remaps_store_addresses_and_labels(tmp_path):
         for projection in projection_set.projections
     } == {("B02", "3")}
     assert metadata[Microscopy.Well.metadata_collection_field] == {"B02": None}
-    assert metadata[Microscopy.Channel.metadata_collection_field] == {"1": "DNA", "2": "RNA"}
+    assert metadata[Microscopy.Channel.metadata_collection_field] == {
+        "1": "DNA",
+        "2": "RNA",
+    }
 
 
 def test_source_binding_workspace_projects_declared_groups_to_wells(tmp_path):
@@ -796,9 +922,13 @@ def test_group_address_preserves_distinct_source_well_as_literal_metadata(tmp_pa
 def test_nonempty_source_bindings_select_their_declared_microscope_handler(
     tmp_path,
 ):
-    handler = DatasetSourceChoice.named("auto").open(tmp_path, filemanager=_filemanager(), source_bindings_config=SourceBindingsConfig(
+    handler = DatasetSourceChoice.named("auto").open(
+        tmp_path,
+        filemanager=_filemanager(),
+        source_bindings_config=SourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),)
-        ))
+        ),
+    )
 
     assert isinstance(handler, SourceBindingsSource)
 
@@ -806,9 +936,13 @@ def test_nonempty_source_bindings_select_their_declared_microscope_handler(
 def test_nonempty_source_bindings_override_format_specific_microscope(
     tmp_path,
 ):
-    handler = DatasetSourceChoice.named("imagexpress").open(tmp_path, filemanager=_filemanager(), source_bindings_config=SourceBindingsConfig(
+    handler = DatasetSourceChoice.named("imagexpress").open(
+        tmp_path,
+        filemanager=_filemanager(),
+        source_bindings_config=SourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),)
-        ))
+        ),
+    )
 
     assert isinstance(handler, SourceBindingsSource)
 
@@ -954,9 +1088,7 @@ def test_order_source_sets_join_imported_metadata_across_aliases(tmp_path):
 
     assert {projection.source_alias for projection in projections} == {"DNA", "Actin"}
     for projection in projections:
-        original = dict(
-            SourceMetadataFields.declared_items(projection.source_metadata)
-        )
+        original = dict(SourceMetadataFields.declared_items(projection.source_metadata))
         assert original["Compound"] == "DMSO"
         assert original["Dose"] == "0"
 
@@ -1452,8 +1584,7 @@ def test_source_bindings_reinitialization_resolves_current_imported_metadata(tmp
         )
     )
     assert (
-        dict(SourceMetadataFields.declared_items(first_metadata))["Compound"]
-        == "First"
+        dict(SourceMetadataFields.declared_items(first_metadata))["Compound"] == "First"
     )
 
     metadata_path = tmp_path / "openhcs_metadata.json"
@@ -2024,9 +2155,13 @@ def test_openhcs_metadata_handler_resolves_subdirectory_inputs(tmp_path):
 
 
 def test_source_bindings_handler_is_registry_constructed():
-    handler = DatasetSourceChoice.named("source_bindings").open(Path("."), filemanager=object(), source_bindings_config=SourceBindingsConfig(
+    handler = DatasetSourceChoice.named("source_bindings").open(
+        Path("."),
+        filemanager=object(),
+        source_bindings_config=SourceBindingsConfig(
             bindings=(NamedSourceBinding(alias="DNA"),),
-        ))
+        ),
+    )
 
     assert isinstance(handler, SourceBindingsSource)
 

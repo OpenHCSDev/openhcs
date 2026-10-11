@@ -184,6 +184,7 @@ ORCHESTRATOR_CODE_DOCUMENT_PAYLOAD_HINT = (
     "for the current template."
 )
 
+
 @dataclass(frozen=True, slots=True)
 class CodeDocumentExecutionResult(PlateManagerOrchestratorCodePayload):
     """Parsed and normalized payload from one declarative UI code document."""
@@ -787,9 +788,7 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
     ) -> UiBridgeOperationRef:
         """Project one typed completion through its registered declaration owner."""
         operation = self.get(operation_id)
-        contract = UiBridgeOperation.for_name(
-            operation.identity.operation_name
-        )
+        contract = UiBridgeOperation.for_name(operation.identity.operation_name)
         if not isinstance(result, contract.result_type):
             raise TypeError(
                 f"{contract.require_name()} requires {contract.result_type.__qualname__}."
@@ -811,9 +810,7 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
         self, operation_id: str, error: Exception
     ) -> UiBridgeOperationRef:
         operation = self.get(operation_id)
-        contract = UiBridgeOperation.for_name(
-            operation.identity.operation_name
-        )
+        contract = UiBridgeOperation.for_name(operation.identity.operation_name)
         return self.complete(
             operation_id,
             status=UiBridgeOperationStatus.FAILED,

@@ -43,7 +43,8 @@ def _prepared_contract(func):
 def test_prepared_resize_preserves_typed_primary_and_bare_array(func):
     pixels = np.arange(24, dtype=np.float32).reshape(4, 6)
     source = ImagePayloadMetadata(
-        source_path="/images/input.tif", source_image_names=("Original",),
+        source_path="/images/input.tif",
+        source_image_names=("Original",),
     ).payload_with(pixels, pixels % 2 == 0)
     contract = _prepared_contract(func)
 
@@ -65,9 +66,14 @@ def test_prepared_full_stack_resize_preserves_existing_metadata_and_mask(
         ImagePayloadMetadata(
             source_path=f"/images/z{index}.tif",
             source_image_names=("Original",),
-            source_component_metadata={"z_index": index, "timepoint": 1, "well": "W001"},
+            source_component_metadata={
+                "z_index": index,
+                "timepoint": 1,
+                "well": "W001",
+            },
             source_spatial_domain=SourceSpatialDomain(
-                origin_yx=(2, 3), source_shape_yx=(8, 10),
+                origin_yx=(2, 3),
+                source_shape_yx=(8, 10),
             ),
         ).payload_with(np.full((4, 6), index, dtype=np.float32), None)
         for index in (3, 1, 2)
@@ -89,21 +95,22 @@ def test_prepared_full_stack_resize_preserves_existing_metadata_and_mask(
     contract = _prepared_contract(resize_volumetric)
     canonical = contract.resolve_canonical_raw_callable()
     kwargs = dict(
-        resizing_factor_x=0.5, resizing_factor_y=0.5, resizing_factor_z=z_factor,
+        resizing_factor_x=0.5,
+        resizing_factor_y=0.5,
+        resizing_factor_z=z_factor,
     )
     expected = canonical(source, **kwargs)
 
     result = CellProfilerFunctionContractExecutor().execute(
-        contract, canonical, source, kwargs,
+        contract,
+        canonical,
+        source,
+        kwargs,
         execution_mode=FullStackExecution,
     )
 
-    np.testing.assert_array_equal(
-        result.data, expected.data
-    )
-    np.testing.assert_array_equal(
-        result.mask, expected.mask
-    )
+    np.testing.assert_array_equal(result.data, expected.data)
+    np.testing.assert_array_equal(result.mask, expected.mask)
     assert result.metadata == expected.metadata
     assert result.metadata.plane_axis is axis
     assert result.metadata.source_image_paths == metadata.source_image_paths
@@ -129,7 +136,10 @@ def test_prepared_resize_bare_pixels_preserve_canonical_return_contract(func):
     expected = canonical(pixels, **kwargs)
 
     result = CellProfilerFunctionContractExecutor().execute(
-        contract, canonical, pixels, kwargs,
+        contract,
+        canonical,
+        pixels,
+        kwargs,
         execution_mode=FullStackExecution,
     )
 

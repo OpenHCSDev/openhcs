@@ -544,7 +544,9 @@ def test_quality_control_measurements_keep_distinct_site_image_identities() -> N
         object_name=None,
         source_image_name=None,
         source_metadata=ImagePayloadMetadata(
-            source_provenance=MeasurementTable.joined_source_provenance("quality_metrics", tables),
+            source_provenance=MeasurementTable.joined_source_provenance(
+                "quality_metrics", tables
+            ),
         ),
     )
 
@@ -706,8 +708,6 @@ def test_running_variance_preserves_numpy_accumulation(dtype, reverse):
         if reverse:
             values = values[::-1]
         means = values.cumsum() / np.arange(1, len(values) + 1)
-        accumulated = (
-            (values[1:] - means[:-1]) * (values[1:] - means[1:])
-        ).cumsum()
+        accumulated = ((values[1:] - means[:-1]) * (values[1:] - means[1:])).cumsum()
         expected = np.hstack(([0], accumulated / np.arange(1, len(values))))
         np.testing.assert_array_equal(running_variance_numba(values), expected)

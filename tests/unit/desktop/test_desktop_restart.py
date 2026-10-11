@@ -116,7 +116,9 @@ def test_session_restart_admission_uses_existing_declaration_work_guard(
     window = SimpleNamespace(session=restart_session)
 
     assert not DesktopSessionRestart.available(window)
-    with pytest.raises(DesktopUpdateError, match="active initialization or compilation"):
+    with pytest.raises(
+        DesktopUpdateError, match="active initialization or compilation"
+    ):
         DesktopRestartSession.require_capture_allowed(window)
 
 

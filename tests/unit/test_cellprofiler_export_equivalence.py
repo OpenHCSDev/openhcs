@@ -224,7 +224,9 @@ def test_native_shards_merge_cpa_declared_image_and_object_rows(
     _write_sharded_native_output(second, (2,))
 
     report = cellprofiler_native_shard_equivalence(
-        reference, (first, second), policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
+        reference,
+        (first, second),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert report.is_equivalent
@@ -265,7 +267,9 @@ def test_native_shards_merge_declared_relationship_rows_and_view(
             )
 
     report = cellprofiler_native_shard_equivalence(
-        reference, (first, second), policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
+        reference,
+        (first, second),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert report.is_equivalent
@@ -280,7 +284,9 @@ def test_native_shards_reject_overlapping_image_sets(tmp_path: Path) -> None:
     _write_sharded_native_output(second, (1,))
 
     report = cellprofiler_native_shard_equivalence(
-        reference, (first, second), policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
+        reference,
+        (first, second),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert not report.is_equivalent
@@ -305,7 +311,9 @@ def test_native_shards_reject_nonpartitionable_experiment_aggregate(
             )
 
     report = cellprofiler_native_shard_equivalence(
-        reference, (first, second), policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
+        reference,
+        (first, second),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert any(
@@ -324,7 +332,9 @@ def test_native_shards_reject_undeclared_side_writes(tmp_path: Path) -> None:
     (second / "unexpected.txt").write_text("side write")
 
     report = cellprofiler_native_shard_equivalence(
-        reference, (first, second), policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT)
+        reference,
+        (first, second),
+        policy=RuntimeEquivalencePolicy(measurement_dialect=SAVED_OUTPUT_DIALECT),
     )
 
     assert any("unexpected files" in message for message in report.failure_messages())
@@ -634,7 +644,9 @@ def test_database_export_equivalence_applies_numeric_tolerance(
     report = cellprofiler_database_export_equivalence(
         reference,
         RuntimeExportObservation.from_output_root(candidate),
-        policy=RuntimeEquivalencePolicy(numeric_abs_tolerance=0.001, measurement_dialect=SAVED_OUTPUT_DIALECT),
+        policy=RuntimeEquivalencePolicy(
+            numeric_abs_tolerance=0.001, measurement_dialect=SAVED_OUTPUT_DIALECT
+        ),
     )
 
     assert report.is_equivalent
@@ -892,7 +904,9 @@ def test_database_column_declarations_own_export_and_equivalence_names() -> None
     )
 
 
-def test_database_measurements_keep_complete_relationship_cohort(tmp_path: Path) -> None:
+def test_database_measurements_keep_complete_relationship_cohort(
+    tmp_path: Path,
+) -> None:
     import pytest
 
     from benchmark.cellprofiler_export_equivalence import _sqlite_database_differences
@@ -901,7 +915,9 @@ def test_database_measurements_keep_complete_relationship_cohort(tmp_path: Path)
         "Per_Parents": MeasurementSubject(MeasurementScope.OBJECT, "Parents"),
         "Per_Children": MeasurementSubject(MeasurementScope.OBJECT, "Children"),
     }
-    reference, candidate = (tmp_path / name for name in ("reference.db", "candidate.db"))
+    reference, candidate = (
+        tmp_path / name for name in ("reference.db", "candidate.db")
+    )
     for path, value in ((reference, 1.5), (candidate, 1.5 + 1e-13)):
         with sqlite3.connect(path) as connection:
             connection.execute(

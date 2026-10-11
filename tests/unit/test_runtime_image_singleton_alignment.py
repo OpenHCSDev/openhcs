@@ -3,7 +3,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from openhcs.core.aligned_image_payload import (AlignedImageStack, compose_aligned_image_payload)
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
+    compose_aligned_image_payload,
+)
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
@@ -63,9 +66,7 @@ def test_scalar_image_aligns_with_nominal_singleton_owner(
 
     composition = compose_aligned_image_payload("Measurement consumer", payloads)
 
-    assert composition.execution_mode is (
-        AlignedStackExecution
-    )
+    assert composition.execution_mode is (AlignedStackExecution)
     assert isinstance(composition.payload, AlignedImageStack)
     assert len(composition.payload.slices) == 1
     bundle = composition.payload.slices[0]
@@ -115,9 +116,7 @@ def test_same_shaped_scalar_images_do_not_invent_runtime_alignment() -> None:
 
     assert composition.execution_mode is FullStackExecution
     assert not isinstance(composition.payload, AlignedImageStack)
-    assert composition.payload.metadata.plane_axis is (
-        RuntimePlaneAxis.SOURCE_BINDING
-    )
+    assert composition.payload.metadata.plane_axis is (RuntimePlaneAxis.SOURCE_BINDING)
 
 
 def test_singleton_runtime_projection_consumes_rgb_image_and_mask_axis_together() -> (

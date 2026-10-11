@@ -10,7 +10,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementScopeSelection,
 )
 
-
 CELLPROFILER_SCOPE_NAMES = MappingProxyType(
     {
         MeasurementScope.SAMPLE: "Image",

@@ -744,10 +744,6 @@ class UiCodeDocument(
     errors: tuple[AgentError, ...] = ()
 
 
-
-
-
-
 @dataclass(frozen=True, kw_only=True)
 class UiStateSurfaceEnvelope(AgentResultEnvelope):
     """Shared envelope for typed UI state-surface payloads."""

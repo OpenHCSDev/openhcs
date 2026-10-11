@@ -403,10 +403,12 @@ class MeasurementImageLabelAlignmentRequest:
                 "Object-label reference alignment requires an image source domain "
                 "adapter."
             )
-        return request.image.with_pixels(label_domain_adapter.extract_source_array(
+        return request.image.with_pixels(
+            label_domain_adapter.extract_source_array(
                 request.image_array,
                 spatial_axes_yx=image_domain_adapter.spatial_axes_yx,
-            ),)
+            ),
+        )
 
     @classmethod
     def validate_alignment(

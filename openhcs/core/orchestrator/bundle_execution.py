@@ -1055,6 +1055,7 @@ def wait_until_visualizers_ready(
     def not_ready_ports() -> list[int]:
         running_ports = {v.port for v in visualizers if v.is_running}
         return [v.port for v in visualizers if v.port not in running_ports]
+
     start_time = time.time()
 
     while time.time() - start_time < max_wait:

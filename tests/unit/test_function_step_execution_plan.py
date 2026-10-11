@@ -521,7 +521,8 @@ def test_invocation_output_selection_omits_inactive_component_outputs():
         {channel_one.ref(): channel_one},
         compiled_output_plans=invocation.output_plans_for_component(
             ComponentGroupScope.from_raw(
-                ("1", "2"), component=Microscopy.Channel,
+                ("1", "2"),
+                component=Microscopy.Channel,
             ),
             "1",
         ),
@@ -711,7 +712,9 @@ def test_invocation_component_selection_projects_relation_owned_inputs():
     )
     selected_outputs = invocation.select_outputs(
         {active_output.ref(): active_output},
-        compiled_output_plans=invocation.output_plans_for_component(execution_scope, "1"),
+        compiled_output_plans=invocation.output_plans_for_component(
+            execution_scope, "1"
+        ),
     )
 
     assert tuple(edge.spec for edge in selected_inputs.values()) == (
@@ -728,7 +731,9 @@ def test_invocation_component_selection_projects_relation_owned_inputs():
     )
     second_selected_outputs = invocation.select_outputs(
         {second_active_output.ref(): second_active_output},
-        compiled_output_plans=invocation.output_plans_for_component(execution_scope, "2"),
+        compiled_output_plans=invocation.output_plans_for_component(
+            execution_scope, "2"
+        ),
     )
 
     assert tuple(edge.spec for edge in second_selected_inputs.values()) == (
@@ -747,7 +752,8 @@ def test_invocation_output_selection_rejects_missing_active_component_output():
             {},
             compiled_output_plans=invocation.output_plans_for_component(
                 ComponentGroupScope.from_raw(
-                    ("1", "2"), component=Microscopy.Channel,
+                    ("1", "2"),
+                    component=Microscopy.Channel,
                 ),
                 "1",
             ),
@@ -770,7 +776,8 @@ def test_invocation_output_selection_rejects_active_projection_drift():
             {drifted_channel_one.ref(): drifted_channel_one},
             compiled_output_plans=invocation.output_plans_for_component(
                 ComponentGroupScope.from_raw(
-                    ("1", "2"), component=Microscopy.Channel,
+                    ("1", "2"),
+                    component=Microscopy.Channel,
                 ),
                 "1",
             ),

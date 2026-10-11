@@ -127,7 +127,9 @@ def build_neuroncyto_ii_crossover_demo(
     )
     pipeline_config = PipelineConfig(
         dataset_source=SourceBindingsSource,
-        partition_filter_config=LazyPartitionFilterConfig(partition_filter=inputs.image_id),
+        partition_filter_config=LazyPartitionFilterConfig(
+            partition_filter=inputs.image_id
+        ),
         path_planning_config=LazyPathPlanningConfig(
             partition_filter=0,
             global_output_folder=output_root,
@@ -295,9 +297,7 @@ def neuroncyto_ii_crossover_demo_contribution(
         pipeline_config=pipeline_config,
         pipeline_steps=tuple(pipeline_steps),
         presentation_identity=StreamProducerIdentity.pipeline_output(
-            output_kind=(
-                CompiledStepPlan.ARTIFACT_OUTPUT_KIND
-            ),
+            output_kind=(CompiledStepPlan.ARTIFACT_OUTPUT_KIND),
             output_key=NEURITE_MORPHOLOGY_OUTPUT.name,
             projection_key=NEURITE_MORPHOLOGY_OUTPUT.name,
             step_name=analysis_step.name,

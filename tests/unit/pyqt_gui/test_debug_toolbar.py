@@ -579,9 +579,11 @@ def test_pipeline_change_marks_the_debug_session_dirty(tmp_path, monkeypatch) ->
         ).with_cursor(_cursor(1, "segment"))
         statuses = []
         harness.session.subscribe(
-            lambda record: statuses.append(record.event.text)
-            if isinstance(record.event, StatusReported)
-            else None
+            lambda record: (
+                statuses.append(record.event.text)
+                if isinstance(record.event, StatusReported)
+                else None
+            )
         )
 
         harness.session.set_pipeline(

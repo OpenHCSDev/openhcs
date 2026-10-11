@@ -196,25 +196,31 @@ class _EngineeringExposureMetadataArtifactProvider(MetadataArtifactProvider):
 
 def _prepare_step_declarations(planner, step, step_index):
     context = replace(
-        planner.artifact_context, step_name=step.name, step_index=step_index,
+        planner.artifact_context,
+        step_name=step.name,
+        step_index=step_index,
     ).with_source_binding_scope(
         source_bindings=step.source_bindings,
         group_by=PathPlannerExecutionGroups.normalized_group_by(step),
         input_source=step.processing_config.input_source,
     )
     graph = extract_artifact_declarations(
-        step.func, invocation_contract_provider=planner.invocation_contract_provider,
+        step.func,
+        invocation_contract_provider=planner.invocation_contract_provider,
         step_context=context,
     )
     contracts = tuple(item.contract for item in graph.pattern.iter_items())
-    return graph, graph.pattern, FunctionStepExecutionScope.require_uniform(contracts), contracts
+    return (
+        graph,
+        graph.pattern,
+        FunctionStepExecutionScope.require_uniform(contracts),
+        contracts,
+    )
 
 
 def _compile_metadata_pattern(planner, pattern):
     snapshot = _resolved_step(func=pattern)
-    declarations, pattern, _, _ = _prepare_step_declarations(planner,
-        snapshot, 3
-    )
+    declarations, pattern, _, _ = _prepare_step_declarations(planner, snapshot, 3)
     input_plans = planner.artifacts.process_artifact_inputs(
         declarations,
         3,
@@ -372,8 +378,8 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
             bindings=(NamedSourceBinding(alias="DNA"),),
         ),
     )
-    declarations, pattern, _, contracts = _prepare_step_declarations(planner,
-        snapshot, 3
+    declarations, pattern, _, contracts = _prepare_step_declarations(
+        planner, snapshot, 3
     )
     execution_bindings = CompiledSourceBindingPlan.from_contracts(
         snapshot.source_bindings,
@@ -431,9 +437,13 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
     "artifact_name, expected",
     [("pixel_size", 1.3556), ("engineering_exposure_duration", 17.25)],
 )
-def test_registered_metadata_provider_value_reaches_runtime_unchanged(artifact_name, expected):
+def test_registered_metadata_provider_value_reaches_runtime_unchanged(
+    artifact_name, expected
+):
     received = []
-    spec = ArtifactSpec.input(artifact_name, SpecialArtifactType, parameter_name="calibration")
+    spec = ArtifactSpec.input(
+        artifact_name, SpecialArtifactType, parameter_name="calibration"
+    )
 
     @numpy
     @artifact_inputs(spec)
@@ -445,13 +455,18 @@ def test_registered_metadata_provider_value_reaches_runtime_unchanged(artifact_n
     planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
     planner.ctx.dataset_root = planner.dataset_root
     assert planner.ctx.microscope_handler.can_resolve_metadata_artifact(artifact_name)
-    compiled, input_plans = _compile_metadata_pattern(planner, (metadata_consumer, {"calibration": -7.0}))
+    compiled, input_plans = _compile_metadata_pattern(
+        planner, (metadata_consumer, {"calibration": -7.0})
+    )
     (invocation,) = compiled.default_group.invocations
     (edge,) = invocation.artifact_input_edges
     assert isinstance(edge, CompiledMetadataArtifactInputEdgePlan)
     assert input_plans == {}
     assert invocation.kwargs_dict == {"calibration": expected}
-    assert all(binding.parameter_name != "calibration" for binding in invocation.runtime_parameter_bindings)
+    assert all(
+        binding.parameter_name != "calibration"
+        for binding in invocation.runtime_parameter_bindings
+    )
     _execute_compiled_metadata_pattern(compiled)
     assert received == [expected]
 
@@ -476,7 +491,8 @@ def test_new_metadata_provider_composes_cooperative_capabilities_through_runtime
             return value
 
     class CheckedExposureMetadataProvider(
-        ResolutionReceipt, PositiveMetadataValue,
+        ResolutionReceipt,
+        PositiveMetadataValue,
         _EngineeringExposureMetadataArtifactProvider,
     ):
         artifact_name = "engineering_checked_exposure_duration"
@@ -544,7 +560,9 @@ def test_required_metadata_input_has_no_magic_default(value):
     planner.ctx.dataset_root = planner.dataset_root
     compiled, _ = _compile_metadata_pattern(planner, metadata_consumer)
     if value is None:
-        with pytest.raises(ValueError, match="Required metadata artifact .* has no value"):
+        with pytest.raises(
+            ValueError, match="Required metadata artifact .* has no value"
+        ):
             _execute_compiled_metadata_pattern(compiled)
     else:
         _execute_compiled_metadata_pattern(compiled)
@@ -558,7 +576,9 @@ def test_authored_kwarg_does_not_satisfy_an_unknown_artifact_origin():
 
     planner = _artifact_planner_stub()
     with pytest.raises(MissingArtifactInputError):
-        _compile_metadata_pattern(planner, (metadata_consumer, {"unknown_metadata": 1.3556}))
+        _compile_metadata_pattern(
+            planner, (metadata_consumer, {"unknown_metadata": 1.3556})
+        )
 
 
 def test_exact_producer_takes_precedence_over_metadata_provider():
@@ -571,11 +591,16 @@ def test_exact_producer_takes_precedence_over_metadata_provider():
     planner = _artifact_planner_stub()
     planner.ctx.microscope_handler = _EngineeringMetadataHandler(filemanager=object())
     planner.ctx.dataset_root = planner.dataset_root
-    producer = _record_declared_output(planner, ArtifactOutputPlan(
-        name="pixel_size", path="/memory/pixel_size.pkl",
-        artifact_type=SpecialArtifactType, producer_step_index=2,
-        producer_step_scope_id="plate::functionstep_2",
-    ))
+    producer = _record_declared_output(
+        planner,
+        ArtifactOutputPlan(
+            name="pixel_size",
+            path="/memory/pixel_size.pkl",
+            artifact_type=SpecialArtifactType,
+            producer_step_index=2,
+            producer_step_scope_id="plate::functionstep_2",
+        ),
+    )
     compiled, input_plans = _compile_metadata_pattern(planner, metadata_consumer)
     (invocation,) = compiled.default_group.invocations
     (edge,) = invocation.artifact_input_edges
@@ -789,10 +814,11 @@ def test_compiled_pattern_rejects_accumulator_owned_output_conflict():
         match="Conflicting compiled invocation output artifact sidecar role",
     ):
         compile_function_pattern(
-            pattern, {}, output_plans,
+            pattern,
+            {},
+            output_plans,
             invocation_contract_provider=planner.invocation_contract_provider,
         ).coalesced_artifact_output_specs()
-
 
 
 def test_materialization_collision_updates_results_dir_and_config():
@@ -1065,9 +1091,7 @@ def test_artifact_output_plan_only_preserves_explicit_source_stack_scope():
     )
 
     assert outputs[output_specs[0].ref()].variable_components == ()
-    assert outputs[output_specs[1].ref()].variable_components == (
-        Microscopy.Channel,
-    )
+    assert outputs[output_specs[1].ref()].variable_components == (Microscopy.Channel,)
 
 
 def test_artifact_output_source_lookup_combines_repeated_main_flow_inputs():
@@ -1113,7 +1137,8 @@ def test_artifact_output_source_lookup_combines_repeated_main_flow_inputs():
 @pytest.mark.parametrize("stored_main_flow", [False, True])
 @pytest.mark.parametrize("stored_secondary", [False, True])
 def test_compiled_source_edges_only_consume_relation_owned_main_flow(
-    stored_main_flow, stored_secondary,
+    stored_main_flow,
+    stored_secondary,
 ):
     source_specs = (
         ArtifactSpec.input("DNA", ImageArtifactType),
@@ -1163,7 +1188,11 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow(
 
     edges = next(compiled.iter_invocations()).artifact_input_edges
     assert tuple(edge.spec for edge in edges) == source_specs
-    assert tuple((edge.main_flow_projection is not None) for edge in edges) == (True, False, False)
+    assert tuple((edge.main_flow_projection is not None) for edge in edges) == (
+        True,
+        False,
+        False,
+    )
     assert edges[0].storage_plan is None
     assert edges[0].projection is None
     assert edges[1].storage_plan is stored_inputs.get(source_specs[1].ref())
@@ -1249,10 +1278,10 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
     )
     native_pattern = compile_function_pattern(percentile_normalize, {}, {})
     native_invocation = next(native_pattern.iter_invocations())
-    planner.artifact_context = (
-        extract_artifact_declarations(percentile_normalize).advance_declaration_context(
-            planner.artifact_context,
-        )
+    planner.artifact_context = extract_artifact_declarations(
+        percentile_normalize
+    ).advance_declaration_context(
+        planner.artifact_context,
     )
     cursor_name = unnamed_main_flow_artifact_name(0, native_invocation.key)
     cursor = ArtifactSpec.input(cursor_name, ImageArtifactType)
@@ -1498,9 +1527,7 @@ def test_artifact_output_source_lookup_ignores_shared_input_broadcast_projection
         execution_scope=FunctionStepExecutionScope.AXIS,
     )
 
-    assert projected[ambiguous_output.ref()].variable_components == (
-        Microscopy.Site,
-    )
+    assert projected[ambiguous_output.ref()].variable_components == (Microscopy.Site,)
 
 
 def test_enabled_source_bindings_preserve_previous_step_main_flow():
@@ -1626,9 +1653,7 @@ def test_artifact_lineage_projects_exact_source_binding_component():
     assert maps.group_scope.keys == expected_channel_scope.keys
     assert maps.group_scope.component is expected_channel_scope.component
     assert maps.outputs[object_output.ref()].group_keys == ("1",)
-    assert maps.outputs[object_output.ref()].variable_components == (
-        Microscopy.Site,
-    )
+    assert maps.outputs[object_output.ref()].variable_components == (Microscopy.Site,)
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
     assert edge.projection.invocation_scope == expected_channel_scope
     assert edge.projection.component_scope(Microscopy.Channel) == (
@@ -1866,11 +1891,17 @@ def test_group_by_namespaces_compiler_owned_outputs():
 
     scopes = planner.artifacts.output_groups_from_declared_relations(
         namespaced,
-        group_scope=PathPlannerGroupScope.from_raw(("1", "2"), component=Microscopy.Channel),
-        relation_source_scopes={}, consumer_variable_components=ComponentSet(),
-        step_index=0, step_name="identify",
+        group_scope=PathPlannerGroupScope.from_raw(
+            ("1", "2"), component=Microscopy.Channel
+        ),
+        relation_source_scopes={},
+        consumer_variable_components=ComponentSet(),
+        step_index=0,
+        step_name="identify",
     )
-    assert scopes[ArtifactSpec.output("nuclei", ObjectLabelsArtifactType).ref()].keys == ("1", "2")
+    assert scopes[
+        ArtifactSpec.output("nuclei", ObjectLabelsArtifactType).ref()
+    ].keys == ("1", "2")
 
 
 def test_artifact_graph_preserves_same_name_outputs_of_different_types():
@@ -1919,9 +1950,13 @@ def test_group_by_namespaces_runtime_adapter_artifact_outputs():
     assert declarations.output_groups[output_ref] == {None}
     scopes = planner.artifacts.output_groups_from_declared_relations(
         namespaced,
-        group_scope=PathPlannerGroupScope.from_raw(("1", "2"), component=Microscopy.Channel),
-        relation_source_scopes={}, consumer_variable_components=ComponentSet(),
-        step_index=0, step_name="correct_illumination",
+        group_scope=PathPlannerGroupScope.from_raw(
+            ("1", "2"), component=Microscopy.Channel
+        ),
+        relation_source_scopes={},
+        consumer_variable_components=ComponentSet(),
+        step_index=0,
+        step_name="correct_illumination",
     )
     assert scopes[output_ref].keys == ("1", "2")
 
@@ -2251,7 +2286,11 @@ def test_measurement_output_scope_compiles_exact_cross_group_consumer_edge():
         consumer_maps.outputs,
         consumer_maps.relation_source_scopes,
         consumer_maps.group_scope,
-        declarations=extract_artifact_declarations(filter_objects, invocation_contract_provider=planner.invocation_contract_provider, step_context=planner.artifact_context),
+        declarations=extract_artifact_declarations(
+            filter_objects,
+            invocation_contract_provider=planner.invocation_contract_provider,
+            step_context=planner.artifact_context,
+        ),
     )
 
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
@@ -3403,8 +3442,10 @@ def test_resolved_pipeline_owns_invocation_aware_artifact_declarations():
     )
 
     pipeline = ResolvedPipelineDefinition(
-        steps=(snapshot,), step_scope_ids={0: "plate::identify_cells"},
-        step_provenance={0: {}}, declaration_provider=declarations_for_invocation,
+        steps=(snapshot,),
+        step_scope_ids={0: "plate::identify_cells"},
+        step_provenance={0: {}},
+        declaration_provider=declarations_for_invocation,
     )
     (declarations,) = pipeline.artifact_graphs
     func_pattern = declarations.pattern
@@ -3470,11 +3511,10 @@ def test_artifact_managed_regular_pattern_preserves_group_by_scope():
         }
     )
 
-    _declarations, _pattern, execution_scope, _contracts = (
-        _prepare_step_declarations(planner,
-            snapshot,
-            2,
-        )
+    _declarations, _pattern, execution_scope, _contracts = _prepare_step_declarations(
+        planner,
+        snapshot,
+        2,
     )
     execution_groups = planner.execution_groups.get_execution_groups(
         snapshot,
@@ -3491,11 +3531,10 @@ def test_artifact_managed_regular_pattern_preserves_group_by_scope():
         "1": [filter_objects],
         "2": [filter_objects],
     }
-    _declarations, _pattern, execution_scope, _contracts = (
-        _prepare_step_declarations(planner,
-            snapshot,
-            2,
-        )
+    _declarations, _pattern, execution_scope, _contracts = _prepare_step_declarations(
+        planner,
+        snapshot,
+        2,
     )
     execution_groups = planner.execution_groups.get_execution_groups(
         snapshot,
@@ -4949,7 +4988,11 @@ def test_compilation_rejects_ambiguous_cross_component_artifact_selection():
             maps.outputs,
             maps.relation_source_scopes,
             maps.group_scope,
-            declarations=extract_artifact_declarations(consume, invocation_contract_provider=planner.invocation_contract_provider, step_context=planner.artifact_context),
+            declarations=extract_artifact_declarations(
+                consume,
+                invocation_contract_provider=planner.invocation_contract_provider,
+                step_context=planner.artifact_context,
+            ),
         )
 
 
@@ -5011,7 +5054,11 @@ def test_compilation_selects_exact_singleton_cross_component_artifact():
         maps.outputs,
         maps.relation_source_scopes,
         maps.group_scope,
-        declarations=extract_artifact_declarations(consume, invocation_contract_provider=planner.invocation_contract_provider, step_context=planner.artifact_context),
+        declarations=extract_artifact_declarations(
+            consume,
+            invocation_contract_provider=planner.invocation_contract_provider,
+            step_context=planner.artifact_context,
+        ),
     )
 
     edge = next(compiled.iter_invocations()).artifact_input_edges[0]
@@ -5116,9 +5163,7 @@ def test_realized_source_scopes_compile_cross_group_artifact_consumption():
             PathPlannerComponentScopes.empty(),
             source_bindings=source_bindings,
         )
-        declarations = (
-            extract_artifact_declarations(produce)
-        )
+        declarations = extract_artifact_declarations(produce)
         maps = planner.artifacts.compile_plan_maps(
             snapshot,
             step_index,
