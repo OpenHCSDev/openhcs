@@ -110,9 +110,27 @@ public:
         return acquired_;
     }
     const Py_buffer& view() const { return view_; }
+    // One unsigned C width has several buffer codes: NumPy exports uint32 as
+    // 'I' on LP64 platforms and as 'L' on LLP64 Windows. Compare by width.
+    static Py_ssize_t unsigned_width(const char* format) {
+        if (format[0] == '\0' || format[1] != '\0') return 0;
+        switch (format[0]) {
+            case 'B': return sizeof(unsigned char);
+            case 'H': return sizeof(unsigned short);
+            case 'I': return sizeof(unsigned int);
+            case 'L': return sizeof(unsigned long);
+            case 'Q': return sizeof(unsigned long long);
+            default: return 0;
+        }
+    }
+    bool has_format(const char* format) const {
+        if (std::strcmp(view_.format, format) == 0) return true;
+        const Py_ssize_t width = unsigned_width(format);
+        return width != 0 && unsigned_width(view_.format) == width && view_.itemsize == width;
+    }
     bool matches(const char* name, const char* format, int ndim, bool writable) const {
         if (view_.ndim != ndim || view_.format == nullptr || format == nullptr ||
-            std::strcmp(view_.format, format) != 0 ||
+            !has_format(format) ||
             !PyBuffer_IsContiguous(&view_, 'C') || (writable && view_.readonly)) {
             PyErr_Format(PyExc_ValueError,
                 "%s must be a C-contiguous %d-D array with format %s%s",
