@@ -9,6 +9,7 @@ from contextvars import copy_context
 import threading
 from typing import Any, ParamSpec, TypeVar
 
+from PyQt6 import sip
 from PyQt6.QtCore import QCoreApplication, QEventLoop, QThread
 from polystore import cleanup_backend_connections
 from pyqt_reactive.core.future_completion import FutureCompletion
@@ -85,7 +86,11 @@ class McpTransportExecutor(AsyncOperationExecutor):
     def __init__(self) -> None:
         if threading.current_thread() is not threading.main_thread():
             raise RuntimeError("MCP transport must be started on the process main thread.")
-        self._application = QCoreApplication.instance() or QCoreApplication([])
+        existing_application = QCoreApplication.instance()
+        # A process holds one Qt application; one this transport created is
+        # its own and goes with it, so a later GUI can create a QApplication.
+        self._created_application = existing_application is None
+        self._application = existing_application or QCoreApplication([])
         if QThread.currentThread() != self._application.thread():
             raise RuntimeError("MCP transport requires the Qt application main thread.")
         super().__init__(max_workers=1)
@@ -128,4 +133,8 @@ class McpTransportExecutor(AsyncOperationExecutor):
             try:
                 super().close()
             finally:
-                cleanup_backend_connections(include_process_resources=True)
+                try:
+                    cleanup_backend_connections(include_process_resources=True)
+                finally:
+                    if self._created_application:
+                        sip.delete(self._application)
