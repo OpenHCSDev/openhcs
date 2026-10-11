@@ -426,11 +426,7 @@ class PlateFileRecord:
     @property
     def streamable_roi_path(self) -> str | None:
         """Expose ROI artifacts through their declared result format."""
-        if (
-            self.kind is PlateFileKind.RESULT
-            and self.file_format is not None
-            and self.file_format.streams_rois
-        ):
+        if self.kind is PlateFileKind.RESULT and self.file_format.streams_rois:
             return self.full_path or self.key
         return None
 

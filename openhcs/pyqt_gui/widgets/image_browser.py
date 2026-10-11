@@ -131,6 +131,19 @@ class ImageBrowserItem(Mapping[str, ImageTableValue]):
 
 
 @dataclass(frozen=True)
+class ResultFileBrowserOpener:
+    """What the image browser does when a result file is opened."""
+
+    browser: "ImageBrowserWidget"
+
+    def open_in_default_app(self, file_path: Path) -> None:
+        subprocess.run(["xdg-open", str(file_path)], check=False)
+
+    def stream_rois(self, file_path: Path) -> None:
+        self.browser._stream_roi_file(file_path)
+
+
+@dataclass(frozen=True)
 class StreamingViewerField:
     """Display metadata for one registered streaming viewer field."""
 
@@ -1208,13 +1221,7 @@ class ImageBrowserWidget(QWidget):
         """Handle double-click on a result file - stream ROIs or display CSV."""
         if item.result_file_type is None:
             raise RuntimeError(f"Image browser item {item.key!r} has no result type.")
-        item.result_file_type.open_with(self, item.result_path())
-
-    def open_in_default_app(self, file_path: Path) -> None:
-        subprocess.run(["xdg-open", str(file_path)], check=False)
-
-    def stream_rois(self, file_path: Path) -> None:
-        self._stream_roi_file(file_path)
+        item.result_file_type.open_with(ResultFileBrowserOpener(self), item.result_path())
 
     def _view_selected_in_viewer(self, config_key: str):
         """View all selected images in the specified viewer as a batch (builds hyperstack)."""
@@ -1231,7 +1238,7 @@ class ImageBrowserWidget(QWidget):
         roi_filenames = [
             item.key
             for item in selected_items
-            if item.result_file_type is not None and item.result_file_type.streams_rois
+            if item.is_result and item.result_file_type.streams_rois
         ]
 
         logger.info(
