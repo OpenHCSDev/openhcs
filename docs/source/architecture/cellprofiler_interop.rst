@@ -148,8 +148,9 @@ runtime retry, or silent substitution with an unrelated backend.
 Exact compile-time reconstruction
 ---------------------------------
 
-``CellProfilerInvocationContractProviderFactory`` walks the resolved
-``StepSnapshot`` sequence and one forward ``ArtifactDeclarationStepContext``:
+``CellProfilerInvocationContractProviderFactory`` walks the steps of the
+``ResolvedPipelineDefinition`` with one forward
+``ArtifactDeclarationStepContext``:
 
 .. code-block:: text
 

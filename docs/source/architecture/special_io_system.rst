@@ -7,8 +7,9 @@ Special I/O terminology (transition)
    generated-pickle-path architecture has been superseded by typed callable
    contracts and compiled artifact plans. Read :doc:`artifact_contract_system`.
 
-``special_inputs`` is callable-ABI metadata. It names Python input parameters; they do not own artifact type, producer identity, materialization, or
-runtime storage.
+``special_inputs`` is callable-ABI metadata. It names Python input parameters
+and does not own artifact type, producer identity, materialization, or runtime
+storage. ``special_outputs`` no longer exists.
 
 Current ownership is split across:
 

@@ -71,6 +71,19 @@ An uncaptured native Qt/OpenGL preflight proves that context before pytest,
 so missing system libraries produce their own diagnostics rather than a
 captured application-startup abort.
 
+The Official30 headless parity lane compares all thirty workflows against the
+committed native CellProfiler outputs on Python 3.12 Linux and on Python 3.14
+Linux, Windows, and macOS. A pull request that changes none of the processing,
+core, format, CellProfiler interop, submodule, benchmark, integration-test, or
+packaging paths skips that lane;
+the required parity check accepts the skip only when that scope check proved
+the change irrelevant.
+
+The test jobs install candidate wheels with ``scripts/install_ci_candidate.py``
+and run the checkout's tests through ``scripts/run_installed_tests.py``, which
+removes checkout source paths from the import path so OpenHCS is imported from
+the installed wheel.
+
 The Python/OS boundary matrix also opens fresh MCP stdio sessions before
 importing NumPy and SciPy inside a tool. These tests exercise cold native-library
 loading while the protocol reader is active, plus protocol-channel isolation

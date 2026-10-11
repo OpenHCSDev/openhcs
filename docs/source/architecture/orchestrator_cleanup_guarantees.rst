@@ -1,7 +1,7 @@
 Execution cleanup guarantees
 ============================
 
-The compiled plate execution boundary makes cleanup converge across success,
+The compiled-bundle execution boundary makes cleanup converge across success,
 failure, cancellation, and a broken process pool.
 
 Viewer acquisition is part of that execution transaction. If one required

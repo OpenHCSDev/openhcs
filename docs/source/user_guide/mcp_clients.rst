@@ -40,7 +40,7 @@ open PyQt windows automatically.
 The installed stdio server defaults to the ``desktop`` capability surface. It
 includes normal UI, selected-plate, viewer, plate-data, knowledge,
 function-authoring, pipeline-authoring, and independent headless-execution
-tools. Headless sessions do not create or mirror desktop Plate Manager state.
+tools. Headless sessions do not create or mirror desktop Datasets window state.
 The desktop profile hides runtime-server, fallback-widget, and expert-only
 tools. The surface is projected from capability declaration metadata, not a
 copied tool list. Advanced users can select a narrower or development-oriented
@@ -241,7 +241,8 @@ directory for a new run. These inspection routes do not submit a pipeline; use
 the session tools above to run one.
 The ``openhcs-benchmark run-measured`` CLI command accepts a normal Python
 pipeline source file, plate and empty evidence directory, runs it on the
-ordinary execution runtime and retains the measured receipt;
+ordinary execution runtime and retains the measured receipt. It requires an
+explicit ``--wait-timeout-ms``; the session stops a run that exceeds it.
 ``--execution-plate`` can identify a prepared input while preserving the
 original plate identity. For large pipelines,
 ``--observation-scope outcomes`` retains per-axis status, output roots, and

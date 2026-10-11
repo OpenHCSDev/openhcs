@@ -24,19 +24,19 @@ Glossary
 
    Compiled execution bundle
       The validated worker-safe steps, frozen processing contexts, and
-      environment decisions consumed by plate execution.
+      environment decisions consumed by bundle execution.
 
    Compiled step plan
-      The typed compiler-owned plan for one step on one execution axis. Runtime
-      code reads it but does not repeat its inference.
+      The typed compiler-owned plan for one step in one processing context.
+      Runtime code reads it but does not repeat its inference.
 
    Compilation session
       The cross-step authority for source, artifact, and plan state while a
       pipeline is compiled.
 
-   Execution axis
-      The component that partitions independent processing contexts, normally
-      well.
+   Partition axis
+      The axis role whose values partition independent processing contexts and
+      worker lanes; for microscopy, the well.
 
    Function pattern
       A callable, a callable plus keyword arguments, a chain, or a dictionary
@@ -58,9 +58,10 @@ Glossary
       A typed quantitative result associated with images, objects, relationships,
       wells, or a plate.
 
-   Microscope handler
-      A registered source-format declaration that owns detection, parsing,
-      metadata projection, virtual-workspace behavior, and compatible backends.
+   Dataset source
+      A registered way to open a dataset root, such as a microscope format. It
+      owns detection, filename parsing, metadata, virtual-workspace behavior,
+      and compatible backends.
 
    Module artifact contract
       The artifact semantics declared by a module family, including a lowered
@@ -79,8 +80,9 @@ Glossary
       ``FunctionStep`` objects.
 
    Processing contract
-      The semantic locality of a callable, such as plane-local ``PURE_2D`` or
-      whole-stack ``PURE_3D``. It is independent of array memory type.
+      The semantic locality of a callable, a member of the
+      ``ProcessingContract`` family such as plane-local ``Pure2DContract`` or
+      whole-stack ``Pure3DContract``. It is independent of array memory type.
 
    Runtime adapter
       A declared boundary that converts typed compiler/runtime values into the
@@ -102,7 +104,7 @@ Glossary
       to satisfy a step.
 
    Source workspace projection
-      The virtual source view exposed by a microscope handler and PolyStore to
+      The virtual source view exposed by a dataset source and PolyStore to
       initialization and compilation.
 
    Variable components

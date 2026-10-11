@@ -9,19 +9,29 @@ OpenHCS-owned areas
 -------------------
 
 ``openhcs/core``
-  Pipeline declarations, source/artifact semantics, compiler plans, runtime
-  values, contexts, orchestrator, progress, and equivalence.
+  The domain-blind kernel: axis families, dataset sources, pipeline
+  declarations, callable and processing contracts, source/artifact semantics,
+  compiler plans, runtime values, contexts, orchestrator, progress, and
+  equivalence.
+
+``openhcs/domains``
+  Domain declarations that instantiate the kernel; microscopy declares its axis
+  family and domain configuration here.
 
 ``openhcs/processing``
-  Processing-library discovery, callable decorators/contracts, native and
-  CellProfiler-compatible processing implementations.
+  Processing-library discovery, native and CellProfiler-compatible processing
+  implementations, presets, and custom functions.
 
 ``openhcs/interop``
   Translation boundaries such as CellProfiler parsing, module declarations,
   settings binding, and public lowering.
 
 ``openhcs/microscopes``
-  Microscope-specific plate layout and metadata integration.
+  Microscope-specific dataset sources: plate layout and metadata integration.
+
+``openhcs/authoring``
+  The session (datasets, pipelines, compile, run, and their events) that the
+  Qt GUI and MCP clients render and invoke.
 
 ``openhcs/pyqt_gui``
   OpenHCS screens, workflow services, editors, Plate Manager, and adapters over

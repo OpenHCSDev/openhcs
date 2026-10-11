@@ -38,19 +38,21 @@ the bound process is compatible.
 Settlement and inspection boundary
 ----------------------------------
 
-Fiji participates in the same typed settlement control contract as Napari, but
-its current display path is synchronous. A ``SETTLE`` request therefore returns
-terminal ``ViewerSettleProgress`` immediately; Fiji does not expose Napari's
-queue of deferred Qt layer-route updates. This still provides one common
-execution/lifecycle protocol without pretending the two viewer implementations
-have the same internal update model.
+Fiji answers the same typed ``SETTLE`` control as Napari through the shared
+viewer control actions. Its display path batches streamed items through
+PolyStore's debounced batch engine, and ``SETTLE`` reports
+``ViewerSettleProgress`` for the queued and active batches: running until every
+queued item has rendered, complete afterwards, or failed with the retained
+native rendering error. Fiji has no queue of deferred Qt layer-route updates;
+the two viewers share the settlement contract, not an internal update model.
 
 Fiji does **not** currently provide Napari-style live viewer-state or payload
-projection. ``STATE`` and ``PAYLOADS`` control requests return explicit errors
-until a Fiji state projector exists. Inspection clients therefore cannot query
-Fiji layers, axes, labels, payload arrays, or payload summaries through those
-controls. This is a declared capability boundary, not a port/readiness failure;
-do not retry it as transport recovery or infer viewer state from window titles.
+projection. It registers no ``STATE`` or ``PAYLOADS`` control action, so those
+requests return an explicit unsupported-control error. Inspection clients
+therefore cannot query Fiji layers, axes, labels, payload arrays, or payload
+summaries through those controls. This is a declared capability boundary, not a
+port/readiness failure; do not retry it as transport recovery or infer viewer
+state from window titles.
 
 Fiji macro execution, display construction, readiness, clear-state control, and
 process lifecycle remain separate supported surfaces. Use Napari when automated

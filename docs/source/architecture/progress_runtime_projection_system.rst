@@ -33,30 +33,33 @@ Consumption path:
 2. Route events through explicit queue wiring via ``set_progress_queue(...)``.
 3. Register events in ``ProgressRegistry`` with semantic channel keying.
 4. Reconcile typed server-heartbeat running/queued entries by execution and
-   plate identity in ``ExecutionRuntimeProjection``.
+   subject identity in ``ExecutionRuntimeProjection``.
 5. Build runtime and execution-tree projections for status derivation.
-6. Coalesce Plate Manager registry mutations through its explicitly
-   GUI-thread-owned timer.
-7. Render the same projection in Plate Manager and ZMQ server browser services.
+6. Coalesce registry mutations in the session's ``ExecutionProgress``: each
+   mutation marks the projection dirty, and the session's main thread rebuilds
+   it at most once per interval and publishes it as session events.
+7. Render the same projection in the Plate Manager (through session events) and
+   the ZMQ server browser.
 
 OpenHCS Invariants
 ------------------
 
-- Canonical execution tree path is ``plate -> worker -> well -> step``.
-- ``PATTERN_GROUP`` is step-detail only and does not set well pipeline percent.
-- Plate/server status is derived from projection snapshots, not mutable cache.
+- The execution tree path is ``subject -> worker -> partition -> step``.
+- ``PATTERN_GROUP`` is step-detail only and does not set partition pipeline
+  percent.
+- Subject/server status is derived from projection snapshots, not mutable cache.
 - Event retention is monotonic per semantic key. Stale or duplicate timestamps
   are rejected before listeners and typed side-effect consumers run.
 - Topology is reconstructed from the retained event snapshot. A late subscriber
   may render a shallow lifecycle node when the initialization event is absent.
-- ``PlateRuntimeStateDeclarationBase`` owns state labels, count labels,
+- Each ``SubjectRuntimeState`` subclass owns its status label, count label,
   terminal policy, and live-server transition policy. ``state_counts`` is the
   only retained count projection; per-state count fields are forbidden.
-- Runtime identity is ``(execution_id, plate_id)``. A new queued execution may
-  replace an older visible execution for the same plate without conflating their
-  retained histories.
-- A background progress callback may only dirty the retained projection. Qt
-  timers and row rendering are application-thread lifecycle responsibilities.
+- Runtime identity is ``SubjectRuntimeIdentity(execution_id, subject_id)``. A
+  new queued execution may replace an older visible execution for the same
+  subject without conflating their retained histories.
+- A background progress callback may only dirty the retained projection.
+  Rebuilding and rendering run on the client's main thread.
 
 Debugger ownership
 ------------------
@@ -135,7 +138,8 @@ plate-scoped step. It is a successful terminal event for that worker/axis
 channel, but it does not assert that the plate execution has finished.
 
 After every worker result succeeds, the parent merges runtime records and calls
-``execute_plate_scoped_steps()`` once for each terminal plate step. The parent
+``execute_dataset_scoped_steps()``, which runs each terminal plate-scoped step
+once. The parent
 then materializes those outputs, runs analysis consolidation, settles viewer
 state, and projects the orchestrator result. Only after those stages succeed
 does it emit the pipeline ``SUCCESS`` event at 100 percent. Failure,

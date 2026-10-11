@@ -55,7 +55,7 @@ selection.
 Choose the owning layer
 -----------------------
 
-- source/file semantics: source declarations or microscope integration
+- source/file semantics: source declarations or a ``DatasetSource`` integration
 - callable behavior: callable contract or owning module declaration
 - storage mechanism: PolyStore
 - array conversion, framework-local device mechanics, and generic callable

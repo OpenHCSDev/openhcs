@@ -1,9 +1,11 @@
 Axes, grouping, and processing semantics
 ========================================
 
-OpenHCS transports image data as 3D arrays, including logical single-plane
-inputs. Array rank alone does not determine what the leading/third axis means or
-whether a callable has per-plane or whole-stack semantics.
+OpenHCS transports image data as tensor payloads whose dimensions are declared
+(``PayloadAxes``): a leading runtime plane axis, spatial dimensions named by the
+payload's spatial domain, and other declared axes such as colour samples. Array
+rank alone does not determine what the leading axis means or whether a callable
+has per-plane or whole-stack semantics.
 
 Five questions, five owners
 ---------------------------
@@ -58,21 +60,25 @@ Related execution declarations
 Processing contracts
 --------------------
 
-``PURE_2D``
+Each contract is a ``ProcessingContract`` subclass that owns its execution
+algorithm; a callable declares one by class, for example
+``@numpy(contract=Pure2DContract)``.
+
+``Pure2DContract``
   The result for one plane is semantically independent of every other plane.
-  OpenHCS may still transport or batch a 3D array, but the contract executes and
+  OpenHCS may still transport or batch a stack, but the contract executes and
   aggregates through nominal per-slice strategies.
 
-``PURE_3D``
+``Pure3DContract``
   The callable depends on the full variable-component stack and executes once
   with whole-stack semantics.
 
-``FLEXIBLE``
+``FlexibleContract``
   The callable supports both modes through an explicit semantic-control
-  parameter. The contract consumes that control and delegates to ``PURE_2D`` or
-  ``PURE_3D``; callers do not infer the mode from shape.
+  parameter. The contract runs per plane when its slice-by-slice control is on
+  and on the whole stack otherwise; callers do not infer the mode from shape.
 
-``VOLUMETRIC_TO_SLICE``
+``VolumetricToSliceContract``
   The callable consumes a real stack and produces a collapsed plane domain. The
   contract updates payload provenance to reflect the consumed leading axis.
 
@@ -100,8 +106,10 @@ the resolved facts, including selected framework-local device bindings, on
 Runtime projection
 ------------------
 
-When a contract requires per-slice execution, ``RuntimeSliceProjection`` selects
-a registered strategy for each nominal value family. Image payloads, object
+When a contract requires per-slice execution, each owned runtime value family
+projects itself: it subclasses ``RuntimeSliceProjectableValue`` and declares its
+slice count and per-slice value. ``RuntimeSliceProjection`` handles only foreign
+values such as arrays, containers, and primitives. Image payloads, object
 labels, measurements, relationships, tables, and aligned collections retain
 their semantic identity during projection and aggregation. A missing projection
 declaration is an error; OpenHCS does not guess from an object's shape or fields.
@@ -112,7 +120,7 @@ Common mistakes
 - Treating ``group_by`` as the definition of the stack axis.
 - Treating a named source binding as a third ``InputSource`` enum value.
 - Treating a value's presence in the runtime store as a persistence request.
-- Treating ``PURE_2D`` as “the callable only accepts rank-2 arrays.”
+- Treating ``Pure2DContract`` as “the callable only accepts rank-2 arrays.”
 - Passing ``variable_components`` or ``group_by`` directly to
   ``FunctionStep`` instead of its processing configuration.
 - Adding backend-specific dispatch to core rather than extending the callable or

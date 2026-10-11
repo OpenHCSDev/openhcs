@@ -87,8 +87,8 @@ to execution and result review.
 
 Choose UI-visible or headless ownership before creating a pipeline. When the
 scientist should see or continue editing the work in the desktop, use the
-UI-owned route; a headless draft or execution does not create Plate Manager
-state. Discover the capabilities exposed by the current profile before
+UI-owned route; a headless draft or execution does not create a row in the
+desktop Datasets pane. Discover the capabilities exposed by the current profile before
 following a guide, and validate a representative bounded run before scaling up.
 
 CellProfiler Mental Model

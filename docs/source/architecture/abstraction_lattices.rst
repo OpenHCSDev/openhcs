@@ -21,7 +21,7 @@ Start with the semantic question an abstraction answers. Examples include:
 - Which artifact does this callable produce?
 - Which CellProfiler module owns this parsed module name?
 - Which runtime value projection applies to this nominal value type?
-- Which microscope handler recognises and projects this source layout?
+- Which dataset source recognises and projects this source layout?
 
 A valid owner contains facts that cannot be obtained from another declaration.
 A mirror derives or copies its answer from an existing owner and then exposes
@@ -68,17 +68,18 @@ The following boundaries are verified by current declarations and tests:
   nominal leaves. ``CompiledStepPlan`` adds execution consequences without
   becoming a second declaration graph.
 
-``MicroscopeHandler`` and ``SourceBindingsConfig``
-  These are distinct owners, not duplicates. A handler recognises and projects
-  a physical or virtual source layout; source bindings select, name, and assign
-  component identity to sources. ``SourceBindingsHandler`` composes both for
-  arbitrary declared files.
+``DatasetSource`` and ``SourceBindingsConfig``
+  These are distinct owners, not duplicates. A dataset source recognises and
+  projects a physical or virtual source layout; source bindings select, name,
+  and assign component identity to sources. ``SourceBindingsSource`` composes
+  both for arbitrary declared files.
 
 Strategy selection mixins
   ``EnumKeyedStrategyMixin``, ``NominalTypeKeyedStrategyMixin``, and
-  ``MostDerivedContextStrategyMixin`` centralise selection by enum member,
-  nearest nominal type, or most-derived matching context. Leaves own
-  specialisation; consumers make one call through the root.
+  ``MostDerivedContextStrategyMixin``, provided by ``metaclass-registry``,
+  centralise selection by enum member, nearest nominal type, or most-derived
+  matching context. Leaves own specialisation; consumers make one call through
+  the root.
 
 ``AgentCapabilityDeclaration``
   MCP tool identity, contracts, effects, security facts, and surface
@@ -119,11 +120,11 @@ declarations.
 Source layouts and source bindings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A microscope handler and source bindings sometimes mention the same files, but
-they answer different questions. The handler determines how a layout becomes a
-workspace and which storage backends it supports. Source bindings determine
-which declared files satisfy named semantic inputs. Combining them in
-``SourceBindingsHandler`` is therefore composition of two authorities, not a
+A dataset source and source bindings sometimes mention the same files, but
+they answer different questions. The dataset source determines how a layout
+becomes a workspace and which storage backends it supports. Source bindings
+determine which declared files satisfy named semantic inputs. Combining them in
+``SourceBindingsSource`` is therefore composition of two authorities, not a
 mirror.
 
 Collapsing every source concern into either owner would lose information. A

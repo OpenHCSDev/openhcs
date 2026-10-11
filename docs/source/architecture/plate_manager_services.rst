@@ -13,7 +13,7 @@ Ownership map
 
 ``session.py``
   ``Session``: dataset add/delete/split, initialisation, compile and run, stop,
-  debug runs, finished-execution records, admission checks, and the ports a
+  debug runs, finished-execution records, work and mutation checks, and the ports a
   client supplies (``MainThread``, ``DatasetAccess``, ``Renderer``).
 
 ``operations/``

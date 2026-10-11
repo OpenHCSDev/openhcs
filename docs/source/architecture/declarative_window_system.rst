@@ -10,6 +10,8 @@ See :external+pyqt-reactive:doc:`window manager usage
 <architecture/scope_window_factory>`.
 
 OpenHCS retains stable product window identities, domain factories, ObjectState
-scope selection, and pipeline/execution actions. Their cross-package composition
+scope selection, and the session views and operations behind the dataset,
+pipeline, and execution windows; a session-view window takes its title from the
+view it renders. Their cross-package composition
 is documented in :doc:`ui_services_architecture`; package ownership and
 migration policy are in :doc:`external_foundations`.

@@ -50,7 +50,7 @@ Stack and grouping use
        processing_config=LazyProcessingConfig.from_config(processing),
    )
 
-Site declares the stack axis. Channel partitions those site stacks for
+Site is the axis the step assembles its stacks along. Channel partitions those site stacks for
 dictionary routing. ``ProcessingContract`` separately declares whether each
 callable has per-plane or whole-stack semantics.
 

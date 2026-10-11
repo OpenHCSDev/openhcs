@@ -4,22 +4,25 @@ Multiprocessing coordination
 Multiprocessing is coordinated from compiled execution facts rather than from
 a second task-planning model.
 
-1. The microscope/source model discovers execution-axis values.
+1. The dataset source discovers the values of the active axis family's
+   partition axis.
 2. ``PipelineCompiler`` produces a frozen ``ProcessingContext`` for each value.
-3. Bundle assembly validates the contexts and worker-safe steps.
+3. Bundle execution validates the contexts and worker-safe steps.
 4. The worker-start policy chooses one multiprocessing context for the entire
    execution.
-5. The executor submits one task per compiled axis and collects typed
-   ``ExecutionResult`` values.
+5. The lane planner assigns the compiled axis contexts to deterministic worker
+   lanes. The executor submits one task per active lane and collects a typed
+   ``ExecutionResult`` for each axis.
 
-Worker processes install the ``CompiledExecutionBundle`` through the worker-lane
-authority. Runtime stores and adapters are process-local; cross-process state is
-limited to serialized bundle data, progress channels, and result messages.
-Cancellation remains parent-owned: process workers are interrupted through the
-execution server's worker ownership boundary, whereas inline and threaded lanes
-observe the execution-scoped cooperative cancellation signal directly.
+Worker processes install the ``CompiledExecutionBundle`` through
+``ForkInheritedWorkerExecutionState``, either inherited at fork or unpickled
+from the bundle shipped to a prepared worker. Runtime stores and adapters are
+process-local; cross-process state is limited to serialized bundle data,
+progress channels, and result messages. Cancellation remains parent-owned:
+process workers are terminated by the executor resources that own them, whereas
+inline and threaded lanes observe the execution-scoped cooperative cancellation
+signal directly.
 
-Generic code must not ask the orchestrator for hard-coded component names.
-Component identities come from the source model and nominal component
-declarations. See :doc:`component_system_integration` and
-:doc:`concurrency_model`.
+Generic code must not ask the orchestrator for hard-coded axis names. Axis
+identities come from the active ``AxisFamily`` declaration and the dataset
+source. See :doc:`component_system_integration` and :doc:`concurrency_model`.

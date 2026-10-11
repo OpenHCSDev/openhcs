@@ -14,8 +14,8 @@ declare:
 - input, output, and execution memory types;
 - artifact inputs and outputs;
 - runtime-bound parameters;
-- required variable components and allowed grouping;
-- ``ProcessingContract``;
+- required axis roles and allowed group-by roles;
+- a ``ProcessingContract`` subclass;
 - runtime adapter and image execution mode;
 - axis- or plate-level execution scope;
 - compiler preparation hooks.
@@ -79,7 +79,7 @@ The desktop form surface materialises every locally available catalogue
 declaration after applying its owner-declared exclusions; authorable parameters
 become editable controls while runtime-owned inputs remain hidden.
 
-OpenHCS-native and custom functions are admitted only when every declared input,
+OpenHCS-native and custom functions are catalogued only when every declared input,
 output, and execution framework is installed and allowed by the current process
 policy. The browsable native catalogue contains public module declarations;
 private decorated helpers remain internal unless an explicit pipeline transports

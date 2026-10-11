@@ -39,7 +39,7 @@ Every supported authoring route produces the same public declaration shape:
 
    PipelineConfig + ordered list[FunctionStep]
        -> ObjectState resolves lazy configuration
-       -> StepSnapshot + CompilationSession
+       -> ResolvedPipelineDefinition + CompilationSession
        -> typed CompiledStepPlan objects
        -> CompiledExecutionBundle
        -> runtime values, artifacts, and materialized outputs
@@ -205,15 +205,16 @@ Keep these independent concepts separate:
   function patterns. It does not define the stack axis.
 
 ``ProcessingContract``
-  Declares callable locality. ``PURE_2D`` retains per-plane semantics even when
-  planes travel in a batch; ``PURE_3D`` means the result depends on the stack.
+  Declares callable locality. ``Pure2DContract`` retains per-plane semantics
+  even when planes travel in a batch; ``Pure3DContract`` means the result
+  depends on the stack.
 
 Unsupported microscope folders
 -------------------------------
 
 ``SourceBindingsConfig`` is the supported generic input boundary when a folder
-does not match a registered microscope handler. A non-empty source-binding
-declaration makes auto-detection select ``SourceBindingsHandler``. The agent or
+does not match a registered dataset source. A non-empty source-binding
+declaration makes auto-detection select ``SourceBindingsSource``. The agent or
 user describes the files; processing callables remain independent of physical
 filenames.
 
@@ -221,6 +222,7 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
 
 .. code-block:: python
 
+   from openhcs.constants.input_source import InputSource
    from openhcs.core.config import (
        LazyProcessingConfig,
        LazySourceBindingsConfig,
@@ -322,8 +324,8 @@ materialization, memory conversion, worker requirements, and execution scope.
 Runtime workers consume the resulting ``CompiledExecutionBundle`` and typed
 runtime values; they do not rediscover those contracts from strings or files.
 
-The desktop application and MCP execution services own progress, cancellation,
-and result presentation. For the explicit lower-level Python boundary, see
+The OpenHCS ``Session`` that both the desktop application and MCP operate owns
+progress, cancellation, and result presentation. For the explicit lower-level Python boundary, see
 :doc:`../api/index`.
 
 Current example authorities

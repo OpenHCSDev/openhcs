@@ -12,7 +12,7 @@ The compiler accepts an initialized ``PipelineOrchestrator`` and an ordered
 ``list[AbstractStep]``. Together they provide:
 
 - a ``PipelineConfig`` and ObjectState scope topology;
-- the microscope/source workspace and selected execution axes;
+- the dataset-source workspace and selected execution axes;
 - callable, module, source, and artifact declarations;
 - per-step processing, materialization, filtering, and streaming configuration.
 

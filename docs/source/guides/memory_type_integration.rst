@@ -55,8 +55,9 @@ projection. OpenHCS launchers consume the combined result; they do not mirror
 framework package layouts or rely on a parent process importing frameworks in a
 particular order.
 
-``ProcessingContract`` is independent of memory type. It says whether a
-callable is semantically plane-local or stack-dependent. Likewise,
+The ``ProcessingContract`` family, such as ``Pure2DContract`` above, is
+independent of memory type. Its subclass says whether a callable is
+semantically plane-local or stack-dependent. Likewise,
 ``variable_components`` defines the transported stack axis and ``group_by``
 defines post-stack grouping. See :doc:`../architecture/processing_semantics`.
 

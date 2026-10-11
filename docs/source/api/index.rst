@@ -66,37 +66,36 @@ Compilation and execution
 
 .. code-block:: python
 
+   import queue
    from pathlib import Path
 
    from objectstate import ensure_global_config_context
    from openhcs.core.config import GlobalPipelineConfig
    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+   from openhcs.core.progress import set_progress_queue
 
-   plate_path = Path("/data/plate").resolve()
+   dataset_root = Path("/data/plate").resolve()
    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
    orchestrator = PipelineOrchestrator(
-       plate_path,
+       dataset_root,
        pipeline_config=pipeline_config,
    ).initialize()
 
-   execution_bundle = orchestrator.compile_pipelines(pipeline_steps)
+   progress_queue = queue.Queue()
+   set_progress_queue(progress_queue)
+   try:
+       execution_bundle = orchestrator.compile_pipelines(pipeline_steps)
+       results = orchestrator.execute_compiled_bundle(
+           execution_bundle=execution_bundle,
+           progress_queue=progress_queue,
+           progress_context=orchestrator.progress_context(),
+       )
+   finally:
+       set_progress_queue(None)
 
-   progress_context = {
-       "execution_id": f"local::{plate_path}",
-       "plate_id": str(plate_path),
-       "axis_id": "",
-   }
-   progress_queue = (
-       execution_bundle.runtime_environment.worker_start
-       .multiprocessing_context()
-       .Queue()
-   )
-
-   results = orchestrator.execute_compiled_plate(
-       execution_bundle=execution_bundle,
-       progress_queue=progress_queue,
-       progress_context=progress_context,
-   )
+Compilation and execution emit typed progress events into the queue installed
+with ``set_progress_queue``; ``orchestrator.progress_context()`` names the
+execution those events report on.
 
 Applications should normally let the GUI or an execution service own progress
 queue lifecycle, cancellation, and result presentation. The explicit call above

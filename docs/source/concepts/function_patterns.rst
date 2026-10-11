@@ -68,7 +68,7 @@ Callable contracts
 ------------------
 
 Every normalized invocation has a ``CallableContract``. All invocations in a
-step must agree on execution scope and satisfy declared axes, grouping, runtime
+step must agree on execution scope and satisfy declared axis roles, grouping, runtime
 parameters, image mode, and artifacts. Compilation turns the public pattern into
 a typed compiled pattern; workers consume that compiled form.
 

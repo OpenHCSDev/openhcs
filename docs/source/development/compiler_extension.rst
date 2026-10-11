@@ -8,10 +8,12 @@ parallel dictionary plan.
 Invariants
 ----------
 
-``StepSnapshot`` binds one resolved step, compiler index, and ObjectState scope
-identity. ``CompilationSession`` validates that steps, snapshots, states,
-context, plans, source projection, and plate scope describe the same execution
-axis.
+``ResolvedPipelineDefinition`` captures the enabled steps with their
+ObjectState scope identities and provenance, and admits their artifact
+contracts and forward topology once before axis fan-out. ``CompilationSession``
+binds that definition to one ``ProcessingContext`` (one axis or sequential
+combination), its compiled-plan map, source projection, and dataset scope;
+``plan(index)`` fails when a step has no compiled plan.
 
 Adding a decision
 -----------------

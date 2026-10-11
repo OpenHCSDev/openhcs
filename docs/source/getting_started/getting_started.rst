@@ -56,12 +56,6 @@ Manual Python installation
 Create a virtual environment, then install the same CPU-safe capability set as
 the desktop installer:
 
-.. note::
-
-   The complete CellProfiler compatibility extra currently requires Python 3.13
-   or earlier because its optional parity dependency does not publish Python
-   3.14 wheels. Python 3.14 supports the base package and core-service extras.
-
 .. code-block:: bash
 
    python -m pip install --upgrade pip

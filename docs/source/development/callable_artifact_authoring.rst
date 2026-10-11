@@ -9,8 +9,8 @@ Callable contract
 -----------------
 
 The contract can carry input, output, and execution memory types, artifact
-inputs and outputs, runtime-bound parameters, required variable components,
-allowed grouping, processing contract, execution scope, runtime adapter,
+inputs and outputs, runtime-bound parameters, required axis roles, allowed
+group-by roles, processing contract, execution scope, runtime adapter,
 preparation hook, and a callable request binding. The execution memory role is
 the framework whose device scope must be active while the callable runs; it may
 differ from an input or output conversion boundary. Use the existing decorators
@@ -63,8 +63,8 @@ main-flow publication, and the active output subset are then represented by
 compiled source, edge, and artifact plans; do not copy them into declaration
 partitions.
 
-``special_inputs`` describes ABI parameters only. They are not a substitute for artifact types, producer edges,
-or materialization declarations.
+``special_inputs`` describes ABI parameters only. They are not a substitute
+for artifact types, producer edges, or materialization declarations.
 
 ``special_inputs("labels")`` alone does not bind a required ``labels`` parameter.
 Compilation rejects that incomplete contract, even if authored kwargs contain a
@@ -209,7 +209,7 @@ still determine their return positions and materialisation. An output image
 reference is not an input-qualified group-scope source.
 ``MaterializationSourceIdentityRelation`` is supported for image targets, not
 labels or measurements, and is therefore not attached to those outputs here.
-``PURE_2D`` asks the runtime to dispatch planes independently;
+``Pure2DContract`` asks the runtime to dispatch planes independently;
 the runtime projects the local ``slice_index=0`` rows onto the assembled stack's
 plane axis. It does not create volumetric object identities.
 
@@ -252,7 +252,7 @@ where you saved it. For MCP custom registration, submit the complete declaration
 block as ``source_code`` to the discovered ``openhcs_register_custom_function``
 capability. Follow the ``openhcs_custom_function_workflow`` guide for explicit
 endpoint, intended storage, preparation and uncertainty handling. Retain the
-registration receipt, then describe the deliberately authored public function
+registration result, then describe the deliberately authored public function
 identifier to verify its ``function_id``, ``import_path`` and artifact contract
 rather than assuming registration returns a function catalogue. Custom
 callables are projected under ``openhcs.processing.custom_functions``. A local
@@ -337,7 +337,7 @@ On the existing centre-producing callable, declare
 ``@artifact_outputs(CENTRE_IMAGE, CENTRE_LABELS, CENTRE_ROWS)`` and return
 ``image, labels, DataclassMeasurementColumnarRows(rows, row_type=CentreRow)``.
 Use the existing memory/processing decorators, as in the executable reference;
-``PURE_3D`` is appropriate only for an actual volumetric calculation. Retain
+``Pure3DContract`` is appropriate only for an actual volumetric calculation. Retain
 the complete source bindings and compiled ZYX grouping: the decorator alone
 does not establish axis order. The row's representative rule (peak, body centre
 or another task-defined location) remains the analysis contract, not the writer.
@@ -458,7 +458,7 @@ the compatible producer, retaining the complete pipeline configuration/source
 bindings. ``np.asarray(objects)`` is a local pixel view for this calculation,
 not a replacement for the nominal input or its provenance. If the task needs
 object/plane identity, use the value's domain and plane APIs rather than
-reconstructing them from dense pixels. ``PURE_2D`` here describes locality;
+reconstructing them from dense pixels. ``Pure2DContract`` here describes locality;
 it does not select the pipeline's variable axis.
 
 Repair the earliest failed declaration before trying execution. If compilation

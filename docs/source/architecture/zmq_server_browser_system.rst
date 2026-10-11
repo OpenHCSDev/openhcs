@@ -38,7 +38,7 @@ OpenHCS Browser Components
   canonicalises responsive heartbeats and in-progress startup observations by
   port, then derives endpoint status without persistent connection flags.
 - ``RuntimeExecutionTopology``:
-  derives worker/well ownership and step names from each retained event
+  derives worker/partition ownership and step names from each retained event
   snapshot and validates worker claims without persistent browser state.
 - ``RuntimeTreeProjectionBuilder``:
   builds typed core runtime trees with recursive aggregation policies.
@@ -65,17 +65,17 @@ Canonical Tree Path
 
 Execution subtree path is invariant:
 
-``plate -> worker -> well -> step``
+``subject -> worker -> partition -> step``
 
-Compilation path is plate -> compilation entries until execution events begin.
+Compilation path is subject -> compilation entries until execution events begin.
 
 Aggregation Semantics
 ---------------------
 
 Tree percentages are recursive and policy-driven:
 
-- ``mean`` for parent aggregates (plate, worker)
-- ``explicit`` for leaf/detail nodes (well, step, compilation)
+- ``mean`` for parent aggregates (subject, worker)
+- ``explicit`` for leaf/detail nodes (partition, step, compilation)
 
 Policies are enforced per registered node type in
 ``RuntimeTreeProjectionBuilder``.
@@ -83,8 +83,8 @@ Policies are enforced per registered node type in
 Refresh/State Preservation
 --------------------------
 
-The Plate Manager's execution client is the sole subscriber that registers
-progress events. The browser observes accepted registry mutations, marshals the
+The ``Session`` execution client (``ZMQClientService``) is the sole subscriber
+that registers progress events. The browser observes accepted registry mutations, marshals the
 notification through a queued Qt signal, and coalesces redraws at the interval
 declared by ``ProgressUIConfig``. Server scans independently supply the current
 typed running/queued heartbeat entries. Expansion/selection preservation is

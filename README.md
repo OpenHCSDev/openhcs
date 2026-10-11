@@ -98,7 +98,7 @@ graph LR
 <td width="50%" valign="top">
 
 ### 🛡️ Compile-Time Validation
-Configuration is resolved once into step snapshots and a compilation session. Typed plans then validate sources, artifacts, materialization, memory contracts, and worker requirements before execution begins. Errors surface immediately, not after hours of processing.
+Configuration is resolved once into a resolved pipeline definition and per-context compilation sessions. Typed plans then validate sources, artifacts, materialization, memory contracts, and worker requirements before execution begins. Errors surface immediately, not after hours of processing.
 
 </td>
 <td width="50%" valign="top">
@@ -199,7 +199,7 @@ graph TD
 | [**PyQT-reactive**](https://github.com/OpenHCSDev/PyQT-reactive) | UI form generation | React-style reactive forms from dataclasses with cross-window sync and flash animations |
 | [**pycodify**](https://github.com/OpenHCSDev/pycodify) | Code ↔ object conversion | Python source as serialization format — type-preserving, diffable, editable, with collision handling |
 | [**python-introspect**](https://github.com/OpenHCSDev/python-introspect) | Signature analysis | Pure-Python function/dataclass introspection for automatic UI generation and contract analysis |
-| [**metaclass-registry**](https://github.com/OpenHCSDev/metaclass-registry) | Plugin discovery | Zero-boilerplate registry system powering microscope handler and storage backend auto-discovery |
+| [**metaclass-registry**](https://github.com/OpenHCSDev/metaclass-registry) | Plugin discovery | Zero-boilerplate registry system powering dataset source and storage backend auto-discovery |
 
 ---
 
@@ -219,7 +219,7 @@ graph TD
 | OMERO | Remote image and metadata access |
 | OpenHCS format | Native generated and materialized plates |
 
-Source handlers are auto-detected and extensible through `metaclass-registry`.
+Dataset sources are auto-detected and extensible through `metaclass-registry`.
 
 </td>
 <td width="60%" valign="top">
@@ -309,24 +309,27 @@ python -m pip install "openhcs[gui,mcp,viz]"
 
 ```python
 # Or lower a CellProfiler pipeline into public OpenHCS declarations
+import queue
 from pathlib import Path
 
 from objectstate import ensure_global_config_context
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+from openhcs.core.progress import set_progress_queue
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 
-plate_path = Path("/data/plate").resolve()
+dataset_root = Path("/data/plate").resolve()
 ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
 steps, pipeline_config = import_cellprofiler_pipeline(
     "analysis.cppipe",
-    source_root=plate_path,
+    source_root=dataset_root,
 )
 
 orchestrator = PipelineOrchestrator(
-    plate_path,
+    dataset_root,
     pipeline_config=pipeline_config,
 ).initialize()
+set_progress_queue(queue.Queue())  # compilation emits progress events
 execution_bundle = orchestrator.compile_pipelines(steps)
 ```
 
@@ -360,16 +363,18 @@ digests. Archived receipts without the latter two digests remain readable but
 cannot verify those files. These routes do not create a
 second pipeline runner or job-status system.
 `openhcs-benchmark run-measured --plate PLATE --pipeline-source-file PIPELINE.py
---output-dir EVIDENCE --run-id ID --wait-timeout-ms 120000` submits that
-pipeline through ordinary headless job control, then calls the same receipt
-finalizer as MCP. Use `--execution-plate PREPARED_PLATE` when the input workspace
-has been prepared separately; the evidence directory must be empty.
+--output-dir EVIDENCE --run-id ID --wait-timeout-ms 120000` runs that
+pipeline through the OpenHCS session, then calls the same receipt finalizer as
+MCP. The source plate is never written: the run mirrors it into an execution
+workspace under `EVIDENCE/workspace` (or `--workspace-root`), or uses
+`--execution-plate PREPARED_PLATE` when the input workspace has been prepared
+separately; the evidence directory must be empty.
 Use `--observation-scope outcomes` to retain per-axis success and provenance
 without transferring runtime arrays; this does not compare output values.
-After an ordinary headless job completes, the expert
-`openhcs_finalize_measured_pipeline_run` tool can validate its runtime
-observation and retain that receipt from the exact submitted pipeline and
-server completion record. It does not submit another job.
+After the OpenHCS session finishes an ordinary run that exported a runtime
+observation, the expert `openhcs_finalize_measured_pipeline_run` tool can
+validate that observation and retain the receipt; the submission and server
+record come from the session. It does not submit another run.
 
 <details>
 <summary><b>📦 All installation options</b></summary>
@@ -432,7 +437,7 @@ Supported on Python 3.11 and 3.12. See [Glencoe Software](https://www.glencoesof
 ```
 PipelineConfig + list[FunctionStep]
         ↓ resolve once
-StepSnapshot + CompilationSession
+ResolvedPipelineDefinition + CompilationSession
         ↓ derive and validate
 typed CompiledStepPlan objects
         ↓ package

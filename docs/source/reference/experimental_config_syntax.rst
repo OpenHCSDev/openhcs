@@ -176,7 +176,7 @@ pipeline or step configuration.
 
 .. code-block:: python
 
-   from openhcs.core.config import ExperimentalAnalysisConfig
+   from openhcs.domains.microscopy.config import ExperimentalAnalysisConfig
    from openhcs.processing.backends.experimental_analysis import (
        ExperimentalAnalysisEngine,
    )

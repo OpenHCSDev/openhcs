@@ -20,8 +20,9 @@ workbook contract is documented in
 :doc:`../reference/experimental_config_syntax`.
 
 Automatic post-plate consolidation is controlled by
-``AnalysisConsolidationConfig`` on the pipeline. It selects file extensions,
-well extraction, exclusions, and output names. Consolidation consumes
+``AnalysisConsolidationConfig`` in the global pipeline configuration. It
+selects the MetaXpress-style layout, file extensions, exclusion patterns, and
+output names. Consolidation consumes
 materialized analysis artifacts; it is not an image-processing ``FunctionStep``
 and does not reconstruct compiler state.
 

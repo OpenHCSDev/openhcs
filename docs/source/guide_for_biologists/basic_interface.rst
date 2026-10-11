@@ -13,7 +13,7 @@ The desktop is a set of ObjectState-backed workflow windows, not one giant form:
 .. code-block:: text
 
    Main window
-       |- Plate Manager          datasets, selection, init/compile/run
+       |- Datasets               datasets, selection, init/compile/run
        |- Pipeline Editor        PipelineConfig + ordered FunctionStep list
        |    `- Step editors      callable pattern + step-local config
        |- Global Configuration   application/session defaults
@@ -21,19 +21,20 @@ The desktop is a set of ObjectState-backed workflow windows, not one giant form:
        |- Log/progress/debug     operation status and diagnostics
        `- Analysis/tools         consolidation, layouts, custom functions
 
-The Plate Manager is the operational hub. Other windows edit or inspect the
+The Datasets pane is the operational hub. Other windows edit or inspect the
 selected plate, pipeline, step, source projection, or application config. A
 Napari or Fiji viewer is a separate runtime window launched only when requested.
-In the supported PyQt desktop shell, Plate Manager and the ZMQ process manager
+In the supported PyQt desktop shell, the Datasets pane and the ZMQ server manager
 occupy the left workspace, Pipeline Editor occupies the right workspace, and
 the system monitor is docked above them. Managed editors,
 configuration windows, logs, and tools open or focus around that embedded
 workspace. The PyQt desktop shell is the supported MCP-attached UI.
 
-Plate Manager
+Datasets pane
 -------------
 
-Plate Manager is the starting point for a dataset. Add a local or configured
+The **Datasets** pane (window identity ``plate_manager`` for MCP agents) is the
+starting point for a dataset. Add a local or configured
 remote plate, initialize it, and select the plate before editing or running its
 pipeline. Initialization discovers the microscope/source format and component
 metadata. Compile and run actions are disabled until their prerequisites are
@@ -49,7 +50,7 @@ It is disabled during startup or disconnection, even if a compiled plate remains
 selected. During execution, the same control provides **Stop**; stopping controls
 remain available if the endpoint becomes unavailable.
 
-Plate Manager code mode records whether its document represents all plates or
+Datasets code mode records whether its document represents all plates or
 only the current selection. Applying a selected document changes only those
 plates and preserves every unselected plate. Read a new document if you need to
 change which plates the edit covers.
@@ -92,7 +93,7 @@ reference to the authoring process; it does not rebuild the catalogue there.
 List previews
 -------------
 
-The ``list_previews`` section of UI configuration controls the Plate Manager
+The ``list_previews`` section of UI configuration controls the Datasets
 and Pipeline Editor summaries. It sets the default wrapping behaviour, includes
 or hides detail lines and modified settings, and shows collections compactly
 or in detail. Saving applies the same display policy to both panels immediately.
@@ -136,16 +137,17 @@ Agent navigation
 An attached MCP agent should navigate semantically:
 
 1. list running windows and ObjectState scopes;
-2. read the Plate Manager state surface to identify selected/source/output rows;
+2. read the Datasets (``plate_manager``) state surface to identify selected/source/output rows;
 3. open or focus the relevant window/scope;
 4. list its code documents or fields rather than guessing widget labels;
 5. validate code, then apply with the current revision token;
-6. dispatch semantic init/compile/run actions and poll operation/state surfaces.
+6. dispatch semantic init/compile/run actions and follow the work they start
+   through the session events and state surfaces.
 
 To select a manager item through MCP, use that manager's window identity and
 the item identity from its state surface, then check the current selection
 before invoking an action. Opening a plate's configuration window does not
-select its Plate Manager row.
+select its Datasets row.
 
 Window focus and field navigation are reported separately. A configuration
 field request selects the tab whose declared ObjectState scope owns that path.
@@ -154,7 +156,7 @@ request reports that the target was unsupported instead of claiming it was
 navigated.
 
 The stable ``main_window`` snapshot captures the complete workspace and status
-bar. Pane identities capture a focused Plate Manager, Pipeline Editor, server
+bar. Pane identities capture a focused Datasets pane, Pipeline Editor, server
 browser, or system-monitor view, while transient dialogs are listed when they
 are open. Window snapshots and the widget tree are useful for orientation or
 diagnosing a missing semantic surface. They are not configuration authorities.

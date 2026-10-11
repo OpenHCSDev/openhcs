@@ -362,7 +362,7 @@
       "document_id": "openhcs_pipeline_compilation_system",
       "section_count": 0,
       "source_path": "docs/source/architecture/pipeline_compilation_system.rst",
-      "summary": "One-time ObjectState resolution, StepSnapshot and CompilationSession ownership, typed CompiledStepPlan fields, artifact/source planning, validation, and runtime bundle construction.",
+      "summary": "One-time ObjectState resolution, ResolvedPipelineDefinition and CompilationSession ownership, typed CompiledStepPlan fields, artifact/source planning, validation, and runtime bundle construction.",
       "tags": [
         "compiler",
         "runtime",

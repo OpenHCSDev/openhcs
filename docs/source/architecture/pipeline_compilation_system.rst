@@ -19,15 +19,10 @@ Output
 Resolve once
 ------------
 
-The normal compiler path materializes the pipeline and each step from ObjectState
-once. ``ResolvedPipelineDefinition`` groups the resolved steps, their ObjectState
-map, and a ``StepSnapshot`` tuple shared by every axis compilation.
-
-A ``StepSnapshot`` contains:
-
-- stable step index
-- ObjectState scope identity
-- the already-resolved step object
+The normal compiler path resolves the pipeline and each saved step through
+ObjectState once, without registering editor states. ``ResolvedPipelineDefinition``
+holds the enabled resolved steps with each step's ObjectState scope identity and
+saved provenance, keyed by step index, and is shared by every axis compilation.
 
 All step semantics remain on that resolved step and its authoritative callable
 or module declarations. Later stages must not call ObjectState again to recover
@@ -49,16 +44,18 @@ catalogue module that exposes them. Catalogue discovery projects those nominal
 claims, rejects duplicate canonical names, and does not maintain a parallel
 module-to-function list.
 
-Compilation owns the deferred warmup. Callable leaves become typed
-``FunctionReference`` and ``CallableContract`` values. Resolving those
-references initializes the function catalog, and
-``prepare_compiled_context_callables()`` resolves and caches every compiled
-invocation and runs its declaration-owned module or callable preparation hook
-before the execution bundle is emitted. A first compilation may therefore pay
-catalog and backend preparation costs; function-step orchestration does not own
-another preparation phase in its hot path. A spawn worker may still resolve a
-reference and rebuild a process-local callable cache because parent-process
-caches cannot cross that process boundary.
+An execution endpoint prepares the registered catalogue before it reports
+readiness: ``RegistryService.prepare_in_current_process()`` populates kernel
+caches, runs each callable's declaration-owned preparation hook, and publishes
+prepared signatures. Compilation then binds the selected callables. Callable
+leaves become typed ``FunctionReference`` and ``CallableContract`` values;
+``CallableContract.from_prepared_callable()`` prepares an authored target that
+the catalogue did not already prepare, and each ``CompiledFunctionInvocation``
+resolves its runtime callable through the process-local contract cache when it
+is built, before the execution bundle is emitted. Function-step orchestration
+does not own another preparation phase in its hot path. A spawn worker may still
+resolve a reference and rebuild a process-local callable cache because
+parent-process caches cannot cross that process boundary.
 
 This ordering is an ownership boundary, not merely a startup optimization.
 Source inspection must stay safe and bounded, while compilation must fail if a
@@ -82,14 +79,14 @@ new ``ProcessingContext`` before constructing the narrower session boundary.
 Each axis receives a ``CompilationSession`` joining:
 
 - the axis ``ProcessingContext``
-- resolved steps and snapshots
-- the step ObjectState map
-- global and orchestrator configuration
+- the shared ``ResolvedPipelineDefinition``
+- the resolved global configuration and the orchestrator
 - the virtual source-workspace projection
 - the mutable ``CompiledStepPlan`` map
-- plate and transport execution facts
+- dataset scope, path resolution, and transport execution facts
 
-The session validates one-to-one step, state, snapshot, and plan identity. A
+``ResolvedPipelineDefinition`` rejects a step without scope and provenance
+facts, and the session reports a missing compiled plan for any step index. A
 compiler stage accepts the session or a narrower typed request derived from it;
 it does not pass loosely related dictionaries between phases.
 
@@ -100,12 +97,12 @@ Typed step plans
 single plan authority for a step. Important fields include:
 
 - input/output paths and storage backends
-- source binding, source universe, and source load plans
+- source binding and source universe plans
 - main-flow dependency
 - artifact input/output plans and execution group scope
 - compiled function pattern and callable contracts
 - variable components, grouping, and sequential filters
-- input, output, and execution memory roles plus framework-local device bindings
+- input and output memory types plus framework-local device bindings
 - materialization plans and enabled streaming declarations
 
 Stages mutate these fields directly. Code should not recreate

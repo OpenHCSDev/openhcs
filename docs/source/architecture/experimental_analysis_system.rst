@@ -10,13 +10,13 @@ compilation or execution.
 Current ownership
 -----------------
 
-``ExperimentalAnalysisConfig`` owns the standalone engine options and all five
-filenames used by the directory workflow. It is deliberately not a global or
-pipeline configuration. ``ExperimentalAnalysisEngine`` owns format selection
+``ExperimentalAnalysisConfig``, declared by the microscopy domain, owns the
+standalone engine options and all five filenames used by the directory
+workflow. It is deliberately not a global or pipeline configuration section. ``ExperimentalAnalysisEngine`` owns format selection
 and orchestration; its ``run_directory`` projection derives every input and
 output path from that configuration. The desktop action constructs the default
 configuration and calls the same engine boundary rather than restating those
-filenames or using the deprecated compatibility wrapper.
+filenames.
 
 ``NormalizationMethod`` owns the fold-change, control z-score, and
 percentage-of-control leaf calculations. The shared analysis module traverses

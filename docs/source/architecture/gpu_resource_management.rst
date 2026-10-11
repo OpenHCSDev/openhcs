@@ -21,8 +21,8 @@ instead of preparing the complete catalogue.
 Fresh catalogue-preparation and execution-server processes receive
 ``MemoryType.subprocess_environment()``. That projection combines each member's
 declared import defaults and member-owned native-library paths before the child
-imports any framework, so parent and child admission do not depend on which GPU
-library happened to be imported first in the parent.
+imports any framework, so parent and child framework imports do not depend on
+which GPU library happened to be imported first in the parent.
 
 The desktop ``--no-gpu`` option and ``OPENHCS_CPU_ONLY=true`` reject a GPU
 footprint before optional frameworks are imported.

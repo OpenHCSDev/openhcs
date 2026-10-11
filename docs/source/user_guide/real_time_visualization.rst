@@ -8,8 +8,8 @@ not artifact materialization, a special pipeline class, or a direct viewer call.
 1. Install ``openhcs[gui,napari]``, ``openhcs[gui,fiji]``, or
    ``openhcs[gui,viz]``.
 2. Open a step in the Pipeline Editor.
-3. Enable its viewer configuration and choose persistence, batching, well
-   filters, and display options.
+3. Enable its viewer configuration and choose persistence, partition
+   filters, transport, and display options.
 4. Compile. OpenHCS validates source metadata, transport, and viewer
    requirements independently of artifact materialization.
 5. Run the compiled plate and inspect the detached viewer.

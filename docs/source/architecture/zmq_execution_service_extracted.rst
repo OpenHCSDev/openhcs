@@ -38,59 +38,57 @@ inline and threaded work then stops at the next cooperative boundary.
 
 OpenHCS execution submission reuses ZMQRuntime's monotonic
 ``OperationDeadline`` across endpoint startup, progress registration, task
-serialisation, and the execute request. ``OpenHCSZMQConfig`` owns this dedicated
-submission budget separately from the shorter budget for status, stop, and
-other control requests. Startup activity may refresh the endpoint inactivity
+serialisation, and the execute request. ZMQRuntime's
+``ExecutionTransportConfig``, which ``OpenHCSZMQConfig`` extends with OpenHCS
+application names, declares this dedicated submission budget separately from
+the shorter budget for status, stop, and other control requests. Startup activity may refresh the endpoint inactivity
 deadline, but it cannot extend the caller's total submit budget. OpenHCS reports
 separately whether preparation expired before the execute request or the
 request was sent without a reply, so callers do not invent an execution
 identifier or retry an unknown outcome blindly.
 
-An accepted headless job retains the exact client that submitted it. Status
-polling reuses that client, projects its ZMQRuntime-owned latest progress
-observation, and disconnects it after caching a terminal response. It does not
-recreate clients for polling or mirror transport progress in an OpenHCS-owned
-registry. The job also retains the exact typed submission and accepting endpoint
-handshake. A successful completion projects those facts with the server's typed
-execution record, including its results and timing boundaries, so evidence
+Desktop and headless MCP clients submit through the same ``Session``, which
+owns one execution client. ``ExecutionSubmission`` records each accepted
+submission with its typed request and accepting endpoint handshake, and follows
+its status through that client until it is terminal. The session then keeps the
+submission, endpoint and the server's typed ``ExecutionRecord``, including its
+results and timing boundaries, together as one finished execution, so evidence
 writers need not reconstruct the pipeline or parse a separate status source.
 
 The ordinary ZMQ client checks the endpoint's OpenHCS application compatibility
 before sending any compile or execution request. Benchmark callers use that same
 admission method; they do not maintain a separate version rule.
 
-The headless cancellation capability addresses that retained client's exact
-job identifier. Its service delegates the bounded request to the ordinary
-execution client and returns the server's applied flag with the observed job
-status; a client timeout alone is not treated as successful cancellation.
-Optional runtime-observation export follows the same submission path: the
-agent path policy validates the destination, and the client/server shared
-auxiliary declaration carries it and its typed value-or-outcome scope to the
-existing execution server. Outcome-only export does not require runtime array
+Session stop shuts down the execution endpoint, gracefully or by force, and
+marks the active datasets cancelled. The ordinary execution client also keeps a
+bounded ``cancel_execution`` control request for one execution identifier.
+Optional runtime-observation export follows the ordinary submission path: the
+client/server shared ``ZMQAuxiliaryExecutionParams`` declaration carries the
+destination and its typed value-or-outcome scope to the existing execution
+server. Outcome-only export does not require runtime array
 values to return to the parent when the compiled plan does not need them. It
 retains file-export paths from the same compiled output contexts as a full
 observation, without collecting intermediate runtime records. The
 benchmark layer need not submit a second kind of job to collect that evidence.
 Both export scopes carry the producing server execution ID, and the ordinary
 export writer will not replace an existing file. The benchmark finaliser
-checks that ID against the completed ordinary job before retaining its receipt.
+checks that ID against the completed ordinary job before retaining its evidence.
 The current value and outcome exports also compare execution-result membership
 with the compiled axis set; a successful subset cannot become a completed
 measurement merely because its reported axes succeeded.
 The server-owned observation also carries a startup snapshot of its Python
-interpreter and installed distribution versions. Benchmark receipts project
+interpreter and installed distribution versions. Benchmark evidence projects
 that observation without treating the client environment as the server's.
 The snapshot does not establish the environment of a remote worker.
 The ordinary compiled-run result also projects the server's completion summary
 and typed output-plate metadata; benchmark adapters consume those projections
 instead of decoding transport response keys themselves.
 
-A source-backed execution session may retain an original ``plate_path`` while
-declaring a different prepared ``execution_plate_path``. The shared ZMQ
-execution identity selects the prepared path when present, independently of a
-selected external pipeline file. The pycodified ``pipeline_source`` remains
-the pipeline authority; a second selected-pipeline path is rejected for that
-session. Both paths pass the ordinary agent read-path policy before submission.
+An execution request names its ``subject_id`` and may declare a different
+prepared ``execution_subject_id``. The shared ZMQ execution identity carries
+both, and the server's orchestrator environment opens the prepared subject when
+present, independently of a selected external pipeline file. The pycodified
+pipeline document remains the pipeline authority.
 
 The execution server owns one ``FunctionCatalogPreparation``. On a cold cache,
 ``RegistryService`` launches the launcher's dedicated

@@ -29,9 +29,10 @@ session's exact process group and are stopped when that session is cleaned up.
 For resource-bound candidate review, retrieve the ``openhcs_viewer_qa`` knowledge
 document, also bundled in the ``use-openhcs`` skill. Its conditional selective-
 retirement procedure follows the installed typed capability and distinguishes
-scene/payload custody from visibility, durable evidence and measured memory.
-That is the operating procedure; this lifecycle overview does not maintain a
-second retirement recipe or assume that every installed viewer supports it.
+retained scene and payload state from visibility, durable evidence and measured
+memory. That is the operating procedure; this lifecycle overview does not
+maintain a second retirement recipe or assume that every installed viewer
+supports it.
 
 Display-axis ownership
 ----------------------
@@ -176,7 +177,8 @@ These mechanisms answer different questions:
 
 ``NapariStreamingConfig`` / ``FijiStreamingConfig``
   Show eligible outputs while the selected step executes. Display axes,
-  batching, transport, viewer persistence, and well selection belong here.
+  batching, transport, viewer persistence, and partition (well) selection belong
+  here.
 
 ``StepMaterializationConfig``
   Save the step's ordinary main-flow result as a persistent checkpoint. Set it

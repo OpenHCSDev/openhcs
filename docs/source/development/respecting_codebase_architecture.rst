@@ -30,7 +30,7 @@ Registry discipline
 
 For a nominal family, the root registry is the catalog. Generic consumers
 normally iterate ``Root.__registry__.values()`` or use the helpers in
-``openhcs.core.registry_strategies``.
+``metaclass_registry.strategies``.
 
 Do not add a second dictionary, set, ordered list, priority table, copied field
 list, compatibility alias, or fallback chain for the same fact. Such mirrors

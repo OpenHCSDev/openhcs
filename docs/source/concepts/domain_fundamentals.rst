@@ -11,10 +11,10 @@ Why the data model matters
 --------------------------
 
 Microscope vendors differ in filename layout, metadata, and storage. OpenHCS
-uses registered microscope handlers and PolyStore source references to project
-those formats into a common source model. The original files remain the source;
-the projection supplies typed component identities and provenance to the
-compiler.
+uses registered dataset sources (one per microscope format) and PolyStore
+source references to project those formats into a common source model. The
+acquired files remain the source; the projection supplies typed component
+identities and provenance to the compiler.
 
 Why compilation matters
 -----------------------

@@ -9,8 +9,9 @@ Plate and execution axis
 ------------------------
 
 The orchestrator discovers component keys through the microscope/source model.
-One configured component—normally well—is the multiprocessing execution axis.
-Compilation creates one context and typed plan set for each selected axis value.
+The active axis family declares one partition axis (well, for microscopy) that
+splits work across processes. Compilation creates one context and typed plan
+set for each selected value on that axis.
 
 Image stack axis
 ----------------
@@ -34,18 +35,19 @@ An array that contains several Z planes is not automatically treated as one
 volumetric object domain. Component axes describe what the data contains;
 callable declarations describe how a function consumes it.
 
-``ProcessingContract`` controls how a callable handles the assembled runtime
-stack independently of the component identities:
+A ``ProcessingContract`` subclass controls how a callable handles the
+assembled runtime stack independently of the component identities:
 
-- ``PURE_2D``: each plane is semantically independent;
-- ``PURE_3D``: the callable depends on the full stack;
-- ``FLEXIBLE``: an explicit control selects either semantic mode;
-- ``VOLUMETRIC_TO_SLICE``: a stack is consumed into a collapsed plane domain.
+- ``Pure2DContract``: each plane is semantically independent;
+- ``Pure3DContract``: the callable depends on the full stack;
+- ``FlexibleContract``: an explicit control selects either semantic mode;
+- ``VolumetricToSliceContract``: a stack is consumed into a collapsed plane
+  domain.
 
 Other callable declarations can preserve a complete image payload or a
 full-stack object-label input. The effective behaviour therefore comes from
-the callable's complete contract, not from array shape or one enum in
-isolation. For example, the CellProfiler-compatible Watershed route consumes a
+the callable's complete contract, not from array shape or one processing
+contract in isolation. For example, the CellProfiler-compatible Watershed route consumes a
 complete 3D payload, whereas ``IdentifyPrimaryObjects``,
 ``IdentifySecondaryObjects``, and ``IdentifyTertiaryObjects`` currently operate
 plane by plane.

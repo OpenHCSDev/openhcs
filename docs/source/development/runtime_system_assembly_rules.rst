@@ -11,7 +11,7 @@ Assembly order
 
    PipelineConfig + FunctionStep declarations
        -> one ObjectState resolution
-       -> StepSnapshot + CompilationSession
+       -> ResolvedPipelineDefinition + CompilationSession
        -> typed CompiledStepPlan objects
        -> CompiledExecutionBundle
        -> workers + RuntimeValueStore
@@ -43,14 +43,17 @@ Owner map
    including the exact framework-local device bindings selected for each step.
 
 ``CompiledExecutionBundle``
-   Contexts, worker-safe steps, plans, and the resolved runtime environment.
+   Runtime contexts, pickle-safe transport contexts, worker assignments, and the
+   resolved runtime environment.
 
 ``RuntimeValueStore``
    Validated runtime values, artifact keys, locations, current bindings, and
    observation history.
 
 ``RuntimeSliceProjection``
-   Nominal, provenance-aware slice projection and aggregation.
+   Slice projection of runtime values. Owned value types declare their slice
+   behaviour through ``RuntimeSliceProjectableValue``; stack values are checked
+   against their source provenance.
 
 Source and artifacts
 --------------------

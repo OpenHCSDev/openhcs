@@ -45,11 +45,13 @@ generic registration, focus/reuse, parentage, navigation, and close cleanup.
 Reopening a scoped editor therefore focuses the existing window; it does not
 create a second domain state or a second window registry.
 
-``MainWindowAction`` members own their enablement, invocation, side effects and
-recovery warnings. The UI bridge projects those members directly. Session restart
-uses the same ``DesktopRestartSession`` capture and history restoration boundary
-as updates and version-mismatch recovery; its accepted receipt precedes old-UI
-shutdown and requires discovery of the new bridge afterwards.
+Main-window actions such as ``CheckForUpdates``, ``RestartApplication`` and
+``ExitApplication`` are ``SessionOperation`` classes that own their availability,
+invocation, side effects and warnings. The UI bridge projects those classes
+directly through ``SessionOperationActionProvider``. Session restart uses the
+same ``DesktopRestartSession`` capture and history restoration as updates and
+version-mismatch recovery; the action returns before the old UI exits, so the
+caller must rediscover the new bridge afterwards.
 
 The process configuration ObjectState scopes share one stable configuration
 window. OpenHCS registers those declared scopes as routes to that window, while
@@ -129,7 +131,8 @@ Process configuration topology
 
 ``UIConfig`` is the process-global desktop declaration. Its ``zmq`` field is an
 OpenHCS-owned ``OpenHCSZMQConfig`` subtype of ZMQRuntime's generic
-``ZMQConfig``; it is not mirrored as a widget settings table.
+``ExecutionTransportConfig`` that only sets OpenHCS's application names; it is
+not mirrored as a widget settings table.
 ``PyQtGuiRuntimeContext`` carries the current
 ``UIConfig`` beside ``GlobalPipelineConfig``. The global configuration window
 edits their registered ObjectState scopes. The declaration contains only
@@ -145,9 +148,8 @@ duplicated as editable UIConfig fields. The update-check preference is itself a
 first reconciles every live consumer and only then publishes the runtime-context
 value and ``ui_config_changed`` signal. The system monitor applies
 ``performance_monitor`` through its idempotent update owner. Plate Manager
-updates its execution connection declaration and the already-materialized
-progress timer; a not-yet-materialized progress service receives the same value
-when constructed. The main-window shortcut lifecycle validates the complete key
+passes the execution transport declaration and progress-update interval to the
+session it renders. The main-window shortcut lifecycle validates the complete key
 set before rebinding its concrete QActions and time-travel event filter. ZMQ
 Manager rebuilds its scan inputs from the current transport declaration and the
 bridge's actual running binding, never from an unstarted configured port.
@@ -242,9 +244,11 @@ renderer, or fallback help system is retained.
 Results and selected-plate ownership
 ------------------------------------
 
-Plate Manager owns the visible plate selection and delegates pipeline editing,
-compile/run actions, Results, and viewer launch to the orchestrator registered
-for that row. Output rows resolve through the declared source/output relation so
+Plate Manager renders the ``Session`` dataset list and holds no session state:
+rows, selection, pending work, compiled artifacts and execution state are read
+from the session, and its buttons are session operations. Pipeline editing,
+compile/run actions, Results, and viewer launch act on the orchestrator
+registered for the selected row. Output rows resolve through the declared source/output relation so
 Results can use the producing orchestrator rather than treating the output plate
 as an unrelated session.
 

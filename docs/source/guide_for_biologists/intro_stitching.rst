@@ -37,9 +37,9 @@ Initialise the source data
 2. Select **Init** in Plate Manager.
 3. Wait for initialisation to finish.
 
-When initialisation succeeds, **Compile** becomes available. Open the metadata
-viewer if you want to confirm the discovered wells, sites, channels, and Z
-planes before continuing.
+When initialisation succeeds, **Compile** becomes available. Select **Viewer**
+and open its **Metadata** tab if you want to confirm the discovered wells,
+sites, channels, and Z planes before continuing.
 
 .. openhcs-gallery:: ui-plate-metadata
 

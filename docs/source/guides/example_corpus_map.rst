@@ -120,7 +120,7 @@ within that benchmark's source and measurement scope. It does not establish
 biological acceptance for a new assay: review its raw pixels and output overlay
 at matched coordinates, then preserve that new validation and any failures
 before promoting an adapted recipe. The portable acceptance boundary and
-required parity receipts are described in
+required parity evidence are described in
 :doc:`../architecture/measurement_equivalence_system` and
 ``benchmark/manifests/README.md``; do not infer a particular case passed from
 its presence in the recipe catalogue alone.

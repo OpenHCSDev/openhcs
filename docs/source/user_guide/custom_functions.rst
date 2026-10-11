@@ -20,10 +20,11 @@ function in the OpenHCS function catalog.
 
 Choose the processing contract deliberately:
 
-- ``PURE_2D`` means each plane is semantically independent;
-- ``PURE_3D`` means the result depends on the whole stack;
-- ``VOLUMETRIC_TO_SLICE`` consumes a volume and returns plane-local output;
-- ``FLEXIBLE`` is for callables that explicitly support either form.
+- ``Pure2DContract`` means each plane is semantically independent;
+- ``Pure3DContract`` means the result depends on the whole stack;
+- ``VolumetricToSliceContract`` consumes a volume and returns plane-local
+  output;
+- ``FlexibleContract`` is for callables that explicitly support either form.
 
 Do not attach compiler fields manually or inspect array framework names inside
 the function. Declare memory, locality, required axes, runtime parameters, and

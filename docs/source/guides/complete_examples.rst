@@ -14,7 +14,7 @@ the returned section from ``openhcs_official30_benchmark_recipes`` with
 ``max_chars=50000``. For example, section
 ``examplehuman-openhcs-python`` defines both ``pipeline_config`` and
 ``pipeline_steps`` using the public API. Sections are generated lazily from the
-manifest-resolved ``.cppipe`` through the canonical importer; they are not a
+manifest-resolved ``.cppipe`` through the public importer; they are not a
 second checked-in set of generated scripts.
 
 The same source is available to Python clients through
@@ -74,7 +74,8 @@ Loose Opera Phenix neurite outgrowth
 is a complete, parameterized CellProfiler-backed example for selected Opera
 Phenix TIFFs copied without ``Index.xml``. Edit its ``example_inputs`` boundary
 for the plate path, exact Hoechst/MAP2/SMI312 filenames, well/site/Z/time
-identities, output root, and viewer port.
+identities, output root, and viewer port. Set its ``source_voxel_spacing`` when
+the copied TIFFs need a calibration; they lose it with ``Index.xml``.
 
 The example uses MAP2 objects as neuronal seeds, enhances and skeletonizes
 SMI312 neurites, measures topology per seed, and propagates seed identities into
@@ -91,8 +92,9 @@ It composes the registered CellProfiler-compatible leaves behind one
 MetaXpress-style step while retaining typed measurements and unified neuron
 labels.
 
-Use the native ``Microscope.OPERAPHENIX`` handler when the complete plate and
-``Index.xml`` are available. Source bindings are appropriate here because the
+Use the native Opera Phenix source (``OperaPhenixHandler``, selected by
+``dataset_source`` detection) when the complete plate and ``Index.xml`` are
+available. Source bindings are appropriate here because the
 loose files no longer carry the plate-level metadata needed by that handler.
 
 Master multi-plate lab-meeting showcase

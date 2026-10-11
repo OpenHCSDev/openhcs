@@ -18,8 +18,9 @@ ObjectState
 ArrayBridge
   Owns memory-type taxonomy, callable memory metadata and decorators (including
   input, output, and execution memory), device-neutral array geometry, array
-  conversion, stack utilities, device streams, OOM behaviour, and the child-
-  process environment required to import each framework consistently. OpenHCS
+  conversion, per-memory-type native array operations, stack utilities, device
+  streams, OOM behaviour, and the child-process environment required to import
+  each framework consistently. OpenHCS
   projects those declarations into callable contracts and process launches, and
   owns semantic image shape roles, compiled conversion and framework-device
   plans, worker resource lifecycle, and resource policy. See
@@ -27,8 +28,9 @@ ArrayBridge
 
 metaclass-registry
   Owns ``AutoRegisterMeta``, ``RegistryConfig``, ``RegistryFamily``, discovery,
-  generic caching, and discovery imports that preserve host-owned root logging.
-  OpenHCS owns its nominal roots, declarations, and shared selection mixins. See
+  discovery imports that preserve host-owned root logging, the shared strategy
+  and selection mixins, and the bounded and process-local cache family.
+  OpenHCS owns its nominal roots and declarations. See
   :external+metaclass-registry:doc:`metaclass-registry documentation <index>`.
 
 PolyStore
@@ -52,15 +54,18 @@ pyqt-reactive
 
 python-introspect
   Owns callable/signature analysis, wrapped-target resolution, parameter
-  metadata, callable-declaration projection, and analyzer extensions. OpenHCS
+  metadata, callable-declaration projection, analyzer extensions, the
+  ``to_jsonable`` encoder paired with the ``dataclass_from_mapping`` decoder,
+  and declared public-API and lazy-export helpers. OpenHCS
   owns domain exclusions, callable contracts, and step-editor consumption. See
   the `python-introspect repository
   <https://github.com/OpenHCSDev/python-introspect>`_.
 
 ZMQRuntime
   Owns generic process lifecycle, exact spawned-process ownership groups,
-  automatic child reaping, request/status/progress protocols, typed connection
-  and operation cancellation, and viewer-control transport.
+  automatic child reaping, the background-process launch policy,
+  request/status/progress protocols, typed connection and operation
+  cancellation, and viewer-control transport.
   OpenHCS owns mapping compiled execution, source axes, runtime observations,
   and application services onto those protocols. See the `ZMQRuntime repository
   <https://github.com/OpenHCSDev/zmqruntime>`_.

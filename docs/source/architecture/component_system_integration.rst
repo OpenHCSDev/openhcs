@@ -5,7 +5,7 @@ The microscope/source model discovers component values for a plate. The
 compiler carries those values into source universes, execution-axis contexts,
 stack construction, grouping, and filtering.
 
-The same component declarations have distinct jobs:
+The step, pipeline, and family declarations have distinct jobs:
 
 ``variable_components``
   Determines what each position on the transported third array axis means.
@@ -16,8 +16,9 @@ The same component declarations have distinct jobs:
 ``sequential_components``
   Chooses dimensions processed in bounded sequential slices.
 
-``multiprocessing_axis``
-  Partitions independent compiled contexts, normally by well.
+The partition axis
+  The family's single ``PartitionAxis``; it partitions independent compiled
+  contexts, by well in the microscopy family.
 
 Metadata caches and source projections are the authority for values available
 on a particular plate. UI selectors, compiler stages, and runtime filters query

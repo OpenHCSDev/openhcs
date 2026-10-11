@@ -12,7 +12,7 @@ OpenHCS integration
 
 OpenHCS registers one formatter for the ``PartitionFilterConfig`` declaration
 family. Config classes own their preview labels and whether an enabled member
-remains visible without an explicit well selection. ``PartitionFilterMode`` members
+remains visible without an explicit partition filter. ``PartitionFilterMode`` members
 own the compact include or exclude operator. The formatter resolves those
 declarations through pyqt-reactive's preview API; it does not scan unrelated
 registries or reproduce subtype tables.

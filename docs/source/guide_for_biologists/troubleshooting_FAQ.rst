@@ -59,9 +59,9 @@ the running UI.
 An attached MCP client can request the main window's **Restart OpenHCS and
 restore session** action once initialisation, compilation and execution have
 finished. It saves the plate declarations and edit history before relaunching.
-The accepted action receipt precedes shutdown: rediscover the new UI bridge and
-check the restored session after restart. The old process's operation receipt
-does not persist across that boundary.
+The action returns before the old UI exits: rediscover the new UI bridge and
+check the restored session after restart. The old process's operation status
+does not survive the restart.
 
 If a restored session refers to a local plate directory that is unavailable,
 OpenHCS restores the plate and edit history but leaves that plate uninitialized.
@@ -100,7 +100,7 @@ configuration.
 If a function registered through MCP is missing, confirm that the MCP client
 and desktop use the same execution endpoint, then reopen the selector. Each
 opening requests current server membership. For isolated development sessions,
-``OPENHCS_UI_CONFIG_CACHE_FILE`` selects the canonical UI configuration for
+``OPENHCS_UI_CONFIG_CACHE_FILE`` selects the shared UI configuration for
 both processes; selecting a UI bridge descriptor alone does not select the
 execution endpoint.
 

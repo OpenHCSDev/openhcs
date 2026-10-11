@@ -15,7 +15,7 @@ Workflow
    changes.
 5. Review every change that alters configuration nesting, ownership, or
    runtime semantics.
-6. run ``scripts/validate_docs.py`` and Sphinx with warnings as errors.
+6. Run ``scripts/validate_docs.py`` and Sphinx with warnings as errors.
 
 The AST pass is useful for import moves, renamed call sites, and detecting old
 constructor keywords. It must not invent compatibility aliases, mirror

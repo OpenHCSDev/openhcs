@@ -12,7 +12,7 @@ PolyStore
   Owns generic storage backends, virtual paths, source references, and ROI
   persistence primitives. Its OMERO declarations own text formats and MIME
   types, table parsing and service readiness, image-plane batching, and the
-  canonical OMERO well and plane addresses.
+  OMERO well and plane addresses.
 
 OpenHCS
   Owns microscope/source selection, source bindings, compilation, processing,

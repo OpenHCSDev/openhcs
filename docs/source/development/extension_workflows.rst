@@ -70,7 +70,7 @@ Compiler/runtime split
 ----------------------
 
 Mutable ObjectState is resolved once. Compiler phases consume the resolved
-step through ``StepSnapshot`` and ``CompilationSession``. Workers consume
+steps through ``ResolvedPipelineDefinition`` and ``CompilationSession``. Workers consume
 ``CompiledExecutionBundle`` and must not reinterpret UI state or callable
 attributes.
 
@@ -92,11 +92,13 @@ Serialization boundaries
 
 Python source generation and JSON transport are different contracts.
 pycodify owns executable Python source, imports, and formatter composition.
-OpenHCS ``to_jsonable`` owns the JSON-native projection used by agent
-capabilities and UI-bridge transport. It uses ``singledispatch`` for mappings,
-sequences, callables, registered nominal types, enums, paths, and scalars.
+python-introspect ``to_jsonable`` owns the JSON-native projection used by
+agent capabilities and UI-bridge transport, paired with the
+``dataclass_from_mapping`` decoder. It uses ``singledispatch`` for dataclasses,
+mappings, sequences, callables, registered nominal types, enums, paths, and
+scalars.
 
-Add a ``to_jsonable.register`` implementation at the OpenHCS value type only
+Add a ``to_jsonable.register`` implementation beside the OpenHCS value type only
 when that type has a stable public transport representation. Do not make
 pycodify formatters or generic JSON consumers guess domain identity, and never
 use either projection to reconstruct compiler semantics that belong in typed

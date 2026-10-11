@@ -10,11 +10,11 @@ Generic folders and unsupported microscopes
 -------------------------------------------
 
 Source bindings are the nominal microscope-independent ingestion path for
-arbitrary folders. When microscope auto-detection fails and a non-empty
-``SourceBindingsConfig`` is present, the handler factory selects
-``SourceBindingsHandler``. That handler recursively inventories the folder and
-projects only the ordinary files selected by the declarations into a virtual
-workspace.
+arbitrary folders. When dataset-source auto-detection fails and a non-empty
+``SourceBindingsConfig`` is present, ``AutoDetectedSource`` selects the
+registered declared-file source, ``SourceBindingsSource``. That source
+recursively inventories the folder and projects only the ordinary files selected
+by the declarations into a virtual workspace.
 
 This fallback is distinct from semantic source selection on a recognized store.
 Native HCS handlers retain ownership of recognized layouts; CZI, OME-TIFF, and

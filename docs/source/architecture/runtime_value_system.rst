@@ -13,8 +13,8 @@ Value families
   Nominal array protocol with explicit NumPy interoperation.
 
 image payloads
-  Image data plus mask, plane-axis declaration, source metadata, spatial domain,
-  and source-plane provenance.
+  ``ImagePayload``: image data plus mask, declared payload axes, plane-axis
+  declaration, source metadata, spatial domain, and source-plane provenance.
 
 object-label values
   Dense or sparse labeled-object domains, grouped sets, and storage/building
@@ -38,8 +38,8 @@ semantic identity. Persistence location is represented separately by
 ``RuntimeArtifactLocation``.
 
 Invocation-selected output plans remain keyed by ``ArtifactSpecRef`` when they
-enter ``RuntimeAdapterRequest``. ``RuntimeReturnedOutputMatcher`` binds returned
-positions to the exact plan/spec refs, and adapter lookup accepts the
+enter ``RuntimeAdapterRequest``. ``CallableContract.resolve_returned_plan_values``
+binds returned positions to the exact plan/spec refs, and adapter lookup accepts the
 declaration-derived ref whose key agrees with its plan. Two outputs may
 therefore share a name when their artifact types differ: selection, matching,
 and request lookup preserve both identities rather than collapsing to the name.
@@ -71,26 +71,29 @@ part of artifact identity rather than encoded into ad hoc path strings.
 Runtime slice projection
 ------------------------
 
-``RuntimeSliceProjectionStrategy`` is a nominal-type registry family. A strategy
-declares the runtime value type it owns. Selection follows the value's MRO, and
-projection uses explicit plane-axis and source-identity declarations.
+Each owned runtime value family subclasses ``RuntimeSliceProjectableValue`` and
+implements its own slice behaviour: slice count, declared plane axis, per-slice
+values, and alignment slices. Projection uses explicit plane-axis and
+source-identity declarations.
 
-Registered strategies cover image payloads, aligned image collections, object
-labels, measurement tables, columnar rows, sparse labels, relationships, and
-identity-projectable semantic values. Primitive/pass-through types are declared
-explicitly. If a new value family can carry a runtime slice, its projection and
-aggregation behavior must be registered with the value type.
+Image payloads, aligned value sets, object labels, columnar rows (including
+measurement tables and sparse labels), relationships, and identity-projectable
+semantic values implement it. ``RuntimeSliceProjection`` handles only foreign
+values: it lists the array, mapping and primitive types that carry no
+runtime-slice axis, and projects tuples and lists item by item. Any other value
+without the ABC is an error. If a new value family can carry a runtime slice, it
+must subclass ``RuntimeSliceProjectableValue``.
 
 Function-output contextualization
 ---------------------------------
 
 A callable return does not inherit context from whichever runtime value happens
-to be nearby. ``FunctionOutputContextStrategy`` first selects behavior from the
-exact compiled output artifact type. For an image output,
-``ImageOutputSourceContextStrategy`` then selects behavior from the nominal type
-of the source chosen by the output's compiled ``source_context_source``
-relation. This is a two-stage owner dispatch, not a table of callable names or
-payload shapes.
+to be nearby. The exact compiled output artifact type first selects behaviour
+through its ``ArtifactType.contextualize_output`` method. For an image output,
+``ImageArtifactType`` then calls ``contextualize_image_output`` on the source
+value chosen by the output's compiled ``source_context_source`` relation, so the
+source's nominal type decides. This is a two-stage owner dispatch, not a table
+of callable names or payload shapes.
 
 An image result that already carries context may bypass derivation only when its
 source identity is complete and, for a declared artifact output, its represented
@@ -103,7 +106,7 @@ Image results that select or reorder source planes implement
 ``SourceProjectedImageOutput``. Their leaf implementation validates the declared
 selection and projects source metadata before generic image contextualization.
 ``SelectedPlaneImageOutput`` carries a cropped array and its ordered source
-indices, preserving channel identity even when only one channel remains.
+indices, preserving source-plane identity even when only one plane remains.
 
 Object-label sources have a specialized image-output rule. A rendered label
 volume with no selected plane must acquire the invocation's declared plane axis,
@@ -118,11 +121,10 @@ the artifact name and type, and the runtime store owns the resulting artifact
 key. A contextualizer must not rename a value, select a same-named plan, or
 coerce one artifact family into another.
 
-Artifact families without contextual image semantics use the root
-``UnchangedFunctionOutputContextStrategy``. It returns their values unchanged
-and does not invoke the image plane projector. Image, measurements, spatial
-graph, and object-label declarations select more-derived strategies through the
-artifact-type hierarchy. The artifact declaration therefore determines
+Artifact families without contextual image semantics inherit the root
+``ArtifactType`` methods. They return their values unchanged and do not invoke
+the image plane projector. Image, measurements, spatial grid, spatial graph,
+and object-label artifact types override them. The artifact declaration therefore determines
 projection behaviour; individual backend result classes do not need a copied
 exemption registry.
 

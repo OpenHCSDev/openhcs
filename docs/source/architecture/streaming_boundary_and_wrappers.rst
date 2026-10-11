@@ -55,8 +55,9 @@ This path has two independent identities:
 
 producer identity
   Identifies the compiled step and exact output surface that emitted the value.
-  ``FunctionStepOutputProducerIdentityAuthority`` derives it from the compiled
-  plan and the returned-output or artifact context.
+  ``CompiledStepPlan.producer_identity_for_main_flow`` and
+  ``producer_identity_for_artifact`` derive it from the compiled step plan and
+  the main-flow output context or artifact output plan.
 
 source identity
   Identifies the source image plane or source domain represented by the value.
@@ -85,9 +86,9 @@ branch on a CellProfiler module name or infer labels from an ndarray dtype.
 
 When a callable deliberately renders an image from labels, the compiled
 ``source_context_source`` relation selects the label artifact as the output's
-context source. Runtime contextualization then uses the registered
-``ObjectLabelImageOutputSourceContextStrategy``. For an unselected volumetric
-invocation, including a depth-one volume, that strategy requires the declared
+context source. Runtime contextualization then calls
+``ObjectLabelValue.contextualize_image_output`` on that label source. For an
+unselected volumetric invocation, including a depth-one volume, it requires the declared
 plane axis, requires source-plane provenance cardinality to match it, and
 validates the rendered output shape. A true scalar 2D label image remains
 scalar. Array rank alone never creates source identity.
@@ -175,7 +176,7 @@ terminal progress for its synchronous update path. Every recorded route must
 succeed before settlement completes, so an exception crosses the asynchronous
 Qt boundary instead of becoming a silent log message or an unrelated timeout.
 
-Compiled plate execution follows this order on success:
+Compiled bundle execution follows this order on success:
 
 1. settle every execution viewer;
 2. read typed state from non-persistent viewers while their endpoints are live;

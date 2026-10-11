@@ -44,7 +44,7 @@ The ``func`` field accepts:
 - a dictionary mapping compiled group keys to either form.
 
 Callable contracts—not examples or UI labels—are the authority for accepted
-parameters, runtime-injected parameters, required axes, processing behavior,
+parameters, runtime-injected parameters, required axis roles, processing behavior,
 memory types, and artifacts.
 
 Data flow
@@ -70,10 +70,11 @@ Compile before execution
 ------------------------
 
 ``PipelineOrchestrator.compile_pipelines(pipeline_steps)`` resolves the pipeline
-once and compiles every selected execution axis. The returned
-``CompiledExecutionBundle`` contains runtime contexts, worker steps, and
-environment decisions. The GUI uses the same boundary and compiles the complete
-selected set before executing it.
+once and compiles every selected value of the partition axis. The returned
+``CompiledExecutionBundle`` contains runtime contexts, worker assignments, and
+the runtime environment plan. The GUI and MCP clients reach the same boundary
+through the OpenHCS session, which compiles the complete selected set of
+datasets before executing it.
 
 Related pages
 -------------

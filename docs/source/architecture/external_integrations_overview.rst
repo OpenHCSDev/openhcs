@@ -8,7 +8,8 @@ parallel pipeline, source, artifact, or execution model.
 CellProfiler
 ------------
 
-The ``.cppipe`` importer parses CellProfiler modules and lowers them to
+The ``.cppipe`` importer, registered from interop as a member of the kernel's
+``PipelineImporter`` family, parses CellProfiler modules and lowers them to
 ``PipelineConfig`` plus ``FunctionStep`` declarations. Module declarations own
 their callable, artifact, and headless-import semantics; interactive-only
 modules fail explicitly. See :doc:`cellprofiler_interop`.
@@ -16,8 +17,9 @@ modules fail explicitly. See :doc:`cellprofiler_interop`.
 Microscope and storage sources
 ------------------------------
 
-Registered ``MicroscopeHandler`` implementations connect filename/metadata
-semantics to PolyStore source references and virtual workspaces. OpenHCS owns
+Registered ``DatasetSource`` implementations, such as the microscope handlers,
+connect filename/metadata semantics to PolyStore source references and virtual
+workspaces. OpenHCS owns
 source selection and compiler bindings; PolyStore owns generic storage. See
 :doc:`microscope_handler_integration` and :doc:`source_model`.
 

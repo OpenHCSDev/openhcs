@@ -16,7 +16,7 @@ trip is:
 
 Choose the document that owns the edited object. Pipeline Editor projects one
 complete ``PipelineDocument``; a step editor projects one ``FunctionStep``; a
-configuration window projects its typed config; Plate Manager projects the
+configuration window projects its typed config; the Datasets window projects the
 multi-plate aggregate. The available Code controls and MCP document catalog are
 discovered from those nominal owners rather than a copied button list.
 
@@ -24,7 +24,7 @@ Select a plate before applying a Pipeline Editor document. Without a selected
 plate, the document remains readable for inspection but reports
 ``writable=False`` and rejects apply requests without changing UI state.
 
-A Plate Manager document also carries its read-time selection scope. An
+A Datasets document also carries its read-time selection scope. An
 all-plates document represents the complete visible collection, so applying it
 synchronises that collection. A selected document may replace only the named
 plates and leaves every unselected plate unchanged. Its payload must contain the
@@ -43,8 +43,8 @@ generated code includes the explicit assignment again. Provide
 ``pipeline_config`` when the pipeline needs non-default source, processing,
 viewer, or materialisation settings.
 
-Reuse the exact imports shown in generated code. Plate Manager accepts external
-processing functions listed in the execution endpoint's catalogue, including
+Reuse the exact imports shown in generated code. The Datasets document accepts
+external processing functions listed in the execution endpoint's catalogue, including
 ``skimage.filters.edges.sobel``. Applying the document resolves the selected
 catalogue wrapper, preserving its processing contract and runtime controls.
 Wildcard imports and functions absent from that catalogue are rejected.
@@ -59,7 +59,7 @@ declared parameters in their supplied order. Decimal fields use compact,
 locale-aware text, so a value such as ``99.8`` remains readable without changing
 the field's configured numeric precision.
 
-Applying a complete Pipeline Editor or Plate Manager code document reconciles
+Applying a complete Pipeline Editor or Datasets code document reconciles
 the submitted declaration with the live ObjectState graph. Unchanged and
 unambiguously edited occurrences retain their history across reordering; added
 occurrences receive new scopes and omitted occurrences are removed. Ambiguous

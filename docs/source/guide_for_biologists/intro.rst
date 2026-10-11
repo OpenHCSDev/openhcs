@@ -22,8 +22,8 @@ OpenHCS is useful when you need to:
 
 The available microscope formats and function libraries depend on the installed
 version and optional dependencies. The application discovers them from their
-registered declarations; use the Plate Manager and function browser as the
-current capability catalog.
+registered declarations; use the ``dataset_source`` choices in the
+configuration form and the function browser as the current capability catalog.
 
 How a run works
 ---------------

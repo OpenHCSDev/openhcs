@@ -65,7 +65,7 @@
   },
   {
     "path": "docs/source/architecture/abstraction_lattices.rst",
-    "source_sha256": "aab6e8a69b89dc4f866cd83a639a4120a9ebbdfa366bd228fe8cda4202ea51b7",
+    "source_sha256": "01f3f213b569c46818674c2bf207749f196c91fa561ce43453203b6763036ee6",
     "audience": [
       "OpenHCS maintainers",
       "extension authors",
@@ -75,53 +75,68 @@
     "diataxis": "explanation",
     "authority": [
       {
-        "path": "openhcs/core/registry_strategies.py",
-        "sha256": "a41186665abbd308f224d0bb41d6618cd9d89b08acaf54ec2819f2024a6e0804",
-        "role": "Defines the shared enum, nominal-type, and most-derived context selection authorities discussed by the page."
+        "path": "external/metaclass-registry/src/metaclass_registry/strategies.py",
+        "sha256": "5c00cd4d80f9f0ceffbc2ab95ad8c6abd44a8a66a974959445ef93df08dd4f0d",
+        "role": "Defines EnumKeyedStrategyMixin (for_enum_member), NominalTypeKeyedStrategyMixin and MostDerivedContextStrategyMixin."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_declarations.py",
-        "sha256": "89dd65abc003c464ba6c489f52d3a4fa47be1d5f8b87d26ad72b7537f188cf8b",
-        "role": "Defines CellProfiler module leaves as owners of module identity, lowering, headless-import validation, artifact semantics, and their declaration-derived function catalogue."
+        "sha256": "6bbf41c158496a02439be2ee5aef12d7712fb632419c226a64c9259a55438b95",
+        "role": "Defines CellProfilerModule leaves and require_module as owners of module identity, lowering, headless-import validation and artifact semantics."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_declarations.py",
-        "sha256": "666ec8c9adfd6a9015adf2b226df671534bb7e547cb0d76f1d16c40ac61e30a6",
+        "sha256": "f70b52114fb5d5e2c2fc49cd9a2b46986bde48ce02d82f1a34a67f072ca2ab20",
         "role": "Defines the nominal interactive-module family that rejects headless import."
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
-        "role": "Projects declaration-owned callable metadata, including memory contracts and artifact relations, at the nominal boundary."
+        "sha256": "5b8e85dc1708d5727c73ac1007150219683fb9fb75c4ff2ec2c0bc676445738c",
+        "role": "Declares CallableContract, the declaration-owned callable metadata at the nominal boundary."
       },
       {
-        "path": "openhcs/microscopes/microscope_base.py",
-        "sha256": "ae19ce4f6e1cd2e60946eceb908722e1ff760d7654a775d8372abbc4ac1fc81f",
-        "role": "Defines the microscope-handler registry and generic factory selection boundary."
+        "path": "openhcs/core/artifacts.py",
+        "sha256": "65eb0ec5c903366243ca8bd5ea07412e8d34bdb81e6015fa76b3c4c59838733f",
+        "role": "Declares the ArtifactSpecRelation family for cross-artifact semantics."
+      },
+      {
+        "path": "openhcs/core/dataset_sources/source.py",
+        "sha256": "097fde4d2b74031eacf53a88e79f499417e8c1c97ba0753e8a9df831b307efa6",
+        "role": "Defines the DatasetSource registry and its layout detection and workspace projection boundary."
+      },
+      {
+        "path": "openhcs/core/dataset_sources/source_bindings_source.py",
+        "sha256": "fccda877f39e7b2f99d6cc95143480e5955186264e316e832ca9a69c2ae90b8c",
+        "role": "Defines SourceBindingsSource, which composes a dataset source with SourceBindingsConfig declarations."
+      },
+      {
+        "path": "openhcs/core/runtime_plane_projection.py",
+        "sha256": "3c88ed042a7f1c65c9495a1c62777e008f1e59c4742ec0563b2849d77ca87cdd",
+        "role": "Defines RuntimePlaneAxis and the RuntimePlaneAxisStrategy family used as the strategy example."
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
-        "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
+        "sha256": "eaebe33af01d057d1d21b3701f958bc96ede3ec5d0bddddca9917c1164ef0042",
+        "role": "Defines AgentCapabilityDeclaration and CapabilityTransport members carrying their transport semantics."
       },
       {
         "path": "tests/unit/test_cellprofiler_static_deletion_gates.py",
-        "sha256": "83d81d01ef7d828b2d0fe971a8487aa4cd049bc69e488f8f82aca2e9f02c2cbf",
+        "sha256": "785ea0bd5da907137672735ca631007ee1273393605f3d5e263ac929fbe36c5a",
         "role": "Guards deletion of superseded CellProfiler mirrors and compatibility surfaces."
       },
       {
         "path": "tests/unit/test_cellprofiler_pipeline_import.py",
-        "sha256": "353f0c1d8e0bc3552d2e418d792794ab0631daa16c78a3e10191b1cc1ea07d73",
+        "sha256": "6b1d201ec5c4ba620fa2367a9cbef1f6fbdd25edbdda9bd7b723ebe3a3363412",
         "role": "Verifies that importing an enabled interactive-only module fails explicitly."
       }
     ],
     "findings": [
-      "The 972-line page mixed a current mental model with benchmark inventories, migration checklists, WIP prescriptions, and stale proposed collapses; it now explains the current owners and treats commit history only as historical evidence.",
-      "Transport initialization instructions were selected again inside the MCP server adapter; CapabilityTransport members now carry the registered nominal rendering strategy used by every consumer.",
-      "Enabled interactive-only CellProfiler modules could otherwise disappear as non-executable declarations; the nominal module family now validates headless import and rejects them explicitly."
+      "The page named MicroscopeHandler and SourceBindingsHandler; G4 replaced them with the DatasetSource family and SourceBindingsSource.",
+      "The strategy selection mixins moved from the deleted openhcs/core/registry_strategies.py into metaclass-registry; the page now says where they come from."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/abstraction_lattices.rst in full and compared it against the changed authorities: openhcs/core/registry_strategies.py (deleted; mixins now in metaclass_registry.strategies), openhcs/microscopes/microscope_base.py (deleted; DatasetSource family in openhcs/core/dataset_sources), module_declarations.py, module_artifact_declarations.py, callable_contract.py, openhcs/agent/capabilities.py and the two CellProfiler tests; replaced the microscope-handler owner and SourceBindingsHandler with DatasetSource and SourceBindingsSource, attributed the strategy mixins to metaclass-registry, and confirmed CellProfilerModule.require_module, ArtifactSpecRelation, RuntimePlaneAxisStrategy, for_enum_member and CapabilityTransport against current source. Historical commit references are left as history.",
       "Re-read docs/source/architecture/abstraction_lattices.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/registry_strategies.py; openhcs/interop/cellprofiler/module_declarations.py; openhcs/core/callable_contract.py; openhcs/microscopes/microscope_base.py; openhcs/agent/capabilities.py; tests/unit/test_cellprofiler_static_deletion_gates.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -148,7 +163,7 @@
   },
   {
     "path": "docs/source/architecture/analysis_consolidation_system.rst",
-    "source_sha256": "3f3fa8f3f0ee441d4c2aa42bd79c2da3dc04635f4958b64ce49bcbfc25a618db",
+    "source_sha256": "d5e535d38edfd520b1fe69191d7547b4f02521631eb6fd71ea3de09bfbea7d83",
     "audience": [
       "OpenHCS runtime maintainers",
       "analysis-output integrators"
@@ -157,47 +172,48 @@
     "diataxis": "explanation",
     "authority": [
       {
-        "path": "openhcs/core/orchestrator/analysis_consolidation.py",
-        "sha256": "3ef9c20c347c1ac724353c84b24f9d7e13513aba7b9c5c01e194171b7e72bb52",
-        "role": "Projects execution-ledger CSV content with each result directory's compiled storage context and the global output-plate destination."
+        "path": "openhcs/domains/microscopy/analysis_consolidation.py",
+        "sha256": "292f7138a00dc22dba5b8d8af5de6140d247b955723cc807cc982ffec7a7dd2d",
+        "role": "Defines AnalysisConsolidationHook, its saved/reused output observations, the per-directory destinations and the FileManager summary writer."
+      },
+      {
+        "path": "openhcs/core/post_execute.py",
+        "sha256": "42183491eae6a5a17fd68c179970b1682343f1f73f355291f2ba4b02c784905d",
+        "role": "Defines the PostExecuteHook family: binding from the global config, observation combine, and running after every partition succeeds."
       },
       {
         "path": "openhcs/processing/backends/analysis/consolidate_analysis_results.py",
-        "sha256": "aad546fdc069653d809f9ef6867ad2ae351276ea9ab66b377af7cd6ab2428d60",
-        "role": "Defines nominal analysis sources and summary writers, in-memory merging, rendering, and consolidation policy."
+        "sha256": "508cdbf635705bd4b133569c7e745b2d163eb77871dd8be2dd2d994a6535c73a",
+        "role": "Defines AnalysisTableSource, AnalysisSummaryWriter, the inclusion selection, in-memory merging and summary rendering."
       },
       {
-        "path": "openhcs/core/config.py",
-        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
-        "role": "Declares AnalysisConsolidationConfig and its standalone consolidation policy."
+        "path": "openhcs/domains/microscopy/config.py",
+        "sha256": "79b8baefdbf22b85c199807f62b8234daca6904633a574886661a1c2e3d03a9b",
+        "role": "Declares AnalysisConsolidationConfig and PlateMetadataConfig."
       },
       {
-        "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "09c39f5cba68f8c15a0def8a09843b62d6da5c5a01e7558a9263ce4d311c078d",
-        "role": "Exercises orchestrator lane planning and post-execution analysis boundaries used by consolidation."
+        "path": "external/PolyStore/src/polystore/base.py",
+        "sha256": "8f2082ade15072bc8e8eba363c75a1d1cff7c67c74845e6485f69eab244634dc",
+        "role": "Declares DataSink.contextual_save_kwargs used for backend save context."
       },
       {
         "path": "tests/unit/test_function_artifact_materialization.py",
-        "sha256": "ba4f8f5f165ab87c3000d6d371a6f25cf4ec6a5d39b5047abaa392c827fe9ae8",
-        "role": "Proves consolidation consumes runtime CSV values, uses the compiled backend destination, ignores non-table artifacts, and propagates failures."
+        "sha256": "e92bd682c105778d8bde9cb0f63ff1baed9f4c082a05d2c7f8f04bf539bd699f",
+        "role": "Proves the hook consumes saved CSV content, uses the compiled backend destination, skips a disabled config, and propagates failures."
       },
       {
         "path": "tests/unit/test_routed_channel_selection.py",
-        "sha256": "f0f7e10c99f6568048817f38ee10f648bb0b6fb4945cc0fae0f988761557745f",
-        "role": "Executes a native plate with separate analysis destinations and verifies per-directory and merged output summaries without writing a summary into the input plate."
-      },
-      {
-        "path": "openhcs/processing/materialization/core.py",
-        "sha256": "1f5a89a1eb50766ef093df3fece16d6bb03422b92d062fe8ae6471656b1ebd45",
-        "role": "Owns writer runtime-path selection before rendering and the shared ROI target request."
+        "sha256": "3e4df60b48b699f18e0de29920be778bd03dc98f767fca8bb64a42d6536c4f41",
+        "role": "Executes a native plate with separate analysis destinations and verifies per-directory and merged summaries without writing into the input plate."
       }
     ],
     "findings": [
-      "The page described discovery as a results-directory scan, while current orchestration consumes exact typed runtime observation records.",
-      "Runtime consolidation formerly reopened virtual output addresses through the host filesystem and discarded failures; it now consumes execution-ledger content and writes through the compiled backend."
+      "The page named consolidate_analysis_outputs in the deleted openhcs/core/orchestrator/analysis_consolidation.py; consolidation is now AnalysisConsolidationHook, a microscopy PostExecuteHook bound from the global config.",
+      "The page said consolidation selection is passed into runtime materialisation so writers can skip rendering; no caller passes an output path filter now, and the hook instead records the CSV text the writer already saved, filtered by the inclusion selection."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/analysis_consolidation_system.rst in full and compared it against the changed authorities: openhcs/core/orchestrator/analysis_consolidation.py (moved to openhcs/domains/microscopy/analysis_consolidation.py as a post-execute hook), consolidate_analysis_results.py, openhcs/core/config.py (consolidation config moved to openhcs/domains/microscopy/config.py), the three tests and openhcs/processing/materialization/core.py; rewrote the flow paragraph for AnalysisConsolidationHook and PostExecuteHook, removed the obsolete output-selection/skip-rendering paragraph, and confirmed the writer, DataSink save context, output-root destination and failure propagation against current source. Dropped test_orchestrator_lane_planning.py and materialization/core.py, which no longer own a stated claim.",
       "Re-read docs/source/architecture/analysis_consolidation_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/orchestrator/analysis_consolidation.py; openhcs/core/config.py; tests/unit/test_orchestrator_lane_planning.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -215,7 +231,7 @@
   },
   {
     "path": "docs/source/architecture/artifact_contract_system.rst",
-    "source_sha256": "eb9380b348a7fccfb4385956bc1997b4dc4bf23aaf1f45abe2fd2fd8c1342d83",
+    "source_sha256": "270407772ecb71fad671363045561f7f736a535fc0b500410005687a04497b72",
     "audience": [
       "OpenHCS compiler maintainers",
       "callable and artifact extension authors"
@@ -225,35 +241,52 @@
     "authority": [
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "bb958c74c98cb96c97c5ac1ea68ac997673aac6afcad57bdf0c9496065e895fa",
-        "role": "Defines artifact families, specifications, references, relations, and materialisation declarations."
+        "sha256": "65eb0ec5c903366243ca8bd5ea07412e8d34bdb81e6015fa76b3c4c59838733f",
+        "role": "Defines the ArtifactType families, ArtifactSpec/ArtifactSpecRef, ArtifactSpecRelation leaves and materialisation declarations."
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
-        "role": "Defines callable artifact input and output ABI ownership and relation validation."
+        "sha256": "5b8e85dc1708d5727c73ac1007150219683fb9fb75c4ff2ec2c0bc676445738c",
+        "role": "Defines CallableContract and its ordered artifact input and output collections."
+      },
+      {
+        "path": "openhcs/core/function_patterns.py",
+        "sha256": "95b9056c6980e4f7943f909aeae8262252c9aa175247a534befc8d4cc459fdd2",
+        "role": "Defines InvocationArtifactInputEdgePlan, its main_flow_projection and storage plan, and MainFlowInputProjection."
+      },
+      {
+        "path": "openhcs/core/pipeline/function_contracts.py",
+        "sha256": "13bcaf7c7a62654f512d2cc739edccd2deeff35d99970ca493f3e827afbda91a",
+        "role": "Defines the special_inputs, artifact_inputs and artifact_outputs decorators."
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "0ed8bb8d843ff41382f4de25367a74c9535a39425c6fc328091ad3025d526151",
+        "sha256": "677d106969aae4d818745bff29b6f84e487ec79a044c8eaf26bea1916236fc6c",
         "role": "Implements artifact satisfaction and exact compiled path planning."
       },
       {
+        "path": "tests/unit/test_implicit_main_flow_compilation.py",
+        "sha256": "9f8f3c44f096ce0318612df7d51affbb21a7bbc837c9846d599dbe20c0a8998b",
+        "role": "Compiles grouped native output into a CellProfiler Threshold consumer and asserts the main-flow edge, group scope and execution scope."
+      },
+      {
         "path": "tests/unit/test_callable_contract.py",
-        "sha256": "493f76a54f5fe024ca8f10c53b1f810b8c369626ad7141205b42ef3a78282137",
+        "sha256": "cc220f53107a08b0406b6e0dd49896e3e4c3c0af6e527b0ef00d4fdaba8f0b2c",
         "role": "Verifies callable contract construction, validation, and artifact semantics."
       },
       {
         "path": "tests/unit/test_artifact_input_projection_plan.py",
-        "sha256": "a777c8fd900f15ca5f6a990fb48b36e1497a3555e5575e68487d7cb7b74cdd65",
+        "sha256": "45e9b6d379c6b2f95bfe9bc5821de66f157d4f828b00ddb74ea3c65a7d64bbd7",
         "role": "Verifies occurrence-specific artifact input projection plans."
       }
     ],
     "findings": [
-      "The artifact-family inventory omitted spatial graphs, and an embedded extension procedure crossed the explanation/how-to boundary."
+      "The page described a consumes_main_flow flag on invocation input edges; the field is gone and an edge consumes main flow exactly when it carries a main_flow_projection.",
+      "The regression description said the test asserts consumes_main_flow=True; it now asserts a main-flow projection on the edge."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/artifact_contract_system.rst in full and compared it against the changed authorities: openhcs/core/artifacts.py, openhcs/core/callable_contract.py, openhcs/core/pipeline/path_planner.py, tests/unit/test_callable_contract.py, tests/unit/test_artifact_input_projection_plan.py; replaced the removed consumes_main_flow flag with main_flow_projection in the occurrence and implicit main-flow sections and the regression description, tidied the special_inputs sentence, and confirmed every other named declaration (ArtifactType families, relation leaves, SourceImageProvenance, ArtifactPlanKeySelector, SelectedPlaneImageOutput, RuntimeValueStore, StepMaterializationConfig) exists with the stated role.",
       "Re-read docs/source/architecture/artifact_contract_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/artifacts.py; openhcs/core/callable_contract.py; openhcs/core/pipeline/path_planner.py; tests/unit/test_callable_contract.py; tests/unit/test_artifact_input_projection_plan.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -270,87 +303,60 @@
   },
   {
     "path": "docs/source/architecture/batch_workflow_service.rst",
-    "source_sha256": "5b35c78968bea4782ff67974f90428b37d7f00d79ef00509155f2b6d79917798",
+    "source_sha256": "5fe054e9e50b3615028bd270372778e384a15a71028c196f5ddddd313942fe4e",
     "audience": [
-      "OpenHCS desktop and execution-service maintainers"
+      "OpenHCS session and execution-service maintainers"
     ],
-    "user_need": "Understand how Plate Manager composes compile, run, progress, status, and cleanup services.",
+    "user_need": "Understand how the session compiles and runs datasets for every client.",
     "diataxis": "explanation",
     "authority": [
       {
-        "path": "openhcs/pyqt_gui/services/plate_manager_batch_workflow.py",
-        "sha256": "974aebec62dc0f283f92d8153594771d1206f02decdfd8ea5faae0a563676699",
-        "role": "Implements the Plate Manager batch facade and compile-before-execute lifecycle."
+        "path": "openhcs/authoring/session/operations/datasets.py",
+        "sha256": "208274effc2e790775d90528211fa4f640eb01f7ca3fdd9c927c3bf71e39b632",
+        "role": "Declares CompileDatasets and its initialised, idle and non-empty-pipeline availability checks."
       },
       {
-        "path": "openhcs/pyqt_gui/widgets/shared/services/compile_batch_workflow_service.py",
-        "sha256": "1b37faeb90ecbc326727bef124ba990a067dffca430955772f8f002356a451f8",
-        "role": "Implements compile-only batch submission and result collection."
+        "path": "openhcs/authoring/session/compilation.py",
+        "sha256": "219db74f43cc83c5c07f5bb4b2a461e4979d22dca48f00b4ea041852f35b2ac5",
+        "role": "Declares DatasetPipelineRequest snapshots and the CompiledDataset result."
       },
       {
-        "path": "openhcs/pyqt_gui/widgets/shared/services/batch_workflow_components.py",
-        "sha256": "abd29f375ab12fdc56058f1c860ce26c3b52129658795eb1c95581d83b7480bd",
-        "role": "Declares the lazily composed focused workflow services."
+        "path": "openhcs/authoring/session/compile_batch.py",
+        "sha256": "0cbe5a6b86a0fb5e9b92c4fc45f858c979031ac93594b317b9761c28f5aaf9ab",
+        "role": "Runs compile-only batches and compile-before-execution through BatchSubmitWaitEngine."
       },
       {
-        "path": "tests/unit/pyqt_gui/test_batch_workflow_compile_engine.py",
-        "sha256": "a8295fb6edbd0229128025327c975d7c916b791f5774df4a030e6c9778f3c4cb",
-        "role": "Verifies batch compilation, artifact retention, status, and failure convergence."
+        "path": "external/zmqruntime/src/zmqruntime/execution/batch_submit_wait.py",
+        "sha256": "c447b2ccbc372a5336f5a3b32844b896dc5d58566cb3de31640ae3be2379edee",
+        "role": "Defines BatchSubmitWaitEngine, the submit-then-wait batch driver."
       },
       {
-        "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "a156a006a3c40f43107b9b1f6ecb97ed150879eb88ded8ef89e25214309ae33a",
-        "role": "Coordinates post-paint endpoint preparation, projects the browser-owned endpoint snapshot into both status-bar surfaces, and routes endpoint termination to the client lifecycle owner."
+        "path": "openhcs/authoring/session/session.py",
+        "sha256": "587047b63972df89ec46a01ed2c92ff3ef9577335f58a980297db02094e4e8e0",
+        "role": "Implements run_datasets (reserve, reset, connect, compile all, submit each with compile_artifact_id) and the endpoint status binding."
       },
       {
-        "path": "external/pyqt-reactive/src/pyqt_reactive/services/zmq_server_scan_service.py",
-        "sha256": "ae12092dfd8b85a3354b87a708f3c32aef787c2f9fd0402158d32d14b654c7de",
-        "role": "Owns the immutable endpoint observation snapshot, derives per-port status without stored connection flags, and projects startup presentation through the lifecycle declaration."
+        "path": "openhcs/authoring/session/submission.py",
+        "sha256": "710ac218d1db01f231b67bf0fe229dc03fb428bc6655b23671f3a026be91c673",
+        "role": "Submits each execution with its compile_artifact_id and auxiliary observation-export parameters."
       },
       {
-        "path": "tests/unit/pyqt_gui/test_main_zmq_window_routing.py",
-        "sha256": "d02fe132fda83540f26ed4b7a79fc1409fabbf0ff6ce72f3d1ed8681258e9f6a",
-        "role": "Proves startup callbacks only commit observations, one snapshot drives status text and the indicator, and endpoint termination descends to the client lifecycle owner."
+        "path": "openhcs/authoring/session/progress.py",
+        "sha256": "cd34f68461b50506600da7854a3bf57646f2f0ff7288d0627bc40cb852a16825",
+        "role": "Defines ExecutionProgress: one registry-mutation subscription, dirty marking and interval rebuilds on the session main thread."
       },
       {
-        "path": "openhcs/agent/services/endpoint_function_catalog_service.py",
-        "sha256": "977a74003819f2547548d322f4c5f0cb148b23fec20f31be4fa462bfcfb7ea04",
-        "role": "Owns the shared asynchronous endpoint catalogue, exact revision state, and selected-reference projection for desktop and local MCP consumers."
-      },
-      {
-        "path": "openhcs/pyqt_gui/widgets/shared/services/zmq_client_service.py",
-        "sha256": "8bb3b33ee64869a225e7ec23be3dcf4f5bf3622dd801f7e77bdd7826980cbd8e",
-        "role": "Owns the persistent OpenHCS execution-client lifecycle and retires its exact session when that endpoint terminates."
-      },
-      {
-        "path": "external/zmqruntime/src/zmqruntime/client.py",
-        "sha256": "fc8bdf68455673921d79742204bf6c88e42b52bbe407d10ef4a831e084ca86a8",
-        "role": "Declares EndpointClientSession as the authoritative transport-client and application-admission proof."
-      },
-      {
-        "path": "openhcs/pyqt_gui/widgets/shared/services/execution_state.py",
-        "sha256": "73d03020ffe437d8aaf4b6a5eeb4f43b91130de747d411648cb7fa2e4df27777",
-        "role": "Owns active batch membership, terminal outcomes and terminal row supersession."
-      },
-      {
-        "path": "tests/unit/pyqt_gui/test_compile_terminal_supersession.py",
-        "sha256": "0b04d9c843ce2dcf16833b1c53b5853637802aa35c2d23de992c3db6c2bb2465",
-        "role": "Tests recompilation superseding row activity while retaining batch outcomes."
-      },
-      {
-        "path": "tests/unit/pyqt_gui/test_concurrent_initialization_progress.py",
-        "sha256": "c8e960fa83adb73f3533cf4c75acafd59249a1993f4e650733101fdd3d62ddb8",
-        "role": "Tests other-plate initialisation without replacing active execution progress."
+        "path": "tests/unit/test_u1_session_guards.py",
+        "sha256": "98de1f6239607e92d2aa35bd5e95f3e1c1c42887cc238e1291ffc830ca2cd4a5",
+        "role": "Guards that session state lives in the Qt-free session package and its operations are declared classes."
       }
     ],
     "findings": [
-      "The lifecycle explanation still described attach-only startup and omitted asynchronous endpoint-catalogue prewarming; it now follows the persistent endpoint and shared projection owners.",
-      "The status explanation assigned the indicator to client connection lifecycle even though the browser snapshot now owns every endpoint-status projection; the page now names the shared snapshot boundary.",
-      "GUI cleanup previously gated client-owner teardown on application admission, leaving an in-progress endpoint attempt alive; the explanation now records unconditional owner teardown and typed cancellation.",
-      "Clarified current endpoint catalogue reads after remote registration and retained asynchronous/cache ownership."
+      "The page had already been rewritten for the session in U1, but its audit record still named the deleted Plate Manager batch workflow, compile batch, execution-state and client-service modules and their tests; the audience and user need also still described Plate Manager."
     ],
-    "disposition": "revise",
+    "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/batch_workflow_service.rst in full and compared it against the changed authorities: the deleted openhcs/pyqt_gui batch workflow, compile batch, components, client service and execution-state modules and their tests (replaced by openhcs/authoring/session), openhcs/pyqt_gui/main.py, test_main_zmq_window_routing.py, endpoint_function_catalog_service.py, zmqruntime client.py and test_concurrent_initialization_progress.py; checked CompileDatasets availability, DatasetPipelineRequest/CompiledDataset, BatchSubmitWaitEngine, run_datasets ordering and compile_artifact_id submission, ExecutionProgress listener and interval rebuild, and the endpoint status binding against the session package. The page text is accurate; the record now points at the session owners.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "A focused 15-file architecture regression selection passed all 462 tests, including the authorities named for this page.",
@@ -375,7 +381,7 @@
   },
   {
     "path": "docs/source/architecture/cellprofiler_interop.rst",
-    "source_sha256": "ca51e69ffeb5e594de80ab27c0c71bcb1d78a76fd059ab093afbab9b7a9b0040",
+    "source_sha256": "462d00bb6421b6de9772e6a8953288b45ee096aab92f630fcbc6a592c11ac8d2",
     "audience": [
       "CellProfiler users",
       "OpenHCS interoperability and compiler maintainers"
@@ -385,37 +391,52 @@
     "authority": [
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
+        "sha256": "3439d96f3fbfcb104a53019dc150049021d9a8132bd27096f1ccf510eefbe37b",
         "role": "Implements .cppipe parsing, declaration-owned headless validation, and lowering into PipelineConfig and FunctionStep declarations."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_declarations.py",
-        "sha256": "89dd65abc003c464ba6c489f52d3a4fa47be1d5f8b87d26ad72b7537f188cf8b",
+        "sha256": "6bbf41c158496a02439be2ee5aef12d7712fb632419c226a64c9259a55438b95",
         "role": "Owns module-specific callable, setting, headless-import, scope, artifact, and function-catalogue declarations."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_declarations.py",
-        "sha256": "666ec8c9adfd6a9015adf2b226df671534bb7e547cb0d76f1d16c40ac61e30a6",
+        "sha256": "f70b52114fb5d5e2c2fc49cd9a2b46986bde48ce02d82f1a34a67f072ca2ab20",
         "role": "Defines the nominal interactive-module family that rejects headless import."
       },
       {
+        "path": "openhcs/interop/cellprofiler/compile_time_contracts.py",
+        "sha256": "75d24fb50658de135b4d777e78aacda84d15769a76d31043343f18645cb92f3a",
+        "role": "Defines CellProfilerInvocationContractProviderFactory, which walks the ResolvedPipelineDefinition steps with a forward artifact context."
+      },
+      {
+        "path": "openhcs/core/pipeline/compilation_session.py",
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
+        "role": "Declares ResolvedPipelineDefinition, the resolved step sequence the provider walks."
+      },
+      {
+        "path": "openhcs/constants/input_source.py",
+        "sha256": "fccc1854051fbe47371df2cfb737080bdca14d932825ef7ddc9a0e1ed1cf0dc9",
+        "role": "Declares the InputSource members PREVIOUS_STEP and PIPELINE_START."
+      },
+      {
         "path": "tests/unit/test_cellprofiler_artifact_declarations.py",
-        "sha256": "627acfb57647e135e44511a8b24e3496c2a59b046f1f9b89c5ade1023cfce382",
+        "sha256": "fe894cd2b592d0755c106be3363eeaf078bc26d0b698a7ccfe6662ef0c0c475b",
         "role": "Verifies typed image, object, measurement, relationship, table, grid, graph, and special artifact declarations."
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "bc5abfddf076996a050b0601c46b6039d2d812ab57cd303847b241e477176f53",
+        "sha256": "dbd6e113a7135901f936e9bc8278d727d678e9971a7c951fced9080adfd9d6df",
         "role": "Defines the executable Official30 import, execution, equivalence, and viewer evidence boundary."
       },
       {
         "path": "tests/unit/test_cellprofiler_pipeline_import.py",
-        "sha256": "353f0c1d8e0bc3552d2e418d792794ab0631daa16c78a3e10191b1cc1ea07d73",
+        "sha256": "6b1d201ec5c4ba620fa2367a9cbef1f6fbdd25edbdda9bd7b723ebe3a3363412",
         "role": "Verifies that direct import rejects an enabled interactive-only module explicitly."
       },
       {
         "path": "benchmark/cellprofiler_reference_exports.py",
-        "sha256": "604f9a95f94eeb10365437b875a0ff3d558dbb2fda13e7e951242d417a69b49c",
+        "sha256": "58cdcb7572266d562314ccae5bf9d98b5f3a4b19944e8a068f89b617219952f3",
         "role": "Derives digest-bound benchmark-only exporter pipelines from terminal importer contracts and owns numeric-image and categorical-label comparison semantics."
       },
       {
@@ -425,12 +446,11 @@
       }
     ],
     "findings": [
-      "The artifact inventory omitted spatial graphs, and a module-authoring procedure duplicated the task-oriented developer guide inside an explanation.",
-      "The explanation did not state that setting-backed output identities remain in public invocation keywords independently of downstream observation and are consumed before the raw runtime call.",
-      "Enabled interactive-only modules could otherwise be silently omitted as non-executable declarations; the owning nominal module family now rejects headless import explicitly."
+      "The compile-time reconstruction section said the provider walks a resolved StepSnapshot sequence; StepSnapshot and openhcs/core/pipeline/step_snapshot.py are gone, and the provider walks the steps of the ResolvedPipelineDefinition."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/cellprofiler_interop.rst in full and compared it against the changed authorities: pipeline_import.py, module_declarations.py, module_artifact_declarations.py, test_cellprofiler_artifact_declarations.py, the Official30 integration test, test_cellprofiler_pipeline_import.py and benchmark/cellprofiler_reference_exports.py; replaced the removed StepSnapshot with ResolvedPipelineDefinition and confirmed the import flow, interactive-module rejection, InputSource members, FunctionStepExecutionScope.PLATE, the provider's named methods, the CPA SQLite/properties route and CellProfilerReferenceExportPlan against current source.",
       "Re-read docs/source/architecture/cellprofiler_interop.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/interop/cellprofiler/pipeline_import.py; openhcs/interop/cellprofiler/module_declarations.py; tests/unit/test_cellprofiler_artifact_declarations.py; tests/integration/test_cellprofiler_official30_zmq.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -455,42 +475,42 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline_document.py",
-        "sha256": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
+        "sha256": "8c554c8275c665f308eb098955bda517aa804eeb34418b5e0f41d412650ce7b5",
         "role": "Defines the nominal pipeline code document and its rendering, parsing, and application boundary."
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_object_state.py",
-        "sha256": "747c284c37e420092ffda9abbb8275fc7deaaff7f3676cecf3f5b1f324314744",
+        "sha256": "e548b367507b3fb6830ce9ecb844e3b756243af96fe38e0d35de5da0b974c1fd",
         "role": "Projects live ObjectState scopes, fields, revisions, document capabilities, and mutation receipts through the UI bridge."
       },
       {
         "path": "openhcs/agent/dto/ui_bridge.py",
-        "sha256": "585b1701b01b92bfce91437a60881afa769e36de9126807c3f4fcaf0ffc006fb",
+        "sha256": "918b30f34e7d096b19ce04017d9a991d0a10e4088c310797e497fb2444fc37c0",
         "role": "Carries generic endpoint application and operation-lifecycle declarations through UI bridge descriptors and request/response envelopes."
       },
       {
         "path": "openhcs/agent/services/ui_bridge_transport.py",
-        "sha256": "32e759baf65b34989c99223d8fa9e64800ab566cd05160df2bc125b04dea5953",
+        "sha256": "1c2fb99aef62969cfabb9d22ccb954e8894ee72fd2e66e625304ffdb96a41b95",
         "role": "Validates the schema, bridge protocol, application identity, and request identity before an MCP response is accepted."
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_server.py",
-        "sha256": "667f582fffd4b489ca7274f8962a759c3d33d24b10ec8e6d1aa5cac01233b067",
+        "sha256": "4b0664fa62d24557294324b631ee3e39052c84e578d40ec408197bce5adcedac",
         "role": "Advertises the shared application identity and rejects incompatible requests before dispatching them into live UI state."
       },
       {
         "path": "external/zmqruntime/src/zmqruntime/messages.py",
-        "sha256": "0df6261b31d3e2758ced4c7ee5933dde0e866b8e30d7927c3fcb2641a8d97d44",
+        "sha256": "ba7b9bac8f0202690f1e2bd17f445fe1741f43642f0a36e4a806bb577c2d1aa1",
         "role": "Owns generic exact endpoint-application compatibility and the typed mismatch error."
       },
       {
         "path": "external/python-introspect/src/python_introspect/annotation_types.py",
-        "sha256": "dc126879a8a581cea0758eec4df18ec20c47ca4b1e135abde23699b65b790bde",
+        "sha256": "004a3ce2e214a184aaa3230ceaa89ccaa5f188c1c3d885aacad5222726c34b7a",
         "role": "Owns declaration-derived enum discovery, accepted input strings, and member coercion across transparent annotation wrappers."
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_agent_bridge.py",
-        "sha256": "fa8e7a1cd300c6e5cfde5ac155d3e0fd0a7324632fb150280f57c828d8dfcecd",
+        "sha256": "ce650c52475764657bbc0221109879594f9cf1482de8245d6c141f00474d5d23",
         "role": "Projects ObjectState branch and snapshot restoration through the attached-agent surface."
       },
       {
@@ -500,27 +520,27 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "1feee4bb413738f04e81cbdf26244dc0d585a68921e6c7749a941a08518007a1",
+        "sha256": "de6758859d9743e826369162855327e4a84056cafdd7ddfdc33868d2a3093353",
         "role": "Verifies read-only rejection, semantic no-op application, and branch restoration through the UI bridge."
       },
       {
         "path": "openhcs/pyqt_gui/services/function_step_code_document.py",
-        "sha256": "3cb9ee3bf0411b0cd9ddf254934dd402de12abb630bc764cd724a9492f912814",
+        "sha256": "67b00a1964680d65a371e238c862775069bb882da2ccb75773adfed4981b90f7",
         "role": "Defines the step-editor code-document projection and apply semantics."
       },
       {
         "path": "tests/unit/pyqt_gui/test_pipeline_code_document_transactionality.py",
-        "sha256": "b7e546e904b897f13d76f0c523e751afa541a75c627349ba79a3a87313d30f4c",
+        "sha256": "0bb9b43d867a4e26f13b51531a2b7a847c6c3685841f8e002e209200a37366b6",
         "role": "Verifies revision checks, validation, snapshots, rollback, and transactional application."
       },
       {
         "path": "openhcs/pyqt_gui/widgets/step_parameter_editor.py",
-        "sha256": "54e0bdd74f8d781c2bfdf1da559bbe7e2393f19ef74826d374a2281e8eb96258",
+        "sha256": "d7d6a2af7d3dafbd3edd57d4a3c52a1f40812e21b95820d1e2190a57e9a97c0c",
         "role": "Applies edited function patterns through generic reconciliation before rebuilding parameter panes."
       },
       {
         "path": "openhcs/serialization/pycodify_formatters.py",
-        "sha256": "316ff58e34dcb87816082ead03347cd280fe72b4e3ab8ea31affc1627e548c23",
+        "sha256": "fe06f3ab873b537b7b2c0b13599ffd11030ae6a8ac504caea9e3dcfa1d4695b4",
         "role": "Supplies OpenHCS semantic equality and clean/full choices to shared parameter projection."
       },
       {
@@ -545,7 +565,7 @@
       },
       {
         "path": "tests/unit/test_pycodify_formatters.py",
-        "sha256": "445479f81fd70ce7f288d5b7537b9bbb85d1b5dd724d27baabf8e4c4e508128c",
+        "sha256": "2f0c6683a5255d01442ae33f676f601d5e3f1e3e04d1b2c2fc945b3c564796ce",
         "role": "Verifies clean/full parameter order and semantic default handling."
       },
       {
@@ -554,16 +574,10 @@
         "role": "Verifies numeric value preservation and compact presentation."
       }
     ],
-    "findings": [
-      "The page duplicated the task-oriented attached-agent sequence and rules already owned by the code/UI user guide, and bare knowledge identifiers were not navigable RTD links.",
-      "The page omitted the generic owner's dynamic writability and declaration-normalised no-op contracts.",
-      "The field projection list omitted declaration-derived enum inputs exposed by ObjectState field help.",
-      "The process boundary did not previously reject an MCP/UI pairing whose OpenHCS versions were incompatible despite sharing an older bridge protocol.",
-      "Explained signature-ordered parameter projection, retained child-state reconciliation, and generic numeric presentation ownership.",
-      "Clarified that function child-state retention is conditional on an unchanged editable callable surface; explicit keyword surface changes rebuild the child at its stable scope."
-    ],
-    "disposition": "revise",
+    "findings": [],
+    "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/code_ui_interconversion.rst in full and compared it against the changed authorities: openhcs/core/pipeline_document.py (PipelineDocumentAuthority renamed PipelineDocumentCodec; PipelineDocument unchanged), ui_bridge_object_state.py, openhcs/agent/dto/ui_bridge.py, ui_bridge_transport.py, ui_bridge_server.py, zmqruntime messages.py, python-introspect annotation_types.py, ui_agent_bridge.py and its test, function_step_code_document.py (now FunctionStepDocumentCodec), the code-document transactionality test, step_parameter_editor.py (the pickled .step settings files are gone, which the page never described), pycodify_formatters.py and its test; checked the schema/bridge-protocol/application identity checks on both bridge ends, the field-mutation request token without base revision, enum values in field help, code-document revision apply, and Plate Manager naming. Every claim the page makes still holds; no text change.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "A focused 15-file architecture regression selection passed all 462 tests, including the authorities named for this page.",
@@ -594,18 +608,18 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
         "role": "Lowers declarations into typed step plans, including declaration-derived framework-device assignments."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "3c840a89baccc8665d415175458280fd904c1a837b7fd879e303d7dbca129a1c",
-        "role": "Defines the scoped CompilationSession authority."
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
+        "role": "Defines the per-context CompilationSession and ResolvedPipelineDefinition."
       },
       {
         "path": "openhcs/core/compiled_execution.py",
-        "sha256": "941115f2dca2e53538d3141a59f3ae1f928a87cf741fcfa177f7cd64a5f41aea",
-        "role": "Assembles and validates worker-safe execution bundles without a process-global GPU registry."
+        "sha256": "85972d418f0958e59f3185f07caf25a103bc9e101e481b2b63903377cc05e397",
+        "role": "Defines CompiledExecutionBundle with its runtime and pickle-safe transport contexts."
       }
     ],
     "findings": [
@@ -613,6 +627,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/compilation_service.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_execution.py; the page only names the session, typed-plan and execution-bundle model and redirects to pipeline_compilation_system, all of which still exist (CompilationSession, CompiledStepPlan, CompiledExecutionBundle), so the redirect stays unchanged.",
       "Re-read docs/source/architecture/compilation_service.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/pipeline/compiler.py; openhcs/core/pipeline/compilation_session.py; openhcs/core/compiled_execution.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -623,7 +638,7 @@
   },
   {
     "path": "docs/source/architecture/compilation_system_detailed.rst",
-    "source_sha256": "f6b652564854eafd1e1d6670a2f6290c799d5aea05ddafff3fe6c8e7587af7bb",
+    "source_sha256": "d866a71b0092d3887ea91d83cbd76deb44fcf4302adf162794157dede8724ad4",
     "audience": [
       "OpenHCS maintainers following the former detailed compiler URL"
     ],
@@ -632,25 +647,31 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
         "role": "Implements the current compiler stages, including declaration-derived framework-device assignment."
       },
       {
-        "path": "openhcs/core/pipeline/step_snapshot.py",
-        "sha256": "d81a70b84d5c68fb738603653516d20da882fb51d74d41a6dca238823e3279cb",
-        "role": "Defines immutable resolved step snapshots consumed during compilation."
+        "path": "openhcs/core/pipeline/compilation_session.py",
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
+        "role": "Defines ResolvedPipelineDefinition, which replaced resolved step snapshots, and CompilationSession."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "6d46571e6f2d069b98a92b41d711b2e20bfab9f0493cf73d3f150d5be08e7f96",
+        "sha256": "5bce281e8291a3434b57ba44f97008e4095cc95998a0805f0369fd212c3a7eec",
         "role": "Defines typed step-plan fields, exact framework footprints, and framework-local device bindings."
+      },
+      {
+        "path": "openhcs/core/compiled_execution.py",
+        "sha256": "85972d418f0958e59f3185f07caf25a103bc9e101e481b2b63903377cc05e397",
+        "role": "Defines CompiledExecutionBundle."
       }
     ],
     "findings": [
-      "The former fixed-phase narrative is historical; the active URL correctly redirects to current StepSnapshot, CompilationSession, typed-plan, and bundle ownership."
+      "The redirect named StepSnapshot as part of the current architecture; openhcs/core/pipeline/step_snapshot.py was deleted and compilation now reads ResolvedPipelineDefinition."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/compilation_system_detailed.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/step_snapshot.py (deleted in 0adb68108; resolved steps now live on ResolvedPipelineDefinition in compilation_session.py), openhcs/core/compiled_step_plan.py; replaced StepSnapshot with ResolvedPipelineDefinition in the redirect text and confirmed the redirect target page exists.",
       "Re-read docs/source/architecture/compilation_system_detailed.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/pipeline/compiler.py; openhcs/core/pipeline/step_snapshot.py; openhcs/core/compiled_step_plan.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -670,13 +691,18 @@
     "authority": [
       {
         "path": "external/ObjectState/src/objectstate/lazy_factory.py",
-        "sha256": "f81ce722695dbab98fd02658f2015e5cb93c1e1e69547d24249e62d896e2a828",
+        "sha256": "64ae924c176757863a84eef19b9df0eff516e32443c2661134ec2ae72f234bf9",
         "role": "Implements generic lazy dataclass creation and resolution owned by ObjectState."
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
-        "role": "Declares OpenHCS domain configuration that consumes ObjectState mechanics."
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
+        "role": "Declares the kernel OpenHCS configuration dataclasses that consume ObjectState mechanics."
+      },
+      {
+        "path": "openhcs/domains/microscopy/config.py",
+        "sha256": "79b8baefdbf22b85c199807f62b8234daca6904633a574886661a1c2e3d03a9b",
+        "role": "Declares the microscopy domain's configuration sections composed into the same ObjectState mechanics."
       }
     ],
     "findings": [
@@ -684,6 +710,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/component_configuration_framework.rst in full and compared it against the changed authorities: external/ObjectState/src/objectstate/lazy_factory.py, openhcs/core/config.py (domain sections such as analysis consolidation moved to openhcs/domains/microscopy/config.py, now added as an authority); the page only states that ObjectState owns lazy configuration and that OpenHCS documents its domain declarations, and redirects to component_system_integration and external_foundations, both of which exist, so the redirect stays unchanged.",
       "Re-read docs/source/architecture/component_configuration_framework.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: external/ObjectState/src/objectstate/lazy_factory.py; openhcs/core/config.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -703,7 +730,7 @@
     "authority": [
       {
         "path": "external/python-introspect/src/python_introspect/signature_analyzer.py",
-        "sha256": "73600e546753640964d4ba5308fdf808ed3a4a6f085417d8ac0745d9e2748ed7",
+        "sha256": "edbe51f6c92b2c334dc4533bbeaa252be649c1ac738d2ebfca4364f2708479dc",
         "role": "Implements generic callable and signature analysis."
       },
       {
@@ -713,22 +740,21 @@
       },
       {
         "path": "external/metaclass-registry/src/metaclass_registry/core.py",
-        "sha256": "ed4dd1dfd0e4e05e916fec39f19b4b8bd526e776aa0c96e3abe9b1ffbdff0505",
-        "role": "Implements generic nominal registration and family discovery."
+        "sha256": "72c8284e8a32dd193f13f36a425289d5293a32f4a381046db523aa87182e0be8",
+        "role": "Implements generic nominal registration through AutoRegisterMeta."
       },
       {
-        "path": "openhcs/constants/constants.py",
-        "sha256": "4cd6c29abd8b8e3ecc396b424d2b8b61e819a215fc1d770d3f6852b260a0691d",
-        "role": "Declares the OpenHCS component enum families derived from the domain component configuration."
+        "path": "openhcs/domains/microscopy/axes.py",
+        "sha256": "531695809259324032e0b88632813323b4fe6a9a176ad6f636aeef8dec332399",
+        "role": "Declares the microscopy axis family, the OpenHCS domain declaration registered through metaclass-registry."
       }
     ],
     "findings": [
-      "The legacy page treated processor metaprogramming as one extracted owner even though signature analysis and nominal registration belong to separate packages.",
-      "python-introspect now also owns generic callable-declaration projection; the transition page now names that boundary.",
-      "The unreferenced OpenHCS-local dynamic-interface registry contradicted the extracted ownership boundary and was removed."
+      "The constants.py authority no longer declares component enum families: G1 deleted them, and the domain declaration is now the microscopy AxisFamily in openhcs/domains/microscopy/axes.py. The redirect text itself names no deleted owner and stays accurate."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/component_processor_metaprogramming.rst in full and compared it against the changed authorities: signature_analyzer.py, metaclass_registry/core.py, openhcs/constants/constants.py; confirmed signature analysis, callable-declaration projection and AutoRegisterMeta registration remain in the external packages, and replaced the deleted component-enum authority with the microscopy axis family declaration; no page edit was needed.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "On 2026-08-21, re-read the transition against signature_analyzer.py and callable_declaration.py after python-introspect 0.1.10.",
@@ -742,7 +768,7 @@
   },
   {
     "path": "docs/source/architecture/component_system_integration.rst",
-    "source_sha256": "5c4c60b9b9a02dfb0dd0f56ecc2bf4528e877314f14f76d0591ec112958e84c8",
+    "source_sha256": "28c20ffb0731f03ab08ed28bd2a431af411a8d30be02002bdfb3dcdc0931d0f4",
     "audience": [
       "OpenHCS compiler, source-model, and processing maintainers"
     ],
@@ -750,36 +776,43 @@
     "diataxis": "explanation",
     "authority": [
       {
-        "path": "openhcs/constants/constants.py",
-        "sha256": "4cd6c29abd8b8e3ecc396b424d2b8b61e819a215fc1d770d3f6852b260a0691d",
-        "role": "Declares the nominal component enum families and their distinct domains."
+        "path": "openhcs/core/axes.py",
+        "sha256": "8d93133639c576050f089fb8aab99937c8982aff07e742fea44f8a12e62bb7b2",
+        "role": "Declares Axis, AxisFamily and the PartitionAxis role whose single member partitions compiled contexts."
       },
       {
-        "path": "openhcs/core/component_set.py",
-        "sha256": "b3f7dbee802766aab3002256db044025abca8c4ce60be4648f7c1de7b13b41cc",
-        "role": "Implements ordered enum-aware component set operations without copied name tables."
+        "path": "openhcs/core/config.py",
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
+        "role": "Declares the step-level variable_components and group_by fields and the pipeline-level sequential_components field."
       },
       {
         "path": "openhcs/core/components/component_values.py",
-        "sha256": "3813d6f7d6d66fc21ea881e3dfcb72f54bd1bfe36212895f00be8f09e59d49dd",
-        "role": "Carries one complete immutable value projection keyed by the canonical component declaration."
+        "sha256": "17d9e89c5b04eaef3f592efa9fd3677bdcec4b58b5f91092da2f1c1c64321a36",
+        "role": "Carries one complete immutable AxisValues projection keyed by the active family's axes."
       },
       {
         "path": "openhcs/core/components/parser_metaprogramming.py",
-        "sha256": "5eaf7c10d4d5667deb723c5b8d92410183ae06ce7b3092ddb71a88e9832d4b7e",
-        "role": "Wraps complete component values in a nominal filename result and exposes string keys only at explicit boundaries."
+        "sha256": "e17a7df08e4c2506971c3039ed0ea3bc918c515d761fbeca54bc1efc156a51c3",
+        "role": "Wraps complete component values in FilenameParseResult and exposes string keys only at explicit boundaries."
+      },
+      {
+        "path": "openhcs/core/dataset_sources/interfaces.py",
+        "sha256": "dd88254bfd5da8b0fdf0a038e358f36b49db5b8cf0b93213d56dc928af965f00",
+        "role": "Defines MetadataComponentValueSet, the metadata-handler projection of complete axis values."
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
-        "role": "Consumes component declarations to construct execution axes, stacks, grouping, and typed plans."
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
+        "role": "Consumes the axis declarations to construct execution-axis contexts, stacks, grouping, and typed plans."
       }
     ],
     "findings": [
-      "The page did not explain how complete per-plate and per-filename component values cross internal boundaries without per-axis method or string-key mirrors."
+      "The page listed ``multiprocessing_axis`` as a component declaration; no such declaration exists. The parallel axis is the family's single PartitionAxis member (well in the microscopy family).",
+      "The constants.py and component_set.py authorities no longer own component declarations after G1 deleted the component enums; replaced them with openhcs/core/axes.py and the config fields' owner, and added the dataset-source interface that defines MetadataComponentValueSet."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/component_system_integration.rst in full and compared it against the changed authorities: constants.py, component_set.py, component_values.py, parser_metaprogramming.py, compiler.py; verified AxisValues, FilenameParseResult, MetadataComponentValueSet, variable_components/group_by/sequential_components and AxisFamily.partition_axis in current source, and replaced the nonexistent multiprocessing_axis declaration with the family's PartitionAxis.",
       "Re-read docs/source/architecture/component_system_integration.rst in full against repository base 32ca17c17 and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/constants/constants.py; openhcs/core/component_set.py; openhcs/core/pipeline/compiler.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -792,7 +825,7 @@
   },
   {
     "path": "docs/source/architecture/component_validation_system.rst",
-    "source_sha256": "c9d15356dc02939a216b2bf7bad60b43b2a244ce30d1eda4e61556c26b80ee02",
+    "source_sha256": "96dd35dc7c5ef2788463cf6f8ef6f085390aa4f5865391cc51eb5d794c4a0c20",
     "audience": [
       "OpenHCS configuration and compiler maintainers"
     ],
@@ -800,24 +833,39 @@
     "diataxis": "reference",
     "authority": [
       {
+        "path": "openhcs/core/axes.py",
+        "sha256": "8d93133639c576050f089fb8aab99937c8982aff07e742fea44f8a12e62bb7b2",
+        "role": "Defines AxisFamily.named decoding, variable_axes as every axis but the partition axis, and the Ungrouped declaration."
+      },
+      {
         "path": "openhcs/core/components/validation.py",
-        "sha256": "21ff922447de83ed3f62e54c25df7966419b4895be23a8a3c5d42a3981df554c",
-        "role": "Defines shared enum conversion and component-combination validators."
+        "sha256": "3efbc509d3559a5bf3255312b652e6b8944427e2fa10fa7ca353753082099fe6",
+        "role": "Implements GenericValidator step checks and dictionary-pattern key checks against dataset values."
       },
       {
         "path": "openhcs/core/pipeline/funcstep_contract_validator.py",
-        "sha256": "73cb5250a5855625903f8b7deada667b83fba594d66de0ed4a68ec76afa3db19",
-        "role": "Validates callable grouping, required axes, function-step components, and declared input, output, and execution memory."
+        "sha256": "4a167f620be9ff6e6524101652b6dfa25984b3a389b19da3f5ce78c14d5947d4",
+        "role": "Validates allowed group_by roles, required callable axis roles, and declared memory contracts per callable."
+      },
+      {
+        "path": "openhcs/core/pipeline/compiler.py",
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
+        "role": "Rejects pipeline sequential axes that are also a step's variable axes."
       },
       {
         "path": "tests/unit/test_funcstep_contract_validator.py",
-        "sha256": "2188b297564b7c756af16f1138e304a1a7dadbdea28f7c440bc7b484d9eb615c",
-        "role": "Covers accepted and rejected component, grouping, callable-contract, and execution-memory combinations."
+        "sha256": "a208ca59a60b2d5bbcc9955e99592fd480368995336f6ef86a0a06f8f6991747",
+        "role": "Covers accepted and rejected grouping, required-role, and callable-contract combinations."
       }
     ],
-    "findings": [],
-    "disposition": "keep",
+    "findings": [
+      "The page told consumers to use nominal enum members; G1 deleted the component enums and consumers now use the axis classes.",
+      "The check list was imprecise: variable axes are checked against the family's variable axes (not a source universe), dictionary-pattern keys against dataset values, callable requirements are axis roles, and the sequential check rejects overlap with a step's variable axes; there is no separate multiprocessing topology check.",
+      "The opening framed the declarations as microscope dimensions; the kernel is domain-blind and the microscopy family is one declaration."
+    ],
+    "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/component_validation_system.rst in full and compared it against the changed authorities: validation.py, funcstep_contract_validator.py, test_funcstep_contract_validator.py; traced GenericValidator.validate_step, validate_dict_pattern_keys, validate_allowed_group_by, validate_required_axis_roles and the compiler's sequential-components check, and rewrote the check list and consumer guidance to match.",
       "Re-read docs/source/architecture/component_validation_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/components/validation.py; openhcs/core/pipeline/funcstep_contract_validator.py; tests/unit/test_funcstep_contract_validator.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -827,7 +875,7 @@
   },
   {
     "path": "docs/source/architecture/concurrency_model.rst",
-    "source_sha256": "db244918e5b7ef7ba93ae17d1855954c630e577b56813f8ded29dafd4e7889bc",
+    "source_sha256": "6c3bd9dbb4c18735e7bcccf48777ddf0f8ea646ae8ab9d3e5a6d2ce8fd0120bb",
     "audience": [
       "OpenHCS runtime and multiprocessing maintainers"
     ],
@@ -836,33 +884,33 @@
     "authority": [
       {
         "path": "openhcs/core/compiled_execution.py",
-        "sha256": "941115f2dca2e53538d3141a59f3ae1f928a87cf741fcfa177f7cd64a5f41aea",
-        "role": "Defines the worker-safe CompiledExecutionBundle and its context-derived axis projection."
+        "sha256": "85972d418f0958e59f3185f07caf25a103bc9e101e481b2b63903377cc05e397",
+        "role": "Defines the worker-safe CompiledExecutionBundle and its pickle-safe transport snapshot."
       },
       {
         "path": "openhcs/core/context/processing_context.py",
-        "sha256": "c7b79f50661c528261ce8c577fd67c753c84a5e499aa87cd5e540b53417351a2",
+        "sha256": "81c5c0bf411040bac2d93418093fff7c97c5ffd9ad942272c0f71c2982c96a44",
         "role": "Owns the compiled multiprocessing-axis identity for one processing context."
       },
       {
-        "path": "openhcs/core/orchestrator/worker_lanes.py",
-        "sha256": "2e2a17b52e06f692c924554c387ed7aed9d25b3174c60e69d28bed6906f430b0",
-        "role": "Groups runtime contexts into worker lanes from their declared axis identity."
+        "path": "openhcs/core/orchestrator/bundle_execution.py",
+        "sha256": "f5ba09a2ec7c688b1ca08167ab398cc976a9e2c39b301ae98f3c5fd560a25c85",
+        "role": "Runs one compiled bundle, then the parent-owned dataset-scoped steps and post-execute hooks."
       },
       {
-        "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "09c39f5cba68f8c15a0def8a09843b62d6da5c5a01e7558a9263ce4d311c078d",
-        "role": "Verifies that worker-lane grouping remains correct when context mapping keys do not encode axis identity."
+        "path": "openhcs/core/orchestrator/worker_lanes.py",
+        "sha256": "d915c01a0ae2dd010d6b972e275669fef63bb3aefd100f1b66a1e34653673db0",
+        "role": "Defines WorkerLaneExecutionContext, the fork-inherited bundle state, and lane grouping from context-owned axis identity."
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "3c952465268e4b6c44676a853bb9c99d2d04a0490c7d398d2cdaf8b3b5f966d7",
-        "role": "Owns executor construction, submission, result collection, cancellation, and footprint-aware cleanup."
+        "sha256": "23a3ef2a70378dd1bb5c413a56e36bbb3fa013142741c9b45407bfc47de8c4a4",
+        "role": "Owns executor construction, the WorkerCommand family served by process workers, result collection, cancellation, and cleanup."
       },
       {
         "path": "openhcs/core/orchestrator/cancellation.py",
         "sha256": "f825b602fb020a23d602e1f93ed9cecea881eca16e07882fd7a91ab519445244",
-        "role": "Owns the exact execution cancellation scope, pre-entry request handoff, and cooperative safe-boundary signal."
+        "role": "Owns the exact execution cancellation scope and cooperative safe-boundary signal."
       },
       {
         "path": "openhcs/core/worker_start_policy.py",
@@ -870,17 +918,25 @@
         "role": "Owns multiprocessing start-method selection from the typed compiled GPU footprint."
       },
       {
+        "path": "tests/unit/test_orchestrator_lane_planning.py",
+        "sha256": "3d5c2f3662b8d4c330582af0c4a649b8f4d9582e064d9cf3159798c8934a2bbb",
+        "role": "Verifies that worker-lane grouping remains correct when context mapping keys do not encode axis identity."
+      },
+      {
         "path": "tests/unit/test_worker_start_policy.py",
-        "sha256": "a3eaadb10898f10e50391310d65d338d60e9df2f4f6dec8b791be7dc75d31fc9",
+        "sha256": "5a6f5e1ef54c49bc7f49c8b7baa530e685a8b76daf37679488ec50d9fb5fc37c",
         "role": "Verifies platform, server, override, and GPU start-method decisions."
       }
     ],
     "findings": [
-      "The cancellation explanation did not distinguish generic terminal status ownership, cooperative thread boundaries, and process-worker interruption.",
-      "The execution-unit explanation left axis identity implicit and did not distinguish context-owned identity from context mapping keys."
+      "The page named ``compiled_plate_execution``, which G7 renamed to ``bundle_execution``.",
+      "The execution-unit text said the configured multiprocessing axis yields one context per well and that workers receive one context at a time; the partition axis is the family's PartitionAxis, and each worker executes a lane of the contexts it owns.",
+      "Process workers now serve a typed WorkerCommand family and forward progress over their parent connection; the page described only a shared queue.",
+      "Output consolidation is a microscopy-domain post-execute hook, and terminal steps are dataset-scoped; the page called them plate steps and core consolidation."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/concurrency_model.rst in full and compared it against the changed authorities: compiled_execution.py, processing_context.py, worker_lanes.py, test_orchestrator_lane_planning.py, worker_execution.py, test_worker_start_policy.py; confirmed CompiledExecutionBundle, WorkerLaneExecutionContext, resolve_worker_start_context, the cancellation signal and AXIS_COMPLETED, renamed compiled_plate_execution to bundle_execution, and corrected the lane, worker-command, progress and post-execute claims.",
       "Re-read docs/source/architecture/concurrency_model.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/compiled_execution.py; openhcs/core/orchestrator/worker_execution.py; openhcs/core/orchestrator/cancellation.py; openhcs/core/worker_start_policy.py; tests/unit/test_worker_start_policy.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -902,25 +958,26 @@
     "authority": [
       {
         "path": "external/ObjectState/src/objectstate/lazy_factory.py",
-        "sha256": "f81ce722695dbab98fd02658f2015e5cb93c1e1e69547d24249e62d896e2a828",
+        "sha256": "64ae924c176757863a84eef19b9df0eff516e32443c2661134ec2ae72f234bf9",
         "role": "Implements reusable lazy dataclass configuration mechanics."
       },
       {
         "path": "external/ObjectState/src/objectstate/context_manager.py",
-        "sha256": "a01b0fc8aeb9b5b0888346f725f92cbfd96b90963bf20001b5414a5e6cd6c0e6",
+        "sha256": "25b1a7aa1dc6abc96b6ff91dd14e27fc3804c06f8c45a2c7a3ca6a3dd01b35a0",
         "role": "Implements generic scoped context resolution."
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
-        "role": "Declares the OpenHCS global, pipeline, step, and standalone configuration hierarchy."
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
+        "role": "Declares GlobalPipelineConfig and the step and standalone configuration dataclasses OpenHCS composes over ObjectState."
       }
     ],
     "findings": [
-      "The transition page did not route readers to the exact ObjectState owner narrative or the current OpenHCS system boundary."
+      "The changes to lazy_factory.py, context_manager.py and config.py (axis-family typing, partition filter, viewer slot modes) do not touch the ownership the redirect states; the page stays a redirect, and the config.py role now names the declarations it actually holds instead of a separate pipeline config class, which the injection system generates."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/configuration_framework.rst in full and compared it against the changed authorities: lazy_factory.py, context_manager.py, openhcs/core/config.py; confirmed ObjectState still owns lazy configuration and context resolution, the linked system_overview and external_foundations pages exist, and no page edit was needed.",
       "Re-read docs/source/architecture/configuration_framework.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: external/ObjectState/src/objectstate/lazy_factory.py; external/ObjectState/src/objectstate/context_manager.py; openhcs/core/config.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -940,20 +997,21 @@
     "authority": [
       {
         "path": "external/ObjectState/src/objectstate/context_manager.py",
-        "sha256": "a01b0fc8aeb9b5b0888346f725f92cbfd96b90963bf20001b5414a5e6cd6c0e6",
+        "sha256": "25b1a7aa1dc6abc96b6ff91dd14e27fc3804c06f8c45a2c7a3ca6a3dd01b35a0",
         "role": "Implements reusable configuration-context registration and resolution."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "3c840a89baccc8665d415175458280fd904c1a837b7fd879e303d7dbca129a1c",
-        "role": "Consumes already resolved configuration in a scoped compiler session."
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
+        "role": "Consumes an already resolved GlobalPipelineConfig in a scoped compiler session."
       }
     ],
     "findings": [
-      "The transition page did not link the exact ObjectState architecture owner or the current OpenHCS resolution path."
+      "The changes to context_manager.py and compilation_session.py do not alter the ownership the redirect states; the compiler session still receives resolved configuration, so the page stays a redirect without edits."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/context_system.rst in full and compared it against the changed authorities: context_manager.py, compilation_session.py; confirmed ObjectState owns context management and the compiler session consumes a resolved GlobalPipelineConfig; no page edit was needed.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings."
     ]
@@ -999,7 +1057,7 @@
     "authority": [
       {
         "path": "openhcs/processing/custom_functions/manager.py",
-        "sha256": "aa5aa5a7032cd38c170d29d800175022883f04df7ce2d3f2fb4f6decad43f97d",
+        "sha256": "f87d622c4e03db3b6d7f977daa86187b892f59133be264ffa381472785247e56",
         "role": "Owns persisted custom-function lifecycle and projects validated declarations through the custom runtime registry."
       },
       {
@@ -1009,10 +1067,11 @@
       }
     ],
     "findings": [
-      "The architecture URL no longer owns a mechanism and is intentionally a transition to the maintained user workflow."
+      "The manager.py changes keep the persisted lifecycle the redirect points to; no claim was invalidated, and the architecture URL remains a transition to the user workflow page."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/custom_function_registration_system.rst in full and compared it against the changed authority manager.py; confirmed the user_guide/custom_function_management target exists and CustomFunctionManager still owns persisted custom functions through the runtime registry; no page edit was needed.",
       "Re-read docs/source/architecture/custom_function_registration_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/processing/custom_functions/manager.py; openhcs/core/steps/function_step.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -1022,7 +1081,7 @@
   },
   {
     "path": "docs/source/architecture/declarative_window_system.rst",
-    "source_sha256": "480757c11ae720000f495ecfd073bc695a59f3ccf60a1c4069e0990a28828f96",
+    "source_sha256": "9dd05739e15cd02e259e4537e18c8f84485ccfc1440e0fa51500c516003785bd",
     "audience": [
       "OpenHCS UI maintainers following the former declarative-window URL"
     ],
@@ -1041,8 +1100,13 @@
       },
       {
         "path": "openhcs/agent/ui_bridge_identities.py",
-        "sha256": "5913d14b99340174af87b2a7cafa3cdd080a331553c0cf59392ade7d253f1234",
-        "role": "Owns the nominal declarations for stable OpenHCS widget and window identities, presentation titles, and complete stable-window family projection."
+        "sha256": "66dcf838d08cac2004ab8f73db777f73270cc520697281cf4f94a5fc6af4dc64",
+        "role": "Owns the nominal stable widget and window identities, including session-view windows whose title comes from the rendered view."
+      },
+      {
+        "path": "openhcs/authoring/session/views.py",
+        "sha256": "8ce6cac27293ac9105f4d2ebc76d10eebeba1ef90e0e8954c0a117910e17e3b3",
+        "role": "Declares the SessionView family, each view's title, and the operations its window binds."
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_window_ids.py",
@@ -1051,15 +1115,16 @@
       },
       {
         "path": "tests/unit/test_build_website.py",
-        "sha256": "4a8952ba0f51590ffd9f1d787986653802506807079a7e0d118343264252e0e0",
-        "role": "Verifies that the stable UI window reference derives its identities and titles from the nominal registry."
+        "sha256": "e88fc8ae73c5610dfb0a9948271a016e666451228ecade92aa1b2892da106059",
+        "role": "Verifies that the stable UI window reference derives its identities and titles from the identity registry."
       }
     ],
     "findings": [
-      "The legacy mechanism is extracted; the final page is correctly constrained to owner-package links and the OpenHCS integration boundary."
+      "Since U1, the plate-manager and pipeline-editor windows render session views and take their titles from them, and pipeline and execution actions are session operations rather than widget actions; the retained-ownership sentence now says so."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/declarative_window_system.rst in full and compared it against the changed authorities: ui_bridge_identities.py, test_build_website.py; confirmed the pyqt-reactive window-manager and scope-window-factory pages and sources exist, traced UiSessionViewWidgetIdentityDeclaration to SessionView.rendered_in, and revised the OpenHCS-retained ownership sentence.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "On 2026-08-28, re-read the complete redirect after stable window strings moved to nominal identity declarations; OpenHCS still owns product identities while pyqt-reactive owns generic lifecycle.",
@@ -1080,20 +1145,21 @@
     "authority": [
       {
         "path": "openhcs/core/function_patterns.py",
-        "sha256": "fe76286a2d378a39fd6061273363ccebbdc88f1dde6b1d36ed54b9cc28539e4a",
-        "role": "Defines callable, sequential-chain, and dictionary-fan-out patterns and derives execution memory through nested declarations."
+        "sha256": "95b9056c6980e4f7943f909aeae8262252c9aa175247a534befc8d4cc459fdd2",
+        "role": "Defines callable, sequential-chain, and dictionary-fan-out patterns and their grouped source keys."
       },
       {
         "path": "tests/unit/test_function_patterns.py",
-        "sha256": "2b18e6f40f3f5e4a9673f954544b0113eba710675573fcda3fac6ef18d5eb725",
+        "sha256": "d0160652d548748901a8b95d21abde9dca050259fd2f74d4a85cb60a50441175",
         "role": "Verifies dictionary fan-out, composition, and invalid pattern rejection."
       }
     ],
     "findings": [
-      "The case-study URL is historical and now serves only as a stable route to the current conceptual owner."
+      "The function_patterns.py and test changes (axis-typed grouping, payload-axis proofs) do not affect the redirect; dictionary fan-out still exists and concepts/function_patterns remains its owner page."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/dict_pattern_case_study.rst in full and compared it against the changed authorities: function_patterns.py, test_function_patterns.py; confirmed NormalizedFunctionPattern still carries grouped dictionary keys and the redirect target exists; no page edit was needed.",
       "Re-read docs/source/architecture/dict_pattern_case_study.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/function_patterns.py; tests/unit/test_function_patterns.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -1112,7 +1178,7 @@
     "authority": [
       {
         "path": "external/ObjectState/src/objectstate/lazy_factory.py",
-        "sha256": "f81ce722695dbab98fd02658f2015e5cb93c1e1e69547d24249e62d896e2a828",
+        "sha256": "64ae924c176757863a84eef19b9df0eff516e32443c2661134ec2ae72f234bf9",
         "role": "Implements dynamic lazy dataclass generation, validation, and resolution."
       },
       {
@@ -1122,17 +1188,18 @@
       }
     ],
     "findings": [
-      "The transition page did not identify the exact ObjectState architecture owner or the current OpenHCS system route."
+      "The lazy_factory.py change does not move lazy-dataclass generation out of ObjectState; the redirect is still accurate and needed no edit."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/dynamic_dataclass_factory.rst in full and compared it against the changed authority external/ObjectState/src/objectstate/lazy_factory.py; confirmed ObjectState still owns lazy dataclass generation and the linked pages exist; no page edit was needed.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings."
     ]
   },
   {
     "path": "docs/source/architecture/experimental_analysis_system.rst",
-    "source_sha256": "9b143aff0b24ea2c3d9dbebe9f4789f764c3e81d1258747ee2fe33eed8e4e943",
+    "source_sha256": "5fb63b58a0a9d3c63672167141dccdcb3d11ec786b044386d136b4cc7d5730a6",
     "audience": [
       "OpenHCS experimental-analysis maintainers",
       "desktop analysis integrators"
@@ -1141,37 +1208,43 @@
     "diataxis": "explanation",
     "authority": [
       {
-        "path": "openhcs/core/config.py",
-        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
-        "role": "Declares standalone ExperimentalAnalysisConfig options and all directory-workflow filenames."
+        "path": "openhcs/domains/microscopy/config.py",
+        "sha256": "79b8baefdbf22b85c199807f62b8234daca6904633a574886661a1c2e3d03a9b",
+        "role": "Declares standalone ExperimentalAnalysisConfig with all five directory-workflow filenames, outside the GlobalConfigSection family, and NormalizationMethod's member-owned calculations."
       },
       {
         "path": "openhcs/processing/backends/experimental_analysis/unified_analysis_engine.py",
-        "sha256": "316be268b761bfa74ed1df137f2ba014a1f1c273aa9abd598a8a2e10388afb79",
-        "role": "Coordinates the workbook-declared format strategy, replicate-local normalization, exports, and configuration-projected run_directory boundary."
+        "sha256": "2705d459204557c4f7092df3fd21ed687dcf56449ed361485382b1c0ce196444",
+        "role": "Coordinates the workbook-declared format strategy, replicate-local normalization, exports, and the configuration-projected run_directory boundary."
       },
       {
-        "path": "openhcs/formats/experimental_result_formats.py",
-        "sha256": "ce46b895e4caafec7d026112cacfdfc496de0cb4cd5978cceb94db02b98fe288",
-        "role": "Defines the scope-keyed CX5 and MetaXpress leaves that own result reading, feature extraction, and plate population."
+        "path": "openhcs/processing/backends/experimental_analysis/result_formats.py",
+        "sha256": "6951f41a2ff2bdac1945c7e56584a578c111c078cac1d684030c00f95a23f528",
+        "role": "Defines the scope-keyed CX5 and MetaXpress ExperimentalResultFormatStrategy leaves for result reading and plate population."
+      },
+      {
+        "path": "openhcs/processing/backends/experimental_analysis/analysis.py",
+        "sha256": "17a701e0740eac3e11319fe73f10302bbcab603218349bfba4e07014aabc27bb",
+        "role": "Owns layout parsing, exclusion projection, replicate averaging, and table/plate-grid export."
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "a156a006a3c40f43107b9b1f6ecb97ed150879eb88ded8ef89e25214309ae33a",
-        "role": "Routes the desktop analysis action through ExperimentalAnalysisEngine rather than the deprecated wrapper."
+        "sha256": "e43085c1eaf0c836ce34e1a1dae7740488d91bdfea56844e7ddd4e6925561cf6",
+        "role": "Routes the desktop analysis action through ExperimentalAnalysisEngine.run_directory with the default configuration."
       },
       {
         "path": "tests/unit/test_experimental_analysis_engine.py",
-        "sha256": "23b5d73def871a4c1f1e60625faf56d4664a315f90ddbddff7fa1ceab2117c17",
-        "role": "Verifies configured path projection, exclusions, normalization-method delegation, mirror deletion, and an end-to-end MetaXpress directory run."
+        "sha256": "641fadecf8c940cc2316a06771c74db5f3f2db9dafdfbfebdc535760d6d776ec",
+        "role": "Verifies configured path projection, exclusions, normalization-method delegation, and an end-to-end MetaXpress directory run."
       }
     ],
     "findings": [
-      "The audit exposed a source-level mirror: the desktop hardcoded four filenames and called a deprecated wrapper; the owner was repaired and the page now describes the configuration-owned engine path.",
-      "Source verification found three parallel CX5 and MetaXpress dispatch systems plus caller-owned normalization selection. They were collapsed into scope-keyed result-format leaves and NormalizationMethod member behavior before documenting the final boundary."
+      "openhcs/formats/experimental_result_formats.py was moved (G2) to openhcs/processing/backends/experimental_analysis/result_formats.py, and ExperimentalAnalysisConfig and NormalizationMethod moved from core/config.py into the microscopy domain config; the page now says the config is a domain declaration.",
+      "The page contrasted the desktop path with a deprecated compatibility wrapper that no longer exists; the clause was removed."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/experimental_analysis_system.rst in full and compared it against the changed authorities: core/config.py, unified_analysis_engine.py, the moved formats/experimental_result_formats.py, pyqt_gui/main.py, test_experimental_analysis_engine.py; traced ExperimentalAnalysisConfig and NormalizationMethod to domains/microscopy/config.py, the result-format strategies to result_formats.py and layout parsing to analysis.py, confirmed the desktop action calls ExperimentalAnalysisEngine().run_directory, and removed the stale deprecated-wrapper clause.",
       "Re-read docs/source/architecture/experimental_analysis_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/config.py; openhcs/processing/backends/experimental_analysis/unified_analysis_engine.py; openhcs/formats/experimental_result_formats.py; openhcs/pyqt_gui/main.py; tests/unit/test_experimental_analysis_engine.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -1188,7 +1261,7 @@
   },
   {
     "path": "docs/source/architecture/external_foundations.rst",
-    "source_sha256": "2c95e2864cf17a5a6195c2fc3c498ac99eb4cf450a841f7a8d2417a94d53f1cb",
+    "source_sha256": "032486c75f7c51f03c8868814044e42624517ff2c8e6f785cf9e88d27066ef4d",
     "audience": [
       "OpenHCS maintainers",
       "first-party package integrators"
@@ -1198,7 +1271,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
+        "sha256": "3592cc37444e2e1f5bb0284e939643039c0d513217861af8133dd8bd6e8a4325",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1213,12 +1286,12 @@
       },
       {
         "path": "external/ObjectState/README.md",
-        "sha256": "1d72de341fc17c96587a75bba4a913787321bf598b848474a833b34a0547842e",
+        "sha256": "e13c149f1130f43eab46cca59986ca0e2de5ce29f5b7d48f8e8aebb9fc9e127a",
         "role": "States ObjectState ownership of lazy state, contexts, provenance, and editing mechanics."
       },
       {
         "path": "external/arraybridge/README.md",
-        "sha256": "b108a144e2f797425a1734f745a73ac7a215bd5e58b3f6fe4342b18e7d16b892",
+        "sha256": "2fe1a330ca101dadb6cea5ac6f0482a5ffe8c7e0e4b9bd7bc8bc2220e106415a",
         "role": "States ArrayBridge ownership of array conversion, memory mechanics, and callable input, output, and execution metadata."
       },
       {
@@ -1227,9 +1300,29 @@
         "role": "Owns framework-neutral array geometry inspection without device-to-host conversion."
       },
       {
+        "path": "external/arraybridge/src/arraybridge/array_operations.py",
+        "sha256": "ea8c4e21ffbef5b5d502f9e5b7779bd5a341cec4408337d16ba89613f4305636",
+        "role": "Owns native array operations as one family leaf per MemoryType declaration."
+      },
+      {
+        "path": "external/arraybridge/src/arraybridge/types.py",
+        "sha256": "08f7ff4df8807bb3340e00a02c6276b1c702a0f00a2eedacd701142736c5d804",
+        "role": "Owns declaration-derived child-process environments for optional array frameworks."
+      },
+      {
         "path": "external/metaclass-registry/README.md",
-        "sha256": "668dab2cc7c536778ca0010f957c85335eda5eb2392e60c62d08b11d79009c37",
+        "sha256": "d89a6b35231f21cb398d02b484b0fc1c3a6e72c29831ab19b32852d201f6988f",
         "role": "States metaclass-registry ownership of reusable nominal registration and host-logging-safe discovery imports."
+      },
+      {
+        "path": "external/metaclass-registry/src/metaclass_registry/strategies.py",
+        "sha256": "5c00cd4d80f9f0ceffbc2ab95ad8c6abd44a8a66a974959445ef93df08dd4f0d",
+        "role": "Owns the shared registered-strategy and nominal selection mixins moved out of OpenHCS."
+      },
+      {
+        "path": "external/metaclass-registry/src/metaclass_registry/caches.py",
+        "sha256": "aa5681adb13a5424f7e8ee5b0fa601b23409f7093dc3e755c23c0b16e7a16e21",
+        "role": "Owns the bounded cache and the process-local cache family."
       },
       {
         "path": "external/PolyStore/README.md",
@@ -1243,53 +1336,54 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/window_snapshot.py",
-        "sha256": "c21e85912ab6715cc9c97bc796b9e5ed03610bf96f786d923557f18a876081f9",
+        "sha256": "bced886e6bbfd69ae9bdebf950027b809e72c23eddadcaa5fcf7151adf7ae913",
         "role": "Owns safe Qt-rendered capture and optional bounded observations of actual flash-renderer frames."
       },
       {
-        "path": "external/pyqt-reactive/docs/architecture/window_snapshot.rst",
-        "sha256": "76100ca0e5342138a0abe0b7e026939f33a06da9d9bff6edff3cc26f165c6378",
-        "role": "Documents the generic capture scopes and the application integration boundary."
-      },
-      {
         "path": "external/python-introspect/README.md",
-        "sha256": "d861f8aff2e79d9e77fbb2286b2f353c5b568412482a57efce9a488e58d543fe",
+        "sha256": "059dcfaafc0b2222e8e64b7fe072d24bddfb5a347a6f25113e715ed7946e44a1",
         "role": "States python-introspect ownership of callable/signature analysis and signature-derived declaration projection."
       },
       {
+        "path": "external/python-introspect/src/python_introspect/jsonable.py",
+        "sha256": "8fe06533a6dce179b7d77792b6ac768c2a64a1e9e79bbe926893498fae035bb4",
+        "role": "Owns the to_jsonable encoder paired with the dataclass_from_mapping decoder."
+      },
+      {
+        "path": "external/python-introspect/src/python_introspect/public_api.py",
+        "sha256": "f3093140a9a7c65ff8e94e3d0f3ab85d720eaa6ad840e0f44b4725f5b73e6059",
+        "role": "Owns declared public-name derivation and the lazy_exports helper."
+      },
+      {
         "path": "external/zmqruntime/README.md",
-        "sha256": "c8f7fa1b36636d6cbcee78bf259f2e2511ef7e19a5533ae246548167e35b3eb9",
+        "sha256": "03d1d715f46d2bd9c4b4b4142fd4622764c3109b2671801fae5163415e41718c",
         "role": "States ZMQRuntime ownership of generic process and transport lifecycle."
       },
       {
         "path": "external/zmqruntime/src/zmqruntime/client.py",
-        "sha256": "fc8bdf68455673921d79742204bf6c88e42b52bbe407d10ef4a831e084ca86a8",
-        "role": "Owns exact spawned endpoint-process adapters, retained exit observation, automatic child reaping, and owner groups without process rediscovery."
+        "sha256": "7d3cce31d5abaa070927f02fe87d919687619e2cf4adbc37ab82483b6b8fc212",
+        "role": "Owns exact spawned endpoint-process adapters, retained exit observation, automatic child reaping, and owner groups."
+      },
+      {
+        "path": "external/zmqruntime/src/zmqruntime/process_launch.py",
+        "sha256": "a9b913aee1c08967cc86fa7def39e19f2bac49c444c6c6db8d375d77e1a31b60",
+        "role": "Owns the per-platform background-process launch policy moved out of pyqt-reactive."
       },
       {
         "path": "external/pycodify/README.md",
         "sha256": "f32db990f5e1feb01ee3d7adbe1195fd691c8964acd789759901d00170cecf7e",
         "role": "States pycodify ownership of Python-source serialisation and formatter composition."
-      },
-      {
-        "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
-        "role": "Owns declaration-derived child-process environments for optional array frameworks."
       }
     ],
     "findings": [
-      "ArrayBridge 0.3 moved callable input, output, and execution memory metadata keys into its decorator contract; the catalogue now distinguishes package ownership from OpenHCS callable-contract projection and compiled resource planning.",
-      "python-introspect 0.1.10 added signature-derived callable-declaration projection to its generic owner boundary.",
-      "ArrayBridge 0.3.1 added framework-neutral array geometry so semantic consumers can inspect shape without implicitly transferring device arrays to the host.",
-      "Qt-rendered snapshot capture moved to pyqt-reactive; OpenHCS retains window discovery, authorisation, and domain transport.",
-      "Exact spawned endpoint-process ownership moved to ZMQRuntime; OpenHCS retains viewer persistence and application shutdown policy.",
-      "ZMQRuntime 0.2.15 made each retained endpoint process observe and reap its own terminal exit without caller polling.",
-      "ZMQRuntime 0.2.17 made owner-requested connection-attempt cancellation a typed generic result and disconnects a connection that wins a late readiness race.",
-      "The package catalogue did not name ArrayBridge child-process environment ownership or metaclass-registry host-logging-safe discovery imports.",
-      "The OMERO boundary assigned deployment to the alpha web application instead of the OpenHCS bundle and lifecycle owner."
+      "L1 moved the registry strategy/selection mixins and the cache family into metaclass-registry; the page still said OpenHCS owned the shared selection mixins.",
+      "L2 moved the to_jsonable encoder and the public-API/lazy-export helpers into python-introspect; the catalogue did not list them.",
+      "L3 moved the background-process launch policy into ZMQRuntime, and L5 added ArrayBridge's per-memory-type array operations; neither was in the catalogue.",
+      "The pyqt-reactive window_snapshot.rst authority was a documentation file; it was dropped in favour of the source owner already listed."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/external_foundations.rst in full and compared it against the changed authorities: pyproject.toml (zmqruntime 0.6, polystore 0.6, objectstate 1.3.1, python-introspect 0.2.5, metaclass-registry 0.3.0, arraybridge 0.4.1, pyqt-reactive 0.4 bounds; still eight first-party packages), the package READMEs, window_snapshot.py, client.py and arraybridge types.py; added the L1, L2, L3 and L5 ownership moves to the catalogue and confirmed the PolyStore, OMERO and pyqt-reactive claims against current source.",
       "Re-read docs/source/architecture/external_foundations.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: pyproject.toml; external/ObjectState/README.md; external/arraybridge/README.md; external/metaclass-registry/README.md; external/PolyStore/README.md; external/pyqt-reactive/README.md; external/python-introspect/README.md; external/zmqruntime/README.md; external/pycodify/README.md.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -1328,7 +1422,7 @@
   },
   {
     "path": "docs/source/architecture/external_integrations_overview.rst",
-    "source_sha256": "cd950b20705e1661d76f3c2ba9a66e68a37a88020228083327b77a9e40b688f1",
+    "source_sha256": "b2e0a00a4927035f23c2efa7900cf2f30ec968c0acc7cf7dded57adddbf76895",
     "audience": [
       "OpenHCS integrators",
       "architecture reviewers"
@@ -1338,27 +1432,37 @@
     "authority": [
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
-        "role": "Implements CellProfiler lowering and declaration-owned headless validation before public OpenHCS pipeline declarations are emitted."
+        "sha256": "3439d96f3fbfcb104a53019dc150049021d9a8132bd27096f1ccf510eefbe37b",
+        "role": "Implements CellProfiler lowering to FunctionStep and PipelineConfig declarations with declaration-owned headless validation."
+      },
+      {
+        "path": "openhcs/interop/cellprofiler/pipeline_importer.py",
+        "sha256": "618cc6bce994d1c5d323a7397930afbe6e7b3c65f6ecc9da53a94e1a61ff6c63",
+        "role": "Registers the .cppipe suffix as a PipelineImporter family member from interop."
+      },
+      {
+        "path": "openhcs/core/pipeline_import.py",
+        "sha256": "b48f0a37e621f36fe256138472c4bda1e87d2d0d45be83361a40ce6cbfea4e55",
+        "role": "Defines the kernel's suffix-keyed PipelineImporter family."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_declarations.py",
-        "sha256": "89dd65abc003c464ba6c489f52d3a4fa47be1d5f8b87d26ad72b7537f188cf8b",
+        "sha256": "6bbf41c158496a02439be2ee5aef12d7712fb632419c226a64c9259a55438b95",
         "role": "Defines the nominal module validation hook queried by the importer."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_declarations.py",
-        "sha256": "666ec8c9adfd6a9015adf2b226df671534bb7e547cb0d76f1d16c40ac61e30a6",
+        "sha256": "f70b52114fb5d5e2c2fc49cd9a2b46986bde48ce02d82f1a34a67f072ca2ab20",
         "role": "Defines the interactive-module family that rejects headless import."
       },
       {
-        "path": "openhcs/microscopes/microscope_base.py",
-        "sha256": "ae19ce4f6e1cd2e60946eceb908722e1ff760d7654a775d8372abbc4ac1fc81f",
-        "role": "Defines registered microscope discovery and source-specific declaration ownership."
+        "path": "openhcs/core/dataset_sources/source.py",
+        "sha256": "097fde4d2b74031eacf53a88e79f499417e8c1c97ba0753e8a9df831b307efa6",
+        "role": "Defines the registered DatasetSource family that microscope handlers implement."
       },
       {
         "path": "external/PolyStore/src/polystore/base.py",
-        "sha256": "ae641affae21b61448816a14bd68b7f2f3fc0082f0f1fbe51079ed32520450b1",
+        "sha256": "8f2082ade15072bc8e8eba363c75a1d1cff7c67c74845e6485f69eab244634dc",
         "role": "Defines the generic storage backend boundary consumed by OpenHCS integrations."
       },
       {
@@ -1373,27 +1477,27 @@
       },
       {
         "path": "external/zmqruntime/src/zmqruntime/execution/server.py",
-        "sha256": "34e9e92c1a8a975a7a716d0c869b540e1ea8376c90cc71aa27d9614d08517a0d",
+        "sha256": "3afc85924853fdb245b2d7ed1e2d68e4a4262edcd84f36c355b9bfd9c4fad926",
         "role": "Implements the generic remote-execution lifecycle kept outside OpenHCS domain code."
       },
       {
         "path": "openhcs/runtime/zmq_server_hooks.py",
-        "sha256": "b10f2a9a409ea1b97ad04ab4fa1fcea2fb41b9fbeaa43f7f31f0371be6ef484c",
-        "role": "Maps generic targeted interruption onto the exact OpenHCS orchestrator and its owned workers."
+        "sha256": "c3027f3495c5ec188a0f9176db7fd0fcbb22451892248c9fd41d73347ac236dd",
+        "role": "Maps generic targeted cancellation onto the exact OpenHCS orchestrator and its owned workers."
       },
       {
         "path": "tests/unit/test_cellprofiler_pipeline_import.py",
-        "sha256": "353f0c1d8e0bc3552d2e418d792794ab0631daa16c78a3e10191b1cc1ea07d73",
+        "sha256": "6b1d201ec5c4ba620fa2367a9cbef1f6fbdd25edbdda9bd7b723ebe3a3363412",
         "role": "Verifies explicit rejection of an interactive-only module during direct import."
       }
     ],
     "findings": [
-      "The overview named cancellation ownership but did not explain the generic terminal-state and OpenHCS cooperative-interruption boundary.",
-      "The OMERO summary assigned deployment to the web plugin instead of the OpenHCS deployment bundle and lifecycle owner.",
-      "The CellProfiler summary omitted the declaration-owned headless-import boundary for interactive-only modules."
+      "The page named ``MicroscopeHandler`` implementations; G4 deleted microscope_base.py and handlers now implement the kernel DatasetSource family.",
+      "The .cppipe importer is now a member of the kernel's PipelineImporter family registered from interop; the page did not say how the generic code reaches it."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/external_integrations_overview.rst in full and compared it against the changed authorities: pipeline_import.py, module_declarations.py, module_artifact_declarations.py, the deleted microscope_base.py, polystore/base.py, zmqruntime execution/server.py, zmq_server_hooks.py, test_cellprofiler_pipeline_import.py; replaced MicroscopeHandler with the DatasetSource family, named the PipelineImporter registration, and confirmed the CellProfiler, OMERO and cancellation claims and every linked page.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "On 2026-08-25, re-read the complete explanation against the canonical Compose declaration, plugin compatibility owner, and PolyStore boundary; corrected OMERO deployment ownership.",
@@ -1445,25 +1549,26 @@
     "authority": [
       {
         "path": "openhcs/runtime/fiji_stream_visualizer.py",
-        "sha256": "436a64ca81b9552c6a97acc9eea12cd509c7d746c5647c737060224cf2ea2632",
-        "role": "Implements the OpenHCS Fiji visualization adapter over compiled streaming declarations."
+        "sha256": "e2f24498a085bd5a3dc850b061386a0c0e3b0d3fc165413b5a9012b0825e47cc",
+        "role": "Implements the OpenHCS Fiji visualization adapter, keyed by the FijiViewer family member, over the shared managed-viewer lifecycle."
       },
       {
         "path": "external/PolyStore/src/polystore/fiji_stream.py",
-        "sha256": "62a60a36f1da5668f60bc0b4e3a5d0e65008042b2361787f4909224dd9b51db9",
+        "sha256": "b1bd2ff8fc047e84dd24691d5fce0e60b25cdab06063b5889a95acca1d5ba0c1",
         "role": "Implements generic Fiji streaming storage mechanics."
       },
       {
         "path": "external/zmqruntime/src/zmqruntime/viewer_protocol.py",
-        "sha256": "5580efffddca2f723b11a652f482fbdb52ebae657620fad95217b313997b9fc9",
+        "sha256": "118829a406428e38f0c04a3a6f54103dc110f4a330f69264900f3a4bb55e62d7",
         "role": "Defines the generic viewer-control transport protocol."
       }
     ],
     "findings": [
-      "The former architecture page no longer owns streaming facts and correctly redirects to the current wrapper and package boundaries."
+      "The fiji_stream_visualizer.py change (FijiViewer family member replacing ViewerType.FIJI, start logic moved into the shared lifecycle) and the library changes do not affect the redirect; the page names no deleted owner and both linked pages exist."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/fiji_streaming_system.rst in full and compared it against the changed authorities: fiji_stream_visualizer.py, polystore/fiji_stream.py, zmqruntime/viewer_protocol.py; confirmed the redirect targets streaming_boundary_and_wrappers and external_foundations exist and the Fiji adapter still lives in OpenHCS over PolyStore and ZMQRuntime; no page edit was needed.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the PolyStore 0.2.18 `fiji_stream.py` change, which removed the subclass destructor and now relies on the shared `StreamingBackend` teardown authority for idempotent, destructor-safe cleanup. The page is a redirect stub with no subclass destructor or Fiji-internal lifecycle prose, so its reference disposition and navigation remain accurate. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
@@ -1480,8 +1585,8 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/animation/flash_mixin.py",
-        "sha256": "37cd2b32047109fc16255a3f9a9938ae553d5f8bd5987cd10460c7ba500f1486",
-        "role": "Implements reusable flash propagation, widget-geometry masking, paint acknowledgement, and animation coordination."
+        "sha256": "5b44c084784499a03c8eccffe37dbf31efc0e3379a6c99907272507f9100a492",
+        "role": "Implements reusable flash propagation, widget-geometry masking, label padding derived from animation config, and paint-acknowledged animation coordination."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/animation/flash_config.py",
@@ -1490,15 +1595,16 @@
       },
       {
         "path": "external/pyqt-reactive/tests/test_flash_destruction_lifetime.py",
-        "sha256": "a567e8b978182773d316e9a7dc7934b80da2708e2804bd8e84898b4b1a030b37",
-        "role": "Verifies Qt-owned cleanup receivers survive native sender destruction and Python garbage collection."
+        "sha256": "3d7f50d0677cc7deee95f879e9a5007dc7551453449f8299dc585499cea86cf3",
+        "role": "Verifies Qt-owned cleanup survives cycle collection and that a pending flash registration ends with the widgets it closes over."
       }
     ],
     "findings": [
-      "The compatibility page lacked the exact owner-page link and pointed twice at the package-level boundary."
+      "The pyqt-reactive flash changes since the last review (pending registrations dropped on widget destruction, label padding derived from animation config) stay inside the generic owner; the redirect's owner link and OpenHCS boundary links remain correct, so only evidence roles changed."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/flash_animation_system.rst in full and compared it against the changed authorities: external/pyqt-reactive/src/pyqt_reactive/animation/flash_mixin.py and external/pyqt-reactive/tests/test_flash_destruction_lifetime.py; confirmed the pyqt-reactive flash page and the ui_services_architecture and external_foundations targets still exist and updated the evidence roles; the page text needed no change.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "On 2026-09-06, re-read the complete redirect and canonical pyqt-reactive flash page against the native widget raster surface, shared mask projection, resolved-change notification ownership and unchanged FlashConfig timing. The redirect still points to the package that owns these generic mechanisms. Native RGB/BGR coverage passed 240 checks across 100%, 125% and 150% scaling; 460 reactive tests, nine OpenHCS form integration tests and five real MCP reset/edit checks passed. Reactive main CI 34044272928 passed every platform job.",
@@ -1517,20 +1623,21 @@
     "authority": [
       {
         "path": "openhcs/core/function_patterns.py",
-        "sha256": "fe76286a2d378a39fd6061273363ccebbdc88f1dde6b1d36ed54b9cc28539e4a",
-        "role": "Defines callable, sequential-chain, and dictionary-fan-out patterns and derives execution memory through nested declarations."
+        "sha256": "95b9056c6980e4f7943f909aeae8262252c9aa175247a534befc8d4cc459fdd2",
+        "role": "Normalizes callable, (callable, kwargs), list-chain, and dict patterns into named invocations and compiles them with their memory and artifact plans."
       },
       {
         "path": "tests/unit/test_function_patterns.py",
-        "sha256": "2b18e6f40f3f5e4a9673f954544b0113eba710675573fcda3fac6ef18d5eb725",
-        "role": "Verifies composition, flattening, validation, and dictionary pattern semantics."
+        "sha256": "d0160652d548748901a8b95d21abde9dca050259fd2f74d4a85cb60a50441175",
+        "role": "Verifies invocation identity for list and dict patterns, normalization, tuple-leaf validation, and compiled pattern semantics."
       }
     ],
     "findings": [
-      "The former architecture URL is retained only as a stable transition to the current concept page."
+      "The redirect still points at the current concept page; function_patterns.py changed only in compiled-invocation detail. Evidence roles updated to the current module's normalized and compiled pattern classes."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/function_pattern_system.rst in full and compared it against the changed authorities: openhcs/core/function_patterns.py and tests/unit/test_function_patterns.py; confirmed the module still accepts callable, (callable, kwargs), list and dict patterns and that docs/source/concepts/function_patterns.rst exists; the page text needed no change.",
       "Re-read docs/source/architecture/function_pattern_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/function_patterns.py; tests/unit/test_function_patterns.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -1549,31 +1656,31 @@
     "authority": [
       {
         "path": "external/python-introspect/src/python_introspect/signature_analyzer.py",
-        "sha256": "73600e546753640964d4ba5308fdf808ed3a4a6f085417d8ac0745d9e2748ed7",
-        "role": "Implements generic wrapped-target and parameter signature analysis."
+        "sha256": "edbe51f6c92b2c334dc4533bbeaa252be649c1ac738d2ebfca4364f2708479dc",
+        "role": "Implements generic wrapped-target and parameter signature analysis used by the OpenHCS editors."
       },
       {
         "path": "external/python-introspect/src/python_introspect/callable_declaration.py",
         "sha256": "3bb8b474624fe6b2964a5c1f9a6aa540b2703500bfa124e7808995cb789d6951",
-        "role": "Orders supplied parameters by signature with optional default omission and caller-owned equality."
+        "role": "Provides callable_declaration_kwargs, which FunctionStep and the code serializer use to order supplied parameters by signature."
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
-        "role": "Adds OpenHCS processing, runtime, artifact, scope, and ArrayBridge memory semantics to analysed callables."
+        "sha256": "5b8e85dc1708d5727c73ac1007150219683fb9fb75c4ff2ec2c0bc676445738c",
+        "role": "Adds OpenHCS processing, runtime, artifact, scope, and ArrayBridge memory semantics on top of python-introspect annotation helpers."
       },
       {
         "path": "tests/unit/test_callable_contract.py",
-        "sha256": "493f76a54f5fe024ca8f10c53b1f810b8c369626ad7141205b42ef3a78282137",
-        "role": "Verifies OpenHCS callable contracts projected from declaration-owned metadata, including execution memory."
+        "sha256": "cc220f53107a08b0406b6e0dd49896e3e4c3c0af6e527b0ef00d4fdaba8f0b2c",
+        "role": "Verifies OpenHCS callable contracts projected from declaration-owned metadata, including execution memory and runtime batching."
       }
     ],
     "findings": [
-      "The transition page did not separate the extracted signature-analysis owner from OpenHCS domain callable semantics.",
-      "The extracted owner now also projects callable declarations from signature defaults."
+      "Re-checked the redirect against the rewritten callable_contract.py: generic signature analysis and declaration projection still come from python-introspect (SignatureAnalyzer, callable_declaration_kwargs, annotation helpers), and OpenHCS-specific callable semantics stay in callable_contract. No page text was wrong; evidence roles were refreshed."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/function_reference_pattern.rst in full and compared it against the changed authorities: external/python-introspect/src/python_introspect/signature_analyzer.py, openhcs/core/callable_contract.py and tests/unit/test_callable_contract.py; grepped OpenHCS imports of python_introspect and confirmed docs/source/architecture/processing_semantics.rst exists; the page text needed no change.",
       "Re-read docs/source/architecture/function_reference_pattern.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: external/python-introspect/src/python_introspect/signature_analyzer.py; openhcs/core/callable_contract.py; tests/unit/test_callable_contract.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -1599,20 +1706,21 @@
     "authority": [
       {
         "path": "external/metaclass-registry/src/metaclass_registry/core.py",
-        "sha256": "ed4dd1dfd0e4e05e916fec39f19b4b8bd526e776aa0c96e3abe9b1ffbdff0505",
+        "sha256": "72c8284e8a32dd193f13f36a425289d5293a32f4a381046db523aa87182e0be8",
         "role": "Implements AutoRegisterMeta, RegistryConfig, families, and generic registry ownership."
       },
       {
-        "path": "openhcs/core/registry_strategies.py",
-        "sha256": "a41186665abbd308f224d0bb41d6618cd9d89b08acaf54ec2819f2024a6e0804",
-        "role": "Defines OpenHCS generic selection over registered domain declarations."
+        "path": "external/metaclass-registry/src/metaclass_registry/strategies.py",
+        "sha256": "5c00cd4d80f9f0ceffbc2ab95ad8c6abd44a8a66a974959445ef93df08dd4f0d",
+        "role": "Provides the selection strategy mixins that OpenHCS declaration families import directly since the OpenHCS strategy module was deleted."
       }
     ],
     "findings": [
-      "The transition page did not link the current metaclass-registry owner inventory directly."
+      "The listed authority openhcs/core/registry_strategies.py was deleted (b221f8491); its strategy mixins now live in metaclass_registry.strategies, which strengthens the page's claim that metaclass-registry owns the reusable mechanism. Authority replaced; page text unchanged."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/function_registry_system.rst in full and compared it against the changed authorities: external/metaclass-registry/src/metaclass_registry/core.py and the deleted openhcs/core/registry_strategies.py (moved to metaclass_registry.strategies and caches in b221f8491); confirmed no OpenHCS importer re-exports the old module and the nominal_ownership and external_foundations targets exist; the page text needed no change.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests."
@@ -1620,7 +1728,7 @@
   },
   {
     "path": "docs/source/architecture/gpu_resource_management.rst",
-    "source_sha256": "998a32e50c5ed6c59b44f3f7b0fc686b19fe619c63b459e0be7b273c555bc637",
+    "source_sha256": "812a3f6e083891191e39168946919f3633f4b5f80ea66de5fe65b40483c68ef9",
     "audience": [
       "OpenHCS compiler and runtime maintainers",
       "GPU integration authors"
@@ -1630,48 +1738,53 @@
     "authority": [
       {
         "path": "external/arraybridge/src/arraybridge/decorators.py",
-        "sha256": "99823105b0ae59054df1d84013633b8b6628d0a6dc3326383199ac7c65c69bed",
+        "sha256": "28f9bf4770bd4cc1ef34045fdef28065063ede029296f62b8a6c4140cc88e40e",
         "role": "Owns callable input, output, and execution memory metadata keys and their decorator projection."
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
-        "role": "Declares framework capabilities, callable memory metadata, and the child-process import environment owned by each MemoryType member."
+        "sha256": "08f7ff4df8807bb3340e00a02c6276b1c702a0f00a2eedacd701142736c5d804",
+        "role": "Declares MemoryContractAttribute keys and each MemoryType member's import policy, device discovery, device scope, allocator cleanup, and subprocess_environment projection."
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
+        "sha256": "5b8e85dc1708d5727c73ac1007150219683fb9fb75c4ff2ec2c0bc676445738c",
         "role": "Projects declaration-owned input, output, and execution memory into immutable callable contracts."
       },
       {
         "path": "openhcs/core/framework_device_resolver.py",
         "sha256": "be96430174bc576c0b8083879c579ef3fb9b83c4690234751459c2d7bc5556a8",
-        "role": "Resolves each required GPU framework through its ArrayBridge declaration and rejects CPU-only requests before imports."
+        "role": "Resolves each required GPU framework through its ArrayBridge declaration and rejects requests while GPU imports are disabled, before any framework import."
       },
       {
         "path": "openhcs/core/pipeline/framework_device_assignment.py",
-        "sha256": "f77f3fb2d30c4af8cab6210dbe294f9fb5e246dad0a6bbf88bcaf1e2b58dead7",
-        "role": "Resolves the pipeline-wide framework footprint and projects exact bindings onto each step plan."
+        "sha256": "cdfde10f996ab682952a1d4948d3de2d23d48353eae41f3124770e19fc28a193",
+        "role": "Resolves the pipeline-wide framework footprint and projects exact bindings onto each step plan and compiled invocation."
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
-        "role": "Invokes callable validation and framework-device assignment before assembling the execution bundle."
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
+        "role": "Calls assign_framework_devices on each context's step plans before bundle assembly."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "6d46571e6f2d069b98a92b41d711b2e20bfab9f0493cf73d3f150d5be08e7f96",
-        "role": "Owns framework-local device bindings, derived GPU footprints, execution scopes, and cleanup requests."
+        "sha256": "5bce281e8291a3434b57ba44f97008e4095cc95998a0805f0369fd212c3a7eec",
+        "role": "Owns FrameworkDeviceAssignment bindings, merged cleanup footprints, and the requires_gpu projection."
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "3c952465268e4b6c44676a853bb9c99d2d04a0490c7d398d2cdaf8b3b5f966d7",
-        "role": "Consumes compiled footprints for worker execution and lane-appropriate framework cleanup."
+        "sha256": "23a3ef2a70378dd1bb5c413a56e36bbb3fa013142741c9b45407bfc47de8c4a4",
+        "role": "Releases each axis's compiled footprint after process and inline contexts and the merged footprint only after thread-backed lanes join."
       },
       {
         "path": "openhcs/core/worker_start_policy.py",
         "sha256": "9493c8729ddfc7457a3a58efb605457d5aa4a54cd42c3f4ef1bd9f28593d9475",
-        "role": "Projects the compiled GPU footprint into CUDA-safe multiprocessing start decisions."
+        "role": "Projects WorkerStartExecutionFacts into one start decision that requires spawn for GPU execution unless unsafe fork is explicit."
+      },
+      {
+        "path": "openhcs/utils/environment.py",
+        "sha256": "2d8738e593b3e92c966089772624f47d17d38bb27fb90974707af659c91e8ad8",
+        "role": "Owns OPENHCS_CPU_ONLY and the CPU-only mode that --no-gpu enables before framework imports."
       },
       {
         "path": "tests/unit/test_framework_device_resolver.py",
@@ -1680,22 +1793,22 @@
       },
       {
         "path": "tests/unit/test_framework_execution_scope.py",
-        "sha256": "888a7693d387b0d5007c9868f0b0344fa3df26620f35e40b45832f0931ef7126",
+        "sha256": "ff92362a71f31b4b893a3816b1fdd396ed30307f45c7084270b4929c1aaa7aa4",
         "role": "Verifies execution-memory device scopes and exact per-lane allocator cleanup."
       },
       {
         "path": "tests/unit/test_worker_start_policy.py",
-        "sha256": "a3eaadb10898f10e50391310d65d338d60e9df2f4f6dec8b791be7dc75d31fc9",
+        "sha256": "5a6f5e1ef54c49bc7f49c8b7baa530e685a8b76daf37679488ec50d9fb5fc37c",
         "role": "Verifies GPU-sensitive worker start policy and explicit unsafe overrides."
       }
     ],
     "findings": [
-      "The former process-level GPU scheduler and GPU-memory validator were deleted; capability now descends from ArrayBridge declarations into a pipeline-wide framework assignment and exact per-step bindings, including execution memory.",
-      "Worker execution now consumes the compiled framework/device footprint for device scopes and cleanup instead of a scalar GPU identifier or copied framework registry.",
-      "The explanation did not state that MemoryType declarations project framework import requirements into fresh catalogue and execution-server processes."
+      "The page described parent/child framework import consistency with the jargon word 'admission'; reworded to plain terms.",
+      "Re-checked every ownership claim against the consolidation changes to callable_contract, compiler, compiled_step_plan and worker_execution: device resolution, per-step bindings, CPU-only rejection, subprocess_environment use by catalogue preparation (registry_service) and the execution-server client, worker-start policy and per-lane cleanup all remain as described. Added openhcs/utils/environment.py as the owner of the CPU-only switch."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/gpu_resource_management.rst in full and compared it against the changed authorities: arraybridge decorators.py and types.py, openhcs/core/callable_contract.py, openhcs/core/pipeline/framework_device_assignment.py, openhcs/core/pipeline/compiler.py, openhcs/core/compiled_step_plan.py, openhcs/core/orchestrator/worker_execution.py and the worker-start and execution-scope tests; traced assign_framework_devices from the compiler, FrameworkDeviceResolver's gpu_imports_disabled check, MemoryType.subprocess_environment() callers, _release_runtime_resources per axis and after threaded lanes, and resolve_worker_start_context; replaced one jargon phrase and refreshed evidence roles.",
       "Re-read docs/source/architecture/gpu_resource_management.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: external/arraybridge/src/arraybridge/decorators.py; external/arraybridge/src/arraybridge/types.py; openhcs/core/callable_contract.py; openhcs/core/framework_device_resolver.py; openhcs/core/pipeline/framework_device_assignment.py; openhcs/core/pipeline/compiler.py; openhcs/core/compiled_step_plan.py; openhcs/core/orchestrator/worker_execution.py; openhcs/core/worker_start_policy.py; tests/unit/test_framework_device_resolver.py; tests/unit/test_framework_execution_scope.py; tests/unit/test_worker_start_policy.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -1757,26 +1870,35 @@
         "role": "Defines the public FunctionStep declaration named by the architecture invariants."
       },
       {
+        "path": "openhcs/core/config.py",
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
+        "role": "Declares GlobalPipelineConfig and the step variable_components and group_by fields, with group_by defaulting from the active AxisFamily."
+      },
+      {
+        "path": "openhcs/core/processing_contracts.py",
+        "sha256": "d37b8a0645d69cb502a7da943b4cf86a87e2daa1cc5323b66b80323caf468f7c",
+        "role": "Defines the ProcessingContract family named as an independent declaration in the invariants."
+      },
+      {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "3c840a89baccc8665d415175458280fd904c1a837b7fd879e303d7dbca129a1c",
-        "role": "Defines the scoped compiler authority named by the navigation map."
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
+        "role": "Defines CompilationSession, the scoped compiler state named by the invariants."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "6d46571e6f2d069b98a92b41d711b2e20bfab9f0493cf73d3f150d5be08e7f96",
-        "role": "Defines typed compiled plan ownership, including declaration-derived framework footprints and exact device bindings."
+        "sha256": "5bce281e8291a3434b57ba44f97008e4095cc95998a0805f0369fd212c3a7eec",
+        "role": "Defines typed CompiledStepPlan fields, including framework footprints and device bindings."
       },
       {
         "path": "openhcs/core/compiled_execution.py",
-        "sha256": "941115f2dca2e53538d3141a59f3ae1f928a87cf741fcfa177f7cd64a5f41aea",
-        "role": "Defines the worker-safe runtime bundle boundary without a process-global GPU registry."
+        "sha256": "85972d418f0958e59f3185f07caf25a103bc9e101e481b2b63903377cc05e397",
+        "role": "Defines the CompiledExecutionBundle that runtime workers consume."
       }
     ],
-    "findings": [
-      "The landing page cited an old documentation plan as a completed-disposition authority; active navigation now stands on current pages and source boundaries only."
-    ],
-    "disposition": "revise",
+    "findings": [],
+    "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/index.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py and openhcs/core/compiled_execution.py; verified each architecture invariant against the current declarations and that every toctree target file exists; the page text needed no change.",
       "Re-read docs/source/architecture/index.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/steps/function_step.py; openhcs/core/pipeline/compilation_session.py; openhcs/core/compiled_step_plan.py; openhcs/core/compiled_execution.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -1786,7 +1908,7 @@
   },
   {
     "path": "docs/source/architecture/list_item_preview_system.rst",
-    "source_sha256": "59ec9b7019bcc8baae04e3cded674beb98cc808c040fd82f47852b253467d5ec",
+    "source_sha256": "fb9177bbbabb4168c1284df0209497cfb23fa9aaf981a248be6e0a15d33134c8",
     "audience": [
       "OpenHCS UI maintainers following the extracted list-preview URL"
     ],
@@ -1796,7 +1918,7 @@
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/strategies/preview_formatting.py",
         "sha256": "dc1a423246ca40f13633847d5d3ffde3916e53c1a8a8a92de893d3e80ad8fda7",
-        "role": "Owns preview detail, collection bounds, and wrapping declarations."
+        "role": "Owns FormattingConfig preview detail, collection bounds, and wrapping declarations."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/protocols/preview_formatter.py",
@@ -1805,33 +1927,33 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "ef81b50ee22b8da69513fd50d6e45a929117fa4bfaa62a20ef08a4c02531c043",
-        "role": "Declares the WellFilterConfig family preview policy and WellFilterMode member operators."
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
+        "role": "Declares PartitionFilterConfig's show_preview_without_partition_filter policy and PartitionFilterMode members' preview_prefix operators."
       },
       {
         "path": "openhcs/pyqt_gui/widgets/config_preview_formatters.py",
-        "sha256": "67b2cbdddc7ef1bced7d549ce5bd29ed7222cacb4d8ea255476ec36f5cab6f62",
-        "role": "Projects OpenHCS well-filter declarations through the generic preview API."
+        "sha256": "490bd6f32183c44028ae06a4a5ca092dd38b44c198ae623d232dc62c5f502183",
+        "role": "format_partition_filter_config projects the partition-filter declarations through the generic preview label API."
       },
       {
         "path": "openhcs/pyqt_gui/services/reactor_providers.py",
-        "sha256": "e937c310e6dd7f06bf8e2cfc227ce442310f6d249fc0abed4ed0e588b4121fe8",
-        "role": "Registers the OpenHCS domain formatter with the generic preview service."
+        "sha256": "aecf1c77636095408486cab53a95cb0fc044fcf2ead0d7b72ac674842cf69abe",
+        "role": "Registers format_partition_filter_config for PartitionFilterConfig with the generic preview service."
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
         "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
-        "role": "Embeds the persisted generic list-preview policy in UIConfig."
+        "role": "Embeds FormattingConfig as UIConfig.list_previews."
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "a156a006a3c40f43107b9b1f6ecb97ed150879eb88ded8ef89e25214309ae33a",
-        "role": "Applies the same preview policy to both managers at startup and after configuration save."
+        "sha256": "e43085c1eaf0c836ce34e1a1dae7740488d91bdfea56844e7ddd4e6925561cf6",
+        "role": "_apply_list_preview_config applies list_previews to Plate Manager and Pipeline Editor at startup and on UI config change."
       },
       {
         "path": "tests/unit/pyqt_gui/test_main_config_propagation.py",
-        "sha256": "291dc45ca20ead6025c255a8109a2e6c55d90bd7858e80ad12484dafa733d7c5",
-        "role": "Verifies live preview policy propagation through the main configuration lifecycle."
+        "sha256": "303d90b43bee7bd531a1c7664fbf9707a2e7be1696a5147614f93c40e5c7021f",
+        "role": "Verifies the list preview config reaches both real lists."
       },
       {
         "path": "tests/unit/pyqt_gui/test_source_binding_preview_policy.py",
@@ -1841,7 +1963,7 @@
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/list_item_delegate.py",
         "sha256": "282c8fe0c88f9bfd51df7eb95c739a8d428d2e9d99478796bb073c698f5907a7",
-        "role": "Owns per-row wrapping overrides, inherited view defaults, shared native/MCP toggling, and delegate paint acknowledgement."
+        "role": "Owns PreviewWrapMode per-row wrapping overrides, inherited view defaults, and delegate paint acknowledgement."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/styled_text_layout.py",
@@ -1856,7 +1978,7 @@
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/widget_tree_projection.py",
         "sha256": "05d5221d64e74ff14483f203975f17543381d959c30ee5918c200fa8e9957547",
-        "role": "Owns row action declarations, automatic selection and explicit preview toggling."
+        "role": "Declares TogglePreviewAction (item_preview_toggle), shared by native clicks and the MCP row action."
       },
       {
         "path": "external/pyqt-reactive/tests/test_list_preview_wrapping.py",
@@ -1865,13 +1987,12 @@
       }
     ],
     "findings": [
-      "The compatibility page lacked the exact owner-page link and duplicated a package-level boundary link.",
-      "The page did not identify the OpenHCS declarations that own well-filter preview labels, empty-selection visibility, and include or exclude operators.",
-      "Added the persisted generic preview policy and its shared two-manager application boundary; retained declaration-owned field selection.",
-      "Clarified row-arrow overrides and repeated graphical guides, distinguishing shared wrapping defaults from row-owned display choices."
+      "After the axis-family rename (WellFilterConfig to PartitionFilterConfig), the page still said an enabled member stays visible 'without an explicit well selection'; the declaration is show_preview_without_partition_filter. Corrected to 'partition filter'.",
+      "Evidence roles named the deleted WellFilterConfig/WellFilterMode; updated to the partition-filter declarations and the current formatter name."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/list_item_preview_system.rst in full and compared it against the changed authorities: openhcs/core/config.py, openhcs/pyqt_gui/widgets/config_preview_formatters.py, openhcs/pyqt_gui/services/reactor_providers.py, openhcs/pyqt_gui/main.py and tests/unit/pyqt_gui/test_main_config_propagation.py; confirmed PartitionFilterConfig/PartitionFilterMode preview declarations, the single formatter registration, UIConfig.list_previews, _apply_list_preview_config for both managers, and TogglePreviewAction; corrected one stale well-selection phrase.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "On 2026-08-24, re-read the complete reference and its generic and domain authorities after moving preview semantics onto the WellFilterConfig family and WellFilterMode members; the page now names the projection boundary without duplicating a registry.",
@@ -1885,7 +2006,7 @@
   },
   {
     "path": "docs/source/architecture/mcp_distribution.rst",
-    "source_sha256": "11d1d54561689e08a1b6c8ceaedfa1f4de7fd82dfa25e20e1b2ae813528ee0ce",
+    "source_sha256": "671e3066e2e1ff97544e6c08b35f0f088d5de4a85abdb912aee735d7c54e8c56",
     "audience": [
       "OpenHCS MCP maintainers",
       "packaging and hosted-deployment integrators"
@@ -1895,28 +2016,43 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
-        "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
-      },
-      {
-        "path": "openhcs/mcp/dev_client_commanding.py",
-        "sha256": "e1c987624c76be157a6524cda985498351da3c77ef19c99b85e05dd5c2e9b970",
-        "role": "Validates one-shot development commands against the selected surface before starting an MCP subprocess."
-      },
-      {
-        "path": "openhcs/mcp/dev_client.py",
-        "sha256": "cb91fcaf3040ff9bc41d6145b71aac8249b42b0369ce8547531cccf7f76dcb3a",
-        "role": "Validates commands before dispatch through an initialized persistent development session."
-      },
-      {
-        "path": "openhcs/mcp/dev_client_core.py",
-        "sha256": "6b05721536e92ed0f9ce4fdd0b6ebd4dbc75201277d1df1d625bf87456d5a57e",
-        "role": "Resolves tool identity and compatible profiles from the capability declarations at the shared call boundary."
+        "sha256": "eaebe33af01d057d1d21b3701f958bc96ede3ec5d0bddddca9917c1164ef0042",
+        "role": "Declares AgentCapabilityDeclaration fields (service, side effects, security, data exposure, transport availability, progress heartbeat and worker-thread safety), CapabilityTransport semantics, local surface profiles, and one tool per headless session operation plus openhcs_session_events."
       },
       {
         "path": "openhcs/mcp/server.py",
-        "sha256": "ed65a008b52db505393413f0fbadf6b096c648ff48340c7e2dda8584750f6c68",
-        "role": "Binds the selected declaration registry into the local stdio MCP server."
+        "sha256": "e1f236011df715da3d17574c0b80cbf50fcae45e3f82491c22fb57e98c6bb662",
+        "role": "Binds the selected declaration registry into FastMCP with outputContract metadata and structured output, runs non-worker-safe capabilities through the main-thread dispatcher, and binds the session to the main thread."
+      },
+      {
+        "path": "openhcs/mcp/execution.py",
+        "sha256": "2fcf0db56f5bd613844c8361962c04715aaa9bfb1b0f1ab191543a99522a06ad",
+        "role": "Runs the MCP SDK loop on a worker thread while a Qt core application and McpMainThreadDispatcher own main-thread calls."
+      },
+      {
+        "path": "openhcs/mcp/stdio.py",
+        "sha256": "ec2935e01e9dc7c0ea56781c174f490528002bd736ac19062bd3a848f7397e7e",
+        "role": "Owns protocol stdin and stdout reservation, routes application output to stderr, and runs the transport through McpTransportExecutor."
+      },
+      {
+        "path": "tests/unit/agent/test_mcp_stdio_transport.py",
+        "sha256": "ffad185f736a7ead7b6e2e7699fb3c9b034c24534af14ea8848e0eb6989cfe1a",
+        "role": "Proves protocol isolation, cold native imports after handshake, and process-handle restoration."
+      },
+      {
+        "path": "tests/unit/agent/test_mcp_distribution_runtime.py",
+        "sha256": "9ddc7dd1386813dc8199ff64ab1ecb0941527fbf62a9cab6577679730f94ea36",
+        "role": "Proves building the local and hosted MCP servers imports no PyQt6."
+      },
+      {
+        "path": "openhcs/mcp/dev_client_core.py",
+        "sha256": "41739b744b0e4287ca7d14cd133371d669e9bff12f4b622313996ae9bb5597da",
+        "role": "Resolves tool identity and compatible profiles from capability declarations and renews the command deadline on each response or progress notification."
+      },
+      {
+        "path": "openhcs/mcp/dev_client_session.py",
+        "sha256": "2dceca7937087d05f72af1d037122ea393721d61d690803628a7b14ca70fd980",
+        "role": "Implements execute-source as add-datasets, set-pipeline, then initialize, compile and run stages followed through session events."
       },
       {
         "path": "openhcs/mcp/control_timeout.py",
@@ -1924,19 +2060,14 @@
         "role": "Projects UI-bridge and viewer connection timeout declarations into bounded MCP caller policies."
       },
       {
-        "path": "openhcs/agent/dto/ui_bridge.py",
-        "sha256": "585b1701b01b92bfce91437a60881afa769e36de9126807c3f4fcaf0ffc006fb",
-        "role": "Declares the UI bridge connection and its default control timeout."
-      },
-      {
-        "path": "openhcs/agent/dto/viewer.py",
-        "sha256": "293ad9fcbd7570e74170e65f9e9d0c51eb78ead57f41213a2878ad6a95d055e3",
-        "role": "Declares viewer control requests and their default timeout."
-      },
-      {
         "path": "openhcs/mcp/context.py",
-        "sha256": "7bb92e1357e02a0676243370179e5ff471d4e15c4c88b9a9f1d69b79f505c7cf",
-        "role": "Composes local stdio authoring with the persisted desktop execution endpoint while keeping hosted HTTP self-contained."
+        "sha256": "1292c9bb7173e6afe5aa6237b861c5f39bc2e854f364fd722c75a3c6b76f534e",
+        "role": "Composes local stdio authoring and the headless session with the saved desktop execution endpoint while keeping hosted HTTP self-contained."
+      },
+      {
+        "path": "openhcs/authoring/session/session.py",
+        "sha256": "587047b63972df89ec46a01ed2c92ff3ef9577335f58a980297db02094e4e8e0",
+        "role": "Defines the headless Session whose datasets and pipelines live in the MCP process's ObjectState and whose events clients follow."
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
@@ -1946,31 +2077,11 @@
       {
         "path": "openhcs/core/config_document.py",
         "sha256": "37f66fd971806e059da6194c003e20a7ad08f69066eec4af7ebb11b4b70a08db",
-        "role": "Derives one typed nested field from the canonical configuration Python document and its dataclass schema."
-      },
-      {
-        "path": "tests/unit/agent/test_mcp_distribution_runtime.py",
-        "sha256": "4f28f8eff46a5de20726bc80316f3fec276e51646b6dd133dbef7b39e6c00004",
-        "role": "Proves cold local MCP composition does not import PyQt6."
-      },
-      {
-        "path": "tests/unit/test_config_document.py",
-        "sha256": "0ee12db4633ab39b34f630e4ee1b0c48b40d8226f91fddc504bb3311b9612cda",
-        "role": "Proves explicit, defaulted, and invalid typed field projections from canonical configuration source."
-      },
-      {
-        "path": "openhcs/mcp/stdio.py",
-        "sha256": "4a5299915413293e5c2492d4e3889614231a1286f93a976094e4d2eba77ea9c0",
-        "role": "Owns protocol stdin and stdout reservation, isolates application input and native-library probes, and routes application output to stderr."
-      },
-      {
-        "path": "tests/unit/agent/test_mcp_stdio_transport.py",
-        "sha256": "4f7c439168dacc350d7fc31618f10dfd7ce7478d52bd5ba13ed54e720291aff2",
-        "role": "Proves persistent protocol isolation, cold native imports after handshake, and process-handle restoration on normal and exceptional exits."
+        "role": "Derives one typed nested field from a configuration Python document and its dataclass schema."
       },
       {
         "path": "openhcs/mcp/http.py",
-        "sha256": "56430a939d65607847486d417c693c91523bf5571cb969389c37ff917f4793c4",
+        "sha256": "c9de5befe7bbbcd6948749e4eafccb1364c0eec78930d55381ac9be0569a3618",
         "role": "Builds the stateless hosted Streamable HTTP server and rejects mutating hosted declarations."
       },
       {
@@ -1980,8 +2091,8 @@
       },
       {
         "path": "openhcs/mcp/client_registration.py",
-        "sha256": "28459b95d3b155778ce178f36302cb830958b74f2603980641ec492d81c41a9a",
-        "role": "Projects one stable launcher into registered local-client configurations."
+        "sha256": "55b701bb77a3de19243fa9a6276f784fad8329e2d435fb26fcc7fdce1e060731",
+        "role": "Projects one stable launcher into registered local-client configurations and synchronises the skill bundle into clients that declare a skill directory."
       },
       {
         "path": "tests/unit/agent/test_hosted_mcp_semantic_ownership.py",
@@ -1989,79 +2100,44 @@
         "role": "Guards declaration-owned hosted transport selection and absence of copied tool lists."
       },
       {
-        "path": "openhcs/desktop_deployment.py",
-        "sha256": "d5393386a14b693af3356484bdcb560e8a3cc0faea061352f46854c0cfead051",
-        "role": "Owns Windows stable-launcher publication and bounded deferral while a valid launcher is live."
+        "path": "openhcs/desktop/deployment.py",
+        "sha256": "4c6a7d63bf5ea759cc3eecd46e93fa335304113873869474f5fe6823f60c298f",
+        "role": "Defines DesktopDeployment and its Windows and macOS leaves, including bounded deferral of the live Windows launcher."
       },
       {
-        "path": "tests/unit/test_desktop_deployment.py",
-        "sha256": "258a657c79a5ad96eacc06a9d4436018ffa10d7ca6d4ae56d5630e0a81c52238",
+        "path": "tests/unit/desktop/test_desktop_deployment.py",
+        "sha256": "6730f5346c91dc8b4f80656b9ab02012124b5ec9bdc4311f3f8d4932ac951ede",
         "role": "Proves live-launcher sharing violations defer only the cache projection and all unsafe failures remain fatal."
       },
       {
-        "path": "openhcs/desktop_installation.py",
-        "sha256": "244ade0711356f68df9f376e2517dfe1c9fb77cc960c517f7c4e8ee418b5711f",
-        "role": "Nominally declares and validates native install policy, then projects one exact package selection for installers and staged updates."
+        "path": "openhcs/desktop/installation.py",
+        "sha256": "b2124aaa3e4ef4a310f91a51c1879de41de1818b25fc619cc7cdad888c4202b6",
+        "role": "Declares DESKTOP_INSTALL_PROFILE and projects one exact package selection for installers and staged updates."
       },
       {
         "path": "scripts/render_installer_contract.py",
-        "sha256": "da9045e1012cb0a71ff0dfd2f2d9fc98232299f5a2f019b01228e344cf3b40e7",
+        "sha256": "1be39dfcc514e2f6f544e6907b3af0992485d3752877502fc761f8da760a7785",
         "role": "Derives the native contract from installer policy, project entry points, brand identity, and the exact release version."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/window_snapshot.py",
-        "sha256": "c21e85912ab6715cc9c97bc796b9e5ed03610bf96f786d923557f18a876081f9",
-        "role": "Owns safe Qt-rendered capture and optional bounded observations of actual flash-renderer frames."
+        "sha256": "bced886e6bbfd69ae9bdebf950027b809e72c23eddadcaa5fcf7151adf7ae913",
+        "role": "Declares the widget and window capture scopes and owns safe Qt-rendered capture."
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_windows.py",
-        "sha256": "edb992542dffb88a9cc4557dbd6647b76d5b68584dca27a4c9486ef545be74e9",
-        "role": "Resolves authorised OpenHCS windows, projects generic snapshot results, and distinguishes focus from accepted target navigation in application DTOs."
-      },
-      {
-        "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "b99b6ca27be471f95ddf0852f8f94ce02797a459bf98bf6e0fa4851c0bb8c698",
-        "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
-      },
-      {
-        "path": "openhcs/demo/synthetic_data.py",
-        "sha256": "7a8f4a79e716ad944d5ceb1ed14e62cab9211aee65b1c0dc571e097e0f4d3c09",
-        "role": "Owns per-generator MT19937 state without changing seeded image generation or caller randomness."
-      },
-      {
-        "path": "openhcs/agent/services/synthetic_plate_service.py",
-        "sha256": "2860714a9f1f2e66df403bc72331195d912cb180600889a1b4f4207642cc776b",
-        "role": "Owns complete synthetic generation, post-write plate inspection, and the typed result."
-      },
-      {
-        "path": "tests/unit/agent/test_synthetic_plate_mcp_progress.py",
-        "sha256": "281197bf81d03a8e477026df293dbb385342d2a68c3d10c2897f6504ea85c74d",
-        "role": "Exercises real MCP subprocess progress and delayed post-inspection completion against an inactivity deadline, with a heartbeat-disabled timeout control."
-      },
-      {
-        "path": "tests/unit/test_synthetic_generator_randomness.py",
-        "sha256": "6ab3efd7f4e083744dc4dda26d97c60b6a7649dd44432362020027b92271717f",
-        "role": "Proves pixel equivalence with the original global RNG leaf, caller-state isolation, and deterministic concurrent generators."
-      },
-      {
-        "path": "openhcs/agent/services/llm_context_service.py",
-        "sha256": "f26b697684b185bd5ebe122de14f6211cf5377cc21f31c917cca53cea6b4e592",
-        "role": "Composes operating-guide sections from nominal context facets and bounds returned guidance."
+        "sha256": "e76298f78e3cbd949e8426a2b42cd6768cc54770a5f45c9dd6c9f788b257785e",
+        "role": "Resolves authorised OpenHCS windows, projects snapshot results, and distinguishes focus from accepted target navigation."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/window_navigation.py",
         "sha256": "88da77ed07ea220b7c6874e71029b5bd50805fb2c3048701f9df773fe17257f2",
-        "role": "Owns typed target admission, the deferred exact-membership recheck, and optional terminal execution/exposure facts."
-      },
-      {
-        "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/manager_selection_controller.py",
-        "sha256": "900fcec4c0a8e61b60130cc7a53ef8b0fd157d906182f96aa85fe57e5f008d46",
-        "role": "Owns item identity resolution and ordinary Qt list selection."
+        "role": "Owns typed target navigation and the deferred exact-membership recheck."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/widget_tree_projection.py",
         "sha256": "05d5221d64e74ff14483f203975f17543381d959c30ee5918c200fa8e9957547",
-        "role": "Owns row action declarations, automatic selection and explicit preview toggling."
+        "role": "Owns bounded tree projection, row action declarations, automatic selection and explicit preview toggling."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/core/deferred_callback.py",
@@ -2069,57 +2145,53 @@
         "role": "Owns QObject-parented delivery, target-destruction cancellation and callback retirement."
       },
       {
-        "path": "external/pyqt-reactive/tests/test_deferred_callback.py",
-        "sha256": "1c59913d1b19a9725e5735bbd342dc115fdf4b555863427169b5001324e83b1c",
-        "role": "Real Qt regressions cover callback retirement, owner destruction, widget cancellation and persistent row identity."
+        "path": "openhcs/agent/services/synthetic_plate_service.py",
+        "sha256": "eb9e9ef693a877d65280004f8f85f1b6d6ab9be1c51aa3d2a0e1ed96630faa2d",
+        "role": "Owns complete synthetic generation, post-write plate inspection, and the typed result."
       },
       {
-        "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
-        "role": "Owns the registry-derived installed benchmark execution and report command surface."
+        "path": "openhcs/demo/synthetic_data.py",
+        "sha256": "be80973ecd87b4b3b36b7a7283d962a5d7cafd491cfa16eafe4622e09391463a",
+        "role": "Owns per-generator random state without changing seeded image generation or caller randomness."
       },
       {
-        "path": "benchmark/contracts/run_receipt.py",
-        "sha256": "1704e1ab47411d25d382b95871c96c1e60c94db14b8ffd55f4dc6c8a917758b9",
-        "role": "Owns the shared comparison-run declaration, lifecycle enum, and validated receipt serialization and parsing."
+        "path": "openhcs/agent/services/llm_context_service.py",
+        "sha256": "ca5efbd7bfbd6a8aded1695b05abecba160fb817c04a14bc7c4a2df449ac5eaa",
+        "role": "Composes operating-guide sections from AuthoringContextSection facets and bounds returned guidance."
       },
       {
-        "path": "benchmark/contracts/control.py",
-        "sha256": "0bce24c29ea9dfb7b50c88937b616118078505db6f497312fff87766397e5ce9",
-        "role": "Declares the lightweight typed benchmark inspection request, result, and artifact contracts imported by capability discovery."
+        "path": "benchmark/mcp_extension.py",
+        "sha256": "056ab5834fa3c37df1a36a37d80f2a821fb4b59c39892d7737e62fa6a57cb53b",
+        "role": "Declares the benchmark list, inspect, report, and measured-run finalise/inspect/report capabilities."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
-        "role": "Implements contained read-only receipt, streamed observation-progress, and structured-artifact inspection without importing benchmark execution modules."
+        "sha256": "83fe9016625d7d8721905b8a153a28c3dcaaf2b9e925a3c97711c634868156b7",
+        "role": "Implements contained read-only receipt, observation-progress, and artifact inspection without importing benchmark execution modules."
       },
       {
-        "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
-        "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
+        "path": "benchmark/control_service.py",
+        "sha256": "a1256b349ffdc8d04cab927326d97821462b61f57b29e564b61cc627302be49c",
+        "role": "Finalises measured-run evidence from the session's finished execution."
+      },
+      {
+        "path": "benchmark/cellprofiler_benchmark_cli.py",
+        "sha256": "4025c591644e29f3df61e476ecae2143690e014336ea9f889aadeff4e692445e",
+        "role": "Owns the installed openhcs-benchmark execution, report and list-cases command surface."
       }
     ],
     "findings": [
-      "The MCP adapter owned a separate 750-millisecond default and two-second cap for UI and viewer requests; it now derives both bounds from the corresponding connection declarations.",
-      "The page claimed multiple transport projections but described only local stdio; it now explains the declaration-filtered, read-only hosted HTTP lane and its security owner.",
-      "The desktop profile boundary now states that both UI-owned and independent headless execution are available while retaining separate state owners.",
-      "The Windows distribution explanation now distinguishes the stable launcher cache from the separately published current-environment authority and its bounded sharing-violation retry.",
-      "The page did not describe the screenshot privacy boundary; it now separates generic bounded Qt rendering from OpenHCS window discovery, authorisation, DTOs, and transport.",
-      "The native installer contract is now documented as a generated projection instead of a manually mirrored product declaration.",
-      "Service-local stdout guards could not protect the persistent stdio protocol from delayed imports or background native writes; the transport now owns the process channel for its full lifetime.",
-      "The window projection previously allowed focus to imply successful target navigation; it now reports navigation only from the registered nominal driver and returns a typed error for an unsupported target.",
-      "Dynamic Qt target lookup bypassed pyqt-reactive's live-window projection after discovery, so a deleted C++ window could escape through its stale Python wrapper; target resolution now uses the generic lifecycle boundary.",
-      "The development client allowed a command excluded by its selected profile to reach the MCP server and degrade into a low-level unknown-tool response; preflight and compatible profile names now derive from the capability declarations.",
-      "Constructing the complete UIConfig in a local MCP process pulled Qt-only shortcut validation across the headless boundary; MCP now projects the unique execution endpoint field from the canonical saved document and dataclass schema.",
-      "Local and hosted initialization instructions were dispatched again inside the MCP server; the CapabilityTransport declaration now delegates to a transport-owned nominal strategy.",
-      "Claude Desktop registration repeated Windows and macOS path decisions inside one target; registered platform leaves now own those paths while the target retains client identity, detection, and configuration format.",
-      "Separate UI and viewer timeout profile classes had become behaviorally identical after timeout derivation moved to the connection contracts; the generated binders now use the sole command policy directly.",
-      "The persistent development client wrapped a progress-aware MCP request in a second absolute wall-clock timeout; the duplicate ceiling was removed and the explanation now names transport inactivity as the client boundary.",
-      "Clarified generic row-action ownership, explicit preview toggling and selection as the automatic default.",
-      "The distribution explanation did not distinguish the packaged benchmark execution CLI from the expert local MCP capability that only inspects an existing authorized run directory."
+      "The local-lane section said the MCP server does not import PyQt; the stdio transport now keeps a QCoreApplication on the main thread and runs the SDK loop on a worker thread (McpTransportExecutor). Corrected, keeping the true claim that it hosts no GUI.",
+      "The liveness section said source-backed orchestrator-session creation runs on the main thread and that the event loop cannot emit progress meanwhile; that capability is gone (U1). Non-worker-safe capabilities now run through the main-thread dispatcher while the off-main SDK loop keeps emitting liveness. Rewrote the paragraph.",
+      "execute-source no longer creates a session and submits it for status polling; it adds the dataset to the headless session, sets its pipeline, and initializes, compiles and runs it, following openhcs_session_events (--no-wait returns on acceptance). Rewrote the session/execution paragraph around the per-operation session tools.",
+      "DesktopDeploymentAuthority was renamed DesktopDeployment and moved to openhcs.desktop.deployment (73a2aece2); corrected the name and replaced the three deleted desktop authorities.",
+      "Client registration now also synchronises the OpenHCS skill bundle into clients with a documented skill directory (Codex), reported separately; added this and narrowed 'agent instructions' to 'server instructions'.",
+      "The headless-session sentence implied no ObjectState state; the session keeps its datasets and pipelines in the MCP process's own ObjectState. Clarified that it creates no rows or history in a running desktop application.",
+      "Measured-run finalisation consumes the session's finished execution; corrected. Removed 'canonical' filler (three places)."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/mcp_distribution.rst in full and compared it against the changed authorities: openhcs/agent/capabilities.py, openhcs/mcp/server.py, stdio.py, context.py, http.py, client_registration.py, dev_client*.py, the deleted openhcs/desktop_deployment.py and desktop_installation.py (moved to openhcs.desktop in 73a2aece2), ui_bridge_windows.py, synthetic-plate and benchmark control owners and tests; verified every named symbol by grep, traced McpTransportExecutor, the binder's dispatcher path, SessionJourney.run_source and skill synchronisation; corrected the PyQt/threading, session-execution, desktop-deployment, client-registration and finalisation passages.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "A focused 15-file architecture regression selection passed all 462 tests, including the authorities named for this page.",
@@ -2172,7 +2244,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "f071f7effe7d94ef86cfcfaa24f479249fce185cba690c670ff247597aafa948",
+    "source_sha256": "55ba2895f65352f0b5404bb1730d42ff8a755b3e495777f66c9e592e407bcf96",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2182,28 +2254,48 @@
     "authority": [
       {
         "path": "openhcs/core/equivalence/policy.py",
-        "sha256": "aaae502d1bb818ba38761374f02d8d4b5cf78a798bb2965f157216eba72cef79",
-        "role": "Declares tolerances, dialect, missing-value, stability, and feature-specific equivalence policy."
+        "sha256": "790d4fa07feac199d95acab616924e35ee95cc7861136e0de66c97683e3647e2",
+        "role": "Declares RuntimeEquivalencePolicy tolerances, MeasurementDialect selection, name mode, stability, and feature-specific numeric tolerances."
       },
       {
         "path": "openhcs/core/equivalence/keys.py",
-        "sha256": "d2b2c2702dd5ad75c7df32905e7abc3ee4bb453c427503387fd210c2631dab5e",
-        "role": "Defines semantic measurement feature, row, source, and aggregate identities."
+        "sha256": "0ae79e4cc4e70804f9d2e948078ade7c271e142473821731b38eeccaef064b5d",
+        "role": "Defines RuntimeMeasurementFeatureKey and the semantic row, source, and aggregate identities."
       },
       {
-        "path": "openhcs/core/equivalence/report.py",
-        "sha256": "de6381c0f804db72af16c9f96905b886aa9fa7b5138a34f867e871b701b62c36",
-        "role": "Defines typed difference records and the final RuntimeEquivalenceReport."
+        "path": "openhcs/core/equivalence/measurement_features.py",
+        "sha256": "18ff75cdd4dad0f88870b90b9a91f2ea352372773bcc9a74cee288d4c110f05b",
+        "role": "Defines the RuntimeMeasurementFeatureSemanticProfile most-derived strategy family."
+      },
+      {
+        "path": "openhcs/core/equivalence/relationships.py",
+        "sha256": "fa257ac5280204b3f749fb581f98e80afea203dbd11fdb39c3cc4186d42625b5",
+        "role": "Defines the registered object-instance-key plane alignment strategies used for relationship comparison."
+      },
+      {
+        "path": "openhcs/core/measurement_dialect.py",
+        "sha256": "96cac83e09e22eeaa02dbd14da2f9553c1f19f51962e83731936ba33429c4578",
+        "role": "Defines the registered MeasurementDialect family and PlainMeasurementDialect."
+      },
+      {
+        "path": "benchmark/equivalence/report.py",
+        "sha256": "2711073c4039c38efcf69e2a07a88dac41bf2600337268019a896469f1a84b03",
+        "role": "Defines typed difference records and RuntimeEquivalenceReport outside the product package."
+      },
+      {
+        "path": "tests/unit/test_equivalence_tooling_boundary.py",
+        "sha256": "91542052bd6ba03b0bac8899f09bf5e6f86db2341a3a0ff60b48f57caf1ce415",
+        "role": "Guards that no product module imports benchmark and that openhcs.core.equivalence keeps only production-reachable modules."
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "177d91604f9be782b3fb9ed8641e0fb80d1c5182ad48d2e37e88c8bf3dc75596",
-        "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy, preserves unmodified fields of caller-declared path-planning, VFS, and consolidation policies while selecting benchmark overrides, and applies digest-bound reference-export comparisons."
+        "sha256": "8f84d9b70037c59558c2534b1ef49dd888c0f1d77d75eae44646c58173fb001d",
+        "role": "Builds benchmark runtime snapshots, the strict CellProfiler policy at 1e-6 tolerances, and digest-bound reference-export comparisons."
       },
       {
         "path": "benchmark/openhcs_measured_run.py",
-        "sha256": "1e0cccc518fb6bec9c92ea8057dd7adfc7305b2d90a6da8f152c1b97601878ab",
-        "role": "Wraps the ordinary compile-and-execute operation with observation validation, execution-ID admission, phase timing, endpoint provenance, and the completed-run receipt; repeated measurements may reuse one connected client."
+        "sha256": "b7b2a3fd7b795db416005ad8b0b1661a960df0792c5d47e70de286d4cd08f9af",
+        "role": "Wraps the ordinary compile-and-execute submission with observation validation, phase timing from completed server records, endpoint provenance, and the completed-run receipt."
       },
       {
         "path": "benchmark/contracts/run_artifacts.py",
@@ -2212,37 +2304,42 @@
       },
       {
         "path": "benchmark/timing.py",
-        "sha256": "00b16a0e95fbc6164e6ab761f1a397441cc71b2699eaf046f46745658a448a8e",
-        "role": "Owns benchmark phase declarations, disjoint additive totals, and validated durations from completed ordinary server jobs."
+        "sha256": "5a98e0a02184d0b7f42651361d55fccaad0fc9fcc7112d985cbfe60317718f2d",
+        "role": "Owns benchmark phase declarations and additive totals that exclude nested runtime observations and benchmark validation phases."
       },
       {
         "path": "benchmark/control_service.py",
-        "sha256": "bf2b39696a49d8c87cf74d39770d63013972b9c8cf884863c467ccdf46eb12d3",
-        "role": "Finalises benchmark evidence from the ordinary execution service's exact completed submission and job record."
+        "sha256": "a1256b349ffdc8d04cab927326d97821462b61f57b29e564b61cc627302be49c",
+        "role": "Finalises benchmark evidence from the OpenHCS session's finished execution: its request, endpoint handshake, and completion record."
+      },
+      {
+        "path": "benchmark/control.py",
+        "sha256": "83fe9016625d7d8721905b8a153a28c3dcaaf2b9e925a3c97711c634868156b7",
+        "role": "Derives unreceipted_artifacts and retained_evidence_valid during measured-run inspection."
       },
       {
         "path": "openhcs/runtime/zmq_execution_observation.py",
-        "sha256": "e52b2e9784daa396b493f1f569fbcbb0d394e7e3c03d1a0c67d6594778ce64d3",
-        "role": "Declares ordinary value and outcome exports, compiled axis-owned value expectations, producing execution identity, and exclusive evidence-file creation."
+        "sha256": "3cc43d3eee6c4701c23fec183ecd895a71acdfcc14acfe2afca62625ccb7381b",
+        "role": "Declares value and outcome exports with required compiled axis membership and rejects exports from other schema versions."
       },
       {
         "path": "benchmark/contracts/measured_run_receipt.py",
-        "sha256": "67c71873d050e05c0e4a1e231c46b700a765c12cade51269553cc7a5cb96989e",
-        "role": "Declares the typed single-pipeline success receipt and its stable serialisation boundary without mirroring runtime job status."
+        "sha256": "c04b69926f1994fd7528eadf172a31ef33cf409380fef60b659d5f27f522f065",
+        "role": "Declares the typed single-pipeline receipt, accepting archived receipts without retained-artifact digests and requiring them on current receipts."
       },
       {
         "path": "benchmark/manifests/official30_portable_axis1.json",
-        "sha256": "7f11549c0bc870f9ce2792afc9176f52b6a2b83236e47b33cbedb4a2cac73267",
+        "sha256": "1be9bb67ea05d78fd1e0b8991b994ff5635da2fff0358302b8e0df888e62888e",
         "role": "Defines the exact portable 30-case acceptance corpus."
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "bc5abfddf076996a050b0601c46b6039d2d812ab57cd303847b241e477176f53",
-        "role": "Implements the headless and non-persistent Napari acceptance routes over all manifest cases."
+        "sha256": "dbd6e113a7135901f936e9bc8278d727d678e9971a7c951fced9080adfd9d6df",
+        "role": "Implements the headless and non-persistent Napari acceptance routes over all manifest cases, plus Fiji variant tests."
       },
       {
         "path": "benchmark/cellprofiler_reference_exports.py",
-        "sha256": "604f9a95f94eeb10365437b875a0ff3d558dbb2fda13e7e951242d417a69b49c",
+        "sha256": "58cdcb7572266d562314ccae5bf9d98b5f3a4b19944e8a068f89b617219952f3",
         "role": "Owns terminal-artifact exporter derivation, exact output-inventory selection, numeric-image tolerance, categorical-label equality, and explicit single-plane label projection."
       },
       {
@@ -2251,27 +2348,22 @@
         "role": "Proves digest and inventory failures remain fail-closed and verifies the two declared per-artifact comparison contracts."
       },
       {
-        "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "2f117fab8c889fb50a2ee734fe802b0ac6cbcbe9945a33d24c1482fbcd7eb955",
-        "role": "Proves validated reference-export comparisons and retention of caller-declared path-planning, VFS, and consolidation settings not overridden by benchmark policy."
-      },
-      {
-        "path": "tests/unit/test_openhcs_measured_run.py",
-        "sha256": "ebb8b7741eec1130969325ed30f425752f6b47aaa59a5c03655002bc3bb53690",
-        "role": "Proves ordinary non-CellProfiler observation validation, execution-ID admission, pre-connect rejection, and distinct receipts for repeated measurements on one client."
-      },
-      {
         "path": "tests/unit/test_benchmark_timing.py",
-        "sha256": "0b25284f3404072758fed50c9818e41f8d25e9c9b7fdacb193afd198cf741e1d",
-        "role": "Proves completed-job duration validation and that overlapping progress and server intervals are excluded from additive phase totals."
+        "sha256": "a6d64635ab230da628c417a08e482f95b1c2a90ba6b9389abb21a459ce42da89",
+        "role": "Proves completed-job duration validation and the additive-total exclusions."
       }
     ],
     "findings": [
-      "The canonical Linux acceptance command hardcoded one developer's /home cache path; it now uses the XDG cache root with a portable home fallback.",
-      "Measured-run inspection now names retained_evidence_valid and states that it verifies retained receipt and observation evidence, not pipeline image or table outputs."
+      "The page named RuntimeMeasurementDialect, which no longer exists; dialects are now the registered MeasurementDialect family (PlainMeasurementDialect in the kernel, CellProfilerMeasurementDialect in interop). Corrected.",
+      "RuntimeEquivalenceReport and the comparison half moved from openhcs/core/equivalence to benchmark/equivalence (f16177ed7); the page did not say where comparison lives. Added the product/benchmark boundary and replaced the deleted report.py authority.",
+      "The page said archived outcome-only exports without compiled axis membership remain readable and archived observation exports keep an all-axis expectation; the legacy readers were deleted and exports from other schema versions are now rejected. Corrected both passages.",
+      "Agent finalisation is supplied by the OpenHCS session's finished execution (U1), not an execution service and submission. Corrected.",
+      "Additive phase totals now also exclude benchmark validation phases; added.",
+      "'The two integration tests' was imprecise now that the module also holds Fiji variant tests; named the headless and Napari tests. Removed 'canonical' filler."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/measurement_equivalence_system.rst in full and compared it against the changed authorities: openhcs/core/equivalence/policy.py and keys.py, the deleted openhcs/core/equivalence/report.py (moved to benchmark/equivalence in f16177ed7), benchmark/adapters/openhcs.py, openhcs_measured_run.py, timing.py, control_service.py, openhcs/runtime/zmq_execution_observation.py, measured_run_receipt.py, the Official30 manifest and integration test, reference exports and their tests; corrected the dialect name, the comparison-package boundary, archived-export readability, the session-based finalisation path and the additive-total rule.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "A focused 15-file architecture regression selection passed all 462 tests, including the authorities named for this page.",
@@ -2309,13 +2401,13 @@
     "authority": [
       {
         "path": "external/arraybridge/src/arraybridge/decorators.py",
-        "sha256": "99823105b0ae59054df1d84013633b8b6628d0a6dc3326383199ac7c65c69bed",
-        "role": "Owns callable input, output, and execution memory metadata keys and decorator semantics."
+        "sha256": "28f9bf4770bd4cc1ef34045fdef28065063ede029296f62b8a6c4140cc88e40e",
+        "role": "Owns the memory decorators that write callable input, output, and execution memory metadata."
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
-        "role": "Declares reusable memory types together with framework capability and device behaviour."
+        "sha256": "08f7ff4df8807bb3340e00a02c6276b1c702a0f00a2eedacd701142736c5d804",
+        "role": "Declares MemoryType members with framework capability and device behaviour, and MemoryContractAttribute's three metadata keys."
       },
       {
         "path": "external/arraybridge/src/arraybridge/converters.py",
@@ -2324,13 +2416,13 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
-        "role": "Projects ArrayBridge metadata into immutable callable input, output, and execution memory contracts."
+        "sha256": "5b8e85dc1708d5727c73ac1007150219683fb9fb75c4ff2ec2c0bc676445738c",
+        "role": "Reads ArrayBridge metadata through MemoryContractAttribute into immutable callable input, output, and execution memory contracts."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "6d46571e6f2d069b98a92b41d711b2e20bfab9f0493cf73d3f150d5be08e7f96",
-        "role": "Derives exact step framework footprints and owns framework-local device bindings."
+        "sha256": "5bce281e8291a3434b57ba44f97008e4095cc95998a0805f0369fd212c3a7eec",
+        "role": "Owns FrameworkDeviceAssignment framework-local device bindings and footprint cleanup."
       },
       {
         "path": "openhcs/core/framework_device_resolver.py",
@@ -2339,11 +2431,11 @@
       }
     ],
     "findings": [
-      "The transition page did not link the exact ArrayBridge owner inventory or the current OpenHCS planning explanation.",
-      "The transition pointed to the deleted GPU-memory validator; current OpenHCS ownership is callable-contract projection, compiled framework bindings, and declaration-derived capability resolution."
+      "Re-checked the redirect against the consolidation changes to callable_contract.py and compiled_step_plan.py and the current ArrayBridge declarations; ArrayBridge still owns memory types, conversion and the input/output/execution metadata keys, and OpenHCS still owns contract projection, compiled framework-device plans and runtime adapters. No page text was wrong; evidence roles were refreshed."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/memory_type_system.rst in full and compared it against the changed authorities: external/arraybridge/src/arraybridge/decorators.py, types.py, openhcs/core/callable_contract.py and openhcs/core/compiled_step_plan.py; confirmed MemoryContractAttribute's INPUT/OUTPUT/EXECUTION keys, FrameworkDeviceAssignment, openhcs/core/runtime_adapters.py and the gpu_resource_management and external_foundations targets; the page text needed no change.",
       "Re-read docs/source/architecture/memory_type_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: external/arraybridge/src/arraybridge/decorators.py; external/arraybridge/src/arraybridge/types.py; external/arraybridge/src/arraybridge/converters.py; openhcs/core/callable_contract.py; openhcs/core/compiled_step_plan.py; openhcs/core/framework_device_resolver.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -2359,57 +2451,69 @@
   },
   {
     "path": "docs/source/architecture/microscope_handler_integration.rst",
-    "source_sha256": "7568ee810dd5ff9f13643ee2434a239e6e79d42d0e3dd57d2690b406d41b254f",
+    "source_sha256": "485cbdb1bbd21e8d5266ed571a66435ba97b294b56f271fc00841a5340b80534",
     "audience": [
       "OpenHCS source-model maintainers",
       "microscope integration authors"
     ],
-    "user_need": "Understand how registered microscope handlers own detection, metadata, source projection, and backend compatibility.",
+    "user_need": "Understand how registered dataset sources own detection, metadata, source projection, and backend compatibility.",
     "diataxis": "explanation",
     "authority": [
       {
-        "path": "openhcs/microscopes/microscope_base.py",
-        "sha256": "ae19ce4f6e1cd2e60946eceb908722e1ff760d7654a775d8372abbc4ac1fc81f",
-        "role": "Defines the handler root, registry-backed factory, uniform plate context, detection, and declaration-owned workspace-backend replay boundary."
+        "path": "openhcs/core/dataset_sources/source.py",
+        "sha256": "097fde4d2b74031eacf53a88e79f499417e8c1c97ba0753e8a9df831b307efa6",
+        "role": "Defines the DatasetSource family keyed by source_name, its selection-role mixins, detection_order, create hook, workspace backend registration, and virtual-workspace metadata recording."
       },
       {
-        "path": "openhcs/microscopes/openhcs.py",
-        "sha256": "a8d416d4ac89e01f2a41a559632f62b67a06e6294833ea9d0af82fdec6787e7e",
-        "role": "Replays a persisted workspace through the source handler type recorded by the canonical OpenHCS metadata."
+        "path": "openhcs/core/dataset_sources/choice.py",
+        "sha256": "7fb3c7ce701f0d629f288b79090044f43ac8ce1b51ca4f50937534407f226f1a",
+        "role": "Defines DatasetSourceChoice, AutoDetectedSource, and open(), which selects the source class, applies declared-file selection, calls create, and binds dataset_root."
       },
       {
-        "path": "openhcs/microscopes/microscope_interfaces.py",
-        "sha256": "a603fa1c58ba005f8ba22713e46efe4e33aee0f762ba188467482ae3ae429200",
-        "role": "Declares the single complete metadata-component projection implemented by microscope metadata handlers."
+        "path": "openhcs/core/dataset_sources/discovery.py",
+        "sha256": "d3c2cd7a43dce30ab3f74a9fcfb1f1d7be389f4ab101f867ac5a2fe418a16c93",
+        "role": "Discovers kernel members and imports the active AxisFamily's extension_modules without naming a domain module."
       },
       {
-        "path": "openhcs/core/source_bindings.py",
-        "sha256": "e0afbbe40cce3847bcc2314910d0083ecc579a5a0d6e4278c3a5df4c62e7eb01",
-        "role": "Declares named source bindings independently of concrete microscope handlers."
+        "path": "openhcs/core/dataset_sources/interfaces.py",
+        "sha256": "dd88254bfd5da8b0fdf0a038e358f36b49db5b8cf0b93213d56dc928af965f00",
+        "role": "Defines MetadataHandler.component_value_set and MetadataComponentValueSet keyed by the active family's axes."
       },
       {
-        "path": "tests/unit/test_microscope_handler_identity.py",
-        "sha256": "3ed9e436b4d9ce2770f5eeed5c884c7621f22eab665cd3cc9280df95d3e10ba8",
-        "role": "Verifies registered identity, explicit construction, auto-detection, and invalid handler failure."
+        "path": "openhcs/core/dataset_sources/openhcs_format.py",
+        "sha256": "a8fa6a597104075d888a5b14cc4b24a9676d1a3918c30b5df2bad4a9abb26078",
+        "role": "Reopens a persisted workspace by looking up the recorded source_name and re-registering that source's workspace backends."
       },
       {
-        "path": "tests/unit/test_bioformats_microscope_handler.py",
-        "sha256": "d12e4e85a13bc28f7d67d1547ce8a347897c89436a129aebf45bc34cd5a193d6",
-        "role": "Verifies generic plate-folder binding and BioFormats handler metadata behaviour."
+        "path": "openhcs/core/config.py",
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
+        "role": "Declares PipelineConfig.dataset_source as a DatasetSourceChoice class defaulting to AutoDetectedSource."
       },
       {
-        "path": "tests/unit/agent/test_plate_inspection_service.py",
-        "sha256": "fafd340d60d66e21ca0ac42cdc1a7f0fee5672788fa219cf7f7a7fefe8841194",
-        "role": "Verifies automatic inspection can reopen both native and SourceBindings virtual workspaces from persisted metadata."
+        "path": "openhcs/microscopes/bioformats.py",
+        "sha256": "bda05411746852ea12ffe11b49e5298cb475e2137cd1a09cf9659b52a89f40e4",
+        "role": "Shows a decoder-owned source metadata handler replaced by the workspace metadata handler after the workspace is written."
+      },
+      {
+        "path": "tests/unit/test_dataset_source_family.py",
+        "sha256": "4cb651b475e5e033ab94824567b8a35b0ee02f313254082e03e35cd96585d829",
+        "role": "Verifies every registered source declares identity, selection role and backends, and that metadata detection and the factory use declared identity."
+      },
+      {
+        "path": "tests/unit/test_dataset_source_guards.py",
+        "sha256": "adfeac23f6196a0c5393dc15b71df04fda0ec34e5ae23bfdaa22e0a165f68170",
+        "role": "Guards that the kernel imports no domain package and that the deleted microscope-handler names do not return."
       }
     ],
     "findings": [
-      "The audit exposed a factory-side concrete class-name branch for OpenHCS plate context and an embedded extension procedure; the root now binds plate_folder uniformly and the page links to the task guide.",
-      "Prepared SourceBindings workspaces could not be inspected through automatic OpenHCS metadata detection because replay reconstructed an ingestion instance without its original configuration; the handler declaration now owns backend replay directly.",
-      "Microscope metadata exposed one method per concrete axis; handlers now return one complete component value set keyed by the canonical declaration."
+      "The page documented MicroscopeHandler, create_microscope_handler, MicroscopeHandler.__registry__, the Microscope enum with AUTO, and a factory binding plate_folder; G4 (c6d9a52ce) replaced these with the DatasetSource family keyed by source_name, PipelineConfig.dataset_source holding a DatasetSourceChoice (AutoDetectedSource or a registered source), selection-role mixins, and DatasetSourceChoice.open binding dataset_root. Rewrote the page in the current vocabulary and retitled it 'Dataset source integration' (URL unchanged).",
+      "Discovery is no longer plain package discovery of openhcs/microscopes: the kernel discovers its own members and imports the active AxisFamily's extension_modules. Added this and placed the extension boundary on those modules.",
+      "Removed 'canonical' and 'original' filler wording.",
+      "Four listed authorities were deleted by G4 (microscope_base.py, microscopes/openhcs.py, microscope_interfaces.py, test_microscope_handler_identity.py); replaced with the openhcs/core/dataset_sources owners and the family and guard tests."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/microscope_handler_integration.rst in full and compared it against the changed authorities: the deleted openhcs/microscopes/microscope_base.py, openhcs.py and microscope_interfaces.py (moved to openhcs/core/dataset_sources in c6d9a52ce), openhcs/core/source_bindings.py and the Bio-Formats and plate-inspection tests; traced DatasetSource registration and discovery, DatasetSourceChoice.open, detection_order, PipelineConfig.dataset_source, component_value_set, and workspace replay through the recorded source name; rewrote the page in DatasetSource vocabulary.",
       "Re-read docs/source/architecture/microscope_handler_integration.rst in full against repository base 32ca17c17 and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/microscopes/microscope_base.py; openhcs/core/source_bindings.py; tests/unit/test_microscope_handler_identity.py; tests/unit/test_bioformats_microscope_handler.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
@@ -2424,7 +2528,7 @@
   },
   {
     "path": "docs/source/architecture/multiprocessing_coordination_system.rst",
-    "source_sha256": "816ae37a0aa964c708bf3b7855583b1e0ce706571a231df60caf1405eecee5ee",
+    "source_sha256": "d8e12a688c5e7b27a98ee51b9e9261176a4a6181a9e7321ef02f3068bf2d2f76",
     "audience": [
       "OpenHCS compiler and multiprocessing maintainers"
     ],
@@ -2433,23 +2537,33 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
-        "role": "Compiles source execution-axis and framework-device facts into frozen contexts and typed plans."
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
+        "role": "Discovers partition-axis values through the active AxisFamily and compiles one frozen ProcessingContext per value."
       },
       {
-        "path": "openhcs/core/compiled_execution.py",
-        "sha256": "941115f2dca2e53538d3141a59f3ae1f928a87cf741fcfa177f7cd64a5f41aea",
-        "role": "Assembles and validates the one worker-safe execution bundle without a process-global GPU registry."
+        "path": "openhcs/core/orchestrator/bundle_execution.py",
+        "sha256": "f5ba09a2ec7c688b1ca08167ab398cc976a9e2c39b301ae98f3c5fd560a25c85",
+        "role": "Validates compiled contexts and worker-safe steps before worker setup and builds the worker-lane execution plan."
+      },
+      {
+        "path": "openhcs/core/orchestrator/worker_lanes.py",
+        "sha256": "d915c01a0ae2dd010d6b972e275669fef63bb3aefd100f1b66a1e34653673db0",
+        "role": "Plans deterministic worker lanes from compiled axis contexts and installs the bundle in workers through ForkInheritedWorkerExecutionState."
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "3c952465268e4b6c44676a853bb9c99d2d04a0490c7d398d2cdaf8b3b5f966d7",
-        "role": "Installs the bundle, submits one task per compiled axis, collects typed results, and performs footprint-aware cleanup."
+        "sha256": "23a3ef2a70378dd1bb5c413a56e36bbb3fa013142741c9b45407bfc47de8c4a4",
+        "role": "Submits one task per active lane, collects per-axis ExecutionResult values, ships or inherits the bundle, and terminates owned process workers on cancellation."
+      },
+      {
+        "path": "openhcs/core/compiled_execution.py",
+        "sha256": "85972d418f0958e59f3185f07caf25a103bc9e101e481b2b63903377cc05e397",
+        "role": "Defines CompiledExecutionBundle with runtime contexts and pickle-safe transport snapshots."
       },
       {
         "path": "openhcs/core/orchestrator/cancellation.py",
         "sha256": "f825b602fb020a23d602e1f93ed9cecea881eca16e07882fd7a91ab519445244",
-        "role": "Defines the parent-owned cancellation scope observed directly by inline and threaded lanes."
+        "role": "Defines the execution-scoped cooperative cancellation signal observed by inline and threaded lanes."
       },
       {
         "path": "openhcs/core/worker_start_policy.py",
@@ -2458,10 +2572,14 @@
       }
     ],
     "findings": [
-      "The page incorrectly described cancellation as a cross-process channel instead of a parent-owned interruption boundary."
+      "Step 5 said the executor submits one task per compiled axis; PooledWorkerLaneRunner submits one task per active worker lane, and a lane can own several axis contexts. Corrected.",
+      "The page attributed axis discovery to a 'microscope/source model' and component identities to 'nominal component declarations'; after G1/G4 the dataset source discovers the active AxisFamily's partition-axis values. Corrected the vocabulary.",
+      "'Worker-lane authority' and 'the execution server's worker ownership boundary' were vague; named ForkInheritedWorkerExecutionState (fork-inherited or shipped bundle) and the executor resources that terminate their own processes.",
+      "Bundle validation lives in orchestrator/bundle_execution.py, not compiled_execution.py; added it and worker_lanes.py as authorities."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/multiprocessing_coordination_system.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py, openhcs/core/compiled_execution.py and openhcs/core/orchestrator/worker_execution.py; traced _axis_values_to_process through AxisFamily.active().partition_axis(), validate_bundle_execution, CompiledContextLanePlanner, PooledWorkerLaneRunner._submit_lanes, ExecuteShippedLane and ProcessWorkerExecutorResources.cancel_execution; corrected the task granularity, axis vocabulary, bundle installation and cancellation wording.",
       "Re-read docs/source/architecture/multiprocessing_coordination_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/pipeline/compiler.py; openhcs/core/compiled_execution.py; openhcs/core/orchestrator/worker_execution.py; openhcs/core/orchestrator/cancellation.py; openhcs/core/worker_start_policy.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",

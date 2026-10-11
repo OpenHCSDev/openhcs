@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "source_sha256": "1a600010deb7ddc3fe141b5efe3528bbe4a4e119846157e935e56784628445ed",
+    "source_sha256": "6eda2fe873aaecfb28e60fa4a7c3ba4f6a33bf3f19d79961149b735d21572b7b",
     "audience": [
       "imaging scientists evaluating OpenHCS",
       "pipeline authors",
@@ -12,8 +12,8 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "6217b5f029796edcd83aa47fb8632d37aa7552344755c578fa4f181a6b23282d",
-        "role": "Declares the published README, Python range, package dependencies, optional surfaces, console commands, and project links."
+        "sha256": "3592cc37444e2e1f5bb0284e939643039c0d513217861af8133dd8bd6e8a4325",
+        "role": "Declares the published README, Python range, package dependencies, optional extras, console commands, and project links."
       },
       {
         "path": ".gitmodules",
@@ -21,93 +21,107 @@
         "role": "Declares the eight extracted package checkouts composed by the source repository."
       },
       {
-        "path": "openhcs/desktop_installation.py",
-        "sha256": "244ade0711356f68df9f376e2517dfe1c9fb77cc960c517f7c4e8ee418b5711f",
-        "role": "Nominally declares the CPU-safe desktop extras and native installation policy without copying project or brand declarations."
+        "path": "openhcs/desktop/installation.py",
+        "sha256": "b2124aaa3e4ef4a310f91a51c1879de41de1818b25fc619cc7cdad888c4202b6",
+        "role": "Declares the CPU-safe desktop package extras selected by the graphical installers."
       },
       {
         "path": "openhcs/core/pipeline_document.py",
-        "sha256": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
+        "sha256": "8c554c8275c665f308eb098955bda517aa804eeb34418b5e0f41d412650ce7b5",
         "role": "Owns the validated Python pipeline document shared by visual, code, and agent authoring."
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "ace8ae0c3e54bbe604b97cec7c3973a1abcf90e1dc517c2adda947dc2c35e882",
-        "role": "Owns compile-time resolution across selected axes and construction of the execution bundle."
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
+        "role": "Owns compile-time resolution across selected axes, compile progress emission, and construction of the execution bundle."
+      },
+      {
+        "path": "openhcs/core/pipeline/compilation_session.py",
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
+        "role": "Declares ResolvedPipelineDefinition and CompilationSession named in the compilation diagram."
+      },
+      {
+        "path": "openhcs/core/progress/types.py",
+        "sha256": "beabbfeb8a6ed727b4bb09f6155de60c4e8b89e71e7ed053bb85574aa1675419",
+        "role": "Declares set_progress_queue, which compilation requires before it emits progress events."
       },
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "bb958c74c98cb96c97c5ac1ea68ac997673aac6afcad57bdf0c9496065e895fa",
+        "sha256": "65eb0ec5c903366243ca8bd5ea07412e8d34bdb81e6015fa76b3c4c59838733f",
         "role": "Declares image, object, measurement, relationship, table, and file artifact semantics used by materialization."
       },
       {
-        "path": "openhcs/constants/constants.py",
-        "sha256": "4cd6c29abd8b8e3ecc396b424d2b8b61e819a215fc1d770d3f6852b260a0691d",
-        "role": "Declares supported microscope source identities, processing axes, memory types, and file formats."
+        "path": "openhcs/core/dataset_sources/source.py",
+        "sha256": "097fde4d2b74031eacf53a88e79f499417e8c1c97ba0753e8a9df831b307efa6",
+        "role": "Declares the auto-registered DatasetSource family that the ImageXpress, Opera Phenix, Bio-Formats, OMERO and OpenHCS-format sources join."
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
-        "role": "Owns declaration-based callable discovery, execution memory contracts, dimensional execution, and registry caching."
+        "sha256": "b1e9253021b9c3ab14a070b7d0f10909f641ba07784c794ad95d2ce36041b1d3",
+        "role": "Owns declaration-based callable discovery, execution memory contracts, processing contracts, and registry caching."
       },
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "46982fd46f47b962033e02d82afb6c3ce2abbafdabfbce99e591d9c6dff2fbab",
+        "sha256": "c96eca530f767002cfcc9aca4fe75c93d7a5848a7f42df9e5d336bf6712ed51e",
         "role": "Owns manual and orchestrated image and ROI streaming through registered viewer declarations."
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "7fe9ab91490dedd6f750a57386e91835cf1067a27d10079966510aa9821adaf0",
-        "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
+        "sha256": "eaebe33af01d057d1d21b3701f958bc96ede3ec5d0bddddca9917c1164ef0042",
+        "role": "Declares the MCP capability profiles, including the full profile and governed custom-function registration."
       },
       {
         "path": "openhcs/mcp/client_registration.py",
-        "sha256": "28459b95d3b155778ce178f36302cb830958b74f2603980641ec492d81c41a9a",
-        "role": "Declares supported local MCP client targets and stable-launcher registration behaviour."
+        "sha256": "55b701bb77a3de19243fa9a6276f784fad8329e2d435fb26fcc7fdce1e060731",
+        "role": "Declares supported local MCP client targets such as ChatGPT desktop/Codex and Claude Desktop."
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
-        "role": "Owns lowering CellProfiler cppipe modules into ordinary OpenHCS pipeline declarations."
+        "sha256": "3439d96f3fbfcb104a53019dc150049021d9a8132bd27096f1ccf510eefbe37b",
+        "role": "Declares import_cellprofiler_pipeline and its returned FunctionStep list and PipelineConfig."
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "bc5abfddf076996a050b0601c46b6039d2d812ab57cd303847b241e477176f53",
+        "sha256": "dbd6e113a7135901f936e9bc8278d727d678e9971a7c951fced9080adfd9d6df",
         "role": "Exercises all 30 declared CellProfiler comparison cases over ZMQ and validates live Napari and Fiji projections."
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "2b92755c556c1d66d28ffa0af6e2ac61cac5af4631514382290a2af0f907c26b",
-        "role": "Owns the installed registry-derived benchmark execution and report command surface."
+        "sha256": "4025c591644e29f3df61e476ecae2143690e014336ea9f889aadeff4e692445e",
+        "role": "Declares the openhcs-benchmark subcommands and options, including run-measured through the OpenHCS session."
+      },
+      {
+        "path": "benchmark/mcp_extension.py",
+        "sha256": "056ab5834fa3c37df1a36a37d80f2a821fb4b59c39892d7737e62fa6a57cb53b",
+        "role": "Declares the expert benchmark MCP tool names, including the session-backed measured-run finalizer."
       },
       {
         "path": "benchmark/contracts/run_receipt.py",
-        "sha256": "1704e1ab47411d25d382b95871c96c1e60c94db14b8ffd55f4dc6c8a917758b9",
+        "sha256": "4cd61bd33f8f6199b3cc4130ed091dddde9c3a23975e132b1bee06c3c6a43cd7",
         "role": "Owns typed run provenance, lifecycle status, exact rerun arguments, and receipt validation."
       },
       {
-        "path": "benchmark/contracts/control.py",
-        "sha256": "0bce24c29ea9dfb7b50c88937b616118078505db6f497312fff87766397e5ce9",
-        "role": "Declares the typed benchmark inspection request and result exposed through MCP."
-      },
-      {
         "path": "benchmark/control.py",
-        "sha256": "4706078a8fbeb516a52bc51600751ae86c39c3ef7e397a2f8cf13d49204db941",
+        "sha256": "83fe9016625d7d8721905b8a153a28c3dcaaf2b9e925a3c97711c634868156b7",
         "role": "Owns read-only inspection of receipts, observation progress, and structured artifacts."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "ee75209799216c90cfa3a585dd9b7af99c99405f93e9fb5e4f900ea26d9d3ea0",
+        "sha256": "093b584eeb37cbb12089d5af082ad45acd779e9d2bdd5b3feaea08234fc22183",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],
     "findings": [
-      "The agent-workflow capability still claimed that the removed embedded UI assistant could use Ollama or remote LLM endpoints.",
-      "The root README is the package-index long description but was outside the editorial drift gate that covered active RTD pages.",
-      "The package overview mentioned Official30 evidence but did not identify the installed benchmark command, typed run receipt, or the expert MCP inspect-only boundary."
+      "The Python example compiled without installing a progress queue; compilation now emits typed progress events and raises ProgressError when none is installed.",
+      "The run-measured paragraph said the command submits through ordinary headless job control; it now runs through the OpenHCS session and mirrors the never-written source plate into an execution workspace (EVIDENCE/workspace or --workspace-root).",
+      "The finalizer paragraph described an ordinary headless job and server completion record; the finalizer now takes the submission and server record from the OpenHCS session.",
+      "The metaclass-registry row and source table named microscope handlers; sources are now the DatasetSource family.",
+      "Authority openhcs/desktop_installation.py was deleted (moved to openhcs/desktop/installation.py), and openhcs/constants/constants.py no longer declares microscope sources or axes.",
+      "The compile-time validation card and the compilation diagram named step snapshots/StepSnapshot, which were deleted; compilation resolves a ResolvedPipelineDefinition and runs per-context CompilationSession objects."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read README.md in full and compared it against the changed authorities: pyproject.toml, openhcs/desktop_installation.py (moved to openhcs/desktop/installation.py), openhcs/core/pipeline_document.py, openhcs/core/pipeline/compiler.py, openhcs/core/artifacts.py, openhcs/constants/constants.py, unified_registry.py, viewer_streaming_service.py, openhcs/agent/capabilities.py, openhcs/mcp/client_registration.py, pipeline_import.py, the Official30 integration test and the benchmark CLI/receipt/control modules; installed a progress queue in the CellProfiler example and renamed its root to dataset_root, rewrote the run-measured and finalizer paragraphs for the session-backed run, replaced microscope-handler wording with dataset sources, replaced the deleted StepSnapshot with ResolvedPipelineDefinition in the validation card and compilation diagram, and confirmed extras, console scripts, benchmark subcommands/options, MCP tool names, the full profile, client targets, and the eight submodules against current source.",
       "Re-read README.md in full and challenged its explanation role, audience, capability claims, installation routes, package boundaries, flow, and links against the hash-pinned declaration owners.",
       "Removed the obsolete embedded-assistant claim while preserving the MCP-first agent workflow.",
       "Passed 12 focused documentation-audit tests, including missing, changed, and Python-block-validated project README regressions.",

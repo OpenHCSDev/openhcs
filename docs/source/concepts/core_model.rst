@@ -70,7 +70,7 @@ the resolved declarations rather than repeatedly resolving individual fields.
 Contracts and artifacts
 -----------------------
 
-Callable contracts declare memory types, required axes, allowed grouping,
+Callable contracts declare memory types, required axis roles, allowed grouping,
 processing contract, execution scope, runtime adapter, and artifact inputs and
 outputs. CellProfiler module leaves derive invocation-specific ``ArtifactSpec``
 inputs and outputs into that same callable contract. Compiler source plans,
@@ -84,8 +84,8 @@ addresses and materialization targets.
 Compilation
 -----------
 
-Each execution axis receives a ``CompilationSession`` with resolved steps,
-``StepSnapshot`` objects, source projection, and typed ``CompiledStepPlan``
+Each value of the partition axis receives a ``CompilationSession`` with the
+resolved pipeline definition, source projection, and typed ``CompiledStepPlan``
 objects. Plans contain source, artifact, function, memory, materialization,
 streaming, GPU, and worker facts. Compilation emits a
 ``CompiledExecutionBundle`` only after these facts satisfy runtime invariants.

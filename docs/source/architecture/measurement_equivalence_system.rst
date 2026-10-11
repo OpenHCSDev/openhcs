@@ -25,9 +25,12 @@ Measurement identity
 --------------------
 
 ``RuntimeMeasurementFeatureKey`` separates subject, feature, source
-qualification, and aggregate identity. ``RuntimeMeasurementDialect`` declares
-how a producer encodes source names, qualifiers, aliases, and row layout. This
-lets two outputs be normalised without erasing meaningful distinctions.
+qualification, and aggregate identity. A registered ``MeasurementDialect``
+declares how a producer names sample and object fields, scopes, feature
+prefixes, aliases, and row qualifiers; ``PlainMeasurementDialect`` is the
+kernel's own spelling and CellProfiler declares its dialect in its interop
+package. This lets two outputs be normalised without erasing meaningful
+distinctions.
 
 Row projection derives stable identities for image-, object-, and
 relationship-scoped measurements. Wide and long-form tables project into the
@@ -65,12 +68,19 @@ Output
 counts, measurement features/content, tables, and images. An empty difference
 tuple means the compared outputs are semantically equivalent.
 
+The product package ``openhcs.core.equivalence`` keeps only the measurement
+semantics that production code uses: feature keys, semantic profiles, rows,
+relationships, and the policy. Output snapshots, comparison, and the report
+live in ``benchmark/equivalence`` beside the benchmark code that consumes them;
+no product module imports the benchmark package.
+
 Official30 evidence boundary
 ----------------------------
 
 The portable acceptance definition is
-``benchmark/manifests/official30_portable_axis1.json`` plus the two integration
-tests in ``tests/integration/test_cellprofiler_official30_zmq.py``. The headless
+``benchmark/manifests/official30_portable_axis1.json`` plus the headless and
+Napari integration tests in
+``tests/integration/test_cellprofiler_official30_zmq.py``. The headless
 test loads exactly 30 cases, requires native references, runs every case with
 ``continue_on_error=True``, and requires every native/OpenHCS execution to
 succeed and every observation to be equivalent. The Napari test exercises the
@@ -93,7 +103,7 @@ developer account:
 Use the sibling
 ``test_official30_nonpersistent_napari_isolated_per_case`` target for the Napari
 route. Different ZMQ/viewer ports avoid endpoint conflict, but overlapping runs
-remain diagnostic only and must not be reported as canonical acceptance timing.
+remain diagnostic only and must not be reported as acceptance timing.
 
 Compared modalities and policy
 ------------------------------
@@ -110,9 +120,8 @@ exported files; the outcome receipt alone does not establish it.
 Current exports also retain the compiler's exact axis membership: a missing
 compiled axis or an outcome for an uncompiled axis invalidates the run even if
 every retained outcome reports success. The measured-run finaliser refuses an
-empty execution. Archived outcome-only exports that predate this membership
-field remain readable, but their observed axes alone cannot prove complete
-compiled coverage and cannot be finalised as a new success receipt.
+empty execution. Outcome and observation exports written under an earlier
+schema version are rejected when read.
 Repeated measurements can share one connected ordinary execution server while
 each run compiles its own artifact and retains a distinct observation and
 receipt. The benchmark does not create a second execution path to keep that
@@ -120,8 +129,7 @@ server warm.
 
 Full-value observation expectations retain the compiled axis that owns each
 artifact kind. A plate-scoped export is checked on its one owning axis rather
-than required independently on every image axis. Archived observation exports
-keep their earlier all-axis expectation when read.
+than required independently on every image axis.
 
 A typed completed-run receipt derives execution identity, source/configuration
 digests, runtime-observation and execution-summary digests, and output references
@@ -134,8 +142,8 @@ The CellProfiler adapter prepares one such submission and then applies its
 optional native-reference equivalence policy. It does not own a second execution
 engine.
 An agent can finalise the same receipt after a normal headless job completes:
-the execution service supplies the exact submission, endpoint handshake and
-server completion record, while the benchmark extension validates and retains
+the OpenHCS session's finished execution supplies the exact request, endpoint
+handshake and server completion record, while the benchmark extension validates and retains
 the observation. Both ordinary export scopes carry the producing server
 execution ID. The shared finaliser rejects an export from a different job
 before writing a success receipt; the runtime export writer also refuses to
@@ -151,7 +159,10 @@ server job, not progress events, supplies the execution-only duration. A missing
 progress event leaves that diagnostic interval absent; client wait time is not
 used to guess it. Server, progress, and client wait intervals overlap, so
 additive phase totals count the client submit/wait phases but not their nested
-server or progress observations.
+server or progress observations. Benchmark validation phases (runtime
+validation, output snapshots, and equivalence comparison) are also excluded
+from the additive total because they check a run rather than operate either
+tool.
 
 If finalisation stops between evidence files, inspection derives the
 ``unreceipted_artifacts`` list from the measured-artifact declarations. Their

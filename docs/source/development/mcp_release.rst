@@ -78,7 +78,7 @@ a complete, revisioned function catalogue, resolves one returned function
 reference, and verifies that the ready endpoint's advertised log is readable
 and contains output. A packaged desktop MCP session then verifies health and
 version identity, discovers the live main and Plate Manager windows, and invokes
-the declared Plate Manager code action. The probe requires the resulting window
+the Plate Manager's ``show_dataset_code`` session operation. The probe requires the resulting window
 to appear, then captures the main window and opened editor through the
 production MCP snapshot capability. It verifies each PNG's path, dimensions,
 byte size, and SHA-256 before closing the GUI, removing the bridge descriptor,
@@ -242,8 +242,11 @@ annotated ``v<version>`` tag through the configured upstream remote. Do not
 create a second MCP-specific or installer-specific tag.
 
 That tag starts ``.github/workflows/publish.yml``. The workflow builds and
-validates the Windows and macOS installer assets first, then builds and smoke
-tests the OpenHCS wheel outside the checkout. After publishing the wheel and
+validates the Windows and macOS installer assets and, with ``cibuildwheel``,
+the stable-ABI OpenHCS wheels for Linux (x86_64 and aarch64), Windows, and
+macOS (x86_64 and arm64), smoke-testing each wheel's native extension. It then
+builds the source distribution, validates every wheel, and smoke tests the
+Linux x86_64 wheel outside the checkout. After publishing the wheels and
 source distribution to PyPI, it creates one GitHub Release containing those
 Python artifacts plus the directly runnable
 ``OpenHCS-Windows-Installer.exe`` and the single-file
@@ -273,8 +276,8 @@ complete release from that tag:
      --field publish_python_package=true \
      --field publish_desktop_installers=true
 
-This path validates and smoke-tests the built wheel, publishes the wheel and
-source distribution to PyPI, assembles the GitHub Release with both native
+This path builds and validates the native wheels, smoke-tests the Linux wheel,
+publishes the wheels and source distribution to PyPI, assembles the GitHub Release with both native
 installers, then publishes the matching official MCP Registry entry. It reuses
 the existing tag. The upload remains fail-closed when that PyPI version already
 exists so independently rebuilt files cannot be mistaken for the published
@@ -291,7 +294,7 @@ again:
      --field publish_python_package=false \
      --field publish_desktop_installers=true
 
-This path downloads the exact wheel and source distribution already owned by
+This path downloads the exact wheels and source distribution already owned by
 PyPI and verifies their declared SHA-256 digests. It builds both native
 installers, attaches the complete asset set to the existing tag, and continues
 to MCP Registry publication. The Python files on PyPI and GitHub are therefore

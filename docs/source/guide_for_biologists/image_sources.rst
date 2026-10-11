@@ -4,22 +4,22 @@ Loading and naming image sources
 An OpenHCS plate can contain one image store or several stores together. Two
 separate decisions are involved:
 
-1. a microscope or store handler owns **ingestion** and publishes addressable
-   planes;
+1. a microscope or store dataset source owns **ingestion** and publishes
+   addressable planes;
 2. source bindings optionally **select and name** those planes for pipeline
    inputs.
 
 .. openhcs-gallery:: source-image-browser
 
-For a recognized HCS layout, OpenHCS keeps the native microscope handler. CZI,
+For a recognized HCS layout, OpenHCS keeps the native microscope source. CZI,
 OME-TIFF, and other supported rich containers are decoded by the Bio-Formats
-store handler using their embedded metadata. Add the containing directory to
-the Plate Manager and initialize with auto-detection; a source binding is not
+store source using their embedded metadata. Add the containing directory to
+the Datasets pane and initialize with auto-detection; a source binding is not
 required merely to open or browse the store.
 
-``SourceBindingsHandler`` has a different role: it is the ingestion fallback for
+``SourceBindingsSource`` has a different role: it is the ingestion fallback for
 an arbitrary image folder whose layout is not recognized. A non-empty
-``PipelineConfig.source_bindings_config`` tells that handler which ordinary
+``PipelineConfig.source_bindings_config`` tells that source which ordinary
 TIFF, PNG, JPEG, or other registered files form the source universe and how
 filename metadata should be interpreted.
 
@@ -30,7 +30,7 @@ their original file provenance and gives them a stable name such as ``DNA`` or
 internals and do not select a storage backend.
 
 This means ``SourceBindingsConfig`` can still name channels or samples from a
-CZI after Bio-Formats has decoded it. In that case the Bio-Formats handler remains
+CZI after Bio-Formats has decoded it. In that case the Bio-Formats source remains
 the ingestion owner; the binding is semantic selection, not a replacement CZI
 loader.
 
@@ -40,7 +40,7 @@ OME-Zarr input and output
 OpenHCS reads OME-Zarr single-resolution images and plates stored as Zarr 2 /
 NGFF 0.4 or Zarr 3 / NGFF 0.5. Discovery uses the declared image hierarchy and axes,
 including time, channel and Z dimensions. Add the directory containing the
-store to the Plate Manager as for other rich image containers.
+store to the Datasets pane as for other rich image containers.
 
 Selecting Zarr for pipeline output continues to produce Zarr 2 / NGFF 0.4
 stores. Updating the installed Zarr library does not change that output format.
@@ -53,11 +53,11 @@ Native layout versus complete metadata
 ----------------------------------------
 
 Filename/layout recognition and automatic detection are related but distinct.
-Run ``openhcs_inspect_plate_path`` with ``microscope_type="auto"`` first. Its
+Run ``openhcs_inspect_plate_path`` with ``source_format="auto"`` first. Its
 ``format_specific_handler_candidates`` are derived live from the registered
-``MicroscopeHandler`` parsers and detection contracts. If a broad store handler
+``DatasetSource`` parsers and detection contracts. If a broad store source
 was selected but a format-specific candidate recognizes every tested physical
-filename under its declared ``root_dir``, do not assume the broad handler is the
+filename under its declared ``root_dir``, do not assume the broad source is the
 better semantic owner merely because native metadata is missing.
 
 Opera Phenix is a representative case. A complete plate export contains the
@@ -70,17 +70,17 @@ owner requires its ``Index.xml`` detection contract; matching filenames alone do
 not make the subset a valid native plate. If those TIFFs are intentionally being
 treated as loose ordinary images, select them with ``SourceBindingsConfig`` and
 declare their Well/Site/Channel/Z/Time identities instead of explicitly selecting
-``microscope_type="opera_phenix"`` or accepting a broad decoder's inferred sample
+``source_format="opera_phenix"`` or accepting a broad decoder's inferred sample
 layout.
 
-The folder-onboarding authoring context lists every currently registered handler
-and its handler-owned selection role. Use the format-specific owner for recognized
+The folder-onboarding authoring context lists every currently registered
+dataset source and its selection role. Use the format-specific owner for recognized
 vendor layouts, the broad structured-store owner for supported rich containers
 without a stronger native match, and the declared-file fallback for arbitrary
 ordinary files whose schema you provide.
 
 ``source_stack_components`` describes axes physically present inside one selected
-file or store payload. Do not declare ``SITE`` or another source-stack axis when
+file or store payload. Do not declare ``Microscopy.Site`` or another source-stack axis when
 each site is a separate ordinary 2-D file. Give each file its component identity,
 then use ``processing_config.variable_components`` to assemble those selected files
 along the callable's stack axis.
@@ -88,10 +88,10 @@ along the callable's stack axis.
 Coordinates and source identity
 -------------------------------
 
-Every resolved plane has one sample identity represented by ``WELL``. This is the
+Every resolved plane has one sample identity represented by ``Microscopy.Well``. This is the
 embedded plate well when the image metadata declares one; otherwise it is the
-exact source-container identity. ``SITE``, ``CHANNEL``, ``Z_INDEX``, and
-``TIMEPOINT`` identify the plane within that sample. If a store declares an axis
+exact source-container identity. ``Microscopy.Site``, ``Microscopy.Channel``,
+``Microscopy.ZIndex``, and ``Microscopy.Timepoint`` identify the plane within that sample. If a store declares an axis
 absent or singleton, its coordinate is ``"1"``. Embedded coordinates are never
 replaced by filename guesses, and conflicting plane identities stop
 initialization with an explicit error.
@@ -132,7 +132,7 @@ Keep three layers separate:
 
 pipeline source universe
   ``PipelineConfig.source_bindings_config`` declares the full named physical
-  source universe and the inputs consumed by the nominal handler projection. It
+  source universe and the inputs consumed by the dataset source projection. It
   may correctly contain Hoechst channel 1, MAP2 channel 2, and SMI312 channel 4
   even when one step needs only two of them.
   Seeing all three in the source workspace inventory is valid.
@@ -145,7 +145,7 @@ per-step binding plan
 callable stack positions
   ``processing_config.variable_components`` owns the meaning of the assembled
   array axis. A callable ``channel_index`` is a zero-based position on that
-  invocation's assembled axis, not a physical microscope ``CHANNEL`` value.
+  invocation's assembled axis, not a physical ``Microscopy.Channel`` value.
 
 When viewer routes carry physical component identities from the first layer,
 they retain the declared values; they do not renumber them to the third layer's
@@ -157,7 +157,7 @@ declaration choices:
 
 simplest inherited full stack
   Set ``input_source=PIPELINE_START`` and
-  ``variable_components=[CHANNEL]``, but omit ``FunctionStep.source_bindings``.
+  ``variable_components=[Microscopy.Channel]``, but omit ``FunctionStep.source_bindings``.
   The step inherits the complete pipeline order, so use
   ``nuclear_stain.channel_index=0``, ``cell_body.channel_index=1``, and
   ``neurite_channel_index=2``. Source provenance retains physical channels 1,
@@ -172,11 +172,11 @@ legacy shared-signal subset
   not equivalent to MAP2-seeded analysis: retain MAP2 and use the inherited
   three-channel form whenever MAP2 owns the neuronal bodies.
 
-In either option, ``variable_components=[CHANNEL]`` assembles the channel stack.
-Do not use ``group_by=CHANNEL`` for assembly. ``group_by`` partitions an already
+In either option, ``variable_components=[Microscopy.Channel]`` assembles the channel stack.
+Do not use ``group_by=Microscopy.Channel`` for assembly. ``group_by`` partitions an already
 assembled value and selects branches only for a dictionary function pattern.
 For this non-dictionary MetaXpress callable, an overlapping
-``group_by=CHANNEL`` is redundant and the compiler normalizes it to
+``group_by=Microscopy.Channel`` is redundant and the compiler normalizes it to
 ``Ungrouped``.
 
 The explicit-subset regression is intentionally generic rather than a
@@ -225,8 +225,8 @@ authoring a multi-image measurement, separate its current image input from its
 typed artifact inputs. ``input_source=PIPELINE_START`` returns to acquisition
 images; it does not remove the step's inherited variable-component scope.
 When the invocation needs an assembled channel stack, declare
-``variable_components=[CHANNEL]`` with the intended step bindings/order. A
-``SITE`` stack or ``group_by=NONE`` alone does not assemble channels. Inspect the
+``variable_components=[Microscopy.Channel]`` with the intended step bindings/order. A
+``Microscopy.Site`` stack or ``group_by=Ungrouped`` alone does not assemble channels. Inspect the
 resolved step configuration and artifact plan, not just the pipeline universe.
 
 Object-label inputs also retain their producer's source context. Equal shape,
@@ -282,10 +282,10 @@ The following block constructs a complete Pipeline Editor code document for a
 directory that mixes stores. The intermediate config values deliberately show
 both source-binding roles:
 
-- ``tiff_png_config`` can drive ``SourceBindingsHandler`` when the directory is
+- ``tiff_png_config`` can drive ``SourceBindingsSource`` when the directory is
   an otherwise unrecognized collection of ordinary files;
 - the CZI, OME-TIFF, and OME-Zarr configs name/select planes after their store
-  handlers decode them.
+  sources decode them.
 
 Choose one as ``pipeline_config`` and keep the ``pipeline_steps`` assignment in
 the same document. Filenames are exact examples; replace them with names present
@@ -390,14 +390,14 @@ detection. OpenHCS first chooses the native, Bio-Formats/store, or arbitrary-
 folder ingestion owner, then resolves every binding over the planes that owner
 published. CZI and OME-TIFF inputs use the Bio-Formats runtime included by an
 OpenHCS installation that enables those formats; OME-Zarr uses PolyStore
-directly. Do not force a rich image container through ``SourceBindingsHandler``
+directly. Do not force a rich image container through ``SourceBindingsSource``
 when its structured decoder is
 missing or unhealthy; repair that decoder instead.
 
 Reopening OpenHCS outputs
 -------------------------
 
-Add a generated output plate to the Plate Manager and initialize it normally.
+Add a generated output plate to the Datasets pane and initialize it normally.
 OpenHCS reloads the semantic axes and source contributors saved with each
 processed image. Do not add source bindings merely to recreate an axis that a
 processing step collapsed: a coordinate retained in the filename identifies the
@@ -415,8 +415,8 @@ coordinate in a format-specific path rule. Use it as ``pipeline_config`` in the
 complete document above; source-backed MCP execution and Pipeline Editor code
 mode must also receive ``pipeline_steps``.
 
-``selector.components`` matches the coordinates published by the source
-handler. ``component_identity`` is optional and assigns the semantic coordinate
+``selector.components`` matches the coordinates published by the dataset
+source. ``component_identity`` is optional and assigns the semantic coordinate
 used after selection. Here the selector matches physical channel ``2`` while
 ``component_identity`` assigns the projected channel value ``DNA``. The
 original channel remains in original source metadata; compilation, grouping,

@@ -1,75 +1,84 @@
-Microscope handler integration
-==============================
+Dataset source integration
+==========================
 
-``MicroscopeHandler`` is the nominal root for microscope/source-specific
-behaviour. Concrete handlers self-register through ``AutoRegisterMeta`` and are
-loaded by package discovery. ``create_microscope_handler`` selects an explicit
-handler or performs ordered detection through the registered family.
+``DatasetSource`` is the nominal root for format-specific dataset behaviour.
+Concrete sources self-register through ``AutoRegisterMeta`` under their
+``source_name``. The registry discovers the kernel's own members in
+``openhcs.core.dataset_sources`` and then imports the modules the active
+``AxisFamily`` lists in ``extension_modules``; for microscopy these include
+``openhcs.microscopes``. The kernel never imports a domain module by name.
 
 Owned declarations
 ------------------
 
-A handler owns:
+A source owns:
 
-- its microscope identity and detection behaviour;
+- its ``source_name`` identity, selection role, and detection behaviour;
 - filename parsing and metadata-handler type;
 - virtual-workspace root and source projection;
 - compatible storage backends;
-- viewer metadata required for component-aware display.
+- viewer metadata required for axis-aware display.
 
-The handler registry is the source of truth. Generic discovery, compiler, and
-UI code iterate ``MicroscopeHandler.__registry__.values()`` or the registry
-service. They must not maintain a copied microscope list or import concrete
-handler modules to inspect names.
+The registry is the source of truth. Generic discovery, compiler, and UI code
+iterate ``DatasetSource.__registry__`` or ``DatasetSourceChoice.choices()``.
+They must not maintain a copied source list or import concrete source modules
+to inspect names.
 
-The configurable ``Microscope`` members, excluding ``AUTO``, match the
-registered handler keys exactly. This keeps user-facing choices, agent
-discovery, and runtime construction on the same declaration set without hidden
-handlers or orphaned enum values.
+Selection
+---------
 
-The factory binds the root-declared ``plate_folder`` context uniformly after a
-registered leaf is created. Leaf-specific initialisation belongs on that
-leaf's ``create`` hook; the factory does not dispatch on concrete handler
-names.
+``PipelineConfig.dataset_source`` holds a ``DatasetSourceChoice`` class:
+``AutoDetectedSource`` (spelled ``auto``) or one registered source. Boundaries
+spell the choice by ``source_name``. Automatic detection walks
+``DatasetSource.detection_order()``: prepared OpenHCS workspaces first, then
+sources ranked by their selection-role mixin. Selection roles such as
+``FormatSpecificSource``, ``DeclaredFileSource``, and
+``PreparedWorkspaceSource`` are capability mixins on the source class.
+
+``DatasetSourceChoice.open`` resolves the source class, lets declared source
+bindings select the declared-file source when the role allows it, constructs
+the leaf through its ``create`` hook, and binds ``dataset_root`` uniformly.
+Leaf-specific initialisation belongs on that leaf's ``create`` hook; the opener
+does not dispatch on concrete source names.
 
 Source and compiler boundary
 ----------------------------
 
-After initialisation, the handler supplies plate metadata and source files to
+After initialisation, the source supplies dataset metadata and source files to
 the source-workspace projection. The compiler uses that projection to construct
 source universes, execution-axis values, main-flow dependencies, and named
 source bindings. PolyStore owns the underlying references, virtual paths, and
 backend I/O.
 
-A handler may use a decoder-owned metadata handler while discovering exact
-source planes. Once it persists the canonical virtual workspace, its active
+A source may use a decoder-owned metadata handler while discovering exact
+source planes. Once it persists the virtual workspace, its active
 ``metadata_handler`` becomes the workspace metadata owner. Consumers therefore
-read one post-initialisation authority instead of conditionally combining raw
-store coordinates with projected workspace coordinates.
+read one post-initialisation metadata handler instead of conditionally
+combining raw store coordinates with projected workspace coordinates.
 
 ``MetadataHandler.component_value_set()`` returns one complete
 ``MetadataComponentValueSet`` keyed by the axes of the active ``AxisFamily``.
-Handlers implement that single projection; generic consumers
-iterate the family instead of calling one handler method per concrete
-axis. Viewer and serialized mappings receive string keys only at their explicit
-boundary.
+Metadata handlers implement that single projection; generic consumers iterate
+the family instead of calling one method per concrete axis. Viewer and
+serialized mappings receive string keys only at their explicit boundary.
 
-The persisted workspace records the handler declaration that produced its
-backing references. When the workspace is reopened, that registered handler
-class re-registers its decoder backends together with the plate-specific
-virtual-workspace backend. Replay therefore follows the original declaration
+The persisted workspace records the ``source_name`` of the source that produced
+its backing references. When the workspace is reopened, that registered source
+class re-registers its decoder backends together with the dataset-specific
+virtual-workspace backend. Replay therefore follows the recorded declaration
 without reconstructing a configuration-dependent ingestion instance or
-requiring the original ``SourceBindingsConfig``.
+requiring the ``SourceBindingsConfig`` used at ingestion.
 
 Extension boundary
 ------------------
 
-A new microscope integration is a registered handler leaf with its parser,
-metadata handler, identity, detection policy, and backend compatibility at the
-owning module. Dataset-specific ordinary-file layouts whose selection and axes
-can be declared with ``SourceBindingsConfig`` use the source-binding handler;
-the dataset name is not registered as a microscope type. Generic discovery and
-compilation consume the resulting declaration.
+A new format integration is a registered ``DatasetSource`` leaf, in a module
+listed by the active family's ``extension_modules``, with its parser, metadata
+handler, identity, selection role, and backend compatibility at the owning
+module. Dataset-specific ordinary-file layouts whose selection and axes can be
+declared with ``SourceBindingsConfig`` use the source-binding source
+(``source_bindings``); the dataset name is not registered as a source.
+Generic discovery and compilation consume the resulting declaration.
 The task-oriented procedure and required tests are in
 :doc:`../development/source_binding_extension`; the ownership rule is expanded
 in :doc:`nominal_ownership`.

@@ -17,7 +17,7 @@ End-to-end flow
              | ObjectState resolves once
              v
    ResolvedPipelineDefinition
-     + StepSnapshot tuple
+     + step scope ids and field provenance
              |
              | one CompilationSession per execution axis
              v
@@ -55,18 +55,18 @@ Resolution boundary
 
 ObjectState owns generic lazy configuration and live editing. Before compilation
 continues, OpenHCS materializes one resolved step object for every declaration.
-``StepSnapshot`` binds compiler identity and ObjectState scope identity to that
-already-resolved step. Downstream compiler stages read semantics from the
-resolved step and its callable/module declarations; they do not repeatedly ask
-ObjectState to reinterpret fields.
+``ResolvedPipelineDefinition`` holds those resolved steps with each step's
+ObjectState scope id and per-field provenance. Downstream compiler stages read
+semantics from the resolved step and its callable/module declarations; they do
+not repeatedly ask ObjectState to reinterpret fields.
 
 Compilation boundary
 --------------------
 
-``CompilationSession`` ties together one ``ProcessingContext``, the resolved
-steps, snapshots, ObjectState map, source-workspace projection, and mutable typed
-plans for one execution axis. Its invariants prevent phases from silently
-mixing steps, scopes, or contexts.
+``CompilationSession`` ties together one ``ProcessingContext``, the
+``ResolvedPipelineDefinition``, source-workspace projection, and mutable typed
+plans for one execution axis. Phases read steps and plans from that one session
+by step index, and a missing plan is an error rather than a default.
 
 Each ``CompiledStepPlan`` is the source of truth for the compiled step. It has
 typed fields for source bindings, source universe, artifact inputs and outputs,
@@ -90,8 +90,8 @@ resolving declaration configuration again.
 
 Runtime data is represented by nominal value families and stored under typed
 artifact keys. ``RuntimeValueStore`` is the authority for validated values,
-locations, replacement, queries, and observation history. Projection strategies
-adapt values to declared slice or grouping scopes without guessing from raw
+locations, replacement, queries, and observation history. Each value family
+projects itself onto declared slice or grouping scopes without guessing from raw
 array shape.
 
 Owners and adapters
@@ -107,7 +107,8 @@ extracted packages own their generic mechanisms:
 - PolyStore: storage, formats, ROI, and virtual-workspace primitives
 - metaclass-registry: generic nominal registration and logging-safe discovery
 - pyqt-reactive: generic reactive forms and widgets
-- python-introspect: callable/signature analysis and declaration projection
+- python-introspect: callable/signature analysis, declaration projection, and
+  the JSON codec (``to_jsonable``/``dataclass_from_mapping``)
 - ZMQRuntime: generic process and transport protocols
 - pycodify: Python-source serialization
 

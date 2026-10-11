@@ -105,8 +105,9 @@ not present an ROI-shaped base path as though it were also the CSV output.
 Callable ABI versus semantic artifacts
 --------------------------------------
 
-The ``special_inputs`` decorator names callable ABI slots. They do not by themselves declare artifact types, producers,
-materialisation, or runtime-store identity.
+The ``special_inputs`` decorator names callable ABI slots. Those names do not
+by themselves declare artifact types, producers, materialisation, or
+runtime-store identity.
 
 Semantic ownership comes from ``artifact_inputs`` and ``artifact_outputs`` on
 the callable. A CellProfiler module derives those declarations through its
@@ -182,8 +183,8 @@ records:
 
 - the exact declared ``ArtifactSpec``
 - an optional prior-producer ``ArtifactInputPlan`` and runtime projection
-- whether the occurrence consumes ordinary main flow
-- which ``MainFlowInputProjection`` applies
+- the ``MainFlowInputProjection`` that applies when the occurrence consumes
+  ordinary main flow
 
 This is why two callable parameters can consume the same semantic artifact
 without collapsing into one edge. ``CompiledStepPlan.artifact_inputs`` remains
@@ -193,8 +194,8 @@ on the compiled invocation edges.
 Implicit main-flow projection
 -----------------------------
 
-An invocation edge with ``consumes_main_flow=True`` cannot also carry a storage
-plan. Its projection is one of two explicit modes:
+An invocation edge that consumes main flow carries a ``main_flow_projection``
+and no storage plan. Its projection is one of two explicit modes:
 
 ``MainFlowInputProjection.COMPLETE_PAYLOAD``
   The invocation has one main-flow reference and consumes the current payload
@@ -207,9 +208,9 @@ plan. Its projection is one of two explicit modes:
 The end-to-end regression in
 ``tests/unit/test_implicit_main_flow_compilation.py`` compiles grouped native
 ``percentile_normalize`` output into a CellProfiler ``Threshold`` consumer. It
-asserts the step dependency, channels ``1``/``2``/``4`` group scope,
-``consumes_main_flow=True``, absence of a storage plan, and axis execution
-scope.
+asserts the step dependency, channels ``1``/``2``/``4`` group scope, a
+main-flow projection on the input edge, absence of a storage plan, and axis
+execution scope.
 
 Compiled plans
 --------------

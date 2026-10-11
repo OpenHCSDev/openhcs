@@ -43,7 +43,10 @@ Local process lane
 ------------------
 
 The local MCP server runs over stdio and is owned by the client process. It
-does not import or host the PyQt UI. GUI, viewer, and local runtime capabilities
+hosts no GUI: the transport keeps a Qt core application on the process main
+thread for main-thread-owned ObjectState work and runs the MCP SDK loop on a
+worker thread, so protocol notifications continue while main-thread work runs.
+GUI, viewer, and local runtime capabilities
 remain local-only and attach through their authenticated process bridges.
 UI-bridge and viewer control budgets remain facts of their respective
 connection declarations. MCP timeout policies bound caller overrides from
@@ -57,8 +60,9 @@ does not import every processing library to rebuild a second catalogue. At MCP
 process startup, the composition root snapshots the persisted desktop ZMQ
 configuration so a non-default host, port, or transport remains the same
 endpoint identity for both authoring surfaces. That snapshot is projected from
-the unique ``OpenHCSZMQConfig`` field in the canonical ``UIConfig`` Python
-document. The projection derives the field from the dataclass schema and does
+the unique ``OpenHCSZMQConfig`` field in the saved ``UIConfig`` Python
+document. The headless session that MCP session tools act on connects through
+that same endpoint configuration. The projection derives the field from the dataclass schema and does
 not construct unrelated UI configuration or import Qt.
 
 The stdio transport reserves process stdin and stdout before constructing the
@@ -106,8 +110,8 @@ measured-pipeline receipt is
 produced only after an ordinary pipeline's selected value or outcome export
 passes its validation. Outcome-only export retains per-axis status without
 claiming value equivalence. The expert-only
-``openhcs_finalize_measured_pipeline_run`` capability consumes the exact
-completed ordinary job, validates the selected export, and retains the submitted
+``openhcs_finalize_measured_pipeline_run`` capability consumes the OpenHCS
+session's exact finished execution, validates the selected export, and retains the submitted
 source, server result and timing receipt. It does not create another execution
 or status authority. ``openhcs_inspect_measured_pipeline_run`` checks that
 receipt, submitted-source digests, and retained observation/summary digests;
@@ -190,16 +194,16 @@ The shared registered JSON projection owns Cursor, Gemini CLI, and Windsurf
 user configuration; Visual Studio Code is registered through its documented
 command-line interface rather than a guessed profile path.
 
-``DesktopDeploymentAuthority`` owns the native launcher, shortcut, and
-application-icon projection. Its registered Windows and macOS leaves read the
-installed distribution entry points and packaged brand assets. Both initial
-setup and the in-application updater call this authority; the PowerShell and
+``DesktopDeployment`` in ``openhcs.desktop.deployment`` owns the native
+launcher, shortcut, and application-icon projection. Its registered Windows and
+macOS leaves read the installed distribution entry points and packaged brand
+assets. Both initial setup and the in-application updater call it; the PowerShell and
 shell bootstrap adapters do not carry parallel launcher or app-bundle
 templates.
 
 On Windows, the stable GUI launcher is a forwarding cache over the separately
 published current-environment pointer. If another launch still holds that
-executable without delete sharing during an update, the Windows authority
+executable without delete sharing during an update, the Windows deployment
 retains the valid launcher, publishes the verified environment, and reports the
 deferred launcher and fingerprint paths. A later installer or desktop refresh
 retries those projections after the executable is released. Other publication
@@ -209,9 +213,12 @@ The projection owns only the ``openhcs`` server entry and preserves every other
 client setting. Its command targets the stable launcher, never a
 version-stamped private environment, so a verified installer update can switch
 the environment without rewriting client configuration. Registration does not
-copy capability lists, path-policy roots, client credentials, or agent
+copy capability lists, path-policy roots, client credentials, or server
 instructions. Those remain owned by the MCP initialisation handshake,
-``AgentPathPolicy``, and the client itself.
+``AgentPathPolicy``, and the client itself. A client target that declares a
+documented skill directory (currently Codex) also receives the installed
+OpenHCS skill bundle; the registration report records that synchronisation
+separately from the client's MCP connection result.
 
 The launcher projects two lifecycle values into the MCP process: one JSON argv
 for reconnecting through that same stable adapter and one installer-owned
@@ -232,8 +239,9 @@ they never contain MCP tool-name lists. The installed server defaults to
 ``desktop`` while the development client explicitly uses ``full`` for complete
 surface audits. The desktop profile includes both UI-owned workflows and
 independent headless execution. Those routes share pipeline declarations but
-retain separate state owners: a headless session does not create Plate Manager
-rows or ObjectState history. Capability discovery and bound tools/resources are
+retain separate state owners: the headless session keeps its datasets and
+pipelines in the MCP process's own ObjectState, so it does not create Plate
+Manager rows or ObjectState history in a running desktop application. Capability discovery and bound tools/resources are
 filtered by the same ``AgentCapabilitySurfaceSelection`` instance.
 
 The development client resolves each requested tool to its capability
@@ -326,20 +334,22 @@ invocation and writes a delayed stack diagnostic to stderr. This exposes a
 blocked worker even when the event loop continues emitting liveness updates.
 The diagnostic does not alter the operation's result or execution context.
 
-Source-backed orchestrator-session creation remains on the MCP process's main
-thread because its import and compiler-facing setup is thread-sensitive. The
-binder emits the standard ``started`` progress event before entering that
-synchronous section, and the service logs its source-parse start and
-completion. The event loop cannot emit periodic progress while the synchronous
-main-thread operation is blocked. None of those signals is scientific percent
-completion or success; the client must still wait for the actual typed result.
+Capabilities whose work touches ObjectState or other thread-sensitive setup
+declare that they are not worker-thread safe. The binder emits the standard
+``started`` progress event and then runs them on the process main thread
+through the main-thread dispatcher; because the SDK loop runs on its own
+thread, periodic liveness updates continue meanwhile. None of those signals is
+scientific percent completion or success; the client must still wait for the
+actual typed result.
 
-Session creation and submitted execution are separate phases. The development
-``execute-source`` command first creates the source-backed session, then submits
-that exact session. Automation that must remain observable over a long run
-submits without an opaque aggregate wait and polls the typed execution-status
-capability until a terminal state. The initial progress event and the
-start/completion diagnostics expose the pre-submit phase; execution status,
+Each headless session operation is one MCP tool on the OpenHCS session:
+adding datasets, setting a dataset's pipeline source, and initializing,
+compiling, or running it. An operation returns the event sequence it started
+at, and ``openhcs_session_events`` returns the events published after that
+sequence. The development ``execute-source`` command chains those operations
+and follows each stage through session events; ``--no-wait`` returns once the
+run is accepted. Automation that must remain observable over a long run follows
+session events instead of an opaque aggregate wait. Execution status,
 cancellation, results, and viewer settlement remain runtime-service
 responsibilities.
 
@@ -350,7 +360,7 @@ Distribution metadata
 ``scripts/sync_mcp_release_metadata.py`` projects it into the Codex plugin,
 Claude MCPB, and ``server.json``. Its dependency-free phase validates only
 directly readable package/version structure. After the built wheel is installed,
-``--capability-requirements`` imports the canonical selected capability registry
+``--capability-requirements`` imports the selected capability registry
 and verifies that all declaration-owned required extras are projected. These
 checked artifacts are install-surface metadata only; they do not own OpenHCS
 behaviour.
@@ -368,7 +378,7 @@ manager. The same profile projects its binary-wheel policy into both paths, so
 platform compatibility lines remain one package declaration and both native
 consumers require the reviewed wheel-backed releases.
 
-Canonical MCP knowledge documents remain in the documentation tree. The wheel
+MCP knowledge documents remain in the documentation tree. The wheel
 build deterministically projects the manifest-declared sources into package
 resources, so installed servers do not depend on a source checkout and there is
 no manually maintained second document corpus.

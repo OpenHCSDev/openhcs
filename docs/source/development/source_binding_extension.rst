@@ -23,15 +23,16 @@ Strategy selection
 ------------------
 
 Existing families select source universes, matching behavior, component
-projection, and workspace projection. Add a concrete strategy to the correct
-root and declare its enum/type/context key. Generic consumers should continue
-to use the root registry or its strategy mixin.
+projection, and workspace projection, for example ``SourceUniverseRequest``
+and ``SourceFilterMatcher``. Add a concrete subclass to the correct family root
+and declare its registry key. Generic consumers should continue to use the
+root registry or its strategy mixin.
 
 Virtual workspaces
 ------------------
 
 PolyStore owns ``SourcePixelRef`` and generic backend addressing. OpenHCS owns
-microscope metadata and ``VirtualWorkspaceSourceProjection``, which maps
+dataset source metadata and ``VirtualWorkspaceSourceProjection``, which maps
 virtual paths to source references and provenance for one compilation session.
 
 Verify declaration validation, strategy selection, physical and virtual path
@@ -41,7 +42,7 @@ folder metadata rules project the declared biological address without changing
 the backend-owned source address, and that reopening the persisted workspace
 reports the projected component values and labels. When a component selector
 and component identity use different values, verify that the selector matches
-the original candidate while the projected address, compiler group keys, and
+the emitted candidate while the projected address, compiler group keys, and
 runtime provenance use the declared component identity.
 
 See :doc:`../architecture/source_model`.

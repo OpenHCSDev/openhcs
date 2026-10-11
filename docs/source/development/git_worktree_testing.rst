@@ -80,14 +80,14 @@ Run the smallest suite that exercises the change first:
 
 .. code-block:: console
 
-   OPENHCS_CPU_ONLY=1 python -m pytest tests/unit/path/to/test_owner.py -q
+   OPENHCS_CPU_ONLY=true python -m pytest tests/unit/path/to/test_owner.py -q
 
 When the change crosses compilation or execution boundaries, run a bounded
 integration configuration before widening the matrix:
 
 .. code-block:: console
 
-   OPENHCS_CPU_ONLY=1 python -m pytest tests/integration/test_main.py \
+   OPENHCS_CPU_ONLY=true python -m pytest tests/integration/test_main.py \
        --it-backends disk \
        --it-microscopes ImageXpress \
        --it-dims 3d \
@@ -111,7 +111,7 @@ commit and recursive submodule revisions beside each result:
 
    git rev-parse HEAD
    git submodule status --recursive
-   OPENHCS_CPU_ONLY=1 python -m pytest tests/unit -q > feature-results.txt 2>&1
+   OPENHCS_CPU_ONLY=true python -m pytest tests/unit -q > feature-results.txt 2>&1
 
 Repeat from the comparison worktree, then compare the result files with
 ``diff``. Tracked fixtures are checked out independently in each worktree.

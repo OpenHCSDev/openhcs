@@ -27,14 +27,14 @@ There are three declaration scopes, followed by one resolution boundary:
    ObjectState resolution at compile time
               |
               v
-   immutable step snapshots and typed compiled plans
+   resolved step declarations and typed compiled plans
 
 .. openhcs-gallery:: ui-pipeline-configuration
 
 ``None`` in a lazy field normally means *inherit*, not *disable*. Enableable
 configs have a separate ``enabled`` field; resetting a lazy field returns it to
 inheritance. Compilation resolves the hierarchy once. Runtime workers consume
-the resolved snapshots and plans and never reinterpret the live forms.
+the resolved declarations and plans and never reinterpret the live forms.
 
 Scope precedence is only one axis. Config dataclass inheritance is the other:
 it determines which related policies share a default. The important well-filter
@@ -43,7 +43,7 @@ relationship is:
 .. code-block:: text
 
    PartitionFilterConfig                 pipeline execution domain
-      |-- PathPlanningConfig        automatic output-plate persistence
+      |-- PathPlanningConfig             automatic output-plate persistence
       `-- StepPartitionFilterConfig      step-policy default
              |-- StepMaterializationConfig
              `-- StreamingDefaults
@@ -181,8 +181,8 @@ Post-run analysis and metadata
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``AnalysisConsolidationConfig``
-  Optional post-plate consolidation, including well pattern, included
-  extensions, exclusions, and output filenames.
+  Optional post-plate consolidation, including MetaXpress-style formatting,
+  included extensions, exclusions, and output filenames.
 
 ``PlateMetadataConfig``
   Plate identity and acquisition metadata used by compatible consolidated

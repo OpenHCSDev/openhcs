@@ -18,8 +18,8 @@ shared request.
 
 ``CustomFunctionManager`` owns persisted source and coordinates create, load,
 replace, and delete transactions. It stores source under the platform-specific
-OpenHCS data directory, validates code before execution, requires a supported
-memory decorator, and rejects name collisions. The process-local
+OpenHCS data directory, validates code before execution, requires exactly one
+decorated processing function per source, and rejects name collisions. The process-local
 ``CustomFunctionRuntimeRegistry`` atomically publishes the derived callable
 metadata, source lifetime, and public module exports, so readers see either the
 previous complete catalogue or the validated replacement. Reloading persisted

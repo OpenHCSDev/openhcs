@@ -34,7 +34,8 @@ An ``AutoRegisterMeta`` family has a nominal root and an authoritative
 use a shared selection mixin. ``RegistryConfig`` and ``RegistryFamily`` describe
 generic registration mechanics and are owned by metaclass-registry.
 
-OpenHCS uses three shared selection models:
+OpenHCS uses three shared selection models, imported from
+``metaclass_registry.strategies``:
 
 ``EnumKeyedStrategyMixin``
   A concrete strategy declares the enum member it owns. The mixin derives the
@@ -72,7 +73,9 @@ Examples in the current architecture
 ------------------------------------
 
 - ``ArtifactType`` and module artifact partitions own artifact roles.
-- ``RuntimeSliceProjectionStrategy`` selects behavior by nominal runtime type.
+- owned runtime values subclass ``RuntimeSliceProjectableValue`` and implement
+  their own runtime-slice projection; ``RuntimeSliceProjection`` handles only
+  foreign values such as arrays, containers, and primitives.
 - runtime equivalence feature profiles select the most-derived semantic owner
   for a feature context.
 - ``ProcessingContract`` subclasses own how a callable executes over its
