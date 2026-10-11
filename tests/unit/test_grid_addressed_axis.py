@@ -15,7 +15,7 @@ from openhcs.core.axes import (
 )
 from openhcs.core.component_filters import ComponentFilters
 from openhcs.domains.microscopy.axes import Microscopy
-from openhcs.pyqt_gui.widgets.shared.plate_view_widget import active_grid_axis
+from openhcs.pyqt_gui.widgets.image_browser import active_grid_axis
 
 
 class _Survey(AxisFamily):

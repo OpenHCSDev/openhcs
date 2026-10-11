@@ -1,69 +1,15 @@
-from PyQt6.QtWidgets import QApplication
+from pyqt_reactive.widgets.grid_selector import GridModel
 
-from openhcs.pyqt_gui.widgets.shared.plate_view_widget import (
-    PlateGridModel,
-    PlateViewWidget,
-)
+from openhcs.domains.microscopy.axes import Microscopy
 
 
-def test_plate_grid_model_parses_standard_well_coordinates() -> None:
-    model = PlateGridModel.from_wells({"B02", "C04", "AA10"})
+def test_well_axis_places_standard_well_ids_on_the_plate_grid() -> None:
+    model = GridModel.of(Microscopy.Well, {"B02", "C04", "AA10"})
 
-    assert model.coord_to_well[(2, 2)] == "B02"
-    assert model.coord_to_well[(3, 4)] == "C04"
-    assert model.coord_to_well[(27, 10)] == "AA10"
-    assert model.well_to_coord["AA10"] == (27, 10)
-    assert model.plate_dimensions == (26, 9)
-    assert model.row_offset == 1
-    assert model.col_offset == 1
-
-
-def test_plate_grid_model_uses_supplied_nonstandard_coordinates() -> None:
-    model = PlateGridModel.from_wells(
-        {"R02C03", "R04C05"},
-        coord_to_well={(2, 3): "R02C03", (4, 5): "R04C05"},
-    )
-
-    assert model.actual_rows == [2, 3, 4]
-    assert model.actual_cols == [3, 4, 5]
-    assert model.well_at(4, 5) == "R04C05"
-    assert model.well_at(3, 4) is None
-    assert model.plate_dimensions == (3, 3)
-
-
-def test_plate_grid_model_preserves_explicit_plate_dimensions() -> None:
-    model = PlateGridModel.from_wells(
-        {"A01", "B02"},
-        plate_dimensions=(8, 12),
-    )
-
-    assert model.plate_dimensions == (8, 12)
-    assert model.actual_rows == [1, 2]
-    assert model.actual_cols == [1, 2]
-
-
-def test_plate_grid_model_projects_axis_membership() -> None:
-    model = PlateGridModel.from_wells({"A01", "A02", "B01"})
-
-    assert model.wells_on_axis(axis_index=0, axis_value=1) == ["A01", "A02"]
-    assert model.wells_on_axis(axis_index=1, axis_value=1) == ["A01", "B01"]
-
-
-def test_plate_selection_controller_mutates_widget_selection() -> None:
-    app = QApplication.instance() or QApplication([])
-    widget = PlateViewWidget()
-    widget.set_available_wells(
-        {"A01", "A02"},
-        plate_dimensions=(1, 2),
-        coord_to_well={(1, 1): "A01", (1, 2): "A02"},
-    )
-
-    widget.select_wells({"A01"}, emit_signal=False)
-    assert widget.selected_wells == {"A01"}
-
-    widget.selection_controller.invert_selection()
-    assert widget.selected_wells == {"A02"}
-
-    widget.clear_selection(emit_signal=False)
-    assert widget.selected_wells == set()
-    assert app is not None
+    assert model.cell_at_position[(2, 2)] == "B02"
+    assert model.cell_at_position[(3, 4)] == "C04"
+    assert model.cell_at_position[(27, 10)] == "AA10"
+    assert model.position_of_cell["AA10"] == (27, 10)
+    assert model.dimensions == (26, 9)
+    assert GridModel.of(Microscopy.Well, set()).dimensions == Microscopy.Well.default_grid
+    assert Microscopy.Well.row_label(27) == "AA"
