@@ -79,6 +79,7 @@ jobs:
             external/metaclass-registry/docs/source
             external/PolyStore/README.md
             external/PolyStore/docs/source
+            external/formbridge/README.md
             external/pyqt-reactive/README.md
             external/pyqt-reactive/docs
             external/python-introspect/README.md

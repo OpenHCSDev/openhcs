@@ -183,7 +183,9 @@ graph TD
     OH --> AB["ArrayBridge<br/>(arrays)"]
     OH --> PS["PolyStore<br/>(I/O + streaming)"]
     OH --> ZR["ZMQRuntime<br/>(exec)"]
-    OH --> QR["PyQT-reactive<br/>(forms)"]
+    OH --> QR["PyQT-reactive<br/>(Qt forms)"]
+    OH --> FB["formbridge<br/>(form model + UI bridge)"]
+    QR --> FB
 
     OS --> PI["python-introspect<br/>(signatures)"]
     OH --> MR["metaclass-registry<br/>(plugins)"]
@@ -197,6 +199,7 @@ graph TD
 | [**PolyStore**](https://github.com/OpenHCSDev/PolyStore) | Unified I/O & stream payloads | Generic storage and streaming payload primitives, backend lifecycle, virtual workspaces, atomic writes, format detection, and ROI extraction |
 | [**ZMQRuntime**](https://github.com/OpenHCSDev/ZMQRuntime) | Process & transport runtime | Generic request, status, progress, cancellation, process-lifecycle, and viewer-control transport protocols |
 | [**PyQT-reactive**](https://github.com/OpenHCSDev/PyQT-reactive) | UI form generation | React-style reactive forms from dataclasses with cross-window sync and flash animations |
+| [**formbridge**](https://github.com/OpenHCSDev/formbridge) | Toolkit-neutral forms and UI bridge | The form model, help and code documents, and the running-UI bridge contracts, client and server; imports no GUI toolkit, so headless MCP uses it without Qt |
 | [**pycodify**](https://github.com/OpenHCSDev/pycodify) | Code ↔ object conversion | Python source as serialization format — type-preserving, diffable, editable, with collision handling |
 | [**python-introspect**](https://github.com/OpenHCSDev/python-introspect) | Signature analysis | Pure-Python function/dataclass introspection for automatic UI generation and contract analysis |
 | [**metaclass-registry**](https://github.com/OpenHCSDev/metaclass-registry) | Plugin discovery | Zero-boilerplate registry system powering microscope handler and storage backend auto-discovery |

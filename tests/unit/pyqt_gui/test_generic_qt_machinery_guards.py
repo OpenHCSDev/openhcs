@@ -12,6 +12,7 @@ REPO = Path(__file__).resolve().parents[3]
 PRODUCT = REPO / "openhcs"
 PYQT_REACTIVE = REPO / "external" / "pyqt-reactive" / "src" / "pyqt_reactive"
 OBJECTSTATE = REPO / "external" / "ObjectState" / "src" / "objectstate"
+FORMBRIDGE = REPO / "external" / "formbridge" / "src" / "formbridge"
 
 MOVED_MODULES = (
     "core/path_cache.py",
@@ -103,7 +104,9 @@ def test_openhcs_defines_no_library_machinery() -> None:
     assert found == []
 
 
-@pytest.mark.parametrize("root", (PRODUCT, PYQT_REACTIVE, OBJECTSTATE), ids=lambda p: p.name)
+@pytest.mark.parametrize(
+    "root", (PRODUCT, PYQT_REACTIVE, FORMBRIDGE, OBJECTSTATE), ids=lambda p: p.name
+)
 def test_scope_ids_are_built_through_scope_key(root: Path) -> None:
     """No hand-written '::' scope grammar outside objectstate.scope_key."""
 
@@ -155,7 +158,11 @@ def test_library_families_are_classes_not_enums() -> None:
 def test_external_editor_switch_is_named_once() -> None:
     readers = sorted(
         str(path.relative_to(REPO))
-        for path in (*_python_files(PRODUCT), *_python_files(PYQT_REACTIVE))
+        for path in (
+            *_python_files(PRODUCT),
+            *_python_files(PYQT_REACTIVE),
+            *_python_files(FORMBRIDGE),
+        )
         if "OPENHCS_USE_EXTERNAL_EDITOR" in path.read_text(encoding="utf-8")
     )
     assert readers == ["openhcs/pyqt_gui/services/reactor_providers.py"]

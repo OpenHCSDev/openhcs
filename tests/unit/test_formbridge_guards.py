@@ -37,6 +37,7 @@ def reject_toolkit(name, globals=None, locals=None, fromlist=(), level=0):
     return original_import(name, globals, locals, fromlist, level)
 
 builtins.__import__ = reject_toolkit
+import openhcs  # a source checkout puts its external/ libraries on sys.path
 import formbridge
 for module in pkgutil.walk_packages(formbridge.__path__, "formbridge."):
     importlib.import_module(module.name)

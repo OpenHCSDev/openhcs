@@ -93,3 +93,10 @@ Merged with `main` at `44980dfe2` (E1, K2, K3, N1). Against the published MCP sn
 | Bridge error hints name bridge operations (`get_operation_status`, `navigate_window`, `get_document`) instead of OpenHCS tool names | `hint` text of bridge errors | no |
 
 A GUI and an MCP client from different sides of this change refuse each other at the protocol check.
+
+## After central verification
+
+- **formbridge is declared wherever the other first-party libraries are:** `.gitmodules`, `pyproject.toml`, the README library table, `scripts/validate_docs.py`, the docs workflow's validation targets, and the test rosters that scan first-party library sources (configuration consumer coverage, configuration mirror deletion, U3's generic-Qt guards, help projection, the desktop update worker's source path). `openhcs/_source_dependencies.py`, `install_ci_candidate` and `validate_local_release_floors` discover `external/*` and needed no entry. The headless guard's subprocess imports `openhcs` first, so it resolves formbridge through the source-checkout activation and passes without formbridge installed.
+- **Gallery:** the scenario id is derived from the bridge identity, so the published asset and its two records were renamed together (`ui-plate-manager` → `ui-datasets`, `window_id` `datasets`). It is a documentation asset, not an external URL contract.
+- **Config leaves:** the consumers of `agent_bridge.*`, `list_previews.*` and `performance_monitor.*` now live in formbridge; the coverage scan and the mirror-deletion scans follow them there (formbridge added beside pyqt-reactive, paths of the five moved files updated). No scope was removed.
+- **nra-r1:** the local run used `--budget-seconds 600`; CI uses 160. The job timed out (no finding): the base scan took 141 s on that runner and the head scan re-parses the two library trees this surface changes.

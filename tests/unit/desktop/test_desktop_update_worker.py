@@ -960,6 +960,7 @@ args.marker.write_text(
         "external/arraybridge/src",
         "external/pycodify/src",
         "external/PolyStore/src",
+        "external/formbridge/src",
         "external/pyqt-reactive/src",
         "external/zmqruntime/src",
     )

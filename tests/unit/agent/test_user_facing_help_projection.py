@@ -527,6 +527,7 @@ def test_help_projection_has_no_semantic_mirror_or_name_dispatch() -> None:
     production_roots = (
         REPOSITORY_ROOT / "openhcs",
         REPOSITORY_ROOT / "external/arraybridge/src",
+        REPOSITORY_ROOT / "external/formbridge/src",
         REPOSITORY_ROOT / "external/pyqt-reactive/src",
         REPOSITORY_ROOT / "external/python-introspect/src",
         REPOSITORY_ROOT / "scripts",
