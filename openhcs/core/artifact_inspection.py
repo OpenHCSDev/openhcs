@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
+
+from zmqruntime.messages import TypedWireMessage
 
 from openhcs.core.artifacts import ArtifactInputPlan, ArtifactOutputPlan, ArtifactSpec
 from openhcs.core.function_patterns import (
@@ -17,12 +18,6 @@ if TYPE_CHECKING:
     from openhcs.core.compiled_execution import CompiledExecutionBundle
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.function_patterns import CompiledFunctionInvocation
-
-
-class ArtifactInspectionControlMessageType(str, Enum):
-    """OpenHCS control message types owned by compiled artifact inspection."""
-
-    READ_COMPILED = "openhcs_artifact_read_compiled"
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,58 +134,16 @@ class CompiledArtifactInspection:
 
 
 @dataclass(frozen=True, slots=True)
-class CompiledArtifactInspectionRequest:
+class CompiledArtifactInspectionRequest(TypedWireMessage):
     """Control request for one retained compile artifact projection."""
+
+    wire_type: ClassVar[str] = "openhcs_artifact_read_compiled"
 
     compile_artifact_id: str
 
     def __post_init__(self) -> None:
         if not self.compile_artifact_id:
             raise ValueError("compile_artifact_id cannot be empty.")
-
-
-@dataclass(frozen=True, slots=True)
-class CompiledArtifactInspectionControlPayload:
-    """Wire payload for one compiled-artifact inspection request."""
-
-    compile_artifact_id: str
-    message_type: ArtifactInspectionControlMessageType = (
-        ArtifactInspectionControlMessageType.READ_COMPILED
-    )
-
-    @classmethod
-    def from_request(
-        cls,
-        request: CompiledArtifactInspectionRequest,
-    ) -> "CompiledArtifactInspectionControlPayload":
-        return cls(compile_artifact_id=request.compile_artifact_id)
-
-    @classmethod
-    def from_dict(
-        cls,
-        payload: Mapping[str, Any],
-    ) -> "CompiledArtifactInspectionControlPayload":
-        message_type = ArtifactInspectionControlMessageType(str(payload["type"]))
-        if message_type is not ArtifactInspectionControlMessageType.READ_COMPILED:
-            raise ValueError(
-                "Unsupported compiled artifact inspection control type: "
-                f"{message_type.value!r}."
-            )
-        return cls(
-            compile_artifact_id=str(payload["compile_artifact_id"]),
-            message_type=message_type,
-        )
-
-    def to_request(self) -> CompiledArtifactInspectionRequest:
-        return CompiledArtifactInspectionRequest(
-            compile_artifact_id=self.compile_artifact_id
-        )
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "type": self.message_type.value,
-            "compile_artifact_id": self.compile_artifact_id,
-        }
 
 
 @dataclass(frozen=True, slots=True)

@@ -142,9 +142,9 @@ class ZMQControlMessageRouter:
 class CompiledArtifactInspectionMessageStrategy(ZMQControlMessageStrategy):
     """Read the exact artifact plans retained by one compile artifact."""
 
-    from openhcs.core.artifact_inspection import ArtifactInspectionControlMessageType
+    from openhcs.core.artifact_inspection import CompiledArtifactInspectionRequest
 
-    registry_key = ArtifactInspectionControlMessageType.READ_COMPILED.value
+    registry_key = CompiledArtifactInspectionRequest.wire_type
 
     def handle(
         self,
@@ -153,14 +153,12 @@ class CompiledArtifactInspectionMessageStrategy(ZMQControlMessageStrategy):
     ) -> dict:
         from openhcs.core.artifact_inspection import (
             CompiledArtifactInspection,
-            CompiledArtifactInspectionControlPayload,
+            CompiledArtifactInspectionRequest,
             CompiledArtifactInspectionResponse,
         )
 
         try:
-            request = CompiledArtifactInspectionControlPayload.from_dict(
-                message
-            ).to_request()
+            request = CompiledArtifactInspectionRequest.from_dict(message)
             record = context.compiled_artifacts.get(request.compile_artifact_id)
             if record is None:
                 raise KeyError(

@@ -14,7 +14,6 @@ from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
 from openhcs.core.artifact_inspection import (
     CompiledArtifactInspection,
-    CompiledArtifactInspectionControlPayload,
     CompiledArtifactInspectionRequest,
     CompiledArtifactInspectionResponse,
 )
@@ -223,7 +222,7 @@ def test_registered_control_router_reads_retained_compile_artifact() -> None:
         compilation=ZMQCompilationResult(execution_bundle=bundle),
     )
     request = CompiledArtifactInspectionRequest("compile-1")
-    message = CompiledArtifactInspectionControlPayload.from_request(request).to_dict()
+    message = request.to_dict()
 
     response = ZMQControlMessageRouter.handle(
         message,

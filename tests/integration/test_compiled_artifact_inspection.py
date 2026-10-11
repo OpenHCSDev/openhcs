@@ -15,7 +15,6 @@ from zmqruntime.config import TransportMode
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
 from openhcs.core.artifact_inspection import (
-    CompiledArtifactInspectionControlPayload,
     CompiledArtifactInspectionRequest,
     CompiledArtifactInspectionResponse,
 )
@@ -217,9 +216,7 @@ def test_compiled_bundle_populates_static_view_then_runtime_enriches_same_row() 
         def get_compiled_artifact_inspection(self, execution_id):
             request = CompiledArtifactInspectionRequest(execution_id)
             response = ZMQControlMessageRouter.handle(
-                CompiledArtifactInspectionControlPayload.from_request(
-                    request
-                ).to_dict(),
+                request.to_dict(),
                 context,
             )
             return CompiledArtifactInspectionResponse.from_control_response(
