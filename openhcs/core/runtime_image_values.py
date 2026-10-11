@@ -1190,13 +1190,13 @@ class ImagePayloadMetadata(
         varying = self.source_provenance.varying_plane_component_values(
             AxisFamily.active().axes
         )
-        if varying:
+        fallback_scalar = fallback_provenance.source_component_metadata
+        if varying and fallback_scalar is not None:
+            # A source without scalar component metadata keeps declaring none.
             fallback_provenance = fallback_provenance.with_source_component_metadata(
                 {
                     key: value
-                    for key, value in (
-                        fallback_provenance.source_component_metadata or {}
-                    ).items()
+                    for key, value in fallback_scalar.items()
                     if key not in varying
                 }
             )

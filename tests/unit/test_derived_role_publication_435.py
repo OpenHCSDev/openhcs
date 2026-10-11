@@ -1,5 +1,6 @@
 """Issue435: real saved image occurrences projected through two existing owners."""
 
+from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.processing.materialization.options import NameByArtifactName, NameBySourceIdentity
 from dataclasses import asdict, replace
@@ -257,7 +258,14 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         destination = plan.output_dir / filename
         filemanager.save(payload, str(destination), Backend.MEMORY.value)
         filemanager.ensure_directory(plan.output_dir, Backend.DISK.value)
-        filemanager.save(payload.data, str(destination), Backend.DISK.value)
+        # Write the file as the runtime does: with the payload's declared TIFF axes.
+        ((_indices, tiff_config),) = ImageFileFormat.storage_write_batches(
+            (payload,), (destination,), None,
+        )
+        filemanager.save(
+            payload.data, str(destination), Backend.DISK.value,
+            **({} if tiff_config is None else {"tiff_config": tiff_config}),
+        )
         record_output_path(
             context, plan, str(destination), image_metadata=payload.metadata,
             output_context=AlignedImageSliceContext.main_flow(
@@ -340,9 +348,9 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         }
         provenance = metadata["source_provenance"]
         assert "z_index" not in provenance["source_component_metadata"]
-        assert [plane["component_metadata"]["z_index"] for plane in
-                provenance["source_image_provenance_planes"]] == ["0", "1", "2", "3"]
-        assert [plane["path"] for plane in provenance["source_image_provenance_planes"]] == [
+        planes = provenance["source_image_provenance_planes"]["identities"]
+        assert [plane["component_metadata"]["z_index"] for plane in planes] == ["0", "1", "2", "3"]
+        assert [plane["path"] for plane in planes] == [
             str(source_dir / f"A01_s001_w1_z{z_index:03d}_t001.tif") for z_index in range(4)
         ]
         assert metadata["source_spatial_domain"]["spatial_dimensions"] == 2

@@ -4,6 +4,7 @@ These source controls do not prove BioFormats discovery, compilation, native
 execution, saved CSV/ROI publication, an installed MCP journey, or biology.
 """
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.artifacts.kinds import (
     MeasurementsArtifactType,
@@ -66,7 +67,22 @@ def output_plan(declaration):
     )
 
 
-@pytest.mark.parametrize("indices", [(), (2, 0, 1), (2, 0), (1,)])
+def test_one_selected_plane_is_that_source_plane(source_volume):
+    """One selected plane consumes the stack axis and takes that plane's identity (#395)."""
+    selection = fixture.select_volume_fixture_planes_v2(source_volume, (1,))
+    projected = ImageArtifactType.contextualize_output(
+        source_volume, selection, output_plan(fixture.SELECTED_VOLUME),
+        RuntimePlaneAxisValueProjection.preserve(axis=RuntimeSlicePlaneAxis, axis_size=3),
+    )
+    np.testing.assert_array_equal(projected.data, source_volume.data[1])
+    assert projected.metadata.plane_axis is NoPlaneAxis
+    assert (
+        projected.metadata.source_provenance
+        == source_volume.metadata.for_leading_source_plane(1).source_provenance
+    )
+
+
+@pytest.mark.parametrize("indices", [(), (2, 0, 1), (2, 0)])
 def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volume, indices):
     original_pixels = source_volume.data
     selected_indices = indices or (0, 1, 2)
@@ -77,8 +93,6 @@ def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volum
     )
     expected = original_pixels[list(selected_indices)]
     source_metadata = source_volume.metadata
-    # for_source_planes intentionally consumes a singleton plane axis. This
-    # declaration instead returns a 3-D stack, including for one selected plane.
     expected_provenance = source_metadata.for_source_planes(selected_indices).source_provenance.with_source_image_provenance_planes(
         source_metadata.source_image_provenance_planes.select(selected_indices),
     )
