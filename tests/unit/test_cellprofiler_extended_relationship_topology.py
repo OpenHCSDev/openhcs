@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 
 from inspect import unwrap
@@ -29,7 +30,6 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.runtime_object_label_domains import (
-    ObjectLabelDomainScope,
     PresentObjectLabelIdsDomainDeclaration,
 )
 from openhcs.core.runtime_plane_projection import (
@@ -441,7 +441,7 @@ def _timepoint_labels(labels: np.ndarray) -> ObjectLabelPayload:
         variant_data=ObjectLabelVariantData(labels=labels),
         plane_axis=SourceBindingPlaneAxis,
         domain=PresentObjectLabelIdsDomainDeclaration(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             plane_projection=projection,
         ).declared_domain(None, labels),
     )

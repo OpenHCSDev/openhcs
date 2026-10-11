@@ -1,3 +1,4 @@
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from openhcs.core.artifacts.plans import ArtifactInputPlan, ArtifactOutputPlan
 from openhcs.core.artifacts.specs import ArtifactSpec, ArtifactSpecCollection
@@ -14,7 +15,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowValueField,
 )
 from openhcs.core.runtime_object_label_domains import (
-    ObjectLabelDomainScope,
     PresentObjectLabelIdsDomainDeclaration,
 )
 from openhcs.core.runtime_plane_projection import (
@@ -78,7 +78,7 @@ def _timepoint_labels(labels: np.ndarray, *, axis_size: int) -> ObjectLabelPaylo
         variant_data=ObjectLabelVariantData(labels=labels),
         plane_axis=SourceBindingPlaneAxis,
         domain=PresentObjectLabelIdsDomainDeclaration(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             plane_projection=projection,
         ).declared_domain(None, labels),
     )

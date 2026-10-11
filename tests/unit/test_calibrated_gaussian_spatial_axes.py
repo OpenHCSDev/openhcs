@@ -1,5 +1,6 @@
 """Gaussian consumes declared physical axes, not assembled payload rank."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
@@ -41,7 +42,7 @@ def _source(pixels, *, domain=None, spacing=(0.5, 0.75), channel_axis=None, coho
         source_voxel_spacing=SourceVoxelSpacing(values_zyx=spacing),
         source_spatial_domain=SourceSpatialDomain() if domain is None else domain,
         axes=PayloadAxes.colour_samples(channel_axis),
-        plane_axis=RuntimeSlicePlaneAxis if cohort else None,
+        plane_axis=RuntimeSlicePlaneAxis if cohort else NoPlaneAxis,
     )
     return metadata.payload_with(pixels, np.ones(pixels.shape, dtype=bool))
 

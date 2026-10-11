@@ -527,7 +527,7 @@ class DebugInvocationParameter:
             facts.extend(
                 (
                     f"representation={value.representation.value!r}",
-                    f"domain_scope={domain.scope.value!r}",
+                    f"domain_scope={domain.scope.name!r}",
                     f"declared_object_count={domain.declared_object_count!r}",
                     f"declared_object_id_count={len(domain.declared_object_ids)}",
                     "declared_object_plane_count="

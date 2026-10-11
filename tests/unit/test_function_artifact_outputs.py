@@ -1,3 +1,5 @@
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from collections.abc import Callable, Mapping
@@ -102,7 +104,6 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageProvenancePlanes,
@@ -1835,7 +1836,7 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -1866,10 +1867,10 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
     assert len(output) == 2
     assert all(isinstance(value, ObjectLabelSet) for value in output)
     assert [value.name for value in output] == ["SavedChildren"] * 2
-    assert [value.plane_axis for value in output] == [None, None]
+    assert [value.plane_axis for value in output] == [NoPlaneAxis, NoPlaneAxis]
     assert [value.domain.scope for value in output] == [
-        ObjectLabelDomainScope.PAYLOAD,
-        ObjectLabelDomainScope.PAYLOAD,
+        PayloadLabelScope,
+        PayloadLabelScope,
     ]
     assert [value.domain.declared_object_ids for value in output] == [
         (1,),

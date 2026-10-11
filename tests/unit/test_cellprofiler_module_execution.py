@@ -1,3 +1,5 @@
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import dataclass, replace
@@ -113,7 +115,6 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelRepresentation,
@@ -1015,7 +1016,7 @@ def test_special_object_label_input_preserves_runtime_slice_domain() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     guides_spec = ArtifactSpec.input(
@@ -1078,7 +1079,7 @@ def test_special_object_label_input_preserves_declared_singleton_label_planes() 
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     guides_spec = ArtifactSpec.input(
@@ -1150,7 +1151,7 @@ def test_special_object_label_input_preserves_projected_overlap_domains() -> Non
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (3, 4)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/site-1.tif", "/input/site-2.tif"),
@@ -1267,7 +1268,7 @@ def test_track_objects_special_input_binds_full_stack_labels_for_pure_3d() -> No
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     embryos_spec = ArtifactSpec.input(
@@ -1929,7 +1930,7 @@ def test_object_input_does_not_replace_preserved_canonical_main_flow_image() -> 
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     runtime = _FakeCellProfilerRuntime(
@@ -1975,7 +1976,7 @@ def test_object_input_does_not_replace_selected_canonical_main_flow_plane() -> N
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     runtime = _FakeCellProfilerRuntime(
@@ -2020,7 +2021,7 @@ def test_singleton_object_measurement_collapses_singleton_plane_context() -> Non
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     runtime = _FakeCellProfilerRuntime(
@@ -2113,7 +2114,7 @@ def test_special_object_label_payload_uses_runtime_plane_selection() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -2170,7 +2171,7 @@ def test_measurement_object_label_preparation_projects_runtime_slice_payload() -
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     measurement_image = CellProfilerMeasurementImage(
@@ -2237,7 +2238,7 @@ def test_relateobjects_special_inputs_project_object_labels_to_current_plane() -
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     input_specs = (
@@ -2296,7 +2297,7 @@ def test_relateobjects_special_inputs_leave_runtime_slice_index_to_executor() ->
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     input_specs = (
@@ -2362,7 +2363,7 @@ def test_relateobjects_special_inputs_project_source_binding_labels_to_current_p
         source_image_names=("Site1", "Site2"),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     input_specs = (
@@ -2429,7 +2430,7 @@ def test_relateobjects_runtime_slice_axis_leaves_slice_index_to_executor() -> No
         source_image_names=("Stain1",),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     input_specs = (
@@ -2486,7 +2487,7 @@ def test_relateobjects_scalar_source_name_does_not_create_source_axis() -> None:
         source_image_name="OrigStain1__OrigStain2",
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     input_specs = (
@@ -2546,7 +2547,7 @@ def test_track_objects_retained_image_uses_tracked_object_source_payload() -> No
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((), (), ()),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("gray0.tif", "gray1.tif", "gray2.tif"),
@@ -2682,7 +2683,7 @@ def test_contextual_object_label_output_applies_declared_payload_scope() -> None
         variant_data=ObjectLabelVariantData(labels=np.zeros((3, 4, 5), dtype=np.int32)),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((), (), ()),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -2691,13 +2692,13 @@ def test_contextual_object_label_output_applies_declared_payload_scope() -> None
     payload = contextual.with_variants(
         contextual.variant_data,
         domain=contextual.object_label_domain().with_scope(
-            ObjectLabelDomainScope.PAYLOAD
+            PayloadLabelScope
         ),
         plane_axis=NoPlaneAxis,
     )
 
     assert isinstance(payload, ObjectLabelPayload)
-    assert payload.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD
+    assert not payload.object_label_domain().scope.ids_per_plane
     assert payload.source_image_provenance_planes.paths == (
         "/input/A01_s001_w1_z001_t001.TIF",
         "/input/A01_s001_w1_z002_t001.TIF",
@@ -2717,7 +2718,7 @@ def test_object_label_output_source_preserves_matching_input_object_plane_contex
         variant_data=ObjectLabelVariantData(labels=np.zeros((2, 4, 5), dtype=np.int32)),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((), ()),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -3986,7 +3987,7 @@ def test_payload_scoped_object_measurement_completion_ignores_slice_axis() -> No
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
             declared_object_count=5,
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
         ),
     )
     rows = MeasurementSparseColumnarRows.from_rows(
@@ -4451,7 +4452,7 @@ def test_object_label_output_domain_scope_uses_declared_group_lineage() -> None:
         kwargs={},
     )
 
-    assert request.object_label_output_domain_scope() is ObjectLabelDomainScope.PAYLOAD
+    assert not request.object_label_output_domain_scope().ids_per_plane
 
 
 class _CalculateMathObjectOperandAdapter(_FakeCellProfilerRuntime):
@@ -4518,7 +4519,7 @@ class _CalculateMathObjectOperandAdapter(_FakeCellProfilerRuntime):
                     plane_axis=RuntimeSlicePlaneAxis,
                     domain=ObjectLabelDomain(
                         declared_object_id_domains=((1, 2), (1, 2)),
-                        scope=ObjectLabelDomainScope.PLANE,
+                        scope=PlaneLabelScope,
                     ),
                 ),
             },
@@ -4848,7 +4849,7 @@ def test_single_object_input_policy_preserves_native_label_contract() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     object_spec = ArtifactSpec.input(
@@ -4894,7 +4895,7 @@ def test_object_row_binding_projects_the_current_runtime_plane() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     object_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
@@ -4935,7 +4936,7 @@ def test_object_row_binding_projects_the_current_runtime_plane() -> None:
         pytest.param(
             RuntimePlaneProjection.selected(0, 1),
             (2, 2),
-            None,
+            NoPlaneAxis,
             False,
             id="explicit-selection",
         ),
@@ -4957,7 +4958,7 @@ def test_object_row_binding_honors_authoritative_singleton_runtime_projection(
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     object_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
@@ -5058,7 +5059,7 @@ def test_adapter_object_record_uses_nominal_full_stack_binding() -> None:
             plane_axis=RuntimeSlicePlaneAxis,
             domain=ObjectLabelDomain(
                 declared_object_id_domains=((1,),),
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
             ),
         ),
     )
@@ -5114,7 +5115,7 @@ def test_image_stack_requirement_does_not_control_scalar_object_input_projection
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     object_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
@@ -5156,7 +5157,7 @@ def test_image_stack_requirement_does_not_control_scalar_object_input_projection
 @pytest.mark.parametrize(
     ("slice_by_slice", "expected_shape", "expected_plane_axis"),
     (
-        (True, (2, 2), None),
+        (True, (2, 2), NoPlaneAxis),
         (False, (1, 2, 2), RuntimeSlicePlaneAxis),
     ),
 )
@@ -5175,7 +5176,7 @@ def test_match_image_stack_object_input_follows_declared_image_execution(
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     plane_projection = (
@@ -5231,7 +5232,7 @@ def test_pure_3d_executor_preserves_nominal_singleton_object_label_stack() -> No
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     seen_label_shape: list[tuple[int, ...]] = []
@@ -5277,7 +5278,7 @@ def test_object_row_binding_returns_current_runtime_plane_relationship() -> None
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     declaration = ObjectRelationshipDeclaration.parent_child(
@@ -5495,7 +5496,7 @@ def test_cellprofiler_contract_executor_preserves_inner_volume_dimensions():
         variant_data=ObjectLabelVariantData(labels=label_data),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((), (1,)),
         ),
     )
@@ -5541,7 +5542,7 @@ def test_cellprofiler_contract_executor_rejects_kwarg_only_runtime_axis():
         variant_data=ObjectLabelVariantData(labels=label_data),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((), (1,), (2,)),
         ),
     )
@@ -5597,7 +5598,7 @@ def test_cellprofiler_contract_executor_projects_declared_runtime_slice_label_kw
         variant_data=ObjectLabelVariantData(labels=label_data),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,), (3,)),
         ),
     )
@@ -5782,7 +5783,7 @@ def test_complete_object_measurement_rows_preserves_sliced_object_label_set_doma
         variant_data=ObjectLabelVariantData(labels=labels),
         source_image_name="BF_image",
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2, 3), (1, 2, 3)),
         ),
         plane_axis=RuntimeSlicePlaneAxis,
@@ -6055,7 +6056,7 @@ def test_measure_object_intensity_direct_slice_requires_projected_label_plane() 
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -6092,7 +6093,7 @@ def test_measure_object_size_shape_consumes_runtime_projected_label_plane() -> N
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -6151,7 +6152,7 @@ def test_complete_object_measurement_rows_uses_declared_slice_local_label_domain
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 3), (1, 2)),
         ),
         plane_axis=RuntimeSlicePlaneAxis,
@@ -6420,7 +6421,7 @@ def test_measure_texture_uses_exact_projected_plane_domain_for_missing_rows() ->
         source_image_names=("BF_image", "MorphBf"),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2, 3, 4, 5), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     projected_payload = RuntimeSliceProjection.value_for_slice(
@@ -6474,7 +6475,7 @@ def test_measure_object_intensity_missing_rows_use_declared_label_extent() -> No
             )
         ),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2, 3), (1, 2, 3)),
         ),
         plane_axis=RuntimeSlicePlaneAxis,
@@ -6704,7 +6705,7 @@ def test_object_only_measurement_preserves_runtime_slice_carrier_stack() -> None
                 plane_axis=RuntimeSlicePlaneAxis,
                 domain=ObjectLabelDomain(
                     declared_object_id_domains=((1,), (1,)),
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                 ),
             )
         },
@@ -6844,7 +6845,7 @@ def test_registered_object_photometry_retains_each_source_at_each_slice(aliases,
             source_image_names=(name,),
             source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
                 paths=paths, component_metadata=fields),
-            plane_axis=RuntimeSlicePlaneAxis if slice_count > 1 else None,
+            plane_axis=RuntimeSlicePlaneAxis if slice_count > 1 else NoPlaneAxis,
         )
         shape = (slice_count, 4, 5) if slice_count > 1 else (4, 5)
         images[name] = metadata.payload_with(np.full(shape, value, dtype=np.uint16))
@@ -6852,9 +6853,9 @@ def test_registered_object_photometry_retains_each_source_at_each_slice(aliases,
     labels = ObjectLabelSet(
         name="Cells",
         variant_data=ObjectLabelVariantData(labels=np.ones(label_shape, dtype=np.int32)),
-        plane_axis=RuntimeSlicePlaneAxis if slice_count > 1 else None,
+        plane_axis=RuntimeSlicePlaneAxis if slice_count > 1 else NoPlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE if slice_count > 1 else ObjectLabelDomainScope.PAYLOAD,
+            scope=PlaneLabelScope if slice_count > 1 else PayloadLabelScope,
             declared_object_id_domains=((1,),) * slice_count if slice_count > 1 else (),
             declared_object_count=None if slice_count > 1 else 1,
         ),
@@ -6935,7 +6936,7 @@ def test_object_intensity_measurement_image_batch_preserves_request_labels() -> 
         plane_axis=SourceBindingPlaneAxis,
         source_image_names=("ImageA", "ImageB"),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,)),
         ),
     )
@@ -6947,7 +6948,7 @@ def test_object_intensity_measurement_image_batch_preserves_request_labels() -> 
         plane_axis=SourceBindingPlaneAxis,
         source_image_names=("ImageA", "ImageB"),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10,), (20,)),
         ),
     )
@@ -6997,7 +6998,7 @@ def test_object_intensity_measurement_image_batch_preserves_request_labels() -> 
         ),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,)),
         ),
     )
@@ -7054,7 +7055,7 @@ def test_object_intensity_measurement_image_batch_delegates_natural_prepared_req
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2, 3)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     object_spec = ArtifactSpec.output("Cells", ObjectLabelsArtifactType)
@@ -7585,7 +7586,7 @@ def test_measure_object_size_shape_preserves_sparse_plane_storage() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -8170,7 +8171,7 @@ def test_pure_2d_declared_object_label_output_preserves_single_slice_axis() -> N
     )
 
     assert isinstance(aggregated, ObjectLabelPayload)
-    assert aggregated.domain.scope is ObjectLabelDomainScope.PLANE
+    assert aggregated.domain.scope.ids_per_plane
     np.testing.assert_array_equal(
         object_label_dense_array(aggregated),
         labels[np.newaxis, ...],
@@ -8226,7 +8227,7 @@ def test_full_stack_pure_2d_implicit_main_output_aligns_declared_object_labels()
     label_payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
             declared_object_ids=(1,),
         ),
     )
@@ -8262,7 +8263,7 @@ def test_full_stack_pure_2d_implicit_main_output_aligns_declared_object_labels()
     assert result_image is image
     assert result_measurements == {"count": 1}
     assert isinstance(result_labels, ObjectLabelPayload)
-    assert result_labels.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not result_labels.domain.scope.ids_per_plane
     np.testing.assert_array_equal(object_label_dense_array(result_labels), labels)
 
 
@@ -8272,7 +8273,7 @@ def test_full_stack_pure_2d_non_flow_main_keeps_relationship_output_alignment() 
         variant_data=ObjectLabelVariantData(
             labels=np.asarray(((0, 1), (0, 0)), dtype=np.int32)
         ),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
     )
     relationship = DirectedObjectRelationshipPayload(source_ids=(1,), target_ids=(1,))
     parent_spec = ArtifactSpec.input("Parent", ObjectLabelsArtifactType)
@@ -8336,7 +8337,7 @@ def test_full_stack_pure_2d_non_flow_main_keeps_relationship_output_alignment() 
     assert result_measurements == {"count": 1}
     assert result_relationship is relationship
     assert result_labels is labels
-    assert result_labels.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not result_labels.domain.scope.ids_per_plane
 
 
 def test_pure_2d_aggregation_uses_generic_columnar_row_owner() -> None:
@@ -8597,7 +8598,7 @@ def test_illumination_apply_image_output_uses_original_input_source_payload() ->
 @pytest.mark.parametrize(
     ("output_variable_components", "plane_projection", "expected_plane_axis"),
     (
-        ((), None, None),
+        ((), None, NoPlaneAxis),
         (
             (Microscopy.Channel,),
             RuntimePlaneAxisValueProjection.preserve(
@@ -8729,7 +8730,7 @@ def test_declared_output_source_uses_projected_object_input_value() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     output_plan = replace(
@@ -9041,7 +9042,7 @@ def test_cellprofiler_contract_executor_slices_aligned_runtime_kwargs():
         ),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (1,)),
         ),
     )
@@ -9487,8 +9488,8 @@ def test_measurement_images_preserve_runtime_slice_axis_across_source_aliases() 
 @pytest.mark.parametrize(
     ("incoming_axis", "mode", "expected_planes"),
     (
-        (None, RuntimeSlicePlaneAxis, 2),
-        (None, SourceBindingPlaneAxis, 1),
+        (NoPlaneAxis, RuntimeSlicePlaneAxis, 2),
+        (NoPlaneAxis, SourceBindingPlaneAxis, 1),
         (RuntimeSlicePlaneAxis, RuntimeSlicePlaneAxis, 2),
         (RuntimeSlicePlaneAxis, SourceBindingPlaneAxis, 1),
         (SourceBindingPlaneAxis, RuntimeSlicePlaneAxis, 1),
@@ -10584,7 +10585,7 @@ def test_pure_2d_object_label_payload_aggregation_expands_varying_crop_domains()
         (1, 2, 3),
         (1, 2, 3, 4, 5),
     )
-    assert aggregated.domain.scope is ObjectLabelDomainScope.PLANE
+    assert aggregated.domain.scope.ids_per_plane
     assert aggregated.spatial_origin_yx is None
     assert aggregated.source_spatial_shape_yx == (4, 5)
     assert aggregated.labels[0, 1, 2] == 1
@@ -10616,7 +10617,7 @@ def test_pure_2d_object_label_payload_aggregation_uses_declared_slice_domains():
 
     assert isinstance(aggregated, ObjectLabelPayload)
     assert aggregated.domain.declared_object_id_domains == ((1, 2), (3,))
-    assert aggregated.domain.scope is ObjectLabelDomainScope.PLANE
+    assert aggregated.domain.scope.ids_per_plane
 
 
 def test_pure_2d_object_label_payload_slice_projects_plane_domain() -> None:
@@ -10632,7 +10633,7 @@ def test_pure_2d_object_label_payload_slice_projects_plane_domain() -> None:
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (1, 2, 3, 4)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -10648,7 +10649,7 @@ def test_pure_2d_object_label_payload_slice_projects_plane_domain() -> None:
     assert sliced.labels.shape == (2, 2)
     assert sliced.domain.declared_object_ids == (1, 2, 3, 4)
     assert sliced.domain.declared_object_id_domains == ()
-    assert sliced.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not sliced.domain.scope.ids_per_plane
 
 
 def test_object_label_endpoint_uses_declared_runtime_slice_axis() -> None:
@@ -10664,7 +10665,7 @@ def test_object_label_endpoint_uses_declared_runtime_slice_axis() -> None:
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (3, 4)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -10711,7 +10712,7 @@ def test_object_label_endpoint_rejects_singleton_axis_cardinality_mismatch() -> 
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -10739,7 +10740,7 @@ def test_pure_2d_object_label_set_slice_projects_plane_domain() -> None:
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (1, 2, 3, 4)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -10755,7 +10756,7 @@ def test_pure_2d_object_label_set_slice_projects_plane_domain() -> None:
     assert sliced.labels.shape == (2, 2)
     assert sliced.domain.declared_object_ids == (1, 2)
     assert sliced.domain.declared_object_id_domains == ()
-    assert sliced.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not sliced.domain.scope.ids_per_plane
 
 
 def test_pure_2d_object_label_payload_slice_projects_grouped_plane_domains() -> None:
@@ -10765,7 +10766,7 @@ def test_pure_2d_object_label_payload_slice_projects_grouped_plane_domains() -> 
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2, 3), (4, 5, 6)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -10781,7 +10782,7 @@ def test_pure_2d_object_label_payload_slice_projects_grouped_plane_domains() -> 
     assert sliced.labels.shape == (3, 4, 5)
     assert sliced.domain.declared_object_ids == (4, 5, 6)
     assert sliced.domain.declared_object_id_domains == ()
-    assert sliced.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not sliced.domain.scope.ids_per_plane
 
 
 def test_grouped_object_label_planes_project_source_provenance_independently() -> None:
@@ -10791,7 +10792,7 @@ def test_grouped_object_label_planes_project_source_provenance_independently() -
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (3, 4)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -10821,7 +10822,7 @@ def test_runtime_slice_count_allows_grouped_object_label_planes() -> None:
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2, 3), (4, 5, 6)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -10829,7 +10830,7 @@ def test_runtime_slice_count_allows_grouped_object_label_planes() -> None:
         variant_data=ObjectLabelVariantData(labels=np.zeros((2, 4, 5), dtype=np.int32)),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2, 3), (4, 5, 6)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -10842,7 +10843,7 @@ def test_runtime_slice_count_uses_sequence_value_declarations() -> None:
         variant_data=ObjectLabelVariantData(labels=np.zeros((2, 4, 5), dtype=np.int32)),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -10850,7 +10851,7 @@ def test_runtime_slice_count_uses_sequence_value_declarations() -> None:
         variant_data=ObjectLabelVariantData(labels=np.zeros((2, 4, 5), dtype=np.int32)),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((3,), (4,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -10973,7 +10974,7 @@ def test_identify_tertiary_preserves_exact_runtime_projected_plane_domains():
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((), ()),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     secondary = ObjectLabelPayload(
@@ -10990,7 +10991,7 @@ def test_identify_tertiary_preserves_exact_runtime_projected_plane_domains():
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((2,), (5,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -11043,7 +11044,7 @@ def test_tertiary_projected_plane_keeps_dense_local_label_domain():
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((2,), (5,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     labels = np.asarray(((0, 0), (5, 0)), dtype=np.int32)
@@ -12086,7 +12087,7 @@ def test_object_only_module_uses_label_planes_instead_of_carrier_axis(
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (4,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -12436,7 +12437,7 @@ def test_classification_rows_include_unclassified_objects() -> None:
                     labels=np.array([[[1, 2], [3, 0]]], dtype=np.int32)
                 ),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1, 2, 3),),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -12781,7 +12782,7 @@ def test_filterobjects_binds_selection_measurement_values_to_label_slices(
                     )
                 ),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1, 2), (1, 2)),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -12799,7 +12800,7 @@ def test_filterobjects_binds_selection_measurement_values_to_label_slices(
                     )
                 ),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1,), (1,)),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -12916,7 +12917,7 @@ def test_area_occupied_rows_preserve_the_selected_domain(carrier_axis, binary_op
             variant_data=ObjectLabelVariantData(labels=labels),
             domain=ObjectLabelDomain(
                 declared_object_id_domains=((1,), (1,)),
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
             ),
             plane_axis=RuntimeSlicePlaneAxis,
         )
@@ -12985,7 +12986,7 @@ def test_relationship_measurements_preserve_pure_2d_slice_indices() -> None:
                 name="Parents",
                 variant_data=ObjectLabelVariantData(labels=parent_labels),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1,), (2,)),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -12994,7 +12995,7 @@ def test_relationship_measurements_preserve_pure_2d_slice_indices() -> None:
                 name="Children",
                 variant_data=ObjectLabelVariantData(labels=child_labels),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1,), (2,)),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -13087,7 +13088,7 @@ def test_relationship_rows_use_exact_compiled_endpoint_plane(
                 name="Parents",
                 variant_data=ObjectLabelVariantData(labels=parent_labels),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1,), (2,)),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -13096,7 +13097,7 @@ def test_relationship_rows_use_exact_compiled_endpoint_plane(
                 name="Children",
                 variant_data=ObjectLabelVariantData(labels=child_labels),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1,), (2,)),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -13232,7 +13233,7 @@ def test_relationship_rows_project_temporal_endpoints_to_their_declared_slices()
         name="Embryos",
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2), (1,)),
         ),
         plane_axis=RuntimeSlicePlaneAxis,
@@ -13345,7 +13346,7 @@ def test_relationship_measurements_reject_singleton_label_domain_broadcast() -> 
                 name="Parents",
                 variant_data=ObjectLabelVariantData(labels=parent_labels),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1,), (1,)),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -13354,7 +13355,7 @@ def test_relationship_measurements_reject_singleton_label_domain_broadcast() -> 
                 name="Children",
                 variant_data=ObjectLabelVariantData(labels=child_labels),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1,),),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -14143,7 +14144,7 @@ def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane(
     child_labels[1, 1:3, 1:3] = 1
     child_labels[1, 3:5, 3:5] = 2
     object_domain = ObjectLabelDomain(
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
         declared_object_id_domains=((1, 2), (1, 2)),
     )
     colocalization_feature = "Correlation_Correlation_First_Second"
@@ -14382,7 +14383,7 @@ def test_relateobjects_relationship_rows_project_distances_from_slice_measuremen
                 name="Parents",
                 variant_data=ObjectLabelVariantData(labels=parent_labels),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1,), (1,)),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -14391,7 +14392,7 @@ def test_relateobjects_relationship_rows_project_distances_from_slice_measuremen
                 name="Children",
                 variant_data=ObjectLabelVariantData(labels=child_labels),
                 domain=ObjectLabelDomain(
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                     declared_object_id_domains=((1,), (1,)),
                 ),
                 plane_axis=RuntimeSlicePlaneAxis,
@@ -14832,7 +14833,7 @@ def test_identify_objects_in_grid_location_rows_preserve_empty_grid_slots() -> N
                 name="Guides",
                 variant_data=ObjectLabelVariantData(labels=guide_labels),
                 domain=ObjectLabelDomain.declared(
-                    scope=ObjectLabelDomainScope.PAYLOAD,
+                    scope=PayloadLabelScope,
                     declared_object_ids=(2,),
                 ),
                 source_image_provenance_planes=(
@@ -14965,7 +14966,7 @@ def test_identify_objects_in_grid_location_rows_use_slice_aligned_grid() -> None
                 plane_axis=RuntimeSlicePlaneAxis,
                 domain=ObjectLabelDomain(
                     declared_object_id_domains=((2, 3), (2,)),
-                    scope=ObjectLabelDomainScope.PLANE,
+                    scope=PlaneLabelScope,
                 ),
                 source_image_provenance_planes=(
                     SourceImageProvenancePlanes.from_components(
@@ -15085,7 +15086,7 @@ def test_object_location_measurements_preserve_declared_empty_grid_cells() -> No
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2, 3), (1, 2, 3)),
         ),
         plane_axis=RuntimeSlicePlaneAxis,
@@ -15193,7 +15194,7 @@ def test_object_location_measurements_preserve_sparse_plane_storage() -> None:
         representation=ObjectLabelRepresentation.SPARSE_IJV,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (3,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -15239,7 +15240,7 @@ def test_object_location_measurements_use_payload_domain_for_full_stack_labels()
     rows = ObjectLocationMeasurementRows(
         payload,
         object_name="Nuclei",
-        domain_scope=ObjectLabelDomainScope.PAYLOAD,
+        domain_scope=PayloadLabelScope,
     ).rows()
 
     by_key = {
@@ -15268,7 +15269,7 @@ def test_object_location_measurements_preserve_declared_diagonal_planes() -> Non
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (1, 2)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -15302,7 +15303,7 @@ def test_object_location_measurements_preserve_repeated_homogeneous_planes() -> 
         variant_data=ObjectLabelVariantData(labels=np.stack((plane, plane), axis=0)),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (1, 2)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -15358,7 +15359,7 @@ def test_sparse_object_label_aggregation_preserves_declared_domain() -> None:
         (1, 2, 3, 4),
         (1, 2, 3, 4),
     )
-    assert aggregated.domain.scope is ObjectLabelDomainScope.PLANE
+    assert aggregated.domain.scope.ids_per_plane
     assert isinstance(aggregated.labels, SparseIJVLabelRows)
 
 
@@ -15674,7 +15675,7 @@ def test_measurement_domain_alignment_projects_declared_source_axis() -> None:
         variant_data=ObjectLabelVariantData(labels=label_planes),
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,)),
         ),
     )
@@ -15819,7 +15820,7 @@ def test_measurement_domain_alignment_projects_source_owned_object_labels() -> N
             )
         ),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,)),
         ),
     )
@@ -15862,7 +15863,7 @@ def test_prepared_measurement_labels_project_runtime_slice_payload_with_dense_la
         variant_data=ObjectLabelVariantData(labels=label_planes),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((3,), (7,)),
         ),
     )
@@ -15879,7 +15880,7 @@ def test_prepared_measurement_labels_project_runtime_slice_payload_with_dense_la
 
     assert isinstance(prepared.source_projected_payload, ObjectLabelPayload)
     assert (
-        prepared.source_projected_payload.domain.scope is ObjectLabelDomainScope.PAYLOAD
+        not prepared.source_projected_payload.domain.scope.ids_per_plane
     )
     assert (
         prepared.source_projected_payload.object_label_domain().declared_object_ids
@@ -15912,7 +15913,7 @@ def test_prepared_measurement_labels_reject_implicit_image_source_identity_proje
         variant_data=ObjectLabelVariantData(labels=label_planes),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((3,), (7,)),
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -15949,7 +15950,7 @@ def test_prepared_measurement_labels_reject_implicit_image_set_identity_projecti
         variant_data=ObjectLabelVariantData(labels=label_planes),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((3,), (7,)),
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -16011,7 +16012,7 @@ def test_measurement_label_alignment_preserves_runtime_slice_payload_for_aligned
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -16036,7 +16037,7 @@ def test_measurement_label_alignment_preserves_runtime_slice_payload_for_dense_s
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((9,), (9,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -16071,7 +16072,7 @@ def test_aligned_stack_kwargs_projects_runtime_slice_labels_to_reference_slice_d
         source_spatial_domain=SourceSpatialDomain(source_shape_yx=(4, 4)),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -16087,9 +16088,9 @@ def test_aligned_stack_kwargs_projects_runtime_slice_labels_to_reference_slice_d
         resolved["labels"].labels,
         np.full((2, 2), 2, dtype=np.int32),
     )
-    assert resolved["labels"].domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not resolved["labels"].domain.scope.ids_per_plane
     assert resolved["labels"].domain.declared_object_ids == (2,)
-    assert resolved["labels"not ].plane_axis.leads_data
+    assert not resolved["labels"].plane_axis.leads_data
     assert resolved["labels"].source_spatial_domain.origin_yx == (2, 0)
     assert resolved["labels"].source_spatial_domain.source_shape_yx == (4, 4)
 
@@ -16108,7 +16109,7 @@ def test_aligned_stack_kwargs_projects_runtime_slice_labels_without_source_metad
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -16124,9 +16125,9 @@ def test_aligned_stack_kwargs_projects_runtime_slice_labels_without_source_metad
         resolved["labels"].labels,
         np.full((4, 4), 2, dtype=np.int32),
     )
-    assert resolved["labels"].domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not resolved["labels"].domain.scope.ids_per_plane
     assert resolved["labels"].domain.declared_object_ids == (2,)
-    assert resolved["labels"not ].plane_axis.leads_data
+    assert not resolved["labels"].plane_axis.leads_data
 
 
 def test_measurement_labels_do_not_infer_broadcast_from_equal_planes() -> None:
@@ -16193,7 +16194,7 @@ def test_measurement_labels_select_source_named_plane_from_composed_image() -> N
         source_image_name="rawDNA",
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((3,), (7,)),
         ),
     )
@@ -16239,7 +16240,7 @@ def test_measurement_labels_select_current_source_binding_plane() -> None:
         source_image_name="rawDNA",
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,), (3,)),
         ),
     )
@@ -16288,7 +16289,7 @@ def test_measurement_labels_reject_source_binding_cardinality_mismatch() -> None
         source_image_name="rawFarRed",
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,)),
         ),
     )
@@ -16336,7 +16337,7 @@ def test_measurement_labels_select_measurement_source_binding_over_label_origin(
         source_image_name="rawDNA",
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((11,), (22,)),
         ),
     )
@@ -16426,7 +16427,7 @@ def test_measurement_labels_do_not_project_unowned_label_stack_by_source_alias()
         name="Cells",
         variant_data=ObjectLabelVariantData(labels=label_planes),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (2,), (3,)),
         ),
         plane_axis=RuntimeSlicePlaneAxis,
@@ -16473,7 +16474,7 @@ def test_measurement_labels_do_not_project_runtime_slice_label_stack_by_source_a
         source_image_name="BF_image",
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10,), (20,)),
         ),
     )
@@ -16526,7 +16527,7 @@ def test_measurement_labels_do_not_project_runtime_slice_stack_for_aligned_measu
         source_image_name="CropBlue",
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10,), (20,), (30,)),
         ),
     )
@@ -16579,7 +16580,7 @@ def test_measurement_labels_project_runtime_slice_stack_for_single_plane_source(
         source_image_name="BF_image",
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10,), (20,)),
         ),
     )
@@ -16624,7 +16625,7 @@ def test_measurement_labels_reject_runtime_stack_without_declared_axis_size() ->
         variant_data=ObjectLabelVariantData(labels=label_planes),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10,), (20,)),
         ),
     )
@@ -16654,7 +16655,7 @@ def test_measurement_labels_project_runtime_slice_stack_for_object_domain() -> N
         variant_data=ObjectLabelVariantData(labels=label_planes),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10,), (20,)),
         ),
     )
@@ -16690,7 +16691,7 @@ def test_measurement_labels_reject_runtime_slice_stack_without_projection() -> N
         variant_data=ObjectLabelVariantData(labels=label_planes),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10,), (20,)),
         ),
     )
@@ -16725,7 +16726,7 @@ def test_measurement_labels_project_runtime_slice_stack_for_unrelated_source_ima
         source_image_name="BF_image",
         source_image_names=("BF_image", "MorphBf"),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10,), (20,)),
         ),
     )
@@ -16762,7 +16763,7 @@ def test_measurement_labels_project_source_binding_stack_for_object_domain() -> 
         plane_axis=SourceBindingPlaneAxis,
         source_image_names=("BF_image", "MorphBf"),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10,), (20,)),
         ),
     )
@@ -16797,7 +16798,7 @@ def test_measurement_labels_project_repeated_source_binding_stack_for_object_dom
         plane_axis=SourceBindingPlaneAxis,
         source_image_names=("BF_image", "MorphBf"),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10,), (10,)),
         ),
     )
@@ -16835,7 +16836,7 @@ def test_measurement_labels_reject_undeclared_nested_runtime_stack_axis() -> Non
         plane_axis=RuntimeSlicePlaneAxis,
         source_image_names=("BF_image", "MorphBf"),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((10, 20), (10, 20)),
         ),
     )
@@ -16881,7 +16882,7 @@ def test_measurement_labels_preserve_payload_scoped_volume_for_source_binding() 
         variant_data=ObjectLabelVariantData(labels=label_volume),
         source_image_name="MembFinal",
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
         ),
     )
     measurement_image = CellProfilerMeasurementImage(
@@ -16961,7 +16962,7 @@ def test_runtime_object_label_payload_ignores_measurement_image_as_selector() ->
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     runtime = _FakeCellProfilerRuntime(
@@ -17015,7 +17016,7 @@ def test_full_stack_object_measurement_resolves_complete_label_artifact() -> Non
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     runtime = _FakeCellProfilerRuntime(
@@ -17992,7 +17993,7 @@ def test_object_measurement_execution_policy_uses_full_stack_for_source_bound_vo
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -18010,7 +18011,7 @@ def test_object_measurement_execution_policy_keeps_payload_domain_labels_full_st
     policy = FullStackLabels
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.zeros((3, 5, 5), dtype=np.int32)),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
     )
 
     mode = policy.image_execution_mode(
@@ -18026,7 +18027,7 @@ def test_slice_aligned_measurement_preserves_singleton_aligned_image_owner() -> 
     policy = SliceAlignedLabels
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=np.zeros((5, 5), dtype=np.int32)),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
     )
 
     mode = policy.image_execution_mode(
@@ -18047,7 +18048,7 @@ def test_object_measurement_execution_policy_keeps_declared_full_stack_for_plane
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((), (), ()),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -18123,7 +18124,7 @@ def test_convert_objects_to_image_contract_preserves_volume_label_payload() -> N
     labels[:, 1:4, 2:5] = 1
     label_payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
     )
 
     assert (
@@ -18183,7 +18184,7 @@ def test_convert_objects_to_image_uses_declared_label_source_for_runtime_plane_d
     )
     label_payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
         source_image_provenance_planes=_convert_objects_source_planes("2"),
         source_spatial_domain=label_spatial_domain,
     )
@@ -18230,7 +18231,7 @@ def test_object_label_image_output_rejects_source_plane_count_drift() -> None:
     labels = np.zeros((3, 5, 7), dtype=np.int32)
     label_payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
         source_image_provenance_planes=_convert_objects_source_planes("2"),
     )
     source_spec = ArtifactSpec.input("Nuclei", ObjectLabelsArtifactType)
@@ -18259,7 +18260,7 @@ def test_object_label_singleton_volume_output_declares_runtime_plane_axis() -> N
     labels = np.zeros((1, 5, 7), dtype=np.int32)
     label_payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
         source_image_provenance_planes=_convert_objects_source_planes("2", 1),
     )
     raw_result = convert_objects_to_image(
@@ -18291,7 +18292,7 @@ def test_object_label_scalar_image_output_does_not_invent_runtime_plane_axis() -
     labels = np.zeros((5, 7), dtype=np.int32)
     label_payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
         source_image_provenance_planes=_convert_objects_source_planes("2", 1),
     )
     raw_result = convert_objects_to_image(
@@ -18326,7 +18327,7 @@ def test_object_measurement_execution_policy_uses_full_stack_for_single_runtime_
     labels = ObjectLabelSet(
         name="Nuclei",
         variant_data=ObjectLabelVariantData(labels=np.zeros((3, 5, 5), dtype=np.int32)),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
     )
 
     mode = policy.image_execution_mode(
@@ -18349,7 +18350,7 @@ def test_measure_object_size_shape_payload_runtime_slice_stack_rows_are_per_slic
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -18381,7 +18382,7 @@ def test_measure_object_size_shape_rejects_projected_plane_with_stack_metadata()
             plane_axis=RuntimeSlicePlaneAxis,
             domain=ObjectLabelDomain(
                 declared_object_id_domains=((1,), (1,), (1,)),
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
             ),
         )
 
@@ -18400,7 +18401,7 @@ def test_measure_object_size_shape_rejects_mismatched_plane_metadata() -> None:
             plane_axis=RuntimeSlicePlaneAxis,
             domain=ObjectLabelDomain(
                 declared_object_id_domains=((1,), (1,), (1,), (1,)),
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
             ),
         )
 
@@ -18413,7 +18414,7 @@ def test_measure_object_size_shape_plane_scoped_singleton_uses_2d_schema() -> No
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -18445,7 +18446,7 @@ def test_measure_object_size_shape_preserves_declared_repeated_plane_domains() -
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -18471,7 +18472,7 @@ def test_measure_object_size_shape_payload_scoped_volume_rows_are_3d() -> None:
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
             declared_object_ids=(1,),
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
         ),
     )
     label_set = ObjectLabelSet(
@@ -18479,7 +18480,7 @@ def test_measure_object_size_shape_payload_scoped_volume_rows_are_3d() -> None:
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
             declared_object_ids=(1,),
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
         ),
     )
 
@@ -18520,7 +18521,7 @@ def test_measure_object_size_shape_plane_scoped_volume_rows_are_3d() -> None:
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -18712,7 +18713,7 @@ def test_natural_measurement_fallback_preserves_selected_main_flow_plane(monkeyp
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 3, 4), dtype=np.int32)),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (1,)),
         ),
     )

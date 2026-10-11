@@ -43,9 +43,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementRowValueField,
 )
-from openhcs.core.runtime_object_label_domains import (
-    ObjectLabelPlaneDomainStrategy,
-)
 from openhcs.core.runtime_slice_alignment import (
     RuntimeSliceAlignedValueSet,
     RuntimeSliceAlignedValues,
@@ -344,9 +341,7 @@ class CalculateMathInputPolicy(CellProfilerObjectInputPolicyMixin):
         if count_object_name is not None:
             labels = request.adapter.get_objects(count_object_name)
             domain = labels.object_label_domain()
-            object_id_domains = ObjectLabelPlaneDomainStrategy.for_enum_member(
-                domain.scope
-            ).plane_domains(
+            object_id_domains = domain.scope.plane_domains(
                 labels,
                 domain=domain,
             )

@@ -749,10 +749,9 @@ class DenseObjectRelationshipPayloadStrategy(ObjectRelationshipPayloadStrategy):
                 for labels in (context.parent_labels, context.child_labels)
             )
         )
-        if (
-            ObjectLabelDomainScope.common((domain.scope for domain in domains))
-            is not ObjectLabelDomainScope.PLANE
-        ):
+        if not ObjectLabelDomainScope.common(
+            domain.scope for domain in domains
+        ).ids_per_plane:
             return None
         plane_counts = tuple(
             labels.declared_plane_count()

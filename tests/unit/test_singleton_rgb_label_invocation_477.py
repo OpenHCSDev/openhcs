@@ -1,4 +1,5 @@
 """Scalar RGB invocations consume only an explicitly declared singleton root."""
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
@@ -7,7 +8,7 @@ from openhcs.core.artifacts.specs import ArtifactSpec
 from openhcs.core.artifacts.kinds import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
 from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData, object_label_dense_array
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
@@ -42,7 +43,7 @@ def _invocation_case(*, root_count=1, label_count=1):
     labels = ObjectLabelSet(
         name='Nuclei', variant_data=ObjectLabelVariantData(labels=label_data),
         plane_axis=RuntimeSlicePlaneAxis,
-        domain=ObjectLabelDomain(declared_object_id_domains=((1,),) * label_count, scope=ObjectLabelDomainScope.PLANE),
+        domain=ObjectLabelDomain(declared_object_id_domains=((1,),) * label_count, scope=PlaneLabelScope),
     )
     adapter = _FakeCellProfilerRuntime(
         {'GFPandDNA': image}, objects={'Nuclei': labels}, callable_contract=contract,
@@ -83,7 +84,7 @@ def test_match_image_labels_consume_declared_singleton_root_for_scalar_rgb():
     assert not selected.plane_axis.leads_data
     assert object_label_dense_array(selected).shape == (8, 9)
     output = _execute(case, invocation)
-    scalar_labels = ObjectLabelSet(name='Nuclei', variant_data=ObjectLabelVariantData(labels=labels_before[0]), domain=ObjectLabelDomain(declared_object_ids=(1,), scope=ObjectLabelDomainScope.PAYLOAD))
+    scalar_labels = ObjectLabelSet(name='Nuclei', variant_data=ObjectLabelVariantData(labels=labels_before[0]), domain=ObjectLabelDomain(declared_object_ids=(1,), scope=PayloadLabelScope))
     expected = raw(image, object_labels=(scalar_labels,), outline_colors=('#21FFFF',))
     np.testing.assert_array_equal(output.data, expected.data)
     np.testing.assert_array_equal(image.data, image_before)

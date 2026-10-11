@@ -1,3 +1,4 @@
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import json
@@ -71,7 +72,6 @@ from openhcs.core.runtime_object_label_building import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelRepresentation,
@@ -660,7 +660,7 @@ def _addressable_roi_label_payload(
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(first_path, second_path),
@@ -675,7 +675,7 @@ def _unaddressed_roi_label_payload():
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(None, None), component_metadata=(None, None)
@@ -889,7 +889,7 @@ def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
     labels[2, 1:4, 2:5] = 7
     payload = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=labels),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
         plane_axis=NoPlaneAxis,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/source/volume.ome.tif",) * 4,
@@ -911,7 +911,7 @@ def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
     metadata = ROIArchiveSourceMetadata.decode(rois)
     assert not payload.plane_axis.leads_data
     assert metadata.plane_axis is (
-        RuntimeSlicePlaneAxis if variable_components else None
+        RuntimeSlicePlaneAxis if variable_components else NoPlaneAxis
     )
     assert metadata.source_voxel_spacing.values_zyx == (2.0, 0.65, 0.65)
     domain = ROIArchiveSourceMetadata.source_component_domain(rois, metadata)
@@ -1204,7 +1204,7 @@ def test_tiff_stack_streaming_saves_per_slice_component_metadata() -> None:
         variant_data=ObjectLabelVariantData(labels=np.zeros((2, 5, 7), dtype=np.int32)),
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((), ()),
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -1615,7 +1615,7 @@ def test_roi_materialization_extracts_each_plane_from_object_label_stack() -> No
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -1661,7 +1661,7 @@ def test_roi_materialization_preserves_payload_scoped_volume_in_one_archive() ->
     )
 
     rois = fm.load(out, "memory")
-    assert payload.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD
+    assert not payload.object_label_domain().scope.ids_per_plane
     assert out == "/tmp/A01_Nuclei_step3_rois.roi.zip"
     assert [roi.metadata["label"] for roi in rois] == [1, 2]
     assert [roi.metadata["plane_indices"] for roi in rois] == [(0,), (1,)]
@@ -1743,7 +1743,7 @@ def test_roi_materialization_projects_singleton_object_label_stack() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             component_metadata=({"well": "A01", "site": 1, "channel": 1},),
@@ -1774,7 +1774,7 @@ def test_roi_streaming_preserves_singleton_projected_source_metadata() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s001_w1_z001_t001.tif",),
@@ -1817,7 +1817,7 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component(
             "well": "A01",
         },
     )
-    assert payload.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD
+    assert not payload.object_label_domain().scope.ids_per_plane
 
     materialize(
         MaterializationSpec(ROIOptions(min_area=0)),
@@ -1933,7 +1933,7 @@ def test_roi_materialization_splits_addressable_label_planes_for_streaming() -> 
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -1987,7 +1987,7 @@ def test_roi_materialization_replaces_parser_equivalent_reference_source_prefix(
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -2134,7 +2134,7 @@ def test_roi_streaming_applies_target_metadata_without_scalar_stream_metadata() 
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -2175,7 +2175,7 @@ def test_roi_materialization_coalesces_duplicate_stream_targets() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -2225,7 +2225,7 @@ def test_roi_materialization_coalesces_source_stack_archive_with_artifact_identi
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -2486,7 +2486,7 @@ def test_roi_materialization_spec_reports_projected_source_identities() -> None:
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(

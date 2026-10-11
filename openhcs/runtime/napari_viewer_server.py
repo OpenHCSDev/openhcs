@@ -85,7 +85,6 @@ from openhcs.runtime.viewer_display import (
     NapariDisplaySettings,
     NapariSlots,
 )
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )

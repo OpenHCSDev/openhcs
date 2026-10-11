@@ -216,9 +216,8 @@ class SliceAlignedLabels(ObjectLabelInputExecutionMode):
 
     @classmethod
     def image_execution_mode(cls, labels, default, *, runtime_slice_count=None):
-        from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 
-        if labels.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD:
+        if not labels.object_label_domain().scope.ids_per_plane:
             return default.for_payload_scoped_labels(runtime_slice_count)
         return default.for_plane_scoped_labels(labels.declared_plane_projection())
 

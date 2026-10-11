@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 import numpy as np
@@ -13,7 +14,6 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
     DenseObjectLabelConsecutiveRelabelingStrategy,
     DenseObjectLabelExtentDomainDeclaration,
     ObjectLabelIdDomainStrategy,
@@ -234,20 +234,20 @@ def test_aligned_dense_object_label_arrays_rejects_implicit_stack_projection() -
 def test_object_label_domain_project_slice_selects_declared_plane_domain() -> None:
     domain = ObjectLabelDomain(
         declared_object_id_domains=((1, 2), (1, 2, 3, 4)),
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
     )
 
     projected = domain.project_slice(slice_index=1, slice_count=2)
 
     assert projected.declared_object_ids == (1, 2, 3, 4)
     assert projected.declared_object_id_domains == ()
-    assert projected.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not projected.scope.ids_per_plane
 
 
 def test_object_label_domain_project_slice_rejects_single_domain_broadcast() -> None:
     domain = ObjectLabelDomain(
         declared_object_id_domains=((1, 2),),
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
     )
 
     with pytest.raises(ValueError, match="must match PURE_2D slice count"):
@@ -257,7 +257,7 @@ def test_object_label_domain_project_slice_rejects_single_domain_broadcast() -> 
 def test_object_label_domain_project_slice_rejects_grouped_plane_domains() -> None:
     domain = ObjectLabelDomain(
         declared_object_id_domains=((1,), (2,), (3,), (4,)),
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
     )
 
     with pytest.raises(ValueError, match="must match PURE_2D slice count"):
@@ -267,7 +267,7 @@ def test_object_label_domain_project_slice_rejects_grouped_plane_domains() -> No
 def test_object_label_domain_project_slice_rejects_repeated_plane_domains() -> None:
     domain = ObjectLabelDomain(
         declared_object_id_domains=((1,), (2,)),
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
     )
 
     with pytest.raises(ValueError, match="must match PURE_2D slice count"):
@@ -277,14 +277,14 @@ def test_object_label_domain_project_slice_rejects_repeated_plane_domains() -> N
 def test_object_label_domain_project_planes_selects_noncontiguous_domains() -> None:
     domain = ObjectLabelDomain(
         declared_object_id_domains=((1,), (2,), (3,), (4,)),
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
     )
 
     projected = domain.project_planes((1, 3))
 
     assert projected.declared_object_ids == ()
     assert projected.declared_object_id_domains == ((2,), (4,))
-    assert projected.scope is ObjectLabelDomainScope.PLANE
+    assert projected.scope.ids_per_plane
 
 
 def test_plane_domain_strategy_rejects_mismatched_single_output_plane() -> None:
@@ -295,7 +295,7 @@ def test_plane_domain_strategy_rejects_mismatched_single_output_plane() -> None:
             variant_data=ObjectLabelVariantData(labels=labels),
             plane_axis=RuntimeSlicePlaneAxis,
             domain=ObjectLabelDomain(
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
                 declared_object_id_domains=((1,), (2,), (3,)),
             ),
         )
@@ -304,7 +304,7 @@ def test_plane_domain_strategy_rejects_mismatched_single_output_plane() -> None:
 def test_object_label_domain_project_slice_rejects_mismatched_plane_domains() -> None:
     domain = ObjectLabelDomain(
         declared_object_id_domains=((1, 2), (1, 2, 3, 4)),
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
     )
 
     with pytest.raises(ValueError, match="must match PURE_2D slice count"):
@@ -503,7 +503,7 @@ def test_object_label_parent_child_payload_preserves_plane_scoped_stack_identity
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     child_stack = ObjectLabelPayload(
@@ -519,7 +519,7 @@ def test_object_label_parent_child_payload_preserves_plane_scoped_stack_identity
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -847,7 +847,7 @@ def test_dense_object_label_plane_id_domains_use_explicit_plane_declarations() -
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 3), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 
@@ -873,7 +873,7 @@ def test_dense_object_label_plane_id_domains_preserve_explicit_single_plane() ->
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 3),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 

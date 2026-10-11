@@ -847,9 +847,6 @@ from openhcs.core.runtime_measurements import (
     measurement_axis_integer_domain,
     measurement_axis_integer_value,
 )
-from openhcs.core.runtime_object_label_domains import (
-    ObjectLabelDomainScope,
-)
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_object_labels import (
     dense_label_centers_2d_numba,
@@ -1602,7 +1599,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
 
         plane_domains = core_rows.label_plane_domains()
         payload_scoped = (
-            child_labels.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD
+            not child_labels.object_label_domain().scope.ids_per_plane
         )
         for slice_index, _plane_domain in enumerate(plane_domains):
             object_numbers = self.object_numbers_by_label_id(

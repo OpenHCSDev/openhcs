@@ -1,3 +1,4 @@
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 import pytest
@@ -5,7 +6,6 @@ import pytest
 from openhcs.core.aligned_image_payload import AlignedImageStack
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
@@ -40,7 +40,7 @@ def test_object_label_runtime_axis_owns_exact_mask_plane_selection() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 

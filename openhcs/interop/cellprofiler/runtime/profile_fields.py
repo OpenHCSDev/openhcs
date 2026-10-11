@@ -116,7 +116,7 @@ def object_label_artifact_profile_fields(
         "declared_object_count": domain.declared_object_count,
         "declared_object_ids": len(domain.declared_object_ids),
         "declared_object_id_domains": len(domain.declared_object_id_domains),
-        "domain_scope": domain.scope.value,
+        "domain_scope": domain.scope.name,
         "plane_axis": value.plane_axis.name,
         "source_path": value.source_path,
         "source_component_metadata": source_component_metadata,

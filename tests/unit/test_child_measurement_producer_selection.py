@@ -1,5 +1,6 @@
 """Prior child measurements select their producer domain, not the child channel."""
 
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
@@ -321,7 +322,6 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
     )
     from openhcs.core.runtime_object_label_domains import (
         ObjectLabelDomain,
-        ObjectLabelDomainScope,
     )
     from openhcs.core.runtime_plane_projection import (
         RuntimePlaneProjection,
@@ -364,7 +364,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
             labels=np.array([[[1, 2], [0, 0]], [[1, 2], [0, 0]]], dtype=np.int32)
         ),
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1, 2), (1, 2)),
         ),
         plane_axis=RuntimeSlicePlaneAxis,

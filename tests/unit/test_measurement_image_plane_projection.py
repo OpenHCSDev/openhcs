@@ -1,3 +1,4 @@
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import numpy as np
 
@@ -14,7 +15,6 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.measurement_image_alignment import ObjectLabelsReference
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
@@ -49,7 +49,7 @@ def test_singleton_object_projection_consumes_measurement_image_plane_proof() ->
         ),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,),),
         ),
     )

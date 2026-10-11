@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 from dataclasses import dataclass
@@ -32,7 +33,6 @@ from openhcs.core.runtime_image_values import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -380,7 +380,7 @@ def test_pure_2d_contract_preserves_declared_source_binding_axis() -> None:
         source_image_names=source_aliases,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     seen_label_shapes: list[tuple[int, ...]] = []

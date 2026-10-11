@@ -38,7 +38,6 @@ from openhcs.core.runtime_measurements import (
     ObjectLabelMeasurementValues,
 )
 from openhcs.core.runtime_object_label_domains import (
-    ObjectLabelPlaneDomainStrategy,
     dense_object_label_id_domain,
 )
 from openhcs.core.runtime_plane_projection import (
@@ -291,9 +290,7 @@ class MeasurementLabelSliceAxisSelection:
         plane_projector: RuntimePlaneAxisProjector,
     ) -> "MeasurementLabelSliceAxisSelection":
         """Bind label-domain semantics to the invocation's exact runtime axis."""
-        domain_strategy = ObjectLabelPlaneDomainStrategy.for_enum_member(
-            labels.object_label_domain().scope
-        )
+        domain_strategy = labels.object_label_domain().scope
         projection = domain_strategy.measurement_projection(labels, plane_projector)
         return cls(
             row_axis=row_axis,
@@ -442,9 +439,7 @@ class MeasurementLabelSliceFeatureQuery(MeasurementTableFeatureQuery):
                 "Object-label measurement lookup requires ObjectLabelValue, got "
                 f"{type(labels).__name__}."
             )
-        domain_strategy = ObjectLabelPlaneDomainStrategy.for_enum_member(
-            labels.object_label_domain().scope
-        )
+        domain_strategy = labels.object_label_domain().scope
         return domain_strategy.measurement_planes(
             labels,
             domain_strategy.measurement_projection(labels, self.plane_projector),

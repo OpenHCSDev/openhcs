@@ -1,3 +1,4 @@
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import dataclass
 import inspect
@@ -22,7 +23,6 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -601,7 +601,7 @@ def test_runtime_slice_projection_projects_declared_object_label_plane() -> None
         variant_data=ObjectLabelVariantData(labels=label_planes),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((3,), (7,)),
         ),
     )
@@ -616,7 +616,7 @@ def test_runtime_slice_projection_projects_declared_object_label_plane() -> None
     )
 
     assert isinstance(projected, ObjectLabelSet)
-    assert projected.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not projected.domain.scope.ids_per_plane
     assert not projected.plane_axis.leads_data
     np.testing.assert_array_equal(projected.labels, label_planes[1])
 
@@ -748,7 +748,7 @@ def test_source_binding_projection_projects_object_labels_through_same_axis() ->
         source_image_names=("First", "Second"),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     projection = RuntimePlaneAxisValueProjection.preserve(
@@ -781,7 +781,7 @@ def test_source_identity_request_projects_explicit_source_binding_label_planes()
         source_image_names=("First", "Second"),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
 

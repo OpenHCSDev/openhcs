@@ -1,10 +1,10 @@
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import numpy as np
 import pytest
 
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
     PresentObjectLabelIdsDomainDeclaration,
 )
 from openhcs.core.runtime_object_labels import (
@@ -35,7 +35,7 @@ def test_payload_domain_replacement_drops_inherited_plane_axis() -> None:
         name="erodedDownsizedNuclei",
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (1, 2)),
         ),
         plane_axis=RuntimeSlicePlaneAxis,
@@ -48,7 +48,7 @@ def test_payload_domain_replacement_drops_inherited_plane_axis() -> None:
     )
 
     assert transformed.domain == ObjectLabelDomain.declared(
-        scope=ObjectLabelDomainScope.PAYLOAD,
+        scope=PayloadLabelScope,
         declared_object_ids=(1, 2),
     )
     assert not transformed.plane_axis.leads_data
@@ -66,7 +66,7 @@ def test_explicit_payload_domain_plane_axis_remains_invalid() -> None:
                 labels=np.zeros((2, 2, 2), dtype=np.int32)
             ),
             domain=ObjectLabelDomain.declared(
-                scope=ObjectLabelDomainScope.PAYLOAD,
+                scope=PayloadLabelScope,
                 declared_object_count=0,
             ),
             plane_axis=RuntimeSlicePlaneAxis,
@@ -91,7 +91,7 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
             source_image_names=("MembFinal",) * 3,
         ),
         domain=ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PAYLOAD,
+            scope=PayloadLabelScope,
             declared_object_count=0,
         ),
     )
@@ -135,7 +135,7 @@ def test_sparse_label_slice_projection_preserves_overlap_and_axis_domain(
         representation=ObjectLabelRepresentation.SPARSE_IJV,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2),) if plane_count == 1 else ((1, 2), (3,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=axis,
     )

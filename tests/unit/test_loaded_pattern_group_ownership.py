@@ -1,5 +1,7 @@
 """Loaded cohorts retain original input facts while plans and call images remain live."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import FrozenInstanceError, fields, replace
 import inspect
@@ -839,7 +841,7 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     np.testing.assert_array_equal(value.mask, np.ones(expected.shape, dtype=bool))
     assert value.metadata.source_provenance.has_values
     assert value.metadata.plane_axis is (
-        RuntimeSlicePlaneAxis if plane_index is None else None
+        RuntimeSlicePlaneAxis if plane_index is None else NoPlaneAxis
     )
 
     changed = replace(edge, main_flow_projection=None)
@@ -876,7 +878,7 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
     )
     from openhcs.core.callable_contract import ImagePayloadConsumption
     from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
-    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
     from openhcs.core.source_binding_selection import SourceUniverseRequest
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
 
@@ -902,7 +904,7 @@ def test_original_source_admission_retains_singleton_alignment_and_label_project
     labels = ObjectLabelSet(
         name="Objects", variant_data=ObjectLabelVariantData(labels=(pixels > 5)[None].astype(np.int32)),
         plane_axis=RuntimeSlicePlaneAxis,
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PLANE, declared_object_id_domains=((1,),)),
+        domain=ObjectLabelDomain(scope=PlaneLabelScope, declared_object_id_domains=((1,),)),
     )
     projected = aligned_image_stack_kwargs(
         {"object_labels": labels}, 0, 1, reference_payload=composition.payload.slices[0],

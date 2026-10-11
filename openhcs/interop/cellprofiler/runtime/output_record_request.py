@@ -1,6 +1,7 @@
 """Output-record request authority for CellProfiler runtime artifacts."""
 
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -279,13 +280,13 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
                 self.adapter.request.require_artifact_input_edge(source_ref)
             )).metadata
 
-    def object_label_output_domain_scope(self) -> ObjectLabelDomainScope | None:
+    def object_label_output_domain_scope(self) -> type[ObjectLabelDomainScope] | None:
         """Return the declared object-label output domain for this invocation."""
         if (
             self.spec.source_context_sources()
             and not self.spec.preserves_source_stack_scope()
         ):
-            return ObjectLabelDomainScope.PAYLOAD
+            return PayloadLabelScope
         return None
 
     def single_output_object_name(self) -> str:

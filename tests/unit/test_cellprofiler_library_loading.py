@@ -1,3 +1,4 @@
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import importlib
 from openhcs.interop.cellprofiler.object_label_variants import (
@@ -161,7 +162,6 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
@@ -703,7 +703,7 @@ def test_overlay_objects_preserves_payload_scoped_volume() -> None:
     label_data[1, 1:3, 2:4] = 1
     labels = ObjectLabelPayload(
         variant_data=ObjectLabelVariantData(labels=label_data),
-        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        domain=ObjectLabelDomain(scope=PayloadLabelScope),
     )
     raw_overlay_objects = overlay_objects
     while hasattr(raw_overlay_objects, "__wrapped__"):
@@ -2686,7 +2686,7 @@ def test_measure_texture_objects_rejects_unprojected_plane_domain_stack():
             )
         ),
         domain=ObjectLabelDomain(
-            declared_object_id_domains=((1,), (2,)), scope=ObjectLabelDomainScope.PLANE
+            declared_object_id_domains=((1,), (2,)), scope=PlaneLabelScope
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -2748,7 +2748,7 @@ def test_measure_texture_objects_preserves_runtime_projected_label_domain():
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (3, 4)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -4692,7 +4692,7 @@ def test_mask_image_rejects_unprojected_object_label_stack():
         variant_data=ObjectLabelVariantData(labels=mask),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -4714,7 +4714,7 @@ def test_relate_objects_rejects_mixed_object_label_domain_scopes():
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1, 2), (1, 2)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -4753,7 +4753,7 @@ def test_relate_objects_preserves_child_object_label_domain_metadata():
     )
     assert isinstance(output, ObjectLabelPayload)
     assert output.domain.declared_object_count == 4
-    assert output.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not output.domain.scope.ids_per_plane
     np.testing.assert_array_equal(output.labels, child_plane)
 
 
@@ -4766,7 +4766,7 @@ def test_relate_objects_uses_explicitly_projected_plane_identity():
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -4778,7 +4778,7 @@ def test_relate_objects_uses_explicitly_projected_plane_identity():
         ),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -5024,7 +5024,7 @@ def test_overlay_outlines_rejects_unprojected_object_label_stack():
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )
@@ -5046,7 +5046,7 @@ def test_overlay_outlines_renders_exact_projected_empty_label_plane():
         variant_data=ObjectLabelVariantData(labels=labels),
         domain=ObjectLabelDomain(
             declared_object_id_domains=((), ()),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         plane_axis=RuntimeSlicePlaneAxis,
     )

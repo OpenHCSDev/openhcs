@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 
 
@@ -15,7 +16,7 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
@@ -143,7 +144,7 @@ def test_object_label_count_is_checked_before_projection_and_spatial_alignment(m
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     monkeypatch.setattr(RuntimeSliceProjection, "value_for_slice", lambda *_args: pytest.fail("cardinality comes first"))

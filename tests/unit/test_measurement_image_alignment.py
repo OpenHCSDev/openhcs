@@ -1,3 +1,4 @@
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 from dataclasses import dataclass, replace
 
@@ -21,8 +22,6 @@ from openhcs.core.measurement_image_alignment import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
-    ObjectLabelPlaneDomainStrategy,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelRepresentation,
@@ -96,7 +95,7 @@ class _PlaneProjector(RuntimePlaneAxisProjector):
 
 def _plane_domain(*ids: tuple[int, ...]) -> ObjectLabelDomain:
     return ObjectLabelDomain.declared(
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
         declared_object_id_domains=ids,
     )
 
@@ -352,7 +351,7 @@ def test_object_reference_projects_declared_single_runtime_slice() -> None:
     )
 
     assert (
-        prepared.source_projected_payload.domain.scope is ObjectLabelDomainScope.PAYLOAD
+        not prepared.source_projected_payload.domain.scope.ids_per_plane
     )
     np.testing.assert_array_equal(
         prepared.measurement_labels,
@@ -409,7 +408,7 @@ def test_object_reference_projects_local_singleton_in_wider_runtime_scope() -> N
     )
 
     assert (
-        prepared.source_projected_payload.domain.scope is ObjectLabelDomainScope.PAYLOAD
+        not prepared.source_projected_payload.domain.scope.ids_per_plane
     )
     np.testing.assert_array_equal(
         prepared.measurement_labels,
@@ -549,9 +548,7 @@ def test_plane_domain_measurement_projection_preserves_sparse_storage() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=_plane_domain((1,), (2,)),
     )
-    strategy = ObjectLabelPlaneDomainStrategy.for_enum_member(
-        ObjectLabelDomainScope.PLANE
-    )
+    strategy = PlaneLabelScope
     projection = strategy.measurement_projection(
         labels,
         _PlaneProjector(runtime_count=2),

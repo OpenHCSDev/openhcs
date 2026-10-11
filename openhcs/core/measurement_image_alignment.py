@@ -21,7 +21,6 @@ from openhcs.core.runtime_object_labels import (
     object_label_project_plane,
 )
 from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileTimer
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.runtime_object_labels import ObjectLabelRepresentation
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
@@ -179,10 +178,7 @@ class MeasurementImageLabelAlignmentRequest:
         """Project labels only through their declared axis and runtime context."""
         if self.label_payload is None:
             return self
-        if (
-            self.label_payload.object_label_domain().scope
-            is not ObjectLabelDomainScope.PLANE
-        ):
+        if not self.label_payload.object_label_domain().scope.ids_per_plane:
             return self
         declared_projection = self.label_payload.declared_plane_projection()
         if declared_projection is None:
@@ -328,8 +324,7 @@ class MeasurementImageLabelAlignmentRequest:
         )
         if (
             label_payload is not None
-            and label_payload.object_label_domain().scope
-            is ObjectLabelDomainScope.PAYLOAD
+            and not label_payload.object_label_domain().scope.ids_per_plane
             and image_runtime_projection is not None
             and image_runtime_projection.axis_size == 1
         ):
@@ -371,10 +366,7 @@ class MeasurementImageLabelAlignmentRequest:
                 return request.image
             return label_payload.measurement_reference_image()
         domain = label_payload.object_label_domain()
-        if domain.scope is not ObjectLabelDomainScope.PAYLOAD and not (
-            domain.scope is ObjectLabelDomainScope.PLANE
-            and label_payload.plane_axis.leads_data
-        ):
+        if domain.scope.ids_per_plane and not label_payload.plane_axis.leads_data:
             raise ValueError(
                 "Object-label reference alignment has no behavior declared for "
                 f"scope={domain.scope!r}, plane_axis={label_payload.plane_axis!r}."

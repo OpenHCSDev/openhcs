@@ -16,9 +16,6 @@ from openhcs.core.runtime_tabular_values import (
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
 )
-from openhcs.core.runtime_object_label_domains import (
-    ObjectLabelDomainScope,
-)
 from openhcs.core.runtime_relationships import (
     DirectedObjectRelationshipPayload,
 )
@@ -493,7 +490,7 @@ class RelationshipMeasurementRows:
                 f"got {type(labels).__name__}."
             )
         domain = labels.object_label_domain()
-        if domain.scope is not ObjectLabelDomainScope.PAYLOAD:
+        if domain.scope.ids_per_plane:
             raise ValueError(
                 f"Relationship endpoint {spec.name!r} must be projected to one "
                 "payload-scoped object-ID domain before row materialization."

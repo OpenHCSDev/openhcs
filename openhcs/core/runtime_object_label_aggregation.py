@@ -1,6 +1,7 @@
 """Object-label reduction and PURE_2D slice aggregation."""
 
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from collections.abc import Sequence
@@ -20,7 +21,6 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
-    ObjectLabelPlaneDomainStrategy,
 )
 from openhcs.core.runtime_object_labels import (
     FinalLabels,
@@ -147,16 +147,14 @@ class ObjectLabelPure2DSliceAggregator:
     ) -> tuple[tuple[int, ...], ...]:
         """Return the object-id domain represented by one PURE_2D output slice."""
         domain = value.object_label_domain()
-        return ObjectLabelPlaneDomainStrategy.for_enum_member(
-            domain.scope
-        ).identity_domains(
+        return domain.scope.identity_domains(
             value,
             domain=domain,
         )
 
     @property
-    def domain_scope(self) -> ObjectLabelDomainScope:
-        return ObjectLabelDomainScope.PLANE
+    def domain_scope(self) -> type[ObjectLabelDomainScope]:
+        return PlaneLabelScope
 
     @property
     def domain(self) -> ObjectLabelDomain:

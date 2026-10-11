@@ -412,7 +412,7 @@ class CellProfilerObjectLocationMeasurementRows(ABC):
 
     label_payload: ObjectLabelValue
     object_name: str
-    domain_scope: ObjectLabelDomainScope | None = None
+    domain_scope: type[ObjectLabelDomainScope] | None = None
 
     @abstractmethod
     def coordinate_is_measured(
@@ -430,8 +430,8 @@ class CellProfilerObjectLocationMeasurementRows(ABC):
         if self.domain_scope is not None and self.domain_scope is not declared_scope:
             raise ValueError(
                 "ObjectLocationMeasurementRows domain_scope must match the "
-                f"object-label declaration; got {self.domain_scope.value!r}, "
-                f"expected {declared_scope.value!r}."
+                f"object-label declaration; got {self.domain_scope.name!r}, "
+                f"expected {declared_scope.name!r}."
             )
 
     def rows(self) -> MeasurementProjectedColumnarRows:
@@ -475,7 +475,7 @@ class CellProfilerObjectLocationMeasurementRows(ABC):
 
     def label_plane_domains(self) -> tuple[tuple[object, tuple[int, ...]], ...]:
         domain = self.label_payload.object_label_domain()
-        if domain.scope is ObjectLabelDomainScope.PAYLOAD:
+        if not domain.scope.ids_per_plane:
             object_ids = domain.explicit_id_domain()
             if object_ids is None:
                 raise ValueError(

@@ -1,3 +1,5 @@
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis, SourceBindingPlaneAxis
 import importlib
 import json
@@ -92,7 +94,6 @@ from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -707,7 +708,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     )
     assert runtime_value.data.domain == ObjectLabelDomain(
         declared_object_id_domains=((1,), (2,)),
-        scope=ObjectLabelDomainScope.PLANE,
+        scope=PlaneLabelScope,
     )
     assert runtime_value.data.plane_axis is RuntimeSlicePlaneAxis
     assert runtime_value.data.source_spatial_domain == SourceSpatialDomain(
@@ -1544,7 +1545,7 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),) * 4,
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=tuple(
@@ -2997,7 +2998,7 @@ def test_projected_artifact_uses_filename_identity_without_restoring_collapsed_s
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((), ()),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes(
             tuple(
@@ -3625,7 +3626,7 @@ def test_materialize_artifact_outputs_merges_parser_axes_into_source_metadata(
 
 @pytest.mark.parametrize(
     "domain_scope",
-    (ObjectLabelDomainScope.PLANE, ObjectLabelDomainScope.PAYLOAD),
+    (PlaneLabelScope, PayloadLabelScope),
 )
 def test_materialize_artifact_outputs_uses_variable_components_for_streaming_identity(
     monkeypatch,
@@ -3642,16 +3643,16 @@ def test_materialize_artifact_outputs_uses_variable_components_for_streaming_ide
         variant_data=ObjectLabelVariantData(labels=np.ones((2, 2, 2), dtype=np.int32)),
         plane_axis=(
             RuntimeSlicePlaneAxis
-            if domain_scope is ObjectLabelDomainScope.PLANE
-            else None
+            if domain_scope.ids_per_plane
+            else NoPlaneAxis
         ),
         domain=(
             ObjectLabelDomain(
                 declared_object_id_domains=((1,), (1,)),
-                scope=ObjectLabelDomainScope.PLANE,
+                scope=PlaneLabelScope,
             )
-            if domain_scope is ObjectLabelDomainScope.PLANE
-            else ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD)
+            if domain_scope.ids_per_plane
+            else ObjectLabelDomain(scope=PayloadLabelScope)
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(
@@ -3809,7 +3810,7 @@ def test_materialize_artifact_outputs_streams_source_binding_roi_plane_metadata(
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (1,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=(

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 from dataclasses import replace
@@ -45,7 +46,6 @@ from openhcs.core.runtime_object_label_building import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneProjection,
@@ -281,7 +281,7 @@ def test_straighten_worms_policy_consumes_declared_singleton_label_plane() -> No
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,),),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     request = _straighten_worms_binding_request(label_stack, plane_index=0)
@@ -294,7 +294,7 @@ def test_straighten_worms_policy_consumes_declared_singleton_label_plane() -> No
         np.array([[0, 1], [0, 0]], dtype=np.int32),
     )
     assert not projected_labels.plane_axis.leads_data
-    assert projected_labels.domain.scope is ObjectLabelDomainScope.PAYLOAD
+    assert not projected_labels.domain.scope.ids_per_plane
 
 
 def test_straighten_worms_callable_rejects_unselected_label_stack() -> None:
@@ -311,7 +311,7 @@ def test_straighten_worms_callable_rejects_unselected_label_stack() -> None:
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
             declared_object_id_domains=((1,), (2,)),
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
         ),
     )
     request = _straighten_worms_binding_request(

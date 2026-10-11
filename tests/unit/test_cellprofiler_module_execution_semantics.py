@@ -1,6 +1,7 @@
 """Focused regressions for declaration-owned CellProfiler execution semantics."""
 
 from __future__ import annotations
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 
 import ast
@@ -29,7 +30,6 @@ from openhcs.core.function_patterns import (
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
-    ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
@@ -250,7 +250,7 @@ def test_slice_aligned_object_measurement_consumes_declared_singleton_plane() ->
         ),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((7,),),
         ),
     )
@@ -260,7 +260,7 @@ def test_slice_aligned_object_measurement_consumes_declared_singleton_plane() ->
 
     assert isinstance(projected, ObjectLabelPayload)
     assert object_label_dense_array(projected).shape == (4, 5)
-    assert projected.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD
+    assert not projected.object_label_domain().scope.ids_per_plane
     assert projected.object_label_domain().declared_object_ids == (7,)
     assert not projected.plane_axis.leads_data
     assert (
@@ -279,7 +279,7 @@ def test_slice_aligned_object_measurement_rejects_full_stack_label_domain() -> N
         ),
         plane_axis=RuntimeSlicePlaneAxis,
         domain=ObjectLabelDomain(
-            scope=ObjectLabelDomainScope.PLANE,
+            scope=PlaneLabelScope,
             declared_object_id_domains=((1,), (1,)),
         ),
     )

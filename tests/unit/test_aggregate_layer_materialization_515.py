@@ -4,6 +4,7 @@ The renderer, disk TIFF writer and wire builder are real. Only the final viewer
 transport is intercepted; no viewer or native process is started.
 """
 
+from openhcs.core.runtime_object_label_domains import PlaneLabelScope
 from openhcs.core.runtime_plane_projection import SourceBindingPlaneAxis
 from dataclasses import replace
 
@@ -17,7 +18,7 @@ from openhcs.core.pipeline.artifact_planning import (
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
 from openhcs.core.runtime_object_labels import ObjectLabelPayload, ObjectLabelVariantData
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import (
@@ -93,7 +94,7 @@ def _source_bound_labels(component):
         variant_data=ObjectLabelVariantData(labels=pixels),
         plane_axis=SourceBindingPlaneAxis,
         domain=ObjectLabelDomain(
-            declared_object_id_domains=((1,), (2,)), scope=ObjectLabelDomainScope.PLANE,
+            declared_object_id_domains=((1,), (2,)), scope=PlaneLabelScope,
         ),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=paths, component_metadata=source_fields,

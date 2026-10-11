@@ -7,11 +7,9 @@ from abc import ABC
 from abc import abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
-from enum import Enum
 from metaclass_registry import AutoRegisterMeta
 from metaclass_registry import RegistryFamily
 from metaclass_registry import RegistryKeyAttribute
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
 from metaclass_registry.strategies import NominalTypeKeyedStrategyMixin
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisProjector
@@ -29,30 +27,516 @@ if TYPE_CHECKING:
 DeclaredObjectIds = tuple[int, ...] | list[int] | None
 
 
-class ObjectLabelDomainScope(str, Enum):
-    """How declared object-label IDs apply across dense label planes."""
+class ObjectLabelDomainScope(ABC, metaclass=AutoRegisterMeta):
+    """How declared object-label IDs apply across dense label planes.
 
-    PAYLOAD = "payload"
-    PLANE = "plane"
+    Each scope is a subclass, used as a class; ``name`` is its spelling in
+    profiles and error text. A scope owns how its labels project onto
+    measurement planes.
+    """
 
-    @classmethod
-    def common(cls, scopes: Any) -> "ObjectLabelDomainScope":
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[ObjectLabelDomainScope]]] = {}
+
+    name: ClassVar[str | None] = None
+    ids_per_plane: ClassVar[bool]
+    """Each label plane declares its own object IDs."""
+
+    @staticmethod
+    def require_member(value: object) -> type[ObjectLabelDomainScope]:
+        """Return ``value`` when it is an object-label domain scope."""
+        if isinstance(value, type) and issubclass(value, ObjectLabelDomainScope):
+            return value
+        raise ValueError(f"{value!r} is not an object-label domain scope.")
+
+    @staticmethod
+    def common(scopes: Any) -> type[ObjectLabelDomainScope]:
         """Return the one scope declared by every merged label value."""
-        unique_scopes = tuple(
-            dict.fromkeys(
-                (
-                    cls(
-                        scope,
-                    )
-                    for scope in scopes
-                )
-            )
-        )
+        unique_scopes = tuple(dict.fromkeys(scopes))
         if len(unique_scopes) == 1:
             return unique_scopes[0]
         raise ValueError(
             "Cannot merge object-label values with different domain scopes: "
             f"{unique_scopes!r}."
+        )
+
+    @classmethod
+    @abstractmethod
+    def validate_domain(cls, domain: ObjectLabelDomain) -> None:
+        """Reject declared IDs that do not fit this scope."""
+
+    @classmethod
+    @abstractmethod
+    def plane_domains(
+        cls,
+        labels: Any,
+        *,
+        domain: ObjectLabelDomain,
+    ) -> tuple[tuple[int, ...], ...]:
+        """Return the object-id domain attached to each dense measurement plane."""
+
+    @classmethod
+    def identity_domains(
+        cls,
+        labels: Any,
+        *,
+        domain: ObjectLabelDomain,
+    ) -> tuple[tuple[int, ...], ...]:
+        """Return object-id domains for identity rows represented by the payload."""
+        return cls.plane_domains(
+            labels,
+            domain=domain,
+        )
+
+    @classmethod
+    @abstractmethod
+    def measurement_object_row_identity(
+        cls,
+        declared_identity: MeasurementObjectRowIdentity,
+    ) -> MeasurementObjectRowIdentity:
+        """Return object-row identity after applying label-domain semantics."""
+
+    @classmethod
+    @abstractmethod
+    def present_domain(
+        cls,
+        labels: Any,
+        *,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> ObjectLabelDomain:
+        """Declare the material IDs produced in an already-selected domain scope."""
+
+    @classmethod
+    @abstractmethod
+    def measurement_projection(
+        cls,
+        labels: "ObjectLabelValue",
+        projector: RuntimePlaneAxisProjector,
+    ) -> RuntimePlaneAxisValueProjection:
+        """Resolve the runtime row projection represented by label semantics."""
+
+    @classmethod
+    @abstractmethod
+    def measurement_axis_values(
+        cls,
+        labels: "ObjectLabelValue",
+        projection: RuntimePlaneAxisValueProjection,
+    ) -> tuple[int, ...]:
+        """Return exact measurement-row axis values represented by labels."""
+
+    @classmethod
+    def required_measurement_axis_values(
+        cls,
+        labels: "ObjectLabelValue",
+        projection: RuntimePlaneAxisValueProjection,
+    ) -> tuple[int, ...]:
+        """Return row-axis values required by nonempty declared label planes."""
+
+        axis_values = cls.measurement_axis_values(labels, projection)
+        plane_domains = cls.plane_domains(
+            labels,
+            domain=labels.object_label_domain(),
+        )
+        if len(axis_values) != len(plane_domains):
+            raise ValueError(
+                "Object-label measurement axis and declared plane domains have "
+                f"different cardinalities: {len(axis_values)} != "
+                f"{len(plane_domains)}."
+            )
+        return tuple(
+            axis_value
+            for axis_value, object_ids in zip(
+                axis_values,
+                plane_domains,
+                strict=True,
+            )
+            if object_ids
+        )
+
+    @classmethod
+    @abstractmethod
+    def measurement_planes(
+        cls,
+        labels: "ObjectLabelValue",
+        projection: RuntimePlaneAxisValueProjection | None,
+    ) -> tuple["ObjectLabelValue", ...]:
+        """Return label values in the same order as measurement axis values."""
+
+    @classmethod
+    def declared_measurement_planes(
+        cls,
+        labels: "ObjectLabelValue",
+    ) -> tuple["ObjectLabelValue", ...]:
+        """Project labels through their own declared plane-domain semantics."""
+        return cls.measurement_planes(labels, cls.value_projection(labels))
+
+    @classmethod
+    def declared_measurement_axis_values(
+        cls,
+        labels: "ObjectLabelValue",
+    ) -> tuple[int, ...]:
+        """Return local row-axis values for every declared measurement plane."""
+        return tuple(range(len(cls.declared_measurement_planes(labels))))
+
+    @classmethod
+    @abstractmethod
+    def measurement_reference_source_provenance(
+        cls,
+        labels: "ObjectLabelValue",
+    ) -> "SourceImageProvenance":
+        """Return source lineage in this domain's image-reference topology."""
+
+    @classmethod
+    @abstractmethod
+    def value_plane_axis(
+        cls,
+        plane_axis: type[RuntimePlaneAxis],
+    ) -> type[RuntimePlaneAxis]:
+        """Return the plane axis valid for this declared domain scope."""
+
+    @classmethod
+    @abstractmethod
+    def value_projection(
+        cls,
+        labels: "ObjectLabelValue",
+    ) -> RuntimePlaneAxisValueProjection | None:
+        """Return the exact runtime plane projection declared by a label value."""
+
+
+class PayloadLabelScope(ObjectLabelDomainScope):
+    """Declared IDs describe one indivisible label value."""
+
+    name = "payload"
+    ids_per_plane = False
+
+    @classmethod
+    def validate_domain(cls, domain: ObjectLabelDomain) -> None:
+        if domain.declared_object_id_domains:
+            raise ValueError(
+                "Payload-scoped object-label domains cannot declare per-plane "
+                "object-ID domains."
+            )
+
+    @classmethod
+    def plane_domains(
+        cls,
+        labels: Any,
+        *,
+        domain: ObjectLabelDomain,
+    ) -> tuple[tuple[int, ...], ...]:
+        if domain.scope is not cls:
+            raise ValueError(
+                "Payload object-label domain strategy requires a payload-scoped "
+                f"declaration, got {domain.scope.name!r}."
+            )
+        if domain.declared_object_id_domains:
+            raise ValueError(
+                "Payload-scoped object labels cannot declare per-plane object-ID "
+                "domains."
+            )
+        object_ids = domain.require_explicit_id_domain(
+            context="Payload-scoped object labels"
+        )
+        return (object_ids,)
+
+    @classmethod
+    def measurement_object_row_identity(
+        cls,
+        declared_identity: MeasurementObjectRowIdentity,
+    ) -> MeasurementObjectRowIdentity:
+        """Keep the row identity declared for one indivisible payload."""
+        return declared_identity
+
+    @classmethod
+    def present_domain(
+        cls,
+        labels: Any,
+        *,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> ObjectLabelDomain:
+        if plane_projection is not None:
+            raise ValueError(
+                "Payload-scoped object-label declaration cannot consume a plane "
+                "projection."
+            )
+        object_ids = ObjectLabelIdDomainStrategy.for_value(labels).present_ids(labels)
+        return ObjectLabelDomain.declared(
+            scope=cls,
+            declared_object_count=0 if not object_ids else None,
+            declared_object_ids=object_ids,
+        )
+
+    @classmethod
+    def measurement_projection(
+        cls,
+        labels: "ObjectLabelValue",
+        projector: RuntimePlaneAxisProjector,
+    ) -> RuntimePlaneAxisValueProjection:
+        projection = RuntimePlaneAxisValueProjection.require_from_projector(
+            projector,
+            RuntimeSlicePlaneAxis,
+        )
+        if projection.plane_index is None and projection.axis_size != 1:
+            raise ValueError(
+                "Payload-scoped object-label measurement lookup requires one "
+                "selected runtime slice, but the invocation preserves "
+                f"{projection.axis_size} {projection.axis.name!r} plane(s)."
+            )
+        return projection
+
+    @classmethod
+    def measurement_axis_values(
+        cls,
+        labels: "ObjectLabelValue",
+        projection: RuntimePlaneAxisValueProjection,
+    ) -> tuple[int, ...]:
+        plane_index = projection.plane_index
+        return (0,) if plane_index is None else (plane_index,)
+
+    @classmethod
+    def required_measurement_axis_values(
+        cls,
+        labels: "ObjectLabelValue",
+        projection: RuntimePlaneAxisValueProjection,
+    ) -> tuple[int, ...]:
+        """Payload-scoped measurements need no per-plane row coordinate."""
+
+        del labels, projection
+        return ()
+
+    @classmethod
+    def measurement_planes(
+        cls,
+        labels: "ObjectLabelValue",
+        projection: RuntimePlaneAxisValueProjection | None,
+    ) -> tuple["ObjectLabelValue", ...]:
+        del projection
+        return (labels,)
+
+    @classmethod
+    def measurement_reference_source_provenance(
+        cls,
+        labels: "ObjectLabelValue",
+    ) -> "SourceImageProvenance":
+        """Keep volume planes as contributors to one payload-scoped image."""
+
+        return labels.source_provenance.with_runtime_planes_as_contributors()
+
+    @classmethod
+    def value_plane_axis(
+        cls,
+        plane_axis: type[RuntimePlaneAxis],
+    ) -> type[RuntimePlaneAxis]:
+        del plane_axis
+        return NoPlaneAxis
+
+    @classmethod
+    def value_projection(
+        cls,
+        labels: "ObjectLabelValue",
+    ) -> None:
+        del labels
+        return None
+
+
+class PlaneLabelScope(ObjectLabelDomainScope):
+    """Declared IDs map exactly to the declared label-plane stack."""
+
+    name = "plane"
+    ids_per_plane = True
+
+    @classmethod
+    def validate_domain(cls, domain: ObjectLabelDomain) -> None:
+        if not domain.declared_object_id_domains:
+            raise ValueError(
+                "Plane-scoped object-label domains require one explicit object-ID "
+                "domain per plane."
+            )
+        if domain.declared_object_count is not None or domain.declared_object_ids:
+            raise ValueError(
+                "Plane-scoped object-label domains cannot also declare a payload-wide "
+                "object count or object-ID domain."
+            )
+
+    @classmethod
+    def plane_domains(
+        cls,
+        labels: Any,
+        *,
+        domain: ObjectLabelDomain,
+    ) -> tuple[tuple[int, ...], ...]:
+
+        if domain.scope is not cls:
+            raise ValueError(
+                "Plane object-label domain strategy requires a plane-scoped "
+                f"declaration, got {domain.scope.name!r}."
+            )
+        if domain.declared_object_count is not None or domain.declared_object_ids:
+            raise ValueError(
+                "Plane-scoped object labels require per-plane object-ID domains, "
+                "not a payload-wide count or ID domain."
+            )
+        plane_count = labels.declared_plane_count()
+        if plane_count is None:
+            raise ValueError(
+                "Plane-scoped object labels require a nominal label-plane "
+                "representation."
+            )
+        if len(domain.declared_object_id_domains) != plane_count:
+            raise ValueError(
+                "Plane-scoped object-label domains must match the declared label "
+                f"plane count: {len(domain.declared_object_id_domains)} domains for "
+                f"{plane_count} planes."
+            )
+        return domain.declared_object_id_domains
+
+    @classmethod
+    def measurement_object_row_identity(
+        cls,
+        declared_identity: MeasurementObjectRowIdentity,
+    ) -> MeasurementObjectRowIdentity:
+        """Use labels within the runtime-slice/object identity product."""
+        del declared_identity
+        return MeasurementObjectRowIdentity.LABEL_ID
+
+    @classmethod
+    def present_domain(
+        cls,
+        labels: Any,
+        *,
+        plane_projection: RuntimePlaneAxisValueProjection | None,
+    ) -> ObjectLabelDomain:
+        from openhcs.core.runtime_object_labels import (
+            object_label_project_plane,
+            object_label_validate_plane_count,
+        )
+
+        if plane_projection is None:
+            raise ValueError(
+                "Plane-scoped object-label declaration requires an exact runtime "
+                "plane projection."
+            )
+        object_label_validate_plane_count(
+            labels,
+            plane_count=plane_projection.axis_size,
+            context="Object-label present-domain declaration",
+        )
+        return ObjectLabelDomain.declared(
+            scope=cls,
+            declared_object_id_domains=tuple(
+                ObjectLabelIdDomainStrategy.for_value(plane).present_ids(plane)
+                for plane in (
+                    object_label_project_plane(
+                        labels,
+                        index,
+                        plane_count=plane_projection.axis_size,
+                    )
+                    for index in range(plane_projection.axis_size)
+                )
+            ),
+        )
+
+    @classmethod
+    def measurement_projection(
+        cls,
+        labels: "ObjectLabelValue",
+        projector: RuntimePlaneAxisProjector,
+    ) -> RuntimePlaneAxisValueProjection:
+        return RuntimePlaneAxisValueProjection.require_from_projector(
+            projector,
+            cls.value_plane_axis(labels.plane_axis),
+            labels.source_aliases,
+        )
+
+    @classmethod
+    def measurement_axis_values(
+        cls,
+        labels: "ObjectLabelValue",
+        projection: RuntimePlaneAxisValueProjection,
+    ) -> tuple[int, ...]:
+        plane_index = projection.plane_index
+        if plane_index is not None:
+            return (plane_index,)
+        return tuple(range(projection.axis_size))
+
+    @classmethod
+    def measurement_planes(
+        cls,
+        labels: "ObjectLabelValue",
+        projection: RuntimePlaneAxisValueProjection | None,
+    ) -> tuple["ObjectLabelValue", ...]:
+        from openhcs.core.runtime_object_labels import (
+            object_label_project_plane,
+        )
+
+        if projection is None:
+            raise ValueError(
+                "Plane-scoped object-label measurement requires an exact runtime "
+                "plane projection."
+            )
+        plane_index = projection.plane_index
+        plane_count = labels.declared_plane_count()
+        if plane_index is not None:
+            if plane_count is not None:
+                raise ValueError(
+                    "Grouped plane-scoped object labels must already be projected "
+                    f"to one label value, but {type(labels).__name__} carries "
+                    f"{plane_count} planes."
+                )
+            return (labels,)
+        if plane_count is None:
+            raise ValueError(
+                "Stack-scoped plane object labels require an explicit label-plane "
+                "stack."
+            )
+        if plane_count != projection.axis_size:
+            raise ValueError(
+                "Plane-scoped object-label count must equal the declared runtime "
+                f"axis size: {plane_count} != {projection.axis_size}."
+            )
+        return tuple(
+            labels.with_projected_plane(
+                object_label_project_plane(
+                    labels.labels,
+                    index,
+                    plane_count=plane_count,
+                ),
+                index,
+            )
+            for index in range(projection.axis_size)
+        )
+
+    @classmethod
+    def measurement_reference_source_provenance(
+        cls,
+        labels: "ObjectLabelValue",
+    ) -> "SourceImageProvenance":
+        """Preserve the projectable source planes declared by plane scope."""
+
+        return labels.source_provenance
+
+    @classmethod
+    def value_plane_axis(
+        cls,
+        plane_axis: type[RuntimePlaneAxis],
+    ) -> type[RuntimePlaneAxis]:
+        if not plane_axis.leads_data:
+            raise ValueError(
+                "Plane-scoped object labels require a declared runtime plane axis."
+            )
+        return plane_axis
+
+    @classmethod
+    def value_projection(
+        cls,
+        labels: "ObjectLabelValue",
+    ) -> RuntimePlaneAxisValueProjection:
+        plane_axis = cls.value_plane_axis(labels.plane_axis)
+        return RuntimePlaneAxisValueProjection.preserve(
+            axis=plane_axis,
+            axis_size=len(labels.object_label_domain().declared_object_id_domains),
+            source_aliases=labels.source_aliases,
         )
 
 
@@ -63,7 +547,7 @@ class ObjectLabelDomain:
     declared_object_count: int | None = None
     declared_object_ids: tuple[int, ...] = ()
     declared_object_id_domains: tuple[tuple[int, ...], ...] = ()
-    scope: ObjectLabelDomainScope = ObjectLabelDomainScope.PAYLOAD
+    scope: type[ObjectLabelDomainScope] = PayloadLabelScope
 
     def __post_init__(self) -> None:
         if self.declared_object_count is not None:
@@ -88,30 +572,7 @@ class ObjectLabelDomain:
                 )
             ),
         )
-        object.__setattr__(
-            self,
-            "scope",
-            ObjectLabelDomainScope(
-                self.scope,
-            ),
-        )
-        if self.scope is ObjectLabelDomainScope.PAYLOAD:
-            if self.declared_object_id_domains:
-                raise ValueError(
-                    "Payload-scoped object-label domains cannot declare per-plane "
-                    "object-ID domains."
-                )
-            return
-        if not self.declared_object_id_domains:
-            raise ValueError(
-                "Plane-scoped object-label domains require one explicit object-ID "
-                "domain per plane."
-            )
-        if self.declared_object_count is not None or self.declared_object_ids:
-            raise ValueError(
-                "Plane-scoped object-label domains cannot also declare a payload-wide "
-                "object count or object-ID domain."
-            )
+        ObjectLabelDomainScope.require_member(self.scope).validate_domain(self)
 
     @staticmethod
     def _normalize_ids(
@@ -126,7 +587,7 @@ class ObjectLabelDomain:
     def declared(
         cls,
         *,
-        scope: ObjectLabelDomainScope = ObjectLabelDomainScope.PAYLOAD,
+        scope: type[ObjectLabelDomainScope] = PayloadLabelScope,
         declared_object_count: int | None = None,
         declared_object_ids: DeclaredObjectIds = (),
         declared_object_id_domains: tuple[tuple[int, ...], ...] = (),
@@ -159,14 +620,12 @@ class ObjectLabelDomain:
             )
         return object_ids
 
-    def with_scope(self, scope: ObjectLabelDomainScope) -> "ObjectLabelDomain":
+    def with_scope(self, scope: type[ObjectLabelDomainScope]) -> "ObjectLabelDomain":
         """Return this object-label declaration with the requested domain scope."""
-        normalized_scope = ObjectLabelDomainScope(
-            scope,
-        )
+        normalized_scope = ObjectLabelDomainScope.require_member(scope)
         if (
-            normalized_scope is ObjectLabelDomainScope.PAYLOAD
-            and self.scope is ObjectLabelDomainScope.PLANE
+            not normalized_scope.ids_per_plane
+            and self.scope.ids_per_plane
             and self.declared_object_id_domains
         ):
             declared_object_ids = tuple(
@@ -200,10 +659,10 @@ class ObjectLabelDomain:
             raise ValueError(
                 f"Object-label slice_index {normalized_index} is outside slice_count {normalized_count}."
             )
-        if self.scope is not ObjectLabelDomainScope.PLANE:
+        if not self.scope.ids_per_plane:
             raise ValueError(
                 "Runtime-slice projection requires a plane-scoped object-label "
-                f"domain, got {self.scope.value!r}."
+                f"domain, got {self.scope.name!r}."
             )
         if not self.declared_object_id_domains:
             raise ValueError(
@@ -219,7 +678,7 @@ class ObjectLabelDomain:
     def project_planes(self, plane_indices: Iterable[int]) -> "ObjectLabelDomain":
         """Return the object-label domain carried by selected plane indexes."""
         normalized_indices = tuple((int(index) for index in plane_indices))
-        if self.scope is not ObjectLabelDomainScope.PLANE:
+        if not self.scope.ids_per_plane:
             raise ValueError(
                 "Object-label plane projection requires a plane-scoped domain."
             )
@@ -245,12 +704,12 @@ class ObjectLabelDomain:
             )
         if len(domains) == 1:
             return ObjectLabelDomain.declared(
-                scope=ObjectLabelDomainScope.PAYLOAD,
+                scope=PayloadLabelScope,
                 declared_object_count=0 if not domains[0] else None,
                 declared_object_ids=domains[0],
             )
         return ObjectLabelDomain.declared(
-            scope=ObjectLabelDomainScope.PLANE, declared_object_id_domains=domains
+            scope=PlaneLabelScope, declared_object_id_domains=domains
         )
 
 
@@ -385,435 +844,6 @@ class DenseArrayObjectLabelIdDomainStrategy(ObjectLabelIdDomainStrategy):
 
     def present_ids(self, labels: Any) -> tuple[int, ...]:
         return self.positive_ids_from_array(labels)
-
-
-class ObjectLabelPlaneDomainStrategy(
-    EnumKeyedStrategyMixin[ObjectLabelDomainScope], ABC, metaclass=AutoRegisterMeta
-):
-    """Projection strategy from object-label domain metadata to measurement planes."""
-
-    __registry_family__ = RegistryFamily(RegistryKeyAttribute.STRATEGY_LABEL)
-    __enum_member_attr__ = "scope"
-    scope: ClassVar[ObjectLabelDomainScope]
-    strategy_label: ClassVar[str | None] = None
-
-    @abstractmethod
-    def plane_domains(
-        self,
-        labels: Any,
-        *,
-        domain: ObjectLabelDomain,
-    ) -> tuple[tuple[int, ...], ...]:
-        """Return the object-id domain attached to each dense measurement plane."""
-
-    def identity_domains(
-        self,
-        labels: Any,
-        *,
-        domain: ObjectLabelDomain,
-    ) -> tuple[tuple[int, ...], ...]:
-        """Return object-id domains for identity rows represented by the payload."""
-        return self.plane_domains(
-            labels,
-            domain=domain,
-        )
-
-    @abstractmethod
-    def measurement_object_row_identity(
-        self,
-        declared_identity: MeasurementObjectRowIdentity,
-    ) -> MeasurementObjectRowIdentity:
-        """Return object-row identity after applying label-domain semantics."""
-
-    @abstractmethod
-    def present_domain(
-        self,
-        labels: Any,
-        *,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> ObjectLabelDomain:
-        """Declare the material IDs produced in an already-selected domain scope."""
-
-    @abstractmethod
-    def measurement_projection(
-        self,
-        labels: "ObjectLabelValue",
-        projector: RuntimePlaneAxisProjector,
-    ) -> RuntimePlaneAxisValueProjection:
-        """Resolve the runtime row projection represented by label semantics."""
-
-    @abstractmethod
-    def measurement_axis_values(
-        self,
-        labels: "ObjectLabelValue",
-        projection: RuntimePlaneAxisValueProjection,
-    ) -> tuple[int, ...]:
-        """Return exact measurement-row axis values represented by labels."""
-
-    def required_measurement_axis_values(
-        self,
-        labels: "ObjectLabelValue",
-        projection: RuntimePlaneAxisValueProjection,
-    ) -> tuple[int, ...]:
-        """Return row-axis values required by nonempty declared label planes."""
-
-        axis_values = self.measurement_axis_values(labels, projection)
-        plane_domains = self.plane_domains(
-            labels,
-            domain=labels.object_label_domain(),
-        )
-        if len(axis_values) != len(plane_domains):
-            raise ValueError(
-                "Object-label measurement axis and declared plane domains have "
-                f"different cardinalities: {len(axis_values)} != "
-                f"{len(plane_domains)}."
-            )
-        return tuple(
-            axis_value
-            for axis_value, object_ids in zip(
-                axis_values,
-                plane_domains,
-                strict=True,
-            )
-            if object_ids
-        )
-
-    @abstractmethod
-    def measurement_planes(
-        self,
-        labels: "ObjectLabelValue",
-        projection: RuntimePlaneAxisValueProjection | None,
-    ) -> tuple["ObjectLabelValue", ...]:
-        """Return label values in the same order as measurement axis values."""
-
-    def declared_measurement_planes(
-        self,
-        labels: "ObjectLabelValue",
-    ) -> tuple["ObjectLabelValue", ...]:
-        """Project labels through their own declared plane-domain semantics."""
-        return self.measurement_planes(labels, self.value_projection(labels))
-
-    def declared_measurement_axis_values(
-        self,
-        labels: "ObjectLabelValue",
-    ) -> tuple[int, ...]:
-        """Return local row-axis values for every declared measurement plane."""
-        return tuple(range(len(self.declared_measurement_planes(labels))))
-
-    @abstractmethod
-    def measurement_reference_source_provenance(
-        self,
-        labels: "ObjectLabelValue",
-    ) -> "SourceImageProvenance":
-        """Return source lineage in this domain's image-reference topology."""
-
-    @abstractmethod
-    def value_plane_axis(
-        self,
-        plane_axis: type[RuntimePlaneAxis],
-    ) -> type[RuntimePlaneAxis]:
-        """Return the plane axis valid for this declared domain scope."""
-
-    @abstractmethod
-    def value_projection(
-        self,
-        labels: "ObjectLabelValue",
-    ) -> RuntimePlaneAxisValueProjection | None:
-        """Return the exact runtime plane projection declared by a label value."""
-
-
-class PayloadObjectLabelPlaneDomainStrategy(ObjectLabelPlaneDomainStrategy):
-    """Payload-scope declarations describe one indivisible label value."""
-
-    scope = ObjectLabelDomainScope.PAYLOAD
-
-    def plane_domains(
-        self,
-        labels: Any,
-        *,
-        domain: ObjectLabelDomain,
-    ) -> tuple[tuple[int, ...], ...]:
-        if domain.scope is not self.scope:
-            raise ValueError(
-                "Payload object-label domain strategy requires a payload-scoped "
-                f"declaration, got {domain.scope.value!r}."
-            )
-        if domain.declared_object_id_domains:
-            raise ValueError(
-                "Payload-scoped object labels cannot declare per-plane object-ID "
-                "domains."
-            )
-        object_ids = domain.require_explicit_id_domain(
-            context="Payload-scoped object labels"
-        )
-        return (object_ids,)
-
-    def measurement_object_row_identity(
-        self,
-        declared_identity: MeasurementObjectRowIdentity,
-    ) -> MeasurementObjectRowIdentity:
-        """Keep the row identity declared for one indivisible payload."""
-        return declared_identity
-
-    def present_domain(
-        self,
-        labels: Any,
-        *,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> ObjectLabelDomain:
-        if plane_projection is not None:
-            raise ValueError(
-                "Payload-scoped object-label declaration cannot consume a plane "
-                "projection."
-            )
-        object_ids = ObjectLabelIdDomainStrategy.for_value(labels).present_ids(labels)
-        return ObjectLabelDomain.declared(
-            scope=self.scope,
-            declared_object_count=0 if not object_ids else None,
-            declared_object_ids=object_ids,
-        )
-
-    def measurement_projection(
-        self,
-        labels: "ObjectLabelValue",
-        projector: RuntimePlaneAxisProjector,
-    ) -> RuntimePlaneAxisValueProjection:
-        projection = RuntimePlaneAxisValueProjection.require_from_projector(
-            projector,
-            RuntimeSlicePlaneAxis,
-        )
-        if projection.plane_index is None and projection.axis_size != 1:
-            raise ValueError(
-                "Payload-scoped object-label measurement lookup requires one "
-                "selected runtime slice, but the invocation preserves "
-                f"{projection.axis_size} {projection.axis.name!r} plane(s)."
-            )
-        return projection
-
-    def measurement_axis_values(
-        self,
-        labels: "ObjectLabelValue",
-        projection: RuntimePlaneAxisValueProjection,
-    ) -> tuple[int, ...]:
-        plane_index = projection.plane_index
-        return (0,) if plane_index is None else (plane_index,)
-
-    def required_measurement_axis_values(
-        self,
-        labels: "ObjectLabelValue",
-        projection: RuntimePlaneAxisValueProjection,
-    ) -> tuple[int, ...]:
-        """Payload-scoped measurements need no per-plane row coordinate."""
-
-        del labels, projection
-        return ()
-
-    def measurement_planes(
-        self,
-        labels: "ObjectLabelValue",
-        projection: RuntimePlaneAxisValueProjection | None,
-    ) -> tuple["ObjectLabelValue", ...]:
-        del projection
-        return (labels,)
-
-    def measurement_reference_source_provenance(
-        self,
-        labels: "ObjectLabelValue",
-    ) -> "SourceImageProvenance":
-        """Keep volume planes as contributors to one payload-scoped image."""
-
-        return labels.source_provenance.with_runtime_planes_as_contributors()
-
-    def value_plane_axis(
-        self,
-        plane_axis: type[RuntimePlaneAxis],
-    ) -> type[RuntimePlaneAxis]:
-        del plane_axis
-        return NoPlaneAxis
-
-    def value_projection(
-        self,
-        labels: "ObjectLabelValue",
-    ) -> None:
-        del labels
-        return None
-
-
-class PlaneObjectLabelPlaneDomainStrategy(ObjectLabelPlaneDomainStrategy):
-    """Plane-scope declarations map exactly to the declared label-plane stack."""
-
-    scope = ObjectLabelDomainScope.PLANE
-
-    def plane_domains(
-        self,
-        labels: Any,
-        *,
-        domain: ObjectLabelDomain,
-    ) -> tuple[tuple[int, ...], ...]:
-
-        if domain.scope is not self.scope:
-            raise ValueError(
-                "Plane object-label domain strategy requires a plane-scoped "
-                f"declaration, got {domain.scope.value!r}."
-            )
-        if domain.declared_object_count is not None or domain.declared_object_ids:
-            raise ValueError(
-                "Plane-scoped object labels require per-plane object-ID domains, "
-                "not a payload-wide count or ID domain."
-            )
-        plane_count = labels.declared_plane_count()
-        if plane_count is None:
-            raise ValueError(
-                "Plane-scoped object labels require a nominal label-plane "
-                "representation."
-            )
-        if len(domain.declared_object_id_domains) != plane_count:
-            raise ValueError(
-                "Plane-scoped object-label domains must match the declared label "
-                f"plane count: {len(domain.declared_object_id_domains)} domains for "
-                f"{plane_count} planes."
-            )
-        return domain.declared_object_id_domains
-
-    def measurement_object_row_identity(
-        self,
-        declared_identity: MeasurementObjectRowIdentity,
-    ) -> MeasurementObjectRowIdentity:
-        """Use labels within the runtime-slice/object identity product."""
-        del declared_identity
-        return MeasurementObjectRowIdentity.LABEL_ID
-
-    def present_domain(
-        self,
-        labels: Any,
-        *,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> ObjectLabelDomain:
-        from openhcs.core.runtime_object_labels import (
-            object_label_project_plane,
-            object_label_validate_plane_count,
-        )
-
-        if plane_projection is None:
-            raise ValueError(
-                "Plane-scoped object-label declaration requires an exact runtime "
-                "plane projection."
-            )
-        object_label_validate_plane_count(
-            labels,
-            plane_count=plane_projection.axis_size,
-            context="Object-label present-domain declaration",
-        )
-        return ObjectLabelDomain.declared(
-            scope=self.scope,
-            declared_object_id_domains=tuple(
-                ObjectLabelIdDomainStrategy.for_value(plane).present_ids(plane)
-                for plane in (
-                    object_label_project_plane(
-                        labels,
-                        index,
-                        plane_count=plane_projection.axis_size,
-                    )
-                    for index in range(plane_projection.axis_size)
-                )
-            ),
-        )
-
-    def measurement_projection(
-        self,
-        labels: "ObjectLabelValue",
-        projector: RuntimePlaneAxisProjector,
-    ) -> RuntimePlaneAxisValueProjection:
-        return RuntimePlaneAxisValueProjection.require_from_projector(
-            projector,
-            self.value_plane_axis(labels.plane_axis),
-            labels.source_aliases,
-        )
-
-    def measurement_axis_values(
-        self,
-        labels: "ObjectLabelValue",
-        projection: RuntimePlaneAxisValueProjection,
-    ) -> tuple[int, ...]:
-        plane_index = projection.plane_index
-        if plane_index is not None:
-            return (plane_index,)
-        return tuple(range(projection.axis_size))
-
-    def measurement_planes(
-        self,
-        labels: "ObjectLabelValue",
-        projection: RuntimePlaneAxisValueProjection | None,
-    ) -> tuple["ObjectLabelValue", ...]:
-        from openhcs.core.runtime_object_labels import (
-            object_label_project_plane,
-        )
-
-        if projection is None:
-            raise ValueError(
-                "Plane-scoped object-label measurement requires an exact runtime "
-                "plane projection."
-            )
-        plane_index = projection.plane_index
-        plane_count = labels.declared_plane_count()
-        if plane_index is not None:
-            if plane_count is not None:
-                raise ValueError(
-                    "Grouped plane-scoped object labels must already be projected "
-                    f"to one label value, but {type(labels).__name__} carries "
-                    f"{plane_count} planes."
-                )
-            return (labels,)
-        if plane_count is None:
-            raise ValueError(
-                "Stack-scoped plane object labels require an explicit label-plane "
-                "stack."
-            )
-        if plane_count != projection.axis_size:
-            raise ValueError(
-                "Plane-scoped object-label count must equal the declared runtime "
-                f"axis size: {plane_count} != {projection.axis_size}."
-            )
-        return tuple(
-            labels.with_projected_plane(
-                object_label_project_plane(
-                    labels.labels,
-                    index,
-                    plane_count=plane_count,
-                ),
-                index,
-            )
-            for index in range(projection.axis_size)
-        )
-
-    def measurement_reference_source_provenance(
-        self,
-        labels: "ObjectLabelValue",
-    ) -> "SourceImageProvenance":
-        """Preserve the projectable source planes declared by plane scope."""
-
-        return labels.source_provenance
-
-    def value_plane_axis(
-        self,
-        plane_axis: type[RuntimePlaneAxis],
-    ) -> type[RuntimePlaneAxis]:
-        if not plane_axis.leads_data:
-            raise ValueError(
-                "Plane-scoped object labels require a declared runtime plane axis."
-            )
-        return plane_axis
-
-    def value_projection(
-        self,
-        labels: "ObjectLabelValue",
-    ) -> RuntimePlaneAxisValueProjection:
-        plane_axis = self.value_plane_axis(labels.plane_axis)
-        return RuntimePlaneAxisValueProjection.preserve(
-            axis=plane_axis,
-            axis_size=len(labels.object_label_domain().declared_object_id_domains),
-            source_aliases=labels.source_aliases,
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -994,14 +1024,12 @@ class PreserveSourceObjectLabelDomainDeclaration(ObjectLabelDomainDeclaration):
 class PresentObjectLabelIdsDomainDeclaration(ObjectLabelDomainDeclaration):
     """Declare only object IDs materially present in transformed labels."""
 
-    scope: ObjectLabelDomainScope = ObjectLabelDomainScope.PAYLOAD
+    scope: type[ObjectLabelDomainScope] = PayloadLabelScope
     plane_projection: RuntimePlaneAxisValueProjection | None = None
 
     def declared_domain(self, source: Any, labels: Any) -> ObjectLabelDomain:
         del source
-        return ObjectLabelPlaneDomainStrategy.for_enum_member(
-            self.scope
-        ).present_domain(
+        return self.scope.present_domain(
             labels,
             plane_projection=self.plane_projection,
         )
@@ -1027,9 +1055,7 @@ def dense_object_label_plane_id_domains(
     payload_domain = ObjectLabelDomainMetadataStrategy.for_value(
         labels
     ).object_label_domain(labels)
-    return ObjectLabelPlaneDomainStrategy.for_enum_member(
-        payload_domain.scope
-    ).plane_domains(
+    return payload_domain.scope.plane_domains(
         labels,
         domain=payload_domain,
     )
@@ -1042,9 +1068,7 @@ def dense_object_label_identity_domains(
     payload_domain = ObjectLabelDomainMetadataStrategy.for_value(
         labels
     ).object_label_domain(labels)
-    return ObjectLabelPlaneDomainStrategy.for_enum_member(
-        payload_domain.scope
-    ).identity_domains(
+    return payload_domain.scope.identity_domains(
         labels,
         domain=payload_domain,
     )

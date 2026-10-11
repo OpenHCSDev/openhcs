@@ -1,5 +1,6 @@
 """Execute the canonical public usage code, rather than a copied example."""
 
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import NoPlaneAxis
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 import re
@@ -35,7 +36,6 @@ from openhcs.core.invocation_artifacts import (
     PIPELINE_INPUT_ARTIFACT,
 )
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelValue,
@@ -476,13 +476,13 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
     assert isinstance(label_payload, ObjectLabelPayload)
     np.testing.assert_array_equal(label_payload.labels, stack.data)
     assert label_payload.plane_axis is (
-        None if plane_count is None else RuntimeSlicePlaneAxis
+        NoPlaneAxis if plane_count is None else RuntimeSlicePlaneAxis
     )
     assert label_payload.source_provenance == stack.metadata.source_provenance
     assert label_payload.source_spatial_domain.source_shape_yx == (8, 8)
     assert label_payload.domain.scope is (
-        ObjectLabelDomainScope.PAYLOAD
-        if plane_count is None else ObjectLabelDomainScope.PLANE
+        PayloadLabelScope
+        if plane_count is None else PlaneLabelScope
     )
     if plane_count is not None:
         assert label_payload.domain.declared_object_id_domains == ((1,),) * plane_count

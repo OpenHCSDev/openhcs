@@ -1,5 +1,7 @@
 """Synthetic public RescaleIntensity declaration -> producer -> native binding."""
 
+from openhcs.core.runtime_plane_projection import NoPlaneAxis
+from openhcs.core.runtime_object_label_domains import PayloadLabelScope, PlaneLabelScope
 from openhcs.core.runtime_plane_projection import RuntimeSlicePlaneAxis
 from dataclasses import replace
 
@@ -16,7 +18,6 @@ from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_bindings import NamedSourceBinding
@@ -164,7 +165,7 @@ def test_declared_source_plane_has_area_not_volume(retained_site):
     objects = SourceImageObjectLabelBuildRequest(
         image=payload,
         labels=labels,
-        domain_scope=ObjectLabelDomainScope.PLANE if retained_site else None,
+        domain_scope=PlaneLabelScope if retained_site else None,
         plane_projection=(
             RuntimePlaneAxisValueProjection.from_source_declaration(
                 metadata.plane_axis, metadata.source_provenance,
@@ -173,10 +174,10 @@ def test_declared_source_plane_has_area_not_volume(retained_site):
         ),
     ).payload()
     assert objects.plane_axis is (
-        RuntimeSlicePlaneAxis if retained_site else None
+        RuntimeSlicePlaneAxis if retained_site else NoPlaneAxis
     )
     assert objects.object_label_domain().scope is (
-        ObjectLabelDomainScope.PLANE if retained_site else ObjectLabelDomainScope.PAYLOAD
+        PlaneLabelScope if retained_site else PayloadLabelScope
     )
     _, rows = measure_object_size_shape.__wrapped__(
         payload, objects, calculate_advanced=False, calculate_zernikes=False,

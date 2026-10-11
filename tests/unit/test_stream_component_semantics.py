@@ -280,7 +280,7 @@ def test_projected_contributors_do_not_declare_a_retained_pixel_plane_domain():
         ImagePayloadMetadata.from_viewer_image_metadata(
             wire["image_metadata"]
         ).plane_axis
-        is None
+        is NoPlaneAxis
     )
 
 
