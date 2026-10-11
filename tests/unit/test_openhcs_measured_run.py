@@ -105,7 +105,7 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
                 "status": "ok",
                 "execution": {
                     "execution_id": execution_id,
-                    "plate_id": str(tmp_path),
+                    "subject_id": str(tmp_path),
                     "client_address": None,
                     "status": "complete",
                     "start_time": 10.0,
@@ -262,7 +262,7 @@ def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
                 "status": "ok",
                 "execution": {
                     "execution_id": execution_id,
-                    "plate_id": str(tmp_path),
+                    "subject_id": str(tmp_path),
                     "client_address": None,
                     "status": "complete",
                     "start_time": 10.0,

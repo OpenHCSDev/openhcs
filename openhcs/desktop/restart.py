@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 
-from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
+from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 from PyQt6.QtCore import QTimer
 
 from openhcs.desktop.update import (

@@ -34,7 +34,7 @@ class ZMQCompilerProgressQueue(ZMQProgressTarget, ProgressQueue):
 
     def put(self, progress_update: dict) -> None:
         canonical_update = dict(progress_update)
-        canonical_update[MessageFields.PLATE_ID] = self.plate_id
+        canonical_update[MessageFields.SUBJECT_ID] = self.plate_id
         self.enqueue(canonical_update)
 
 

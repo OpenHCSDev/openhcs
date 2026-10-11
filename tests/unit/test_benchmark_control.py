@@ -549,7 +549,7 @@ def test_measured_finalization_refuses_missing_server_timing_without_receipt(
         request=ZMQExecutionRequestBuilder.from_task(submission),
         record=ExecutionRecord(
             execution_id="execution-1",
-            plate_id=str(tmp_path),
+            subject_id=str(tmp_path),
             client_address=None,
             status="complete",
             results_summary={},

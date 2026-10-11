@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, replace
-from typing import Any, Callable
+from dataclasses import dataclass
+from typing import Any
 
 from zmqruntime.messages import (
     ExecutionStatus,
     MessageFields,
-    PongResponse,
-    QueuedExecutionInfo,
     ResponseType,
 )
 
@@ -22,37 +20,6 @@ from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryParamField
 from python_introspect import to_jsonable
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True, slots=True)
-class ZMQPongResponseEnricher:
-    """Adds OpenHCS queue and compile-status data to base pong responses."""
-
-    active_executions: dict[str, Any]
-    compile_status: Callable[[], tuple[str | None, str | None]]
-
-    def enrich(self, response: PongResponse) -> PongResponse:
-        compile_status, compile_message = self.compile_status()
-
-        queued = [
-            (execution_id, record)
-            for execution_id, record in self.active_executions.items()
-            if record.status == ExecutionStatus.QUEUED.value
-        ]
-        queued_executions = tuple(
-            QueuedExecutionInfo(
-                execution_id=execution_id,
-                plate_id=str(record.plate_id),
-                queue_position=index + 1,
-            )
-            for index, (execution_id, record) in enumerate(queued)
-        )
-        return replace(
-            response,
-            compile_status=compile_status,
-            compile_message=compile_message,
-            queued_executions=queued_executions,
-        )
 
 
 @dataclass(frozen=True, slots=True)

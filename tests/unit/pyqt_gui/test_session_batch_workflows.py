@@ -640,7 +640,7 @@ def test_server_queue_snapshot_projects_queued_executions(monkeypatch):
                 queued_execution_entries=(
                     QueuedExecutionInfo(
                         execution_id="exec-queued",
-                        plate_id="plate-queued",
+                        subject_id="plate-queued",
                         queue_position=3,
                     ),
                 ),

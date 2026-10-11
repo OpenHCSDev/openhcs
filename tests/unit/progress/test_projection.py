@@ -229,14 +229,14 @@ def test_server_lifecycle_entries_reconcile_by_execution_and_plate_identity():
         queued_executions=(
             QueuedExecutionInfo(
                 execution_id="exec-next",
-                plate_id="/tmp/plate",
+                subject_id="/tmp/plate",
                 queue_position=4,
             ),
         ),
         running_executions=(
             RunningExecutionInfo(
                 execution_id="exec-running",
-                plate_id="/tmp/other",
+                subject_id="/tmp/other",
                 start_time=2.0,
                 elapsed=0.5,
                 compile_only=True,
@@ -260,14 +260,14 @@ def test_running_entry_only_supersedes_matching_queued_identity():
         queued_executions=(
             QueuedExecutionInfo(
                 execution_id="shared-exec",
-                plate_id="/tmp/queued-plate",
+                subject_id="/tmp/queued-plate",
                 queue_position=2,
             ),
         ),
         running_executions=(
             RunningExecutionInfo(
                 execution_id="shared-exec",
-                plate_id="/tmp/running-plate",
+                subject_id="/tmp/running-plate",
                 start_time=2.0,
                 elapsed=0.5,
             ),
@@ -285,7 +285,7 @@ def test_running_entry_only_supersedes_matching_queued_identity():
 def test_server_snapshot_refreshes_queue_position_for_same_identity():
     queued_entry = QueuedExecutionInfo(
         execution_id="exec-queued",
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
         queue_position=4,
     )
     projection = build_execution_runtime_projection(
@@ -317,7 +317,7 @@ def test_running_snapshot_advances_compiled_identity_into_execution():
         running_executions=(
             RunningExecutionInfo(
                 execution_id="exec-shared",
-                plate_id="/tmp/plate",
+                subject_id="/tmp/plate",
                 start_time=2.0,
                 elapsed=0.5,
             ),
@@ -342,7 +342,7 @@ def test_lagging_server_snapshot_does_not_downgrade_terminal_event_state():
         running_executions=(
             RunningExecutionInfo(
                 execution_id="exec-terminal",
-                plate_id="/tmp/plate",
+                subject_id="/tmp/plate",
                 start_time=0.5,
                 elapsed=0.5,
             ),

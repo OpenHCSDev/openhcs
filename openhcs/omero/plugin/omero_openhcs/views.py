@@ -14,7 +14,16 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from omeroweb.webclient.decorators import login_required
-from zmqruntime import TransportEndpoint, TransportMode, ZMQConfig
+from zmqruntime import (
+    CancelRequest,
+    ControlMessageType,
+    ControlRequestHeader,
+    ExecuteRequest,
+    StatusRequest,
+    TransportEndpoint,
+    TransportMode,
+    ZMQConfig,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +60,9 @@ class SimpleZMQClient:
     def ping(self):
         """Ping server to check if alive."""
         try:
-            response = self._send_request({"type": "ping"})
+            response = self._send_request(
+                ControlRequestHeader(ControlMessageType.PING).to_dict()
+            )
         except zmq.ZMQError:
             logger.debug("ZMQ execution endpoint is unavailable", exc_info=True)
             return False
@@ -59,29 +70,24 @@ class SimpleZMQClient:
 
     def get_server_info(self):
         """Get detailed server info including workers."""
-        return self._send_request({"type": "ping"})
+        return self._send_request(ControlRequestHeader(ControlMessageType.PING).to_dict())
 
     def get_status(self, execution_id=None):
         """Get execution status."""
-        request = {"type": "status"}
-        if execution_id:
-            request["execution_id"] = execution_id
-        return self._send_request(request)
+        return self._send_request(StatusRequest(execution_id=execution_id or None).to_dict())
 
     def execute_pipeline(self, plate_id, pipeline_code, config_code):
         """Execute pipeline on server."""
-        request = {
-            "type": "execute",
-            "plate_id": str(plate_id),
-            "pipeline_code": pipeline_code,
-            "config_code": config_code,
-        }
-        return self._send_request(request)
+        request = ExecuteRequest(
+            subject_id=str(plate_id),
+            pipeline_code=pipeline_code,
+            config_code=config_code,
+        )
+        return self._send_request(request.to_dict())
 
     def cancel(self, execution_id):
         """Cancel execution."""
-        request = {"type": "cancel", "execution_id": execution_id}
-        return self._send_request(request)
+        return self._send_request(CancelRequest(execution_id=execution_id).to_dict())
 
 
 def _get_zmq_client():

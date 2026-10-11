@@ -22,7 +22,7 @@ from importlib import import_module
 from threading import Event, Lock, Thread
 from typing import IO
 
-from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
+from zmqruntime.process_launch import BackgroundProcessLaunchPolicy
 
 _STARTUP_WINDOW_CHILD_ARGUMENT = "--startup-window-child"
 _STARTUP_PROGRESS_ENVIRONMENT = "OPENHCS_STARTUP_PROGRESS"
