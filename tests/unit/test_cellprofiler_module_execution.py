@@ -1,5 +1,6 @@
 from dataclasses import dataclass, replace
 import sqlite3
+from tests.artifact_graphs import admitted_graph
 from openhcs.interop.cellprofiler.object_label_variants import (
     SmallRemovedLabels,
     UneditedLabels,
@@ -41,7 +42,7 @@ from openhcs.core.artifacts import (
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.callable_contract import (
     CallableContract,
-    CallableMetadata,
+    CallableDeclaration,
     ImagePayloadConsumption,
     attach_callable_contract_metadata,
     runtime_image_execution_mode,
@@ -424,7 +425,7 @@ def _compiled_callable_contract(
         )
     return replace(
         raw_contract,
-        metadata=replace(raw_contract.metadata, **metadata_changes),
+        **metadata_changes,
     )
 
 
@@ -1720,10 +1721,7 @@ def test_composed_measurement_images_keep_declared_aliases_and_resolved_payload(
     )
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            image_payload_consumption=ImagePayloadConsumption.COMPOSED,
-        ),
+        image_payload_consumption=ImagePayloadConsumption.COMPOSED,
     )
     image = np.ones((4, 5), dtype=np.float32)
     runtime = _FakeCellProfilerRuntime(
@@ -7684,10 +7682,7 @@ def test_cellprofiler_contract_executor_stacks_color_slice_outputs():
     raw_contract = CallableContract.from_callable(colorize)
     callable_contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_outputs=(ArtifactSpec.output("Color", ImageArtifactType),),
-        ),
+        artifact_outputs=(ArtifactSpec.output("Color", ImageArtifactType),),
     )
     stack = ImageMetadataPayload(
         np.zeros((2, 4, 5), dtype=np.float32),
@@ -9030,13 +9025,10 @@ def test_cellprofiler_contract_executor_slices_aligned_runtime_kwargs():
     raw_contract = CallableContract.from_callable(keep_labels)
     callable_contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_outputs=(
+        artifact_outputs=(
                 ArtifactSpec.output("Image", ImageArtifactType),
                 ArtifactSpec.output("Labels", ObjectLabelsArtifactType),
             ),
-        ),
     )
     stack = ImageMetadataPayload(
         np.zeros((2, 4, 5), dtype=np.uint16),
@@ -9089,13 +9081,10 @@ def test_cellprofiler_contract_executor_aggregates_object_label_payload_auxiliar
     raw_contract = CallableContract.from_callable(keep_payload)
     callable_contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_outputs=(
+        artifact_outputs=(
                 ArtifactSpec.output("Image", ImageArtifactType),
                 ArtifactSpec.output("Objects", ObjectLabelsArtifactType),
             ),
-        ),
     )
     stack = ImageMetadataPayload(
         np.stack(
@@ -9155,13 +9144,10 @@ def test_cellprofiler_contract_executor_preserves_site_metadata_for_object_label
     raw_contract = CallableContract.from_callable(segment)
     callable_contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_outputs=(
+        artifact_outputs=(
                 ArtifactSpec.output("Image", ImageArtifactType),
                 ArtifactSpec.output("Objects", ObjectLabelsArtifactType),
             ),
-        ),
     )
     image = ImagePayloadMetadata(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
@@ -9699,7 +9685,11 @@ def _pattern_group_runtime_for_output_memory(
     context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
     return PatternGroupExecutionRequest(
         context=context,
-        compiled_group=compile_function_pattern(lambda image: image, {}, {}).default_group,
+        compiled_group=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ).default_group,
         pattern_group_info="", component_index=0, component_count=1,
         execution_plan=CompiledStepPlan(
             step_index=0,
@@ -9974,14 +9964,10 @@ def test_cellprofiler_contract_executor_projects_batch_relationship_auxiliary():
     raw_contract = CallableContract.from_callable(relate)
     callable_contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_inputs=(parent_spec, child_spec),
-            artifact_outputs=(
+        artifact_inputs=(parent_spec, child_spec), artifact_outputs=(
                 ArtifactSpec.output("Image", ImageArtifactType),
                 _relationship_output(parent_spec, child_spec),
             ),
-        ),
     )
     stack = ImageMetadataPayload(
         np.zeros((2, 4, 5), dtype=np.float32),
@@ -10021,13 +10007,10 @@ def test_cellprofiler_contract_executor_aggregates_volume_label_auxiliary():
     raw_contract = CallableContract.from_callable(keep_volume_labels)
     callable_contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_outputs=(
+        artifact_outputs=(
                 ArtifactSpec.output("Image", ImageArtifactType),
                 ArtifactSpec.output("Objects", ObjectLabelsArtifactType),
             ),
-        ),
     )
     stack = ImageMetadataPayload(
         np.stack(
@@ -10099,10 +10082,7 @@ def test_cellprofiler_contract_executor_does_not_infer_stack_from_ndarray_kwargs
     raw_contract = CallableContract.from_callable(increment_labels)
     callable_contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_outputs=(ArtifactSpec.output("Image", ImageArtifactType),),
-        ),
+        artifact_outputs=(ArtifactSpec.output("Image", ImageArtifactType),),
     )
     image = np.zeros((4, 5), dtype=np.uint16)
     labels = np.stack(
@@ -10199,10 +10179,7 @@ def test_cellprofiler_contract_executor_broadcasts_2d_labels_to_image_stack():
     raw_contract = CallableContract.from_callable(add_label_values)
     callable_contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_outputs=(ArtifactSpec.output("Image", ImageArtifactType),),
-        ),
+        artifact_outputs=(ArtifactSpec.output("Image", ImageArtifactType),),
     )
     image = ImageMetadataPayload(
         np.stack(
@@ -11572,10 +11549,7 @@ def test_cellprofiler_contract_executor_applies_aligned_multi_image_stack():
     raw_contract = CallableContract.from_callable(subtract_illumination)
     callable_contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_outputs=(ArtifactSpec.output("Corrected", ImageArtifactType),),
-        ),
+        artifact_outputs=(ArtifactSpec.output("Corrected", ImageArtifactType),),
     )
     aligned_stack = AlignedImageStack(
         slices=(
@@ -11620,10 +11594,7 @@ def test_aligned_multi_image_stack_rejects_volumetric_contract() -> None:
     raw_contract = CallableContract.from_callable(keep_volume)
     callable_contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_outputs=(ArtifactSpec.output("Image", ImageArtifactType),),
-        ),
+        artifact_outputs=(ArtifactSpec.output("Image", ImageArtifactType),),
     )
     aligned_stack = AlignedImageStack(
         slices=(
@@ -13168,11 +13139,7 @@ def test_output_record_request_rejects_ref_equivalent_endpoint_reconstruction() 
         func=lambda image: image,
         function_name="relationship_edge_probe",
         module_name=__name__,
-        metadata=CallableMetadata(
-            artifact_inputs=(endpoint_spec,),
-            artifact_outputs=(relationship_spec,),
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        artifact_inputs=(endpoint_spec,), artifact_outputs=(relationship_spec,), runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     runtime = _FakeCellProfilerRuntime(
         {},
@@ -13208,11 +13175,7 @@ def test_output_record_request_rejects_ambiguous_exact_endpoint_occurrence() -> 
         func=lambda image: image,
         function_name="relationship_edge_probe",
         module_name=__name__,
-        metadata=CallableMetadata(
-            artifact_inputs=(endpoint_spec, endpoint_spec),
-            artifact_outputs=(relationship_spec,),
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        artifact_inputs=(endpoint_spec, endpoint_spec), artifact_outputs=(relationship_spec,), runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     runtime = _FakeCellProfilerRuntime(
         {},

@@ -42,7 +42,7 @@ from openhcs.core.config import (
     LazyPartitionFilterConfig,
     PipelineConfig,
 )
-from openhcs.core.function_patterns import get_core_callable
+from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -456,12 +456,14 @@ def czi_brain_axon_cellbody_demo_contribution(
     soma_matches = tuple(
         step
         for step in pipeline_steps
-        if get_core_callable(step.func) is count_neuronal_cell_bodies_metaxpress
+        if AuthoredFunctionPattern.first_callable(step.func)
+        is count_neuronal_cell_bodies_metaxpress
     )
     axon_matches = tuple(
         step
         for step in pipeline_steps
-        if get_core_callable(step.func) is skan_axon_skeletonize_and_analyze
+        if AuthoredFunctionPattern.first_callable(step.func)
+        is skan_axon_skeletonize_and_analyze
     )
     if len(soma_matches) != 1 or len(axon_matches) != 1:
         raise ValueError(

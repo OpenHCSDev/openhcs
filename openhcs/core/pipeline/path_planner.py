@@ -28,13 +28,11 @@ from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     CompiledFunctionPattern,
-    FunctionPatternSyntax,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     MainFlowInputProjection,
     RuntimeParameterBinding,
     compile_function_pattern,
-    inject_artifact_input_values,
     normalize_function_pattern,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
@@ -598,13 +596,10 @@ class PathPlannerMetadataArtifactInjection:
             artifact_name
         )
 
-    def inject_metadata(
-        self,
-        pattern: FunctionPatternSyntax,
-        inputs: Mapping[ArtifactSpecRef, ArtifactSpec],
-    ) -> FunctionPatternSyntax:
+    def inject_metadata(self, graph: ArtifactGraph) -> ArtifactGraph:
         """Inject values once; compiled metadata edges reference these kwargs."""
-        for spec in inputs.values():
+        pattern = graph.pattern
+        for spec in graph.inputs.values():
             if (
                 spec.ref().for_plan_type(ArtifactOutputPlan) not in self.planner.declared
                 and self.metadata_artifact_available(spec.name)
@@ -613,8 +608,8 @@ class PathPlannerMetadataArtifactInjection:
                     spec.name,
                     self.planner.ctx.dataset_root,
                 )
-                pattern = inject_artifact_input_values(pattern, {spec.name: value})
-        return pattern
+                pattern = pattern.with_artifact_input_values({spec.name: value})
+        return replace(graph, pattern=pattern)
 
 
 @dataclass(frozen=True)
@@ -1006,8 +1001,6 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         self,
         step: AbstractStep,
         step_index: int,
-        is_function_step: bool,
-        func_pattern: FunctionPatternSyntax | None,
         artifact_inputs: Mapping[ArtifactSpecRef, ArtifactInputPlan],
         artifact_outputs: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
         relation_source_scopes: Mapping[
@@ -1016,11 +1009,8 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         ],
         execution_group_scope: PathPlannerGroupScope,
         declarations: ArtifactGraph,
-    ) -> CompiledFunctionPattern | None:
+    ) -> CompiledFunctionPattern:
         """Build the executable function-pattern graph for a FunctionStep."""
-        if not is_function_step or not func_pattern:
-            return None
-
         step_context = self.planner.artifact_context
         step_values = vars(step)
         pipeline_values = vars(self.planner.session.global_config)
@@ -1049,11 +1039,9 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             )
 
         compiled_pattern = compile_function_pattern(
-            func_pattern,
+            declarations,
             artifact_inputs,
             artifact_outputs,
-            artifact_graph=declarations,
-            step_context=step_context,
             runtime_parameter_bindings=tuple(runtime_parameter_bindings),
             path_resolver=self.planner.session.path_resolver,
         )
@@ -2112,22 +2100,18 @@ class PathPlannerStepAssemblyStage:
             contract_source_bindings,
         )
 
-        if isinstance(step, FunctionStep):
-            func_pattern = self.planner.artifacts.inject_metadata(
-                func_pattern,
-                declarations.inputs,
+        compiled_pattern = (
+            self.planner.artifacts.build_step_compiled_function_pattern(
+                step,
+                step_index,
+                artifact_maps.inputs,
+                artifact_maps.outputs,
+                artifact_maps.relation_source_scopes,
+                artifact_maps.group_scope,
+                self.planner.artifacts.inject_metadata(declarations),
             )
-
-        compiled_pattern = self.planner.artifacts.build_step_compiled_function_pattern(
-            step,
-            step_index,
-            isinstance(step, FunctionStep),
-            func_pattern,
-            artifact_maps.inputs,
-            artifact_maps.outputs,
-            artifact_maps.relation_source_scopes,
-            artifact_maps.group_scope,
-            declarations,
+            if isinstance(step, FunctionStep)
+            else None
         )
         self.update_core_step_plan(
             step,

@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
@@ -32,7 +33,7 @@ def _identity(image):
 
 
 def _runtime():
-    pattern = compile_function_pattern(_identity, {}, {})
+    pattern = compile_function_pattern(admitted_graph(_identity), {}, {})
     runtime = PatternGroupExecutionRequest(
         context=ProcessingContext(axis_id="A01"),
         pattern_group_info="", component_index=0, component_count=1,
@@ -185,7 +186,7 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     if raw_named:
         mask = None
     producer = _runtime()
-    pattern = compile_function_pattern(_identity, {}, {})
+    pattern = compile_function_pattern(admitted_graph(_identity), {}, {})
     plan = replace(producer.execution_plan, output_dir=tmp_path, step_scope_id="whole-producer", compiled_function_pattern=pattern)
     producer = replace(producer, execution_plan=plan)
     files = _MemoryFiles()
@@ -317,7 +318,7 @@ def _selected_pattern(name):
     def consume(image):
         return image
 
-    pattern = compile_function_pattern(consume, {}, {})
+    pattern = compile_function_pattern(admitted_graph(consume), {}, {})
     invocation = pattern.default_group.invocations[0]
     invocation = invocation.with_artifact_input_edges((InvocationArtifactInputEdgePlan(
         key=InvocationArtifactInputProjectionKey(invocation_key=invocation.key, input_index=0),
@@ -341,7 +342,7 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     opaque_pixels = np.arange(20, dtype=np.float32).reshape(4, 5) + 100
     opaque = scalar_metadata.payload_with(opaque_pixels)
     producer = _runtime()
-    pattern = compile_function_pattern(_identity, {}, {})
+    pattern = compile_function_pattern(admitted_graph(_identity), {}, {})
     plan = replace(producer.execution_plan, output_dir=tmp_path, step_scope_id="mixed-producer", compiled_function_pattern=pattern)
     producer = replace(producer, execution_plan=plan)
     files = _MemoryFiles()

@@ -14,7 +14,7 @@ from openhcs.core.artifacts import (
     SourceStackLineageSourceRelation,
     SpatialGridArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -49,10 +49,7 @@ def _contract(*, outputs: tuple[ArtifactSpec, ...]) -> CallableContract:
         func=lambda image: image,
         function_name="recording_probe",
         module_name=__name__,
-        metadata=CallableMetadata(
-            artifact_outputs=outputs,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        artifact_outputs=outputs, runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
 
 

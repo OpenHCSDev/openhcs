@@ -10,7 +10,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.function_patterns import get_core_callable
+from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.source_metadata import SourceVoxelSpacing
@@ -88,7 +88,7 @@ def test_compact_example_uses_owned_channel_order_and_one_function_step(
     assert len(steps) == 1
     step = steps[0]
     assert step.name == "CompactMetaXpressNeuriteOutgrowth"
-    assert get_core_callable(step.func) is neurite_outgrowth_metaxpress
+    assert AuthoredFunctionPattern.first_callable(step.func) is neurite_outgrowth_metaxpress
     assert step.processing_config.variable_components == [Microscopy.Channel]
     assert step.processing_config.group_by is Ungrouped
     assert step.processing_config.input_source.reads_pipeline_start

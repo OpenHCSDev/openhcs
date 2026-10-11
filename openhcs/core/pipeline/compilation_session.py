@@ -17,7 +17,6 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.function_patterns import (
     normalize_function_pattern,
     NormalizedFunctionItem,
-    strip_disabled_functions,
 )
 from openhcs.core.invocation_artifacts import (
     InvocationContractProvider,
@@ -239,11 +238,7 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
                 if isinstance(step, FunctionStep)
                 else ArtifactGraph.empty()
             )
-            for item in () if graph.pattern is None else graph.pattern.iter_items():
-                item.contract.validate_artifact_input_parameter_bindings()
-                graph.invocation_declarations[
-                    item.key
-                ].validate_artifact_output_declarations()
+            graph.validate_invocation_declarations()
             previous = graphs[-1] if graphs else None
             previous_pattern = None if previous is None else previous.pattern
             dependency = graph.resolve_main_input_dependency(
@@ -394,11 +389,7 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
             "steps",
             tuple(
                 (
-                    step.with_function_spec(
-                        normalize_function_pattern(
-                            strip_disabled_functions(step.func) or []
-                        )
-                    )
+                    step.with_function_spec(normalize_function_pattern(step.func or []))
                     if isinstance(step, FunctionStep)
                     else step
                 )

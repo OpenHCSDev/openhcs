@@ -559,7 +559,7 @@ def test_openhcs_registry_cache_preserves_plate_scoped_callable_contract(
     assert cached.func.__wrapped__ is export_to_spreadsheet
     assert is_enableable(cached.func)
     assert contract.execution_scope is FunctionStepExecutionScope.PLATE
-    assert contract.runtime_bound_parameters == ("artifact_batch",)
+    assert contract.runtime_bound_parameter_names == ("artifact_batch",)
     assert contract.resolve_canonical_raw_callable() is export_to_spreadsheet
 
 

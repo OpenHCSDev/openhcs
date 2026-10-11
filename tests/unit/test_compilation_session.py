@@ -8,6 +8,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.constants.input_source import InputSource, ReadPipelineStart, ReadPreviousStep
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
@@ -29,7 +30,6 @@ from openhcs.core.config import (
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     compile_function_pattern,
-    inject_artifact_input_values,
     normalize_function_pattern,
 )
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
@@ -458,9 +458,9 @@ def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(m
     assert calls == [needs_grid]
     assert normalize_function_pattern(captured) is captured
     extract_artifact_declarations(captured)
-    injected = inject_artifact_input_values(captured, {"grid_dimensions": (3, 4)})
-    other_axis = inject_artifact_input_values(captured, {"grid_dimensions": (8, 9)})
-    compiled = compile_function_pattern(injected, {}, {})
+    injected = captured.with_artifact_input_values({"grid_dimensions": (3, 4)})
+    other_axis = captured.with_artifact_input_values({"grid_dimensions": (8, 9)})
+    compiled = compile_function_pattern(admitted_graph(injected), {}, {})
     assert calls == [needs_grid]
     assert next(injected.iter_items()).contract is item.contract
     assert next(other_axis.iter_items()).contract is item.contract
@@ -471,12 +471,14 @@ def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(m
 
     replacement = from_callable(CallableContract, needs_grid)
     provider_compiled = compile_function_pattern(
-        injected,
-        {},
-        {},
-        invocation_contract_provider=lambda _item, _context: InvocationContractPlan(
+        admitted_graph(
+            injected,
+            invocation_contract_provider=lambda _item, _context: InvocationContractPlan(
             replacement
         ),
+        ),
+        {},
+        {},
     )
     assert next(provider_compiled.iter_invocations()).contract is replacement
     kwargs["sigma"] = 7

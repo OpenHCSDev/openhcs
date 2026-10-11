@@ -32,10 +32,7 @@ def _prepared_contract(func):
     contract = CallableContract.from_callable(func).with_prepared_signature()
     return replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
 
 

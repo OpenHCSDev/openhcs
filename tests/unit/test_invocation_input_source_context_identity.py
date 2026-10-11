@@ -6,6 +6,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -62,7 +63,11 @@ def _compile_source_context_edges(
     def align_like(image: np.ndarray) -> np.ndarray:
         return image
 
-    compiled = compile_function_pattern(align_like, {}, {})
+    compiled = compile_function_pattern(
+        admitted_graph(align_like),
+        {},
+        {},
+    )
     input_plans = {}
     if store_combined_image:
         input_plans[combined_image.ref()] = ArtifactInputPlan(
@@ -113,7 +118,11 @@ def test_implicit_native_main_flow_consumes_complete_payload_not_source_alias() 
     def threshold_like(image: np.ndarray) -> np.ndarray:
         return image
 
-    compiled = compile_function_pattern(threshold_like, {}, {})
+    compiled = compile_function_pattern(
+        admitted_graph(threshold_like),
+        {},
+        {},
+    )
     compiled = PathPlannerArtifactStage(
         PathPlanner.__new__(PathPlanner)
     ).compile_invocation_input_edges(
@@ -163,7 +172,7 @@ def test_multiple_main_flow_images_keep_declared_source_projection() -> None:
     compiled = PathPlannerArtifactStage(
         PathPlanner.__new__(PathPlanner)
     ).compile_invocation_input_edges(
-        compile_function_pattern(consume_both, {}, {}),
+        compile_function_pattern(admitted_graph(consume_both), {}, {}),
         artifact_inputs={},
         relation_source_scopes={},
         execution_group_scope=ComponentGroupScope.ungrouped(),

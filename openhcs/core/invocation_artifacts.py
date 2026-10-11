@@ -400,10 +400,7 @@ class MainFlowArtifactContractProvider(
         ).unique(conflict_context="main-flow artifact input")
         return InvocationContractPlan(
             contract=replace(
-                contract,
-                metadata=replace(
-                    contract.metadata, artifact_inputs=inputs, artifact_outputs=outputs
-                ),
+                contract, artifact_inputs=inputs, artifact_outputs=outputs
             )
         )
 

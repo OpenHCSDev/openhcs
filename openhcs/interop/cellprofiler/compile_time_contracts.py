@@ -256,16 +256,13 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
                         ) from exc
                     compiled_contract = replace(
                         compiled_contract,
-                        metadata=replace(
-                            compiled_contract.metadata,
-                            runtime_adapter=(
-                                None
-                                if (
-                                    scope is FunctionStepExecutionScope.PLATE
-                                    or not module_type.uses_cellprofiler_runtime_adapter()
-                                )
-                                else CellProfilerRuntimeAdapter.runtime_adapter_spec()
-                            ),
+                        runtime_adapter=(
+                            None
+                            if (
+                                scope is FunctionStepExecutionScope.PLATE
+                                or not module_type.uses_cellprofiler_runtime_adapter()
+                            )
+                            else CellProfilerRuntimeAdapter.runtime_adapter_spec()
                         ),
                     )
                     key = (step_index, invocation.key)

@@ -6,6 +6,7 @@ import ast
 from collections.abc import Sequence
 from pathlib import Path
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.pipeline.compilation_session import (
@@ -83,7 +84,7 @@ def _compiled_template_path(
         backend="disk",
     )
     pattern = compile_function_pattern(
-        step.func,
+        admitted_graph(step.func),
         {},
         {},
         path_resolver=resolver,

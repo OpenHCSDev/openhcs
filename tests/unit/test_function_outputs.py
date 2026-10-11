@@ -17,6 +17,7 @@ from polystore.streaming.viewer_transport import (
 from polystore.virtual_workspace import SourcePixelRef
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import (
@@ -429,7 +430,11 @@ def function_step_plan(
         step_scope_id=f"step-scope-{pipeline_position}",
         main_input_dependency=NoMainFlowInput(),
         variable_components=variable_components,
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
 
 

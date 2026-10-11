@@ -151,7 +151,7 @@ def test_gray_to_color_plain_rgb_uses_three_current_image_inputs() -> None:
     first_input = contracts[0].artifact_inputs.of_artifact_type(ImageArtifactType)[0]
     assert output.relations == (GroupLineageSourceRelation(source=first_input.ref()),)
     assert (
-        CallableContract.from_callable(gray_to_color).metadata.image_payload_consumption
+        CallableContract.from_callable(gray_to_color).image_payload_consumption
         is ImagePayloadConsumption.COMPOSED
     )
 

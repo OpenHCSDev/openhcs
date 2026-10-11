@@ -12,7 +12,7 @@ from openhcs.agent.dto.knowledge import (
 )
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.core.function_patterns import get_core_callable, normalize_function_pattern
+from openhcs.core.function_patterns import AuthoredFunctionPattern, normalize_function_pattern
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
@@ -108,11 +108,11 @@ def test_neurite_example_declares_bounded_sources_and_final_user_result(
         "UnifiedNeurons",
         "NeuriteSpreadsheetExport",
     ]
-    assert get_core_callable(steps[5].func) is (
+    assert AuthoredFunctionPattern.first_callable(steps[5].func) is (
         measure_object_skeleton_with_branchpoint_image
     )
-    assert get_core_callable(steps[6].func) is identify_secondary_objects
-    assert get_core_callable(steps[7].func) is export_to_spreadsheet
+    assert AuthoredFunctionPattern.first_callable(steps[6].func) is identify_secondary_objects
+    assert AuthoredFunctionPattern.first_callable(steps[7].func) is export_to_spreadsheet
     signal_invocation = next(normalize_function_pattern(steps[1].func).iter_items())
     assert dict(signal_invocation.kwargs)["percentiles"] == (10, 50, 90)
     foreground_invocation = next(normalize_function_pattern(steps[3].func).iter_items())

@@ -50,10 +50,7 @@ def _binding_request(
     contract = CallableContract.from_callable(measure_image_area_occupied)
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            artifact_inputs=(*primary_image_inputs, *object_inputs),
-        ),
+        artifact_inputs=(*primary_image_inputs, *object_inputs),
     )
     edges = tuple(
         cellprofiler_runtime_input_edge_for_test(

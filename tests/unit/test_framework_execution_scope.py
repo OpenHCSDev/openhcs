@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import numpy as np
 
 from arraybridge import MemoryType
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
@@ -25,7 +26,7 @@ def test_function_invocation_enters_declared_execution_memory_scope(
     process.output_memory_type = "numpy"
     process.execution_memory_type = "torch"
     invocation = next(
-        compile_function_pattern(process, {}, {}).iter_invocations()
+        compile_function_pattern(admitted_graph(process), {}, {}).iter_invocations()
     ).with_device_assignment(
         FrameworkDeviceAssignment.from_mapping({MemoryType.TORCH: 4})
     )

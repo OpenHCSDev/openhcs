@@ -12,6 +12,7 @@ from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.debug import NoOpDebugExecutionPolicy
@@ -146,7 +147,9 @@ class FrozenWorkerContext(ProcessingContext):
                     step_name="Save",
                     axis_id="A01",
                     compiled_function_pattern=compile_function_pattern(
-                        lambda image: image, {}, {}
+                        admitted_graph(lambda image: image),
+                        {},
+                        {},
                     ),
                 )
             },

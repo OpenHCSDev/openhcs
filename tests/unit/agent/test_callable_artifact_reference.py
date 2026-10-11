@@ -9,6 +9,7 @@ from types import ModuleType
 import numpy as np
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentRequest,
     KnowledgeBaseSearchRequest,
@@ -157,7 +158,11 @@ def test_reference_executes_and_compiles_actual_function_step(reference_namespac
     subject = plans[specs[2].ref()].measurement_subject()
     assert subject.name == "fixture_labels"
     assert subject.id_field == "object_label"
-    compiled = compile_function_pattern(namespace["step"].func, {}, plans)
+    compiled = compile_function_pattern(
+        admitted_graph(namespace["step"].func),
+        {},
+        plans,
+    )
     assert len(compiled.groups[0].invocations) == 1
     assert compiled.groups[0].invocations[0].contract.artifact_outputs == (
         contract.artifact_outputs
@@ -274,7 +279,11 @@ def test_input_reference_compiles_nominal_binding_and_repairs_wrong_annotation(
         declaration.name, "/synthetic/fixture-labels.pkl",
         artifact_type=declaration.artifact_type,
     )
-    compiled = compile_function_pattern(function, {plan.ref(): plan}, {})
+    compiled = compile_function_pattern(
+        admitted_graph(function),
+        {plan.ref(): plan},
+        {},
+    )
     assert compiled.groups[0].invocations[0].contract.artifact_inputs.specs == (
         declaration,
     )
@@ -290,10 +299,18 @@ def test_input_reference_compiles_nominal_binding_and_repairs_wrong_annotation(
     try:
         raw.__annotations__["objects"] = np.ndarray
         with pytest.raises(TypeError, match="does not accept object_labels artifact payloads"):
-            compile_function_pattern(function, {plan.ref(): plan}, {})
+            compile_function_pattern(
+                admitted_graph(function),
+                {plan.ref(): plan},
+                {},
+            )
     finally:
         raw.__annotations__["objects"] = original_annotation
-    compile_function_pattern(function, {plan.ref(): plan}, {})
+    compile_function_pattern(
+        admitted_graph(function),
+        {plan.ref(): plan},
+        {},
+    )
 
 
 def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypatch):

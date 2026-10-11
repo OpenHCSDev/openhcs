@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.step_dependencies import PipelineStartInput, StepOutputInput
 from openhcs.core.component_group_scope import ComponentGroupScope
@@ -37,7 +38,7 @@ def _identity(image):
 
 
 def _fixture():
-    pattern = compile_function_pattern(_identity, {}, {})
+    pattern = compile_function_pattern(admitted_graph(_identity), {}, {})
     plan = CompiledStepPlan(
         step_index=0,
         step_name="Loaded",
@@ -157,10 +158,7 @@ def test_chain_shares_cohort_but_advances_only_current_image_and_memory(monkeypa
         invocation,
         contract=replace(
             invocation.contract,
-            metadata=replace(
-                invocation.contract.metadata,
-                output_memory_type="next-memory",
-            ),
+            output_memory_type="next-memory",
         ),
     )
     group = replace(request.compiled_group, invocations=(invocation, invocation))
@@ -410,7 +408,11 @@ def _stored_primary_fixture(*, preserves_main_flow=False):
         artifact_type=ImageArtifactType,
         source_step_id=0,
     )
-    pattern = compile_function_pattern(consume, {}, {output_plan.ref(): output_plan})
+    pattern = compile_function_pattern(
+        admitted_graph(consume),
+        {},
+        {output_plan.ref(): output_plan},
+    )
     pattern = PathPlannerArtifactStage(
         PathPlanner.__new__(PathPlanner)
     ).compile_invocation_input_edges(
@@ -559,7 +561,11 @@ def test_checkpoint_demand_follows_preserved_input_to_native_reader():
         source,
         step_index=2,
         step_scope_id="native",
-        compiled_function_pattern=compile_function_pattern(_identity, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(_identity),
+            {},
+            {},
+        ),
         main_input_dependency=StepOutputInput(
             source_step_index=1, source_step_scope_id="preserving"
         ),
@@ -792,7 +798,11 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
     pattern = PathPlannerArtifactStage(
         PathPlanner.__new__(PathPlanner)
     ).compile_invocation_input_edges(
-        compile_function_pattern([consume, consume], {}, {}),
+        compile_function_pattern(
+            admitted_graph([consume, consume]),
+            {},
+            {},
+        ),
         artifact_inputs={}, relation_source_scopes={},
         execution_group_scope=ComponentGroupScope.dynamic(Microscopy.Channel),
         consumer_variable_components=ComponentSet((Microscopy.Site,)),

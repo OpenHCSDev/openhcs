@@ -7,7 +7,7 @@ import pytest
 
 from openhcs.core.aligned_image_payload import (AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle, ImagePayloadStackComposition, ImagePayloadSliceStack, compose_aligned_image_payload)
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
@@ -96,9 +96,7 @@ def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classifica
     assert composition.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert literal._composed_payload is None
     contract = CallableContract.from_callable(function)
-    contract = replace(contract, metadata=replace(
-        contract.metadata, artifact_outputs=(ArtifactSpec.output("Filled", ImageArtifactType),),
-    ))
+    contract = replace(contract, artifact_outputs=(ArtifactSpec.output("Filled", ImageArtifactType),))
     executor = CellProfilerFunctionContractExecutor()
     outputs = tuple(
         executor.execute(
@@ -138,7 +136,7 @@ def test_every_full_stack_processing_family_materializes_image_and_image_kwargs(
         func=dense_callable,
         function_name="dense_callable",
         module_name="DenseProbeModule",
-        metadata=CallableMetadata(processing_contract=processing_contract),
+        processing_contract=processing_contract,
     )
     kwargs = {"reference": aligned, "token": opaque}
     # Retain the PURE_3D prohibition on slice-aligned non-image kwargs.
@@ -399,7 +397,7 @@ def test_full_stack_raw_callable_keeps_opaque_nonimage_kwargs(processing_contrac
         func=consume,
         function_name="consume",
         module_name="OpaqueFullStackProbe",
-        metadata=CallableMetadata(processing_contract=processing_contract),
+        processing_contract=processing_contract,
     )
     result = CellProfilerFunctionContractExecutor().execute(
         contract,

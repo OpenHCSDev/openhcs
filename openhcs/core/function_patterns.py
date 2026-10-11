@@ -48,13 +48,6 @@ from openhcs.core.callable_contract import (
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.function_reference import FunctionReference
-from openhcs.core.invocation_artifacts import (
-    ArtifactDeclarationStepContext,
-    CompositeInvocationContractProvider,
-    InvocationArtifactDeclarationProviderLike,
-    InvocationContractProvider,
-    callable_contract_artifact_declarations,
-)
 from openhcs.core.runtime_image_values import project_image_mask_to_data_domain
 from openhcs.core.runtime_image_values import ImagePayload, owned_runtime_value
 
@@ -180,16 +173,6 @@ class FunctionInvocationKey:
                 return None
             return str(component_value)
         return self.group_key
-
-    @classmethod
-    def from_callable(
-        cls, func: Callable, group_key: FunctionGroupKey, position: int
-    ) -> "FunctionInvocationKey":
-        return cls.from_contract(
-            CallableContract.from_callable(func),
-            group_key,
-            position,
-        )
 
     @classmethod
     def from_contract(
@@ -413,36 +396,28 @@ class NormalizedFunctionGroup:
         return str(self.source_group_key)
 
     @classmethod
-    def from_pattern(
+    def from_chain(
         cls,
         group_key: FunctionGroupKey,
-        pattern: FunctionPatternSyntax,
+        chain: Sequence[FunctionPatternSyntax],
     ) -> NormalizedFunctionGroup:
-        items = pattern if isinstance(pattern, list) else [pattern]
         normalized_items: list[NormalizedFunctionItem] = []
-
-        for item in items:
-            func, kwargs = _split_function_item(item)
+        for leaf in chain:
+            func, kwargs = AuthoredFunctionPattern.split_leaf(leaf)
+            kwargs = {} if kwargs is None else kwargs
             if RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs):
                 continue
             contract = CallableContract.from_prepared_callable(func)
-            position = len(normalized_items)
             normalized_items.append(
                 NormalizedFunctionItem(
                     key=FunctionInvocationKey.from_contract(
-                        contract,
-                        group_key,
-                        position,
+                        contract, group_key, len(normalized_items),
                     ),
                     contract=contract,
                     kwargs=_freeze_runtime_kwargs(kwargs),
                 )
             )
-
-        return cls(
-            source_group_key=group_key,
-            items=tuple(normalized_items),
-        )
+        return cls(source_group_key=group_key, items=tuple(normalized_items))
 
 
 @dataclass(frozen=True, slots=True)
@@ -923,43 +898,23 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     def from_normalized_item(
         cls,
         item: NormalizedFunctionItem,
+        graph: "ArtifactGraph",
         input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
         output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
-        declaration_provider: InvocationArtifactDeclarationProviderLike,
-        invocation_contract_provider: InvocationContractProvider,
-        step_context: ArtifactDeclarationStepContext,
         runtime_parameter_bindings: Sequence[RuntimeParameterBinding],
         path_resolver: "CompilationPathResolver | None",
-        artifact_graph: "ArtifactGraph | None" = None,
     ) -> "CompiledFunctionInvocation":
-        contract_plan = (
-            invocation_contract_provider(item, step_context) if artifact_graph is None
-            else artifact_graph.invocation_contract_plans[item.key]
-        )
-        if contract_plan is None:
-            invocation_kwargs = item.kwargs
-        else:
-            invocation_kwargs = contract_plan.consume_authored_kwargs(
-                item,
-                step_context,
-            )
-            item = replace(item, contract=contract_plan.contract)
-        artifact_selector = (
-            declaration_provider(item, step_context) if artifact_graph is None
-            else artifact_graph.invocation_declarations[item.key]
-        )
-        if artifact_graph is None:
-            item.contract.validate_artifact_input_parameter_bindings()
-            artifact_selector.validate_artifact_output_declarations()
+        """Compile one graph-resolved item; the graph owns its contract and declarations."""
+        artifact_selector = graph.invocation_declarations[item.key]
         artifact_input_plans = artifact_selector.select_plans(
             ArtifactInputPlan,
             input_plans,
         )
         user_kwargs, compiled_runtime_bindings = _compile_runtime_parameter_bindings(
-            invocation_kwargs,
+            item.kwargs,
             runtime_parameter_bindings,
             (
-                *item.contract.runtime_bound_parameters,
+                *item.contract.runtime_bound_parameter_names,
                 *item.contract.config_bound_parameter_names,
             ),
         )
@@ -1243,29 +1198,23 @@ class CompiledFunctionGroup:
         cls,
         normalized_group: NormalizedFunctionGroup,
         *,
+        graph: "ArtifactGraph",
         input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
         output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
-        declaration_provider: InvocationArtifactDeclarationProviderLike,
-        invocation_contract_provider: InvocationContractProvider,
-        step_context: ArtifactDeclarationStepContext,
         runtime_parameter_bindings: Sequence[RuntimeParameterBinding],
         path_resolver: "CompilationPathResolver | None",
-        artifact_graph: "ArtifactGraph | None" = None,
     ) -> "CompiledFunctionGroup":
-        """Compile an authored group through its declaration-owned invocation values."""
+        """Compile an authored group through its graph-resolved invocations."""
         return cls(
             group_key=normalized_group.group_key,
             invocations=tuple(
                 CompiledFunctionInvocation.from_normalized_item(
-                    item=item,
-                    input_plans=input_plans,
-                    output_plans=output_plans,
-                    declaration_provider=declaration_provider,
-                    invocation_contract_provider=invocation_contract_provider,
-                    step_context=step_context,
-                    runtime_parameter_bindings=runtime_parameter_bindings,
-                    path_resolver=path_resolver,
-                    artifact_graph=artifact_graph,
+                    item,
+                    graph,
+                    input_plans,
+                    output_plans,
+                    runtime_parameter_bindings,
+                    path_resolver,
                 )
                 for item in normalized_group.items
             ),
@@ -1492,264 +1441,143 @@ class CompiledFunctionPattern:
         return filtered
 
 
-def iter_enabled_function_invocations(
-    pattern: FunctionPatternSyntax,
-) -> Iterator[NormalizedFunctionItem]:
-    """Yield enabled callable invocations from any supported function pattern.
+class AuthoredFunctionPattern:
+    """The authored ``FunctionStep.func`` shape, walked in one place.
 
-    Positions are renumbered after disabled functions are filtered out, matching
-    the current runtime behavior for list chains and dict-pattern branches.
+    A pattern is a leaf, a list of leaves (one chain), or a dict of either
+    keyed by group. A leaf is a callable or ``(callable, kwargs)``.
     """
-    yield from normalize_function_pattern(pattern).iter_items()
 
+    @staticmethod
+    def is_callable_leaf(value: object) -> bool:
+        return isinstance(value, FunctionReference) or (
+            callable(value) and not isinstance(value, type)
+        )
 
-def get_core_callable(
-    func_pattern: FunctionPatternSyntax,
-) -> FunctionPatternCallable | None:
-    """Extract the first effective callable reference from a function pattern."""
-    if isinstance(func_pattern, NormalizedFunctionPattern):
-        return next((item.func for item in func_pattern.iter_items()), None)
+    @classmethod
+    def split_leaf(
+        cls, leaf: FunctionPatternSyntax,
+    ) -> tuple[FunctionPatternCallable, RuntimeKwargMap | None]:
+        """Return ``(callable, kwargs)``; kwargs is None for a bare callable."""
+        if isinstance(leaf, tuple):
+            if len(leaf) != 2:
+                raise TypeError(
+                    "Function-pattern tuple leaves must contain exactly two members: "
+                    "(callable, kwargs)."
+                )
+            func, kwargs = leaf
+            if not isinstance(kwargs, Mapping):
+                raise TypeError(f"Function kwargs must be a mapping, got {type(kwargs)}")
+            return func, kwargs
+        if cls.is_callable_leaf(leaf):
+            return leaf, None
+        raise TypeError(
+            "Invalid function-pattern item: expected a callable or (callable, kwargs), "
+            f"got a {type(leaf).__name__} object {leaf!r}."
+        )
 
-    if isinstance(func_pattern, FunctionReference):
-        return func_pattern
+    @staticmethod
+    def chain(value: FunctionPatternSyntax) -> tuple:
+        return tuple(value) if isinstance(value, list) else (value,)
 
-    if callable(func_pattern) and not isinstance(func_pattern, type):
-        return func_pattern
+    @classmethod
+    def groups(
+        cls, pattern: FunctionPatternSyntax,
+    ) -> tuple[tuple[FunctionGroupKey, tuple], ...]:
+        """Return ``(group key, chain of leaves)`` in authored order."""
+        if isinstance(pattern, dict):
+            return tuple((key, cls.chain(value)) for key, value in pattern.items())
+        return ((DEFAULT_GROUP_KEY, cls.chain(pattern)),)
 
-    if isinstance(func_pattern, tuple):
-        _require_two_member_function_leaf(func_pattern)
-        first_element = func_pattern[0]
-        if isinstance(first_element, FunctionReference):
-            return first_element
-        if callable(first_element) and not isinstance(first_element, type):
-            return first_element
+    @classmethod
+    def first_callable(
+        cls, pattern: FunctionPatternSyntax,
+    ) -> FunctionPatternCallable | None:
+        """Return the first authored callable, enabled or not."""
+        for _group_key, chain in cls.groups(pattern):
+            for leaf in chain:
+                return cls.split_leaf(leaf)[0]
         return None
 
-    if isinstance(func_pattern, list) and func_pattern:
-        return get_core_callable(func_pattern[0])
+    @classmethod
+    def map_leaves(
+        cls,
+        pattern: FunctionPatternSyntax,
+        rewrite: Callable[
+            [FunctionPatternSyntax, FunctionPatternCallable, RuntimeKwargMap | None],
+            FunctionPatternSyntax | None,
+        ],
+    ) -> FunctionPatternSyntax | None:
+        """Rebuild ``pattern`` with each leaf rewritten; None drops the leaf.
 
-    if isinstance(func_pattern, dict) and func_pattern:
-        for value in func_pattern.values():
-            core_callable = get_core_callable(value)
-            if core_callable is not None:
-                return core_callable
+        A container whose leaves all come back unchanged is returned as is.
+        """
+        if isinstance(pattern, dict):
+            mapped = {
+                key: cls._map_chain(value, rewrite) for key, value in pattern.items()
+            }
+            if all(mapped[key] is value for key, value in pattern.items()):
+                return pattern
+            return {key: value for key, value in mapped.items() if value is not None}
+        return cls._map_chain(pattern, rewrite)
 
-    return None
+    @classmethod
+    def _map_chain(cls, value, rewrite):
+        if not isinstance(value, list):
+            return rewrite(value, *cls.split_leaf(value))
+        mapped = [rewrite(leaf, *cls.split_leaf(leaf)) for leaf in value]
+        if all(new is old for new, old in zip(mapped, value)):
+            return value
+        return [leaf for leaf in mapped if leaf is not None]
 
 
 def normalize_function_pattern(
     pattern: FunctionPatternSyntax | NormalizedFunctionPattern,
 ) -> NormalizedFunctionPattern:
-    """Lower raw FunctionStep.func syntax into typed grouped callable items."""
+    """Lower authored FunctionStep.func syntax into typed grouped callable items.
+
+    Disabled items are dropped; a dict group left without items is dropped.
+    """
     if isinstance(pattern, NormalizedFunctionPattern):
         return pattern
-    if isinstance(pattern, dict):
-        groups = tuple(
-            NormalizedFunctionGroup.from_pattern(group_key=group_key, pattern=value)
-            for group_key, value in pattern.items()
-        )
-        return NormalizedFunctionPattern(
-            groups=groups,
-            is_grouped=True,
-        )
-
+    is_grouped = isinstance(pattern, dict)
+    groups = tuple(
+        NormalizedFunctionGroup.from_chain(group_key, chain)
+        for group_key, chain in AuthoredFunctionPattern.groups(pattern)
+    )
     return NormalizedFunctionPattern(
-        groups=(
-            NormalizedFunctionGroup.from_pattern(
-                group_key=DEFAULT_GROUP_KEY,
-                pattern=pattern,
-            ),
-        ),
-        is_grouped=False,
+        groups=tuple(group for group in groups if group.items or not is_grouped),
+        is_grouped=is_grouped,
     )
-
-
-def resolve_function_pattern_execution_scope(
-    pattern: FunctionPatternSyntax,
-    invocation_contract_provider: InvocationContractProvider,
-    step_context: ArtifactDeclarationStepContext,
-) -> FunctionStepExecutionScope:
-    """Resolve one uniform callable scope before path planning."""
-    contracts = resolve_function_pattern_contracts(
-        pattern,
-        invocation_contract_provider,
-        step_context,
-    )
-    return FunctionStepExecutionScope.require_uniform(contracts)
-
-
-def resolve_function_pattern_contracts(
-    pattern: FunctionPatternSyntax,
-    invocation_contract_provider: InvocationContractProvider,
-    step_context: ArtifactDeclarationStepContext,
-) -> tuple[CallableContract, ...]:
-    """Resolve compiler-visible contracts for every enabled pattern item."""
-
-    contracts: list[CallableContract] = []
-    for item in normalize_function_pattern(pattern).iter_items():
-        contract_plan = invocation_contract_provider(item, step_context)
-        contracts.append(
-            item.contract if contract_plan is None else contract_plan.contract
-        )
-    return tuple(contracts)
 
 
 def compile_function_pattern(
-    pattern: FunctionPatternSyntax,
+    graph: "ArtifactGraph",
     input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
     output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
-    declaration_provider: InvocationArtifactDeclarationProviderLike = (
-        callable_contract_artifact_declarations
-    ),
-    invocation_contract_provider: InvocationContractProvider = (
-        CompositeInvocationContractProvider(())
-    ),
-    step_context: ArtifactDeclarationStepContext = (
-        ArtifactDeclarationStepContext.empty()
-    ),
+    *,
     runtime_parameter_bindings: Sequence[RuntimeParameterBinding] = (),
     path_resolver: "CompilationPathResolver | None" = None,
-    artifact_graph: "ArtifactGraph | None" = None,
 ) -> CompiledFunctionPattern:
-    """Compile raw FunctionStep.func syntax into the runtime source of truth."""
-    normalized = normalize_function_pattern(pattern)
+    """Compile a step's artifact graph into the runtime source of truth."""
+    pattern = graph.pattern
+    if pattern is None:
+        raise ValueError("compile_function_pattern requires a FunctionStep artifact graph.")
     runtime_parameter_bindings = tuple(runtime_parameter_bindings)
     return CompiledFunctionPattern(
         groups=tuple(
             CompiledFunctionGroup.from_normalized_group(
                 group,
+                graph=graph,
                 input_plans=input_plans,
                 output_plans=output_plans,
-                declaration_provider=declaration_provider,
-                invocation_contract_provider=invocation_contract_provider,
-                step_context=step_context,
                 runtime_parameter_bindings=runtime_parameter_bindings,
                 path_resolver=path_resolver,
-                artifact_graph=artifact_graph,
             )
-            for group in normalized.groups
+            for group in pattern.groups
         ),
-        is_grouped=normalized.is_grouped,
+        is_grouped=pattern.is_grouped,
     )
-
-
-def strip_disabled_functions(
-    pattern: FunctionPatternSyntax,
-) -> FunctionPatternSyntax | None:
-    """Remove disabled function items from any supported function-pattern shape."""
-    if isinstance(pattern, NormalizedFunctionPattern):
-        return pattern
-    if isinstance(pattern, tuple):
-        _func, kwargs = _split_function_item(pattern)
-        if RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs):
-            return None
-        return pattern
-
-    if isinstance(pattern, list):
-        stripped = [strip_disabled_functions(item) for item in pattern]
-        return [item for item in stripped if item not in (None, [], {})]
-
-    if isinstance(pattern, dict):
-        stripped = {
-            key: strip_disabled_functions(value) for key, value in pattern.items()
-        }
-        return {
-            key: value for key, value in stripped.items() if value not in (None, [], {})
-        }
-
-    return pattern
-
-
-def inject_kwargs_into_pattern(
-    pattern: FunctionPatternSyntax,
-    kwargs: RuntimeKwargMap,
-) -> FunctionPatternSyntax:
-    """Inject kwargs into every callable item in a function pattern."""
-    if not kwargs:
-        return pattern
-
-    if _is_callable_pattern_item(pattern):
-        return PatternItemKwargMerge(kwargs).merge(pattern)
-
-    if isinstance(pattern, list):
-        return [inject_kwargs_into_pattern(item, kwargs) for item in pattern]
-
-    if isinstance(pattern, dict):
-        return {
-            key: inject_kwargs_into_pattern(value, kwargs)
-            for key, value in pattern.items()
-        }
-
-    return pattern
-
-
-def inject_artifact_input_values(
-    pattern: FunctionPatternSyntax,
-    values_by_key: RuntimeKwargMap,
-) -> FunctionPatternSyntax:
-    """Inject artifact input values only into callables that declare those inputs."""
-    if not values_by_key:
-        return pattern
-
-    if isinstance(pattern, NormalizedFunctionPattern):
-        return pattern.with_artifact_input_values(values_by_key)
-
-    if _is_callable_pattern_item(pattern):
-        core_callable = get_core_callable(pattern)
-        contract = CallableContract.from_callable(core_callable)
-        matched_values = {
-            spec.parameter_name: values_by_key[spec.name]
-            for spec in contract.artifact_inputs
-            if spec.binds_callable_parameter() and spec.name in values_by_key
-        }
-        if not matched_values:
-            return pattern
-        return PatternItemKwargMerge(matched_values).merge_replacing_existing(pattern)
-
-    if isinstance(pattern, list):
-        return [inject_artifact_input_values(item, values_by_key) for item in pattern]
-
-    if isinstance(pattern, dict):
-        return {
-            key: inject_artifact_input_values(value, values_by_key)
-            for key, value in pattern.items()
-        }
-
-    raise ValueError(
-        f"Cannot inject artifact values into pattern type: {type(pattern)}"
-    )
-
-
-def _is_callable_pattern_item(pattern: FunctionPatternSyntax) -> bool:
-    if get_core_callable(pattern) is None:
-        return False
-    return not isinstance(pattern, (list, dict))
-
-
-@dataclass(frozen=True, slots=True)
-class PatternItemKwargMerge:
-    """Nominal merge authority for function-pattern item kwargs."""
-
-    kwargs: RuntimeKwargMap
-
-    def merge(self, pattern: FunctionPatternSyntax) -> FunctionPatternSyntax:
-        """Return a callable pattern item with injected kwargs."""
-        if isinstance(pattern, tuple):
-            func, existing_kwargs = _split_function_item(pattern)
-            return (func, {**self.kwargs, **existing_kwargs})
-
-        return (pattern, dict(self.kwargs))
-
-    def merge_replacing_existing(
-        self,
-        pattern: FunctionPatternSyntax,
-    ) -> FunctionPatternSyntax:
-        """Return a callable pattern item with injected kwargs taking precedence."""
-        if isinstance(pattern, tuple):
-            func, existing_kwargs = _split_function_item(pattern)
-            return (func, {**existing_kwargs, **self.kwargs})
-
-        return self.merge(pattern)
 
 
 def _compile_runtime_parameter_bindings(
@@ -1778,30 +1606,6 @@ def _compile_runtime_parameter_bindings(
             )
         )
     return tuple(remaining_kwargs.items()), tuple(compiled_bindings)
-
-
-def _split_function_item(
-    func_item: FunctionPatternSyntax,
-) -> tuple[FunctionPatternCallable, RuntimeKwargMap]:
-    if isinstance(func_item, tuple):
-        func, kwargs = _require_two_member_function_leaf(func_item)
-        if not isinstance(kwargs, Mapping):
-            raise TypeError(f"Function kwargs must be a mapping, got {type(kwargs)}")
-        return func, kwargs
-
-    if get_core_callable(func_item) is not None:
-        return func_item, {}
-
-    raise TypeError(f"Invalid function-pattern item: {func_item}")
-
-
-def _require_two_member_function_leaf(func_item: tuple) -> tuple[object, object]:
-    if len(func_item) != 2:
-        raise TypeError(
-            "Function-pattern tuple leaves must contain exactly two members: "
-            "(callable, kwargs)."
-        )
-    return func_item
 
 
 def _freeze_runtime_kwargs(kwargs: RuntimeKwargMap) -> RuntimeKwargItems:

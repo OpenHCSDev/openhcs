@@ -96,14 +96,7 @@ def _contract_for(
     contract = CallableContract.from_callable(func)
     return replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            artifact_inputs=artifact_inputs,
-            artifact_outputs=artifact_outputs,
-            execution_scope=(
-                contract.execution_scope if execution_scope is None else execution_scope
-            ),
-        ),
+        artifact_inputs=artifact_inputs, artifact_outputs=artifact_outputs, execution_scope=contract.execution_scope if execution_scope is None else execution_scope,
     )
 
 

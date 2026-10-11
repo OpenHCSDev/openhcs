@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
@@ -45,7 +46,11 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
                 axis_id="A01", output_memory_type=MemoryType.NUMPY,
             ),
             context=ProcessingContext(axis_id="A01"),
-            compiled_group=compile_function_pattern(lambda image: image, {}, {}).default_group,
+            compiled_group=compile_function_pattern(
+                admitted_graph(lambda image: image),
+                {},
+                {},
+            ).default_group,
             component_index=0,
             component_count=1)
     result = runtime._project_output_slices(bundle, [])
