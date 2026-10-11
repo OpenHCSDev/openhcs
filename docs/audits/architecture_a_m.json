@@ -81,32 +81,32 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/module_declarations.py",
-        "sha256": "493efb9c749b10ba54713d0c16ee7118f07ff35afbafc9ff156b7100dbd63b19",
+        "sha256": "6bbf41c158496a02439be2ee5aef12d7712fb632419c226a64c9259a55438b95",
         "role": "Defines CellProfilerModule leaves and require_module as owners of module identity, lowering, headless-import validation and artifact semantics."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_declarations.py",
-        "sha256": "286638babca312c85ee0b8319fd44ba86be5868a3c1a20b74b1b48a0bfdbc652",
+        "sha256": "f70b52114fb5d5e2c2fc49cd9a2b46986bde48ce02d82f1a34a67f072ca2ab20",
         "role": "Defines the nominal interactive-module family that rejects headless import."
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "2060f856bcb0cc8ef57b92fc17a1e558a676e4033075950b1a4e41dc8656d330",
+        "sha256": "5b8e85dc1708d5727c73ac1007150219683fb9fb75c4ff2ec2c0bc676445738c",
         "role": "Declares CallableContract, the declaration-owned callable metadata at the nominal boundary."
       },
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "907551ae0ce4bf42a557554f5df0252b0a88fc9b7c1b7ac19705aade66b6656f",
+        "sha256": "65eb0ec5c903366243ca8bd5ea07412e8d34bdb81e6015fa76b3c4c59838733f",
         "role": "Declares the ArtifactSpecRelation family for cross-artifact semantics."
       },
       {
         "path": "openhcs/core/dataset_sources/source.py",
-        "sha256": "f736728d2f715b72cd5479fcc79520911b037d3410a42ebfc9febef2e51ffda6",
+        "sha256": "097fde4d2b74031eacf53a88e79f499417e8c1c97ba0753e8a9df831b307efa6",
         "role": "Defines the DatasetSource registry and its layout detection and workspace projection boundary."
       },
       {
         "path": "openhcs/core/dataset_sources/source_bindings_source.py",
-        "sha256": "7d2ac740ebb081869ad98573032849732f9b64cbbfb4fc7bd9778becc328c78c",
+        "sha256": "fccda877f39e7b2f99d6cc95143480e5955186264e316e832ca9a69c2ae90b8c",
         "role": "Defines SourceBindingsSource, which composes a dataset source with SourceBindingsConfig declarations."
       },
       {
@@ -136,6 +136,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/abstraction_lattices.rst against B6's later changes to openhcs/interop/cellprofiler/module_declarations.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, openhcs/core/callable_contract.py, openhcs/core/artifacts.py, openhcs/core/dataset_sources/source.py, openhcs/core/dataset_sources/source_bindings_source.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/abstraction_lattices.rst against the later B6 changes to openhcs/interop/cellprofiler/module_declarations.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, openhcs/core/callable_contract.py, openhcs/core/artifacts.py, openhcs/core/dataset_sources/source.py, openhcs/core/dataset_sources/source_bindings_source.py, openhcs/agent/capabilities.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/abstraction_lattices.rst in full and compared it against the changed authorities: openhcs/core/registry_strategies.py (deleted; mixins now in metaclass_registry.strategies), openhcs/microscopes/microscope_base.py (deleted; DatasetSource family in openhcs/core/dataset_sources), module_declarations.py, module_artifact_declarations.py, callable_contract.py, openhcs/agent/capabilities.py and the two CellProfiler tests; replaced the microscope-handler owner and SourceBindingsHandler with DatasetSource and SourceBindingsSource, attributed the strategy mixins to metaclass-registry, and confirmed CellProfilerModule.require_module, ArtifactSpecRelation, RuntimePlaneAxisStrategy, for_enum_member and CapabilityTransport against current source. Historical commit references are left as history.",
       "Re-read docs/source/architecture/abstraction_lattices.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -174,12 +175,12 @@
     "authority": [
       {
         "path": "openhcs/domains/microscopy/analysis_consolidation.py",
-        "sha256": "1084a6761a379417f86a042d635d4d43fbe55c4ac497998e48c94fe56807393a",
+        "sha256": "292f7138a00dc22dba5b8d8af5de6140d247b955723cc807cc982ffec7a7dd2d",
         "role": "Defines AnalysisConsolidationHook, its saved/reused output observations, the per-directory destinations and the FileManager summary writer."
       },
       {
         "path": "openhcs/core/post_execute.py",
-        "sha256": "2d925b58e1fe242acf705f16fe4ac0ef34119da9827eca00c126c4194eed2919",
+        "sha256": "42183491eae6a5a17fd68c179970b1682343f1f73f355291f2ba4b02c784905d",
         "role": "Defines the PostExecuteHook family: binding from the global config, observation combine, and running after every partition succeeds."
       },
       {
@@ -199,7 +200,7 @@
       },
       {
         "path": "tests/unit/test_function_artifact_materialization.py",
-        "sha256": "1f6c1aafba18111da085153bbbba8b8141096b94e626647ca717be172cb63a74",
+        "sha256": "e92bd682c105778d8bde9cb0f63ff1baed9f4c082a05d2c7f8f04bf539bd699f",
         "role": "Proves the hook consumes saved CSV content, uses the compiled backend destination, skips a disabled config, and propagates failures."
       },
       {
@@ -214,6 +215,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/analysis_consolidation_system.rst against B6's later changes to openhcs/domains/microscopy/analysis_consolidation.py, openhcs/core/post_execute.py, tests/unit/test_function_artifact_materialization.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/analysis_consolidation_system.rst against the later B6 changes to openhcs/domains/microscopy/analysis_consolidation.py, openhcs/core/post_execute.py, tests/unit/test_function_artifact_materialization.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/analysis_consolidation_system.rst in full and compared it against the changed authorities: openhcs/core/orchestrator/analysis_consolidation.py (moved to openhcs/domains/microscopy/analysis_consolidation.py as a post-execute hook), consolidate_analysis_results.py, openhcs/core/config.py (consolidation config moved to openhcs/domains/microscopy/config.py), the three tests and openhcs/processing/materialization/core.py; rewrote the flow paragraph for AnalysisConsolidationHook and PostExecuteHook, removed the obsolete output-selection/skip-rendering paragraph, and confirmed the writer, DataSink save context, output-root destination and failure propagation against current source. Dropped test_orchestrator_lane_planning.py and materialization/core.py, which no longer own a stated claim.",
       "Re-read docs/source/architecture/analysis_consolidation_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -243,37 +245,37 @@
     "authority": [
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "907551ae0ce4bf42a557554f5df0252b0a88fc9b7c1b7ac19705aade66b6656f",
+        "sha256": "65eb0ec5c903366243ca8bd5ea07412e8d34bdb81e6015fa76b3c4c59838733f",
         "role": "Defines the ArtifactType families, ArtifactSpec/ArtifactSpecRef, ArtifactSpecRelation leaves and materialisation declarations."
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "2060f856bcb0cc8ef57b92fc17a1e558a676e4033075950b1a4e41dc8656d330",
+        "sha256": "5b8e85dc1708d5727c73ac1007150219683fb9fb75c4ff2ec2c0bc676445738c",
         "role": "Defines CallableContract and its ordered artifact input and output collections."
       },
       {
         "path": "openhcs/core/function_patterns.py",
-        "sha256": "3dbdad68a4c7c765cc0dae056079929e5e4632f39bdbe2e746bea3acc171562d",
+        "sha256": "95b9056c6980e4f7943f909aeae8262252c9aa175247a534befc8d4cc459fdd2",
         "role": "Defines InvocationArtifactInputEdgePlan, its main_flow_projection and storage plan, and MainFlowInputProjection."
       },
       {
         "path": "openhcs/core/pipeline/function_contracts.py",
-        "sha256": "883d22780ab41f122d6ed651c9f59fea540120f8fcf50d30e348ac295bd4fca9",
+        "sha256": "13bcaf7c7a62654f512d2cc739edccd2deeff35d99970ca493f3e827afbda91a",
         "role": "Defines the special_inputs, artifact_inputs and artifact_outputs decorators."
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "bc1380d505dae574c6dc1255afcba59b0513d933716017c05217baabed104d24",
+        "sha256": "677d106969aae4d818745bff29b6f84e487ec79a044c8eaf26bea1916236fc6c",
         "role": "Implements artifact satisfaction and exact compiled path planning."
       },
       {
         "path": "tests/unit/test_implicit_main_flow_compilation.py",
-        "sha256": "1feb8d922c8551500b7d38db1ca1d1aa43475af1bc9a3552443980c2662bf4e4",
+        "sha256": "9f8f3c44f096ce0318612df7d51affbb21a7bbc837c9846d599dbe20c0a8998b",
         "role": "Compiles grouped native output into a CellProfiler Threshold consumer and asserts the main-flow edge, group scope and execution scope."
       },
       {
         "path": "tests/unit/test_callable_contract.py",
-        "sha256": "b0ce0cba2e396e53f8cb9e95533ff918788e8c6dd60037a66e0aeda603bc64c2",
+        "sha256": "cc220f53107a08b0406b6e0dd49896e3e4c3c0af6e527b0ef00d4fdaba8f0b2c",
         "role": "Verifies callable contract construction, validation, and artifact semantics."
       },
       {
@@ -288,6 +290,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/artifact_contract_system.rst against B6's later changes to openhcs/core/artifacts.py, openhcs/core/callable_contract.py, openhcs/core/function_patterns.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/pipeline/path_planner.py, tests/unit/test_implicit_main_flow_compilation.py, tests/unit/test_callable_contract.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/artifact_contract_system.rst against the later B6 changes to openhcs/core/artifacts.py, openhcs/core/callable_contract.py, openhcs/core/function_patterns.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/pipeline/path_planner.py, tests/unit/test_implicit_main_flow_compilation.py, tests/unit/test_callable_contract.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/artifact_contract_system.rst in full and compared it against the changed authorities: openhcs/core/artifacts.py, openhcs/core/callable_contract.py, openhcs/core/pipeline/path_planner.py, tests/unit/test_callable_contract.py, tests/unit/test_artifact_input_projection_plan.py; replaced the removed consumes_main_flow flag with main_flow_projection in the occurrence and implicit main-flow sections and the regression description, tidied the special_inputs sentence, and confirmed every other named declaration (ArtifactType families, relation leaves, SourceImageProvenance, ArtifactPlanKeySelector, SelectedPlaneImageOutput, RuntimeValueStore, StepMaterializationConfig) exists with the stated role.",
       "Re-read docs/source/architecture/artifact_contract_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -315,7 +318,7 @@
     "authority": [
       {
         "path": "openhcs/authoring/session/operations/datasets.py",
-        "sha256": "43d9edfed59abe6b88e242d39f1ddc8f5078559e04b3875da1da07b993295993",
+        "sha256": "208274effc2e790775d90528211fa4f640eb01f7ca3fdd9c927c3bf71e39b632",
         "role": "Declares CompileDatasets and its initialised, idle and non-empty-pipeline availability checks."
       },
       {
@@ -325,7 +328,7 @@
       },
       {
         "path": "openhcs/authoring/session/compile_batch.py",
-        "sha256": "d539bcf8df15581d23bc69701c5d30d489c3fe5f600f19236b28ec35c1c2d92f",
+        "sha256": "0cbe5a6b86a0fb5e9b92c4fc45f858c979031ac93594b317b9761c28f5aaf9ab",
         "role": "Runs compile-only batches and compile-before-execution through BatchSubmitWaitEngine."
       },
       {
@@ -335,22 +338,22 @@
       },
       {
         "path": "openhcs/authoring/session/session.py",
-        "sha256": "458d71fe96ab75153977c554fb748e78f1773cd7794b625d7ec233c9b22e4453",
+        "sha256": "587047b63972df89ec46a01ed2c92ff3ef9577335f58a980297db02094e4e8e0",
         "role": "Implements run_datasets (reserve, reset, connect, compile all, submit each with compile_artifact_id) and the endpoint status binding."
       },
       {
         "path": "openhcs/authoring/session/submission.py",
-        "sha256": "e04fdb017c3905903885b21007ebb4ceb530ec16267ea26577b3c9609b82e2ce",
+        "sha256": "710ac218d1db01f231b67bf0fe229dc03fb428bc6655b23671f3a026be91c673",
         "role": "Submits each execution with its compile_artifact_id and auxiliary observation-export parameters."
       },
       {
         "path": "openhcs/authoring/session/progress.py",
-        "sha256": "eef42f1c12c9649c36e7d1a86d664f527e6c1aa28868eb5b348d1ebdb5d548bd",
+        "sha256": "cd34f68461b50506600da7854a3bf57646f2f0ff7288d0627bc40cb852a16825",
         "role": "Defines ExecutionProgress: one registry-mutation subscription, dirty marking and interval rebuilds on the session main thread."
       },
       {
         "path": "tests/unit/test_u1_session_guards.py",
-        "sha256": "54e03867fc65858f21384d4c98215dc9d9accec1c0965a85d563b8410085b8f9",
+        "sha256": "98de1f6239607e92d2aa35bd5e95f3e1c1c42887cc238e1291ffc830ca2cd4a5",
         "role": "Guards that session state lives in the Qt-free session package and its operations are declared classes."
       }
     ],
@@ -359,6 +362,7 @@
     ],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against B6's later changes to openhcs/authoring/session/operations/datasets.py, openhcs/authoring/session/compile_batch.py, openhcs/authoring/session/session.py, openhcs/authoring/session/submission.py, openhcs/authoring/session/progress.py, tests/unit/test_u1_session_guards.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against the later B6 changes to openhcs/authoring/session/operations/datasets.py, openhcs/authoring/session/compile_batch.py, openhcs/authoring/session/session.py, openhcs/authoring/session/submission.py, openhcs/authoring/session/progress.py, tests/unit/test_u1_session_guards.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/batch_workflow_service.rst in full and compared it against the changed authorities: the deleted openhcs/pyqt_gui batch workflow, compile batch, components, client service and execution-state modules and their tests (replaced by openhcs/authoring/session), openhcs/pyqt_gui/main.py, test_main_zmq_window_routing.py, endpoint_function_catalog_service.py, zmqruntime client.py and test_concurrent_initialization_progress.py; checked CompileDatasets availability, DatasetPipelineRequest/CompiledDataset, BatchSubmitWaitEngine, run_datasets ordering and compile_artifact_id submission, ExecutionProgress listener and interval rebuild, and the endpoint status binding against the session package. The page text is accurate; the record now points at the session owners.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
@@ -395,17 +399,17 @@
     "authority": [
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "5d3646e17f7de843a5b36164f7cef7505da7841636423ae4fb4e00d194a87e9c",
+        "sha256": "3439d96f3fbfcb104a53019dc150049021d9a8132bd27096f1ccf510eefbe37b",
         "role": "Implements .cppipe parsing, declaration-owned headless validation, and lowering into PipelineConfig and FunctionStep declarations."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_declarations.py",
-        "sha256": "493efb9c749b10ba54713d0c16ee7118f07ff35afbafc9ff156b7100dbd63b19",
+        "sha256": "6bbf41c158496a02439be2ee5aef12d7712fb632419c226a64c9259a55438b95",
         "role": "Owns module-specific callable, setting, headless-import, scope, artifact, and function-catalogue declarations."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_declarations.py",
-        "sha256": "286638babca312c85ee0b8319fd44ba86be5868a3c1a20b74b1b48a0bfdbc652",
+        "sha256": "f70b52114fb5d5e2c2fc49cd9a2b46986bde48ce02d82f1a34a67f072ca2ab20",
         "role": "Defines the nominal interactive-module family that rejects headless import."
       },
       {
@@ -415,7 +419,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "90d75f6287c5f21f93d82960729199261f7906e0f4912b7728527260b9723a66",
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
         "role": "Declares ResolvedPipelineDefinition, the resolved step sequence the provider walks."
       },
       {
@@ -425,7 +429,7 @@
       },
       {
         "path": "tests/unit/test_cellprofiler_artifact_declarations.py",
-        "sha256": "5792727b3fdb1a7bffffe43fa63e7d5944a6c538ab35e90dc86e1dcfa908b189",
+        "sha256": "fe894cd2b592d0755c106be3363eeaf078bc26d0b698a7ccfe6662ef0c0c475b",
         "role": "Verifies typed image, object, measurement, relationship, table, grid, graph, and special artifact declarations."
       },
       {
@@ -454,6 +458,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/cellprofiler_interop.rst against B6's later changes to openhcs/interop/cellprofiler/pipeline_import.py, openhcs/interop/cellprofiler/module_declarations.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, openhcs/core/pipeline/compilation_session.py, tests/unit/test_cellprofiler_artifact_declarations.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/cellprofiler_interop.rst against the later B6 changes to openhcs/interop/cellprofiler/pipeline_import.py, openhcs/interop/cellprofiler/module_declarations.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, openhcs/core/pipeline/compilation_session.py, tests/unit/test_cellprofiler_artifact_declarations.py, tests/integration/test_cellprofiler_official30_zmq.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/cellprofiler_interop.rst in full and compared it against the changed authorities: pipeline_import.py, module_declarations.py, module_artifact_declarations.py, test_cellprofiler_artifact_declarations.py, the Official30 integration test, test_cellprofiler_pipeline_import.py and benchmark/cellprofiler_reference_exports.py; replaced the removed StepSnapshot with ResolvedPipelineDefinition and confirmed the import flow, interactive-module rejection, InputSource members, FunctionStepExecutionScope.PLATE, the provider's named methods, the CPA SQLite/properties route and CellProfilerReferenceExportPlan against current source.",
       "Re-read docs/source/architecture/cellprofiler_interop.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -485,12 +490,12 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_object_state.py",
-        "sha256": "81b5ffbbd19952f85430962cd1bb61918ac3abe4dd9ec843b8f67e4590ffd06b",
+        "sha256": "e548b367507b3fb6830ce9ecb844e3b756243af96fe38e0d35de5da0b974c1fd",
         "role": "Projects live ObjectState scopes, fields, revisions, document capabilities, and mutation receipts through the UI bridge."
       },
       {
         "path": "openhcs/agent/dto/ui_bridge.py",
-        "sha256": "5f5df140f0a32fa7e0a169981b7f346f7335a2a517676eefc7b29bd8fdc52a8f",
+        "sha256": "918b30f34e7d096b19ce04017d9a991d0a10e4088c310797e497fb2444fc37c0",
         "role": "Carries generic endpoint application and operation-lifecycle declarations through UI bridge descriptors and request/response envelopes."
       },
       {
@@ -515,7 +520,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_agent_bridge.py",
-        "sha256": "5a03e683a0677166361440c6c78803ec2dadf753342e69996153005bccab5473",
+        "sha256": "ce650c52475764657bbc0221109879594f9cf1482de8245d6c141f00474d5d23",
         "role": "Projects ObjectState branch and snapshot restoration through the attached-agent surface."
       },
       {
@@ -525,7 +530,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "b03744b1fa201f77de26d2e6050422b6422ebce78443c478c5e8c5f55e0a3e24",
+        "sha256": "de6758859d9743e826369162855327e4a84056cafdd7ddfdc33868d2a3093353",
         "role": "Verifies read-only rejection, semantic no-op application, and branch restoration through the UI bridge."
       },
       {
@@ -535,7 +540,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_pipeline_code_document_transactionality.py",
-        "sha256": "139725010d983c7e8a98731b4e462339c4188b8d9c44383677191810ad7bf24f",
+        "sha256": "0bb9b43d867a4e26f13b51531a2b7a847c6c3685841f8e002e209200a37366b6",
         "role": "Verifies revision checks, validation, snapshots, rollback, and transactional application."
       },
       {
@@ -570,7 +575,7 @@
       },
       {
         "path": "tests/unit/test_pycodify_formatters.py",
-        "sha256": "1dd67d1a782d04dc24ac2ba9ec1e457769c1c6c9191c992f0a1cc0feb78487c5",
+        "sha256": "2f0c6683a5255d01442ae33f676f601d5e3f1e3e04d1b2c2fc945b3c564796ce",
         "role": "Verifies clean/full parameter order and semantic default handling."
       },
       {
@@ -582,6 +587,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/code_ui_interconversion.rst against B6's later changes to openhcs/pyqt_gui/services/ui_bridge_object_state.py, openhcs/agent/dto/ui_bridge.py, openhcs/pyqt_gui/services/ui_agent_bridge.py, tests/unit/pyqt_gui/test_ui_agent_bridge.py, tests/unit/pyqt_gui/test_pipeline_code_document_transactionality.py, tests/unit/test_pycodify_formatters.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/code_ui_interconversion.rst against the later B6 changes to openhcs/pyqt_gui/services/ui_bridge_object_state.py, openhcs/agent/dto/ui_bridge.py, openhcs/pyqt_gui/services/ui_agent_bridge.py, tests/unit/pyqt_gui/test_ui_agent_bridge.py, tests/unit/pyqt_gui/test_pipeline_code_document_transactionality.py, tests/unit/test_pycodify_formatters.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/code_ui_interconversion.rst in full and compared it against the changed authorities: openhcs/core/pipeline_document.py (PipelineDocumentAuthority renamed PipelineDocumentCodec; PipelineDocument unchanged), ui_bridge_object_state.py, openhcs/agent/dto/ui_bridge.py, ui_bridge_transport.py, ui_bridge_server.py, zmqruntime messages.py, python-introspect annotation_types.py, ui_agent_bridge.py and its test, function_step_code_document.py (now FunctionStepDocumentCodec), the code-document transactionality test, step_parameter_editor.py (the pickled .step settings files are gone, which the page never described), pycodify_formatters.py and its test; checked the schema/bridge-protocol/application identity checks on both bridge ends, the field-mutation request token without base revision, enum values in field help, code-document revision apply, and Plate Manager naming. Every claim the page makes still holds; no text change.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
@@ -614,12 +620,12 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "d1216010dec1804c51aec9c774f298513638ca016d500fe6328d76a9a9bfb4d6",
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
         "role": "Lowers declarations into typed step plans, including declaration-derived framework-device assignments."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "90d75f6287c5f21f93d82960729199261f7906e0f4912b7728527260b9723a66",
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
         "role": "Defines the per-context CompilationSession and ResolvedPipelineDefinition."
       },
       {
@@ -633,6 +639,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/compilation_service.rst against B6's later changes to openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/compilation_service.rst against the later B6 changes to openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/compilation_service.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_execution.py; the page only names the session, typed-plan and execution-bundle model and redirects to pipeline_compilation_system, all of which still exist (CompilationSession, CompiledStepPlan, CompiledExecutionBundle), so the redirect stays unchanged.",
       "Re-read docs/source/architecture/compilation_service.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -654,17 +661,17 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "d1216010dec1804c51aec9c774f298513638ca016d500fe6328d76a9a9bfb4d6",
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
         "role": "Implements the current compiler stages, including declaration-derived framework-device assignment."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "90d75f6287c5f21f93d82960729199261f7906e0f4912b7728527260b9723a66",
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
         "role": "Defines ResolvedPipelineDefinition, which replaced resolved step snapshots, and CompilationSession."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "f4a851d7de2ea82e1d548f37e6be2511fd20d799580193496a3746e5484906ba",
+        "sha256": "5bce281e8291a3434b57ba44f97008e4095cc95998a0805f0369fd212c3a7eec",
         "role": "Defines typed step-plan fields, exact framework footprints, and framework-local device bindings."
       },
       {
@@ -678,6 +685,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/compilation_system_detailed.rst against B6's later changes to openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/compilation_system_detailed.rst against the later B6 changes to openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/compilation_system_detailed.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/step_snapshot.py (deleted in 0adb68108; resolved steps now live on ResolvedPipelineDefinition in compilation_session.py), openhcs/core/compiled_step_plan.py; replaced StepSnapshot with ResolvedPipelineDefinition in the redirect text and confirmed the redirect target page exists.",
       "Re-read docs/source/architecture/compilation_system_detailed.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -704,7 +712,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "7b5622b3d82b1e1d672eaedb14e054be81baef417a736adb06bea34fb6708b28",
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
         "role": "Declares the kernel OpenHCS configuration dataclasses that consume ObjectState mechanics."
       },
       {
@@ -718,6 +726,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/component_configuration_framework.rst against B6's later changes to openhcs/core/config.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/component_configuration_framework.rst against the later B6 changes to external/ObjectState/src/objectstate/lazy_factory.py, openhcs/core/config.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/component_configuration_framework.rst in full and compared it against the changed authorities: external/ObjectState/src/objectstate/lazy_factory.py, openhcs/core/config.py (domain sections such as analysis consolidation moved to openhcs/domains/microscopy/config.py, now added as an authority); the page only states that ObjectState owns lazy configuration and that OpenHCS documents its domain declarations, and redirects to component_system_integration and external_foundations, both of which exist, so the redirect stays unchanged.",
       "Re-read docs/source/architecture/component_configuration_framework.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -754,7 +763,7 @@
       },
       {
         "path": "openhcs/domains/microscopy/axes.py",
-        "sha256": "28cc16a296d4580351cd9abec553155e59c4d56a6ea20d52cbd6abb2879b75c6",
+        "sha256": "531695809259324032e0b88632813323b4fe6a9a176ad6f636aeef8dec332399",
         "role": "Declares the microscopy axis family, the OpenHCS domain declaration registered through metaclass-registry."
       }
     ],
@@ -763,6 +772,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/component_processor_metaprogramming.rst against B6's later changes to openhcs/domains/microscopy/axes.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/component_processor_metaprogramming.rst against the later B6 changes to openhcs/domains/microscopy/axes.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/component_processor_metaprogramming.rst in full and compared it against the changed authorities: signature_analyzer.py, metaclass_registry/core.py, openhcs/constants/constants.py; confirmed signature analysis, callable-declaration projection and AutoRegisterMeta registration remain in the external packages, and replaced the deleted component-enum authority with the microscopy axis family declaration; no page edit was needed.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
@@ -787,12 +797,12 @@
     "authority": [
       {
         "path": "openhcs/core/axes.py",
-        "sha256": "03e5a61d808a0221507b2be93f3672cc5f4421e53eb72ce4b683309cc673213b",
+        "sha256": "8d93133639c576050f089fb8aab99937c8982aff07e742fea44f8a12e62bb7b2",
         "role": "Declares Axis, AxisFamily and the PartitionAxis role whose single member partitions compiled contexts."
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "7b5622b3d82b1e1d672eaedb14e054be81baef417a736adb06bea34fb6708b28",
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
         "role": "Declares the step-level variable_components and group_by fields and the pipeline-level sequential_components field."
       },
       {
@@ -807,12 +817,12 @@
       },
       {
         "path": "openhcs/core/dataset_sources/interfaces.py",
-        "sha256": "31e3f5789c4a1603de12a0f0f95ceb529ff3190d45f2315e2674ef81a9177047",
+        "sha256": "dd88254bfd5da8b0fdf0a038e358f36b49db5b8cf0b93213d56dc928af965f00",
         "role": "Defines MetadataComponentValueSet, the metadata-handler projection of complete axis values."
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "d1216010dec1804c51aec9c774f298513638ca016d500fe6328d76a9a9bfb4d6",
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
         "role": "Consumes the axis declarations to construct execution-axis contexts, stacks, grouping, and typed plans."
       }
     ],
@@ -822,6 +832,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/component_system_integration.rst against B6's later changes to openhcs/core/axes.py, openhcs/core/config.py, openhcs/core/dataset_sources/interfaces.py, openhcs/core/pipeline/compiler.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/component_system_integration.rst against the later B6 changes to openhcs/core/axes.py, openhcs/core/config.py, openhcs/core/dataset_sources/interfaces.py, openhcs/core/pipeline/compiler.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/component_system_integration.rst in full and compared it against the changed authorities: constants.py, component_set.py, component_values.py, parser_metaprogramming.py, compiler.py; verified AxisValues, FilenameParseResult, MetadataComponentValueSet, variable_components/group_by/sequential_components and AxisFamily.partition_axis in current source, and replaced the nonexistent multiprocessing_axis declaration with the family's PartitionAxis.",
       "Re-read docs/source/architecture/component_system_integration.rst in full against repository base 32ca17c17 and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -845,7 +856,7 @@
     "authority": [
       {
         "path": "openhcs/core/axes.py",
-        "sha256": "03e5a61d808a0221507b2be93f3672cc5f4421e53eb72ce4b683309cc673213b",
+        "sha256": "8d93133639c576050f089fb8aab99937c8982aff07e742fea44f8a12e62bb7b2",
         "role": "Defines AxisFamily.named decoding, variable_axes as every axis but the partition axis, and the Ungrouped declaration."
       },
       {
@@ -855,17 +866,17 @@
       },
       {
         "path": "openhcs/core/pipeline/funcstep_contract_validator.py",
-        "sha256": "56968226fda4d3909aa581604e12e170d1b9b13ea1cd34536f6be32d6f4566a1",
+        "sha256": "4a167f620be9ff6e6524101652b6dfa25984b3a389b19da3f5ce78c14d5947d4",
         "role": "Validates allowed group_by roles, required callable axis roles, and declared memory contracts per callable."
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "d1216010dec1804c51aec9c774f298513638ca016d500fe6328d76a9a9bfb4d6",
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
         "role": "Rejects pipeline sequential axes that are also a step's variable axes."
       },
       {
         "path": "tests/unit/test_funcstep_contract_validator.py",
-        "sha256": "e40f4cd60e418dcafcea5d8b6ddcd61e222478e14da3bd3d8a5d5f5263af9cc0",
+        "sha256": "a208ca59a60b2d5bbcc9955e99592fd480368995336f6ef86a0a06f8f6991747",
         "role": "Covers accepted and rejected grouping, required-role, and callable-contract combinations."
       }
     ],
@@ -876,6 +887,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/component_validation_system.rst against B6's later changes to openhcs/core/axes.py, openhcs/core/pipeline/funcstep_contract_validator.py, openhcs/core/pipeline/compiler.py, tests/unit/test_funcstep_contract_validator.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/component_validation_system.rst against the later B6 changes to openhcs/core/axes.py, openhcs/core/pipeline/funcstep_contract_validator.py, openhcs/core/pipeline/compiler.py, tests/unit/test_funcstep_contract_validator.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/component_validation_system.rst in full and compared it against the changed authorities: validation.py, funcstep_contract_validator.py, test_funcstep_contract_validator.py; traced GenericValidator.validate_step, validate_dict_pattern_keys, validate_allowed_group_by, validate_required_axis_roles and the compiler's sequential-components check, and rewrote the check list and consumer guidance to match.",
       "Re-read docs/source/architecture/component_validation_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -906,7 +918,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/bundle_execution.py",
-        "sha256": "7665bd4ab8b9ce73d3dcb4fb9679e836b23bffb81d70541baef2e114ee54b0d9",
+        "sha256": "f5ba09a2ec7c688b1ca08167ab398cc976a9e2c39b301ae98f3c5fd560a25c85",
         "role": "Runs one compiled bundle, then the parent-owned dataset-scoped steps and post-execute hooks."
       },
       {
@@ -916,7 +928,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "1d71883f545f7f8702c64710f968b4138d0748fa0c58b6e1b87e06a7045e5ebf",
+        "sha256": "23a3ef2a70378dd1bb5c413a56e36bbb3fa013142741c9b45407bfc47de8c4a4",
         "role": "Owns executor construction, the WorkerCommand family served by process workers, result collection, cancellation, and cleanup."
       },
       {
@@ -931,7 +943,7 @@
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "4a83337fa35c68e4f641760ebbf86e4cc30f6624da55ccebd09be636a4b56bd0",
+        "sha256": "3d5c2f3662b8d4c330582af0c4a649b8f4d9582e064d9cf3159798c8934a2bbb",
         "role": "Verifies that worker-lane grouping remains correct when context mapping keys do not encode axis identity."
       },
       {
@@ -948,6 +960,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/concurrency_model.rst against B6's later changes to openhcs/core/orchestrator/bundle_execution.py, openhcs/core/orchestrator/worker_execution.py, tests/unit/test_orchestrator_lane_planning.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/concurrency_model.rst against the later B6 changes to openhcs/core/orchestrator/bundle_execution.py, openhcs/core/orchestrator/worker_execution.py, tests/unit/test_orchestrator_lane_planning.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/concurrency_model.rst in full and compared it against the changed authorities: compiled_execution.py, processing_context.py, worker_lanes.py, test_orchestrator_lane_planning.py, worker_execution.py, test_worker_start_policy.py; confirmed CompiledExecutionBundle, WorkerLaneExecutionContext, resolve_worker_start_context, the cancellation signal and AXIS_COMPLETED, renamed compiled_plate_execution to bundle_execution, and corrected the lane, worker-command, progress and post-execute claims.",
       "Re-read docs/source/architecture/concurrency_model.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -981,7 +994,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "7b5622b3d82b1e1d672eaedb14e054be81baef417a736adb06bea34fb6708b28",
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
         "role": "Declares GlobalPipelineConfig and the step and standalone configuration dataclasses OpenHCS composes over ObjectState."
       }
     ],
@@ -990,6 +1003,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/configuration_framework.rst against B6's later changes to openhcs/core/config.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/configuration_framework.rst against the later B6 changes to external/ObjectState/src/objectstate/lazy_factory.py, openhcs/core/config.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/configuration_framework.rst in full and compared it against the changed authorities: lazy_factory.py, context_manager.py, openhcs/core/config.py; confirmed ObjectState still owns lazy configuration and context resolution, the linked system_overview and external_foundations pages exist, and no page edit was needed.",
       "Re-read docs/source/architecture/configuration_framework.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -1016,7 +1030,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "90d75f6287c5f21f93d82960729199261f7906e0f4912b7728527260b9723a66",
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
         "role": "Consumes an already resolved GlobalPipelineConfig in a scoped compiler session."
       }
     ],
@@ -1025,6 +1039,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/context_system.rst against B6's later changes to openhcs/core/pipeline/compilation_session.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/context_system.rst against the later B6 changes to openhcs/core/pipeline/compilation_session.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/context_system.rst in full and compared it against the changed authorities: context_manager.py, compilation_session.py; confirmed ObjectState owns context management and the compiler session consumes a resolved GlobalPipelineConfig; no page edit was needed.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
@@ -1072,7 +1087,7 @@
     "authority": [
       {
         "path": "openhcs/processing/custom_functions/manager.py",
-        "sha256": "5cd7e955087f0bd9c527fc6307dff48f4aa959c607a3ec776b8379abac76fb36",
+        "sha256": "0ffa6fc2a18566600dcff33d4b27466d8a5684662fa1c696cb5ea52ea459a1e4",
         "role": "Owns persisted custom-function lifecycle and projects validated declarations through the custom runtime registry."
       },
       {
@@ -1086,6 +1101,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/custom_function_registration_system.rst against B6's later changes to openhcs/processing/custom_functions/manager.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/custom_function_registration_system.rst against the later B6 changes to openhcs/processing/custom_functions/manager.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/custom_function_registration_system.rst in full and compared it against the changed authority manager.py; confirmed the user_guide/custom_function_management target exists and CustomFunctionManager still owns persisted custom functions through the runtime registry; no page edit was needed.",
       "Re-read docs/source/architecture/custom_function_registration_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -1121,7 +1137,7 @@
       },
       {
         "path": "openhcs/authoring/session/views.py",
-        "sha256": "2963a2c48856704ea8291075316c470ccc8eeed161b5a798181a519a2ceaef98",
+        "sha256": "8ce6cac27293ac9105f4d2ebc76d10eebeba1ef90e0e8954c0a117910e17e3b3",
         "role": "Declares the SessionView family, each view's title, and the operations its window binds."
       },
       {
@@ -1140,6 +1156,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/declarative_window_system.rst against B6's later changes to openhcs/authoring/session/views.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/declarative_window_system.rst against the later B6 changes to openhcs/authoring/session/views.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/declarative_window_system.rst in full and compared it against the changed authorities: ui_bridge_identities.py, test_build_website.py; confirmed the pyqt-reactive window-manager and scope-window-factory pages and sources exist, traced UiSessionViewWidgetIdentityDeclaration to SessionView.rendered_in, and revised the OpenHCS-retained ownership sentence.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
@@ -1162,7 +1179,7 @@
     "authority": [
       {
         "path": "openhcs/core/function_patterns.py",
-        "sha256": "3dbdad68a4c7c765cc0dae056079929e5e4632f39bdbe2e746bea3acc171562d",
+        "sha256": "95b9056c6980e4f7943f909aeae8262252c9aa175247a534befc8d4cc459fdd2",
         "role": "Defines callable, sequential-chain, and dictionary-fan-out patterns and their grouped source keys."
       },
       {
@@ -1176,6 +1193,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/dict_pattern_case_study.rst against B6's later changes to openhcs/core/function_patterns.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/dict_pattern_case_study.rst against the later B6 changes to openhcs/core/function_patterns.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/dict_pattern_case_study.rst in full and compared it against the changed authorities: function_patterns.py, test_function_patterns.py; confirmed NormalizedFunctionPattern still carries grouped dictionary keys and the redirect target exists; no page edit was needed.",
       "Re-read docs/source/architecture/dict_pattern_case_study.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -1233,27 +1251,27 @@
       },
       {
         "path": "openhcs/processing/backends/experimental_analysis/unified_analysis_engine.py",
-        "sha256": "bd43ec00c265279585f6bcc9eb0a6b6a2eeedaacad6003a33a60ab181cd13a4d",
+        "sha256": "2705d459204557c4f7092df3fd21ed687dcf56449ed361485382b1c0ce196444",
         "role": "Coordinates the workbook-declared format strategy, replicate-local normalization, exports, and the configuration-projected run_directory boundary."
       },
       {
         "path": "openhcs/processing/backends/experimental_analysis/result_formats.py",
-        "sha256": "b0790fa7050855c772f6817b3d538c86bbb161d3d0446020d808ada95351a3c0",
+        "sha256": "6951f41a2ff2bdac1945c7e56584a578c111c078cac1d684030c00f95a23f528",
         "role": "Defines the scope-keyed CX5 and MetaXpress ExperimentalResultFormatStrategy leaves for result reading and plate population."
       },
       {
         "path": "openhcs/processing/backends/experimental_analysis/analysis.py",
-        "sha256": "2fe9bcfba30e739cbf0b74112bfec6ce8714f173bdbd08b6dde1e3b6abe78d6e",
+        "sha256": "17a701e0740eac3e11319fe73f10302bbcab603218349bfba4e07014aabc27bb",
         "role": "Owns layout parsing, exclusion projection, replicate averaging, and table/plate-grid export."
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00ff3bfe7a032bd3de59274697a69d12c9b898177cd8e839f9da3b130becaedf",
+        "sha256": "01dcb82b5850f3cdb1c300a2aa360ba330e7f15dffb5a24e37504311095090f9",
         "role": "Routes the desktop analysis action through ExperimentalAnalysisEngine.run_directory with the default configuration."
       },
       {
         "path": "tests/unit/test_experimental_analysis_engine.py",
-        "sha256": "c79887f97615197c25c340dd277189ebc331bce1f3e9bfec7466c57c92ebd6cf",
+        "sha256": "641fadecf8c940cc2316a06771c74db5f3f2db9dafdfbfebdc535760d6d776ec",
         "role": "Verifies configured path projection, exclusions, normalization-method delegation, and an end-to-end MetaXpress directory run."
       }
     ],
@@ -1263,6 +1281,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/experimental_analysis_system.rst against B6's later changes to openhcs/processing/backends/experimental_analysis/unified_analysis_engine.py, openhcs/processing/backends/experimental_analysis/result_formats.py, openhcs/processing/backends/experimental_analysis/analysis.py, openhcs/pyqt_gui/main.py, tests/unit/test_experimental_analysis_engine.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/experimental_analysis_system.rst against the later B6 changes to openhcs/processing/backends/experimental_analysis/unified_analysis_engine.py, openhcs/processing/backends/experimental_analysis/result_formats.py, openhcs/processing/backends/experimental_analysis/analysis.py, openhcs/pyqt_gui/main.py, tests/unit/test_experimental_analysis_engine.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/experimental_analysis_system.rst in full and compared it against the changed authorities: core/config.py, unified_analysis_engine.py, the moved formats/experimental_result_formats.py, pyqt_gui/main.py, test_experimental_analysis_engine.py; traced ExperimentalAnalysisConfig and NormalizationMethod to domains/microscopy/config.py, the result-format strategies to result_formats.py and layout parsing to analysis.py, confirmed the desktop action calls ExperimentalAnalysisEngine().run_directory, and removed the stale deprecated-wrapper clause.",
       "Re-read docs/source/architecture/experimental_analysis_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -1453,7 +1472,7 @@
     "authority": [
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "5d3646e17f7de843a5b36164f7cef7505da7841636423ae4fb4e00d194a87e9c",
+        "sha256": "3439d96f3fbfcb104a53019dc150049021d9a8132bd27096f1ccf510eefbe37b",
         "role": "Implements CellProfiler lowering to FunctionStep and PipelineConfig declarations with declaration-owned headless validation."
       },
       {
@@ -1468,17 +1487,17 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/module_declarations.py",
-        "sha256": "493efb9c749b10ba54713d0c16ee7118f07ff35afbafc9ff156b7100dbd63b19",
+        "sha256": "6bbf41c158496a02439be2ee5aef12d7712fb632419c226a64c9259a55438b95",
         "role": "Defines the nominal module validation hook queried by the importer."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_declarations.py",
-        "sha256": "286638babca312c85ee0b8319fd44ba86be5868a3c1a20b74b1b48a0bfdbc652",
+        "sha256": "f70b52114fb5d5e2c2fc49cd9a2b46986bde48ce02d82f1a34a67f072ca2ab20",
         "role": "Defines the interactive-module family that rejects headless import."
       },
       {
         "path": "openhcs/core/dataset_sources/source.py",
-        "sha256": "f736728d2f715b72cd5479fcc79520911b037d3410a42ebfc9febef2e51ffda6",
+        "sha256": "097fde4d2b74031eacf53a88e79f499417e8c1c97ba0753e8a9df831b307efa6",
         "role": "Defines the registered DatasetSource family that microscope handlers implement."
       },
       {
@@ -1503,7 +1522,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_server_hooks.py",
-        "sha256": "daf16cc68c8696f6c3680bd230c809be276ead00cfa84488954d328288f51f42",
+        "sha256": "c3027f3495c5ec188a0f9176db7fd0fcbb22451892248c9fd41d73347ac236dd",
         "role": "Maps generic targeted cancellation onto the exact OpenHCS orchestrator and its owned workers."
       },
       {
@@ -1518,6 +1537,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/external_integrations_overview.rst against B6's later changes to openhcs/interop/cellprofiler/pipeline_import.py, openhcs/interop/cellprofiler/module_declarations.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, openhcs/core/dataset_sources/source.py, openhcs/runtime/zmq_server_hooks.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/external_integrations_overview.rst against the later B6 changes to openhcs/interop/cellprofiler/pipeline_import.py, openhcs/interop/cellprofiler/module_declarations.py, openhcs/interop/cellprofiler/module_artifact_declarations.py, openhcs/core/dataset_sources/source.py, openhcs/runtime/zmq_server_hooks.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/external_integrations_overview.rst in full and compared it against the changed authorities: pipeline_import.py, module_declarations.py, module_artifact_declarations.py, the deleted microscope_base.py, polystore/base.py, zmqruntime execution/server.py, zmq_server_hooks.py, test_cellprofiler_pipeline_import.py; replaced MicroscopeHandler with the DatasetSource family, named the PipelineImporter registration, and confirmed the CellProfiler, OMERO and cancellation claims and every linked page.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
@@ -1645,7 +1665,7 @@
     "authority": [
       {
         "path": "openhcs/core/function_patterns.py",
-        "sha256": "3dbdad68a4c7c765cc0dae056079929e5e4632f39bdbe2e746bea3acc171562d",
+        "sha256": "95b9056c6980e4f7943f909aeae8262252c9aa175247a534befc8d4cc459fdd2",
         "role": "Normalizes callable, (callable, kwargs), list-chain, and dict patterns into named invocations and compiles them with their memory and artifact plans."
       },
       {
@@ -1659,6 +1679,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/function_pattern_system.rst against B6's later changes to openhcs/core/function_patterns.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/function_pattern_system.rst against the later B6 changes to openhcs/core/function_patterns.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/function_pattern_system.rst in full and compared it against the changed authorities: openhcs/core/function_patterns.py and tests/unit/test_function_patterns.py; confirmed the module still accepts callable, (callable, kwargs), list and dict patterns and that docs/source/concepts/function_patterns.rst exists; the page text needed no change.",
       "Re-read docs/source/architecture/function_pattern_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -1689,12 +1710,12 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "2060f856bcb0cc8ef57b92fc17a1e558a676e4033075950b1a4e41dc8656d330",
+        "sha256": "5b8e85dc1708d5727c73ac1007150219683fb9fb75c4ff2ec2c0bc676445738c",
         "role": "Adds OpenHCS processing, runtime, artifact, scope, and ArrayBridge memory semantics on top of python-introspect annotation helpers."
       },
       {
         "path": "tests/unit/test_callable_contract.py",
-        "sha256": "b0ce0cba2e396e53f8cb9e95533ff918788e8c6dd60037a66e0aeda603bc64c2",
+        "sha256": "cc220f53107a08b0406b6e0dd49896e3e4c3c0af6e527b0ef00d4fdaba8f0b2c",
         "role": "Verifies OpenHCS callable contracts projected from declaration-owned metadata, including execution memory and runtime batching."
       }
     ],
@@ -1703,6 +1724,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/function_reference_pattern.rst against B6's later changes to openhcs/core/callable_contract.py, tests/unit/test_callable_contract.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/function_reference_pattern.rst against the later B6 changes to openhcs/core/callable_contract.py, tests/unit/test_callable_contract.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/function_reference_pattern.rst in full and compared it against the changed authorities: external/python-introspect/src/python_introspect/signature_analyzer.py, openhcs/core/callable_contract.py and tests/unit/test_callable_contract.py; grepped OpenHCS imports of python_introspect and confirmed docs/source/architecture/processing_semantics.rst exists; the page text needed no change.",
       "Re-read docs/source/architecture/function_reference_pattern.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -1772,7 +1794,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "2060f856bcb0cc8ef57b92fc17a1e558a676e4033075950b1a4e41dc8656d330",
+        "sha256": "5b8e85dc1708d5727c73ac1007150219683fb9fb75c4ff2ec2c0bc676445738c",
         "role": "Projects declaration-owned input, output, and execution memory into immutable callable contracts."
       },
       {
@@ -1787,17 +1809,17 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "d1216010dec1804c51aec9c774f298513638ca016d500fe6328d76a9a9bfb4d6",
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
         "role": "Calls assign_framework_devices on each context's step plans before bundle assembly."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "f4a851d7de2ea82e1d548f37e6be2511fd20d799580193496a3746e5484906ba",
+        "sha256": "5bce281e8291a3434b57ba44f97008e4095cc95998a0805f0369fd212c3a7eec",
         "role": "Owns FrameworkDeviceAssignment bindings, merged cleanup footprints, and the requires_gpu projection."
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "1d71883f545f7f8702c64710f968b4138d0748fa0c58b6e1b87e06a7045e5ebf",
+        "sha256": "23a3ef2a70378dd1bb5c413a56e36bbb3fa013142741c9b45407bfc47de8c4a4",
         "role": "Releases each axis's compiled footprint after process and inline contexts and the merged footprint only after thread-backed lanes join."
       },
       {
@@ -1832,6 +1854,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/gpu_resource_management.rst against B6's later changes to openhcs/core/callable_contract.py, openhcs/core/pipeline/compiler.py, openhcs/core/compiled_step_plan.py, openhcs/core/orchestrator/worker_execution.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/gpu_resource_management.rst against the later B6 changes to openhcs/core/callable_contract.py, openhcs/core/pipeline/compiler.py, openhcs/core/compiled_step_plan.py, openhcs/core/orchestrator/worker_execution.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/gpu_resource_management.rst in full and compared it against the changed authorities: arraybridge decorators.py and types.py, openhcs/core/callable_contract.py, openhcs/core/pipeline/framework_device_assignment.py, openhcs/core/pipeline/compiler.py, openhcs/core/compiled_step_plan.py, openhcs/core/orchestrator/worker_execution.py and the worker-start and execution-scope tests; traced assign_framework_devices from the compiler, FrameworkDeviceResolver's gpu_imports_disabled check, MemoryType.subprocess_environment() callers, _release_runtime_resources per axis and after threaded lanes, and resolve_worker_start_context; replaced one jargon phrase and refreshed evidence roles.",
       "Re-read docs/source/architecture/gpu_resource_management.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -1896,22 +1919,22 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "7b5622b3d82b1e1d672eaedb14e054be81baef417a736adb06bea34fb6708b28",
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
         "role": "Declares GlobalPipelineConfig and the step variable_components and group_by fields, with group_by defaulting from the active AxisFamily."
       },
       {
         "path": "openhcs/core/processing_contracts.py",
-        "sha256": "9b999e9210baf292f8fbf5bb3758c41a95e74401bfb1e1c127bae2dba625b0ee",
+        "sha256": "d37b8a0645d69cb502a7da943b4cf86a87e2daa1cc5323b66b80323caf468f7c",
         "role": "Defines the ProcessingContract family named as an independent declaration in the invariants."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "90d75f6287c5f21f93d82960729199261f7906e0f4912b7728527260b9723a66",
+        "sha256": "8f691504ea5983189c8ff1984b6125866449d0d68f6077138780398773f2c6e0",
         "role": "Defines CompilationSession, the scoped compiler state named by the invariants."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "f4a851d7de2ea82e1d548f37e6be2511fd20d799580193496a3746e5484906ba",
+        "sha256": "5bce281e8291a3434b57ba44f97008e4095cc95998a0805f0369fd212c3a7eec",
         "role": "Defines typed CompiledStepPlan fields, including framework footprints and device bindings."
       },
       {
@@ -1923,6 +1946,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/index.rst against B6's later changes to openhcs/core/config.py, openhcs/core/processing_contracts.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/index.rst against the later B6 changes to openhcs/core/config.py, openhcs/core/processing_contracts.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/index.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py and openhcs/core/compiled_execution.py; verified each architecture invariant against the current declarations and that every toctree target file exists; the page text needed no change.",
       "Re-read docs/source/architecture/index.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -1953,7 +1977,7 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "7b5622b3d82b1e1d672eaedb14e054be81baef417a736adb06bea34fb6708b28",
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
         "role": "Declares PartitionFilterConfig's show_preview_without_partition_filter policy and PartitionFilterMode members' preview_prefix operators."
       },
       {
@@ -1963,7 +1987,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/reactor_providers.py",
-        "sha256": "43634ee5d4ac6c65d681288c575ee0c9570140d592cb3856942ec69f47c59d90",
+        "sha256": "aecf1c77636095408486cab53a95cb0fc044fcf2ead0d7b72ac674842cf69abe",
         "role": "Registers format_partition_filter_config for PartitionFilterConfig with the generic preview service."
       },
       {
@@ -1973,12 +1997,12 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00ff3bfe7a032bd3de59274697a69d12c9b898177cd8e839f9da3b130becaedf",
+        "sha256": "01dcb82b5850f3cdb1c300a2aa360ba330e7f15dffb5a24e37504311095090f9",
         "role": "_apply_list_preview_config applies list_previews to Plate Manager and Pipeline Editor at startup and on UI config change."
       },
       {
         "path": "tests/unit/pyqt_gui/test_main_config_propagation.py",
-        "sha256": "499b05f1249ffc522bf18e97de05d1bf2000ab159daa0685958bd37d9dc62cc4",
+        "sha256": "303d90b43bee7bd531a1c7664fbf9707a2e7be1696a5147614f93c40e5c7021f",
         "role": "Verifies the list preview config reaches both real lists."
       },
       {
@@ -2018,6 +2042,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/list_item_preview_system.rst against B6's later changes to openhcs/core/config.py, openhcs/pyqt_gui/services/reactor_providers.py, openhcs/pyqt_gui/main.py, tests/unit/pyqt_gui/test_main_config_propagation.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/list_item_preview_system.rst against the later B6 changes to openhcs/core/config.py, openhcs/pyqt_gui/services/reactor_providers.py, openhcs/pyqt_gui/main.py, tests/unit/pyqt_gui/test_main_config_propagation.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/list_item_preview_system.rst in full and compared it against the changed authorities: openhcs/core/config.py, openhcs/pyqt_gui/widgets/config_preview_formatters.py, openhcs/pyqt_gui/services/reactor_providers.py, openhcs/pyqt_gui/main.py and tests/unit/pyqt_gui/test_main_config_propagation.py; confirmed PartitionFilterConfig/PartitionFilterMode preview declarations, the single formatter registration, UIConfig.list_previews, _apply_list_preview_config for both managers, and TogglePreviewAction; corrected one stale well-selection phrase.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
@@ -2048,7 +2073,7 @@
       },
       {
         "path": "openhcs/mcp/server.py",
-        "sha256": "927e64594a0fc174759eeb58496fed0ccf95e5d8d29bc248cde9a033efb69fbc",
+        "sha256": "e1f236011df715da3d17574c0b80cbf50fcae45e3f82491c22fb57e98c6bb662",
         "role": "Binds the selected declaration registry into FastMCP with outputContract metadata and structured output, runs non-worker-safe capabilities through the main-thread dispatcher, and binds the session to the main thread."
       },
       {
@@ -2073,12 +2098,12 @@
       },
       {
         "path": "openhcs/mcp/dev_client_core.py",
-        "sha256": "b5b1aea8a5a9352d828efd408408cb0ce867db4c5dc4f91e1fa9fbb7947013b2",
+        "sha256": "41739b744b0e4287ca7d14cd133371d669e9bff12f4b622313996ae9bb5597da",
         "role": "Resolves tool identity and compatible profiles from capability declarations and renews the command deadline on each response or progress notification."
       },
       {
         "path": "openhcs/mcp/dev_client_session.py",
-        "sha256": "0486edcefae169b51ee2baf4b6498d93411f8dd93d94bcfdfbf46ee21896c73d",
+        "sha256": "2dceca7937087d05f72af1d037122ea393721d61d690803628a7b14ca70fd980",
         "role": "Implements execute-source as add-datasets, set-pipeline, then initialize, compile and run stages followed through session events."
       },
       {
@@ -2088,12 +2113,12 @@
       },
       {
         "path": "openhcs/mcp/context.py",
-        "sha256": "af9ec43138e05762fc97b34825b96e15f183aa56781d697c601eb79f14a1bc42",
+        "sha256": "1292c9bb7173e6afe5aa6237b861c5f39bc2e854f364fd722c75a3c6b76f534e",
         "role": "Composes local stdio authoring and the headless session with the saved desktop execution endpoint while keeping hosted HTTP self-contained."
       },
       {
         "path": "openhcs/authoring/session/session.py",
-        "sha256": "458d71fe96ab75153977c554fb748e78f1773cd7794b625d7ec233c9b22e4453",
+        "sha256": "587047b63972df89ec46a01ed2c92ff3ef9577335f58a980297db02094e4e8e0",
         "role": "Defines the headless Session whose datasets and pipelines live in the MCP process's ObjectState and whose events clients follow."
       },
       {
@@ -2153,7 +2178,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_windows.py",
-        "sha256": "7a10b37aba9c5ea5cdbe46a4c9703b345e83a64554d6abacbfa1ee41cd3c4020",
+        "sha256": "e76298f78e3cbd949e8426a2b42cd6768cc54770a5f45c9dd6c9f788b257785e",
         "role": "Resolves authorised OpenHCS windows, projects snapshot results, and distinguishes focus from accepted target navigation."
       },
       {
@@ -2198,12 +2223,12 @@
       },
       {
         "path": "benchmark/control_service.py",
-        "sha256": "f894cc090597ca04c273090c99f26fd0e3cfeffd1b7d44bbb94858892e17813c",
+        "sha256": "a1256b349ffdc8d04cab927326d97821462b61f57b29e564b61cc627302be49c",
         "role": "Finalises measured-run evidence from the session's finished execution."
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "edc32916215a88b62702621dea9b692586572284caf9b781394b5784f62897ee",
+        "sha256": "4025c591644e29f3df61e476ecae2143690e014336ea9f889aadeff4e692445e",
         "role": "Owns the installed openhcs-benchmark execution, report and list-cases command surface."
       }
     ],
@@ -2218,6 +2243,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/mcp/server.py, openhcs/mcp/dev_client_core.py, openhcs/mcp/dev_client_session.py, openhcs/mcp/context.py, openhcs/authoring/session/session.py, openhcs/pyqt_gui/services/ui_bridge_windows.py, benchmark/control_service.py, benchmark/cellprofiler_benchmark_cli.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against the later B6 changes to openhcs/agent/capabilities.py, openhcs/mcp/server.py, openhcs/mcp/execution.py, openhcs/mcp/dev_client_core.py, openhcs/mcp/dev_client_session.py, openhcs/mcp/context.py, openhcs/authoring/session/session.py, openhcs/pyqt_gui/services/ui_bridge_windows.py, benchmark/control_service.py, benchmark/cellprofiler_benchmark_cli.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/mcp_distribution.rst in full and compared it against the changed authorities: openhcs/agent/capabilities.py, openhcs/mcp/server.py, stdio.py, context.py, http.py, client_registration.py, dev_client*.py, the deleted openhcs/desktop_deployment.py and desktop_installation.py (moved to openhcs.desktop in 73a2aece2), ui_bridge_windows.py, synthetic-plate and benchmark control owners and tests; verified every named symbol by grep, traced McpTransportExecutor, the binder's dispatcher path, SessionJourney.run_source and skill synchronisation; corrected the PyQt/threading, session-execution, desktop-deployment, client-registration and finalisation passages.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
@@ -2287,12 +2313,12 @@
       },
       {
         "path": "openhcs/core/equivalence/keys.py",
-        "sha256": "1f409e1a834afd15f8bff206ebaefc8ef904c1ac7a93d43222d19e1230b7a4cb",
+        "sha256": "0ae79e4cc4e70804f9d2e948078ade7c271e142473821731b38eeccaef064b5d",
         "role": "Defines RuntimeMeasurementFeatureKey and the semantic row, source, and aggregate identities."
       },
       {
         "path": "openhcs/core/equivalence/measurement_features.py",
-        "sha256": "2899f25b73c04a6f845a68d5e174088388978c4b21cb1fd8127ff7f100a1a0bd",
+        "sha256": "18ff75cdd4dad0f88870b90b9a91f2ea352372773bcc9a74cee288d4c110f05b",
         "role": "Defines the RuntimeMeasurementFeatureSemanticProfile most-derived strategy family."
       },
       {
@@ -2302,7 +2328,7 @@
       },
       {
         "path": "openhcs/core/measurement_dialect.py",
-        "sha256": "ab20f9e1edd45021e6881497b342489e312f18bef9b7b749ea4359b4cb811375",
+        "sha256": "96cac83e09e22eeaa02dbd14da2f9553c1f19f51962e83731936ba33429c4578",
         "role": "Defines the registered MeasurementDialect family and PlainMeasurementDialect."
       },
       {
@@ -2337,7 +2363,7 @@
       },
       {
         "path": "benchmark/control_service.py",
-        "sha256": "f894cc090597ca04c273090c99f26fd0e3cfeffd1b7d44bbb94858892e17813c",
+        "sha256": "a1256b349ffdc8d04cab927326d97821462b61f57b29e564b61cc627302be49c",
         "role": "Finalises benchmark evidence from the OpenHCS session's finished execution: its request, endpoint handshake, and completion record."
       },
       {
@@ -2391,6 +2417,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/measurement_equivalence_system.rst against B6's later changes to openhcs/core/equivalence/keys.py, openhcs/core/equivalence/measurement_features.py, openhcs/core/measurement_dialect.py, benchmark/control_service.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/measurement_equivalence_system.rst against the later B6 changes to openhcs/core/equivalence/keys.py, openhcs/core/equivalence/measurement_features.py, openhcs/core/measurement_dialect.py, benchmark/adapters/openhcs.py, benchmark/openhcs_measured_run.py, benchmark/control_service.py, tests/integration/test_cellprofiler_official30_zmq.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/measurement_equivalence_system.rst in full and compared it against the changed authorities: openhcs/core/equivalence/policy.py and keys.py, the deleted openhcs/core/equivalence/report.py (moved to benchmark/equivalence in f16177ed7), benchmark/adapters/openhcs.py, openhcs_measured_run.py, timing.py, control_service.py, openhcs/runtime/zmq_execution_observation.py, measured_run_receipt.py, the Official30 manifest and integration test, reference exports and their tests; corrected the dialect name, the comparison-package boundary, archived-export readability, the session-based finalisation path and the additive-total rule.",
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
@@ -2445,12 +2472,12 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "2060f856bcb0cc8ef57b92fc17a1e558a676e4033075950b1a4e41dc8656d330",
+        "sha256": "5b8e85dc1708d5727c73ac1007150219683fb9fb75c4ff2ec2c0bc676445738c",
         "role": "Reads ArrayBridge metadata through MemoryContractAttribute into immutable callable input, output, and execution memory contracts."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "f4a851d7de2ea82e1d548f37e6be2511fd20d799580193496a3746e5484906ba",
+        "sha256": "5bce281e8291a3434b57ba44f97008e4095cc95998a0805f0369fd212c3a7eec",
         "role": "Owns FrameworkDeviceAssignment framework-local device bindings and footprint cleanup."
       },
       {
@@ -2464,6 +2491,7 @@
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/memory_type_system.rst against B6's later changes to openhcs/core/callable_contract.py, openhcs/core/compiled_step_plan.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/memory_type_system.rst against the later B6 changes to openhcs/core/callable_contract.py, openhcs/core/compiled_step_plan.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/memory_type_system.rst in full and compared it against the changed authorities: external/arraybridge/src/arraybridge/decorators.py, types.py, openhcs/core/callable_contract.py and openhcs/core/compiled_step_plan.py; confirmed MemoryContractAttribute's INPUT/OUTPUT/EXECUTION keys, FrameworkDeviceAssignment, openhcs/core/runtime_adapters.py and the gpu_resource_management and external_foundations targets; the page text needed no change.",
       "Re-read docs/source/architecture/memory_type_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its reference user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -2491,12 +2519,12 @@
     "authority": [
       {
         "path": "openhcs/core/dataset_sources/source.py",
-        "sha256": "f736728d2f715b72cd5479fcc79520911b037d3410a42ebfc9febef2e51ffda6",
+        "sha256": "097fde4d2b74031eacf53a88e79f499417e8c1c97ba0753e8a9df831b307efa6",
         "role": "Defines the DatasetSource family keyed by source_name, its selection-role mixins, detection_order, create hook, workspace backend registration, and virtual-workspace metadata recording."
       },
       {
         "path": "openhcs/core/dataset_sources/choice.py",
-        "sha256": "ece43af801b4b02c302d9ac4bf6e5d07c0d9ebee5027433d12a4b548a19d11f0",
+        "sha256": "7fb3c7ce701f0d629f288b79090044f43ac8ce1b51ca4f50937534407f226f1a",
         "role": "Defines DatasetSourceChoice, AutoDetectedSource, and open(), which selects the source class, applies declared-file selection, calls create, and binds dataset_root."
       },
       {
@@ -2506,32 +2534,32 @@
       },
       {
         "path": "openhcs/core/dataset_sources/interfaces.py",
-        "sha256": "31e3f5789c4a1603de12a0f0f95ceb529ff3190d45f2315e2674ef81a9177047",
+        "sha256": "dd88254bfd5da8b0fdf0a038e358f36b49db5b8cf0b93213d56dc928af965f00",
         "role": "Defines MetadataHandler.component_value_set and MetadataComponentValueSet keyed by the active family's axes."
       },
       {
         "path": "openhcs/core/dataset_sources/openhcs_format.py",
-        "sha256": "f4976001de8dcfd598fd08ebe8cb0e2c8a412e03956210d81a392d327a11ce3e",
+        "sha256": "a8fa6a597104075d888a5b14cc4b24a9676d1a3918c30b5df2bad4a9abb26078",
         "role": "Reopens a persisted workspace by looking up the recorded source_name and re-registering that source's workspace backends."
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "7b5622b3d82b1e1d672eaedb14e054be81baef417a736adb06bea34fb6708b28",
+        "sha256": "57add27eeb590c61324df6bafe488435d3177e7022e39e1827ae6b1a8d26adde",
         "role": "Declares PipelineConfig.dataset_source as a DatasetSourceChoice class defaulting to AutoDetectedSource."
       },
       {
         "path": "openhcs/microscopes/bioformats.py",
-        "sha256": "478cac79bb2512a16f1419b6f7c899d06e6e4c0d1046bd13ac031fbc9cd21470",
+        "sha256": "bda05411746852ea12ffe11b49e5298cb475e2137cd1a09cf9659b52a89f40e4",
         "role": "Shows a decoder-owned source metadata handler replaced by the workspace metadata handler after the workspace is written."
       },
       {
         "path": "tests/unit/test_dataset_source_family.py",
-        "sha256": "e9e4decb541543619d6f6abc1dceffcfec590e916045b7a1396baf51c9bea3be",
+        "sha256": "4cb651b475e5e033ab94824567b8a35b0ee02f313254082e03e35cd96585d829",
         "role": "Verifies every registered source declares identity, selection role and backends, and that metadata detection and the factory use declared identity."
       },
       {
         "path": "tests/unit/test_dataset_source_guards.py",
-        "sha256": "89b8cfc1492c909477e8f102d8e82baf5bb6f2d324a2866e319f90d7c97ce214",
+        "sha256": "adfeac23f6196a0c5393dc15b71df04fda0ec34e5ae23bfdaa22e0a165f68170",
         "role": "Guards that the kernel imports no domain package and that the deleted microscope-handler names do not return."
       }
     ],
@@ -2543,6 +2571,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/microscope_handler_integration.rst against B6's later changes to openhcs/core/dataset_sources/source.py, openhcs/core/dataset_sources/choice.py, openhcs/core/dataset_sources/interfaces.py, openhcs/core/dataset_sources/openhcs_format.py, openhcs/core/config.py, openhcs/microscopes/bioformats.py, tests/unit/test_dataset_source_family.py, tests/unit/test_dataset_source_guards.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/microscope_handler_integration.rst against the later B6 changes to openhcs/core/dataset_sources/source.py, openhcs/core/dataset_sources/choice.py, openhcs/core/dataset_sources/interfaces.py, openhcs/core/dataset_sources/openhcs_format.py, openhcs/core/config.py, openhcs/microscopes/bioformats.py, tests/unit/test_dataset_source_family.py, tests/unit/test_dataset_source_guards.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/microscope_handler_integration.rst in full and compared it against the changed authorities: the deleted openhcs/microscopes/microscope_base.py, openhcs.py and microscope_interfaces.py (moved to openhcs/core/dataset_sources in c6d9a52ce), openhcs/core/source_bindings.py and the Bio-Formats and plate-inspection tests; traced DatasetSource registration and discovery, DatasetSourceChoice.open, detection_order, PipelineConfig.dataset_source, component_value_set, and workspace replay through the recorded source name; rewrote the page in DatasetSource vocabulary.",
       "Re-read docs/source/architecture/microscope_handler_integration.rst in full against repository base 32ca17c17 and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
@@ -2568,12 +2597,12 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "d1216010dec1804c51aec9c774f298513638ca016d500fe6328d76a9a9bfb4d6",
+        "sha256": "2dc739b39ef2b8a468dca8cef2ab1900e2d0f1091c15ef54c24215a4abefc991",
         "role": "Discovers partition-axis values through the active AxisFamily and compiles one frozen ProcessingContext per value."
       },
       {
         "path": "openhcs/core/orchestrator/bundle_execution.py",
-        "sha256": "7665bd4ab8b9ce73d3dcb4fb9679e836b23bffb81d70541baef2e114ee54b0d9",
+        "sha256": "f5ba09a2ec7c688b1ca08167ab398cc976a9e2c39b301ae98f3c5fd560a25c85",
         "role": "Validates compiled contexts and worker-safe steps before worker setup and builds the worker-lane execution plan."
       },
       {
@@ -2583,7 +2612,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "1d71883f545f7f8702c64710f968b4138d0748fa0c58b6e1b87e06a7045e5ebf",
+        "sha256": "23a3ef2a70378dd1bb5c413a56e36bbb3fa013142741c9b45407bfc47de8c4a4",
         "role": "Submits one task per active lane, collects per-axis ExecutionResult values, ships or inherits the bundle, and terminates owned process workers on cancellation."
       },
       {
@@ -2610,6 +2639,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/multiprocessing_coordination_system.rst against B6's later changes to openhcs/core/pipeline/compiler.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/core/orchestrator/worker_execution.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/multiprocessing_coordination_system.rst against the later B6 changes to openhcs/core/pipeline/compiler.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/core/orchestrator/worker_execution.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/multiprocessing_coordination_system.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py, openhcs/core/compiled_execution.py and openhcs/core/orchestrator/worker_execution.py; traced _axis_values_to_process through AxisFamily.active().partition_axis(), validate_bundle_execution, CompiledContextLanePlanner, PooledWorkerLaneRunner._submit_lanes, ExecuteShippedLane and ProcessWorkerExecutorResources.cancel_execution; corrected the task granularity, axis vocabulary, bundle installation and cancellation wording.",
       "Re-read docs/source/architecture/multiprocessing_coordination_system.rst in full against repository base bb4218fae and the current shared worktree; challenged its explanation user need for accuracy, freshness, duplication, owner boundaries, flow, and navigation.",
