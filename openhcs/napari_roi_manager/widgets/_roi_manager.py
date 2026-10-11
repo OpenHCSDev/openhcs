@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable
-from enum import IntEnum
+from abc import ABC, abstractmethod
 from functools import partial
 from pathlib import Path
+from typing import ClassVar
 
 import napari
 import numpy as np
@@ -14,6 +15,7 @@ from napari.layers.shapes._shapes_constants import ShapeType
 from napari.utils._proxies import PublicOnlyProxy
 from qtpy import QtCore
 from qtpy import QtWidgets as QtW
+from metaclass_registry import AutoRegisterMeta
 from roifile import roiread, roiwrite
 
 from openhcs.napari_roi_manager._dataclasses import RoiData, RoiTuple
@@ -87,17 +89,64 @@ class QRoiManagerButtons(QtW.QWidget):
             widget.setEnabled(available)
 
 
-class RoiTableColumn(IntEnum):
-    """Columns projected directly from one native Napari Shapes layer."""
+class RoiTableColumn(ABC, metaclass=AutoRegisterMeta):
+    """One column of the ROI table, projected from a native Napari Shapes layer.
 
-    def __new__(cls, value: int, header: str):
-        member = int.__new__(cls, value)
-        member._value_ = value
-        member.header = header
-        return member
+    ``index`` is the column's Qt section; each column reads its own cells.
+    """
 
-    NAME = (0, "name")
-    SHAPE_TYPE = (1, "type")
+    __registry_key__ = "index"
+    __skip_if_no_key__ = True
+
+    index: ClassVar[int | None] = None
+    header: ClassVar[str]
+    editable: ClassVar[bool] = False
+
+    @classmethod
+    def at(cls, section: int) -> type["RoiTableColumn"]:
+        return cls.__registry__[section]
+
+    @staticmethod
+    @abstractmethod
+    def values(layer: Shapes) -> list[str]:
+        """Every cell of this column for ``layer``."""
+
+    @classmethod
+    def cell(cls, layer: Shapes, row: int) -> str:
+        return cls.values(layer)[row]
+
+
+class RoiNameColumn(RoiTableColumn):
+    index = 0
+    header = "name"
+    editable = True
+
+    @staticmethod
+    def values(layer: Shapes) -> list[str]:
+        features = layer.features
+        if RoiNameColumn.header in features.columns:
+            return [str(value) for value in features[RoiNameColumn.header].tolist()]
+        return [f"ROI-{index:>04}" for index in range(len(layer.data))]
+
+    @classmethod
+    def cell(cls, layer: Shapes, row: int) -> str:
+        features = layer.features
+        if cls.header in features.columns:
+            return str(features[cls.header].iat[row])
+        return f"ROI-{row:>04}"
+
+
+class RoiShapeTypeColumn(RoiTableColumn):
+    index = 1
+    header = "type"
+
+    @staticmethod
+    def values(layer: Shapes) -> list[str]:
+        return [str(value) for value in layer.shape_type]
+
+    @classmethod
+    def cell(cls, layer: Shapes, row: int) -> str:
+        return str(layer.shape_type[row])
 
 
 class QRoiTableModel(QtCore.QAbstractTableModel):
@@ -129,7 +178,7 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
         return len(self._layer.data)
 
     def columnCount(self, parent=QtCore.QModelIndex()) -> int:
-        return 0 if parent.isValid() else len(RoiTableColumn)
+        return 0 if parent.isValid() else len(RoiTableColumn.__registry__)
 
     def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
         if (
@@ -142,10 +191,7 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
             )
         ):
             return None
-        column = RoiTableColumn(index.column())
-        if column is RoiTableColumn.NAME:
-            return self._name(index.row())
-        return str(self._layer.shape_type[index.row()])
+        return RoiTableColumn.at(index.column()).cell(self._layer, index.row())
 
     def headerData(
         self,
@@ -157,12 +203,12 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
             orientation == QtCore.Qt.Orientation.Horizontal
             and role == QtCore.Qt.ItemDataRole.DisplayRole
         ):
-            return RoiTableColumn(section).header
+            return RoiTableColumn.at(section).header
         return super().headerData(section, orientation, role)
 
     def flags(self, index):
         flags = super().flags(index)
-        if index.isValid() and RoiTableColumn(index.column()) is RoiTableColumn.NAME:
+        if index.isValid() and RoiTableColumn.at(index.column()).editable:
             flags |= QtCore.Qt.ItemFlag.ItemIsEditable
         return flags
 
@@ -171,38 +217,22 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
             role != QtCore.Qt.ItemDataRole.EditRole
             or not index.isValid()
             or self._layer is None
-            or RoiTableColumn(index.column()) is not RoiTableColumn.NAME
+            or not RoiTableColumn.at(index.column()).editable
         ):
             return False
-        names = self.column_values(RoiTableColumn.NAME)
+        names = RoiNameColumn.values(self._layer)
         names[index.row()] = str(value)
         features = self._layer.features.copy()
-        features[RoiTableColumn.NAME.header] = names
+        features[RoiNameColumn.header] = names
         self._layer.features = features
         return True
 
-    def column_values(self, column: RoiTableColumn) -> list[str]:
+    def column_values(self, column: type[RoiTableColumn]) -> list[str]:
         """Project one complete column only for explicit bulk callers."""
 
         if self._layer is None:
             return []
-        if column is RoiTableColumn.NAME:
-            features = self._layer.features
-            if RoiTableColumn.NAME.header in features.columns:
-                return [
-                    str(value)
-                    for value in features[RoiTableColumn.NAME.header].tolist()
-                ]
-            return [f"ROI-{index:>04}" for index in range(self.rowCount())]
-        return [str(value) for value in self._layer.shape_type]
-
-    def _name(self, row: int) -> str:
-        if self._layer is None:
-            raise RuntimeError("ROI table model has no native Shapes layer.")
-        features = self._layer.features
-        if RoiTableColumn.NAME.header in features.columns:
-            return str(features[RoiTableColumn.NAME.header].iat[row])
-        return f"ROI-{row:>04}"
+        return column.values(self._layer)
 
 
 class QRoiListWidget(QtW.QTableView):
@@ -215,14 +245,14 @@ class QRoiListWidget(QtW.QTableView):
         horizontal_header = self.horizontalHeader()
         horizontal_header.setFixedHeight(18)
         horizontal_header.setSectionResizeMode(
-            RoiTableColumn.NAME,
+            RoiNameColumn.index,
             QtW.QHeaderView.ResizeMode.Stretch,
         )
         horizontal_header.setSectionResizeMode(
-            RoiTableColumn.SHAPE_TYPE,
+            RoiShapeTypeColumn.index,
             QtW.QHeaderView.ResizeMode.Interactive,
         )
-        horizontal_header.resizeSection(RoiTableColumn.SHAPE_TYPE, 96)
+        horizontal_header.resizeSection(RoiShapeTypeColumn.index, 96)
         self.verticalHeader().setSectionResizeMode(QtW.QHeaderView.ResizeMode.Fixed)
         self.verticalHeader().setDefaultSectionSize(18)
         self.setSelectionBehavior(QtW.QAbstractItemView.SelectionBehavior.SelectRows)
@@ -259,10 +289,10 @@ class QRoiListWidget(QtW.QTableView):
                         span_stop = row
                         continue
                     selection.select(
-                        self.model().index(span_start, RoiTableColumn.NAME),
+                        self.model().index(span_start, RoiNameColumn.index),
                         self.model().index(
                             span_stop,
-                            RoiTableColumn.SHAPE_TYPE,
+                            RoiShapeTypeColumn.index,
                         ),
                     )
                     if row is not None:
@@ -270,7 +300,7 @@ class QRoiListWidget(QtW.QTableView):
                 selection_model.select(selection, flags)
             if valid_rows:
                 self.scrollTo(
-                    self.model().index(valid_rows[0], RoiTableColumn.NAME),
+                    self.model().index(valid_rows[0], RoiNameColumn.index),
                     QtW.QAbstractItemView.ScrollHint.EnsureVisible,
                 )
         finally:

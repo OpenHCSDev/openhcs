@@ -64,9 +64,13 @@ class GuiLogLevel(str, Enum):
 
     @property
     def logging_level(self) -> int:
-        if self is GuiLogLevel.SILENT:
-            return logging.CRITICAL + 1
-        return getattr(logging, self.value)
+        """The stdlib level; ``SILENT`` is one above ``CRITICAL``."""
+        return getattr(logging, self.value, logging.CRITICAL + 1)
+
+    @property
+    def emits_records(self) -> bool:
+        """Whether any record reaches a handler at this level."""
+        return self.logging_level <= logging.CRITICAL
 
     @classmethod
     def choices(cls) -> tuple[str, ...]:
