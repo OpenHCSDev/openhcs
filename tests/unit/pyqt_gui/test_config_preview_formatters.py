@@ -8,11 +8,11 @@ from openhcs.core.config import (
     NapariStreamingConfig,
     StepMaterializationConfig,
     PartitionFilterConfig,
-    PartitionFilterMode,
 )
 from openhcs.pyqt_gui.widgets.config_preview_formatters import (
     format_partition_filter_config,
 )
+from openhcs.core.config import ExcludePartitions
 
 
 def test_partition_filter_preview_label_is_owned_by_config_declaration() -> None:
@@ -29,7 +29,7 @@ def test_plain_partition_filter_preview_requires_a_selection() -> None:
         format_partition_filter_config(
             PartitionFilterConfig(
                 partition_filter=["A01", "A02"],
-                partition_filter_mode=PartitionFilterMode.EXCLUDE,
+                partition_filter_mode=ExcludePartitions,
             ),
             "partition_filter",
         )

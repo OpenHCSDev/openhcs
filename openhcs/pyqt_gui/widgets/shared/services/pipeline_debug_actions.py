@@ -10,9 +10,22 @@ from typing import TYPE_CHECKING, ClassVar
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.agent.dto.common import AgentError
-from openhcs.core.debug import DebugCommandType
+from python_introspect import to_jsonable
+
+from openhcs.core.debug import DebugCommand, DebugCommandType
+from openhcs.core.debug import (
+    ChooseSourceGroupDebugCommand,
+    RandomSourceGroupDebugCommand,
+    RestartDebugCommand,
+    RunDebugCommand,
+    RunToPauseDebugCommand,
+    StepDebugCommand,
+    StopDebugCommand,
+    ToggleDebugCommand,
+)
 
 if TYPE_CHECKING:
+    from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
     from openhcs.pyqt_gui.widgets.shared.services.debug_session_projection import (
         PipelineDebugSessionContext,
     )
@@ -53,14 +66,14 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
 
     __registry__: ClassVar[
         dict[
-            DebugCommandType | DebugToolbarAuxiliaryAction,
+            type[DebugCommandType] | DebugToolbarAuxiliaryAction,
             type["PipelineDebugActionDeclarationBase"],
         ]
     ] = {}
     __registry_key__ = "identity"
     __skip_if_no_key__ = True
 
-    identity: ClassVar[DebugCommandType | DebugToolbarAuxiliaryAction | None] = None
+    identity: ClassVar[type[DebugCommandType] | DebugToolbarAuxiliaryAction | None] = None
     toolbar_placement: ClassVar[DebugActionPlacement] = DebugActionPlacement.HIDDEN
     toolbar_order: ClassVar[int] = 0
     label: ClassVar[str]
@@ -73,11 +86,10 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def action_id(cls) -> str:
-        identity = cls.require_identity()
-        return identity.value
+        return to_jsonable(cls.require_identity())
 
     @classmethod
-    def require_identity(cls) -> DebugCommandType | DebugToolbarAuxiliaryAction:
+    def require_identity(cls) -> type[DebugCommandType] | DebugToolbarAuxiliaryAction:
         if cls.identity is None:
             raise ValueError(
                 f"{cls.__name__} does not declare a debug action identity."
@@ -117,14 +129,14 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def for_command_type(
         cls,
-        command_type: DebugCommandType,
+        command_type: type[DebugCommandType],
     ) -> type["PipelineDebugCommandActionDeclaration"]:
         declaration = cls.__registry__.get(command_type)
         if declaration is None:
-            raise ValueError(f"Unhandled debug command route: {command_type.value}")
+            raise ValueError(f"Unhandled debug command route: {command_type.name}")
         if not issubclass(declaration, PipelineDebugCommandActionDeclaration):
             raise TypeError(
-                f"Debug action {command_type.value!r} is not a command declaration."
+                f"Debug action {command_type.name!r} is not a command declaration."
             )
         return declaration
 
@@ -151,22 +163,28 @@ class PipelineDebugActionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
     def invoke(cls, workflow: "PipelineEditorDebugWorkflow") -> None:
         """Invoke this action through the nominal editor workflow."""
 
+    @classmethod
+    @abstractmethod
+    def emit_from(cls, toolbar: "DebugToolbarWidget") -> None:
+        """Emit this action's toolbar signal."""
+
 
 class PipelineDebugCommandActionDeclaration(PipelineDebugActionDeclarationBase):
     """Debug action backed by a core DebugCommandType."""
 
-    identity: ClassVar[DebugCommandType | None] = None
+    identity: ClassVar[type[DebugCommandType] | None] = None
 
     @classmethod
-    def command_type(cls) -> DebugCommandType:
-        identity = cls.require_identity()
-        if not isinstance(identity, DebugCommandType):
-            raise TypeError(f"{cls.__name__} is not backed by DebugCommandType.")
-        return identity
+    def command_type(cls) -> type[DebugCommandType]:
+        return cls.require_identity()
 
     @classmethod
     def invoke(cls, workflow: "PipelineEditorDebugWorkflow") -> None:
         workflow.run_command(cls.command_type())
+
+    @classmethod
+    def emit_from(cls, toolbar: "DebugToolbarWidget") -> None:
+        toolbar.command_requested.emit(DebugCommand(cls.command_type()))
 
 
 class PipelineDebugAuxiliaryActionDeclaration(PipelineDebugActionDeclarationBase):
@@ -189,9 +207,13 @@ class PipelineDebugAuxiliaryActionDeclaration(PipelineDebugActionDeclarationBase
     def invoke(cls, workflow: "PipelineEditorDebugWorkflow") -> None:
         workflow.show_runtime_inspection()
 
+    @classmethod
+    def emit_from(cls, toolbar: "DebugToolbarWidget") -> None:
+        toolbar.runtime_inspection_requested.emit()
+
 
 class ToggleDebugModeAction(PipelineDebugCommandActionDeclaration):
-    identity = DebugCommandType.TOGGLE
+    identity = ToggleDebugCommand
     label = "Debug"
     tooltip = "Debug toolbar active. Use Debug, Step, Pause, Restart, or Inspect."
 
@@ -201,7 +223,7 @@ class ToggleDebugModeAction(PipelineDebugCommandActionDeclaration):
 
 
 class StartOrContinueDebugAction(PipelineDebugCommandActionDeclaration):
-    identity = DebugCommandType.RUN
+    identity = RunDebugCommand
     toolbar_placement = DebugActionPlacement.PRIMARY
     toolbar_order = 10
     label = "Debug"
@@ -218,7 +240,7 @@ class StartOrContinueDebugAction(PipelineDebugCommandActionDeclaration):
 
 
 class StepDebugAction(PipelineDebugCommandActionDeclaration):
-    identity = DebugCommandType.STEP
+    identity = StepDebugCommand
     toolbar_placement = DebugActionPlacement.PRIMARY
     toolbar_order = 20
     label = "Step"
@@ -226,7 +248,7 @@ class StepDebugAction(PipelineDebugCommandActionDeclaration):
 
 
 class RunToPauseDebugAction(PipelineDebugCommandActionDeclaration):
-    identity = DebugCommandType.RUN_TO_PAUSE
+    identity = RunToPauseDebugCommand
     toolbar_placement = DebugActionPlacement.PRIMARY
     toolbar_order = 30
     label = "Run to Pause"
@@ -250,7 +272,7 @@ class RunToPauseDebugAction(PipelineDebugCommandActionDeclaration):
 
 
 class RestartDebugAction(PipelineDebugCommandActionDeclaration):
-    identity = DebugCommandType.RESTART
+    identity = RestartDebugCommand
     toolbar_placement = DebugActionPlacement.SESSION
     toolbar_order = 40
     label = "Restart"
@@ -268,7 +290,7 @@ class InspectRuntimeValuesAction(PipelineDebugAuxiliaryActionDeclaration):
 
 
 class ChooseSourceGroupDebugAction(PipelineDebugCommandActionDeclaration):
-    identity = DebugCommandType.CHOOSE_SOURCE_GROUP
+    identity = ChooseSourceGroupDebugCommand
     toolbar_placement = DebugActionPlacement.SESSION
     toolbar_order = 10
     label = "Choose source group"
@@ -276,7 +298,7 @@ class ChooseSourceGroupDebugAction(PipelineDebugCommandActionDeclaration):
 
 
 class StopDebugSessionAction(PipelineDebugCommandActionDeclaration):
-    identity = DebugCommandType.STOP
+    identity = StopDebugCommand
     toolbar_placement = DebugActionPlacement.SESSION
     toolbar_order = 20
     label = "Stop debug session"
@@ -290,7 +312,7 @@ class StopDebugSessionAction(PipelineDebugCommandActionDeclaration):
 
 
 class RandomSourceGroupDebugAction(PipelineDebugCommandActionDeclaration):
-    identity = DebugCommandType.RANDOM_SOURCE_GROUP
+    identity = RandomSourceGroupDebugCommand
     label = "Random source group"
     tooltip = "Choose a random well/image set for debug execution"
 

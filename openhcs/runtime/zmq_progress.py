@@ -10,9 +10,15 @@ from typing import Self
 from openhcs.core.progress import (
     ProgressEvent,
     ProgressExecutionContext,
-    ProgressPhase,
     ProgressQueue,
-    ProgressStatus,
+)
+from openhcs.core.progress.types import (
+    CompileProgressPhase,
+    FailedProgressStatus,
+    InitProgressPhase,
+    RunningProgressStatus,
+    StartedProgressStatus,
+    SuccessProgressStatus,
 )
 
 
@@ -41,8 +47,8 @@ class ZMQProgressEmitter(ProgressExecutionContext):
             axis_id="",
             step_name="pipeline",
             total=step_count,
-            phase=ProgressPhase.COMPILE,
-            status=ProgressStatus.STARTED,
+            phase=CompileProgressPhase,
+            status=StartedProgressStatus,
             completed=0,
             percent=0.0,
         )
@@ -52,8 +58,8 @@ class ZMQProgressEmitter(ProgressExecutionContext):
             axis_id="",
             step_name="pipeline",
             total=step_count,
-            phase=ProgressPhase.COMPILE,
-            status=ProgressStatus.RUNNING,
+            phase=CompileProgressPhase,
+            status=RunningProgressStatus,
             completed=0,
             percent=0.0,
         )
@@ -67,8 +73,8 @@ class ZMQProgressEmitter(ProgressExecutionContext):
         self.emit(
             axis_id="",
             step_name="",
-            phase=ProgressPhase.INIT,
-            status=ProgressStatus.STARTED,
+            phase=InitProgressPhase,
+            status=StartedProgressStatus,
             percent=0.0,
             completed=0,
             total=1,
@@ -86,8 +92,8 @@ class ZMQProgressEmitter(ProgressExecutionContext):
         self.emit(
             axis_id="",
             step_name="",
-            phase=ProgressPhase.INIT,
-            status=ProgressStatus.STARTED,
+            phase=InitProgressPhase,
+            status=StartedProgressStatus,
             percent=0.0,
             completed=0,
             total=1,
@@ -105,8 +111,8 @@ class ZMQProgressEmitter(ProgressExecutionContext):
         self.emit(
             axis_id="",
             step_name="",
-            phase=ProgressPhase.INIT,
-            status=ProgressStatus.STARTED,
+            phase=InitProgressPhase,
+            status=StartedProgressStatus,
             percent=0.0,
             completed=0,
             total=1,
@@ -125,8 +131,8 @@ class ZMQProgressEmitter(ProgressExecutionContext):
             axis_id="",
             step_name="pipeline",
             total=step_count,
-            phase=ProgressPhase.COMPILE,
-            status=ProgressStatus.SUCCESS,
+            phase=CompileProgressPhase,
+            status=SuccessProgressStatus,
             completed=1,
             percent=100.0,
             partition_values=compiled_axis_ids,
@@ -137,8 +143,8 @@ class ZMQProgressEmitter(ProgressExecutionContext):
         self.emit(
             axis_id=axis_id,
             step_name="compilation",
-            phase=ProgressPhase.COMPILE,
-            status=ProgressStatus.SUCCESS,
+            phase=CompileProgressPhase,
+            status=SuccessProgressStatus,
             completed=1,
             total=1,
             percent=100.0,
@@ -150,8 +156,8 @@ class ZMQProgressEmitter(ProgressExecutionContext):
             self.emit(
                 axis_id=axis_id,
                 step_name="compilation",
-                phase=ProgressPhase.COMPILE,
-                status=ProgressStatus.FAILED,
+                phase=CompileProgressPhase,
+                status=FailedProgressStatus,
                 completed=0,
                 total=1,
                 percent=0.0,

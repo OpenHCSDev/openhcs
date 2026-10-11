@@ -34,7 +34,7 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import TiffConfig, PartitionFilterMode
+from openhcs.core.config import TiffConfig
 from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
@@ -112,6 +112,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 from openhcs.core.streaming_config_declarations import NapariViewer
 from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.config import IncludePartitions
 
 
 def _publish_saved_step(context, plan, *, artifact_materializations=()):
@@ -729,7 +730,7 @@ def test_stream_outputs_respects_compiled_filter_for_streaming_config():
             {
                 type(config): StepAxisFilterResolution(
                     resolved_axis_values=frozenset({"B03"}),
-                    filter_mode=PartitionFilterMode.INCLUDE,
+                    filter_mode=IncludePartitions,
                     original_filter="B03",
                 )
             }

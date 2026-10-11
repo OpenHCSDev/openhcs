@@ -8,8 +8,11 @@ from pathlib import Path
 
 import openhcs
 from openhcs.core.orchestrator import worker_execution
-from openhcs.core.progress import ProgressEvent, ProgressExecutionContext, ProgressPhase
-from openhcs.core.progress import ProgressStatus
+from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
+from openhcs.core.progress.types import (
+    StartedProgressStatus,
+    StepStartedProgressPhase,
+)
 
 REPO_ROOT = Path(openhcs.__file__).resolve().parents[1]
 ORCHESTRATOR = REPO_ROOT / "openhcs/core/orchestrator"
@@ -127,8 +130,8 @@ def test_progress_event_codec_is_its_declaration() -> None:
     event = ProgressExecutionContext("execution-1", "/data/set").event(
         axis_id="A",
         step_name="step",
-        phase=ProgressPhase.STEP_STARTED,
-        status=ProgressStatus.STARTED,
+        phase=StepStartedProgressPhase,
+        status=StartedProgressStatus,
         percent=0.0,
         completed=0,
         total=2,

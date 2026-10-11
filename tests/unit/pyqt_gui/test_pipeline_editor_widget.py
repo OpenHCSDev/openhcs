@@ -45,7 +45,6 @@ from openhcs.core.config import (
     LazyStepPartitionFilterConfig,
     PipelineConfig,
 )
-from openhcs.core.debug import DebugCommandType
 from openhcs.core.execution_state import ManagerExecutionState
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.pipeline_document import PipelineDocumentCodec
@@ -63,6 +62,7 @@ from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
 from pyqt_reactive.services.code_editor_form_updater import CodeEditorFormUpdater
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from tests.unit.pyqt_gui.session_harness import add_datasets, qt_app, session_gui
+from openhcs.core.debug import StepDebugCommand
 
 TEST_PLATE_SCOPE = "plate"
 
@@ -1297,20 +1297,20 @@ def _compiled(scope_id: str) -> CompiledDataset:
 def test_debug_toolbar_follows_the_current_dataset_compilation(tmp_path) -> None:
     with editor_gui(tmp_path) as harness:
         toolbar = harness.editor.debug_toolbar
-        assert toolbar.command_enabled(DebugCommandType.STEP) is False
+        assert toolbar.command_enabled(StepDebugCommand) is False
 
         harness.session.set_compiled(harness.scope_id, _compiled(harness.scope_id))
         harness.gui.settle()
-        assert toolbar.command_enabled(DebugCommandType.STEP) is True
+        assert toolbar.command_enabled(StepDebugCommand) is True
 
         harness.session.set_compiled(harness.scope_id, None)
         harness.gui.settle()
-        assert toolbar.command_enabled(DebugCommandType.STEP) is False
+        assert toolbar.command_enabled(StepDebugCommand) is False
 
         harness.session.compiled[harness.scope_id] = _compiled(harness.scope_id)
         harness.session.set_dataset_state(harness.scope_id, OrchestratorState.COMPILED)
         harness.gui.settle()
-        assert toolbar.command_enabled(DebugCommandType.STEP) is True
+        assert toolbar.command_enabled(StepDebugCommand) is True
 
 
 def test_pipeline_update_refreshes_existing_step_scope_state() -> None:

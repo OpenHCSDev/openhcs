@@ -20,7 +20,7 @@ from openhcs.core.debug import (
     DebugCursor,
     FileManagerDebugSnapshotStore,
 )
-from openhcs.core.debug_views import DebugViewModel
+from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.abstract import AbstractStep
@@ -28,6 +28,11 @@ from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     PipelineDebugActionDeclarationBase,
 )
 from openhcs.pyqt_gui.windows.debug_inspector_window import DebugInspectorWindow
+from openhcs.core.debug import (
+    RestartDebugCommand,
+    RunDebugCommand,
+    StepDebugCommand,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -217,14 +222,14 @@ class PipelineEditorDebugWorkflow:
 
     def run_command(
         self,
-        command_type: DebugCommandType = DebugCommandType.RUN,
+        command_type: type[DebugCommandType] = RunDebugCommand,
     ) -> None:
         scope_id = self.editor.current_plate
         if not scope_id:
             self.editor.status_message.emit("Select a dataset before running debug mode.")
             return
         session = self.editor.session
-        command_label = command_type.value.replace("_", " ")
+        command_label = command_type.name.replace("_", " ")
         self.editor.status_message.emit(f"Submitting debug {command_label} for {scope_id}")
         cursor = self._replay_cursor(command_type)
         session.debug_terminal_summaries.pop(scope_id, None)
@@ -244,16 +249,16 @@ class PipelineEditorDebugWorkflow:
             if step.debug_pause
         )
 
-    def _replay_cursor(self, command_type: DebugCommandType) -> DebugCursor | None:
+    def _replay_cursor(self, command_type: type[DebugCommandType]) -> DebugCursor | None:
         scope_id = self.editor.current_plate
         displayed = self.editor.session.displayed_debug_session(scope_id)
         if (
-            command_type is DebugCommandType.RESTART
+            command_type is RestartDebugCommand
             and displayed is not None
             and displayed.dirty_from_cursor is not None
         ):
             return displayed.dirty_from_cursor
-        if command_type is DebugCommandType.STEP:
+        if command_type is StepDebugCommand:
             if displayed is not None and displayed.cursor is not None:
                 return displayed.cursor
             summary = self.editor.session.debug_terminal_summaries.get(scope_id)

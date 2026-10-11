@@ -349,7 +349,7 @@ def qualify_candidate(
     )
     require(
         {
-            (event.axis_id, event.phase.value, event.timestamp, event.pid)
+            (event.axis_id, event.phase.name, event.timestamp, event.pid)
             for event in events
         }
         == {

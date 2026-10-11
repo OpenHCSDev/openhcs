@@ -1,11 +1,12 @@
 import pytest
 
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent, ProgressPhase
 from openhcs.core.progress.runtime_tree import RuntimeExecutionTopology
+from openhcs.core.progress.types import (
+    InitProgressPhase,
+    RunningProgressStatus,
+    StepStartedProgressPhase,
+)
 
 
 def _event(
@@ -13,7 +14,7 @@ def _event(
     execution_id: str = "exec-1",
     subject_id: str = "/tmp/plate",
     axis_id: str = "A01",
-    phase: ProgressPhase = ProgressPhase.STEP_STARTED,
+    phase: ProgressPhase = StepStartedProgressPhase,
     timestamp: float = 1.0,
     worker_slot: str | None = "worker_0",
     owned_partition_values: list[str] | None = None,
@@ -27,7 +28,7 @@ def _event(
         axis_id=axis_id,
         step_name="s",
         phase=phase,
-        status=ProgressStatus.RUNNING,
+        status=RunningProgressStatus,
         percent=0.0,
         completed=0,
         total=1,
@@ -44,7 +45,7 @@ def _event(
 def test_runtime_topology_is_derived_from_retained_event_snapshot():
     init_event = _event(
         axis_id="",
-        phase=ProgressPhase.INIT,
+        phase=InitProgressPhase,
         worker_slot=None,
         worker_assignments={"worker_0": ["A01"]},
         partition_values=["A01", "B01"],
@@ -71,7 +72,7 @@ def test_runtime_topology_is_derived_from_retained_event_snapshot():
 def test_runtime_topology_rejects_worker_claim_mismatch():
     init_event = _event(
         axis_id="",
-        phase=ProgressPhase.INIT,
+        phase=InitProgressPhase,
         worker_slot=None,
         worker_assignments={"worker_0": ["A01"]},
     )

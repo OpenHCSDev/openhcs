@@ -74,11 +74,7 @@ from openhcs.core.execution_state import (
 from openhcs.core.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent
 from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.core.source_bindings import (
     LazyStepSourceBindingsConfig,
@@ -118,6 +114,10 @@ from tests.unit.pyqt_gui.session_harness import (
     add_datasets,
     caller_session,
     session_gui,
+)
+from openhcs.core.progress.types import (
+    RunningProgressStatus,
+    StepStartedProgressPhase,
 )
 
 
@@ -838,8 +838,8 @@ def test_progress_from_a_worker_thread_reaches_the_live_row(tmp_path) -> None:
                 subject_id=scope_id,
                 axis_id="A01",
                 step_name="Segment",
-                phase=ProgressPhase.STEP_STARTED,
-                status=ProgressStatus.RUNNING,
+                phase=StepStartedProgressPhase,
+                status=RunningProgressStatus,
                 percent=25.0,
                 completed=1,
                 total=4,

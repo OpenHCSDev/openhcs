@@ -19,14 +19,12 @@ from openhcs.agent.services.runtime_server_service import (
     RuntimeServerService,
     ZMQRuntimeServerGateway,
 )
-from openhcs.core.debug_views import (
-    DebugViewModel,
-    DebugViewSection,
-    DebugViewSectionKind,
-    DebugViewTable,
-    DebugViewTableProjection,
-)
+from openhcs.core.debug_view_models import DebugViewModel, DebugViewSection, DebugViewTable
 from python_introspect import to_jsonable
+from openhcs.core.debug_views import (
+    RuntimeValueRecordsDebugViewTable,
+    RuntimeValuesDebugViewSection,
+)
 
 DEBUG_SESSION_ID = "debug-session-1"
 
@@ -36,12 +34,12 @@ def _runtime_view() -> DebugViewModel:
         title="Runtime Values",
         sections=(
             DebugViewSection(
-                kind=DebugViewSectionKind.RUNTIME_VALUES,
+                kind=RuntimeValuesDebugViewSection.name,
                 title="Runtime Values",
                 table=DebugViewTable(
                     columns=("key", "location", "value_type"),
                     rows=(("image-key", "/memory/image.npy", "ImageArray"),),
-                    projection=DebugViewTableProjection.RUNTIME_VALUE_RECORDS,
+                    projection=RuntimeValueRecordsDebugViewTable.name,
                 ),
             ),
         ),

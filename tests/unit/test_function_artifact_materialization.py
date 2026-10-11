@@ -45,7 +45,7 @@ from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import TiffConfig, PartitionFilterMode
+from openhcs.core.config import TiffConfig
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
@@ -171,6 +171,7 @@ from tests.unit.viewer_axes_fixture import STREAM_AXES
 from openhcs.core.streaming_config_declarations import NapariViewer
 from openhcs.core.payload_axes import PayloadAxes
 from openhcs.core.axes import ColourAxis
+from openhcs.core.config import IncludePartitions
 
 
 class StreamingConfigStub(ViewerDisplayConfigABC):
@@ -536,7 +537,7 @@ def test_named_artifact_streaming_respects_compiled_streaming_filter():
             {
                 type(config): StepAxisFilterResolution(
                     resolved_axis_values=frozenset({"B03"}),
-                    filter_mode=PartitionFilterMode.INCLUDE,
+                    filter_mode=IncludePartitions,
                     original_filter="B03",
                 )
             }

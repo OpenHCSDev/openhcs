@@ -485,9 +485,9 @@ class DebugSnapshotReadMessageStrategy(
 ):
     """Handle debug snapshot read control messages."""
 
-    from openhcs.core.debug import DebugControlMessageType
+    from openhcs.core.debug import DebugSnapshotReadRequest
 
-    registry_key = DebugControlMessageType.READ_SNAPSHOT.value
+    registry_key = DebugSnapshotReadRequest.wire_type
 
     def handle(
         self,
@@ -495,13 +495,10 @@ class DebugSnapshotReadMessageStrategy(
         context: ZMQControlRequestContext,
     ) -> dict:
         del context
-        from openhcs.core.debug import (
-            DebugSnapshotReadControlPayload,
-            DebugSnapshotReadResponse,
-        )
+        from openhcs.core.debug import DebugSnapshotReadRequest, DebugSnapshotReadResponse
 
         try:
-            request = DebugSnapshotReadControlPayload.from_dict(message).to_request()
+            request = DebugSnapshotReadRequest.from_dict(message)
             snapshot = self.snapshot_store_for_request(request).read_snapshot(
                 request.snapshot_id
             )
@@ -513,9 +510,9 @@ class DebugSnapshotReadMessageStrategy(
 class DebugWorkerCommandMessageStrategy(ZMQControlMessageStrategy):
     """Handle persistent paused-worker control messages."""
 
-    from openhcs.core.debug import DebugControlMessageType
+    from openhcs.core.debug import DebugWorkerCommandRequest
 
-    registry_key = DebugControlMessageType.WORKER_COMMAND.value
+    registry_key = DebugWorkerCommandRequest.wire_type
 
     def handle(
         self,
@@ -525,16 +522,16 @@ class DebugWorkerCommandMessageStrategy(ZMQControlMessageStrategy):
         del context
         from openhcs.core.debug import (
             DebugPausedWorkerRegistry,
-            DebugWorkerCommandControlPayload,
+            DebugWorkerCommandRequest,
             DebugWorkerCommandResponse,
         )
 
         try:
-            request = DebugWorkerCommandControlPayload.from_dict(message).to_request()
-            status = DebugPausedWorkerRegistry.controller_for(
+            request = DebugWorkerCommandRequest.from_dict(message)
+            worker = DebugPausedWorkerRegistry.controller_for(
                 request.debug_session_id
             ).apply_command(request.command_type)
-            return DebugWorkerCommandResponse(status=status).to_control_response()
+            return DebugWorkerCommandResponse(worker=worker).to_control_response()
         except Exception as error:
             return self.error_response(error)
 
@@ -545,9 +542,9 @@ class DebugArtifactExportMessageStrategy(
 ):
     """Handle debug artifact export control messages."""
 
-    from openhcs.core.debug import DebugControlMessageType
+    from openhcs.core.debug import DebugArtifactExportRequest
 
-    registry_key = DebugControlMessageType.EXPORT_ARTIFACT.value
+    registry_key = DebugArtifactExportRequest.wire_type
 
     def handle(
         self,
@@ -556,13 +553,13 @@ class DebugArtifactExportMessageStrategy(
     ) -> dict:
         del context
         from openhcs.core.debug import (
-            DebugArtifactExportControlPayload,
             DebugArtifactExportPlan,
+            DebugArtifactExportRequest,
             DebugArtifactExportResponse,
         )
 
         try:
-            request = DebugArtifactExportControlPayload.from_dict(message).to_request()
+            request = DebugArtifactExportRequest.from_dict(message)
             exported_path = DebugArtifactExportPlan(
                 artifact_ref=request.artifact_ref,
                 export_root=Path(request.export_root),
@@ -578,9 +575,9 @@ class DebugArtifactExportMessageStrategy(
 class DebugRuntimeInspectionMessageStrategy(ZMQControlMessageStrategy):
     """Handle paused-worker live runtime inspection requests."""
 
-    from openhcs.core.debug import DebugControlMessageType
+    from openhcs.core.debug import DebugRuntimeInspectionRequest
 
-    registry_key = DebugControlMessageType.INSPECT_RUNTIME.value
+    registry_key = DebugRuntimeInspectionRequest.wire_type
 
     def handle(
         self,
@@ -590,14 +587,12 @@ class DebugRuntimeInspectionMessageStrategy(ZMQControlMessageStrategy):
         del context
         from openhcs.core.debug import (
             DebugPausedWorkerRegistry,
-            DebugRuntimeInspectionControlPayload,
+            DebugRuntimeInspectionRequest,
             DebugRuntimeInspectionResponse,
         )
 
         try:
-            request = DebugRuntimeInspectionControlPayload.from_dict(
-                message
-            ).to_request()
+            request = DebugRuntimeInspectionRequest.from_dict(message)
             view_model = DebugPausedWorkerRegistry.controller_for(
                 request.debug_session_id
             ).runtime_inspection_view()

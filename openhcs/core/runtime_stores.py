@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field as dataclass_field, fields
+from collections.abc import Mapping
+from dataclasses import dataclass, field as dataclass_field
 import inspect
 from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
-from python_introspect import RuntimeParameterDeclarationABC, to_jsonable
+from python_introspect import RuntimeParameterDeclarationABC
 
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import (
@@ -44,7 +44,7 @@ from openhcs.core.source_matching import (
     semantic_source_metadata_value,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
+from openhcs.core.axes import Axis, PartitionAxis
 
 if TYPE_CHECKING:
     from openhcs.processing.materialization.core import Output
@@ -83,28 +83,6 @@ class RuntimeArtifactLocation:
             table_header=None if shape is None else shape[0],
             table_row_count=None if shape is None else shape[1],
         )
-
-    @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "RuntimeArtifactLocation":
-        """Reconstruct one location from its transport projection."""
-
-        values = {
-            declaration.name: data[declaration.name]
-            for declaration in fields(cls)
-            if declaration.name in data
-        }
-        values["path"] = str(values["path"])
-        values["backend"] = str(values["backend"])
-        return cls(**values)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Project this location to transport primitives."""
-
-        return {
-            declaration.name: to_jsonable(value)
-            for declaration in fields(self)
-            if (value := getattr(self, declaration.name)) is not None
-        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -945,67 +923,6 @@ class RuntimeArtifactAddress:
             location=record.location,
             value_type=type(record.data).__qualname__,
         )
-
-    @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "RuntimeArtifactAddress":
-        key = data["key"]
-        location = data["location"]
-        if not isinstance(key, Mapping):
-            raise TypeError("RuntimeArtifactAddress.key must be a mapping.")
-        if not isinstance(location, Mapping):
-            raise TypeError("RuntimeArtifactAddress.location must be a mapping.")
-        scope = key["scope"]
-        if not isinstance(scope, Mapping):
-            raise TypeError("RuntimeArtifactAddress.key.scope must be a mapping.")
-        component = scope.get("component")
-        value = scope.get("value")
-        fixed_component_values = scope["fixed_component_values"]
-        if not isinstance(fixed_component_values, Sequence) or isinstance(
-            fixed_component_values,
-            (str, bytes),
-        ):
-            raise TypeError(
-                "RuntimeArtifactAddress.key.scope.fixed_component_values must be a "
-                "sequence."
-            )
-        family = AxisFamily.active()
-        fixed_values: list[tuple[type[Axis], str]] = []
-        for item in fixed_component_values:
-            if (
-                not isinstance(item, Sequence)
-                or isinstance(item, (str, bytes))
-                or len(item) != 2
-            ):
-                raise TypeError(
-                    "Runtime artifact fixed component coordinates must be "
-                    "two-item sequences."
-                )
-            fixed_values.append((family.named(str(item[0])), str(item[1])))
-        value_type = data.get("value_type")
-        return cls(
-            key=ArtifactKey(
-                name=str(key["name"]),
-                artifact_type=ArtifactType.coerce(str(key["artifact_type"])),
-                scope=RuntimeExecutionAxisScope.from_raw(
-                    str(scope["axis_id"]),
-                    component=None if component is None else family.named(str(component)),
-
-                    value=None if value is None else str(value),
-                    fixed_component_values=tuple(fixed_values),
-                ),
-                semantic_id=(
-                    None if key.get("semantic_id") is None else str(key["semantic_id"])
-                ),
-            ),
-            location=RuntimeArtifactLocation.from_dict(location),
-            value_type=None if value_type is None else str(value_type),
-        )
-
-    def to_dict(self) -> dict[str, Any]:
-        payload = to_jsonable(self)
-        if not isinstance(payload, Mapping):
-            raise TypeError("RuntimeArtifactAddress transport must be a mapping.")
-        return dict(payload)
 
 
 StoreQueryCacheT = TypeVar("StoreQueryCacheT", bound=BoundedCache[Any, Any])

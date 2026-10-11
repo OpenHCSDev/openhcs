@@ -14,11 +14,7 @@ from openhcs.agent.ui_bridge_identities import (
 )
 from openhcs.core.artifacts import MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent
 from openhcs.core.progress.live_measurements import (
     LiveMeasurementProgressPayload,
     LiveMeasurementTablePreview,
@@ -45,6 +41,10 @@ from openhcs.authoring.session.progress_notifications import (
 )
 from openhcs.authoring.session.operations.datasets import ShowLiveResults
 from tests.unit.pyqt_gui.session_harness import caller_session
+from openhcs.core.progress.types import (
+    StepCompletedProgressPhase,
+    SuccessProgressStatus,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,8 +113,8 @@ def _notification() -> LiveMeasurementAvailableNotification:
         subject_id="plate-1",
         axis_id="B03",
         step_name="Neurite Outgrowth",
-        phase=ProgressPhase.STEP_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=StepCompletedProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         completed=1,
         total=1,

@@ -1287,7 +1287,7 @@ def native_cellprofiler_partition_filter_scope_slug(
         filter_slug = (
             "_".join(_scope_slug_fragment(value) for value in partition_filter) or "empty"
         )
-    return f"wells_{partition_filter_config.partition_filter_mode.value}_{filter_slug}"
+    return f"wells_{partition_filter_config.partition_filter_mode.name}_{filter_slug}"
 
 
 def native_cellprofiler_reference_scope_slugs(

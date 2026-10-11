@@ -50,7 +50,7 @@ from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.progress.types import ProgressEvent, ProgressPhase
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.source_matching import with_source_component_metadata
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
@@ -80,6 +80,10 @@ from openhcs.runtime.zmq_execution_signature import (
 )
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.progress.types import (
+    AxisCompletedProgressPhase,
+    AxisStartedProgressPhase,
+)
 
 WELL_THROUGHPUT_ROWS_CSV = "well_throughput.csv"
 WELL_THROUGHPUT_EVENTS_CSV = "well_throughput_progress_events.csv"
@@ -1632,7 +1636,7 @@ def _require_declared_worker_observation(
 ) -> None:
     """Reject a throughput row unless its progress proves the declared workers."""
 
-    axis_phases = {ProgressPhase.AXIS_STARTED.value, ProgressPhase.AXIS_COMPLETED.value}
+    axis_phases = {AxisStartedProgressPhase.name, AxisCompletedProgressPhase.name}
     axis_events = tuple(
         ProgressEvent.from_dict(event)
         for event in events
@@ -1640,10 +1644,10 @@ def _require_declared_worker_observation(
         and event.get("phase") in axis_phases
     )
     starts = tuple(
-        event for event in axis_events if event.phase is ProgressPhase.AXIS_STARTED
+        event for event in axis_events if event.phase is AxisStartedProgressPhase
     )
     completions = tuple(
-        event for event in axis_events if event.phase is ProgressPhase.AXIS_COMPLETED
+        event for event in axis_events if event.phase is AxisCompletedProgressPhase
     )
     started_axes = tuple(event.axis_id for event in starts)
     completed_axes = tuple(event.axis_id for event in completions)

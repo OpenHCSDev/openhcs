@@ -195,7 +195,7 @@ class PartitionFilterProcessor:
     @staticmethod
     def resolve_filter_with_mode(
         partition_filter: PartitionFilterValue,
-        partition_filter_mode: PartitionFilterMode,
+        partition_filter_mode: type[PartitionFilterMode],
         available_values: List[str],
     ) -> List[str]:
         """The available values the filter and its mode select, in available order.
@@ -207,7 +207,7 @@ class PartitionFilterProcessor:
             _identity_key(value)
             for value in PartitionFilter.decode(partition_filter).matches(
                 available_values,
-                strict=partition_filter_mode.rejects_unknown_values,
+                strict=partition_filter_mode.rejects_unknown_values(),
             )
         }
         result = [
@@ -218,7 +218,7 @@ class PartitionFilterProcessor:
         logger.debug(
             "Partition filter %r (%s) over %s selects %s",
             partition_filter,
-            partition_filter_mode.value,
+            partition_filter_mode.name,
             available_values,
             result,
         )

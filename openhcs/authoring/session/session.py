@@ -102,7 +102,6 @@ from openhcs.core.dataset_sources.source import (
 )
 from openhcs.core.debug import (
     DebugCommandType,
-    DebugReplayMode,
     DebugSession,
     DebugSnapshot,
     DebugTerminalSummary,
@@ -142,6 +141,11 @@ from openhcs.runtime.zmq_execution_signature import (
     ZMQRuntimeObservationExportScope,
 )
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
+from openhcs.core.debug import PersistentPausedWorkerReplay
+from openhcs.core.debug import (
+    RunDebugCommand,
+    StopDebugCommand,
+)
 
 if TYPE_CHECKING:
     from openhcs.agent.dto.common import AgentError
@@ -1326,7 +1330,7 @@ class Session:
         self,
         scope_id: str,
         *,
-        command_type: DebugCommandType = DebugCommandType.RUN,
+        command_type: type[DebugCommandType] = RunDebugCommand,
         snapshot_store_backend: str | None = None,
         selected_source_group: str | None = None,
         pause_step_indices: tuple[int, ...] = (),
@@ -1342,7 +1346,7 @@ class Session:
                 debug_session_id=active.debug_session_id,
                 command_type=command_type,
             )
-            if command_type is DebugCommandType.STOP:
+            if command_type is StopDebugCommand:
                 self.debug_sessions.pop(scope_id, None)
             return
 
@@ -1360,12 +1364,12 @@ class Session:
                 debug_session_id=debug_session.debug_session_id,
                 snapshot_store_ref=str(snapshot_root),
                 snapshot_store_backend=snapshot_store_backend,
-                command_type=DebugCommandType(command_type),
+                command_type=command_type,
                 selected_source_group=selected_source_group,
                 pause_step_indices=tuple(pause_step_indices),
                 start_step_index=start_step_index,
                 start_after_invocation_key=start_after_invocation_key,
-                replay_mode=DebugReplayMode.PERSISTENT_PAUSED_WORKER,
+                replay_mode=PersistentPausedWorkerReplay,
             )
             request = dataset_pipeline_request(scope_id, self.global_config)
             artifact_id = await self.debug_runs.compile_artifact_id(request, debug_request)

@@ -20,19 +20,13 @@ from openhcs.core.debug import (
     NoOpDebugExecutionPolicy,
     DebugArtifactRef,
     DebugArtifactRefProjection,
-    DebugArtifactExportControlPayload,
     DebugArtifactExportPlan,
     DebugArtifactExportRequest,
     DebugArtifactExportResponse,
     DebugArtifactIdentity,
-    DebugBoundaryEventDeclarationBase,
-    DebugBoundaryOutcome,
-    DebugCommandType,
-    DebugCommandDeclarationBase,
     DebugCursor,
     DebugBoundaryState,
     DebugEvent,
-    DebugEventType,
     DebugExecutionConfig,
     DebugEventSink,
     DebugExecutionContext,
@@ -41,17 +35,13 @@ from openhcs.core.debug import (
     DebugProgressContext,
     DebugProgressEventRequest,
     DebugPausedWorkerRegistry,
-    DebugRuntimeInspectionControlPayload,
     DebugRuntimeInspectionRequest,
     DebugRuntimeInspectionResponse,
     DebugSnapshotReadRequest,
-    DebugSnapshotReadControlPayload,
     DebugSnapshotReadResponse,
     DebugSnapshot,
-    DebugReplayMode,
     DebugSinkInstallRequest,
     DebugSession,
-    DebugSessionRequest,
     FileManagerDebugSnapshotStore,
     LocalSnapshotProgressDebugEventSink,
     LocalDebugSnapshotStore,
@@ -60,16 +50,11 @@ from openhcs.core.debug import (
     ProgressDebugExecutionPolicy,
     RecordingDebugEventSink,
     DebugWorkerCommandRequest,
-    DebugWorkerCommandControlPayload,
     DebugWorkerCommandResponse,
     DebugWarmReplayArtifactReusePlan,
     debug_event_sink_from_context,
 )
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent
 from openhcs.core.artifacts import (
     ArtifactMeasurementSubjectRelation,
     ArtifactInputPlan,
@@ -140,6 +125,32 @@ from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.image_payload_execution_mode import (
     FullStackExecution,
+)
+from openhcs.core.progress.types import (
+    ErrorProgressStatus,
+    PatternGroupProgressPhase,
+    RunningProgressStatus,
+    StartedProgressStatus,
+    SuccessProgressStatus,
+)
+from openhcs.core.debug import (
+    AfterInvocationDebugBoundary,
+    BeforeInvocationDebugBoundary,
+    ExceptionDebugBoundary,
+    PersistentPausedWorkerReplay,
+    WarmArtifactReplay,
+)
+from openhcs.core.debug import PausedDebugWorker
+from python_introspect import (
+    dataclass_from_mapping,
+    to_jsonable,
+)
+from openhcs.core.debug import DebugBoundary
+from openhcs.core.debug import (
+    ChooseSourceGroupDebugCommand,
+    RunDebugCommand,
+    RunToPauseDebugCommand,
+    StepDebugCommand,
 )
 
 
@@ -381,7 +392,7 @@ class DebugRuntimeFixture:
         )
 
     @classmethod
-    def debug_event(cls, *, event_type: DebugEventType) -> DebugEvent:
+    def debug_event(cls, *, event_type: type[DebugBoundary]) -> DebugEvent:
         return DebugEvent(
             event_type=event_type,
             cursor=cls.cursor(),
@@ -399,31 +410,13 @@ class DebugRuntimeFixture:
         return DebugSinkInstallRequest(context=context, progress_context=cls.lane())
 
 
-def test_debug_command_and_boundary_declarations_cover_wire_tokens():
-    assert set(DebugCommandDeclarationBase.__registry__) == set(DebugCommandType)
-    assert set(DebugBoundaryEventDeclarationBase.__registry__) == set(DebugEventType)
-
-
-def test_debug_boundary_declarations_own_progress_status_and_artifact_policy():
-    before = DebugBoundaryEventDeclarationBase.for_event_type(
-        DebugEventType.BEFORE_INVOCATION
-    )
-    after = DebugBoundaryEventDeclarationBase.for_event_type(
-        DebugEventType.AFTER_INVOCATION
-    )
-    exception = DebugBoundaryEventDeclarationBase.for_event_type(
-        DebugEventType.EXCEPTION
-    )
-
-    assert before.progress_status is ProgressStatus.STARTED
-    assert before.boundary_outcome is DebugBoundaryOutcome.STARTED
-    assert not before.reports_output_artifacts
-    assert after.progress_status is ProgressStatus.SUCCESS
-    assert after.boundary_outcome is DebugBoundaryOutcome.COMPLETED
-    assert after.reports_output_artifacts
-    assert exception.progress_status is ProgressStatus.ERROR
-    assert exception.boundary_outcome is DebugBoundaryOutcome.FAILED
-    assert exception.reports_output_artifacts
+def test_debug_boundaries_own_progress_status_and_artifact_policy():
+    assert BeforeInvocationDebugBoundary.progress_status is StartedProgressStatus
+    assert not BeforeInvocationDebugBoundary.reports_output_artifacts
+    assert AfterInvocationDebugBoundary.progress_status is SuccessProgressStatus
+    assert AfterInvocationDebugBoundary.reports_output_artifacts
+    assert ExceptionDebugBoundary.progress_status is ErrorProgressStatus
+    assert ExceptionDebugBoundary.reports_output_artifacts
 
 
 class DebugSnapshotFileManagerStub:
@@ -645,23 +638,23 @@ def test_debug_execution_config_normalizes_compile_cache_payload():
     config = DebugExecutionConfig(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
         snapshot_store_ref=DebugRuntimeFixture.SNAPSHOT_STORE_REF,
-        command_type=DebugCommandType.STEP,
+        command_type=StepDebugCommand,
         selected_source_group=DebugRuntimeFixture.AXIS_ID,
         start_step_index=3,
         start_after_invocation_key="default:0:old",
-        replay_mode=DebugReplayMode.PERSISTENT_PAUSED_WORKER,
+        replay_mode=PersistentPausedWorkerReplay,
     )
 
     compile_payload = config.compile_cache_config_params()[
         DebugExecutionConfig.CONFIG_PARAMS_KEY
     ]
 
-    assert compile_payload["command_type"] == DebugCommandType.RUN.value
+    assert compile_payload["command_type"] == RunDebugCommand.name
     assert compile_payload["start_step_index"] == 0
     assert compile_payload["start_after_invocation_key"] is None
     assert compile_payload["selected_source_group"] == DebugRuntimeFixture.AXIS_ID
     assert (
-        compile_payload["replay_mode"] == DebugReplayMode.PERSISTENT_PAUSED_WORKER.value
+        compile_payload["replay_mode"] == PersistentPausedWorkerReplay.name
     )
 
 
@@ -714,8 +707,8 @@ def test_execute_chain_emits_debug_invocation_events():
 
     np.testing.assert_array_equal(result, np.array([2, 4, 6]))
     assert [event.event_type for event in sink.events] == [
-        DebugEventType.BEFORE_INVOCATION,
-        DebugEventType.AFTER_INVOCATION,
+        BeforeInvocationDebugBoundary,
+        AfterInvocationDebugBoundary,
     ]
     assert (
         sink.events[0].cursor.invocation_key
@@ -760,7 +753,7 @@ def test_before_invocation_observes_exact_bound_call_boundary():
         runtime_adapter,
         runtime_token,
     ):
-        assert sink.events[-1].event_type is DebugEventType.BEFORE_INVOCATION
+        assert sink.events[-1].event_type is BeforeInvocationDebugBoundary
         assert context is debug_context
         assert isinstance(runtime_adapter, DebugBoundRuntimeAdapter)
         assert runtime_token == "x" * 2048
@@ -798,8 +791,8 @@ def test_before_invocation_observes_exact_bound_call_boundary():
         main_image.data,
     )
     assert [event.event_type for event in sink.events] == [
-        DebugEventType.BEFORE_INVOCATION,
-        DebugEventType.AFTER_INVOCATION,
+        BeforeInvocationDebugBoundary,
+        AfterInvocationDebugBoundary,
     ]
     parameters = {
         parameter.name: parameter.value_repr
@@ -887,7 +880,7 @@ def test_before_invocation_debug_preserves_same_name_typed_input_identity():
     @artifact_inputs(image_spec, labels_spec)
     def inspect_same_name_inputs(image, shared_image, shared_labels):
         del shared_image, shared_labels
-        assert sink.events[-1].event_type is DebugEventType.BEFORE_INVOCATION
+        assert sink.events[-1].event_type is BeforeInvocationDebugBoundary
         return image
 
     invocation = DebugRuntimeFixture.compiled_invocation(
@@ -979,7 +972,7 @@ def test_debug_step_executes_one_function_pattern_invocation():
     emitted: list[ProgressEvent] = []
     config = DebugExecutionConfig(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
-        command_type=DebugCommandType.STEP,
+        command_type=StepDebugCommand,
     )
     context = DebugExecutionContextStub()
     ProgressDebugExecutionPolicy(config).install_context_sink(
@@ -1003,7 +996,7 @@ def test_debug_step_executes_one_function_pattern_invocation():
     assert [
         DebugProgressContext.from_context(event.context).event_type
         for event in emitted
-    ] == [DebugEventType.BEFORE_INVOCATION, DebugEventType.AFTER_INVOCATION]
+    ] == [BeforeInvocationDebugBoundary, AfterInvocationDebugBoundary]
 
 
 def test_debug_step_can_advance_past_current_function_pattern_invocation():
@@ -1014,7 +1007,7 @@ def test_debug_step_can_advance_past_current_function_pattern_invocation():
     )
     config = DebugExecutionConfig(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
-        command_type=DebugCommandType.STEP,
+        command_type=StepDebugCommand,
         start_after_invocation_key=DebugCursor.invocation_key_text(first_invocation),
     )
     context = DebugExecutionContextStub()
@@ -1056,8 +1049,8 @@ def test_execute_chain_emits_debug_exception_event():
         pass
 
     assert [event.event_type for event in sink.events] == [
-        DebugEventType.BEFORE_INVOCATION,
-        DebugEventType.EXCEPTION,
+        BeforeInvocationDebugBoundary,
+        ExceptionDebugBoundary,
     ]
     assert sink.events[1].exception == "RuntimeError: debug boom"
     assert "test_debug_runtime.py" in (sink.events[1].traceback_text or "")
@@ -1189,7 +1182,7 @@ def test_local_debug_snapshot_store_round_trips_metadata(tmp_path):
     assert written_path.name == "snap-1.json"
     assert restored == snapshot
     assert store.list_snapshot_ids() == ("snap-1",)
-    assert store.manifest().to_json_dict() == {
+    assert to_jsonable(store.manifest()) == {
         "debug_session_id": session.debug_session_id,
         "snapshot_ids": ["snap-1"],
     }
@@ -1229,7 +1222,7 @@ def test_debug_progress_context_round_trips_through_progress_event():
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
         snapshot_id="snap-2",
         cursor=DebugRuntimeFixture.cursor(),
-        event_type=DebugEventType.AFTER_INVOCATION,
+        event_type=AfterInvocationDebugBoundary,
         snapshot_store_ref=DebugRuntimeFixture.SNAPSHOT_STORE_REF,
         snapshot_store_backend=DebugRuntimeFixture.DEBUG_SNAPSHOT_BACKEND,
     )
@@ -1238,8 +1231,8 @@ def test_debug_progress_context_round_trips_through_progress_event():
         subject_id=DebugRuntimeFixture.SUBJECT_ID,
         axis_id=DebugRuntimeFixture.AXIS_ID,
         step_name=DebugRuntimeFixture.SEGMENT_NAME,
-        phase=ProgressPhase.PATTERN_GROUP,
-        status=ProgressStatus.RUNNING,
+        phase=PatternGroupProgressPhase,
+        status=RunningProgressStatus,
         percent=50,
         completed=1,
         total=2,
@@ -1256,7 +1249,7 @@ def test_debug_progress_context_round_trips_through_progress_event():
 
 def test_debug_progress_event_request_builds_lightweight_progress_event():
     debug_event = sink_event = DebugRuntimeFixture.debug_event(
-        event_type=DebugEventType.AFTER_INVOCATION,
+        event_type=AfterInvocationDebugBoundary,
     )
     request = DebugProgressEventRequest(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
@@ -1273,9 +1266,9 @@ def test_debug_progress_event_request_builds_lightweight_progress_event():
     progress = request.to_progress_event()
     restored_context = DebugProgressContext.from_context(progress.context or {})
 
-    assert debug_event.event_type is DebugEventType.AFTER_INVOCATION
-    assert progress.phase is ProgressPhase.PATTERN_GROUP
-    assert progress.status is ProgressStatus.SUCCESS
+    assert debug_event.event_type is AfterInvocationDebugBoundary
+    assert progress.phase is PatternGroupProgressPhase
+    assert progress.status is SuccessProgressStatus
     assert progress.message == "after_invocation"
     assert progress.error is None
     assert progress.worker_slot == "worker_0"
@@ -1299,11 +1292,11 @@ def test_progress_debug_event_sink_uses_injected_progress_emitter():
     )
 
     sink.record(
-        DebugRuntimeFixture.debug_event(event_type=DebugEventType.BEFORE_INVOCATION)
+        DebugRuntimeFixture.debug_event(event_type=BeforeInvocationDebugBoundary)
     )
 
     assert len(emitted) == 1
-    assert emitted[0].status is ProgressStatus.STARTED
+    assert emitted[0].status is StartedProgressStatus
     assert emitted[0].context is not None
     assert (
         emitted[0].context[DebugProgressContext.context_key]["debug_session_id"] == DebugRuntimeFixture.DEBUG_SESSION_ID
@@ -1321,7 +1314,7 @@ def test_progress_debug_event_sink_uses_injected_progress_emitter():
 
 
 def test_debug_event_builds_metadata_snapshot():
-    event = DebugRuntimeFixture.debug_event(event_type=DebugEventType.AFTER_INVOCATION)
+    event = DebugRuntimeFixture.debug_event(event_type=AfterInvocationDebugBoundary)
 
     snapshot = event.to_snapshot(snapshot_id="snap-event")
 
@@ -1347,7 +1340,7 @@ def test_local_snapshot_progress_sink_writes_snapshot_and_emits_id(tmp_path):
     )
 
     sink.record(
-        DebugRuntimeFixture.debug_event(event_type=DebugEventType.AFTER_INVOCATION)
+        DebugRuntimeFixture.debug_event(event_type=AfterInvocationDebugBoundary)
     )
 
     restored_context = DebugProgressContext.from_context(emitted[0].context or {})
@@ -1356,7 +1349,7 @@ def test_local_snapshot_progress_sink_writes_snapshot_and_emits_id(tmp_path):
     assert store.read_snapshot(restored_context.snapshot_id).step_name == (
         DebugRuntimeFixture.SEGMENT_NAME
     )
-    assert emitted[0].status is ProgressStatus.SUCCESS
+    assert emitted[0].status is SuccessProgressStatus
     assert emitted[0].worker_slot == "worker_0"
     assert emitted[0].owned_partition_values == ["A01"]
 
@@ -1366,7 +1359,7 @@ def test_debug_execution_config_round_trips_through_config_params():
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
         snapshot_store_ref=DebugRuntimeFixture.SNAPSHOT_STORE_REF,
         snapshot_store_backend=DebugRuntimeFixture.DEBUG_SNAPSHOT_BACKEND,
-        command_type=DebugCommandType.STEP,
+        command_type=StepDebugCommand,
         selected_source_group="A01",
         pause_step_indices=(2, 5),
         start_step_index=2,
@@ -1408,7 +1401,7 @@ def test_progress_debug_execution_policy_uses_filemanager_snapshot_store():
 def test_debug_step_policy_stops_after_first_step_only():
     config = DebugExecutionConfig(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
-        command_type=DebugCommandType.STEP,
+        command_type=StepDebugCommand,
     )
     policy = DebugExecutionPolicy.from_config_params(config.to_config_params())
 
@@ -1430,7 +1423,7 @@ def test_debug_step_policy_stops_after_first_step_only():
 def test_debug_run_to_pause_policy_stops_at_declared_pause_step():
     config = DebugExecutionConfig(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
-        command_type=DebugCommandType.RUN_TO_PAUSE,
+        command_type=RunToPauseDebugCommand,
         pause_step_indices=(2,),
     )
     policy = DebugExecutionPolicy.from_config_params(config.to_config_params())
@@ -1445,7 +1438,7 @@ def test_debug_run_to_pause_policy_stops_at_declared_pause_step():
 def test_debug_execution_policy_defaults_to_one_available_axis():
     config = DebugExecutionConfig(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
-        command_type=DebugCommandType.RUN,
+        command_type=RunDebugCommand,
     )
     policy = DebugExecutionPolicy.from_config_params(config.to_config_params())
 
@@ -1459,7 +1452,7 @@ def test_debug_execution_policy_defaults_to_one_available_axis():
 def test_debug_execution_policy_uses_selected_source_group_as_axis_filter():
     config = DebugExecutionConfig(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
-        command_type=DebugCommandType.CHOOSE_SOURCE_GROUP,
+        command_type=ChooseSourceGroupDebugCommand,
         selected_source_group="B01",
     )
     policy = DebugExecutionPolicy.from_config_params(config.to_config_params())
@@ -1471,7 +1464,7 @@ def test_debug_execution_policy_skips_before_start_step_index():
     config = DebugExecutionConfig(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
         start_step_index=2,
-        replay_mode=DebugReplayMode.WARM_ARTIFACT,
+        replay_mode=WarmArtifactReplay,
     )
     policy = DebugExecutionPolicy.from_config_params(config.to_config_params())
 
@@ -1497,7 +1490,7 @@ def test_debug_session_marks_current_cursor_dirty_nominally():
 
 def test_debug_snapshot_read_request_round_trips_snapshot_response():
     snapshot = DebugRuntimeFixture.debug_event(
-        event_type=DebugEventType.AFTER_INVOCATION
+        event_type=AfterInvocationDebugBoundary
     ).to_snapshot(snapshot_id=DebugRuntimeFixture.SNAPSHOT_ID)
     request = DebugSnapshotReadRequest(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
@@ -1506,9 +1499,7 @@ def test_debug_snapshot_read_request_round_trips_snapshot_response():
     )
     response = DebugSnapshotReadResponse(snapshot=snapshot)
 
-    restored_request = DebugSnapshotReadControlPayload.from_request(
-        request
-    ).to_request()
+    restored_request = DebugSnapshotReadRequest.from_dict(request.to_dict())
     restored_response = DebugSnapshotReadResponse.from_control_response(
         response.to_control_response()
     )
@@ -1527,7 +1518,7 @@ def test_debug_snapshot_round_trips_invocation_parameters_and_artifact_identity(
         group_keys=("A01",),
     )
     event = DebugEvent(
-        event_type=DebugEventType.AFTER_INVOCATION,
+        event_type=AfterInvocationDebugBoundary,
         cursor=cursor,
         step_name="segment",
         callable_name="segment",
@@ -1539,8 +1530,8 @@ def test_debug_snapshot_round_trips_invocation_parameters_and_artifact_identity(
         ),
     )
 
-    restored = DebugSnapshot.from_json_dict(
-        event.to_snapshot(snapshot_id="snapshot-1").to_json_dict()
+    restored = dataclass_from_mapping(
+        DebugSnapshot, to_jsonable(event.to_snapshot(snapshot_id="snapshot-1"))
     )
 
     assert restored.invocation_parameters[0].name == "threshold"
@@ -1583,7 +1574,7 @@ def test_paused_worker_runtime_inspection_projects_runtime_value_store():
         DebugRuntimeFixture.DEBUG_SESSION_ID
     )
     controller.bind_context(context)
-    controller.apply_command(DebugCommandType.CHOOSE_SOURCE_GROUP)
+    controller.apply_command(ChooseSourceGroupDebugCommand)
 
     view_model = controller.runtime_inspection_view()
 
@@ -1607,10 +1598,7 @@ def test_runtime_inspection_control_payload_round_trips_view_model():
     request = DebugRuntimeInspectionRequest(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID
     )
-    payload = DebugRuntimeInspectionControlPayload.from_request(request)
-    restored_request = DebugRuntimeInspectionControlPayload.from_dict(
-        payload.to_dict()
-    ).to_request()
+    restored_request = DebugRuntimeInspectionRequest.from_dict(request.to_dict())
 
     assert restored_request == request
 
@@ -1619,7 +1607,7 @@ def test_runtime_inspection_control_payload_round_trips_view_model():
         DebugRuntimeFixture.DEBUG_SESSION_ID
     )
     controller.bind_context(context)
-    controller.apply_command(DebugCommandType.CHOOSE_SOURCE_GROUP)
+    controller.apply_command(ChooseSourceGroupDebugCommand)
     response = DebugRuntimeInspectionResponse(
         view_model=controller.runtime_inspection_view()
     )
@@ -1635,20 +1623,6 @@ def test_runtime_inspection_control_payload_round_trips_view_model():
 def test_debug_boundary_state_registry_covers_event_and_snapshot():
     assert DebugBoundaryState.__registry__["event"] is DebugEvent
     assert DebugBoundaryState.__registry__["snapshot"] is DebugSnapshot
-
-
-def test_debug_session_request_registry_covers_control_request_family():
-    assert DebugSessionRequest.__registry__["snapshot_read"] is DebugSnapshotReadRequest
-    assert (
-        DebugSessionRequest.__registry__["artifact_export"]
-        is DebugArtifactExportRequest
-    )
-    assert (
-        DebugSessionRequest.__registry__["worker_command"] is DebugWorkerCommandRequest
-    )
-    assert (
-        DebugSessionRequest.__registry__["progress_event"] is DebugProgressEventRequest
-    )
 
 
 def test_warm_replay_rejects_missing_artifact_outputs():
@@ -1871,7 +1845,7 @@ def test_zmq_server_reads_local_debug_snapshot_by_control_request(tmp_path):
     )
 
     snapshot = DebugRuntimeFixture.debug_event(
-        event_type=DebugEventType.AFTER_INVOCATION
+        event_type=AfterInvocationDebugBoundary
     ).to_snapshot(snapshot_id=DebugRuntimeFixture.SNAPSHOT_ID)
     store = LocalDebugSnapshotStore(
         root_path=tmp_path,
@@ -1884,7 +1858,7 @@ def test_zmq_server_reads_local_debug_snapshot_by_control_request(tmp_path):
         snapshot_store_ref=str(tmp_path),
     )
 
-    message = DebugSnapshotReadControlPayload.from_request(request).to_dict()
+    message = request.to_dict()
     response = ZMQControlMessageRouter.handle(
         message,
         ZMQControlRequestContext.empty(),
@@ -1916,7 +1890,7 @@ def test_zmq_server_exports_debug_artifact_by_control_request(tmp_path):
         export_root=str(tmp_path / "exports"),
     )
 
-    message = DebugArtifactExportControlPayload.from_request(request).to_dict()
+    message = request.to_dict()
     response = ZMQControlMessageRouter.handle(
         message,
         ZMQControlRequestContext.empty(),
@@ -1947,7 +1921,7 @@ def test_live_zmq_debug_worker_command_loop_round_trips_paused_worker_status():
     try:
         response = client.send_debug_worker_command(
             debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
-            command_type=DebugCommandType.STEP,
+            command_type=StepDebugCommand,
         )
     finally:
         client.disconnect()
@@ -1955,14 +1929,14 @@ def test_live_zmq_debug_worker_command_loop_round_trips_paused_worker_status():
         thread.join(timeout=2.0)
         DebugPausedWorkerRegistry.remove(DebugRuntimeFixture.DEBUG_SESSION_ID)
 
-    assert response.status.debug_session_id == DebugRuntimeFixture.DEBUG_SESSION_ID
+    assert response.worker.debug_session_id == DebugRuntimeFixture.DEBUG_SESSION_ID
 
 
 def test_paused_worker_controller_blocks_and_steps_after_snapshot_boundary():
     controller = DebugPausedWorkerRegistry.controller_for(
         DebugRuntimeFixture.DEBUG_SESSION_ID
     )
-    event = DebugRuntimeFixture.debug_event(event_type=DebugEventType.AFTER_INVOCATION)
+    event = DebugRuntimeFixture.debug_event(event_type=AfterInvocationDebugBoundary)
     completed: list[str] = []
 
     def wait_at_boundary() -> None:
@@ -1972,11 +1946,11 @@ def test_paused_worker_controller_blocks_and_steps_after_snapshot_boundary():
     thread = threading.Thread(target=wait_at_boundary)
     thread.start()
     deadline = time.time() + 2.0
-    while controller.status.state.value != "paused" and time.time() < deadline:
+    while controller.status.state is not PausedDebugWorker and time.time() < deadline:
         time.sleep(0.01)
 
-    assert controller.status.state.value == "paused"
-    controller.apply_command(DebugCommandType.STEP)
+    assert controller.status.state is PausedDebugWorker
+    controller.apply_command(StepDebugCommand)
     thread.join(timeout=2.0)
 
     assert completed == ["resumed"]
@@ -1991,10 +1965,10 @@ def test_zmq_server_routes_paused_worker_command_by_control_request():
 
     request = DebugWorkerCommandRequest(
         debug_session_id=DebugRuntimeFixture.DEBUG_SESSION_ID,
-        command_type=DebugCommandType.STEP,
+        command_type=StepDebugCommand,
     )
 
-    message = DebugWorkerCommandControlPayload.from_request(request).to_dict()
+    message = request.to_dict()
     response = ZMQControlMessageRouter.handle(
         message,
         ZMQControlRequestContext.empty(),
@@ -2002,5 +1976,5 @@ def test_zmq_server_routes_paused_worker_command_by_control_request():
 
     assert DebugWorkerCommandResponse.from_control_response(
         response
-    ).status.debug_session_id == (DebugRuntimeFixture.DEBUG_SESSION_ID)
+    ).worker.debug_session_id == (DebugRuntimeFixture.DEBUG_SESSION_ID)
     DebugPausedWorkerRegistry.remove(DebugRuntimeFixture.DEBUG_SESSION_ID)

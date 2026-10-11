@@ -29,22 +29,10 @@ from openhcs.core.artifact_inspection import CompiledArtifactInspection
 from openhcs.core.artifacts import MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.debug import (
-    DebugCommandType,
-    DebugCursor,
-    DebugEvent,
-    DebugEventType,
-    DebugProgressEventRequest,
-    DebugReplayMode,
-)
+from openhcs.core.debug import DebugCursor, DebugEvent, DebugProgressEventRequest
 from openhcs.core.execution_state import ManagerExecutionState, TerminalExecutionStatus
 from openhcs.core.orchestrator.orchestrator import OrchestratorState
-from openhcs.core.progress import (
-    ProgressExecutionContext,
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressExecutionContext, ProgressEvent
 from openhcs.core.progress.live_measurements import (
     LiveMeasurementProgressPayload,
     LiveMeasurementTablePreview,
@@ -56,6 +44,20 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
 from openhcs.runtime.zmq_execution_client import ZMQExecutionRequestBuilder
 from tests.unit.pyqt_gui.session_harness import add_datasets, caller_session
+from openhcs.core.progress.types import (
+    StepCompletedProgressPhase,
+    SuccessProgressStatus,
+)
+from openhcs.core.debug import (
+    AfterInvocationDebugBoundary,
+    BeforeInvocationDebugBoundary,
+    PersistentPausedWorkerReplay,
+)
+from openhcs.core.debug import (
+    RunDebugCommand,
+    RunToPauseDebugCommand,
+    StepDebugCommand,
+)
 
 
 class StandInServer:
@@ -104,7 +106,7 @@ def _running(session, scope_id: str, execution_id: str) -> None:
 
 async def _run(session, scope_id: str, debug: bool) -> None:
     if debug:
-        await session.run_debug(scope_id, command_type=DebugCommandType.RUN)
+        await session.run_debug(scope_id, command_type=RunDebugCommand)
     else:
         await session.run_datasets((scope_id,))
 
@@ -412,10 +414,10 @@ def _debug_request(**overrides) -> DebugRunRequest:
         debug_session_id="debug-1",
         snapshot_store_ref="/tmp/snapshots/debug-1",
         snapshot_store_backend="local",
-        command_type=DebugCommandType.STEP,
+        command_type=StepDebugCommand,
         selected_source_group="A01",
         pause_step_indices=(0,),
-        replay_mode=DebugReplayMode.PERSISTENT_PAUSED_WORKER,
+        replay_mode=PersistentPausedWorkerReplay,
     )
     values.update(overrides)
     return DebugRunRequest(**values)
@@ -436,7 +438,7 @@ def test_debug_compile_reuse_keys_on_the_session_not_the_cursor():
     first = _replay_signature(_debug_request(start_step_index=0))
     moved_cursor = _replay_signature(
         _debug_request(
-            command_type=DebugCommandType.RUN_TO_PAUSE,
+            command_type=RunToPauseDebugCommand,
             start_step_index=4,
             start_after_invocation_key="default:0:color_to_gray",
         )
@@ -462,8 +464,8 @@ def _progress_event(**kwargs) -> ProgressEvent:
         subject_id="plate-1",
         axis_id="A01",
         step_name="Measure",
-        phase=ProgressPhase.STEP_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=StepCompletedProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         completed=1,
         total=1,
@@ -475,7 +477,7 @@ def _progress_event(**kwargs) -> ProgressEvent:
 
 def _debug_progress_event(*, snapshot_id: str | None, event_type=None):
     event = DebugEvent(
-        event_type=event_type or DebugEventType.AFTER_INVOCATION,
+        event_type=event_type or AfterInvocationDebugBoundary,
         cursor=DebugCursor(
             step_index=1,
             step_scope_id="step-1",
@@ -521,7 +523,7 @@ def test_debug_progress_with_a_snapshot_publishes_it_and_projects_the_frame():
 def test_debug_progress_without_a_snapshot_publishes_nothing():
     with caller_session() as session:
         _event, progress = _debug_progress_event(
-            snapshot_id=None, event_type=DebugEventType.BEFORE_INVOCATION
+            snapshot_id=None, event_type=BeforeInvocationDebugBoundary
         )
         session.progress.on_progress(progress.to_dict())
         assert _events_of(session, DebugSnapshotAvailable) == []

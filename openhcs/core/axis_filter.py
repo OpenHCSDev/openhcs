@@ -18,7 +18,7 @@ class StepAxisFilterResolution:
     """Resolved axis filter for one step-level filtering config root."""
 
     resolved_axis_values: frozenset[str]
-    filter_mode: PartitionFilterMode
+    filter_mode: type[PartitionFilterMode]
     original_filter: PartitionFilterValue
 
 

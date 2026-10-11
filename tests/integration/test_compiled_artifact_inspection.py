@@ -33,11 +33,7 @@ from openhcs.core.function_patterns import (
     FunctionInvocationKey,
 )
 from openhcs.core.pipeline.function_contracts import artifact_outputs
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent
 from openhcs.core.progress.runtime_artifacts import RuntimeArtifactProgressPayload
 from openhcs.core.runtime_artifact_values import ArtifactKey, RuntimeValue
 from openhcs.core.runtime_stores import (
@@ -66,6 +62,10 @@ from openhcs.runtime.zmq_control import (
 )
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 from openhcs.runtime.zmq_execution_server import ZMQExecutionServer
+from openhcs.core.progress.types import (
+    StepCompletedProgressPhase,
+    SuccessProgressStatus,
+)
 
 
 @contextmanager
@@ -131,8 +131,8 @@ def _emit_spawned_runtime_observation(worker_queue) -> None:
             subject_id="/plates/one",
             axis_id="A01",
             step_name="Produce",
-            phase=ProgressPhase.STEP_COMPLETED,
-            status=ProgressStatus.SUCCESS,
+            phase=StepCompletedProgressPhase,
+            status=SuccessProgressStatus,
             percent=100.0,
             completed=1,
             total=1,
@@ -262,8 +262,8 @@ def test_compiled_bundle_populates_static_view_then_runtime_enriches_same_row() 
         subject_id="/plates/one",
         axis_id="A01",
         step_name="Produce",
-        phase=ProgressPhase.STEP_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=StepCompletedProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         completed=1,
         total=1,

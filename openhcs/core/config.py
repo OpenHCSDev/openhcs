@@ -35,7 +35,11 @@ from openhcs.core.axes import (
 )
 from metaclass_registry import AutoRegisterMeta
 from openhcs.constants.input_source import InputSource
-from python_introspect import AnnotatedDataclassValidationMixin, Enableable
+from python_introspect import (
+    AnnotatedDataclassValidationMixin,
+    Enableable,
+    RegisteredClassChoices,
+)
 from python_introspect.enableable import EnableableMeta
 from polystore.streaming.viewer_transport import ViewerDisplayConfigABC
 from zmqruntime.config import (
@@ -100,39 +104,39 @@ class MaterializationBackend(Enum):
     OMERO_LOCAL = "omero_local"
 
 
-class PartitionFilterMode(Enum):
+class PartitionFilterMode(ABC, metaclass=AutoRegisterMeta):
     """Whether a partition filter selects the values to include or to exclude.
 
-    Each member carries what it does: its preview operator, whether a value the
-    dataset lacks is an error, and whether matched values are kept or dropped.
+    Each mode is a subclass carrying what it does; ``name`` is its spelling in
+    forms and on the wire.
     """
 
-    INCLUDE = ("include", "+", True)
-    EXCLUDE = ("exclude", "-", False)
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["PartitionFilterMode"]]] = {}
 
-    def __new__(
-        cls, serialized_value: str, preview_prefix: str, keeps_matches: bool
-    ) -> "PartitionFilterMode":
-        member = object.__new__(cls)
-        member._value_ = serialized_value
-        member._preview_prefix = preview_prefix
-        member._keeps_matches = keeps_matches
-        return member
+    name: ClassVar[str | None] = None
+    preview_prefix: ClassVar[str]
+    """This mode's compact operator in a filter preview."""
+    keeps_matches: ClassVar[bool]
+    """Matched values are the selection (include), not its complement."""
 
-    @property
-    def preview_prefix(self) -> str:
-        """Return this member's compact filter-selection operator."""
-        return self._preview_prefix
-
-    @property
-    def keeps_matches(self) -> bool:
-        """Matched values are the selection (include), not its complement."""
-        return self._keeps_matches
-
-    @property
-    def rejects_unknown_values(self) -> bool:
+    @classmethod
+    def rejects_unknown_values(cls) -> bool:
         """Naming a value the dataset lacks is an error only when including it."""
-        return self._keeps_matches
+        return cls.keeps_matches
+
+
+class IncludePartitions(PartitionFilterMode):
+    name = "include"
+    preview_prefix = "+"
+    keeps_matches = True
+
+
+class ExcludePartitions(PartitionFilterMode):
+    name = "exclude"
+    preview_prefix = "-"
+    keeps_matches = False
 
 
 class MultiprocessingStartMethod(Enum):
@@ -365,9 +369,11 @@ class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
     mode selects all.
     """
 
-    partition_filter_mode: Annotated[PartitionFilterMode, abbreviation("filter_mode")] = (
-        PartitionFilterMode.INCLUDE
-    )
+    partition_filter_mode: Annotated[
+        type[PartitionFilterMode],
+        abbreviation("filter_mode"),
+        RegisteredClassChoices(PartitionFilterMode),
+    ] = IncludePartitions
     """Apply ``partition_filter`` as the values to include or the values to exclude.
 
     Include mode rejects unknown explicit values. Exclude mode ignores unknown

@@ -5,7 +5,18 @@ from openhcs.core.artifacts import (
     RelationshipsArtifactType,
 )
 from openhcs.core.debug import DebugArtifactRef, DebugCursor, DebugSnapshot
-from openhcs.core.debug_views import DebugViewModel, DebugViewSectionKind
+from openhcs.core.debug_view_models import DebugViewModel
+from openhcs.core.debug_views import (
+    ErrorDebugViewSection,
+    InputArtifactsDebugViewSection,
+    MeasurementsDebugViewSection,
+    OutputArtifactsDebugViewSection,
+    RelationshipsDebugViewSection,
+    SourcesDebugViewSection,
+    SummaryDebugViewSection,
+    TimingDebugViewSection,
+    snapshot_view_model,
+)
 
 
 class DebugViewFixture:
@@ -48,9 +59,9 @@ class DebugViewFixture:
 
 def section_by_kind(
     view: DebugViewModel,
-    kind: DebugViewSectionKind,
+    kind: str,
 ):
-    return next(section for section in view.sections if section.kind is kind)
+    return next(section for section in view.sections if section.kind == kind)
 
 
 def table_row_mapping(section):
@@ -82,30 +93,30 @@ def test_debug_view_model_projects_snapshot_sections():
         timing_seconds=0.125,
     )
 
-    view = DebugViewModel.from_debug_snapshot(snapshot)
+    view = snapshot_view_model(snapshot)
 
     assert view.title == DebugViewFixture.MEASURE_IMAGE_INTENSITY
     assert tuple(section.kind for section in view.sections) == (
-        DebugViewSectionKind.SUMMARY,
-        DebugViewSectionKind.SOURCES,
-        DebugViewSectionKind.OUTPUT_ARTIFACTS,
-        DebugViewSectionKind.MEASUREMENTS,
-        DebugViewSectionKind.TIMING,
+        SummaryDebugViewSection.name,
+        SourcesDebugViewSection.name,
+        OutputArtifactsDebugViewSection.name,
+        MeasurementsDebugViewSection.name,
+        TimingDebugViewSection.name,
     )
-    assert "axis: A01" in section_by_kind(view, DebugViewSectionKind.SUMMARY).text
-    assert section_by_kind(view, DebugViewSectionKind.SOURCES).text == "A01_s1_w1.tif"
+    assert "axis: A01" in section_by_kind(view, SummaryDebugViewSection.name).text
+    assert section_by_kind(view, SourcesDebugViewSection.name).text == "A01_s1_w1.tif"
     output_row = table_row_mapping(
-        section_by_kind(view, DebugViewSectionKind.OUTPUT_ARTIFACTS)
+        section_by_kind(view, OutputArtifactsDebugViewSection.name)
     )
     assert output_row["kind"] == MeasurementsArtifactType.value
     assert output_row["name"] == "ImageMeasurements"
     assert output_row["storage_ref"] == "debug/snap/ImageMeasurements.csv"
     assert output_row["dtype"] == "csv"
     measurement_row = table_row_mapping(
-        section_by_kind(view, DebugViewSectionKind.MEASUREMENTS)
+        section_by_kind(view, MeasurementsDebugViewSection.name)
     )
     assert measurement_row == output_row
-    assert section_by_kind(view, DebugViewSectionKind.TIMING).text == "0.125000s"
+    assert section_by_kind(view, TimingDebugViewSection.name).text == "0.125000s"
 
 
 def test_debug_view_model_sections_follow_present_snapshot_payloads():
@@ -137,23 +148,23 @@ def test_debug_view_model_sections_follow_present_snapshot_payloads():
         exception="boom",
     )
 
-    view = DebugViewModel.from_debug_snapshot(snapshot)
+    view = snapshot_view_model(snapshot)
 
     assert tuple(section.kind for section in view.sections) == (
-        DebugViewSectionKind.SUMMARY,
-        DebugViewSectionKind.INPUT_ARTIFACTS,
-        DebugViewSectionKind.RELATIONSHIPS,
-        DebugViewSectionKind.ERROR,
+        SummaryDebugViewSection.name,
+        InputArtifactsDebugViewSection.name,
+        RelationshipsDebugViewSection.name,
+        ErrorDebugViewSection.name,
     )
     input_row = table_row_mapping(
-        section_by_kind(view, DebugViewSectionKind.INPUT_ARTIFACTS)
+        section_by_kind(view, InputArtifactsDebugViewSection.name)
     )
     assert input_row["kind"] == ObjectLabelsArtifactType.value
     assert input_row["name"] == "Nuclei"
     assert input_row["shape"] == "1, 64, 64"
     relationship_row = table_row_mapping(
-        section_by_kind(view, DebugViewSectionKind.RELATIONSHIPS)
+        section_by_kind(view, RelationshipsDebugViewSection.name)
     )
     assert relationship_row["kind"] == RelationshipsArtifactType.value
     assert relationship_row["name"] == "ParentChild"
-    assert section_by_kind(view, DebugViewSectionKind.ERROR).text == "boom"
+    assert section_by_kind(view, ErrorDebugViewSection.name).text == "boom"
