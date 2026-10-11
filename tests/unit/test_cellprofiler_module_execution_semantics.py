@@ -77,12 +77,7 @@ def _image_measurement_executor(
         raw_func=raw_func,
         callable_contract=replace(
             raw_contract,
-            metadata=replace(
-                raw_contract.metadata,
-                artifact_inputs=(image_input,),
-                artifact_outputs=declared_outputs,
-                runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-            ),
+            artifact_inputs=(image_input,), artifact_outputs=declared_outputs, runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
         ),
     )
 
@@ -206,12 +201,7 @@ def test_main_flow_replacement_uses_declared_artifact_slot(
         raw_func=color_to_gray,
         callable_contract=replace(
             raw_contract,
-            metadata=replace(
-                raw_contract.metadata,
-                artifact_inputs=(source,),
-                artifact_outputs=(output,),
-                runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-            ),
+            artifact_inputs=(source,), artifact_outputs=(output,), runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
         ),
     )
     runtime = _runtime_with_outputs(

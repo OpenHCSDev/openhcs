@@ -252,7 +252,7 @@ def test_public_paired_vector_kwargs_reconstruct_original_mode_without_extra_sel
         _classification_context(),
     )
     assert contract.function_name == "classify_objects_two_measurements"
-    assert contract.runtime_bound_parameters == (
+    assert contract.runtime_bound_parameter_names == (
         "measurement1_values",
         "measurement2_values",
     )
@@ -383,7 +383,7 @@ def test_missing_and_conflicting_mode_declarations_fail_closed(parameters):
     contract = CallableContract.from_callable(classify_objects_two_measurements)
     contract = replace(
         contract,
-        metadata=replace(contract.metadata, runtime_bound_parameters=parameters),
+        runtime_bound_parameter_types=parameters,
     )
     with pytest.raises(ValueError, match="one declared measurement-count mode"):
         ClassificationMethod.from_callable_contract(contract)

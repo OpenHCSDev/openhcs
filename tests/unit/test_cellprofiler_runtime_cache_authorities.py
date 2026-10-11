@@ -75,7 +75,7 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
     )
     contract = replace(
         contract,
-        metadata=replace(contract.metadata, artifact_inputs=(input_spec,)),
+        artifact_inputs=(input_spec,),
     )
     adapter = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=store,
@@ -156,7 +156,7 @@ def test_runtime_adapter_measurement_queries_follow_store_revisions() -> None:
     )
     contract = replace(
         contract,
-        metadata=replace(contract.metadata, artifact_inputs=(input_spec,)),
+        artifact_inputs=(input_spec,),
     )
     adapter = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=store,

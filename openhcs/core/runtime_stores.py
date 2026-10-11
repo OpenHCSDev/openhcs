@@ -290,7 +290,7 @@ class RuntimeArtifactInput:
     axis_scope: RuntimeExecutionAxisScope
     backend: str
     source_binding_plan: CompiledSourceBindingPlan = dataclass_field(
-        default_factory=CompiledSourceBindingPlan.empty
+        default_factory=CompiledSourceBindingPlan
     )
 
     def __post_init__(self) -> None:
@@ -773,7 +773,7 @@ class RuntimeArtifactBatch(RuntimeParameterDeclarationABC):
     records_by_axis: Mapping[str, tuple[StoredRuntimeValue, ...]]
     source_image_set_identity_policy: SourceImageSetIdentityPolicy
     source_binding_plan: CompiledSourceBindingPlan = dataclass_field(
-        default_factory=CompiledSourceBindingPlan.empty
+        default_factory=CompiledSourceBindingPlan
     )
 
     def __post_init__(self) -> None:

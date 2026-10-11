@@ -13,7 +13,7 @@ from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.alias_property import AliasProperty
 
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.debug import (
@@ -268,19 +268,13 @@ class DebugRuntimeFixture:
     ) -> CompiledFunctionInvocation:
         resolved_contract = contract
         if resolved_contract is None:
-            callable_metadata = CallableMetadata.from_callable(func)
-            resolved_contract = CallableContract(
-                func=func,
-                function_name=func.__name__,
-                module_name=func.__module__,
-                metadata=replace(
-                    callable_metadata,
-                    input_memory_type=MEMORY_TYPE_NUMPY,
-                    output_memory_type=MEMORY_TYPE_NUMPY,
-                    processing_contract=Pure3DContract,
-                    runtime_adapter=runtime_adapter,
-                    runtime_context_parameter=runtime_context_parameter,
-                ),
+            resolved_contract = replace(
+                CallableContract.from_callable(func),
+                input_memory_type=MEMORY_TYPE_NUMPY,
+                output_memory_type=MEMORY_TYPE_NUMPY,
+                processing_contract=Pure3DContract,
+                runtime_adapter=runtime_adapter,
+                runtime_context_parameter=runtime_context_parameter,
             )
         invocation_key = FunctionInvocationKey.from_contract(
             resolved_contract,
@@ -339,7 +333,7 @@ class DebugRuntimeFixture:
             step_name="debuggable",
             axis_id=DebugRuntimeFixture.AXIS_ID,
             input_memory_type=MEMORY_TYPE_NUMPY,
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
             variable_components=(),
             execution_group_scope=ComponentGroupScope.ungrouped(),
             compiled_function_pattern=SimpleNamespace(is_grouped=False),
@@ -1066,13 +1060,7 @@ def test_projection_exception_contains_complete_invocation_context_without_debug
         func=DebugRuntimeFixture.projection_mismatch,
         function_name="correct_illumination_calculate",
         module_name="CorrectIlluminationCalculate",
-        metadata=CallableMetadata(
-            input_memory_type=MEMORY_TYPE_NUMPY,
-            output_memory_type=MEMORY_TYPE_NUMPY,
-            runtime_adapter=runtime_adapter,
-            processing_contract=Pure2DContract,
-            runtime_image_execution_mode=FullStackExecution,
-        ),
+        input_memory_type=MEMORY_TYPE_NUMPY, output_memory_type=MEMORY_TYPE_NUMPY, runtime_adapter=runtime_adapter, processing_contract=Pure2DContract, runtime_image_execution_mode=FullStackExecution,
     )
     image = ImagePayloadMetadata(
         source_image_names=("OrigStain1", "OrigStain2"),

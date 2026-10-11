@@ -7,8 +7,6 @@ import numpy as np
 from typing import TYPE_CHECKING, Annotated, ClassVar, Tuple
 from dataclasses import dataclass
 from enum import Enum
-import scipy.ndimage
-import scipy.sparse
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.measurement_row_materialization import (
@@ -60,7 +58,7 @@ from openhcs.core.pipeline.function_contracts import (
 
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
-    from openhcs.core.source_bindings import StepSourceBindingsConfig
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
         CellProfilerOutputRecordRequest,
     )

@@ -12,12 +12,12 @@ from openhcs.core.source_bindings import (
     ImagePlaneSource,
     MetadataSelector,
     NamedSourceBinding,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_projection import SourceCandidate
 from openhcs.domains.microscopy.axes import Microscopy
 
@@ -200,7 +200,7 @@ def test_preparation_consumers_cannot_reauthor_binding_or_java_lifetime():
     root = Path(__file__).resolve().parents[2]
     for path, class_name, method_name, owner_call, forbidden in (
         (
-            "openhcs/core/source_bindings.py",
+            "openhcs/core/config.py",
             "SourceBindingsConfig",
             "discovery_path_matches",
             "physical_path_matches",

@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -176,9 +177,9 @@ def _export_context() -> ProcessingContext:
                 step_index=0,
                 step_name="ExportToDatabase",
                 axis_id="A01",
-                source_binding_plan=CompiledSourceBindingPlan.empty(),
+                source_binding_plan=CompiledSourceBindingPlan(),
                 compiled_function_pattern=compile_function_pattern(
-                    export_to_database,
+                    admitted_graph(export_to_database),
                     {},
                     {},
                 ),

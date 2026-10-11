@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from openhcs.core.config import MaterializationBackend, PipelineConfig
     from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
-    from openhcs.core.source_bindings import SourceBindingsConfig
+    from openhcs.core.config import SourceBindingsConfig
 
 
 # ---------------------------------------------------------------------------

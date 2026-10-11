@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
@@ -35,7 +36,7 @@ def _runtime_input_provider(func, *specs: ArtifactSpec) -> InvocationContractPro
     return _RuntimeInputContractProvider(
         replace(
             contract,
-            metadata=replace(contract.metadata, artifact_inputs=specs),
+            artifact_inputs=specs,
         )
     )
 
@@ -56,14 +57,16 @@ def test_repeated_input_roles_compile_as_exact_edge_occurrences() -> None:
         artifact_type=ObjectLabelsArtifactType,
     )
     compiled = compile_function_pattern(
-        consume_repeated_objects,
-        {plan.ref(): plan for plan in (storage_plan,)},
-        {},
-        invocation_contract_provider=_runtime_input_provider(
+        admitted_graph(
+            consume_repeated_objects,
+            invocation_contract_provider=_runtime_input_provider(
             consume_repeated_objects,
             objects,
             objects,
         ),
+        ),
+        {plan.ref(): plan for plan in (storage_plan,)},
+        {},
     )
     invocation = next(compiled.iter_invocations())
 
@@ -121,15 +124,17 @@ def test_repeated_input_roles_compile_distinct_relation_owned_edge_projections()
         group_component=Microscopy.Site,
     )
     compiled = compile_function_pattern(
-        consume_ambiguous_objects,
-        {plan.ref(): plan for plan in (object_plan, source_plan)},
-        {},
-        invocation_contract_provider=_runtime_input_provider(
+        admitted_graph(
+            consume_ambiguous_objects,
+            invocation_contract_provider=_runtime_input_provider(
             consume_ambiguous_objects,
             plain_objects,
             source_scoped_objects,
             source,
         ),
+        ),
+        {plan.ref(): plan for plan in (object_plan, source_plan)},
+        {},
     )
 
     compiled = _artifact_stage().compile_invocation_input_edges(

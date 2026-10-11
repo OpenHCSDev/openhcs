@@ -27,13 +27,14 @@ from openhcs.core.callable_contract import (
     CompilerPreparedAutoRegisterFamily,
     FunctionStepExecutionScope,
 )
-from openhcs.core.config import ProcessingConfig, StepSourceBindingsConfig
+from openhcs.core.config import (
+    ProcessingConfig,
+    StepSourceBindingsConfig,
+    SourceBindingsConfig,
+)
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     ArtifactInputPlan,
-)
-from openhcs.core.source_bindings import (
-    SourceBindingsConfig,
 )
 from openhcs.interop.cellprofiler.module_artifact_contracts import (
     CellProfilerModuleArtifactContracts,
@@ -429,7 +430,7 @@ class CellProfilerModule(
         config: "SourceBindingsConfig",
     ) -> "SourceBindingsConfig":
         """Fold enabled modules into one public source-binding configuration."""
-        from openhcs.core.source_bindings import SourceBindingsConfig
+        from openhcs.core.config import SourceBindingsConfig
 
         if not isinstance(config, SourceBindingsConfig):
             raise TypeError(
@@ -799,8 +800,8 @@ class CellProfilerModule(
             )
         first = contract_values[0]
         canonical_callable = cls.require_callable(first.function_name)
-        expected_metadata = replace(
-            first.metadata,
+        expected_declaration = replace(
+            first.declaration,
             artifact_inputs=(),
             artifact_outputs=(),
         )
@@ -812,11 +813,11 @@ class CellProfilerModule(
                 )
             if (
                 replace(
-                    contract.metadata,
+                    contract.declaration,
                     artifact_inputs=(),
                     artifact_outputs=(),
                 )
-                != expected_metadata
+                != expected_declaration
             ):
                 raise ValueError(
                     f"{cls.__name__} dynamic callable contracts disagree outside "
@@ -855,14 +856,11 @@ class CellProfilerModule(
 
         return replace(
             first,
-            metadata=replace(
-                first.metadata,
-                artifact_inputs=combined_occurrences(
-                    contract.metadata.artifact_inputs for contract in contract_values
-                ),
-                artifact_outputs=combined_occurrences(
-                    contract.metadata.artifact_outputs for contract in contract_values
-                ),
+            artifact_inputs=combined_occurrences(
+                contract.artifact_inputs for contract in contract_values
+            ),
+            artifact_outputs=combined_occurrences(
+                contract.artifact_outputs for contract in contract_values
             ),
         )
 
@@ -908,11 +906,9 @@ class CellProfilerModule(
         combined = cls.combine_callable_contracts(contracts)
         resolved = replace(
             invocation.contract,
-            metadata=replace(
-                invocation.contract.metadata,
-                artifact_inputs=combined.metadata.artifact_inputs,
-                artifact_outputs=combined.metadata.artifact_outputs,
-            ),
+            artifact_inputs=combined.artifact_inputs,
+            artifact_outputs=combined.artifact_outputs,
+            repeated_return_slots=combined.repeated_return_slots,
         )
         return resolved, tuple(
             name for name in invocation.kwargs_dict if name in consumed_names

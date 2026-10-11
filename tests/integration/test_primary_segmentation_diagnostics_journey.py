@@ -136,8 +136,8 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         SourceFilterMatchType,
         SourceFilterSubject,
         SourceSelector,
-        StepSourceBindingsConfig,
     )
+    from openhcs.core.config import StepSourceBindingsConfig
     from openhcs.core.source_image_provenance import SourceImageProvenance
     from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
     from openhcs.core.steps.function_step import FunctionStep

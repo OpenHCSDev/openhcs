@@ -16,10 +16,8 @@ from openhcs.core.pipeline.artifact_planning import (
     ArtifactGraph,
     artifact_producers_for_outputs,
 )
-from openhcs.core.source_bindings import (
-    NamedSourceBinding,
-    StepSourceBindingsConfig,
-)
+from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.axes import Ungrouped
 
 

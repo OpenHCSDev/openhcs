@@ -11,7 +11,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
@@ -49,10 +49,7 @@ def _output_record_request(
         func=lambda image: image,
         function_name="active_occurrence_probe",
         module_name=__name__,
-        metadata=CallableMetadata(
-            artifact_inputs=declared_inputs,
-            artifact_outputs=(output,),
-        ),
+        artifact_inputs=declared_inputs, artifact_outputs=(output,),
     )
     invocation_key = FunctionInvocationKey(
         function_name=contract.function_name,
@@ -119,10 +116,7 @@ def test_output_source_uses_compiled_runtime_occurrence_for_repeated_roles(
         func=lambda image: image,
         function_name="repeated_role_probe",
         module_name=__name__,
-        metadata=CallableMetadata(
-            artifact_inputs=(primary, neighbor),
-            artifact_outputs=(output,),
-        ),
+        artifact_inputs=(primary, neighbor), artifact_outputs=(output,),
     )
     invocation_key = FunctionInvocationKey(
         function_name=contract.function_name,

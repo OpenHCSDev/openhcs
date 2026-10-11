@@ -20,15 +20,14 @@ from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjecto
 from openhcs.core.source_bindings import (
     CompiledSourceUniversePlan,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
-    SourceBindingsConfig,
+    PairByOrder,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceProjectionRole,
     SourceSelector,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_io import (
     get_all_image_paths,
@@ -349,7 +348,7 @@ def test_object_only_source_anchors_match_compiled_pattern_after_loading(
                 strict=True,
             )
         ),
-        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
     )
     filemanager = _filemanager()
     materialization = SourceBindingWorkspaceProjector(
@@ -418,7 +417,7 @@ def test_virtual_pipeline_source_universe_does_not_mix_physical_paths(
                 strict=True,
             )
         ),
-        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        match_plan=PairByOrder(),
     )
     filemanager = _filemanager()
     materialization = SourceBindingWorkspaceProjector(

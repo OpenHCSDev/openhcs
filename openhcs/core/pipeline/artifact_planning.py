@@ -48,7 +48,8 @@ from openhcs.processing.materialization import (
 
 from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import FunctionStepExecutionScope
-from openhcs.core.source_bindings import CompiledSourceBindingPlan, StepSourceBindingsConfig
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_step import FunctionStep
 
@@ -242,7 +243,7 @@ class ArtifactGraph:
         default_factory=StepInputDependency.unresolved
     )
     source_binding_plan: CompiledSourceBindingPlan = field(
-        default_factory=CompiledSourceBindingPlan.empty
+        default_factory=CompiledSourceBindingPlan
     )
     _input_lineage_order: (
         tuple[tuple[ArtifactSpecRef, tuple[ArtifactSpecRef, ...]], ...] | None
@@ -378,8 +379,7 @@ class ArtifactGraph:
         context: ArtifactDeclarationStepContext,
     ) -> "ArtifactGraph":
         """Capture fixed source routing once per graph."""
-        binding_plan = CompiledSourceBindingPlan.from_contracts(
-            config,
+        binding_plan = config.compiled_plan_for_contracts(
             () if self.pattern is None else (
                 item.contract for item in self.pattern.iter_items()
             ),
@@ -521,6 +521,12 @@ class ArtifactGraph:
     @classmethod
     def empty(cls) -> "ArtifactGraph":
         return cls()
+
+    def validate_invocation_declarations(self) -> None:
+        """Admit each invocation's artifact parameters and output declarations."""
+        for item in () if self.pattern is None else self.pattern.iter_items():
+            item.contract.validate_artifact_input_parameter_bindings()
+            self.invocation_declarations[item.key].validate_artifact_output_declarations()
 
     @property
     def outputs(self) -> OrderedDict[ArtifactSpecRef, ArtifactSpec]:
@@ -704,7 +710,11 @@ def extract_artifact_declarations(
         contract_plan = invocation_contract_provider(invocation, step_context)
         contract_plans[invocation.key] = contract_plan
         if contract_plan is not None:
-            invocation = replace(invocation, contract=contract_plan.contract)
+            invocation = replace(
+                invocation,
+                contract=contract_plan.contract,
+                kwargs=contract_plan.consume_authored_kwargs(invocation, step_context),
+            )
         resolved_items[invocation.key] = invocation
         artifact_selector = declaration_provider(invocation, step_context)
         declarations[invocation.key] = artifact_selector

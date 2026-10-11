@@ -56,8 +56,9 @@ from openhcs.authoring.session.events import (
 from openhcs.authoring.session.session import Session
 from openhcs.pyqt_gui.session_rendering import QtSessionEventRelay
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
+from openhcs.core.function_patterns import AuthoredFunctionPattern
 from openhcs.core.source_binding_context import SourceBindingContext
-from openhcs.core.source_bindings import SourceBindingsConfig
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionSpec, FunctionStep
 from python_introspect import SignatureAnalyzer
@@ -1001,7 +1002,7 @@ class DualEditorWindow(BaseFormDialog):
         if not self.editing_step.func:
             return "No function assigned"
 
-        func = DualEditorSession.callable_from_function_spec(self.editing_step.func)
+        func = AuthoredFunctionPattern.first_callable(self.editing_step.func)
         if func is None:
             return "No callable function assigned"
 

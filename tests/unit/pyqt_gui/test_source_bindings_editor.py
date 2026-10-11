@@ -23,8 +23,7 @@ from openhcs.core.source_bindings import (
     MetadataSelector,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
@@ -511,14 +510,11 @@ def test_pipeline_source_bindings_table_edits_recreate_container_and_children() 
         source=MetadataSource.FILE_NAME,
         pattern=r"(?P<well>A\d{2})_(?P<channel>DNA)\.tif",
     )
-    expected_match_plan = SourceBindingMatchPlan(
-        method=SourceBindingMatchMethod.METADATA,
-        dimensions=(
+    expected_match_plan = PairByMetadata(dimensions=(
             SourceBindingMatchDimension(
                 fields=(SourceBindingMatchField("DNA", "well"),),
             ),
-        ),
-    )
+        ))
 
     try:
         for _ in range(80):
@@ -1255,17 +1251,14 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
         for _ in range(10):
             QApplication.processEvents()
 
-        expected_plan = SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=(
+        expected_plan = PairByMetadata(dimensions=(
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("DNA", "well"),),
                 ),
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("GFP", "well"),),
                 ),
-            ),
-        )
+            ))
         assert (
             state.get_resolved_value("step_source_bindings_config.match_plan")
             == expected_plan
@@ -2853,27 +2846,21 @@ def test_source_bindings_placeholder_preview_updates_for_same_summary_text() -> 
     container.set_value_widget(widget)
 
     first = StepSourceBindingsConfig(
-        match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=(
+        match_plan=PairByMetadata(dimensions=(
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("DNA", "well"),),
                 ),
-            ),
-        ),
+            )),
     )
     second = StepSourceBindingsConfig(
-        match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=(
+        match_plan=PairByMetadata(dimensions=(
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("DNA", "well"),),
                 ),
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("GFP", "site"),),
                 ),
-            ),
-        ),
+            )),
     )
     first_placeholder = LazyDefaultPlaceholderService._format_placeholder_text(
         first,
@@ -4662,17 +4649,14 @@ def test_source_bindings_editor_edits_match_plan() -> None:
         (SourceBindingMatchField("DNA", "well"), SourceBindingMatchField("GFP", "well")),
     )
 
-    assert widget.get_value().match_plan == SourceBindingMatchPlan(
-        method=SourceBindingMatchMethod.METADATA,
-        dimensions=(
+    assert widget.get_value().match_plan == PairByMetadata(dimensions=(
             SourceBindingMatchDimension(
                 fields=(
                     SourceBindingMatchField("DNA", "well"),
                     SourceBindingMatchField("GFP", "well"),
                 ),
             ),
-        ),
-    )
+        ))
 
 
 def test_source_bindings_editor_enum_columns_use_typed_combos() -> None:

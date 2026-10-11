@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType, SpecialArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import compile_function_pattern
@@ -39,7 +40,11 @@ def test_required_abi_only_parameter_rejects_missing_exact_binding(
     with pytest.raises(
         ValueError, match="'labels' has no exact artifact declaration binding"
     ):
-        compile_function_pattern((consume, authored_kwargs), {}, {})
+        compile_function_pattern(
+            admitted_graph((consume, authored_kwargs)),
+            {},
+            {},
+        )
 
 
 def test_optional_abi_only_parameter_keeps_its_declared_default() -> None:
@@ -50,7 +55,7 @@ def test_optional_abi_only_parameter_keeps_its_declared_default() -> None:
         received.append(labels)
         return image
 
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
     (invocation,) = compiled.default_group.invocations
     assert invocation.contract.artifact_input_parameter_names == ("labels",)
     assert invocation.contract.artifact_inputs.names() == ()
@@ -75,9 +80,9 @@ def test_scalar_artifact_roster_cardinality_belongs_to_its_runtime_binder(manage
 
     if not managed:
         with pytest.raises(ValueError, match="labels.*multiple exact artifact occurrences"):
-            compile_function_pattern(consume, {}, {})
+            compile_function_pattern(admitted_graph(consume), {}, {})
         return
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
     (invocation,) = compiled.default_group.invocations
     assert invocation.contract.artifact_inputs.specs == inputs
     assert invocation.contract.artifact_input_parameter_names == ("labels",)
@@ -95,7 +100,7 @@ def test_artifact_spec_only_parameter_declaration_compiles() -> None:
         del labels
         return image
 
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
     contract = compiled.default_group.invocations[0].contract
 
     assert contract.artifact_input_parameter_names == ("labels",)
@@ -114,7 +119,7 @@ def test_matching_legacy_and_artifact_spec_declarations_compile() -> None:
         del labels
         return image
 
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
 
     assert compiled.default_group.invocations[
         0
@@ -137,7 +142,7 @@ def test_conflicting_legacy_and_artifact_spec_declarations_fail_compilation() ->
     with pytest.raises(
         ValueError, match="artifact-fed parameter declarations disagree"
     ):
-        compile_function_pattern(consume, {}, {})
+        compile_function_pattern(admitted_graph(consume), {}, {})
 
 
 def test_legacy_declaration_agrees_with_compiled_exact_artifact_binding() -> None:
@@ -154,7 +159,7 @@ def test_legacy_declaration_agrees_with_compiled_exact_artifact_binding() -> Non
     )
     compiled_contract = replace(
         contract,
-        metadata=replace(contract.metadata, artifact_inputs=(labels,)),
+        artifact_inputs=(labels,),
     )
 
     compiled_contract.validate_artifact_input_parameter_bindings()
@@ -170,7 +175,7 @@ class _DeclaredInputProvider(InvocationContractProvider):
         self.events.append("declare")
         contract = replace(
             invocation.contract,
-            metadata=replace(invocation.contract.metadata, artifact_inputs=self.inputs),
+            artifact_inputs=self.inputs,
         )
         return InvocationContractPlan(contract)
 
@@ -212,7 +217,9 @@ def test_new_provider_finalizes_exact_input_through_cooperative_hooks(
     events = []
     provider = _CheckedInputProvider((labels,), events)
     compiled = compile_function_pattern(
-        consume, {}, {}, invocation_contract_provider=provider
+        admitted_graph(consume, invocation_contract_provider=provider),
+        {},
+        {},
     )
     (invocation,) = compiled.default_group.invocations
     assert invocation.contract.artifact_input_parameter_names == ("labels",)
@@ -225,9 +232,11 @@ def test_new_provider_finalizes_exact_input_through_cooperative_hooks(
         ValueError, match="'labels' has no exact artifact declaration binding"
     ):
         compile_function_pattern(
-            consume,
+            admitted_graph(
+                consume,
+                invocation_contract_provider=_CheckedInputProvider((), events),
+            ),
             {},
             {},
-            invocation_contract_provider=_CheckedInputProvider((), events),
         )
     assert events == ["start", "declare"]

@@ -16,7 +16,7 @@ from openhcs.processing.backends.cellprofiler.morphology import MorphologyBacken
 from metaclass_registry.strategies import (
     EnumKeyedStrategyMixin,
 )
-from openhcs.core.source_bindings import StepSourceBindingsConfig
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.callable_contract import (
     attach_processing_prepare,
     callable_request,

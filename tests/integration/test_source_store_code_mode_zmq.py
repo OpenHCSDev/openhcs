@@ -25,6 +25,8 @@ from openhcs.core.config import (
     LazyVFSConfig,
     MaterializationBackend,
     PipelineConfig,
+    LazySourceBindingsConfig,
+    LazyStepSourceBindingsConfig,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
@@ -32,8 +34,6 @@ from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.source_bindings import (
-    LazySourceBindingsConfig,
-    LazyStepSourceBindingsConfig,
     NamedSourceBinding,
     SourceFilterClause,
     SourceFilterMatchType,

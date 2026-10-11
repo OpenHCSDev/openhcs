@@ -48,7 +48,8 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_bindings import NamedSourceBinding, StepSourceBindingsConfig
+from openhcs.core.source_bindings import NamedSourceBinding
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
@@ -139,10 +140,7 @@ def _compiled_image_quality_contract() -> CallableContract:
     contract = CallableContract.from_callable(measure_image_quality)
     return replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            artifact_outputs=(measurement_spec,),
-        ),
+        artifact_outputs=(measurement_spec,),
     )
 
 
@@ -438,10 +436,7 @@ def test_measure_image_quality_table_uses_row_qualified_source_inputs() -> None:
     contract = _compiled_image_quality_contract()
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            artifact_inputs=source_specs,
-        ),
+        artifact_inputs=source_specs,
     )
     _output, records = CellProfilerFunctionContractExecutor().execute(
         contract,

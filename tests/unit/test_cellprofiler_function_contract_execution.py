@@ -22,7 +22,7 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.callable_contract import (
     CallableContract,
-    CallableMetadata,
+    CallableDeclaration,
     CallableProjection,
     callable_request,
 )
@@ -86,11 +86,7 @@ def _compiled_contract(
         func=func,
         function_name="dispatch_probe",
         module_name="DispatchProbeModule",
-        metadata=CallableMetadata(
-            processing_contract=processing_contract,
-            artifact_inputs=artifact_inputs,
-            artifact_outputs=artifact_outputs,
-        ),
+        processing_contract=processing_contract, artifact_inputs=artifact_inputs, artifact_outputs=artifact_outputs,
     ).with_prepared_signature()
 
 
@@ -116,11 +112,7 @@ def test_registered_morph_distance_projects_raw_abi_and_retains_source_context()
     contract = CallableContract.from_callable(morph)
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-            artifact_outputs=(ArtifactSpec.output("Distance", ImageArtifactType),),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(), artifact_outputs=(ArtifactSpec.output("Distance", ImageArtifactType),),
     )
     pixels = np.zeros((1, 7, 7), dtype=np.float32)
     pixels[:, 2:5, 2:5] = 1
@@ -181,10 +173,7 @@ def test_raw_slice_abi_retains_declared_payloads_and_projects_kwargs(
     contract = _compiled_contract(raw, Pure2DContract)
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     source = ImagePayloadMetadata(source_image_names=("DNA",)).payload_with(
         np.ones((3, 4), dtype=np.float32), np.ones((3, 4), dtype=bool),
@@ -256,11 +245,7 @@ def test_raw_abi_projection_matches_declared_argument_in_single_and_full_stack_m
     contract = _compiled_contract(raw, processing_contract)
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-            artifact_outputs=(ArtifactSpec.output("Result", ImageArtifactType),),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(), artifact_outputs=(ArtifactSpec.output("Result", ImageArtifactType),),
     )
     source = ImagePayloadMetadata(source_image_names=("DNA",)).payload_with(
         np.ones((3, 4)), None,
@@ -311,10 +296,7 @@ def test_canonical_argument_projection_uses_declared_nominal_annotation(
     assert contract.runtime_main_flow_call_argument(source) is expected
     adapted = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     assert adapted.raw_main_flow_call_argument(source) is expected
     assert adapted.runtime_main_flow_call_argument(source) is source
@@ -403,7 +385,7 @@ def test_raw_abi_derivation_follows_existing_input_guards(monkeypatch) -> None:
         raise AssertionError("Input guard resolved the raw ABI prematurely")
 
     monkeypatch.setattr(
-        CallableContract, "canonical_parameter_declarations",
+        CallableContract, "canonical_parameter_annotations",
         property(reject_premature_annotations),
     )
     with pytest.raises(TypeError, match="requires AlignedImageStack"):
@@ -500,10 +482,7 @@ def test_authored_distinct_raw_abi_batch_has_no_runtime_queries_and_filters_cont
     ])
     monkeypatch.setattr(CallablePreparation,"prepare",lambda self:None)
     contract = CallableContract.from_prepared_callable(wrapper)
-    contract = replace(contract,metadata=replace(
-        contract.metadata,processing_contract=Pure2DContract,
-        artifact_outputs=(ArtifactSpec.output("Result",ImageArtifactType),),
-    ))
+    contract = replace(contract,processing_contract=Pure2DContract, artifact_outputs=(ArtifactSpec.output("Result",ImageArtifactType),))
     source = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,source_image_names=("DNA",)).payload_with(np.ones((12,3,4)),None)
     projection = RuntimePlaneAxisValueProjection.preserve(axis=RuntimePlaneAxis.RUNTIME_SLICE,axis_size=12)
     def forbidden(*args, **kwargs):
@@ -541,10 +520,7 @@ def test_compiled_slice_execution_resolves_raw_target_once_and_preserves_request
     contract = CallableContract.from_callable(decorated).with_prepared_signature()
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            processing_contract=Pure2DContract,
-        ),
+        processing_contract=Pure2DContract,
     )
     raw_target = contract.resolve_canonical_raw_callable()
     resolve_raw = CallableContract.resolve_raw_runtime_callable

@@ -120,10 +120,7 @@ def _straighten_worms_binding_request(
         runtime_value_store=store,
         callable_contract=replace(
             callable_contract,
-            metadata=replace(
-                callable_contract.metadata,
-                artifact_inputs=(object_spec,),
-            ),
+            artifact_inputs=(object_spec,),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(
             "A01",

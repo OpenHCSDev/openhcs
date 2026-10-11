@@ -17,6 +17,7 @@ from python_introspect import (
     parameter_exclusions,
 )
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.callable_contract import CallableContract, callable_request
 from openhcs.core.config import LazyDtypeConfig
 from openhcs.core.function_patterns import compile_function_pattern
@@ -243,7 +244,11 @@ def test_native_flexible_callable_receives_declared_array_abi_and_keeps_slice_co
         return image + 1
 
     invocation = compile_function_pattern(
-        (native_image_operation, {"slice_by_slice": slice_by_slice}), {}, {},
+        admitted_graph(
+            (native_image_operation, {"slice_by_slice": slice_by_slice}),
+        ),
+        {},
+        {},
     ).default_group.invocations[0]
     result = invocation.runtime_callable(
         invocation.main_flow_call_argument(payload), **dict(invocation.runtime_kwargs),
@@ -260,7 +265,11 @@ def test_native_flexible_callable_preserves_explicitly_declared_carrier_abi() ->
     def carrier_operation(image: RuntimeArrayPayload) -> RuntimeArrayPayload:
         return image
 
-    invocation = compile_function_pattern(carrier_operation, {}, {}).default_group.invocations[0]
+    invocation = compile_function_pattern(
+        admitted_graph(carrier_operation),
+        {},
+        {},
+    ).default_group.invocations[0]
     assert invocation.main_flow_call_argument(payload) is payload
 
 

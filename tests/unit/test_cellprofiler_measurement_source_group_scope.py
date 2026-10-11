@@ -74,11 +74,7 @@ def test_measurement_source_alignment_uses_selected_output_group_scope() -> None
     raw_contract = CallableContract.from_callable(combine_objects)
     contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_inputs=(first, second),
-            artifact_outputs=(measurements,),
-        ),
+        artifact_inputs=(first, second), artifact_outputs=(measurements,),
     )
     invocation_key = FunctionInvocationKey(
         contract.function_name,

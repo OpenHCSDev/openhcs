@@ -1723,7 +1723,7 @@ def _ungrouped_runtime_artifact_input(
     storage_plan: ArtifactInputPlan,
     *,
     axis_scope: RuntimeExecutionAxisScope = RuntimeExecutionAxisScope(axis_id="A01"),
-    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan.empty(),
+    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
 ) -> RuntimeArtifactInput:
     ungrouped = ComponentGroupScope.ungrouped()
     return RuntimeArtifactInput(
@@ -1994,7 +1994,7 @@ def test_paired_channel_declaration_reaches_both_adapter_input_consumers():
     contract = replace(
         contract,
         module_name="SecondaryConsumer",
-        metadata=replace(contract.metadata, artifact_inputs=(edge.spec, source_spec)),
+        artifact_inputs=(edge.spec, source_spec),
     )
     adapter = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=store,
@@ -2042,7 +2042,7 @@ def test_paired_channel_input_rejects_other_well_or_producer(producer_axis, prod
 def test_cross_channel_input_without_source_declaration_remains_exact():
     store, _record, runtime_input = _paired_channel_label_input()
     strict_input = replace(
-        runtime_input, source_binding_plan=CompiledSourceBindingPlan.empty(),
+        runtime_input, source_binding_plan=CompiledSourceBindingPlan(),
     )
 
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):

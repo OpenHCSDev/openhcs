@@ -1216,7 +1216,7 @@ class PipelineCompiler:
                 "pattern without a routed component scope."
             )
         execution_scope = plan.execution_group_scope
-        source_binding_plan: CompiledSourceBindingPlan | None = None
+        source_binding_plan = CompiledSourceBindingPlan()
         try:
             if not declared_plan.has_primary_content:
                 component_value = None
@@ -1250,10 +1250,7 @@ class PipelineCompiler:
                 f"{routed_group!r} on "
                 f"{execution_scope.component.name!r}: {error}"
             ) from error
-        if (
-            source_binding_plan is not None
-            and source_binding_plan.primary_plane_bindings
-        ):
+        if source_binding_plan.primary_plane_bindings:
             PipelineCompiler._validate_pipeline_start_payload_axis_requirement(
                 session=session, source_binding_plan=source_binding_plan,
                 owner=owner, requirement=requirement, failures=failures,
@@ -1352,7 +1349,7 @@ class PipelineCompiler:
             return True
         PipelineCompiler._validate_pipeline_start_payload_axis_requirement(
             session=session,
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
             owner=owner,
             requirement=requirement,
             failures=failures,

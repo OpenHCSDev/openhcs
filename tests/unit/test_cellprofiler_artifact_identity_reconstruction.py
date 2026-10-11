@@ -6,6 +6,7 @@ from dataclasses import replace
 
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -32,8 +33,8 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceProjectionRole,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_artifact_contracts import (
     CellProfilerModuleArtifactContracts,
@@ -250,11 +251,13 @@ def test_authored_identity_remains_visible_through_compiled_artifact_graph() -> 
         for spec in contract.artifact_outputs
     }
     compiled = compile_function_pattern(
-        step.func,
+        admitted_graph(
+            step.func,
+            invocation_contract_provider=_ContractProvider(plan),
+            step_context=step_context,
+        ),
         {},
         output_plans,
-        invocation_contract_provider=_ContractProvider(plan),
-        step_context=step_context,
     )
     compiled = PathPlannerArtifactStage(
         PathPlanner.__new__(PathPlanner)
@@ -347,20 +350,14 @@ def test_dynamic_contract_composition_rejects_runtime_parameter_drift() -> None:
     )
     declared = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            artifact_inputs=artifact_inputs,
-        ),
+        artifact_inputs=artifact_inputs,
     )
     drifted = replace(
         declared,
-        metadata=replace(
-            declared.metadata,
-            artifact_inputs=(
+        artifact_inputs=(
                 replace(artifact_inputs[0], parameter_name="neighbor_labels"),
                 replace(artifact_inputs[1], parameter_name="labels"),
             ),
-        ),
     )
 
     with pytest.raises(ValueError, match="conflicting dynamic artifact"):

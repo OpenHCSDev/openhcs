@@ -48,10 +48,7 @@ def _compiled_measurement_pattern(
         for contract in (
             replace(
                 base_contract,
-                metadata=replace(
-                    base_contract.metadata,
-                    artifact_outputs=(output,),
-                ),
+                artifact_outputs=(output,),
             ),
         )
     )

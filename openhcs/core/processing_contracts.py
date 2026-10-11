@@ -147,10 +147,10 @@ class SignatureFilteredKwargs(RuntimeInvocationKwargPolicy):
         *,
         signature: inspect.Signature | None = None,
     ) -> dict[str, Any]:
-        from openhcs.core.callable_contract import CallableMetadata
+        from openhcs.core.callable_contract import CallableDeclaration
 
         parameters = (
-            CallableMetadata.callable_signature(func) if signature is None else signature
+            CallableDeclaration.callable_signature(func) if signature is None else signature
         ).parameters
         if any(
             parameter.kind is inspect.Parameter.VAR_KEYWORD
@@ -1078,11 +1078,11 @@ class ProcessingContract(ABC, metaclass=AutoRegisterMeta):
     ) -> dict[str, Any]:
         """Consume and return semantic selectors owned by this contract."""
         if parameters is None:
-            from openhcs.core.callable_contract import CallableMetadata
+            from openhcs.core.callable_contract import CallableDeclaration
 
             parameters = (
                 {} if func is None
-                else CallableMetadata.callable_signature(func).parameters
+                else CallableDeclaration.callable_signature(func).parameters
             )
         values: dict[str, Any] = {}
         for parameter_type in cls.runtime_parameter_types():
@@ -1327,9 +1327,9 @@ class LibraryContractCall(ContractCall):
 
     @property
     def parameters(self) -> Mapping[str, inspect.Parameter]:
-        from openhcs.core.callable_contract import CallableMetadata
+        from openhcs.core.callable_contract import CallableDeclaration
 
-        return CallableMetadata.callable_signature(self.func).parameters
+        return CallableDeclaration.callable_signature(self.func).parameters
 
     @property
     def batch_executors(self) -> Mapping[Any, Callable[..., Any]]:

@@ -31,7 +31,7 @@ from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
-from openhcs.core.config import DtypeConfig
+from openhcs.core.config import DtypeConfig, StepSourceBindingsConfig
 from openhcs.core.function_patterns import (
     MainFlowInputProjection,
     DEFAULT_GROUP_KEY,
@@ -116,7 +116,6 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceProjectionRole,
     SourceSelector,
-    StepSourceBindingsConfig,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
@@ -643,9 +642,7 @@ def _output_binding_for_spec(
 def _compiled_source_binding_plan(
     source_bindings: StepSourceBindingsConfig,
 ) -> CompiledSourceBindingPlan:
-    return CompiledSourceBindingPlan.from_config(
-        source_bindings,
-    )
+    return source_bindings.compiled_plan()
 
 
 def _adapter(
@@ -833,11 +830,7 @@ def _compiled_callable_contract(
     raw_contract = CallableContract.from_callable(func)
     return replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_inputs=artifact_inputs,
-            artifact_outputs=artifact_outputs,
-        ),
+        artifact_inputs=artifact_inputs, artifact_outputs=artifact_outputs,
     )
 
 
@@ -850,10 +843,7 @@ def _executor_for_contract(
 ) -> CellProfilerModuleExecutor:
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     available_plans = adapter.request.artifact_outputs
     invocation_key = FunctionInvocationKey(func.__name__, DEFAULT_GROUP_KEY, 0)

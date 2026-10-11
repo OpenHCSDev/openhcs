@@ -9,6 +9,7 @@ import pytest
 import tifffile
 from polystore.virtual_workspace import SourcePixelRef
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.config import (
     LazyPathPlanningConfig,
     PipelineConfig,
@@ -241,9 +242,17 @@ def test_new_unnamed_replacement_and_table_passthrough_contracts():
     def table_only(image):
         return image
 
-    replacement = compile_function_pattern(another_image, {}, {}).default_group
+    replacement = compile_function_pattern(
+        admitted_graph(another_image),
+        {},
+        {},
+    ).default_group
     assert replacement.unwrapped_main_flow_output_context({}) == (
         AlignedImageSliceContext.anonymous_main_flow()
     )
-    retained = compile_function_pattern(table_only, {}, {}).default_group
+    retained = compile_function_pattern(
+        admitted_graph(table_only),
+        {},
+        {},
+    ).default_group
     assert retained.unwrapped_main_flow_output_context({}) is None

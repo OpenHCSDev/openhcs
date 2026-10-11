@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import MemoryType
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
@@ -35,6 +36,7 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.step_dependencies import (
     StepInputDependency,
     StepInputDependencyKind,
@@ -98,7 +100,11 @@ def _compiled_plan(**overrides):
             sub_dir="images",
             analysis_results_dir="/tmp/materialized_results",
         ),
-        compiled_function_pattern=compile_function_pattern(noop, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(noop),
+            {},
+            {},
+        ),
     )
     for key, value in overrides.items():
         setattr(plan, key, value)
@@ -127,7 +133,7 @@ def test_compiled_step_plan_is_the_runtime_plan_owner():
     assert plan.variable_components == (Microscopy.Site,)
     assert plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
     assert plan.main_input_dependency.source_step_scope_id == "plate::functionstep_1"
-    assert plan.source_binding_plan.is_empty
+    assert plan.source_binding_plan == CompiledSourceBindingPlan()
     assert plan.device_id_for(plan.input_memory_type) is None
     assert not plan.requires_gpu
     assert plan.gpu_memory_types == frozenset()
@@ -161,7 +167,7 @@ def test_compiled_step_plan_includes_invocation_execution_memory(monkeypatch) ->
     numpy_boundary_with_torch_execution.execution_memory_type = "torch"
     compiled_plan = _compiled_plan(
         compiled_function_pattern=compile_function_pattern(
-            numpy_boundary_with_torch_execution,
+            admitted_graph(numpy_boundary_with_torch_execution),
             {},
             {},
         ),
@@ -214,7 +220,7 @@ def test_compiled_step_plan_includes_intermediate_invocation_memory() -> None:
         input_memory_type="numpy",
         output_memory_type="numpy",
         compiled_function_pattern=compile_function_pattern(
-            [to_cupy, from_cupy],
+            admitted_graph([to_cupy, from_cupy]),
             {},
             {},
         ),
@@ -366,7 +372,7 @@ def test_grouped_pattern_requires_concrete_execution_group_component():
         execution_group_value=None,
         execution_group_scope=ComponentGroupScope.ungrouped(),
         compiled_function_pattern=compile_function_pattern(
-            {"1": first, "2": second},
+            admitted_graph({"1": first, "2": second}),
             {},
             {},
         ),
@@ -503,7 +509,7 @@ def _cross_channel_output_invocation():
         paths_by_group={"2": "/memory/channel_two__2.pkl"},
     )
     invocation = compile_function_pattern(
-        publish_channels,
+        admitted_graph(publish_channels),
         {},
         {
             channel_one.ref(): channel_one,
@@ -556,7 +562,7 @@ def test_compiler_handoff_preserves_exact_same_name_output_types():
     )
     available = {image_plan.ref(): image_plan, labels_plan.ref(): labels_plan}
     invocation = compile_function_pattern(
-        publish_shared_outputs,
+        admitted_graph(publish_shared_outputs),
         {},
         available,
     ).default_group.invocations[0]
@@ -668,7 +674,7 @@ def test_invocation_component_selection_projects_relation_owned_inputs():
         )
     }
     invocation = compile_function_pattern(
-        publish_derived_channels,
+        admitted_graph(publish_derived_channels),
         input_plans,
         output_plans,
     ).default_group.invocations[0]
@@ -798,7 +804,7 @@ def test_adapter_invocation_preserves_component_selected_artifact_inputs():
         group_component=Microscopy.Channel,
     )
     invocation = compile_function_pattern(
-        apply_illumination,
+        admitted_graph(apply_illumination),
         {first_input.ref(): first_input},
         {},
     ).default_group.invocations[0]

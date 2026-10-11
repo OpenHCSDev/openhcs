@@ -8,10 +8,10 @@ import numpy as np
 import pytest
 from python_introspect import parameter_exclusions
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.callable_contract import (
     CallableContract,
-    CallableMetadata,
-    CallableProjection,
+    CallableDeclaration,
     prepare_processing_callable,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -79,15 +79,12 @@ def test_none_declaration_preserves_callable_identity_and_public_signature():
      (_named_context, "execution_context")],
 )
 def test_namespace_reconstruction_retains_captured_selection(func, expected):
-    metadata = CallableMetadata.from_callable(func)
+    metadata = CallableContract.from_callable(func).declaration
     namespace = metadata.as_namespace()
     assert namespace[FunctionContractAttribute.runtime_context_parameter] == expected
-    projection = CallableProjection(
-        func=func, name=func.__name__, module_name=func.__module__, namespace=namespace
-    )
-    assert CallableMetadata.from_projection(projection).runtime_context_parameter == (
-        expected
-    )
+    assert CallableDeclaration.from_namespace(
+        namespace, func.__name__
+    ).runtime_context_parameter == expected
 
 
 @pytest.mark.parametrize("func", [_inferred_context, _without_context, _named_context])
@@ -129,7 +126,7 @@ def test_wrapper_preparation_does_not_resurrect_context_inference():
     ],
 )
 def test_runtime_binding_consumes_captured_selection(func, parameter):
-    pattern = compile_function_pattern(func, {}, {})
+    pattern = compile_function_pattern(admitted_graph(func), {}, {})
     context = ProcessingContext(axis_id="A01")
     artifacts = ({}, {})
     scope = PatternGroupData(
@@ -203,7 +200,7 @@ def test_named_context_declaration_does_not_resolve_unrelated_forward_references
         "DefinedAfterDeclaration"
     )
     assert vars(process)[FunctionContractAttribute.runtime_context_parameter] == "context"
-    assert CallableMetadata.from_callable(process).runtime_context_parameter == "context"
+    assert CallableContract.from_callable(process).declaration.runtime_context_parameter == "context"
     marker = namespace["DefinedAfterDeclaration"]()
     assert process(marker, context=marker) == (marker, marker)
 

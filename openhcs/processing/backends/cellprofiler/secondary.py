@@ -191,6 +191,16 @@ class IdentifyTertiaryObjectsModule(
             for spec in inputs.specs
         )
 
+    @classmethod
+    def repeated_return_slots(
+        cls,
+        artifact_inputs: ArtifactSpecCollection,
+    ) -> tuple[int, ...]:
+        """With larger == smaller objects both relationship slots (0 and 1 of
+        ``artifact_contract_outputs``) declare one relationship; slot 1 repeats it."""
+        larger_input, smaller_input = cls.object_inputs(artifact_inputs)
+        return (1,) if larger_input.ref() == smaller_input.ref() else ()
+
     larger_objects_setting = "Select the larger identified objects"
     smaller_objects_setting = "Select the smaller identified objects"
     output_objects_setting = "Name the tertiary objects to be identified"

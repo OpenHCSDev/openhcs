@@ -33,7 +33,11 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    PipelineConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
@@ -54,7 +58,6 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceProjectionRole,
-    StepSourceBindingsConfig,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import (
@@ -283,15 +286,15 @@ def test_callable_contract_combination_preserves_exact_occurrence_order() -> Non
     module_type = CellProfilerModule.require_module("RelateObjects")
     combined = module_type.combine_callable_contracts((first, second))
 
-    assert combined.metadata.artifact_inputs == (
+    assert combined.artifact_inputs.specs == (
         first_objects.for_plan_type(ArtifactInputPlan),
         first_objects.for_plan_type(ArtifactInputPlan),
         second_objects.for_plan_type(ArtifactInputPlan),
         second_objects.for_plan_type(ArtifactInputPlan),
     )
-    assert combined.metadata.artifact_outputs == (
-        *first.metadata.artifact_outputs,
-        *second.metadata.artifact_outputs,
+    assert combined.artifact_outputs.specs == (
+        *first.artifact_outputs,
+        *second.artifact_outputs,
     )
 
 
@@ -317,8 +320,8 @@ def test_callable_contract_combination_aligns_identical_occurrences() -> None:
         "RelateObjects"
     ).combine_callable_contracts((contract, contract))
 
-    assert combined.metadata.artifact_inputs == contract.metadata.artifact_inputs
-    assert combined.metadata.artifact_outputs == contract.metadata.artifact_outputs
+    assert combined.artifact_inputs == contract.artifact_inputs
+    assert combined.artifact_outputs == contract.artifact_outputs
 
 
 def test_callable_contract_combination_rejects_relation_drift() -> None:
@@ -338,16 +341,13 @@ def test_callable_contract_combination_rejects_relation_drift() -> None:
         available_artifacts=ArtifactSpecCollection((objects_output,)),
         main_flow_artifacts=ArtifactSpecCollection(()),
     )
-    first_output = contract.metadata.artifact_outputs[0]
+    first_output = contract.artifact_outputs[0]
     drifted = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            artifact_outputs=(
+        artifact_outputs=(
                 replace(first_output, relations=()),
-                *contract.metadata.artifact_outputs[1:],
+                *contract.artifact_outputs[1:],
             ),
-        ),
     )
 
     with pytest.raises(ValueError, match="conflicting dynamic artifact"):
@@ -712,14 +712,14 @@ def test_declarations_carry_cross_step_object_and_measurement_flow() -> None:
         ArtifactSpecRelation(identify_objects.ref()),
     )
     assert identify_objects.relations == (SourceStackLineageSourceRelation(source_ref),)
-    assert identify_contract.metadata.artifact_inputs == (
+    assert identify_contract.artifact_inputs.specs == (
         ArtifactSpec.input("OrigBlue", ImageArtifactType),
     )
-    assert identify_contract.metadata.artifact_outputs == tuple(
+    assert identify_contract.artifact_outputs.specs == tuple(
         identify_contract.artifact_outputs
     )
     assert measurement_contract.artifact_inputs.names() == ("Nuclei",)
-    assert measurement_contract.metadata.artifact_outputs == tuple(
+    assert measurement_contract.artifact_outputs.specs == tuple(
         measurement_contract.artifact_outputs
     )
     assert measurement_contract.artifact_outputs.names_of_artifact_type(
