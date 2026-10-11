@@ -85,3 +85,42 @@ Deleted:
 ## Done when
 
 The guards pass. The crossing family, intensity and bifurcation tests pass, and so do the existing crossing acceptance tests. The structural ratchet and NRA R1 show no regressions. The 30-workflow CellProfiler parity check is 30/30.
+
+## Outcome and corrections
+
+Production (Python under `openhcs/`): −79, +355. The surface adds more than it deletes for two reasons: the topology-class plane is a new output (six classes and the family root, about 150 lines), and the shared crossing routes are new behaviour (`passages`, `crossing_routes`, `shared_trace_owners`). Tests: −4, +216. Guards: 3/3.
+
+Corrections to the plan above:
+
+- **The crossing is a node in the topology, not a graph-edge split.** Splitting each owner's path at the crossing would change straightness for curved neurites, because the sum of two chords exceeds one chord. Each owner's single path instead runs through the shared crossing pixel. In the `SpatialGraph`, both owners' edges carry that pixel.
+- **Even-parity diagonal crossings** (two digital lines meeting in a 2×2 block) share no pixel. Forcing both owners through one pixel costs one of them up to 2√2 − 2 px. The family test's diagonal scene has a shared pixel and is exact.
+- **The branch-count gap is not caused by the crossing change.** It does not touch the arm-departure ring in `classify_owned_endpoints` or `_merge_nearby_nodes`. A 60° same-point bifurcation now keeps both daughters owned (traced length on the investigation's probe: 435 → 663 µm), but its branch count is still decided by that ring.
+
+### Measured change (per neuron, before → after)
+
+No real neurite images are available on this machine:
+- the NeuronCyto II archive is not in `~/.cache/openhcs/datasets`;
+- the personal plate lives on the unmounted HDD;
+- the loose OperaPhenix example calls CellProfiler's `MeasureObjectSkeleton`, not this function.
+
+The deltas below are from the repo's synthetic test inputs, at 1 px = 1 unit.
+
+| Input | Neuron | Length | Straightness |
+|---|---|---|---|
+| `_draw_fluorescent_neuron(crossing)` (unrooted line crossing) | 1 | 83.828 → 83.000 | 0.9901 → 1.0000 |
+| filled two-neuron crossing | 1, 2 | 83.828 → 83.000 each | 0.9901 → 1.0000 |
+| family orthogonal | 1, 2 | 85.828 → 85.000 each | 0.9903 → 1.0000 |
+| family diagonal (single-node crossing) | 1 | 117.380 → 117.380 | 1.0000 → 1.0000 |
+| family diagonal | 2 | 52.326 → 117.380 (distal half was dropped) | 1.0000 → 1.0000 |
+| one neurite crosses two | crossing two | 99.657 → 98.000 | 0.9834 → 1.0000 |
+| one neurite crosses two | the other two | −0.828 each | +0.009 each |
+| crossing 4 px from a branch point | branched | 109.385 → 108.556 | 0.9695 → 0.9769 |
+| `_draw_fluorescent_neuron()`, `(branched)` | 1 | unchanged | unchanged |
+
+Rule of thumb for the manuscript:
+- every resolved crossing a neuron passes through loses 2√2 − 2 ≈ 0.83 px of length;
+- straightness rises by about 0.83/L for a straight neurite of length L;
+- `resolved_crossovers` now counts single-node crossings, which `main` reported as 0;
+- a neuron that lost its distal half at such a crossing regains it.
+
+The direction-sampling change alters which 4-arm junctions resolve as crossings. On the investigation's probe, 60° same-point bifurcations are no longer crossings, so their daughters' length returns to the neuron. The 90° collinear case is still a crossing (N1-Q1). Other angles were not measured.
