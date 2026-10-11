@@ -1124,9 +1124,7 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
     final_rendered = _render_owned_skeleton(skeleton.shape, final)
     # The final topology replaces the distorted span around the core with each
     # owner's route through one shared crossing pixel; the rest keeps its owner.
-    replaced, _ = topology.crossing_routes(
-        repaired, owner=1, origin=(0, 0), outgrowth_width_px=8.0,
-    )
+    replaced, _ = topology.crossing_routes(repaired, owner=1, outgrowth_width_px=8.0)
     for path_index in topology.crossing_paths:
         coordinates = topology.path_coordinates[path_index]
         outside = ~replaced[tuple(coordinates.T)] & (cell_bodies[tuple(coordinates.T)] == 0)
