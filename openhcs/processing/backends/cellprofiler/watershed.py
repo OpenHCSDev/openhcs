@@ -608,13 +608,6 @@ class WatershedSeedMethod(str, Enum):
     CONNECTED_COMPONENTS = "connected_components"
 
 
-class WatershedRuntimeFamily(str, Enum):
-    """CellProfiler Watershed implementation family selected by module revision."""
-
-    CELLPROFILER4 = "cellprofiler4"
-    LIBRARY = "library"
-
-
 @dataclass(frozen=True, slots=True)
 class WatershedSpecialInputs:
     """Method-resolved auxiliary images for one Watershed invocation."""
@@ -666,7 +659,7 @@ class WatershedInvocationRequest:
 
     def execute(
         self,
-        runtime_family: WatershedRuntimeFamily,
+        runtime: type["WatershedRuntimeStrategy"],
         special_inputs: tuple[object, ...] = (),
     ) -> tuple[np.ndarray, DataclassMeasurementColumnarRows, ObjectLabelValue]:
         """Apply this request through its declaration-owned runtime family."""
@@ -724,7 +717,7 @@ class WatershedInvocationRequest:
             structuring_element=self.structuring_element,
             structuring_element_size=self.structuring_element_size,
         )
-        labels = WatershedRuntimeStrategy.for_enum_member(runtime_family).labels(
+        labels = runtime().labels(
             image_array,
             intensity_image_array,
             markers_array,
@@ -1193,14 +1186,14 @@ class MarkerWatershedMethodStrategy(WatershedMethodStrategy):
         )
 
 
-class WatershedRuntimeStrategy(
-    EnumKeyedStrategyMixin[WatershedRuntimeFamily], ABC, metaclass=AutoRegisterMeta
-):
-    """Execute one nominal CellProfiler Watershed implementation family."""
+class WatershedRuntimeStrategy(ABC, metaclass=AutoRegisterMeta):
+    """One CellProfiler Watershed implementation family, selected by module revision.
+
+    Each family is a subclass; ``strategy_label`` is its registry key.
+    """
 
     __registry_key__ = WATERSHED_STRATEGY_REGISTRY_KEY
     __skip_if_no_key__ = True
-    strategy_key: ClassVar[WatershedRuntimeFamily | None] = None
     strategy_label: ClassVar[str | None] = None
 
     @abstractmethod
@@ -1401,7 +1394,7 @@ class CellProfiler4MarkerInitialWatershedStrategy(
 class CellProfiler4WatershedRuntimeStrategy(WatershedRuntimeStrategy):
     """CellProfiler 4.2 module-level Watershed semantics."""
 
-    strategy_key = WatershedRuntimeFamily.CELLPROFILER4
+    strategy_label = "cellprofiler4"
 
     def labels(
         self,
@@ -1516,7 +1509,7 @@ class CellProfiler4WatershedRuntimeStrategy(WatershedRuntimeStrategy):
 class LibraryWatershedRuntimeStrategy(WatershedRuntimeStrategy):
     """CellProfiler library-style Watershed semantics."""
 
-    strategy_key = WatershedRuntimeFamily.LIBRARY
+    strategy_label = "library"
 
     def labels(
         self,
@@ -1867,7 +1860,7 @@ def watershed_library(
             watershed method and supplied by OpenHCS.
     """
 
-    return request.execute(WatershedRuntimeFamily.LIBRARY, topology_inputs)
+    return request.execute(LibraryWatershedRuntimeStrategy, topology_inputs)
 
 
 @runtime_image_execution_mode(FullStackExecution)
@@ -1881,7 +1874,7 @@ def watershed_cellprofiler4(
 ) -> tuple[np.ndarray, DataclassMeasurementColumnarRows, ObjectLabelValue]:
     """Apply CellProfiler 4 Watershed with topology-resolved auxiliary inputs."""
 
-    return request.execute(WatershedRuntimeFamily.CELLPROFILER4, topology_inputs)
+    return request.execute(CellProfiler4WatershedRuntimeStrategy, topology_inputs)
 
 
 set_signature_analysis_target(watershed_cellprofiler4, watershed_library)
