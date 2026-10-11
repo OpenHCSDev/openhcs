@@ -1081,7 +1081,7 @@
       },
       {
         "path": "openhcs/mcp/installed_demo.py",
-        "sha256": "fc5149e135ce528c7704028434011e347df8b42ffdec8bc2be333d9fc2d0bd37",
+        "sha256": "10fccd5b2d4382dca19857c0f7b9eaefe4eccbc34b4ff1898e8fced689a90223",
         "role": "Implements the installed-package MCP demonstration used by the getting-started verification flow."
       },
       {
@@ -1156,6 +1156,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against B6's later changes to openhcs/mcp/installed_demo.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against B6's later changes to openhcs/mcp/installed_demo.py, .github/workflows/integration-tests.yml: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against B6's later changes to tests/unit/test_installed_mcp_demo.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/getting_started/getting_started.rst against the later B6 changes to pyproject.toml, tests/unit/test_installed_mcp_demo.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",

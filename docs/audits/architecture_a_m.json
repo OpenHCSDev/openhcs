@@ -339,7 +339,7 @@
       },
       {
         "path": "openhcs/authoring/session/session.py",
-        "sha256": "c1446fdf475503848a62086d13bc3e809dadd4958c3f763ea0347264bab5647d",
+        "sha256": "8d74425f65ce9f39f88439ca90bd09c02678ae3aef8d3cf6795570986444add0",
         "role": "Implements run_datasets (reserve, reset, connect, compile all, submit each with compile_artifact_id) and the endpoint status binding."
       },
       {
@@ -363,6 +363,7 @@
     ],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against B6's later changes to openhcs/authoring/session/session.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against B6's later changes to openhcs/authoring/session/session.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against B6's later changes to openhcs/authoring/session/operations/datasets.py, openhcs/authoring/session/compile_batch.py, openhcs/authoring/session/session.py, openhcs/authoring/session/submission.py, openhcs/authoring/session/progress.py, tests/unit/test_u1_session_guards.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/batch_workflow_service.rst against the later B6 changes to openhcs/authoring/session/operations/datasets.py, openhcs/authoring/session/compile_batch.py, openhcs/authoring/session/session.py, openhcs/authoring/session/submission.py, openhcs/authoring/session/progress.py, tests/unit/test_u1_session_guards.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -2122,7 +2123,7 @@
       },
       {
         "path": "openhcs/authoring/session/session.py",
-        "sha256": "c1446fdf475503848a62086d13bc3e809dadd4958c3f763ea0347264bab5647d",
+        "sha256": "8d74425f65ce9f39f88439ca90bd09c02678ae3aef8d3cf6795570986444add0",
         "role": "Defines the headless Session whose datasets and pipelines live in the MCP process's ObjectState and whose events clients follow."
       },
       {
@@ -2247,6 +2248,7 @@
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/authoring/session/session.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/mcp/execution.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/authoring/session/session.py, benchmark/cellprofiler_benchmark_cli.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/mcp_distribution.rst against B6's later changes to openhcs/mcp/server.py, openhcs/mcp/dev_client_core.py, openhcs/mcp/dev_client_session.py, openhcs/mcp/context.py, openhcs/authoring/session/session.py, openhcs/pyqt_gui/services/ui_bridge_windows.py, benchmark/control_service.py, benchmark/cellprofiler_benchmark_cli.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
