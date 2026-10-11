@@ -94,6 +94,9 @@ def test_gui_journey_runs_the_same_operations_through_the_widgets(
                     "connect",
                 )
                 manager.update_button_states()
+            # The previous stage's batch ends after its row reports done.
+            wait_until(lambda: not session.execution_state.busy, "batch finished")
+            manager.update_button_states()
             assert manager.buttons[operation.operation_id].isEnabled(), operation
             manager.handle_button_action(operation.operation_id)
             deadline = time.monotonic() + STAGE_TIMEOUT_SECONDS
