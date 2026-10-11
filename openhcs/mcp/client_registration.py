@@ -16,13 +16,13 @@ import sys
 import tempfile
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import asdict, dataclass
-from enum import Enum
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, ClassVar
 
 import tomlkit
 from metaclass_registry import AutoRegisterMeta
+from python_introspect import to_jsonable
 from tomlkit.items import InlineTable
 
 from openhcs.agent.runtime_platform import AgentRuntimePlatformKey
@@ -41,13 +41,36 @@ OPENHCS_MCP_SERVER_NAME = "openhcs"
 _CONFIG_MODE = 0o600
 
 
-class ClientRegistrationStatus(str, Enum):
-    """Stable installer-facing result status."""
+class ClientRegistrationStatus(ABC, metaclass=AutoRegisterMeta):
+    """Installer-facing outcome of registering one client.
 
-    REGISTERED = "registered"
-    UPDATED = "updated"
-    UNCHANGED = "unchanged"
-    FAILED = "failed"
+    Each outcome is a subclass; ``name`` is its spelling in the installer
+    report.
+    """
+
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+
+    name: ClassVar[str | None] = None
+    failed: ClassVar[bool] = False
+    """Registration did not happen; the report counts this result as failed."""
+
+
+class ClientRegistered(ClientRegistrationStatus):
+    name = "registered"
+
+
+class ClientUpdated(ClientRegistrationStatus):
+    name = "updated"
+
+
+class ClientUnchanged(ClientRegistrationStatus):
+    name = "unchanged"
+
+
+class ClientRegistrationFailed(ClientRegistrationStatus):
+    name = "failed"
+    failed = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -220,7 +243,7 @@ class MacOSClaudeDesktopPlatformSemantics(ClaudeDesktopPlatformSemanticsABC):
 class ClientConfigMutation:
     """Leaf-owned configuration mutation without duplicated client identity."""
 
-    status: ClientRegistrationStatus
+    status: type[ClientRegistrationStatus]
     config_path: str | None
     backup_path: str | None
     message: str
@@ -232,7 +255,7 @@ class ClientRegistrationResult:
 
     target_id: str
     display_name: str
-    status: str
+    status: type[ClientRegistrationStatus]
     required: bool
     detected: bool
     config_path: str | None
@@ -252,7 +275,7 @@ class ClientRegistrationResult:
         return cls(
             target_id=target.require_target_id(),
             display_name=target.display_name,
-            status=mutation.status.value,
+            status=mutation.status,
             required=required,
             detected=detected,
             config_path=mutation.config_path,
@@ -275,7 +298,7 @@ class ClientRegistrationResult:
         return cls(
             target_id=target_id,
             display_name=display_name,
-            status=ClientRegistrationStatus.FAILED.value,
+            status=ClientRegistrationFailed,
             required=required,
             detected=detected,
             config_path=os.fspath(config_path) if config_path is not None else None,
@@ -316,7 +339,7 @@ class ClientRegistrationReport:
         failed = tuple(
             result
             for result in frozen_results
-            if result.status == ClientRegistrationStatus.FAILED.value
+            if result.status.failed
         )
         return cls(
             schema_version=CLIENT_REGISTRATION_SCHEMA_VERSION,
@@ -335,13 +358,7 @@ class ClientRegistrationReport:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a JSON-native installer payload."""
-        return {
-            "schema_version": self.schema_version,
-            "ok": self.ok,
-            "required_ok": self.required_ok,
-            "results": [asdict(result) for result in self.results],
-            "skill_sync": [asdict(result) for result in self.skill_sync],
-        }
+        return dict(to_jsonable(self))
 
 
 class ClientConfigFormatError(ValueError):
@@ -717,7 +734,7 @@ class VsCodeClientRegistrationTarget(McpClientRegistrationTarget):
                 f"VS Code --add-mcp exited with {completed.returncode}{suffix}"
             )
         return ClientConfigMutation(
-            status=ClientRegistrationStatus.REGISTERED,
+            status=ClientRegistered,
             config_path=None,
             backup_path=None,
             message=f"Registered OpenHCS through {executable} --add-mcp.",
@@ -809,7 +826,7 @@ def _update_codex_toml(
 
     if _toml_server_matches(servers.get(OPENHCS_MCP_SERVER_NAME), launcher):
         return ClientConfigMutation(
-            status=ClientRegistrationStatus.UNCHANGED,
+            status=ClientUnchanged,
             config_path=os.fspath(path),
             backup_path=None,
             message="OpenHCS is already registered with ChatGPT desktop and Codex.",
@@ -825,9 +842,9 @@ def _update_codex_toml(
     backup_path = _atomic_config_write(path, rendered, original=original)
     return ClientConfigMutation(
         status=(
-            ClientRegistrationStatus.UPDATED
+            ClientUpdated
             if original is not None
-            else ClientRegistrationStatus.REGISTERED
+            else ClientRegistered
         ),
         config_path=os.fspath(path),
         backup_path=backup_path,
@@ -865,7 +882,7 @@ def _update_json_mcp_servers(
     desired = launcher.stdio_server_entry()
     if servers.get(OPENHCS_MCP_SERVER_NAME) == desired:
         return ClientConfigMutation(
-            status=ClientRegistrationStatus.UNCHANGED,
+            status=ClientUnchanged,
             config_path=os.fspath(path),
             backup_path=None,
             message="OpenHCS is already registered with this client.",
@@ -876,9 +893,9 @@ def _update_json_mcp_servers(
     backup_path = _atomic_config_write(path, rendered, original=original)
     return ClientConfigMutation(
         status=(
-            ClientRegistrationStatus.UPDATED
+            ClientUpdated
             if original is not None
-            else ClientRegistrationStatus.REGISTERED
+            else ClientRegistered
         ),
         config_path=os.fspath(path),
         backup_path=backup_path,
@@ -983,7 +1000,7 @@ def register_mcp_clients(
     skill_results: list[ClientSkillSyncResult] = []
     if sync_client_skills:
         for result in results:
-            if result.status == ClientRegistrationStatus.FAILED.value:
+            if result.status.failed:
                 continue
             target = McpClientRegistrationTarget.target_for_id(result.target_id)
             assert target is not None  # Successful results came from registered owners.
@@ -1099,10 +1116,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         for result in report.results:
             print(
-                f"{result.display_name}: {result.status} - {result.message}",
+                f"{result.display_name}: {result.status.name} - {result.message}",
                 file=(
                     sys.stderr
-                    if result.status == ClientRegistrationStatus.FAILED.value
+                    if result.status.failed
                     else sys.stdout
                 ),
             )

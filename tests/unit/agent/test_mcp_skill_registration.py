@@ -113,7 +113,7 @@ def test_legacy_skill_prevents_duplicate_discovery(bundle, environment, kind):
     report = register(environment, sync=True)
     assert not report.ok
     assert not report.required_ok
-    assert report.results[0].status == "registered"  # MCP did succeed.
+    assert report.results[0].status is client_registration.ClientRegistered  # MCP did succeed.
     assert "duplicate discovery" in report.skill_sync[0].error
     assert legacy.lstat() == before
     assert not (environment.home / ".agents").exists()
@@ -124,7 +124,7 @@ def test_custom_default_skill_is_preserved_and_failure_is_separate(bundle, envir
     skill.mkdir(parents=True)
     (skill / "SKILL.md").write_text("user instructions")
     report = register(environment, sync=True)
-    assert report.results[0].status == "registered"
+    assert report.results[0].status is client_registration.ClientRegistered
     assert not report.required_ok
     assert "Unmanaged" in report.skill_sync[0].error
     assert (skill / "SKILL.md").read_text() == "user instructions"
@@ -194,7 +194,7 @@ def test_skill_failure_does_not_erase_successful_mcp_registration(
 
     monkeypatch.setattr(client_registration, "sync_skills", failed_sync)
     report = register(environment, sync=True)
-    assert report.results[0].status == "registered"
+    assert report.results[0].status is client_registration.ClientRegistered
     assert not report.ok
     assert "not writable" in report.skill_sync[0].error
 
@@ -268,7 +268,7 @@ def test_failed_mcp_registration_does_not_install_skills(bundle, environment):
     config.parent.mkdir(parents=True)
     config.write_text("[broken toml")
     report = register(environment, sync=True)
-    assert report.results[0].status == "failed"
+    assert report.results[0].status is client_registration.ClientRegistrationFailed
     assert not report.skill_sync
     assert not (environment.home / ".agents").exists()
 
@@ -324,7 +324,7 @@ def test_new_client_skill_capability_is_driven_by_its_declaration(
         @classmethod
         def register(cls, launcher, environment):
             return client_registration.ClientConfigMutation(
-                client_registration.ClientRegistrationStatus.REGISTERED,
+                client_registration.ClientRegistered,
                 None,
                 None,
                 "registered test harness",

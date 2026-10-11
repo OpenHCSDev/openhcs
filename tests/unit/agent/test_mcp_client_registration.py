@@ -12,7 +12,10 @@ from openhcs.mcp import client_registration
 from openhcs.mcp.client_registration import (
     CLIENT_REGISTRATION_SCHEMA_VERSION,
     ClientRegistrationEnvironment,
-    ClientRegistrationStatus,
+    ClientRegistered,
+    ClientRegistrationFailed,
+    ClientUnchanged,
+    ClientUpdated,
     ClaudeDesktopClientRegistrationTarget,
     CodexClientRegistrationTarget,
     CursorClientRegistrationTarget,
@@ -102,7 +105,7 @@ def test_codex_registration_preserves_unrelated_toml_and_creates_backup(
     assert report.ok
     assert report.required_ok
     (result,) = report.results
-    assert result.status == ClientRegistrationStatus.UPDATED.value
+    assert result.status == ClientUpdated
     assert result.config_path == str(config_path)
     assert result.backup_path == f"{config_path}.openhcs.bak"
     assert Path(result.backup_path).read_text(encoding="utf-8") == original
@@ -138,7 +141,7 @@ def test_codex_unchanged_registration_does_not_rewrite_or_backup(
         environment=environment,
     )
 
-    assert report.results[0].status == ClientRegistrationStatus.UNCHANGED.value
+    assert report.results[0].status == ClientUnchanged
     assert config_path.read_text(encoding="utf-8") == original
     assert not Path(f"{config_path}.openhcs.bak").exists()
 
@@ -179,7 +182,7 @@ def test_new_cursor_config_uses_strict_mcp_servers_json(tmp_path: Path) -> None:
     )
 
     result = report.results[0]
-    assert result.status == ClientRegistrationStatus.REGISTERED.value
+    assert result.status == ClientRegistered
     assert result.backup_path is None
     config_path = tmp_path / ".cursor" / "mcp.json"
     assert json.loads(config_path.read_text(encoding="utf-8")) == {
@@ -227,7 +230,7 @@ def test_additional_home_json_clients_use_documented_user_config(
 
     assert report.ok
     (result,) = report.results
-    assert result.status == ClientRegistrationStatus.UPDATED.value
+    assert result.status == ClientUpdated
     assert result.config_path == str(config_path)
     updated = json.loads(config_path.read_text(encoding="utf-8"))
     assert updated["theme"] == "dark"
@@ -265,7 +268,7 @@ def test_home_json_registration_is_idempotent_without_backup_churn(
     )
 
     (result,) = report.results
-    assert result.status == ClientRegistrationStatus.UNCHANGED.value
+    assert result.status == ClientUnchanged
     assert result.backup_path is None
     assert config_path.read_text(encoding="utf-8") == original
     assert not Path(f"{config_path}.openhcs.bak").exists()
@@ -295,7 +298,7 @@ def test_json_update_replaces_only_openhcs_and_preserves_unrelated_entries(
     )
 
     result = report.results[0]
-    assert result.status == ClientRegistrationStatus.UPDATED.value
+    assert result.status == ClientUpdated
     assert Path(result.backup_path).read_text(encoding="utf-8") == original
     updated = json.loads(config_path.read_text(encoding="utf-8"))
     assert updated["theme"] == "dark"
@@ -331,7 +334,7 @@ def test_malformed_config_fails_without_mutation_or_backup(
 
     assert not report.ok
     assert not report.required_ok
-    assert report.results[0].status == ClientRegistrationStatus.FAILED.value
+    assert report.results[0].status == ClientRegistrationFailed
     assert "left unchanged" in report.results[0].message
     assert config_path.read_text(encoding="utf-8") == malformed
     assert not Path(f"{config_path}.openhcs.bak").exists()
@@ -420,8 +423,8 @@ def test_detected_failure_preserves_success_and_does_not_fail_required_contract(
     assert [
         (result.target_id, result.status, result.required) for result in report.results
     ] == [
-        ("codex", ClientRegistrationStatus.REGISTERED.value, True),
-        ("cursor", ClientRegistrationStatus.FAILED.value, False),
+        ("codex", ClientRegistered, True),
+        ("cursor", ClientRegistrationFailed, False),
     ]
 
 
