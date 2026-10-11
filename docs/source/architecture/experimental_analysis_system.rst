@@ -23,8 +23,8 @@ percentage-of-control leaf calculations. The shared analysis module traverses
 the experiment once and applies that declaration against each biological
 replicate's own control distribution; it does not infer control semantics from
 condition-name strings. ``ExperimentalResultFormatStrategy`` leaves own the
-CX5 and MetaXpress result readers selected by the workbook's
-``ExperimentalAnalysisScope`` declaration. The shared analysis module owns
+CX5 and MetaXpress result readers; each leaf's ``scope_name`` is the scope a
+workbook declares to select it. The shared analysis module owns
 layout parsing, exclusion projection, and table/plate-grid export.
 
 Pipeline boundary

@@ -118,7 +118,7 @@ Common mistakes
 ---------------
 
 - Treating ``group_by`` as the definition of the stack axis.
-- Treating a named source binding as a third ``InputSource`` enum value.
+- Treating a named source binding as a third ``InputSource`` choice.
 - Treating a value's presence in the runtime store as a persistence request.
 - Treating ``Pure2DContract`` as “the callable only accepts rank-2 arrays.”
 - Passing ``variable_components`` or ``group_by`` directly to

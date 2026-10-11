@@ -156,7 +156,7 @@ MAP2[channel=2], SMI312[channel=4])``. A MetaXpress neurite step has two useful
 declaration choices:
 
 simplest inherited full stack
-  Set ``input_source=PIPELINE_START`` and
+  Set ``input_source=ReadPipelineStart`` and
   ``variable_components=[Microscopy.Channel]``, but omit ``FunctionStep.source_bindings``.
   The step inherits the complete pipeline order, so use
   ``nuclear_stain.channel_index=0``, ``cell_body.channel_index=1``, and
@@ -210,7 +210,7 @@ step that selects MAP2 is valid evidence for that route. None of these cases
 changes the zero-based positions of the selected callable stack.
 
 Step source subsets and reordering select or re-enter original declared sources,
-especially at ``PIPELINE_START`` or on a branch that deliberately returns to the
+especially at the pipeline start or on a branch that deliberately returns to the
 source universe. They do not reinterpret a previous step's output. Stitching,
 Z projection, channel projection, or filtering may change that output's slice
 count and axes; downstream code must use the current artifact provenance plus
@@ -222,7 +222,7 @@ Plan image stacks and source-bound labels before authoring
 
 Naming two sources does not make both available in every invocation. Before
 authoring a multi-image measurement, separate its current image input from its
-typed artifact inputs. ``input_source=PIPELINE_START`` returns to acquisition
+typed artifact inputs. ``input_source=ReadPipelineStart`` returns to acquisition
 images; it does not remove the step's inherited variable-component scope.
 When the invocation needs an assembled channel stack, declare
 ``variable_components=[Microscopy.Channel]`` with the intended step bindings/order. A
@@ -296,7 +296,7 @@ source-binding semantics; do not pass that concrete class to this lazy field.
 
 .. code-block:: python
 
-   from openhcs.constants.input_source import InputSource
+   from openhcs.constants.input_source import ReadPipelineStart
    from openhcs.core.config import (
        LazyProcessingConfig,
        LazySourceBindingsConfig,
@@ -305,10 +305,10 @@ source-binding semantics; do not pass that concrete class to this lazy field.
    )
    from openhcs.core.source_bindings import (
        NamedSourceBinding,
+       SourceFileName,
        SourceFilterClause,
-       SourceFilterMatchType,
-       SourceFilterSubject,
        SourceSelector,
+       TextEquals,
    )
    from openhcs.core.steps.function_step import FunctionStep
    from openhcs.processing.backends.processors.numpy_processor import (
@@ -322,8 +322,8 @@ source-binding semantics; do not pass that concrete class to this lazy field.
            selector=SourceSelector(
                filters=(
                    SourceFilterClause(
-                       subject=SourceFilterSubject.FILE,
-                       match_type=SourceFilterMatchType.EQUALS,
+                       subject=SourceFileName,
+                       match_type=TextEquals,
                        value=filename,
                    ),
                ),
@@ -375,7 +375,7 @@ source-binding semantics; do not pass that concrete class to this lazy field.
            name="Normalize DNA",
            func=stack_percentile_normalize,
            processing_config=LazyProcessingConfig(
-               input_source=InputSource.PIPELINE_START,
+               input_source=ReadPipelineStart,
            ),
            source_bindings=LazyStepSourceBindingsConfig(
                enabled=True,

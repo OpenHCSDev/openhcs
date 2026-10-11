@@ -69,10 +69,11 @@ counts, measurement features/content, tables, and images. An empty difference
 tuple means the compared outputs are semantically equivalent.
 
 The product package ``openhcs.core.equivalence`` keeps only the measurement
-semantics that production code uses: feature keys, semantic profiles, rows,
-relationships, and the policy. Output snapshots, comparison, and the report
-live in ``benchmark/equivalence`` beside the benchmark code that consumes them;
-no product module imports the benchmark package.
+semantics that production code uses: feature keys, semantic profiles, cell
+and array signatures, relationship aggregate features, and the policy. Output
+snapshots, row and fact projection, relationship plane alignment, comparison,
+and the report live in ``benchmark/equivalence`` beside the benchmark code that
+consumes them; no product module imports the benchmark package.
 
 Official30 evidence boundary
 ----------------------------
@@ -185,6 +186,13 @@ runtime/output snapshots and compares:
 - CSV/table outputs, including measurement and relationship facts
 - CPA SQLite table projections
 - CellProfiler Analyst ``.properties`` values
+
+CellProfiler writes most AreaShape values by position among an image's
+non-empty objects, so an empty declared object shifts later values onto the
+wrong ``ObjectNumber``. OpenHCS keeps each value on the object it measured.
+The adapter therefore reads native reference tables through
+``benchmark/equivalence/native_shape_rows.py``, which moves those values back
+to their objects within each image without adding or dropping any.
 
 The strict CellProfiler policy sets numeric and image absolute/relative
 tolerances to ``1e-6``, permits zero differing image fraction, disables the

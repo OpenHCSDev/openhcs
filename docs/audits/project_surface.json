@@ -12,7 +12,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "b5d4d752704b886da20d860743b81dc3d2ce3a3c402208246fadc1c6cb71f597",
+        "sha256": "75f92010b3c18ede61cf7296064079590c143283871e372a1fd4546417d4e0f9",
         "role": "Declares the published README, Python range, package dependencies, optional extras, console commands, and project links."
       },
       {
@@ -32,12 +32,12 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "4a33908fb42874e6d57eeea3f5305793ddbda41d13356f0a78501af38dcdfeb4",
+        "sha256": "40b07b7f40aca39b19b95a8f61c1b0c8270f0ab0a29e8c36caa13f04d8fa539f",
         "role": "Owns compile-time resolution across selected axes, compile progress emission, and construction of the execution bundle."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "0f9cc4819b53d55b7e9446429b8c8ac1ff1a59f4902020ea1658495ce01d464c",
+        "sha256": "4946c221e34ec19957b5af2b1a54359d454ee840fb1f5e1fe2b3b306ac8e5426",
         "role": "Declares ResolvedPipelineDefinition and CompilationSession named in the compilation diagram."
       },
       {
@@ -46,13 +46,8 @@
         "role": "Declares set_progress_queue, which compilation requires before it emits progress events."
       },
       {
-        "path": "openhcs/core/artifacts.py",
-        "sha256": "65eb0ec5c903366243ca8bd5ea07412e8d34bdb81e6015fa76b3c4c59838733f",
-        "role": "Declares image, object, measurement, relationship, table, and file artifact semantics used by materialization."
-      },
-      {
         "path": "openhcs/core/dataset_sources/source.py",
-        "sha256": "350bf5691a03522e9f54b1d8ab712c6beba1683aac4fa5159ea4e80c6041530d",
+        "sha256": "b3758a878fdf8ec28b6d9818ebfd96c5c470895575f7a79500c85f1490679281",
         "role": "Declares the auto-registered DatasetSource family that the ImageXpress, Opera Phenix, Bio-Formats, OMERO and OpenHCS-format sources join."
       },
       {
@@ -62,7 +57,7 @@
       },
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "c96eca530f767002cfcc9aca4fe75c93d7a5848a7f42df9e5d336bf6712ed51e",
+        "sha256": "50742cdcb589dc9fba5a177c0107c046dd63c518c5aa77bd8a80e4f69e898e07",
         "role": "Owns manual and orchestrated image and ROI streaming through registered viewer declarations."
       },
       {
@@ -72,12 +67,12 @@
       },
       {
         "path": "openhcs/mcp/client_registration.py",
-        "sha256": "55b701bb77a3de19243fa9a6276f784fad8329e2d435fb26fcc7fdce1e060731",
+        "sha256": "4d6fc5f744617ab1d0e9b8317d07965496aaa6b098a4d179ef95cc6baec35671",
         "role": "Declares supported local MCP client targets such as ChatGPT desktop/Codex and Claude Desktop."
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "b96f33b866fe6c9f8118ca70fcb7dff8e6a02cb29d79df67230a5e8b97df8002",
+        "sha256": "5aa8895c9f533603b7ef972202141e2439473f0604b97d66f5a027b8b3cd1c83",
         "role": "Declares import_cellprofiler_pipeline and its returned FunctionStep list and PipelineConfig."
       },
       {
@@ -87,7 +82,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "2e0de28a96c57ee150e28fbbed28d876507e9281075a03f729838f3ca3610966",
+        "sha256": "0c2cab4d989d50149cb314e908baace8aa794953c86ebc572fa120beaa695780",
         "role": "Declares the openhcs-benchmark subcommands and options, including run-measured through the OpenHCS session."
       },
       {
@@ -102,18 +97,24 @@
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "83fe9016625d7d8721905b8a153a28c3dcaaf2b9e925a3c97711c634868156b7",
+        "sha256": "b10dd87d7bc44063566e0c53d849091c0fc43a345b434c13467df1ede86ac892",
         "role": "Owns read-only inspection of receipts, observation progress, and structured artifacts."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
         "sha256": "093b584eeb37cbb12089d5af082ad45acd779e9d2bdd5b3feaea08234fc22183",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
+      },
+      {
+        "path": "openhcs/core/artifacts/kinds.py",
+        "sha256": "216b913efad9ec76707e9f61be445fb6fa1c6601c36ef53e296acd4928604515",
+        "role": "Declares the image, object-label, measurement, relationship, table, spatial and metadata artifact kinds used by materialization."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read README.md in full and compared it against the changed authorities: pyproject.toml (python-introspect floor 0.2.8), openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/artifacts.py (K2 split it into the openhcs/core/artifacts package), openhcs/core/dataset_sources/source.py, openhcs/core/viewer_streaming_service.py, openhcs/mcp/client_registration.py, openhcs/interop/cellprofiler/pipeline_import.py, benchmark/cellprofiler_benchmark_cli.py, benchmark/control.py; E1 turned OrchestratorState, MaterializationBackend, InputSource, the client-registration status and the observation export scope into class families, but the README names none of the old enum members and the `--observation-scope outcomes` spelling is still the registered name, so no claim changed. Replaced the deleted artifacts.py authority with openhcs/core/artifacts/kinds.py.",
       "On 2026-10-11 (B6), re-read README.md in full and compared it against the changed authorities: pyproject.toml (zmqruntime 0.6.2, pycodify 0.2, objectstate 2.1.1, python-introspect 0.2.7, pyqt-reactive 0.5 floors), openhcs/core/pipeline_document.py (renders through pycodify.generate_python_source), openhcs/core/pipeline/compiler.py and compilation_session.py (ScopeKey ids, progress classes, disabled-function stripping removed), openhcs/core/progress/types.py (K6: ProgressPhase/ProgressStatus enums became class families; set_progress_queue unchanged and still exported from openhcs.core.progress), openhcs/core/dataset_sources/source.py (SourceBindingsConfig import moved) and pipeline_import.py (K4 import moves). The README states no dependency version or phase name; the CellProfiler example's imports (ensure_global_config_context, set_progress_queue, import_cellprofiler_pipeline with source_root, PipelineOrchestrator.initialize/compile_pipelines) and the compilation diagram's class names all still resolve, so no claim changed.",
       "On 2026-10-11 (B6 final), compared README.md against B6's later changes to tests/integration/test_cellprofiler_official30_zmq.py, benchmark/cellprofiler_benchmark_cli.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared README.md against B6's later changes to openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/progress/types.py, openhcs/core/artifacts.py, openhcs/core/dataset_sources/source.py, openhcs/processing/backends/lib_registry/unified_registry.py, openhcs/core/viewer_streaming_service.py, openhcs/interop/cellprofiler/pipeline_import.py, benchmark/cellprofiler_benchmark_cli.py, tests/unit/test_benchmark_control.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",

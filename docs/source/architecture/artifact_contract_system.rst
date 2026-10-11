@@ -133,7 +133,7 @@ consumer inherit the exact producer and group scope without generated-name
 prefix matching or a CellProfiler-specific branch.
 
 The initial raw image flow has the compiler-owned ``PIPELINE_INPUT_ARTIFACT``
-identity. A first-step consumer or a step selecting ``PIPELINE_START`` can
+identity. A first-step consumer or a step selecting ``ReadPipelineStart`` can
 therefore inherit its actual source scope without referring to an earlier step.
 Explicit source bindings keep their own declared identities.
 

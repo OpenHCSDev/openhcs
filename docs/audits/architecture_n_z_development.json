@@ -10,12 +10,12 @@
     "authority": [
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "038d7a76eeac8d69079591cf6eb7736af5415b28a7a067d6677bd15d115d11c7",
-        "role": "Detached Napari endpoint: accepted stream batches, layer routing, variable-size display strategies, and dimension-label overlays."
+        "sha256": "ac54f8bfdce33150c31b38bcd5cf6069b5fd66fb7c05d5a6951610ec3d895bfd",
+        "role": "Detached Napari endpoint: accepted stream batches, layer routing, the NapariLayerKind family, and dimension-label overlays with their route-source family."
       },
       {
         "path": "openhcs/runtime/napari_streaming_handlers.py",
-        "sha256": "be585484075783f7717776d2b8ba163aab8a69aa24c560ca3844214485bd9eef",
+        "sha256": "b43f29163cef420c77f30e46e92d94145520f7534077d54636a0ab141da32e7e",
         "role": "Napari route handlers that project typed received batches onto native viewer state."
       },
       {
@@ -25,10 +25,11 @@
       }
     ],
     "findings": [
-      "The Napari endpoint and handler rewrites (domain-blind viewers, G6) did not move ownership: the transport contract stays in zmqruntime and the OpenHCS wrappers stay in openhcs/runtime, so the redirect to streaming_boundary_and_wrappers and external_foundations remains correct. Only the endpoint evidence role was refreshed."
+      "The page is a redirect stub; its link targets still exist and own the content (checked 2026-10-11, B6). The record's napari_viewer_server.py role named variable-size display strategies, which E1 moved to the NapariVariableSizeHandling family in openhcs/runtime/viewer_display.py; the role now names what the endpoint still owns."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/napari_integration_architecture.rst in full and compared it against the changed authorities: openhcs/runtime/napari_viewer_server.py and openhcs/runtime/napari_streaming_handlers.py (E1: NapariDimensionLabelRouteSource and NapariLayerKind became class families in the endpoint; the variable-size display strategies moved onto the NapariVariableSizeHandling family in openhcs/runtime/viewer_display.py); confirmed both redirect targets exist and the endpoint and handlers remain the OpenHCS Napari wrappers; the page text needed no change, and the endpoint evidence role no longer claims the variable-size strategies.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/napari_integration_architecture.rst in full and compared it against the changed authorities: openhcs/runtime/napari_viewer_server.py and openhcs/runtime/napari_streaming_handlers.py; confirmed both redirect targets exist and the modules remain the OpenHCS Napari wrappers; the page text needed no change.",
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "tests/unit/test_napari_streaming_handlers.py and tests/unit/test_viewer_protocol.py exercise the named OpenHCS and transport boundaries",
@@ -48,7 +49,7 @@
     "authority": [
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "c96eca530f767002cfcc9aca4fe75c93d7a5848a7f42df9e5d336bf6712ed51e",
+        "sha256": "50742cdcb589dc9fba5a177c0107c046dd63c518c5aa77bd8a80e4f69e898e07",
         "role": "Compiled output streaming parametrized by viewer type, viewer settlement, and lifecycle cleanup."
       },
       {
@@ -63,10 +64,11 @@
       }
     ],
     "findings": [
-      "The streaming service and Napari visualiser changes since the last review do not move the transport or wrapper boundary; the redirect to streaming_boundary_and_wrappers and external_foundations remains correct. Evidence roles refreshed only."
+      "The page is a redirect stub; its link target still exists and owns the content (checked 2026-10-11, B6)."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/napari_streaming_system.rst in full and compared it against the changed authorities: openhcs/core/viewer_streaming_service.py (E1: viewer lifecycle is assigned as a ViewerLifecycle class, ViewerConnectedExternal); confirmed both redirect targets exist and the module remains the OpenHCS streaming service; the page text needed no change.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/napari_streaming_system.rst against B6's later changes to openhcs/core/viewer_streaming_service.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/napari_streaming_system.rst against the later B6 changes to openhcs/core/viewer_streaming_service.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/napari_streaming_system.rst in full and compared it against the changed authorities: openhcs/core/viewer_streaming_service.py and openhcs/runtime/napari_stream_visualizer.py; confirmed both redirect targets exist and the modules remain the OpenHCS streaming service and Napari adapter; the page text needed no change.",
@@ -97,7 +99,7 @@
       },
       {
         "path": "openhcs/core/runtime_plane_projection.py",
-        "sha256": "3c88ed042a7f1c65c9495a1c62777e008f1e59c4742ec0563b2849d77ca87cdd",
+        "sha256": "cf644451b6649dcec398fecbf961a4a29ea74f0bb2e0bdab052ec1be8a427f95",
         "role": "RuntimeSliceProjectableValue ABC on which owned runtime values declare their slice projection."
       },
       {
@@ -112,7 +114,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/module_declarations.py",
-        "sha256": "b0195b66126c31f71dc0d4bb281a128e0164bb7dfb3b314ee8fe744ebc55d626",
+        "sha256": "6ff4f4bc3eaf6b4c9fc42752493c2b9ba2e11c8994d7edaea81f586ac57c3b89",
         "role": "CellProfilerModule declarations owning callable names, catalogue placement, and headless-import eligibility."
       },
       {
@@ -124,6 +126,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/nominal_ownership.rst in full and compared it against the changed authorities: openhcs/core/runtime_plane_projection.py (K2/K3: stored_slices, match_alignment and contextualized_output added to RuntimeSliceProjectableValue) and openhcs/interop/cellprofiler/module_declarations.py (E1: InputSource class family); confirmed owned values still subclass RuntimeSliceProjectableValue while RuntimeSliceProjection handles foreign values, ArtifactType is still the artifact-kind root (now in openhcs/core/artifacts/kinds.py), and OpenHCS still imports all three selection mixins from metaclass_registry.strategies after E1; no prose change was needed.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/nominal_ownership.rst in full and compared it against the changed authorities: openhcs/core/processing_contracts.py (K5: CallableMetadata renamed CallableDeclaration for signature lookup) and interop/cellprofiler/module_declarations.py (K4: SourceBindingsConfig imported from core/config.py; K5: contracts carry artifact inputs/outputs directly); re-checked that the three metaclass_registry.strategies mixins, RegistryConfig/RegistryFamily, RuntimeSliceProjectableValue, RuntimeSliceProjection, ProcessingContract and CellProfilerModule exist with the described roles; the page names none of the renamed symbols, so no prose change was needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/nominal_ownership.rst against B6's later changes to openhcs/core/processing_contracts.py, openhcs/processing/backends/lib_registry/openhcs_registry.py, openhcs/interop/cellprofiler/module_declarations.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/nominal_ownership.rst against the later B6 changes to openhcs/core/processing_contracts.py, openhcs/processing/backends/lib_registry/openhcs_registry.py, openhcs/interop/cellprofiler/module_declarations.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -225,12 +228,12 @@
     "authority": [
       {
         "path": "openhcs/core/orchestrator/bundle_execution.py",
-        "sha256": "bc3a2d0a50c3db3be81b03f6af4a139c3db2f779e969aad608e59be66508ee4b",
+        "sha256": "25446d6c6a43c22ff7104c6712c143f0276bc4749c2642fffac10db1455ef707",
         "role": "Parent compiled-bundle execution: executor shutdown, BrokenProcessPool handling, parent resource release, reverse-order viewer bootstrap rollback, and viewer settlement ordering."
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "26b9586890e7117b24b6b85660d3f417455d55546401739f91146d18e4d21134",
+        "sha256": "83ade0271c9b24ca1ba61c708d9e6f60a432b630ec6a8a2fac6d1018458e6be5",
         "role": "Inline, process and thread lane resources: per-axis image-cache release, process-local runtime/framework cleanup, and thread-lane deferral to the parent."
       },
       {
@@ -240,12 +243,12 @@
       },
       {
         "path": "openhcs/runtime/viewer_protocol.py",
-        "sha256": "c4bdae4bae6dee412f0d27a9cf75a95db53b3bd95c03cee7d046be16b52fe5b8",
-        "role": "rollback_failed_bootstrap distinguishing connected external viewers from OpenHCS-owned viewer processes."
+        "sha256": "347a65b63c149f2f437014d537cfaf481a33801d860742f4083b7377494e792f",
+        "role": "ViewerLifecycle family: ViewerConnectedExternal and ViewerOwnedProcess each implement rollback_failed_bootstrap, releasing an external client or stopping an OpenHCS-owned viewer process."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "358d3eaf5952170f9e9e2dc9056fb08707e8fcf74682063c074b367a83c2648f",
+        "sha256": "6525348d097bda8d0265bc7c3f312dd8839ca9f65dd05f797fc82ba873e04547",
         "role": "Framework/device assignment merge and cleanup_loaded used for the compiled framework/device footprint."
       },
       {
@@ -260,18 +263,19 @@
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "85a73ddf071552fc88d454c9de857d066fd62f45492b74945ee22ec908b85289",
+        "sha256": "4af8c5e5a6d68a64f862a0bcb98f398a0a898948e6f8b5e462a4a11381f19524",
         "role": "Proves partial viewer acquisition and readiness failures roll back every acquired viewer."
       },
       {
         "path": "tests/unit/test_runtime_stack_cache_lifetime.py",
-        "sha256": "a63226b25afc995817b496c1cf153ddd324786cb5e746c49399082b0ad2f573c",
+        "sha256": "c92b69339b57d51498f2e879ab0d2bf0059efa2cae4fdc1ce91663eb95e4bd31",
         "role": "Tests context-local image-cache lifetime across success and failure."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/orchestrator_cleanup_guarantees.rst in full and compared it against the changed authorities: openhcs/core/orchestrator/bundle_execution.py and worker_execution.py (E1 class families for orchestrator state and observation mode), openhcs/runtime/viewer_protocol.py (E1: ViewerLifecycleState replaced by the ViewerLifecycle class family), openhcs/core/compiled_step_plan.py and the two test files; traced rollback_failed_bootstrap onto ViewerConnectedExternal (releases the client, leaves the endpoint) and ViewerOwnedProcess (stops the process), which is what the page states; parent and worker cleanup ordering is unchanged; no prose change was needed, and the viewer_protocol.py evidence role now names the lifecycle family.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/orchestrator_cleanup_guarantees.rst in full and compared it against the changed authorities: orchestrator/bundle_execution.py (K6 progress classes; lane results reordered to compiled axis order), orchestrator/worker_execution.py (K6 progress classes), compiled_step_plan.py (empty plan defaults) and tests/unit/test_orchestrator_lane_planning.py (progress phase name instead of value); none touches executor shutdown, viewer rollback, lane cleanup ownership, image-cache release or the terminal ordering, so no prose change was needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/orchestrator_cleanup_guarantees.rst against B6's later changes to openhcs/core/orchestrator/bundle_execution.py, openhcs/core/orchestrator/worker_execution.py, openhcs/runtime/viewer_protocol.py, openhcs/core/compiled_step_plan.py, tests/unit/test_orchestrator_lane_planning.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/orchestrator_cleanup_guarantees.rst against the later B6 changes to openhcs/core/orchestrator/bundle_execution.py, openhcs/core/orchestrator/worker_execution.py, openhcs/runtime/viewer_protocol.py, openhcs/core/compiled_step_plan.py, tests/unit/test_orchestrator_lane_planning.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -300,17 +304,17 @@
     "authority": [
       {
         "path": "openhcs/core/orchestrator/orchestrator.py",
-        "sha256": "99870516da6d64e1858f4dd8799d6e38ab6911b7b02bc29b252d2a23f7687410",
+        "sha256": "a7097eec86c5966552bcb546a2161d1a08e6a4c630e6b156de3b8354b0026b54",
         "role": "PipelineOrchestrator: __objectstate_delegate__ to pipeline_config, dataset_root identity, and initialize enforcing the source role's availability check."
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "4a33908fb42874e6d57eeea3f5305793ddbda41d13356f0a78501af38dcdfeb4",
+        "sha256": "40b07b7f40aca39b19b95a8f61c1b0c8270f0ab0a29e8c36caa13f04d8fa539f",
         "role": "Compiler consuming ObjectState-resolved steps and the resolved global configuration once per compilation."
       },
       {
         "path": "openhcs/core/dataset_sources/source.py",
-        "sha256": "350bf5691a03522e9f54b1d8ab712c6beba1683aac4fa5159ea4e80c6041530d",
+        "sha256": "b3758a878fdf8ec28b6d9818ebfd96c5c470895575f7a79500c85f1490679281",
         "role": "DatasetSource family and SourceSelectionRole.require_available_source, which owns the local-directory availability contract."
       },
       {
@@ -322,6 +326,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/orchestrator_configuration_management.rst in full and compared it against the changed authorities: openhcs/core/orchestrator/orchestrator.py and openhcs/core/pipeline/compiler.py (E1: OrchestratorState became a class family) and openhcs/core/dataset_sources/source.py (get_required_backend deleted); confirmed __objectstate_delegate__ is still pipeline_config, initialize still calls source_selection_role().require_available_source and a failed check sets OrchestratorInitFailed without marking the orchestrator initialized; the page names no state member, so no prose change was needed.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/orchestrator_configuration_management.rst in full and compared it against the changed authorities: orchestrator.py (K4 import of source_bindings_defaults_to_base from core/config.py), pipeline/compiler.py (U3 ScopeKey compiler scope ids, K6 progress classes), dataset_sources/source.py (K4 import move) and objectstate/object_state.py (U3 library release); confirmed __objectstate_delegate__ = 'pipeline_config', initialize opening the configured DatasetSource and calling its SourceSelectionRole.require_available_source on dataset_root, and once-per-compilation resolution; no prose change needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/orchestrator_configuration_management.rst against B6's later changes to openhcs/core/orchestrator/orchestrator.py, openhcs/core/pipeline/compiler.py, openhcs/core/dataset_sources/source.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/orchestrator_configuration_management.rst against the later B6 changes to openhcs/core/orchestrator/orchestrator.py, openhcs/core/pipeline/compiler.py, openhcs/core/dataset_sources/source.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -501,12 +506,12 @@
     "authority": [
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "2defaf02ac0e214bb63f74d6eb56f294fbb5db4e06ecd9cc4479b16848f09854",
+        "sha256": "890473715373d1adc6b12fec2b57eab6f179cbca7d837920c0388d620ce8b8c2",
         "role": "Typed source-binding declaration vocabulary: bindings, selectors, metadata rules, the SourceSetPairing family (PairByOrder, PairByMetadata) and the compiled plan."
       },
       {
         "path": "openhcs/core/source_binding_selection.py",
-        "sha256": "9610bc6112c068cf6c4b0ff7a1265ee4086291042e2dc422d8a90cce3c560eb7",
+        "sha256": "e837296accf4dd3353956a8e5f267d3fdd4581fb01db1227bc592a2ed6b4d0d3",
         "role": "Source candidate matching, anchor-pattern policies, and source-universe requests that replaced pattern detection."
       },
       {
@@ -516,10 +521,11 @@
       }
     ],
     "findings": [
-      "The record's source_bindings.py role named SourceBindingsConfig, which K4 moved to openhcs/core/config.py, and the binding kinds' pairing is now the SourceSetPairing family (SourceBindingMatchPlan/SourceBindingMatchMethod deleted). The page itself names no module or class, so only the record changed."
+      "The page is a redirect stub; its link target still exists and owns the content (checked 2026-10-11, B6)."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/pattern_detection_system.rst in full and compared it against the changed authorities: openhcs/core/source_bindings.py and openhcs/core/source_binding_selection.py (E1: source-binding kinds became class families; anchor and match status enums deleted; SourceUniverseRequest keyed by binding origin class); confirmed the source_model target exists and that SourceSetPairing, PairByOrder and PairByMetadata are still declared in source_bindings.py; the page names no module or class, so its text needed no change.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/pattern_detection_system.rst in full and compared it against the changed authorities: source_bindings.py (K4: config classes moved to core/config.py, SourceSetPairing replaces SourceBindingMatchPlan), source_binding_selection.py, dataset_sources/source_bindings_source.py; the page only links to source_model, which exists; corrected the authority role only.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/pattern_detection_system.rst against B6's later changes to openhcs/core/source_binding_selection.py, openhcs/core/dataset_sources/source_bindings_source.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/pattern_detection_system.rst against the later B6 changes to openhcs/core/source_bindings.py, openhcs/core/source_binding_selection.py, openhcs/core/dataset_sources/source_bindings_source.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -539,7 +545,7 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "6ee23916956716df52cb24893ecdd69747b7db2869f6622b534d8ae43e7bf5d7",
+        "sha256": "9625ca054fac6c1e460216cfe0e85621f5306592a004d1bdc28a6b1ce2099366",
         "role": "ProcessingConfig field docstrings: variable_components is the stack-axis authority and group_by partitions already assembled values, used for dictionary-pattern branch selection."
       },
       {
@@ -549,20 +555,21 @@
       },
       {
         "path": "openhcs/core/pipeline/artifact_planning.py",
-        "sha256": "aea5f172c469aae05b473eebf52fe280367c606cd82c45e5821289eb7ab1ec90",
+        "sha256": "377558d738198216e9f240af6e19dfd71b5a81d826a2044ec957fa410abcdf92",
         "role": "Artifact producer/consumer graph and output materialization planning behind the artifact-contract route."
       },
       {
         "path": "openhcs/core/runtime_stores.py",
-        "sha256": "74b591773b7f653c957b2db33a1262925e5c02b71074695b6fc18d6120ed5934",
+        "sha256": "35fe71906bfd16842de347776a0c5cc846550ad490cc3628885129d746ec6f31",
         "role": "RuntimeValueStore and runtime artifact queries behind the runtime-value route."
       }
     ],
     "findings": [
-      "Removed 'canonical' filler from 'Use these canonical pages'. The page's claims are otherwise unaffected: config.py (K4 source-binding config classes, PartitionFilterMode family), processing_contracts.py (CallableDeclaration rename), artifact_planning.py (config.compiled_plan_for_contracts, invocation validation) and runtime_stores.py (hand-written to_dict/from_dict deleted) change nothing it states."
+      "The page is a redirect stub; its link target still exists and owns the content (checked 2026-10-11, B6)."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/pattern_grouping_and_special_outputs.rst in full and compared it against the changed authorities: openhcs/core/config.py (E1: MaterializationBackend and InputSource class families), openhcs/core/pipeline/artifact_planning.py (K2 artifacts package imports, E1 StepInputDependency subclasses) and openhcs/core/runtime_stores.py (K2 imports); confirmed the ProcessingConfig variable_components and group_by docstrings are unchanged and all four link targets exist; the page text needed no change.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/pattern_grouping_and_special_outputs.rst in full and compared it against the changed authorities: core/config.py, core/processing_contracts.py, pipeline/artifact_planning.py and core/runtime_stores.py; confirmed the ProcessingConfig docstrings still make variable_components the assembled-array axis and group_by a partition of already assembled values, ProcessingContract and RuntimeValueStore exist, and the four linked pages exist; removed one filler word.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/pattern_grouping_and_special_outputs.rst against B6's later changes to openhcs/core/config.py, openhcs/core/processing_contracts.py, openhcs/core/runtime_stores.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/pattern_grouping_and_special_outputs.rst against the later B6 changes to openhcs/core/config.py, openhcs/core/processing_contracts.py, openhcs/core/runtime_stores.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -588,17 +595,17 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "4a33908fb42874e6d57eeea3f5305793ddbda41d13356f0a78501af38dcdfeb4",
+        "sha256": "40b07b7f40aca39b19b95a8f61c1b0c8270f0ab0a29e8c36caa13f04d8fa539f",
         "role": "_resolve_pipeline_once ObjectState resolution, AxisCompilationRequest context projection, stage order, worker assignment, and bundle construction."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "0f9cc4819b53d55b7e9446429b8c8ac1ff1a59f4902020ea1658495ce01d464c",
+        "sha256": "4946c221e34ec19957b5af2b1a54359d454ee840fb1f5e1fe2b3b306ac8e5426",
         "role": "ResolvedPipelineDefinition scope/provenance validation and CompilationSession fields and missing-plan errors."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "358d3eaf5952170f9e9e2dc9056fb08707e8fcf74682063c074b367a83c2648f",
+        "sha256": "6525348d097bda8d0265bc7c3f312dd8839ca9f65dd05f797fc82ba873e04547",
         "role": "CompiledStepPlan typed field inventory and per-step framework-device assignment."
       },
       {
@@ -608,12 +615,12 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "a8e73c5df804d78baf72710e210cb2ae63156657a074071e11fd868f4b19d3b4",
+        "sha256": "6089f63e72e1a47fc5f6bc7b443028ac8ec40d934898589fa03b5592c2273ab3",
         "role": "CallableContract.from_prepared_callable, process-local resolve_runtime_callable cache, and AXIS/PLATE FunctionStepExecutionScope."
       },
       {
         "path": "openhcs/core/function_patterns.py",
-        "sha256": "cc8c35f37ea0a3bd939905fe317652a34b3129ee6f47f6f9023b8c459e62df70",
+        "sha256": "c8004ae1e3f241c4ac6ce0a61c69e3c0d1ecfb5021e1bef5dd0fb1fd1251ca50",
         "role": "CompiledFunctionInvocation binds its runtime callable at construction and rebuilds it after process transport."
       },
       {
@@ -623,25 +630,24 @@
       },
       {
         "path": "openhcs/core/orchestrator/bundle_execution.py",
-        "sha256": "bc3a2d0a50c3db3be81b03f6af4a139c3db2f779e969aad608e59be66508ee4b",
+        "sha256": "25446d6c6a43c22ff7104c6712c143f0276bc4749c2642fffac10db1455ef707",
         "role": "Parent ordering of plate-scoped steps, completed-dataset metadata finalization, and viewer settlement."
       },
       {
         "path": "openhcs/core/steps/function_outputs.py",
-        "sha256": "fc6176fddfcddfa6801091ce0d861b3ed5ea57d06f07227ed634cc706436e91f",
+        "sha256": "a8a8fd0297c421a8a9fa6dc0d6d3b8be952a5ba426e7c7811faf70bfc21fe38d",
         "role": "OpenHCSMetadataTarget declarations, typed projection persistence, and completed-plate deduplication across axes."
       },
       {
         "path": "tests/unit/test_compilation_session.py",
-        "sha256": "82f7227730a5285524dc9da39eb2d09f7af7ce1ee13285e5ebb0e7983d7e393b",
+        "sha256": "f7d5483997bf604f2c4fccaf08c165ae1a7c881079a250add3c98ce02250e2c0",
         "role": "Regression proof that axis sessions share one resolved pipeline and own their axis plans."
       }
     ],
-    "findings": [
-      "Replaced 'duplicate canonical names' with 'duplicate callable names' (filler word). The K5/K4/K6/U3 changes to the authorities (CallableDeclaration split, function-pattern walking moved to AuthoredFunctionPattern, artifact-declaration validation moved onto ArtifactGraph, ScopeKey compiler scopes, progress classes, empty plan defaults) do not change any claim the page makes."
-    ],
-    "disposition": "revise",
+    "findings": [],
+    "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/pipeline_compilation_system.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py, compilation_session.py, compiled_step_plan.py, callable_contract.py, function_patterns.py, orchestrator/bundle_execution.py, steps/function_outputs.py and tests/unit/test_compilation_session.py (K2: artifacts package imports; E1: OrchestratorState, MaterializationBackend, InputSource, StepInputDependency and RuntimeObservationMode class families); the page names none of the replaced enum members; AXIS/PLATE FunctionStepExecutionScope, _resolve_pipeline_once, AxisCompilationRequest, from_prepared_callable, prepare_in_current_process and registered_callable are unchanged, so no prose change was needed.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/pipeline_compilation_system.rst in full and compared it against the changed authorities: pipeline/compiler.py, compilation_session.py (graph.validate_invocation_declarations; disabled-function stripping dropped from normalization), compiled_step_plan.py, callable_contract.py (K5), function_patterns.py (AuthoredFunctionPattern, graph-resolved invocation compile), lib_registry/registry_service.py, orchestrator/bundle_execution.py and tests/unit/test_compilation_session.py; re-verified _resolve_pipeline_once, ResolvedPipelineDefinition, CompilationSession, AxisCompilationRequest, FunctionStepTransportAuthority, RegistryService.registered_callable/prepare_in_current_process, CallableContract.from_prepared_callable, resolve_runtime_callable, CompiledFunctionInvocation.runtime_callable, CompiledRuntimeEnvironmentPlan, input/output memory types on CompiledStepPlan, AXIS/PLATE scopes and OpenHCSMetadataTarget; removed one filler word.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/pipeline_compilation_system.rst against B6's later changes to openhcs/core/steps/function_outputs.py: metadata documents are written only for backends that host local files (not virtual backends such as OMERO); the image-source guide test reads axis-family spellings. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/pipeline_compilation_system.rst against B6's later changes to openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py, openhcs/core/callable_contract.py, openhcs/core/function_patterns.py, openhcs/processing/backends/lib_registry/registry_service.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/core/steps/function_outputs.py, tests/unit/test_compilation_session.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -673,7 +679,7 @@
     "authority": [
       {
         "path": "openhcs/authoring/session/session.py",
-        "sha256": "0c4e0f0979e1793862859e47eefeb6dd9d4b51c99fba20c2ebc6adf11619c3b5",
+        "sha256": "ced615b580e4625e09873449b29ac67cdea87c8b8065c205f32e6d5921cf31fc",
         "role": "Session class, MainThread/DispatcherThread, DatasetAccess and Renderer ports, dataset add/delete/split and work/mutation checks."
       },
       {
@@ -683,22 +689,22 @@
       },
       {
         "path": "openhcs/authoring/session/views.py",
-        "sha256": "c772d515dfa738363ab403a3e19c9e438c17b0748a3a9ed65c44c416f579a378",
+        "sha256": "296adbceb7db7a7f7ac3cb09dbe8bb6620dec588a3b593ef2239108298bee5c8",
         "role": "SessionView family with DatasetListView and PipelineStepsView."
       },
       {
         "path": "openhcs/authoring/session/events.py",
-        "sha256": "6f0b27e3c6d43de6f301de4c9bb80b713b433c7e10c351eda5b35c57d91ece98",
+        "sha256": "3df85cff1c283becb247d9c5cb24fe1441c8dcaf8d2810b560b7398d41834449",
         "role": "SessionEvent family and event log with subscribe and events-after reads."
       },
       {
         "path": "openhcs/authoring/session/compile_batch.py",
-        "sha256": "0cbe5a6b86a0fb5e9b92c4fc45f858c979031ac93594b317b9761c28f5aaf9ab",
+        "sha256": "3e7397caa5ea1b38c1abc47d363e37fc01b0b601ab1e6b37ed00226f7aa51f42",
         "role": "Compile batches that check work is allowed and mark datasets compile-pending before connecting."
       },
       {
         "path": "openhcs/authoring/session/dataset_document.py",
-        "sha256": "50dc7b601b6a2343c8aaa1ebdaae92d9b4641f7c7ca6a02ade207809e5bdd172",
+        "sha256": "ddb55e52107819b22d7bb7d18e6310d98eb0600471a722cb789a5a68028d26f3",
         "role": "DatasetDocumentScope family and payload scope-id check for selected code documents."
       },
       {
@@ -728,13 +734,14 @@
       },
       {
         "path": "openhcs/mcp/server.py",
-        "sha256": "e1f236011df715da3d17574c0b80cbf50fcae45e3f82491c22fb57e98c6bb662",
+        "sha256": "c3dd3a396a3c304341b06c7c813036e779c921fa915060d2d3d2ed594b00b697",
         "role": "MCP binds the session to DispatcherThread over McpMainThreadDispatcher."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/plate_manager_services.rst in full and compared it against the changed authorities: openhcs/authoring/session/session.py (read in its current form), views.py, events.py, compile_batch.py and dataset_document.py (E1: orchestrator state, terminal status, debug phase and selection scope became class families spelled by name) and openhcs/mcp/server.py (tool schemas spell family defaults by registry key); confirmed Session, MainThread, DispatcherThread, DatasetAccess, Renderer, the SessionView and SessionOperation roots, DatasetDocumentScope, every listed session module, core/dataset_sources/dataset_scopes.py, QtSessionEventRelay and the DispatcherThread binding in MCP and the GUI; no prose change was needed.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/plate_manager_services.rst in full and compared it against the changed authorities: authoring/session/session.py (K6: debug command and replay mode are now classes such as RunDebugCommand and PersistentPausedWorkerReplay), dataset_document.py (L6: retain_only_authored_paths now from objectstate) and pipelines.py (U3: function scope ids built with ScopeKey); re-checked every module in the ownership map, MainThread/DispatcherThread/DatasetAccess/Renderer, QtSessionEventRelay, openhcs_session_events, McpMainThreadDispatcher, require_work_allowed/require_definition_mutation_allowed and PipelineImporter; none of the changed names appears on the page, so no prose change was needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/plate_manager_services.rst against B6's later changes to openhcs/authoring/session/session.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/plate_manager_services.rst against B6's later changes to openhcs/authoring/session/views.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
@@ -836,7 +843,7 @@
   },
   {
     "path": "docs/source/architecture/processing_semantics.rst",
-    "source_sha256": "67a1c1bccacef1b3ccdbc97cfa9a95fec6b52dc0b6dd535d92db3e11876aca59",
+    "source_sha256": "74a5847ebc8c9e7245fd81c44ec3eaca4229edbd31afa3b81863f5fad926afc0",
     "audience": [
       "Pipeline authors and OpenHCS processing maintainers"
     ],
@@ -845,8 +852,8 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "6ee23916956716df52cb24893ecdd69747b7db2869f6622b534d8ae43e7bf5d7",
-        "role": "ProcessingConfig variable_components, group_by and input_source field semantics, and StepMaterializationConfig."
+        "sha256": "9625ca054fac6c1e460216cfe0e85621f5306592a004d1bdc28a6b1ce2099366",
+        "role": "ProcessingConfig variable_components, group_by and input_source field semantics (input_source chooses an InputSource class), and StepMaterializationConfig."
       },
       {
         "path": "openhcs/core/processing_contracts.py",
@@ -855,7 +862,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "a8e73c5df804d78baf72710e210cb2ae63156657a074071e11fd868f4b19d3b4",
+        "sha256": "6089f63e72e1a47fc5f6bc7b443028ac8ec40d934898589fa03b5592c2273ab3",
         "role": "CallableDeclaration fields (memory types, allowed group_by roles, stack requirement, processing contract, execution scope, runtime adapter, image mode, ImagePayloadConsumption, artifact declarations) inherited by CallableContract."
       },
       {
@@ -865,25 +872,26 @@
       },
       {
         "path": "openhcs/core/runtime_plane_projection.py",
-        "sha256": "3c88ed042a7f1c65c9495a1c62777e008f1e59c4742ec0563b2849d77ca87cdd",
+        "sha256": "cf644451b6649dcec398fecbf961a4a29ea74f0bb2e0bdab052ec1be8a427f95",
         "role": "RuntimeSliceProjectableValue: owned values declare slice count and per-slice projection."
       },
       {
         "path": "openhcs/core/runtime_slice_projection.py",
-        "sha256": "8f45a17d6aabd4fae1df55e8d3cda2efdd8df2156357c69133f06ccf1cfb2d96",
+        "sha256": "f59785d901d0d7bcc3ac1fc1be606bd1728a727ea7347cdc1dd4f549cc3193fa",
         "role": "RuntimeSliceProjection foreign-value handling and the missing-declaration error."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "358d3eaf5952170f9e9e2dc9056fb08707e8fcf74682063c074b367a83c2648f",
+        "sha256": "6525348d097bda8d0265bc7c3f312dd8839ca9f65dd05f797fc82ba873e04547",
         "role": "CompiledStepPlan storage of resolved callable facts and framework-local device bindings."
       }
     ],
     "findings": [
-      "K5 split callable_contract.py into CallableDeclaration (the declared fields) and CallableContract (declaration bound to the callable, inheriting those fields); the page's statement that a callable's CallableContract declares memory roles, grouping, processing contract, scope, adapter, image mode and artifacts still holds through inheritance, so only the evidence role was updated."
+      "E1 turned InputSource into a class family (ReadPreviousStep, ReadPipelineStart); the common-mistakes list still said 'a third InputSource enum value'. Now 'a third InputSource choice'."
     ],
-    "disposition": "keep",
+    "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/processing_semantics.rst in full and compared it against the changed authorities: openhcs/core/config.py (E1: InputSource is a class family, ReadPreviousStep and ReadPipelineStart; MaterializationBackend family), callable_contract.py and compiled_step_plan.py (K2 imports), runtime_plane_projection.py and runtime_slice_projection.py (stored_slices, match_alignment, contextualized_output added); corrected the common-mistakes bullet that called InputSource an enum; confirmed the two input-source choices, the four contract classes, RuntimeSliceProjectableValue ownership and the foreign-value role of RuntimeSliceProjection.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/processing_semantics.rst in full and compared it against the changed authorities: core/config.py (K4 source-binding config classes moved in, PartitionFilterMode family; variable_components, group_by, input_source and StepMaterializationConfig unchanged), processing_contracts.py (CallableMetadata renamed CallableDeclaration), callable_contract.py (K5 declared-field CallableDeclaration, CallableContract subclass) and compiled_step_plan.py (empty plan defaults); confirmed InputSource still has two members, the four contract subclasses and FlexibleContract's bases, FunctionStepExecutionScope and ImagePayloadConsumption; no prose change needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/processing_semantics.rst against B6's later changes to openhcs/core/config.py, openhcs/core/processing_contracts.py, openhcs/core/callable_contract.py, openhcs/core/compiled_step_plan.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/processing_semantics.rst against the later B6 changes to openhcs/core/config.py, openhcs/core/processing_contracts.py, openhcs/core/callable_contract.py, openhcs/core/compiled_step_plan.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -902,7 +910,7 @@
   },
   {
     "path": "docs/source/architecture/progress_runtime_projection_system.rst",
-    "source_sha256": "76768c7b6ef484ede75b7f3ffbd5bdaad2f930fb04ad7675941b84a5d8d49635",
+    "source_sha256": "fab87f05006b4b1ce13788ca20e608d6a2d388b38474bd50b1af68bda3a87991",
     "audience": [
       "OpenHCS runtime, debugger, and UI maintainers"
     ],
@@ -936,13 +944,13 @@
       },
       {
         "path": "openhcs/core/debug.py",
-        "sha256": "4a1ed9fb0dcd40beeda9a2a3c90cdb5b2541252590d28281a9fb6f1aa021c510",
+        "sha256": "311b003ce50b69abbbdd934e1ff53cade27105605b6c3d7c980fc4ac81b8c2a4",
         "role": "DebugCommandType and DebugBoundary families, command-keyed execution and stop strategies, cursor, session, snapshot, artifact identity, snapshot store, warm-replay and paused-worker declarations."
       },
       {
         "path": "openhcs/core/debug_session_projection.py",
-        "sha256": "0a630eb03a83d741a4ed55838adb8ee65dd4fde9be07878aeba5e7a8c86c7378",
-        "role": "DebugSessionPhaseDeclarationBase phase selection."
+        "sha256": "a088647748f3f3dace29ace81a6efacf3af32d66fd846417eedd5755b3545868",
+        "role": "DebugSessionPhase family: for_context picks the matching phase class by priority."
       },
       {
         "path": "openhcs/authoring/session/progress.py",
@@ -956,7 +964,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/bundle_execution.py",
-        "sha256": "bc3a2d0a50c3db3be81b03f6af4a139c3db2f779e969aad608e59be66508ee4b",
+        "sha256": "25446d6c6a43c22ff7104c6712c143f0276bc4749c2642fffac10db1455ef707",
         "role": "execute_dataset_scoped_steps and the parent ordering before the pipeline SuccessProgressPhase event."
       },
       {
@@ -971,13 +979,11 @@
       }
     ],
     "findings": [
-      "K6 turned the progress enums into class families: channels are now the ProgressStream family and the registry keys by subject, axis and stream; PATTERN_GROUP, AXIS_COMPLETED and SUCCESS are PatternGroupProgressPhase, AxisCompletedProgressPhase and SuccessProgressPhase. The page named the old channel vocabulary and enum members; corrected.",
-      "K6 merged DebugCommandDeclarationBase into the DebugCommandType family (each command owns apply_to_worker; strategies key by command class) and replaced DebugBoundaryEventDeclarationBase with the DebugBoundary family; boundary outcome and timeline state were deleted as dead. The debugger-ownership bullets named both deleted classes and the deleted outcome/timeline facts; rewritten.",
-      "DebugRuntimeProjection no longer derives timeline frames (DebugRuntimeProjection.timeline deleted in K6); the projection-path paragraph now says current and last frames.",
-      "Removed 'Canonical' from the owner-docs heading. Added progress/registry.py as authority for the stream keying the page now states."
+      "E1 merged DebugSessionPhaseDeclarationBase and the DebugSessionPhase enum into one DebugSessionPhase class family whose for_context selects the phase; the projection-path paragraph named the deleted class. Corrected."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/progress_runtime_projection_system.rst in full and compared it against the changed authorities: openhcs/core/debug.py (K2 imports), openhcs/core/debug_session_projection.py (E1: DebugSessionPhaseDeclarationBase and the DebugSessionPhase enum merged into the DebugSessionPhase class family) and openhcs/core/orchestrator/bundle_execution.py (E1 class families); replaced the deleted DebugSessionPhaseDeclarationBase with DebugSessionPhase.for_context; confirmed the debugger names in openhcs/core/debug.py, execute_dataset_scoped_steps and LiveMeasurementProgressPayload.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/progress_runtime_projection_system.rst in full and compared it against the changed authorities: core/progress/projection.py, runtime_tree.py, types.py, debug_projection.py, core/debug.py (K6 families), orchestrator/bundle_execution.py and runtime/zmq_progress.py (progress classes); checked ProgressStream/Phase/Status classes, ProgressRegistry's (subject, axis, stream) key, DebugCommandType.apply_to_worker, the command-keyed DebugInvocationExecutionStrategy/DebugStepStopStrategy, DebugBoundary members, DebugRuntimeProjection fields, and that SubjectRuntimeState, state_counts, node kinds, ExecutionProgress, execute_dataset_scoped_steps and the zmqruntime owner pages exist; corrected the progress vocabulary, the debugger-ownership bullets and the frame list.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/progress_runtime_projection_system.rst against B6's later changes to openhcs/core/progress/projection.py, openhcs/core/progress/runtime_tree.py, openhcs/core/progress/types.py, openhcs/core/debug.py, openhcs/authoring/session/progress.py, openhcs/core/orchestrator/bundle_execution.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/progress_runtime_projection_system.rst against the later B6 changes to openhcs/core/progress/projection.py, openhcs/core/progress/runtime_tree.py, openhcs/core/progress/types.py, openhcs/core/debug.py, openhcs/authoring/session/progress.py, openhcs/agent/capabilities.py, openhcs/core/orchestrator/bundle_execution.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -998,7 +1004,7 @@
   },
   {
     "path": "docs/source/architecture/quick_start.rst",
-    "source_sha256": "8785a34f2a2723bb302210d4da339932e3c956c808b30476267903ab5f2ce5bf",
+    "source_sha256": "089e7b6a3d66efef0ac3aa8cbbcf9eaf79198a8ad3e51c88799bfef7deab77b0",
     "audience": [
       "New OpenHCS users, developers, and coding agents"
     ],
@@ -1012,7 +1018,7 @@
       },
       {
         "path": "openhcs/core/steps/abstract.py",
-        "sha256": "9e710b3db635730f88258e5a6e18aed607876e296783022c06798f2bcd03d5e4",
+        "sha256": "2bffdfe02664c4974797bb6cefbf7f84ebb6912fcc11e026a3f2d8b3da5262b8",
         "role": "Step constructor accepting processing_config and source_bindings nested declarations."
       },
       {
@@ -1022,13 +1028,13 @@
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "6ee23916956716df52cb24893ecdd69747b7db2869f6622b534d8ae43e7bf5d7",
+        "sha256": "9625ca054fac6c1e460216cfe0e85621f5306592a004d1bdc28a6b1ce2099366",
         "role": "SourceBindingsConfig, StepSourceBindingsConfig and their lazy forms used in the folder example (declared here since K4)."
       },
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "2defaf02ac0e214bb63f74d6eb56f294fbb5db4e06ecd9cc4479b16848f09854",
-        "role": "Selector, filter, metadata-rule, component-selector and NamedSourceBinding types imported by the folder example."
+        "sha256": "890473715373d1adc6b12fec2b57eab6f179cbca7d837920c0388d620ce8b8c2",
+        "role": "Selector, NamedSourceBinding, component-selector and metadata-rule types, and the filter-subject, match-type and metadata-source class families (SourceFileName, SourceExtension, TextContains, PathIsImage, FromFileName) the folder example imports."
       },
       {
         "path": "openhcs/core/dataset_sources/source_bindings_source.py",
@@ -1037,7 +1043,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "b96f33b866fe6c9f8118ca70fcb7dff8e6a02cb29d79df67230a5e8b97df8002",
+        "sha256": "5aa8895c9f533603b7ef972202141e2439473f0604b97d66f5a027b8b3cd1c83",
         "role": "import_cellprofiler_pipeline signature and headless-import rejection of interactive modules."
       },
       {
@@ -1052,7 +1058,7 @@
       },
       {
         "path": "openhcs/authoring/session/session.py",
-        "sha256": "0c4e0f0979e1793862859e47eefeb6dd9d4b51c99fba20c2ebc6adf11619c3b5",
+        "sha256": "ced615b580e4625e09873449b29ac67cdea87c8b8065c205f32e6d5921cf31fc",
         "role": "Session shared by the desktop application and MCP for progress, cancellation and results."
       },
       {
@@ -1062,13 +1068,21 @@
       },
       {
         "path": "tests/unit/test_cellprofiler_pipeline_import.py",
-        "sha256": "0ce4efd85d819c7e9f7fa84ec6f1ac7ec4bda024c9a8d5c7f264fda2730264f0",
+        "sha256": "67576f37b7cbe0595acea633265f8e14677ca3c1b8204630413330273dc4e58a",
         "role": "Proves interactive CellProfiler modules fail headless import instead of disappearing."
+      },
+      {
+        "path": "openhcs/constants/input_source.py",
+        "sha256": "4a7929e66d11d5ad81c40f080ba8cd23d466797bfa780d59eae0e1aea3ffd9a4",
+        "role": "InputSource class family; ReadPipelineStart is the choice the folder example assigns."
       }
     ],
-    "findings": [],
-    "disposition": "keep",
+    "findings": [
+      "E1 replaced the enums the unsupported-folder example used with class families: InputSource.PIPELINE_START, MetadataSource.FILE_NAME, SourceFilterSubject.FILE/EXTENSION and SourceFilterMatchType.CONTAINS/IS_IMAGE no longer exist, so the example raised AttributeError. It now uses ReadPipelineStart, FromFileName, SourceFileName, SourceExtension, TextContains and PathIsImage."
+    ],
+    "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/quick_start.rst in full and compared it against the changed authorities: openhcs/core/steps/abstract.py, openhcs/core/config.py, openhcs/core/source_bindings.py, openhcs/interop/cellprofiler/pipeline_import.py, openhcs/authoring/session/session.py and tests/unit/test_cellprofiler_pipeline_import.py (E1: InputSource, MetadataSource, SourceFilterSubject and SourceFilterMatchType became class families); rewrote the folder example to the family classes and executed both self-contained Python blocks against the worktree (they construct without error); confirmed import_cellprofiler_pipeline's signature and return order, the preset paths and the first_use context.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/quick_start.rst in full and compared it against the changed authorities: pipeline_document.py (rendering now through pycodify generate_python_source, L6), steps/abstract.py and source_bindings.py (K4: SourceBindingsConfig/StepSourceBindingsConfig now declared in core/config.py, SourceSetPairing family), processing_contracts.py (K5 CallableDeclaration rename), dataset_sources/source_bindings_source.py, cellprofiler/pipeline_import.py, authoring/session/session.py (K6 debug command classes) and both tests; imported every name in the page's code examples from the current tree (Lazy*Config from core.config, the selector/filter/metadata types from core.source_bindings, PipelineDocumentCodec.from_values, Pure2DContract, import_cellprofiler_pipeline signature, InputSource.PIPELINE_START, Microscopy.Channel, stack_percentile_normalize, SourceBindingsSource, Session). No claim on the page changed; the authority list now names core/config.py for the source-binding config classes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/quick_start.rst against B6's later changes to openhcs/authoring/session/session.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/quick_start.rst against B6's later changes to openhcs/authoring/session/session.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
@@ -1095,23 +1109,28 @@
     "authority": [
       {
         "path": "openhcs/napari_roi_manager/widgets/_roi_manager.py",
-        "sha256": "841a7ead6e0b577ac224526e1bc1c6ca2fcef42ced5420c632e5501befb45ea3",
+        "sha256": "3234a3735245f225c8035a8d8f12af085cc4e2653e4a7fd49f124808cf01d358",
         "role": "ROI manager bound to the active native Shapes layer through connect_layer, with observer release on widget destruction."
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "744573f1bafa67b7a81be5af425012ada47741292519863e250b79f1c778b265",
+        "sha256": "79db4b008483dfb5ac752f3a5da692a941cba7caae25a6ec26085bbdb4bf278f",
         "role": "ROI output writers, polyline graph-edge writer with its 2D-only rejection, and projected filename resolution."
       },
       {
         "path": "openhcs/processing/materialization/options.py",
-        "sha256": "271346eda98bfcabe2614696e1d2499327b84dcd8245f3ad61025cc18ddcae0f",
+        "sha256": "e7487e9ad44276d4f2880f0d9b03fd6396f8053b9bda5775ab25caaf023554ca",
         "role": "SpatialGraphROIOptions and SWCOptions declarations."
       },
       {
-        "path": "openhcs/core/artifacts.py",
-        "sha256": "65eb0ec5c903366243ca8bd5ea07412e8d34bdb81e6015fa76b3c4c59838733f",
-        "role": "ArtifactOutputPlan, ArtifactSpecRelation and ObjectArtifactSubjectBinding."
+        "path": "openhcs/core/artifacts/plans.py",
+        "sha256": "0d6a10a78f7177273deca4ad07b9bc729a2eb99254164f2606922674b7286b22",
+        "role": "ArtifactOutputPlan: artifact type, producer, execution scope, materialization options and object_subject_binding."
+      },
+      {
+        "path": "openhcs/core/artifacts/relations.py",
+        "sha256": "b1ae8be613fbabc372bd6692b41c5f925d4f968291f0a715bd1473d85cbed000",
+        "role": "ArtifactSpecRelation family and ObjectArtifactSubjectBinding feature metadata."
       },
       {
         "path": "external/PolyStore/src/polystore/roi.py",
@@ -1120,15 +1139,16 @@
       },
       {
         "path": "tests/unit/test_napari_roi_manager_integration.py",
-        "sha256": "a4b7dee556f0ceccaa212751e29eb8160d3d0c08c741760715ee8372b0c0e927",
+        "sha256": "15b0417fc6388f932ac6cb8b35102721918b987b68e52caef04b1c6bc5ea9e81",
         "role": "Regression proof for the native Shapes-layer ROI manager seam."
       }
     ],
     "findings": [
-      "Flow defect: 'Spatial graphs have two independent registered projections:' was followed by the unrelated projected-filename paragraph before the two options it introduced; the paragraph now precedes the object-label sentence. Ownership and naming claims were re-verified against the changed widget, materialization core and PolyStore ROI owner and remain accurate."
+      "K2 split openhcs/core/artifacts.py into a package; the record's authority now names artifacts/plans.py and artifacts/relations.py. The page text names the classes without a module path and is unchanged."
     ],
-    "disposition": "revise",
+    "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/roi_system.rst in full and compared it against the changed authorities: openhcs/napari_roi_manager/widgets/_roi_manager.py (E1: RoiTableColumn became a class family), openhcs/processing/materialization/core.py and options.py (E1: MaterializedFilenameIdentity class family; output_plan is now required), the deleted openhcs/core/artifacts.py (K2: split into the openhcs/core/artifacts package) and tests/unit/test_napari_roi_manager_integration.py; confirmed connect_layer, SpatialGraphROIOptions, SWCOptions, ArtifactOutputPlan (artifacts/plans.py) and ArtifactSpecRelation with ObjectArtifactSubjectBinding (artifacts/relations.py); the page names classes without module paths, so no prose change was needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/roi_system.rst against B6's later changes to openhcs/processing/materialization/core.py, openhcs/core/artifacts.py, tests/unit/test_napari_roi_manager_integration.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/roi_system.rst against the later B6 changes to openhcs/processing/materialization/core.py, openhcs/core/artifacts.py, tests/unit/test_napari_roi_manager_integration.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/roi_system.rst in full and compared it against the changed authorities: napari_roi_manager/widgets/_roi_manager.py (observer release on destroy), processing/materialization/core.py (new ROIOutput/PointROIOutput writers), polystore/roi.py, test_napari_roi_manager_integration.py; verified SpatialGraphROIOptions, SWCOptions, SpatialGraph, ArtifactOutputPlan, ArtifactSpecRelation, ObjectArtifactSubjectBinding and connect_layer exist and that the polyline writer rejects 3D graphs; reordered one misplaced paragraph. Added options.py and core/artifacts.py as authorities for the named declarations.",
@@ -1143,7 +1163,7 @@
   },
   {
     "path": "docs/source/architecture/runtime_value_system.rst",
-    "source_sha256": "43f47fa2b2c534958a47c42c887badc4492f83165772503e98ae2a994a18f3e5",
+    "source_sha256": "26890bf40926be1ebe4cf728c31b565a0b7c5b854896b082e4da78a7fd32040f",
     "audience": [
       "OpenHCS runtime and artifact maintainers"
     ],
@@ -1152,47 +1172,52 @@
     "authority": [
       {
         "path": "openhcs/core/runtime_artifact_values.py",
-        "sha256": "930752071d37ef1a8669812e7a629e151690b3f33bf4a29dba92d1d479b9074d",
+        "sha256": "ce42e38f893459b9cb0ed6d779fabd5818204301ab1acc13ab0a7df32e6e3a2d",
         "role": "RuntimeValue, ArtifactKey, execution scope, and the output-normalization entry that calls the artifact type's contextualize_output_from_projector."
       },
       {
         "path": "openhcs/core/runtime_stores.py",
-        "sha256": "74b591773b7f653c957b2db33a1262925e5c02b71074695b6fc18d6120ed5934",
+        "sha256": "35fe71906bfd16842de347776a0c5cc846550ad490cc3628885129d746ec6f31",
         "role": "RuntimeValueStore recording, replacement, RuntimeArtifactQuery resolution, and observation semantics."
       },
       {
         "path": "openhcs/core/runtime_plane_projection.py",
-        "sha256": "3c88ed042a7f1c65c9495a1c62777e008f1e59c4742ec0563b2849d77ca87cdd",
-        "role": "RuntimeSliceProjectableValue ABC and its indexed, invariant and identity-projectable subclasses."
+        "sha256": "cf644451b6649dcec398fecbf961a4a29ea74f0bb2e0bdab052ec1be8a427f95",
+        "role": "RuntimeSliceProjectableValue ABC, its indexed, invariant and identity-projectable subclasses, and the default contextualized_output hook selection."
       },
       {
         "path": "openhcs/core/runtime_slice_projection.py",
-        "sha256": "8f45a17d6aabd4fae1df55e8d3cda2efdd8df2156357c69133f06ccf1cfb2d96",
-        "role": "RuntimeSliceProjection foreign-value list and rejection of undeclared owned values."
+        "sha256": "f59785d901d0d7bcc3ac1fc1be606bd1728a727ea7347cdc1dd4f549cc3193fa",
+        "role": "RuntimeSliceProjection foreign-value list, rejection of undeclared owned values, and contextualized_output for foreign returned values."
       },
       {
-        "path": "openhcs/core/artifacts.py",
-        "sha256": "65eb0ec5c903366243ca8bd5ea07412e8d34bdb81e6015fa76b3c4c59838733f",
-        "role": "ArtifactType.contextualize_output root (unchanged) and its image, object-label, measurement, spatial-grid and spatial-graph overrides."
+        "path": "openhcs/core/artifacts/kinds.py",
+        "sha256": "216b913efad9ec76707e9f61be445fb6fa1c6601c36ef53e296acd4928604515",
+        "role": "ArtifactType.contextualize_output root with its per-value hooks, and the image, object-label, measurement, spatial-grid and spatial-graph overrides."
+      },
+      {
+        "path": "openhcs/core/artifacts/plans.py",
+        "sha256": "0d6a10a78f7177273deca4ad07b9bc729a2eb99254164f2606922674b7286b22",
+        "role": "ArtifactSpecRef identity and the source_context_source relation an output plan resolves."
       },
       {
         "path": "openhcs/core/runtime_image_values.py",
-        "sha256": "4801bdad5dd2bde9998e108836479923b2bb87023785eeff395936f3471fdf03",
+        "sha256": "4dd5173cbeaba217bffd28b04c05f6bac3f49711bfd9b5bc7f791364bfbc87c8",
         "role": "ImagePayload metadata (mask, axes, plane axis, provenance) and contextualize_image_output for image sources."
       },
       {
         "path": "openhcs/core/runtime_object_labels.py",
-        "sha256": "a8ca5cc37f7049bb0ed06f1600afab9943d515e5ccb43dac0fb39f8f1bc7fbf7",
+        "sha256": "0e6f92699f87013550e6426a70bd2e458fab881c4108aa1559cb17121110c284",
         "role": "ObjectLabelValue.contextualize_image_output plane-axis rule for label-rendered images."
       },
       {
         "path": "openhcs/core/projected_image_output.py",
-        "sha256": "84ade707b65fab8b4b66006b8f01dd045920252f5b5cabe58bea8626165aae83",
+        "sha256": "3870623dae8a400a8f6f0ab9a2b1d4f82ee9c2c71f1e0528d35986e75e13a0c5",
         "role": "SourceProjectedImageOutput and SelectedPlaneImageOutput source-plane selection."
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "a8e73c5df804d78baf72710e210cb2ae63156657a074071e11fd868f4b19d3b4",
+        "sha256": "6089f63e72e1a47fc5f6bc7b443028ac8ec40d934898589fa03b5592c2273ab3",
         "role": "CallableContract.resolve_returned_plan_values binding returned positions to exact output plan refs."
       },
       {
@@ -1202,7 +1227,7 @@
       },
       {
         "path": "tests/unit/test_function_artifact_outputs.py",
-        "sha256": "cba628c3eeff1176f634ccb388b8aa698b336c4a6ce408a9ec48f09e9bf85510",
+        "sha256": "6be6e5ad7669f4e10d59f593c52926cc46c4e39ea2294ea67fe6a94996ea877f",
         "role": "Proves image-output contextualization and that named artifacts bypass unrelated source-axis projection, using admitted artifact graphs."
       },
       {
@@ -1211,9 +1236,12 @@
         "role": "Proves undeclared value types are rejected and declared slices project without implicit device-to-host conversion."
       }
     ],
-    "findings": [],
-    "disposition": "keep",
+    "findings": [
+      "After K2 (artifacts package), ArtifactType.contextualize_output no longer goes straight from the artifact type to the source: it asks the returned value's contextualized_output which of the type's hooks applies (contextualize_value, contextualize_image, contextualize_projected_image, contextualize_aligned), and ImageArtifactType.contextualize_image then calls the source's contextualize_image_output. The page described this as a two-stage dispatch on artifact type and source; the paragraph now names the returned value's part."
+    ],
+    "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/runtime_value_system.rst in full and compared it against the changed authorities: openhcs/core/artifacts.py (now the openhcs/core/artifacts package, K2), runtime_artifact_values.py, runtime_stores.py, runtime_plane_projection.py, runtime_slice_projection.py, runtime_image_values.py, runtime_object_labels.py, projected_image_output.py, callable_contract.py, tests/unit/test_function_artifact_outputs.py; read ArtifactType.contextualize_output and ImageArtifactType.contextualize_image in artifacts/kinds.py and corrected the function-output paragraph to include the returned value's contextualized_output step; confirmed the five overriding artifact types, source_context_source (artifacts/plans.py), resolve_returned_plan_values, SourceProjectedImageOutput.resolve_source_context and every named class still exist; the other diffs are import moves, new helper methods and the object-label storage enum dropping its payload-shape member data, none of which the page states.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/runtime_value_system.rst in full and compared it against the changed authorities: openhcs/core/runtime_stores.py, openhcs/core/callable_contract.py, tests/unit/test_function_artifact_outputs.py; runtime_stores dropped to_dict/from_dict on RuntimeArtifactLocation/Address (no page claim relies on them); K5 restructured callable metadata into CallableDeclaration but resolve_returned_plan_values remains on CallableContract; the test changes are fixture-only (admitted_graph, CompiledSourceBindingPlan()). Grepped every class and method the page names (RuntimeArrayPayload through ObjectLabelValue, RuntimeArtifactQuery, RuntimeExecutionAxisScope, ComponentGroupScope, source_context_source); all exist. No correction needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/runtime_value_system.rst against B6's later changes to openhcs/core/runtime_stores.py, openhcs/core/artifacts.py, openhcs/core/runtime_object_labels.py, openhcs/core/callable_contract.py, tests/unit/test_function_artifact_outputs.py, tests/unit/test_runtime_slice_projection.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/runtime_value_system.rst against the later B6 changes to openhcs/core/runtime_stores.py, openhcs/core/artifacts.py, openhcs/core/runtime_object_labels.py, openhcs/core/callable_contract.py, tests/unit/test_function_artifact_outputs.py, tests/unit/test_runtime_slice_projection.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -1302,7 +1330,7 @@
     "authority": [
       {
         "path": "external/python-introspect/src/python_introspect/jsonable.py",
-        "sha256": "0148e51fb2fc4c7e1c625b088cb0ca56fecd58f9836b9e5da58b75b5eb2d40ee",
+        "sha256": "c845361d0d14914798d9a1b5329d681300511fc7e95c67508943425716930ebd",
         "role": "to_jsonable singledispatch encoder: scalars, mappings, sequences, paths, enums, callables by import path, dataclasses, and AutoRegisterMeta types by registry key."
       },
       {
@@ -1326,11 +1354,10 @@
         "role": "LazyResolutionFormatter and LazyDataclassFormatter: source formatting for lazy configuration dataclasses."
       }
     ],
-    "findings": [
-      "The Python-source section did not name pycodify's PythonSourceLiteral and path factoring or objectstate.codegen, which L6 made the owners of value-owned source spelling, path factoring, and lazy-config formatting."
-    ],
-    "disposition": "revise",
+    "findings": [],
+    "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/serialization_boundaries.rst in full and compared it against the changed authorities: external/python-introspect/src/python_introspect/jsonable.py (current file read; no reviewed version in history); confirmed to_jsonable is a singledispatch function with registrations for mappings, sequences and sets, callables, AutoRegisterMeta registered types (projected through the registry key), Enum, Path and JSON scalars plus the dataclass projection, that dataclass_from_mapping is the decoder in dataclass_projection.py, and that PythonSourceLiteral and ImageFileFormat exist; no claim changed.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/serialization_boundaries.rst in full and compared it against the changed authorities: python_introspect/jsonable.py, python_introspect/dataclass_projection.py, pycodify/core.py; to_jsonable still dispatches scalars, mappings, sequences, paths, enums, callables by import path, dataclasses and AutoRegisterMeta types by registry key, and dataclass_from_mapping is its decoder. L6 moved PythonSourceLiteral and path factoring into pycodify 0.2 (FormatContext.paths) and lazy-config formatting into objectstate.codegen; added those owners to the Python-source section. Unformattable values now raise in pycodify (FallbackFormatter deleted), consistent with the extension rule.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/serialization_boundaries.rst against B6's later changes to openhcs/core/image_file_serialization.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/serialization_boundaries.rst against the later B6 changes to openhcs/core/image_file_serialization.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -1408,17 +1435,17 @@
     "authority": [
       {
         "path": "openhcs/core/config.py",
-        "sha256": "6ee23916956716df52cb24893ecdd69747b7db2869f6622b534d8ae43e7bf5d7",
+        "sha256": "9625ca054fac6c1e460216cfe0e85621f5306592a004d1bdc28a6b1ce2099366",
         "role": "SourceBindingsConfig and StepSourceBindingsConfig declarations and source_bindings_defaults_to_base."
       },
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "2defaf02ac0e214bb63f74d6eb56f294fbb5db4e06ecd9cc4479b16848f09854",
+        "sha256": "890473715373d1adc6b12fec2b57eab6f179cbca7d837920c0388d620ce8b8c2",
         "role": "Declaration vocabulary (ImagePlaneSource, selectors, filters, MetadataExtractionRule, NamedSourceBinding, SourceSetPairing/PairByOrder/PairByMetadata) and the compiled binding and universe plans."
       },
       {
         "path": "openhcs/core/source_binding_workspace.py",
-        "sha256": "5e7ac439d7ef6cd35a5660d2ad9db24f1890801d8bdf1d82c13b12f8baaa9eb0",
+        "sha256": "e242d9b932d52c1099756881870f926a273f5ec08663938347580cb4a70e8283",
         "role": "Source-binding workspace projector, pairing-keyed source-set assemblers and materialization of the virtual workspace."
       },
       {
@@ -1433,7 +1460,7 @@
       },
       {
         "path": "openhcs/core/source_projection.py",
-        "sha256": "c51f7c16a9174ed1fda972fc020d2ce0f14dd2005d32929df0bae174878bb735",
+        "sha256": "a922f3e66d44bc60ad0a31039128c72321f324ae9ed81070e3efe175e2e12414",
         "role": "SourcePlaneProjection, SourceArtifactProjection, SourceProjectionSet and typed SourceDatasetDiagnostic."
       },
       {
@@ -1442,11 +1469,10 @@
         "role": "BackendBase.resolve_listed_address and optional physical_source_path versus DataSource.source_path."
       }
     ],
-    "findings": [
-      "The declaration vocabulary named SourceBindingMatchPlan, which K4 deleted; pairing is now the SourceSetPairing family (PairByOrder, the default when no method is declared, and PairByMetadata)."
-    ],
-    "disposition": "revise",
+    "findings": [],
+    "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/source_model.rst in full and compared it against the changed authorities: openhcs/core/config.py, openhcs/core/source_bindings.py, openhcs/core/source_binding_workspace.py, openhcs/core/source_projection.py; E1 turned SourceProjectionRole, SourceSetRole and MaterializationBackend into class families (PrimaryPlaneRole, SourceArtifactRole, BroadcastSource, MaterializeToZarr and siblings) and source roots now use absolute_source_path; the page names only SourceProjectionRole as the declared role a reader reconstructs projections from, which still holds, and every other named class, method and field was grepped and exists; no page change.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/source_model.rst in full and compared it against the changed authorities: core/source_bindings.py (K4: config classes moved to core/config.py, SourceBindingMatchPlan/SourceBindingMatchMethod replaced by SourceSetPairing, plans never None), source_binding_workspace.py (pairing-keyed assemblers, path identity), dataset_sources/source_bindings_source.py and choice.py (import moves only), source_projection.py (source_path_posix); grepped every other named declaration, projection, diagnostic, serializer and PolyStore method in the current tree; replaced the SourceBindingMatchPlan entry with SourceSetPairing and added core/config.py as the config-class authority.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/source_model.rst against B6's later changes to openhcs/core/source_binding_workspace.py, openhcs/core/dataset_sources/source_bindings_source.py, openhcs/core/dataset_sources/choice.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/source_model.rst against the later B6 changes to openhcs/core/source_bindings.py, openhcs/core/source_binding_workspace.py, openhcs/core/dataset_sources/source_bindings_source.py, openhcs/core/dataset_sources/choice.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -1467,35 +1493,36 @@
     "authority": [
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "a8e73c5df804d78baf72710e210cb2ae63156657a074071e11fd868f4b19d3b4",
+        "sha256": "6089f63e72e1a47fc5f6bc7b443028ac8ec40d934898589fa03b5592c2273ab3",
         "role": "CallableContract input/output declarations and runtime-owned parameter projection."
       },
       {
         "path": "openhcs/core/pipeline/function_contracts.py",
-        "sha256": "ffc21dd3021a2316cfbd100c2d655867ce4bec619f2db7288e82aeb11c1930e8",
+        "sha256": "67a654102b1d60c0a0f90e64ccaf3a8c177035cd11a0346734f872b329783d74",
         "role": "special_inputs decorator: records parameter names as runtime-managed callable metadata and excludes them from user parameters; no special_outputs decorator exists."
       },
       {
         "path": "openhcs/core/pipeline/artifact_planning.py",
-        "sha256": "aea5f172c469aae05b473eebf52fe280367c606cd82c45e5821289eb7ab1ec90",
+        "sha256": "377558d738198216e9f240af6e19dfd71b5a81d826a2044ec957fa410abcdf92",
         "role": "ArtifactGraph and ArtifactSpecRef planning during compilation."
       },
       {
         "path": "openhcs/core/runtime_stores.py",
-        "sha256": "74b591773b7f653c957b2db33a1262925e5c02b71074695b6fc18d6120ed5934",
+        "sha256": "35fe71906bfd16842de347776a0c5cc846550ad490cc3628885129d746ec6f31",
         "role": "RuntimeValueStore recording, replacement, query, and observation during execution."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_contracts.py",
-        "sha256": "4d521778e83fee62a4b164d6a3934d0824f2c5e7375bc7bea1d74256e67d61fe",
+        "sha256": "cefc83a740f917730f336b7283c6ea2d9280d27bf077e030d41b7a8a9add41af",
         "role": "CellProfilerModuleArtifactContracts: per-invocation artifact bindings from CellProfiler setting declarations."
       }
     ],
     "findings": [
-      "Redirect still correct after K5: every owner the page names still exists with the stated role; no page change needed."
+      "The page is a redirect stub; its link target still exists and owns the content (checked 2026-10-11, B6)."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/special_io_system.rst in full and compared it against the changed authorities: openhcs/core/callable_contract.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/pipeline/artifact_planning.py, openhcs/core/runtime_stores.py, openhcs/interop/cellprofiler/module_artifact_contracts.py; the diffs are imports from the openhcs/core/artifacts package (K2), artifact_type.value replacing require_value(), and step-input dependency classes; CallableContract, CellProfilerModuleArtifactContracts, ArtifactGraph, RuntimeValueStore and the special_inputs decorator still exist, and artifact_contract_system.rst, the redirect target, exists.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/special_io_system.rst in full and compared it against the changed authorities: callable_contract.py, function_contracts.py, artifact_planning.py, runtime_stores.py, module_artifact_contracts.py; K5 replaced CallableMetadata with CallableDeclaration (CallableContract now subclasses it); CallableContract, special_inputs, ArtifactGraph, RuntimeValueStore and CellProfilerModuleArtifactContracts all still exist with the roles the page assigns, and no special_outputs decorator exists. No correction needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/special_io_system.rst against B6's later changes to openhcs/core/pipeline/function_contracts.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/special_io_system.rst against B6's later changes to openhcs/core/callable_contract.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/runtime_stores.py, openhcs/interop/cellprofiler/module_artifact_contracts.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -1577,13 +1604,14 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "b5d4d752704b886da20d860743b81dc3d2ce3a3c402208246fadc1c6cb71f597",
+        "sha256": "75f92010b3c18ede61cf7296064079590c143283871e372a1fd4546417d4e0f9",
         "role": "Declares polystore and arraybridge as separate runtime dependencies of OpenHCS."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/storage_and_memory_system.rst in full and compared it against the changed authorities: pyproject.toml (current file read; no reviewed version in history); polystore and arraybridge remain declared dependencies, and external_foundations.rst, the page this one points to, exists; no claim changed.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/storage_and_memory_system.rst in full and compared it against the changed authorities: pyproject.toml; the diff only raises dependency pins (pyqt-reactive 0.5, pycodify 0.2, objectstate 2.1, zmqruntime 0.6.2, python-introspect 0.2.7); polystore and arraybridge remain separate runtime dependencies, and FileManager and the arraybridge converters still exist. No correction needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/storage_and_memory_system.rst against the later B6 changes to pyproject.toml: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/storage_and_memory_system.rst in full and compared it against the changed authorities: external/PolyStore/src/polystore/filemanager.py (submodule advance) and pyproject.toml (polystore 0.6, arraybridge 0.4.1, JAX and openhcs-basicpy dependency changes); the redirect makes no version, backend or API claim those changes affect, and both packages remain separate dependencies with intersphinx targets in docs/source/conf.py; no prose change was needed.",
@@ -1621,7 +1649,7 @@
     "authority": [
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "c96eca530f767002cfcc9aca4fe75c93d7a5848a7f42df9e5d336bf6712ed51e",
+        "sha256": "50742cdcb589dc9fba5a177c0107c046dd63c518c5aa77bd8a80e4f69e898e07",
         "role": "Compiled output streaming through StreamComponentMessageExtraAuthority and viewer settlement."
       },
       {
@@ -1631,22 +1659,22 @@
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "358d3eaf5952170f9e9e2dc9056fb08707e8fcf74682063c074b367a83c2648f",
+        "sha256": "6525348d097bda8d0265bc7c3f312dd8839ca9f65dd05f797fc82ba873e04547",
         "role": "CompiledStepPlan.producer_identity_for_main_flow and producer_identity_for_artifact."
       },
       {
         "path": "openhcs/core/runtime_object_labels.py",
-        "sha256": "a8ca5cc37f7049bb0ed06f1600afab9943d515e5ccb43dac0fb39f8f1bc7fbf7",
+        "sha256": "0e6f92699f87013550e6426a70bd2e458fab881c4108aa1559cb17121110c284",
         "role": "ObjectLabelValue.contextualize_image_output plane-axis and provenance rule for label-rendered images."
       },
       {
         "path": "openhcs/core/orchestrator/bundle_execution.py",
-        "sha256": "bc3a2d0a50c3db3be81b03f6af4a139c3db2f779e969aad608e59be66508ee4b",
+        "sha256": "25446d6c6a43c22ff7104c6712c143f0276bc4749c2642fffac10db1455ef707",
         "role": "Viewer bootstrap with rollback of the acquired set, settle-then-read-state order, and stopping of execution-owned viewers."
       },
       {
         "path": "openhcs/runtime/viewer_protocol.py",
-        "sha256": "c4bdae4bae6dee412f0d27a9cf75a95db53b3bd95c03cee7d046be16b52fe5b8",
+        "sha256": "347a65b63c149f2f437014d537cfaf481a33801d860742f4083b7377494e792f",
         "role": "ManagedViewerLifecycleMixin, ViewerProcessPlatform Linux policy, ViewerSettleProgress phases, and the execution-owned EndpointProcessGroup."
       },
       {
@@ -1656,12 +1684,12 @@
       },
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "038d7a76eeac8d69079591cf6eb7736af5415b28a7a067d6677bd15d115d11c7",
+        "sha256": "ac54f8bfdce33150c31b38bcd5cf6069b5fd66fb7c05d5a6951610ec3d895bfd",
         "role": "NapariImagePayload intake validation, bounded shape projection and preflighted layer isolation in the Napari Qt process."
       },
       {
         "path": "openhcs/runtime/napari_streaming_handlers.py",
-        "sha256": "be585484075783f7717776d2b8ba163aab8a69aa24c560ca3844214485bd9eef",
+        "sha256": "b43f29163cef420c77f30e46e92d94145520f7534077d54636a0ab141da32e7e",
         "role": "Accepted intake-cycle and route error retention through settlement."
       },
       {
@@ -1671,7 +1699,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_server.py",
-        "sha256": "12e96bcd1fb1aaccb43aa3fe90697b5d1cdda8998721a556005e95f344c9b2b3",
+        "sha256": "709193dcb39298d3ad8bdc7908150740993da161547b6499be9923cb2317f3f1",
         "role": "Releases execution-session process resources when the execution server stops."
       },
       {
@@ -1686,7 +1714,7 @@
       },
       {
         "path": "tests/unit/test_viewer_protocol.py",
-        "sha256": "04aa9e7e8bdc2ce6f3cd0705e531b35672c2369d5c46bb319b2eec17ee21dc75",
+        "sha256": "3aaf1fea097807f3bcd82c11abf58c134303c499bda49206ad9328900b68f0af",
         "role": "Proves execution cleanup stops exact non-persistent processes while persistent viewers remain available."
       },
       {
@@ -1696,23 +1724,24 @@
       },
       {
         "path": "tests/unit/test_napari_streaming_handlers.py",
-        "sha256": "93244d4d09c5cd6d7a2645fca2482578ad52646f3bb9e6de5ebe505b157fbfea",
+        "sha256": "c08363837db3efd13534c966a6192b785cb85ccca742b574ac9bd0e74600b80e",
         "role": "Proves one global ROI-member budget and metadata-only shape projection."
       },
       {
         "path": "tests/unit/test_napari_accepted_work_settlement.py",
-        "sha256": "50cde8ceede31c3ef07db0c0aed69865d058617fd77f34d834bb48252a47fcf1",
+        "sha256": "32c52a4807fddceb25839b75c6a937dcc0c7212437c2c3072066b976cf894306",
         "role": "Tests accepted display failures, settlement reporting and recovery."
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "85a73ddf071552fc88d454c9de857d066fd62f45492b74945ee22ec908b85289",
+        "sha256": "4af8c5e5a6d68a64f862a0bcb98f398a0a898948e6f8b5e462a4a11381f19524",
         "role": "Proves multi-viewer bootstrap rollback after partial acquisition and readiness failure."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/streaming_boundary_and_wrappers.rst in full and compared it against the changed authorities: openhcs/core/viewer_streaming_service.py, compiled_step_plan.py, runtime_object_labels.py, orchestrator/bundle_execution.py, openhcs/runtime/viewer_protocol.py, napari_viewer_server.py, napari_streaming_handlers.py, zmq_execution_server.py and the four changed tests; E1 turned ViewerSettlePhase (SettlementRunning/Complete/Failed), the viewer lifecycle (ViewerStopped/ViewerConnectedExternal/ViewerOwnedProcess), the launch session, NapariLayerKind and OrchestratorState into class families; the page states settlement by its wire phase names complete and failed, which the phase classes keep, and describes owned versus external viewer rollback, which the lifecycle classes implement; confirmed ViewerType is still the enum derived from the ViewerFamily registry, and that ViewerShapePayloadProjection.SUMMARY, ViewerProcessPlatform, ViewerSlotFamily, ViewerControlAction, DeclaredAxis and NapariImagePayload exist; no page change.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/streaming_boundary_and_wrappers.rst in full and compared it against the changed authorities: compiled_step_plan.py (CompiledSourceBindingPlan/CompiledSourceUniversePlan default factories), orchestrator/bundle_execution.py (K6 ProgressPhase/ProgressStatus classes, lane results ordered by compiled axis), runtime/zmq_execution_server.py (K6 debug replay predicate) and test_orchestrator_lane_planning.py; verified StreamComponentMessageExtraAuthority, StepOutputManifestStore, ArtifactMaterializationTargetPlan, producer_identity_for_main_flow/_for_artifact, StreamProducerIdentity.projection_key, ObjectLabelValue.contextualize_image_output, ViewerFamily/ViewerType, ViewerControlAction, ViewerProcessPlatform, ViewerSettleProgress, EndpointProcessGroup, the viewer control/projection option classes, settle-then-read-state order, server stop cleanup and the bootstrap rollback test all still exist as described; no claim needed correction.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/streaming_boundary_and_wrappers.rst against B6's later changes to openhcs/core/viewer_streaming_service.py, openhcs/core/compiled_step_plan.py, openhcs/core/runtime_object_labels.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/runtime/viewer_protocol.py, openhcs/runtime/zmq_execution_server.py, tests/unit/test_viewer_result_element_selection.py, tests/unit/test_napari_streaming_handlers.py, tests/unit/test_napari_accepted_work_settlement.py, tests/unit/test_orchestrator_lane_planning.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/streaming_boundary_and_wrappers.rst against the later B6 changes to openhcs/core/viewer_streaming_service.py, openhcs/core/compiled_step_plan.py, openhcs/core/runtime_object_labels.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/runtime/viewer_protocol.py, openhcs/runtime/zmq_execution_server.py, tests/unit/test_viewer_result_element_selection.py, tests/unit/test_napari_streaming_handlers.py, tests/unit/test_napari_accepted_work_settlement.py, tests/unit/test_orchestrator_lane_planning.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -1759,7 +1788,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "4a33908fb42874e6d57eeea3f5305793ddbda41d13356f0a78501af38dcdfeb4",
+        "sha256": "40b07b7f40aca39b19b95a8f61c1b0c8270f0ab0a29e8c36caa13f04d8fa539f",
         "role": "PipelineCompiler phases from declaration resolution to framework device assignment."
       },
       {
@@ -1769,10 +1798,11 @@
       }
     ],
     "findings": [
-      "Redirect still correct: the target page covers the current flow; no page change needed."
+      "The page is a redirect stub; its link target still exists and owns the content (checked 2026-10-11, B6)."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/system_integration.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compiler.py; the diff swaps enum members for the E1 class families (OrchestratorCompiled, MaterializeToZarr, PrimaryPlaneRole); the page states nothing about them, and system_overview.rst, the redirect target, exists.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/system_integration.rst in full and compared it against the changed authorities: openhcs/core/pipeline_document.py, openhcs/core/pipeline/compiler.py; PipelineDocument now renders through pycodify generate_python_source and the compiler uses ScopeKey and the K6 progress classes; the redirect to system_overview still describes the current flow. No correction needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/system_integration.rst against B6's later changes to openhcs/core/pipeline/compiler.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/system_integration.rst against the later B6 changes to openhcs/core/pipeline/compiler.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -1801,12 +1831,12 @@
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "0f9cc4819b53d55b7e9446429b8c8ac1ff1a59f4902020ea1658495ce01d464c",
+        "sha256": "4946c221e34ec19957b5af2b1a54359d454ee840fb1f5e1fe2b3b306ac8e5426",
         "role": "ResolvedPipelineDefinition (resolved steps, scope ids, field provenance) and the per-axis CompilationSession."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "358d3eaf5952170f9e9e2dc9056fb08707e8fcf74682063c074b367a83c2648f",
+        "sha256": "6525348d097bda8d0265bc7c3f312dd8839ca9f65dd05f797fc82ba873e04547",
         "role": "CompiledStepPlan typed fields, including framework-local device assignment."
       },
       {
@@ -1821,17 +1851,17 @@
       },
       {
         "path": "openhcs/core/runtime_stores.py",
-        "sha256": "74b591773b7f653c957b2db33a1262925e5c02b71074695b6fc18d6120ed5934",
+        "sha256": "35fe71906bfd16842de347776a0c5cc846550ad490cc3628885129d746ec6f31",
         "role": "RuntimeValueStore recording, replacement, query, and observation semantics."
       },
       {
         "path": "openhcs/core/runtime_plane_projection.py",
-        "sha256": "3c88ed042a7f1c65c9495a1c62777e008f1e59c4742ec0563b2849d77ca87cdd",
+        "sha256": "cf644451b6649dcec398fecbf961a4a29ea74f0bb2e0bdab052ec1be8a427f95",
         "role": "RuntimeSliceProjectableValue: value families own their slice projection."
       },
       {
         "path": "external/python-introspect/src/python_introspect/jsonable.py",
-        "sha256": "0148e51fb2fc4c7e1c625b088cb0ca56fecd58f9836b9e5da58b75b5eb2d40ee",
+        "sha256": "c845361d0d14914798d9a1b5329d681300511fc7e95c67508943425716930ebd",
         "role": "python-introspect's to_jsonable JSON encoder."
       },
       {
@@ -1865,11 +1895,10 @@
         "role": "Generic configuration window that OpenHCSConfigWindow subclasses."
       }
     ],
-    "findings": [
-      "The package-owner list predated U3 and L6: it omitted ObjectState's ScopeKey grammar and lazy-config source formatting and pyqt-reactive's configuration windows, editable tables, grid selection and time-travel views."
-    ],
-    "disposition": "revise",
+    "findings": [],
+    "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/system_overview.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compilation_session.py, compiled_step_plan.py, runtime_stores.py, runtime_plane_projection.py, external/python-introspect/src/python_introspect/jsonable.py; the diffs are imports from the openhcs/core/artifacts package, UnresolvedStepInput as the default step-input dependency, and new slice-projection helper methods; CompilationSession, the CompiledStepPlan fields, CompiledExecutionBundle, RuntimeValueStore and to_jsonable/dataclass_from_mapping match the page; no page change.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/system_overview.rst in full and compared it against the changed authorities: pipeline_document.py, compilation_session.py, compiled_step_plan.py, runtime_stores.py, python_introspect/jsonable.py; the flow, ResolvedPipelineDefinition, CompilationSession, CompiledStepPlan typed fields and RuntimeValueStore claims still hold (diffs: generate_python_source, graph.validate_invocation_declarations, CompiledSourceBindingPlan() defaults). Updated the package-owner list for U3/L6: ObjectState now owns ScopeKey and objectstate.codegen, and pyqt-reactive owns configuration windows, editable tables, grid selection and time travel.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/system_overview.rst against B6's later changes to openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py, openhcs/core/runtime_stores.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/system_overview.rst against the later B6 changes to openhcs/core/pipeline/compilation_session.py, openhcs/core/compiled_step_plan.py, openhcs/core/runtime_stores.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -1910,12 +1939,12 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "b5d4d752704b886da20d860743b81dc3d2ce3a3c402208246fadc1c6cb71f597",
+        "sha256": "75f92010b3c18ede61cf7296064079590c143283871e372a1fd4546417d4e0f9",
         "role": "No Textual dependency or entry point; openhcs-gui gui-script points at the PyQt application."
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "3cdb7819f09604046ba69e0b4f57b73e4e98d8f68af80158501a54bb42e701a2",
+        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
         "role": "PyQt desktop main window composition."
       },
       {
@@ -1925,10 +1954,11 @@
       }
     ],
     "findings": [
-      "Redirect still correct: no Textual interface in source or distribution; no page change needed."
+      "The page is a redirect stub; its link target still exists and owns the content (checked 2026-10-11, B6)."
     ],
     "disposition": "redirect",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/tui_system.rst in full and compared it against the changed authorities: pyproject.toml, openhcs/pyqt_gui/main.py; pyproject.toml declares no Textual dependency, main.py only swapped selection and update-check enum members for class families, and docs/source/user_guide/index.rst and docs/archive exist.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/tui_system.rst in full and compared it against the changed authorities: pyproject.toml, openhcs/pyqt_gui/main.py, tests/unit/pyqt_gui/test_ui_config_lifecycle.py; pyproject.toml still has no Textual dependency and the openhcs-gui gui-script points at openhcs.pyqt_gui.__main__:main; main.py changes are U3 moves of generic Qt machinery; the lifecycle test still guards that openhcs/textual_tui does not return (its shortcut tests moved to pyqt-reactive); docs/archive still exists. No correction needed.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/tui_system.rst against B6's later changes to openhcs/pyqt_gui/main.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/tui_system.rst against the later B6 changes to pyproject.toml, openhcs/pyqt_gui/main.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -1970,7 +2000,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
+        "sha256": "d092cb20206127484fbbc80a38a5152462b9b8991e848a814c85f564d51f4db8",
         "role": "Embeds the persisted generic list-preview policy in UIConfig."
       },
       {
@@ -2005,7 +2035,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/app.py",
-        "sha256": "3257f148dfddac3f1ff7409881db8100273adac5c3564b9cd3745e8f75313086",
+        "sha256": "3816c79689a29c22d2e4098622c0d3242c334517b201f159f30a728ea0fb322f",
         "role": "Owns application execution and native window-tree destruction before QApplication teardown."
       },
       {
@@ -2025,12 +2055,12 @@
       },
       {
         "path": "openhcs/desktop/update.py",
-        "sha256": "7bd5ab7abffdc20a9f6f85fb2e5f169ecda462e50b210b175d918453dbebfb3c",
+        "sha256": "23ffce8fe2362d8651ea90d2ef9601d193658e4fcef6aef8964e888f43014a3c",
         "role": "DesktopRestartSession capture and restoration shared by restart, update and version-mismatch recovery."
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "3cdb7819f09604046ba69e0b4f57b73e4e98d8f68af80158501a54bb42e701a2",
+        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
         "role": "OpenHCSMainWindow.set_ui_config consumer reconciliation and rollback, and preview-policy propagation to both managers."
       },
       {
@@ -2085,7 +2115,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/widgets/plate_manager.py",
-        "sha256": "e816cdafd4795c07b5d177a04472221057230416311d1bf83c5bf65188d2aa00",
+        "sha256": "b6e56da089cff746c9f0f41ca4b4d947942d4a71d1b290a1d8b76c3b7732c31e",
         "role": "Plate Manager renders the Session dataset list, holds no session state, and forwards transport and progress settings to the session."
       },
       {
@@ -2104,13 +2134,10 @@
         "role": "ShortcutLifecycle rejects duplicate keys before rebinding QActions and the application shortcut filter."
       }
     ],
-    "findings": [
-      "The main-window shortcut lifecycle moved to pyqt-reactive (U3): MainWindowShortcutLifecycle was replaced by the generic ShortcutLifecycle and its application shortcut filter; the page now names that owner.",
-      "The configuration window moved to pyqt-reactive (U3): ConfigWindow there owns the two-tab save transaction and OpenHCSConfigWindow only supplies the OpenHCS document format and window ids; the page now says so and the authorities name both files.",
-      "test_ui_config_lifecycle.py no longer holds the shortcut-lifecycle tests (moved with the lifecycle); its role was narrowed to the UIConfig cache path and session transport/progress projection."
-    ],
-    "disposition": "revise",
+    "findings": [],
+    "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/ui_services_architecture.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/config.py, openhcs/pyqt_gui/app.py, openhcs/desktop/update.py, openhcs/pyqt_gui/main.py, openhcs/pyqt_gui/widgets/plate_manager.py; E1 turned the startup-readiness state, the update-check origin (ExplicitUpdateCheck/StartupUpdateCheck), the selection scope (SelectedItems/AllItems) and OrchestratorState into class families; the page names none of them and its statements on OpenHCSPyQtApp shutdown, UIConfig fields, set_ui_config, the update-check preference and Plate Manager's session rendering are unaffected; every named class was grepped and exists; no page change.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/ui_services_architecture.rst in full and compared it against the changed authorities: pyqt_gui/services/window_handlers.py (ScopeKey separator, OpenHCSConfigWindow over pyqt-reactive ConfigWindow, session event connection), tests/unit/pyqt_gui/test_ui_config_lifecycle.py (shortcut tests removed), pyqt_gui/main.py (pyqt-reactive ShortcutLifecycle, DockLayoutStore/DockPane, TimeTravelCommands/TimeTravelNavigator) and widgets/plate_manager.py (GuiEventBusBroadcaster removed, PathCacheKey and external-editor policy from pyqt-reactive); corrected the shortcut-lifecycle and configuration-window transaction owners and checked the save transaction order in pyqt-reactive ConfigWindow.save_config against the page's rollback description.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/ui_services_architecture.rst against B6's later changes to openhcs/pyqt_gui/services/ui_bridge_session_actions.py, openhcs/pyqt_gui/main.py, tests/unit/pyqt_gui/test_main_config_propagation.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/ui_services_architecture.rst against the later B6 changes to openhcs/pyqt_gui/services/ui_bridge_session_actions.py, openhcs/pyqt_gui/main.py, tests/unit/pyqt_gui/test_main_config_propagation.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -2180,12 +2207,12 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_server.py",
-        "sha256": "12e96bcd1fb1aaccb43aa3fe90697b5d1cdda8998721a556005e95f344c9b2b3",
+        "sha256": "709193dcb39298d3ad8bdc7908150740993da161547b6499be9923cb2317f3f1",
         "role": "OpenHCS compiled-execution adapter over the generic execution server."
       },
       {
         "path": "openhcs/runtime/zmq_execution_observation.py",
-        "sha256": "3cc43d3eee6c4701c23fec183ecd895a71acdfcc14acfe2afca62625ccb7381b",
+        "sha256": "db40a0d1e82bdbe778f948619e62a93d74c16d3155ebc701a067bbba164f0efa",
         "role": "Owns the ordinary value/outcome export schemas, producing execution identity, and exclusive evidence-file creation."
       },
       {
@@ -2230,7 +2257,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "5df650f60c4d48cbf47c275d4e46b870b35c915ca8baa8e06e77f321578ca6d7",
+        "sha256": "ad7ea01599493dbefce1f3c91e6b082e932c6a5183d0a85a186f7bd7b62779a9",
         "role": "Spawns the execution server with the ArrayBridge-projected child environment and carries typed execution transport."
       },
       {
@@ -2240,17 +2267,17 @@
       },
       {
         "path": "openhcs/authoring/session/submission.py",
-        "sha256": "710ac218d1db01f231b67bf0fe229dc03fb428bc6655b23671f3a026be91c673",
+        "sha256": "e88dba60a818ce44d0ecf744b918f8a82421ccd0d9a6a5aebce7c15bb331f1dc",
         "role": "ExecutionSubmission records each accepted submission with its request and endpoint and follows status to terminal."
       },
       {
         "path": "openhcs/authoring/session/session.py",
-        "sha256": "0c4e0f0979e1793862859e47eefeb6dd9d4b51c99fba20c2ebc6adf11619c3b5",
+        "sha256": "ced615b580e4625e09873449b29ac67cdea87c8b8065c205f32e6d5921cf31fc",
         "role": "Session owns the one execution client and keeps FinishedExecution (request, endpoint, ExecutionRecord) per execution."
       },
       {
         "path": "openhcs/authoring/session/execution_control.py",
-        "sha256": "1ee26c917eb106809092f9cb9f906ee8f5e32bbb53700826b369646879eb2544",
+        "sha256": "40e8e6bf11dc90707ea8f11ebbae4f54d2cec4721ee341fdcad394db24dddf5e",
         "role": "Session stop: endpoint shutdown (graceful or forced) and cancellation of active datasets."
       },
       {
@@ -2355,7 +2382,7 @@
       },
       {
         "path": "openhcs/processing/custom_functions/runtime_registry.py",
-        "sha256": "160fb2fbad1b4d2f1ffaf784bacc5d7355d78c2720e718083cfc8c05748384df",
+        "sha256": "d2311617cad39d96ceb3ea6e13b6ad89f3b846e95d5dc3d692e7a9a46dd9c739",
         "role": "Atomic process-local projection of persisted custom-function declarations without a copied global catalogue."
       },
       {
@@ -2382,6 +2409,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/zmq_execution_service_extracted.rst in full and compared it against the changed authorities: openhcs/runtime/zmq_execution_server.py, zmq_execution_observation.py, zmq_execution_client.py, openhcs/authoring/session/submission.py, session.py, execution_control.py, openhcs/processing/custom_functions/runtime_registry.py; E1 made the runtime-observation export scope a class family that builds its own export, and execution status, terminal status and custom-function lifetime became families; the page describes the scope as a typed value-or-outcome scope carried by ZMQAuxiliaryExecutionParams and both exports as carrying the execution ID, which still holds; no page change.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/zmq_execution_service_extracted.rst in full and compared it against the changed authorities: runtime/zmq_execution_server.py and zmq_execution_client.py (K6 debug request codecs and replay predicate), external/zmqruntime messages.py (current file: EndpointApplication.compatibility_with, ExecutionRecord, ExecutionStatus), authoring/session/session.py (debug command classes), lib_registry/registry_service.py (contract read from reference.declaration) and test_cellprofiler_processing_backend.py (runtime_bound_parameter_names); verified EndpointConnectionAttempt, EndpointConnectionCancelledError, TransportEndpoint, OperationDeadline, ExecutionSubmission, ZMQAuxiliaryExecutionParams, FunctionCatalogPreparation, --prepare-capabilities, OperationCancellation and execution_subject_id still exist as described; no claim needed correction.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/zmq_execution_service_extracted.rst against B6's later changes to openhcs/authoring/session/session.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/zmq_execution_service_extracted.rst against B6's later changes to openhcs/authoring/session/session.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
@@ -2464,7 +2492,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "3cdb7819f09604046ba69e0b4f57b73e4e98d8f68af80158501a54bb42e701a2",
+        "sha256": "2d10806e310cb0d47ee7e47b879a7a95b28dcf5c688d9ce2a54b81ae1a041c47",
         "role": "Projects the configured endpoint snapshot into its dedicated right-hand indicator, and routes endpoint termination to the client lifecycle owner."
       },
       {
@@ -2501,6 +2529,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/architecture/zmq_server_browser_system.rst in full and compared it against the changed authorities: openhcs/pyqt_gui/main.py; the diff swaps selection and update-check enum members for class families and touches no endpoint-snapshot, status-bar or server-browser code; the listed module paths exist and every named class was grepped; no page change.",
       "On 2026-10-11 (B6), re-read docs/source/architecture/zmq_server_browser_system.rst in full and compared it against the changed authorities: pyqt_gui/main.py (shortcut, dock and time-travel machinery moved to pyqt-reactive; endpoint indicator projection unchanged) and core/progress/runtime_tree.py (K6 ProgressStream classes replace channel helpers); verified every named class (ZMQServerBrowserWidgetABC, EndpointObservationSnapshot, RuntimeExecutionTopology, RuntimeTreeProjectionBuilder, ProgressTreeBuilder, ExecutionProgressProjection, ServerRowPresenter, LiveServerTreeSync, EndpointShutdownService, ZMQClientService, ProgressUIConfig, EndpointClientSession), the primary module paths, and mean/explicit percent node policies on subject/worker vs partition/step/compilation nodes; no claim needed correction.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/zmq_server_browser_system.rst against B6's later changes to openhcs/pyqt_gui/main.py, openhcs/core/progress/runtime_tree.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/architecture/zmq_server_browser_system.rst against the later B6 changes to openhcs/pyqt_gui/main.py, openhcs/core/progress/runtime_tree.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -2532,7 +2561,7 @@
     "authority": [
       {
         "path": "openhcs/mcp/client_registration.py",
-        "sha256": "55b701bb77a3de19243fa9a6276f784fad8329e2d435fb26fcc7fdce1e060731",
+        "sha256": "4d6fc5f744617ab1d0e9b8317d07965496aaa6b098a4d179ef95cc6baec35671",
         "role": "Declares McpClientRegistrationTarget.__registry__ keyed by target_id."
       },
       {
@@ -2547,7 +2576,7 @@
       },
       {
         "path": "openhcs/mcp/installed_demo.py",
-        "sha256": "10fccd5b2d4382dca19857c0f7b9eaefe4eccbc34b4ff1898e8fced689a90223",
+        "sha256": "f89ba094072c46c1ed5504c7b4e786aa3806776615330f4e32f2b07f19555100",
         "role": "Declares the deterministic fixture request (1x1 grid, 192 px tiles, 10% overlap, 1 px stage error, 2 wavelengths, 1 Z, 12 cells, 0.95 shared, A01, ImageXpress, seed 1)."
       },
       {
@@ -2569,6 +2598,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/agent_workflow_validation.rst in full and compared it against the changed authorities: openhcs/mcp/client_registration.py (E1: ClientRegistrationStatus and the runtime platform became class families and the report is projected with to_jsonable; McpClientRegistrationTarget.__registry__ is still keyed by target_id) and openhcs/mcp/installed_demo.py (compares the terminal status with ExecutionCompleted.name; the deterministic fixture request is unchanged); the fixture table, registry rule and evidence schema still hold.",
       "On 2026-10-11 (B6 final), compared docs/source/development/agent_workflow_validation.rst against B6's later changes to openhcs/mcp/installed_demo.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/agent_workflow_validation.rst against B6's later changes to openhcs/mcp/installed_demo.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/agent_workflow_validation.rst against B6's later changes to tests/unit/test_installed_mcp_demo.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -2618,7 +2648,7 @@
   },
   {
     "path": "docs/source/development/callable_artifact_authoring.rst",
-    "source_sha256": "7a7502b1ad080497bf5e1490c6a1159e87a94a4b479250c9b02d7dd3cd7fbaa8",
+    "source_sha256": "6b216b639ff38eeebcf8bd72e40e75fe8508d445689fbd55f0dbfcfb7e6b869f",
     "audience": [
       "OpenHCS callable and artifact extension authors"
     ],
@@ -2627,13 +2657,23 @@
     "authority": [
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "a8e73c5df804d78baf72710e210cb2ae63156657a074071e11fd868f4b19d3b4",
+        "sha256": "6089f63e72e1a47fc5f6bc7b443028ac8ec40d934898589fa03b5592c2273ab3",
         "role": "Declares CallableDeclaration (inherited by CallableContract) with required_axis_roles, allowed_group_by_roles, memory roles and prepared signatures, processing_prepare, resolve_returned_output, the return partition and the artifact-parameter binding errors quoted by the page."
       },
       {
-        "path": "openhcs/core/artifacts.py",
-        "sha256": "65eb0ec5c903366243ca8bd5ea07412e8d34bdb81e6015fa76b3c4c59838733f",
-        "role": "Declares ArtifactSpec, MainFlowStackOutputSpec, the artifact types, ObjectMeasurementSubjectRelation and MaterializationSourceIdentityRelation."
+        "path": "openhcs/core/artifacts/specs.py",
+        "sha256": "c4c50309a195bf85e1c0641413544d9581fc0ce1197043130126f7a4c70d8c4e",
+        "role": "Declares ArtifactSpec with its input() and output() constructors and MainFlowStackOutputSpec."
+      },
+      {
+        "path": "openhcs/core/artifacts/kinds.py",
+        "sha256": "216b913efad9ec76707e9f61be445fb6fa1c6601c36ef53e296acd4928604515",
+        "role": "Declares the ArtifactType members used in the examples (image, object labels, measurements, special) and runtime_parameter_types()."
+      },
+      {
+        "path": "openhcs/core/artifacts/relations.py",
+        "sha256": "b1ae8be613fbabc372bd6692b41c5f925d4f968291f0a715bd1473d85cbed000",
+        "role": "Declares ObjectMeasurementSubjectRelation and MaterializationSourceIdentityRelation."
       },
       {
         "path": "openhcs/core/processing_contracts.py",
@@ -2642,27 +2682,27 @@
       },
       {
         "path": "openhcs/core/pipeline/function_contracts.py",
-        "sha256": "ffc21dd3021a2316cfbd100c2d655867ce4bec619f2db7288e82aeb11c1930e8",
+        "sha256": "67a654102b1d60c0a0f90e64ccaf3a8c177035cd11a0346734f872b329783d74",
         "role": "Declares artifact_inputs, artifact_outputs, special_inputs (which writes the artifact-fed parameter names), execution_scope and runtime_bound_parameters."
       },
       {
         "path": "openhcs/core/runtime_stores.py",
-        "sha256": "74b591773b7f653c957b2db33a1262925e5c02b71074695b6fc18d6120ed5934",
+        "sha256": "35fe71906bfd16842de347776a0c5cc846550ad490cc3628885129d746ec6f31",
         "role": "Declares RuntimeArtifactBatch.records and StoredRuntimeValue for plate-scope callables."
       },
       {
         "path": "openhcs/core/orchestrator/bundle_execution.py",
-        "sha256": "bc3a2d0a50c3db3be81b03f6af4a139c3db2f779e969aad608e59be66508ee4b",
+        "sha256": "25446d6c6a43c22ff7104c6712c143f0276bc4749c2642fffac10db1455ef707",
         "role": "Requires a plate-scope callable to declare exactly one SpecialArtifactType output."
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "744573f1bafa67b7a81be5af425012ada47741292519863e250b79f1c778b265",
+        "sha256": "79db4b008483dfb5ac752f3a5da692a941cba7caae25a6ec26085bbdb4bf278f",
         "role": "Point ROI writer: rejects missing fields, duplicate labels, non-finite coordinates and an empty archive."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_contracts.py",
-        "sha256": "4d521778e83fee62a4b164d6a3934d0824f2c5e7375bc7bea1d74256e67d61fe",
+        "sha256": "cefc83a740f917730f336b7283c6ea2d9280d27bf077e030d41b7a8a9add41af",
         "role": "Declares CellProfilerModuleArtifactContracts resolving setting-backed specs into the invocation CallableContract."
       },
       {
@@ -2672,7 +2712,7 @@
       },
       {
         "path": "tests/unit/test_artifact_spec_collection.py",
-        "sha256": "60ba79abffde80987809e2ef0621983e798780ad21cd4e98db6b29f21372c697",
+        "sha256": "46b3367620866438509896fc33bf196f262078f84a6b976612f104ce228148e4",
         "role": "Proves role-neutral artifact specs, exact refs, relations and collection validation."
       },
       {
@@ -2682,10 +2722,11 @@
       }
     ],
     "findings": [
-      "The contract summary listed a preparation hook among the contract's fields; K5 removed prepare from the declaration, so the hook stays on the callable (processing_prepare) and the contract carries only the prepared signatures. Reworded."
+      "K2 replaced the module openhcs/core/artifacts.py with the package openhcs/core/artifacts/. The four code blocks that imported from the old module were repointed by K2 to openhcs.core.artifacts.kinds, .specs and .relations after the last review, and the audit record still named the deleted module as an authority; the record now names specs.py, kinds.py and relations.py."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/callable_artifact_authoring.rst in full and compared it against the changed authorities: openhcs/core/artifacts.py (deleted by K2; replaced as authority by openhcs/core/artifacts/specs.py, kinds.py and relations.py), openhcs/core/callable_contract.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/runtime_stores.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/processing/materialization/core.py, openhcs/interop/cellprofiler/module_artifact_contracts.py and tests/unit/test_artifact_spec_collection.py; executed all six code blocks in order against this tree (imports from the artifacts package modules, the direct-call assertions, the points, diagnostic, input and plate declarations) and they pass; confirmed the quoted 'does not accept object_labels artifact payloads', 'no exact artifact declaration' and 'trailing return count' messages, canonical_return_output_specs, trailing_return_output_specs, runtime_parameter_types and the plate rule of exactly one SpecialArtifactType output still exist. No prose edit was needed in this round.",
       "On 2026-10-11 (B6), re-read docs/source/development/callable_artifact_authoring.rst in full and compared it against the changed authorities: callable_contract.py (K5 CallableDeclaration, prepare removed, repeated_return_slots), processing_contracts.py, function_contracts.py (special_inputs now writes artifact_input_parameter_names), runtime_stores.py (K6 codec removal), bundle_execution.py (progress classes, lane results in compiled axis order), module_artifact_contracts.py (UniqueReturnSlots) and tests/unit/test_callable_contract.py; corrected the preparation-hook claim, confirmed by a direct call that special_inputs('labels') alone still fails with 'has no exact artifact declaration binding', and re-checked canonical/trailing_return_output_specs, RuntimeArtifactBatch.records, StoredRuntimeValue and the single SpecialArtifactType plate output.",
       "On 2026-10-11 (B6 final), compared docs/source/development/callable_artifact_authoring.rst against B6's later changes to openhcs/core/pipeline/function_contracts.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/callable_artifact_authoring.rst against B6's later changes to openhcs/core/callable_contract.py, openhcs/core/artifacts.py, openhcs/core/processing_contracts.py, openhcs/core/pipeline/function_contracts.py, openhcs/core/runtime_stores.py, openhcs/core/orchestrator/bundle_execution.py, openhcs/processing/materialization/core.py, openhcs/interop/cellprofiler/module_artifact_contracts.py, tests/unit/test_callable_contract.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -2716,22 +2757,22 @@
     "authority": [
       {
         "path": "openhcs/interop/cellprofiler/module_declarations.py",
-        "sha256": "b0195b66126c31f71dc0d4bb281a128e0164bb7dfb3b314ee8fe744ebc55d626",
+        "sha256": "6ff4f4bc3eaf6b4c9fc42752493c2b9ba2e11c8994d7edaea81f586ac57c3b89",
         "role": "CellProfiler module registry, catalogue placement, and headless-import eligibility."
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_contracts.py",
-        "sha256": "4d521778e83fee62a4b164d6a3934d0824f2c5e7375bc7bea1d74256e67d61fe",
+        "sha256": "cefc83a740f917730f336b7283c6ea2d9280d27bf077e030d41b7a8a9add41af",
         "role": "Invocation-specific CellProfiler artifact contract derivation."
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "b96f33b866fe6c9f8118ca70fcb7dff8e6a02cb29d79df67230a5e8b97df8002",
+        "sha256": "5aa8895c9f533603b7ef972202141e2439473f0604b97d66f5a027b8b3cd1c83",
         "role": "Public CellProfiler pipeline lowering and declaration-owned headless-import validation."
       },
       {
         "path": "tests/unit/test_cellprofiler_pipeline_import.py",
-        "sha256": "0ce4efd85d819c7e9f7fa84ec6f1ac7ec4bda024c9a8d5c7f264fda2730264f0",
+        "sha256": "67576f37b7cbe0595acea633265f8e14677ca3c1b8204630413330273dc4e58a",
         "role": "Proves interactive CellProfiler modules fail headless import instead of disappearing from the lowered pipeline."
       },
       {
@@ -2753,6 +2794,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/cellprofiler_module_authoring.rst in full and compared it against the changed authorities: openhcs/interop/cellprofiler/module_declarations.py and pipeline_import.py (E1: the main-flow anchor is an InputSource class, ReadPreviousStep or ReadPipelineStart), module_artifact_contracts.py (K2: artifact_type.value in derived names and messages) and tests/unit/test_cellprofiler_pipeline_import.py (same renames); for_callable_contract, declared_function_names, validate_pipeline_import, module_blocks_for_invocation and SettingToKeywordBinding.input/output still exist as the page describes.",
       "On 2026-10-11 (B6), re-read docs/source/development/cellprofiler_module_authoring.rst in full and compared it against the changed authorities: module_declarations.py, module_artifact_contracts.py, pipeline_import.py and tests/unit/test_cellprofiler_pipeline_import.py (K4 moved SourceBindingsConfig/StepSourceBindingsConfig imports to openhcs.core.config and replaced SourceBindingMatchMethod.ORDER with PairByOrder; K5 put artifact_inputs/outputs directly on CallableContract and added repeated_return_slots through UniqueReturnSlots); the page names only SourceBindingsConfig, CellProfilerModule hooks, CellProfilerModuleArtifactContracts, SettingToKeywordBinding.input()/output(), module_blocks_for_invocation() and ModuleBlock, all re-checked in the current tree, and its claim that outputs are declared independently of return position still holds.",
       "On 2026-10-11 (B6 final), compared docs/source/development/cellprofiler_module_authoring.rst against B6's later changes to openhcs/interop/cellprofiler/module_declarations.py, openhcs/interop/cellprofiler/module_artifact_contracts.py, openhcs/interop/cellprofiler/pipeline_import.py, openhcs/processing/backends/lib_registry/openhcs_registry.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/cellprofiler_module_authoring.rst against the later B6 changes to openhcs/interop/cellprofiler/module_declarations.py, openhcs/interop/cellprofiler/module_artifact_contracts.py, openhcs/interop/cellprofiler/pipeline_import.py, openhcs/processing/backends/lib_registry/openhcs_registry.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -2779,22 +2821,22 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "0f9cc4819b53d55b7e9446429b8c8ac1ff1a59f4902020ea1658495ce01d464c",
+        "sha256": "4946c221e34ec19957b5af2b1a54359d454ee840fb1f5e1fe2b3b306ac8e5426",
         "role": "ResolvedPipelineDefinition and CompilationSession fields, one-time artifact admission before axis fan-out, and the missing-plan failure of plan(index)."
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "4a33908fb42874e6d57eeea3f5305793ddbda41d13356f0a78501af38dcdfeb4",
+        "sha256": "40b07b7f40aca39b19b95a8f61c1b0c8270f0ab0a29e8c36caa13f04d8fa539f",
         "role": "Compilation order, declaration resolution, callable warm-up, framework-local device assignment, and bundle construction."
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "6ff14c63768ed5cbd77e84236b3980d62f616465e9ecfb7cdf27c63d8070a405",
+        "sha256": "cf31311ffa462d0cbd8eb8cf426d75d5ee2f5668de7b7291ca6787b5d5be118a",
         "role": "Compiled source satisfaction, artifact edge, path, grouping, and plan decisions."
       },
       {
         "path": "tests/unit/test_compilation_session.py",
-        "sha256": "82f7227730a5285524dc9da39eb2d09f7af7ce1ee13285e5ebb0e7983d7e393b",
+        "sha256": "f7d5483997bf604f2c4fccaf08c165ae1a7c881079a250add3c98ce02250e2c0",
         "role": "Regression proof that axis sessions share one resolved pipeline definition while owning their own plans."
       },
       {
@@ -2804,7 +2846,7 @@
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "358d3eaf5952170f9e9e2dc9056fb08707e8fcf74682063c074b367a83c2648f",
+        "sha256": "6525348d097bda8d0265bc7c3f312dd8839ca9f65dd05f797fc82ba873e04547",
         "role": "Typed per-step framework-device binding authority."
       },
       {
@@ -2826,6 +2868,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/compiler_extension.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compilation_session.py (K2 import only), openhcs/core/pipeline/compiler.py (E1 class families), openhcs/core/pipeline/path_planner.py and openhcs/core/compiled_step_plan.py (E1: StepInputDependency is a class family, UnresolvedStepInput/PipelineStartInput/StepOutputInput, whose members answer the directory defaults) and tests/unit/test_compilation_session.py (same renames); the session invariants, plan(index) failure and exact ArtifactSpecRef planning are unchanged, and the page names no dependency-kind member.",
       "On 2026-10-11 (B6), re-read docs/source/development/compiler_extension.rst in full and compared it against the changed authorities: compilation_session.py (disabled items dropped by normalisation; invocation declarations validated by the artifact graph), compiler.py (ScopeKey scope ids, progress phase/status classes, an empty CompiledSourceBindingPlan instead of None), path_planner.py (inject_metadata over the ArtifactGraph, source_bindings.compiled_plan), compiled_step_plan.py (empty plan defaults) and tests/unit/test_compilation_session.py (PairByOrder, admitted_graph); the page's ResolvedPipelineDefinition/CompilationSession invariants, plan(index) failure, typed-plan guidance and ArtifactSpecRef identity still hold.",
       "On 2026-10-11 (B6 final), compared docs/source/development/compiler_extension.rst against B6's later changes to openhcs/core/pipeline/compilation_session.py, openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/path_planner.py, tests/unit/test_compilation_session.py, openhcs/core/compiled_step_plan.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/compiler_extension.rst against the later B6 changes to openhcs/core/pipeline/compilation_session.py, openhcs/core/pipeline/compiler.py, openhcs/core/pipeline/path_planner.py, tests/unit/test_compilation_session.py, openhcs/core/compiled_step_plan.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -2851,7 +2894,7 @@
     "authority": [
       {
         "path": "openhcs/agent/services/object_state_field_help_service.py",
-        "sha256": "5aa83508fa68cb69160d34ca64b495f5a34a401f358ce69ce290e24c96371a4c",
+        "sha256": "5f8bbcd9ebc9d4361a7907900ce1df578ec489fe4ccc8907ea4fdb0f987158da",
         "role": "Declaration-reflected ObjectState field help and configuration schema projection."
       },
       {
@@ -2880,11 +2923,10 @@
         "role": "Proves every scenario owns a valid representative static projection, stable-window figures derive from registered UI identities, documentation-only scenarios do not expand the website cards, and Sphinx branding resolves from package authority."
       }
     ],
-    "findings": [
-      "The record listed docs/audits/README.md as an authority; it is documentation, and scripts/validate_docs.py already owns the enforced ledger and project.readme rules the page states, so it was dropped. Page text needed no change."
-    ],
+    "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/documentation_authoring.rst in full and compared it against the changed authorities: openhcs/agent/services/object_state_field_help_service.py (E1: the parameter supplier is a class family, SuppliedByAgent/SuppliedAtRuntime, replacing FunctionParameterSource); field help is still reflected from the declarations, and the four verification test files and openhcs_describe_config_schema still exist.",
       "On 2026-10-11 (B6), re-read docs/source/development/documentation_authoring.rst in full and compared it against the changed authorities: object_state_field_help_service.py (UI-bridge scope listing through UiBridgeService.invoke; JsonValue from python_introspect), knowledge_base_service.py (comparison-manifest parsing moved to openhcs.agent.knowledge_manifest_schema), scripts/validate_docs.py (path regex now accepts .jsonl), scripts/gallery_catalog.py (SessionOperation actions) and tests/unit/test_build_website.py. Confirmed openhcs_describe_config_schema, the openhcs-gallery directive, the napari-roi-navigation scenario, the documentation publication target, the project.readme gate, reference/configuration.rst and all four listed test files exist; no page claim changed. Dropped the docs/audits/README.md authority as a documentation file.",
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "Config-help and knowledge-service tests provide the listed projection gates; the audit validator enforces exact active-source coverage and SHA-256 freshness.",
@@ -2913,7 +2955,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "b5d4d752704b886da20d860743b81dc3d2ce3a3c402208246fadc1c6cb71f597",
+        "sha256": "75f92010b3c18ede61cf7296064079590c143283871e372a1fd4546417d4e0f9",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2923,12 +2965,12 @@
       },
       {
         "path": "external/python-introspect/src/python_introspect/jsonable.py",
-        "sha256": "0148e51fb2fc4c7e1c625b088cb0ca56fecd58f9836b9e5da58b75b5eb2d40ee",
+        "sha256": "c845361d0d14914798d9a1b5329d681300511fc7e95c67508943425716930ebd",
         "role": "singledispatch to_jsonable projection for dataclasses, mappings, sequences, callables, registered types, enums, paths and scalars, paired with dataclass_from_mapping."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "0f9cc4819b53d55b7e9446429b8c8ac1ff1a59f4902020ea1658495ce01d464c",
+        "sha256": "4946c221e34ec19957b5af2b1a54359d454ee840fb1f5e1fe2b3b306ac8e5426",
         "role": "ResolvedPipelineDefinition and CompilationSession consumed by compiler phases."
       },
       {
@@ -2938,12 +2980,12 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "a8e73c5df804d78baf72710e210cb2ae63156657a074071e11fd868f4b19d3b4",
+        "sha256": "6089f63e72e1a47fc5f6bc7b443028ac8ec40d934898589fa03b5592c2273ab3",
         "role": "OpenHCS callable declaration projection for input, output, and execution frameworks."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "358d3eaf5952170f9e9e2dc9056fb08707e8fcf74682063c074b367a83c2648f",
+        "sha256": "6525348d097bda8d0265bc7c3f312dd8839ca9f65dd05f797fc82ba873e04547",
         "role": "Typed per-step framework-device binding authority."
       },
       {
@@ -2953,7 +2995,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "2e0de28a96c57ee150e28fbbed28d876507e9281075a03f729838f3ca3610966",
+        "sha256": "0c2cab4d989d50149cb314e908baace8aa794953c86ebc572fa120beaa695780",
         "role": "Owns registered benchmark command declarations and the derived installed parser."
       },
       {
@@ -2970,6 +3012,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/extension_workflows.rst in full and compared it against the changed authorities: pyproject.toml (foundation pins raised; same eight distributions), external/python-introspect/src/python_introspect/jsonable.py (read in full at 0.2.8: singledispatch to_jsonable still registers dataclasses, mappings, sequences, callables, AutoRegisterMeta classes, enums, paths and scalars, paired with dataclass_from_mapping), openhcs/core/pipeline/compilation_session.py and openhcs/core/callable_contract.py (K2 imports), openhcs/core/compiled_step_plan.py (E1 StepInputDependency classes) and benchmark/cellprofiler_benchmark_cli.py (E1: observation scope choices come from the ZMQRuntimeObservationExportScope registry; BenchmarkCliCommand unchanged); every owner named in the table still exists and metaclass-registry still ships the enum-, type- and context-keyed strategy mixins.",
       "On 2026-10-11 (B6), re-read docs/source/development/extension_workflows.rst in full and compared it against the changed authorities: pyproject.toml (first-party floors only), external/python-introspect/src/python_introspect/jsonable.py (current file: singledispatch registrations for dataclasses, mappings, sequences, callables, AutoRegisterMeta families, enums, paths and scalars, plus registered_class_from_key), openhcs/core/pipeline/compilation_session.py (validation moved onto ArtifactGraph), openhcs/core/callable_contract.py (K5: CallableMetadata folded into CallableContract declared fields; input/output/execution memory types remain) and openhcs/core/compiled_step_plan.py (CompiledSourceBindingPlan() default). Rechecked every class the owner table and prose names (CallableContract, CellProfilerModule, ImageFileFormat, ResolvedPipelineDefinition, CompilationSession, CompiledExecutionBundle, CompiledStepPlan device bindings, BenchmarkCliCommand, ComparisonSuiteRunDeclaration/Receipt, MeasuredPipelineRunReceipt) and that pycodify still owns Python source generation after L6 (ObjectState adds only the lazy-config formatter); no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/extension_workflows.rst against B6's later changes to benchmark/cellprofiler_benchmark_cli.py: the session decides in-place initialization by an actual file-creation attempt that leaves nothing behind, its debug-session methods moved into an inherited mixin, the measured CLI treats Windows Ctrl+Break like Ctrl+C, and the Official30 viewer test reads typed payload summaries. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/extension_workflows.rst against B6's later changes to openhcs/core/pipeline/compilation_session.py, openhcs/core/callable_contract.py, openhcs/core/compiled_step_plan.py, benchmark/cellprofiler_benchmark_cli.py, tests/unit/test_benchmark_control.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
@@ -3017,7 +3060,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "b5d4d752704b886da20d860743b81dc3d2ce3a3c402208246fadc1c6cb71f597",
+        "sha256": "75f92010b3c18ede61cf7296064079590c143283871e372a1fd4546417d4e0f9",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3027,15 +3070,14 @@
       },
       {
         "path": "openhcs/utils/environment.py",
-        "sha256": "2d8738e593b3e92c966089772624f47d17d38bb27fb90974707af659c91e8ad8",
+        "sha256": "1985ffbe42b5dfb283b78b6282f9b56e08cd51d5a9e79f2dd4eebffcb6da0bf5",
         "role": "OpenHCSProcessEnvironment.flag_enabled, which tests/conftest.py uses to read OPENHCS_CPU_ONLY (1, true, yes or on) before deciding whether to load pytest-qt."
       }
     ],
-    "findings": [
-      "The record's tests/conftest.py role said the harness accepts only 'true' for OPENHCS_CPU_ONLY; conftest now reads the flag through OpenHCSProcessEnvironment.cpu_only_mode, which accepts 1, true, yes or on. The page's OPENHCS_CPU_ONLY=true commands remain correct; the authority now names openhcs/utils/environment.py, which owns that parsing."
-    ],
+    "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/git_worktree_testing.rst in full and compared it against the changed authorities: pyproject.toml (foundation pins raised; the dev and gui extras used by the install command still exist) and openhcs/utils/environment.py (AgentRuntimePlatformAuthority renamed AgentRuntimePlatform in the Numba cache helper; flag_enabled still accepts 1, true, yes or on); the install order, OPENHCS_CPU_ONLY usage and --it-* option names are unchanged.",
       "On 2026-10-11 (B6), re-read docs/source/development/git_worktree_testing.rst in full and compared it against the changed authorities: pyproject.toml (first-party floors moved to zmqruntime 0.6.2, pycodify 0.2, objectstate 2.1.1, python-introspect 0.2.7, pyqt-reactive 0.5); the page states no version floors. Rechecked the eight editable installs against .gitmodules, the dev and gui extras, and the integration options file; corrected the stale conftest role (OPENHCS_CPU_ONLY parsing now lives in OpenHCSProcessEnvironment).",
       "On 2026-10-11 (B6 final), compared docs/source/development/git_worktree_testing.rst against B6's later changes to tests/conftest.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/git_worktree_testing.rst against B6's later changes to tests/conftest.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
@@ -3075,7 +3117,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "b5d4d752704b886da20d860743b81dc3d2ce3a3c402208246fadc1c6cb71f597",
+        "sha256": "75f92010b3c18ede61cf7296064079590c143283871e372a1fd4546417d4e0f9",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3087,6 +3129,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/index.rst in full and compared it against the changed authorities: pyproject.toml (read the current file: foundation pins raised to zmqruntime 0.6.2, objectstate 2.1.1, python-introspect 0.2.8 and polystore 0.6.1, mahotas kept in the core dependencies); the page gives no version and every toctree target still exists.",
       "On 2026-10-11 (B6), re-read docs/source/development/index.rst in full and compared it against the changed authorities: pyproject.toml (first-party dependency floors only); the page states no versions. Confirmed every toctree target and related-architecture link exists and the recursive-clone guidance matches .gitmodules; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/index.rst against the later B6 changes to pyproject.toml: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/development/index.rst in full and compared it against the changed authorities: pyproject.toml (first-party dependency floors, JAX extra, openhcs-basicpy) and openhcs/core/compiled_execution.py; the page states neither versions nor compiled-bundle facts. Confirmed every toctree target exists and the recursive-clone guidance matches .gitmodules; dropped the unrelated compiled_execution.py and self-referential page authorities.",
@@ -3189,7 +3232,7 @@
       },
       {
         "path": "openhcs/mcp/dev_client_core.py",
-        "sha256": "41739b744b0e4287ca7d14cd133371d669e9bff12f4b622313996ae9bb5597da",
+        "sha256": "1bb405ee541cdb48b27c355aeb71ad680ec8c14f9fd31089814e7ac01751b89b",
         "role": "MCP dev-client session, selected-workflow argument projection, revision-token terminal-state criteria with idempotent initialization, and transport timeout."
       },
       {
@@ -3219,12 +3262,12 @@
       },
       {
         "path": "openhcs/agent/services/ui_bridge_service.py",
-        "sha256": "c7bdf8b5caec1c21c986cdc2224524839fadfa8764dafcd05125d90c72351899",
+        "sha256": "a2d682ad7841a7d85173f792961cae2dc5546fb4fcf39caa85f0bbd6ed062b01",
         "role": "Declares the default UI bridge connection spec whose timeout bounds UI development commands."
       },
       {
         "path": "openhcs/mcp/dev_client_commands/ui.py",
-        "sha256": "be3bc9096e4a711cc6583667596ba25a60428711f2883248e82d5ac66d6dd28b",
+        "sha256": "e5eec92b43c20d91f83681e505afa94ca733e809b1c732f81952757b345d3cff",
         "role": "Owns declaration-derived UI development commands, including selected-workflow ordering and the typed output-directory projection for window snapshots."
       },
       {
@@ -3239,17 +3282,17 @@
       },
       {
         "path": "openhcs/authoring/session/session.py",
-        "sha256": "0c4e0f0979e1793862859e47eefeb6dd9d4b51c99fba20c2ebc6adf11619c3b5",
+        "sha256": "ced615b580e4625e09873449b29ac67cdea87c8b8065c205f32e6d5921cf31fc",
         "role": "Session submission budget and runtime-observation export validation (writable root, no existing path, outcomes require a path)."
       },
       {
         "path": "openhcs/agent/dto/session.py",
-        "sha256": "6d954139237672eddae155f3ece1dfefef4d4e4ce20b1934ae388860538627bc",
+        "sha256": "730cbcfcda6c7d52a1c6e1d142ec2e7d721f32c51bb78c845a8a03201da70ba0",
         "role": "Typed run request fields runtime_observation_export_path, runtime_observation_export_scope and submit_timeout_ms, and event_sequence results."
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "4e6f6b1761b2c0316c99984baad6ea2c97e5c76c3f155111b8e498d7358e3175",
+        "sha256": "7f47844b6fc0bf2461dfdb97e4b622a8d16f0f8c00004c1e6b7ea1a9997abe82",
         "role": "Regression proof for selected-surface preflight, stale-row rejection, idempotent initialization, and every declared or malformed bridge-receipt continuation outcome."
       },
       {
@@ -3274,7 +3317,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "5df650f60c4d48cbf47c275d4e46b870b35c915ca8baa8e06e77f321578ca6d7",
+        "sha256": "ad7ea01599493dbefce1f3c91e6b082e932c6a5183d0a85a186f7bd7b62779a9",
         "role": "Owns the total headless submission budget and the pre-dispatch timeout boundary documented for MCP developers."
       },
       {
@@ -3289,17 +3332,17 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_server.py",
-        "sha256": "4b0664fa62d24557294324b631ee3e39052c84e578d40ec408197bce5adcedac",
+        "sha256": "f93a3570a834eca8596139676629dda48c3f22991fd8cb58cd03427af8b24a38",
         "role": "Rejects stale MCP request contracts before they reach live UI state."
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "67cdad5133dc83ccb005b58cc56535ae89e77fc23d3ebd76e616c0da5f567b44",
+        "sha256": "422be9298e5120c898bd7110884ca770f1f033f07fd69be4ac0caa978d3014f4",
         "role": "Proves stale protocol and application versions fail before UI operation dispatch."
       },
       {
         "path": "openhcs/mcp/server.py",
-        "sha256": "e1f236011df715da3d17574c0b80cbf50fcae45e3f82491c22fb57e98c6bb662",
+        "sha256": "c3dd3a396a3c304341b06c7c813036e779c921fa915060d2d3d2ed594b00b697",
         "role": "Owns the mcp_server_stale guard, declaration-derived progress execution, and verbose delayed thread-stack diagnostics across the full invocation."
       },
       {
@@ -3311,6 +3354,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/mcp_development.rst in full and compared it against the changed authorities: openhcs/mcp/dev_client_core.py, openhcs/mcp/dev_client_commands/ui.py, openhcs/agent/services/ui_bridge_service.py, openhcs/agent/dto/session.py, openhcs/authoring/session/session.py, openhcs/mcp/server.py, openhcs/runtime/zmq_execution_client.py, openhcs/pyqt_gui/services/ui_bridge_server.py and the two test modules (E1: poll status, orchestrator state, field filter, selection scope and export scope became class families); the page names no enum member; the selected-workflow wait policy, the session-operation tool names, the submit_timeout_ms budget, and the runtime-observation export checks (writable root, no existing path, `values`/`outcomes` spellings, scope.check_export_path before submission) still hold in the current files, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/development/mcp_development.rst in full and compared it against the changed authorities: openhcs/authoring/session/session.py, openhcs/runtime/zmq_execution_client.py and tests/unit/pyqt_gui/test_ui_agent_bridge.py (K6: debug commands, boundaries and progress phases/statuses became class families; debug control requests send request.to_dict() directly; U3: DockPane and ConfigCodeDocumentDriver moved to pyqt-reactive). The page names none of those types; rechecked the openhcs-mcp-dev entry point, every dev-client command and option it shows, the SessionOperation operation_ids behind the six named tools, openhcs_session_events/openhcs_session_datasets, execution_submission_timeout_ms on OpenHCSZMQConfig's zmqruntime base, UIConfigCacheEnvironment, the bridge/cache environment variables and OPENHCS_MCP_VERBOSE; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_development.rst against B6's later changes to openhcs/authoring/session/session.py: the writability probe makes one exclusive create attempt, the installed demo reports ViewerType.value, the unit session pre-creates its QApplication, and the GUI journey waits for each batch to end. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_development.rst against B6's later changes to openhcs/agent/dto/session.py: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
@@ -3385,7 +3429,7 @@
       },
       {
         "path": "tests/unit/agent/test_knowledge_base_service.py",
-        "sha256": "b814db1827c3d4cc3dab479ef7e84c6c406f324ccaddee794690f3b387626411",
+        "sha256": "7b30d1c1931efc1c380b2dacd743bcd4e509cafc949b01d24e156448681a0fc3",
         "role": "Regression proof for document IDs, search, bounded reads, and section selection."
       },
       {
@@ -3397,6 +3441,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/mcp_knowledge_base.rst in full and compared it against the changed authorities: tests/unit/agent/test_knowledge_base_service.py (MfdPresetKey renamed MfdPresetDefinition in the corpus assertions); the page does not name the preset class and its allowlist, search and section claims are untouched by the rename, so nothing was changed.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_knowledge_base.rst against B6's later changes to tests/unit/agent/test_knowledge_base_service.py: metadata documents are written only for backends that host local files (not virtual backends such as OMERO); the image-source guide test reads axis-family spellings. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_knowledge_base.rst against B6's later changes to tests/unit/agent/test_knowledge_base_service.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/mcp_knowledge_base.rst against the later B6 changes to openhcs/agent/capabilities.py, tests/unit/agent/test_knowledge_base_service.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -3691,7 +3736,7 @@
       },
       {
         "path": "tests/integration/test_main.py",
-        "sha256": "05331ebbe7a79554dfe7348e22ecf1ab3bbc0c58c43f9e3b9ca027f340a7dec0",
+        "sha256": "ce4a32452cef8b8dadea26894b923bbda88f0f88635e979c83f81a8d6ac34f29",
         "role": "Direct and ZMQ compile-before-execute integration harness with explicit OMERO lifecycle cleanup and no browser side effect."
       },
       {
@@ -3713,6 +3758,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/omero_testing.rst in full and compared it against the changed authorities: tests/integration/test_main.py (E1: ReadPipelineStart, PadToMaxSize and MaterializationBackend.__registry__ replace enum members); the page names none of those spellings; the harness still selects the omero_local materialization backend for OMERO runs and exercises direct and ZMQ execution, so nothing was changed.",
       "On 2026-10-11 (B6 final), compared docs/source/development/omero_testing.rst against B6's later changes to .github/workflows/integration-tests.yml: one-plane label projection now owned by every slice-aligned label mode, dataset rows carry the finished execution's error, the wheel job prewarms the Fiji bundle, the test session creates its QApplication first, and tracked files keep committed bytes. No claim this page makes changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/omero_testing.rst against the later B6 changes to external/PolyStore/src/polystore/omero_local.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/development/omero_testing.rst in full and compared it against the changed authorities: tests/integration/test_main.py (partition-filter config renames, Microscopy axis family, DatasetSourceChoice, per-test allocated ports, execute_compiled_bundle, subject_id, PipelineDocumentCodec) and .github/workflows/integration-tests.yml (parity-scope gate, run_installed_tests.py coverage). The page names none of the renamed test internals; confirmed the harness still registers OMEROLocalBackend and runs direct and ZMQ modes without opening a browser, the omero-tests-linux lane still builds submodule candidate wheels without a publication dependency and keeps Tables-0 and component diagnostics, and OMEROWellAddress, OMEROPlaneAddress, OMEROPlaneFilenameTemplate and FilenameParseResult exist at their owners.",
@@ -3823,12 +3869,12 @@
     "authority": [
       {
         "path": "openhcs/core/debug.py",
-        "sha256": "4a1ed9fb0dcd40beeda9a2a3c90cdb5b2541252590d28281a9fb6f1aa021c510",
+        "sha256": "311b003ce50b69abbbdd934e1ff53cade27105605b6c3d7c980fc4ac81b8c2a4",
         "role": "Nominal debug command, boundary, snapshot, replay, and paused-worker declarations."
       },
       {
         "path": "openhcs/core/debug_session_projection.py",
-        "sha256": "0a630eb03a83d741a4ed55838adb8ee65dd4fde9be07878aeba5e7a8c86c7378",
+        "sha256": "a088647748f3f3dace29ace81a6efacf3af32d66fd846417eedd5755b3545868",
         "role": "Typed debug-session phase selection from exact runtime context."
       },
       {
@@ -3838,13 +3884,14 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "4a33908fb42874e6d57eeea3f5305793ddbda41d13356f0a78501af38dcdfeb4",
+        "sha256": "40b07b7f40aca39b19b95a8f61c1b0c8270f0ab0a29e8c36caa13f04d8fa539f",
         "role": "Compilation order, declaration resolution, callable warm-up, framework-local device assignment, and bundle construction."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/pipeline_debugging_guide.rst in full and compared it against the changed authorities: openhcs/core/debug.py (K2 artifacts package imports), openhcs/core/debug_session_projection.py (E1: DebugSessionPhase is now the phase family itself) and openhcs/core/pipeline/compiler.py (E1: orchestrator state and materialization backend classes); the page names the debug phase only as state-surface content and names no removed class; CompiledStepPlan, CompilationSession, debug_pause and the inspection tool names are unchanged, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/development/pipeline_debugging_guide.rst in full and compared it against the changed authorities: openhcs/core/debug.py (K6: debug commands, event boundaries and replay modes became class families such as StepDebugCommand and AfterInvocationDebugBoundary; control payload wrappers deleted), openhcs/agent/services/runtime_server_service.py (command decoded through registered_class_from_key, worker state read from the typed status) and openhcs/core/pipeline/compiler.py (ScopeKey scope ids, progress phase/status classes, CompiledSourceBindingPlan() default). The page names none of the changed types; rechecked debug_pause on AbstractStep, the 'Run to Pause', Step and 'Inspect Runtime' action labels, pipeline_debug_toolbar.session, openhcs_inspect_pipeline_source_artifact_plan, openhcs_inspect_debug_runtime_values / runtime-debug-values, SettingToKeywordBinding and StepMaterializationConfig; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/pipeline_debugging_guide.rst against B6's later changes to openhcs/core/debug.py, openhcs/core/pipeline/compiler.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/pipeline_debugging_guide.rst against the later B6 changes to openhcs/core/debug.py, openhcs/core/pipeline/compiler.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -3878,7 +3925,7 @@
       },
       {
         "path": "openhcs/processing/backends/processors/pyclesperanto_processor.py",
-        "sha256": "ae7b91db142b898f47831fcb3e44c67758e9e2f8c2d77ada3b347dadbc34af47",
+        "sha256": "ae6a2507ecfea6e592f4c9ec874e761ef82eb9a958c09e56c17ff9e3b3ef7390",
         "role": "OpenHCS processing callables using the pyclesperanto integration."
       },
       {
@@ -3903,7 +3950,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "a8e73c5df804d78baf72710e210cb2ae63156657a074071e11fd868f4b19d3b4",
+        "sha256": "6089f63e72e1a47fc5f6bc7b443028ac8ec40d934898589fa03b5592c2273ab3",
         "role": "Compiler-visible projection of all declared callable memory roles."
       },
       {
@@ -3913,7 +3960,7 @@
       },
       {
         "path": "openhcs/core/steps/function_runtime.py",
-        "sha256": "fa9486cddf3db943a218f276bb43d079f505bf84b18d9f7bd074f7a4d86332b3",
+        "sha256": "83d9eca90f2dca33ff8074bb768a24fadc5dfb1881855274eab9203b4cc41770",
         "role": "Runtime conversion and invocation inside the compiled execution-framework device scope."
       },
       {
@@ -3930,6 +3977,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/pyclesperanto_simple_implementation.rst in full and compared it against the changed authorities: openhcs/processing/backends/processors/pyclesperanto_processor.py and openhcs/core/callable_contract.py (K2: artifact imports moved to openhcs.core.artifacts.specs/kinds/plans) and the current openhcs/core/steps/function_runtime.py; the example imports only openhcs.core.memory and openhcs.core.processing_contracts, both unchanged; Pure3DContract, PyclesperantoRegistry's runtime-owned output_image/output_image_matrix/device parameters and the runtime execution_device_scope still exist, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/development/pyclesperanto_simple_implementation.rst in full and compared it against the changed authorities: openhcs/core/processing_contracts.py and openhcs/core/callable_contract.py (K5: CallableMetadata replaced by CallableDeclaration, which CallableContract inherits), openhcs/core/steps/function_runtime.py (K6 debug boundary classes; main-flow source-binding plan no longer None) and tests/unit/test_unified_registry_runtime_payloads.py. The page names none of the changed types; rechecked the pyclesperanto decorator re-exported from openhcs.core.memory, Pure3DContract, and PyclesperantoRegistry's runtime-owned output_image, output_image_matrix and device parameters; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/pyclesperanto_simple_implementation.rst against B6's later changes to openhcs/processing/backends/processors/pyclesperanto_processor.py, openhcs/core/memory/decorators.py, openhcs/core/processing_contracts.py, openhcs/core/callable_contract.py, openhcs/core/steps/function_runtime.py, tests/unit/test_unified_registry_runtime_payloads.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/pyclesperanto_simple_implementation.rst against the later B6 changes to openhcs/processing/backends/processors/pyclesperanto_processor.py, openhcs/core/memory/decorators.py, openhcs/core/processing_contracts.py, openhcs/core/callable_contract.py, openhcs/core/steps/function_runtime.py, tests/unit/test_unified_registry_runtime_payloads.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -3962,13 +4010,14 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "b5d4d752704b886da20d860743b81dc3d2ce3a3c402208246fadc1c6cb71f597",
+        "sha256": "75f92010b3c18ede61cf7296064079590c143283871e372a1fd4546417d4e0f9",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/repository_setup.rst in full and compared it against the changed authorities: pyproject.toml (python-introspect requirement raised to 0.2.8); the page quotes no dependency version; the Python 3.11-3.14 range, the centrosome python_version < 3.14 marker, the dev/dev-gui/gui/viz/gpu/docs/cellprofiler-compat extras, the CUDA 12 gpu pins and the eight external/ submodule directories all match, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/development/repository_setup.rst in full and compared it against the changed authorities: pyproject.toml (first-party floors moved to zmqruntime 0.6.2, pycodify 0.2, objectstate 2.1.1, python-introspect 0.2.7, pyqt-reactive 0.5); the page states no version floors. Rechecked the eight submodules against .gitmodules, requires-python >=3.11,<3.15, the named extras (dev, gui, dev-gui, cellprofiler-compat, viz, gpu, docs), and that OPENHCS_CPU_ONLY=1 is accepted by OpenHCSProcessEnvironment.flag_enabled; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/repository_setup.rst against the later B6 changes to pyproject.toml: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
       "On 2026-10-11 (B6), re-read docs/source/development/repository_setup.rst in full and compared it against the changed authorities: pyproject.toml (first-party floors moved to zmqruntime 0.6, objectstate 1.3.1, python-introspect 0.2.5, metaclass-registry 0.3, arraybridge 0.4.1, polystore 0.6, pyqt-reactive 0.4; JAX GPU extra now jax[cuda12-local]; openhcs-basicpy added as an ordinary dependency); challenged the eight-submodule count against .gitmodules, the 3.11-3.14 range against requires-python, the centrosome parity oracle's python_version < 3.14 marker, the named extras (dev, gui, dev-gui, cellprofiler-compat, viz, gpu, docs), setup.py deferring metadata to pyproject.toml, and the CUDA 12 statement for the gpu extra; all remain accurate and the page states no version floors.",
@@ -4021,12 +4070,12 @@
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "0f9cc4819b53d55b7e9446429b8c8ac1ff1a59f4902020ea1658495ce01d464c",
+        "sha256": "4946c221e34ec19957b5af2b1a54359d454ee840fb1f5e1fe2b3b306ac8e5426",
         "role": "Resolved step/session identity and typed plan assembly invariants."
       },
       {
         "path": "openhcs/core/runtime_stores.py",
-        "sha256": "74b591773b7f653c957b2db33a1262925e5c02b71074695b6fc18d6120ed5934",
+        "sha256": "35fe71906bfd16842de347776a0c5cc846550ad490cc3628885129d746ec6f31",
         "role": "RuntimeValueStore recording, replacement, query, and observation semantics."
       },
       {
@@ -4038,6 +4087,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/respecting_codebase_architecture.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compilation_session.py and openhcs/core/runtime_stores.py (K2: artifact imports moved into the openhcs.core.artifacts package); the page names no artifact module path; EnumKeyedStrategyMixin, NominalTypeKeyedStrategyMixin, MostDerivedContextStrategyMixin and RegistryFamily still exist in metaclass_registry and EnumKeyedStrategyMixin still has OpenHCS users, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/development/respecting_codebase_architecture.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compilation_session.py (per-invocation validation moved onto ArtifactGraph.validate_invocation_declarations; strip_disabled_functions no longer applied) and openhcs/core/runtime_stores.py (hand-written to_dict/from_dict transport on RuntimeArtifactLocation and RuntimeArtifactAddress deleted). Both moves agree with the page's single-owner guidance; rechecked that the three strategy mixins, AutoRegisterMeta, RegistryConfig and RegistryFamily still exist in metaclass-registry; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/respecting_codebase_architecture.rst against B6's later changes to openhcs/core/pipeline/compilation_session.py, openhcs/core/runtime_stores.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/respecting_codebase_architecture.rst against the later B6 changes to openhcs/core/pipeline/compilation_session.py, openhcs/core/runtime_stores.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -4060,7 +4110,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "0f9cc4819b53d55b7e9446429b8c8ac1ff1a59f4902020ea1658495ce01d464c",
+        "sha256": "4946c221e34ec19957b5af2b1a54359d454ee840fb1f5e1fe2b3b306ac8e5426",
         "role": "Declares ResolvedPipelineDefinition and CompilationSession, the resolved declaration view and per-context compiler boundary named in the assembly order."
       },
       {
@@ -4070,22 +4120,22 @@
       },
       {
         "path": "openhcs/core/runtime_stores.py",
-        "sha256": "74b591773b7f653c957b2db33a1262925e5c02b71074695b6fc18d6120ed5934",
+        "sha256": "35fe71906bfd16842de347776a0c5cc846550ad490cc3628885129d746ec6f31",
         "role": "RuntimeValueStore recording, replacement, query, and observation semantics."
       },
       {
         "path": "openhcs/core/runtime_slice_projection.py",
-        "sha256": "8f45a17d6aabd4fae1df55e8d3cda2efdd8df2156357c69133f06ccf1cfb2d96",
+        "sha256": "f59785d901d0d7bcc3ac1fc1be606bd1728a727ea7347cdc1dd4f549cc3193fa",
         "role": "RuntimeSliceProjection boundary between owned projectable values and foreign values, with source-provenance checks on stacks."
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "a8e73c5df804d78baf72710e210cb2ae63156657a074071e11fd868f4b19d3b4",
+        "sha256": "6089f63e72e1a47fc5f6bc7b443028ac8ec40d934898589fa03b5592c2273ab3",
         "role": "Callable ABI and input/output/execution memory-type declaration authority."
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "358d3eaf5952170f9e9e2dc9056fb08707e8fcf74682063c074b367a83c2648f",
+        "sha256": "6525348d097bda8d0265bc7c3f312dd8839ca9f65dd05f797fc82ba873e04547",
         "role": "Typed per-step source-binding plan and framework-device decisions."
       },
       {
@@ -4097,6 +4147,7 @@
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/runtime_system_assembly_rules.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compilation_session.py, openhcs/core/runtime_stores.py, openhcs/core/callable_contract.py, openhcs/core/compiled_step_plan.py (K2 artifact package imports; UnresolvedStepInput default) and openhcs/core/runtime_slice_projection.py (new stored_slices/match_alignment/contextualized_output delegating to the value); every owner in the owner map still exists with the stated responsibility, and the RuntimeSliceProjection entry stays true because the new methods delegate to RuntimeSliceProjectableValue, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/development/runtime_system_assembly_rules.rst in full and compared it against the changed authorities: openhcs/core/pipeline/compilation_session.py (per-invocation validation moved onto ArtifactGraph), openhcs/core/runtime_stores.py (hand-written address/location to_dict/from_dict deleted), openhcs/core/callable_contract.py (K5: CallableContract now inherits CallableDeclaration and its declared fields directly; memory roles, artifact inputs/outputs and execution scope remain on the contract) and openhcs/core/compiled_step_plan.py (CompiledSourceBindingPlan() default). Rechecked CellProfilerModuleArtifactContracts, CompiledExecutionBundle's runtime/transport contexts, worker assignments and runtime environment, SourceBindingsConfig, ArtifactSpecRef and ArtifactKey; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/runtime_system_assembly_rules.rst against B6's later changes to openhcs/core/pipeline/compilation_session.py, openhcs/core/runtime_stores.py, openhcs/core/callable_contract.py, openhcs/core/compiled_step_plan.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/runtime_system_assembly_rules.rst against the later B6 changes to openhcs/core/pipeline/compilation_session.py, openhcs/core/runtime_stores.py, openhcs/core/callable_contract.py, openhcs/core/compiled_step_plan.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -4121,33 +4172,34 @@
     "authority": [
       {
         "path": "openhcs/core/runtime_artifact_values.py",
-        "sha256": "930752071d37ef1a8669812e7a629e151690b3f33bf4a29dba92d1d479b9074d",
+        "sha256": "ce42e38f893459b9cb0ed6d779fabd5818204301ab1acc13ab0a7df32e6e3a2d",
         "role": "RuntimeValue and ArtifactKey construction from compiled output plans."
       },
       {
         "path": "openhcs/core/runtime_plane_projection.py",
-        "sha256": "3c88ed042a7f1c65c9495a1c62777e008f1e59c4742ec0563b2849d77ca87cdd",
+        "sha256": "cf644451b6649dcec398fecbf961a4a29ea74f0bb2e0bdab052ec1be8a427f95",
         "role": "Declares RuntimeSliceProjectableValue and its indexed, invariant and identity-stamped subclasses that payload authors join."
       },
       {
         "path": "openhcs/core/runtime_slice_projection.py",
-        "sha256": "8f45a17d6aabd4fae1df55e8d3cda2efdd8df2156357c69133f06ccf1cfb2d96",
+        "sha256": "f59785d901d0d7bcc3ac1fc1be606bd1728a727ea7347cdc1dd4f549cc3193fa",
         "role": "RuntimeSliceProjection foreign-value list and rejection of owned values without slice declarations."
       },
       {
         "path": "openhcs/core/runtime_stores.py",
-        "sha256": "74b591773b7f653c957b2db33a1262925e5c02b71074695b6fc18d6120ed5934",
+        "sha256": "35fe71906bfd16842de347776a0c5cc846550ad490cc3628885129d746ec6f31",
         "role": "RuntimeValueStore recording, replacement, query, and observation semantics."
       },
       {
         "path": "tests/unit/test_runtime_value_store.py",
-        "sha256": "d20ae0d5160c79ba7b7c3291a052a606b3ed7dee3c0cd84a6cf013e17a127a23",
+        "sha256": "17e15a64a4e84437f6523f872bad11ea7d813c50c1c41fc86ca7822379a7ce27",
         "role": "Regression proof for typed runtime recording, replacement, queries, and failure behaviour."
       }
     ],
     "findings": [],
     "disposition": "keep",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/runtime_value_extension.rst in full and compared it against the changed authorities: openhcs/core/runtime_artifact_values.py (payload_of), openhcs/core/runtime_plane_projection.py (stored_slices, match_alignment, contextualized_output and axis-size checks on the value classes), openhcs/core/runtime_slice_projection.py, openhcs/core/runtime_stores.py and tests/unit/test_runtime_value_store.py (K2 artifact package imports); RuntimeSliceProjectableValue, RuntimeSliceIndexedValue and RuntimeSliceInvariantValue still exist, the added behaviour sits on the payload classes as the page says, and RuntimeSliceProjection.require_foreign_value still rejects undeclared values, so nothing was changed.",
       "On 2026-10-11 (B6), re-read docs/source/development/runtime_value_extension.rst in full and compared it against the changed authorities: openhcs/core/runtime_stores.py and tests/unit/test_runtime_value_store.py (hand-written to_dict/from_dict on RuntimeArtifactLocation and RuntimeArtifactAddress deleted; round trips now use python_introspect to_jsonable and dataclass_from_mapping; CompiledSourceBindingPlan() replaces .empty()). The page names none of those methods and its 'add transport only where needed' guidance still holds; rechecked RuntimeSliceProjectableValue and its indexed/invariant subclasses, RuntimeSliceProjection and RuntimeValueStore; no claim changes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/runtime_value_extension.rst against B6's later changes to openhcs/core/runtime_stores.py, tests/unit/test_runtime_value_store.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/runtime_value_extension.rst against the later B6 changes to openhcs/core/runtime_stores.py, tests/unit/test_runtime_value_store.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",
@@ -4159,7 +4211,7 @@
   },
   {
     "path": "docs/source/development/source_binding_extension.rst",
-    "source_sha256": "1f33644ddd081d2659cd5417f2607189a049bab6e07d26e198e65f452de52659",
+    "source_sha256": "9f62eb7718bf83ef1bb7ef5207e4ccbf60667b35ea30934442b5a1b443a39f12",
     "audience": [
       "OpenHCS source-ingestion and compiler extension authors"
     ],
@@ -4168,32 +4220,32 @@
     "authority": [
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "2defaf02ac0e214bb63f74d6eb56f294fbb5db4e06ecd9cc4479b16848f09854",
-        "role": "Declares SourceFilterClause, MetadataExtractionRule, NamedSourceBinding, ImagePlaneSource, the SourceSetPairing family (PairByOrder, PairByMetadata) and the compiled source universe and binding plans."
+        "sha256": "890473715373d1adc6b12fec2b57eab6f179cbca7d837920c0388d620ce8b8c2",
+        "role": "Declares SourceFilterClause, MetadataExtractionRule, NamedSourceBinding, ImagePlaneSource, the SourceFilterMatchType predicate family, the SourceSetPairing family (PairByOrder, PairByMetadata) and the compiled source universe and binding plans."
       },
       {
         "path": "openhcs/core/config.py",
-        "sha256": "6ee23916956716df52cb24893ecdd69747b7db2869f6622b534d8ae43e7bf5d7",
+        "sha256": "9625ca054fac6c1e460216cfe0e85621f5306592a004d1bdc28a6b1ce2099366",
         "role": "Declares SourceBindingsConfig and StepSourceBindingsConfig as global_pipeline_config sections, where the step config compiles its own binding plan."
       },
       {
         "path": "openhcs/core/source_binding_selection.py",
-        "sha256": "9610bc6112c068cf6c4b0ff7a1265ee4086291042e2dc422d8a90cce3c560eb7",
-        "role": "SourceUniverseRequest family that selects source universes."
+        "sha256": "e837296accf4dd3353956a8e5f267d3fdd4581fb01db1227bc592a2ed6b4d0d3",
+        "role": "SourceUniverseRequest family, keyed by SourceBindingOrigin class, that selects source universes."
       },
       {
         "path": "openhcs/core/source_matching.py",
-        "sha256": "f32db4e25a0b6b7c1a334ee27c7206044e1ba645717ee12f6acd69d28d9b30a8",
-        "role": "SourceFilterMatcher and SourceFilterTargetResolver matching families."
+        "sha256": "cea83c632056420b4e2affac25f9da37c3a4ee41878e2a1fb18b6747d8573dcf",
+        "role": "Applies filter clauses and metadata extraction rules to candidate paths and derives image-set identity from source declarations."
       },
       {
         "path": "openhcs/core/source_workspace_projection.py",
-        "sha256": "2d2b6bf5a331cb61411b293b333980a9951f9ec1cd8537874d6529949180f3ec",
+        "sha256": "1f8785fec7919f52b69578bbd6f6b5f94be8b2f9e97d11d00f639f3f70bcfe23",
         "role": "VirtualWorkspaceSourceProjection mapping virtual paths to SourcePixelRef and source metadata."
       },
       {
         "path": "openhcs/core/source_binding_workspace.py",
-        "sha256": "5e7ac439d7ef6cd35a5660d2ad9db24f1890801d8bdf1d82c13b12f8baaa9eb0",
+        "sha256": "e242d9b932d52c1099756881870f926a273f5ec08663938347580cb4a70e8283",
         "role": "Compiled virtual source workspace and the source-set assemblers keyed by SourceSetPairing class."
       },
       {
@@ -4203,11 +4255,11 @@
       }
     ],
     "findings": [
-      "K4 replaced the SourceBindingMatchMethod enum and SourceBindingMatchPlan with the SourceSetPairing class family (PairByOrder default, PairByMetadata); the strategy-selection paragraph named only SourceUniverseRequest and SourceFilterMatcher, so it now also names SourceSetPairing as the family that decides source-set pairing.",
-      "The record's source_bindings.py role said it declares SourceBindingsConfig and StepSourceBindingsConfig; K4 moved both to openhcs/core/config.py, which is now a separate authority."
+      "E1 deleted the SourceFilterMatcher strategy family from openhcs/core/source_matching.py; filter predicates are now the SourceFilterMatchType class family in openhcs/core/source_bindings.py. The strategy-selection paragraph still named SourceFilterMatcher as a family to extend, so it now names SourceFilterMatchType."
     ],
     "disposition": "revise",
     "validation": [
+      "On 2026-10-11 (B6), re-read docs/source/development/source_binding_extension.rst in full and compared it against the changed authorities: openhcs/core/source_bindings.py, openhcs/core/source_matching.py, openhcs/core/source_binding_selection.py, openhcs/core/source_binding_workspace.py, openhcs/core/source_workspace_projection.py and openhcs/core/config.py (E1: the source-binding kinds became class families); replaced the deleted SourceFilterMatcher with SourceFilterMatchType in the strategy-selection paragraph and re-wrapped it; confirmed SourceUniverseRequest (now keyed by SourceBindingOrigin class), SourceSetPairing, the compiled plan classes and VirtualWorkspaceSourceProjection still exist at their owners.",
       "On 2026-10-11 (B6), re-read docs/source/development/source_binding_extension.rst in full and compared it against the changed authorities: openhcs/core/source_bindings.py, source_binding_selection.py, source_matching.py, source_workspace_projection.py and source_binding_workspace.py (K4: config classes moved to core/config.py, SourceSetPairing family replaces the match-method enum, CompiledSourceBindingPlan()/CompiledSourceUniversePlan() replace .empty(), one lexical path identity). Confirmed every class the page names exists at its current owner, added SourceSetPairing to the strategy families, and added core/config.py as the config-class authority.",
       "On 2026-10-11 (B6 final), compared docs/source/development/source_binding_extension.rst against B6's later changes to openhcs/core/source_binding_selection.py, openhcs/core/source_workspace_projection.py, openhcs/core/source_binding_workspace.py: black formatting (AST-equal) and the ratchet refactor (method groups moved into inherited mixins, unused main-window theme methods deleted, catalog policy moved to module functions); none changes a claim this page makes.",
       "On 2026-10-11 (B6 final), compared docs/source/development/source_binding_extension.rst against the later B6 changes to openhcs/core/source_bindings.py, openhcs/core/source_binding_selection.py, openhcs/core/source_workspace_projection.py, openhcs/core/source_binding_workspace.py: Python changes that are not formatting-only (AST-unequal) were read (dependency floors, mahotas moved to core, startup-owner record through the held lock, OMERO is_dir, catalog exclusion by declared distribution, source-path filter matching, GUI catalog readiness, MCP application release); none changes a claim this page makes.",

@@ -95,7 +95,7 @@ normal execution projection beside them.
 
 The runtime projection is not the session-state machine. Given the selected
 target, active session, manager execution state, terminal summary, pause state,
-and snapshots, ``DebugSessionPhaseDeclarationBase`` selects the current debugger
+and snapshots, ``DebugSessionPhase.for_context`` selects the current debugger
 phase. Toolbar, inspector, UI-bridge, agent, and MCP-facing adapters consume that
 typed session context and projection instead of re-deriving phase semantics.
 

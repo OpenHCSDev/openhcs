@@ -60,7 +60,9 @@ python-introspect
   Owns callable/signature analysis, wrapped-target resolution, parameter
   metadata, field labels, callable-declaration projection, analyzer extensions, the
   ``to_jsonable`` encoder paired with the ``dataclass_from_mapping`` decoder,
-  and declared public-API and lazy-export helpers. OpenHCS
+  the registry-key spelling and field choices of registered class families
+  (``RegisteredClassChoices``), and declared public-API and lazy-export
+  helpers. OpenHCS
   owns domain exclusions, callable contracts, and step-editor consumption. See
   the `python-introspect repository
   <https://github.com/OpenHCSDev/python-introspect>`_.

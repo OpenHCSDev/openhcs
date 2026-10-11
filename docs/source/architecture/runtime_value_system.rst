@@ -89,11 +89,14 @@ Function-output contextualization
 
 A callable return does not inherit context from whichever runtime value happens
 to be nearby. The exact compiled output artifact type first selects behaviour
-through its ``ArtifactType.contextualize_output`` method. For an image output,
-``ImageArtifactType`` then calls ``contextualize_image_output`` on the source
-value chosen by the output's compiled ``source_context_source`` relation, so the
-source's nominal type decides. This is a two-stage owner dispatch, not a table
-of callable names or payload shapes.
+through its ``ArtifactType.contextualize_output`` method, which asks the
+returned value's ``contextualized_output`` which of the type's hooks applies:
+a plain value, an image payload, a source-projected image, or one value per
+runtime slice. For an image payload, ``ImageArtifactType`` then calls
+``contextualize_image_output`` on the source value chosen by the output's
+compiled ``source_context_source`` relation, so the source's nominal type
+decides. This is owner dispatch on the artifact type, the returned value, and
+the source, not a table of callable names or payload shapes.
 
 An image result that already carries context may bypass derivation only when its
 source identity is complete and, for a declared artifact output, its represented

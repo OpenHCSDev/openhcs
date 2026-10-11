@@ -79,7 +79,7 @@ exports into exact callable artifact contracts. These are executable conversion
 rules, not prose conventions.
 
 That does not make the importer a universal native-pipeline intent oracle. The
-``InputSource`` enum has only previous-step and pipeline-start main flow; an
+``InputSource`` family has only previous-step and pipeline-start main flow; an
 additional named image is represented by an artifact input plus source binding
 or prior producer. A ``.cppipe`` also does not choose arbitrary OpenHCS viewer
 streaming, native checkpoint, VFS, or user review policy that it never declared.

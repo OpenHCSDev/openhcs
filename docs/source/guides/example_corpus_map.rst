@@ -62,8 +62,8 @@ Native OpenHCS Examples
 -----------------------
 
 The checked-in MFD preset authority is
-``openhcs/processing/presets/mfd_specs.py``. It owns the typed preset keys,
-variant declarations, shared step templates, materializers, and
+``openhcs/processing/presets/mfd_specs.py``. It owns the preset
+definitions, shared step templates, materializers, and
 ``build_mfd_preset``. These four small modules are current materialization
 wrappers over that authority:
 

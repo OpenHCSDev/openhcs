@@ -222,7 +222,7 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
 
 .. code-block:: python
 
-   from openhcs.constants.input_source import InputSource
+   from openhcs.constants.input_source import ReadPipelineStart
    from openhcs.core.config import (
        LazyProcessingConfig,
        LazySourceBindingsConfig,
@@ -231,13 +231,15 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
    )
    from openhcs.core.source_bindings import (
        ComponentSelector,
+       FromFileName,
        MetadataExtractionRule,
-       MetadataSource,
        NamedSourceBinding,
+       PathIsImage,
+       SourceExtension,
+       SourceFileName,
        SourceFilterClause,
-       SourceFilterMatchType,
-       SourceFilterSubject,
        SourceSelector,
+       TextContains,
    )
    from openhcs.core.steps.function_step import FunctionStep
    from openhcs.domains.microscopy.axes import Microscopy
@@ -251,8 +253,8 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
            selector=SourceSelector(
                filters=(
                    SourceFilterClause(
-                       subject=SourceFilterSubject.FILE,
-                       match_type=SourceFilterMatchType.CONTAINS,
+                       subject=SourceFileName,
+                       match_type=TextContains,
                        value=token,
                    ),
                ),
@@ -266,13 +268,13 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
        source_bindings_config=LazySourceBindingsConfig(
            source_filters=(
                SourceFilterClause(
-                   subject=SourceFilterSubject.EXTENSION,
-                   match_type=SourceFilterMatchType.IS_IMAGE,
+                   subject=SourceExtension,
+                   match_type=PathIsImage,
                ),
            ),
            metadata_rules=(
                MetadataExtractionRule(
-                   source=MetadataSource.FILE_NAME,
+                   source=FromFileName,
                    pattern=(
                        r"^(?P<Well>[A-H][0-9]{2})_"
                        r"s(?P<Site>[0-9]+)_(?P<Stain>[^.]+)"
@@ -291,7 +293,7 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
            name="Normalize DNA",
            func=stack_percentile_normalize,
            processing_config=LazyProcessingConfig(
-               input_source=InputSource.PIPELINE_START,
+               input_source=ReadPipelineStart,
            ),
            source_bindings=LazyStepSourceBindingsConfig(
                enabled=True,

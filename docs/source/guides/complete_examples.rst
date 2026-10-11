@@ -58,8 +58,8 @@ desktop application, which uses the same declarations and compiler.
 Typed native presets
 --------------------
 
-The current native MFD variants are declared once by ``MfdPresetKey`` and
-materialized by ``build_mfd_preset`` in
+The current native MFD variants are declared once as ``MfdPresetDefinition``
+values and materialized by ``build_mfd_preset`` in
 ``openhcs.processing.presets.mfd_specs``. The four corresponding
 ``10x_mfd_*.py`` modules are thin wrappers over that owner. Consult
 :doc:`example_corpus_map` for their source index. Crop presets resolve
