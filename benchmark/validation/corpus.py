@@ -47,8 +47,8 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
+    PairByOrder,
     SourceBindingOrigin,
     SourceFilterClause,
     SourceFilterMatchType,
@@ -543,10 +543,9 @@ def source_bindings_for_validation(
         )
         for channel in validation.channels
     )
-    match_plan = None
+    match_plan = PairByOrder()
     if len(bindings) > 1:
-        match_plan = SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
+        match_plan = PairByMetadata(
             dimensions=tuple(
                 SourceBindingMatchDimension(
                     fields=tuple(

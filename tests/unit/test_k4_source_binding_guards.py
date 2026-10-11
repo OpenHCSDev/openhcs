@@ -96,13 +96,44 @@ def test_step_source_bindings_has_one_class_whatever_the_import_order():
     assert result.returncode == 0, result.stderr
 
 
-def test_pairing_is_a_family_and_never_absent():
+DELETED_NAMES = (
+    "SourceBindingMatchMethod",
+    "SourceBindingMatchPlan",
+    "SourceBindingMatchFields",
+    "CellProfilerSourceMatchMethod",
+    "SourceBindingPlanMeta",
+    "DefaultSourceBoundAnchorPatternPolicy",
+    "registered_plan_types",
+    "concrete_registered_plan_type",
+    "path_metadata_values_equivalent",
+    "_normalized_source_path",
+    "source_binding_configs",
+)
+LIVE_TREES = ("openhcs", "tests", "scripts", "examples", "benchmark")
+
+
+def _live_python_files():
+    for tree in LIVE_TREES:
+        for path in (ROOT / tree).rglob("*.py"):
+            relative = path.relative_to(ROOT).as_posix()
+            if relative.startswith("benchmark/results/") or path == Path(__file__):
+                continue
+            yield path
+
+
+def test_deleted_source_binding_names_stay_deleted():
+    """No live module names a deleted K4 name, the old constructors, or a None pairing."""
+
     pattern = re.compile(
-        r"SourceBindingMatchMethod|SourceBindingMatchPlan|match_plan is (not )?None"
+        r"\b(" + "|".join(DELETED_NAMES) + r")\b"
+        r"|Compiled(SourceBindingPlan|SourceUniversePlan)\.(empty|from_config|from_contracts)\b"
+        r"|match_plan is (not )?None"
+        r"|from openhcs\.core\.source_bindings import (?:\([^)]*|[^\n(]*)"
+        r"\b(Lazy)?(Step)?SourceBindingsConfig\b"
     )
     offenders = [
-        str(path.relative_to(ROOT))
-        for path in OPENHCS.rglob("*.py")
+        path.relative_to(ROOT).as_posix()
+        for path in _live_python_files()
         if pattern.search(path.read_text(encoding="utf-8"))
     ]
     assert offenders == []

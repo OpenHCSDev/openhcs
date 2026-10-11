@@ -727,7 +727,6 @@ def test_names_and_types_contributes_typed_bindings_and_metadata_match_plan() ->
     assert illumination.origin is SourceBindingOrigin.PIPELINE_START
     assert illumination.source_set_role is SourceSetRole.MATCHED
     assert illumination.projection_role is SourceProjectionRole.SOURCE_ARTIFACT
-    assert config.match_plan is not None
     assert isinstance(config.match_plan, PairByMetadata)
     assert config.match_plan.dimensions[0].field_for_alias("DAPI") == "folder"
     assert (
