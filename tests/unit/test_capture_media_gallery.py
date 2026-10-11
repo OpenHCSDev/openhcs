@@ -417,13 +417,34 @@ def test_viewer_still_ingests_real_native_qt_snapshot_without_rerendering(
     monkeypatch: pytest.MonkeyPatch,
     viewer_type: ViewerType,
 ) -> None:
+    from PyQt6.QtCore import pyqtSignal
     from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
     from pyqt_reactive.services.window_snapshot import (
         QtWindowSnapshotRequest,
         QtWindowSnapshotService,
+        WindowSnapshotRenderOwner,
     )
 
-    widget = QWidget()
+    class NativeWindow(QWidget):
+        frame_completed = pyqtSignal()
+
+        def paintEvent(self, event):
+            super().paintEvent(event)
+            self.frame_completed.emit()
+
+    class NativePaintOwner(WindowSnapshotRenderOwner):
+        @property
+        def widget(self):
+            return widget
+
+        @property
+        def frame_completed(self):
+            return widget.frame_completed
+
+        def request_frame(self):
+            widget.update()
+
+    widget = NativeWindow()
     widget.setWindowTitle("Native viewer source fixture")
     QVBoxLayout(widget).addWidget(QLabel("Real native result-window pixels"))
     widget.resize(420, 120)
@@ -437,14 +458,21 @@ def test_viewer_still_ingests_real_native_qt_snapshot_without_rerendering(
     class NativeSnapshotService:
         def snapshot_window(self, request):
             observed.append(request)
-            snapshot = QtWindowSnapshotService().capture(
+            # The request observes a completed native frame before capture.
+            outcomes = []
+            QtWindowSnapshotService().request_capture(
                 QtWindowSnapshotRequest(
                     widget=widget,
                     capture=request,
                     subject_id="native-gallery-fixture",
                     title=widget.windowTitle(),
-                )
+                    render_owner=NativePaintOwner(),
+                ),
+                outcomes.append,
+                outcomes.append,
             )
+            qtbot.waitUntil(lambda: bool(outcomes), timeout=request.timeout_ms)
+            (snapshot,) = outcomes
             native.append(snapshot)
             return ViewerWindowSnapshotResult(
                 schema_version=SCHEMA_VERSION,

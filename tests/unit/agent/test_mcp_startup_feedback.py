@@ -5,6 +5,14 @@ import threading
 from types import SimpleNamespace
 
 import pytest
+from zmqruntime.client import AttachedEndpointConnection
+from zmqruntime.messages import (
+    ControlMessageType,
+    MessageFields,
+    PongResponse,
+    ProcessIdentity,
+    ServerRole,
+)
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
 from openhcs.agent.capabilities import (
@@ -26,6 +34,7 @@ from openhcs.agent.services.endpoint_function_catalog_service import (
 )
 from openhcs.mcp.server import _await_with_declared_progress, build_server
 from openhcs.mcp.dev_client_core import DEFAULT_CALL_TIMEOUT_SECONDS
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 
@@ -154,11 +163,10 @@ def test_registered_catalog_tool_routes_original_pending_control_statuses_withou
     )
 
     class SyntheticControlClient(ZMQExecutionClient):
-        def is_connected(self):
-            return True
-
         def _send_control_request(self, request, **kwargs):
             workers.append(threading.get_ident())
+            if request[MessageFields.TYPE] == ControlMessageType.PING.value:
+                return self.connected_endpoint.to_dict()
             requests.append(request)
             return (
                 FunctionCatalogControlResponse(page).to_control_response()
@@ -170,6 +178,18 @@ def test_registered_catalog_tool_routes_original_pending_control_statuses_withou
             raise AssertionError("Source journey must never launch native")
 
     client = SyntheticControlClient(port=5555, connection_status_callback=ui.append)
+    # The original handshake is the catalog's incarnation authority.
+    client._connection = AttachedEndpointConnection(
+        PongResponse(
+            port=client.port,
+            control_port=client.control_port,
+            ready=True,
+            server="synthetic catalog",
+            server_role=ServerRole.EXECUTION,
+            application=OPENHCS_ENDPOINT_APPLICATION,
+            process_identity=ProcessIdentity.current(),
+        )
+    )
     service = ZMQFunctionCatalogService(
         lambda: OpenHCSZMQConfig(default_port=5555),
         client_factory=lambda config: client,

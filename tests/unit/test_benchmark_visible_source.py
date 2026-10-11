@@ -8,7 +8,6 @@ from openhcs.constants.constants import Backend
 
 def test_visible_source_alias_is_writable_polystore_workspace(
     tmp_path: Path,
-    monkeypatch,
 ) -> None:
     from polystore.base import ensure_storage_registry, storage_registry
 
@@ -16,11 +15,9 @@ def test_visible_source_alias_is_writable_polystore_workspace(
     ensure_storage_registry()
     filemanager = FileManager(storage_registry)
     hidden_source = tmp_path / ".cache" / "images"
-    visible_root = tmp_path / "visible_sources"
     filemanager.ensure_directory(hidden_source, backend)
     filemanager.save("payload", hidden_source / "image.txt", backend)
     filemanager.save({"source": True}, hidden_source / "openhcs_metadata.json", backend)
-    monkeypatch.setenv("OPENHCS_BENCHMARK_VISIBLE_SOURCE_ROOT", str(visible_root))
 
     alias = resolve_visible_source_path(hidden_source)
 
@@ -43,7 +40,6 @@ def test_visible_source_alias_is_writable_polystore_workspace(
 
 def test_visible_source_alias_preserves_pipeline_parent_siblings(
     tmp_path: Path,
-    monkeypatch,
 ) -> None:
     from polystore.base import ensure_storage_registry, storage_registry
 
@@ -52,7 +48,6 @@ def test_visible_source_alias_preserves_pipeline_parent_siblings(
     filemanager = FileManager(storage_registry)
     pipeline_root = tmp_path / ".cache" / "AdvancedSegmentation"
     image_root = pipeline_root / "BBBC022_20585_AE"
-    visible_root = tmp_path / "visible_sources"
     filemanager.ensure_directory(image_root, backend)
     (pipeline_root / "BBBC022_Analysis_Final.cppipe").write_text(
         "pipeline",
@@ -60,7 +55,6 @@ def test_visible_source_alias_preserves_pipeline_parent_siblings(
     )
     (pipeline_root / "20585_AE.csv").write_text("metadata", encoding="utf-8")
     (image_root / "IXMtest_A01_s1_w1.tif").write_text("image", encoding="utf-8")
-    monkeypatch.setenv("OPENHCS_BENCHMARK_VISIBLE_SOURCE_ROOT", str(visible_root))
 
     alias = resolve_visible_source_path(image_root)
 
@@ -76,7 +70,6 @@ def test_visible_source_alias_preserves_pipeline_parent_siblings(
 
 def test_visible_source_alias_rebuilds_nested_openhcs_metadata(
     tmp_path: Path,
-    monkeypatch,
 ) -> None:
     from polystore.base import ensure_storage_registry, storage_registry
 
@@ -85,11 +78,9 @@ def test_visible_source_alias_rebuilds_nested_openhcs_metadata(
     filemanager = FileManager(storage_registry)
     pipeline_root = tmp_path / ".cache" / "Example"
     image_root = pipeline_root / "images"
-    visible_root = tmp_path / "visible_sources"
     filemanager.ensure_directory(image_root, backend)
     (pipeline_root / "pipeline.cppipe").write_text("pipeline", encoding="utf-8")
     (image_root / "image.tif").write_text("image", encoding="utf-8")
-    monkeypatch.setenv("OPENHCS_BENCHMARK_VISIBLE_SOURCE_ROOT", str(visible_root))
 
     alias = resolve_visible_source_path(image_root)
     metadata_path = alias / "openhcs_metadata.json"
@@ -102,7 +93,6 @@ def test_visible_source_alias_rebuilds_nested_openhcs_metadata(
 
 def test_visible_source_alias_rebuilds_stale_file_mirror(
     tmp_path: Path,
-    monkeypatch,
 ) -> None:
     from polystore.base import ensure_storage_registry, storage_registry
 
@@ -111,14 +101,12 @@ def test_visible_source_alias_rebuilds_stale_file_mirror(
     filemanager = FileManager(storage_registry)
     pipeline_root = tmp_path / ".cache" / "PixelBasedClassification"
     image_root = pipeline_root / "images"
-    visible_root = tmp_path / "visible_sources"
     filemanager.ensure_directory(image_root, backend)
     (pipeline_root / "pixel_based_classification_cho.cppipe").write_text(
         "pipeline",
         encoding="utf-8",
     )
     (image_root / "cho01.png").write_text("phase", encoding="utf-8")
-    monkeypatch.setenv("OPENHCS_BENCHMARK_VISIBLE_SOURCE_ROOT", str(visible_root))
 
     alias = resolve_visible_source_path(image_root)
     (image_root / "cho01_Probabilities.tiff").write_text(

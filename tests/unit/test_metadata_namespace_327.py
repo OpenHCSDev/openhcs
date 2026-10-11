@@ -3,6 +3,7 @@
 import ast
 import json
 import pickle
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -68,6 +69,17 @@ def test_application_namespace_persist_reopen_and_native_handoff(
         capture_output=True,
         timeout=30,
         check=False,
+        # The worker imports the dependency first, so it must find the same
+        # PolyStore source this process uses, not one an installed .pth names.
+        env={
+            **os.environ,
+            "PYTHONPATH": os.pathsep.join(
+                (
+                    str(Path(polystore.__file__).resolve().parents[1]),
+                    os.environ.get("PYTHONPATH", ""),
+                )
+            ),
+        },
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert "exact application namespace" in result.stdout

@@ -35,9 +35,7 @@ from openhcs.core.input_workspace import (
     InputWorkspacePreparationResult,
 )
 from openhcs.core.source_matching import source_component_metadata_values
-from openhcs.core.steps.function_output_manifest import (
-    FunctionStepOutputProducerIdentityRequest,
-)
+from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
@@ -80,7 +78,7 @@ class Official30PresentationDeclaration:
         output_kind = _required_text(payload, "output_kind")
         if output_kind not in (
             AlignedImageSliceContext.MAIN_FLOW_OUTPUT_KIND,
-            FunctionStepOutputProducerIdentityRequest.ARTIFACT_OUTPUT_KIND,
+            CompiledStepPlan.ARTIFACT_OUTPUT_KIND,
         ):
             raise ValueError(
                 f"Official30 visual target has unsupported output kind {output_kind!r}."

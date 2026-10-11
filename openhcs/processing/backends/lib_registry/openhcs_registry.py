@@ -192,9 +192,19 @@ class OpenHCSFunctionCatalogDeclaration(ABC):
             )
         return module_name
 
+    @classmethod
+    def prepare_declared_callable(cls, implementation: Callable[..., Any]) -> None:
+        """Complete one owned callable before any reader projects it.
 
-def _registry_catalog_module_for_callable(func: Callable[..., Any]) -> str:
-    """Return the local nominal owner's catalog module or the defining module."""
+        Fresh catalog scans and cached-catalog reconstruction both pass through
+        this hook, so what a reader sees never depends on which path ran.
+        """
+
+
+def _catalog_declaration_for_callable(
+    func: Callable[..., Any],
+) -> type[OpenHCSFunctionCatalogDeclaration] | None:
+    """Return the local nominal declaration that owns one callable, if any."""
 
     declared = inspect.unwrap(func)
     implementation_module = importlib.import_module(declared.__module__)
@@ -208,14 +218,44 @@ def _registry_catalog_module_for_callable(func: Callable[..., Any]) -> str:
         and declared.__name__ in candidate.declared_function_names()
     )
     if not owners:
-        return declared.__module__
+        return None
     if len(owners) > 1:
         raise ValueError(
             f"OpenHCS callable {declared.__module__}.{declared.__name__} is claimed "
             "by multiple catalog declarations: "
             f"{tuple(owner.__name__ for owner in owners)!r}."
         )
-    return owners[0].require_registry_catalog_module()
+    return owners[0]
+
+
+def _registry_catalog_module_for_callable(func: Callable[..., Any]) -> str:
+    """Return the local nominal owner's catalog module or the defining module."""
+
+    owner = _catalog_declaration_for_callable(func)
+    if owner is None:
+        return inspect.unwrap(func).__module__
+    return owner.require_registry_catalog_module()
+
+
+def _registered_wrapper(
+    registry: "OpenHCSRegistry",
+    func: Callable[..., Any],
+    wrap: Callable[[], Callable[..., Any]],
+) -> Callable[..., Any]:
+    """Prepare and wrap one declaration once per process, then reuse it.
+
+    Fresh catalog scans and cached reconstruction both register here, so the
+    owning declaration completes its callable before any reader projects it.
+    """
+    declared = inspect.unwrap(func)
+    with registry._registered_callable_lock:
+        wrapped = registry._registered_callables.get(declared)
+        if wrapped is None:
+            owner = _catalog_declaration_for_callable(func)
+            if owner is not None:
+                owner.prepare_declared_callable(func)
+            wrapped = registry._registered_callables[declared] = wrap()
+        return wrapped
 
 
 _MEMORY_DECORATOR_IMPORT_MODULES = frozenset(
@@ -700,14 +740,10 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
             # Attach nominal contract metadata for downstream authorities.
             vars(func)[FunctionContractAttribute.processing_contract] = contract
 
-        # Apply the shared nominal registration wrapper once per declaration.
-        # Catalog discovery may later request different metadata naming for the
-        # same callable, but its runtime identity remains stable.
-        with self._registered_callable_lock:
-            wrapped_func = self._registered_callables.get(declared)
-            if wrapped_func is None:
-                wrapped_func = self.apply_contract_wrapper(func, contract)
-                self._registered_callables[declared] = wrapped_func
+        # One wrapper per declaration; later metadata naming keeps its identity.
+        wrapped_func = _registered_wrapper(
+            self, func, lambda: self.apply_contract_wrapper(func, contract)
+        )
 
         # Generate unique function name using module information
         unique_name = self._generate_function_name(name, module_name)
@@ -789,14 +825,11 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
     ) -> Callable:
         """Reconstruct cached metadata through the declaration's one wrapper."""
 
-        declared = inspect.unwrap(func)
-        with self._registered_callable_lock:
-            wrapped_func = self._registered_callables.get(declared)
-            if wrapped_func is not None:
-                return wrapped_func
-            wrapped_func = super().reconstruct_cached_callable(func, contract)
-            self._registered_callables[declared] = wrapped_func
-            return wrapped_func
+        return _registered_wrapper(
+            self, func, lambda: super(OpenHCSRegistry, self).reconstruct_cached_callable(
+                func, contract
+            )
+        )
 
     def _processing_contract_for_function(
         self,

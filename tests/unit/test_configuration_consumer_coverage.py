@@ -10,7 +10,7 @@ from functools import cache
 from pathlib import Path
 from typing import get_args, get_type_hints
 
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config import AxisRoleModeDisplayConfig, GlobalPipelineConfig
 from openhcs.pyqt_gui.config import ShortcutConfig, get_default_ui_config
 from openhcs.pyqt_gui.main import OpenHCSMainWindow
 from openhcs.pyqt_gui.services.main_window_workflows import (
@@ -627,6 +627,11 @@ class _TypedAttributeFlow:
                     and owner is not None
                 ):
                     receivers |= frozenset((owner,))
+                if isinstance(expression.func.value, ast.Name):
+                    # ``ClassName.factory(...)``: the class itself receives.
+                    receivers |= self._type_aliases_by_source[
+                        source_path.resolve()
+                    ].get(expression.func.value.id, frozenset())
                 return frozenset().union(
                     *(
                         self._method_return_type(
@@ -937,11 +942,26 @@ class _TypedAttributeFlow:
                     )
         return frozenset(consumed)
 
+    def _axis_role_mode_fields(self) -> frozenset[_ConsumedField]:
+        """Role-declared slot fields are read by name through the role query."""
+
+        reader = inspect.getsource(AxisRoleModeDisplayConfig.slot_for_axis)
+        assert "self.role_mode_fields()" in reader
+        assert "getattr(self, field_name)" in reader
+        return frozenset(
+            (_owner_identity(_declaring_owner(config_type, field_name)), field_name)
+            for config_type in self._config_types
+            if issubclass(config_type, AxisRoleModeDisplayConfig)
+            and is_dataclass(config_type)
+            for _role, field_name in config_type.role_mode_fields()
+        )
+
     def consumed_fields(
         self,
     ) -> frozenset[_ConsumedField]:
         self._collect_class_attribute_types()
         consumed = set(self._shortcut_projection_fields())
+        consumed |= self._axis_role_mode_fields()
         for unit, function, owner in self._function_scopes:
             environment = self._function_environment(
                 function,

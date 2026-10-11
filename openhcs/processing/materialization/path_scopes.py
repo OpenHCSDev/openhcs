@@ -12,10 +12,10 @@ if TYPE_CHECKING:
 
 
 class MaterializationRelativePathScope(ABC):
-    """Project a writer-declared relative path into its runtime scope."""
+    """Scope a writer-declared relative path to its runtime execution."""
 
     @abstractmethod
-    def project(
+    def scoped_path(
         self,
         relative_path: PurePosixPath,
         context: ProcessingContext | None,
@@ -27,7 +27,7 @@ class MaterializationRelativePathScope(ABC):
 class SharedMaterializationRelativePathScope(MaterializationRelativePathScope):
     """Keep a relative output path shared across execution axes."""
 
-    def project(
+    def scoped_path(
         self,
         relative_path: PurePosixPath,
         context: ProcessingContext | None,
@@ -40,7 +40,7 @@ class SharedMaterializationRelativePathScope(MaterializationRelativePathScope):
 class ExecutionAxisMaterializationRelativePathScope(MaterializationRelativePathScope):
     """Isolate relative outputs when one execution contains multiple axes."""
 
-    def project(
+    def scoped_path(
         self,
         relative_path: PurePosixPath,
         context: ProcessingContext | None,

@@ -26,6 +26,7 @@ from openhcs.core.axes import AxisFamily
 from openhcs.core.artifacts import ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
+from openhcs.core.dataset_sources.interfaces import MetadataHandler
 from openhcs.core.config import (
     FijiDimensionMode,
     FijiStreamingConfig,
@@ -139,9 +140,20 @@ class FakeViewer:
         return self.settlement_succeeds
 
 
-class FakeMetadataHandler:
-    def source_workspace_metadata_document(self, plate_path):
-        return None
+class FakeMetadataHandler(MetadataHandler):
+    """Inherits the handler defaults (workspace root, virtual metadata)."""
+
+    def component_value_set(self, plate_path):
+        raise AssertionError("Streaming reads component values, not the value set.")
+
+    def get_grid_dimensions(self, plate_path):
+        raise AssertionError("Streaming does not read grid dimensions.")
+
+    def get_image_files(self, plate_path, *args, **kwargs):
+        raise AssertionError("Streaming receives its filenames.")
+
+    def get_pixel_size(self, plate_path):
+        raise AssertionError("Streaming reads source voxel spacing.")
 
     def find_metadata_file(self, root: Path) -> Path:
         return root
@@ -312,7 +324,7 @@ def test_stream_images_uses_resolved_config_backend_not_viewer_name(
     assert viewer.settlement_calls == 1
     assert filemanager.saved_batches
     _data, _paths, backend, metadata = filemanager.saved_batches[0]
-    assert backend == config.backend.value
+    assert backend == config.viewer_family.backend.value
     stream_request = metadata[ViewerStreamKwarg.STREAM_REQUEST.value]
     assert stream_request.display_config is config
     assert stream_request.host == config.host
@@ -558,7 +570,8 @@ def test_stream_images_derives_rgb_channel_axis_before_viewer_dispatch(
     stream_request = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
     item_fields = dict(stream_request.source.item_fields)
     image_metadata = item_fields.pop("image_metadata")
-    assert image_metadata["source_channel_axis"] == -1
+    # The colour axis travels once, as an item field (G3), not in image metadata.
+    assert "source_channel_axis" not in image_metadata
     assert image_metadata["source_spatial_domain"]["origin_yx"] == [0, 0]
     assert item_fields == {
         "source_spatial_shape_yx": [8, 9],
@@ -625,7 +638,7 @@ def test_stream_images_projects_declared_channel_singleton_with_retained_plane_a
     item_fields = dict(stream_request.source.item_fields)
     image_metadata = item_fields.pop("image_metadata")
     assert image_metadata["plane_axis"] is None
-    assert image_metadata["source_channel_axis"] is None
+    assert "source_channel_axis" not in image_metadata
     assert item_fields == {
         "source_spatial_shape_yx": [8, 9],
         "spatial_origin_yx": [0, 0],

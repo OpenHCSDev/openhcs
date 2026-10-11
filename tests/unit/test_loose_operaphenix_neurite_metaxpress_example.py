@@ -14,6 +14,7 @@ from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.function_patterns import get_core_callable
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressCellBodySettings,
     MetaXpressNuclearSettings,
@@ -157,7 +158,11 @@ def test_compact_example_compiles_the_full_ordered_channel_stack(
 ) -> None:
     plate_path = tmp_path / "plate"
     plate_path.mkdir()
-    inputs = _inputs(plate_path, tmp_path / "output")
+    # The MetaXpress recipe is physical; copied TIFFs carry no calibration.
+    inputs = replace(
+        _inputs(plate_path, tmp_path / "output"),
+        source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65)),
+    )
     for source in inputs.channel_stack:
         tifffile.imwrite(
             plate_path / source.filename,

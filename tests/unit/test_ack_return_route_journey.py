@@ -10,6 +10,9 @@ from threading import Event
 import numpy as np
 import pytest
 
+# This file is also the producer script: activate the source-checkout
+# externals before importing polystore, as the application entry points do.
+import openhcs  # noqa: F401
 from polystore.napari_stream import NapariStreamingBackend
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import (
@@ -81,8 +84,8 @@ def receive(pipe):
 
 
 @pytest.mark.parametrize("mode", [TransportMode.TCP, TransportMode.IPC])
-def test_two_native_stream_producers_keep_deferred_ack_ownership(mode, tmp_path_factory):
-    directory = tmp_path_factory.mktemp("ack")
+def test_two_native_stream_producers_keep_deferred_ack_ownership(mode, unix_socket_dir):
+    directory = unix_socket_dir
     config = ZMQConfig(default_port=48000, ipc_socket_dir=str(directory))
     pair = DataControlPortPairAuthority.acquire(config, transport_mode=mode)
     server = NapariViewerServer(NapariViewerServerRequest(

@@ -6,8 +6,11 @@ import ast
 from collections.abc import Callable
 from pathlib import Path
 
+from metaclass_registry.caches import IdentityBoundProcessCache
+
 from openhcs.core.callable_contract import (
     CallableContract,
+    CallableContractRuntimeCache,
     CallableImportIdentity,
     CallableMetadata,
 )
@@ -216,7 +219,11 @@ def test_runtime_callable_resolution_has_no_scan_fallback_or_cache_mirror() -> N
         )
         for node in ast.walk(method)
     )
-    assert not any(
-        isinstance(node, ast.Name) and "cache" in node.id.lower()
+    # The one retention owner is the identity-bound process cache family
+    # (#419); no other cache or mirror may appear in resolution.
+    assert {
+        node.id
         for node in ast.walk(method)
-    )
+        if isinstance(node, ast.Name) and "cache" in node.id.lower()
+    } <= {"cache", "cached", "CallableContractRuntimeCache"}
+    assert issubclass(CallableContractRuntimeCache, IdentityBoundProcessCache)

@@ -16,6 +16,7 @@ from openhcs.agent.services import (
 from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseDocumentSpec,
     KnowledgeBaseService,
+    MAX_DOCUMENT_CHARS,
 )
 from openhcs.mcp.context import OpenHCSAgentContext
 from python_introspect import to_jsonable
@@ -304,7 +305,7 @@ def test_knowledge_base_retrieves_canonical_image_source_guide():
     document = service.get_document(
         KnowledgeBaseDocumentRequest.from_fields(
             document_id="openhcs_image_sources",
-            max_chars=20_000,
+            max_chars=MAX_DOCUMENT_CHARS,
         )
     )
 

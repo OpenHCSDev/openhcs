@@ -1,5 +1,6 @@
 """Integration tests for the first-party native Napari ROI Manager."""
 
+import importlib
 from pathlib import Path
 import tomllib
 
@@ -23,12 +24,16 @@ def test_existing_openhcs_manifest_owns_roi_manager_widget() -> None:
     }
     command = commands["openhcs.make_roi_manager_widget"]
     assert command["python_name"] == "openhcs.napari_roi_manager:QRoiManager"
-    assert manifest["contributions"]["widgets"] == [
-        {
-            "command": "openhcs.make_roi_manager_widget",
-            "display_name": "OpenHCS ROI Manager",
-        }
-    ]
+    widgets = manifest["contributions"]["widgets"]
+    assert {
+        "command": "openhcs.make_roi_manager_widget",
+        "display_name": "OpenHCS ROI Manager",
+    } in widgets
+    # Every contributed widget names a declared, importable command.
+    for widget in widgets:
+        python_name = commands[widget["command"]]["python_name"]
+        module_name, _, attribute = python_name.partition(":")
+        assert callable(getattr(importlib.import_module(module_name), attribute))
 
 
 @pytest.mark.unit

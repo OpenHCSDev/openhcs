@@ -446,9 +446,13 @@ def test_source_candidate_jobs_run_independently_from_publication_readiness():
         "desktop-installer-source-test",
     }
 
+    # Only the source-diff relevance gate (969270e26) may precede a candidate
+    # job, and it depends on nothing, so no publication readiness can gate one.
+    assert "needs" not in jobs["parity-scope"]
     for job_name in source_candidate_jobs:
         job = jobs[job_name]
-        assert "needs" not in job
+        needs = job.get("needs", ())
+        assert set((needs,) if isinstance(needs, str) else needs) <= {"parity-scope"}
         checkout = next(
             step for step in job["steps"] if _uses_action(step, "actions/checkout")
         )

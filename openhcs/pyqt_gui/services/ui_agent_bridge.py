@@ -26,8 +26,14 @@ from openhcs.agent.dto.common import (
     AgentResultEnvelope,
 )
 from python_introspect import project_dataclass, to_jsonable
-from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
-from openhcs.core.function_reference import FunctionReference
+from openhcs.agent.services.function_catalog_service import (
+    FunctionCatalogServiceABC,
+    UnknownFunctionIdError,
+)
+from openhcs.core.function_reference import (
+    FunctionReference,
+    RegistryFunctionReference,
+)
 from openhcs.agent.dto.ui_bridge import (
     UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
     UiActionCatalog,
@@ -263,6 +269,8 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
         self._allowed_builtin_references = allowed_builtin_references
         self._function_catalog = function_catalog
         self.catalog_bindings: dict[tuple[str, str], FunctionReference] = {}
+        self.catalog_key_bindings: dict[str, FunctionReference] = {}
+        self.registry_lookup_names: set[str] = set()
         self._function_names: set[str] = set()
         self._imported_names: set[str] = set()
         self._path_constructor_names: set[str] = set()
@@ -300,6 +308,9 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
             if alias.name == "*":
                 self._error("unsafe_import", "Wildcard imports are not allowed.")
                 continue
+            lookup = RegistryFunctionReference.registry_lookup
+            if (module_name, alias.name) == (lookup.module_name, lookup.function_name):
+                self.registry_lookup_names.add(alias.asname or alias.name)
             if (
                 root_name not in self._allowed_import_roots
                 and not self._is_declared_external_value_import(
@@ -353,6 +364,12 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
         self._error("unsafe_statement", "Standalone expressions are not allowed.")
 
     def visit_Call(self, node: ast.Call) -> None:
+        if (
+            isinstance(node.func, ast.Name)
+            and node.func.id in self.registry_lookup_names
+        ):
+            self._bind_catalog_key(node)
+            return
         if not self._is_approved_constructor_call(node.func):
             self._error("unsafe_call", "Only approved constructor calls are allowed.")
             return
@@ -445,6 +462,27 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
         self._function_names.add(alias.asname or alias.name)
         return True
 
+    def _bind_catalog_key(self, node: ast.Call) -> None:
+        """Admit ``get_function('<key>')`` only for a key the catalog owns."""
+        match node:
+            case ast.Call(args=[ast.Constant(value=str() as key)], keywords=[]):
+                pass
+            case _:
+                self._error(
+                    "unsafe_call",
+                    "Registry lookups take one literal catalog function id.",
+                )
+                return
+        if self._function_catalog is None:
+            self._error("unsafe_call", "Registry lookups need a function catalog.")
+            return
+        if key in self.catalog_key_bindings:
+            return
+        try:
+            self.catalog_key_bindings[key] = self._function_catalog.reference(key)
+        except UnknownFunctionIdError as exc:
+            self._error("unknown_function_id", str(exc))
+
     def _is_absolute_path_binding(self, node: ast.expr) -> bool:
         if not isinstance(node, ast.Call):
             return False
@@ -509,8 +547,28 @@ class CatalogFunctionImportProjection(ast.NodeTransformer):
 
     namespace_key = "__openhcs_catalog_references__"
 
-    def __init__(self, bindings: dict[tuple[str, str], FunctionReference]) -> None:
+    def __init__(
+        self,
+        bindings: dict[tuple[str, str], FunctionReference],
+        key_bindings: dict[str, FunctionReference],
+        lookup_names: set[str],
+    ) -> None:
         self.bindings = bindings
+        self.key_bindings = key_bindings
+        self.lookup_names = lookup_names
+
+    def visit_Call(self, node: ast.Call) -> ast.expr:
+        """Bind a validated ``get_function('<key>')`` to the catalog reference."""
+        if isinstance(node.func, ast.Name) and node.func.id in self.lookup_names:
+            return ast.copy_location(
+                ast.Subscript(
+                    value=ast.Name(id=self.namespace_key, ctx=ast.Load()),
+                    slice=ast.Constant(value=node.args[0].value),
+                    ctx=ast.Load(),
+                ),
+                node,
+            )
+        return self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> list[ast.stmt]:
         statements: list[ast.stmt] = []
@@ -544,7 +602,11 @@ class UiCodeDocumentExecutionService:
 
     def validate_source(self, source: str, operations) -> CodeDocumentExecutionResult:
         tree, validation = self._source_policy.prepare(source)
-        projection = CatalogFunctionImportProjection(validation.catalog_bindings)
+        projection = CatalogFunctionImportProjection(
+            validation.catalog_bindings,
+            validation.catalog_key_bindings,
+            validation.registry_lookup_names,
+        )
         executable = compile(
             ast.fix_missing_locations(projection.visit(tree)),
             "<plate-manager-code>",
@@ -553,7 +615,10 @@ class UiCodeDocumentExecutionService:
         namespace = PlateManagerCodeNamespace()
         namespace[projection.namespace_key] = {
             identity: reference.resolve()
-            for identity, reference in projection.bindings.items()
+            for identity, reference in (
+                *projection.bindings.items(),
+                *projection.key_bindings.items(),
+            )
         }
         with operations.patch_lazy_constructors():
             exec(executable, namespace)

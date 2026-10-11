@@ -3241,7 +3241,7 @@ def _image_relative_output_path(
     )
     expanded = _format_image_sequence_index(expanded, sequence_index)
     relative_path = _normalized_relative_materialization_path(expanded)
-    scoped_relative_path = options.relative_path_scope.project(
+    scoped_relative_path = options.relative_path_scope.scoped_path(
         relative_path,
         context.context,
     )

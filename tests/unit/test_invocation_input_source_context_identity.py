@@ -177,7 +177,7 @@ def test_multiple_main_flow_images_keep_declared_source_projection() -> None:
     )
 
 
-def test_primary_workspace_role_does_not_override_compiled_input_ownership(
+def test_named_source_binding_owns_unstored_input_over_main_flow_projection(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     contract, plate_template, combined_image, compiled = _compile_source_context_edges()
@@ -224,16 +224,16 @@ def test_primary_workspace_role_does_not_override_compiled_input_ownership(
         current_image=current_payload,
     )
 
-    with pytest.raises(
-        ValueError,
-        match="does not represent declared source image 'PlateTemplate'",
-    ):
-        request.artifact_value(
-            replace(
-                edges_by_ref[plate_template.ref()],
-                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
-            )
+    # A named source binding owns its unstored input even when the edge also
+    # carries a main-flow projection (bee5f223a): the current image is not read.
+    projected_request = request.artifact_value(
+        replace(
+            edges_by_ref[plate_template.ref()],
+            main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
         )
+    )
+    np.testing.assert_array_equal(projected_request.data, 7.0)
+    assert projected_request.metadata.source_image_names == (plate_template.name,)
 
     source_request = request.artifact_value(edges_by_ref[plate_template.ref()])
     main_flow_request = request.artifact_value(edges_by_ref[combined_image.ref()])

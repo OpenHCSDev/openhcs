@@ -32,6 +32,9 @@ from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     NoObjectNameMeasurementRecordMixin,
 )
+from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
+    ObjectLabelDrivenPrimaryImageInputPolicy,
+)
 from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
 from openhcs.processing.backends.cellprofiler.classification import (
     ClassifyObjectsSingleMeasurementModule,
@@ -99,6 +102,18 @@ class _StackSubjectProbeModule(
     setting_bindings = (measurement_stack_binding,)
 
 
+def _object_input(module_type, name):
+    """Object labels bound where the module's invocation domain reads them."""
+    if issubclass(module_type, ObjectLabelDrivenPrimaryImageInputPolicy):
+        binding = module_type.primary_image_domain_input_binding()
+        return ArtifactSpec.input(
+            name,
+            ObjectLabelsArtifactType,
+            parameter_name=binding.require_runtime_parameter_name(),
+        )
+    return ArtifactSpec.input(name, ObjectLabelsArtifactType)
+
+
 def _measurement_output(module_type, inputs, function_name=None):
     return module_type.measurement_output_artifact(
         ModuleBlock(module_num=1, name=module_type.module_name),
@@ -115,7 +130,7 @@ def _measurement_output(module_type, inputs, function_name=None):
 )
 def test_classification_variants_declare_only_exact_object_subject(function_name):
     image = ArtifactSpec.input("SourceImage", ImageArtifactType)
-    objects = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
+    objects = _object_input(ClassifyObjectsSingleMeasurementModule, "Cells")
     prior = ArtifactSpec.input("PriorMeasurements", MeasurementsArtifactType)
     output = _measurement_output(
         ClassifyObjectsSingleMeasurementModule, (image, objects, prior), function_name
@@ -219,10 +234,14 @@ def test_classification_does_not_inherit_measurement_input_setting_or_splitting(
     "module_type", (_ObjectSubjectProbeModule, ClassifyObjectsSingleMeasurementModule)
 )
 def test_missing_object_subject_stays_rejected(module_type):
-    output = _measurement_output(
-        module_type, (ArtifactSpec.input("NotAnObject", ImageArtifactType),)
-    )
-    with pytest.raises(ValueError, match="no declared measurement subject relation"):
+    # Object-label-driven modules reject at declaration, before validation.
+    with pytest.raises(
+        ValueError,
+        match="no declared measurement subject relation|exactly one invocation-domain",
+    ):
+        output = _measurement_output(
+            module_type, (ArtifactSpec.input("NotAnObject", ImageArtifactType),)
+        )
         MeasurementsArtifactType.validate_native_output_declaration(output)
 
 
@@ -230,12 +249,12 @@ def test_missing_object_subject_stays_rejected(module_type):
     "module_type", (_ObjectSubjectProbeModule, ClassifyObjectsSingleMeasurementModule)
 )
 def test_ambiguous_object_subject_stays_rejected(module_type):
-    output = _measurement_output(
-        module_type,
-        tuple(
-            ArtifactSpec.input(name, ObjectLabelsArtifactType)
-            for name in ("Cells", "Nuclei")
-        ),
-    )
-    with pytest.raises(ValueError, match="multiple measurement subjects"):
+    with pytest.raises(
+        ValueError,
+        match="multiple measurement subjects|exactly one invocation-domain",
+    ):
+        output = _measurement_output(
+            module_type,
+            tuple(_object_input(module_type, name) for name in ("Cells", "Nuclei")),
+        )
         MeasurementsArtifactType.validate_native_output_declaration(output)

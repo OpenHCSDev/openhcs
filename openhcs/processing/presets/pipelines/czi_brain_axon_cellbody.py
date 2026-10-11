@@ -153,7 +153,7 @@ def build_czi_brain_axon_cellbody_demo(
             partition_filter=0,
             global_output_folder=output_root,
         ),
-        materialization_results_path=output_root / "results",
+        materialization_results_path=Path("results"),
         materialize_runtime_artifacts=True,
     )
     steps = [

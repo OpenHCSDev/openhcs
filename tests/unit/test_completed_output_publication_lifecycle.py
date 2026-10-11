@@ -56,13 +56,18 @@ def _context(plate_root: Path, count: int) -> ProcessingContext:
         axis_id="A01", filemanager=SimpleNamespace(exists=lambda *_args: False),
         step_plans={index: SimpleNamespace(
             compiled_function_pattern=None, execution_scope=FunctionStepExecutionScope.AXIS,
-            step_name=str(index),
+            step_name=str(index), visualize=False, streaming_configs={},
+            artifact_outputs={}, future_artifact_inputs=None,
+            requires_main_flow_checkpoint=lambda _plans: False,
         ) for index in range(count)},
     )
     context.dataset_root = plate_root
     context.microscope_handler = SimpleNamespace(
         parser=SourceSchemaFilenameParser(),
-        metadata_handler=SimpleNamespace(source_workspace_metadata_document=lambda _p: None),
+        metadata_handler=SimpleNamespace(
+            source_workspace_metadata_document=lambda _p: None,
+            source_workspace_root=Path,
+        ),
         source_bindings_still_required=lambda: None,
     )
     context.freeze()

@@ -141,9 +141,8 @@ def test_czi_demo_declares_bounded_three_channel_analysis_and_artifacts(
     assert pipeline_config.partition_filter_config.partition_filter == "A01"
     assert pipeline_config.path_planning_config.partition_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is True
-    assert pipeline_config.materialization_results_path == (
-        inputs.output_root.resolve() / "results"
-    )
+    # Results live inside the output plate root (path planner rule, 6f8c327c8).
+    assert pipeline_config.materialization_results_path == Path("results")
     source_bindings = pipeline_config.source_bindings_config.bindings
     assert [binding.alias for binding in source_bindings] == [
         "Axon",

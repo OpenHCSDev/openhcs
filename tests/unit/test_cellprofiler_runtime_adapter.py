@@ -728,6 +728,7 @@ def _source_bound_image_adapter(output_bindings, images):
     )
     document = {'subdirectories': {'.': subdirectory}}
     context.microscope_handler.metadata_handler = SimpleNamespace(
+        source_workspace_root=lambda _plate: Path(context.input_dir),
         source_workspace_metadata_document=lambda _plate: document,
     )
     workspace = VirtualWorkspaceSourceProjection.from_openhcs_metadata(

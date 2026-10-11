@@ -476,10 +476,13 @@ def test_ui_bridge_answers_zmq_browser_control_ping(tmp_path) -> None:
     assert response["application"] == OPENHCS_ENDPOINT_APPLICATION.to_dict()
 
 
-def test_second_ipc_ui_bridge_cannot_replace_live_endpoint_pair(tmp_path) -> None:
+def test_second_ipc_ui_bridge_cannot_replace_live_endpoint_pair(
+    tmp_path, unix_socket_dir
+) -> None:
+    ipc_dir = unix_socket_dir
     transport_config = replace(
         OPENHCS_ZMQ_CONFIG,
-        ipc_socket_dir=str(tmp_path / "ipc"),
+        ipc_socket_dir=str(ipc_dir),
         ipc_socket_prefix="ui-bridge-collision",
     )
     endpoint_pair = DataControlPortPairAuthority.acquire(

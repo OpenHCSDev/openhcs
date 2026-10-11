@@ -132,19 +132,19 @@ def test_imported_function_step_values_remain_signature_diffs_in_object_state():
     )
 
     assert state.parameters["name"] == "Loaded CP Step"
-    assert state._signature_defaults["name"] is None
+    assert state.signature_default("name") is None
     assert state.parameters["enabled"] is False
-    assert state._signature_defaults["enabled"] is True
+    assert state.signature_default("enabled") is True
     assert state.parameters["debug_pause"] is True
-    assert state._signature_defaults["debug_pause"] is False
+    assert state.signature_default("debug_pause") is False
     assert state.parameters["processing_config.variable_components"] == [
         Microscopy.Site
     ]
-    assert state._signature_defaults["processing_config.variable_components"] is None
+    assert state.signature_default("processing_config.variable_components") is None
     assert (
         state.parameters["processing_config.input_source"] is InputSource.PIPELINE_START
     )
-    assert state._signature_defaults["processing_config.input_source"] is None
+    assert state.signature_default("processing_config.input_source") is None
     assert {
         "name",
         "enabled",

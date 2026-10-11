@@ -250,7 +250,8 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
 @pytest.mark.parametrize(
     "spacing,expected_scalar,physical",
     (
-        (SourceVoxelSpacing(), 1.0, True),
+        # Uncalibrated sources have only a numeric view, never a physical size.
+        (SourceVoxelSpacing(), 1.0, False),
         (SourceVoxelSpacing((1.3556, 1.3556)), 1.3556, True),
         (SourceVoxelSpacing((4.2, 1.3556, 1.3556)), 1.3556, True),
         (SourceVoxelSpacing((1.2, 1.3556)), 1.0, False),
@@ -2014,7 +2015,8 @@ def test_openhcs_metadata_handler_resolves_subdirectory_inputs(tmp_path):
 
     assert handler.find_metadata_file(image_dir) == metadata_path
     assert handler.get_grid_dimensions(image_dir) == (2, 2)
-    assert handler.get_pixel_size(image_dir) == 0.65
+    # Uncalibrated: the subdirectory resolves its numeric view (#440).
+    assert handler.get_metadata_pixel_size(image_dir) == 0.65
     assert (
         handler.get_source_filename_parser_name(image_dir)
         == "ImageXpressFilenameParser"

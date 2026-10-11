@@ -24,10 +24,12 @@ from openhcs.core.processing_contracts import (
 from openhcs.processing.backends.processors.numpy_processor import (
     non_local_means_denoise_planes,
 )
+from openhcs.processing.custom_functions.runtime_registry import (
+    project_custom_function,
+)
 
 
-def _catalog(monkeypatch, declaration):
-    metadata = OpenHCSRegistry.metadata_for_declared_callable(declaration)
+def _catalog(monkeypatch, metadata):
     assert metadata is not None
     monkeypatch.setattr(
         FunctionCatalogService,
@@ -38,7 +40,10 @@ def _catalog(monkeypatch, declaration):
 
 
 def test_installed_witness_declaration_doc_and_parameter_contract_agree(monkeypatch):
-    catalog, metadata = _catalog(monkeypatch, non_local_means_denoise_planes)
+    catalog, metadata = _catalog(
+        monkeypatch,
+        OpenHCSRegistry.metadata_for_declared_callable(non_local_means_denoise_planes),
+    )
     # The actual dependency still generates this valid-for-ArrayBridge text.
     assert "Additional Parameters" in inspect.getdoc(metadata.func)
     detail = catalog.get(metadata.composite_key, max_doc_chars=None)
@@ -68,7 +73,7 @@ def test_new_declaration_preserves_authored_prose_without_consumer_edits(monkeyp
         """
         return image + offset
 
-    catalog, metadata = _catalog(monkeypatch, independent_doc_probe)
+    catalog, metadata = _catalog(monkeypatch, project_custom_function(independent_doc_probe))
     detail = catalog.get(metadata.composite_key, max_doc_chars=None)
     assert detail.doc == inspect.getdoc(inspect.unwrap(independent_doc_probe))
     assert "Additional Parameters is an authored heading" in detail.doc
@@ -90,7 +95,7 @@ def test_flexible_controls_remain_typed_and_existing_mro_behavior_is_unchanged(m
         seen.append(image.shape)
         return image + offset
 
-    catalog, metadata = _catalog(monkeypatch, independent_flexible_doc_probe)
+    catalog, metadata = _catalog(monkeypatch, project_custom_function(independent_flexible_doc_probe))
     detail = catalog.get(metadata.composite_key, max_doc_chars=None)
     assert detail.doc == inspect.getdoc(inspect.unwrap(independent_flexible_doc_probe))
     parameters = {parameter.name: parameter for parameter in detail.parameters}
@@ -121,7 +126,7 @@ def test_nominal_request_boundary_is_not_unwrapped_to_private_implementation(mon
 
     implementation.__doc__ = "Public request-binding declaration prose."
     declaration = numpy_contract(contract=Pure2DContract)(implementation)
-    catalog, metadata = _catalog(monkeypatch, declaration)
+    catalog, metadata = _catalog(monkeypatch, project_custom_function(declaration))
     detail = catalog.get(metadata.composite_key, max_doc_chars=None)
     assert detail.doc == "Public request-binding declaration prose."
     assert "offset" in {parameter.name for parameter in detail.parameters}
@@ -145,7 +150,9 @@ def test_cellprofiler_setting_help_remains_on_final_typed_parameter_projection(m
     module = CellProfilerModule.for_callable_contract(CallableContract.from_callable(classify_objects_single_measurement))
     assert module is not None
     implementation = module.require_callable()
-    catalog, metadata = _catalog(monkeypatch, implementation)
+    catalog, metadata = _catalog(
+        monkeypatch, OpenHCSRegistry.metadata_for_declared_callable(implementation)
+    )
     detail = catalog.get(metadata.composite_key, max_doc_chars=None)
     parameters = {parameter.name: parameter for parameter in detail.parameters}
     # These selectors have declaration-generated help, absent from authored prose.

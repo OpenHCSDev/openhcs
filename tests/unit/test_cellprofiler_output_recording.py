@@ -35,6 +35,7 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
     ImageOutputRecorder,
     RelationshipsOutputRecorder,
+    SpatialGridOutputRecorder,
 )
 from openhcs.domains.microscopy.axes import Microscopy
 from openhcs.core.image_payload_execution_mode import (
@@ -65,7 +66,7 @@ def _image_request(image: np.ndarray) -> CellProfilerImageRequest:
     )
 
 
-def test_output_recording_uses_artifact_dependency_order() -> None:
+def test_output_recording_uses_artifact_dependency_order(monkeypatch) -> None:
     source = ArtifactSpec.output("source", SpatialGridArtifactType)
     dependent = ArtifactSpec.output(
         "dependent",
@@ -82,6 +83,14 @@ def test_output_recording_uses_artifact_dependency_order() -> None:
         path="dependent.pkl",
         artifact_type=dependent.artifact_type,
         relations=dependent.relations,
+    )
+    # Observe dispatch order at the recorder family boundary; what each
+    # recorder does with a grid is covered by the grid recording tests.
+    recorded = []
+    monkeypatch.setattr(
+        SpatialGridOutputRecorder,
+        "record",
+        lambda _self, request: recorded.append(request.spec.name),
     )
     adapter = Mock(spec=CellProfilerRuntimeAdapter)
     adapter.request = SimpleNamespace(
@@ -111,10 +120,7 @@ def test_output_recording_uses_artifact_dependency_order() -> None:
         current_image=image,
     )
 
-    assert tuple(call.args[0] for call in adapter.add_spatial_grid.call_args_list) == (
-        "source",
-        "dependent",
-    )
+    assert tuple(recorded) == ("source", "dependent")
 
 
 def test_relationship_recording_uses_exact_artifact_relation() -> None:

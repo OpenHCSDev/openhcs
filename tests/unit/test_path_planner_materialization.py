@@ -3561,15 +3561,16 @@ def test_adapter_managed_edges_bind_only_compatible_special_parameters():
 def test_artifact_managed_regular_pattern_uses_declared_owner_scope():
     nuclei = ArtifactSpec.input("Nuclei", ObjectLabelsArtifactType)
 
+    # Without a raw image parameter the declared input owns the invocation
+    # domain; a callable that takes main-flow pixels follows the main flow (#785).
     @artifact_inputs(nuclei)
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
         manages_artifact_inputs=True,
     )
-    def identify_primary_objects(image, *, runtime):
-        del runtime
-        return image
+    def identify_primary_objects(*, runtime):
+        return runtime
 
     planner = _artifact_planner_stub()
     _record_declared_output(

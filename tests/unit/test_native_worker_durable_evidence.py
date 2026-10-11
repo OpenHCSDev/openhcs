@@ -1,6 +1,7 @@
 """Native batch completion evidence survives loss of its controller process."""
 
 import json
+from dataclasses import asdict
 import os
 import signal
 import subprocess
@@ -11,6 +12,7 @@ from pathlib import Path
 import pytest
 
 import benchmark.matched_cellprofiler_batch as matched_batch
+from benchmark.native_batch_contracts import NativeBatchRequest
 
 
 def wait_for_path(path: Path, timeout: float = 10) -> None:
@@ -21,10 +23,28 @@ def wait_for_path(path: Path, timeout: float = 10) -> None:
         time.sleep(0.01)
 
 
+def _write_request(root: Path) -> Path:
+    """A complete native batch request; the bridge admits only that shape."""
+    request = root / "request.json"
+    request.write_text(
+        json.dumps(
+            asdict(
+                NativeBatchRequest(
+                    pipeline_path=str(root / "pipeline.cppipe"),
+                    input_dir=str(root / "images"),
+                    output_root=str(root / "output"),
+                    expected_image_sets=None,
+                    repetitions=1,
+                )
+            )
+        )
+    )
+    return request
+
+
 @pytest.mark.parametrize("failure", ("returncode", "missing-report", "timeout"))
 def test_native_bridge_keeps_failure_evidence(tmp_path, monkeypatch, failure):
-    request = tmp_path / "request.json"
-    request.write_text("{}")
+    request = _write_request(tmp_path)
 
     def run(command, **kwargs):
         kwargs["stdout"].write("progress before failure\n")
@@ -47,6 +67,7 @@ def test_native_bridge_keeps_failure_evidence(tmp_path, monkeypatch, failure):
             evidence_prefix=tmp_path / "native",
             project_root=tmp_path,
             repetitions=1,
+            timeout_seconds=1.0,
         )
     assert (tmp_path / "native_stdout.log").read_text() == "progress before failure\n"
     assert (tmp_path / "native_stderr.log").read_text() == "native failure details\n"
@@ -58,7 +79,7 @@ def test_native_worker_finishes_report_after_controller_termination(tmp_path):
 import json,os,sys,time
 from pathlib import Path
 request=json.loads(Path(sys.argv[1]).read_text())
-root=Path(request['root'])
+root=Path(sys.argv[1]).parent
 print('live native progress',flush=True)
 print('live native diagnostics',file=sys.stderr,flush=True)
 (root/'started.json').write_text(json.dumps({'pid':os.getpid()}))
@@ -70,15 +91,14 @@ Path(request['report_path']).write_text(json.dumps({'worker_completed':True}))
 print('worker complete',flush=True)
 (root/'finished').touch()
 """)
-    request = tmp_path / "request.json"
-    request.write_text(json.dumps({"root": str(tmp_path)}))
+    request = _write_request(tmp_path)
     project_root = Path(__file__).resolve().parents[2]
     program = """
 import sys
 from pathlib import Path
 from benchmark.matched_cellprofiler_batch import _invoke_native_worker
 root=Path(sys.argv[1])
-_invoke_native_worker(native_python=Path(sys.executable),worker_script=root/'worker.py',request_path=root/'request.json',evidence_prefix=root/'native',project_root=root,repetitions=1)
+_invoke_native_worker(native_python=Path(sys.executable),worker_script=root/'worker.py',request_path=root/'request.json',evidence_prefix=root/'native',project_root=root,repetitions=1,timeout_seconds=None)
 """
     worker_pid = None
     with (tmp_path / "controller.log").open("w") as log:

@@ -31,6 +31,7 @@ from openhcs.agent.services.synthetic_plate_service import (
 from openhcs.core.config import GlobalPipelineConfig, PathPlanningConfig
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.plate_image_inventory import PlateFileKind
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import (
     WorkspaceSourceProjections,
 )
@@ -1199,6 +1200,16 @@ def test_plate_inspection_auto_result_only_root_skips_handler_detection(
     )
 
 
+def _calibrated_source_metadata(image_files) -> dict[str, dict]:
+    """Declared micrometer calibration; ``pixel_size`` alone is a numeric view."""
+    source_metadata = {}
+    for image_file in image_files:
+        entry: dict = {}
+        SourceVoxelSpacing((0.65, 0.65)).merge_into(entry, path=image_file)
+        source_metadata[image_file] = entry
+    return source_metadata
+
+
 def test_plate_inspection_reads_no_main_openhcs_output_subdirectories(
     tmp_path: Path,
 ) -> None:
@@ -1242,6 +1253,9 @@ def test_plate_inspection_reads_no_main_openhcs_output_subdirectories(
                             f"checkpoints_step1/{image_name}"
                             for image_name in image_names
                         ],
+                        "source_metadata": _calibrated_source_metadata(
+                            f"checkpoints_step1/{image_name}" for image_name in image_names
+                        ),
                         "results_dir": "checkpoints_step1_results",
                     },
                     "checkpoints_step2": {
@@ -1250,6 +1264,9 @@ def test_plate_inspection_reads_no_main_openhcs_output_subdirectories(
                             f"checkpoints_step2/{image_name}"
                             for image_name in image_names
                         ],
+                        "source_metadata": _calibrated_source_metadata(
+                            f"checkpoints_step2/{image_name}" for image_name in image_names
+                        ),
                         "results_dir": "checkpoints_step2_results",
                     },
                 }

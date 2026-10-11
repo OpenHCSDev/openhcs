@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import os
 import shutil
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from polystore.streaming.identity import StreamProducerIdentity
@@ -48,6 +48,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
@@ -103,6 +104,12 @@ class LooseOperaPhenixNeuriteInputs:
     map2: SemanticImageSource | None
     smi312: SemanticImageSource
     neurite_candidate_threshold_correction_factor: float = 0.05
+    source_voxel_spacing: SourceVoxelSpacing = field(default_factory=SourceVoxelSpacing)
+    """Calibration of the copied TIFFs, which lose it with ``Index.xml``.
+
+    Physical-unit callables (the MetaXpress recipe) require a micrometer
+    spacing; an empty spacing declares the export uncalibrated.
+    """
 
     @property
     def cell_body_source(self) -> SemanticImageSource:
@@ -197,9 +204,12 @@ def build_loose_operaphenix_neurite_config(
             partition_filter=0,
             global_output_folder=output_root,
         ),
-        materialization_results_path=output_root / "results",
+        materialization_results_path=Path("results"),
         materialize_runtime_artifacts=True,
-        source_bindings_config=LazySourceBindingsConfig(bindings=source_bindings),
+        source_bindings_config=LazySourceBindingsConfig(
+            bindings=source_bindings,
+            source_voxel_spacing=inputs.source_voxel_spacing,
+        ),
     )
 
 

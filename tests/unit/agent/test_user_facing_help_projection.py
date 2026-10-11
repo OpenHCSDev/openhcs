@@ -19,6 +19,7 @@ from python_introspect import (
 from python_introspect.signature_analyzer import ParametersDocstringSection
 
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.processing.backends.analysis.cell_counting_cpu import (
     count_cells_single_channel,
@@ -294,7 +295,9 @@ def test_preprocessing_guidance_projects_from_callable_owners(monkeypatch) -> No
         normalized_detail_doc = " ".join(detail.doc.split())
         normalized_shared_text = " ".join(shared_text.split())
 
-        assert detail.doc == inspect.getdoc(metadata.func)
+        # Catalog prose is the semantic declaration's, not the memory wrapper's.
+        raw = CallableContract.from_callable(metadata.func).resolve_raw_runtime_callable()
+        assert detail.doc == inspect.getdoc(raw)
         assert detail.entry.summary == shared_help.summary
         for phrase in expected_phrases[metadata.func]:
             assert phrase in normalized_detail_doc

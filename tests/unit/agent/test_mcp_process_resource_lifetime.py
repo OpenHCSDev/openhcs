@@ -203,7 +203,9 @@ def test_real_sdk_stdio_declared_resource_closes_before_child_exit(tmp_path, fai
     asyncio.run(journey())
 
 
-def test_resident_connection_close_preserves_resource_until_process_owner_close(monkeypatch, tmp_path):
+def test_resident_connection_close_preserves_resource_until_process_owner_close(
+    monkeypatch, unix_socket_dir
+):
     from mcp.server.fastmcp import FastMCP
     from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
     from openhcs.mcp.dev_client_core import McpDevSocketSession
@@ -222,7 +224,7 @@ def test_resident_connection_close_preserves_resource_until_process_owner_close(
         calls.append("process resource closed")
 
     backend_registry.register_cleanup_callback(release_resource)
-    transport = McpSocketTransport(tmp_path / "resident.sock")
+    transport = McpSocketTransport(unix_socket_dir / "resident.sock")
     clients = AsyncOperationExecutor(max_workers=1)
 
     async def journey():

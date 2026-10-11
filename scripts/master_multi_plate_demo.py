@@ -41,9 +41,7 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
 )
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from openhcs.core.steps.function_output_manifest import (
-    FunctionStepOutputProducerIdentityRequest,
-)
+from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.mcp.dev_client import McpDevClient
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
@@ -155,7 +153,7 @@ def compiled_presentation_contract(
             )
 
         artifact_output_kind = (
-            FunctionStepOutputProducerIdentityRequest.ARTIFACT_OUTPUT_KIND
+            CompiledStepPlan.ARTIFACT_OUTPUT_KIND
         )
         target_outputs = [
             output
@@ -1118,7 +1116,7 @@ class McpMasterDemoOperations(MasterDemoOperations):
         for row in rows:
             if not isinstance(row, Mapping):
                 continue
-            scope_id = row.get("plate_scope_id")
+            scope_id = row.get("scope_id")
             color = row.get("scope_accent_color")
             if isinstance(scope_id, str) and isinstance(color, str):
                 colors[scope_id] = color

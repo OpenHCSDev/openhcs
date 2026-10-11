@@ -87,13 +87,13 @@ class ColorToGrayScalarOutputProjection(ABC):
     """Own whether a scalar output selects a source channel or derives from all."""
 
     @abstractmethod
-    def project(
+    def channel_output(
         self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
     ) -> RuntimeArrayData: ...
 
 
 class SelectedColorChannelProjection(ColorToGrayScalarOutputProjection):
-    def project(
+    def channel_output(
         self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
     ) -> RuntimeArrayData:
         return image.metadata.project_channel_payload(
@@ -106,7 +106,7 @@ class SelectedColorChannelProjection(ColorToGrayScalarOutputProjection):
 
 
 class DerivedColorChannelProjection(ColorToGrayScalarOutputProjection):
-    def project(
+    def channel_output(
         self, image: RuntimeArrayData, *, channel_index: int, output: RuntimeArrayData
     ) -> RuntimeArrayData:
         del channel_index
@@ -1656,7 +1656,7 @@ def color_to_gray(
     outputs = split_color_to_gray(image, image_type, channel_indices)
     return pack_aligned_image_outputs(
         tuple(
-            image_type.scalar_output_projection.project(
+            image_type.scalar_output_projection.channel_output(
                 image, channel_index=channel_index, output=output,
             )
             for channel_index, output in zip(channel_indices, outputs, strict=True)

@@ -1297,11 +1297,15 @@ class RuntimeValueStore:
         fabricated runtime values.
         """
         retained_addresses = {(record.key, record.location) for record in retained_records}
+        retained_inputs = {
+            (ref.artifact_type, ref.name)
+            for ref in retained_refs
+            if ref.plan_type is ArtifactInputPlan
+        }
 
         def retained(record: StoredRuntimeValue) -> bool:
             return (
-                ArtifactSpecRef(ArtifactInputPlan, record.key.artifact_type, record.key.name)
-                in retained_refs
+                (record.key.artifact_type, record.key.name) in retained_inputs
                 or (record.key, record.location) in retained_addresses
             )
 

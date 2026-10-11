@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 import dataclasses
 import importlib
 import inspect
@@ -10,7 +11,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from types import ModuleType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from python_introspect import Enableable
 
@@ -89,7 +90,7 @@ class FunctionReference(PythonSourceLiteral, ABC):
     def source_literal_imports(self) -> frozenset[tuple[str, str]]:
         imports = super().source_literal_imports()
         identity = self.source_import_identity
-        if identity.module_name == "builtins":
+        if identity.module_name == builtins.__name__:
             return imports
         return imports | frozenset({(identity.module_name, identity.function_name)})
 
@@ -138,6 +139,12 @@ class ImportableFunctionReference(ModuleExportFunctionSource, FunctionReference)
 class RegistryFunctionReference(FunctionReference):
     """Reference whose callable identity is owned by a function registry."""
 
+    # Rendered source spells a registry reference as a call of this export.
+    registry_lookup: ClassVar[CallableImportIdentity] = CallableImportIdentity(
+        module_name="openhcs.processing.func_registry",
+        function_name="get_function",
+    )
+
     def __post_init__(self) -> None:
         registry_name, separator, function_key = self.composite_key.partition(":")
         if not separator or not registry_name or not function_key:
@@ -154,10 +161,7 @@ class RegistryFunctionReference(FunctionReference):
 
     @property
     def source_import_identity(self) -> CallableImportIdentity:
-        return CallableImportIdentity(
-            module_name="openhcs.processing.func_registry",
-            function_name="get_function",
-        )
+        return self.registry_lookup
 
     def source_expression(self, imported_name: str) -> str:
         return f"{imported_name}({self.composite_key!r})"

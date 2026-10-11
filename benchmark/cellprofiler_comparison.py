@@ -321,7 +321,7 @@ class ModuleCoverageArtifacts:
                         else ""
                     ),
                     processing_contract=(
-                        module.processing_contract.value
+                        module.processing_contract.key
                         if module.processing_contract is not None
                         else ""
                     ),

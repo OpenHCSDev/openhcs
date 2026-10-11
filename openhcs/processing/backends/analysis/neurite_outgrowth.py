@@ -1878,6 +1878,18 @@ def neurite_outgrowth_metaxpress_pixels(
     contextualizes native ROI placement. Pixel graphs publish graph ROIs, not
     physical SWC files. The unchanged image and declared artifacts have
     the same identity/subject relations as the physical recipe.
+
+    Args:
+        neurite_channel_index: Zero-based channel containing neurite outgrowth.
+        illumination: Fluorescence or transmission contrast model used for
+            foreground detection.
+        cell_body: Optional channel plus pixel width, square-pixel area, and
+            local-background thresholds for cell bodies.
+        outgrowth: Pixel width, intensity, and significant-growth thresholds
+            for attached neurites.
+        use_nuclear_stain: Whether to segment a nuclear channel and return nuclei.
+        nuclear_stain: Nuclear channel and pixel size/intensity thresholds used
+            when nuclear staining is enabled.
     """
     return PIXEL_CELLPROFILER_NEURITE_ENGINE_PROFILE.analyze(
         image,

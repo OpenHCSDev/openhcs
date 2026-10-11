@@ -881,7 +881,7 @@ def _borrowed_source_export_fixture(
             "source": serializer.metadata_dict(
                 SourceProjectionSet(tuple(sources)),
                 microscope_handler_name="openhcs",
-                source_filename_parser_name="source_schema",
+                source_filename_parser_name="SourceSchemaFilenameParser",
                 grid_dimensions=[1, 1],
                 pixel_size=1.0,
             )

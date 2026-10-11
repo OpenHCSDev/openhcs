@@ -147,8 +147,8 @@ def test_retained_corrupt_provenance_fails_at_admission() -> None:
     subdirectory = _serialized_metadata(_collapsed_metadata())["subdirectories"]["."]
     subdirectory["source_projection"][0]["image_metadata"]["source_provenance"][
         "source_image_provenance_planes"
-    ][0]["undeclared_field"] = "corrupt"
-    with pytest.raises(ValueError, match="undeclared field"):
+    ]["planes"][0]["undeclared_field"] = "corrupt"
+    with pytest.raises(ValueError, match="Unknown provenance plane fields"):
         VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
 
 

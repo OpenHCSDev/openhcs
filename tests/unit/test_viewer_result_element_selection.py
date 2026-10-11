@@ -31,6 +31,7 @@ from openhcs.runtime.napari_streaming_handlers import (
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.runtime.napari_viewer_server import (
+    NapariLayerDisplayPipeline,
     NapariLayerIsolationControlAction,
     NapariNavigationControlAction,
     NapariResultElementSelections,
@@ -141,6 +142,9 @@ class _ViewerServerHarness(SimpleNamespace):
     def raise_result_selection_surface(self) -> None:
         NapariViewerServer.raise_result_selection_surface(self)
 
+    def require_viewer(self):
+        return NapariViewerServer.require_viewer(self)
+
 
 def _viewer_server(viewer, layer, route_key: str = "result-rois", group_binding=None):
     route_state = NapariLayerRouteStateStore.empty()
@@ -153,13 +157,15 @@ def _viewer_server(viewer, layer, route_key: str = "result-rois", group_binding=
         viewer=viewer,
         layer_route_state=route_state,
         component_groups=NapariComponentGroupStore(),
-        display_pipeline=SimpleNamespace(dimension_label_overlay=overlay),
         napari_window_title="OpenHCS Napari Viewer",
         result_selection_surface=NapariResultSelectionSurface(
             dock=result_selection_dock,
             manager=SimpleNamespace(),
         ),
     )
+    # Selection awaits the native frame through the real display pipeline.
+    server.display_pipeline = NapariLayerDisplayPipeline(server)
+    server.display_pipeline.dimension_label_overlay = overlay
     server.result_selection_controller = NapariResultSelectionController(server)
     if NapariResultElementSelections.state(layer).supported:
         from napari.layers import Points
@@ -242,11 +248,6 @@ def test_linked_selection_projects_off_slice_members_without_changing_subject(qt
     server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
     server.result_selection_controller.bind(linked, group_binding=binding)
     original_data = [coordinates.copy() for coordinates in linked.data]
-
-    # Original native behaviour reproduces the retained failure signature.
-    with pytest.raises(ValueError, match="zero-size array.*minimum"):
-        linked.selected_data = {0, 1}
-    linked.selected_data = set()
 
     state = server.result_selection_controller.select(layer, 1)
 

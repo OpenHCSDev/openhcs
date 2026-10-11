@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import inspect
 from pathlib import Path
 
@@ -25,7 +26,10 @@ from openhcs.mcp.control_timeout import (
     McpUiBridgeTimeoutPolicy,
     McpViewerTimeoutPolicy,
 )
+from openhcs.constants.constants import Backend
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSMetadataHandler
+from polystore.disk import DiskStorageBackend
+from polystore.filemanager import FileManager
 from openhcs.domains.microscopy.axes import Microscopy
 
 
@@ -192,20 +196,18 @@ def test_mcp_schema_distinguishes_action_and_state_revisions_and_bounds_timeout(
     assert str(McpUiBridgeTimeoutPolicy.max_ms) in connection_timeout["description"]
 
 
-def test_openhcs_metadata_preserves_null_component_labels(monkeypatch) -> None:
-    monkeypatch.setattr(
-        OpenHCSMetadataHandler,
-        "_load_metadata",
-        lambda _self, _plate_path: {
-            "wells": {
-                "A01": None,
-                "A02": "Treatment",
-            }
-        },
+def test_openhcs_metadata_preserves_null_component_labels(tmp_path: Path) -> None:
+    (tmp_path / OpenHCSMetadataHandler.METADATA_FILENAME).write_text(
+        json.dumps(
+            {"subdirectories": {"images": {"wells": {"A01": None, "A02": "Treatment"}}}}
+        ),
+        encoding="utf-8",
     )
-    handler = object.__new__(OpenHCSMetadataHandler)
+    handler = OpenHCSMetadataHandler(
+        FileManager({Backend.DISK.value: DiskStorageBackend()})
+    )
 
-    assert handler.component_value_set("/plate").values_for(Microscopy.Well) == {
+    assert handler.component_value_set(tmp_path).values_for(Microscopy.Well) == {
         "A01": None,
         "A02": "Treatment",
     }

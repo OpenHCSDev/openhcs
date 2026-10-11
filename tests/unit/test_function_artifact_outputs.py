@@ -2924,7 +2924,8 @@ def _declared_source_executor(
                 component=None,
                 value=None,
             ),
-            execution_plan=SimpleNamespace(
+            execution_plan=CompiledStepPlan(
+                step_index=0, step_name="source-bound", axis_id="A01",
                 variable_components=(),
             ),
         ),

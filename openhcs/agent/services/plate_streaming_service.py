@@ -63,11 +63,17 @@ from openhcs.core.virtual_workspace_metadata import (
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
+from openhcs.runtime.viewer_display import DeclaredAxes
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
     ViewerGraphicalSessionUnavailableError,
 )
 from openhcs.core.axes import AxisFamily
+
+
+def _active_declared_axes() -> DeclaredAxes:
+    """Declarations of the active axis family, as a producer sends them."""
+    return DeclaredAxes.of(AxisFamily.active().axes)
 
 
 class PlateStreamingService:
@@ -402,7 +408,7 @@ class PlateStreamingService:
             producers.append(producer)
             plane_domain = ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
                 record.summary.require_plane_components(),
-                context="image receipt plane coordinates",
+                declared_axes=_active_declared_axes(), context="image receipt plane coordinates",
             )
             planes = SourceImageProvenancePlanes.from_component_domain(
                 path=image_path,

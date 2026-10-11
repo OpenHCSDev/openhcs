@@ -1,5 +1,7 @@
 """Real MCP transport remains responsive through post-generation inspection."""
 
+import re
+
 import pytest
 
 from openhcs.mcp import dev_client
@@ -97,4 +99,8 @@ def test_real_mcp_generation_survives_post_inspection_inactivity_window(
     assert generated["detected_source_format"] == "imagexpress"
     assert result.server_stderr_tail is not None
     assert "exercising delayed completion" in result.server_stderr_tail
-    assert "Generate synthetic plate: still running" in result.server_stderr_tail
+    # Heartbeats repeat the latest reported phase (4ab076890).
+    assert re.search(
+        r"message='Generate synthetic plate: [^'\n]*still running'",
+        result.server_stderr_tail,
+    )

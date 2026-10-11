@@ -1753,6 +1753,8 @@ class ArtifactSidecarRole(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
 
     name: ClassVar[str]
+    inspection_only: ClassVar[bool] = False
+    """Whether the sidecar exists only for inspection, never as a pipeline result."""
 
     @classmethod
     def name_for(
@@ -1780,6 +1782,7 @@ class QaCheckpoint(ArtifactSidecarRole):
     """An inspection checkpoint published beside a primary artifact."""
 
     name = "qa_checkpoint"
+    inspection_only = True
 
 
 class ArtifactViewerStreaming(str, Enum):
@@ -2465,6 +2468,10 @@ class ArtifactSpec:
     def binds_callable_parameter(self) -> bool:
         """Distinguish a runtime argument from a context-only artifact identity."""
         return self.parameter_name is not None
+
+    def is_inspection_only(self) -> bool:
+        """Whether this is a QA sidecar rather than a processing result."""
+        return self.sidecar_role is not None and self.sidecar_role.inspection_only
 
     def __post_init__(self) -> None:
         if not isinstance(self.viewer_streaming, ArtifactViewerStreaming):
