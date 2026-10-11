@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import replace
 
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
-from python_introspect import JsonObject
+from python_introspect import JsonObject, registered_class_from_key, to_jsonable
 from openhcs.agent.dto.execution import (
     RuntimeDebugArtifactExportRequest,
     RuntimeDebugArtifactExportResult,
@@ -32,7 +32,7 @@ from openhcs.agent.dto.execution import (
     unreachable_runtime_server_info,
 )
 from openhcs.core.debug_view_models import DebugViewModel
-from openhcs.core.debug import DebugPausedWorkerStatus
+from openhcs.core.debug import DebugCommandType, DebugPausedWorkerStatus
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
@@ -213,9 +213,9 @@ class ZMQRuntimeServerGateway(RuntimeServerGatewayABC):
             )
             .send_debug_worker_command(
                 debug_session_id=debug_session_id,
-                command_type=command_type,
+                command_type=registered_class_from_key(DebugCommandType, command_type),
             )
-            .status
+            .worker
         )
 
     def export_debug_artifact(
@@ -649,18 +649,13 @@ class RuntimeServerService:
                     ),
                 ),
             )
-        status_record = status.to_dict() if hasattr(status, "to_dict") else {}
         return RuntimeDebugCommandResult(
             schema_version=SCHEMA_VERSION,
             connection=connection,
             debug_session_id=debug_session_id,
             command_type=command_type,
-            worker_state=(
-                str(status_record.get("state"))
-                if status_record.get("state") is not None
-                else None
-            ),
-            cursor=status_record.get("cursor"),
+            worker_state=status.state.name,
+            cursor=to_jsonable(status.cursor),
         )
 
     def debug_command_from_request(

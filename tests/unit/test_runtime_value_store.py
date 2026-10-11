@@ -75,6 +75,10 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBi
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
 from openhcs.core.axes import Axis, AxisFamily
 from openhcs.domains.microscopy.axes import Microscopy
+from python_introspect import (
+    dataclass_from_mapping,
+    to_jsonable,
+)
 
 
 def _runtime_input_edge(
@@ -289,7 +293,7 @@ def test_runtime_artifact_address_round_trips_fixed_component_values():
         value_type="MeasurementTable",
     )
 
-    restored = RuntimeArtifactAddress.from_dict(address.to_dict())
+    restored = dataclass_from_mapping(RuntimeArtifactAddress, to_jsonable(address))
 
     assert restored == address
     assert restored.key.scope.fixed_component_values == scope.fixed_component_values
@@ -1719,7 +1723,7 @@ def _ungrouped_runtime_artifact_input(
     storage_plan: ArtifactInputPlan,
     *,
     axis_scope: RuntimeExecutionAxisScope = RuntimeExecutionAxisScope(axis_id="A01"),
-    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan.empty(),
+    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
 ) -> RuntimeArtifactInput:
     ungrouped = ComponentGroupScope.ungrouped()
     return RuntimeArtifactInput(
@@ -1990,7 +1994,7 @@ def test_paired_channel_declaration_reaches_both_adapter_input_consumers():
     contract = replace(
         contract,
         module_name="SecondaryConsumer",
-        metadata=replace(contract.metadata, artifact_inputs=(edge.spec, source_spec)),
+        artifact_inputs=(edge.spec, source_spec),
     )
     adapter = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=store,
@@ -2038,7 +2042,7 @@ def test_paired_channel_input_rejects_other_well_or_producer(producer_axis, prod
 def test_cross_channel_input_without_source_declaration_remains_exact():
     store, _record, runtime_input = _paired_channel_label_input()
     strict_input = replace(
-        runtime_input, source_binding_plan=CompiledSourceBindingPlan.empty(),
+        runtime_input, source_binding_plan=CompiledSourceBindingPlan(),
     )
 
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):

@@ -485,11 +485,7 @@ def test_new_runtime_declaration_is_discovered_and_cooperatively_binds_vector_an
     contract = replace(
         declared,
         module_name=compiled.module_name,
-        metadata=replace(
-            declared.metadata,
-            artifact_inputs=compiled.metadata.artifact_inputs,
-            artifact_outputs=compiled.metadata.artifact_outputs,
-        ),
+        artifact_inputs=compiled.artifact_inputs, artifact_outputs=compiled.artifact_outputs,
     )
     bound = ClassifyObjectsSingleMeasurementModule.bind_runtime_inputs(
         _runtime_request(contract, {"independent_feature": "AreaShape_Area"})
@@ -595,7 +591,7 @@ def test_scalar_output_binding_rejects_inconsistent_compiled_declarations(defect
         )
         outputs += (replace(image, relations=(replace(relation, rule_index=1),)),)
     contract = replace(
-        contract, metadata=replace(contract.metadata, artifact_outputs=outputs)
+        contract, artifact_outputs=outputs
     )
     kwargs = {
         key: value

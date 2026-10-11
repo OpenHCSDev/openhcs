@@ -15,7 +15,7 @@ from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
 )
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
@@ -206,7 +206,7 @@ def runtime_adapter_request_for_test(
                 func=lambda image: image,
                 function_name="cellprofiler_runtime_adapter_test",
                 module_name=__name__,
-                metadata=CallableMetadata(artifact_outputs=tuple(output_specs)),
+                artifact_outputs=tuple(output_specs),
             )
         else:
             declared_outputs = supplied_contract.artifact_outputs

@@ -74,10 +74,7 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(
     invocation = _compile_public_step(step)
     contract = replace(
         invocation.contract,
-        metadata=replace(
-            invocation.contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     pixels = np.arange(20, dtype=np.float32).reshape(4, 5) * 1000
     physical = {

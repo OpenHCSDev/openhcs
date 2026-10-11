@@ -1,13 +1,6 @@
-from openhcs.pyqt_gui.services.time_travel_navigation import (
-    TimeTravelSourceScope,
-    make_field_path_target,
-    make_function_token_target,
-    should_replace_navigation_target,
-    should_include_time_travel_scope,
-)
+from pyqt_reactive.services.time_travel_navigation import TimeTravelNavigator
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.pyqt_gui.main import OpenHCSMainWindow
 from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab
 from pyqt_reactive.services.function_navigation import build_function_token_field_path
 from pyqt_reactive.services.window_navigation import (
@@ -17,7 +10,12 @@ from pyqt_reactive.services.window_navigation import (
     WindowNavigationDriver,
     WindowNavigationResult,
 )
-from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindowNavigationDriver
+from openhcs.pyqt_gui.windows.dual_editor_window import (
+    DualEditorWindowNavigationDriver,
+    step_function_scope,
+)
+
+NAVIGATOR = TimeTravelNavigator(function_scope=step_function_scope)
 
 
 class RuntimeCallable:
@@ -60,64 +58,29 @@ def _reset_registry() -> None:
 def test_time_travel_navigation_filters_unrelated_dirty_scopes() -> None:
     triggering_scope = "/tmp/plate::functionstep_5"
 
-    assert should_include_time_travel_scope(
-        TimeTravelSourceScope(
-            changed_scope_id=triggering_scope,
-            triggering_scope=triggering_scope,
-        )
-    )
-    assert not should_include_time_travel_scope(
-        TimeTravelSourceScope(
-            changed_scope_id=f"{triggering_scope}::cellprofilerruntimecallable_0",
-            triggering_scope=triggering_scope,
-        )
-    )
-    assert not should_include_time_travel_scope(
-        TimeTravelSourceScope(
-            changed_scope_id="/tmp/plate::functionstep_9",
-            triggering_scope=triggering_scope,
-        )
-    )
+    assert NAVIGATOR.includes(triggering_scope, triggering_scope)
+    assert not NAVIGATOR.includes(f"{triggering_scope}::cellprofilerruntimecallable_0", triggering_scope)
+    assert not NAVIGATOR.includes("/tmp/plate::functionstep_9", triggering_scope)
 
 
 def test_time_travel_navigation_keeps_legacy_global_refresh_when_scope_unknown() -> (
     None
 ):
-    assert should_include_time_travel_scope(
-        TimeTravelSourceScope(
-            changed_scope_id="/tmp/plate::functionstep_9",
-            triggering_scope=None,
-        )
-    )
+    assert NAVIGATOR.includes("/tmp/plate::functionstep_9", None)
 
 
 def test_time_travel_navigation_includes_parent_step_for_function_trigger() -> None:
     step_scope = "/tmp/plate::functionstep_5"
     function_scope = f"{step_scope}::cellprofilerruntimecallable_0"
 
-    assert should_include_time_travel_scope(
-        TimeTravelSourceScope(
-            changed_scope_id=function_scope,
-            triggering_scope=function_scope,
-        )
-    )
-    assert should_include_time_travel_scope(
-        TimeTravelSourceScope(
-            changed_scope_id=step_scope,
-            triggering_scope=function_scope,
-        )
-    )
+    assert NAVIGATOR.includes(function_scope, function_scope)
+    assert NAVIGATOR.includes(step_scope, function_scope)
 
 
 def test_time_travel_plate_scope_does_not_open_step_descendants() -> None:
     plate_scope = "/tmp/plate"
 
-    assert not should_include_time_travel_scope(
-        TimeTravelSourceScope(
-            changed_scope_id=f"{plate_scope}::functionstep_5",
-            triggering_scope=plate_scope,
-        )
-    )
+    assert not NAVIGATOR.includes(f"{plate_scope}::functionstep_5", plate_scope)
 
 
 def test_time_travel_unknown_trigger_does_not_create_missing_windows(
@@ -154,16 +117,12 @@ def test_time_travel_unknown_trigger_does_not_create_missing_windows(
     )
     scheduled: list[object] = []
     monkeypatch.setattr(
-        OpenHCSMainWindow,
-        "_defer_time_travel_navigation",
-        lambda _self, callback: scheduled.append(callback),
+        TimeTravelNavigator,
+        "defer",
+        staticmethod(lambda callback: scheduled.append(callback)),
     )
 
-    OpenHCSMainWindow._on_time_travel_complete(
-        OpenHCSMainWindow.__new__(OpenHCSMainWindow),
-        [(step_scope, step_state)],
-        None,
-    )
+    NAVIGATOR.on_time_travel_complete([(step_scope, step_state)], None)
 
     assert requests == []
     assert len(scheduled) == 1
@@ -186,9 +145,9 @@ def test_time_travel_navigation_runs_after_later_refresh_callbacks(monkeypatch) 
 
     scheduled: list[object] = []
     monkeypatch.setattr(
-        OpenHCSMainWindow,
-        "_defer_time_travel_navigation",
-        lambda _self, callback: scheduled.append(callback),
+        TimeTravelNavigator,
+        "defer",
+        staticmethod(lambda callback: scheduled.append(callback)),
     )
 
     class TabWidget:
@@ -225,18 +184,11 @@ def test_time_travel_navigation_runs_after_later_refresh_callbacks(monkeypatch) 
         staticmethod(fake_navigate),
     )
 
-    monkeypatch.setattr(
-        OpenHCSMainWindow,
-        "_select_tab_for_time_travel",
-        lambda _self, scope_id, target: window.tab_widget.setCurrentIndex(0),
+    navigator = TimeTravelNavigator(
+        function_scope=step_function_scope,
+        target_shown=lambda scope_id, target: window.tab_widget.setCurrentIndex(0),
     )
-
-    main_window = OpenHCSMainWindow.__new__(OpenHCSMainWindow)
-    OpenHCSMainWindow._on_time_travel_complete(
-        main_window,
-        [(step_scope, step_state)],
-        step_scope,
-    )
+    navigator.on_time_travel_complete([(step_scope, step_state)], step_scope)
 
     assert navigate_requests == []
     window.tab_widget.setCurrentIndex(1)
@@ -246,32 +198,6 @@ def test_time_travel_navigation_runs_after_later_refresh_callbacks(monkeypatch) 
     assert len(navigate_requests) == 1
     assert navigate_requests[0].field_path == field_path
     assert window.tab_widget.indices == [1, 0]
-
-
-def test_time_travel_navigation_defer_runs_after_same_wave_refresh(monkeypatch) -> None:
-    callbacks: list[object] = []
-
-    def fake_single_shot(delay, callback) -> None:
-        assert delay == 0
-        callbacks.append(callback)
-
-    from PyQt6.QtCore import QTimer
-
-    monkeypatch.setattr(QTimer, "singleShot", staticmethod(fake_single_shot))
-
-    order: list[str] = []
-    main_window = OpenHCSMainWindow.__new__(OpenHCSMainWindow)
-    OpenHCSMainWindow._defer_time_travel_navigation(
-        main_window,
-        lambda: order.append("navigate"),
-    )
-    QTimer.singleShot(0, lambda: order.append("refresh"))
-
-    while callbacks:
-        callback = callbacks.pop(0)
-        callback()
-
-    assert order == ["refresh", "navigate"]
 
 
 def test_time_travel_function_scope_reopens_parent_step_with_parent_state() -> None:
@@ -291,8 +217,7 @@ def test_time_travel_function_scope_reopens_parent_step_with_parent_state() -> N
     ObjectStateRegistry.register(step_state, _skip_snapshot=True)
     ObjectStateRegistry.register(function_state, _skip_snapshot=True)
 
-    requests = OpenHCSMainWindow._build_time_travel_window_requests(
-        OpenHCSMainWindow.__new__(OpenHCSMainWindow),
+    requests = NAVIGATOR.window_requests(
         [(function_scope, function_state)],
         function_scope,
     )
@@ -317,8 +242,7 @@ def test_time_travel_step_source_bindings_child_targets_step_settings() -> None:
     ObjectStateRegistry.register(step_state, _skip_snapshot=True)
     step_state._last_changed_field = field_path
 
-    requests = OpenHCSMainWindow._build_time_travel_window_requests(
-        OpenHCSMainWindow.__new__(OpenHCSMainWindow),
+    requests = NAVIGATOR.window_requests(
         [(step_scope, step_state)],
         step_scope,
     )
@@ -441,14 +365,6 @@ def test_dual_editor_function_navigation_does_not_use_step_build_callbacks(
     window.close()
 
 
-def test_time_travel_step_field_target_replaces_stale_function_target() -> None:
-    field_target = make_field_path_target("source_bindings.source_filters")
-    function_target = make_function_token_target("function_0")
-
-    assert should_replace_navigation_target(function_target, field_target)
-    assert not should_replace_navigation_target(field_target, function_target)
-
-
 def test_time_travel_unknown_trigger_prefers_source_bindings_field_over_function_scope() -> (
     None
 ):
@@ -470,15 +386,11 @@ def test_time_travel_unknown_trigger_prefers_source_bindings_field_over_function
     ObjectStateRegistry.register(function_state, _skip_snapshot=True)
     step_state._last_changed_field = field_path
 
-    main_window = OpenHCSMainWindow.__new__(OpenHCSMainWindow)
-
-    function_first = OpenHCSMainWindow._build_time_travel_window_requests(
-        main_window,
+    function_first = NAVIGATOR.window_requests(
         [(function_scope, function_state), (step_scope, step_state)],
         None,
     )
-    step_first = OpenHCSMainWindow._build_time_travel_window_requests(
-        main_window,
+    step_first = NAVIGATOR.window_requests(
         [(step_scope, step_state), (function_scope, function_state)],
         None,
     )

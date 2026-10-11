@@ -24,9 +24,9 @@ from openhcs.core.plate_image_inventory import PlateFileKind, PlateImageInventor
 from openhcs.core.source_bindings import (
     MetadataSelector,
     NamedSourceBinding,
-    SourceBindingsConfig,
     SourceSelector,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.core.source_workspace_projection import WorkspaceSourceProjections
 from openhcs.core.source_metadata import SourceVoxelSpacing

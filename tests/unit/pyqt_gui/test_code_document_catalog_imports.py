@@ -13,7 +13,7 @@ from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogServiceABC,
     UnknownFunctionIdError,
 )
-from openhcs.core.callable_contract import CallableImportIdentity, CallableMetadata
+from openhcs.core.callable_contract import CallableImportIdentity, CallableDeclaration
 from openhcs.core.config import LazyDtypeConfig
 from openhcs.core.function_reference import (
     FunctionReferenceTransportAuthority,
@@ -53,12 +53,12 @@ def catalog():
             module_name="skimage.filters.edges", function_name="sobel"
         ),
         composite_key="skimage:filters.sobel",
-        metadata=CallableMetadata(
+        declaration=CallableDeclaration(
             input_memory_type="numpy",
             output_memory_type="numpy",
             execution_memory_type="numpy",
             processing_contract=FlexibleContract,
-            runtime_bound_parameters=(SliceBySliceRuntimeParameter,),
+            runtime_bound_parameter_types=(SliceBySliceRuntimeParameter,),
         ),
     )
     service.reference.return_value = reference
@@ -103,8 +103,8 @@ def test_catalog_import_preserves_selected_registry_wrapper(
     assert resolved is catalog.reference.return_value.resolve()
     transported = FunctionReferenceTransportAuthority.function_reference(resolved)
     assert transported.composite_key == catalog.reference.return_value.composite_key
-    assert transported.metadata.processing_contract is FlexibleContract
-    assert SliceBySliceRuntimeParameter in transported.metadata.runtime_bound_parameters
+    assert transported.declaration.processing_contract is FlexibleContract
+    assert SliceBySliceRuntimeParameter in transported.declaration.runtime_bound_parameter_types
     rendered = PlateManagerCodeDocumentAuthority.render(result)
     repeated = executor.validate_source(rendered, operations)
     assert repeated.pipeline_data["/tmp/plate"][0].func is resolved

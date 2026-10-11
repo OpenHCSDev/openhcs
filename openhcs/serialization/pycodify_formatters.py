@@ -2,37 +2,27 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable
-from dataclasses import dataclass, fields
-from enum import Enum
 from pathlib import Path
 
 from objectstate import semantic_values_equal
-from objectstate.field_access import DataclassFieldAccess, DottedFieldPath
-from objectstate.lazy_factory import LazyDataclass
-from pycodify import FormatContext, SourceFormatter, SourceFragment, to_source
+from objectstate.codegen import field_needs_source
+from pycodify import (
+    FormatContext,
+    SourceFormatter,
+    SourceFragment,
+    imported_name,
+    to_source,
+)
 from pyqt_reactive.pattern_metadata import PatternScopeToken
 from python_introspect import callable_declaration_kwargs, parameter_exclusions
 
 from openhcs.core.axes import is_grouping_declaration
-from openhcs.core.callable_contract import CallableContract, CallableImportIdentity
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,
-    ImportableFunctionReference,
 )
 from openhcs.core.steps.function_step import FunctionStep
-
-
-class NameMappingLookup:
-    @staticmethod
-    def resolve(
-        context: FormatContext,
-        import_pair: tuple[str, str],
-        default_name: str,
-    ) -> str:
-        if import_pair in context.name_mappings:
-            return context.name_mappings[import_pair]
-        return default_name
 
 
 class OpenHCSCallableFormatter(SourceFormatter):
@@ -45,109 +35,7 @@ class OpenHCSCallableFormatter(SourceFormatter):
         return FunctionReferenceTransportAuthority.function_reference(value)
 
     def format(self, value, context: FormatContext) -> SourceFragment:
-        try:
-            reference = self.reference_for(value)
-        except RuntimeError:
-            return SourceFragment(repr(value), frozenset())
-        return to_source(reference, context)
-
-
-class OpenHCSImportableTypeFormatter(OpenHCSCallableFormatter):
-    """Classes own direct declaration imports, not processing-registry lookup."""
-
-    priority = 76
-
-    def can_format(self, value) -> bool:
-        return inspect.isclass(value)
-
-    def reference_for(self, value) -> FunctionReference:
-        identity = CallableImportIdentity.from_callable(value)
-        return ImportableFunctionReference(
-            import_identity=identity, composite_key=identity.import_path,
-        )
-
-
-class AxisDeclarationFormatter(SourceFormatter):
-    """Axes and grouping declarations are spelled by their qualified class path."""
-
-    priority = 77
-
-    def can_format(self, value) -> bool:
-        return is_grouping_declaration(value)
-
-    def format(self, value, context: FormatContext) -> SourceFragment:
-        root_name, _, nested_path = value.__qualname__.partition(".")
-        import_pair = (value.__module__, root_name)
-        mapped_root = NameMappingLookup.resolve(context, import_pair, root_name)
-        reference = f"{mapped_root}.{nested_path}" if nested_path else mapped_root
-        return SourceFragment(reference, frozenset([import_pair]))
-
-
-class PythonSourceLiteralFormatter(SourceFormatter):
-    priority = 120
-
-    def can_format(self, value) -> bool:
-        from openhcs.core.python_source_literal import PythonSourceLiteral
-
-        return isinstance(value, PythonSourceLiteral)
-
-    def format(self, value, context: FormatContext) -> SourceFragment:
-        return SourceFragment(
-            value.source_literal_with_names(context.name_mappings),
-            value.source_literal_imports(),
-        )
-
-
-class OpenHCSPathFormatter(SourceFormatter):
-    """Collect and substitute document-scoped path expressions."""
-
-    priority = 118
-
-    def can_format(self, value) -> bool:
-        return isinstance(value, Path)
-
-    def format(self, value: Path, context: FormatContext) -> SourceFragment:
-        from openhcs.serialization.source_path_factoring import (
-            SourcePathFactoringPlan,
-            SourcePathOccurrenceCollector,
-        )
-
-        collector = context.extension(SourcePathOccurrenceCollector)
-        if collector is not None:
-            collector.record(value)
-        plan = context.extension(SourcePathFactoringPlan)
-        if plan is not None:
-            expression = plan.expression_for(value)
-            if expression is not None:
-                return to_source(expression, context)
-
-        import_pair = ("pathlib", "Path")
-        name = NameMappingLookup.resolve(context, import_pair, "Path")
-        return SourceFragment(
-            f"{name}({str(value)!r})",
-            frozenset((import_pair,)),
-        )
-
-
-class EnumMemberFormatter(SourceFormatter):
-    priority = 115
-
-    def can_format(self, value) -> bool:
-        return isinstance(value, Enum)
-
-    def format(self, value, context: FormatContext) -> SourceFragment:
-        enum_type = type(value)
-        if "<locals>" in enum_type.__qualname__:
-            return SourceFragment(repr(value), frozenset())
-
-        root_name, _, nested_path = enum_type.__qualname__.partition(".")
-        import_pair = (enum_type.__module__, root_name)
-        mapped_root = NameMappingLookup.resolve(context, import_pair, root_name)
-        enum_reference = f"{mapped_root}.{nested_path}" if nested_path else mapped_root
-        return SourceFragment(
-            f"{enum_reference}.{value.name}",
-            frozenset([import_pair]),
-        )
+        return to_source(self.reference_for(value), context)
 
 
 class MaterializationSpecFormatter(SourceFormatter):
@@ -159,17 +47,12 @@ class MaterializationSpecFormatter(SourceFormatter):
         return isinstance(value, MaterializationSpec)
 
     def format(self, value, context: FormatContext) -> SourceFragment:
-        materialization_type = type(value)
-        import_pair = (
-            materialization_type.__module__,
-            materialization_type.__name__,
-        )
-        class_name = NameMappingLookup.resolve(
-            context, import_pair, materialization_type.__name__
+        class_ref = imported_name(
+            type(value).__module__, type(value).__qualname__, context
         )
         item_ctx = context.indented()
         output_frags = [to_source(output, item_ctx) for output in value.outputs]
-        imports = {import_pair}
+        imports = set(class_ref.imports)
         for frag in output_frags:
             imports |= set(frag.imports)
 
@@ -189,7 +72,7 @@ class MaterializationSpecFormatter(SourceFormatter):
 
         inner = f",\n{item_ctx.indent_str}".join(args)
         return SourceFragment(
-            f"{class_name}(\n{item_ctx.indent_str}{inner}\n{context.indent_str})",
+            f"{class_ref.code}(\n{item_ctx.indent_str}{inner}\n{context.indent_str})",
             frozenset(imports),
         )
 
@@ -311,228 +194,6 @@ class FunctionPatternListFormatter(SourceFormatter):
         return SourceFragment(code, imports)
 
 
-@dataclass(frozen=True)
-class LazyDataclassFieldEmissionState:
-    explicit_field_names: frozenset[str]
-    has_concrete_field_values: bool
-
-    @classmethod
-    def from_instance(cls, value: LazyDataclass) -> "LazyDataclassFieldEmissionState":
-        raw_values = value.__dict__
-        explicit_field_names = frozenset(raw_values["_explicitly_set_fields"])
-        has_concrete_field_values = any(
-            raw_values[field.name] is not None for field in fields(value)
-        )
-        return cls(
-            explicit_field_names=explicit_field_names,
-            has_concrete_field_values=has_concrete_field_values,
-        )
-
-    @property
-    def requires_serialization(self) -> bool:
-        return bool(self.explicit_field_names) or self.has_concrete_field_values
-
-    @staticmethod
-    def value_requires_clean_serialization(value) -> bool:
-        if value is None:
-            return False
-        if isinstance(value, LazyDataclass):
-            return LazyDataclassFieldEmissionState.from_instance(
-                value
-            ).requires_serialization
-        return True
-
-    @staticmethod
-    def raw_field_values_match(left: LazyDataclass, right: LazyDataclass) -> bool:
-        if type(left) is not type(right):
-            return False
-        left_values = left.__dict__
-        right_values = right.__dict__
-        for field in fields(left):
-            left_value = left_values[field.name]
-            right_value = right_values[field.name]
-            if isinstance(left_value, LazyDataclass) and isinstance(
-                right_value,
-                LazyDataclass,
-            ):
-                if not LazyDataclassFieldEmissionState.raw_field_values_match(
-                    left_value,
-                    right_value,
-                ):
-                    return False
-            elif left_value != right_value:
-                return False
-        return True
-
-    @classmethod
-    def retain_only_authored_paths(
-        cls,
-        value: LazyDataclass,
-        authored_field_paths: frozenset[str] | set[str],
-    ) -> LazyDataclass:
-        """Restore constructor intent after a flattened ObjectState rebuild.
-
-        ObjectState reconstructs lazy dataclasses from every flattened field so
-        their constructors can preserve raw ``None`` inheritance markers. That
-        necessarily marks every constructor keyword as explicit. Clean source
-        generation instead needs the raw-vs-signature paths already owned by
-        ObjectState, so apply those paths to the existing lazy metadata without
-        changing field values.
-        """
-
-        paths = tuple(DottedFieldPath(path) for path in authored_field_paths)
-        return cls._copy_with_only_authored_paths(
-            value,
-            prefix=DottedFieldPath(""),
-            authored_field_paths=paths,
-        )
-
-    @classmethod
-    def _copy_with_only_authored_paths(
-        cls,
-        value: LazyDataclass,
-        *,
-        prefix: DottedFieldPath,
-        authored_field_paths: tuple[DottedFieldPath, ...],
-    ) -> LazyDataclass:
-        field_values = {}
-        for field in fields(value):
-            field_value = DataclassFieldAccess.raw_value(value, field.name)
-            if isinstance(field_value, LazyDataclass):
-                field_value = cls._copy_with_only_authored_paths(
-                    field_value,
-                    prefix=prefix.child(field.name),
-                    authored_field_paths=authored_field_paths,
-                )
-            field_values[field.name] = field_value
-
-        projected = type(value)(**field_values)
-        explicit_field_names = {
-            field.name
-            for field in fields(projected)
-            if prefix.child(field.name).contains_any(authored_field_paths)
-        }
-        object.__setattr__(projected, "_explicitly_set_fields", explicit_field_names)
-        return projected
-
-
-@dataclass(frozen=True)
-class LazyDataclassSerializedField:
-    name: str
-    fragment: SourceFragment
-
-
-@dataclass(frozen=True)
-class LazyDataclassSerializationPlan:
-    class_name: str
-    import_pair: tuple[str, str]
-    fields: tuple[LazyDataclassSerializedField, ...]
-
-    @classmethod
-    def from_instance(
-        cls,
-        value: LazyDataclass,
-        context: FormatContext,
-    ) -> "LazyDataclassSerializationPlan":
-        lazy_class = type(value)
-        import_pair = (lazy_class.__module__, lazy_class.__name__)
-        if import_pair in context.name_mappings:
-            class_name = context.name_mappings[import_pair]
-        else:
-            class_name = lazy_class.__name__
-
-        raw_values = value.__dict__
-        explicit_field_names = raw_values["_explicitly_set_fields"]
-        field_ctx = context.indented()
-        serialized_fields = []
-
-        for field in fields(value):
-            current_value = raw_values[field.name]
-            if context.clean_mode and current_value is None:
-                continue
-            if context.clean_mode and field.name not in explicit_field_names:
-                if not LazyDataclassFieldEmissionState.value_requires_clean_serialization(
-                    current_value
-                ):
-                    continue
-
-            serialized_fields.append(
-                LazyDataclassSerializedField(
-                    name=field.name,
-                    fragment=to_source(current_value, field_ctx),
-                )
-            )
-
-        return cls(
-            class_name=class_name,
-            import_pair=import_pair,
-            fields=tuple(serialized_fields),
-        )
-
-
-class LazyDataclassFormatEligibility:
-    @staticmethod
-    def accepts(candidate) -> bool:
-        return isinstance(candidate, LazyDataclass)
-
-
-class FunctionStepCleanModeFieldPolicy:
-    def should_emit(
-        self,
-        field_name,
-        current_value,
-        default_value,
-        context: FormatContext,
-    ) -> bool:
-        if not context.clean_mode:
-            return True
-
-        if isinstance(current_value, LazyDataclass):
-            emission_state = LazyDataclassFieldEmissionState.from_instance(
-                current_value
-            )
-            if not emission_state.requires_serialization:
-                return False
-            if isinstance(
-                default_value, LazyDataclass
-            ) and LazyDataclassFieldEmissionState.raw_field_values_match(
-                current_value,
-                default_value,
-            ):
-                return False
-            return True
-
-        return current_value != default_value
-
-
-class LazyDataclassFormatter(SourceFormatter):
-    priority = 36
-
-    def can_format(self, value) -> bool:
-        return LazyDataclassFormatEligibility.accepts(value)
-
-    def format(self, value: LazyDataclass, context: FormatContext) -> SourceFragment:
-        plan = LazyDataclassSerializationPlan.from_instance(value, context)
-        imports = {plan.import_pair}
-        field_ctx = context.indented()
-        lines = []
-
-        for field in plan.fields:
-            imports |= field.fragment.imports
-            lines.append(f"{field.name}={field.fragment.code}")
-
-        if not lines:
-            return SourceFragment(f"{plan.class_name}()", frozenset(imports))
-
-        inner = f",\n{field_ctx.indent_str}".join(lines)
-        code = (
-            f"{plan.class_name}(\n"
-            f"{field_ctx.indent_str}{inner}\n"
-            f"{context.indent_str})"
-        )
-        return SourceFragment(code, frozenset(imports))
-
-
 class FunctionStepFormatter(SourceFormatter):
     priority = 80
 
@@ -564,7 +225,6 @@ class FunctionStepFormatter(SourceFormatter):
         field_ctx = context.indented()
         params = []
         imports = set()
-        field_policy = FunctionStepCleanModeFieldPolicy()
 
         for name, param in signatures:
             if name in step_values:
@@ -577,27 +237,21 @@ class FunctionStepFormatter(SourceFormatter):
             else:
                 default_value = param.default
 
-            if not field_policy.should_emit(
-                name,
-                current_value,
-                default_value,
-                context,
-            ):
+            if not field_needs_source(current_value, default_value, context):
                 continue
 
             frag = to_source(current_value, field_ctx)
             imports |= frag.imports
             params.append(f"{name}={frag.code}")
 
-        import_pair = (FunctionStep.__module__, FunctionStep.__name__)
-        class_name = NameMappingLookup.resolve(
-            context, import_pair, FunctionStep.__name__
+        class_ref = imported_name(
+            FunctionStep.__module__, FunctionStep.__qualname__, context
         )
-        imports.add(import_pair)
+        imports |= class_ref.imports
 
         if not params:
-            return SourceFragment(f"{class_name}()", frozenset(imports))
+            return SourceFragment(f"{class_ref.code}()", frozenset(imports))
 
         inner = f",\n{field_ctx.indent_str}".join(params)
-        code = f"{class_name}(\n{field_ctx.indent_str}{inner}\n{context.indent_str})"
+        code = f"{class_ref.code}(\n{field_ctx.indent_str}{inner}\n{context.indent_str})"
         return SourceFragment(code, frozenset(imports))

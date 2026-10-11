@@ -17,8 +17,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ImageArtifactType,
 )
-from openhcs.core.config import StepSourceBindingsConfig
-from openhcs.core.source_bindings import EMPTY_SOURCE_BINDINGS
+from openhcs.core.config import EMPTY_SOURCE_BINDINGS, StepSourceBindingsConfig
 from openhcs.core.axes import GroupingDeclaration, Ungrouped, is_grouping_declaration
 
 _ClaimValue = TypeVar("_ClaimValue")
@@ -93,11 +92,6 @@ class ArtifactDeclarationStepContext:
             raise TypeError(
                 "ArtifactDeclarationStepContext.step_index must be int or None, "
                 f"got {type(self.step_index).__name__}."
-            )
-        if not isinstance(self.source_bindings, StepSourceBindingsConfig):
-            raise TypeError(
-                "ArtifactDeclarationStepContext.source_bindings must be "
-                f"StepSourceBindingsConfig, got {type(self.source_bindings).__name__}."
             )
         if not is_grouping_declaration(self.group_by):
             raise TypeError(
@@ -411,10 +405,7 @@ class MainFlowArtifactContractProvider(
         ).unique(conflict_context="main-flow artifact input")
         return InvocationContractPlan(
             contract=replace(
-                contract,
-                metadata=replace(
-                    contract.metadata, artifact_inputs=inputs, artifact_outputs=outputs
-                ),
+                contract, artifact_inputs=inputs, artifact_outputs=outputs
             )
         )
 

@@ -37,16 +37,17 @@ from benchmark.contracts.tool_adapter import (
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.constants import Backend
-from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    PartitionFilterConfig,
+    SourceBindingsConfig,
+    source_bindings_defaults_to_base,
+)
 from openhcs.core.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
     materialize_source_binding_workspace,
 )
-from openhcs.core.source_bindings import (
-    ImportedMetadataTable,
-    SourceBindingsConfig,
-    source_bindings_defaults_to_base,
-)
+from openhcs.core.source_bindings import ImportedMetadataTable
 from openhcs.core.partition_filter import PartitionFilterProcessor
 from benchmark.equivalence.runtime import RuntimeOutputSnapshot
 from openhcs.interop.cellprofiler.parser import CPPipeParser
@@ -1287,7 +1288,7 @@ def native_cellprofiler_partition_filter_scope_slug(
         filter_slug = (
             "_".join(_scope_slug_fragment(value) for value in partition_filter) or "empty"
         )
-    return f"wells_{partition_filter_config.partition_filter_mode.value}_{filter_slug}"
+    return f"wells_{partition_filter_config.partition_filter_mode.name}_{filter_slug}"
 
 
 def native_cellprofiler_reference_scope_slugs(

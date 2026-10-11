@@ -10,7 +10,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     MeasurementsArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
@@ -70,13 +70,11 @@ def test_align_projection_reads_ordered_image_outputs_from_callable_contract() -
         func=lambda: None,
         function_name="align",
         module_name="Align",
-        metadata=CallableMetadata(
-            artifact_outputs=(
+        artifact_outputs=(
                 ArtifactSpec.output("DNA", ImageArtifactType),
                 ArtifactSpec.output("AlignMeasurements", MeasurementsArtifactType),
                 ArtifactSpec.output("RNA", ImageArtifactType),
-            )
-        ),
+            ),
     )
 
     projected = AlignModule.MeasurementRows.for_request(

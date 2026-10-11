@@ -41,7 +41,7 @@ from openhcs.core.debug import (
     DebugCursor,
     DebugEvent,
     DebugEventSink,
-    DebugEventType,
+    DebugBoundary,
     DebugArtifactRefProjection,
     DebugInvocationParameter,
     debug_event_sink_from_context,
@@ -141,6 +141,11 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.axes import Axis, AxisFamily, PartitionAxis
 from openhcs.core.runtime_image_values import owned_runtime_value
 from openhcs.core.runtime_image_values import image_metadata_of
+from openhcs.core.debug import (
+    AfterInvocationDebugBoundary,
+    BeforeInvocationDebugBoundary,
+    ExceptionDebugBoundary,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -211,7 +216,7 @@ class PatternGroupExecutionScope:
     def main_flow_source_binding_plan(self) -> CompiledSourceBindingPlan:
         """Return bindings that anchor and load this group's main-flow stack."""
         declared_plan = self.execution_plan.source_binding_plan
-        selected = declared_plan.for_main_flow_scope(
+        return declared_plan.for_main_flow_scope(
             component=self.execution_plan.execution_group_scope.component,
             group_key=self.component_key,
             main_flow_refs=self.compiled_group.main_flow_input_refs_for_component(
@@ -220,7 +225,6 @@ class PatternGroupExecutionScope:
                 source_bindings=declared_plan,
             ),
         )
-        return declared_plan.for_artifact_refs(()) if selected is None else selected
 
     def active_main_flow_source_binding_plan(
         self,
@@ -1541,7 +1545,7 @@ class PatternGroupData(PatternGroupExecutionScope):
                 if captures_debug:
                     debug_sink.record(
                         executor.debug_event(
-                            DebugEventType.EXCEPTION,
+                            ExceptionDebugBoundary,
                             exception=exc,
                         )
                     )
@@ -1549,7 +1553,7 @@ class PatternGroupData(PatternGroupExecutionScope):
             invocation_seconds = time.perf_counter() - invocation_started_at
             if captures_debug:
                 after_event = executor.debug_event(
-                    DebugEventType.AFTER_INVOCATION,
+                    AfterInvocationDebugBoundary,
                     timing_seconds=invocation_seconds,
                 )
                 debug_sink.record(after_event)
@@ -1641,7 +1645,7 @@ class FunctionCoreDebugMixin:
 
     def debug_event(
         self,
-        event_type: DebugEventType,
+        event_type: type[DebugBoundary],
         *,
         exception: Exception | None = None,
         timing_seconds: float | None = None,
@@ -2098,7 +2102,7 @@ class FunctionCoreExecutor(FunctionCoreDebugMixin):
             bound_parameters[primary_parameter] = main_data_arg
             debug_sink.record(
                 self.debug_event(
-                    DebugEventType.BEFORE_INVOCATION,
+                    BeforeInvocationDebugBoundary,
                     invocation_parameters=DebugInvocationParameter.from_kwargs(
                         bound_parameters,
                         plane_projector=plane_projector,

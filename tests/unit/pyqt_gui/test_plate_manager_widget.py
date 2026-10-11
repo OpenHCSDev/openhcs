@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pyqt_reactive.widgets.shared.dock_layout import DockPane
 import ast
 import asyncio
 import threading
@@ -60,6 +61,7 @@ from openhcs.core.config import (
     LazySourceBindingsConfig,
     PipelineConfig,
     PartitionFilterConfig,
+    LazyStepSourceBindingsConfig,
 )
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
@@ -73,18 +75,13 @@ from openhcs.core.execution_state import (
 from openhcs.core.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent
 from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.core.source_bindings import (
-    LazyStepSourceBindingsConfig,
     MetadataSelector,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
+    PairByOrder,
     SourceSelector,
 )
 from openhcs.core.steps.function_step import FunctionStep
@@ -98,7 +95,6 @@ from openhcs.processing.backends.processors.numpy_processor import (
     percentile_normalize,
 )
 from openhcs.pyqt_gui.services.main_window_workflows import (
-    MainWindowDockPane,
     MainWindowEmbeddedWidgets,
     MainWindowPipelineActions,
 )
@@ -118,6 +114,10 @@ from tests.unit.pyqt_gui.session_harness import (
     add_datasets,
     caller_session,
     session_gui,
+)
+from openhcs.core.progress.types import (
+    RunningProgressStatus,
+    StepStartedProgressPhase,
 )
 
 
@@ -410,7 +410,7 @@ def test_workspace_import_replaces_steps_keeps_public_functions_and_applies_conf
     tmp_path,
 ) -> None:
     root, scope_id = _cellprofiler_dataset(tmp_path, "CropExample", "crop.cppipe")
-    match_plan = SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER)
+    match_plan = PairByOrder()
     pipeline_config = PipelineConfig(
         source_bindings_config=LazySourceBindingsConfig(match_plan=match_plan),
     )
@@ -471,7 +471,7 @@ def test_workspace_import_replaces_steps_keeps_public_functions_and_applies_conf
 def test_selection_does_not_reseed_a_dirty_imported_config(tmp_path) -> None:
     imported_config = PipelineConfig(
         source_bindings_config=LazySourceBindingsConfig(
-            match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+            match_plan=PairByOrder(),
         ),
     )
     with session_gui() as gui:
@@ -485,8 +485,8 @@ def test_selection_does_not_reseed_a_dirty_imported_config(tmp_path) -> None:
         session.import_workspace_pipeline(scope_id, workspace)
         state = ObjectStateRegistry.get_by_scope(scope_id)
         state.update_parameter(
-            "source_bindings_config.match_plan.method",
-            SourceBindingMatchMethod.METADATA,
+            "source_bindings_config.match_plan",
+            PairByMetadata(),
         )
 
         session.select((other,))
@@ -494,10 +494,10 @@ def test_selection_does_not_reseed_a_dirty_imported_config(tmp_path) -> None:
         gui.settle()
 
         assert (
-            state.parameters["source_bindings_config.match_plan.method"]
-            is SourceBindingMatchMethod.METADATA
+            state.parameters["source_bindings_config.match_plan"]
+            == PairByMetadata()
         )
-        assert "source_bindings_config.match_plan.method" in state.dirty_fields
+        assert "source_bindings_config.match_plan" in state.dirty_fields
         assert _names(session.pipeline_steps(scope_id)) == ["Imported"]
 
 
@@ -625,7 +625,7 @@ def test_embedded_manager_navigation_selects_the_exact_live_row(tmp_path) -> Non
         main_window.embedded_widgets = MainWindowEmbeddedWidgets()
         main_window.window_specs = {}
         main_window.embedded_widgets.register(
-            MainWindowDockPane.create(
+            DockPane.create(
                 main_window=main_window,
                 window_id=OpenHCSUiWindowId.plate_manager,
                 title="Plate Manager",
@@ -838,8 +838,8 @@ def test_progress_from_a_worker_thread_reaches_the_live_row(tmp_path) -> None:
                 subject_id=scope_id,
                 axis_id="A01",
                 step_name="Segment",
-                phase=ProgressPhase.STEP_STARTED,
-                status=ProgressStatus.RUNNING,
+                phase=StepStartedProgressPhase,
+                status=RunningProgressStatus,
                 percent=25.0,
                 completed=1,
                 total=4,

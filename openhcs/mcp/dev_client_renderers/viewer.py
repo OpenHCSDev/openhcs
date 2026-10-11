@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from objectstate import ScopeKey
 import json
 from collections.abc import Mapping
 from pathlib import Path
@@ -441,9 +442,9 @@ class ViewerRoiSummaryRenderer(ViewerResultRenderer):
         text = cls.text(value)
         if value is None or len(text) <= 80:
             return text
-        separator_index = text.rfind("::")
-        if separator_index >= 0:
-            return f"...{text[separator_index:]}"
+        route = ScopeKey(text)
+        if route.depth > 1:
+            return f"...{ScopeKey.SEPARATOR}{route.last}"
         return f"{text[:32]}...{text[-32:]}"
 
     @classmethod

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactInputProjectionPlan,
     ArtifactInputPlan,
@@ -13,7 +14,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecRef,
     ImageArtifactType,
 )
-from openhcs.core.callable_contract import CallableContract, CallableMetadata
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.function_patterns import (
@@ -101,14 +102,18 @@ def _runtime_sentinel(
 
 
 def _compiled_pattern(func):
-    return compile_function_pattern(func, {}, {})
+    return compile_function_pattern(admitted_graph(func), {}, {})
 
 
 def _compiled_pattern_with_exact_input_edges(
     func: FunctionPatternSyntax,
     input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
 ) -> CompiledFunctionPattern:
-    compiled = compile_function_pattern(func, input_plans, {})
+    compiled = compile_function_pattern(
+        admitted_graph(func),
+        input_plans,
+        {},
+    )
     groups = []
     for group in compiled.groups:
         invocations = []
@@ -148,7 +153,7 @@ def _compiled_pattern_with_exact_input_edges(
 
 @dataclass(frozen=True)
 class _MetadataTransformProvider(InvocationContractProvider):
-    transform: Callable[[CallableMetadata], CallableMetadata]
+    transform: Callable[[CallableDeclaration], CallableDeclaration]
 
     def __call__(
         self,
@@ -159,7 +164,7 @@ class _MetadataTransformProvider(InvocationContractProvider):
         return InvocationContractPlan(
             contract=replace(
                 invocation.contract,
-                metadata=self.transform(invocation.contract.metadata),
+                **self.transform(invocation.contract.declaration).field_values(),
             )
         )
 
@@ -178,10 +183,12 @@ def _compiled_semantic_step_plan(
         variable_components=variable_components,
         group_by=group_by,
         compiled_function_pattern=compile_function_pattern(
-            pattern,
+            admitted_graph(
+                pattern,
+                invocation_contract_provider=provider,
+            ),
             {},
             {},
-            invocation_contract_provider=provider,
         ),
     )
 

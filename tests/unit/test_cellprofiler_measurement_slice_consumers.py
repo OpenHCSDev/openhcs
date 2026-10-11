@@ -255,10 +255,7 @@ def _measurement_input_request(
     raw_callable_contract = CallableContract.from_callable(_measurement_consumer)
     callable_contract = replace(
         raw_callable_contract,
-        metadata=replace(
-            raw_callable_contract.metadata,
-            artifact_inputs=(measurement_spec,),
-        ),
+        artifact_inputs=(measurement_spec,),
     )
     return RuntimeInputBindingRequest(
         adapter=_MeasurementInputAdapter(

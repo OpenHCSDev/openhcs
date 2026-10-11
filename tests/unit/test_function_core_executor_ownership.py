@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -42,7 +43,11 @@ def _executor():
     first = {"value": 1}
     second = {"value": 2}
     pattern = compile_function_pattern(
-        (_consume_metadata, {"first": first, "second": second}), {}, {}
+        admitted_graph(
+            (_consume_metadata, {"first": first, "second": second}),
+        ),
+        {},
+        {},
     )
     invocation = next(pattern.iter_invocations())
     edges = tuple(
@@ -66,7 +71,7 @@ def _executor():
         input_memory_type="numpy",
         output_memory_type="numpy",
         execution_group_scope=ComponentGroupScope.ungrouped(),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
     )
     artifacts = ({edge.key: edge for edge in edges}, {})
     initial_image = np.arange(6, dtype=np.float32).reshape(1, 2, 3)

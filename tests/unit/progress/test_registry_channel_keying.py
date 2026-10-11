@@ -1,19 +1,16 @@
-from openhcs.core.progress import (
-    ProgressChannel,
-    ProgressChannelDeclarationBase,
-    ProgressEvent,
-    ProgressPhaseDeclarationBase,
-    ProgressPhase,
-    ProgressStatusDeclarationBase,
-    ProgressStatus,
-    registry,
+from openhcs.core.progress import ProgressEvent, ProgressPhase, ProgressStatus, registry
+from openhcs.core.progress.types import (
+    PatternGroupProgressPhase,
+    RunningProgressStatus,
+    StepCompletedProgressPhase,
+    SuccessProgressStatus,
 )
 
 
 def _event(
     *,
-    phase: ProgressPhase,
-    status: ProgressStatus,
+    phase: type[ProgressPhase],
+    status: type[ProgressStatus],
     percent: float,
     axis_id: str = "A01",
     step_name: str = "pipeline",
@@ -40,15 +37,15 @@ def test_registry_keeps_pipeline_and_step_channels_separate():
     tracker.clear_all()
 
     pipeline_event = _event(
-        phase=ProgressPhase.STEP_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=StepCompletedProgressPhase,
+        status=SuccessProgressStatus,
         percent=25.0,
         completed=1,
         total=4,
     )
     step_event = _event(
-        phase=ProgressPhase.PATTERN_GROUP,
-        status=ProgressStatus.RUNNING,
+        phase=PatternGroupProgressPhase,
+        status=RunningProgressStatus,
         percent=50.0,
         completed=1,
         total=2,
@@ -61,12 +58,6 @@ def test_registry_keeps_pipeline_and_step_channels_separate():
     events = tracker.get_events("exec-1")
     assert len(events) == 2
     phase_set = {event.phase for event in events}
-    assert phase_set == {ProgressPhase.STEP_COMPLETED, ProgressPhase.PATTERN_GROUP}
+    assert phase_set == {StepCompletedProgressPhase, PatternGroupProgressPhase}
 
     tracker.clear_all()
-
-
-def test_progress_semantic_declarations_cover_wire_tokens():
-    assert set(ProgressChannelDeclarationBase.__registry__) == set(ProgressChannel)
-    assert set(ProgressPhaseDeclarationBase.__registry__) == set(ProgressPhase)
-    assert set(ProgressStatusDeclarationBase.__registry__) == set(ProgressStatus)

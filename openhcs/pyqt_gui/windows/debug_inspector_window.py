@@ -28,7 +28,8 @@ from openhcs.core.debug import (
     DebugSnapshotStore,
     LocalDebugSnapshotStore,
 )
-from openhcs.core.debug_views import (
+from openhcs.core.debug_views import snapshot_view_model
+from openhcs.core.debug_view_models import (
     DebugViewModel,
     DebugViewSection,
     DebugViewSectionDeclarationBase,
@@ -90,7 +91,7 @@ class DebugInspectorWindow(QDialog):
     ) -> None:
         super().__init__(parent)
         self.snapshot_renderer = (
-            DebugViewModel.from_debug_snapshot
+            snapshot_view_model
             if snapshot_renderer is None
             else snapshot_renderer
         )
@@ -168,7 +169,7 @@ class DebugInspectorWindow(QDialog):
     def _section_widget(self, section: DebugViewSection) -> QWidget:
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        section_declaration = DebugViewSectionDeclarationBase.for_kind(section.kind)
+        section_declaration = DebugViewSectionDeclarationBase.__registry__[section.kind]
         if section.table is not None:
             if not section.table.rows:
                 layout.addWidget(
@@ -192,9 +193,9 @@ class DebugInspectorWindow(QDialog):
             return None
         if section.table.projection is None:
             return None
-        table_declaration = DebugViewTableProjectionDeclarationBase.for_projection(
+        table_declaration = DebugViewTableProjectionDeclarationBase.__registry__[
             section.table.projection
-        )
+        ]
         if not table_declaration.supports_artifact_actions:
             return None
         return self._artifact_actions_widget(self.current_snapshot)

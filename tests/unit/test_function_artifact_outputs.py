@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 import numpy as np
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.processing.backends.cellprofiler.crop import CropMask
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.artifacts import (
@@ -192,7 +193,7 @@ def _execute_function_core(request: CoreExecutionRequest):
         else {request.group_key: [request.func_callable]}
     )
     compiled_pattern = compile_function_pattern(
-        pattern,
+        admitted_graph(pattern),
         request.artifact_inputs,
         request.artifact_outputs,
     )
@@ -212,12 +213,7 @@ def _execute_function_core(request: CoreExecutionRequest):
     declared_contract = compiled_invocation.contract
     contract = replace(
         declared_contract,
-        metadata=replace(
-            declared_contract.metadata,
-            input_memory_type=MEMORY_TYPE_NUMPY,
-            output_memory_type=MEMORY_TYPE_NUMPY,
-            processing_contract=request.processing_contract,
-        ),
+        input_memory_type=MEMORY_TYPE_NUMPY, output_memory_type=MEMORY_TYPE_NUMPY, processing_contract=request.processing_contract,
     )
     invocation = replace(
         compiled_invocation,
@@ -230,7 +226,7 @@ def _execute_function_core(request: CoreExecutionRequest):
         step_name="test",
         axis_id=request.context.axis_id,
         input_memory_type=MEMORY_TYPE_NUMPY,
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
         variable_components=(),
         execution_group_scope=request.execution_group_scope,
         compiled_function_pattern=compiled_pattern,
@@ -1735,7 +1731,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
     )
     invocation = next(
         compile_function_pattern(
-            rgb_output,
+            admitted_graph(rgb_output),
             {},
             {plan.ref(): plan for plan in (output_plan,)},
         ).iter_invocations()
@@ -1789,7 +1785,11 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
 
     runtime = PatternGroupExecutionRequest(
-        compiled_group=compile_function_pattern(passthrough, {}, {}).default_group,
+        compiled_group=compile_function_pattern(
+            admitted_graph(passthrough),
+            {},
+            {},
+        ).default_group,
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="DeclaredOutput",
@@ -1836,7 +1836,11 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
     )
 
     runtime = PatternGroupExecutionRequest(
-        compiled_group=compile_function_pattern(passthrough, {}, {}).default_group,
+        compiled_group=compile_function_pattern(
+            admitted_graph(passthrough),
+            {},
+            {},
+        ).default_group,
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="DeclaredObjectLabels",
@@ -2344,7 +2348,7 @@ def test_measurement_subject_is_required_before_schema_rows_execute(boundary):
 
             CallableContract.from_callable(count).validate_artifact_output_declarations()
         else:
-            compile_function_pattern(count, {}, {})
+            compile_function_pattern(admitted_graph(count), {}, {})
     assert "ImageMeasurementSubjectRelation" in str(exc.value)
     assert "ArtifactSpec.output" in str(exc.value)
 
@@ -2409,7 +2413,7 @@ def test_compile_rejects_conflicting_measurement_subject_relations():
         return image
 
     with pytest.raises(ValueError, match="multiple measurement subjects"):
-        compile_function_pattern(count, {}, {})
+        compile_function_pattern(admitted_graph(count), {}, {})
 
 
 def test_execute_function_core_wraps_columnar_rows_with_compiled_measurement_identity():
@@ -2888,7 +2892,7 @@ def test_function_runtime_stacks_and_unstacks_explicit_runtime_slices():
 def _declared_source_executor(
     spec: ArtifactSpec,
     *,
-    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan.empty(),
+    source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
     main_flow_projection: MainFlowInputProjection = (
         MainFlowInputProjection.DECLARED_SOURCE_IMAGE
     ),
@@ -2899,7 +2903,7 @@ def _declared_source_executor(
 
     invocation = next(
         compile_function_pattern(
-            declared_source_origin,
+            admitted_graph(declared_source_origin),
             {},
             {},
         ).iter_invocations()

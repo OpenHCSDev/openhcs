@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.config_cache import ConfigCacheSpec, load_config_sync
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.pyqt_gui.services.ui_agent_bridge import UiCodeDocumentSourcePolicy
@@ -1235,7 +1236,7 @@ def test_demo_source_saves_source_bindings_through_pipeline_config(
             is pipeline_namespace["pipeline_data"][str(context.plate_dir)]
         )
         for step in pipeline_namespace["pipeline_steps"]:
-            compile_function_pattern(step.func, {}, {})
+            compile_function_pattern(admitted_graph(step.func), {}, {})
         bindings = pipeline_config.source_bindings_config.bindings
         states.append(
             (

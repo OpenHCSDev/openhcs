@@ -17,6 +17,7 @@ from polystore.streaming.viewer_transport import (
 from polystore.virtual_workspace import SourcePixelRef
 from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import Backend
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.artifacts import (
@@ -34,7 +35,7 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import TiffConfig, PartitionFilterMode
+from openhcs.core.config import TiffConfig
 from openhcs.domains.microscopy.analysis_consolidation import AnalysisConsolidationHook
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
@@ -115,6 +116,7 @@ from openhcs.domains.microscopy.axes import Microscopy
 from tests.unit.viewer_axes_fixture import STREAM_AXES
 from openhcs.core.streaming_config_declarations import NapariViewer
 from openhcs.core.payload_axes import PayloadAxes
+from openhcs.core.config import IncludePartitions
 
 
 def _publish_saved_step(context, plan, *, artifact_materializations=()):
@@ -492,7 +494,11 @@ def function_step_plan(
         step_scope_id=f"step-scope-{pipeline_position}",
         main_input_dependency=StepInputDependency.no_main_flow(),
         variable_components=variable_components,
-        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        compiled_function_pattern=compile_function_pattern(
+            admitted_graph(lambda image: image),
+            {},
+            {},
+        ),
     )
 
 
@@ -797,7 +803,7 @@ def test_stream_outputs_respects_compiled_filter_for_streaming_config():
             {
                 type(config): StepAxisFilterResolution(
                     resolved_axis_values=frozenset({"B03"}),
-                    filter_mode=PartitionFilterMode.INCLUDE,
+                    filter_mode=IncludePartitions,
                     original_filter="B03",
                 )
             }

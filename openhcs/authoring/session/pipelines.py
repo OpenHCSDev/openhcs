@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from objectstate import ScopeKey
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Self
@@ -13,10 +14,7 @@ from openhcs.authoring.session.datasets import (
     DATASET_LIST_SCOPE_ID,
     dataset_scope_ids,
 )
-from openhcs.core.dataset_sources.dataset_scopes import (
-    SCOPE_SEGMENT_SEPARATOR,
-    DatasetScope,
-)
+from openhcs.core.dataset_sources.dataset_scopes import DatasetScope
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from openhcs.authoring.session.step_scopes import FunctionStepScopeToken
 from pyqt_reactive.services.function_pattern_code_document import (
@@ -196,7 +194,7 @@ class PipelineObjectStateBinding:
             for token in binding._flatten_function_tokens(
                 step_state.metadata.get(FUNC_EDITOR_PATTERN_TOKENS_META_KEY)
             ):
-                function_scope_id = f"{step_scope_id}{SCOPE_SEGMENT_SEPARATOR}{token}"
+                function_scope_id = ScopeKey(step_scope_id).child(token)
                 function_state = ObjectStateRegistry.get_by_scope(function_scope_id)
                 if function_state is None:
                     raise RuntimeError(
@@ -264,9 +262,7 @@ class PipelineObjectStateBinding:
         previous_tokens: list[str] = []
         for scope_id in existing_step_scope_ids:
             state = ObjectStateRegistry.get_by_scope(scope_id)
-            token = FunctionStepScopeToken.from_segment(
-                scope_id.rsplit(SCOPE_SEGMENT_SEPARATOR, 1)[-1]
-            )
+            token = FunctionStepScopeToken.from_segment(ScopeKey(scope_id).last)
             if state is None:
                 raise ValueError(
                     f"Pipeline editor declares missing ObjectState scope {scope_id!r}."
@@ -409,7 +405,7 @@ class PipelineObjectStateBinding:
             pattern_tokens,
         ):
             func_obj, kwargs, token = entry.func, entry.kwargs, entry.token
-            func_scope_id = f"{scope_id}{SCOPE_SEGMENT_SEPARATOR}{token}"
+            func_scope_id = ScopeKey(scope_id).child(token)
             existing_func_state = ObjectStateRegistry.get_by_scope(func_scope_id)
             if existing_func_state is not None:
                 existing_func_state = FunctionPatternCodeDocumentService.synchronize_existing_function_state(
@@ -554,7 +550,7 @@ class PipelineObjectStateBinding:
 
         if token is None:
             return func_item
-        child_scope_id = f"{parent_scope_id}::{token}"
+        child_scope_id = ScopeKey(parent_scope_id).child(token)
         child_state = (
             function_states[child_scope_id]
             if function_states is not None

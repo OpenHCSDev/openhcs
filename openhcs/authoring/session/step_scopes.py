@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from openhcs.core.dataset_sources.dataset_scopes import SCOPE_SEGMENT_SEPARATOR
+from objectstate import ScopeKey
 from openhcs.core.steps.function_step import FunctionStep
 from pyqt_reactive.services.function_navigation import (
     FUNCTION_FIELD_ROOT,
@@ -16,7 +16,7 @@ from pyqt_reactive.services.scope_token_service import ScopeTokenService
 
 FUNCTION_STEP_SCOPE_TOKEN_PREFIX = f"{FunctionStep.__name__.lower()}_"
 
-_SCOPE_SEPARATOR_PATTERN = re.escape(SCOPE_SEGMENT_SEPARATOR)
+_SCOPE_SEPARATOR_PATTERN = re.escape(ScopeKey.SEPARATOR)
 _FUNCTION_STEP_TOKEN_PATTERN = re.compile(
     rf"^{re.escape(FUNCTION_STEP_SCOPE_TOKEN_PREFIX)}(?P<index>\d+)$"
 )
@@ -76,23 +76,19 @@ class StepEditorScope:
 
     @classmethod
     def parse(cls, scope_id: str) -> "StepEditorScope":
-        segments = tuple(scope_id.split(SCOPE_SEGMENT_SEPARATOR))
+        segments = ScopeKey(scope_id).parts
         step_ref = cls._step_token_ref(segments)
         if step_ref is None:
             raise ValueError(f"Invalid step scope_id format: {scope_id}")
 
         step_token_index, step_token = step_ref
-        plate_scope = SCOPE_SEGMENT_SEPARATOR.join(segments[:step_token_index])
-        step_scope_id = SCOPE_SEGMENT_SEPARATOR.join(segments[: step_token_index + 1])
         child_segments = segments[step_token_index + 1 :]
         return cls(
             scope_id=scope_id,
-            plate_scope=plate_scope,
-            step_scope_id=step_scope_id,
+            plate_scope=ScopeKey.of(*segments[:step_token_index]),
+            step_scope_id=ScopeKey.of(*segments[: step_token_index + 1]),
             step_token=step_token,
-            child_scope_id=(
-                SCOPE_SEGMENT_SEPARATOR.join(child_segments) if child_segments else None
-            ),
+            child_scope_id=ScopeKey.of(*child_segments) if child_segments else None,
         )
 
     @classmethod

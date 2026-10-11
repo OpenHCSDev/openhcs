@@ -29,15 +29,12 @@ from openhcs.core.image_payload_execution_mode import (
 
 
 def _execute_prepared(func, source, kwargs, mode=NaturalExecution):
-    contract = NormalizedFunctionGroup.from_pattern("image", func).items[0].contract
+    contract = NormalizedFunctionGroup.from_chain("image", (func,)).items[0].contract
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
-    assert contract.metadata.canonical_signature is not None
+    assert contract.prepared_canonical_signature is not None
     assert contract.raw_main_flow_call_argument(source) is source
     return CellProfilerFunctionContractExecutor().execute(
         contract,

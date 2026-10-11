@@ -77,6 +77,7 @@ from openhcs.runtime.zmq_execution_signature import (
 )
 
 if TYPE_CHECKING:
+    from openhcs.core.debug import DebugCommandType
     from openhcs.agent.dto.functions import (
         CustomFunctionRegistrationDestination,
         CustomFunctionRegistrationDestinationRequest,
@@ -1171,7 +1172,6 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         snapshot_store_backend: str | None = None,
     ):
         from openhcs.core.debug import (
-            DebugSnapshotReadControlPayload,
             DebugSnapshotReadRequest,
             DebugSnapshotReadResponse,
         )
@@ -1185,7 +1185,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
             snapshot_store_backend=snapshot_store_backend,
         )
         response = self._send_control_request(
-            DebugSnapshotReadControlPayload.from_request(request).to_dict()
+            request.to_dict()
         )
         return DebugSnapshotReadResponse.from_control_response(response).snapshot
 
@@ -1217,23 +1217,18 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         self,
         *,
         debug_session_id: str,
-        command_type,
+        command_type: type[DebugCommandType],
     ):
-        from openhcs.core.debug import (
-            DebugCommandType,
-            DebugWorkerCommandControlPayload,
-            DebugWorkerCommandRequest,
-            DebugWorkerCommandResponse,
-        )
+        from openhcs.core.debug import DebugWorkerCommandRequest, DebugWorkerCommandResponse
 
         if not self.is_connected() and not self.connect():
             raise RuntimeError("Failed to connect to execution server")
         request = DebugWorkerCommandRequest(
             debug_session_id=debug_session_id,
-            command_type=DebugCommandType(command_type),
+            command_type=command_type,
         )
         response = self._send_control_request(
-            DebugWorkerCommandControlPayload.from_request(request).to_dict()
+            request.to_dict()
         )
         return DebugWorkerCommandResponse.from_control_response(response)
 
@@ -1243,7 +1238,6 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         debug_session_id: str,
     ):
         from openhcs.core.debug import (
-            DebugRuntimeInspectionControlPayload,
             DebugRuntimeInspectionRequest,
             DebugRuntimeInspectionResponse,
         )
@@ -1252,7 +1246,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
             raise RuntimeError("Failed to connect to execution server")
         request = DebugRuntimeInspectionRequest(debug_session_id=debug_session_id)
         response = self._send_control_request(
-            DebugRuntimeInspectionControlPayload.from_request(request).to_dict()
+            request.to_dict()
         )
         return DebugRuntimeInspectionResponse.from_control_response(response).view_model
 
@@ -1266,7 +1260,6 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         snapshot_store_backend: str | None = None,
     ):
         from openhcs.core.debug import (
-            DebugArtifactExportControlPayload,
             DebugArtifactExportRequest,
             DebugArtifactExportResponse,
         )
@@ -1281,7 +1274,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
             snapshot_store_backend=snapshot_store_backend,
         )
         response = self._send_control_request(
-            DebugArtifactExportControlPayload.from_request(request).to_dict()
+            request.to_dict()
         )
         return DebugArtifactExportResponse.from_control_response(response)
 

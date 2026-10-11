@@ -12,7 +12,7 @@ from pyqt_reactive.services.window_code_document import (
 
 from openhcs.core.function_step_document import FunctionStepDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.ui.shared.code_editor_form_updater import CodeEditorFormUpdater
+from objectstate import patch_lazy_constructors
 
 
 class FunctionStepCodeDocumentDriver(WindowCodeDocumentDriver):
@@ -57,5 +57,5 @@ class FunctionStepCodeDocumentDriver(WindowCodeDocumentDriver):
 
     @staticmethod
     def _step_from_source(source: str) -> FunctionStep:
-        with CodeEditorFormUpdater.patch_lazy_constructors():
+        with patch_lazy_constructors():
             return FunctionStepDocumentCodec.from_source(source).step

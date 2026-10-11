@@ -14,12 +14,13 @@ from objectstate import (
     set_saved_global_config,
 )
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.pyqt_gui.windows.config_edit_session import ConfigEditSession
-from openhcs.pyqt_gui.windows.config_window import (
+from pyqt_reactive.windows.config_window import (
+    ConfigEditSession,
     ConfigSaveParticipant,
-    ConfigWindow,
     ConfigWindowTabSpec,
 )
+
+from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow
 
 
 @dataclass(frozen=True)
@@ -50,7 +51,7 @@ def suppress_save_dialog(monkeypatch):
     return messages
 
 
-def _dispose_window(window: ConfigWindow, qapp) -> None:
+def _dispose_window(window: OpenHCSConfigWindow, qapp) -> None:
     window.before_managed_close()
     window.deleteLater()
     qapp.processEvents()
@@ -88,7 +89,7 @@ def test_save_guard_rejection_has_no_transaction_side_effects(
     def reject_mutation() -> None:
         raise RuntimeError("mutation rejected")
 
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(
                 state=state,
@@ -135,7 +136,7 @@ def test_failure_after_first_mark_saved_restores_every_state_exactly(
     second_state = ObjectState(second_saved, scope_id="second")
     ObjectStateRegistry.register(first_state, _skip_snapshot=True)
     ObjectStateRegistry.register(second_state, _skip_snapshot=True)
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(state=first_state),
             ConfigWindowTabSpec(state=second_state),
@@ -191,7 +192,7 @@ def test_failed_participant_restores_saved_live_and_session_cancel_baseline(
         rollback_values.append(value)
         external_config["current"] = value
 
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(
                 state=state,
@@ -266,7 +267,7 @@ def test_failed_global_context_publication_restores_session_and_both_stores(
     set_live_global_config(GlobalPipelineConfig, prior_live)
     state = ObjectState(saved, scope_id="")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(ConfigWindowTabSpec(state=state),),
         scope_id="",
     )
@@ -324,7 +325,7 @@ def test_participant_failure_compensates_attempted_effects_in_reverse_order(
         effects.append(("apply_second", value))
         raise RuntimeError("second participant failed")
 
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(
                 state=first_state,
@@ -376,7 +377,7 @@ def test_postcommit_window_failure_does_not_roll_back_commit(
     ObjectStateRegistry.register(state, _skip_snapshot=True)
     applied: list[object] = []
     rolled_back: list[object] = []
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(
                 state=state,
@@ -420,15 +421,15 @@ def test_inactive_tab_factory_failure_is_visible_and_rejects_window(
         "critical",
         lambda _parent, _title, message: messages.append(message),
     )
-    original_materialize = ConfigWindow._materialize_tab
+    original_materialize = OpenHCSConfigWindow._materialize_tab
 
     def materialize_or_fail(self, tab):
         if tab.spec.label == "_SecondConfig":
             raise RuntimeError("inactive tab build failed")
         return original_materialize(self, tab)
 
-    monkeypatch.setattr(ConfigWindow, "_materialize_tab", materialize_or_fail)
-    window = ConfigWindow(
+    monkeypatch.setattr(OpenHCSConfigWindow, "_materialize_tab", materialize_or_fail)
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(state=first_state),
             ConfigWindowTabSpec(state=second_state),
@@ -463,7 +464,7 @@ def test_progressive_form_build_failure_is_visible_and_rejects_window(
         "critical",
         lambda _parent, _title, message: messages.append(message),
     )
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(ConfigWindowTabSpec(state=state),),
         scope_id="progressive",
     )
@@ -490,7 +491,7 @@ def test_closing_progressive_config_cancels_deferred_form_work(
         "critical",
         lambda _parent, _title, message: messages.append(message),
     )
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(ConfigWindowTabSpec(state=state),),
         scope_id="progressive-close",
     )

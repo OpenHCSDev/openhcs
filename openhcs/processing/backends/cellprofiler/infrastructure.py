@@ -27,10 +27,10 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
+    PairByOrder,
+    SourceSetPairing,
     SourceBindingOrigin,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
@@ -38,6 +38,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
     SourceSetRole,
 )
+from openhcs.core.config import SourceBindingsConfig
 from openhcs.core.source_matching import source_metadata_component
 from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
@@ -164,29 +165,6 @@ class CellProfilerSourceFilterOperator(Enum):
                 f"{self.value!r}, negated=True."
             )
         return self.negated_match_type
-
-
-class CellProfilerSourceMatchMethod(Enum):
-    """CellProfiler image-set matching method translated to generic matching."""
-
-    def __new__(cls, literal: str, method: SourceBindingMatchMethod):
-        member = object.__new__(cls)
-        member._value_ = literal
-        member.method = method
-        return member
-
-    METADATA = ("metadata", SourceBindingMatchMethod.METADATA)
-    ORDER = ("order", SourceBindingMatchMethod.ORDER)
-
-    @classmethod
-    def from_literal(cls, value: str) -> "CellProfilerSourceMatchMethod":
-        normalized = value.strip().casefold()
-        for member in cls:
-            if member.value == normalized:
-                return member
-        raise ValueError(
-            f"Unsupported NamesAndTypes image set matching method: {value!r}."
-        )
 
 
 class CellProfilerSourceImageType(Enum):
@@ -1176,24 +1154,20 @@ def _match_metadata_dimensions(value: str) -> tuple[SourceBindingMatchDimension,
     return tuple(dimensions)
 
 
-def _names_and_types_match_plan(
-    module: ModuleBlock,
-) -> SourceBindingMatchPlan | None:
-    method_values = tuple(
-        value.strip()
-        for value in module.get_setting_values("Image set matching method")
-        if value.strip()
+def _names_and_types_match_plan(module: ModuleBlock) -> SourceSetPairing:
+    """Decode NamesAndTypes' image-set matching method; Order when unset."""
+
+    pairings = tuple(
+        dict.fromkeys(
+            SourceSetPairing.named(value)
+            for value in module.get_setting_values("Image set matching method")
+            if value.strip()
+        )
     )
-    if not method_values:
-        return None
-    methods = tuple(
-        CellProfilerSourceMatchMethod.from_literal(value).method
-        for value in method_values
-    )
-    if any(method is not methods[0] for method in methods[1:]):
+    if len(pairings) > 1:
         raise ValueError("NamesAndTypes declared conflicting matching methods.")
-    if methods[0] is SourceBindingMatchMethod.ORDER:
-        return SourceBindingMatchPlan(method=methods[0])
+    if not pairings or pairings[0] is PairByOrder:
+        return PairByOrder()
     metadata_values = tuple(
         value.strip()
         for value in module.get_setting_values("Match metadata")
@@ -1206,7 +1180,7 @@ def _names_and_types_match_plan(
                 "NamesAndTypes Match metadata requires one shared declaration."
             )
         dimensions = _match_metadata_dimensions(metadata_values[0])
-    return SourceBindingMatchPlan(method=methods[0], dimensions=dimensions)
+    return PairByMetadata(dimensions=dimensions)
 
 
 class NamesAndTypesModule(SourceSetupCellProfilerModule):

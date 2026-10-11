@@ -101,7 +101,7 @@ from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.progress.types import ProgressEvent, ProgressPhase
+from openhcs.core.progress.types import ProgressEvent
 from openhcs.core.runtime_exports import RuntimeExportObservation
 from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
@@ -125,6 +125,10 @@ from openhcs.runtime.zmq_execution_signature import (
 )
 from python_introspect import to_jsonable
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.progress.types import (
+    AxisCompletedProgressPhase,
+    AxisStartedProgressPhase,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -1040,10 +1044,10 @@ def _worker_axis_evidence(
 ) -> dict[str, object]:
     selected = tuple(event for event in events if event.execution_id == execution_id)
     starts = tuple(
-        event for event in selected if event.phase is ProgressPhase.AXIS_STARTED
+        event for event in selected if event.phase is AxisStartedProgressPhase
     )
     completions = tuple(
-        event for event in selected if event.phase is ProgressPhase.AXIS_COMPLETED
+        event for event in selected if event.phase is AxisCompletedProgressPhase
     )
     started_axes = tuple(event.axis_id for event in starts)
     completed_axes = tuple(event.axis_id for event in completions)
@@ -1080,7 +1084,7 @@ def _worker_axis_evidence(
         "axis_events": tuple(
             {
                 "axis_id": event.axis_id,
-                "phase": event.phase.value,
+                "phase": event.phase.name,
                 "timestamp": event.timestamp,
                 "pid": event.pid,
                 "worker_slot": event.worker_slot,
@@ -1643,8 +1647,8 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient | None) -> in
     def capture_progress_event(event: Mapping[str, Any]) -> None:
         progress_events.append(dict(event))
         if event["phase"] in (
-            ProgressPhase.AXIS_STARTED.value,
-            ProgressPhase.AXIS_COMPLETED.value,
+            AxisStartedProgressPhase.name,
+            AxisCompletedProgressPhase.name,
         ):
             axis_events.append(ProgressEvent.from_dict(dict(event)))
 

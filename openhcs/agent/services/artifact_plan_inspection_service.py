@@ -59,7 +59,7 @@ class AgentProgressQueue(ProgressQueue):
         self.events.append(event)
         EndpointStartupStatus(
             EndpointStartupPhase.PREPARING_CAPABILITIES,
-            f"{event.phase.value}: {event.status.value}: "
+            f"{event.phase.name}: {event.status.name}: "
             f"{event.axis_id}: {event.step_name}: "
             f"{event.completed}/{event.total}",
         ).publish()

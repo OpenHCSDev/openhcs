@@ -4,32 +4,14 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
+from pyqt_reactive.core.path_cache import PathCacheKey, cache_path, get_initial_path
 from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
 from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
 from pyqt_reactive.theming import ColorScheme, ThemeManager
 
-from openhcs.core.path_cache import (
-    PathCacheKey,
-    cache_path,
-    get_initial_path,
-)
 
 logger = logging.getLogger(__name__)
-
-
-class GlobalEventBus(QObject):
-    """Cross-window pipeline and configuration change signals."""
-
-    pipeline_changed = pyqtSignal(list)  # list[FunctionStep]
-    config_changed = pyqtSignal(object)  # config object
-
-    def emit_pipeline_changed(self, pipeline_steps: list):
-        self.pipeline_changed.emit(pipeline_steps)
-
-    def emit_config_changed(self, config):
-        self.config_changed.emit(config)
 
 
 class PyQtServiceAdapter:
@@ -49,9 +31,6 @@ class PyQtServiceAdapter:
 
         # Initialize theme manager for centralized color management
         self.theme_manager = ThemeManager()
-
-        # Initialize global event bus for cross-window communication
-        self.event_bus = GlobalEventBus()
 
         # Apply dark theme globally to ensure consistent dialog styling
         self._apply_dark_theme()
@@ -169,7 +148,7 @@ class PyQtServiceAdapter:
 
     def show_cached_directory_dialog(
         self,
-        cache_key: PathCacheKey,
+        cache_key: type[PathCacheKey],
         title: str = "Select Directory",
         fallback_path: Optional[Path] = None,
         allow_multiple: bool = False,
@@ -306,11 +285,3 @@ class PyQtServiceAdapter:
             FileManager instance
         """
         return self.main_window.file_manager
-
-    def get_event_bus(self) -> GlobalEventBus:
-        """Get the global event bus for cross-window communication.
-
-        Returns:
-            GlobalEventBus instance
-        """
-        return self.event_bus

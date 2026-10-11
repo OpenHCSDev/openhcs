@@ -96,16 +96,14 @@ from openhcs.core.config import (
     MultiprocessingStartMethod,
     NapariStreamingConfig,
     PipelineConfig,
+    LazySourceBindingsConfig,
 )
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentCodec
-from openhcs.core.progress import (
-    ProgressExecutionContext, ProgressIdentity, ProgressPhase, ProgressStatus,
-)
+from openhcs.core.progress import ProgressExecutionContext, ProgressIdentity
 from openhcs.core.source_bindings import (
-    LazySourceBindingsConfig,
     MetadataExtractionRule,
     NamedSourceBinding,
     SourceFilterClause,
@@ -127,6 +125,10 @@ from openhcs.runtime.viewer_protocol import (
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.progress.types import (
+    CompileProgressPhase,
+    RunningProgressStatus,
+)
 
 
 def sample_processing_function(image, sigma: float = 1.0):
@@ -313,7 +315,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
         request.progress_queue.put(
             ProgressExecutionContext("inspection", str(request.plate)).event(
                 axis_id="A01", step_name="compilation",
-                phase=ProgressPhase.COMPILE, status=ProgressStatus.RUNNING,
+                phase=CompileProgressPhase, status=RunningProgressStatus,
                 percent=0.0, completed=0, total=1,
             )
         )
@@ -2926,8 +2928,8 @@ def test_artifact_plan_inspection_inspects_pipeline_source_artifact_plan(
     assert compile_gateway.requests[0].axis_filter == ("A01",)
     events = compile_gateway.requests[0].progress_queue.events
     assert len(events) == 1
-    assert events[0].phase is ProgressPhase.COMPILE
-    assert events[0].status is ProgressStatus.RUNNING
+    assert events[0].phase is CompileProgressPhase
+    assert events[0].status is RunningProgressStatus
     assert events[0].identity == ProgressIdentity(
         "inspection", str(tmp_path.resolve()), "A01", "compilation",
     )

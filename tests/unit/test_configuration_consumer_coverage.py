@@ -13,9 +13,7 @@ from typing import get_args, get_type_hints
 from openhcs.core.config import AxisRoleModeDisplayConfig, GlobalPipelineConfig
 from openhcs.pyqt_gui.config import ShortcutConfig, get_default_ui_config
 from openhcs.pyqt_gui.main import OpenHCSMainWindow
-from openhcs.pyqt_gui.services.main_window_workflows import (
-    MainWindowShortcutLifecycle,
-)
+from pyqt_reactive.services.application_shortcuts import ShortcutLifecycle
 
 
 @dataclass(frozen=True, slots=True)
@@ -870,21 +868,13 @@ class _TypedAttributeFlow:
     def _shortcut_projection_fields() -> frozenset[_ConsumedField]:
         """Resolve shortcut lambdas through their exact typed lifecycle owner."""
 
-        binding_methods: set[str] = set()
-        for method_name, method in inspect.getmembers(
-            MainWindowShortcutLifecycle,
-            predicate=inspect.isfunction,
-        ):
-            try:
-                hints = get_type_hints(
-                    method,
-                    localns={"ShortcutConfig": ShortcutConfig},
-                )
-            except (NameError, TypeError):
-                continue
-            callable_signature = get_args(hints.get("key_from_config"))
-            if callable_signature == ([ShortcutConfig], str):
-                binding_methods.add(method_name)
+        binding_methods = {
+            method_name
+            for method_name, method in inspect.getmembers(
+                ShortcutLifecycle, predicate=inspect.isfunction
+            )
+            if "key_from_config" in inspect.signature(method).parameters
+        }
         assert binding_methods
 
         main_window_tree = ast.parse(inspect.getsource(OpenHCSMainWindow))
@@ -898,8 +888,9 @@ class _TypedAttributeFlow:
                 for target in node.targets
             )
             and isinstance(node.value, ast.Call)
-            and isinstance(node.value.func, ast.Name)
-            and node.value.func.id == MainWindowShortcutLifecycle.__name__
+            and isinstance(node.value.func, ast.Subscript)
+            and ast.unparse(node.value.func)
+            == f"{ShortcutLifecycle.__name__}[{ShortcutConfig.__name__}]"
             for node in ast.walk(main_window_tree)
         )
         assert owns_lifecycle

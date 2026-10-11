@@ -71,12 +71,11 @@ def test_compiler_source_queries_borrow_config_while_public_queries_stay_live(
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.source_bindings import (
-        SourceBindingsConfig,
-        LazySourceBindingsConfig,
         SourceFilterClause,
         SourceFilterMatchType,
         SourceFilterSubject,
     )
+    from openhcs.core.config import SourceBindingsConfig, LazySourceBindingsConfig
 
     source_handler = OperaPhenixHandler(SimpleNamespace())
     (tmp_path / "Images").mkdir()

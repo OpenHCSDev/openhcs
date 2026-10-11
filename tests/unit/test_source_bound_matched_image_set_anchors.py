@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ArtifactMeasurementSubjectRelation,
     ArtifactOutputPlan,
@@ -32,8 +33,8 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
+    PairByOrder,
     SourceBindingOrigin,
     SourceSelector,
 )
@@ -96,7 +97,7 @@ def test_artifact_only_group_declares_no_source_anchor_bindings() -> None:
     def consume(*, payload):
         return payload
 
-    compiled = compile_function_pattern(consume, {}, {})
+    compiled = compile_function_pattern(admitted_graph(consume), {}, {})
     source_binding_plan = CompiledSourceBindingPlan(
         bindings=(
             NamedSourceBinding(
@@ -119,8 +120,8 @@ def test_artifact_only_group_declares_no_source_anchor_bindings() -> None:
         pattern_filter.source_anchor_bindings(
             compiled.default_group,
             component_value=None,
-        )
-        is None
+        ).binding_declarations
+        == ()
     )
 
 
@@ -168,10 +169,7 @@ def _filter_source_anchors(
     )
     source_binding_plan = CompiledSourceBindingPlan(
         bindings=compiled_bindings,
-        match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=_match_dimensions(dimension_aliases or aliases),
-        ),
+        match_plan=PairByMetadata(dimensions=_match_dimensions(dimension_aliases or aliases)),
     )
     declared_specs = tuple(binding.input_spec() for binding in compiled_bindings)
     source_aligned_outputs = tuple(
@@ -246,7 +244,7 @@ def _filter_source_anchors(
         )
     }
     compiled_pattern = compile_function_pattern(
-        measure_images,
+        admitted_graph(measure_images),
         {},
         output_plans,
     )
@@ -403,10 +401,7 @@ def test_grouped_branches_project_their_exact_contract_bindings(
     aliases = tuple(binding.alias for binding in compiled_bindings)
     source_binding_plan = CompiledSourceBindingPlan(
         bindings=compiled_bindings,
-        match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=_match_dimensions(aliases),
-        ),
+        match_plan=PairByMetadata(dimensions=_match_dimensions(aliases)),
     )
 
     @artifact_inputs(compiled_bindings[0].input_spec())
@@ -418,7 +413,7 @@ def test_grouped_branches_project_their_exact_contract_bindings(
         return image
 
     compiled_pattern = compile_function_pattern(
-        {"2": measure_er, "1": measure_hoechst},
+        admitted_graph({"2": measure_er, "1": measure_hoechst}),
         {},
         {},
     )
@@ -493,7 +488,7 @@ def test_alias_only_step_binding_uses_virtual_projection_for_template_anchor(
             component=Microscopy.Channel,
         ),
         compiled_function_pattern=compile_function_pattern(
-            identify_bodies,
+            admitted_graph(identify_bodies),
             {},
             {},
         ),
@@ -595,16 +590,14 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=bindings,
-            match_plan=SourceBindingMatchPlan(
-                method=SourceBindingMatchMethod.ORDER,
-            ),
+            match_plan=PairByOrder(),
         ),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1", "2"),
             component=Microscopy.Site,
         ),
         compiled_function_pattern=compile_function_pattern(
-            align_source_set,
+            admitted_graph(align_source_set),
             {},
             {output_plan.ref(): output_plan},
         ),
@@ -719,16 +712,14 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=CompiledSourceBindingPlan(
             bindings=bindings,
-            match_plan=SourceBindingMatchPlan(
-                method=SourceBindingMatchMethod.ORDER,
-            ),
+            match_plan=PairByOrder(),
         ),
         execution_group_scope=ComponentGroupScope.from_raw(
             ("1", "2"),
             component=Microscopy.Site,
         ),
         compiled_function_pattern=compile_function_pattern(
-            align_source_set,
+            admitted_graph(align_source_set),
             {},
             output_plans,
         ),

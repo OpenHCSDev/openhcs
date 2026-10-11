@@ -17,14 +17,16 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
     AgentProgressQueue, CompileInspectionGatewayABC, ArtifactPlanInspectionService,
 )
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
-from openhcs.core.progress import (
-    ProgressEvent, ProgressExecutionContext, ProgressPhase, ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.mcp.execution import McpTransportExecutor
 from openhcs.mcp.server import build_server
 
 from tests.unit.agent.test_agent_services import _FakeCompileInspectionGateway
 from tests.unit.agent.test_plate_inspection_service import ImageXpressPlateFixture
+from openhcs.core.progress.types import (
+    CompileProgressPhase,
+    RunningProgressStatus,
+)
 
 
 @pytest.mark.parametrize("declaration", (QueryPlateFilesCapability, SamplePlateImageCapability))
@@ -35,11 +37,11 @@ def test_physical_reader_declarations_inherit_original_affine_progress(declarati
     assert "progress_worker_thread_safe" not in declaration.__dict__
 
 
-def test_original_progress_codec_is_the_only_event_store_and_rejects_bad_enum():
+def test_original_progress_codec_is_the_only_event_store_and_rejects_unknown_phase():
     queue = AgentProgressQueue()
     event = ProgressExecutionContext("inspection", "/source").event(
         axis_id="A01", step_name="new-declared-step",
-        phase=ProgressPhase.COMPILE, status=ProgressStatus.RUNNING, percent=25,
+        phase=CompileProgressPhase, status=RunningProgressStatus, percent=25,
         completed=1, total=4,
     )
     statuses = []
@@ -47,7 +49,7 @@ def test_original_progress_codec_is_the_only_event_store_and_rejects_bad_enum():
         queue.put(event)
         invalid = event.to_dict()
         invalid["phase"] = "not-a-declared-phase"
-        with pytest.raises(ValueError, match="phase must be one of"):
+        with pytest.raises(ValueError, match="is not a registered ProgressPhase"):
             ProgressEvent.from_dict(invalid)
         with pytest.raises(ValueError, match="missing required field"):
             ProgressEvent.from_dict({"phase": "compile", "status": "running"})

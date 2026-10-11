@@ -19,7 +19,7 @@ from typing import ClassVar
 
 from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
 from openhcs.core.callable_contract import (
-    CallableMetadataReader,
+    DeclaredCallable,
     CallableProjection,
     CompilerPreparedAutoRegisterFamily,
 )
@@ -207,14 +207,16 @@ class CallablePreparation:
         if module_name is not None:
             yield ModuleRegistryPreparation(module_name)
             module = importlib.import_module(module_name)
-            hook = CallableMetadataReader(
-                vars(module), f"Module {module_name}"
-            ).optional_callable(FunctionContractAttribute.processing_prepare)
+            hook = DeclaredCallable().read(
+                vars(module).get(FunctionContractAttribute.processing_prepare),
+                owner=f"Module {module_name}.{FunctionContractAttribute.processing_prepare}",
+            )
             if hook is not None:
                 yield ModuleHookPreparation(hook, module_name)
-        hook = CallableMetadataReader(
-            self.projection.namespace, self.projection.name
-        ).optional_callable(FunctionContractAttribute.processing_prepare)
+        hook = DeclaredCallable().read(
+            self.projection.namespace.get(FunctionContractAttribute.processing_prepare),
+            owner=f"{self.projection.name!r}.{FunctionContractAttribute.processing_prepare}",
+        )
         if hook is not None:
             yield CallableHookPreparation(hook, module_name, self.projection.name)
 

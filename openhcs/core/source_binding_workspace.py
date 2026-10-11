@@ -10,22 +10,27 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, cast
 
-from metaclass_registry import AutoRegisterMeta
+from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
 from openhcs.core.runtime_array_values import array_geometry
-from metaclass_registry.strategies import EnumKeyedStrategyMixin
+from metaclass_registry.strategies import (
+    EnumKeyedStrategyMixin,
+    NominalTypeKeyedStrategyMixin,
+)
 from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataTable,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
-    SourceBindingsConfig,
+    PairByMetadata,
+    PairByOrder,
     SourceProjectionRole,
+    SourceSetPairing,
     SourceSetRole,
 )
+from openhcs.core.config import SourceBindingsConfig
+from openhcs.core.source_path_identity import source_path_posix
 from openhcs.core.source_matching import (
     merge_source_metadata,
     metadata_from_rules,
@@ -245,26 +250,30 @@ class _ImportedMetadataIndex:
 
 
 class SourceSetAssembler(
-    EnumKeyedStrategyMixin[SourceBindingMatchMethod],
-    ABC,
-    metaclass=AutoRegisterMeta,
+    NominalTypeKeyedStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
-    """Assemble matched source members through the declared match method."""
+    """Assemble matched source members by the declared source-set pairing."""
 
-    strategy_key: ClassVar[SourceBindingMatchMethod | None] = None
+    value_type: ClassVar[type[SourceSetPairing] | None] = None
+    value_type_label: ClassVar[str | None] = None
+    __registry_family__ = RegistryFamily(RegistryKeyAttribute.VALUE_TYPE_LABEL)
 
     @classmethod
-    def for_config(cls, config: SourceBindingsConfig) -> "SourceSetAssembler":
-        method = (
-            SourceBindingMatchMethod.ORDER
-            if config.match_plan is None
-            else config.match_plan.method
-        )
-        return cls.for_enum_member(method)
+    def assemble(
+        cls,
+        pairing: SourceSetPairing,
+        candidates_by_alias: Mapping[str, tuple[SourceCandidate, ...]],
+        imported_metadata_indexes: tuple[_ImportedMetadataIndex, ...],
+    ) -> tuple[_SourceSet, ...]:
+        """Pair the matched candidates by ``pairing``'s registered assembler."""
+
+        return cls.require_nominal_value(
+            pairing, context="Source-set assembly"
+        ).source_sets(pairing, candidates_by_alias, imported_metadata_indexes)
 
     def source_sets(
         self,
-        match_plan: SourceBindingMatchPlan | None,
+        match_plan: SourceSetPairing,
         candidates_by_alias: Mapping[str, tuple[SourceCandidate, ...]],
         imported_metadata_indexes: tuple[_ImportedMetadataIndex, ...],
     ) -> tuple[_SourceSet, ...]:
@@ -292,22 +301,20 @@ class SourceSetAssembler(
     @abstractmethod
     def _matched_source_sets(
         self,
-        match_plan: SourceBindingMatchPlan | None,
+        match_plan: SourceSetPairing,
         candidates_by_alias: Mapping[str, tuple[SourceCandidate, ...]],
     ) -> tuple[_SourceSet, ...]:
         """Return source sets matched by the selected strategy leaf."""
 
 
 class MetadataSourceSetAssembler(SourceSetAssembler):
-    strategy_key = SourceBindingMatchMethod.METADATA
+    value_type = PairByMetadata
 
     def _matched_source_sets(
         self,
-        match_plan: SourceBindingMatchPlan | None,
+        match_plan: SourceSetPairing,
         candidates_by_alias: Mapping[str, tuple[SourceCandidate, ...]],
     ) -> tuple[_SourceSet, ...]:
-        if match_plan is None:
-            raise ValueError("Metadata source-set assembly requires a match plan.")
         aliases = tuple(candidates_by_alias)
         dimension_count = len(match_plan.dimensions)
         if not aliases:
@@ -453,11 +460,11 @@ class MetadataSourceSetAssembler(SourceSetAssembler):
 
 
 class OrderSourceSetAssembler(SourceSetAssembler):
-    strategy_key = SourceBindingMatchMethod.ORDER
+    value_type = PairByOrder
 
     def _matched_source_sets(
         self,
-        match_plan: SourceBindingMatchPlan | None,
+        match_plan: SourceSetPairing,
         candidates_by_alias: Mapping[str, tuple[SourceCandidate, ...]],
     ) -> tuple[_SourceSet, ...]:
         del match_plan
@@ -753,7 +760,7 @@ class SourceBindingWorkspaceProjector:
             for binding in matched_bindings
             if candidates_by_alias[binding.alias]
         }
-        source_sets = SourceSetAssembler.for_config(self.source_bindings).source_sets(
+        source_sets = SourceSetAssembler.assemble(
             self.source_bindings.match_plan,
             matched_candidates,
             self._imported_metadata_indexes(dataset_root, filemanager),
@@ -949,7 +956,7 @@ class SourceBindingWorkspaceProjector:
             path = Path(path_value)
             relative_path = _relative_source_path(source_root, path)
             filter_paths = tuple(
-                dict.fromkeys((relative_path, _normalized_source_path(path)))
+                dict.fromkeys((relative_path, source_path_posix(path)))
             )
             if not self.source_bindings.source_path_filters_match(filter_paths):
                 continue
@@ -1465,11 +1472,7 @@ def _relative_source_path(source_root: Path, source_path: Path) -> str:
         relative = source_path.relative_to(source_root)
     except ValueError:
         relative = source_path
-    return _normalized_source_path(relative)
-
-
-def _normalized_source_path(path: str | Path) -> str:
-    return str(path).replace("\\", "/")
+    return source_path_posix(relative)
 
 
 def _backend_name(backend: Backend | str) -> str:

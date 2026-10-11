@@ -18,7 +18,7 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     SourceStackLineageSourceRelation,
 )
-from openhcs.core.source_bindings import StepSourceBindingsConfig
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.interop.cellprofiler.setting_names import SettingNameFamily
 from openhcs.interop.cellprofiler.settings_binder import (

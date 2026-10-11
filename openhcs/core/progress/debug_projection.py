@@ -2,22 +2,19 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Mapping, Sequence
 
 from zmqruntime.messages import QueuedExecutionInfo, RunningExecutionInfo
 
 from openhcs.core.debug import (
-    DebugBoundaryEventDeclarationBase,
-    DebugBoundaryOutcome,
+    DebugBoundary,
     DebugBoundaryState,
     DebugCursor,
-    DebugEventType,
     DebugProgressContext,
     DebugSession,
     DebugSnapshot,
     DebugTerminalSummary,
-    DebugTimelineNodeState,
 )
 from openhcs.core.progress.types import ProgressEvent, ProgressIdentity
 
@@ -46,11 +43,7 @@ class DebugProgressRecord:
         return cls(event=event, context=context)
 
     def with_snapshot(self, snapshot: DebugSnapshot | None) -> "DebugProgressRecord":
-        return DebugProgressRecord(
-            event=self.event,
-            context=self.context,
-            snapshot=snapshot,
-        )
+        return replace(self, snapshot=snapshot)
 
     @property
     def session_id(self) -> str:
@@ -87,20 +80,8 @@ class DebugProgressRecord:
         return boundary.callable_name
 
     @property
-    def event_type(self) -> DebugEventType:
+    def event_type(self) -> type[DebugBoundary]:
         return self.context.event_type
-
-    @property
-    def boundary_outcome(self) -> DebugBoundaryOutcome:
-        return DebugBoundaryEventDeclarationBase.for_event_type(
-            self.event_type
-        ).boundary_outcome
-
-    @property
-    def timeline_node_state(self) -> DebugTimelineNodeState:
-        return DebugBoundaryEventDeclarationBase.for_event_type(
-            self.event_type
-        ).timeline_node_state
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,7 +95,7 @@ class DebugRuntimeFrame:
         return self.record.cursor
 
     @property
-    def event_type(self) -> DebugEventType:
+    def event_type(self) -> type[DebugBoundary]:
         return self.record.event_type
 
     @property
@@ -139,21 +120,6 @@ class DebugRuntimeFrame:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugTimelineNode:
-    """Minimal typed timeline entry over a debug progress frame."""
-
-    frame: DebugRuntimeFrame
-
-    @property
-    def cursor(self) -> DebugCursor:
-        return self.frame.cursor
-
-    @property
-    def state(self) -> DebugTimelineNodeState:
-        return self.frame.record.timeline_node_state
-
-
-@dataclass(frozen=True, slots=True)
 class DebugRuntimeProjection:
     """Generic debugger state projected from progress and debug contexts."""
 
@@ -162,7 +128,6 @@ class DebugRuntimeProjection:
     terminal_summary: DebugTerminalSummary | None = None
     current_frame: DebugRuntimeFrame | None = None
     last_frame: DebugRuntimeFrame | None = None
-    timeline: tuple[DebugTimelineNode, ...] = ()
     records: tuple[DebugProgressRecord, ...] = ()
 
     @classmethod
@@ -195,16 +160,6 @@ class DebugRuntimeProjection:
         if self.current_frame is None:
             return None
         return self.current_frame.progress_identity
-
-    def node_state_for_cursor(
-        self,
-        *,
-        cursor: DebugCursor,
-    ) -> DebugTimelineNodeState:
-        for record in reversed(self.records):
-            if record.cursor == cursor:
-                return record.timeline_node_state
-        return DebugTimelineNodeState.PENDING
 
 
 @dataclass(frozen=True, slots=True)
@@ -242,9 +197,6 @@ class DebugRuntimeProjectionBuilder:
             terminal_summary=source.terminal_summary,
             current_frame=current_frame,
             last_frame=last_frame,
-            timeline=tuple(
-                DebugTimelineNode(DebugRuntimeFrame(record)) for record in records
-            ),
             records=records,
         )
 

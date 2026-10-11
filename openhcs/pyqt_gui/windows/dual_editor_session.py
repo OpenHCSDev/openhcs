@@ -122,17 +122,6 @@ class DualEditorSession:
                 )
         return True, current_pattern
 
-    @staticmethod
-    def callable_from_function_spec(func_spec: FunctionSpec) -> Callable | None:
-        """Return the first callable represented by a FunctionStep function spec."""
-        if callable(func_spec):
-            return func_spec
-        if isinstance(func_spec, tuple) and func_spec and callable(func_spec[0]):
-            return func_spec[0]
-        if isinstance(func_spec, list) and func_spec:
-            return DualEditorSession.callable_from_function_spec(func_spec[0])
-        return None
-
 
 @dataclass
 class DualEditorFunctionPatternController:

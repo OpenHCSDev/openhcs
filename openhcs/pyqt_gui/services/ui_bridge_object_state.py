@@ -55,6 +55,7 @@ from openhcs.agent.services.object_state_field_projection import (
     ObjectStateFieldFilterDeclaration,
 )
 from objectstate import ObjectState, ObjectStateRegistry
+from objectstate.inspection import FieldInspection, type_name, type_qualname
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     APPLY_TIME_TRAVEL_OPT_IN_GUARD,
     CONFIRMATION_REQUIRED_GUARD,
@@ -179,157 +180,8 @@ class WindowCodeDocumentAddress:
 
 
 @dataclass(frozen=True, slots=True)
-class ObjectStateFieldProvenanceEffect:
-    """Typed effect for projecting optional ObjectState provenance."""
-
-    @classmethod
-    def from_state(
-        cls,
-        state: ObjectState,
-        field_path: str,
-    ) -> "ObjectStateFieldProvenanceEffect":
-        match state.get_provenance(field_path):
-            case (source_scope_id, source_type) if source_type is not None:
-                return ResolvedObjectStateFieldProvenance(
-                    source_scope_id=source_scope_id,
-                    source_type=source_type,
-                    field_name=ObjectStateScopeProjectionService.field_name(field_path),
-                )
-            case _:
-                return MissingObjectStateFieldProvenance()
-
-    def to_dto(self) -> UiObjectStateFieldProvenance | None:
-        return None
-
-
-@dataclass(frozen=True, slots=True)
-class MissingObjectStateFieldProvenance(ObjectStateFieldProvenanceEffect):
-    """No inherited ObjectState provenance is available for this field."""
-
-
-@dataclass(frozen=True, slots=True)
-class ResolvedObjectStateFieldProvenance(ObjectStateFieldProvenanceEffect):
-    """Validated ObjectState provenance source for one field address."""
-
-    source_scope_id: str | None
-    source_type: type
-    field_name: str
-
-    def to_dto(self) -> UiObjectStateFieldProvenance | None:
-        return UiObjectStateFieldProvenance(
-            source_scope_id=agent_object_state_scope_id(self.source_scope_id),
-            source_type=ObjectStateScopeProjectionService.type_qualname(
-                self.source_type
-            ),
-            source_field_path=self.source_field_path(),
-        )
-
-    def source_field_path(self) -> str | None:
-        source_state = ObjectStateRegistry.get_by_scope(self.source_scope_id)
-        if source_state is None:
-            return None
-        return source_state.project_ui_visible_field_path(
-            self.source_type,
-            self.field_name,
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class ObjectStateFieldSemanticProjection:
-    """Shared ObjectState field semantics used by scope and widget projections."""
-
-    state: ObjectState
-    field_path: str
-    raw_value: object
-    resolved_value: object
-    resolved_value_available: bool
-    provenance: UiObjectStateFieldProvenance | None
-
-    @classmethod
-    def from_state(
-        cls,
-        state: ObjectState,
-        field_path: str,
-    ) -> "ObjectStateFieldSemanticProjection":
-        raw_value = state.parameters[field_path]
-        resolved_value = None
-        resolved_value_available = False
-        try:
-            resolved_value = state.get_resolved_value(field_path)
-            resolved_value_available = True
-        except Exception:
-            logger.debug(
-                "Failed to resolve ObjectState field %s on scope %r.",
-                field_path,
-                state.scope_id,
-                exc_info=True,
-            )
-        return cls(
-            state=state,
-            field_path=field_path,
-            raw_value=raw_value,
-            resolved_value=resolved_value,
-            resolved_value_available=resolved_value_available,
-            provenance=ObjectStateFieldProvenanceEffect.from_state(
-                state,
-                field_path,
-            ).to_dto(),
-        )
-
-    @property
-    def dirty(self) -> bool:
-        return self.field_path in self.state.dirty_fields
-
-    @property
-    def signature_diff(self) -> bool:
-        return self.field_path in self.state.signature_diff_fields
-
-    @property
-    def last_changed(self) -> bool:
-        return self.field_path == self.state.last_changed_field
-
-    @property
-    def raw_value_is_none(self) -> bool:
-        return self.raw_value is None
-
-    @property
-    def resolved_value_is_none(self) -> bool:
-        return self.resolved_value_available and self.resolved_value is None
-
-    @property
-    def inherited_value(self) -> bool:
-        return self.raw_value is None and (
-            self.resolved_value_available and self.resolved_value is not None
-        )
-
-    @property
-    def semantic_markers(self) -> tuple[str, ...]:
-        markers = []
-        if self.dirty:
-            markers.append("*")
-        if self.signature_diff:
-            markers.append("_")
-        return tuple(markers)
-
-    @property
-    def field_name(self) -> str:
-        return self.field_path.rsplit(".", 1)[-1]
-
-    @property
-    def container_path(self) -> str:
-        if "." not in self.field_path:
-            return ""
-        return self.field_path.rsplit(".", 1)[0]
-
-    @property
-    def raw_value_type(self) -> str:
-        return self.type_name(self.raw_value)
-
-    @property
-    def resolved_value_type(self) -> str | None:
-        if not self.resolved_value_available:
-            return None
-        return self.type_name(self.resolved_value)
+class ObjectStateFieldSemanticProjection(FieldInspection):
+    """One inspected ObjectState field projected onto the bridge's DTOs."""
 
     @property
     def raw_json_value(self) -> JsonValue:
@@ -381,7 +233,7 @@ class ObjectStateFieldSemanticProjection:
             raw_value_is_none=self.raw_value_is_none,
             resolved_value_is_none=self.resolved_value_is_none,
             inherited_value=self.inherited_value,
-            provenance=self.provenance,
+            provenance=self.provenance_dto,
         )
 
     def to_field_summary(
@@ -406,25 +258,21 @@ class ObjectStateFieldSemanticProjection:
             ),
             field_name=self.field_name,
             container_path=self.container_path,
-            object_state_path_type=self.object_state_path_type,
+            object_state_path_type=self.declaring_type,
             raw_value_type=self.raw_value_type,
             resolved_value_type=self.resolved_value_type,
             parameter_description=parameter_description,
         )
 
     @property
-    def object_state_path_type(self) -> str:
-        return self.type_qualname(self.state.type_for_path(self.field_path))
-
-    @staticmethod
-    def type_name(value) -> str:
-        if value is None:
-            return "None"
-        return type(value).__name__
-
-    @staticmethod
-    def type_qualname(value_type: type | Callable[..., object]) -> str:
-        return f"{value_type.__module__}.{value_type.__qualname__}"
+    def provenance_dto(self) -> UiObjectStateFieldProvenance | None:
+        if self.provenance is None:
+            return None
+        return UiObjectStateFieldProvenance(
+            source_scope_id=agent_object_state_scope_id(self.provenance.source_scope_id),
+            source_type=type_qualname(self.provenance.source_type),
+            source_field_path=self.provenance.source_field_path,
+        )
 
     @staticmethod
     def json_value(value) -> JsonValue:
@@ -442,7 +290,7 @@ class ObjectStateFieldSemanticProjection:
     def value_preview(cls, value) -> UiObjectStateValuePreview:
         text, truncated = cls.preview_text(value)
         return UiObjectStateValuePreview(
-            type_name=cls.type_name(value),
+            type_name=type_name(value),
             is_none=value is None,
             text=text,
             truncated=truncated,
@@ -626,42 +474,13 @@ class ObjectStateScopeProjectionService:
         include_values: bool,
         include_description: bool,
     ) -> UiObjectStateFieldSummary:
-        return ObjectStateFieldSemanticProjection.from_state(
+        return ObjectStateFieldSemanticProjection.of(
             state,
             field_path,
         ).to_field_summary(
             include_values=include_values,
             include_description=include_description,
         )
-
-    @staticmethod
-    def _resolved_type_name(state: ObjectState, field_path: str) -> str | None:
-        try:
-            return ObjectStateScopeProjectionService.type_name(
-                state.get_resolved_value(field_path)
-            )
-        except Exception:
-            return None
-
-    @staticmethod
-    def type_name(value) -> str:
-        if value is None:
-            return "None"
-        return type(value).__name__
-
-    @staticmethod
-    def type_qualname(value_type: type) -> str:
-        return f"{value_type.__module__}.{value_type.__qualname__}"
-
-    @staticmethod
-    def field_name(field_path: str) -> str:
-        return field_path.rsplit(".", 1)[-1]
-
-    @staticmethod
-    def container_path(field_path: str) -> str:
-        if "." not in field_path:
-            return ""
-        return field_path.rsplit(".", 1)[0]
 
 
 def object_state_for_agent_scope_id(scope_id: str) -> ObjectState | None:
@@ -747,7 +566,7 @@ class ObjectStateFieldMutationService:
         state: ObjectState,
         request: UiObjectStateFieldMutationRequest,
     ) -> UiObjectStateFieldSummary:
-        return ObjectStateFieldSemanticProjection.from_state(
+        return ObjectStateFieldSemanticProjection.of(
             state,
             request.field_path,
         ).to_field_summary(include_values=request.include_field_values)
@@ -758,9 +577,7 @@ class ObjectStateFieldMutationService:
         request: UiObjectStateFieldMutationRequest,
     ) -> object:
         help_target = state.type_for_path(request.field_path)
-        parameter_name = ObjectStateScopeProjectionService.field_name(
-            request.field_path
-        )
+        parameter_name = request.field_path.rsplit(".", 1)[-1]
         parameter_info = UnifiedParameterAnalyzer.analyze(help_target).get(
             parameter_name
         )

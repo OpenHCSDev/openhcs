@@ -500,7 +500,7 @@ class RegistryService:
             declared,
             reference.composite_key,
         )
-        contract = reference.metadata.processing_contract
+        contract = reference.declaration.processing_contract
         if contract is None:
             metadata = registry.metadata_for_declared_callable(declared)
             if metadata is None:

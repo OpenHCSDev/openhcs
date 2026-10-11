@@ -38,10 +38,11 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
+    StepSourceBindingsConfig,
 )
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
-    get_core_callable,
+    AuthoredFunctionPattern,
     normalize_function_pattern,
 )
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
@@ -60,7 +61,6 @@ from openhcs.core.source_bindings import (
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
-    StepSourceBindingsConfig,
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
@@ -128,9 +128,9 @@ def test_pure_import_returns_only_public_steps_and_pipeline_config(
     assert isinstance(pipeline_config, PipelineConfig)
     assert [step.name for step in steps] == ["MedianFilter", "SaveImages"]
     assert all(isinstance(step, FunctionStep) for step in steps)
-    assert all(get_core_callable(step.func) is not None for step in steps)
+    assert all(AuthoredFunctionPattern.first_callable(step.func) is not None for step in steps)
     assert all(
-        not isinstance(get_core_callable(step.func), CellProfilerModuleExecutor)
+        not isinstance(AuthoredFunctionPattern.first_callable(step.func), CellProfilerModuleExecutor)
         for step in steps
     )
     assert tuple(
@@ -188,7 +188,7 @@ def test_compiler_derives_runtime_executor_after_generic_transport(
         source_bindings=StepSourceBindingsConfig(enabled=True),
     )
     _source, transported_steps = _transport_round_trip([declared_step])
-    transported_callable = get_core_callable(transported_steps[0].func)
+    transported_callable = AuthoredFunctionPattern.first_callable(transported_steps[0].func)
     assert transported_callable is RegistryService.registered_callable(
         correct_illumination_calculate
     )

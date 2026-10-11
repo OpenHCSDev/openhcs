@@ -34,11 +34,13 @@ from openhcs.pyqt_gui.services.window_handlers import (
     OpenHCSWindowCreationAuthority,
     register_openhcs_window_handlers,
 )
-from openhcs.pyqt_gui.windows.config_window import (
+from pyqt_reactive.windows.config_window import (
+    ConfigEditSession,
     ConfigSaveParticipant,
-    ConfigWindow,
     ConfigWindowTabSpec,
 )
+
+from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.interop.cellprofiler.dataset_scope import CellProfilerPipelineScope
 from openhcs.domains.microscopy.axes import Microscopy
@@ -218,7 +220,7 @@ def test_two_tab_config_window_saves_both_authoritative_objects(qapp) -> None:
     ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
     ObjectStateRegistry.register(ui_state, _skip_snapshot=True)
     saved: list[object] = []
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(
                 state=pipeline_state,
@@ -269,7 +271,7 @@ def test_config_window_page_count_and_visual_scope_own_presentation(qapp) -> Non
         "auto_add_output_dataset",
     }
     plate_state = ObjectState(PipelineConfig(), scope_id="/tmp/plate")
-    plate_window = ConfigWindow(
+    plate_window = OpenHCSConfigWindow(
         tabs=(ConfigWindowTabSpec(state=plate_state),),
         scope_id=plate_state.scope_id,
     )
@@ -301,7 +303,7 @@ def test_config_window_page_count_and_visual_scope_own_presentation(qapp) -> Non
         get_default_ui_config(),
         scope_id=UIConfig.object_state_scope_id(),
     )
-    global_window = ConfigWindow(
+    global_window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(state=global_state),
             ConfigWindowTabSpec(state=ui_state),
@@ -360,7 +362,7 @@ def test_pipeline_config_header_owns_live_tab_actions_and_commit_groups(
     from PyQt6.QtWidgets import QPushButton
 
     state = ObjectState(PipelineConfig(), scope_id="/tmp/plate")
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(ConfigWindowTabSpec(state=state),),
         scope_id=state.scope_id,
     )
@@ -424,7 +426,7 @@ def test_pipeline_config_help_uses_shared_rich_document_renderer(qapp) -> None:
 
     HelpWindowManager._help_window = None
     state = ObjectState(PipelineConfig(), scope_id="/tmp/help-renderer-plate")
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(ConfigWindowTabSpec(state=state),),
         scope_id=state.scope_id,
     )
@@ -461,7 +463,7 @@ def test_config_window_header_switches_title_help_and_auxiliary_actions_by_tab(
         get_default_ui_config(),
         scope_id=UIConfig.object_state_scope_id(),
     )
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(state=global_state),
             ConfigWindowTabSpec(state=ui_state),
@@ -512,7 +514,7 @@ def test_pipeline_config_code_document_emits_only_authored_override(qapp) -> Non
         PipelineConfig(),
         scope_id="/tmp/plate",
     )
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(ConfigWindowTabSpec(state=state),),
         scope_id=state.scope_id,
     )
@@ -555,7 +557,7 @@ def test_ui_config_save_commits_state_before_live_notifications(
 
     from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext
     from openhcs.pyqt_gui.main import OpenHCSMainWindow
-    from openhcs.pyqt_gui.windows import config_window
+    from pyqt_reactive.windows import config_window
 
     def unexpected_save_error(_parent, _title, message):
         pytest.fail(message)
@@ -642,7 +644,7 @@ def test_ui_config_save_commits_state_before_live_notifications(
     ObjectStateRegistry.connect_listener(
         lambda: registry_observations.append(state.saved_object)
     )
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(
                 state=state,
@@ -724,7 +726,7 @@ def test_config_window_save_button_starts_disabled_and_styles_disabled_state(
     """Config windows expose managed dirty state through visible save styling."""
     state = ObjectState(GlobalPipelineConfig(), scope_id="")
     ObjectStateRegistry.register(state, _skip_snapshot=True)
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(
                 state=state,
@@ -809,7 +811,7 @@ def test_pipeline_streaming_enableable_placeholders_dim_after_build_and_toggle(
 
 
 def test_global_config_window_registers_with_stable_window_id() -> None:
-    window = ConfigWindow.__new__(ConfigWindow)
+    window = OpenHCSConfigWindow.__new__(OpenHCSConfigWindow)
     window.scope_id = ""
 
     assert window.window_manager_scope_id() == OpenHCSUiWindowId.global_config
@@ -874,7 +876,7 @@ def test_scope_global_config_window_save_persists_cache(monkeypatch) -> None:
     from openhcs.core import config_cache
     from openhcs.pyqt_gui.windows import config_window
 
-    monkeypatch.setattr(config_window, "ConfigWindow", FakeConfigWindow)
+    monkeypatch.setattr(config_window, "OpenHCSConfigWindow", FakeConfigWindow)
     monkeypatch.setattr(
         config_cache,
         "save_global_config_sync",
@@ -951,7 +953,7 @@ def test_plate_config_window_factory_passes_exact_registered_state(
 
     from openhcs.pyqt_gui.windows import config_window
 
-    monkeypatch.setattr(config_window, "ConfigWindow", FakeConfigWindow)
+    monkeypatch.setattr(config_window, "OpenHCSConfigWindow", FakeConfigWindow)
     monkeypatch.setattr(window_authority, "_show_window", lambda window: None)
 
     window = window_authority.create_plate_config_window(
@@ -1024,7 +1026,7 @@ def test_ui_config_scope_navigation_selects_owning_config_tab(qapp, qtbot) -> No
         get_default_ui_config(),
         scope_id=UIConfig.object_state_scope_id(),
     )
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(state=global_state),
             ConfigWindowTabSpec(state=ui_state),
@@ -1078,7 +1080,7 @@ def test_config_navigation_rejects_ambiguous_field_without_state_scope(qapp) -> 
 
     first_state = ObjectState(FirstConfig(), scope_id="first_config")
     second_state = ObjectState(SecondConfig(), scope_id="second_config")
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(state=first_state),
             ConfigWindowTabSpec(state=second_state),

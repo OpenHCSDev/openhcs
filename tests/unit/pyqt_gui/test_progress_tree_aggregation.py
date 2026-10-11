@@ -4,13 +4,7 @@ from pyqt_reactive.services.zmq_server_info import BaseServerInfo
 from pyqt_reactive.widgets.shared import TreeStateAdapter, TreeSyncAdapter
 from zmqruntime.messages import PongResponse
 
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-    is_success_terminal_event,
-    is_terminal_event,
-)
+from openhcs.core.progress import ProgressEvent, ProgressPhase, ProgressStatus
 from openhcs.core.progress.projection import CompiledSubjectRuntimeState
 from openhcs.pyqt_gui.widgets.shared.server_browser.progress_projection import (
     ExecutionProgressProjection,
@@ -20,6 +14,18 @@ from openhcs.pyqt_gui.widgets.shared.server_browser.progress_tree_builder import
     ProgressTreeBuilder,
 )
 from openhcs.pyqt_gui.widgets.shared.zmq_server_manager import ZMQServerManagerWidget
+from openhcs.core.progress.types import (
+    AxisErrorProgressPhase,
+    CompileProgressPhase,
+    ErrorProgressStatus,
+    FailedProgressStatus,
+    InitProgressPhase,
+    PatternGroupProgressPhase,
+    RunningProgressStatus,
+    StepCompletedProgressPhase,
+    StepStartedProgressPhase,
+    SuccessProgressStatus,
+)
 
 
 def _event(
@@ -70,8 +76,8 @@ def _init_event(
     return _event(
         execution_id=execution_id,
         subject_id=subject_id,
-        phase=ProgressPhase.INIT,
-        status=ProgressStatus.RUNNING,
+        phase=InitProgressPhase,
+        status=RunningProgressStatus,
         percent=0.0,
         axis_id="",
         step_name="init",
@@ -120,8 +126,8 @@ def _nodes(
 
 def test_worker_tree_uses_pipeline_percent_for_parent_aggregation():
     pipeline_event = _event(
-        phase=ProgressPhase.STEP_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=StepCompletedProgressPhase,
+        status=SuccessProgressStatus,
         percent=25.0,
         completed=1,
         total=4,
@@ -131,8 +137,8 @@ def test_worker_tree_uses_pipeline_percent_for_parent_aggregation():
         owned_partition_values=["A01"],
     )
     step_event = _event(
-        phase=ProgressPhase.PATTERN_GROUP,
-        status=ProgressStatus.RUNNING,
+        phase=PatternGroupProgressPhase,
+        status=RunningProgressStatus,
         percent=50.0,
         completed=1,
         total=2,
@@ -156,8 +162,8 @@ def test_worker_tree_uses_pipeline_percent_for_parent_aggregation():
 def test_execution_events_without_topology_render_shallow_node():
     step_event = _event(
         execution_id="exec-run",
-        phase=ProgressPhase.STEP_STARTED,
-        status=ProgressStatus.RUNNING,
+        phase=StepStartedProgressPhase,
+        status=RunningProgressStatus,
         percent=25.0,
         step_name="ColorToGray",
     )
@@ -172,8 +178,8 @@ def test_execution_events_without_topology_render_shallow_node():
 def test_compile_tree_marks_plate_as_compiled():
     compile_events = [
         _event(
-            phase=ProgressPhase.COMPILE,
-            status=ProgressStatus.SUCCESS,
+            phase=CompileProgressPhase,
+            status=SuccessProgressStatus,
             percent=100.0,
             axis_id=axis_id,
             step_name="compilation",
@@ -198,26 +204,26 @@ def test_compile_tree_marks_plate_as_compiled():
 
 def test_success_status_only_terminates_status_driven_phase():
     compile_event = _event(
-        phase=ProgressPhase.COMPILE,
-        status=ProgressStatus.SUCCESS,
+        phase=CompileProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
     )
     intermediate_event = _event(
-        phase=ProgressPhase.STEP_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=StepCompletedProgressPhase,
+        status=SuccessProgressStatus,
         percent=50.0,
     )
 
-    assert is_success_terminal_event(compile_event)
-    assert is_terminal_event(compile_event)
-    assert not is_success_terminal_event(intermediate_event)
-    assert not is_terminal_event(intermediate_event)
+    assert compile_event.is_success_terminal()
+    assert compile_event.is_complete()
+    assert not intermediate_event.is_success_terminal()
+    assert not intermediate_event.is_complete()
 
 
 def test_compile_tree_marks_pipeline_level_failure():
     compile_failed = _event(
-        phase=ProgressPhase.COMPILE,
-        status=ProgressStatus.FAILED,
+        phase=CompileProgressPhase,
+        status=FailedProgressStatus,
         percent=0.0,
         axis_id="pipeline",
         step_name="compilation",
@@ -231,8 +237,8 @@ def test_compile_tree_marks_pipeline_level_failure():
 
 def test_worker_tree_marks_failed_well_and_plate():
     failed_event = _event(
-        phase=ProgressPhase.AXIS_ERROR,
-        status=ProgressStatus.ERROR,
+        phase=AxisErrorProgressPhase,
+        status=ErrorProgressStatus,
         percent=42.0,
         completed=1,
         total=2,
@@ -277,8 +283,8 @@ def test_new_queued_execution_replaces_old_compiled_identity_for_same_plate():
     old_compile = _event(
         execution_id="exec-compile",
         subject_id="/tmp/plate_a",
-        phase=ProgressPhase.COMPILE,
-        status=ProgressStatus.SUCCESS,
+        phase=CompileProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         axis_id="A01",
         step_name="compilation",
@@ -345,8 +351,8 @@ def test_running_snapshot_advances_init_only_projection_to_executing():
 def test_compile_events_with_worker_topology_stay_in_compile_mode():
     compile_event = _event(
         execution_id="exec-compile",
-        phase=ProgressPhase.COMPILE,
-        status=ProgressStatus.SUCCESS,
+        phase=CompileProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         step_name="compilation",
         partition_values=["A01"],

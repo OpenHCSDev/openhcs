@@ -138,7 +138,7 @@ def convert(case_dir, source_commit, repetitions, *, scaling=False, command=None
             evidence = _worker_axis_evidence(events, execution_id=c['execution_id'], expected_axes=len(provenance['wells']), expected_workers=provenance['candidate_worker_count'])
             require(tuple(evidence['worker_process_ids']) == tuple(c['worker_process_ids']) and math.isclose(evidence['worker_interval_overlap_seconds'], c['worker_interval_overlap_seconds'], rel_tol=0.0, abs_tol=1e-9), 'Candidate worker concurrency differs from saved progress')
             require({event['axis_id'] for event in c['axis_events']} == set(provenance['wells']), 'Candidate axes do not match requested assignment identities')
-            require({(event.axis_id, event.phase.value, event.timestamp, event.pid) for event in events} == {(event['axis_id'], event['phase'], event['timestamp'], event['pid']) for event in c['axis_events']}, 'Candidate axis report differs from original progress')
+            require({(event.axis_id, event.phase.name, event.timestamp, event.pid) for event in events} == {(event['axis_id'], event['phase'], event['timestamp'], event['pid']) for event in c['axis_events']}, 'Candidate axis report differs from original progress')
             require(all(c[key] == [] for key in ('database_differences', 'csv_differences', 'image_differences', 'unexpected_output_files', 'missing_declared_output_files')), 'Candidate assignment science failed')
             require(receipt['expected_axis_count'] == receipt['observed_axis_count'] == c['axis_count'] == len(provenance['wells']), 'Scaling receipt axis domain differs')
             shard_inputs[str(progress_path)] = sha(progress_path)

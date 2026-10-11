@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from objectstate import ScopeKey
 from typing import Any
 
 from PyQt6.QtCore import Qt
@@ -28,7 +29,6 @@ from openhcs.authoring.session.live_measurements import (
     LiveMeasurementTable,
     LiveMeasurementTableEntry,
 )
-from openhcs.core.dataset_sources.dataset_scopes import SCOPE_SEGMENT_SEPARATOR
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
@@ -299,11 +299,8 @@ class LiveMeasurementsWindow(QDialog):
             color_scheme=self.color_scheme,
             zmq_config=self._zmq_config,
             progress_config=self._progress_config,
-            state_scope_parent_id=SCOPE_SEGMENT_SEPARATOR.join(
-                (
-                    str(self._orchestrator.dataset_root),
-                    self.STATE_SCOPE_SEGMENT,
-                )
+            state_scope_parent_id=ScopeKey(str(self._orchestrator.dataset_root)).child(
+                self.STATE_SCOPE_SEGMENT
             ),
             parent=self,
         )

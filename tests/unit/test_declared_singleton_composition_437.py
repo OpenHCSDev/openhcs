@@ -130,10 +130,7 @@ def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
     declared = CallableContract.from_callable(independently_declared_source_echo)
     contract = replace(
         declared,
-        metadata=replace(
-            declared.metadata,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     spec = contract.artifact_inputs.specs[0]
     key = InvocationArtifactInputProjectionKey(

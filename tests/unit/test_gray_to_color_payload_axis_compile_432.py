@@ -108,11 +108,7 @@ def test_preservation_annotation_cannot_create_missing_source_payload_axis(tmp_p
     falsely_preserving = replace(
         invocation,
         contract=replace(
-            invocation.contract,
-            metadata=replace(
-                invocation.contract.metadata,
-                payload_axis_transition=PreservedPayloadAxes(),
-            ),
+            invocation.contract, payload_axis_transition=PreservedPayloadAxes()
         ),
     )
     session.plans[0] = replace(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 
 import inspect
@@ -18,7 +19,11 @@ from openhcs.core.artifacts import (
     RelationshipsArtifactType,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
-from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.config import (
+    GlobalPipelineConfig,
+    PipelineConfig,
+    StepSourceBindingsConfig,
+)
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
@@ -38,11 +43,7 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.source_bindings import (
-    NamedSourceBinding,
-    SourceProjectionRole,
-    StepSourceBindingsConfig,
-)
+from openhcs.core.source_bindings import NamedSourceBinding, SourceProjectionRole
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.interop.cellprofiler.compile_time_contracts import (
     CellProfilerInvocationContractProviderFactory,
@@ -184,11 +185,13 @@ def _compiled_neighbor_invocation():
         for spec in plan.contract.artifact_outputs
     }
     compiled = compile_function_pattern(
-        step.func,
+        admitted_graph(
+            step.func,
+            invocation_contract_provider=provider,
+            step_context=step_context,
+        ),
         {},
         output_plans,
-        invocation_contract_provider=provider,
-        step_context=step_context,
     )
     return next(compiled.iter_invocations())
 

@@ -6,6 +6,7 @@ pipeline retains those admission facts; live UI states remain in their registry.
 
 from __future__ import annotations
 
+from objectstate import ScopeKey
 import logging
 from pathlib import Path
 from typing import (
@@ -98,10 +99,13 @@ from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.partition_filter import PartitionFilterProcessor
 from objectstate import ObjectState, ObjectStateRegistry, get_base_type_for_lazy
 from openhcs.core.steps.function_step import FunctionStep  # Used for isinstance check
-from openhcs.core.progress import ProgressPhase, ProgressStatus
 from dataclasses import dataclass, replace
 from openhcs.core.axes import AxisFamily
 from openhcs.core.post_execute import PostExecuteHook
+from openhcs.core.progress.types import (
+    CompileProgressPhase,
+    RunningProgressStatus,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -123,7 +127,7 @@ def _compiler_step_scope_id(
     step_index: int,
 ) -> str:
     """Build a compiler scope id that preserves stable step tokens."""
-    return f"{compilation_scope}::{_step_scope_token(step, step_index)}"
+    return ScopeKey(compilation_scope).child(_step_scope_token(step, step_index))
 
 
 def _compiler_pipeline_scope_id(
@@ -131,7 +135,9 @@ def _compiler_pipeline_scope_id(
     pipeline_definition: Sequence["AbstractStep"],
 ) -> str:
     """Build the compiler declaration scope for one submitted pipeline."""
-    return f"{dataset_root}::pipeline::submission_{id(pipeline_definition):x}"
+    return ScopeKey.of(
+        str(dataset_root), "pipeline", f"submission_{id(pipeline_definition):x}"
+    )
 
 
 MATERIALIZATION_PLAN_REQUIREMENTS = (
@@ -902,7 +908,7 @@ class PipelineCompiler:
                 available_values,
             )
             logger.info(
-                f"Partition filter: {partition_filter_config.partition_filter} (mode={partition_filter_config.partition_filter_mode.value}) "
+                f"Partition filter: {partition_filter_config.partition_filter} (mode={partition_filter_config.partition_filter_mode.name}) "
                 f"→ {len(resolved_values)} partition values to process: {resolved_values}"
             )
             resolved_axis_filter = (
@@ -1210,7 +1216,7 @@ class PipelineCompiler:
                 "pattern without a routed component scope."
             )
         execution_scope = plan.execution_group_scope
-        source_binding_plan: CompiledSourceBindingPlan | None = None
+        source_binding_plan = CompiledSourceBindingPlan()
         try:
             if not declared_plan.has_primary_content:
                 component_value = None
@@ -1244,10 +1250,7 @@ class PipelineCompiler:
                 f"{routed_group!r} on "
                 f"{execution_scope.component.name!r}: {error}"
             ) from error
-        if (
-            source_binding_plan is not None
-            and source_binding_plan.primary_plane_bindings
-        ):
+        if source_binding_plan.primary_plane_bindings:
             PipelineCompiler._validate_pipeline_start_payload_axis_requirement(
                 session=session, source_binding_plan=source_binding_plan,
                 owner=owner, requirement=requirement, failures=failures,
@@ -1346,7 +1349,7 @@ class PipelineCompiler:
             return True
         PipelineCompiler._validate_pipeline_start_payload_axis_requirement(
             session=session,
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
             owner=owner,
             requirement=requirement,
             failures=failures,
@@ -1457,8 +1460,8 @@ class PipelineCompiler:
         orchestrator.progress_context().emit(
             axis_id=axis_id,
             step_name="compilation",
-            phase=ProgressPhase.COMPILE,
-            status=ProgressStatus.RUNNING,
+            phase=CompileProgressPhase,
+            status=RunningProgressStatus,
             completed=completed,
             total=total,
             percent=(completed / total) * 100.0,

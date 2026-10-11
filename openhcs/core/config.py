@@ -6,11 +6,14 @@ such as VFSConfig, PathPlanningConfig, and the overarching GlobalPipelineConfig.
 Configuration is intended to be immutable and provided as Python objects.
 """
 
+import hashlib
+import json
 import logging
 import inspect
-from dataclasses import dataclass, field, fields
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass, field, fields, replace
 from pathlib import Path
-from typing import Optional, Union, List, Annotated, ClassVar
+from typing import TYPE_CHECKING, Optional, Union, List, Annotated, ClassVar, Self
 from enum import Enum
 from abc import ABC, abstractmethod
 from arraybridge.decorators import DtypeConversion, DtypeConversionConfig
@@ -35,7 +38,11 @@ from openhcs.core.axes import (
 )
 from metaclass_registry import AutoRegisterMeta
 from openhcs.constants.input_source import InputSource
-from python_introspect import AnnotatedDataclassValidationMixin, Enableable
+from python_introspect import (
+    AnnotatedDataclassValidationMixin,
+    Enableable,
+    RegisteredClassChoices,
+)
 from python_introspect.enableable import EnableableMeta
 from polystore.streaming.viewer_transport import ViewerDisplayConfigABC
 from zmqruntime.config import (
@@ -66,6 +73,33 @@ from openhcs.runtime.viewer_display import (
 )
 from openhcs.core.vfs_protocol import PlateOutputDirectory, PlateOutputFile
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+from openhcs.core.artifacts import ArtifactSpecCollection
+from openhcs.core.component_set import ComponentSet
+from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.source_bindings import (
+    CompiledSourceBindingPlan,
+    ImagePlaneSource,
+    ImportedMetadataTable,
+    NamedSourceBinding,
+    SourceBindingDeclarationsMixin,
+    SourceFilterClause,
+    _SourceBindingPlanBase,
+    normalize_source_binding_values,
+)
+from openhcs.core.source_metadata import (
+    SourceMetadataFields,
+    SourceMetadataMapping,
+    SourceMetadataScalar,
+    SourceMetadataValue,
+    SourceVoxelSpacing,
+    source_metadata_scalar,
+)
+from openhcs.core.source_path_identity import source_path_posix
+from openhcs.core.source_spatial_domain import SourceSpatialDomain
+
+if TYPE_CHECKING:
+    from openhcs.core.callable_contract import CallableContract
+    from openhcs.core.step_dependencies import StepInputDependency
 
 
 # Combined metaclass for StreamingConfig to support both Enableable and AutoRegisterMeta
@@ -100,39 +134,39 @@ class MaterializationBackend(Enum):
     OMERO_LOCAL = "omero_local"
 
 
-class PartitionFilterMode(Enum):
+class PartitionFilterMode(ABC, metaclass=AutoRegisterMeta):
     """Whether a partition filter selects the values to include or to exclude.
 
-    Each member carries what it does: its preview operator, whether a value the
-    dataset lacks is an error, and whether matched values are kept or dropped.
+    Each mode is a subclass carrying what it does; ``name`` is its spelling in
+    forms and on the wire.
     """
 
-    INCLUDE = ("include", "+", True)
-    EXCLUDE = ("exclude", "-", False)
+    __registry_key__ = "name"
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type["PartitionFilterMode"]]] = {}
 
-    def __new__(
-        cls, serialized_value: str, preview_prefix: str, keeps_matches: bool
-    ) -> "PartitionFilterMode":
-        member = object.__new__(cls)
-        member._value_ = serialized_value
-        member._preview_prefix = preview_prefix
-        member._keeps_matches = keeps_matches
-        return member
+    name: ClassVar[str | None] = None
+    preview_prefix: ClassVar[str]
+    """This mode's compact operator in a filter preview."""
+    keeps_matches: ClassVar[bool]
+    """Matched values are the selection (include), not its complement."""
 
-    @property
-    def preview_prefix(self) -> str:
-        """Return this member's compact filter-selection operator."""
-        return self._preview_prefix
-
-    @property
-    def keeps_matches(self) -> bool:
-        """Matched values are the selection (include), not its complement."""
-        return self._keeps_matches
-
-    @property
-    def rejects_unknown_values(self) -> bool:
+    @classmethod
+    def rejects_unknown_values(cls) -> bool:
         """Naming a value the dataset lacks is an error only when including it."""
-        return self._keeps_matches
+        return cls.keeps_matches
+
+
+class IncludePartitions(PartitionFilterMode):
+    name = "include"
+    preview_prefix = "+"
+    keeps_matches = True
+
+
+class ExcludePartitions(PartitionFilterMode):
+    name = "exclude"
+    preview_prefix = "-"
+    keeps_matches = False
 
 
 class MultiprocessingStartMethod(Enum):
@@ -365,9 +399,11 @@ class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
     mode selects all.
     """
 
-    partition_filter_mode: Annotated[PartitionFilterMode, abbreviation("filter_mode")] = (
-        PartitionFilterMode.INCLUDE
-    )
+    partition_filter_mode: Annotated[
+        type[PartitionFilterMode],
+        abbreviation("filter_mode"),
+        RegisteredClassChoices(PartitionFilterMode),
+    ] = IncludePartitions
     """Apply ``partition_filter`` as the values to include or the values to exclude.
 
     Include mode rejects unknown explicit values. Exclude mode ignores unknown
@@ -522,21 +558,463 @@ class ProcessingConfig(AnnotatedDataclassValidationMixin):
     """
 
 
-from openhcs.core import source_bindings as source_binding_configs
-
-SourceBindingsConfig = global_pipeline_config(
+@global_pipeline_config(
     inherit_as_none=False,
     preview_label="SRC",
     abbreviation="src",
-)(source_binding_configs.SourceBindingsConfig)
+)
+@dataclass(frozen=True)
+class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBase):
+    """Canonical pipeline declaration for selecting and naming plate sources.
 
-StepSourceBindingsConfig = global_pipeline_config(
+    Normal plate initialization resolves these bindings over exact planes emitted
+    by the image stores. Embedded sample/well and axis coordinates are preserved;
+    an absent axis becomes ``"1"`` only when its store declares that axis absent
+    or singleton. Conflicting dataset, plane, or component identities fail
+    explicitly instead of being selected by a fallback.
+    """
+
+    source_filters: tuple[SourceFilterClause, ...] = ()
+    """Filters limiting the source universe before named bindings are resolved."""
+
+    bindings: tuple[NamedSourceBinding, ...] = ()
+    """Named semantic source bindings available to pipelines and inherited by steps."""
+
+    image_plane_sources: tuple[ImagePlaneSource, ...] = ()
+    """Exact image-plane source records available for source-binding resolution."""
+
+    imported_metadata_tables: tuple[ImportedMetadataTable, ...] = ()
+    """External metadata tables joined to source records before matching."""
+
+    source_stack_components: tuple[type[Axis], ...] = ()
+    """Ordered plate components that form one logical source image stack."""
+
+    source_spatial_domain: SourceSpatialDomain = field(
+        default_factory=SourceSpatialDomain
+    )
+    """Declared intrinsic image dimensions, independent of stack transport."""
+
+    grouping_metadata_fields: tuple[str, ...] = ()
+    """Metadata field names used to partition matched sources into execution groups."""
+
+    source_voxel_spacing: SourceVoxelSpacing = field(default_factory=SourceVoxelSpacing)
+    """Source-pixel spacing in z/y/x array order (or y/x for 2D).
+
+    Configured values use micrometers by default. CellProfiler imports retain
+    dimensionless relative spacing explicitly; that does not calibrate physical
+    measurements. Omit values when unknown. Anisotropic coordinates are valid,
+    but scalar physical-pixel-size functions require isotropic X/Y calibration.
+    """
+
+    def __post_init__(self) -> None:
+        self._normalize_common_fields()
+        source_filters = object.__getattribute__(self, "source_filters")
+        if source_filters is not None:
+            source_filters = normalize_source_binding_values(
+                "SourceBindingsConfig.source_filters",
+                source_filters,
+                SourceFilterClause,
+            )
+        bindings = object.__getattribute__(self, "bindings")
+        if bindings is not None:
+            bindings = normalize_source_binding_values(
+                f"{type(self).__name__}.bindings",
+                bindings,
+                NamedSourceBinding,
+            )
+            bindings = tuple(
+                replace(
+                    binding,
+                    selector=replace(
+                        binding.selector,
+                        metadata=tuple(
+                            replace(
+                                selector,
+                                value=self.coerce_metadata_scalar(
+                                    selector.field,
+                                    selector.value,
+                                ),
+                            )
+                            for selector in binding.selector.metadata
+                        ),
+                    ),
+                )
+                for binding in bindings
+            )
+        seen_aliases: set[str] = set()
+        if bindings is not None:
+            for binding in bindings:
+                if binding.alias in seen_aliases:
+                    raise ValueError(
+                        f"{type(self).__name__}.bindings contains duplicate alias "
+                        f"{binding.alias!r}."
+                    )
+                seen_aliases.add(binding.alias)
+        object.__setattr__(self, "source_filters", source_filters)
+        object.__setattr__(self, "bindings", bindings)
+        image_plane_sources = object.__getattribute__(self, "image_plane_sources")
+        if image_plane_sources is not None:
+            image_plane_sources = normalize_source_binding_values(
+                f"{type(self).__name__}.image_plane_sources",
+                image_plane_sources,
+                ImagePlaneSource,
+            )
+        object.__setattr__(self, "image_plane_sources", image_plane_sources)
+
+        imported_metadata_tables = object.__getattribute__(
+            self,
+            "imported_metadata_tables",
+        )
+        if imported_metadata_tables is not None:
+            imported_metadata_tables = normalize_source_binding_values(
+                f"{type(self).__name__}.imported_metadata_tables",
+                imported_metadata_tables,
+                ImportedMetadataTable,
+            )
+        object.__setattr__(
+            self,
+            "imported_metadata_tables",
+            imported_metadata_tables,
+        )
+
+        source_stack_components = object.__getattribute__(
+            self,
+            "source_stack_components",
+        )
+        if source_stack_components is not None:
+            source_stack_components = ComponentSet.collect(
+                source_stack_components
+            ).as_tuple()
+        object.__setattr__(
+            self,
+            "source_stack_components",
+            source_stack_components,
+        )
+
+        grouping_metadata_fields = object.__getattribute__(
+            self,
+            "grouping_metadata_fields",
+        )
+        if grouping_metadata_fields is not None:
+            grouping_metadata_fields = tuple(
+                str(value).strip() for value in grouping_metadata_fields
+            )
+            if any(not value for value in grouping_metadata_fields):
+                raise ValueError(
+                    f"{type(self).__name__}.grouping_metadata_fields cannot contain "
+                    "empty names."
+                )
+            grouping_metadata_fields = tuple(dict.fromkeys(grouping_metadata_fields))
+        object.__setattr__(self, "grouping_metadata_fields", grouping_metadata_fields)
+
+        source_voxel_spacing = object.__getattribute__(self, "source_voxel_spacing")
+        if source_voxel_spacing is not None and not isinstance(
+            source_voxel_spacing,
+            SourceVoxelSpacing,
+        ):
+            raise TypeError(
+                f"{type(self).__name__}.source_voxel_spacing must be "
+                "SourceVoxelSpacing."
+            )
+
+    @property
+    def has_primary_content(self) -> bool:
+        return bool(self.binding_declarations or self.image_plane_sources)
+
+    @property
+    def source_filter_declarations(self) -> tuple[SourceFilterClause, ...]:
+        """Source filters explicitly declared on this plan."""
+
+        return tuple(self.source_filters or ())
+
+    def source_path_filters_match(self, identities: tuple[str, ...]) -> bool:
+        """Match the declared source universe against physical path identities."""
+        from openhcs.core.source_matching import source_filters_match
+
+        return any(
+            source_filters_match(identity, self.source_filter_declarations)
+            for identity in identities
+        )
+
+    def discovery_path_matches(self, root: Path, path: Path) -> bool:
+        """Apply known physical-path selections before decoding a source store.
+
+        Metadata and component selectors still belong to plane projection. An
+        unrestricted binding keeps discovery unrestricted, not just the first
+        filtered alias. All matching uses the existing source-filter owners.
+        """
+        root = root.resolve(strict=False)
+        resolved = path.resolve(strict=False)
+        identities = (source_path_posix(resolved),)
+        if root.is_file():
+            identities = (resolved.name, *identities)
+        elif resolved.is_relative_to(root):
+            identities = (source_path_posix(resolved.relative_to(root)), *identities)
+        if not self.source_path_filters_match(identities):
+            return False
+        return not self.binding_declarations or any(
+            binding.physical_path_matches(root, resolved, identities)
+            for binding in self.binding_declarations
+        )
+
+    def declaration_identity(self) -> str:
+        """Return a stable identity for this complete source declaration."""
+
+        from python_introspect import to_jsonable
+
+        declaration = to_jsonable(self)
+        if not isinstance(declaration, Mapping):
+            raise TypeError(
+                "SourceBindingsConfig serialization must produce a mapping, got "
+                f"{type(declaration).__name__}."
+            )
+        canonical = json.dumps(declaration, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+    def resolved_source_locations(self, source_root: Path) -> Self:
+        """Return this config with every path-bearing declaration resolved."""
+
+        return replace(
+            self,
+            bindings=tuple(
+                binding.with_resolved_explicit_source(source_root)
+                for binding in self.binding_declarations
+            ),
+            image_plane_sources=tuple(
+                source.resolved(source_root) for source in self.image_plane_sources
+            ),
+            imported_metadata_tables=tuple(
+                table.resolved(source_root) for table in self.imported_metadata_tables
+            ),
+        )
+
+    def resolved_imported_metadata_locations(
+        self,
+        source_root: Path,
+        *,
+        portable_roots: Sequence[Path] = (),
+    ) -> Self:
+        """Resolve imported tables through their nominal path authority."""
+
+        return replace(
+            self,
+            imported_metadata_tables=tuple(
+                table.resolved(source_root, portable_roots=portable_roots)
+                for table in self.imported_metadata_tables
+            ),
+        )
+
+    def coerce_metadata_scalar(
+        self,
+        field_name: str,
+        value: SourceMetadataScalar,
+    ) -> SourceMetadataScalar:
+        """Apply the exact declared source-metadata field dtype."""
+
+        field_spec = next(
+            (field for field in self.metadata_fields if field.name == field_name),
+            None,
+        )
+        if field_spec is None:
+            return source_metadata_scalar(value)
+        coerced = field_spec.coerce_scalar(value)
+        if coerced is not None and not isinstance(coerced, (str, int, float, bool)):
+            raise TypeError(
+                f"Source metadata field {field_name!r} produced unsupported scalar "
+                f"type {type(coerced).__name__}."
+            )
+        return source_metadata_scalar(coerced)
+
+    def coerce_metadata(
+        self,
+        metadata: SourceMetadataMapping,
+    ) -> dict[str, SourceMetadataValue]:
+        """Apply declared field dtypes without changing metadata structure."""
+
+        return {
+            str(field_name): (
+                {
+                    str(nested_name): self.coerce_metadata_scalar(
+                        str(nested_name),
+                        nested_value,
+                    )
+                    for nested_name, nested_value in value.items()
+                }
+                if isinstance(value, Mapping)
+                else self.coerce_metadata_scalar(str(field_name), value)
+            )
+            for field_name, value in metadata.items()
+        }
+
+    def metadata_fields_for_realized_source_metadata(
+        self,
+        realized_source_metadata: Iterable[SourceMetadataMapping] | None,
+    ) -> tuple[FieldSpec, ...]:
+        """Merge declarations with realized non-key source-literal fields."""
+
+        declared_fields = tuple(self.metadata_fields or ())
+        if realized_source_metadata is None:
+            return declared_fields
+
+        return self.metadata_fields_for_literal_types(
+            SourceMetadataFields.literal_field_types(realized_source_metadata)
+        )
+
+    def metadata_fields_for_literal_types(
+        self, field_types: Mapping[str, type[object] | None]
+    ) -> tuple[FieldSpec, ...]:
+        """Overlay this declaration on one admitted cohort's literal schema."""
+        declared_fields = tuple(self.metadata_fields or ())
+        excluded_names = frozenset(
+            join.imported_metadata_field
+            for table in self.imported_metadata_tables
+            for join in table.joins
+        )
+        declared_names = frozenset(field.name for field in declared_fields)
+        realized_fields = tuple(
+            FieldSpec(name, dtype, required=False)
+            for name, dtype in field_types.items()
+            if name not in declared_names and name not in excluded_names
+        )
+        return FieldSpec.merge_exact(
+            (declared_fields, realized_fields),
+            context=f"{type(self).__name__} realized metadata fields",
+        )
+
+    @property
+    def is_empty(self) -> bool:
+        """Whether this declaration declares nothing: every field at its default."""
+
+        default = SourceBindingsConfig()
+        return all(
+            getattr(self, item.name) == getattr(default, item.name)
+            for item in fields(SourceBindingsConfig)
+        )
+
+    def compiled_plan(
+        self,
+        *,
+        selected_bindings: tuple[NamedSourceBinding, ...] | None = None,
+        realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
+    ) -> CompiledSourceBindingPlan:
+        """Freeze these declarations into one step's compiled plan."""
+
+        return CompiledSourceBindingPlan(
+            bindings=(
+                self.binding_declarations
+                if selected_bindings is None
+                else selected_bindings
+            ),
+            metadata_rules=self.metadata_rule_declarations,
+            match_plan=self.match_plan,
+            metadata_fields=self.metadata_fields_for_realized_source_metadata(
+                realized_source_metadata
+            ),
+            source_stack_components=self.source_stack_components,
+            source_spatial_domain=self.source_spatial_domain,
+        )
+
+    def compiled_plan_for_contracts(
+        self,
+        contracts: "Iterable[CallableContract]",
+        main_input_dependency: "StepInputDependency",
+        available_artifacts: ArtifactSpecCollection,
+    ) -> CompiledSourceBindingPlan:
+        """Compile only the bindings the step's callables consume."""
+
+        contracts = tuple(contracts)
+        implicit_specs = (
+            tuple(binding.input_spec() for binding in self.primary_plane_bindings)
+            if main_input_dependency.uses_pipeline_start_anchors()
+            and any(contract.accepts_implicit_main_flow_input for contract in contracts)
+            else ()
+        )
+        source_specs = tuple(dict.fromkeys((
+            *implicit_specs,
+            *(
+                spec
+                for contract in contracts
+                for spec in contract.artifact_inputs
+                if self.declares_artifact_ref(spec.ref())
+                or available_artifacts.by_name_and_artifact_type(
+                    spec.name, spec.artifact_type
+                ) is not None
+            ),
+        )))
+        bindings = (
+            self.bindings_for_artifact_specs(source_specs, available_artifacts)
+            if source_specs
+            else ()
+        )
+        if not bindings:
+            return CompiledSourceBindingPlan()
+        return self.compiled_plan(selected_bindings=bindings)
+
+@global_pipeline_config(
     preview_label="STEP_SRC",
     abbreviation="step_src",
-)(source_binding_configs.StepSourceBindingsConfig)
+)
+@dataclass(frozen=True)
+class StepSourceBindingsConfig(
+    SourceBindingsConfig,
+    Enableable,
+):
+    """Step-local source-binding config inheriting pipeline/plate defaults."""
 
-source_binding_configs.SourceBindingsConfig = SourceBindingsConfig
-source_binding_configs.StepSourceBindingsConfig = StepSourceBindingsConfig
+    enabled: bool = False
+    """Whether this step uses source-binding resolution instead of the prior step image stack."""
+
+    def for_input_source(self, input_source: InputSource) -> Self:
+        """Return the source declarations active for one resolved input source."""
+
+        if self.enabled is None:
+            raise ValueError(
+                "StepSourceBindingsConfig.for_input_source requires "
+                "ObjectState-resolved enabled state."
+            )
+        resolved_input_source = (
+            input_source
+            if isinstance(input_source, InputSource)
+            else InputSource(input_source)
+        )
+        if self.enabled or resolved_input_source is InputSource.PIPELINE_START:
+            return self
+        return type(self)()
+
+
+
+def source_bindings_defaults_to_base(
+    defaults: SourceBindingsConfig,
+) -> SourceBindingsConfig:
+    """Return concrete source-binding defaults from eager or lazy config values."""
+    from objectstate import get_base_type_for_lazy
+
+    lazy_base_type = get_base_type_for_lazy(type(defaults))
+    if lazy_base_type is SourceBindingsConfig:
+        concrete_defaults = SourceBindingsConfig()
+        return SourceBindingsConfig(
+            **{
+                item.name: (
+                    resolved
+                    if (
+                        resolved := type(defaults).__getattribute__(
+                            defaults,
+                            item.name,
+                        )
+                    )
+                    is not None
+                    else object.__getattribute__(concrete_defaults, item.name)
+                )
+                for item in fields(SourceBindingsConfig)
+                if item.init
+            }
+        )
+    if isinstance(defaults, SourceBindingsConfig):
+        return defaults
+    raise TypeError(
+        "Source-binding defaults must resolve to SourceBindingsConfig, got "
+        f"{type(defaults).__name__}."
+    )
 
 
 @abbreviation("seq")
@@ -921,12 +1399,6 @@ def runtime_config_parameter(
     )
 
 
-SourceBindingsConfig = source_binding_configs.SourceBindingsConfig
-StepSourceBindingsConfig = source_binding_configs.StepSourceBindingsConfig
-LazySourceBindingsConfig = source_binding_configs.LazySourceBindingsConfig
-LazyStepSourceBindingsConfig = source_binding_configs.LazyStepSourceBindingsConfig
-
-
 # ============================================================================
 # Streaming Port Utilities
 # ============================================================================
@@ -957,11 +1429,10 @@ from objectstate import config_context
 from objectstate.lazy_factory import resolve_lazy_configurations_for_serialization
 
 with config_context(PipelineConfig()):
-    source_binding_configs.EMPTY_SOURCE_BINDINGS = (
-        resolve_lazy_configurations_for_serialization(
-            LazyStepSourceBindingsConfig(),
-        )
+    EMPTY_SOURCE_BINDINGS: StepSourceBindingsConfig = (
+        resolve_lazy_configurations_for_serialization(LazyStepSourceBindingsConfig())
     )
+    """Step source bindings resolved against the default pipeline config."""
 
 # Note: We use the framework's default MRO-based priority function.
 # More derived classes automatically get higher priority through MRO depth.

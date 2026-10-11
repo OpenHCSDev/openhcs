@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pyqt_reactive.widgets.shared.dock_layout import DockPane
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -128,9 +129,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.debug import (
-    DebugCommandType,
     DebugCursor,
-    DebugEventType,
     DebugProgressContext,
     DebugSession,
     DebugTerminalSummary,
@@ -140,11 +139,7 @@ from openhcs.core.execution_state import (
 )
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.pipeline_document import PipelineDocument
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent
 from openhcs.core.progress.debug_projection import (
     RuntimeProjectionBuilder,
     RuntimeProjectionSource,
@@ -156,14 +151,11 @@ from openhcs.core.progress.projection import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.config import AgentUiBridgeConfig
-from openhcs.pyqt_gui.services.config_window_code_document import (
-    ConfigCodeDocumentDriver,
-)
+from pyqt_reactive.windows.config_window import ConfigCodeDocumentDriver
 from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
 )
 from openhcs.pyqt_gui.services.main_window_workflows import (
-    MainWindowDockPane,
     MainWindowEmbeddedWidgets,
 )
 from openhcs.pyqt_gui.services.reactor_providers import OpenHCSCodegenProvider
@@ -230,6 +222,17 @@ from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from openhcs.core.selection import SelectedAllSelectionMode
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from tests.unit.pyqt_gui.session_harness import session_gui, session_port
+from openhcs.core.progress.types import (
+    PatternGroupProgressPhase,
+    SuccessProgressStatus,
+)
+from openhcs.core.debug import AfterInvocationDebugBoundary
+from openhcs.core.debug import (
+    RestartDebugCommand,
+    RunDebugCommand,
+    StepDebugCommand,
+    StopDebugCommand,
+)
 
 DOCUMENT_ID = UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value
 PLATE_SCOPE_ID = "plate-1"
@@ -302,6 +305,7 @@ def replacement_function(image, threshold: int = 2):
 
 def test_config_code_document_honors_clean_flag() -> None:
     driver = ConfigCodeDocumentDriver(
+        document_format=ConfigDocumentAuthority,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=lambda: GlobalPipelineConfig(num_workers=2),
@@ -320,6 +324,7 @@ def test_pycodified_config_document_delegates_to_config_authority() -> None:
     replacement = GlobalPipelineConfig(num_workers=3)
     applied: list[GlobalPipelineConfig] = []
     driver = ConfigCodeDocumentDriver(
+        document_format=ConfigDocumentAuthority,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=lambda: original,
@@ -347,6 +352,7 @@ def test_pycodified_config_document_delegates_to_config_authority() -> None:
 def test_pycodified_config_document_authorizes_before_apply() -> None:
     applied: list[GlobalPipelineConfig] = []
     driver = ConfigCodeDocumentDriver(
+        document_format=ConfigDocumentAuthority,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=GlobalPipelineConfig,
@@ -490,7 +496,7 @@ class FakeEmbeddedWindowWidgets(MainWindowEmbeddedWidgets):
             dock_widget.setObjectName(window_id)
             dock_widget.setWidget(widget)
             self.register(
-                MainWindowDockPane(
+                DockPane(
                     window_id=window_id,
                     title=title,
                     widget=widget,
@@ -989,7 +995,7 @@ def test_floating_embedded_pane_is_not_duplicated_as_qt_top_level() -> None:
     main_window = QMainWindow()
     main_window.session = BridgeSessions.get()
     embedded_widgets = MainWindowEmbeddedWidgets()
-    pipeline_pane = MainWindowDockPane.create(
+    pipeline_pane = DockPane.create(
         main_window=main_window,
         window_id=OpenHCSUiWindowId.pipeline_editor,
         title="Pipeline Editor",
@@ -1050,7 +1056,7 @@ def test_embedded_registration_does_not_hide_main_window_from_bridge(
     embedded_widgets = MainWindowEmbeddedWidgets()
     embedded_scope_id = "test_main_window_embedded_scope"
     embedded_widget = QWidget()
-    embedded_pane = MainWindowDockPane.create(
+    embedded_pane = DockPane.create(
         main_window=main_window,
         window_id=embedded_scope_id,
         title="Embedded",
@@ -4476,13 +4482,13 @@ def test_pipeline_debug_toolbar_actions_are_exposed_from_toolbar_declarations() 
             declaration.action_id()
             for declaration in PipelineDebugActionDeclarationBase.toolbar_actions()
         }
-        step_action = actions[DebugCommandType.STEP.value]
+        step_action = actions[StepDebugCommand.name]
         assert step_action.title == StepDebugAction.label
         assert step_action.enabled is True
         assert step_action.confirmation_required is True
         for action_id in (
-            DebugCommandType.RESTART.value,
-            DebugCommandType.STOP.value,
+            RestartDebugCommand.name,
+            StopDebugCommand.name,
             DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value,
         ):
             assert actions[action_id].enabled is False
@@ -4495,10 +4501,10 @@ def test_pipeline_debug_toolbar_projects_pending_execution_to_bridge_actions() -
         gui.settle()
         actions = _debug_actions(_pipeline_editor_bridge(gui.pipeline_editor))
 
-        step_action = actions[DebugCommandType.STEP.value]
+        step_action = actions[StepDebugCommand.name]
         assert step_action.enabled is False
         assert step_action.disabled_error.code == "debug_execution_pending"
-        assert actions[DebugCommandType.STOP.value].enabled is True
+        assert actions[StopDebugCommand.name].enabled is True
 
 
 def test_pipeline_debug_toolbar_action_invoke_routes_to_the_session(
@@ -4513,13 +4519,13 @@ def test_pipeline_debug_toolbar_action_invoke_routes_to_the_session(
         )
         bridge = _pipeline_editor_bridge(gui.pipeline_editor)
         widget_id = PipelineDebugToolbarWidgetIdentity.require_value()
-        action = _debug_actions(bridge)[DebugCommandType.STEP.value]
+        action = _debug_actions(bridge)[StepDebugCommand.name]
 
         def invoke(confirm):
             return bridge.invoke_action(
                 UiActionInvokeRequest(
                     widget_id=widget_id,
-                    action_id=DebugCommandType.STEP.value,
+                    action_id=StepDebugCommand.name,
                     selected_scope_ids=action.target_scope_ids,
                     observed_selection_revision_token=action.selection_revision_token,
                     confirmation_requirement=(
@@ -4537,7 +4543,7 @@ def test_pipeline_debug_toolbar_action_invoke_routes_to_the_session(
         ((work, args, kwargs),) = started
         assert work == gui.session.run_debug
         assert args == (DATASET_SCOPE_ID,)
-        assert kwargs["command_type"] is DebugCommandType.STEP
+        assert kwargs["command_type"] is StepDebugCommand
 
 
 def test_pipeline_debug_toolbar_runtime_values_action_requires_debug_session(
@@ -4614,11 +4620,11 @@ def test_pipeline_debug_session_state_surface_projects_context_and_actions() -> 
         assert state.payload["execution_id"] == "exec-1"
         assert state.payload["axis_id"] == "A01"
         assert state.payload["cursor"]["step_scope_id"] == "plate-1::functionstep_1"
-        assert actions[DebugCommandType.RESTART.value]["enabled"] is True
+        assert actions[RestartDebugCommand.name]["enabled"] is True
         assert (
             actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is True
         )
-        assert actions[DebugCommandType.STEP.value]["label"] == StepDebugAction.label
+        assert actions[StepDebugCommand.name]["label"] == StepDebugAction.label
 
 
 def test_pipeline_debug_session_state_surface_projects_runtime_frame() -> None:
@@ -4634,8 +4640,8 @@ def test_pipeline_debug_session_state_surface_projects_runtime_frame() -> None:
             subject_id=DATASET_SCOPE_ID,
             axis_id="A01",
             step_name="IdentifyPrimaryObjects",
-            phase=ProgressPhase.PATTERN_GROUP,
-            status=ProgressStatus.SUCCESS,
+            phase=PatternGroupProgressPhase,
+            status=SuccessProgressStatus,
             percent=100.0,
             completed=1,
             total=1,
@@ -4645,7 +4651,7 @@ def test_pipeline_debug_session_state_surface_projects_runtime_frame() -> None:
                 debug_session_id="debug-1",
                 snapshot_id="snapshot-1",
                 cursor=_debug_cursor(),
-                event_type=DebugEventType.AFTER_INVOCATION,
+                event_type=AfterInvocationDebugBoundary,
                 snapshot_store_ref="/debug",
             ).to_context(),
         )
@@ -4676,7 +4682,7 @@ def _terminal_summary(debug_session_id: str) -> DebugTerminalSummary:
         subject_id=DATASET_SCOPE_ID,
         terminal_status="complete",
         cursor=_debug_cursor(),
-        command_type=DebugCommandType.STEP,
+        command_type=StepDebugCommand,
         axis_id="A01",
         snapshot_id="snapshot-1",
         snapshot_store_ref="/debug",
@@ -4707,7 +4713,7 @@ def test_pipeline_debug_session_terminal_summary_retires_the_inspected_session()
                 subject_id=DATASET_SCOPE_ID, execution_id="exec-1", axis_id="A01"
             )
             .with_cursor(_debug_cursor())
-            .with_command(DebugCommandType.STEP)
+            .with_command(StepDebugCommand)
         )
         gui.session.inspected_debug_sessions[DATASET_SCOPE_ID] = inspected
         gui.session.debug_terminal_summaries[DATASET_SCOPE_ID] = _terminal_summary(
@@ -4725,9 +4731,9 @@ def test_pipeline_debug_session_terminal_summary_retires_the_inspected_session()
             state.payload["terminal_summary"]["debug_session_id"]
             == inspected.debug_session_id
         )
-        assert actions[DebugCommandType.RUN.value]["label"] == "Start Debug"
-        assert actions[DebugCommandType.RESTART.value]["enabled"] is False
-        assert actions[DebugCommandType.STOP.value]["enabled"] is False
+        assert actions[RunDebugCommand.name]["label"] == "Start Debug"
+        assert actions[RestartDebugCommand.name]["enabled"] is False
+        assert actions[StopDebugCommand.name]["enabled"] is False
         assert (
             actions[DebugToolbarAuxiliaryAction.RUNTIME_VALUES.value]["enabled"] is False
         )

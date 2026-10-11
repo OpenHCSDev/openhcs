@@ -511,7 +511,7 @@ class ParameterDocumentationPolicy:
         for name in callable_contract.artifact_input_parameter_names:
             if name in supplied_by:
                 supplied_by[name] = FunctionParameterSource.ARTIFACT_INPUT
-        for name in callable_contract.runtime_bound_parameters:
+        for name in callable_contract.runtime_bound_parameter_names:
             if name in supplied_by:
                 supplied_by[name] = FunctionParameterSource.RUNTIME_PARAMETER
         runtime_context_parameter = callable_contract.runtime_context_parameter
@@ -1255,7 +1255,7 @@ def _runtime_contract_summary(
             None if contract.processing_contract is None
             else contract.processing_contract.key
         ),
-        runtime_bound_parameters=contract.runtime_bound_parameters,
+        runtime_bound_parameters=contract.runtime_bound_parameter_names,
         required_axis_roles=tuple(
             role.__name__ for role in contract.required_axis_roles
         ),

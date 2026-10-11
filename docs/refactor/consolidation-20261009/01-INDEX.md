@@ -87,6 +87,7 @@ Total: about −16k production lines removed from `openhcs/`, plus up to −6k o
 | Q5 | `omero/` (a separate Django plugin) | Out of scope |
 | G2-Q1 | Rewrite saved pipelines that set `ImagePlaneSource(channel=…)` or `SaveImagesSeriesAxis.TIMEPOINT/Z_INDEX` (both unread)? | No tool; such pipelines fail loudly on load |
 | G7-Q1 | Rewrite saved `.py` configs and pipelines that name `WellFilterConfig`, `StepWellFilterConfig`, `WellFilterMode`, `well_filter`, `well_filter_mode`, `well_filter_config` or `auto_add_output_plate_to_plate_manager` (now `PartitionFilterConfig`, `StepPartitionFilterConfig`, `PartitionFilterMode`, `partition_filter`, `partition_filter_mode`, `partition_filter_config`, `auto_add_output_dataset`)? | No tool; such files fail loudly on load and are re-saved from the GUI |
+| K4-Q1 | Rewrite saved `.py` pipelines that name `SourceBindingMatchPlan`, `SourceBindingMatchMethod`, or import `LazyStepSourceBindingsConfig`/`LazySourceBindingsConfig` from `openhcs.core.source_bindings` (now `PairByOrder`/`PairByMetadata`, and `openhcs.core.config`)? | No tool; such files fail loudly on load and are re-saved from the GUI |
 
 ## Surface files
 

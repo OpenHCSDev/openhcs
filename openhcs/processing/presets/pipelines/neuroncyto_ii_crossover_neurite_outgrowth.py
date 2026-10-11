@@ -35,10 +35,10 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     LazyPartitionFilterConfig,
     PipelineConfig,
+    LazySourceBindingsConfig,
 )
 from openhcs.core.source_bindings import (
     ComponentSelector,
-    LazySourceBindingsConfig,
     NamedSourceBinding,
     SourceFilterClause,
     SourceFilterMatchType,

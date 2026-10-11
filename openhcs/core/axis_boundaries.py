@@ -1,15 +1,17 @@
-"""Form choice sets for fields that hold axes.
+"""Form choice sets and the JSON decoder for fields that hold axes.
 
 Kept out of :mod:`openhcs.core.axes` so that declaring and activating a family
 (done by the product entry point in every process) stays free of the
-annotation library. JSON spells a declaration by its registry key, its name.
+annotation library. JSON spells a declaration by its name, decoded through the
+active family.
 """
 
 from __future__ import annotations
 
-from python_introspect import AnnotationChoices
+from metaclass_registry import AutoRegisterMeta
+from python_introspect import AnnotationChoices, registered_class_from_key
 
-from openhcs.core.axes import AxisFamily
+from openhcs.core.axes import AxisDeclarationMeta, AxisFamily, GroupingDeclaration
 
 
 class _AxisDeclarationChoices(AnnotationChoices):
@@ -45,6 +47,19 @@ class GroupingChoices(_AxisDeclarationChoices):
 
     def choices(self) -> tuple[object, ...]:
         return AxisFamily.active().grouping_choices()
+
+
+
+@registered_class_from_key.register(AxisDeclarationMeta)
+def _declaration_from_boundary_name(family: AxisDeclarationMeta, key: object) -> type:
+    """Decode a grouping declaration through the active family.
+
+    Two families may declare the same name, so the registry cannot decode it.
+    """
+
+    if issubclass(family, GroupingDeclaration):
+        return AxisFamily.active().grouping_named(str(key))
+    return registered_class_from_key.dispatch(AutoRegisterMeta)(family, key)
 
 
 __all__ = ["AxisChoices", "GroupingChoices", "VariableAxisChoices"]

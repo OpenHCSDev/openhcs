@@ -8,10 +8,7 @@ from typing import Union
 from polystore.filemanager import FileManager
 
 from openhcs.constants.constants import Backend
-from openhcs.core.source_bindings import (
-    SourceBindingsConfig,
-    source_bindings_defaults_to_base,
-)
+from openhcs.core.config import SourceBindingsConfig, source_bindings_defaults_to_base
 from openhcs.core.virtual_workspace_metadata import FIELDS, METADATA_CONFIG
 from openhcs.core.dataset_sources.source import DatasetSource
 from openhcs.core.dataset_sources.source import DeclaredFileSource

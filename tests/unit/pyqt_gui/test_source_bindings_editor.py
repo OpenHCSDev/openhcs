@@ -12,7 +12,6 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QStyle,
-    QTableWidgetItem,
     QWidget,
 )
 from python_introspect import is_enableable
@@ -24,8 +23,7 @@ from openhcs.core.source_bindings import (
     MetadataSelector,
     SourceBindingMatchDimension,
     SourceBindingMatchField,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByMetadata,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
@@ -47,11 +45,11 @@ from openhcs.constants.constants import Backend
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.source_bindings_preview import SourceInventory
 from openhcs.pyqt_gui.widgets.source_bindings_editor import (
-    DataclassFieldColumns,
-    EditableTableLayout,
-    RowSuggestion,
     SourceBindingsEditorWidget,
     SourceSetPairingRow,
+)
+from pyqt_reactive.widgets.editable_table import (
+    DataclassFieldColumns,
     StructuredSelectorCellWidget,
     StructuredSelectorDialog,
 )
@@ -191,35 +189,6 @@ def binding_cell_widget(table, binding_index: int, field: str):
     return table.cellWidget(*binding_cell_position(binding_index, field))
 
 
-def test_structured_selector_dialog_edits_typed_filter_rows() -> None:
-    QtApplicationHarness.app()
-
-    existing = SourceFilterClause(
-        SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "DNA", any_group=1
-    )
-    dialog = StructuredSelectorDialog(
-        element_type=SourceFilterClause,
-        suggestions=(
-            RowSuggestion.of(
-                SourceFilterClause,
-                subject=SourceFilterSubject.DIRECTORY,
-                match_type=SourceFilterMatchType.IS_IMAGE,
-            ),
-        ),
-        value=(existing,),
-    )
-
-    assert dialog.table.columnCount() == len(DataclassFieldColumns.of(SourceFilterClause))
-    assert dialog.value() == (existing,)
-
-    dialog._append_suggestion(dialog.suggestions.item(0).data(Qt.ItemDataRole.UserRole))
-
-    assert dialog.value() == (
-        existing,
-        SourceFilterClause(SourceFilterSubject.DIRECTORY, SourceFilterMatchType.IS_IMAGE),
-    )
-
-
 def test_structured_selector_dialog_choices_come_from_field_type() -> None:
     QtApplicationHarness.app()
 
@@ -237,21 +206,6 @@ def test_structured_selector_dialog_choices_come_from_field_type() -> None:
         component_widget.itemData(index) for index in range(component_widget.count())
     ) == AxisFamily.active().axes
     assert component_widget.currentData() is Microscopy.Channel
-
-
-def test_structured_selector_dialog_reports_incomplete_rows() -> None:
-    QtApplicationHarness.app()
-
-    dialog = StructuredSelectorDialog(
-        element_type=MetadataSelector,
-        suggestions=(),
-        value=(),
-    )
-
-    dialog.append_draft({"field": "Well"})
-
-    assert "Incomplete rows ignored: 1" == dialog.validation_label.text()
-    assert dialog.value() == ()
 
 
 def test_source_bindings_config_uses_inline_dataclass_widget_info() -> None:
@@ -556,14 +510,11 @@ def test_pipeline_source_bindings_table_edits_recreate_container_and_children() 
         source=MetadataSource.FILE_NAME,
         pattern=r"(?P<well>A\d{2})_(?P<channel>DNA)\.tif",
     )
-    expected_match_plan = SourceBindingMatchPlan(
-        method=SourceBindingMatchMethod.METADATA,
-        dimensions=(
+    expected_match_plan = PairByMetadata(dimensions=(
             SourceBindingMatchDimension(
                 fields=(SourceBindingMatchField("DNA", "well"),),
             ),
-        ),
-    )
+        ))
 
     try:
         for _ in range(80):
@@ -1300,17 +1251,14 @@ def test_pipeline_source_bindings_preview_preserves_inherited_table_rows() -> No
         for _ in range(10):
             QApplication.processEvents()
 
-        expected_plan = SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=(
+        expected_plan = PairByMetadata(dimensions=(
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("DNA", "well"),),
                 ),
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("GFP", "well"),),
                 ),
-            ),
-        )
+            ))
         assert (
             state.get_resolved_value("step_source_bindings_config.match_plan")
             == expected_plan
@@ -2523,53 +2471,6 @@ def test_source_bindings_editor_tables_expand_without_vertical_scrollbars() -> N
     assert table.visualRect(final_index).bottom() <= table.viewport().rect().bottom()
 
 
-def test_editable_table_layout_keeps_final_row_visible_with_or_without_scrollbar() -> (
-    None
-):
-    app = QtApplicationHarness.app()
-    table = ScopedTableWidget(2, 2)
-    table.setItem(0, 0, QTableWidgetItem("field"))
-    table.setItem(0, 1, QTableWidgetItem("short"))
-    table.setItem(1, 0, QTableWidgetItem("imported metadata tables"))
-    table.setItem(1, 1, QTableWidgetItem("a value wide enough to require scrolling"))
-    EditableTableLayout.configure(table)
-    EditableTableLayout.fit_to_rows(table)
-    table.resize(180, table.height())
-    table.show()
-    for _ in range(4):
-        app.processEvents()
-    EditableTableLayout.fit_to_rows(table)
-    app.processEvents()
-
-    expected_rows_height = sum(table.rowHeight(row) for row in range(table.rowCount()))
-    final_index = table.model().index(table.rowCount() - 1, 0)
-    assert table.horizontalScrollBar().isVisible()
-    assert table.viewport().height() >= expected_rows_height
-    assert table.visualRect(final_index).bottom() <= table.viewport().rect().bottom()
-    viewport_rect = QRect(
-        table.viewport().mapTo(table, table.viewport().rect().topLeft()),
-        table.viewport().size(),
-    )
-    horizontal_bar_rect = QRect(
-        table.horizontalScrollBar().mapTo(
-            table,
-            table.horizontalScrollBar().rect().topLeft(),
-        ),
-        table.horizontalScrollBar().size(),
-    )
-    assert not viewport_rect.intersects(horizontal_bar_rect)
-
-    table.resize(1200, table.height())
-    for _ in range(4):
-        app.processEvents()
-    EditableTableLayout.fit_to_rows(table)
-    app.processEvents()
-
-    assert not table.horizontalScrollBar().isVisible()
-    assert table.viewport().height() >= expected_rows_height
-    assert table.visualRect(final_index).bottom() <= table.viewport().rect().bottom()
-
-
 def test_pipeline_sources_preview_fits_rows_and_bar_in_reflowing_config_body() -> None:
     app = QtApplicationHarness.app()
     widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
@@ -2945,27 +2846,21 @@ def test_source_bindings_placeholder_preview_updates_for_same_summary_text() -> 
     container.set_value_widget(widget)
 
     first = StepSourceBindingsConfig(
-        match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=(
+        match_plan=PairByMetadata(dimensions=(
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("DNA", "well"),),
                 ),
-            ),
-        ),
+            )),
     )
     second = StepSourceBindingsConfig(
-        match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.METADATA,
-            dimensions=(
+        match_plan=PairByMetadata(dimensions=(
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("DNA", "well"),),
                 ),
                 SourceBindingMatchDimension(
                     fields=(SourceBindingMatchField("GFP", "site"),),
                 ),
-            ),
-        ),
+            )),
     )
     first_placeholder = LazyDefaultPlaceholderService._format_placeholder_text(
         first,
@@ -4754,17 +4649,14 @@ def test_source_bindings_editor_edits_match_plan() -> None:
         (SourceBindingMatchField("DNA", "well"), SourceBindingMatchField("GFP", "well")),
     )
 
-    assert widget.get_value().match_plan == SourceBindingMatchPlan(
-        method=SourceBindingMatchMethod.METADATA,
-        dimensions=(
+    assert widget.get_value().match_plan == PairByMetadata(dimensions=(
             SourceBindingMatchDimension(
                 fields=(
                     SourceBindingMatchField("DNA", "well"),
                     SourceBindingMatchField("GFP", "well"),
                 ),
             ),
-        ),
-    )
+        ))
 
 
 def test_source_bindings_editor_enum_columns_use_typed_combos() -> None:

@@ -3,11 +3,7 @@ from dataclasses import dataclass
 import pytest
 
 from openhcs.core.artifacts import ArtifactOutputPlan, MeasurementsArtifactType
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent
 from openhcs.core.progress.live_measurements import (
     LiveMeasurementPayloadError,
     LiveMeasurementProgressPayload,
@@ -31,6 +27,10 @@ from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.progress.types import (
+    StepCompletedProgressPhase,
+    SuccessProgressStatus,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,8 +127,8 @@ def _event_with_context(context):
         subject_id="/tmp/plate",
         axis_id="A01",
         step_name="Measure",
-        phase=ProgressPhase.STEP_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=StepCompletedProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         completed=1,
         total=1,

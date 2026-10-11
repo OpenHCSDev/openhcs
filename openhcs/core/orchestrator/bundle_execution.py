@@ -86,6 +86,18 @@ from openhcs.core.steps.function_artifact_materialization import (
 from openhcs.core.steps.function_outputs import (
     OpenHCSMetadataTarget,
 )
+from openhcs.core.progress.types import (
+    FailedProgressStatus,
+    InitProgressPhase,
+    RunningProgressPhase,
+    RunningProgressStatus,
+    StartedProgressStatus,
+    StepCompletedProgressPhase,
+    StepStartedProgressPhase,
+    SuccessProgressPhase,
+    SuccessProgressStatus,
+    ViewerSettlementProgressPhase,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -258,12 +270,19 @@ def execute_bundle_request(
                         request=request,
                         worker_assignment_plan=worker_assignment_plan,
                     )
+                    lane_results = executor_resources.run_worker_lanes(
+                        pipeline_definition=validated.pipeline_definition,
+                        worker_lane_execution_plan=worker_lane_execution_plan,
+                        parent_contexts=validated.compiled_contexts,
+                    )
+                    # Lanes finish in any order; results follow the compiled axis order.
                     execution_results = BundleExecutionResults(
-                        executor_resources.run_worker_lanes(
-                            pipeline_definition=validated.pipeline_definition,
-                            worker_lane_execution_plan=worker_lane_execution_plan,
-                            parent_contexts=validated.compiled_contexts,
-                        )
+                        {
+                            axis_id: lane_results[axis_id]
+                            for axis_id in sorted(
+                                lane_results, key=execution_bundle.axis_ids.index
+                            )
+                        }
                     )
                     if any(
                         result.is_cancelled() for result in execution_results.values()
@@ -327,8 +346,8 @@ def execute_bundle_request(
                 progress_queue=validated.progress_queue,
                 progress_context=validated,
                 step_name="pipeline",
-                phase=ProgressPhase.SUCCESS,
-                status=ProgressStatus.SUCCESS,
+                phase=SuccessProgressPhase,
+                status=SuccessProgressStatus,
                 completed=len(validated.pipeline_definition),
                 total=len(validated.pipeline_definition),
                 percent=100.0,
@@ -624,8 +643,8 @@ def execute_dataset_scoped_steps(
             progress_queue=progress_queue,
             progress_context=progress_context,
             step_name=owner_plan.step_name,
-            phase=ProgressPhase.STEP_COMPLETED,
-            status=ProgressStatus.SUCCESS,
+            phase=StepCompletedProgressPhase,
+            status=SuccessProgressStatus,
             completed=step_index + 1,
             total=total_steps,
             percent=((step_index + 1) / total_steps) * 100.0,
@@ -669,7 +688,7 @@ class _DatasetStepProgressHeartbeat:
         self._stop_event = threading.Event()
 
     def __enter__(self) -> "_DatasetStepProgressHeartbeat":
-        self._emit(ProgressPhase.STEP_STARTED, ProgressStatus.STARTED)
+        self._emit(StepStartedProgressPhase, StartedProgressStatus)
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
         return self
@@ -681,9 +700,9 @@ class _DatasetStepProgressHeartbeat:
 
     def _run(self) -> None:
         while not self._stop_event.wait(self.interval_seconds):
-            self._emit(ProgressPhase.RUNNING, ProgressStatus.RUNNING)
+            self._emit(RunningProgressPhase, RunningProgressStatus)
 
-    def _emit(self, phase: ProgressPhase, status: ProgressStatus) -> None:
+    def _emit(self, phase: type[ProgressPhase], status: type[ProgressStatus]) -> None:
         _emit_execution_progress(
             progress_queue=self.progress_queue,
             progress_context=self.progress_context,
@@ -701,8 +720,8 @@ def _emit_execution_progress(
     progress_queue: ProgressQueue,
     progress_context: ProgressExecutionContext,
     step_name: str,
-    phase: ProgressPhase,
-    status: ProgressStatus,
+    phase: type[ProgressPhase],
+    status: type[ProgressStatus],
     completed: int,
     total: int,
     percent: float,
@@ -1031,8 +1050,8 @@ def emit_launching_viewer(
         progress_context.event(
             axis_id="",
             step_name="",
-            phase=ProgressPhase.INIT,
-            status=ProgressStatus.STARTED,
+            phase=InitProgressPhase,
+            status=StartedProgressStatus,
             percent=0.0,
             message=required_visualizer.launch_message,
             completed=0,
@@ -1066,8 +1085,8 @@ def wait_until_visualizers_ready(
                 progress_context.event(
                     axis_id="",
                     step_name="",
-                    phase=ProgressPhase.INIT,
-                    status=ProgressStatus.RUNNING,
+                    phase=InitProgressPhase,
+                    status=RunningProgressStatus,
                     percent=0.0,
                     message="All streaming viewers ready",
                     completed=0,
@@ -1083,8 +1102,8 @@ def wait_until_visualizers_ready(
         progress_context.event(
             axis_id="",
             step_name="",
-            phase=ProgressPhase.INIT,
-            status=ProgressStatus.FAILED,
+            phase=InitProgressPhase,
+            status=FailedProgressStatus,
             percent=0.0,
             message=message,
             completed=0,
@@ -1140,8 +1159,8 @@ class ViewerSettlementProgressObserver:
             progress_queue=self.progress_queue,
             progress_context=self.progress_context,
             step_name=f"viewer_settlement_{self.viewer_port}",
-            phase=ProgressPhase.VIEWER_SETTLEMENT,
-            status=ProgressStatus.RUNNING,
+            phase=ViewerSettlementProgressPhase,
+            status=RunningProgressStatus,
             completed=progress.completed_update_count,
             total=total,
             percent=percent,

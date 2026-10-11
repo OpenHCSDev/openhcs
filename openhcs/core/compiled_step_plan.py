@@ -279,10 +279,10 @@ class CompiledStepPlan:
         default_factory=StepInputDependency.unresolved
     )
     source_binding_plan: CompiledSourceBindingPlan = field(
-        default_factory=CompiledSourceBindingPlan.empty
+        default_factory=CompiledSourceBindingPlan
     )
     source_universe_plan: CompiledSourceUniversePlan = field(
-        default_factory=CompiledSourceUniversePlan.empty
+        default_factory=CompiledSourceUniversePlan
     )
     runtime_artifact_materialization: RuntimeArtifactMaterializationPlan = field(
         default_factory=RuntimeArtifactMaterializationPlan.disabled

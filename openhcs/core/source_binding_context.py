@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from openhcs.core.source_bindings import (
+from openhcs.core.config import (
     EMPTY_SOURCE_BINDINGS,
     SourceBindingsConfig,
     StepSourceBindingsConfig,

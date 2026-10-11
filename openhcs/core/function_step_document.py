@@ -68,17 +68,14 @@ class FunctionStepDocumentCodec:
         """Render a validated FunctionStep document as reviewable Python source."""
 
         import openhcs.serialization.pycodify_formatters  # noqa: F401
-        from pycodify import Assignment
-        from openhcs.serialization.source_path_factoring import (
-            OpenHCSPythonSourceDocument,
-        )
+        from pycodify import Assignment, generate_python_source
 
         normalized = cls.from_value(document.step)
-        return OpenHCSPythonSourceDocument(
+        return generate_python_source(
             Assignment(FunctionStepDocumentField.STEP.value, normalized.step),
             header=cls.HEADER,
             clean_mode=clean_mode,
-        ).render()
+        )
 
     @staticmethod
     def _require_step(value: object) -> None:

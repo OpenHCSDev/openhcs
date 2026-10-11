@@ -26,12 +26,12 @@ from openhcs.core.config import (
     GlobalPipelineConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
+    SourceBindingsConfig,
 )
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
-    SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,

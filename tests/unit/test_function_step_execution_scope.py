@@ -13,6 +13,7 @@ import pytest
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -34,12 +35,11 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.post_execute import PostExecuteHook
 from openhcs.core.function_patterns import (
+    normalize_function_pattern,
     compile_function_pattern,
-    resolve_function_pattern_execution_scope,
 )
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
-    CompositeInvocationContractProvider,
 )
 from openhcs.core.orchestrator.bundle_execution import (
     _dataset_artifact_batch,
@@ -47,11 +47,7 @@ from openhcs.core.orchestrator.bundle_execution import (
     validate_dataset_scoped_contexts,
 )
 from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressExecutionContext,
-    ProgressPhase,
-)
+from openhcs.core.progress import ProgressEvent, ProgressExecutionContext
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
     artifact_outputs,
@@ -90,6 +86,11 @@ from openhcs.core.dataset_sources.source_schema import SourceSchemaFilenameParse
 from openhcs.processing.materialization import FileBundleOptions, MaterializationSpec
 from openhcs.core.axes import Axis
 from openhcs.domains.microscopy.axes import Microscopy
+from openhcs.core.progress.types import (
+    RunningProgressPhase,
+    StepCompletedProgressPhase,
+    StepStartedProgressPhase,
+)
 
 
 def test_runtime_step_values_share_within_step_and_release_between_steps() -> None:
@@ -290,7 +291,7 @@ def test_runtime_artifact_batch_is_exact_immutable_contract_selection() -> None:
     )
 
     assert batch.input_specs == (spec,)
-    assert batch.source_binding_plan.is_empty
+    assert batch.source_binding_plan == CompiledSourceBindingPlan()
     assert isinstance(batch.records_by_axis, MappingProxyType)
     assert batch.require_parameter_name() == "artifact_batch"
     parameter = batch.parameter()
@@ -322,10 +323,11 @@ def test_mixed_axis_and_plate_pattern_fails_before_path_planning() -> None:
         return artifact_batch
 
     with pytest.raises(ValueError, match="mixed|uniform|scope"):
-        resolve_function_pattern_execution_scope(
-            [axis_callable, plate_callable],
-            CompositeInvocationContractProvider(()),
-            ArtifactDeclarationStepContext(step_index=0),
+        FunctionStepExecutionScope.require_uniform(
+            item.contract
+            for item in normalize_function_pattern(
+                [axis_callable, plate_callable]
+            ).iter_items()
         )
 
 
@@ -341,7 +343,7 @@ def test_compiled_pattern_derives_uniform_scope_from_callable_contracts() -> Non
         return artifact_batch
 
     compiled = compile_function_pattern(
-        [first, second],
+        admitted_graph([first, second]),
         {},
         {},
     )
@@ -390,7 +392,7 @@ def _plate_step_plan(
     input_plans = OrderedDict((plan.ref(), plan) for plan in artifact_inputs)
     output_plans = OrderedDict(((artifact_output.ref(), artifact_output),))
     compiled_pattern = compile_function_pattern(
-        func,
+        admitted_graph(func),
         input_plans,
         output_plans,
     )
@@ -878,9 +880,9 @@ def test_plate_scope_progress_stays_live_until_materialization_completes() -> No
         heartbeat_interval_seconds=0.001,
     )
 
-    assert events[0].phase is ProgressPhase.STEP_STARTED
-    assert events[-1].phase is ProgressPhase.STEP_COMPLETED
-    assert any(event.phase is ProgressPhase.RUNNING for event in events[1:-1])
+    assert events[0].phase is StepStartedProgressPhase
+    assert events[-1].phase is StepCompletedProgressPhase
+    assert any(event.phase is RunningProgressPhase for event in events[1:-1])
     assert all(event.axis_id == "" for event in events)
     assert all(event.step_name == "export" for event in events)
     assert events[0].completed == 1
@@ -954,7 +956,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     assert table.well_id == "A01"
     assert observation.contexts[0].outputs.runtime_export_paths == (table.path,)
     events = list(progress_queue.events)
-    assert events[-1].phase is ProgressPhase.STEP_COMPLETED
+    assert events[-1].phase is StepCompletedProgressPhase
 
 
 def test_plate_scope_image_set_policy_includes_compiled_group_component() -> None:
@@ -1280,7 +1282,7 @@ def test_plate_scope_rejects_context_invocation_drift() -> None:
             artifact_type=SpecialArtifactType,
         )
         compiled = compile_function_pattern(
-            (export, {"prefix": prefix}),
+            admitted_graph((export, {"prefix": prefix})),
             {},
             {plan.ref(): plan for plan in (output_plan,)},
         )
@@ -1325,7 +1327,7 @@ def test_plate_scope_rejects_context_output_plan_drift() -> None:
             metadata_writer=axis_id == "A01",
         )
         plan.compiled_function_pattern = compile_function_pattern(
-            export,
+            admitted_graph(export),
             {},
             {plan.ref(): plan for plan in (output_plan,)},
         )

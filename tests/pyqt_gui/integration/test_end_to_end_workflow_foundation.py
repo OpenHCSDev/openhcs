@@ -53,7 +53,7 @@ from openhcs.demo.synthetic_data import SyntheticMicroscopyGenerator
 from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, get_default_ui_config
 from openhcs.pyqt_gui.main import OpenHCSMainWindow
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
-from openhcs.pyqt_gui.windows.config_window import ConfigWindow
+from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow
 from openhcs.microscopes.imagexpress import ImageXpressHandler
 
 # ============================================================================
@@ -694,11 +694,11 @@ def _apply_orchestrator_config(context: WorkflowContext) -> WorkflowContext:
     return context.with_updates(orchestrator=orchestrator)
 
 
-def _find_config_window(scope_id: str) -> Optional[ConfigWindow]:
+def _find_config_window(scope_id: str) -> Optional[OpenHCSConfigWindow]:
     """Find the visible configuration window owned by one ObjectState scope."""
     for widget in QApplication.topLevelWidgets():
         if (
-            isinstance(widget, ConfigWindow)
+            isinstance(widget, OpenHCSConfigWindow)
             and widget.scope_id == scope_id
             and widget.isVisible()
         ):

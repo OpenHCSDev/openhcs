@@ -8,6 +8,7 @@ import pytest
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
@@ -51,7 +52,11 @@ def _runtime(tmp_path):
     )
     runtime = PatternGroupExecutionRequest(context=context,
             execution_plan=plan,
-            compiled_group=compile_function_pattern(_identity, {}, {}).default_group,
+            compiled_group=compile_function_pattern(
+                admitted_graph(_identity),
+                {},
+                {},
+            ).default_group,
             component_value=None,
             pattern_group_info="A01_s001_w1_z001_t001.tif",
             component_index=0,

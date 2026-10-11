@@ -23,9 +23,8 @@ from PyQt6.QtCore import pyqtSignal, QTimer
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.abstract import AbstractStep
 from python_introspect import SignatureAnalyzer
-from openhcs.core.config import PipelineConfig
+from openhcs.core.config import PipelineConfig, SourceBindingsConfig
 from openhcs.core.source_binding_context import SourceBindingContext
-from openhcs.core.source_bindings import SourceBindingsConfig
 from openhcs.pyqt_gui.widgets.source_bindings_editor import SourceBindingsEditorWidget
 from pyqt_reactive.forms.parameter_form_manager import (
     ParameterFormManager,
@@ -48,19 +47,19 @@ from pyqt_reactive.widgets.shared.scrollable_form_body import (
 )
 from pyqt_reactive.widgets.shared.scrollable_form_mixin import ScrollableFormMixin
 from pyqt_reactive.services.parameter_ops_service import ParameterOpsService
-from pyqt_reactive.services.window_code_document import WindowCodeDocumentDriver
+from pyqt_reactive.services.code_editor_form_updater import CodeEditorFormUpdater
+from pyqt_reactive.services.window_code_document import (
+    WindowCodeDocumentDriver,
+    use_external_code_editor,
+)
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.theming import ColorScheme, WidgetTheme
 from pyqt_reactive.forms.layout_constants import CURRENT_LAYOUT
 from openhcs.pyqt_gui.services.function_step_code_document import (
     FunctionStepCodeDocumentDriver,
 )
-from openhcs.pyqt_gui.services.config_window_code_document import (
-    ExternalCodeEditorPreference,
-)
 
 from pyqt_reactive.forms.parameter_type_utils import ParameterTypeUtils
-from openhcs.ui.shared.code_editor_form_updater import CodeEditorFormUpdater
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 
 logger = logging.getLogger(__name__)
@@ -506,7 +505,7 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
                 initial_content=document.source,
                 title=document.title,
                 callback=self._handle_edited_step_code,
-                use_external=ExternalCodeEditorPreference.use_external_editor(),
+                use_external=use_external_code_editor(),
                 declaration_type=document.declaration_type,
                 code_data={"clean_mode": True},
             )

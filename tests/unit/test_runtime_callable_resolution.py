@@ -12,7 +12,7 @@ from openhcs.core.callable_contract import (
     CallableContract,
     CallableContractRuntimeCache,
     CallableImportIdentity,
-    CallableMetadata,
+    CallableDeclaration,
 )
 from openhcs.core.function_reference import (
     FunctionReference,
@@ -42,7 +42,7 @@ def _contract(
         func=func,
         function_name="raw_callable",
         module_name=__name__,
-        metadata=CallableMetadata(runtime_adapter=runtime_adapter),
+        runtime_adapter=runtime_adapter,
     )
 
 
@@ -131,7 +131,7 @@ def test_function_reference_resolves_once_before_runtime_factory(
             function_name="raw_callable",
         ),
         composite_key="python:tests:raw_callable",
-        metadata=CallableMetadata(runtime_adapter=spec),
+        declaration=CallableDeclaration(runtime_adapter=spec),
     )
     contract = _contract(reference, spec)
     resolve_calls: list[FunctionReference] = []

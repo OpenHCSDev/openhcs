@@ -2,11 +2,7 @@ from dataclasses import fields, replace as dataclass_replace
 
 from zmqruntime.messages import QueuedExecutionInfo, RunningExecutionInfo
 
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent, ProgressPhase, ProgressStatus
 from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,
     SubjectRuntimeState,
@@ -17,6 +13,18 @@ from openhcs.core.progress.projection import (
     CompleteSubjectRuntimeState,
     FailedSubjectRuntimeState,
     build_execution_runtime_projection,
+)
+from openhcs.core.progress.types import (
+    AxisCompletedProgressPhase,
+    AxisErrorProgressPhase,
+    CompileProgressPhase,
+    ErrorProgressStatus,
+    InitProgressPhase,
+    RunningProgressStatus,
+    StartedProgressStatus,
+    StepCompletedProgressPhase,
+    StepStartedProgressPhase,
+    SuccessProgressStatus,
 )
 
 
@@ -54,23 +62,23 @@ def _event(
 def test_projection_marks_plate_compiled_when_all_known_wells_compiled():
     events = [
         _event(
-            phase=ProgressPhase.INIT,
-            status=ProgressStatus.STARTED,
+            phase=InitProgressPhase,
+            status=StartedProgressStatus,
             percent=0.0,
             partition_values=["A01", "B01"],
         ),
         _event(
             axis_id="A01",
             step_name="compilation",
-            phase=ProgressPhase.COMPILE,
-            status=ProgressStatus.SUCCESS,
+            phase=CompileProgressPhase,
+            status=SuccessProgressStatus,
             percent=100.0,
         ),
         _event(
             axis_id="B01",
             step_name="compilation",
-            phase=ProgressPhase.COMPILE,
-            status=ProgressStatus.SUCCESS,
+            phase=CompileProgressPhase,
+            status=SuccessProgressStatus,
             percent=100.0,
         ),
     ]
@@ -88,16 +96,16 @@ def test_projection_marks_plate_compiled_when_all_known_wells_compiled():
 def test_projection_marks_plate_executing_from_pipeline_channel():
     events = [
         _event(
-            phase=ProgressPhase.INIT,
-            status=ProgressStatus.STARTED,
+            phase=InitProgressPhase,
+            status=StartedProgressStatus,
             percent=0.0,
             partition_values=["A01", "B01"],
         ),
         _event(
             axis_id="A01",
             step_name="normalize",
-            phase=ProgressPhase.STEP_COMPLETED,
-            status=ProgressStatus.SUCCESS,
+            phase=StepCompletedProgressPhase,
+            status=SuccessProgressStatus,
             percent=50.0,
             completed=1,
             total=2,
@@ -117,16 +125,16 @@ def test_projection_marks_plate_executing_from_pipeline_channel():
 def test_projection_dedupes_multiple_execution_ids_for_same_plate():
     exec1 = _event(
         execution_id="exec-1",
-        phase=ProgressPhase.COMPILE,
-        status=ProgressStatus.SUCCESS,
+        phase=CompileProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         axis_id="A01",
         step_name="compilation",
     )
     exec2 = _event(
         execution_id="exec-2",
-        phase=ProgressPhase.STEP_STARTED,
-        status=ProgressStatus.RUNNING,
+        phase=StepStartedProgressPhase,
+        status=RunningProgressStatus,
         percent=50.0,
         axis_id="A01",
         step_name="normalize",
@@ -152,16 +160,16 @@ def test_projection_dedupes_multiple_execution_ids_for_same_plate():
 def test_projection_marks_plate_failed_on_axis_error():
     events = [
         _event(
-            phase=ProgressPhase.INIT,
-            status=ProgressStatus.STARTED,
+            phase=InitProgressPhase,
+            status=StartedProgressStatus,
             percent=0.0,
             partition_values=["A01", "B01"],
         ),
         _event(
             axis_id="A01",
             step_name="normalize",
-            phase=ProgressPhase.AXIS_ERROR,
-            status=ProgressStatus.ERROR,
+            phase=AxisErrorProgressPhase,
+            status=ErrorProgressStatus,
             percent=50.0,
             completed=1,
             total=2,
@@ -169,8 +177,8 @@ def test_projection_marks_plate_failed_on_axis_error():
         _event(
             axis_id="B01",
             step_name="pipeline",
-            phase=ProgressPhase.AXIS_COMPLETED,
-            status=ProgressStatus.SUCCESS,
+            phase=AxisCompletedProgressPhase,
+            status=SuccessProgressStatus,
             percent=100.0,
             completed=2,
             total=2,
@@ -201,8 +209,8 @@ def test_init_topology_projects_queued_without_a_parallel_ui_override():
         {
             "exec-1": [
                 _event(
-                    phase=ProgressPhase.INIT,
-                    status=ProgressStatus.STARTED,
+                    phase=InitProgressPhase,
+                    status=StartedProgressStatus,
                     percent=0.0,
                     worker_assignments={"worker_0": ["A01"]},
                 )
@@ -218,8 +226,8 @@ def test_init_topology_projects_queued_without_a_parallel_ui_override():
 def test_server_lifecycle_entries_reconcile_by_execution_and_plate_identity():
     old_event = _event(
         execution_id="exec-old",
-        phase=ProgressPhase.AXIS_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=AxisCompletedProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         axis_id="A01",
     )
@@ -305,8 +313,8 @@ def test_server_snapshot_refreshes_queue_position_for_same_identity():
 def test_running_snapshot_advances_compiled_identity_into_execution():
     compiled_event = _event(
         execution_id="exec-shared",
-        phase=ProgressPhase.COMPILE,
-        status=ProgressStatus.SUCCESS,
+        phase=CompileProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         axis_id="A01",
         step_name="compilation",
@@ -331,8 +339,8 @@ def test_running_snapshot_advances_compiled_identity_into_execution():
 def test_lagging_server_snapshot_does_not_downgrade_terminal_event_state():
     completed_event = _event(
         execution_id="exec-terminal",
-        phase=ProgressPhase.AXIS_COMPLETED,
-        status=ProgressStatus.SUCCESS,
+        phase=AxisCompletedProgressPhase,
+        status=SuccessProgressStatus,
         percent=100.0,
         axis_id="A01",
     )
@@ -356,15 +364,15 @@ def test_lagging_server_snapshot_does_not_downgrade_terminal_event_state():
 def test_plate_runtime_terminal_policy_lives_on_projection():
     events = [
         _event(
-            phase=ProgressPhase.INIT,
-            status=ProgressStatus.STARTED,
+            phase=InitProgressPhase,
+            status=StartedProgressStatus,
             percent=0.0,
             partition_values=["A01"],
         ),
         _event(
             axis_id="A01",
-            phase=ProgressPhase.AXIS_COMPLETED,
-            status=ProgressStatus.SUCCESS,
+            phase=AxisCompletedProgressPhase,
+            status=SuccessProgressStatus,
             percent=100.0,
         ),
     ]

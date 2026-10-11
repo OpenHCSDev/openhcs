@@ -51,14 +51,9 @@ def _contract_and_source_bindings(
     raw_contract = CallableContract.from_callable(module_type.require_callable())
     contract = replace(
         raw_contract,
-        metadata=replace(
-            raw_contract.metadata,
-            artifact_inputs=(
-                (ArtifactSpec.input("Nuclei", ObjectLabelsArtifactType),)
+        artifact_inputs=(ArtifactSpec.input("Nuclei", ObjectLabelsArtifactType),)
                 if object_input
-                else ()
-            ),
-        ),
+                else (),
     )
     source_bindings = StepSourceBindingsConfig(
         enabled=True,

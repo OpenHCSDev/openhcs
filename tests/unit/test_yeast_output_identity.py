@@ -35,11 +35,7 @@ def _executor(*outputs: ArtifactSpec) -> CellProfilerModuleExecutor:
     contract = CallableContract.from_callable(color_to_gray)
     contract = replace(
         contract,
-        metadata=replace(
-            contract.metadata,
-            artifact_outputs=outputs,
-            runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
-        ),
+        artifact_outputs=outputs, runtime_adapter=CellProfilerRuntimeAdapter.runtime_adapter_spec(),
     )
     return CellProfilerModuleExecutor(
         raw_func=color_to_gray,
@@ -205,15 +201,11 @@ def test_preserving_cellprofiler_tail_retains_the_existing_producer(named_produc
 
         producer_contract = replace(
             producer_contract,
-            metadata=replace(
-                producer_contract.metadata,
-                artifact_outputs=(),
-                runtime_adapter=RuntimeAdapterSpec(
+            artifact_outputs=(), runtime_adapter=RuntimeAdapterSpec(
                     "runtime",
                     lambda request: object(),
                     artifact_output_policy=NativeReturnArtifactOutputPolicy,
                 ),
-            ),
         )
     producer = CompiledFunctionInvocation(
         key=FunctionInvocationKey.from_contract(producer_contract, "default", 0),

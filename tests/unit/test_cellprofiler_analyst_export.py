@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     ArtifactOutputPlan,
@@ -56,8 +57,8 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
     SourceProjectionRole,
-    StepSourceBindingsConfig,
 )
+from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_matching import with_declared_source_metadata
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
@@ -107,7 +108,7 @@ RUNTIME_IMAGE_FIELD = MeasurementRowAxisField.SLICE_INDEX.value
 
 def _projection_builder() -> CellProfilerAnalystProjectionBuilder:
     return CellProfilerAnalystProjectionBuilder(
-        source_binding_plan=CompiledSourceBindingPlan.empty()
+        source_binding_plan=CompiledSourceBindingPlan()
     )
 
 
@@ -344,9 +345,9 @@ def _export_context() -> ProcessingContext:
                 step_index=0,
                 step_name="ExportToDatabase",
                 axis_id=AXIS_ID,
-                source_binding_plan=CompiledSourceBindingPlan.empty(),
+                source_binding_plan=CompiledSourceBindingPlan(),
                 compiled_function_pattern=compile_function_pattern(
-                    export_to_database,
+                    admitted_graph(export_to_database),
                     {},
                     {},
                 ),
@@ -497,7 +498,7 @@ def test_projection_uses_only_exact_batch_records_and_merges_subject_rows() -> N
     settings = _settings()
     channels = CPAImageChannelSpec.defaults_for_artifacts(
         (image_spec,),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
     )
 
     projection = _projection_builder().build(
@@ -697,7 +698,7 @@ def test_projection_adds_common_typed_source_provenance_to_image_rows() -> None:
         _settings(),
         CPAImageChannelSpec.defaults_for_artifacts(
             (dna, rna),
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
         ),
     )
 
@@ -757,7 +758,7 @@ def test_projection_canonicalizes_physical_source_path(tmp_path: Path) -> None:
         _settings(),
         CPAImageChannelSpec.defaults_for_artifacts(
             (dna,),
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
         ),
     )
 
@@ -799,7 +800,7 @@ def test_projection_renders_source_builtins_and_thumbnail_from_declared_image(
         settings,
         CPAImageChannelSpec.defaults_for_artifacts(
             (dna,),
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
         ),
     )
 
@@ -1318,7 +1319,7 @@ def test_projection_exports_normalized_identify_primary_objects_image_number() -
         _settings(),
         CPAImageChannelSpec.defaults_for_artifacts(
             (image_spec,),
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
         ),
     )
 
@@ -1378,7 +1379,7 @@ def test_projection_merges_axisless_and_slice_qualified_object_measurements() ->
         _settings(),
         CPAImageChannelSpec.defaults_for_artifacts(
             (image_spec,),
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
         ),
     )
 
@@ -1444,7 +1445,7 @@ def test_projection_uses_declared_row_identity_aliases_as_structural_fields() ->
         _settings(),
         CPAImageChannelSpec.defaults_for_artifacts(
             (image_spec,),
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
+            source_binding_plan=CompiledSourceBindingPlan(),
         ),
     )
 
@@ -1672,7 +1673,7 @@ def test_module_contract_selects_ordered_tables_and_cpa_images_and_declares_bund
     assert callable_contract.execution_scope is FunctionStepExecutionScope.PLATE
     assert callable_contract.processing_contract is None
     assert callable_contract.runtime_adapter is None
-    assert callable_contract.metadata.runtime_bound_parameters == (
+    assert callable_contract.runtime_bound_parameter_types == (
         RuntimeArtifactBatch,
     )
 
@@ -1701,7 +1702,7 @@ def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step(
         input_specs=(image_spec, measurements),
         records_by_axis={AXIS_ID: store.values()},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
-        source_binding_plan=CompiledSourceBindingPlan.empty(),
+        source_binding_plan=CompiledSourceBindingPlan(),
     )
     context = _export_context()
     context.step_plans[1] = CompiledStepPlan(
@@ -1712,7 +1713,7 @@ def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step(
             metadata_fields=(FieldSpec("SiblingOnly", str, required=False),),
         ),
         compiled_function_pattern=compile_function_pattern(
-            export_to_database,
+            admitted_graph(export_to_database),
             {},
             {},
         ),

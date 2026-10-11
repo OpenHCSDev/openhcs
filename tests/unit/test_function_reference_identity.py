@@ -10,7 +10,7 @@ from skimage.filters.edges import sobel
 from openhcs.core.callable_contract import (
     CallableContract,
     CallableImportIdentity,
-    CallableMetadata,
+    CallableDeclaration,
 )
 from openhcs.core.function_reference import (
     FunctionReferenceTransportAuthority,
@@ -57,7 +57,7 @@ def test_cached_resolution_rejects_forged_import_identity(monkeypatch) -> None:
             function_name="forged_name",
         ),
         composite_key=composite_key,
-        metadata=FunctionReferenceTransportAuthority.callable_metadata(metadata.func),
+        declaration=FunctionReferenceTransportAuthority.callable_declaration(metadata.func),
     )
 
     with pytest.raises(RuntimeError, match="contradicts canonical identity"):
@@ -73,7 +73,7 @@ def test_cold_resolution_rejects_forged_composite_key(monkeypatch) -> None:
     reference = RegistryFunctionReference(
         import_identity=metadata.import_identity,
         composite_key="skimage:cellprofiler_crop",
-        metadata=FunctionReferenceTransportAuthority.callable_metadata(metadata.func),
+        declaration=FunctionReferenceTransportAuthority.callable_declaration(metadata.func),
     )
 
     with pytest.raises(RuntimeError, match="contradicts declaration-owned identity"):
@@ -89,7 +89,7 @@ def test_cold_external_resolution_retains_registry_classified_contract(
             function_name="threshold_otsu",
         ),
         composite_key="skimage:filters.threshold_otsu",
-        metadata=CallableMetadata(
+        declaration=CallableDeclaration(
             processing_contract=FlexibleContract,
         ),
     )
@@ -124,7 +124,7 @@ def test_raw_resolution_cannot_replace_processing_reference_metadata(
     monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})
     reference = FunctionReferenceTransportAuthority.function_reference(wrapped)
     assert type(reference) is RegistryFunctionReference
-    raw_reference = replace(reference, metadata=CallableMetadata())
+    raw_reference = replace(reference, declaration=CallableDeclaration())
     first, second = (
         (raw_reference, reference) if raw_first else (reference, raw_reference)
     )
@@ -134,7 +134,7 @@ def test_raw_resolution_cannot_replace_processing_reference_metadata(
     for _ in range(3):
         transported = FunctionReferenceTransportAuthority.function_reference(wrapped)
         assert transported.composite_key == reference.composite_key
-        assert transported.metadata == reference.metadata
+        assert transported.declaration == reference.declaration
         assert CallableContract.from_callable(transported).input_memory_type == "numpy"
         assert transported.resolve() is wrapped
 

@@ -29,6 +29,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from pyqt_reactive.animation import WindowFlashOverlay
+from pyqt_reactive.services.application_shortcuts import ShortcutLifecycle
+from pyqt_reactive.services.time_travel_navigation import TimeTravelNavigator
 from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.zmq_server_scan_service import (
     EndpointObservationSnapshot,
@@ -38,6 +40,7 @@ from pyqt_reactive.widgets import (
     StatusState,
 )
 from pyqt_reactive.widgets.editors.simple_code_editor import QScintillaCodeEditorDialog
+from pyqt_reactive.widgets.shared.dock_layout import DockLayoutStore, DockPane
 from pyqt_reactive.widgets.system_monitor import SystemMonitorWidget
 from zmqruntime import EndpointConnectionCancelledError
 
@@ -76,7 +79,7 @@ from openhcs.pyqt_gui.session_rendering import (
     OperationPresenter,
     QtSessionEventRelay,
 )
-from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, UIConfig
+from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, ShortcutConfig, UIConfig
 from openhcs.desktop.restart import DesktopSessionRestart
 from openhcs.desktop.update import (
     DesktopRestartSession,
@@ -92,32 +95,21 @@ from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
 )
 from openhcs.pyqt_gui.services.main_window_workflows import (
-    MainWindowDockLayoutStore,
-    MainWindowDockPane,
     MainWindowEmbeddedWidgets,
     MainWindowLifecycleWorkflow,
     MainWindowPipelineActions,
-    MainWindowShortcutLifecycle,
-    MainWindowTimeTravelWorkflow,
     MainWindowUiBridgeLifecycle,
     build_main_window_specs,
 )
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
-from openhcs.pyqt_gui.services.time_travel_navigation import (
-    TimeTravelNavigationTarget,
-    TimeTravelSourceScope,
-    TimeTravelWindowRequest,
-    make_field_path_target,
-    make_function_token_target,
-    parse_function_scope_ref,
-    resolve_fallback_field_path,
-    should_include_time_travel_scope,
-    should_replace_navigation_target,
-)
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     UiOwnedStateSurfaceDeclaration,
 )
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
+from openhcs.pyqt_gui.windows.dual_editor_window import (
+    select_step_editor_tab_after_time_travel,
+    step_function_scope,
+)
 from openhcs.desktop.zmq_version_restart import (
     ZMQVersionRestartDialogPresenter,
     ZMQVersionRestartWorkflow,
@@ -260,13 +252,16 @@ class OpenHCSMainWindow(QMainWindow):
         )
 
         self.embedded_widgets = MainWindowEmbeddedWidgets()
-        self.dock_layout_store = MainWindowDockLayoutStore.for_current_application()
+        self.dock_layout_store = DockLayoutStore.for_application(
+            state_key="main_window/dock_layout_state",
+            state_version=2,
+        )
         self.floating_windows: dict[str, QWidget] = {}
         self.ui_bridge_lifecycle = MainWindowUiBridgeLifecycle()
         application = QApplication.instance()
         if application is None:
             raise RuntimeError("OpenHCSMainWindow requires an active QApplication.")
-        self.shortcut_lifecycle = MainWindowShortcutLifecycle(application)
+        self.shortcut_lifecycle = ShortcutLifecycle[ShortcutConfig](application)
 
         # Declarative window specs
         self.window_specs = self._get_window_specs()
@@ -474,7 +469,7 @@ class OpenHCSMainWindow(QMainWindow):
         )
 
         self.system_monitor = self.service_adapter.create_system_monitor_widget()
-        system_monitor_pane = MainWindowDockPane.create(
+        system_monitor_pane = DockPane.create(
             main_window=self,
             window_id=SystemMonitorWindowIdentity.require_value(),
             title=SystemMonitorWindowIdentity.require_title(),
@@ -504,7 +499,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.plate_manager_widget = self.service_adapter.create_plate_manager_widget(
             self.session
         )
-        plate_manager_pane = MainWindowDockPane.create(
+        plate_manager_pane = DockPane.create(
             main_window=self,
             window_id=PlateManagerWidgetIdentity.require_value(),
             title=PlateManagerWidgetIdentity.require_title(),
@@ -526,7 +521,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.session.bind_endpoint_observations(
             lambda: self.zmq_manager_widget.endpoint_snapshot
         )
-        zmq_manager_pane = MainWindowDockPane.create(
+        zmq_manager_pane = DockPane.create(
             main_window=self,
             window_id=ZmqServerManagerWindowIdentity.require_value(),
             title=ZmqServerManagerWindowIdentity.require_title(),
@@ -539,7 +534,7 @@ class OpenHCSMainWindow(QMainWindow):
         self.pipeline_editor_widget = (
             self.service_adapter.create_pipeline_editor_widget(self.session)
         )
-        pipeline_editor_pane = MainWindowDockPane.create(
+        pipeline_editor_pane = DockPane.create(
             main_window=self,
             window_id=PipelineEditorWidgetIdentity.require_value(),
             title=PipelineEditorWidgetIdentity.require_title(),
@@ -650,7 +645,7 @@ class OpenHCSMainWindow(QMainWindow):
         """Show plate manager by default."""
         # Plate Manager and Pipeline Editor are now embedded in the main window
         # Just ensure they're visible (in case they were hidden)
-        self.embedded_widgets.show_defaults()
+        self.embedded_widgets.ensure_all_visible()
 
         # Log viewer is still a separate window (on-demand)
 
@@ -865,7 +860,9 @@ class OpenHCSMainWindow(QMainWindow):
         # Add time-travel controls to the ordinary left lane. Transient
         # QStatusBar messages hide ordinary widgets, so application status is
         # rendered by a permanent right-lane label below instead.
-        from openhcs.pyqt_gui.widgets.shared.time_travel_widget import TimeTravelWidget
+        from pyqt_reactive.widgets.time_travel import TimeTravelCommands, TimeTravelWidget
+
+        from openhcs.authoring.session.datasets import DATASET_LIST_SCOPE_ID
 
         color_scheme = self.service_adapter.get_current_color_scheme()
         self.bottom_control_panel = QWidget(self)
@@ -873,13 +870,14 @@ class OpenHCSMainWindow(QMainWindow):
         bottom_control_layout.setContentsMargins(0, 0, 0, 0)
         bottom_control_layout.setSpacing(1)
 
-        time_travel_workflow = MainWindowTimeTravelWorkflow(
-            refresh_time_travel_widget=lambda: self.time_travel_widget.refresh(),
+        time_travel_commands = TimeTravelCommands(
+            refresh=lambda: self.time_travel_widget.refresh(),
             before_restore=self.session.require_definition_mutation_allowed,
+            hidden_scopes=frozenset({"", DATASET_LIST_SCOPE_ID}),
         )
         self.time_travel_widget = TimeTravelWidget(
             color_scheme=color_scheme,
-            time_travel_workflow=time_travel_workflow,
+            commands=time_travel_commands,
         )
         bottom_control_layout.addWidget(self.time_travel_widget)
 
@@ -949,9 +947,13 @@ class OpenHCSMainWindow(QMainWindow):
     def _connect_object_state_lifecycle(self) -> None:
         """Own the registry subscriptions rendered by this main window."""
 
+        self.time_travel_navigator = TimeTravelNavigator(
+            function_scope=step_function_scope,
+            target_shown=select_step_editor_tab_after_time_travel,
+        )
         self._time_travel_complete_subscription = (
             ObjectStateRegistry.add_time_travel_complete_callback(
-                self._on_time_travel_complete
+                self.time_travel_navigator.on_time_travel_complete
             )
         )
         self.destroyed.connect(self._time_travel_complete_subscription.release)
@@ -1023,29 +1025,29 @@ class OpenHCSMainWindow(QMainWindow):
         Uses event filter to intercept Ctrl+Z/Y BEFORE input widgets get them,
         so time-travel always takes priority over widget-level undo/redo.
         """
-        time_travel_workflow = self.time_travel_widget.time_travel_workflow
+        time_travel_commands = self.time_travel_widget.commands
 
         # Time travel functions
         def time_travel_back():
-            time_travel_workflow.back()
+            time_travel_commands.back()
 
         def time_travel_forward():
-            time_travel_workflow.forward()
+            time_travel_commands.forward()
 
         def time_travel_to_head():
-            time_travel_workflow.to_head()
+            time_travel_commands.to_head()
 
-        self.shortcut_lifecycle.bind_time_travel_command(
+        self.shortcut_lifecycle.bind_command(
             lambda config: config.time_travel_back,
             "Step back in history",
             time_travel_back,
         )
-        self.shortcut_lifecycle.bind_time_travel_command(
+        self.shortcut_lifecycle.bind_command(
             lambda config: config.time_travel_forward,
             "Step forward in history",
             time_travel_forward,
         )
-        self.shortcut_lifecycle.bind_time_travel_command(
+        self.shortcut_lifecycle.bind_command(
             lambda config: config.time_travel_to_head,
             "Return to history head",
             time_travel_to_head,
@@ -1105,185 +1107,6 @@ class OpenHCSMainWindow(QMainWindow):
             logger.info(
                 f"⏱️ TIME_TRAVEL: Auto-closed window for unregistered state: {scope_id}"
             )
-
-    def _on_time_travel_complete(self, dirty_states, triggering_scope: str | None):
-        """Handle time-travel completion by reopening windows for dirty ObjectStates.
-
-        When time-travel restores state with unsaved changes, this callback
-        reopens the appropriate editor windows so the user can see/save the changes.
-
-        Opens windows for the triggering mutation scope when available. Older
-        dirty states may still exist in the full registry snapshot, but undoing
-        one edit should not reopen unrelated editors.
-
-        Args:
-            dirty_states: List of (scope_id, ObjectState) tuples with unsaved changes
-            triggering_scope: Scope that triggered the snapshot (for logging only)
-        """
-        logger.debug(
-            f"⏱️ TIME_TRAVEL_CALLBACK: triggering_scope={triggering_scope!r} dirty_count={len(dirty_states)}"
-        )
-
-        from objectstate.time_travel_profile import TimeTravelProfiler
-
-        with TimeTravelProfiler.phase(
-            "openhcs.main.build_time_travel_window_requests",
-            dirty_states=len(dirty_states),
-        ):
-            pending = self._build_time_travel_window_requests(
-                dirty_states,
-                triggering_scope,
-            )
-        if not pending:
-            return
-
-        self._defer_time_travel_navigation(
-            lambda: self._execute_time_travel_window_requests(
-                pending,
-                triggering_scope,
-            )
-        )
-
-    def _defer_time_travel_navigation(self, callback) -> None:
-        """Run time-travel navigation after queued restore refreshes settle."""
-        from PyQt6.QtCore import QTimer
-
-        QTimer.singleShot(0, lambda: QTimer.singleShot(0, callback))
-
-    def _execute_time_travel_window_requests(
-        self,
-        pending: dict[str, TimeTravelWindowRequest],
-        triggering_scope: str | None,
-    ) -> None:
-        """Open/focus the windows targeted by a completed time-travel restore."""
-        from objectstate.time_travel_profile import TimeTravelProfiler
-        from pyqt_reactive.services.scope_window_navigation import (
-            ScopeWindowNavigationService,
-        )
-        from pyqt_reactive.services.window_navigation import WindowNavigationRequest
-
-        with TimeTravelProfiler.phase(
-            "openhcs.main.execute_time_travel_window_requests",
-            requests=len(pending),
-        ):
-            for request in pending.values():
-                field_path = (
-                    request.target.to_field_path()
-                    if request.target is not None
-                    else None
-                )
-                with TimeTravelProfiler.phase(
-                    "openhcs.main.navigate_window",
-                    scope=request.scope_id,
-                    field_path=field_path,
-                ):
-                    result = ScopeWindowNavigationService.navigate(
-                        WindowNavigationRequest(
-                            scope_id=request.scope_id,
-                            object_state=request.object_state,
-                            field_path=field_path,
-                            create_if_missing=triggering_scope is not None,
-                        )
-                    )
-                if result.created:
-                    logger.info(
-                        f"⏱️ TIME_TRAVEL: Opened window for changed state: {request.scope_id}"
-                    )
-                if result.window is not None:
-                    with TimeTravelProfiler.phase(
-                        "openhcs.main.select_time_travel_tab",
-                        scope=request.scope_id,
-                    ):
-                        self._select_tab_for_time_travel(
-                            request.scope_id, request.target
-                        )
-
-    def _build_time_travel_window_requests(
-        self,
-        dirty_states,
-        triggering_scope: str | None,
-    ) -> dict[str, TimeTravelWindowRequest]:
-        """Project changed ObjectStates into canonical window reopen requests."""
-        from objectstate import ObjectStateRegistry
-
-        pending: dict[str, TimeTravelWindowRequest] = {}
-
-        for entry in dirty_states:
-            if not isinstance(entry, (tuple, list)) or len(entry) != 2:
-                continue
-            scope_id, state = entry
-            if not isinstance(scope_id, str) or not isinstance(state, ObjectState):
-                continue
-            if not should_include_time_travel_scope(
-                TimeTravelSourceScope(
-                    changed_scope_id=scope_id,
-                    triggering_scope=triggering_scope,
-                )
-            ):
-                continue
-
-            use_scope_id = scope_id
-            use_state = state
-            target: TimeTravelNavigationTarget | None = None
-
-            function_scope = parse_function_scope_ref(scope_id)
-            if function_scope is not None:
-                use_scope_id = function_scope.step_scope_id
-                parent_state = ObjectStateRegistry.get_by_scope(use_scope_id)
-                if isinstance(parent_state, ObjectState):
-                    use_state = parent_state
-                target = make_function_token_target(function_scope.function_token)
-
-            if target is None:
-                field_path = resolve_fallback_field_path(
-                    use_state.last_changed_field,
-                    use_state.dirty_fields,
-                )
-                logger.debug(
-                    f"⏱️ TIME_TRAVEL_NAV: scope={use_scope_id} last_changed_field={field_path}"
-                )
-                if field_path:
-                    target = make_field_path_target(field_path)
-
-            request = TimeTravelWindowRequest(
-                scope_id=use_scope_id,
-                object_state=use_state,
-                target=target,
-            )
-            existing = pending.get(use_scope_id)
-            if existing is None:
-                pending[use_scope_id] = request
-            elif should_replace_navigation_target(existing.target, target):
-                pending[use_scope_id] = request
-
-        return pending
-
-    def _select_tab_for_time_travel(
-        self, scope_id: str, target: TimeTravelNavigationTarget | None
-    ) -> None:
-        """Select appropriate tab in step editor after time-travel.
-
-        If 'func' parameter was modified, switch to Function Pattern tab.
-        Otherwise, stay on Step Settings tab.
-        """
-        from pyqt_reactive.services.window_manager import WindowManager
-
-        from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
-
-        window = WindowManager.get_window(scope_id)
-        if not isinstance(window, DualEditorWindow):
-            return
-
-        if window.tab_widget is None:
-            return
-
-        is_function_scope = parse_function_scope_ref(scope_id) is not None
-        if is_function_scope or (target is not None and target.is_function_target):
-            window.tab_widget.setCurrentIndex(1)
-            logger.debug("[TAB_SELECT] Time-travel: Function Pattern tab")
-        else:
-            window.tab_widget.setCurrentIndex(0)
-            logger.debug("[TAB_SELECT] Time-travel: Step Settings tab")
 
     def show_synthetic_plate_generator(self):
         """Show synthetic plate generator window."""

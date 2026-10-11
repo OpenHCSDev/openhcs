@@ -17,7 +17,6 @@ from pyqt_reactive.theming import ColorScheme
 from openhcs.authoring.session.datasets import write_dataset_scope_ids
 from openhcs.authoring.session.session import CallerThread, Session
 from openhcs.core.config import GlobalPipelineConfig
-from openhcs.pyqt_gui.services.service_adapter import GlobalEventBus
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 
@@ -27,7 +26,6 @@ class GuiServiceStub:
 
     errors: list[str] = field(default_factory=list)
     directory_choices: list[str] = field(default_factory=list)
-    event_bus: GlobalEventBus = field(default_factory=GlobalEventBus)
     main_window: object | None = None
     global_config: object | None = None
     file_manager: object | None = None
@@ -37,9 +35,6 @@ class GuiServiceStub:
 
     def get_current_color_scheme(self) -> ColorScheme:
         return ColorScheme()
-
-    def get_event_bus(self) -> GlobalEventBus:
-        return self.event_bus
 
     def show_error_dialog(self, message: str) -> None:
         self.errors.append(message)

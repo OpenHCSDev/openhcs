@@ -8,6 +8,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState
 from objectstate.object_state_registry import ObjectStateRegistry
 
+from tests.artifact_graphs import admitted_graph
 from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.callable_contract import CallableContract
@@ -23,11 +24,12 @@ from openhcs.core.config import (
     PipelineConfig,
     ProcessingConfig,
     StepMaterializationConfig,
+    EMPTY_SOURCE_BINDINGS,
+    StepSourceBindingsConfig,
 )
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     compile_function_pattern,
-    inject_artifact_input_values,
     normalize_function_pattern,
 )
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
@@ -40,17 +42,14 @@ from openhcs.core.pipeline.path_planner import (
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.source_bindings import (
-    EMPTY_SOURCE_BINDINGS,
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
     ComponentSelector,
     MetadataExtractionRule,
     MetadataSource,
     NamedSourceBinding,
-    SourceBindingMatchMethod,
-    SourceBindingMatchPlan,
+    PairByOrder,
     SourceSelector,
-    StepSourceBindingsConfig,
 )
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_step import FunctionStep
@@ -301,12 +300,7 @@ def _compile_source_plans_for_contract(
     func,
     main_input_dependency: StepInputDependency = StepInputDependency.pipeline_start(),
 ):
-    execution_bindings = CompiledSourceBindingPlan.from_contracts(
-        snapshot.source_bindings,
-        (CallableContract.from_callable(func),),
-        main_input_dependency,
-        ArtifactDeclarationStepContext.empty().available_artifacts,
-    )
+    execution_bindings = snapshot.source_bindings.compiled_plan_for_contracts((CallableContract.from_callable(func),), main_input_dependency, ArtifactDeclarationStepContext.empty().available_artifacts)
     fields = snapshot.source_bindings.metadata_fields_for_literal_types(
         session.source_literal_field_types
     )
@@ -459,9 +453,9 @@ def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(m
     assert calls == [needs_grid]
     assert normalize_function_pattern(captured) is captured
     extract_artifact_declarations(captured)
-    injected = inject_artifact_input_values(captured, {"grid_dimensions": (3, 4)})
-    other_axis = inject_artifact_input_values(captured, {"grid_dimensions": (8, 9)})
-    compiled = compile_function_pattern(injected, {}, {})
+    injected = captured.with_artifact_input_values({"grid_dimensions": (3, 4)})
+    other_axis = captured.with_artifact_input_values({"grid_dimensions": (8, 9)})
+    compiled = compile_function_pattern(admitted_graph(injected), {}, {})
     assert calls == [needs_grid]
     assert next(injected.iter_items()).contract is item.contract
     assert next(other_axis.iter_items()).contract is item.contract
@@ -472,12 +466,14 @@ def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(m
 
     replacement = from_callable(CallableContract, needs_grid)
     provider_compiled = compile_function_pattern(
-        injected,
-        {},
-        {},
-        invocation_contract_provider=lambda _item, _context: InvocationContractPlan(
+        admitted_graph(
+            injected,
+            invocation_contract_provider=lambda _item, _context: InvocationContractPlan(
             replacement
         ),
+        ),
+        {},
+        {},
     )
     assert next(provider_compiled.iter_invocations()).contract is replacement
     kwargs["sigma"] = 7
@@ -515,7 +511,7 @@ def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
         source=MetadataSource.FILE_NAME,
         pattern=r"(?P<well>[A-H]\d{2})\.tif",
     )
-    match_plan = SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER)
+    match_plan = PairByOrder()
     binding = NamedSourceBinding(
         alias="DNA",
         selector=SourceSelector(
@@ -655,7 +651,7 @@ def test_compiler_disabled_source_bindings_stay_inert_without_contract_requireme
 
     PipelineCompiler._supplement_step_plans(session)
 
-    assert session.plan(0).source_binding_plan.is_empty
+    assert session.plan(0).source_binding_plan == CompiledSourceBindingPlan()
 
 
 def test_path_planner_activates_declared_source_binding_for_pipeline_start():
@@ -787,7 +783,7 @@ def test_path_planner_preserves_pipeline_start_bindings_for_implicit_main_flow()
 
     assert execution_bindings.bindings == (binding,)
     assert source_binding_plan.bindings == (binding,)
-    assert source_universe_plan == source_universe_plan.empty()
+    assert source_universe_plan == CompiledSourceUniversePlan()
 
 
 def test_path_planner_step_output_projects_only_exact_source_artifacts() -> None:

@@ -30,7 +30,6 @@ from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
     RuntimeInvocationDomain,
 )
-from openhcs.core.progress import ProgressPhase, ProgressStatus
 from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
 from openhcs.core.source_binding_selection import (
     SourceBoundAnchorPatternPolicy,
@@ -57,6 +56,10 @@ from openhcs.core.steps.function_runtime import (
     _process_single_pattern_group,
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
+from openhcs.core.progress.types import (
+    PatternGroupProgressPhase,
+    RunningProgressStatus,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.dataset_sources.interfaces import FilenameParser
@@ -349,13 +352,7 @@ class FunctionStepExecutor:
                 compiled_group,
                 component_value=component_value,
             )
-            if bindings is None:
-                return ()
-            return policy.select(
-                pattern_list,
-                bindings=bindings.binding_declarations,
-                source_context=source_context,
-            )
+            return bindings.select_anchors(pattern_list, policy, source_context)
 
         return self.apply(
             "step_filter_source_anchors",
@@ -393,7 +390,6 @@ class FunctionStepExecutor:
             requires_cross_group_resolution = (
                 execution_scope.component is not None
                 and target_key is not None
-                and bindings is not None
                 and bindings.requires_cross_group_candidate_resolution(
                     execution_scope.component,
                     str(target_key),
@@ -404,16 +400,8 @@ class FunctionStepExecutor:
                 if local_candidates is None or requires_cross_group_resolution
                 else local_candidates
             )
-            selected_groups[target_key] = (
-                ()
-                if bindings is None
-                else tuple(
-                    policy.select(
-                        candidates,
-                        bindings=bindings.binding_declarations,
-                        source_context=source_context,
-                    )
-                )
+            selected_groups[target_key] = bindings.select_anchors(
+                candidates, policy, source_context
             )
 
         filtered = selected_groups
@@ -435,8 +423,8 @@ class FunctionStepExecutor:
         compiled_group: CompiledFunctionGroup,
         *,
         component_value: FunctionGroupKey,
-    ) -> CompiledSourceBindingPlan | None:
-        """Return component-compatible main-flow declarations, if any."""
+    ) -> CompiledSourceBindingPlan:
+        """Return component-compatible main-flow declarations (possibly none)."""
 
         main_flow_refs = compiled_group.main_flow_input_refs_for_component(
             self.plan.execution_group_scope,
@@ -1033,8 +1021,8 @@ class FunctionStepExecutor:
         runtime.emit(
             axis_id=self.plan.axis_id,
             step_name=self.plan.step_name,
-            phase=ProgressPhase.PATTERN_GROUP,
-            status=ProgressStatus.RUNNING,
+            phase=PatternGroupProgressPhase,
+            status=RunningProgressStatus,
             completed=completed_groups,
             total=total_groups,
             percent=(completed_groups / total_groups) * 100.0,

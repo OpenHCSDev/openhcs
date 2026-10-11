@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.callable_contract import CallableContract, CallableMetadata, KeywordRuntimeParameter
+from openhcs.core.callable_contract import CallableContract, CallableDeclaration, KeywordRuntimeParameter
 from openhcs.core.function_reference import FunctionReference
 from openhcs.core.runtime_adapters import RuntimeImageExecutionContext
 from openhcs.core.runtime_plane_projection import (
@@ -52,7 +52,7 @@ def runtime_callable_defaults(
 ) -> Mapping[str, object]:
     """Return callable defaults visible to runtime batch executors."""
     try:
-        callable_signature = CallableMetadata.callable_signature(func) if signature is None else signature
+        callable_signature = CallableDeclaration.callable_signature(func) if signature is None else signature
     except (TypeError, ValueError) as exc:
         raise TypeError(
             f"Runtime batch function {func!r} must expose an inspectable signature."

@@ -15,23 +15,17 @@ from openhcs.core.debug import (
     DebugCommand,
     DebugCommandType,
     DebugCursor,
-    DebugEventType,
     DebugProgressContext,
-    DebugReplayMode,
     DebugSession,
     DebugTerminalSummary,
     FileManagerDebugSnapshotStore,
 )
-from openhcs.core.debug_views import DebugViewModel
+from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.authoring.session.progress_notifications import (
     DebugSnapshotAvailableNotification,
 )
 from openhcs.core.execution_state import ManagerExecutionState, TerminalExecutionStatus
-from openhcs.core.progress import (
-    ProgressEvent,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressEvent
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
@@ -53,6 +47,24 @@ from tests.unit.pyqt_gui.session_harness import (
     add_datasets,
     caller_session,
     qt_app,
+)
+from openhcs.core.progress.types import (
+    PatternGroupProgressPhase,
+    SuccessProgressStatus,
+)
+from openhcs.core.debug import (
+    AfterInvocationDebugBoundary,
+    PersistentPausedWorkerReplay,
+)
+from openhcs.core.debug import (
+    ChooseSourceGroupDebugCommand,
+    RandomSourceGroupDebugCommand,
+    RestartDebugCommand,
+    RunDebugCommand,
+    RunToPauseDebugCommand,
+    StepDebugCommand,
+    StopDebugCommand,
+    ToggleDebugCommand,
 )
 
 
@@ -101,9 +113,9 @@ def test_debug_toolbar_emits_typed_command() -> None:
     commands: list[DebugCommand] = []
     toolbar.command_requested.connect(commands.append)
 
-    toolbar.buttons[DebugCommandType.STEP].click()
+    toolbar.buttons[StepDebugCommand].click()
 
-    assert commands == [DebugCommand(DebugCommandType.STEP)]
+    assert commands == [DebugCommand(StepDebugCommand)]
 
 
 def test_debug_toolbar_debug_button_runs_debug_execution() -> None:
@@ -113,11 +125,11 @@ def test_debug_toolbar_debug_button_runs_debug_execution() -> None:
     commands: list[DebugCommand] = []
     toolbar.command_requested.connect(commands.append)
 
-    toolbar.buttons[DebugCommandType.RUN].click()
+    toolbar.buttons[RunDebugCommand].click()
 
-    assert toolbar.buttons[DebugCommandType.RUN].text() == "Start Debug"
+    assert toolbar.buttons[RunDebugCommand].text() == "Start Debug"
     assert toolbar.phase_label.text() == "Ready"
-    assert commands == [DebugCommand(DebugCommandType.RUN)]
+    assert commands == [DebugCommand(RunDebugCommand)]
 
 
 def test_debug_toolbar_renders_secondary_commands_as_session_buttons() -> None:
@@ -127,20 +139,20 @@ def test_debug_toolbar_renders_secondary_commands_as_session_buttons() -> None:
     commands: list[DebugCommand] = []
     toolbar.command_requested.connect(commands.append)
 
-    assert DebugCommandType.TOGGLE not in toolbar.buttons
-    assert DebugCommandType.CHOOSE_SOURCE_GROUP in toolbar.buttons
-    assert DebugCommandType.RANDOM_SOURCE_GROUP not in toolbar.buttons
-    assert DebugCommandType.STOP in toolbar.buttons
+    assert ToggleDebugCommand not in toolbar.buttons
+    assert ChooseSourceGroupDebugCommand in toolbar.buttons
+    assert RandomSourceGroupDebugCommand not in toolbar.buttons
+    assert StopDebugCommand in toolbar.buttons
 
-    toolbar.buttons[DebugCommandType.CHOOSE_SOURCE_GROUP].click()
+    toolbar.buttons[ChooseSourceGroupDebugCommand].click()
     toolbar.set_debug_session_context(
         debug_toolbar_context(session=active_debug_session())
     )
-    toolbar.buttons[DebugCommandType.STOP].click()
+    toolbar.buttons[StopDebugCommand].click()
 
     assert commands == [
-        DebugCommand(DebugCommandType.CHOOSE_SOURCE_GROUP),
-        DebugCommand(DebugCommandType.STOP),
+        DebugCommand(ChooseSourceGroupDebugCommand),
+        DebugCommand(StopDebugCommand),
     ]
 
 
@@ -173,11 +185,11 @@ def test_debug_toolbar_session_only_controls_follow_active_session() -> None:
     toolbar = DebugToolbarWidget()
     toolbar.set_debug_session_context(debug_toolbar_context())
 
-    assert toolbar.buttons[DebugCommandType.RUN].isEnabled()
-    assert toolbar.buttons[DebugCommandType.STEP].isEnabled()
-    assert toolbar.buttons[DebugCommandType.CHOOSE_SOURCE_GROUP].isEnabled()
-    assert not toolbar.buttons[DebugCommandType.RESTART].isEnabled()
-    assert not toolbar.buttons[DebugCommandType.STOP].isEnabled()
+    assert toolbar.buttons[RunDebugCommand].isEnabled()
+    assert toolbar.buttons[StepDebugCommand].isEnabled()
+    assert toolbar.buttons[ChooseSourceGroupDebugCommand].isEnabled()
+    assert not toolbar.buttons[RestartDebugCommand].isEnabled()
+    assert not toolbar.buttons[StopDebugCommand].isEnabled()
     assert toolbar.runtime_inspection_button is not None
     assert not toolbar.runtime_inspection_button.isEnabled()
 
@@ -186,9 +198,9 @@ def test_debug_toolbar_session_only_controls_follow_active_session() -> None:
     )
 
     assert toolbar.phase_label.text() == "Debug Active"
-    assert toolbar.buttons[DebugCommandType.RUN].text() == "Continue"
-    assert toolbar.buttons[DebugCommandType.RESTART].isEnabled()
-    assert toolbar.buttons[DebugCommandType.STOP].isEnabled()
+    assert toolbar.buttons[RunDebugCommand].text() == "Continue"
+    assert toolbar.buttons[RestartDebugCommand].isEnabled()
+    assert toolbar.buttons[StopDebugCommand].isEnabled()
     assert toolbar.runtime_inspection_button.isEnabled()
 
 
@@ -202,13 +214,13 @@ def test_debug_toolbar_terminal_summary_retire_matching_local_session() -> None:
         group_key="default",
         invocation_key="default:0:correct_illumination_apply",
     )
-    session = session.with_cursor(cursor).with_command(DebugCommandType.STEP)
+    session = session.with_cursor(cursor).with_command(StepDebugCommand)
     terminal_summary = DebugTerminalSummary(
         debug_session_id=session.debug_session_id,
         subject_id="plate",
         terminal_status="complete",
         cursor=cursor,
-        command_type=DebugCommandType.STEP,
+        command_type=StepDebugCommand,
         axis_id=session.axis_id,
         snapshot_id="snapshot-1",
         snapshot_store_ref="/debug",
@@ -222,9 +234,9 @@ def test_debug_toolbar_terminal_summary_retire_matching_local_session() -> None:
     )
 
     assert toolbar.phase_label.text() == "Debug Complete"
-    assert toolbar.buttons[DebugCommandType.RUN].text() == "Start Debug"
-    assert not toolbar.buttons[DebugCommandType.RESTART].isEnabled()
-    assert not toolbar.buttons[DebugCommandType.STOP].isEnabled()
+    assert toolbar.buttons[RunDebugCommand].text() == "Start Debug"
+    assert not toolbar.buttons[RestartDebugCommand].isEnabled()
+    assert not toolbar.buttons[StopDebugCommand].isEnabled()
     assert toolbar.runtime_inspection_button is not None
     assert not toolbar.runtime_inspection_button.isEnabled()
 
@@ -238,11 +250,11 @@ def test_debug_toolbar_projects_pending_execution_state() -> None:
         )
     )
 
-    assert not toolbar.buttons[DebugCommandType.RUN].isEnabled()
-    assert not toolbar.buttons[DebugCommandType.STEP].isEnabled()
-    assert not toolbar.buttons[DebugCommandType.RESTART].isEnabled()
-    assert not toolbar.buttons[DebugCommandType.CHOOSE_SOURCE_GROUP].isEnabled()
-    assert toolbar.buttons[DebugCommandType.STOP].isEnabled()
+    assert not toolbar.buttons[RunDebugCommand].isEnabled()
+    assert not toolbar.buttons[StepDebugCommand].isEnabled()
+    assert not toolbar.buttons[RestartDebugCommand].isEnabled()
+    assert not toolbar.buttons[ChooseSourceGroupDebugCommand].isEnabled()
+    assert toolbar.buttons[StopDebugCommand].isEnabled()
     assert toolbar.runtime_inspection_button is not None
     assert not toolbar.runtime_inspection_button.isEnabled()
 
@@ -251,7 +263,7 @@ def test_debug_toolbar_omits_random_source_group_action() -> None:
     QtApplicationHarness.app()
     toolbar = DebugToolbarWidget()
 
-    assert DebugCommandType.RANDOM_SOURCE_GROUP not in toolbar.buttons
+    assert RandomSourceGroupDebugCommand not in toolbar.buttons
 
 
 def test_debug_toolbar_uses_shared_button_panel_styling() -> None:
@@ -261,7 +273,7 @@ def test_debug_toolbar_uses_shared_button_panel_styling() -> None:
     toolbar = DebugToolbarWidget(color_scheme=color_scheme)
 
     assert toolbar.button_panel is not None
-    assert "color: #ff0000" in toolbar.buttons[DebugCommandType.STEP].styleSheet()
+    assert "color: #ff0000" in toolbar.buttons[StepDebugCommand].styleSheet()
 
 
 def test_debug_toolbar_disables_run_to_pause_without_pause_boundary() -> None:
@@ -270,9 +282,9 @@ def test_debug_toolbar_disables_run_to_pause_without_pause_boundary() -> None:
 
     toolbar.set_debug_session_context(debug_toolbar_context(pause_step_indices=()))
 
-    assert not toolbar.buttons[DebugCommandType.RUN_TO_PAUSE].isEnabled()
+    assert not toolbar.buttons[RunToPauseDebugCommand].isEnabled()
     assert (
-        "debug-pause step" in toolbar.buttons[DebugCommandType.RUN_TO_PAUSE].toolTip()
+        "debug-pause step" in toolbar.buttons[RunToPauseDebugCommand].toolTip()
     )
 
 
@@ -403,7 +415,7 @@ def test_pipeline_editor_routes_stop_debug_command_to_the_session(
         stops = []
         monkeypatch.setattr(harness.session, "stop_execution", stops.append)
 
-        harness.workflow.handle_command(DebugCommand(DebugCommandType.STOP))
+        harness.workflow.handle_command(DebugCommand(StopDebugCommand))
 
         assert stops == [True]
         assert harness.messages[-1] == "Requested debug execution stop."
@@ -415,7 +427,7 @@ def test_pipeline_editor_has_route_for_every_debug_command() -> None:
         for declaration in PipelineDebugActionDeclarationBase.__registry__.values()
         if issubclass(declaration, PipelineDebugCommandActionDeclaration)
     }
-    assert command_types == set(DebugCommandType)
+    assert command_types == set(DebugCommandType.__registry__.values())
 
 
 def test_streaming_preview_label_is_declared_on_config_class() -> None:
@@ -426,12 +438,12 @@ def test_pipeline_editor_dispatches_pause_step_indices(tmp_path, monkeypatch) ->
     with debug_editor(tmp_path, monkeypatch) as harness:
         assert harness.workflow.pause_step_indices() == (1,)
 
-        harness.workflow.run_command(DebugCommandType.RUN_TO_PAUSE)
+        harness.workflow.run_command(RunToPauseDebugCommand)
 
         assert harness.debug_runs() == [
             {
                 "scope_id": harness.scope_id,
-                "command_type": DebugCommandType.RUN_TO_PAUSE,
+                "command_type": RunToPauseDebugCommand,
                 "pause_step_indices": (1,),
                 "start_step_index": 0,
                 "start_after_invocation_key": None,
@@ -448,10 +460,10 @@ def test_pipeline_editor_step_advances_from_the_current_invocation(
             subject_id=harness.scope_id
         ).with_cursor(_cursor(1, "segment"))
 
-        harness.workflow.handle_command(DebugCommand(DebugCommandType.STEP))
+        harness.workflow.handle_command(DebugCommand(StepDebugCommand))
 
         (run,) = harness.debug_runs()
-        assert run["command_type"] is DebugCommandType.STEP
+        assert run["command_type"] is StepDebugCommand
         assert run["start_step_index"] == 1
         assert run["start_after_invocation_key"] == "default:0:segment"
 
@@ -466,7 +478,7 @@ def test_pipeline_editor_restarts_from_the_dirty_debug_cursor(
             .mark_dirty_from_cursor()
         )
 
-        harness.workflow.run_command(DebugCommandType.RESTART)
+        harness.workflow.run_command(RestartDebugCommand)
 
         (run,) = harness.debug_runs()
         assert run["start_step_index"] == 1
@@ -482,17 +494,17 @@ def test_pipeline_editor_step_replays_from_terminal_debug_cursor(
                 subject_id=harness.scope_id,
                 terminal_status="complete",
                 cursor=_cursor(2, "measure"),
-                command_type=DebugCommandType.STEP,
+                command_type=StepDebugCommand,
                 axis_id="A01",
             )
         )
 
-        harness.workflow.run_command(DebugCommandType.STEP)
+        harness.workflow.run_command(StepDebugCommand)
 
         assert harness.debug_runs() == [
             {
                 "scope_id": harness.scope_id,
-                "command_type": DebugCommandType.STEP,
+                "command_type": StepDebugCommand,
                 "pause_step_indices": (1,),
                 "start_step_index": 2,
                 "start_after_invocation_key": "default:0:measure",
@@ -516,7 +528,7 @@ def test_debug_context_prefers_terminal_state_over_a_stale_inspected_session(
             subject_id=harness.scope_id,
             terminal_status="complete",
             cursor=_cursor(2, "measure"),
-            command_type=DebugCommandType.STEP,
+            command_type=StepDebugCommand,
             axis_id="A01",
         )
         harness.session.debug_terminal_summaries[harness.scope_id] = summary
@@ -665,7 +677,7 @@ def debug_snapshot_notification(
         debug_session_id="debug-1",
         snapshot_id="snap-1",
         cursor=_cursor(1, "segment"),
-        event_type=DebugEventType.AFTER_INVOCATION,
+        event_type=AfterInvocationDebugBoundary,
         snapshot_store_ref="/debug",
         snapshot_store_backend=snapshot_store_backend,
     )
@@ -675,8 +687,8 @@ def debug_snapshot_notification(
             subject_id=scope_id,
             axis_id="A01",
             step_name="step",
-            phase=ProgressPhase.PATTERN_GROUP,
-            status=ProgressStatus.SUCCESS,
+            phase=PatternGroupProgressPhase,
+            status=SuccessProgressStatus,
             percent=100,
             completed=1,
             total=1,
@@ -797,15 +809,15 @@ def test_session_reuses_the_persistent_paused_worker_across_commands(
         asyncio.run(
             session.run_debug(
                 scope_id,
-                command_type=DebugCommandType.RUN_TO_PAUSE,
+                command_type=RunToPauseDebugCommand,
                 pause_step_indices=(1,),
             )
         )
         debug_session = session.debug_sessions[scope_id]
         for command in (
-            DebugCommandType.STEP,
-            DebugCommandType.RUN,
-            DebugCommandType.STOP,
+            StepDebugCommand,
+            RunDebugCommand,
+            StopDebugCommand,
         ):
             asyncio.run(session.run_debug(scope_id, command_type=command))
 
@@ -815,17 +827,17 @@ def test_session_reuses_the_persistent_paused_worker_across_commands(
             tmp_path / "plate" / ".openhcs_debug"
         )
         assert debug_request.snapshot_store_backend is None
-        assert debug_request.command_type is DebugCommandType.RUN_TO_PAUSE
+        assert debug_request.command_type is RunToPauseDebugCommand
         assert debug_request.selected_source_group is None
         assert debug_request.pause_step_indices == (1,)
         assert debug_request.start_step_index == 0
         assert debug_request.start_after_invocation_key is None
-        assert debug_request.replay_mode is DebugReplayMode.PERSISTENT_PAUSED_WORKER
+        assert debug_request.replay_mode is PersistentPausedWorkerReplay
         assert submitted == [(scope_id, "debug-compile")]
         assert worker_commands == [
-            (debug_session.debug_session_id, DebugCommandType.STEP),
-            (debug_session.debug_session_id, DebugCommandType.RUN),
-            (debug_session.debug_session_id, DebugCommandType.STOP),
+            (debug_session.debug_session_id, StepDebugCommand),
+            (debug_session.debug_session_id, RunDebugCommand),
+            (debug_session.debug_session_id, StopDebugCommand),
         ]
         assert scope_id not in session.debug_sessions
 

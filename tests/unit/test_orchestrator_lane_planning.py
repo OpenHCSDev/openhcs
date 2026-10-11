@@ -65,16 +65,17 @@ from openhcs.core.orchestrator.worker_lanes import (
     WorkerLaneExecutionContext,
     WorkerLaneExecutionPlan,
 )
-from openhcs.core.progress import (
-    ProgressExecutionContext,
-    ProgressPhase,
-    ProgressStatus,
-)
+from openhcs.core.progress import ProgressExecutionContext
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponse,
     ViewerPersistenceMode,
     ViewerSettlePhase,
     ViewerSettleProgress,
+)
+from openhcs.core.progress.types import (
+    FailedProgressStatus,
+    SuccessProgressPhase,
+    ViewerSettlementProgressPhase,
 )
 
 PROGRESS_CONTEXT = ProgressExecutionContext(
@@ -1382,7 +1383,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
 
     progress_queue = SimpleNamespace(
         put=lambda raw_event: events.append(
-            raw_event.phase.value
+            raw_event.phase.name
         )
     )
     results = _execute_with_visualizer(
@@ -1402,9 +1403,9 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
     assert events == [
         "metadata",
         "settle",
-        ProgressPhase.VIEWER_SETTLEMENT.value,
+        ViewerSettlementProgressPhase.name,
         "capture",
-        ProgressPhase.SUCCESS.value,
+        SuccessProgressPhase.name,
         "stop",
     ]
 
@@ -1526,4 +1527,4 @@ def test_execution_visualizer_readiness_timeout_is_fatal(monkeypatch):
             progress_context=PROGRESS_CONTEXT,
         )
 
-    assert events[-1].status is ProgressStatus.FAILED
+    assert events[-1].status is FailedProgressStatus

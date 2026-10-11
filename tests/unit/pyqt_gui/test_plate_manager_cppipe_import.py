@@ -173,7 +173,7 @@ def test_config_window_edits_the_logical_pipeline_scope(tmp_path, monkeypatch) -
             pass
 
     monkeypatch.setattr(
-        "openhcs.pyqt_gui.widgets.plate_manager.ConfigWindow", FakeConfigWindow
+        "openhcs.pyqt_gui.widgets.plate_manager.OpenHCSConfigWindow", FakeConfigWindow
     )
     with session_gui() as gui:
         gui.session.invoke(AddDatasets, DatasetRootsRequest(roots=(str(root),)))

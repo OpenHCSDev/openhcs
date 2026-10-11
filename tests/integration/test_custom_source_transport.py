@@ -17,6 +17,11 @@ import time
 from pathlib import Path
 
 import pytest
+from tests.artifact_graphs import admitted_graph
+from openhcs.core.progress.types import (
+    StepCompletedProgressPhase,
+    SuccessProgressStatus,
+)
 
 WORKTREE = Path(__file__).resolve().parents[2]
 PYTHON = Path(sys.executable)
@@ -257,7 +262,7 @@ def _helper_values(owner):
 
 
 def _assert_specs(actual, expected):
-    assert actual == tuple(expected)
+    assert tuple(actual) == tuple(expected)
     for transported, declared in zip(actual, expected, strict=True):
         assert type(transported) is type(declared)
         # ArtifactSpec equality deliberately ignores this operational field.
@@ -296,9 +301,9 @@ def _assert_payload(payload, kind):
             )
             assert type(value) is type(expected)
             assert value == expected
-            _assert_specs(value.metadata.artifact_outputs, contract.artifact_outputs)
-            _assert_specs(value.metadata.artifact_inputs, contract.artifact_inputs)
-            assert value.metadata.artifact_input_parameter_names == ("auxiliary",)
+            _assert_specs(value.declaration.artifact_outputs, contract.artifact_outputs)
+            _assert_specs(value.declaration.artifact_inputs, contract.artifact_inputs)
+            assert value.declaration.artifact_input_parameter_names == ("auxiliary",)
             resolved = value.resolve()
             assert value.resolve() is resolved  # Exercise the warm reference cache.
             resolved_owner = (
@@ -404,25 +409,21 @@ def _require_stale_rejection(operation):
 def _spawned_custom_task(payload, execution_id, subject_id):
     """Run actual registered declarations and emit through the initialized queue."""
     import numpy as np
-    from openhcs.core.progress import (
-        ProgressExecutionContext,
-        ProgressPhase,
-        ProgressStatus,
-    )
+    from openhcs.core.progress import ProgressExecutionContext
 
     _assert_payload(payload, "reference")
     values = np.arange(6, dtype=np.uint16).reshape(2, 3)
     results = []
     for reference, _helpers in payload:
         np.testing.assert_array_equal(reference.resolve()(values), values)
-        owner = reference.metadata.artifact_outputs[0].measurement_feature_owner
+        owner = reference.declaration.artifact_outputs[0].measurement_feature_owner
         results.append(owner.make_row(2.5))
     ProgressExecutionContext(execution_id, subject_id).emit(
         axis_id="synthetic",
         step_name="custom",
-        phase=ProgressPhase.STEP_COMPLETED,
-        status=ProgressStatus.SUCCESS,
-        percent=100,
+        phase=StepCompletedProgressPhase,
+        status=SuccessProgressStatus,
+        percent=100.0,
         completed=1,
         total=1,
     )
@@ -437,7 +438,6 @@ def _spawned_compiled_custom_task(context, helpers):
     plan = context.step_plans[0]
     (invocation,) = tuple(plan.compiled_function_pattern.iter_invocations())
     assert isinstance(invocation.contract.raw_processing_function, FunctionReference)
-    assert invocation.contract.metadata.prepare is None
     values = np.arange(6, dtype=np.uint16).reshape(2, 3)
     np.testing.assert_array_equal(invocation.runtime_callable(values), values)
     owner = invocation.contract.artifact_outputs[0].measurement_feature_owner
@@ -466,7 +466,11 @@ def _compiled_custom_contexts(payload, runtime):
         # Unlike an already-referenced pattern, this carries a displaced raw
         # callable until the existing transport projection derives its owner.
         captured = normalize_function_pattern(reference.resolve())
-        pattern = compile_function_pattern(captured, {}, {})
+        pattern = compile_function_pattern(
+            admitted_graph(captured),
+            {},
+            {},
+        )
         (invocation,) = tuple(pattern.iter_invocations())
         assert callable(invocation.contract.raw_processing_function)
         prepared = invocation.contract.resolve_runtime_callable()
@@ -571,7 +575,7 @@ def _spawn(path):
         assert progress.execution_id == context.execution_id
         assert progress.subject_id == context.subject_id
         assert progress.pid == pid
-        assert progress.status is ProgressStatus.SUCCESS
+        assert progress.status is SuccessProgressStatus
         assert progress.percent == 100
         print(f"spawned custom revision/progress/rows: worker {pid}", flush=True)
     finally:
