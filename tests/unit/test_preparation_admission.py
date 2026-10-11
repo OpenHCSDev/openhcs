@@ -242,14 +242,16 @@ def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded
     assert events == ["selected", "unselected", "dynamic"]
 
 
-def test_unavailable_affinity_does_not_admit_speculative_parallelism(monkeypatch):
+def test_platform_without_affinity_admits_its_online_cpus(monkeypatch):
     events = []
-    started, _, _ = simulated_workers(monkeypatch, 8)
+    started, peak, _ = simulated_workers(monkeypatch, 8)
     monkeypatch.delattr(os, "sched_getaffinity")
+    monkeypatch.setattr(os, "cpu_count", lambda: 2)
     PreparationCacheBatch(
         tuple(DeclaredCache(str(i), events) for i in range(3))
     ).populate_child_caches(max_workers=8)
-    assert not started and not events
+    assert started == [("0",), ("1",), ("2",)]
+    assert max(peak) == 2
 
 
 def test_affinity_query_failure_is_not_misreported_as_success(monkeypatch):
