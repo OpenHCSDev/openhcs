@@ -30,8 +30,8 @@ class ExecutionProgressProjection:
         self._builder = builder
 
     @staticmethod
-    def plate_name(plate_id: str, exec_id: str | None = None) -> str:
-        plate_leaf = Path(plate_id).name
+    def subject_name(subject_id: str, exec_id: str | None = None) -> str:
+        plate_leaf = Path(subject_id).name
         if exec_id:
             return f"{plate_leaf} ({exec_id[:8]})"
         return plate_leaf
@@ -45,7 +45,7 @@ class ExecutionProgressProjection:
             executions=executions,
             running_executions=server_info.running_execution_entries,
             queued_executions=server_info.queued_execution_entries,
-            get_plate_name=self.plate_name,
+            get_subject_name=self.subject_name,
         )
 
 

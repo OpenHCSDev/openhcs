@@ -21,9 +21,9 @@ from openhcs.utils.environment import OpenHCSProcessEnvironment
 def profile_arguments():
     return {
         "execution_id": "execution",
-        "plate_id": "plate",
+        "subject_id": "plate",
         "worker_slot": "worker_0",
-        "owned_wells": ["W001"],
+        "owned_partition_values": ["W001"],
     }
 
 
@@ -143,7 +143,7 @@ def foreign_polling_thread():
 thread=threading.Thread(target=foreign_polling_thread);thread.start()
 policy=CProfileWorkerProfilingPolicy.from_environment()
 try:
-    with policy.profile(execution_id='kernel',plate_id='plate',worker_slot='worker_0',owned_wells=['W001']):
+    with policy.profile(execution_id='kernel',subject_id='plate',worker_slot='worker_0',owned_partition_values=['W001']):
         for _ in range(10):profiled_kernel(1_000_000)
 finally:
     stop.set();thread.join()

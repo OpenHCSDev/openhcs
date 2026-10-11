@@ -137,14 +137,14 @@ class PostExecuteHook(ABC, metaclass=AutoRegisterMeta):
     def run_all(
         compiled_contexts: Mapping[str, "ProcessingContext"],
         execution_results: Mapping[str, "ExecutionResult"],
-        plate_runtime_observation: "RuntimeExecutionObservation",
+        dataset_runtime_observation: "RuntimeExecutionObservation",
     ) -> None:
         """Run every bound hook over the observations of this execution."""
         context_observations = tuple(
             context_observation
             for runtime_observation in (
                 *(result.runtime_observation for result in execution_results.values()),
-                plate_runtime_observation,
+                dataset_runtime_observation,
             )
             for context_observation in runtime_observation.contexts
         )

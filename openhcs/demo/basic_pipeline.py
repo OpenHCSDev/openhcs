@@ -12,7 +12,7 @@ from openhcs.core.config import (
     LazyFijiStreamingConfig,
     LazyNapariStreamingConfig,
     LazyStepMaterializationConfig,
-    LazyStepWellFilterConfig,
+    LazyStepPartitionFilterConfig,
     LazyProcessingConfig,
     PipelineConfig,
 )
@@ -36,7 +36,7 @@ pipeline_steps = []
 step_1 = FunctionStep(
     func=(stack_percentile_normalize, {"low_percentile": 0.5, "high_percentile": 99.5}),
     name="Image Enhancement Processing",
-    step_well_filter_config=LazyStepWellFilterConfig(),
+    step_partition_filter_config=LazyStepPartitionFilterConfig(),
     step_materialization_config=LazyStepMaterializationConfig(),
 )
 pipeline_steps.append(step_1)

@@ -82,7 +82,7 @@ def _compiled_plan(**overrides):
         output_memory_type="numpy",
         zarr_config=None,
         pipeline_position=9,
-        output_plate_root="/tmp/plate_processed",
+        output_dataset_root="/tmp/plate_processed",
         sub_dir="images",
         analysis_results_dir="/tmp/output_results",
         input_conversion=InputConversionPlan(

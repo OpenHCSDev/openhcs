@@ -45,7 +45,7 @@ from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import TiffConfig, WellFilterMode
+from openhcs.core.config import TiffConfig, PartitionFilterMode
 from openhcs.domains.microscopy.config import (
     AnalysisConsolidationConfig,
     PlateMetadataConfig,
@@ -536,7 +536,7 @@ def test_named_artifact_streaming_respects_compiled_streaming_filter():
             {
                 type(config): StepAxisFilterResolution(
                     resolved_axis_values=frozenset({"B03"}),
-                    filter_mode=WellFilterMode.INCLUDE,
+                    filter_mode=PartitionFilterMode.INCLUDE,
                     original_filter="B03",
                 )
             }

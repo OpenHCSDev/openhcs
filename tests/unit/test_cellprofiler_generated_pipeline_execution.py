@@ -210,7 +210,7 @@ def test_compiler_derives_runtime_executor_after_generic_transport(
         orchestrator.initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=transported_steps,
-            well_filter=["A01"],
+            partition_values=["A01"],
             is_zmq_execution=True,
         )
         context = compilation.runtime_contexts["A01"]

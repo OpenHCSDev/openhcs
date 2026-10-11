@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 def execution_server_status_text(projection: ExecutionRuntimeProjection) -> str:
     """One status line summarizing the runtime projection."""
 
-    plate_count = len(projection.by_plate_latest)
+    plate_count = len(projection.by_subject_latest)
     if plate_count == 0:
         return "Ready"
     parts = projection.count_status_labels()

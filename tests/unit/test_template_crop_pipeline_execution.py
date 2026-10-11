@@ -106,16 +106,16 @@ def test_template_crop_persists_each_source_channel(
         ).initialize()
         compiled = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=["A01"],
+            partition_values=["A01"],
             enable_visualizer_override=False,
         )
-        result = orchestrator.execute_compiled_plate(
+        result = orchestrator.execute_compiled_bundle(
             execution_bundle=compiled,
             max_workers=1,
             progress_queue=queue,
             progress_context={
                 "execution_id": str(tmp_path),
-                "plate_id": str(plate),
+                "subject_id": str(plate),
                 "axis_id": "",
             },
         )

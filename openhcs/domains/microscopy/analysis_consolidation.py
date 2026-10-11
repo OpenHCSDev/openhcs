@@ -282,15 +282,15 @@ class AnalysisConsolidationHook(PostExecuteHook):
         if observation is None:
             return
         first_context = next(iter(compiled_contexts.values()))
-        if first_context.output_plate_root is None:
+        if first_context.output_dataset_root is None:
             raise ValueError(
                 "Analysis consolidation requires the compiled output plate root."
             )
-        output_plate_root = Path(first_context.output_plate_root)
+        output_dataset_root = Path(first_context.output_dataset_root)
 
         successful_dirs, failed_dirs = consolidate_runtime_analysis_table_output_groups(
             analysis_outputs_by_directory=observation.outputs_by_directory,
-            plate_path=output_plate_root,
+            plate_path=output_dataset_root,
             analysis_consolidation_config=self.analysis_consolidation_config,
             plate_metadata_config=self.plate_metadata_config,
             summary_writer=FileManagerAnalysisSummaryWriter(
@@ -300,7 +300,7 @@ class AnalysisConsolidationHook(PostExecuteHook):
                         directory: group.destination
                         for directory, group in observation.groups.items()
                     },
-                    output_plate_root: observation.destination,
+                    output_dataset_root: observation.destination,
                 },
             ),
         )

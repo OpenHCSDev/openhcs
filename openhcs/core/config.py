@@ -100,13 +100,13 @@ class MaterializationBackend(Enum):
     OMERO_LOCAL = "omero_local"
 
 
-class WellFilterMode(Enum):
-    """Well filtering modes for selective materialization."""
+class PartitionFilterMode(Enum):
+    """Whether a partition filter selects the values to include or to exclude."""
 
     INCLUDE = ("include", "+")
     EXCLUDE = ("exclude", "-")
 
-    def __new__(cls, serialized_value: str, preview_prefix: str) -> "WellFilterMode":
+    def __new__(cls, serialized_value: str, preview_prefix: str) -> "PartitionFilterMode":
         member = object.__new__(cls)
         member._value_ = serialized_value
         member._preview_prefix = preview_prefix
@@ -141,7 +141,7 @@ class GlobalPipelineConfig(AnnotatedDataclassValidationMixin):
     """
     Directory for materialized named analysis artifacts such as CSV and JSON files.
 
-    A relative path is resolved inside the compiled output plate root; an
+    A relative path is resolved inside the compiled output dataset root; an
     absolute path must also remain inside that root. Unsupported root geometry
     is rejected during planning before dispatch. This destination is separate
     from ordinary image outputs and per-step main-flow checkpoints.
@@ -167,7 +167,7 @@ class GlobalPipelineConfig(AnnotatedDataclassValidationMixin):
     dataset_source: Annotated[
         type[DatasetSourceChoice], abbreviation("source"), DatasetSourceChoices()
     ] = field(default_factory=lambda: AutoDetectedSource)
-    """Dataset source used to open the plate.
+    """Dataset source used to open the dataset.
 
     ``auto`` selects a registered source from source evidence. Choose an exact
     source to override detection, or ``source_bindings`` for a generic image
@@ -197,12 +197,9 @@ class GlobalPipelineConfig(AnnotatedDataclassValidationMixin):
     through a clean server process where the platform supports it.
     """
 
-    auto_add_output_plate_to_plate_manager: Annotated[
-        bool, abbreviation("auto_add_output_plate")
-    ] = False
-    """If True, when a plate run completes successfully, the computed output plate root
-    (from path planning) is automatically added to Plate Manager as a new orchestrator
-    if it is not already present."""
+    auto_add_output_dataset: Annotated[bool, abbreviation("auto_add_output")] = False
+    """If True, when a run completes successfully, the computed output dataset root
+    (from path planning) is opened as a new dataset if it is not already open."""
 
     # Future extension point:
     # logging_config: Optional[Dict[str, Any]] = None # For configuring logging levels, handlers
@@ -326,47 +323,47 @@ class FijiDisplayConfig(AxisRoleModeDisplayConfig, FijiDisplaySettings):
 FijiDisplayConfig = global_pipeline_config(ui_hidden=True, inherit_as_none=False)(FijiDisplayConfig)
 
 
-@abbreviation("wfc")
+@abbreviation("pfc")
 @global_pipeline_config(preview_label="FILT")
 @dataclass(frozen=True)
-class WellFilterConfig(AnnotatedDataclassValidationMixin):
-    """Base execution-domain filter inherited by specialized well policies.
+class PartitionFilterConfig(AnnotatedDataclassValidationMixin):
+    """Base execution-domain filter inherited by specialized partition policies.
 
-    At pipeline scope this constrains which wells compile and execute. Nominal
+    At pipeline scope this constrains which partition values compile and execute. Nominal
     subclasses reuse the same selection for their own narrower behavior, such
     as main-flow persistence, step checkpoints, or viewer emission.
     """
 
-    show_preview_without_well_filter: ClassVar[bool] = False
+    show_preview_without_partition_filter: ClassVar[bool] = False
 
-    well_filter: Annotated[Optional[Union[List[str], str, int]], abbreviation("")] = (
+    partition_filter: Annotated[Optional[Union[List[str], str, int]], abbreviation("")] = (
         None
     )
-    """Well selection matched against the plate's ordered available wells.
+    """Selection matched against the dataset's ordered partition values.
 
     Use a list for exact IDs; a string for one ID, comma-separated IDs,
     ``row:A``, ``col:01-06``, or an inclusive ``A01:A12`` range; or a
-    non-negative integer for the first N available wells. ``None`` bypasses
-    filtering. Zero matches no wells, so include mode selects none and exclude
+    non-negative integer for the first N available values. ``None`` bypasses
+    filtering. Zero matches no values, so include mode selects none and exclude
     mode selects all.
     """
 
-    well_filter_mode: Annotated[WellFilterMode, abbreviation("filter_mode")] = (
-        WellFilterMode.INCLUDE
+    partition_filter_mode: Annotated[PartitionFilterMode, abbreviation("filter_mode")] = (
+        PartitionFilterMode.INCLUDE
     )
-    """Apply ``well_filter`` as the wells to include or the wells to exclude.
+    """Apply ``partition_filter`` as the values to include or the values to exclude.
 
-    Include mode rejects unknown explicit wells. Exclude mode ignores unknown
-    explicit wells and preserves every unmatched available well.
+    Include mode rejects unknown explicit values. Exclude mode ignores unknown
+    explicit values and preserves every unmatched available value.
     """
 
     @classmethod
-    def well_filter_inheritance_branch(cls) -> type["WellFilterConfig"]:
+    def partition_filter_inheritance_branch(cls) -> type["PartitionFilterConfig"]:
         """Return the nominal MRO branch that may supply inherited filters."""
         return cls
 
     @classmethod
-    def accepts_well_filter_provenance(cls, source_type: type | None) -> bool:
+    def accepts_partition_filter_provenance(cls, source_type: type | None) -> bool:
         """Return whether an inherited filter belongs to this policy branch."""
         if source_type is None:
             return True
@@ -375,7 +372,7 @@ class WellFilterConfig(AnnotatedDataclassValidationMixin):
 
         config_type = get_base_type_for_lazy(cls) or cls
         source_base = get_base_type_for_lazy(source_type) or source_type
-        branch_type = cls.well_filter_inheritance_branch()
+        branch_type = cls.partition_filter_inheritance_branch()
         branch_base = get_base_type_for_lazy(branch_type) or branch_type
         return issubclass(source_base, config_type) or source_base in branch_base.mro()
 
@@ -393,7 +390,7 @@ class WellFilterConfig(AnnotatedDataclassValidationMixin):
 class ZarrConfig(AnnotatedDataclassValidationMixin, _polystore_config.ZarrConfig):
     """OpenHCS registration of PolyStore's Zarr configuration owner.
 
-    OME-ZARR metadata and plate metadata are always enabled for HCS compliance.
+    OME-ZARR metadata and HCS layout metadata are always enabled.
     Shuffle filter is always enabled for Blosc compressor (ignored for others).
     """
 
@@ -539,7 +536,7 @@ class SequentialProcessingConfig(AnnotatedDataclassValidationMixin):
     sequential_components: Annotated[
         List[type[Axis]], abbreviation("seq_comp"), VariableAxisChoices()
     ] = field(default_factory=list)
-    """Plate components whose value combinations run through the whole pipeline in turn.
+    """Axes whose value combinations run through the whole pipeline in turn.
 
     After one combination completes all steps, its runtime data can be released
     before the next combination begins. This bounds peak memory but may reduce
@@ -551,64 +548,64 @@ class SequentialProcessingConfig(AnnotatedDataclassValidationMixin):
 @abbreviation("pp")
 @global_pipeline_config(
     always_viewable_fields=[
-        "well_filter",
+        "partition_filter",
         "output_dir_suffix",
         "global_output_folder",
     ],
 )
 @dataclass(frozen=True)
-class PathPlanningConfig(WellFilterConfig):
+class PathPlanningConfig(PartitionFilterConfig):
     """
     Configuration for pipeline path planning and directory structure.
 
-    This class handles path construction concerns including plate root directories,
+    This class handles path construction concerns including dataset root directories,
     output directory suffixes, and subdirectory organization. It does not handle
     analysis results location, which is controlled at the pipeline level.
 
-    Its inherited well filter selects which processed wells seed the automatic
-    main-flow output plate. Zero keeps that automatic output runtime-only. This
+    Its inherited partition filter selects which processed partition values seed
+    the automatic main-flow output dataset. Zero keeps that automatic output runtime-only. This
     policy is independent of step checkpoints, typed artifact materialization,
     and viewer streaming.
     """
 
     output_dir_suffix: Annotated[str, abbreviation("suffix")] = "_openhcs"
-    """Non-empty suffix appended to the input plate name to form the output plate root."""
+    """Non-empty suffix appended to the input dataset name to form the output dataset root."""
 
     global_output_folder: Annotated[
         Optional[PlateOutputDirectory], abbreviation("global_folder")
     ] = None
     """
-    Optional parent directory for output plate roots.
+    Optional parent directory for output dataset roots.
 
-    ``None`` creates the output root beside the input plate. An explicit path is
+    ``None`` creates the output root beside the input dataset. An explicit path is
     resolved to an absolute directory during compilation, then combined with the
-    input plate name and ``output_dir_suffix``.
+    input dataset name and ``output_dir_suffix``.
     """
 
     sub_dir: Annotated[str, abbreviation("subdir")] = "images"
     """
-    Relative directory inside the output plate root for ordinary processed images.
+    Relative directory inside the output dataset root for ordinary processed images.
 
     This does not choose the analysis-artifact results directory or a step
     checkpoint directory; those are owned by their respective declarations.
     """
 
 
-@abbreviation("step_wf")
-@global_pipeline_config(always_viewable_fields=["well_filter"])
+@abbreviation("step_pf")
+@global_pipeline_config(always_viewable_fields=["partition_filter"])
 @dataclass(frozen=True)
-class StepWellFilterConfig(WellFilterConfig):
+class StepPartitionFilterConfig(PartitionFilterConfig):
     """Step-policy filter inheriting the broader pipeline execution domain."""
 
     # Override defaults for step-level configurations
-    # well_filter: Optional[Union[List[str], str, int]] = 1
+    # partition_filter: Optional[Union[List[str], str, int]] = 1
     pass
 
 
 @abbreviation("mat")
 @global_pipeline_config(preview_label="MAT", always_viewable_fields=["sub_dir"])
 @dataclass(frozen=True)
-class StepMaterializationConfig(Enableable, StepWellFilterConfig, PathPlanningConfig):
+class StepMaterializationConfig(Enableable, StepPartitionFilterConfig, PathPlanningConfig):
     """
     Configuration for persistent copies of a step's ordinary main-flow result.
 
@@ -620,18 +617,18 @@ class StepMaterializationConfig(Enableable, StepWellFilterConfig, PathPlanningCo
     Their persistence is owned by artifact output and compiled runtime-artifact
     materialization plans rather than this main-flow checkpoint config.
 
-    Uses multiple inheritance from PathPlanningConfig and StepWellFilterConfig.
+    Uses multiple inheritance from PathPlanningConfig and StepPartitionFilterConfig.
 
     The 'sub_dir' field is conditionally shown in list item previews via always_viewable_fields.
     Since this config is Enableable, the sub_dir will only appear when enabled=True.
     This means disabled materialization configs won't clutter the preview with sub_dir.
     """
 
-    show_preview_without_well_filter: ClassVar[bool] = True
+    show_preview_without_partition_filter: ClassVar[bool] = True
 
     # Override sub_dir for materialization-specific default
     sub_dir: Annotated[str, abbreviation("subdir")] = "checkpoints"
-    """Relative directory inside the output plate root for this step checkpoint."""
+    """Relative directory inside the output dataset root for this step checkpoint."""
 
     enabled: Annotated[bool, abbreviation("enabled")] = False
     """Persist this step's ordinary main-flow result when enabled.
@@ -641,18 +638,18 @@ class StepMaterializationConfig(Enableable, StepWellFilterConfig, PathPlanningCo
     """
 
     @classmethod
-    def well_filter_inheritance_branch(cls) -> type[WellFilterConfig]:
+    def partition_filter_inheritance_branch(cls) -> type[PartitionFilterConfig]:
         """Keep checkpoint selection on the step-filter branch, not final output."""
-        return StepWellFilterConfig
+        return StepPartitionFilterConfig
 
 
 @abbreviation("stream")
-@global_pipeline_config(always_viewable_fields=["well_filter"])
+@global_pipeline_config(always_viewable_fields=["partition_filter"])
 @dataclass(frozen=True)
-class StreamingDefaults(Enableable, StepWellFilterConfig):
+class StreamingDefaults(Enableable, StepPartitionFilterConfig):
     """Default configuration for streaming to visualizers.
 
-    An unset viewer well filter inherits broader well scope. A viewer override
+    An unset viewer partition filter inherits the broader scope. A viewer override
     can narrow emission, but it cannot undo loading or processing already chosen
     by the pipeline execution-domain filter.
 
@@ -706,7 +703,7 @@ class StreamingDefaults(Enableable, StepWellFilterConfig):
 class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
     """Abstract base configuration for streaming to visualizers.
 
-    Uses multiple inheritance from StepWellFilterConfig and StreamingDefaults.
+    Uses multiple inheritance from StepPartitionFilterConfig and StreamingDefaults.
     Inherited fields (persistent, host, port, transport_mode) are automatically set to None
     by @global_pipeline_config(inherit_as_none=True), enabling polymorphic access without
     type-specific attribute names.
@@ -715,7 +712,7 @@ class StreamingConfig(StreamingDefaults, ABC, metaclass=StreamingConfigMeta):
     __registry__: ClassVar[dict[type[ViewerFamily], type["StreamingConfig"]]]
     __registry_key__ = "viewer_family"
     viewer_family: ClassVar[type[ViewerFamily]]
-    show_preview_without_well_filter: ClassVar[bool] = True
+    show_preview_without_partition_filter: ClassVar[bool] = True
 
     @property
     @abstractmethod

@@ -715,12 +715,12 @@ def test_admitted_request_config_survives_next_live_global_context(
     authored = PipelineConfig(dataset_source=OpenHCSDatasetSource)
     ensure_global_config_context(
         GlobalPipelineConfig,
-        GlobalPipelineConfig(num_workers=2, auto_add_output_plate_to_plate_manager=True),
+        GlobalPipelineConfig(num_workers=2, auto_add_output_dataset=True),
     )
     admitted = ObjectState(authored).to_saved_resolved_object()
     ensure_global_config_context(
         GlobalPipelineConfig,
-        GlobalPipelineConfig(num_workers=4, auto_add_output_plate_to_plate_manager=False),
+        GlobalPipelineConfig(num_workers=4, auto_add_output_dataset=False),
     )
     received = {}
     monkeypatch.setattr(
@@ -764,7 +764,7 @@ def test_admitted_request_config_survives_next_live_global_context(
     orchestrator.pipeline_config = PipelineConfig(dataset_source=OpenHCSDatasetSource, num_workers=3)
     next_request = orchestrator.get_effective_config()
     assert next_request.num_workers == 3
-    assert next_request.auto_add_output_plate_to_plate_manager is False
+    assert next_request.auto_add_output_dataset is False
     assert admitted.num_workers == 2
 
 

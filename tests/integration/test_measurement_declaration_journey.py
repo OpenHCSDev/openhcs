@@ -282,14 +282,14 @@ def _execute(path, document, bundle):
     orchestrator = PipelineOrchestrator(
         path, pipeline_config=document.pipeline_config
     ).initialize()
-    return orchestrator.execute_compiled_plate(
+    return orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
         max_workers=1,
         runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
         progress_queue=AgentProgressQueue(),
         progress_context={
             "execution_id": "measurement-contract-synthetic",
-            "plate_id": str(path),
+            "subject_id": str(path),
             "axis_id": "",
         },
     )

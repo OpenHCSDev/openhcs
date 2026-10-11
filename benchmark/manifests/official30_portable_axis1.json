@@ -1,5 +1,5 @@
 {
-  "default_well_filter": 1,
+  "default_partition_filter": 1,
   "cases": [
     {
       "cellprofiler_timeout_seconds": 900.0,

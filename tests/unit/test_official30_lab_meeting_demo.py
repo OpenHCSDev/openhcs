@@ -112,10 +112,10 @@ def test_official30_lab_meeting_contributions_import_manifest_owned_cases(
             contribution.presentation_identity.step_name
         ]
         assert (
-            contribution.pipeline_config.well_filter_config.well_filter
+            contribution.pipeline_config.partition_filter_config.partition_filter
             == expected_axis_filter
         )
-        assert contribution.pipeline_config.path_planning_config.well_filter == 0
+        assert contribution.pipeline_config.path_planning_config.partition_filter == 0
         assert contribution.pipeline_config.materialize_runtime_artifacts is True
         assert contribution.prepare is None
         request = preparation_requests.pop(0)

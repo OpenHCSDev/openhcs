@@ -589,7 +589,7 @@ class Session:
         if existing is not None:
             return existing
         orchestrator = PipelineOrchestrator(
-            plate_path=scope.root,
+            dataset_root=scope.root,
             storage_registry=_create_storage_registry(),
             selected_pipeline_path=scope.pipeline_path,
             transport_config=self.client.config,
@@ -1254,7 +1254,7 @@ class Session:
         try:
             self.set_dataset_state(scope_id, status.orchestrator_state)
             self.publish(StatusReported(f"{status.status_prefix} {scope_id}"))
-            if status.auto_add_output_plate:
+            if status.auto_add_output_dataset:
                 if self.execution_state.allows_auto_add_output:
                     self._add_output_dataset(scope_id, completion)
                 else:
@@ -1282,13 +1282,13 @@ class Session:
     ) -> None:
         """Add the computed output root as a dataset when the run asks for it."""
 
-        if completion.auto_add_output_plate_to_plate_manager is None:
+        if completion.auto_add_output_dataset is None:
             raise RuntimeError(
                 "Missing auto-add flag in completion result; expected from compile context."
             )
-        if not completion.auto_add_output_plate_to_plate_manager:
+        if not completion.auto_add_output_dataset:
             return
-        output_root = completion.output_plate_root
+        output_root = completion.output_dataset_root
         if not output_root:
             return
         output_root = str(output_root)
@@ -1347,7 +1347,7 @@ class Session:
             return
 
         self.require_execution_allowed((scope_id,))
-        debug_session = DebugSession.create(plate_id=scope_id, command_type=command_type)
+        debug_session = DebugSession.create(subject_id=scope_id, command_type=command_type)
         self.debug_sessions[scope_id] = debug_session
         root = DatasetScope.parse(scope_id).root
         snapshot_root = (root if root.is_dir() else root.parent) / ".openhcs_debug"
@@ -1384,7 +1384,7 @@ class Session:
         self,
         notification: DebugSnapshotAvailableNotification,
     ) -> None:
-        scope_id = notification.progress_event.plate_id
+        scope_id = notification.progress_event.subject_id
         if notification.snapshot is not None:
             retained = tuple(
                 snapshot
@@ -1421,7 +1421,7 @@ class Session:
 
         event = notification.progress_event
         context = notification.debug_context
-        scope_id = event.plate_id
+        scope_id = event.subject_id
         active = self.debug_sessions.get(scope_id)
         summary = self.debug_terminal_summaries.get(scope_id)
         if active is not None:
@@ -1442,7 +1442,7 @@ class Session:
         else:
             self.inspected_debug_sessions[scope_id] = DebugSession(
                 debug_session_id=context.debug_session_id,
-                plate_id=scope_id,
+                subject_id=scope_id,
                 axis_id=event.axis_id,
                 snapshot_store_ref=context.snapshot_store_ref,
                 snapshot_store_backend=context.snapshot_store_backend,
@@ -1451,7 +1451,7 @@ class Session:
 
     def _close_debug_session(self, scope_id: str) -> None:
         active = self.debug_sessions.pop(scope_id, None)
-        if active is None or active.plate_id != scope_id:
+        if active is None or active.subject_id != scope_id:
             return
         terminal_status = self.batch.terminal_status(scope_id)
         if terminal_status is None:

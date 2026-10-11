@@ -59,14 +59,14 @@ from openhcs.core.config import (
     LazyNapariStreamingConfig,
     LazySourceBindingsConfig,
     PipelineConfig,
-    WellFilterConfig,
+    PartitionFilterConfig,
 )
 from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 from openhcs.core.dataset_sources.source_bindings_source import SourceBindingsSource
 from openhcs.core.debug import DebugTerminalSummary
 from openhcs.core.execution_state import (
     ExecutionCompletionPayload,
-    ExecutionOutputPlateSummary,
+    ExecutionOutputSummary,
     ManagerExecutionState,
     TerminalExecutionStatus,
 )
@@ -75,7 +75,6 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
 )
@@ -798,7 +797,7 @@ def test_list_refresh_never_resolves_path_configs_and_the_view_resolves_each_onc
         resolutions = []
 
         def counted(orchestrator, **kwargs):
-            resolutions.append(orchestrator.plate_path)
+            resolutions.append(orchestrator.dataset_root)
             return original(orchestrator, **kwargs)
 
         monkeypatch.setattr(PipelineOrchestrator, "get_effective_config", counted)
@@ -835,12 +834,10 @@ def test_progress_from_a_worker_thread_reaches_the_live_row(tmp_path) -> None:
             assert "Pending" in pending.layout.status_prefix
 
             event = ProgressEvent(
-                identity=ProgressIdentity(
-                    execution_id="execution-1",
-                    plate_id=scope_id,
-                    axis_id="A01",
-                    step_name="Segment",
-                ),
+                execution_id="execution-1",
+                subject_id=scope_id,
+                axis_id="A01",
+                step_name="Segment",
                 phase=ProgressPhase.STEP_STARTED,
                 status=ProgressStatus.RUNNING,
                 percent=25.0,
@@ -858,7 +855,7 @@ def test_progress_from_a_worker_thread_reaches_the_live_row(tmp_path) -> None:
 
             deadline = time.monotonic() + 5
             while (
-                gui.session.runtime_projection.get_plate(scope_id, "execution-1")
+                gui.session.runtime_projection.get_subject(scope_id, "execution-1")
                 is None
             ):
                 gui.settle()
@@ -1074,7 +1071,7 @@ def test_clean_code_document_emits_only_the_authored_fiji_override(tmp_path) -> 
             {
                 scope_id: PipelineConfig(
                     fiji_streaming_config=LazyFijiStreamingConfig(
-                        well_filter="333", enabled=False
+                        partition_filter="333", enabled=False
                     ),
                 )
             }
@@ -1096,7 +1093,7 @@ def test_clean_code_document_emits_only_the_authored_fiji_override(tmp_path) -> 
         }
         assert "from openhcs.core.source_bindings import" not in source
         assert "fiji_streaming_config=LazyFijiStreamingConfig(" in source
-        assert "well_filter='333'" in source
+        assert "partition_filter='333'" in source
         assert "enabled=False" in source
         for absent in (
             "napari_streaming_config=",
@@ -1107,7 +1104,7 @@ def test_clean_code_document_emits_only_the_authored_fiji_override(tmp_path) -> 
         fiji = object.__getattribute__(
             restored.per_plate_configs[scope_id], "fiji_streaming_config"
         )
-        assert object.__getattribute__(fiji, "well_filter") == "333"
+        assert object.__getattribute__(fiji, "partition_filter") == "333"
         assert object.__getattribute__(fiji, "enabled") is False
 
 
@@ -1155,24 +1152,24 @@ def test_code_document_keeps_an_authored_dataset_override(tmp_path) -> None:
 
 
 def test_code_document_reads_the_global_config_from_object_state() -> None:
-    initial = GlobalPipelineConfig(well_filter_config=WellFilterConfig(well_filter="A01"))
+    initial = GlobalPipelineConfig(partition_filter_config=PartitionFilterConfig(partition_filter="A01"))
     with caller_session(global_config=initial) as session:
         global_state = _global_state(session)
-        global_state.update_parameter("well_filter_config.well_filter", "A02")
+        global_state.update_parameter("partition_filter_config.partition_filter", "A02")
 
         document = _render(session)
 
-        assert "well_filter='A02'" in document.source
-        assert "well_filter='A01'" not in document.source
+        assert "partition_filter='A02'" in document.source
+        assert "partition_filter='A01'" not in document.source
         assert (
             object.__getattribute__(
-                document.payload.global_pipeline_config.well_filter_config,
-                "well_filter",
+                document.payload.global_pipeline_config.partition_filter_config,
+                "partition_filter",
             )
             == "A02"
         )
         assert (
-            object.__getattribute__(session.global_config.well_filter_config, "well_filter")
+            object.__getattribute__(session.global_config.partition_filter_config, "partition_filter")
             == "A01"
         )
 
@@ -1192,7 +1189,7 @@ def test_a_pipeline_change_clears_stale_compilation_and_terminal_tracking(
                 compile_artifact_id="compile-1",
                 steps=(),
                 inspection=CompiledArtifactInspection(
-                    compile_artifact_id="compile-1", plate_id=scope_id, steps=()
+                    compile_artifact_id="compile-1", subject_id=scope_id, steps=()
                 ),
             ),
         )
@@ -1430,9 +1427,9 @@ def test_a_produced_output_dataset_selects_prepared_replay_once(
             status=TerminalExecutionStatus.COMPLETE,
             execution_id="produced",
             results={},
-            output_plate=ExecutionOutputPlateSummary(
-                output_plate_root=output_root,
-                auto_add_output_plate_to_plate_manager=True,
+            output_dataset=ExecutionOutputSummary(
+                output_dataset_root=output_root,
+                auto_add_output_dataset=True,
             ),
             traceback_text="",
             message="",
@@ -1454,7 +1451,7 @@ def test_a_produced_output_dataset_selects_prepared_replay_once(
                 status=TerminalExecutionStatus.COMPLETE,
                 execution_id="produced-again",
                 results={},
-                output_plate=completion.output_plate,
+                output_dataset=completion.output_dataset,
                 traceback_text="",
                 message="",
             ),
@@ -1473,7 +1470,7 @@ def test_a_standard_run_retires_only_its_targets_debug_summaries(
         for scope_id, status in ((target, "failed"), (other, "complete")):
             session.debug_terminal_summaries[scope_id] = DebugTerminalSummary(
                 debug_session_id=f"debug-{Path(scope_id).name}",
-                plate_id=scope_id,
+                subject_id=scope_id,
                 terminal_status=status,
             )
 

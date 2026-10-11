@@ -48,7 +48,7 @@ payloads only when coordinates are needed.
 
 To display only one step, leave viewer streaming disabled at global and
 pipeline scope and enable ``napari_streaming_config`` or
-``fiji_streaming_config`` only on that ``FunctionStep``. Use its ``well_filter``
+``fiji_streaming_config`` only on that ``FunctionStep``. Use its ``partition_filter``
 to bound the diagnostic run and ``persistent=True`` to keep the detached viewer
 available after completion. Recompile after any change.
 

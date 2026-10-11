@@ -39,7 +39,7 @@ from openhcs.core.config import (
     PathPlanningConfig,
     PipelineConfig,
     VFSConfig,
-    WellFilterConfig,
+    PartitionFilterConfig,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
@@ -132,7 +132,7 @@ def test_openhcs_adapter_preserves_declared_main_flow_output_policy(
 ) -> None:
     base_config = GlobalPipelineConfig(
         path_planning_config=PathPlanningConfig(
-            well_filter=0,
+            partition_filter=0,
             sub_dir="reviewed-images",
         ),
         vfs_config=VFSConfig(intermediate_backend=Backend.DISK),
@@ -153,11 +153,11 @@ def test_openhcs_adapter_preserves_declared_main_flow_output_policy(
     configured = adapter._execution_global_config(
         request,
         output_suffix="_candidate",
-        output_plate_root=tmp_path / "candidate-plate",
+        output_dataset_root=tmp_path / "candidate-plate",
         compilation_debug_config=CompilationDebugConfig(),
     )
 
-    assert configured.path_planning_config.well_filter == 0
+    assert configured.path_planning_config.partition_filter == 0
     assert configured.path_planning_config.sub_dir == "reviewed-images"
     assert configured.path_planning_config.global_output_folder == request.output_dir
     assert configured.path_planning_config.output_dir_suffix == "_candidate"
@@ -328,7 +328,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
                 "execution": self.poll_status(execution_id)["execution"],
                 "status": "complete",
                 "execution_id": execution_id,
-                "results": {"output_plate_root": str(tmp_path)},
+                "results": {"output_dataset_root": str(tmp_path)},
             }
 
         def poll_status(self, execution_id):
@@ -340,7 +340,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
                     "subject_id": "/tmp/execution_plate",
                     "client_address": None,
                     "status": "complete",
-                    "results_summary": {"output_plate_root": str(tmp_path)},
+                    "results_summary": {"output_dataset_root": str(tmp_path)},
                     "start_time": 10.0 if execution_id == "compile-1" else 13.0,
                     "end_time": 12.0 if execution_id == "compile-1" else 17.0,
                 },
@@ -352,12 +352,12 @@ def test_benchmark_executes_pipeline_via_zmq_client(
     )
     timing = PhaseTimingTrace(run_id="run", pipeline_name="pipe", tool="OpenHCS")
     global_config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=1),
+        partition_filter_config=PartitionFilterConfig(partition_filter=1),
     )
 
     execution, source = _execute_pipeline_via_zmq_server(
-        plate_id="/tmp/plate",
-        execution_plate_id="/tmp/execution_plate",
+        subject_id="/tmp/plate",
+        execution_subject_id="/tmp/execution_plate",
         selected_pipeline_path="/tmp/pipeline.cppipe",
         pipeline_steps=_public_steps(),
         global_config=global_config,
@@ -369,7 +369,7 @@ def test_benchmark_executes_pipeline_via_zmq_client(
 
     assert execution.execution_id == "exec-1"
     assert execution.output_roots == (tmp_path,)
-    assert execution.results_summary == {"output_plate_root": str(tmp_path)}
+    assert execution.results_summary == {"output_dataset_root": str(tmp_path)}
     assert (
         execution.endpoint_provenance.endpoint_openhcs_version
         == OPENHCS_ENDPOINT_APPLICATION.version
@@ -443,8 +443,8 @@ def test_benchmark_rejects_incompatible_execution_endpoint(
 
     with pytest.raises(ToolExecutionError, match="0.8.4"):
         _execute_pipeline_via_zmq_server(
-            plate_id="/tmp/plate",
-            execution_plate_id="/tmp/execution_plate",
+            subject_id="/tmp/plate",
+            execution_subject_id="/tmp/execution_plate",
             selected_pipeline_path="/tmp/pipeline.cppipe",
             pipeline_steps=_public_steps(),
             global_config=GlobalPipelineConfig(),
@@ -572,29 +572,29 @@ def test_openhcs_watchdog_reports_progress_inactivity(
 def test_benchmark_submission_matches_pyqt_submission_payload() -> None:
     steps = _public_steps()
     global_config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=1),
+        partition_filter_config=PartitionFilterConfig(partition_filter=1),
     )
     pipeline_config = PipelineConfig()
-    plate_id = "/tmp/plate#openhcs-cppipe=pipeline.cppipe"
-    execution_plate_id = "/tmp/plate/.openhcs/source_bindings/pipeline"
+    subject_id = "/tmp/plate#openhcs-cppipe=pipeline.cppipe"
+    execution_subject_id = "/tmp/plate/.openhcs/source_bindings/pipeline"
     selected_pipeline_path = "/tmp/plate/pipeline.cppipe"
 
     benchmark_submission = OpenHCSExecutionSubmission(
-        plate_id=plate_id,
+        subject_id=subject_id,
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=steps
         ),
         global_config=global_config,
-        execution_plate_id=execution_plate_id,
+        execution_subject_id=execution_subject_id,
         selected_pipeline_path=selected_pipeline_path,
         config_params={
             "runtime_observation_export_path": "/tmp/runtime_observation.pkl",
         },
     )
     ui_request = DatasetPipelineRequest(
-        scope=DatasetScope.parse(plate_id),
+        scope=DatasetScope.parse(subject_id),
         name="pipeline",
-        execution_root=execution_plate_id,
+        execution_root=execution_subject_id,
         pipeline_path=selected_pipeline_path,
         steps=list(steps),
         pipeline_config=pipeline_config,

@@ -102,7 +102,7 @@ class ArtifactPlanViewRow:
 class ArtifactPlanViewModel:
     """Renderer-independent view derived only from compiled plans and runtime facts."""
 
-    plate_id: str | None = None
+    subject_id: str | None = None
     step_index: int | None = None
     rows: tuple[ArtifactPlanViewRow, ...] = ()
 
@@ -115,11 +115,11 @@ class ArtifactPlanViewModel:
     ) -> "ArtifactPlanViewModel":
         if inspection is None or step_index is None:
             return cls(
-                plate_id=None if inspection is None else inspection.plate_id,
+                subject_id=None if inspection is None else inspection.subject_id,
                 step_index=step_index,
             )
         return cls(
-            plate_id=inspection.plate_id,
+            subject_id=inspection.subject_id,
             step_index=step_index,
             rows=tuple(
                 row
@@ -179,7 +179,7 @@ class ArtifactPlanViewModel:
         self,
         notification: RuntimeArtifactAvailableNotification,
     ) -> "ArtifactPlanViewModel":
-        if self.plate_id is None or notification.event.plate_id != self.plate_id:
+        if self.subject_id is None or notification.event.subject_id != self.subject_id:
             return self
         rows = self.rows
         for address in notification.payload.addresses:
@@ -306,7 +306,7 @@ class ArtifactPlanViewWidget(QWidget):
         rows = self._model.rows
         if self._model.step_index is None:
             message = "No pipeline step selected."
-        elif self._model.plate_id is None:
+        elif self._model.subject_id is None:
             message = "No compiled artifact plan."
         elif not rows:
             message = "Compiled step has no artifact contracts."

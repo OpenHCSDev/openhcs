@@ -8,11 +8,11 @@ from pyqt_reactive.utils.preview_formatters import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.config import WellFilterConfig
+    from openhcs.core.config import PartitionFilterConfig
 
 
-def format_well_filter_config(
-    config: "WellFilterConfig",
+def format_partition_filter_config(
+    config: "PartitionFilterConfig",
     _config_attr: str,
 ) -> str | None:
     """Project one well-filter declaration into its compact preview text."""
@@ -23,13 +23,13 @@ def format_well_filter_config(
     if label is None:
         raise TypeError(f"{type(config).__name__} has no preview-label declaration")
 
-    well_filter = config.well_filter
-    if well_filter is None:
-        return label.label if config.show_preview_without_well_filter else None
+    partition_filter = config.partition_filter
+    if partition_filter is None:
+        return label.label if config.show_preview_without_partition_filter else None
 
-    if isinstance(well_filter, list):
-        well_display = str(len(well_filter))
+    if isinstance(partition_filter, list):
+        well_display = str(len(partition_filter))
     else:
-        well_display = str(well_filter)
+        well_display = str(partition_filter)
 
-    return f"{label.label}{config.well_filter_mode.preview_prefix}{well_display}"
+    return f"{label.label}{config.partition_filter_mode.preview_prefix}{well_display}"

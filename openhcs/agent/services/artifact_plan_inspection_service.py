@@ -55,14 +55,13 @@ class AgentProgressQueue(ProgressQueue):
     def __init__(self) -> None:
         self.events: list[ProgressEvent] = []
 
-    def put(self, event: dict) -> None:
-        progress = ProgressEvent.from_dict(event)
-        self.events.append(progress)
+    def put(self, event: ProgressEvent) -> None:
+        self.events.append(event)
         EndpointStartupStatus(
             EndpointStartupPhase.PREPARING_CAPABILITIES,
-            f"{progress.phase.value}: {progress.status.value}: "
-            f"{progress.axis_id}: {progress.step_name}: "
-            f"{progress.completed}/{progress.total}",
+            f"{event.phase.value}: {event.status.value}: "
+            f"{event.axis_id}: {event.step_name}: "
+            f"{event.completed}/{event.total}",
         ).publish()
 
 
@@ -121,7 +120,7 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
             request.global_pipeline_config,
         )
         orchestrator = PipelineOrchestrator(
-            plate_path=request.plate,
+            dataset_root=request.plate,
             pipeline_config=request.pipeline_document.pipeline_config,
             progress_callback=None,
         )
@@ -138,7 +137,7 @@ class InProcessCompileInspectionGateway(CompileInspectionGatewayABC):
         try:
             execution_bundle = orchestrator.compile_pipelines(
                 pipeline_definition=request.pipeline_document.pipeline_steps,
-                well_filter=list(request.axis_filter) or None,
+                partition_values=list(request.axis_filter) or None,
                 is_zmq_execution=True,
             )
             EndpointStartupStatus(

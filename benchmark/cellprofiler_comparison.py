@@ -38,7 +38,7 @@ from benchmark.runner import (
     run_cellprofiler_cppipe_parity,
 )
 from benchmark.timing import BenchmarkPhase, additive_phase_total_seconds
-from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
+from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
 from benchmark.equivalence.outputs import image_paths, table_paths
 
 if TYPE_CHECKING:
@@ -441,7 +441,7 @@ class CellProfilerComparisonCase:
     equivalence_reference_output_dir: Path | None = None
     cellprofiler_timeout_seconds: float | None = None
     pipeline_params: Mapping[str, object] = field(default_factory=dict)
-    well_filter_config: WellFilterConfig | None = None
+    partition_filter_config: PartitionFilterConfig | None = None
 
     @property
     def resolved_dataset_id(self) -> str:
@@ -453,13 +453,13 @@ class CellProfilerComparisonCase:
     ) -> GlobalPipelineConfig:
         """Apply the case's declared well scope unless the caller supplied one."""
         if (
-            self.well_filter_config is None
-            or global_config.well_filter_config.well_filter is not None
+            self.partition_filter_config is None
+            or global_config.partition_filter_config.partition_filter is not None
         ):
             return global_config
         return replace(
             global_config,
-            well_filter_config=self.well_filter_config,
+            partition_filter_config=self.partition_filter_config,
         )
 
 
@@ -690,9 +690,9 @@ def load_comparison_cases(
         raise ValueError(
             "Benchmark manifest default_pipeline_params must be an object."
         )
-    default_well_filter_config = _manifest_well_filter_config(
+    default_partition_filter_config = _manifest_partition_filter_config(
         payload,
-        "default_well_filter",
+        "default_partition_filter",
     )
     cases: list[CellProfilerComparisonCase] = []
     for raw_case in raw_cases:
@@ -743,10 +743,10 @@ def load_comparison_cases(
                     **dict(default_pipeline_params),
                     **dict(raw_pipeline_params),
                 },
-                well_filter_config=(
-                    _manifest_well_filter_config(raw_case, "well_filter")
-                    if "well_filter" in raw_case
-                    else default_well_filter_config
+                partition_filter_config=(
+                    _manifest_partition_filter_config(raw_case, "partition_filter")
+                    if "partition_filter" in raw_case
+                    else default_partition_filter_config
                 ),
             )
         )
@@ -777,31 +777,31 @@ def select_comparison_cases(
     return tuple(case for case in available if case.name in selected)
 
 
-def _manifest_well_filter_config(
+def _manifest_partition_filter_config(
     payload: Mapping[str, object],
     key: str,
-) -> WellFilterConfig | None:
+) -> PartitionFilterConfig | None:
     """Parse one public well-filter value from a benchmark manifest."""
     if key not in payload:
         return None
     raw_value = payload.get(key)
     if raw_value is None:
-        return WellFilterConfig(well_filter=None)
+        return PartitionFilterConfig(partition_filter=None)
     if isinstance(raw_value, bool):
         raise ValueError(f"Benchmark manifest {key} must not be boolean.")
     if isinstance(raw_value, int):
         if raw_value <= 0:
             raise ValueError(f"Benchmark manifest {key} must be positive.")
-        well_filter: int | str | list[str] = raw_value
+        partition_filter: int | str | list[str] = raw_value
     elif isinstance(raw_value, str):
-        well_filter = raw_value
+        partition_filter = raw_value
     elif isinstance(raw_value, Sequence) and not isinstance(raw_value, (str, bytes)):
-        well_filter = [str(value) for value in raw_value]
+        partition_filter = [str(value) for value in raw_value]
     else:
         raise ValueError(
             f"Benchmark manifest {key} must be an integer, string, list, or null."
         )
-    return WellFilterConfig(well_filter=well_filter)
+    return PartitionFilterConfig(partition_filter=partition_filter)
 
 
 def run_comparison_suite(

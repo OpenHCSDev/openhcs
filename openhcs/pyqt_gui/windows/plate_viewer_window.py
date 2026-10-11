@@ -66,10 +66,10 @@ class PlateViewerWindow(BaseFormDialog):
         # scope_id for singleton behavior - one viewer per plate
         # Use ::plate_viewer suffix to avoid conflicts with ConfigWindow (which uses just plate_path)
         self.scope_id = (
-            f"{orchestrator.plate_path}::plate_viewer" if orchestrator else None
+            f"{orchestrator.dataset_root}::plate_viewer" if orchestrator else None
         )
         # Store plate path for styling (without suffix) so border matches plate's ConfigWindow
-        self._style_scope_id = str(orchestrator.plate_path) if orchestrator else None
+        self._style_scope_id = str(orchestrator.dataset_root) if orchestrator else None
 
         # CRITICAL: Initialize scope-based styling BEFORE creating child widgets
         # This sets self._scope_accent_color for use in this class
@@ -100,7 +100,7 @@ class PlateViewerWindow(BaseFormDialog):
         self._metadata_viewer_loaded = False
         self._metadata_tab_index = -1
 
-        plate_name = orchestrator.plate_path.name if orchestrator else "Unknown"
+        plate_name = orchestrator.dataset_root.name if orchestrator else "Unknown"
         self.setWindowTitle(f"Plate Viewer - {plate_name}")
         self.setMinimumSize(800, 600)
         self.resize(1200, 800)
@@ -148,8 +148,8 @@ class PlateViewerWindow(BaseFormDialog):
 
         # Show plate name with full path in parentheses, with elision (title on right of tabs)
         if self.orchestrator:
-            plate_name = self.orchestrator.plate_path.name
-            full_path = str(self.orchestrator.plate_path)
+            plate_name = self.orchestrator.dataset_root.name
+            full_path = str(self.orchestrator.dataset_root)
             title_text = f"Plate: {plate_name} ({full_path})"
         else:
             title_text = "Plate: Unknown"
@@ -308,7 +308,7 @@ class PlateViewerWindow(BaseFormDialog):
 
         try:
             metadata_handler = self.orchestrator.microscope_handler.metadata_handler
-            plate_path = self.orchestrator.plate_path
+            plate_path = self.orchestrator.dataset_root
             document = metadata_handler.build_metadata_view_document(
                 plate_path,
                 self.orchestrator.microscope_handler,
@@ -341,7 +341,7 @@ class PlateViewerWindow(BaseFormDialog):
 
         try:
             # Find results directories from the metadata handler's format contract.
-            plate_path = self.orchestrator.plate_path
+            plate_path = self.orchestrator.dataset_root
             metadata_handler = self.orchestrator.microscope_handler.metadata_handler
             results_dirs = [
                 result_directory.path

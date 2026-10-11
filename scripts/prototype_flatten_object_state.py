@@ -21,15 +21,15 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class WellFilterConfig:
+class PartitionFilterConfig:
     """Base well filter config."""
 
-    well_filter: Optional[int] = None
+    partition_filter: Optional[int] = None
     enabled: bool = True
 
 
 @dataclass
-class StepWellFilterConfig(WellFilterConfig):
+class StepPartitionFilterConfig(PartitionFilterConfig):
     """Step-level well filter config (inherits from base)."""
 
     step_specific_param: Optional[str] = None
@@ -47,7 +47,7 @@ class NapariStreamingConfig:
 class GlobalPipelineConfig:
     """Test global config with nested dataclasses."""
 
-    well_filter_config: Optional[WellFilterConfig] = None
+    partition_filter_config: Optional[PartitionFilterConfig] = None
     napari_streaming_config: Optional[NapariStreamingConfig] = None
     some_top_level_param: str = "default"
 
@@ -57,7 +57,7 @@ class FunctionStep:
     """Function step with nested config."""
 
     name: str = "step"
-    step_well_filter_config: Optional[StepWellFilterConfig] = None
+    step_partition_filter_config: Optional[StepPartitionFilterConfig] = None
     processing_config: Optional[Any] = None
 
 
@@ -82,7 +82,7 @@ class FlatObjectState:
 
         Args:
             obj: Object to extract from
-            prefix: Current path prefix (e.g., 'well_filter_config')
+            prefix: Current path prefix (e.g., 'partition_filter_config')
         """
         if not is_dataclass(obj):
             return
@@ -159,7 +159,7 @@ class FlatObjectState:
         """Recursively reconstruct dataclass from flat parameters.
 
         Args:
-            prefix: Current path prefix (e.g., 'well_filter_config')
+            prefix: Current path prefix (e.g., 'partition_filter_config')
 
         Returns:
             Reconstructed dataclass instance
@@ -213,7 +213,7 @@ class FlatObjectState:
         """Update a parameter value.
 
         Args:
-            dotted_path: Full dotted path (e.g., 'well_filter_config.well_filter')
+            dotted_path: Full dotted path (e.g., 'partition_filter_config.partition_filter')
             value: New value
         """
         if dotted_path not in self.parameters:
@@ -256,7 +256,7 @@ def test_extraction():
 
     # Create a test instance with nested configs
     config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=2, enabled=True),
+        partition_filter_config=PartitionFilterConfig(partition_filter=2, enabled=True),
         napari_streaming_config=NapariStreamingConfig(window_size=20),
         some_top_level_param="custom",
     )
@@ -276,8 +276,8 @@ def test_extraction():
 
     # Validate expected paths exist
     expected_paths = [
-        "well_filter_config.well_filter",
-        "well_filter_config.enabled",
+        "partition_filter_config.partition_filter",
+        "partition_filter_config.enabled",
         "napari_streaming_config.window_size",
         "napari_streaming_config.buffer_size",
         "some_top_level_param",
@@ -297,7 +297,7 @@ def test_reconstruction():
 
     # Create original
     original = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=2, enabled=True),
+        partition_filter_config=PartitionFilterConfig(partition_filter=2, enabled=True),
         napari_streaming_config=NapariStreamingConfig(window_size=20),
         some_top_level_param="custom",
     )
@@ -316,11 +316,11 @@ def test_reconstruction():
     # Verify equality
     assert reconstructed.some_top_level_param == original.some_top_level_param
     assert (
-        reconstructed.well_filter_config.well_filter
-        == original.well_filter_config.well_filter
+        reconstructed.partition_filter_config.partition_filter
+        == original.partition_filter_config.partition_filter
     )
     assert (
-        reconstructed.well_filter_config.enabled == original.well_filter_config.enabled
+        reconstructed.partition_filter_config.enabled == original.partition_filter_config.enabled
     )
     assert (
         reconstructed.napari_streaming_config.window_size
@@ -337,27 +337,27 @@ def test_update_and_invalidation():
     print("=" * 80)
 
     config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=2),
+        partition_filter_config=PartitionFilterConfig(partition_filter=2),
     )
 
     state = FlatObjectState(config)
 
     # First reconstruction - should compute
     obj1 = state.to_object()
-    print(f"\nFirst call: {obj1.well_filter_config.well_filter}")
+    print(f"\nFirst call: {obj1.partition_filter_config.partition_filter}")
 
     # Second call - should use cache
     obj2 = state.to_object()
-    print(f"Second call (cached): {obj2.well_filter_config.well_filter}")
+    print(f"Second call (cached): {obj2.partition_filter_config.partition_filter}")
     assert obj1 is obj2, "Should return same cached object"
 
     # Update parameter - should invalidate cache
-    state.update_parameter("well_filter_config.well_filter", 5)
+    state.update_parameter("partition_filter_config.partition_filter", 5)
 
     # Third call - should recompute
     obj3 = state.to_object()
-    print(f"After update: {obj3.well_filter_config.well_filter}")
-    assert obj3.well_filter_config.well_filter == 5
+    print(f"After update: {obj3.partition_filter_config.partition_filter}")
+    assert obj3.partition_filter_config.partition_filter == 5
     assert obj3 is not obj1, "Should create new object after cache invalidation"
 
     print("\n✓ Cache invalidation working correctly!")
@@ -369,11 +369,11 @@ def test_type_based_invalidation():
     print("TEST 4: Type-Based Invalidation (Sibling Inheritance)")
     print("=" * 80)
 
-    # Create a FunctionStep with StepWellFilterConfig
+    # Create a FunctionStep with StepPartitionFilterConfig
     step = FunctionStep(
         name="my_step",
-        step_well_filter_config=StepWellFilterConfig(
-            well_filter=3, enabled=False, step_specific_param="test"
+        step_partition_filter_config=StepPartitionFilterConfig(
+            partition_filter=3, enabled=False, step_specific_param="test"
         ),
     )
 
@@ -383,15 +383,15 @@ def test_type_based_invalidation():
     for path in sorted(state.parameters.keys()):
         print(f"  {path}")
 
-    # Simulate: WellFilterConfig.well_filter changed in another scope
-    # Should invalidate StepWellFilterConfig.well_filter (sibling inheritance)
-    print("\nInvalidating WellFilterConfig.well_filter...")
-    state.invalidate_by_type_and_field(WellFilterConfig, "well_filter")
+    # Simulate: PartitionFilterConfig.partition_filter changed in another scope
+    # Should invalidate StepPartitionFilterConfig.partition_filter (sibling inheritance)
+    print("\nInvalidating PartitionFilterConfig.partition_filter...")
+    state.invalidate_by_type_and_field(PartitionFilterConfig, "partition_filter")
 
     print(f"\nInvalid fields: {state._invalid_fields}")
 
-    # Should have invalidated step_well_filter_config.well_filter
-    expected_invalid = "step_well_filter_config.well_filter"
+    # Should have invalidated step_partition_filter_config.partition_filter
+    expected_invalid = "step_partition_filter_config.partition_filter"
     assert (
         expected_invalid in state._invalid_fields
     ), f"Should invalidate {expected_invalid}"
@@ -406,7 +406,7 @@ def test_field_prefix_pattern():
     print("=" * 80)
 
     config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=2, enabled=True),
+        partition_filter_config=PartitionFilterConfig(partition_filter=2, enabled=True),
     )
 
     state = FlatObjectState(config)
@@ -414,8 +414,8 @@ def test_field_prefix_pattern():
     # Simulate root PFM (field_prefix = '')
     root_prefix = ""
 
-    # Simulate nested PFM (field_prefix = 'well_filter_config')
-    nested_prefix = "well_filter_config"
+    # Simulate nested PFM (field_prefix = 'partition_filter_config')
+    nested_prefix = "partition_filter_config"
 
     # Root PFM accesses top-level params
     def get_field_value(prefix: str, field_name: str):
@@ -427,12 +427,12 @@ def test_field_prefix_pattern():
     print(f"Root PFM accessing 'some_top_level_param': {top_level_value}")
 
     # Test nested access
-    well_filter_value = get_field_value(nested_prefix, "well_filter")
+    partition_filter_value = get_field_value(nested_prefix, "partition_filter")
     enabled_value = get_field_value(nested_prefix, "enabled")
-    print(f"Nested PFM accessing 'well_filter': {well_filter_value}")
+    print(f"Nested PFM accessing 'partition_filter': {partition_filter_value}")
     print(f"Nested PFM accessing 'enabled': {enabled_value}")
 
-    assert well_filter_value == 2
+    assert partition_filter_value == 2
     assert enabled_value == True
 
     print("\n✓ Field prefix pattern works correctly!")
@@ -446,8 +446,8 @@ def test_none_handling():
 
     # Create config with some None values (lazy)
     config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(
-            well_filter=None, enabled=True  # Lazy - should inherit
+        partition_filter_config=PartitionFilterConfig(
+            partition_filter=None, enabled=True  # Lazy - should inherit
         ),
         some_top_level_param="custom",
     )
@@ -463,13 +463,13 @@ def test_none_handling():
 
     print("\nReconstructed object:")
     print(
-        f"  well_filter_config.well_filter: {reconstructed.well_filter_config.well_filter}"
+        f"  partition_filter_config.partition_filter: {reconstructed.partition_filter_config.partition_filter}"
     )
-    print(f"  well_filter_config.enabled: {reconstructed.well_filter_config.enabled}")
+    print(f"  partition_filter_config.enabled: {reconstructed.partition_filter_config.enabled}")
 
-    # The reconstructed object should have None for well_filter (not set in filtered_fields)
-    assert reconstructed.well_filter_config.well_filter is None
-    assert reconstructed.well_filter_config.enabled is True
+    # The reconstructed object should have None for partition_filter (not set in filtered_fields)
+    assert reconstructed.partition_filter_config.partition_filter is None
+    assert reconstructed.partition_filter_config.enabled is True
 
     print("\n✓ None handling correct - lazy fields preserved!")
 

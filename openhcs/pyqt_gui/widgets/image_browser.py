@@ -394,7 +394,7 @@ class ImageBrowserFileFocusController:
         if browser.orchestrator and path.is_absolute():
             try:
                 candidates.append(
-                    str(path.relative_to(browser.orchestrator.plate_path))
+                    str(path.relative_to(browser.orchestrator.dataset_root))
                 )
             except ValueError:
                 pass
@@ -525,7 +525,7 @@ class ImageBrowserWidget(QWidget):
             self._streaming_service_cache = StreamingService(
                 filemanager=self.filemanager,
                 microscope_handler=self.orchestrator.microscope_handler,
-                plate_path=self.orchestrator.plate_path,
+                plate_path=self.orchestrator.dataset_root,
                 transport_config=self.orchestrator.transport_config,
             )
             self._streaming_service_orchestrator = self.orchestrator
@@ -791,13 +791,13 @@ class ImageBrowserWidget(QWidget):
             self.scope_id = None
         else:
             state_parent_scope = self._state_scope_parent_id or str(
-                orchestrator.plate_path
+                orchestrator.dataset_root
             )
             self.scope_id = SCOPE_SEGMENT_SEPARATOR.join(
                 (state_parent_scope, OpenHCSUiWindowId.image_browser)
             )
         parent_state = (
-            ObjectStateRegistry.get_by_scope(str(orchestrator.plate_path))
+            ObjectStateRegistry.get_by_scope(str(orchestrator.dataset_root))
             if orchestrator
             else None
         )
@@ -1267,7 +1267,7 @@ class ImageBrowserWidget(QWidget):
         if not self.orchestrator:
             raise RuntimeError("No orchestrator set")
 
-        plate_path = Path(self.orchestrator.plate_path)
+        plate_path = Path(self.orchestrator.dataset_root)
 
         # Resolve backend
         read_backend = self.orchestrator.microscope_handler.get_primary_backend(
@@ -1555,7 +1555,7 @@ class ImageBrowserWidget(QWidget):
         if not self.orchestrator:
             return []
 
-        plate_path = self.orchestrator.plate_path
+        plate_path = self.orchestrator.dataset_root
 
         # If no folder selected or root selected, we're at plate root
         if current_folder is None:

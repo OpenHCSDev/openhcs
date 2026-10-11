@@ -191,8 +191,8 @@ def _submission(
         plate_root,
     )
     return OpenHCSExecutionSubmission(
-        plate_id=plate_root,
-        execution_plate_id=plate_root,
+        subject_id=plate_root,
+        execution_subject_id=plate_root,
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
         ),
@@ -274,7 +274,7 @@ def test_code_mode_and_zmq_wire_preserve_mixed_store_sources(
 
     ensure_global_config_context(GlobalPipelineConfig, global_config)
     orchestrator = PipelineOrchestrator(
-        plate_path=tmp_path,
+        dataset_root=tmp_path,
         pipeline_config=pipeline_config,
     ).initialize()
     projection = orchestrator.source_workspace_projection()

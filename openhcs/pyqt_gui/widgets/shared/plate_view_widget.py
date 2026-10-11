@@ -392,7 +392,7 @@ class PlateSelectionController:
         self.update_status()
 
         if sync_to_filter:
-            self.sync_to_well_filter()
+            self.sync_to_partition_filter()
 
         if emit_signal:
             self.view.wells_selected.emit(set())
@@ -409,12 +409,12 @@ class PlateSelectionController:
 
         self.update_status()
         if emit_signal:
-            self.sync_to_well_filter()
+            self.sync_to_partition_filter()
             self.view.wells_selected.emit(self.view.selected_wells.copy())
 
     def publish_selection_change(self) -> None:
         self.update_status()
-        self.sync_to_well_filter()
+        self.sync_to_partition_filter()
         self.view.wells_selected.emit(self.view.selected_wells.copy())
 
     def toggle_well_selection(self, well_id: str, select: bool) -> None:
@@ -494,23 +494,23 @@ class PlateSelectionController:
 
         self.publish_selection_change()
 
-    def sync_to_well_filter(self) -> None:
-        if not self.view.well_filter_widget:
+    def sync_to_partition_filter(self) -> None:
+        if not self.view.partition_filter_widget:
             return
 
         if self.view.selected_wells:
-            self.view.well_filter_widget.set_selected_values(
+            self.view.partition_filter_widget.set_selected_values(
                 self.view.selected_wells,
                 block_signals=True,
             )
         else:
-            self.view.well_filter_widget.select_all(block_signals=True)
+            self.view.partition_filter_widget.select_all(block_signals=True)
 
-    def sync_from_well_filter(self) -> None:
-        if not self.view.well_filter_widget:
+    def sync_from_partition_filter(self) -> None:
+        if not self.view.partition_filter_widget:
             return
 
-        selected_in_filter = self.view.well_filter_widget.get_selected_values()
+        selected_in_filter = self.view.partition_filter_widget.get_selected_values()
         self.select_wells(selected_in_filter, emit_signal=False)
 
     def update_status(self) -> None:
@@ -868,7 +868,7 @@ class PlateViewWidget(QWidget):
         self.selection_rect_widget = None  # Visual rectangle overlay
 
         # Column filter sync
-        self.well_filter_widget = (
+        self.partition_filter_widget = (
             None  # Reference to ColumnFilterWidget for 'well' column
         )
         self.selection_controller = PlateSelectionController(self)
@@ -1269,10 +1269,10 @@ class PlateViewWidget(QWidget):
 
         return super().eventFilter(obj, event)
 
-    def sync_to_well_filter(self):
+    def sync_to_partition_filter(self):
         """Sync current plate view selection to well filter checkboxes."""
-        self.selection_controller.sync_to_well_filter()
+        self.selection_controller.sync_to_partition_filter()
 
-    def sync_from_well_filter(self):
+    def sync_from_partition_filter(self):
         """Sync well filter checkbox selection to plate view."""
-        self.selection_controller.sync_from_well_filter()
+        self.selection_controller.sync_from_partition_filter()

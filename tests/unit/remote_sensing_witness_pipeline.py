@@ -189,16 +189,16 @@ def run_pipeline(root: Path, output_root: Path) -> dict:
         ).initialize()
         compiled = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=list(SCENES),
+            partition_values=list(SCENES),
             enable_visualizer_override=False,
         )
-        results = orchestrator.execute_compiled_plate(
+        results = orchestrator.execute_compiled_bundle(
             execution_bundle=compiled,
             max_workers=1,
             progress_queue=queue,
             progress_context={
                 "execution_id": str(root),
-                "plate_id": str(root),
+                "subject_id": str(root),
                 "axis_id": "",
             },
         )
@@ -209,8 +209,8 @@ def run_pipeline(root: Path, output_root: Path) -> dict:
 
     from openhcs.core.config import GlobalPipelineConfig as Config
 
-    output_plate = next(output_root.iterdir())
-    metadata = json.loads((output_plate / "openhcs_metadata.json").read_text())
+    output_dataset = next(output_root.iterdir())
+    metadata = json.loads((output_dataset / "openhcs_metadata.json").read_text())
     return {
         "source_type": type(orchestrator.microscope_handler).__name__,
         "is_kernel_source": isinstance(
@@ -223,12 +223,12 @@ def run_pipeline(root: Path, output_root: Path) -> dict:
             if not result.is_success()
         },
         "outputs": sorted(
-            path.relative_to(output_plate).as_posix()
-            for path in output_plate.rglob("*.tif")
+            path.relative_to(output_dataset).as_posix()
+            for path in output_dataset.rglob("*.tif")
         ),
         "output_maxima": {
             path.name: int(tifffile.imread(path).max())
-            for path in output_plate.rglob("*.tif")
+            for path in output_dataset.rglob("*.tif")
         },
         "output_subdirectories": {
             name: sorted(record) for name, record in metadata["subdirectories"].items()
@@ -238,7 +238,7 @@ def run_pipeline(root: Path, output_root: Path) -> dict:
         "measurement_headers": sorted(
             {
                 path.read_text().splitlines()[0]
-                for path in output_plate.rglob("*cell_counts*.csv")
+                for path in output_dataset.rglob("*cell_counts*.csv")
             }
         ),
         "loaded_domain_modules": sorted(

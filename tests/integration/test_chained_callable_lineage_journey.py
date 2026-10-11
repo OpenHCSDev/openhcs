@@ -133,14 +133,14 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
     orchestrator = PipelineOrchestrator(
         plate, pipeline_config=document.pipeline_config,
     ).initialize()
-    results = orchestrator.execute_compiled_plate(
+    results = orchestrator.execute_compiled_bundle(
         execution_bundle=bundle,
         max_workers=1,
         runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
         progress_queue=AgentProgressQueue(),
         progress_context={
             "execution_id": "chained-public-callable-synthetic",
-            "plate_id": str(plate),
+            "subject_id": str(plate),
             "axis_id": "",
         },
     )

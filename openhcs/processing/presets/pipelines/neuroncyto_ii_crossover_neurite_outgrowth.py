@@ -33,7 +33,7 @@ from openhcs.core.config import (
     LazyNapariStreamingConfig,
     LazyPathPlanningConfig,
     LazyProcessingConfig,
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
     PipelineConfig,
 )
 from openhcs.core.source_bindings import (
@@ -127,9 +127,9 @@ def build_neuroncyto_ii_crossover_demo(
     )
     pipeline_config = PipelineConfig(
         dataset_source=SourceBindingsSource,
-        well_filter_config=LazyWellFilterConfig(well_filter=inputs.image_id),
+        partition_filter_config=LazyPartitionFilterConfig(partition_filter=inputs.image_id),
         path_planning_config=LazyPathPlanningConfig(
-            well_filter=0,
+            partition_filter=0,
             global_output_folder=output_root,
         ),
         materialization_results_path=Path("results"),

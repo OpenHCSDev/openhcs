@@ -1961,7 +1961,7 @@ def complete_objective_report() -> dict[str, object]:
             "terminal_status": "complete",
             "compile_state_revision": "compile-r1",
             "execution_state_revision": "run-r1",
-            "output_plate_root": "/output",
+            "output_dataset_root": "/output",
         },
         "measurement_snapshot": {"row_count": 1},
         "results_window": {"entry_count": 1},

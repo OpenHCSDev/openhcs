@@ -31,15 +31,16 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeObservationMode,
 )
 from openhcs.core.orchestrator.cancellation import ExecutionCancellationAuthority
-from openhcs.core.orchestrator.compiled_plate_execution import (
-    CompiledPlateExecutionRequest,
-    execute_compiled_plate_request,
+from openhcs.core.orchestrator.bundle_execution import (
+    BundleExecutionRequest,
+    execute_bundle_request,
 )
 from openhcs.core.debug import (
     DebugExecutionPolicy,
     NoOpDebugExecutionPolicy,
 )
-from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.progress import ProgressExecutionContext, ProgressQueue
+from python_introspect import project_dataclass
 from openhcs.core.viewer_streaming_service import StreamingViewerLifecycle
 from openhcs.runtime.viewer_protocol import ViewerPersistenceMode
 from polystore.filemanager import FileManager
@@ -72,20 +73,20 @@ class PipelineOrchestrator:
     The orchestrator first compiles the pipeline for all specified axis values,
     creating frozen, immutable ProcessingContexts using `compile_plate_for_processing()`.
     Then, it executes the (now stateless) pipeline definition against these contexts,
-    potentially in parallel, using `execute_compiled_plate()`.
+    potentially in parallel, using `execute_compiled_bundle()`.
     """
 
     # ObjectState delegation: when ObjectState stores this orchestrator, extract
     # editable parameters from pipeline_config (a dataclass) instead of the orchestrator.
     # This enables time-travel to track the orchestrator lifecycle while forms edit the config.
     __objectstate_delegate__ = "pipeline_config"
-    _plate_path: Optional[Path] = None
-    _plate_path_frozen: bool = False
+    _dataset_root: Optional[Path] = None
+    _dataset_root_frozen: bool = False
     state: AliasProperty[OrchestratorState] = AliasProperty("_state")
 
     def __init__(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         workspace_path: Optional[Union[str, Path]] = None,
         *,
         pipeline_config: Optional["PipelineConfig"] = None,
@@ -96,7 +97,7 @@ class PipelineOrchestrator:
         transport_config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
     ):
         self._initialize_runtime_identity(
-            plate_path,
+            dataset_root,
             workspace_path,
             pipeline_config=pipeline_config,
             selected_pipeline_path=selected_pipeline_path,
@@ -136,7 +137,7 @@ class PipelineOrchestrator:
         cls,
         execution_bundle: CompiledExecutionBundle,
         *,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         pipeline_config: "PipelineConfig",
         selected_pipeline_path: Union[str, Path, None] = None,
         progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
@@ -151,7 +152,7 @@ class PipelineOrchestrator:
             raise ValueError("Compiled execution lacks its admitted source workspace.")
         orchestrator = cls.__new__(cls)
         orchestrator._initialize_runtime_identity(
-            plate_path,
+            dataset_root,
             source.workspace_path,
             pipeline_config=pipeline_config,
             selected_pipeline_path=selected_pipeline_path,
@@ -163,7 +164,7 @@ class PipelineOrchestrator:
 
     def _initialize_runtime_identity(
         self,
-        plate_path: Union[str, Path],
+        dataset_root: Union[str, Path],
         workspace_path: Optional[Union[str, Path]],
         *,
         pipeline_config: Optional["PipelineConfig"],
@@ -172,7 +173,7 @@ class PipelineOrchestrator:
     ) -> None:
         self._executor_resources = None
         self._execution_cancellation = ExecutionCancellationAuthority()
-        self.execution_id = f"local::{plate_path}"
+        self.execution_id = f"local::{dataset_root}"
         self.transport_config = transport_config
         self._pipeline_config = None
 
@@ -185,16 +186,16 @@ class PipelineOrchestrator:
         # Convert to the immutable execution identity. Source availability is a
         # runtime initialization precondition so declarations can be loaded and
         # edited while their external source is temporarily unavailable.
-        if plate_path:
-            plate_path = Path(plate_path)
-            if not plate_path.is_absolute():
-                raise ValueError(f"Plate path must be absolute: {plate_path}")
+        if dataset_root:
+            dataset_root = Path(dataset_root)
+            if not dataset_root.is_absolute():
+                raise ValueError(f"Plate path must be absolute: {dataset_root}")
 
-        self._plate_path_frozen = False
+        self._dataset_root_frozen = False
 
-        self.plate_path = plate_path
+        self.dataset_root = dataset_root
         self.workspace_path = workspace_path
-        self.source_plate_path = plate_path
+        self.source_dataset_root = dataset_root
         self.input_workspace_preparation_result: (
             InputWorkspacePreparationResult | None
         ) = None
@@ -202,14 +203,14 @@ class PipelineOrchestrator:
             Path(selected_pipeline_path) if selected_pipeline_path is not None else None
         )
 
-        if self.plate_path is None and self.workspace_path is None:
+        if self.dataset_root is None and self.workspace_path is None:
             raise ValueError(
-                "Either plate_path or workspace_path must be provided for PipelineOrchestrator."
+                "Either dataset_root or workspace_path must be provided for PipelineOrchestrator."
             )
 
-        # Freeze plate_path immediately after setting it to prove immutability
-        self._plate_path_frozen = True
-        logger.info(f"🔒 PLATE_PATH FROZEN: {self.plate_path} is now immutable")
+        # Freeze dataset_root immediately after setting it to prove immutability
+        self._dataset_root_frozen = True
+        logger.info(f"🔒 PLATE_PATH FROZEN: {self.dataset_root} is now immutable")
 
     def _initialize_runtime_services(
         self, progress_callback: Optional[Callable[[Dict[str, Any]], None]]
@@ -235,28 +236,36 @@ class PipelineOrchestrator:
         self._visualizers = {}  # Dict[(backend_name, port)] -> visualizer instance
 
     @property
-    def plate_path(self) -> Optional[Path]:
+    def dataset_root(self) -> Optional[Path]:
         """Execution plate path for this orchestrator."""
 
-        return self._plate_path
+        return self._dataset_root
 
-    @plate_path.setter
-    def plate_path(self, value: Optional[Path]) -> None:
+    @dataset_root.setter
+    def dataset_root(self, value: Optional[Path]) -> None:
         """Set plate path until the orchestrator freezes execution identity."""
 
-        if self._plate_path_frozen:
+        if self._dataset_root_frozen:
             import traceback
 
             stack_trace = "".join(traceback.format_stack())
             error_msg = (
-                f"🚫 IMMUTABLE PLATE_PATH VIOLATION: Cannot modify plate_path after freezing!\n"
-                f"Current value: {self._plate_path}\n"
+                f"🚫 IMMUTABLE PLATE_PATH VIOLATION: Cannot modify dataset_root after freezing!\n"
+                f"Current value: {self._dataset_root}\n"
                 f"Attempted new value: {value}\n"
                 f"Stack trace:\n{stack_trace}"
             )
             logger.error(error_msg)
             raise AttributeError(error_msg)
-        self._plate_path = value
+        self._dataset_root = value
+
+    def progress_context(self) -> ProgressExecutionContext:
+        """The execution this orchestrator's progress events report on."""
+
+        return ProgressExecutionContext(
+            execution_id=self.execution_id,
+            subject_id=str(self.dataset_root),
+        )
 
     def get_or_create_visualizer(self, config, vis_config=None):
         """
@@ -326,7 +335,7 @@ class PipelineOrchestrator:
             )
             if self._microscope_handler_rebuild_type is None:
                 self.microscope_handler = shared_context.dataset_source.open(
-                    self.plate_path,
+                    self.dataset_root,
                     filemanager=self.filemanager,
                     source_bindings_config=shared_context.source_bindings_config,
                 )
@@ -335,7 +344,7 @@ class PipelineOrchestrator:
                     filemanager=self.filemanager,
                     source_bindings_config=shared_context.source_bindings_config,
                 )
-                self.microscope_handler.plate_folder = Path(self.plate_path)
+                self.microscope_handler.plate_folder = Path(self.dataset_root)
                 self._microscope_handler_rebuild_type = None
             logger.info(
                 f"Initialized microscope handler: {type(self.microscope_handler).__name__}"
@@ -356,24 +365,24 @@ class PipelineOrchestrator:
                 "An input workspace can only be bound before initialization."
             )
         self.input_workspace_preparation_result = result
-        self.source_plate_path = Path(result.original_source_root)
-        if Path(result.execution_plate_path) == Path(self.plate_path):
+        self.source_dataset_root = Path(result.original_source_root)
+        if Path(result.execution_plate_path) == Path(self.dataset_root):
             return
-        self._rebind_plate_path_for_prepared_workspace(result.execution_plate_path)
+        self._rebind_dataset_root_for_prepared_workspace(result.execution_plate_path)
 
     def source_binding_context(self, logical_plate_id: str) -> SourceBindingContext:
         """Project the current source declaration and workspace owned by this plate."""
 
         if not logical_plate_id:
             raise ValueError("Source-binding context requires a logical plate id.")
-        if self.source_plate_path is None or self.plate_path is None:
+        if self.source_dataset_root is None or self.dataset_root is None:
             raise RuntimeError("Source-binding context requires a bound plate path.")
         if self.pipeline_config is None:
             raise RuntimeError("Source-binding context requires a PipelineConfig.")
         return SourceBindingContext(
             logical_plate_id=logical_plate_id,
-            display_plate_root=self.source_plate_path,
-            execution_plate_path=self.plate_path,
+            display_plate_root=self.source_dataset_root,
+            execution_plate_path=self.dataset_root,
             source_bindings=source_bindings_defaults_to_base(
                 self.pipeline_config.source_bindings_config
             ),
@@ -381,7 +390,7 @@ class PipelineOrchestrator:
             source_backend=Backend.DISK.value,
         )
 
-    def _rebind_plate_path_for_prepared_workspace(
+    def _rebind_dataset_root_for_prepared_workspace(
         self,
         execution_plate_path: Path,
     ) -> None:
@@ -391,19 +400,19 @@ class PipelineOrchestrator:
             raise RuntimeError(
                 "Prepared input workspace can only rebind a CREATED orchestrator."
             )
-        self._rebind_created_plate_path(Path(execution_plate_path))
-        self.execution_id = f"local::{self.plate_path}"
+        self._rebind_created_dataset_root(Path(execution_plate_path))
+        self.execution_id = f"local::{self.dataset_root}"
         logger.info(
             "Prepared input workspace rebound orchestrator execution path to %s",
-            self.plate_path,
+            self.dataset_root,
         )
 
-    def _rebind_created_plate_path(self, execution_plate_path: Path) -> None:
-        self._plate_path_frozen = False
+    def _rebind_created_dataset_root(self, execution_plate_path: Path) -> None:
+        self._dataset_root_frozen = False
         try:
-            self.plate_path = execution_plate_path
+            self.dataset_root = execution_plate_path
         finally:
-            self._plate_path_frozen = True
+            self._dataset_root_frozen = True
 
     def initialize(
         self,
@@ -428,13 +437,13 @@ class PipelineOrchestrator:
             )
             self.initialize_microscope_handler(effective_config)
             self.microscope_handler.source_selection_role().require_available_source(
-                self.plate_path
+                self.dataset_root
             )
 
             # Delegate workspace initialization to microscope handler
             logger.info("Initializing workspace with microscope handler...")
             actual_image_dir = self.microscope_handler.initialize_workspace(
-                self.plate_path, self.filemanager
+                self.dataset_root, self.filemanager
             )
 
             # Use the actual image directory returned by the microscope handler
@@ -455,7 +464,7 @@ class PipelineOrchestrator:
                 logger.debug("Could not log VFS config at init", exc_info=True)
 
             # Set workspace_path based on what the handler returned
-            if actual_image_dir != self.plate_path:
+            if actual_image_dir != self.dataset_root:
                 # Handler created a workspace (or virtual path for OMERO)
                 self.workspace_path = (
                     Path(actual_image_dir).parent
@@ -474,7 +483,7 @@ class PipelineOrchestrator:
             logger.info("Caching component keys and metadata...")
             self.cache_component_keys()
             self.metadata_cache.cache_metadata(
-                self.microscope_handler, self.plate_path, self._component_keys_cache
+                self.microscope_handler, self.dataset_root, self._component_keys_cache
             )
 
             # Ensure complete OpenHCS metadata exists
@@ -511,7 +520,7 @@ class PipelineOrchestrator:
         source_registry = source.filemanager.registry
         for context in contexts:
             if (
-                context.plate_path != self.plate_path
+                context.dataset_root != self.dataset_root
                 or context.input_dir != source.input_dir
                 or context.workspace_path != source.workspace_path
                 or context.microscope_handler is not source.microscope_handler
@@ -532,7 +541,7 @@ class PipelineOrchestrator:
                 "Compiled execution memory backend does not match this runtime."
             )
         source.microscope_handler.source_selection_role().require_available_source(
-            self.plate_path
+            self.dataset_root
         )
         self.registry = dict(source_registry)
         self.filemanager = FileManager(self.registry)
@@ -572,7 +581,7 @@ class PipelineOrchestrator:
 
         # For plates with virtual workspace, metadata is already created by _build_virtual_mapping()
         # We just need to add the component metadata to the existing "." subdirectory
-        subdir_name = get_subdirectory_name(self.input_dir, self.plate_path)
+        subdir_name = get_subdirectory_name(self.input_dir, self.dataset_root)
 
         # Create context using SAME logic as create_context() to get full metadata
         context = self.create_context(
@@ -581,7 +590,7 @@ class PipelineOrchestrator:
 
         # Determine correct backend using handler's logic (virtual_workspace for ImageXpress/Opera, disk for others)
         backend = self.microscope_handler.get_primary_backend(
-            self.plate_path, self.filemanager
+            self.dataset_root, self.filemanager
         )
         logger.debug(f"Using backend '{backend}' for metadata extraction")
 
@@ -592,7 +601,7 @@ class PipelineOrchestrator:
             str(self.input_dir),
             backend,
             is_main=True,
-            plate_root=str(self.plate_path),
+            plate_root=str(self.dataset_root),
             sub_dir=subdir_name,
             skip_if_complete=True,
         )
@@ -617,11 +626,11 @@ class PipelineOrchestrator:
 
         # If relative, resolve relative to output plate root
         path_config = effective_config.path_planning_config
-        output_plate_root = PipelinePathPlanner.build_output_plate_root(
-            self.plate_path, path_config, is_per_step_materialization=False
+        output_dataset_root = PipelinePathPlanner.build_output_dataset_root(
+            self.dataset_root, path_config, is_per_step_materialization=False
         )
 
-        return output_plate_root / materialization_path
+        return output_dataset_root / materialization_path
 
     def create_context(
         self, axis_id: str, *, resolved_config: GlobalPipelineConfig | None = None
@@ -652,7 +661,7 @@ class PipelineOrchestrator:
         context.microscope_handler = self.microscope_handler
         context.input_dir = self.input_dir
         context.workspace_path = self.workspace_path
-        context.plate_path = self.plate_path  # Add plate_path for path planner
+        context.dataset_root = self.dataset_root  # Add dataset_root for path planner
 
         # CRITICAL: Pass metadata cache for OpenHCS metadata creation
         # Extract cached metadata from service and convert to dict format expected by OpenHCSMetadataGenerator
@@ -684,17 +693,17 @@ class PipelineOrchestrator:
             raise RuntimeError(
                 "Orchestrator must be initialized before source workspace inspection."
             )
-        if self.plate_path is None or self.microscope_handler is None:
+        if self.dataset_root is None or self.microscope_handler is None:
             raise RuntimeError("Orchestrator source workspace is not available.")
 
-        plate_path = Path(self.plate_path)
+        dataset_root = Path(self.dataset_root)
         from openhcs.core.source_workspace_projection import (
             VirtualWorkspaceSourceProjection,
             WorkspaceSourceProjections,
         )
 
         projection = WorkspaceSourceProjections.from_plate_metadata(
-            plate_path=plate_path,
+            dataset_root=dataset_root,
             metadata_handler=self.microscope_handler.metadata_handler,
             filemanager=self.filemanager,
             source_bindings=source_bindings_defaults_to_base(
@@ -707,7 +716,7 @@ class PipelineOrchestrator:
         ).projection_if_available()
         if projection is not None:
             return projection
-        return VirtualWorkspaceSourceProjection.empty(plate_path)
+        return VirtualWorkspaceSourceProjection.empty(dataset_root)
 
     def source_workspace_files(self, axis_id: str | None = None) -> tuple[str, ...]:
         """Return VFS-visible virtual source paths for one axis or all axes."""
@@ -716,7 +725,7 @@ class PipelineOrchestrator:
     def compile_pipelines(
         self,
         pipeline_definition: List[AbstractStep],
-        well_filter: Optional[List[str]] = None,
+        partition_values: Optional[List[str]] = None,
         enable_visualizer_override: bool = False,
         is_zmq_execution: bool = False,
         debug_execution_policy: DebugExecutionPolicy = NoOpDebugExecutionPolicy(),
@@ -727,7 +736,7 @@ class PipelineOrchestrator:
         return PipelineCompiler.compile_pipelines(
             orchestrator=self,
             pipeline_definition=pipeline_definition,
-            axis_filter=well_filter,  # Translate well_filter to axis_filter for generic backend
+            axis_filter=partition_values,
             enable_visualizer_override=enable_visualizer_override,
             is_zmq_execution=is_zmq_execution,
             debug_execution_policy=debug_execution_policy,
@@ -747,44 +756,30 @@ class PipelineOrchestrator:
             return self._executor_resources.cancel_execution()
         return 0
 
-    def execute_compiled_plate(
+    def execute_compiled_bundle(
         self,
         execution_bundle: CompiledExecutionBundle,
+        *,
+        progress_queue: ProgressQueue,
+        progress_context: ProgressExecutionContext,
         max_workers: Optional[int] = None,
         visualizer: ExecutionVisualizerABC | None = None,
         log_file_base: Optional[str] = None,
-        progress_queue=None,
-        progress_context=None,
         runtime_observation_mode: RuntimeObservationMode | None = None,
         debug_execution_policy: DebugExecutionPolicy = NoOpDebugExecutionPolicy(),
         prepared_worker_runner: "PreparedForkWorkerLaneRunner | None" = None,
     ) -> Dict[str, ExecutionResult]:
+        """Run the compiled bundle's contexts through the worker lanes.
+
+        ``log_file_base`` prefixes each worker process's log file
+        (``{log_file_base}_worker_{pid}.log``). Returns each axis value's result.
         """
-        Execute-all phase: Runs the stateless pipeline against compiled contexts.
 
-        Args:
-            pipeline_definition: The stateless list of AbstractStep objects.
-            compiled_contexts: Dict of axis_id to its compiled, frozen ProcessingContext.
-                               Obtained from `compile_plate_for_processing`.
-            max_workers: Maximum number of worker threads for parallel execution.
-            visualizer: Viewer implementing the compiled execution lifecycle.
-            log_file_base: Base path for worker process log files (without extension).
-                          Each worker will create its own log file: {log_file_base}_worker_{pid}.log
-
-        Returns:
-            A dictionary mapping well IDs to their execution status (success/error and details).
-        """
-        if progress_context is None:
-            raise ValueError("progress_context is required for execute_compiled_plate.")
-        execution_progress_context = ProgressExecutionContext.from_value(
-            progress_context
-        )
-
-        return execute_compiled_plate_request(
+        return execute_bundle_request(
             self,
-            CompiledPlateExecutionRequest(
-                execution_id=execution_progress_context.execution_id,
-                plate_id=execution_progress_context.plate_id,
+            project_dataclass(
+                BundleExecutionRequest,
+                progress_context,
                 execution_bundle=execution_bundle,
                 max_workers=max_workers,
                 visualizer=visualizer,
@@ -970,7 +965,7 @@ class PipelineOrchestrator:
     @pipeline_config.setter
     def pipeline_config(self, value: Optional["PipelineConfig"]) -> None:
         """Replace the declaration through source invalidation once bound to a plate."""
-        if value is None or self.plate_path is None:
+        if value is None or self.dataset_root is None:
             self._pipeline_config = value
         else:
             self.apply_pipeline_config(value)
@@ -1025,7 +1020,7 @@ class PipelineOrchestrator:
         # The merged config is computed internally and used by get_effective_config()
         # but should NOT be set as the global thread-local context.
 
-        logger.info(f"Applied orchestrator config for plate: {self.plate_path}")
+        logger.info(f"Applied orchestrator config for plate: {self.dataset_root}")
 
     def _invalidate_source_projection(self) -> None:
         """Require normal initialization to rebuild source-owned plate state."""
@@ -1076,7 +1071,7 @@ class PipelineOrchestrator:
         self.pipeline_config = None
         # Clear metadata cache for this orchestrator
         self.metadata_cache.clear_cache()
-        logger.info(f"Cleared per-orchestrator config for plate: {self.plate_path}")
+        logger.info(f"Cleared per-orchestrator config for plate: {self.dataset_root}")
 
     def cleanup_pipeline_config(self) -> None:
         """Clean up orchestrator context when done (for backward compatibility)."""

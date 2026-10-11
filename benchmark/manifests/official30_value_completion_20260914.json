@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "description": "Dated five-case extension of the Official30 protocol. Each generated pipeline preserves its pinned source modules and appends only declaration-derived terminal image or object-label exports. This manifest does not alter the historical Official30 cache or summary.",
-  "default_well_filter": 1,
+  "default_partition_filter": 1,
   "cases": [
     {
       "cellprofiler_timeout_seconds": 900.0,

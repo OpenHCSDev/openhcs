@@ -60,16 +60,16 @@ def test_htd_spacing_survives_gaussian_compile_execute_and_persist(tmp_path):
                     ),
                 )
             ],
-            well_filter=["A01"],
+            partition_values=["A01"],
             enable_visualizer_override=False,
         )
-        result = orchestrator.execute_compiled_plate(
+        result = orchestrator.execute_compiled_bundle(
             execution_bundle=compiled,
             max_workers=1,
             progress_queue=queue,
             progress_context={
                 "execution_id": str(tmp_path),
-                "plate_id": str(plate),
+                "subject_id": str(plate),
                 "axis_id": "",
             },
         )

@@ -101,7 +101,7 @@ class CompiledArtifactInspection:
     """Pickle-safe projection of one retained compiled execution bundle."""
 
     compile_artifact_id: str
-    plate_id: str
+    subject_id: str
     steps: tuple[CompiledArtifactStepInspection, ...]
 
     @classmethod
@@ -109,16 +109,16 @@ class CompiledArtifactInspection:
         cls,
         *,
         compile_artifact_id: str,
-        plate_id: str,
+        subject_id: str,
         bundle: "CompiledExecutionBundle",
     ) -> "CompiledArtifactInspection":
         if not compile_artifact_id:
             raise ValueError("compile_artifact_id cannot be empty.")
-        if not plate_id:
-            raise ValueError("plate_id cannot be empty.")
+        if not subject_id:
+            raise ValueError("subject_id cannot be empty.")
         return cls(
             compile_artifact_id=compile_artifact_id,
-            plate_id=plate_id,
+            subject_id=subject_id,
             steps=tuple(
                 CompiledArtifactStepInspection.from_step_plan(
                     context_id=context_id,

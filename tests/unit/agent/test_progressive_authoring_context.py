@@ -567,8 +567,8 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
         in viewer
     )
     assert "verify the reported paths exist before freezing the pipeline" in viewer
-    assert "pipeline_config.well_filter_config" in viewer
-    assert "path_planning_config.well_filter=0" in viewer
+    assert "pipeline_config.partition_filter_config" in viewer
+    assert "path_planning_config.partition_filter=0" in viewer
     assert "Start from the user's scientific question" in viewer
     assert "same stable object or label identity" in viewer
     assert "derive matching display colors from that identity" in viewer

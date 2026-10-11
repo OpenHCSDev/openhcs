@@ -42,8 +42,8 @@ from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outpu
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.orchestrator.compiled_plate_execution import (
-    validate_plate_scoped_contexts,
+from openhcs.core.orchestrator.bundle_execution import (
+    validate_dataset_scoped_contexts,
 )
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import set_progress_queue
@@ -495,14 +495,14 @@ def test_quality_control_plate_invocation_is_context_independent(
         orchestrator.initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=prepared.pipeline_steps,
-            well_filter=["A01", "B01"],
+            partition_values=["A01", "B01"],
             is_zmq_execution=True,
         )
     finally:
         set_progress_queue(None)
 
     contexts = compilation.runtime_contexts
-    (plate_step_index,) = validate_plate_scoped_contexts(contexts)
+    (plate_step_index,) = validate_dataset_scoped_contexts(contexts)
     invocations = tuple(
         context.step_plans[
             plate_step_index

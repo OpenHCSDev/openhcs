@@ -102,7 +102,7 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.progress import (
-    ProgressEventPayload, ProgressIdentity, ProgressPhase, ProgressStatus, create_event,
+    ProgressExecutionContext, ProgressIdentity, ProgressPhase, ProgressStatus,
 )
 from openhcs.core.source_bindings import (
     LazySourceBindingsConfig,
@@ -310,11 +310,13 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
 
     @staticmethod
     def emit_progress(request):
-        request.progress_queue.put(create_event(ProgressEventPayload(
-            identity=ProgressIdentity("inspection", str(request.plate), "A01", "compilation"),
-            phase=ProgressPhase.COMPILE, status=ProgressStatus.RUNNING,
-            percent=0.0,
-        )).to_dict())
+        request.progress_queue.put(
+            ProgressExecutionContext("inspection", str(request.plate)).event(
+                axis_id="A01", step_name="compilation",
+                phase=ProgressPhase.COMPILE, status=ProgressStatus.RUNNING,
+                percent=0.0, completed=0, total=1,
+            )
+        )
 
     def _compile(self, request):
         self.requests.append(request)
@@ -340,7 +342,7 @@ class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
         step_plan.streaming_configs["napari_streaming_config"] = NapariStreamingConfig(
             enabled=True,
             persistent=True,
-            well_filter=["A01"],
+            partition_filter=["A01"],
         )
         input_plan = ArtifactInputPlan(
             name="positions",
@@ -2519,8 +2521,8 @@ def test_config_service_reflects_pipeline_schema_without_materializing_lazy_valu
 
     schema = service.describe_schema("pipeline")
     shared_descriptions = dataclass_parameter_descriptions(PipelineConfig)
-    well_filter = next(
-        field for field in schema.fields if field.path == "well_filter_config"
+    partition_filter = next(
+        field for field in schema.fields if field.path == "partition_filter_config"
     )
     source_bindings = next(
         field for field in schema.fields if field.path == "source_bindings_config"
@@ -2530,8 +2532,8 @@ def test_config_service_reflects_pipeline_schema_without_materializing_lazy_valu
     )
 
     assert schema.config_type == "PipelineConfig"
-    assert well_filter.lazy is True
-    assert well_filter.default_repr.endswith("LazyWellFilterConfig()")
+    assert partition_filter.lazy is True
+    assert partition_filter.default_repr.endswith("LazyPartitionFilterConfig()")
     assert source_bindings.description == shared_descriptions["source_bindings_config"]
     assert path_planning.description == shared_descriptions["path_planning_config"]
     assert path_planning.description is not None
@@ -2601,7 +2603,7 @@ def test_config_service_coerces_nested_pipeline_config_patch_values():
         ConfigPatch(
             config_type="PipelineConfig",
             values={
-                "well_filter_config": {"well_filter": 2},
+                "partition_filter_config": {"partition_filter": 2},
                 "path_planning_config": {
                     "output_dir_suffix": "_codex_mcp_contract_validation"
                 },
@@ -2615,10 +2617,10 @@ def test_config_service_coerces_nested_pipeline_config_patch_values():
     pipeline_field_types = {field.name: field.type for field in fields(PipelineConfig)}
 
     assert isinstance(
-        config.well_filter_config,
-        pipeline_field_types["well_filter_config"],
+        config.partition_filter_config,
+        pipeline_field_types["partition_filter_config"],
     )
-    assert config.well_filter_config.well_filter == 2
+    assert config.partition_filter_config.partition_filter == 2
     assert isinstance(
         config.path_planning_config,
         pipeline_field_types["path_planning_config"],
@@ -2629,7 +2631,7 @@ def test_config_service_coerces_nested_pipeline_config_patch_values():
     )
     assert isinstance(config.vfs_config, pipeline_field_types["vfs_config"])
     assert config.vfs_config.read_backend is Backend.DISK
-    assert "well_filter_config=LazyWellFilterConfig" in rendered.source
+    assert "partition_filter_config=LazyPartitionFilterConfig" in rendered.source
     assert "path_planning_config=LazyPathPlanningConfig" in rendered.source
 
 
@@ -2745,7 +2747,7 @@ def test_pipeline_authoring_service_uses_referenced_pipeline_config(monkeypatch)
         "pipeline",
         ConfigPatch(
             config_type="PipelineConfig",
-            values={"well_filter_config": {"well_filter": 2}},
+            values={"partition_filter_config": {"partition_filter": 2}},
         ),
     )
     pipeline_service = PipelineAuthoringService(
@@ -2762,8 +2764,8 @@ def test_pipeline_authoring_service_uses_referenced_pipeline_config(monkeypatch)
 
     assert pipeline_spec.pipeline_config_id == config_ref.config_id
     assert document.pipeline_config is config_service.resolve_ref(config_ref)
-    assert document.pipeline_config.well_filter_config.well_filter == 2
-    assert "well_filter=2" in rendered.source
+    assert document.pipeline_config.partition_filter_config.partition_filter == 2
+    assert "partition_filter=2" in rendered.source
 
 
 def test_pipeline_authoring_service_rejects_non_pipeline_config_reference(monkeypatch):
@@ -2947,7 +2949,7 @@ def test_artifact_plan_inspection_inspects_pipeline_source_artifact_plan(
     )
     assert inspection.steps[0].viewer_streaming[0].viewer_type is ViewerType.NAPARI
     assert inspection.steps[0].viewer_streaming[0].effective_config["enabled"] is True
-    assert inspection.steps[0].viewer_streaming[0].effective_config["well_filter"] == [
+    assert inspection.steps[0].viewer_streaming[0].effective_config["partition_filter"] == [
         "A01"
     ]
     assert inspection.steps[0].artifact_inputs[0].name == "positions"

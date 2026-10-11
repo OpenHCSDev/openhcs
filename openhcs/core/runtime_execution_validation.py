@@ -383,8 +383,8 @@ def _runtime_output_roots(
         if not context.step_plans:
             continue
         for plan in context.step_plans.values():
-            if plan.output_plate_root is not None:
-                roots.append(Path(plan.output_plate_root))
+            if plan.output_dataset_root is not None:
+                roots.append(Path(plan.output_dataset_root))
             if plan.materialized_output is not None:
                 roots.append(Path(plan.materialized_output.plate_root))
 

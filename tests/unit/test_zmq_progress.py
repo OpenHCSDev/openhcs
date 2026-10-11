@@ -6,7 +6,7 @@ def test_compiler_progress_queue_uses_request_plate_identity():
     emitted: list[dict] = []
     queue = ZMQCompilerProgressQueue(
         enqueue=emitted.append,
-        plate_id="/tmp/plate#openhcs-cppipe=Analysis.cppipe",
+        subject_id="/tmp/plate#openhcs-cppipe=Analysis.cppipe",
     )
 
     compiler_update = {
@@ -32,7 +32,7 @@ def test_compile_failed_emits_failed_compile_events_for_axes():
     emitter = ZMQProgressEmitter(
         enqueue=emitted.append,
         execution_id="exec-1",
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
     )
 
     emitter.compile_failed(axis_ids=["B02", "A01"], error="compile exploded")
@@ -48,7 +48,7 @@ def test_compile_failed_emits_pipeline_failure_when_axes_are_unknown():
     emitter = ZMQProgressEmitter(
         enqueue=emitted.append,
         execution_id="exec-1",
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
     )
 
     emitter.compile_failed(axis_ids=[], error="early compile exploded")
@@ -64,7 +64,7 @@ def test_compile_heartbeat_emits_running_pipeline_compile_event():
     emitter = ZMQProgressEmitter(
         enqueue=emitted.append,
         execution_id="exec-1",
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
     )
 
     emitter.compile_heartbeat(step_count=18)

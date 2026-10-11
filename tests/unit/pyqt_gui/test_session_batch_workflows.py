@@ -41,7 +41,6 @@ from openhcs.core.execution_state import ManagerExecutionState, TerminalExecutio
 from openhcs.core.orchestrator.orchestrator import OrchestratorState
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
 )
@@ -87,7 +86,7 @@ class StandInServer:
         if scope_id in self.failing:
             raise RuntimeError("controlled compile failure")
         return CompiledArtifactInspection(
-            compile_artifact_id=execution_id, plate_id=scope_id, steps=()
+            compile_artifact_id=execution_id, subject_id=scope_id, steps=()
         )
 
 
@@ -374,8 +373,8 @@ def test_submission_names_the_dataset_scope_and_runs_in_the_execution_root():
         pipeline_path="/tmp/source/BBBC022_Analysis_Start.cppipe",
     ).submission()
 
-    assert submission.plate_id == scope.scope_id
-    assert submission.execution_plate_id == (
+    assert submission.subject_id == scope.scope_id
+    assert submission.execution_subject_id == (
         "/tmp/source/.openhcs_cellprofiler/Analysis_Start"
     )
     assert submission.selected_pipeline_path == (
@@ -458,12 +457,10 @@ def test_debug_compile_reuse_keys_on_the_session_not_the_cursor():
 
 def _progress_event(**kwargs) -> ProgressEvent:
     return ProgressEvent(
-        identity=ProgressIdentity(
-            execution_id="exec-1",
-            plate_id="plate-1",
-            axis_id="A01",
-            step_name="Measure",
-        ),
+        execution_id="exec-1",
+        subject_id="plate-1",
+        axis_id="A01",
+        step_name="Measure",
         phase=ProgressPhase.STEP_COMPLETED,
         status=ProgressStatus.SUCCESS,
         percent=100.0,
@@ -492,7 +489,7 @@ def _debug_progress_event(*, snapshot_id: str | None, event_type=None):
         debug_session_id="debug-1",
         debug_event=event,
         execution_id="exec-1",
-        plate_id="plate-1",
+        subject_id="plate-1",
         **(
             {}
             if snapshot_id is None
@@ -518,7 +515,7 @@ def test_debug_progress_with_a_snapshot_publishes_it_and_projects_the_frame():
         (available,) = _events_of(session, DebugSnapshotAvailable)
         assert available.notification.debug_context.snapshot_id == "snapshot-1"
         assert available.notification.debug_context.snapshot_store_ref == "/tmp/debug"
-        assert session.runtime_projection.get_plate("plate-1", "exec-1") is not None
+        assert session.runtime_projection.get_subject("plate-1", "exec-1") is not None
 
 
 def test_debug_progress_without_a_snapshot_publishes_nothing():
@@ -629,7 +626,6 @@ def test_server_queue_snapshot_projects_queued_executions(monkeypatch):
 
     from zmqruntime.messages import QueuedExecutionInfo
 
-    from openhcs.core.progress.projection import PlateRuntimeState
 
     with caller_session() as session:
         monkeypatch.setattr(
@@ -648,9 +644,9 @@ def test_server_queue_snapshot_projects_queued_executions(monkeypatch):
         )
         session.progress.rebuild()
 
-        plate = session.runtime_projection.get_plate("plate-queued", "exec-queued")
+        plate = session.runtime_projection.get_subject("plate-queued", "exec-queued")
         assert plate is not None
-        assert plate.state is PlateRuntimeState.QUEUED
+        assert plate.state is QueuedSubjectRuntimeState
         assert plate.queue_position == 3
         assert execution_server_status_text(session.runtime_projection).startswith(
             "Server:"
@@ -664,7 +660,7 @@ def test_a_standard_run_retires_the_previous_debug_summary(tmp_path, monkeypatch
         (scope_id,) = add_datasets(session, tmp_path, "plate")
         _ready(session, scope_id)
         session.debug_terminal_summaries[scope_id] = DebugTerminalSummary(
-            debug_session_id="debug-1", plate_id=scope_id, terminal_status="failed"
+            debug_session_id="debug-1", subject_id=scope_id, terminal_status="failed"
         )
         StandInServer(session, monkeypatch, failing={scope_id})
         monkeypatch.setattr(session.client, "require_client", lambda: object())

@@ -34,7 +34,7 @@ TransportRequestItems = tuple[tuple[str, TransportValue], ...]
 class ZMQAuxiliaryParamField(Enum):
     """Transport keys consumed as typed auxiliary execution inputs."""
 
-    WELL_FILTER = "well_filter"
+    PARTITION_VALUES = "partition_values"
     RUNTIME_OBSERVATION_EXPORT_PATH = "runtime_observation_export_path"
     RUNTIME_OBSERVATION_EXPORT_SCOPE = "runtime_observation_export_scope"
 
@@ -50,7 +50,7 @@ class ZMQRuntimeObservationExportScope(Enum):
 class ZMQAuxiliaryExecutionParams:
     """Auxiliary execution options shared by the ordinary client and server."""
 
-    axis_filter: tuple[str, ...] | None = None
+    partition_values: tuple[str, ...] | None = None
     debug_execution_config: DebugExecutionConfig | None = None
     runtime_observation_export_path: Path | None = None
     runtime_observation_export_scope: ZMQRuntimeObservationExportScope = (
@@ -83,8 +83,8 @@ class ZMQAuxiliaryExecutionParams:
         """Project explicitly requested options into zmqruntime config_params."""
 
         params: dict[str, Any] = {}
-        if self.axis_filter is not None:
-            params[ZMQAuxiliaryParamField.WELL_FILTER.value] = list(self.axis_filter)
+        if self.partition_values is not None:
+            params[ZMQAuxiliaryParamField.PARTITION_VALUES.value] = list(self.partition_values)
         if self.debug_execution_config is not None:
             params.update(self.debug_execution_config.to_config_params())
         if self.runtime_observation_export_path is not None:
@@ -133,8 +133,8 @@ class ZMQAuxiliaryExecutionParams:
         if not config_params:
             return cls()
         return cls(
-            axis_filter=cls._axis_filter_from_transport(
-                config_params.get(ZMQAuxiliaryParamField.WELL_FILTER.value)
+            partition_values=cls._partition_values_from_transport(
+                config_params.get(ZMQAuxiliaryParamField.PARTITION_VALUES.value)
             ),
             debug_execution_config=cls._debug_config_from_transport(config_params),
             runtime_observation_export_path=cls._path_from_transport(
@@ -161,18 +161,18 @@ class ZMQAuxiliaryExecutionParams:
             ) from exc
 
     @staticmethod
-    def _axis_filter_from_transport(
-        axis_filter: list[str] | tuple[str, ...] | str | int | None,
+    def _partition_values_from_transport(
+        partition_values: list[str] | tuple[str, ...] | str | int | None,
     ) -> tuple[str, ...] | None:
-        if axis_filter is None:
+        if partition_values is None:
             return None
-        if isinstance(axis_filter, list):
-            return tuple(str(axis_id) for axis_id in axis_filter)
-        if isinstance(axis_filter, tuple):
-            return tuple(str(axis_id) for axis_id in axis_filter)
+        if isinstance(partition_values, list):
+            return tuple(str(axis_id) for axis_id in partition_values)
+        if isinstance(partition_values, tuple):
+            return tuple(str(axis_id) for axis_id in partition_values)
         raise TypeError(
-            "ZMQ config_params well_filter must be a concrete axis-id sequence, "
-            f"got {type(axis_filter).__name__}."
+            "ZMQ config_params partition_values must be a concrete axis-id sequence, "
+            f"got {type(partition_values).__name__}."
         )
 
     @staticmethod
@@ -205,21 +205,21 @@ class OpenHCSExecutionConfigBundle:
     """Global execution context plus the config projected from a pipeline document."""
 
     global_pipeline: GlobalPipelineConfig
-    plate_pipeline: PipelineConfig
+    pipeline: PipelineConfig
 
 
 @dataclass(frozen=True, slots=True)
 class ZMQExecutionIdentity:
     """Plate and source-selection identity shared by client and server."""
 
-    plate_id: str
-    execution_plate_id: str | None = None
+    subject_id: str
+    execution_subject_id: str | None = None
     selected_pipeline_path: str | None = None
 
     def signature_items(self) -> TransportRequestItems:
         return (
-            (MessageFields.SUBJECT_ID, self.plate_id),
-            (MessageFields.EXECUTION_SUBJECT_ID, self.execution_plate_id),
+            (MessageFields.SUBJECT_ID, self.subject_id),
+            (MessageFields.EXECUTION_SUBJECT_ID, self.execution_subject_id),
             (MessageFields.SELECTED_PIPELINE_PATH, self.selected_pipeline_path),
         )
 
@@ -300,8 +300,8 @@ class ZMQExecutionRequestPayload:
     ) -> "ZMQExecutionRequestPayload":
         return cls(
             identity=ZMQExecutionIdentity(
-                plate_id=request.subject_id,
-                execution_plate_id=request.execution_subject_id,
+                subject_id=request.subject_id,
+                execution_subject_id=request.execution_subject_id,
                 selected_pipeline_path=request.selected_pipeline_path,
             ),
             pipeline_code=request.pipeline_code,
@@ -311,12 +311,12 @@ class ZMQExecutionRequestPayload:
         )
 
     @property
-    def plate_id(self) -> str:
-        return self.identity.plate_id
+    def subject_id(self) -> str:
+        return self.identity.subject_id
 
     @property
-    def execution_plate_id(self) -> str | None:
-        return self.identity.execution_plate_id
+    def execution_subject_id(self) -> str | None:
+        return self.identity.execution_subject_id
 
     @property
     def selected_pipeline_path(self) -> str | None:

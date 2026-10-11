@@ -75,8 +75,8 @@ def test_compact_example_uses_owned_channel_order_and_one_function_step(
         2,
     ]
     assert pipeline_config.dataset_source is SourceBindingsSource
-    assert pipeline_config.well_filter_config.well_filter == "B03"
-    assert pipeline_config.path_planning_config.well_filter == 0
+    assert pipeline_config.partition_filter_config.partition_filter == "B03"
+    assert pipeline_config.path_planning_config.partition_filter == 0
     assert [
         binding.alias for binding in pipeline_config.source_bindings_config.bindings
     ] == [
@@ -93,7 +93,7 @@ def test_compact_example_uses_owned_channel_order_and_one_function_step(
     assert step.processing_config.group_by is Ungrouped
     assert step.processing_config.input_source is InputSource.PIPELINE_START
     assert step.napari_streaming_config.enabled is True
-    assert step.napari_streaming_config.well_filter is None
+    assert step.napari_streaming_config.partition_filter is None
     assert step.napari_streaming_config.port == 5999
 
     kwargs = step.func[1]
@@ -178,7 +178,7 @@ def test_compact_example_compiles_the_full_ordered_channel_stack(
         ).initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=[inputs.well],
+            partition_values=[inputs.well],
             is_zmq_execution=True,
         )
     finally:

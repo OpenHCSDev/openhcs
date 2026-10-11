@@ -55,7 +55,7 @@ def test_disabling_automatic_materialization_keeps_only_declared_exports(
 
     planner = MaterializationFlagPlanner(
         pipeline_config=SimpleNamespace(
-            path_planning_config=SimpleNamespace(well_filter=None)
+            path_planning_config=SimpleNamespace(partition_filter=None)
         ),
         microscope_handler=SimpleNamespace(),
         filemanager=object(),

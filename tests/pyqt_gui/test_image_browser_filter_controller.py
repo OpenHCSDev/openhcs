@@ -175,7 +175,7 @@ class _LazyInventoryOrchestrator:
         return self._config
 
 
-def test_image_browser_filter_controller_applies_folder_and_well_filters():
+def test_image_browser_filter_controller_applies_folder_and_partition_filters():
     browser = _Browser()
     controller = ImageBrowserFilterController(browser)
 
@@ -370,12 +370,12 @@ def test_plate_file_inventory_from_handler_matches_browser_file_shape(
     image_path = plate_root / "images" / "A01_w1.tif"
     handler_result_dir = plate_root / "results"
     config = GlobalPipelineConfig()
-    output_plate_root = PathPlannerPathAuthority.build_output_plate_root(
+    output_dataset_root = PathPlannerPathAuthority.build_output_dataset_root(
         plate_root,
         config.path_planning_config,
     )
     output_result_dir = PathPlannerPathAuthority.analysis_results_dir_for(
-        output_plate_root / config.path_planning_config.sub_dir,
+        output_dataset_root / config.path_planning_config.sub_dir,
     )
     image_path.parent.mkdir(parents=True)
     handler_result_dir.mkdir(parents=True)

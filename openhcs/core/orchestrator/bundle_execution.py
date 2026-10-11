@@ -60,12 +60,10 @@ from openhcs.core.pipeline.funcstep_contract_validator import (
     FuncStepContractValidator,
 )
 from openhcs.core.progress import (
-    ProgressEventPayload,
     ProgressExecutionContext,
     ProgressPhase,
     ProgressQueue,
     ProgressStatus,
-    create_event,
     set_progress_queue,
 )
 from openhcs.core.runtime_batch_contracts import (
@@ -99,14 +97,14 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-PLATE_STEP_PROGRESS_HEARTBEAT_SECONDS = 2.0
+DATASET_STEP_PROGRESS_HEARTBEAT_SECONDS = 2.0
 
 
 @dataclass(frozen=True, slots=True)
-class CompiledPlateExecutionExtras:
+class BundleExecutionExtras:
     """Diagnostics captured at the parent-owned execution boundary."""
 
-    EXECUTION_RECORD_KEY: ClassVar[str] = "compiled_plate_execution_extras"
+    EXECUTION_RECORD_KEY: ClassVar[str] = "bundle_execution_extras"
     RESULTS_SUMMARY_KEY: ClassVar[str] = "viewer_states_by_port"
 
     viewer_states_by_port: Mapping[int, "ViewerControlResponse"]
@@ -115,17 +113,17 @@ class CompiledPlateExecutionExtras:
     )
 
 
-class CompiledPlateExecutionResults(dict[str, ExecutionResult]):
+class BundleExecutionResults(dict[str, ExecutionResult]):
     """Axis results plus parent-owned diagnostics from one compiled execution."""
 
     def __init__(
         self,
         results: Mapping[str, ExecutionResult] | None = None,
         *,
-        extras: CompiledPlateExecutionExtras | None = None,
+        extras: BundleExecutionExtras | None = None,
     ) -> None:
         super().__init__(results or {})
-        self.extras = extras or CompiledPlateExecutionExtras(
+        self.extras = extras or BundleExecutionExtras(
             viewer_states_by_port=MappingProxyType({})
         )
 
@@ -152,14 +150,14 @@ class CompiledPlateExecutionResults(dict[str, ExecutionResult]):
 
 
 @dataclass(frozen=True, slots=True)
-class CompiledPlateExecutionRequest(ProgressExecutionContext):
+class BundleExecutionRequest(ProgressExecutionContext):
     """Public execute-compiled-plate call normalized into one request record."""
 
     execution_bundle: CompiledExecutionBundle
     max_workers: Optional[int]
     visualizer: ExecutionVisualizerABC | None
     log_file_base: Optional[str]
-    progress_queue: ProgressQueue | None
+    progress_queue: ProgressQueue
     runtime_observation_mode: RuntimeObservationMode
     debug_execution_policy: DebugExecutionPolicy
     prepared_worker_runner: PreparedForkWorkerLaneRunner | None = None
@@ -179,7 +177,7 @@ class CompiledPlateExecutionRequest(ProgressExecutionContext):
 
 
 @dataclass(frozen=True, slots=True)
-class ValidatedCompiledPlateExecution(ProgressExecutionContext):
+class ValidatedBundleExecution(ProgressExecutionContext):
     """Validated execution inputs plus defaults derived from orchestrator state."""
 
     pipeline_definition: List[AbstractStep]
@@ -191,27 +189,27 @@ class ValidatedCompiledPlateExecution(ProgressExecutionContext):
     def worker_lane_execution_plan(
         self,
         *,
-        request: CompiledPlateExecutionRequest,
+        request: BundleExecutionRequest,
         worker_assignment_plan: WorkerAssignmentPlan,
     ) -> WorkerLaneExecutionPlan:
         return WorkerLaneExecutionPlan(
             execution_id=self.execution_id,
-            plate_id=self.plate_id,
+            subject_id=self.subject_id,
             debug_execution_policy=request.debug_execution_policy,
             assignments=worker_assignment_plan,
             runtime_observation_mode=request.runtime_observation_mode,
         )
 
 
-def execute_compiled_plate_request(
+def execute_bundle_request(
     orchestrator: "PipelineOrchestrator",
-    request: CompiledPlateExecutionRequest,
-) -> CompiledPlateExecutionResults:
+    request: BundleExecutionRequest,
+) -> BundleExecutionResults:
     """Execute compiled plate contexts through the runtime worker lanes."""
 
-    validated = validate_compiled_plate_execution(orchestrator, request)
+    validated = validate_bundle_execution(orchestrator, request)
     if validated is None:
-        return CompiledPlateExecutionResults()
+        return BundleExecutionResults()
 
     cancellation = orchestrator._execution_cancellation.begin()
     try:
@@ -250,8 +248,8 @@ def execute_compiled_plate_request(
         execution_bundle = request.execution_bundle
         worker_assignments = request.worker_assignments_for()
 
-        execution_results = CompiledPlateExecutionResults()
-        plate_runtime_observation = RuntimeExecutionObservation()
+        execution_results = BundleExecutionResults()
+        dataset_runtime_observation = RuntimeExecutionObservation()
         try:
             executor_resources.install_execution_bundle(execution_bundle)
             orchestrator._executor_resources = executor_resources
@@ -266,7 +264,7 @@ def execute_compiled_plate_request(
                         request=request,
                         worker_assignment_plan=worker_assignment_plan,
                     )
-                    execution_results = CompiledPlateExecutionResults(
+                    execution_results = BundleExecutionResults(
                         executor_resources.run_worker_lanes(
                             pipeline_definition=validated.pipeline_definition,
                             worker_lane_execution_plan=worker_lane_execution_plan,
@@ -281,7 +279,7 @@ def execute_compiled_plate_request(
                         )
                     cancellation.raise_if_requested("after worker execution")
                     if execution_results.is_success():
-                        plate_runtime_observation = execute_plate_scoped_steps(
+                        dataset_runtime_observation = execute_dataset_scoped_steps(
                             validated.compiled_contexts,
                             progress_queue=validated.progress_queue,
                             progress_context=validated,
@@ -310,10 +308,10 @@ def execute_compiled_plate_request(
                 PostExecuteHook.run_all(
                     validated.compiled_contexts,
                     execution_results,
-                    plate_runtime_observation,
+                    dataset_runtime_observation,
                 )
         finally:
-            OpenHCSMetadataTarget.finalize_completed_plate(
+            OpenHCSMetadataTarget.finalize_completed_dataset(
                 validated.compiled_contexts,
                 runtime_observations=(
                     RuntimeExecutionObservation.from_completed_outputs(
@@ -341,11 +339,11 @@ def execute_compiled_plate_request(
                 total=len(validated.pipeline_definition),
                 percent=100.0,
             )
-        return CompiledPlateExecutionResults(
+        return BundleExecutionResults(
             execution_results,
-            extras=CompiledPlateExecutionExtras(
+            extras=BundleExecutionExtras(
                 viewer_states_by_port=viewer_states_by_port,
-                runtime_observation=plate_runtime_observation,
+                runtime_observation=dataset_runtime_observation,
             ),
         )
     except ExecutionCancelledError:
@@ -366,10 +364,10 @@ def execute_compiled_plate_request(
                 orchestrator._execution_cancellation.finish(cancellation)
 
 
-def validate_compiled_plate_execution(
+def validate_bundle_execution(
     orchestrator: "PipelineOrchestrator",
-    request: CompiledPlateExecutionRequest,
-) -> ValidatedCompiledPlateExecution | None:
+    request: BundleExecutionRequest,
+) -> ValidatedBundleExecution | None:
     """Validate execute-compiled-plate invariants before worker setup."""
 
     pipeline_definition = request.pipeline_definition
@@ -381,13 +379,9 @@ def validate_compiled_plate_execution(
     if not compiled_contexts:
         logger.warning("No compiled contexts provided for execution.")
         return None
-    if request.progress_queue is None:
-        raise ValueError(
-            "progress_queue is required for execute_compiled_plate invariant path"
-        )
-    plate_step_indexes = validate_plate_scoped_contexts(compiled_contexts)
+    dataset_step_indexes = validate_dataset_scoped_contexts(compiled_contexts)
     if (
-        plate_step_indexes
+        dataset_step_indexes
         and request.runtime_observation_mode is RuntimeObservationMode.OMIT
     ):
         raise ValueError(
@@ -396,9 +390,9 @@ def validate_compiled_plate_execution(
             "worker execution."
         )
     runtime_environment = request.execution_bundle.runtime_environment
-    return ValidatedCompiledPlateExecution(
+    return ValidatedBundleExecution(
         execution_id=request.execution_id,
-        plate_id=request.plate_id,
+        subject_id=request.subject_id,
         pipeline_definition=pipeline_definition,
         compiled_contexts=compiled_contexts,
         actual_max_workers=actual_max_workers(
@@ -410,7 +404,7 @@ def validate_compiled_plate_execution(
     )
 
 
-def validate_plate_scoped_contexts(
+def validate_dataset_scoped_contexts(
     compiled_contexts: Mapping[str, ProcessingContext],
 ) -> tuple[int, ...]:
     """Validate plate lifecycle invariants shared by compilation contexts."""
@@ -429,16 +423,16 @@ def validate_plate_scoped_contexts(
             "Plate-scoped step membership drifted between compiled contexts: "
             f"{memberships!r}."
         )
-    (plate_step_indexes,) = distinct_memberships
-    if not plate_step_indexes:
+    (dataset_step_indexes,) = distinct_memberships
+    if not dataset_step_indexes:
         return ()
 
-    first_plate_index = plate_step_indexes[0]
+    first_dataset_index = dataset_step_indexes[0]
     axis_successors = {
         context_key: tuple(
             step_plan.step_name
             for step_index, step_plan in sorted(context.step_plans.items())
-            if step_index > first_plate_index
+            if step_index > first_dataset_index
             and step_plan.execution_scope is FunctionStepExecutionScope.AXIS
         )
         for context_key, context in compiled_contexts.items()
@@ -455,13 +449,13 @@ def validate_plate_scoped_contexts(
             f"{contexts_with_axis_successors!r}."
         )
 
-    for step_index in plate_step_indexes:
+    for step_index in dataset_step_indexes:
         baseline_invocations: tuple[CompiledFunctionInvocation, ...] | None = None
         baseline_source_binding_plan: CompiledSourceBindingPlan | None = None
         metadata_owners = 0
         for context_key, context in compiled_contexts.items():
             step_plan = context.step_plans[step_index]
-            _validate_plate_step_plan(step_plan)
+            _validate_dataset_step_plan(step_plan)
             invocations = step_plan.compiled_function_pattern.default_group.invocations
             if baseline_invocations is None:
                 baseline_invocations = invocations
@@ -486,15 +480,15 @@ def validate_plate_scoped_contexts(
                 f"Plate-scoped step {step_index} requires exactly one "
                 f"metadata-writer output owner, got {metadata_owners}."
             )
-    return plate_step_indexes
+    return dataset_step_indexes
 
 
-def execute_plate_scoped_steps(
+def execute_dataset_scoped_steps(
     compiled_contexts: Mapping[str, ProcessingContext],
     *,
     progress_queue: ProgressQueue,
     progress_context: ProgressExecutionContext,
-    heartbeat_interval_seconds: float = PLATE_STEP_PROGRESS_HEARTBEAT_SECONDS,
+    heartbeat_interval_seconds: float = DATASET_STEP_PROGRESS_HEARTBEAT_SECONDS,
     executor_resources: WorkerExecutorResources | None = None,
 ) -> RuntimeExecutionObservation:
     """Invoke plate-scoped FunctionSteps once from merged runtime records."""
@@ -503,18 +497,18 @@ def execute_plate_scoped_steps(
         context_key: context.runtime_value_store.observation_cursor()
         for context_key, context in compiled_contexts.items()
     }
-    plate_step_indexes = validate_plate_scoped_contexts(compiled_contexts)
+    dataset_step_indexes = validate_dataset_scoped_contexts(compiled_contexts)
     total_steps = max(next(iter(compiled_contexts.values())).step_plans) + 1
     records_by_axis = _runtime_record_snapshot(compiled_contexts)
     observations_by_context = {key: [] for key in compiled_contexts}
-    for step_index in plate_step_indexes:
-        owner_context, owner_plan = _plate_output_owner(
+    for step_index in dataset_step_indexes:
+        owner_context, owner_plan = _dataset_output_owner(
             compiled_contexts,
             step_index,
         )
         with (
             owner_context.runtime_step_scope(),
-            _PlateStepProgressHeartbeat(
+            _DatasetStepProgressHeartbeat(
                 progress_queue=progress_queue,
                 progress_context=progress_context,
                 step_index=step_index,
@@ -537,7 +531,7 @@ def execute_plate_scoped_steps(
                 resolved_output_plan = output_plan.for_group(
                     output_plan.require_single_group_key()
                 )
-                batch = _plate_artifact_batch(
+                batch = _dataset_artifact_batch(
                     compiled_contexts=compiled_contexts,
                     step_index=step_index,
                     invocation_position=invocation_position,
@@ -665,7 +659,7 @@ def execute_plate_scoped_steps(
 
 
 @dataclass(slots=True)
-class _PlateStepProgressHeartbeat:
+class _DatasetStepProgressHeartbeat:
     """Keep one compiler-owned plate step visible while it is executing."""
 
     progress_queue: ProgressQueue
@@ -673,14 +667,14 @@ class _PlateStepProgressHeartbeat:
     step_index: int
     step_name: str
     total_steps: int
-    interval_seconds: float = PLATE_STEP_PROGRESS_HEARTBEAT_SECONDS
+    interval_seconds: float = DATASET_STEP_PROGRESS_HEARTBEAT_SECONDS
     _stop_event: threading.Event = field(init=False, repr=False)
     _thread: threading.Thread | None = field(init=False, default=None, repr=False)
 
     def __post_init__(self) -> None:
         self._stop_event = threading.Event()
 
-    def __enter__(self) -> "_PlateStepProgressHeartbeat":
+    def __enter__(self) -> "_DatasetStepProgressHeartbeat":
         self._emit(ProgressPhase.STEP_STARTED, ProgressStatus.STARTED)
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
@@ -723,24 +717,20 @@ def _emit_execution_progress(
     """Publish one parent-owned execution event without a worker claim."""
 
     progress_queue.put(
-        create_event(
-            ProgressEventPayload(
-                identity=progress_context.identity_for_event(
-                    axis_id="",
-                    step_name=step_name,
-                ),
-                phase=phase,
-                status=status,
-                completed=completed,
-                total=total,
-                percent=percent,
-                context=context,
-            )
-        ).to_dict()
+        progress_context.event(
+            axis_id="",
+            step_name=step_name,
+            phase=phase,
+            status=status,
+            completed=completed,
+            total=total,
+            percent=percent,
+            context=context,
+        )
     )
 
 
-def _validate_plate_step_plan(step_plan: CompiledStepPlan) -> None:
+def _validate_dataset_step_plan(step_plan: CompiledStepPlan) -> None:
     pattern = step_plan.compiled_function_pattern
     if pattern is None:
         raise ValueError(
@@ -752,15 +742,15 @@ def _validate_plate_step_plan(step_plan: CompiledStepPlan) -> None:
         )
     FuncStepContractValidator.validate_compiled_step_plan(step_plan)
     for invocation in pattern.default_group.invocations:
-        _validate_plate_invocation(invocation, step_plan)
+        _validate_dataset_invocation(invocation, step_plan)
 
 
-def _validate_plate_invocation(
+def _validate_dataset_invocation(
     invocation: CompiledFunctionInvocation,
     step_plan: CompiledStepPlan,
 ) -> None:
     contract = invocation.contract
-    FuncStepContractValidator.validate_plate_callable_contracts(
+    FuncStepContractValidator.validate_dataset_callable_contracts(
         (contract,),
         step_plan.step_name,
     )
@@ -833,7 +823,7 @@ def _runtime_record_snapshot(
     )
 
 
-def _plate_output_owner(
+def _dataset_output_owner(
     compiled_contexts: Mapping[str, ProcessingContext],
     step_index: int,
 ) -> tuple[ProcessingContext, CompiledStepPlan]:
@@ -850,7 +840,7 @@ def _plate_output_owner(
     return owners[0]
 
 
-def _plate_artifact_batch(
+def _dataset_artifact_batch(
     *,
     compiled_contexts: Mapping[str, ProcessingContext],
     step_index: int,
@@ -1044,15 +1034,16 @@ def emit_launching_viewer(
     """Publish progress for viewer startup."""
 
     progress_queue.put(
-        create_event(
-            ProgressEventPayload(
-                identity=progress_context.identity_for_event(axis_id="", step_name=""),
-                phase=ProgressPhase.INIT,
-                status=ProgressStatus.STARTED,
-                percent=0.0,
-                message=required_visualizer.launch_message,
-            )
-        ).to_dict()
+        progress_context.event(
+            axis_id="",
+            step_name="",
+            phase=ProgressPhase.INIT,
+            status=ProgressStatus.STARTED,
+            percent=0.0,
+            message=required_visualizer.launch_message,
+            completed=0,
+            total=1,
+        )
     )
 
 
@@ -1074,18 +1065,16 @@ def wait_until_visualizers_ready(
         )
         if all(v.is_running for v in visualizers):
             progress_queue.put(
-                create_event(
-                    ProgressEventPayload(
-                        identity=progress_context.identity_for_event(
-                            axis_id="",
-                            step_name="",
-                        ),
-                        phase=ProgressPhase.INIT,
-                        status=ProgressStatus.RUNNING,
-                        percent=0.0,
-                        message="All streaming viewers ready",
-                    )
-                ).to_dict()
+                progress_context.event(
+                    axis_id="",
+                    step_name="",
+                    phase=ProgressPhase.INIT,
+                    status=ProgressStatus.RUNNING,
+                    percent=0.0,
+                    message="All streaming viewers ready",
+                    completed=0,
+                    total=1,
+                )
             )
             return
         time.sleep(0.2)
@@ -1094,15 +1083,16 @@ def wait_until_visualizers_ready(
     message = f"Timeout waiting for streaming viewers. Not ready: {not_ready}"
     logger.error(f"🔬 ORCHESTRATOR: {message}")
     progress_queue.put(
-        create_event(
-            ProgressEventPayload(
-                identity=progress_context.identity_for_event(axis_id="", step_name=""),
-                phase=ProgressPhase.INIT,
-                status=ProgressStatus.FAILED,
-                percent=0.0,
-                message=message,
-            )
-        ).to_dict()
+        progress_context.event(
+            axis_id="",
+            step_name="",
+            phase=ProgressPhase.INIT,
+            status=ProgressStatus.FAILED,
+            percent=0.0,
+            message=message,
+            completed=0,
+            total=1,
+        )
     )
     raise TimeoutError(message)
 
@@ -1122,7 +1112,7 @@ class ViewerSettlementProgressObserver:
     progress_queue: ProgressQueue
     progress_context: ProgressExecutionContext
     viewer_port: int
-    heartbeat_interval_seconds: float = PLATE_STEP_PROGRESS_HEARTBEAT_SECONDS
+    heartbeat_interval_seconds: float = DATASET_STEP_PROGRESS_HEARTBEAT_SECONDS
     _last_progress: "ViewerSettleProgress | None" = field(
         default=None,
         init=False,
@@ -1242,7 +1232,7 @@ def stop_execution_visualizers(visualizers: list[ExecutionVisualizerABC]) -> Non
 
 def project_execution_state(
     orchestrator: "PipelineOrchestrator",
-    execution_results: CompiledPlateExecutionResults,
+    execution_results: BundleExecutionResults,
 ) -> None:
     """Project worker-lane results back into orchestrator lifecycle state."""
 

@@ -7,10 +7,10 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
-    from openhcs.core.config import WellFilterConfig, WellFilterMode
+    from openhcs.core.config import PartitionFilterConfig, PartitionFilterMode
 
 
-WellFilterValue: TypeAlias = list[str] | str | int | None
+PartitionFilterValue: TypeAlias = list[str] | str | int | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,8 +18,8 @@ class StepAxisFilterResolution:
     """Resolved axis filter for one step-level filtering config root."""
 
     resolved_axis_values: frozenset[str]
-    filter_mode: WellFilterMode
-    original_filter: WellFilterValue
+    filter_mode: PartitionFilterMode
+    original_filter: PartitionFilterValue
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,7 +27,7 @@ class StepAxisFilterSet:
     """Resolved axis filters keyed by the config type that declared them."""
 
     resolutions_by_config_type: Mapping[
-        type["WellFilterConfig"], StepAxisFilterResolution
+        type["PartitionFilterConfig"], StepAxisFilterResolution
     ]
 
     @classmethod
@@ -37,7 +37,7 @@ class StepAxisFilterSet:
     def __len__(self) -> int:
         return len(self.resolutions_by_config_type)
 
-    def allows(self, config: "WellFilterConfig", axis_id: str | None) -> bool:
+    def allows(self, config: "PartitionFilterConfig", axis_id: str | None) -> bool:
         resolution = self.resolution_for(config)
         if resolution is None:
             return True
@@ -51,7 +51,7 @@ class StepAxisFilterSet:
 
     def resolution_for(
         self,
-        config: "WellFilterConfig",
+        config: "PartitionFilterConfig",
     ) -> StepAxisFilterResolution | None:
         from objectstate import get_base_type_for_lazy
 
@@ -78,7 +78,7 @@ def step_axis_allows_config(
     step_axis_filters: StepAxisFilterMap,
     *,
     step_index: int,
-    config: "WellFilterConfig",
+    config: "PartitionFilterConfig",
     axis_id: str | None,
 ) -> bool:
     """Return whether one resolved step config applies to the runtime axis."""

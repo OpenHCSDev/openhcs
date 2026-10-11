@@ -266,7 +266,7 @@ def test_config_window_page_count_and_visual_scope_own_presentation(qapp) -> Non
         "dataset_source",
         "use_threading",
         "multiprocessing_start_method",
-        "auto_add_output_plate_to_plate_manager",
+        "auto_add_output_dataset",
     }
     plate_state = ObjectState(PipelineConfig(), scope_id="/tmp/plate")
     plate_window = ConfigWindow(
@@ -521,13 +521,13 @@ def test_pipeline_config_code_document_emits_only_authored_override(qapp) -> Non
         authored_source = """# OpenHCS configuration
 
 from openhcs.core.config import (
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
     PipelineConfig,
 )
 
 config = PipelineConfig(
-    well_filter_config=LazyWellFilterConfig(
-        well_filter='3'
+    partition_filter_config=LazyPartitionFilterConfig(
+        partition_filter='3'
     )
 )"""
         driver = window.window_code_document_driver()
@@ -535,15 +535,15 @@ config = PipelineConfig(
         source = driver.read_document().source
 
         assert state.signature_diff_fields == {
-            "well_filter_config",
-            "well_filter_config.well_filter",
+            "partition_filter_config",
+            "partition_filter_config.partition_filter",
         }
         assert source == authored_source
         restored = ConfigDocumentAuthority.from_source(
             source,
             expected_config_type=PipelineConfig,
         )
-        assert restored.well_filter_config.well_filter == "3"
+        assert restored.partition_filter_config.partition_filter == "3"
     finally:
         window.close()
 

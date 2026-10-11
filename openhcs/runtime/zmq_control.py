@@ -168,7 +168,7 @@ class CompiledArtifactInspectionMessageStrategy(ZMQControlMessageStrategy):
                 )
             inspection = CompiledArtifactInspection.from_execution_bundle(
                 compile_artifact_id=record.execution_id,
-                plate_id=record.plate_id,
+                subject_id=record.subject_id,
                 bundle=record.compilation.execution_bundle,
             )
             return CompiledArtifactInspectionResponse(

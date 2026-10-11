@@ -39,7 +39,7 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
     PipelineConfig,
 )
 from openhcs.core.function_patterns import get_core_callable
@@ -148,9 +148,9 @@ def build_czi_brain_axon_cellbody_demo(
                 ),
             ),
         ),
-        well_filter_config=LazyWellFilterConfig(well_filter="A01"),
+        partition_filter_config=LazyPartitionFilterConfig(partition_filter="A01"),
         path_planning_config=LazyPathPlanningConfig(
-            well_filter=0,
+            partition_filter=0,
             global_output_folder=output_root,
         ),
         materialization_results_path=output_root / "results",

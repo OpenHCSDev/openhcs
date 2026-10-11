@@ -109,13 +109,13 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
         context = bundle.runtime_contexts["A01"]
         assert tuple(context.step_plans[0].variable_components) == (Microscopy.ZIndex,)
         orchestrator = PipelineOrchestrator(source, pipeline_config=document.pipeline_config).initialize()
-        outcomes = orchestrator.execute_compiled_plate(
+        outcomes = orchestrator.execute_compiled_bundle(
             execution_bundle=bundle, max_workers=1,
             runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
             progress_queue=AgentProgressQueue(),
             progress_context={
                 "execution_id": "source-schema-aggregate-synthetic",
-                "plate_id": str(source),
+                "subject_id": str(source),
                 "axis_id": "",
             },
         )

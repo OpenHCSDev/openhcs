@@ -4,14 +4,25 @@ from zmqruntime.messages import QueuedExecutionInfo, RunningExecutionInfo
 
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
 )
 from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,
-    PlateRuntimeState,
-    PlateRuntimeStateDeclarationBase,
+    SubjectRuntimeState,
+    QueuedSubjectRuntimeState,
+    CompilingSubjectRuntimeState,
+    CompiledSubjectRuntimeState,
+    ExecutingSubjectRuntimeState,
+    CompleteSubjectRuntimeState,
+    FailedSubjectRuntimeState,
+    SubjectRuntimeState,
+    QueuedSubjectRuntimeState,
+    CompilingSubjectRuntimeState,
+    CompiledSubjectRuntimeState,
+    ExecutingSubjectRuntimeState,
+    CompleteSubjectRuntimeState,
+    FailedSubjectRuntimeState,
     build_execution_runtime_projection,
 )
 
@@ -19,7 +30,7 @@ from openhcs.core.progress.projection import (
 def _event(
     *,
     execution_id: str = "exec-1",
-    plate_id: str = "/tmp/plate",
+    subject_id: str = "/tmp/plate",
     axis_id: str = "",
     step_name: str = "pipeline",
     phase: ProgressPhase,
@@ -27,16 +38,14 @@ def _event(
     percent: float,
     completed: int = 0,
     total: int = 1,
-    total_wells=None,
+    partition_values=None,
     worker_assignments=None,
 ) -> ProgressEvent:
     return ProgressEvent(
-        identity=ProgressIdentity(
-            execution_id=execution_id,
-            plate_id=plate_id,
-            axis_id=axis_id,
-            step_name=step_name,
-        ),
+        execution_id=execution_id,
+        subject_id=subject_id,
+        axis_id=axis_id,
+        step_name=step_name,
         phase=phase,
         status=status,
         percent=percent,
@@ -44,7 +53,7 @@ def _event(
         total=total,
         timestamp=1.0,
         pid=1234,
-        total_wells=total_wells,
+        partition_values=partition_values,
         worker_assignments=worker_assignments,
     )
 
@@ -55,7 +64,7 @@ def test_projection_marks_plate_compiled_when_all_known_wells_compiled():
             phase=ProgressPhase.INIT,
             status=ProgressStatus.STARTED,
             percent=0.0,
-            total_wells=["A01", "B01"],
+            partition_values=["A01", "B01"],
         ),
         _event(
             axis_id="A01",
@@ -74,12 +83,12 @@ def test_projection_marks_plate_compiled_when_all_known_wells_compiled():
     ]
 
     projection = build_execution_runtime_projection({"exec-1": events})
-    plate = projection.get_plate("/tmp/plate", "exec-1")
+    plate = projection.get_subject("/tmp/plate", "exec-1")
 
     assert plate is not None
-    assert plate.state == PlateRuntimeState.COMPILED
+    assert plate.state == CompiledSubjectRuntimeState
     assert round(plate.percent, 1) == 100.0
-    assert projection.count_for_state(PlateRuntimeState.COMPILED) == 1
+    assert projection.count_for_state(CompiledSubjectRuntimeState) == 1
     assert projection.has_active_work is False
 
 
@@ -89,7 +98,7 @@ def test_projection_marks_plate_executing_from_pipeline_channel():
             phase=ProgressPhase.INIT,
             status=ProgressStatus.STARTED,
             percent=0.0,
-            total_wells=["A01", "B01"],
+            partition_values=["A01", "B01"],
         ),
         _event(
             axis_id="A01",
@@ -103,12 +112,12 @@ def test_projection_marks_plate_executing_from_pipeline_channel():
     ]
 
     projection = build_execution_runtime_projection({"exec-1": events})
-    plate = projection.get_plate("/tmp/plate", "exec-1")
+    plate = projection.get_subject("/tmp/plate", "exec-1")
 
     assert plate is not None
-    assert plate.state == PlateRuntimeState.EXECUTING
+    assert plate.state == ExecutingSubjectRuntimeState
     assert round(plate.percent, 1) == 25.0
-    assert projection.count_for_state(PlateRuntimeState.EXECUTING) == 1
+    assert projection.count_for_state(ExecutingSubjectRuntimeState) == 1
     assert projection.has_active_work is True
 
 
@@ -142,9 +151,9 @@ def test_projection_dedupes_multiple_execution_ids_for_same_plate():
     )
 
     assert len(projection.plates) == 2  # raw snapshots
-    assert len(projection.by_plate_latest) == 1  # deduped visible plate set
-    assert projection.count_for_state(PlateRuntimeState.EXECUTING) == 1
-    assert projection.count_for_state(PlateRuntimeState.COMPILED) == 0
+    assert len(projection.by_subject_latest) == 1  # deduped visible plate set
+    assert projection.count_for_state(ExecutingSubjectRuntimeState) == 1
+    assert projection.count_for_state(CompiledSubjectRuntimeState) == 0
 
 
 def test_projection_marks_plate_failed_on_axis_error():
@@ -153,7 +162,7 @@ def test_projection_marks_plate_failed_on_axis_error():
             phase=ProgressPhase.INIT,
             status=ProgressStatus.STARTED,
             percent=0.0,
-            total_wells=["A01", "B01"],
+            partition_values=["A01", "B01"],
         ),
         _event(
             axis_id="A01",
@@ -176,16 +185,16 @@ def test_projection_marks_plate_failed_on_axis_error():
     ]
 
     projection = build_execution_runtime_projection({"exec-1": events})
-    plate = projection.get_plate("/tmp/plate", "exec-1")
+    plate = projection.get_subject("/tmp/plate", "exec-1")
 
     assert plate is not None
-    assert plate.state == PlateRuntimeState.FAILED
+    assert plate.state == FailedSubjectRuntimeState
     assert round(plate.percent, 1) == 75.0
-    assert projection.count_for_state(PlateRuntimeState.FAILED) == 1
+    assert projection.count_for_state(FailedSubjectRuntimeState) == 1
 
 
 def test_plate_runtime_state_declarations_cover_wire_tokens():
-    assert set(PlateRuntimeStateDeclarationBase.__registry__) == set(PlateRuntimeState)
+    assert set(SubjectRuntimeState.__registry__) == set(SubjectRuntimeState)
 
 
 def test_execution_projection_does_not_mirror_registered_state_counts_as_fields():
@@ -193,7 +202,7 @@ def test_execution_projection_does_not_mirror_registered_state_counts_as_fields(
 
     assert "state_counts" in projection_fields
     assert (
-        not {f"{state.value}_count" for state in PlateRuntimeState} & projection_fields
+        not {f"{state.value}_count" for state in SubjectRuntimeState} & projection_fields
     )
 
 
@@ -211,9 +220,9 @@ def test_init_topology_projects_queued_without_a_parallel_ui_override():
         }
     )
 
-    plate = projection.get_plate("/tmp/plate", "exec-1")
+    plate = projection.get_subject("/tmp/plate", "exec-1")
     assert plate is not None
-    assert plate.state is PlateRuntimeState.QUEUED
+    assert plate.state is QueuedSubjectRuntimeState
 
 
 def test_server_lifecycle_entries_reconcile_by_execution_and_plate_identity():
@@ -244,14 +253,14 @@ def test_server_lifecycle_entries_reconcile_by_execution_and_plate_identity():
         ),
     )
 
-    queued = projection.get_plate("/tmp/plate")
-    compiling = projection.get_plate("/tmp/other")
+    queued = projection.get_subject("/tmp/plate")
+    compiling = projection.get_subject("/tmp/other")
     assert queued is not None
     assert queued.execution_id == "exec-next"
-    assert queued.state is PlateRuntimeState.QUEUED
+    assert queued.state is QueuedSubjectRuntimeState
     assert queued.queue_position == 4
     assert compiling is not None
-    assert compiling.state is PlateRuntimeState.COMPILING
+    assert compiling.state is CompilingSubjectRuntimeState
 
 
 def test_running_entry_only_supersedes_matching_queued_identity():
@@ -274,12 +283,12 @@ def test_running_entry_only_supersedes_matching_queued_identity():
         ),
     )
 
-    queued = projection.get_plate("/tmp/queued-plate", "shared-exec")
-    running = projection.get_plate("/tmp/running-plate", "shared-exec")
+    queued = projection.get_subject("/tmp/queued-plate", "shared-exec")
+    running = projection.get_subject("/tmp/running-plate", "shared-exec")
     assert queued is not None
-    assert queued.state is PlateRuntimeState.QUEUED
+    assert queued.state is QueuedSubjectRuntimeState
     assert running is not None
-    assert running.state is PlateRuntimeState.EXECUTING
+    assert running.state is ExecutingSubjectRuntimeState
 
 
 def test_server_snapshot_refreshes_queue_position_for_same_identity():
@@ -298,7 +307,7 @@ def test_server_snapshot_refreshes_queue_position_for_same_identity():
         queued_executions=(dataclass_replace(queued_entry, queue_position=1),),
     )
 
-    queued = projection.get_plate("/tmp/plate", "exec-queued")
+    queued = projection.get_subject("/tmp/plate", "exec-queued")
     assert queued is not None
     assert queued.queue_position == 1
 
@@ -324,9 +333,9 @@ def test_running_snapshot_advances_compiled_identity_into_execution():
         ),
     )
 
-    running = projection.get_plate("/tmp/plate", "exec-shared")
+    running = projection.get_subject("/tmp/plate", "exec-shared")
     assert running is not None
-    assert running.state is PlateRuntimeState.EXECUTING
+    assert running.state is ExecutingSubjectRuntimeState
 
 
 def test_lagging_server_snapshot_does_not_downgrade_terminal_event_state():
@@ -349,9 +358,9 @@ def test_lagging_server_snapshot_does_not_downgrade_terminal_event_state():
         ),
     )
 
-    completed = projection.get_plate("/tmp/plate", "exec-terminal")
+    completed = projection.get_subject("/tmp/plate", "exec-terminal")
     assert completed is not None
-    assert completed.state is PlateRuntimeState.COMPLETE
+    assert completed.state is CompleteSubjectRuntimeState
 
 
 def test_plate_runtime_terminal_policy_lives_on_projection():
@@ -360,7 +369,7 @@ def test_plate_runtime_terminal_policy_lives_on_projection():
             phase=ProgressPhase.INIT,
             status=ProgressStatus.STARTED,
             percent=0.0,
-            total_wells=["A01"],
+            partition_values=["A01"],
         ),
         _event(
             axis_id="A01",
@@ -371,8 +380,8 @@ def test_plate_runtime_terminal_policy_lives_on_projection():
     ]
 
     projection = build_execution_runtime_projection({"exec-1": events})
-    plate = projection.get_plate("/tmp/plate", "exec-1")
+    plate = projection.get_subject("/tmp/plate", "exec-1")
 
     assert plate is not None
-    assert plate.state == PlateRuntimeState.COMPLETE
+    assert plate.state == CompleteSubjectRuntimeState
     assert plate.is_terminal

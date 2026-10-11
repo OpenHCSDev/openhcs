@@ -37,7 +37,7 @@ from benchmark.contracts.tool_adapter import (
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.constants import Backend
-from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
+from openhcs.core.config import GlobalPipelineConfig, PartitionFilterConfig
 from openhcs.core.source_binding_workspace import (
     SourceBindingWorkspaceMaterialization,
     materialize_source_binding_workspace,
@@ -47,7 +47,7 @@ from openhcs.core.source_bindings import (
     SourceBindingsConfig,
     source_bindings_defaults_to_base,
 )
-from openhcs.core.utils import WellFilterProcessor
+from openhcs.core.partition_filter import PartitionFilterProcessor
 from benchmark.equivalence.runtime import RuntimeOutputSnapshot
 from openhcs.interop.cellprofiler.parser import CPPipeParser
 from openhcs.interop.cellprofiler.pipeline_import import (
@@ -743,7 +743,7 @@ class SelectedWellNativeCellProfilerInputDomainStrategy(
             source,
             source_root=request.dataset_path,
         )
-        return not source_bindings.is_empty and _request_has_well_filter(request)
+        return not source_bindings.is_empty and _request_has_partition_filter(request)
 
     def prepare(
         self,
@@ -882,13 +882,13 @@ class SelectedWellNativeCellProfilerInputDomainStrategy(
         self,
         request: CellProfilerRunRequest,
     ) -> tuple[str, ...]:
-        well_filter_slug = native_cellprofiler_well_filter_scope_slug(
-            request.global_config.well_filter_config
+        partition_filter_slug = native_cellprofiler_partition_filter_scope_slug(
+            request.global_config.partition_filter_config
         )
         return tuple(
             slug
             for slug in (
-                well_filter_slug,
+                partition_filter_slug,
                 *super().reference_scope_slugs(request),
             )
             if slug is not None
@@ -907,7 +907,7 @@ class EmbeddedImagePlaneNativeCellProfilerInputDomainStrategy(
         request: CellProfilerRunRequest,
         source: CPPipeSourceResolution,
     ) -> bool:
-        if _request_has_well_filter(request):
+        if _request_has_partition_filter(request):
             return False
         return bool(
             _cellprofiler_source_bindings(
@@ -1272,22 +1272,22 @@ def _subprocess_output(result: subprocess.CompletedProcess[str]) -> str:
     return "\n".join(part for part in (stdout, stderr) if part)
 
 
-def native_cellprofiler_well_filter_scope_slug(
-    well_filter_config: WellFilterConfig,
+def native_cellprofiler_partition_filter_scope_slug(
+    partition_filter_config: PartitionFilterConfig,
 ) -> str | None:
     """Return a stable native-reference suffix for public well filtering."""
-    well_filter = well_filter_config.well_filter
-    if well_filter is None:
+    partition_filter = partition_filter_config.partition_filter
+    if partition_filter is None:
         return None
-    if isinstance(well_filter, int):
-        filter_slug = f"first{well_filter}"
-    elif isinstance(well_filter, str):
-        filter_slug = _scope_slug_fragment(well_filter)
+    if isinstance(partition_filter, int):
+        filter_slug = f"first{partition_filter}"
+    elif isinstance(partition_filter, str):
+        filter_slug = _scope_slug_fragment(partition_filter)
     else:
         filter_slug = (
-            "_".join(_scope_slug_fragment(value) for value in well_filter) or "empty"
+            "_".join(_scope_slug_fragment(value) for value in partition_filter) or "empty"
         )
-    return f"wells_{well_filter_config.well_filter_mode.value}_{filter_slug}"
+    return f"wells_{partition_filter_config.partition_filter_mode.value}_{filter_slug}"
 
 
 def native_cellprofiler_reference_scope_slugs(
@@ -1436,14 +1436,14 @@ def _selected_source_wells(
     workspace: SourceBindingWorkspaceMaterialization,
 ) -> tuple[str, ...]:
     available_wells = _primary_workspace_wells(workspace)
-    well_filter_config = request.global_config.well_filter_config
-    well_filter = well_filter_config.well_filter
-    if well_filter is None:
+    partition_filter_config = request.global_config.partition_filter_config
+    partition_filter = partition_filter_config.partition_filter
+    if partition_filter is None:
         return available_wells
     selected_wells = tuple(
-        WellFilterProcessor.resolve_filter_with_mode(
-            well_filter,
-            well_filter_config.well_filter_mode,
+        PartitionFilterProcessor.resolve_filter_with_mode(
+            partition_filter,
+            partition_filter_config.partition_filter_mode,
             list(available_wells),
         )
     )
@@ -1454,8 +1454,8 @@ def _selected_source_wells(
     return selected_wells
 
 
-def _request_has_well_filter(request: CellProfilerRunRequest) -> bool:
-    return request.global_config.well_filter_config.well_filter is not None
+def _request_has_partition_filter(request: CellProfilerRunRequest) -> bool:
+    return request.global_config.partition_filter_config.partition_filter is not None
 
 
 def native_cellprofiler_reference_is_complete(

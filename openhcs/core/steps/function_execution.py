@@ -30,7 +30,7 @@ from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
     RuntimeInvocationDomain,
 )
-from openhcs.core.progress import ProgressPhase, ProgressStatus, emit
+from openhcs.core.progress import ProgressPhase, ProgressStatus
 from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
 from openhcs.core.source_binding_selection import (
     SourceBoundAnchorPatternPolicy,
@@ -1033,9 +1033,7 @@ class FunctionStepExecutor:
         runtime = self.context.execution_runtime
         if runtime is None:
             return
-        emit(
-            execution_id=runtime.execution_id,
-            plate_id=runtime.plate_id,
+        runtime.emit(
             axis_id=self.plan.axis_id,
             step_name=self.plan.step_name,
             phase=ProgressPhase.PATTERN_GROUP,
@@ -1045,6 +1043,4 @@ class FunctionStepExecutor:
             percent=(completed_groups / total_groups) * 100.0,
             component=str(component_value),
             pattern=str(pattern_item),
-            worker_slot=runtime.worker_slot,
-            owned_wells=list(runtime.owned_wells),
         )

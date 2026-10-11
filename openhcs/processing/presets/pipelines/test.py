@@ -18,6 +18,6 @@ step_1 = FunctionStep(
         stack_percentile_normalize,
     ],
     name="Step_1",
-    napari_streaming_config=LazyNapariStreamingConfig(well_filter="12"),
+    napari_streaming_config=LazyNapariStreamingConfig(partition_filter="12"),
 )
 pipeline_steps.append(step_1)

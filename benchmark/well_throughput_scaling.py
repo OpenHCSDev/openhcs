@@ -41,10 +41,10 @@ from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
     LazyVFSConfig,
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
     MaterializationBackend,
     MultiprocessingStartMethod,
-    WellFilterConfig,
+    PartitionFilterConfig,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
@@ -57,7 +57,7 @@ from openhcs.core.source_projection import (
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
-from openhcs.core.utils import WellFilterProcessor
+from openhcs.core.partition_filter import PartitionFilterProcessor
 from openhcs.core.virtual_workspace_metadata import (
     FIELDS,
     AtomicMetadataWriter,
@@ -1883,7 +1883,7 @@ def well_throughput_run_input_sha256(
                 "name": case.name,
                 "dataset": source_record(case.dataset_path),
                 "cppipe": source_record(case.cppipe_path),
-                "well_filter": to_jsonable(case.well_filter_config),
+                "partition_filter": to_jsonable(case.partition_filter_config),
             }
             for case in cases
         ],
@@ -2022,7 +2022,7 @@ def run_well_throughput_suite(
                     ),
                     mode=mode,
                     start_method=effective_start_method,
-                    source_well_filter=case.well_filter_config,
+                    source_partition_filter=case.partition_filter_config,
                     native_execution_baseline=native_baselines.get(case.name),
                     max_memory_mb=max_memory_mb,
                     execution_port=execution_port,
@@ -2046,7 +2046,7 @@ def run_case_well_throughput(
     output_root: Path,
     mode: WellThroughputMode,
     start_method: MultiprocessingStartMethod = MultiprocessingStartMethod.FORK,
-    source_well_filter: WellFilterConfig | None = None,
+    source_partition_filter: PartitionFilterConfig | None = None,
     native_execution_baseline: NativeCellProfilerExecutionBaseline | None = None,
     max_memory_mb: float | None = None,
     execution_port: int | None = None,
@@ -2094,7 +2094,7 @@ def run_case_well_throughput(
     well_ids = _replicate_source_binding_workspace_wells(
         prepared.materialization.metadata_path,
         _synthetic_well_ids(mode.well_count),
-        source_well_filter=source_well_filter,
+        source_partition_filter=source_partition_filter,
     )
 
     global_config = GlobalPipelineConfig(
@@ -2111,9 +2111,9 @@ def run_case_well_throughput(
             use_threading=None,
             multiprocessing_start_method=None,
             materialize_runtime_artifacts=False,
-            well_filter_config=LazyWellFilterConfig(well_filter=list(well_ids)),
+            partition_filter_config=LazyPartitionFilterConfig(partition_filter=list(well_ids)),
             path_planning_config=LazyPathPlanningConfig(
-                well_filter=0,
+                partition_filter=0,
                 global_output_folder=output_root,
                 output_dir_suffix="_well_throughput",
             ),
@@ -2129,8 +2129,8 @@ def run_case_well_throughput(
         output_root / "ordinary_run_evidence" / run_id / "runtime_outcomes.pkl.gz"
     ).resolve()
     submission = OpenHCSExecutionSubmission(
-        plate_id=dataset_path,
-        execution_plate_id=source_workspace_path,
+        subject_id=dataset_path,
+        execution_subject_id=source_workspace_path,
         selected_pipeline_path=cppipe_path,
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config,
@@ -3101,7 +3101,7 @@ def _replicate_source_binding_workspace_wells(
     metadata_path: Path,
     well_ids: Iterable[str],
     *,
-    source_well_filter: WellFilterConfig | None = None,
+    source_partition_filter: PartitionFilterConfig | None = None,
 ) -> tuple[str, ...]:
     """Replicate the declared source-well scope without copying source pixels."""
 
@@ -3144,13 +3144,13 @@ def _replicate_source_binding_workspace_wells(
             if projection.address is not None
         )
     )
-    if source_well_filter is None or source_well_filter.well_filter is None:
+    if source_partition_filter is None or source_partition_filter.partition_filter is None:
         selected_source_wells = available_source_wells
     else:
         selected_source_wells = tuple(
-            WellFilterProcessor.resolve_filter_with_mode(
-                source_well_filter.well_filter,
-                source_well_filter.well_filter_mode,
+            PartitionFilterProcessor.resolve_filter_with_mode(
+                source_partition_filter.partition_filter,
+                source_partition_filter.partition_filter_mode,
                 list(available_source_wells),
             )
         )

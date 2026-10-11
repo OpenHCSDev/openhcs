@@ -137,7 +137,7 @@ AUTHORING_SCHEMA_ROOT_PROBES = (
             "source_bindings_config",
             "path_planning_config",
             "step_materialization_config",
-            "step_well_filter_config",
+            "step_partition_filter_config",
             "sequential_processing_config",
             "napari_streaming_config",
             "fiji_streaming_config",
@@ -149,7 +149,7 @@ AUTHORING_SCHEMA_ROOT_PROBES = (
             "dtype_config",
             "processing_config",
             "source_bindings",
-            "step_well_filter_config",
+            "step_partition_filter_config",
             "step_materialization_config",
             "streaming_defaults",
             "napari_streaming_config",
@@ -228,10 +228,10 @@ AUTHORING_SCHEMA_PROBES = (
     ),
     (
         "step",
-        "step_well_filter_config",
+        "step_partition_filter_config",
         (
-            "step_well_filter_config.well_filter",
-            "step_well_filter_config.well_filter_mode",
+            "step_partition_filter_config.partition_filter",
+            "step_partition_filter_config.partition_filter_mode",
         ),
     ),
     (
@@ -1225,7 +1225,7 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     LazySourceBindingsConfig,
     LazyStepMaterializationConfig,
-    LazyStepWellFilterConfig,
+    LazyStepPartitionFilterConfig,
     PipelineConfig,
 )
 from openhcs.runtime.viewer_display import NapariVariableSizeHandling
@@ -1257,7 +1257,7 @@ plate_paths = [
 ]
 
 global_config = GlobalPipelineConfig(
-    auto_add_output_plate_to_plate_manager=True
+    auto_add_output_dataset=True
 )
 
 per_plate_configs = {{
@@ -1319,8 +1319,8 @@ pipeline_data = {{
                     'high_percentile': 99.5
                 }}),
             name='Image Enhancement Processing {ctx.run_id}',
-            step_well_filter_config=LazyStepWellFilterConfig(
-                well_filter=4
+            step_partition_filter_config=LazyStepPartitionFilterConfig(
+                partition_filter=4
             ),
             step_materialization_config=LazyStepMaterializationConfig()
         ),
@@ -2564,7 +2564,7 @@ def selected_plate_state(ctx: RunContext) -> dict[str, Any]:
         raise RehearsalFailure(
             "Selected plate did not finish with terminal_status=complete."
         )
-    output_root = row.get("output_plate_root")
+    output_root = row.get("output_dataset_root")
     if not isinstance(output_root, str) or not Path(output_root).exists():
         raise RehearsalFailure("Output plate root is missing.")
     return row
@@ -4452,7 +4452,7 @@ def run_one(
             "fresh_processes": fresh,
             "descriptor_path": str(ctx.descriptor_path),
             "plate_dir": str(ctx.plate_dir),
-            "output_plate_root": row.get("output_plate_root"),
+            "output_dataset_root": row.get("output_dataset_root"),
             "napari_port": ctx.napari_port,
             "isolated_ui_bridge_port": args.isolated_ui_bridge_port,
             "authoring_contexts": authoring_contexts,
@@ -4473,7 +4473,7 @@ def run_one(
                 "execution_state_revision": execution_state_revision,
                 "terminal_status": row.get("terminal_status"),
                 "plate_root": row.get("plate_root"),
-                "output_plate_root": row.get("output_plate_root"),
+                "output_dataset_root": row.get("output_dataset_root"),
             },
             "measurement_snapshot": measurements,
             "results_window": results_window,
@@ -4827,7 +4827,7 @@ def build_objective_evidence(report: Mapping[str, Any]) -> dict[str, Any]:
         for field_name in (
             "compile_state_revision",
             "execution_state_revision",
-            "output_plate_root",
+            "output_dataset_root",
         )
     ):
         raise RehearsalFailure(
@@ -4971,7 +4971,7 @@ def write_markdown_report(session_dir: Path, reports: list[dict[str, Any]]) -> N
             f"- {report['run_id']}: {report['elapsed_seconds']:.2f}s, "
             f"fresh={report['fresh_processes']}, descriptor={report['descriptor_path']}"
         )
-        lines.append(f"  output={report['output_plate_root']}")
+        lines.append(f"  output={report['output_dataset_root']}")
         lines.append(
             f"  viewer_port={report['napari_port']} route={report['viewer']['route_key']} "
             f"payload_records={report['viewer']['payload_record_count']}"
@@ -5047,7 +5047,7 @@ def main() -> int:
     for report in reports:
         print(
             f"{report['run_id']} elapsed={report['elapsed_seconds']:.2f}s "
-            f"viewer_port={report['napari_port']} output={report['output_plate_root']}"
+            f"viewer_port={report['napari_port']} output={report['output_dataset_root']}"
         )
     return 0
 

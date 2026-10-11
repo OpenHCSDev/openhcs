@@ -63,8 +63,8 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
     pipeline_config, steps = build_neuroncyto_ii_crossover_demo(inputs)
 
     assert pipeline_config.dataset_source is SourceBindingsSource
-    assert pipeline_config.well_filter_config.well_filter == "Image15"
-    assert pipeline_config.path_planning_config.well_filter == 0
+    assert pipeline_config.partition_filter_config.partition_filter == "Image15"
+    assert pipeline_config.path_planning_config.partition_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is True
     assert pipeline_config.materialization_results_path == Path("results")
 
@@ -181,7 +181,7 @@ def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
         ).initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=[inputs.image_id],
+            partition_values=[inputs.image_id],
             is_zmq_execution=True,
         )
     finally:
@@ -255,16 +255,16 @@ def test_neuroncyto_demo_executes_numeric_biological_well_identity(
         ).initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=[inputs.image_id],
+            partition_values=[inputs.image_id],
             enable_visualizer_override=False,
         )
-        results = orchestrator.execute_compiled_plate(
+        results = orchestrator.execute_compiled_bundle(
             execution_bundle=compilation,
             max_workers=1,
             progress_queue=progress_queue,
             progress_context={
                 "execution_id": f"test::{time.time_ns()}",
-                "plate_id": str(plate_path),
+                "subject_id": str(plate_path),
                 "axis_id": "",
             },
         )
@@ -389,7 +389,7 @@ def test_neuroncyto_demo_contributor_prepares_only_declared_pair(
         ).initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=list(contribution.pipeline_steps),
-            well_filter=["Image15"],
+            partition_values=["Image15"],
             is_zmq_execution=True,
         )
     finally:

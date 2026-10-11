@@ -18,7 +18,7 @@ from openhcs.agent.services.artifact_plan_inspection_service import (
 )
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.core.progress import (
-    ProgressEventPayload, ProgressIdentity, ProgressPhase, ProgressStatus, create_event,
+    ProgressEvent, ProgressExecutionContext, ProgressPhase, ProgressStatus,
 )
 from openhcs.mcp.execution import McpTransportExecutor
 from openhcs.mcp.server import build_server
@@ -37,20 +37,20 @@ def test_physical_reader_declarations_inherit_original_affine_progress(declarati
 
 def test_original_progress_codec_is_the_only_event_store_and_rejects_bad_enum():
     queue = AgentProgressQueue()
-    event = create_event(ProgressEventPayload(
-        identity=ProgressIdentity("inspection", "/source", "A01", "new-declared-step"),
+    event = ProgressExecutionContext("inspection", "/source").event(
+        axis_id="A01", step_name="new-declared-step",
         phase=ProgressPhase.COMPILE, status=ProgressStatus.RUNNING, percent=25,
         completed=1, total=4,
-    ))
+    )
     statuses = []
     with EndpointStartupStatus.callback_scope(statuses.append):
-        queue.put(event.to_dict())
+        queue.put(event)
         invalid = event.to_dict()
         invalid["phase"] = "not-a-declared-phase"
-        with pytest.raises(ValueError, match="Invalid phase"):
-            queue.put(invalid)
+        with pytest.raises(ValueError, match="phase must be one of"):
+            ProgressEvent.from_dict(invalid)
         with pytest.raises(ValueError, match="missing required field"):
-            queue.put({"phase": "compile", "status": "running"})
+            ProgressEvent.from_dict({"phase": "compile", "status": "running"})
     assert queue.events == [event]
     assert len(statuses) == 1
     assert statuses[0].message == "compile: running: A01: new-declared-step: 1/4"

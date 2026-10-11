@@ -6,6 +6,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Dict, List, Mapping, Optional, Sequence, TypeAlias
 
+from python_introspect import project_dataclass
+
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import (
@@ -61,14 +63,14 @@ class ForkInheritedWorkerExecutionState:
 
 @dataclass(frozen=True, slots=True)
 class WorkerLaneExecutionContext(ProgressExecutionContext):
-    """Execution identity for one deterministic worker lane."""
+    """One worker lane of an execution: its slot and the partition values it owns."""
 
     debug_execution_policy: DebugExecutionPolicy
     worker_slot: str
     worker_assignments: Mapping[str, Sequence[str]]
 
     @property
-    def owned_wells(self) -> tuple[str, ...]:
+    def owned_partition_values(self) -> tuple[str, ...]:
         return tuple(self.worker_assignments[self.worker_slot])
 
     @property
@@ -78,15 +80,18 @@ class WorkerLaneExecutionContext(ProgressExecutionContext):
             value for values in self.worker_assignments.values() for value in values
         )
 
+    def event_fields(self) -> dict[str, object]:
+        """Every event a lane emits carries the lane's claim."""
+
+        return {
+            **ProgressExecutionContext.event_fields(self),
+            "worker_slot": self.worker_slot,
+            "owned_partition_values": list(self.owned_partition_values),
+        }
+
     def install_debug_sink(self, processing_context: DebugExecutionContext) -> None:
         self.debug_execution_policy.install_context_sink(
-            DebugSinkInstallRequest(
-                context=processing_context,
-                execution_id=self.execution_id,
-                plate_id=self.plate_id,
-                worker_slot=self.worker_slot,
-                owned_wells=self.owned_wells,
-            )
+            DebugSinkInstallRequest(context=processing_context, progress_context=self)
         )
 
 
@@ -106,11 +111,6 @@ class WorkerAssignmentPlan:
             if lane_contexts
         )
 
-    def owned_wells(self, worker_slot: str) -> tuple[str, ...]:
-        """Return the deterministic well ownership for one worker slot."""
-
-        return tuple(self.worker_assignments[worker_slot])
-
 
 @dataclass(frozen=True, slots=True)
 class WorkerLaneExecutionPlan(ProgressExecutionContext):
@@ -126,10 +126,11 @@ class WorkerLaneExecutionPlan(ProgressExecutionContext):
         return self.assignments.active_lane_items()
 
     def lane_context(self, worker_slot: str) -> WorkerLaneExecutionContext:
-        return WorkerLaneExecutionContext(
-            execution_id=self.execution_id,
-            plate_id=self.plate_id,
-            debug_execution_policy=self.debug_execution_policy,
+        """The lane's context: this plan's identity plus the lane's slot."""
+
+        return project_dataclass(
+            WorkerLaneExecutionContext,
+            self,
             worker_slot=worker_slot,
             worker_assignments=self.assignments.worker_assignments,
         )

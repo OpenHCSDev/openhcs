@@ -583,7 +583,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
 
             steps = [FunctionStep(func=stack_percentile_normalize)]
         compilation = orchestrator.compile_pipelines(
-            pipeline_definition=steps, well_filter=["A01"]
+            pipeline_definition=steps, partition_values=["A01"]
         )
         context = compilation.runtime_contexts["A01"]
         if embedded:
@@ -603,12 +603,12 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
             assert context.step_plans[2].variable_components == [
                 Microscopy.Channel
             ]
-        result = orchestrator.execute_compiled_plate(
+        result = orchestrator.execute_compiled_bundle(
             execution_bundle=compilation,
             progress_queue=progress,
             progress_context={
                 "execution_id": f"test::source-geometry::{embedded}",
-                "plate_id": str(plate),
+                "subject_id": str(plate),
                 "axis_id": "",
             },
         )
@@ -623,7 +623,7 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
             )
             assert len(position_outputs) == 2, (
                 context.step_plans[0].artifact_analysis_output_dir,
-                tuple(Path(context.output_plate_root).rglob("*positions*.json")),
+                tuple(Path(context.output_dataset_root).rglob("*positions*.json")),
             )
             expected_positions = [
                 [((site - 1) % 3) * 4.625 - 1.25, ((site - 1) // 3) * 2.375 - 0.5]
@@ -637,8 +637,8 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
             )
             from openhcs.core.dataset_sources.openhcs_format import OpenHCSDatasetSource
 
-            output_plate = Path(context.output_plate_root)
-            metadata_path = output_plate / OpenHCSMetadataHandler.METADATA_FILENAME
+            output_dataset = Path(context.output_dataset_root)
+            metadata_path = output_dataset / OpenHCSMetadataHandler.METADATA_FILENAME
             persisted_bytes = metadata_path.read_bytes()
             persisted = json.loads(persisted_bytes)
             image_subdirectories = [
@@ -666,11 +666,11 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                 config
             )
             reopened = PipelineOrchestrator(
-                output_plate, pipeline_config=replay_config
+                output_dataset, pipeline_config=replay_config
             ).initialize()
             assert isinstance(reopened.microscope_handler, OpenHCSDatasetSource)
             input_dir = reopened.microscope_handler.initialize_workspace(
-                output_plate, reopened.filemanager
+                output_dataset, reopened.filemanager
             )
             assert input_dir == reopened.input_dir
             assert metadata_path.read_bytes() == persisted_bytes
@@ -688,14 +688,14 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
                         ),
                     )
                 ],
-                well_filter=["A01"],
+                partition_values=["A01"],
             )
-            replay_result = reopened.execute_compiled_plate(
+            replay_result = reopened.execute_compiled_bundle(
                 execution_bundle=replay,
                 progress_queue=progress,
                 progress_context={
                     "execution_id": f"test::stitched-output-replay::{assembly_backend}",
-                    "plate_id": str(output_plate),
+                    "subject_id": str(output_dataset),
                     "axis_id": "",
                 },
             )

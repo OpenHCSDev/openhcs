@@ -25,7 +25,7 @@ from openhcs.core.config import (
     LazyNapariStreamingConfig,
     LazyFijiStreamingConfig,
 )
-from openhcs.core.config import LazyStepWellFilterConfig
+from openhcs.core.config import LazyStepPartitionFilterConfig
 from openhcs.core.config import LazyProcessingConfig, LazyDtypeConfig
 from openhcs.core.config import LazyStepSourceBindingsConfig
 from openhcs.core.source_bindings import (
@@ -299,7 +299,7 @@ class AbstractStep(abc.ABC):
         dtype_config: "LazyDtypeConfig" = LazyDtypeConfig(),
         processing_config: "LazyProcessingConfig" = LazyProcessingConfig(),
         source_bindings: "LazyStepSourceBindingsConfig" = LazyStepSourceBindingsConfig(),
-        step_well_filter_config: "LazyStepWellFilterConfig" = LazyStepWellFilterConfig(),
+        step_partition_filter_config: "LazyStepPartitionFilterConfig" = LazyStepPartitionFilterConfig(),
         step_materialization_config: "LazyStepMaterializationConfig" = LazyStepMaterializationConfig(),
         streaming_defaults: "LazyStreamingDefaults" = LazyStreamingDefaults(),
         napari_streaming_config: "LazyNapariStreamingConfig" = LazyNapariStreamingConfig(),
@@ -327,7 +327,7 @@ class AbstractStep(abc.ABC):
                 separately by SequentialProcessingConfig.
             source_bindings: Named semantic inputs selected for this step from
                 pipeline sources or prior step artifacts.
-            step_well_filter_config: Wells eligible to execute this step. The
+            step_partition_filter_config: Wells eligible to execute this step. The
                 step policy can narrow but cannot restore wells removed by the
                 pipeline execution-domain filter.
             step_materialization_config: Optional persistent checkpoint of this
@@ -353,7 +353,7 @@ class AbstractStep(abc.ABC):
                 f"got {type(source_bindings).__name__}."
             )
         self.source_bindings = source_bindings
-        self.step_well_filter_config = step_well_filter_config
+        self.step_partition_filter_config = step_partition_filter_config
         self.step_materialization_config = step_materialization_config
         self.streaming_defaults = streaming_defaults
         self.napari_streaming_config = napari_streaming_config

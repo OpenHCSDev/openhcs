@@ -42,17 +42,17 @@ relationship is:
 
 .. code-block:: text
 
-   WellFilterConfig                 pipeline execution domain
+   PartitionFilterConfig                 pipeline execution domain
       |-- PathPlanningConfig        automatic output-plate persistence
-      `-- StepWellFilterConfig      step-policy default
+      `-- StepPartitionFilterConfig      step-policy default
              |-- StepMaterializationConfig
              `-- StreamingDefaults
                     `-- registered Napari/Fiji streaming config
 
-The broad pipeline ``well_filter_config`` is applied before per-well contexts
+The broad pipeline ``partition_filter_config`` is applied before per-well contexts
 compile, so it reduces image loading, memory use, and processing. Descendant
 step policies inherit that selection unless explicitly narrowed. Sibling
-overrides remain isolated: changing ``path_planning_config.well_filter`` changes
+overrides remain isolated: changing ``path_planning_config.partition_filter`` changes
 automatic main-flow persistence, not viewer eligibility.
 
 The root configuration dataclasses and their generated lazy counterparts are
@@ -108,7 +108,7 @@ Sources and execution shape
   combination at a time to bound memory. It does not replace
   ``variable_components`` or ``group_by``.
 
-``WellFilterConfig`` and ``StepWellFilterConfig``
+``PartitionFilterConfig`` and ``StepPartitionFilterConfig``
   Reusable include/exclude selection for pipeline operations and individual
   steps. Step filtering changes which wells execute; it is not an image-source
   selector.
@@ -129,7 +129,7 @@ Storage, paths, and persistence
 
 ``PathPlanningConfig``
   Output workspace/root placement, directory naming, and which processed wells
-  seed the automatic main-flow output plate. ``well_filter=0`` keeps that
+  seed the automatic main-flow output plate. ``partition_filter=0`` keeps that
   automatic output runtime-only. It does not disable explicitly requested step
   checkpoints or named-artifact materialization. Compiled plan inspection
   reports ``main_flow_axis_persistence_enabled`` for each step so this effective
@@ -166,7 +166,7 @@ Viewers
   ``StreamingConfig`` registry; generic code does not maintain a viewer-name
   table. To display one exact step, leave viewer enablement false at broader
   scopes and override ``enabled=True`` only on that step's selected viewer
-  config, optionally with a bounded ``well_filter`` and ``persistent=True``;
+  config, optionally with a bounded ``partition_filter`` and ``persistent=True``;
   then compile again.
 
 .. openhcs-gallery:: ui-step-settings-editor

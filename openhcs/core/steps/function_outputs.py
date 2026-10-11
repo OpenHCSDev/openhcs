@@ -1048,7 +1048,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         return MappingProxyType(observations)
 
     @classmethod
-    def finalize_completed_plate(
+    def finalize_completed_dataset(
         cls,
         compiled_contexts: Mapping[str, ProcessingContext],
         *,
@@ -1129,7 +1129,7 @@ class PrimaryImageMetadataTarget(
             raise ValueError(
                 f"Step {plan.step_index} ({plan.step_name}) has no output directory."
             )
-        if plan.output_plate_root is None or plan.sub_dir is None:
+        if plan.output_dataset_root is None or plan.sub_dir is None:
             raise ValueError(
                 f"Step {plan.step_index} ({plan.step_name}) has incomplete "
                 "OpenHCS metadata output identity."
@@ -1137,7 +1137,7 @@ class PrimaryImageMetadataTarget(
         return cls(
             output_dir=plan.output_dir,
             backend=plan.write_backend,
-            plate_root=plan.output_plate_root,
+            plate_root=plan.output_dataset_root,
             sub_dir=plan.sub_dir,
             results_dir=plan.analysis_results_dir,
         )
@@ -1230,7 +1230,7 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
         if not materialization.has_persistent_target:
             return None
         output_dir = plan.artifact_analysis_output_dir
-        plate_root = plan.artifact_output_plate_root
+        plate_root = plan.artifact_output_dataset_root
         return cls(
             output_dir=output_dir,
             backend=materialization.require_persistent_backend(),

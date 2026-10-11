@@ -28,7 +28,7 @@ class ExecutionServerSummary:
 def summarize_execution_server(
     projection: ExecutionRuntimeProjection,
 ) -> ExecutionServerSummary:
-    plate_count = len(projection.by_plate_latest)
+    plate_count = len(projection.by_subject_latest)
     if plate_count == 0:
         return ExecutionServerSummary(status_text="✅ Idle", info_text="")
 

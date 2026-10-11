@@ -449,7 +449,7 @@ def _run_installed_measured_cli_smoke(
     comparable_fields = (
         "schema_version",
         "pipeline_name",
-        "plate_id",
+        "subject_id",
         "pipeline_source_sha256",
         "global_config_source_sha256",
     )
@@ -463,7 +463,7 @@ def _run_installed_measured_cli_smoke(
         or cli_receipt.execution_id == mcp_receipt.execution_id
     ):
         raise AssertionError("Installed measured runs lost distinct job identities.")
-    if cli_receipt.execution_plate_id != str(evidence.cli_execution_plate):
+    if cli_receipt.execution_subject_id != str(evidence.cli_execution_plate):
         raise AssertionError("Installed CLI ignored its prepared execution plate.")
     if (
         mcp_receipt.observation_export_scope.value != "outcomes"

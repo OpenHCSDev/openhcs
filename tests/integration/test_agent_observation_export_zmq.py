@@ -197,7 +197,7 @@ def test_headless_observation_export_uses_ordinary_execution(
         MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
     )
     assert receipt.execution_id == execution_id
-    assert receipt.plate_id == str(plate)
+    assert receipt.subject_id == str(plate)
     assert receipt.server_environment == observation.server_environment
     assert BenchmarkPhase.SERVER_PIPELINE_JOB in {
         timing.phase for timing in receipt.phase_timings
@@ -216,7 +216,7 @@ def test_measured_wrapper_retains_sources_and_receipt_for_ordinary_pipeline(
     plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
     evidence_dir = tmp_path / "evidence"
     submission = OpenHCSExecutionSubmission(
-        plate_id=plate,
+        subject_id=plate,
         pipeline_document=pipeline,
         global_config=GlobalPipelineConfig(),
     ).with_auxiliary_params(
@@ -270,11 +270,11 @@ def test_measured_wrapper_uses_declared_main_flow_output_policy(
     evidence_dir = tmp_path / "evidence"
     output_dir = tmp_path / "outputs"
     submission = OpenHCSExecutionSubmission(
-        plate_id=plate,
+        subject_id=plate,
         pipeline_document=pipeline,
         global_config=GlobalPipelineConfig(
             path_planning_config=PathPlanningConfig(
-                well_filter=0,
+                partition_filter=0,
                 global_output_folder=output_dir,
             ),
             materialize_runtime_artifacts=False,
@@ -313,7 +313,7 @@ def test_ordinary_execution_can_export_outcomes_without_value_observation(
     plate, pipeline = _synthetic_plate_and_pipeline(tmp_path)
     export_path = tmp_path / "outcomes.pkl.gz"
     submission = OpenHCSExecutionSubmission(
-        plate_id=plate,
+        subject_id=plate,
         pipeline_document=pipeline,
         global_config=GlobalPipelineConfig(materialize_runtime_artifacts=False),
     ).with_auxiliary_params(
@@ -379,11 +379,11 @@ def test_measured_repetitions_share_one_owned_ordinary_server(tmp_path: Path) ->
         for repetition in range(2):
             evidence_dir = tmp_path / f"evidence-{repetition}"
             submission = OpenHCSExecutionSubmission(
-                plate_id=plate,
+                subject_id=plate,
                 pipeline_document=pipeline,
                 global_config=GlobalPipelineConfig(
                     path_planning_config=PathPlanningConfig(
-                        well_filter=0,
+                        partition_filter=0,
                         global_output_folder=tmp_path / f"outputs-{repetition}",
                     ),
                     materialize_runtime_artifacts=False,
@@ -448,7 +448,7 @@ def test_well_throughput_wrapper_runs_a_synthetic_ordinary_plate(
     monkeypatch.setattr(
         throughput,
         "_replicate_source_binding_workspace_wells",
-        lambda _path, _well_ids, *, source_well_filter: ("A01",),
+        lambda _path, _well_ids, *, source_partition_filter: ("A01",),
     )
     output_root = tmp_path / "throughput"
 
@@ -470,8 +470,8 @@ def test_well_throughput_wrapper_runs_a_synthetic_ordinary_plate(
         "ordinary_run_evidence/*/measured_pipeline_receipt.json"
     )
     receipt = MeasuredPipelineRunReceipt.read(receipt_path)
-    assert receipt.plate_id == str(source_identity)
-    assert receipt.execution_plate_id == str(plate)
+    assert receipt.subject_id == str(source_identity)
+    assert receipt.execution_subject_id == str(plate)
     assert receipt.expected_axis_count == receipt.observed_axis_count == 1
     assert receipt.observation_export_scope is ZMQRuntimeObservationExportScope.OUTCOMES
 
@@ -500,7 +500,7 @@ def test_paper_two_worker_geometry_uses_one_ordinary_measured_run(
     monkeypatch.setattr(
         throughput,
         "_replicate_source_binding_workspace_wells",
-        lambda _path, _well_ids, *, source_well_filter: wells,
+        lambda _path, _well_ids, *, source_partition_filter: wells,
     )
     output_root = tmp_path / "throughput"
 
@@ -562,8 +562,8 @@ def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
     receipt = MeasuredPipelineRunReceipt.read(
         MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir)
     )
-    assert receipt.plate_id == str(source_identity)
-    assert receipt.execution_plate_id == str(plate)
+    assert receipt.subject_id == str(source_identity)
+    assert receipt.execution_subject_id == str(plate)
     assert receipt.run_id == "ordinary-cli"
     assert receipt.pipeline_name == "pipeline"
     assert receipt.observation_export_scope is ZMQRuntimeObservationExportScope.OUTCOMES

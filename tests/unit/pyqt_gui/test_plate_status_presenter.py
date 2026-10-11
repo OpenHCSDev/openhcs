@@ -1,8 +1,10 @@
 from openhcs.core.orchestrator.orchestrator import OrchestratorState
 from openhcs.core.progress.projection import (
-    PlateRuntimeIdentity,
-    PlateRuntimeProjection,
-    PlateRuntimeState,
+    SubjectRuntimeIdentity,
+    SubjectRuntimeProjection,
+    SubjectRuntimeState,
+    QueuedSubjectRuntimeState,
+    CompilingSubjectRuntimeState,
 )
 from openhcs.core.execution_state import (
     TerminalExecutionStatus,
@@ -13,12 +15,12 @@ from openhcs.authoring.session.dataset_status import (
 
 
 def _runtime_plate(
-    state: PlateRuntimeState,
+    state: type[SubjectRuntimeState],
     percent: float = 0.0,
     queue_position: int | None = None,
-) -> PlateRuntimeProjection:
-    return PlateRuntimeProjection(
-        identity=PlateRuntimeIdentity(execution_id="exec-1", plate_id="/tmp/plate"),
+) -> SubjectRuntimeProjection:
+    return SubjectRuntimeProjection(
+        identity=SubjectRuntimeIdentity(execution_id="exec-1", subject_id="/tmp/plate"),
         state=state,
         percent=percent,
         axis_progress=tuple(),
@@ -34,7 +36,7 @@ def test_runtime_projection_is_canonical_over_local_flags():
         is_compile_pending=True,
         is_execution_active=False,
         terminal_status=TerminalExecutionStatus.FAILED,
-        runtime_projection=_runtime_plate(PlateRuntimeState.COMPILING, 42.0),
+        runtime_projection=_runtime_plate(CompilingSubjectRuntimeState, 42.0),
     )
 
     assert prefix == "⏳ Compiling 42.0%"
@@ -48,7 +50,7 @@ def test_queue_position_is_rendered_by_the_runtime_state_authority():
         is_execution_active=False,
         terminal_status=None,
         runtime_projection=_runtime_plate(
-            PlateRuntimeState.QUEUED,
+            QueuedSubjectRuntimeState,
             queue_position=2,
         ),
     )

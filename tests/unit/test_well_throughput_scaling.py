@@ -45,7 +45,7 @@ from benchmark.well_throughput_scaling import (
 from openhcs.core.config import (
     MultiprocessingStartMethod,
     PipelineConfig,
-    WellFilterConfig,
+    PartitionFilterConfig,
 )
 from openhcs.core.orchestrator.execution_result import ExecutionResult
 from openhcs.core.source_projection import (
@@ -81,7 +81,7 @@ def test_reused_server_suite_keeps_one_client_and_distinct_resume_identity(
             name=name,
             dataset_path=dataset_path,
             cppipe_path=cppipe_path,
-            well_filter_config=None,
+            partition_filter_config=None,
         )
         for name in ("CaseA", "CaseB")
     )
@@ -314,7 +314,7 @@ def test_sweep_runner_uses_manifest_modes_and_worker_start_method(
         name="Example",
         dataset_path=tmp_path / "dataset",
         cppipe_path=tmp_path / "pipeline.cppipe",
-        well_filter_config=WellFilterConfig(well_filter=1),
+        partition_filter_config=PartitionFilterConfig(partition_filter=1),
     )
     case.dataset_path.mkdir()
     (case.dataset_path / "image.tif").write_bytes(b"image")
@@ -324,12 +324,12 @@ def test_sweep_runner_uses_manifest_modes_and_worker_start_method(
         "load_comparison_cases",
         lambda _manifest_path: (case,),
     )
-    submitted: list[tuple[str, MultiprocessingStartMethod, WellFilterConfig]] = []
+    submitted: list[tuple[str, MultiprocessingStartMethod, PartitionFilterConfig]] = []
 
     def fake_run_case_well_throughput(**kwargs):
         mode = kwargs["mode"]
         submitted.append(
-            (mode.name, kwargs["start_method"], kwargs["source_well_filter"])
+            (mode.name, kwargs["start_method"], kwargs["source_partition_filter"])
         )
         return WellThroughputResult(
             case_name="Example",
@@ -359,8 +359,8 @@ def test_sweep_runner_uses_manifest_modes_and_worker_start_method(
     )
 
     assert submitted == [
-        ("8w_2c", MultiprocessingStartMethod.SPAWN, case.well_filter_config),
-        ("12w_3c", MultiprocessingStartMethod.SPAWN, case.well_filter_config),
+        ("8w_2c", MultiprocessingStartMethod.SPAWN, case.partition_filter_config),
+        ("12w_3c", MultiprocessingStartMethod.SPAWN, case.partition_filter_config),
     ]
     assert tuple(row.mode_name for row in rows) == ("8w_2c", "12w_3c")
 
@@ -683,7 +683,7 @@ def test_repeated_wells_use_manifest_source_well_scope(
     target_wells = _replicate_source_binding_workspace_wells(
         metadata_path,
         ("W001", "W002"),
-        source_well_filter=WellFilterConfig(well_filter=source_filter),
+        source_partition_filter=PartitionFilterConfig(partition_filter=source_filter),
     )
 
     assert target_wells == ("W001", "W002")
@@ -880,7 +880,7 @@ def test_rerun_missing_memory_filters_completed_rows(
             "name": "Example",
             "dataset_path": tmp_path / "dataset",
             "cppipe_path": tmp_path / "pipeline.cppipe",
-            "well_filter_config": None,
+            "partition_filter_config": None,
         },
     )()
     manifest_path = tmp_path / "manifest.json"
@@ -996,7 +996,7 @@ def test_run_input_hash_binds_benchmark_implementation(
         name="Example",
         dataset_path=dataset_path,
         cppipe_path=cppipe_path,
-        well_filter_config=None,
+        partition_filter_config=None,
     )
     kwargs = {
         "cases": (case,),
@@ -1030,7 +1030,7 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
             "name": "Example",
             "dataset_path": tmp_path / "dataset",
             "cppipe_path": tmp_path / "pipeline.cppipe",
-            "well_filter_config": None,
+            "partition_filter_config": None,
         },
     )()
     manifest_path = tmp_path / "manifest.json"
@@ -1102,7 +1102,7 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
 
 @pytest.mark.parametrize(
     "changed_input",
-    ("manifest", "cppipe", "source", "well_filter", "mode", "start_method"),
+    ("manifest", "cppipe", "source", "partition_filter", "mode", "start_method"),
 )
 def test_resume_rejects_changed_run_inputs(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, changed_input: str
@@ -1121,7 +1121,7 @@ def test_resume_rejects_changed_run_inputs(
         name="Example",
         dataset_path=dataset_path,
         cppipe_path=cppipe_path,
-        well_filter_config=None,
+        partition_filter_config=None,
     )
     monkeypatch.setattr(
         well_throughput_scaling,
@@ -1169,8 +1169,8 @@ def test_resume_rejects_changed_run_inputs(
         cppipe_path.write_text("pipelinE", encoding="utf-8")
     elif changed_input == "source":
         image_path.write_bytes(b"other")
-    elif changed_input == "well_filter":
-        case.well_filter_config = WellFilterConfig(well_filter=2)
+    elif changed_input == "partition_filter":
+        case.partition_filter_config = PartitionFilterConfig(partition_filter=2)
     elif changed_input == "mode":
         plan = WellThroughputBenchmarkPlan((WellThroughputMode("1w_1t", 1, 2),))
     start_method = (
@@ -1208,7 +1208,7 @@ def test_resume_rejects_legacy_rows_without_run_input_fingerprint(
         name="Example",
         dataset_path=dataset_path,
         cppipe_path=cppipe_path,
-        well_filter_config=None,
+        partition_filter_config=None,
     )
     monkeypatch.setattr(
         well_throughput_scaling,
@@ -1347,7 +1347,7 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     monkeypatch.setattr(
         well_throughput_scaling,
         "_replicate_source_binding_workspace_wells",
-        lambda _path, well_ids, *, source_well_filter: well_ids,
+        lambda _path, well_ids, *, source_partition_filter: well_ids,
     )
     submissions = []
 
@@ -1436,8 +1436,8 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     assert clock[0] == 134.25
     assert result.execution_route == ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
     assert len(submissions) == 1
-    assert submissions[0].plate_id == str(tmp_path / "input")
-    assert submissions[0].execution_plate_id == str(tmp_path / "plate")
+    assert submissions[0].subject_id == str(tmp_path / "input")
+    assert submissions[0].execution_subject_id == str(tmp_path / "plate")
     assert submissions[0].pipeline_document.pipeline_steps == []
     pipeline_config = submissions[0].pipeline_document.pipeline_config
     assert object.__getattribute__(pipeline_config, "num_workers") is None
@@ -1452,7 +1452,7 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
             MultiprocessingStartMethod.FORK
         )
     assert submissions[0].global_pipeline_config.num_workers == worker_count
-    assert pipeline_config.path_planning_config.well_filter == 0
+    assert pipeline_config.path_planning_config.partition_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is False
     assert submissions[0].global_pipeline_config.materialize_runtime_artifacts is False
     assert submissions[0].config_params["runtime_observation_export_scope"] == (
@@ -1506,7 +1506,7 @@ def test_run_suite_passes_memory_limit_to_case_runner(
             "name": "Example",
             "dataset_path": tmp_path / "dataset",
             "cppipe_path": tmp_path / "pipeline.cppipe",
-            "well_filter_config": None,
+            "partition_filter_config": None,
         },
     )()
     (tmp_path / "manifest.json").write_text("{}", encoding="utf-8")

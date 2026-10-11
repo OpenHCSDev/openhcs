@@ -15,7 +15,7 @@ from openhcs.core.config import MultiprocessingStartMethod, NapariStreamingConfi
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.orchestrator import (
-    compiled_plate_execution as compiled_plate_execution_module,
+    bundle_execution as compiled_plate_execution_module,
 )
 from openhcs.core.orchestrator import orchestrator as orchestrator_module
 from openhcs.core.orchestrator import worker_execution as worker_execution_module
@@ -32,15 +32,15 @@ from openhcs.core.orchestrator.cancellation import (
     ExecutionCancellationSignal,
     ExecutionCancelledError,
 )
-from openhcs.core.orchestrator.compiled_plate_execution import (
-    CompiledPlateExecutionRequest,
-    CompiledPlateExecutionResults,
+from openhcs.core.orchestrator.bundle_execution import (
+    BundleExecutionRequest,
+    BundleExecutionResults,
     clear_viewer_state,
-    execute_compiled_plate_request,
+    execute_bundle_request,
     project_execution_state,
     settle_viewer_state,
     stop_execution_visualizers,
-    validate_compiled_plate_execution,
+    validate_bundle_execution,
     wait_until_visualizers_ready,
 )
 from openhcs.core.orchestrator.execution_result import (
@@ -74,7 +74,7 @@ from openhcs.runtime.viewer_protocol import (
 
 PROGRESS_CONTEXT = ProgressExecutionContext(
     execution_id="exec",
-    plate_id="plate",
+    subject_id="plate",
 )
 
 
@@ -106,7 +106,7 @@ def test_fork_resources_reuse_lane_processes_for_ordered_plate_partitions(monkey
     )
     plan = WorkerLaneExecutionPlan(
         execution_id="exec",
-        plate_id="plate",
+        subject_id="plate",
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         assignments=WorkerAssignmentPlan(
             worker_assignments={"worker_0": ["A01"], "worker_1": ["A02"]},
@@ -161,7 +161,7 @@ def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure)
     )
     plan = WorkerLaneExecutionPlan(
         execution_id="exec",
-        plate_id="plate",
+        subject_id="plate",
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         assignments=WorkerAssignmentPlan(
             worker_assignments={"worker_0": ["A01"], "worker_1": ["A02"]},
@@ -232,9 +232,9 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
         worker_assignments={},
         runtime_environment=runtime_environment,
     )
-    request = CompiledPlateExecutionRequest(
+    request = BundleExecutionRequest(
         execution_id="exec",
-        plate_id="plate",
+        subject_id="plate",
         execution_bundle=bundle,
         max_workers=1,
         visualizer=None,
@@ -284,7 +284,7 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
     )
     monkeypatch.setattr(
         compiled_plate_execution_module,
-        "execute_plate_scoped_steps",
+        "execute_dataset_scoped_steps",
         lambda _contexts, **_kwargs: RuntimeExecutionObservation(),
     )
     monkeypatch.setattr(
@@ -299,7 +299,7 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
         is_initialized=lambda: True,
         microscope_handler=object(),
     )
-    return execute_compiled_plate_request(orchestrator, request)
+    return execute_bundle_request(orchestrator, request)
 
 
 def test_lane_planner_generates_stable_default_assignments_and_groups_combos():
@@ -369,9 +369,9 @@ def test_compiled_plate_execution_request_uses_bundle_as_runtime_authority():
         worker_assignments={"worker_0": ["A01"]},
         runtime_environment=runtime_environment,
     )
-    request = CompiledPlateExecutionRequest(
+    request = BundleExecutionRequest(
         execution_id="exec",
-        plate_id="plate",
+        subject_id="plate",
         execution_bundle=bundle,
         max_workers=None,
         visualizer=None,
@@ -384,7 +384,7 @@ def test_compiled_plate_execution_request_uses_bundle_as_runtime_authority():
         is_initialized=lambda: True,
     )
 
-    validated = validate_compiled_plate_execution(orchestrator, request)
+    validated = validate_bundle_execution(orchestrator, request)
 
     assert validated is not None
     assert validated.pipeline_definition == ["step"]
@@ -406,9 +406,9 @@ def test_plate_scope_rejects_omitted_runtime_observations(monkeypatch):
         worker_assignments=None,
         runtime_environment=runtime_environment,
     )
-    request = CompiledPlateExecutionRequest(
+    request = BundleExecutionRequest(
         execution_id="exec",
-        plate_id="plate",
+        subject_id="plate",
         execution_bundle=bundle,
         max_workers=None,
         visualizer=None,
@@ -419,12 +419,12 @@ def test_plate_scope_rejects_omitted_runtime_observations(monkeypatch):
     )
     monkeypatch.setattr(
         compiled_plate_execution_module,
-        "validate_plate_scoped_contexts",
+        "validate_dataset_scoped_contexts",
         lambda _contexts: (1,),
     )
 
     with pytest.raises(ValueError, match="MERGE_INTO_PARENT"):
-        validate_compiled_plate_execution(
+        validate_bundle_execution(
             SimpleNamespace(is_initialized=lambda: True),
             request,
         )
@@ -745,7 +745,7 @@ def test_fork_child_termination_cannot_run_inherited_parent_cleanup(
     )
     lane = WorkerLaneExecutionContext(
         execution_id="signal-ownership",
-        plate_id=str(tmp_path),
+        subject_id=str(tmp_path),
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         worker_slot="worker_0",
         worker_assignments={"worker_0": ["A01"]},
@@ -797,7 +797,7 @@ def test_pooled_worker_lane_runner_submits_and_collects_lane_results(monkeypatch
         release_axis_resources,
     ):
         assert release_axis_resources is True
-        axis_id = lane_context.owned_wells[0]
+        axis_id = lane_context.owned_partition_values[0]
         return {axis_id: ExecutionResult.success(axis_id)}
 
     monkeypatch.setattr(
@@ -813,7 +813,7 @@ def test_pooled_worker_lane_runner_submits_and_collects_lane_results(monkeypatch
 
     execution_plan = WorkerLaneExecutionPlan(
         execution_id=PROGRESS_CONTEXT.execution_id,
-        plate_id=PROGRESS_CONTEXT.plate_id,
+        subject_id=PROGRESS_CONTEXT.subject_id,
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         assignments=WorkerAssignmentPlan(
             worker_assignments={"worker_0": ["A01"]},
@@ -856,7 +856,7 @@ def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
     )
     lane_context = WorkerLaneExecutionContext(
         execution_id="cancel-lane",
-        plate_id="synthetic",
+        subject_id="synthetic",
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         worker_slot="worker_0",
         worker_assignments={"worker_0": ["A01", "B01"]},
@@ -938,7 +938,7 @@ def test_pooled_worker_lane_runner_submits_stripped_pipeline_shells(monkeypatch)
 
     execution_plan = WorkerLaneExecutionPlan(
         execution_id=PROGRESS_CONTEXT.execution_id,
-        plate_id=PROGRESS_CONTEXT.plate_id,
+        subject_id=PROGRESS_CONTEXT.subject_id,
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         assignments=WorkerAssignmentPlan(
             worker_assignments={"worker_0": ["A01"]},
@@ -1006,7 +1006,7 @@ def test_fork_inherited_runner_executes_single_lane_without_self_merge(monkeypat
     try:
         execution_plan = WorkerLaneExecutionPlan(
             execution_id=PROGRESS_CONTEXT.execution_id,
-            plate_id=PROGRESS_CONTEXT.plate_id,
+            subject_id=PROGRESS_CONTEXT.subject_id,
             debug_execution_policy=NoOpDebugExecutionPolicy(),
             assignments=WorkerAssignmentPlan(
                 worker_assignments={"worker_0": ["A01"]},
@@ -1049,7 +1049,7 @@ def test_pooled_worker_lane_runner_emits_error_before_reraising(monkeypatch):
 
     execution_plan = WorkerLaneExecutionPlan(
         execution_id=PROGRESS_CONTEXT.execution_id,
-        plate_id=PROGRESS_CONTEXT.plate_id,
+        subject_id=PROGRESS_CONTEXT.subject_id,
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         assignments=WorkerAssignmentPlan(
             worker_assignments={"worker_0": ["A01"]},
@@ -1066,10 +1066,10 @@ def test_pooled_worker_lane_runner_emits_error_before_reraising(monkeypatch):
         )
 
     assert emitted[0]["execution_id"] == "exec"
-    assert emitted[0]["plate_id"] == "plate"
+    assert emitted[0]["subject_id"] == "plate"
     assert emitted[0]["axis_id"] == "A01"
     assert emitted[0]["worker_slot"] == "worker_0"
-    assert emitted[0]["owned_wells"] == ["A01"]
+    assert emitted[0]["owned_partition_values"] == ["A01"]
 
 
 def test_executor_shutdown_plan_swallows_broken_pool_errors(caplog):
@@ -1093,11 +1093,11 @@ def test_analysis_consolidation_skips_disabled_config():
     hook = AnalysisConsolidationHook(
         AnalysisConsolidationConfig(enabled=False), PlateMetadataConfig()
     )
-    hook.run({"A01": SimpleNamespace(output_plate_root=None)}, object())
+    hook.run({"A01": SimpleNamespace(output_dataset_root=None)}, object())
 
 
 def test_analysis_consolidation_propagates_runtime_failures(monkeypatch):
-    context = SimpleNamespace(output_plate_root="/output", filemanager=object())
+    context = SimpleNamespace(output_dataset_root="/output", filemanager=object())
     inputs = analysis_consolidation_module.RuntimeAnalysisConsolidationInputs(
         groups={},
         destination=analysis_consolidation_module.RuntimeAnalysisSummaryDestination(
@@ -1121,13 +1121,13 @@ def test_execution_state_projector_maps_success_and_failure():
 
     project_execution_state(
         orchestrator,
-        CompiledPlateExecutionResults({"A01": ExecutionResult.success("A01")}),
+        BundleExecutionResults({"A01": ExecutionResult.success("A01")}),
     )
     assert orchestrator._state is orchestrator_module.OrchestratorState.COMPLETED
 
     project_execution_state(
         orchestrator,
-        CompiledPlateExecutionResults({"A01": ExecutionResult.error("A01")}),
+        BundleExecutionResults({"A01": ExecutionResult.error("A01")}),
     )
     assert orchestrator._state is orchestrator_module.OrchestratorState.EXEC_FAILED
 
@@ -1313,7 +1313,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
     events = []
     monkeypatch.setattr(
         compiled_plate_execution_module.OpenHCSMetadataTarget,
-        "finalize_completed_plate",
+        "finalize_completed_dataset",
         lambda _contexts, *, runtime_observations: events.append("metadata"),
     )
     response = ViewerControlResponse(
@@ -1376,7 +1376,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
         progress_queue=progress_queue,
     )
 
-    assert isinstance(results, CompiledPlateExecutionResults)
+    assert isinstance(results, BundleExecutionResults)
     assert results == {"A01": ExecutionResult.success("A01")}
     assert results.extras.viewer_states_by_port == {5563: response}
     layer = results.extras.viewer_states_by_port[5563].payload["layers"][0]

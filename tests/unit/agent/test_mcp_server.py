@@ -728,7 +728,7 @@ def test_mcp_create_pipeline_uses_optional_config_reference_in_full_document():
         "pipeline",
         ConfigPatch(
             config_type="PipelineConfig",
-            values={"well_filter_config": {"well_filter": 2}},
+            values={"partition_filter_config": {"partition_filter": 2}},
         ),
     )
     built = server.build_server(OpenHCSAgentContext(config_service=config_service))
@@ -757,7 +757,7 @@ def test_mcp_create_pipeline_uses_optional_config_reference_in_full_document():
     assert "pipeline_config_id" in create_schema["properties"]
     assert "pipeline_config_id" not in create_schema.get("required", ())
     assert "pipeline_config = PipelineConfig(" in source
-    assert "well_filter=2" in source
+    assert "partition_filter=2" in source
     assert "pipeline_steps = []" in source
 
 
@@ -2179,8 +2179,8 @@ def test_mcp_object_state_field_search_supports_exact_paths_and_leaf_default():
                             field_summary("napari_streaming_config"),
                             field_summary("napari_streaming_config.enabled"),
                             field_summary("napari_streaming_config.port"),
-                            field_summary("well_filter_config.well_filter"),
-                            field_summary("well_filter_config.well_filter_mode"),
+                            field_summary("partition_filter_config.partition_filter"),
+                            field_summary("partition_filter_config.partition_filter_mode"),
                         ),
                     ),
                 ),
@@ -2203,7 +2203,7 @@ def test_mcp_object_state_field_search_supports_exact_paths_and_leaf_default():
                 "openhcs_ui_get_object_state_fields",
                 {
                     "scope_ids": ["global_config"],
-                    "field_paths": ["well_filter_config.well_filter"],
+                    "field_paths": ["partition_filter_config.partition_filter"],
                     "connection": {"timeout_ms": 1234},
                 },
             ),
@@ -2241,12 +2241,12 @@ def test_mcp_object_state_field_search_supports_exact_paths_and_leaf_default():
 
     exact_fields = exact_payload["scopes"][0]["fields"]
     assert [field["field_path"] for field in exact_fields] == [
-        "well_filter_config.well_filter",
+        "partition_filter_config.partition_filter",
     ]
-    assert exact_payload["field_paths"] == ["well_filter_config.well_filter"]
+    assert exact_payload["field_paths"] == ["partition_filter_config.partition_filter"]
     assert exact_payload["include_container_fields"] is False
     assert ui_bridge_service.requests[0].field_paths == (
-        "well_filter_config.well_filter",
+        "partition_filter_config.partition_filter",
     )
     assert ui_bridge_service.requests[1].field_paths == ()
     assert ui_bridge_service.requests[2].field_paths == ()
@@ -2756,7 +2756,7 @@ def test_mcp_mutate_object_state_field_tool_projects_request(monkeypatch):
                 "openhcs_ui_mutate_object_state_field",
                 {
                     "object_state_scope_id": "global_config",
-                    "field_path": "well_filter_config.well_filter",
+                    "field_path": "partition_filter_config.partition_filter",
                     "value": "A01",
                     "request_token": "req-1",
                     "connection": {"timeout_ms": 1234},
@@ -2774,7 +2774,7 @@ def test_mcp_mutate_object_state_field_tool_projects_request(monkeypatch):
     assert len(ui_bridge_service.requests) == 1
     request = ui_bridge_service.requests[0]
     assert request.object_state_scope_id == "global_config"
-    assert request.field_path == "well_filter_config.well_filter"
+    assert request.field_path == "partition_filter_config.partition_filter"
     assert request.value == "A01"
     assert request.reset is False
     assert request.request_token.value == "req-1"
@@ -3002,7 +3002,7 @@ def test_mcp_selected_plate_image_inspection_targets_output_plate():
         return
 
     selected_plate_root = "/tmp/selected-plate"
-    output_plate_root = "/tmp/selected-plate_openhcs"
+    output_dataset_root = "/tmp/selected-plate_openhcs"
 
     class _UiBridgeService(_OperationMethodsBridgeService):
         def connection_from_fields(self, fields):
@@ -3028,7 +3028,7 @@ def test_mcp_selected_plate_image_inspection_targets_output_plate():
                             "scope_id": selected_plate_root,
                             "name": "selected-plate",
                             "root": selected_plate_root,
-                            "output_root": output_plate_root,
+                            "output_root": output_dataset_root,
                             "selected": True,
                         }
                     ]
@@ -3070,10 +3070,10 @@ def test_mcp_selected_plate_image_inspection_targets_output_plate():
     result = asyncio.run(call_selected_plate_images_tool())
     payload = json.loads(_direct_tool_text(result))
 
-    assert plate_inspection_service.request.plate_path == output_plate_root
+    assert plate_inspection_service.request.plate_path == output_dataset_root
     assert plate_inspection_service.request.source_format == "auto"
     assert payload["target"] == "output"
-    assert payload["inspection"]["plate_path"] == output_plate_root
+    assert payload["inspection"]["plate_path"] == output_dataset_root
 
     async def call_selected_plate_images_tool_with_explicit_type():
         built = server.build_server(context)
@@ -3087,7 +3087,7 @@ def test_mcp_selected_plate_image_inspection_targets_output_plate():
         return result
 
     asyncio.run(call_selected_plate_images_tool_with_explicit_type())
-    assert plate_inspection_service.request.plate_path == output_plate_root
+    assert plate_inspection_service.request.plate_path == output_dataset_root
     assert plate_inspection_service.request.source_format == "imagexpress"
 
 
@@ -3096,7 +3096,7 @@ def test_mcp_selected_plate_file_query_composes_ui_state_and_plate_service():
         return
 
     selected_plate_root = "/tmp/selected-plate"
-    output_plate_root = "/tmp/selected-plate_openhcs"
+    output_dataset_root = "/tmp/selected-plate_openhcs"
 
     class _UiBridgeService(_OperationMethodsBridgeService):
         def __init__(self):
@@ -3127,7 +3127,7 @@ def test_mcp_selected_plate_file_query_composes_ui_state_and_plate_service():
                             "scope_id": selected_plate_root,
                             "name": "selected-plate",
                             "root": selected_plate_root,
-                            "output_root": output_plate_root,
+                            "output_root": output_dataset_root,
                             "selected": True,
                         }
                     ]
@@ -3177,14 +3177,14 @@ def test_mcp_selected_plate_file_query_composes_ui_state_and_plate_service():
 
     assert ui_bridge_service.state_surface_request.surface_id == "plate_manager.state"
     assert ui_bridge_service.state_surface_request.selection_mode == "selected"
-    assert plate_inspection_service.request.plate_path == output_plate_root
+    assert plate_inspection_service.request.plate_path == output_dataset_root
     assert plate_inspection_service.request.source_format == "auto"
     assert plate_inspection_service.request.kind.value == "result"
     assert plate_inspection_service.request.path_contains == "roi"
     assert plate_inspection_service.request.limit == 7
     assert payload["selected_plate"]["root"] == selected_plate_root
     assert payload["target"] == "output"
-    assert payload["query"]["plate_path"] == output_plate_root
+    assert payload["query"]["plate_path"] == output_dataset_root
 
     async def call_selected_plate_source_query_tool():
         built = server.build_server(context)
@@ -3215,7 +3215,7 @@ def test_mcp_selected_plate_result_stream_uses_output_context_for_output_target(
         return
 
     selected_plate_root = "/tmp/selected-plate"
-    output_plate_root = "/tmp/selected-plate_openhcs"
+    output_dataset_root = "/tmp/selected-plate_openhcs"
 
     class _UiBridgeService(_OperationMethodsBridgeService):
         def connection_from_fields(self, fields):
@@ -3241,7 +3241,7 @@ def test_mcp_selected_plate_result_stream_uses_output_context_for_output_target(
                             "scope_id": selected_plate_root,
                             "name": "selected-plate",
                             "root": selected_plate_root,
-                            "output_root": output_plate_root,
+                            "output_root": output_dataset_root,
                             "selected": True,
                         }
                     ]
@@ -3288,16 +3288,16 @@ def test_mcp_selected_plate_result_stream_uses_output_context_for_output_target(
     result = asyncio.run(call_selected_plate_stream_tool())
     payload = json.loads(_direct_tool_text(result))
 
-    assert plate_streaming_service.request.plate_path == output_plate_root
+    assert plate_streaming_service.request.plate_path == output_dataset_root
     assert plate_streaming_service.request.context_plate_path == selected_plate_root
     assert plate_streaming_service.request.source_format == "auto"
     assert plate_streaming_service.request.kind.value == "result"
     assert plate_streaming_service.request.path_contains == "rois"
     assert plate_streaming_service.request.limit == 2
     assert plate_streaming_service.ui_bridge_connection == "ui-connection"
-    assert payload["selected_plate"]["output_root"] == output_plate_root
+    assert payload["selected_plate"]["output_root"] == output_dataset_root
     assert payload["target"] == "output"
-    assert payload["stream"]["plate_path"] == output_plate_root
+    assert payload["stream"]["plate_path"] == output_dataset_root
 
 
 def test_mcp_selected_plate_image_sample_composes_ui_state_and_plate_service():
@@ -3544,7 +3544,7 @@ def test_mcp_selected_plate_image_sample_targets_output_plate():
         return
 
     selected_plate_root = "/tmp/selected-plate"
-    output_plate_root = "/tmp/selected-plate_openhcs"
+    output_dataset_root = "/tmp/selected-plate_openhcs"
     selected_image_path = "./A01_s001_w1_z001_t001.tif"
 
     class _UiBridgeService(_OperationMethodsBridgeService):
@@ -3571,7 +3571,7 @@ def test_mcp_selected_plate_image_sample_targets_output_plate():
                             "scope_id": selected_plate_root,
                             "name": "selected-plate",
                             "root": selected_plate_root,
-                            "output_root": output_plate_root,
+                            "output_root": output_dataset_root,
                             "selected": True,
                         }
                     ]
@@ -3619,11 +3619,11 @@ def test_mcp_selected_plate_image_sample_targets_output_plate():
     result = asyncio.run(call_selected_plate_sample_tool())
     payload = json.loads(_direct_tool_text(result))
 
-    assert plate_inspection_service.sample_request.plate_path == output_plate_root
+    assert plate_inspection_service.sample_request.plate_path == output_dataset_root
     assert plate_inspection_service.sample_request.source_format == "auto"
     assert plate_inspection_service.sample_request.image_path == selected_image_path
     assert payload["target"] == "output"
-    assert payload["sample"]["plate_path"] == output_plate_root
+    assert payload["sample"]["plate_path"] == output_dataset_root
 
 
 def test_mcp_stdio_server_roundtrip_returns_errors_as_payloads():
@@ -5419,7 +5419,7 @@ def test_mcp_dev_client_object_state_fields_command_projects_tool_arguments():
             "--query",
             "streaming_defaults",
             "--field-path-contains",
-            "well_filter_config",
+            "partition_filter_config",
             "--path-contains",
             "processing_config",
             "--field-path",
@@ -5444,7 +5444,7 @@ def test_mcp_dev_client_object_state_fields_command_projects_tool_arguments():
     assert call.arguments["field_path_contains"] == [
         "napari_streaming_config",
         "streaming_defaults",
-        "well_filter_config",
+        "partition_filter_config",
         "processing_config",
     ]
     assert call.arguments["include_clean_fields"] is False
@@ -5609,7 +5609,7 @@ def test_mcp_dev_client_object_state_set_command_projects_tool_arguments():
             "--scope-id",
             "global_config",
             "--field-path",
-            "well_filter_config.well_filter",
+            "partition_filter_config.partition_filter",
             "--reset",
             "--no-field-values",
         )
@@ -5618,7 +5618,7 @@ def test_mcp_dev_client_object_state_set_command_projects_tool_arguments():
 
     assert reset_call.name == "openhcs_ui_mutate_object_state_field"
     assert reset_call.arguments["object_state_scope_id"] == "global_config"
-    assert reset_call.arguments["field_path"] == "well_filter_config.well_filter"
+    assert reset_call.arguments["field_path"] == "partition_filter_config.partition_filter"
     assert reset_call.arguments["value"] is None
     assert reset_call.arguments["reset"] is True
     assert reset_call.arguments["include_field_values"] is False

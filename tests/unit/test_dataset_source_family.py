@@ -13,7 +13,7 @@ from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.artifact_plan_inspection_service import ArtifactPlanInspectionService
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
-from openhcs.core.config import LazyWellFilterConfig, PipelineConfig
+from openhcs.core.config import LazyPartitionFilterConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.pipeline_document import PipelineDocumentCodec
 from openhcs.core.steps.function_step import FunctionStep
@@ -192,7 +192,7 @@ def test_explicit_inspection_and_artifact_plan_reach_opera_axes(
 
     config = PipelineConfig(
         dataset_source=OperaPhenixHandler,
-        well_filter_config=LazyWellFilterConfig(well_filter="R04C09"),
+        partition_filter_config=LazyPartitionFilterConfig(partition_filter="R04C09"),
     )
     pipeline_source = PipelineDocumentCodec.render(
         PipelineDocumentCodec.from_values(

@@ -361,7 +361,7 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
     manager = custom_manager.CustomFunctionManager(create_storage=False)
     metadata = manager._prepare_source(_reference_block("callable-artifact-plate-reference"))
     contract = CallableContract.from_callable(metadata.func)
-    FuncStepContractValidator.validate_plate_callable_contracts((contract,), metadata.name)
+    FuncStepContractValidator.validate_dataset_callable_contracts((contract,), metadata.name)
     assert contract.execution_scope is FunctionStepExecutionScope.PLATE
     assert contract.runtime_bound_parameter_types == (RuntimeArtifactBatch,)
     assert contract.input_memory_type is contract.processing_contract is None

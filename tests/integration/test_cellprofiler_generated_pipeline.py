@@ -48,7 +48,7 @@ from openhcs.core.config import (
     LazyPathPlanningConfig,
     LazyProcessingConfig,
     LazyVFSConfig,
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
     MaterializationBackend,
     PipelineConfig,
 )
@@ -141,7 +141,7 @@ def _execute_imported_cppipe_via_zmq(
     cppipe_path: Path,
     source_root: Path,
     dataset_source: type[DatasetSourceChoice] = AutoDetectedSource,
-    well_filter: tuple[str, ...] | int | None = None,
+    partition_filter: tuple[str, ...] | int | None = None,
     materialize_runtime_artifacts: bool = True,
 ) -> tuple[
     SourceBindingWorkspaceMaterialization | None,
@@ -179,12 +179,12 @@ def _execute_imported_cppipe_via_zmq(
         vfs_config=LazyVFSConfig(
             materialization_backend=MaterializationBackend.DISK,
         ),
-        well_filter_config=(
-            LazyWellFilterConfig()
-            if well_filter is None
-            else LazyWellFilterConfig(
-                well_filter=(
-                    well_filter if isinstance(well_filter, int) else list(well_filter)
+        partition_filter_config=(
+            LazyPartitionFilterConfig()
+            if partition_filter is None
+            else LazyPartitionFilterConfig(
+                partition_filter=(
+                    partition_filter if isinstance(partition_filter, int) else list(partition_filter)
                 )
             )
         ),
@@ -194,8 +194,8 @@ def _execute_imported_cppipe_via_zmq(
         "runtime_observation_export_path": str(observation_path),
     }
     submission = OpenHCSExecutionSubmission(
-        plate_id=source_root,
-        execution_plate_id=execution_plate_path,
+        subject_id=source_root,
+        execution_subject_id=execution_plate_path,
         selected_pipeline_path=cppipe_path,
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
@@ -224,8 +224,8 @@ def _execute_imported_cppipe_via_zmq(
         ).require_complete("CellProfiler integration compilation")
 
         execution_submission = OpenHCSExecutionSubmission(
-            plate_id=source_root,
-            execution_plate_id=execution_plate_path,
+            subject_id=source_root,
+            execution_subject_id=execution_plate_path,
             selected_pipeline_path=cppipe_path,
             pipeline_document=PipelineDocumentCodec.from_values(
                 pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
@@ -392,8 +392,8 @@ def test_invalid_public_cellprofiler_step_fails_during_zmq_compilation(
     )
     observation_path = tmp_path / "invalid_compile_observation.pkl"
     submission = OpenHCSExecutionSubmission(
-        plate_id=source_root,
-        execution_plate_id=source_root,
+        subject_id=source_root,
+        execution_subject_id=source_root,
         selected_pipeline_path=selected_pipeline_path,
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=pipeline_config, pipeline_steps=pipeline_steps
@@ -658,7 +658,7 @@ def test_percent_positive_cppipe_executes_measurement_consumers_over_zmq(
         tmp_path,
         cppipe_path=cppipe_path,
         source_root=source_root,
-        well_filter=1,
+        partition_filter=1,
     )
 
     filtered_object_records = _runtime_records(
@@ -713,7 +713,7 @@ def test_examplehuman_cppipe_executes_source_bound_objects_over_zmq(
         tmp_path,
         cppipe_path=cppipe_path,
         source_root=source_root,
-        well_filter=1,
+        partition_filter=1,
     )
 
     assert workspace is not None
@@ -1018,7 +1018,7 @@ def test_official_illumination_preserves_rule_row_binding_over_zmq(
         tmp_path,
         cppipe_path=cppipe_path,
         source_root=source_root,
-        well_filter=1,
+        partition_filter=1,
     )
     assert tuple(path.name for path in export.exports.image_outputs) == ("Illum.npy",)
     illumination = np.load(export.exports.image_outputs[0])
@@ -1300,7 +1300,7 @@ def _execute_official_cellprofiler3_pipeline(
         tmp_path,
         cppipe_path=cppipe_path,
         source_root=source_root,
-        well_filter=1,
+        partition_filter=1,
         materialize_runtime_artifacts=materialize_runtime_artifacts,
     )
 
@@ -1316,7 +1316,7 @@ def test_two_well_plate_export_observation_uses_compiled_owner(
         tmp_path,
         cppipe_path=case.cppipe_path,
         source_root=case.dataset_path,
-        well_filter=("A01", "A12"),
+        partition_filter=("A01", "A12"),
         materialize_runtime_artifacts=False,
     )
 

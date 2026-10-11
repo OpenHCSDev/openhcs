@@ -552,7 +552,7 @@ def test_plate_file_query_reads_path_planned_results_for_source_plate(
             output_dir_suffix="_explicit_test_results",
         )
     )
-    output_root = PathPlannerPathAuthority.build_output_plate_root(
+    output_root = PathPlannerPathAuthority.build_output_dataset_root(
         plate,
         config.path_planning_config,
     )

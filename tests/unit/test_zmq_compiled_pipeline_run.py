@@ -72,7 +72,7 @@ class RejectingCompileClient(FakeExecutionClient):
 
 def _submission():
     return OpenHCSExecutionSubmission(
-        plate_id="/tmp/plate",
+        subject_id="/tmp/plate",
         pipeline_document=PipelineDocumentCodec.from_values(
             pipeline_config=PipelineConfig(), pipeline_steps=[]
         ),
@@ -117,13 +117,13 @@ def test_compiled_pipeline_run_owns_completion_result_projection():
         def wait_for_completion(self, execution_id, poll_interval=0.5):
             response = super().wait_for_completion(execution_id, poll_interval)
             if execution_id == "execute-1":
-                response["execution"]["results_summary"] = {"output_plate_root": "/output/plate"}
+                response["execution"]["results_summary"] = {"output_dataset_root": "/output/plate"}
             return response
 
     run = run_compiled_pipeline(ClientWithResults(), _submission())
 
-    assert run.results_summary == {"output_plate_root": "/output/plate"}
-    assert run.output_plate.output_plate_root == "/output/plate"
+    assert run.results_summary == {"output_dataset_root": "/output/plate"}
+    assert run.output_dataset.output_dataset_root == "/output/plate"
 
 
 def test_compiled_pipeline_run_accepts_legacy_result_summary_field():
@@ -131,12 +131,12 @@ def test_compiled_pipeline_run_accepts_legacy_result_summary_field():
         def wait_for_completion(self, execution_id, poll_interval=0.5):
             response = super().wait_for_completion(execution_id, poll_interval)
             if execution_id == "execute-1":
-                response["execution"]["results_summary"] = {"output_plate_root": "/legacy/plate"}
+                response["execution"]["results_summary"] = {"output_dataset_root": "/legacy/plate"}
             return response
 
     run = run_compiled_pipeline(ClientWithLegacyResults(), _submission())
 
-    assert run.output_plate.output_plate_root == "/legacy/plate"
+    assert run.output_dataset.output_dataset_root == "/legacy/plate"
 
 
 def test_ordinary_submission_rejects_incompatible_endpoint_before_request(
@@ -193,7 +193,7 @@ def test_auxiliary_observation_request_is_shared_by_client_and_server():
 
 def test_auxiliary_options_round_trip_through_one_transport_declaration():
     options = ZMQAuxiliaryExecutionParams(
-        axis_filter=("A01", "B02"),
+        partition_values=("A01", "B02"),
         debug_execution_config=DebugExecutionConfig(debug_session_id="debug-1"),
         runtime_observation_export_path=Path("/tmp/observed.pkl"),
     )

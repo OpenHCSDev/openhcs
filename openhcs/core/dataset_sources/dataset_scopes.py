@@ -34,10 +34,10 @@ class DatasetScope:
     """A separately prepared root the dataset executes on (none: its root)."""
 
     @property
-    def plate_id(self) -> str:
+    def subject_id(self) -> str:
         """The identity an execution submission names for this dataset."""
 
-        return self.kind.plate_id(self)
+        return self.kind.subject_id(self)
 
     @property
     def initialized_root(self) -> Path:
@@ -105,7 +105,7 @@ class DatasetScopeKind(ABC, metaclass=AutoRegisterMeta):
         return scope.root.name
 
     @classmethod
-    def plate_id(cls, scope: DatasetScope) -> str:
+    def subject_id(cls, scope: DatasetScope) -> str:
         return scope.scope_id
 
     @classmethod
@@ -180,7 +180,7 @@ class PreparedWorkspaceScope(DatasetScopeKind):
         return cls.scope_for(root_text, unquote(encoded))
 
     @classmethod
-    def plate_id(cls, scope: DatasetScope) -> str:
+    def subject_id(cls, scope: DatasetScope) -> str:
         return str(scope.root)
 
     @classmethod

@@ -12,9 +12,9 @@ from zmqruntime.messages import (
     ResponseType,
 )
 
-from openhcs.core.execution_state import ExecutionOutputPlateSummary
-from openhcs.core.orchestrator.compiled_plate_execution import (
-    CompiledPlateExecutionExtras,
+from openhcs.core.execution_state import ExecutionOutputSummary
+from openhcs.core.orchestrator.bundle_execution import (
+    BundleExecutionExtras,
 )
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryParamField
 from python_introspect import to_jsonable
@@ -43,15 +43,15 @@ class ZMQResultsSummaryEnricher:
             summary = {}
             record.results_summary = summary
 
-        output_plate_summary = record.get_extra(
-            ExecutionOutputPlateSummary.EXECUTION_RECORD_KEY
+        output_summary = record.get_extra(
+            ExecutionOutputSummary.EXECUTION_RECORD_KEY
         )
-        if output_plate_summary is None:
-            output_plate_summary = ExecutionOutputPlateSummary()
-        elif not isinstance(output_plate_summary, ExecutionOutputPlateSummary):
+        if output_summary is None:
+            output_summary = ExecutionOutputSummary()
+        elif not isinstance(output_summary, ExecutionOutputSummary):
             raise TypeError(
                 "Execution output-plate metadata must use "
-                f"{ExecutionOutputPlateSummary.__name__}."
+                f"{ExecutionOutputSummary.__name__}."
             )
         observation_export_path = record.get_extra(
             ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value
@@ -60,17 +60,17 @@ class ZMQResultsSummaryEnricher:
             ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_SCOPE.value
         )
         compiled_execution_extras = record.get_extra(
-            CompiledPlateExecutionExtras.EXECUTION_RECORD_KEY
+            BundleExecutionExtras.EXECUTION_RECORD_KEY
         )
         if compiled_execution_extras is not None and not isinstance(
             compiled_execution_extras,
-            CompiledPlateExecutionExtras,
+            BundleExecutionExtras,
         ):
             raise TypeError(
                 "Compiled execution metadata must use "
-                f"{CompiledPlateExecutionExtras.__name__}."
+                f"{BundleExecutionExtras.__name__}."
             )
-        summary.update(output_plate_summary.results_summary_fields())
+        summary.update(output_summary.results_summary_fields())
         if observation_export_path:
             summary[ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value] = str(
                 observation_export_path
@@ -83,17 +83,17 @@ class ZMQResultsSummaryEnricher:
             compiled_execution_extras is not None
             and compiled_execution_extras.viewer_states_by_port
         ):
-            summary[CompiledPlateExecutionExtras.RESULTS_SUMMARY_KEY] = to_jsonable(
+            summary[BundleExecutionExtras.RESULTS_SUMMARY_KEY] = to_jsonable(
                 compiled_execution_extras.viewer_states_by_port
             )
         if isinstance(execution_payload, dict):
             execution_payload[MessageFields.RESULTS_SUMMARY] = summary
 
         logger.info(
-            "[%s] Attached results_summary extras: output_plate_root=%s auto_add=%s observation=%s",
+            "[%s] Attached results_summary extras: output_dataset_root=%s auto_add=%s observation=%s",
             execution_id,
-            output_plate_summary.output_plate_root,
-            output_plate_summary.auto_add_output_plate_to_plate_manager,
+            output_summary.output_dataset_root,
+            output_summary.auto_add_output_dataset,
             summary.get(ZMQAuxiliaryParamField.RUNTIME_OBSERVATION_EXPORT_PATH.value),
         )
 

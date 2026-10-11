@@ -52,7 +52,7 @@ def test_multi_pipeline_folder_adds_one_logical_row_per_pipeline(tmp_path) -> No
         assert rows[second_scope].pipeline_path == str(second)
         for scope_id, pipeline in ((first_scope, first), (second_scope, second)):
             orchestrator = session.orchestrator(scope_id)
-            assert orchestrator.plate_path == root
+            assert orchestrator.dataset_root == root
             assert orchestrator.selected_pipeline_path == pipeline
         assert session.current_scope_id == first_scope
 
@@ -146,7 +146,7 @@ def test_code_documents_naming_a_pipeline_scope_keep_its_import_request(
         session.sync_datasets((scope_id,))
 
         orchestrator = session.orchestrator(scope_id)
-        assert orchestrator.plate_path == root
+        assert orchestrator.dataset_root == root
         assert orchestrator.selected_pipeline_path == pipeline
         assert session.current_scope_id == scope_id
 

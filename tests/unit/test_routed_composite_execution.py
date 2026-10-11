@@ -134,7 +134,7 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
         ).initialize()
         compiled = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=["A01"],
+            partition_values=["A01"],
             enable_visualizer_override=False,
         )
         context = compiled.runtime_contexts["A01"]
@@ -152,13 +152,13 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
             assert context.step_plans[
                 position_step_index
             ].execution_group_scope.is_ungrouped
-        result = orchestrator.execute_compiled_plate(
+        result = orchestrator.execute_compiled_bundle(
             execution_bundle=compiled,
             max_workers=1,
             progress_queue=queue,
             progress_context={
                 "execution_id": str(tmp_path),
-                "plate_id": str(plate),
+                "subject_id": str(plate),
                 "axis_id": "",
             },
         )

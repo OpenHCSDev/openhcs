@@ -138,8 +138,8 @@ def test_czi_demo_declares_bounded_three_channel_analysis_and_artifacts(
     pipeline_config, steps = build_czi_brain_axon_cellbody_demo(inputs)
 
     assert pipeline_config.dataset_source is BioFormatsHandler
-    assert pipeline_config.well_filter_config.well_filter == "A01"
-    assert pipeline_config.path_planning_config.well_filter == 0
+    assert pipeline_config.partition_filter_config.partition_filter == "A01"
+    assert pipeline_config.path_planning_config.partition_filter == 0
     assert pipeline_config.materialize_runtime_artifacts is True
     assert pipeline_config.materialization_results_path == (
         inputs.output_root.resolve() / "results"
@@ -440,7 +440,7 @@ def test_czi_contributor_samples_only_declared_crop_planes(
             .initialize()
             .compile_pipelines(
                 pipeline_definition=list(contribution.pipeline_steps),
-                well_filter=["A01"],
+                partition_values=["A01"],
                 is_zmq_execution=True,
             )
         )

@@ -138,7 +138,7 @@ def test_showcase_sources_are_seven_bounded_distinct_pipeline_documents(tmp_path
         stream_config = streamed_steps[0].napari_streaming_config
         assert stream_config.port == showcase.SHOWCASE_NAPARI_PORT
         assert stream_config.persistent is True
-        assert stream_config.well_filter is None
+        assert stream_config.partition_filter is None
         assert _assignment_names(source) == {
             "plate_paths",
             "global_config",
@@ -149,8 +149,8 @@ def test_showcase_sources_are_seven_bounded_distinct_pipeline_documents(tmp_path
             pipeline_source
         )
         assert expected_callable[blueprint.scenario_id] in source
-        assert "well_filter='A01'" in source
-        assert "well_filter=0" in source
+        assert "partition_filter='A01'" in source
+        assert "partition_filter=0" in source
         assert "materialize_runtime_artifacts=True" in source
         assert "SourceBinding" not in source
         assert ".cppipe" not in source
@@ -240,7 +240,7 @@ def test_colocalization_presentation_compiles_from_public_native_source(
         ).initialize()
         compilation = orchestrator.compile_pipelines(
             pipeline_definition=namespace["pipeline_steps"],
-            well_filter=["A01"],
+            partition_values=["A01"],
             is_zmq_execution=True,
         )
     finally:
@@ -401,7 +401,7 @@ def test_live_measurement_evidence_requires_owner_declared_populated_tables(tmp_
         "payload": {
             "entries": [
                 {
-                    "plate_id": str(plate_path),
+                    "subject_id": str(plate_path),
                     "step_name": "Count",
                     "preview": {
                         "address": {"key": {"name": "cell_rows"}},
@@ -701,7 +701,7 @@ class _FakeMcpClient:
                     "payload": {
                         "entries": [
                             {
-                                "plate_id": str(self.plate_path),
+                                "subject_id": str(self.plate_path),
                                 "step_name": "Assay",
                                 "preview": {
                                     "address": {"key": {"name": "assay_measurements"}},

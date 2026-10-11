@@ -774,7 +774,7 @@ class UiLiveMeasurementEntryState:
 
     sequence_id: int
     execution_id: str
-    plate_id: str
+    subject_id: str
     axis_id: str
     step_name: str
     preview: LiveMeasurementTablePreview
@@ -863,7 +863,7 @@ class UiDebugSnapshotStoreRefCarrier:
 @dataclass(frozen=True, slots=True)
 class UiProgressIdentityState:
     execution_id: str
-    plate_id: str
+    subject_id: str
     axis_id: str
     step_name: str
 

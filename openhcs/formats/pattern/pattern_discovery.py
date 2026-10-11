@@ -228,7 +228,7 @@ class PatternDiscoveryEngine:
         extensions: List[str] = None,
         group_by: type[GroupingDeclaration] | None = None,
         recursive: bool = False,
-        **kwargs,  # Dynamic filter parameters (e.g., well_filter, site_filter)
+        **kwargs,  # Dynamic filter parameters (e.g., partition_filter, site_filter)
     ) -> Dict[str, Any]:
         """
         Automatically detect image patterns in a folder.

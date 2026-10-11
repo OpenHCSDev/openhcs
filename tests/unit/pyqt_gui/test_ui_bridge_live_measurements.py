@@ -16,7 +16,6 @@ from openhcs.core.artifacts import MeasurementsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
 )
@@ -110,12 +109,10 @@ def _notification() -> LiveMeasurementAvailableNotification:
         truncated_previews=False,
     )
     event = ProgressEvent(
-        identity=ProgressIdentity(
-            execution_id="execution-1",
-            plate_id="plate-1",
-            axis_id="B03",
-            step_name="Neurite Outgrowth",
-        ),
+        execution_id="execution-1",
+        subject_id="plate-1",
+        axis_id="B03",
+        step_name="Neurite Outgrowth",
         phase=ProgressPhase.STEP_COMPLETED,
         status=ProgressStatus.SUCCESS,
         percent=100.0,
@@ -243,7 +240,7 @@ def test_live_measurement_surface_projects_exact_bounded_preview_and_revision() 
         assert state.payload["total_row_count"] == 3
         entry = state.payload["entries"][0]
         assert entry["execution_id"] == "execution-1"
-        assert entry["plate_id"] == "plate-1"
+        assert entry["subject_id"] == "plate-1"
         assert entry["step_name"] == "Neurite Outgrowth"
         assert entry["preview"]["columns"] == ["label_id", "neurite_length_px"]
         assert entry["preview"]["rows"][0] == {

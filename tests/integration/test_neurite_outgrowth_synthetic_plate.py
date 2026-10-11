@@ -182,7 +182,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         ).initialize()
         set_progress_queue(progress_queue)
         compilation = orchestrator.compile_pipelines(
-            pipeline_definition=[step], well_filter=["A01"]
+            pipeline_definition=[step], partition_values=["A01"]
         )
         compiled_context = compilation.runtime_contexts["A01"]
         compiled_plan = compiled_context.step_plans[0]
@@ -206,12 +206,12 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
             source_stack, **compiled_invocation.kwargs_dict
         )
 
-        results = orchestrator.execute_compiled_plate(
+        results = orchestrator.execute_compiled_bundle(
             execution_bundle=compilation,
             progress_queue=progress_queue,
             progress_context={
                 "execution_id": f"test::{time.time_ns()}",
-                "plate_id": str(plate_dir),
+                "subject_id": str(plate_dir),
                 "axis_id": "",
             },
         )
@@ -338,19 +338,19 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                 )
         assert len({path.name for path in checkpoint_paths}) == 20
 
-        assert compiled_plan.output_plate_root is not None
-        output_plate_root = Path(compiled_plan.output_plate_root)
+        assert compiled_plan.output_dataset_root is not None
+        output_dataset_root = Path(compiled_plan.output_dataset_root)
         projected_label_paths = tuple(
-            path for path in all_label_paths if path.is_relative_to(output_plate_root)
+            path for path in all_label_paths if path.is_relative_to(output_dataset_root)
         )
         assert len(projected_label_paths) == 8
-        metadata_path = output_plate_root / "openhcs_metadata.json"
+        metadata_path = output_dataset_root / "openhcs_metadata.json"
         source_projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
-            output_plate_root,
+            output_dataset_root,
             json.loads(metadata_path.read_text()),
         )
         for label_path in projected_label_paths:
-            virtual_path = str(label_path.relative_to(output_plate_root))
+            virtual_path = str(label_path.relative_to(output_dataset_root))
             projection = source_projection.require_source_projection_for(
                 VirtualWorkspacePathLookup.from_paths(
                     virtual_path,

@@ -123,7 +123,7 @@ def test_compiled_execution_bundle_derives_axis_ids_from_contexts() -> None:
                 FunctionStepExecutionScope.AXIS,
                 FunctionStepExecutionScope.PLATE,
             ),
-            RuntimeObservationMode.MERGE_PLATE_INPUTS,
+            RuntimeObservationMode.MERGE_DATASET_INPUTS,
         ),
     ),
 )
@@ -256,7 +256,7 @@ def test_axis_only_worker_lane_releases_runtime_values_after_each_axis(
         ],
         lane_context=WorkerLaneExecutionContext(
             execution_id="execution",
-            plate_id="plate",
+            subject_id="plate",
             debug_execution_policy=NoOpDebugExecutionPolicy(),
             worker_slot="worker",
             worker_assignments={"worker": [context.axis_id for context in contexts]},
@@ -389,7 +389,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
         axis_contexts=[("A01", context)],
         lane_context=WorkerLaneExecutionContext(
             execution_id="execution-1",
-            plate_id="plate-1",
+            subject_id="plate-1",
             debug_execution_policy=NoOpDebugExecutionPolicy(),
             worker_slot="worker-0",
             worker_assignments={"worker-0": ["A01"]},
@@ -454,7 +454,7 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
             axis_contexts=[("A01", context)],
             lane_context=WorkerLaneExecutionContext(
                 execution_id="execution-1",
-                plate_id="plate-1",
+                subject_id="plate-1",
                 debug_execution_policy=NoOpDebugExecutionPolicy(),
                 worker_slot="worker-0",
                 worker_assignments={"worker-0": ["A01"]},
@@ -496,7 +496,7 @@ def test_worker_lane_releases_previous_axis_stack_before_next_axis(
         ],
         lane_context=WorkerLaneExecutionContext(
             execution_id="execution",
-            plate_id="plate",
+            subject_id="plate",
             debug_execution_policy=NoOpDebugExecutionPolicy(),
             worker_slot="worker",
             worker_assignments={"worker": [context.axis_id for context in contexts]},
@@ -511,7 +511,7 @@ def test_worker_lane_releases_previous_axis_stack_before_next_axis(
 
 @pytest.mark.parametrize(
     "observation_mode",
-    (RuntimeObservationMode.OMIT, RuntimeObservationMode.MERGE_PLATE_INPUTS),
+    (RuntimeObservationMode.OMIT, RuntimeObservationMode.MERGE_DATASET_INPUTS),
 )
 @pytest.mark.parametrize("release_process_resources", (True, False))
 def test_worker_lane_releases_unconsumed_image_records_before_next_axis(
@@ -547,7 +547,7 @@ def test_worker_lane_releases_unconsumed_image_records_before_next_axis(
         ],
         lane_context=WorkerLaneExecutionContext(
             execution_id="execution",
-            plate_id="plate",
+            subject_id="plate",
             debug_execution_policy=NoOpDebugExecutionPolicy(),
             worker_slot="worker",
             worker_assignments={"worker": [context.axis_id for context in contexts]},

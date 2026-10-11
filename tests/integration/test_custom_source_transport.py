@@ -400,7 +400,7 @@ def _require_stale_rejection(operation):
     raise AssertionError("A persisted reference accepted a stale source revision")
 
 
-def _spawned_custom_task(payload, execution_id, plate_id):
+def _spawned_custom_task(payload, execution_id, subject_id):
     """Run actual registered declarations and emit through the initialized queue."""
     import numpy as np
     from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
@@ -412,7 +412,7 @@ def _spawned_custom_task(payload, execution_id, plate_id):
         np.testing.assert_array_equal(reference.resolve()(values), values)
         owner = reference.metadata.artifact_outputs[0].measurement_feature_owner
         results.append(owner.make_row(2.5))
-    emit(execution_id=execution_id, plate_id=plate_id, axis_id="synthetic",
+    emit(execution_id=execution_id, subject_id=subject_id, axis_id="synthetic",
          step_name="custom", phase=ProgressPhase.STEP_COMPLETED,
          status=ProgressStatus.SUCCESS, percent=100)
     return os.getpid(), tuple(results)
@@ -532,7 +532,7 @@ def _spawn(path):
                 assert values == [[0, 1, 2], [3, 4, 5]]
                 assert type(row) is helpers[4] and row == helpers[5]
             pid, rows = resources.executor.submit(
-                _spawned_custom_task, payload, context.execution_id, context.plate_id,
+                _spawned_custom_task, payload, context.execution_id, context.subject_id,
             ).result(timeout=15)
         assert pid != os.getpid()
         for row, (_reference, helpers) in zip(rows, payload, strict=True):
@@ -540,7 +540,7 @@ def _spawn(path):
             assert row == helpers[5]
         progress = queue.get(timeout=5)
         assert progress["execution_id"] == context.execution_id
-        assert progress["plate_id"] == context.plate_id
+        assert progress["subject_id"] == context.subject_id
         assert progress["pid"] == pid
         assert progress["status"] == "success"
         assert progress["percent"] == 100

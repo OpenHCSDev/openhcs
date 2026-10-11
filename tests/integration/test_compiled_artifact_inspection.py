@@ -35,7 +35,6 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.progress import (
     ProgressEvent,
-    ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
 )
@@ -129,12 +128,10 @@ def _emit_spawned_runtime_observation(worker_queue) -> None:
     context = runtime_artifact_context_for_records(store.observed_values_after(cursor))
     worker_queue.put(
         ProgressEvent(
-            identity=ProgressIdentity(
-                execution_id="run-1",
-                plate_id="/plates/one",
-                axis_id="A01",
-                step_name="Produce",
-            ),
+            execution_id="run-1",
+            subject_id="/plates/one",
+            axis_id="A01",
+            step_name="Produce",
             phase=ProgressPhase.STEP_COMPLETED,
             status=ProgressStatus.SUCCESS,
             percent=100.0,
@@ -143,7 +140,7 @@ def _emit_spawned_runtime_observation(worker_queue) -> None:
             timestamp=time.time(),
             pid=0,
             worker_slot="worker_0",
-            owned_wells=["A01"],
+            owned_partition_values=["A01"],
             context=context,
         ).to_dict()
     )
@@ -199,7 +196,7 @@ def _compiled_record() -> tuple[ZMQCompileArtifactRecord, ArtifactOutputPlan]:
                 GlobalPipelineConfig(), PipelineConfig()
             ),
             execution_id="compile-1",
-            plate_id="/plates/one",
+            subject_id="/plates/one",
             compilation_signature="request",
             debug_replay_signature="debug",
             compilation=ZMQCompilationResult(
@@ -263,12 +260,10 @@ def test_compiled_bundle_populates_static_view_then_runtime_enriches_same_row() 
         value_type="ndarray",
     )
     event = ProgressEvent(
-        identity=ProgressIdentity(
-            execution_id="run-1",
-            plate_id="/plates/one",
-            axis_id="A01",
-            step_name="Produce",
-        ),
+        execution_id="run-1",
+        subject_id="/plates/one",
+        axis_id="A01",
+        step_name="Produce",
         phase=ProgressPhase.STEP_COMPLETED,
         status=ProgressStatus.SUCCESS,
         percent=100.0,
@@ -301,7 +296,7 @@ def test_artifact_ui_inspection_crosses_live_zmq_from_server_compiled_record() -
     model = ArtifactPlanViewModel.from_inspection(inspection, step_index=0)
 
     assert inspection.compile_artifact_id == record.execution_id
-    assert inspection.plate_id == record.plate_id
+    assert inspection.subject_id == record.subject_id
     assert len(model.rows) == 1
     assert model.rows[0].plan == output_plan
     assert model.rows[0].runtime_location == ""

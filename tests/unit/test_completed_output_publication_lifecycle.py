@@ -69,7 +69,7 @@ def _context(plate_root: Path, count: int) -> ProcessingContext:
 
 def _lane() -> WorkerLaneExecutionContext:
     return WorkerLaneExecutionContext(
-        execution_id="output-facts", plate_id="plate", worker_slot="worker_0",
+        execution_id="output-facts", subject_id="plate", worker_slot="worker_0",
         debug_execution_policy=NoOpDebugExecutionPolicy(),
         worker_assignments={"worker_0": ["A01"]},
     )

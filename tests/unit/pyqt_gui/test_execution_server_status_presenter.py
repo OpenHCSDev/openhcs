@@ -1,8 +1,10 @@
 from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,
-    PlateRuntimeIdentity,
-    PlateRuntimeProjection,
-    PlateRuntimeState,
+    SubjectRuntimeIdentity,
+    SubjectRuntimeProjection,
+    CompilingSubjectRuntimeState,
+    ExecutingSubjectRuntimeState,
+    FailedSubjectRuntimeState,
 )
 from openhcs.authoring.session.progress import execution_server_status_text
 
@@ -16,25 +18,25 @@ def test_execution_server_status_status_text_returns_ready_when_no_plates():
 
 
 def test_execution_server_status_status_text_includes_projection_counts():
-    plate_one = PlateRuntimeProjection(
-        identity=PlateRuntimeIdentity(execution_id="exec-1", plate_id="/tmp/p1"),
-        state=PlateRuntimeState.COMPILING,
+    plate_one = SubjectRuntimeProjection(
+        identity=SubjectRuntimeIdentity(execution_id="exec-1", subject_id="/tmp/p1"),
+        state=CompilingSubjectRuntimeState,
         percent=40.0,
         axis_progress=tuple(),
         latest_timestamp=1.0,
     )
-    plate_two = PlateRuntimeProjection(
-        identity=PlateRuntimeIdentity(execution_id="exec-2", plate_id="/tmp/p2"),
-        state=PlateRuntimeState.EXECUTING,
+    plate_two = SubjectRuntimeProjection(
+        identity=SubjectRuntimeIdentity(execution_id="exec-2", subject_id="/tmp/p2"),
+        state=ExecutingSubjectRuntimeState,
         percent=85.0,
         axis_progress=tuple(),
         latest_timestamp=1.0,
     )
     projection = ExecutionRuntimeProjection(
-        by_plate_latest={"/tmp/p1": plate_one, "/tmp/p2": plate_two},
+        by_subject_latest={"/tmp/p1": plate_one, "/tmp/p2": plate_two},
         state_counts={
-            PlateRuntimeState.COMPILING: 1,
-            PlateRuntimeState.EXECUTING: 1,
+            CompilingSubjectRuntimeState: 1,
+            ExecutingSubjectRuntimeState: 1,
         },
         overall_percent=62.5,
     )
@@ -44,16 +46,16 @@ def test_execution_server_status_status_text_includes_projection_counts():
 
 
 def test_execution_server_status_status_text_includes_failed_projection_count():
-    failed_plate = PlateRuntimeProjection(
-        identity=PlateRuntimeIdentity(execution_id="exec-3", plate_id="/tmp/p3"),
-        state=PlateRuntimeState.FAILED,
+    failed_plate = SubjectRuntimeProjection(
+        identity=SubjectRuntimeIdentity(execution_id="exec-3", subject_id="/tmp/p3"),
+        state=FailedSubjectRuntimeState,
         percent=10.0,
         axis_progress=tuple(),
         latest_timestamp=1.0,
     )
     projection = ExecutionRuntimeProjection(
-        by_plate_latest={"/tmp/p3": failed_plate},
-        state_counts={PlateRuntimeState.FAILED: 1},
+        by_subject_latest={"/tmp/p3": failed_plate},
+        state_counts={FailedSubjectRuntimeState: 1},
         overall_percent=10.0,
     )
 

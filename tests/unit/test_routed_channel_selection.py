@@ -61,16 +61,16 @@ def _execute_steps(plate, steps, output_root):
         ).initialize()
         compiled = orchestrator.compile_pipelines(
             pipeline_definition=steps,
-            well_filter=["A01"],
+            partition_values=["A01"],
             enable_visualizer_override=False,
         )
-        return orchestrator.execute_compiled_plate(
+        return orchestrator.execute_compiled_bundle(
             execution_bundle=compiled,
             max_workers=1,
             progress_queue=queue,
             progress_context={
                 "execution_id": str(output_root),
-                "plate_id": str(plate),
+                "subject_id": str(plate),
                 "axis_id": "",
             },
         )

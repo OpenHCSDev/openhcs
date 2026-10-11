@@ -77,13 +77,13 @@ from benchmark.well_throughput_scaling import (
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyPathPlanningConfig,
-    LazyWellFilterConfig,
+    LazyPartitionFilterConfig,
     MaterializationBackend,
     MultiprocessingStartMethod,
     PathPlanningConfig,
     PipelineConfig,
     VFSConfig,
-    WellFilterConfig,
+    PartitionFilterConfig,
 )
 from openhcs.domains.microscopy.config import AnalysisConsolidationConfig
 from benchmark.equivalence.comparison import runtime_image_differences
@@ -1084,7 +1084,7 @@ def _worker_axis_evidence(
                 "timestamp": event.timestamp,
                 "pid": event.pid,
                 "worker_slot": event.worker_slot,
-                "owned_wells": event.owned_wells,
+                "owned_partition_values": event.owned_partition_values,
             }
             for event in selected
         ),
@@ -1102,9 +1102,9 @@ def _global_config(
         num_workers=worker_count,
         use_threading=False,
         multiprocessing_start_method=start_method,
-        well_filter_config=WellFilterConfig(well_filter=list(wells)),
+        partition_filter_config=PartitionFilterConfig(partition_filter=list(wells)),
         path_planning_config=PathPlanningConfig(
-            well_filter=0,
+            partition_filter=0,
             global_output_folder=output_dir,
             output_dir_suffix="_matched_pilot",
         ),
@@ -1128,9 +1128,9 @@ def _candidate_pipeline_config(
         use_threading=None,
         multiprocessing_start_method=None,
         materialize_runtime_artifacts=False,
-        well_filter_config=LazyWellFilterConfig(well_filter=list(wells)),
+        partition_filter_config=LazyPartitionFilterConfig(partition_filter=list(wells)),
         path_planning_config=LazyPathPlanningConfig(
-            well_filter=0,
+            partition_filter=0,
             global_output_folder=output_dir,
             output_dir_suffix="_matched_pilot",
         ),
@@ -1420,7 +1420,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient | None) -> in
         _replicate_source_binding_workspace_wells(
             prepared.materialization.metadata_path,
             wells,
-            source_well_filter=native_global_config.well_filter_config,
+            source_partition_filter=native_global_config.partition_filter_config,
         )
     provenance["native_input_inventory"] = _source_input_inventory(
         native_domain.source_universe
@@ -1669,8 +1669,8 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient | None) -> in
             prepared.pipeline_config, global_config, output_dir, wells
         )
         submission = OpenHCSExecutionSubmission(
-            plate_id=case.dataset_path,
-            execution_plate_id=prepared.execution_plate_path,
+            subject_id=case.dataset_path,
+            execution_subject_id=prepared.execution_plate_path,
             selected_pipeline_path=case.cppipe_path,
             pipeline_document=PipelineDocumentCodec.from_values(
                 pipeline_config=pipeline_config,

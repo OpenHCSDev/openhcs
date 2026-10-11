@@ -668,7 +668,7 @@ class FuncStepContractValidator:
                     f"Plate-scoped FunctionStep {step_name!r} must compile with "
                     "StepInputDependency.no_main_flow()."
                 )
-            FuncStepContractValidator.validate_plate_callable_contracts(
+            FuncStepContractValidator.validate_dataset_callable_contracts(
                 contracts,
                 step_name,
             )
@@ -781,7 +781,7 @@ class FuncStepContractValidator:
                 raise ValueError(
                     f"Plate-scoped FunctionStep {step_name!r} cannot use a dict pattern."
                 )
-            FuncStepContractValidator.validate_plate_callable_contracts(
+            FuncStepContractValidator.validate_dataset_callable_contracts(
                 contracts,
                 step_name,
             )
@@ -849,7 +849,7 @@ class FuncStepContractValidator:
             )
 
         if compiled_pattern.execution_scope is FunctionStepExecutionScope.PLATE:
-            FuncStepContractValidator.validate_plate_callable_contracts(
+            FuncStepContractValidator.validate_dataset_callable_contracts(
                 tuple(invocation.contract for invocation in invocations),
                 step_name,
             )
@@ -872,7 +872,7 @@ class FuncStepContractValidator:
         return input_type, invocations[-1].output_memory_type
 
     @staticmethod
-    def validate_plate_callable_contracts(
+    def validate_dataset_callable_contracts(
         contracts: Sequence[CallableContract],
         step_name: str,
     ) -> None:

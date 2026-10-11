@@ -51,7 +51,7 @@ class ProgressTreeBuilder:
         executions: Mapping[str, Sequence[ProgressEvent]],
         running_executions: Sequence[RunningExecutionInfo],
         queued_executions: Sequence[QueuedExecutionInfo],
-        get_plate_name: Callable[[str, str | None], str],
+        get_subject_name: Callable[[str, str | None], str],
     ) -> RuntimeTreeProjection:
         events_snapshot = {
             execution_id: list(events) for execution_id, events in executions.items()
@@ -63,7 +63,7 @@ class ProgressTreeBuilder:
         )
         return self.projection_builder.build(
             executions=executions,
-            get_plate_name=get_plate_name,
+            get_subject_name=get_subject_name,
             runtime_projection=runtime_projection,
         )
 

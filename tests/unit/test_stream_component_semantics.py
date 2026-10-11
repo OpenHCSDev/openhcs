@@ -33,7 +33,7 @@ def test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity()
     for slot in assignments.worker_assignments:
         lane = WorkerLaneExecutionContext(
             execution_id="execution",
-            plate_id="plate",
+            subject_id="plate",
             debug_execution_policy=NoOpDebugExecutionPolicy(),
             worker_slot=slot,
             worker_assignments=assignments.worker_assignments,
@@ -42,7 +42,7 @@ def test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity()
         context.bind_execution_runtime(lane)
         assert context.execution_runtime is lane
         assert lane.worker_assignments is assignments.worker_assignments
-        assert lane.owned_wells == tuple(assignments.worker_assignments[slot])
+        assert lane.owned_partition_values == tuple(assignments.worker_assignments[slot])
         provider = StreamExecutionAxisDomainProvider.build_for_component(
             context=context,
             component=AxisFamily.active().partition_axis().name,

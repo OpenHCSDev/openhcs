@@ -222,7 +222,7 @@ class StreamingConfigBehaviorMixin:
             raise ValueError("Streaming viewer surface requires a ProcessingContext.")
         source = ViewerStreamSourceIdentity(
             microscope_handler=context.microscope_handler,
-            plate_path=context.plate_path,
+            plate_path=context.dataset_root,
         )
         return self.viewer_surface(source, context.transport_config)
 

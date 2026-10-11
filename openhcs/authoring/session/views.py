@@ -131,7 +131,7 @@ def output_relations(
             else default_path_config
         )
         output_root = str(
-            PipelinePathPlanner.build_output_plate_root(Path(row.root), path_config)
+            PipelinePathPlanner.build_output_dataset_root(Path(row.root), path_config)
         )
         if output_root == row.root:
             continue
@@ -185,8 +185,8 @@ class DatasetActivity:
         execution_id = self.execution_id
         if self.terminal_status is not None or execution_id is None:
             return None
-        return self.session.runtime_projection.get_plate(
-            plate_id=self.scope_id, execution_id=execution_id
+        return self.session.runtime_projection.get_subject(
+            subject_id=self.scope_id, execution_id=execution_id
         )
 
     @property
@@ -298,7 +298,7 @@ class DatasetListView(SessionView):
             ),
             execution_id=activity.execution_id,
             terminal_status=None if terminal is None else terminal.value,
-            runtime_state=None if runtime is None else runtime.state.value,
+            runtime_state=None if runtime is None else runtime.state.state_name,
             runtime_percent=None if runtime is None else runtime.percent,
             queue_position=None if runtime is None else runtime.queue_position,
             output_scope_id=relation.output_scope_id,

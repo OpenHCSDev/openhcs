@@ -590,7 +590,7 @@ class StreamMetadataRootAuthority:
     def from_context(cls, context: ProcessingContext) -> "StreamMetadataRootAuthority":
         roots = []
         for value in (
-            context.plate_path,
+            context.dataset_root,
             context.input_dir,
         ):
             if value is None:
@@ -601,7 +601,7 @@ class StreamMetadataRootAuthority:
         return cls(
             source=ViewerStreamSourceIdentity(
                 microscope_handler=context.microscope_handler,
-                plate_path=context.plate_path,
+                plate_path=context.dataset_root,
             ),
             candidate_roots=tuple(roots),
         )

@@ -73,9 +73,9 @@ def test_real_global_config():
     print(f"Reconstructed successfully: {type(reconstructed) == type(config)}")
 
     # Verify a few nested configs are correct
-    if hasattr(config, "well_filter_config") and config.well_filter_config is not None:
-        assert type(reconstructed.well_filter_config) == type(config.well_filter_config)
-        print(f"✓ well_filter_config type matches")
+    if hasattr(config, "partition_filter_config") and config.partition_filter_config is not None:
+        assert type(reconstructed.partition_filter_config) == type(config.partition_filter_config)
+        print(f"✓ partition_filter_config type matches")
 
     if (
         hasattr(config, "napari_streaming_config")
@@ -94,7 +94,7 @@ def test_real_global_config():
     # Find a field to update
     test_path = None
     for path in state.parameters.keys():
-        if "well_filter" in path and path.endswith("well_filter"):
+        if "partition_filter" in path and path.endswith("partition_filter"):
             test_path = path
             break
 

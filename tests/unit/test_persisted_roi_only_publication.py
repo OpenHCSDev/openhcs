@@ -93,7 +93,7 @@ def plan_for(plate, backend=Backend.DISK.value):
         axis_id="A01",
         write_backend=Backend.MEMORY.value,
         create_openhcs_metadata=True,
-        output_plate_root=str(plate),
+        output_dataset_root=str(plate),
         analysis_results_dir=str(plate / "compiled_default"),
         runtime_artifact_materialization=RuntimeArtifactMaterializationPlan(
             persistent_enabled=True,
@@ -241,7 +241,7 @@ def test_saved_roi_only_batch_publishes_and_reconciles_without_rendering(
         for target in owner.reconciliation_targets(publication_context)
     )
     assert plate / destination in reconciled
-    OpenHCSMetadataTarget.finalize_completed_plate({"A01": publication_context})
+    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": publication_context})
     assert result_paths(plate, publication_context) == (output.path,)
 
 
@@ -270,7 +270,7 @@ def test_result_only_destination_saved_through_zarr_passthrough_publishes_comple
     plan = plan_for(plate, Backend.ZARR.value)
     publication_context.step_plans = {0: plan}
     _publish_saved_step(publication_context, plan, artifact_materializations=(outcome,))
-    OpenHCSMetadataTarget.finalize_completed_plate({"A01": publication_context})
+    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": publication_context})
 
     published = json.loads(METADATA_CONFIG.metadata_path(plate).read_text())
     entry = published["subdirectories"]["results"]
@@ -355,7 +355,7 @@ def test_measurement_only_step_does_not_reconcile_pending_image_producer(
         SourceProjectionMetadataSerializer.projection_fields(((projection, virtual_path),)),
     )
     publication_context.step_plans = {0: plan}
-    OpenHCSMetadataTarget.finalize_completed_plate({"A01": publication_context})
+    OpenHCSMetadataTarget.finalize_completed_dataset({"A01": publication_context})
     reconciled = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES][destination]
     assert reconciled[FIELDS.IMAGE_FILES] == [virtual_path]
     assert len(reconciled[FIELDS.SOURCE_PROJECTION]) == 1
