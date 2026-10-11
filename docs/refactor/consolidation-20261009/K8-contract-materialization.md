@@ -81,7 +81,25 @@ A new result file kind (say `.parquet`): before, an enum member, an entry in the
 
 The package is in `openhcs/core/`, nothing names the old path, the three converters are gone, `FileFormat` is a family, the guards pass, parity is 30/30, and the ratchet and nra-r1 show no regression.
 
+## Debt removed with the move
+
+The ratchet and nra-r1 key debt by file path, so a moved file must arrive clean. Before the move `materialization/core.py` and `path_scopes.py` carried 35 foreign absence probes, 3 long boolean chains (12 terms), 1 string dispatch (3 arms), 2 type switches (6 arms) and 3 redundant type checks. All are zero now; each answer went to its owner:
+
+- **`Output`** owns `stored_content()` (an image carries its metadata), `describes_image()`, `numbers_samples()` and its owner comparison.
+- **Options** (`options.py`): `TabularExtractionOptions.declares_fields/has_fields/extracts_rows/requests_extraction`, `ImageFileOptions.names_files_by_template`. `TabularRowsAuthority.requested` is deleted.
+- **`MaterializationSpec.disallowed_backends`**, **`MaterializationContext.sample_numbers_for_export`**, **`MaterializationInput.is_sequence`**, **`SourceStemAuthoritySelection.has_parser`**, one `runtime_planes()` for three copies of the same filter.
+- **Type switches are dispatch:** `_mapping_column_length` and `_file_bundle_entry_output` are `singledispatch` functions.
+- **String dispatch is a table:** `NONFINITE_FLOAT_CODES` is the one declaration the CSV writer and reader both iterate (was 1/2/3 written on both sides).
+- **Archive identity** compares facet by facet (`_identity_facets`).
+- **Other owners, one small method each:** `SourceSpatialDomain.with_undeclared_shape_from`, `SourceImageIdentity.has_path/has_component_metadata`, `SourceImageProvenancePlanes.names_every_path`, `MeasurementTable.unowned_feature_names`, `ProcessingContext.execution_axis_count`.
+- **Redundant type checks deleted:** the `__post_init__` `isinstance` checks of `ColumnarCsvOutput.content/options` and `RenderedColumnarCsvOutput.options`. Certificate **tests-only**: the three constructors in the tree pass the declared types; a caller passing another type now fails later instead of at construction.
+
+Left for the surfaces that own the type:
+- **K1:** `MaterializationInputItem.has_leading_plane_axis()` still reads `metadata.plane_axis` against `None`; it becomes the plane-axis family's answer when `NoPlaneAxis` lands.
+- **K7 (#1209):** materialization annotates `ProcessingContext` where it reads execution state (`path_scopes.py`, `MaterializationContext.context`); these become `ExecutingContext` when K7 is on main (not yet at `625150118`). `ProcessingContext.execution_axis_count` moves with it.
+
 ## Outcome
 
-- Guards 3/3. Official30 parity passed on the final execution-path tree. Touched and importing unit files: 4,279 passed; the 9 failures are the same 9 on `origin/main` (`44980dfe2`).
-- **Ratchet and nra-r1 exit 1 for the move alone.** Both key counts by file path, so the moved files' unchanged counts appear as new under `core/materialization/` and vanish under `processing/materialization/` (ratchet: 12 boolean-chain terms, 34+1 absence probes, 1 string dispatch with 3 arms, 2 type switches with 6 arms; nra: 3 redundant type checks; each number identical on both sides). No other key increased; `ImageBrowserWidget` god-class excess fell by 1.
+- Guards 3/3. Structural ratchet (`openhcs`, `scripts`, `benchmark`) and nra-r1: no key increased.
+- Importing unit files: the failures are the same nine as on `origin/main`; the others pass alone.
+- Official30 parity passed on the final tree.
