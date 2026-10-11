@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 from openhcs._source_dependencies import ensure_source_checkout_external_paths
+from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 ensure_source_checkout_external_paths()
 
@@ -64,7 +65,7 @@ def pytest_sessionstart(session):
 
 
 # Conditionally import pytest-qt only when not in CPU-only mode
-CPU_ONLY_MODE = os.getenv("OPENHCS_CPU_ONLY", "false").lower() == "true"
+CPU_ONLY_MODE = OpenHCSProcessEnvironment.cpu_only_mode()
 if not CPU_ONLY_MODE:
     pytest_plugins = ["pytestqt"]
 else:
