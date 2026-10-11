@@ -157,9 +157,7 @@ from openhcs.core.progress.projection import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.config import AgentUiBridgeConfig
-from openhcs.pyqt_gui.services.config_window_code_document import (
-    ConfigCodeDocumentDriver,
-)
+from pyqt_reactive.windows.config_window import ConfigCodeDocumentDriver
 from openhcs.pyqt_gui.services.embedded_code_documents import (
     EmbeddedCodeDocumentRegistrationABC,
 )
@@ -302,6 +300,7 @@ def replacement_function(image, threshold: int = 2):
 
 def test_config_code_document_honors_clean_flag() -> None:
     driver = ConfigCodeDocumentDriver(
+        document_format=ConfigDocumentAuthority,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=lambda: GlobalPipelineConfig(num_workers=2),
@@ -320,6 +319,7 @@ def test_pycodified_config_document_delegates_to_config_authority() -> None:
     replacement = GlobalPipelineConfig(num_workers=3)
     applied: list[GlobalPipelineConfig] = []
     driver = ConfigCodeDocumentDriver(
+        document_format=ConfigDocumentAuthority,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=lambda: original,
@@ -347,6 +347,7 @@ def test_pycodified_config_document_delegates_to_config_authority() -> None:
 def test_pycodified_config_document_authorizes_before_apply() -> None:
     applied: list[GlobalPipelineConfig] = []
     driver = ConfigCodeDocumentDriver(
+        document_format=ConfigDocumentAuthority,
         title="View/Edit GlobalPipelineConfig",
         config_type=GlobalPipelineConfig,
         current_config=GlobalPipelineConfig,

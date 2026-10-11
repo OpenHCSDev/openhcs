@@ -6,7 +6,7 @@ view them in Napari with configurable display settings.
 """
 
 from openhcs.core.axes import Axis, AxisFamily, GridAddressed
-from pyqt_reactive.widgets.grid_selector import GridSelectorWidget
+from pyqt_reactive.widgets.grid_selector import GridAddressing, GridSelectorWidget
 from objectstate import ScopeKey
 import logging
 import subprocess
@@ -59,6 +59,23 @@ def active_grid_axis() -> type[Axis] | None:
 
     grid_axes = AxisFamily.active().with_role(GridAddressed)
     return grid_axes[0] if grid_axes else None
+
+
+@dataclass(frozen=True, slots=True)
+class GridAxisAddressing(GridAddressing):
+    """Lays a GridAddressed axis's values out on the grid selector."""
+
+    axis: type[Axis]
+
+    @property
+    def default_grid(self) -> tuple[int, int]:
+        return self.axis.default_grid
+
+    def grid_index(self, value: object) -> tuple[int, int] | None:
+        return self.axis.grid_index(value)
+
+    def row_label(self, row: int) -> str:
+        return self.axis.row_label(row)
 
 
 def require_grid_axis() -> type[Axis]:
@@ -616,7 +633,7 @@ class ImageBrowserWidget(QWidget):
         if active_grid_axis() is not None:
             grid_axis = require_grid_axis()
             self.plate_view_widget = GridSelectorWidget(
-                addressing=grid_axis,
+                addressing=GridAxisAddressing(grid_axis),
                 title="Plate View",
                 cell_noun=f"{grid_axis.label.lower()}s",
                 color_scheme=self.color_scheme,

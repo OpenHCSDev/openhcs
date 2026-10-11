@@ -55,6 +55,7 @@ class OpenHCSFormGenConfig(FormGenConfig):
     performance_logger_name: str = "openhcs.performance"
     performance_log_filename: str = "performance.log"
     path_cache_file: str | None = None
+    external_editor_env_var: str = "OPENHCS_USE_EXTERNAL_EDITOR"
 
 
 class OpenHCSCodegenProvider(CodegenProviderABC):

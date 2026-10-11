@@ -7,8 +7,8 @@ the :class:`DatasetListView` operations; changes arrive as session events.
 
 from __future__ import annotations
 
+from pyqt_reactive.services.window_code_document import use_external_code_editor
 import logging
-import os
 from dataclasses import fields, replace
 from functools import singledispatchmethod
 from pathlib import Path
@@ -101,7 +101,7 @@ from openhcs.pyqt_gui.widgets.shared.openhcs_manager_mixins import (
 from openhcs.pyqt_gui.widgets.shared.services.plate_manager_workflows import (
     PlateManagerCodeWorkflow,
 )
-from openhcs.pyqt_gui.windows.config_window import ConfigWindow
+from openhcs.pyqt_gui.windows.config_window import OpenHCSConfigWindow
 from openhcs.pyqt_gui.windows.live_measurements_window import LiveMeasurementsWindow
 from openhcs.pyqt_gui.windows.plate_viewer_window import PlateViewerWindow
 
@@ -109,14 +109,6 @@ if TYPE_CHECKING:
     from openhcs.pyqt_gui.config import UIConfig
 
 logger = logging.getLogger(__name__)
-
-
-def external_editor_enabled() -> bool:
-    """Return the explicit environment policy for launching the code editor."""
-    variable_name = "OPENHCS_USE_EXTERNAL_EDITOR"
-    if variable_name not in os.environ:
-        return False
-    return os.environ[variable_name].lower() in ("1", "true", "yes")
 
 
 class PlateManagerWidget(
@@ -441,7 +433,7 @@ class PlateManagerWidget(
             callback=lambda edited: self._action_controller.apply_edited_code(
                 operations, edited
             ),
-            use_external=external_editor_enabled(),
+            use_external=use_external_code_editor(),
             declaration_type=type(document.payload),
             code_data={"clean_mode": document.clean_mode},
         )
@@ -527,7 +519,7 @@ def open_config_window(
     on_save,
     mutation_scope_ids: tuple[str, ...],
 ) -> None:
-    from openhcs.pyqt_gui.windows.config_window import (
+    from pyqt_reactive.windows.config_window import (
         ConfigSaveParticipant,
         ConfigWindowTabSpec,
     )
@@ -536,7 +528,7 @@ def open_config_window(
         for scope_id in mutation_scope_ids:
             manager.session.require_definition_mutation_allowed(scope_id)
 
-    window = ConfigWindow(
+    window = OpenHCSConfigWindow(
         tabs=(
             ConfigWindowTabSpec(
                 state=state,

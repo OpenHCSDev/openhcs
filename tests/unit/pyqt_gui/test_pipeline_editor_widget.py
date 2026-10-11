@@ -60,7 +60,7 @@ from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
-from openhcs.ui.shared.code_editor_form_updater import CodeEditorFormUpdater
+from pyqt_reactive.services.code_editor_form_updater import CodeEditorFormUpdater
 from openhcs.ui.shared.plate_scope_identity import PipelineScopeIdentity
 from tests.unit.pyqt_gui.session_harness import add_datasets, qt_app, session_gui
 

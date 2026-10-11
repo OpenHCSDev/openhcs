@@ -5,10 +5,10 @@ widget displays the step objects it last read from the session and re-reads
 them on every pipeline event; every change goes through the session.
 """
 
+from pyqt_reactive.services.window_code_document import use_external_code_editor
 from objectstate import ScopeKey
 import copy
 import logging
-import os
 from dataclasses import dataclass
 from functools import singledispatchmethod
 from typing import Any, Callable, Optional, Tuple
@@ -112,7 +112,6 @@ logger = logging.getLogger(__name__)
 
 
 StepFunctionDeclaration = FunctionSpec | dict[str, FunctionSpec] | None
-PIPELINE_EDITOR_EXTERNAL_EDITOR_ENV = "OPENHCS_USE_EXTERNAL_EDITOR"
 SHOW_PIPELINE_DEBUG_TOOLBAR = False
 
 
@@ -130,17 +129,6 @@ class PipelineEditorEmbeddedCodeDocumentRegistration(
     @classmethod
     def code_document_driver_for_window(cls, window):
         return window.code_document_driver()
-
-
-def pipeline_editor_external_editor_enabled() -> bool:
-    """Return the explicit environment policy for launching pipeline code edits."""
-    if PIPELINE_EDITOR_EXTERNAL_EDITOR_ENV not in os.environ:
-        return False
-    return os.environ[PIPELINE_EDITOR_EXTERNAL_EDITOR_ENV].lower() in (
-        "1",
-        "true",
-        "yes",
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -801,7 +789,7 @@ class ShowPipelineCodePresenter(OperationPresenter):
             initial_content=editor_widget.code_document_source(clean=True),
             title=editor_widget.code_document_title(),
             callback=editor_widget._handle_edited_code,
-            use_external=pipeline_editor_external_editor_enabled(),
+            use_external=use_external_code_editor(),
             declaration_type=PipelineDocument,
             code_data={"clean_mode": True},
         )
