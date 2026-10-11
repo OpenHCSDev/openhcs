@@ -313,11 +313,6 @@ class ArtifactPlan(DeclaredRelations, ABC, metaclass=AutoRegisterMeta):
                 owner=f"Artifact plan {self.name!r}",
             ),
         )
-        if not isinstance(self.group_scope, ComponentGroupScope):
-            raise TypeError(
-                f"Artifact plan {self.name!r} group_scope must be a "
-                f"ComponentGroupScope, got {type(self.group_scope).__name__}."
-            )
         for grouped in self.group_scope.as_grouped():
             if grouped.component in self.variable_components:
                 raise ValueError(
