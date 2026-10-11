@@ -37,6 +37,11 @@ from openhcs.processing.backends.cellprofiler.illumination import (
 )
 from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
+from openhcs.processing.custom_functions.runtime_registry import (
+    CustomFunctionLifetime,
+    CustomFunctionRuntimeRegistry,
+    project_custom_function,
+)
 
 
 class SelectedDeclarations(FunctionCatalogService):
@@ -281,10 +286,13 @@ def test_new_declaration_composes_independent_settings_without_consumer_edits(
         assert NewAuthoringModule.__mro__.index(
             ExtraOutputSettings
         ) < NewAuthoringModule.__mro__.index(CellProfilerModuleSettings)
-        key, metadata = RegistryService.declared_metadata_for_callable(
-            new_authoring_callable
+        metadata = project_custom_function(new_authoring_callable)
+        CustomFunctionRuntimeRegistry.publish(
+            metadata, CustomFunctionLifetime.EPHEMERAL
         )
-        monkeypatch.setitem(RegistryService._metadata_cache, key, metadata)
+        monkeypatch.setitem(
+            RegistryService._metadata_cache, metadata.composite_key, metadata
+        )
         kwargs = {
             binding.require_parameter_name(): f"New{position}"
             for position, binding in enumerate(
@@ -302,6 +310,7 @@ def test_new_declaration_composes_independent_settings_without_consumer_edits(
         )
         assert invocation.kwargs_dict == {**kwargs, "amount": 3}
     finally:
+        CustomFunctionRuntimeRegistry.remove(new_authoring_callable.__name__)
         dict.__delitem__(
             CellProfilerModule.__registry__, NewAuthoringModule.module_name
         )

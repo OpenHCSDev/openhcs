@@ -124,10 +124,10 @@ def test_stream_declaration_composes_original_progress_and_main_affinity(declara
 
 
 def test_saved_roi_continuous_sdk_receipt_error_reuse_beyond_ordinary_idle(
-    tmp_path, saved_roi_stream,
+    unix_socket_dir, saved_roi_stream,
 ):
     service, arguments, identity, received, timings, unsigned = saved_roi_stream
-    transport = McpSocketTransport(tmp_path.parent / "stream.sock")
+    transport = McpSocketTransport(unix_socket_dir / "stream.sock")
     built = build_server(OpenHCSAgentContext(plate_streaming_service=service),
                          main_thread_dispatcher=transport.execution.dispatcher)
     clients = AsyncOperationExecutor(max_workers=1)

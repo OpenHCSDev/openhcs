@@ -360,7 +360,7 @@ def serve_stdio_inspection_fixture(*, work_seconds=2.4):
     pytest.param(12.0, 10.0, 1, id="ordinary-ten-second-idle"),
 ))
 def test_resident_continuous_connections_keep_affinity_and_wire_progress(
-    tmp_path, work_seconds, idle_seconds, connection_count,
+    unix_socket_dir, work_seconds, idle_seconds, connection_count,
 ):
     from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
     from openhcs.mcp.dev_client_core import McpDevServerSpec, McpDevSocketSession
@@ -368,7 +368,7 @@ def test_resident_continuous_connections_keep_affinity_and_wire_progress(
     import io
     import sys
 
-    transport = McpSocketTransport(tmp_path / "affine.sock")
+    transport = McpSocketTransport(unix_socket_dir / "affine.sock")
     service = WireInspectionService(
         ContextVar("resident-source-identity", default="resident"), work_seconds=work_seconds,
     )

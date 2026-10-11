@@ -24,6 +24,7 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentSummary,
     KnowledgeBaseSearchRequest,
 )
+from openhcs.agent.services.function_catalog_service import FunctionCatalogService
 from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseDocumentSpec,
     KnowledgeBaseService,
@@ -359,7 +360,9 @@ def test_official30_source_document_renders_through_mcp_dev_renderer():
 
 
 def test_mcp_capabilities_discover_examples_architecture_and_function_docs():
-    context = OpenHCSAgentContext()
+    # The in-process catalog an execution endpoint serves; endpoint transport
+    # and incarnation checks are covered by test_function_catalog_zmq.
+    context = OpenHCSAgentContext(function_catalog=FunctionCatalogService())
 
     example_search = SearchKnowledgeCapability.invocation.execute(
         context,
