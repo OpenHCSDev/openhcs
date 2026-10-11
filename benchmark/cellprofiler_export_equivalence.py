@@ -24,7 +24,7 @@ from benchmark.equivalence.report import (
 from benchmark.equivalence.table_snapshots import (
     RuntimeTableSnapshot,
 )
-from openhcs.core.equivalence.measurement_rows import RuntimeSampleNumberOffset
+from benchmark.equivalence.measurement_rows import RuntimeSampleNumberOffset
 from benchmark.equivalence.runtime import (
     RuntimeMeasurementSnapshot,
     RuntimeMeasurementSnapshotCachePayload,

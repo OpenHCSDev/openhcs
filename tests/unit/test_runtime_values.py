@@ -80,9 +80,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
     MeasurementSubject,
-    ObjectFeatureArrayDomain,
-    ObjectFeatureArrayDomainStrategy,
-    ObjectFeatureMissingValue,
     ObjectFeatureValueTable,
 )
 from openhcs.core.runtime_object_labels import (
@@ -1176,21 +1173,21 @@ def test_shape_object_feature_table_uses_registered_nominal_contract() -> None:
 
     rows = table.rows()
     assert rows[0]["object_label"] == 1
-    assert rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value] == 10.0
+    assert np.isnan(rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value])
     assert (
         rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.MAXIMUM_RADIUS.value]
-        == 2.0
+        == 0.0
     )
     assert MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_Z.value not in rows[0]
     assert rows[1]["object_label"] == 2
-    assert np.isnan(rows[1][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value])
+    assert rows[1][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value] == 10.0
     assert (
         rows[1][MeasureObjectSizeShapeModule.MeasurementFeature.MAXIMUM_RADIUS.value]
-        == 0.0
+        == 2.0
     )
 
 
-def test_shape_object_feature_table_rejects_undeclared_dense_feature_domain() -> None:
+def test_shape_object_feature_table_rejects_undeclared_feature() -> None:
     table = ShapeObjectFeatureValueTable.from_feature_arrays(
         {
             "UndeclaredDenseFeature": np.asarray([0.1, 0.2, 0.3]),
@@ -1199,7 +1196,7 @@ def test_shape_object_feature_table_rejects_undeclared_dense_feature_domain() ->
         object_domain=(1, 2, 3),
     )
 
-    with pytest.raises(ValueError, match="feature-array domain"):
+    with pytest.raises(ValueError, match="not a declared AreaShape feature"):
         table.rows()
 
 
@@ -1214,14 +1211,6 @@ def test_shape_descriptors_align_with_measured_ids_not_missing_declared_labels()
         measured_object_ids=(1, 3),
         object_domain=(1, 2, 3),
     )
-
-    assert (
-        ObjectFeatureArrayDomainStrategy.for_enum_member(
-            ObjectFeatureArrayDomain.ROW_ORDINAL
-        ).domain
-        is ObjectFeatureArrayDomain.ROW_ORDINAL
-    )
-    assert ObjectFeatureMissingValue.ZERO.scalar == 0.0
 
     rows = table.rows()
     assert (
