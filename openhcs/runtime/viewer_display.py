@@ -372,9 +372,9 @@ class ViewerDisplaySettings(AnnotatedDataclassValidationMixin):
 
 
 class NapariVariableSizeHandling(ABC, metaclass=AutoRegisterMeta):
-    """How Napari shows images of different sizes in one stream; each way is a subclass.
+    """How to handle images with different sizes in the same layer.
 
-    ``name`` is its spelling in forms and on the wire.
+    Each way is a subclass; ``name`` is its spelling in forms and on the wire.
     """
 
     __registry_key__ = "name"
@@ -393,46 +393,6 @@ class NapariVariableSizeHandling(ABC, metaclass=AutoRegisterMeta):
     @abstractmethod
     def materialize_layer_items(cls, layer_items: list, *, route_key: str) -> list:
         """Return image items that can share one native Napari layer."""
-
-
-class PadToMaxSize(NapariVariableSizeHandling):
-    """Keep one component route and pad its images to a common shape."""
-
-    name = "pad_to_max"
-
-    @classmethod
-    def materialize_layer_items(cls, layer_items: list, *, route_key: str) -> list:
-        import numpy as np
-
-        shapes = {item.data.shape for item in layer_items}
-        if len(shapes) <= 1:
-            return layer_items
-        logger.info(
-            "🔬 NAPARI PROCESS: Images in layer %s have different shapes - "
-            "padding to max size",
-            route_key,
-        )
-        max_shape = tuple(
-            max(shape[axis] for shape in shapes)
-            for axis in range(len(layer_items[0].data.shape))
-        )
-        for item_index, item in enumerate(layer_items):
-            if item.data.shape == max_shape:
-                continue
-            pad_width = tuple(
-                (0, maximum - current)
-                for current, maximum in zip(item.data.shape, max_shape, strict=True)
-            )
-            layer_items[item_index] = replace(
-                item,
-                data=np.pad(item.data, pad_width, mode="constant", constant_values=0),
-            )
-            logger.debug(
-                "🔬 NAPARI PROCESS: Padded image from %s to %s",
-                item.data.shape,
-                max_shape,
-            )
-        return layer_items
 
 
 class SeparateLayers(NapariVariableSizeHandling):
@@ -480,6 +440,46 @@ class SeparateLayers(NapariVariableSizeHandling):
                 "Napari separate-layer route "
                 f"{route_key!r} still contains mixed image shapes: "
                 f"{sorted(shapes)!r}."
+            )
+        return layer_items
+
+
+class PadToMaxSize(NapariVariableSizeHandling):
+    """Keep one component route and pad its images to a common shape."""
+
+    name = "pad_to_max"
+
+    @classmethod
+    def materialize_layer_items(cls, layer_items: list, *, route_key: str) -> list:
+        import numpy as np
+
+        shapes = {item.data.shape for item in layer_items}
+        if len(shapes) <= 1:
+            return layer_items
+        logger.info(
+            "🔬 NAPARI PROCESS: Images in layer %s have different shapes - "
+            "padding to max size",
+            route_key,
+        )
+        max_shape = tuple(
+            max(shape[axis] for shape in shapes)
+            for axis in range(len(layer_items[0].data.shape))
+        )
+        for item_index, item in enumerate(layer_items):
+            if item.data.shape == max_shape:
+                continue
+            pad_width = tuple(
+                (0, maximum - current)
+                for current, maximum in zip(item.data.shape, max_shape, strict=True)
+            )
+            layer_items[item_index] = replace(
+                item,
+                data=np.pad(item.data, pad_width, mode="constant", constant_values=0),
+            )
+            logger.debug(
+                "🔬 NAPARI PROCESS: Padded image from %s to %s",
+                item.data.shape,
+                max_shape,
             )
         return layer_items
 

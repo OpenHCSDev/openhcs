@@ -34,6 +34,8 @@ from typing import Annotated, Any, Self, get_type_hints
 
 from pydantic import Field as PydanticField
 from pydantic import WithJsonSchema
+from pydantic.json_schema import GenerateJsonSchema
+from metaclass_registry import AutoRegisterMeta
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
 from python_introspect import JsonValue, dataclass_from_mapping, to_jsonable
 from zmqruntime.config import TransportMode
@@ -90,6 +92,15 @@ from openhcs.mcp.lifecycle import (
 )
 
 MCP_SERVER_INSTRUCTIONS = CapabilityTransport.LOCAL_STDIO.server_instructions()
+
+
+class RegisteredFamilyJsonSchema(GenerateJsonSchema):
+    """Tool schemas spell a family-valued default by its registry key."""
+
+    def encode_default(self, dft: object) -> object:
+        if isinstance(dft, AutoRegisterMeta):
+            return to_jsonable(dft)
+        return super().encode_default(dft)
 
 
 def _request_parameter_annotation(
@@ -831,7 +842,9 @@ def build_server(
             argument_model = registered_tool.fn_metadata.arg_model
             argument_model.model_config["extra"] = "forbid"
             argument_model.model_rebuild(force=True)
-            registered_tool.parameters = argument_model.model_json_schema(by_alias=True)
+            registered_tool.parameters = argument_model.model_json_schema(
+                by_alias=True, schema_generator=RegisteredFamilyJsonSchema
+            )
             return guarded_tool
 
         return decorator
