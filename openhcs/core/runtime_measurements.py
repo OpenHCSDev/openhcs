@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from functools import lru_cache
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from openhcs.core.artifacts import (
     NamedArtifactPayload,
@@ -35,6 +35,7 @@ import math
 import numpy as np
 import re
 from openhcs.core.axes import AxisFamily
+from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
     VolumeSourceSpatialDomain,
@@ -1689,3 +1690,15 @@ class MeasurementSubject:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class RuntimeScopedMeasurementTable:
+    """Measurement table plus the execution scope and record it came from."""
+
+    table: MeasurementTable
+    record_identity: str | None = None
+    execution_scope: RuntimeExecutionAxisScope | None = None
+    occurrence_identity: object = field(
+        default_factory=object,
+        repr=False,
+        compare=False,
+    )

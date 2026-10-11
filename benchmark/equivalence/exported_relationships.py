@@ -5,7 +5,11 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Self
+from abc import ABC, abstractmethod
+from typing import ClassVar, Self
+
+from metaclass_registry import RegistryFamily, RegistryKeyAttribute
+from metaclass_registry.strategies import MostDerivedContextStrategyMixin
 
 import numpy as np
 
@@ -25,7 +29,7 @@ from openhcs.core.equivalence.keys import (
     RuntimeMeasurementFeatureKey,
     RuntimeMeasurementSubjectKey,
 )
-from openhcs.core.equivalence.measurement_facts import (
+from benchmark.equivalence.measurement_facts import (
     RuntimeDirectionalPairMeasurementDerivationContract,
     RuntimeMeasurementFactList,
     RuntimeMeasurementFacts,
@@ -34,7 +38,7 @@ from openhcs.core.equivalence.measurement_facts import (
 from benchmark.equivalence.measurement_requirements import (
     RequiredRuntimeMeasurementProjection,
 )
-from openhcs.core.equivalence.measurement_rows import (
+from benchmark.equivalence.measurement_rows import (
     RuntimeSampleNumberOffset,
     RuntimeMeasurementFeatureKeyCache,
     RuntimeMeasurementPaddingGroupCache,
@@ -51,12 +55,10 @@ from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 from openhcs.core.measurement_dialect import MeasurementDialect
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.equivalence.relationships import (
-    ObjectInstanceKeyPlaneAlignmentStrategy,
     RelationshipAggregateFeatureContext,
     RelationshipAggregateFeatureSemantics,
-    RuntimeScopedMeasurementTable,
-    _ObjectInstanceChildrenByParent,
 )
+from openhcs.core.runtime_measurements import RuntimeScopedMeasurementTable
 from openhcs.core.measurement_row_materialization import (
     columnar_row_values,
     iter_measurement_rows,
@@ -91,6 +93,200 @@ from openhcs.core.source_plane_alignment import (
 )
 
 RuntimeMeasurementKeySet = frozenset[RuntimeMeasurementFeatureKey]
+
+
+_ObjectInstanceChildrenByParent = Mapping[
+    ObjectInstanceKey,
+    tuple[ObjectInstanceKey, ...],
+]
+
+
+@dataclass(frozen=True, slots=True)
+class ObjectInstanceKeyPlaneAlignmentContext:
+    """Object-instance relationship keys plus measured child value identity."""
+
+    child_ids_by_parent: _ObjectInstanceChildrenByParent
+    values_by_child_id: Mapping[ObjectInstanceKey, float]
+
+    @property
+    def child_slice_indices(self) -> frozenset[int | None]:
+        return frozenset(
+            child_id.slice_index
+            for child_ids in self.child_ids_by_parent.values()
+            for child_id in child_ids
+        )
+
+    @property
+    def value_slice_indices(self) -> frozenset[int | None]:
+        return frozenset(child_id.slice_index for child_id in self.values_by_child_id)
+
+    @property
+    def single_value_slice_index(self) -> int | None:
+        slice_indices = self.value_slice_indices
+        if len(slice_indices) != 1:
+            return None
+        slice_index = next(iter(slice_indices))
+        return slice_index if slice_index is not None else None
+
+
+class ObjectInstanceKeyPlaneAlignmentStrategy(
+    MostDerivedContextStrategyMixin[ObjectInstanceKeyPlaneAlignmentContext],
+    ABC,
+):
+    """Nominal projection between relationship and measurement-row plane identity."""
+
+    __registry_family__ = RegistryFamily(RegistryKeyAttribute.STRATEGY_KEY)
+
+    strategy_key: ClassVar[str | None] = None
+
+    @classmethod
+    def align_child_ids_by_parent(
+        cls,
+        child_ids_by_parent: _ObjectInstanceChildrenByParent,
+        values_by_child_id: Mapping[ObjectInstanceKey, float],
+    ) -> _ObjectInstanceChildrenByParent:
+        """Align relationship child identities to the measured value domain."""
+        context = ObjectInstanceKeyPlaneAlignmentContext(
+            child_ids_by_parent=child_ids_by_parent,
+            values_by_child_id=values_by_child_id,
+        )
+        strategy = cls.for_context(
+            context,
+            error_subject="Object instance plane alignment",
+        )
+        if strategy is None:
+            raise ValueError("Object instance plane alignment requires a strategy.")
+        return strategy.align(context)
+
+    @abstractmethod
+    def align(
+        self,
+        context: ObjectInstanceKeyPlaneAlignmentContext,
+    ) -> _ObjectInstanceChildrenByParent:
+        """Return relationship child identities projected into value identity."""
+
+
+class UnmodifiedObjectInstanceKeyPlaneAlignmentStrategy(
+    ObjectInstanceKeyPlaneAlignmentStrategy
+):
+    """Preserve relationship identity when no plane projection is required."""
+
+    strategy_key = "unmodified"
+
+    def matches(
+        self,
+        context: ObjectInstanceKeyPlaneAlignmentContext,
+    ) -> bool:
+        del context
+        return True
+
+    def align(
+        self,
+        context: ObjectInstanceKeyPlaneAlignmentContext,
+    ) -> _ObjectInstanceChildrenByParent:
+        return context.child_ids_by_parent
+
+
+class SingleSliceValueObjectInstanceKeyPlaneAlignmentStrategy(
+    UnmodifiedObjectInstanceKeyPlaneAlignmentStrategy
+):
+    """Inject the single measured plane into unscoped relationship identities."""
+
+    strategy_key = "single_slice_value"
+
+    def matches(
+        self,
+        context: ObjectInstanceKeyPlaneAlignmentContext,
+    ) -> bool:
+        return (
+            context.child_slice_indices == frozenset({None})
+            and context.single_value_slice_index is not None
+        )
+
+    def align(
+        self,
+        context: ObjectInstanceKeyPlaneAlignmentContext,
+    ) -> _ObjectInstanceChildrenByParent:
+        slice_index = context.single_value_slice_index
+        if slice_index is None:
+            raise ValueError("Single-slice alignment requires a value slice index.")
+        return {
+            ObjectInstanceKey(parent_id.object_id, slice_index=slice_index): tuple(
+                ObjectInstanceKey(child_id.object_id, slice_index=slice_index)
+                for child_id in child_ids
+            )
+            for parent_id, child_ids in context.child_ids_by_parent.items()
+        }
+
+
+class MultiSliceValueObjectInstanceKeyPlaneAlignmentStrategy(
+    UnmodifiedObjectInstanceKeyPlaneAlignmentStrategy
+):
+    """Expand unscoped relationship identities across measured child planes."""
+
+    strategy_key = "multi_slice_value"
+
+    def matches(
+        self,
+        context: ObjectInstanceKeyPlaneAlignmentContext,
+    ) -> bool:
+        return (
+            context.child_slice_indices == frozenset({None})
+            and None not in context.value_slice_indices
+            and len(context.value_slice_indices) > 1
+        )
+
+    def align(
+        self,
+        context: ObjectInstanceKeyPlaneAlignmentContext,
+    ) -> _ObjectInstanceChildrenByParent:
+        value_keys_by_object_id: dict[int, list[ObjectInstanceKey]] = {}
+        for value_key in context.values_by_child_id:
+            value_keys_by_object_id.setdefault(value_key.object_id, []).append(
+                value_key
+            )
+        return {
+            parent_id: tuple(
+                value_key
+                for child_id in child_ids
+                for value_key in value_keys_by_object_id.get(child_id.object_id, ())
+            )
+            for parent_id, child_ids in context.child_ids_by_parent.items()
+        }
+
+
+class UnscopedValueObjectInstanceKeyPlaneAlignmentStrategy(
+    UnmodifiedObjectInstanceKeyPlaneAlignmentStrategy
+):
+    """Drop relationship plane identity when measured values are unscoped."""
+
+    strategy_key = "unscoped_value"
+
+    def matches(
+        self,
+        context: ObjectInstanceKeyPlaneAlignmentContext,
+    ) -> bool:
+        return (
+            context.value_slice_indices == frozenset({None})
+            and None not in context.child_slice_indices
+        )
+
+    def align(
+        self,
+        context: ObjectInstanceKeyPlaneAlignmentContext,
+    ) -> _ObjectInstanceChildrenByParent:
+        unscoped_children_by_parent: dict[
+            ObjectInstanceKey, list[ObjectInstanceKey]
+        ] = {}
+        for parent_id, child_ids in context.child_ids_by_parent.items():
+            parent_key = ObjectInstanceKey(parent_id.object_id)
+            unscoped_children_by_parent.setdefault(parent_key, []).extend(
+                ObjectInstanceKey(child_id.object_id) for child_id in child_ids
+            )
+        return {
+            parent_id: tuple(child_ids)
+            for parent_id, child_ids in unscoped_children_by_parent.items()
+        }
 
 
 _ObjectInstanceAggregateValues = dict[tuple[ObjectInstanceKey, ...], float]
@@ -576,10 +772,9 @@ def object_measurement_values_by_label(
                     continue
                 if key not in values_by_feature:
                     values_by_feature[key] = {}
-                object_instance_key = scoped_table.object_instance_key(
-                    runtime_row,
+                object_instance_key = sample_number_offset.object_instance_key(
+                    runtime_row.row,
                     object_label,
-                    sample_number_offset=sample_number_offset,
                 )
                 if aligned_slice_indices is not None:
                     local_slice_index = object_instance_key.slice_index

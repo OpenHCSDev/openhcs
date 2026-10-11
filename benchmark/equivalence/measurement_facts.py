@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Generic, TypeVar
@@ -29,10 +28,6 @@ RuntimeMeasurementFact = tuple[
 ]
 RuntimeMeasurementFacts = tuple[RuntimeMeasurementFact, ...]
 RuntimeMeasurementFactList = list[RuntimeMeasurementFact]
-RuntimeMeasurementFactCounterMapping = Mapping[
-    RuntimeMeasurementFeatureKey,
-    Counter[RuntimeCellSignature],
-]
 RuntimeRequiredMeasurementKeys = frozenset[RuntimeMeasurementFeatureKey] | None
 RuntimeRowProjectionValueT = TypeVar("RuntimeRowProjectionValueT")
 RuntimeMeasurementPaddingGroup = tuple[

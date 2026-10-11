@@ -27,7 +27,7 @@
 3. **Row vocabulary module** `core/measurement_row_qualifiers.py`. It holds the `RowQualifierFormat` family (`IdentifierFormat`, `TwoDigitIntegerFormat`, `FractionOfCountFormat`), each owning `render(values)`, `suffix_token_width(tokens, end)` and `distinctive`, plus `RuntimeMeasurementRowQualifier(field_names, value_format, feature_prefixes)`, the qualifier sequences and the defaults. The dialect answers `row_qualifier_field_names()` and `row_qualifier_suffixes(row, field_name)` from it.
    Deleted: `RuntimeMeasurementQualifierValueMode`, `RuntimeMeasurementQualifierSuffixMatchStrategy` and its three subclasses, `_MEASUREMENT_QUALIFIER_VALUE_RENDERERS` with its coverage check, the id-keyed field-name cache, and the function-level import.
 4. **Source-name encoding family.** `SourceNameEncoding` with `SeparateKeySourceName` and `FeatureSuffixSourceName`, each owning how a source name binds to a feature (`source_qualified_feature_family`, encoding a key). Deleted: the enum, the branches and the unsupported-encoding `raise`.
-5. **Typed key selection.** `MeasurementKeySelection` with `AllMeasurementKeys` and `SelectedMeasurementKeys(keys)`. Each owns `requires_key`, `requires_value`, `may_require_value` and `needs_pair_derivation`. Deleted: `RuntimeRequiredMeasurementKeys = frozenset | None`, every `is None` check on it, and the second `required_key_index` mode.
+5. **Required keys leave the product.** The `required_keys` `None`-mode lives only in the comparison projections. It moves with them to `benchmark/equivalence/` (item 6), which leaves 0 sites in `openhcs/`. Typing it there as an all-keys/selected-keys family is benchmark work and is not part of this surface. `benchmark/` is non-product code and the ratchet excludes it.
 6. **Comparison tooling leaves the product.** Once production no longer imports `measurement_rows`, the modules production cannot reach move to `benchmark/equivalence/` (Q1), together with `measurement_facts.py` and the benchmark-only half of `relationships.py`. Production keeps `RuntimeScopedMeasurementTable` as a plain carrier.
 
 ## Guards
@@ -35,8 +35,8 @@
 `tests/unit/test_measurement_rows_guards.py`:
 - no `class … (… Enum)` named `*ValueMode`, `*SourceNameEncoding`, `ObjectFeatureArrayDomain` or `ObjectFeatureMissingValue` under `openhcs/`;
 - `EnumKeyedStrategyMixin` is not used in `core/measurement_dialect.py`, `core/measurement_row_qualifiers.py` or `core/runtime_measurements.py`;
-- no `required_keys is None` or `required_keys is not None` anywhere in `openhcs/` or `benchmark/equivalence/`;
-- `cells.py` has exactly one function that recurses into mapping and sequence cells;
+- no `required_key… is None` / `is not None` comparison anywhere in `openhcs/`;
+- `cells.py` has exactly one recursive payload or hash walker (`measurement_table_cell_payload`);
 - no module under `openhcs/` imports `openhcs.core.equivalence.measurement_rows` or `measurement_facts` (they no longer exist there).
 
 ## Tests
@@ -44,7 +44,7 @@
 - **Family test (new):** `tests/unit/test_object_measurement_empty_labels.py` runs every object-measurement function that takes a label payload (AreaShape, intensity, texture, granularity, neighbours) on dense 2-D, dense 3-D and sparse IJV labels where it accepts them. For each, declaring an extra empty label must leave every other label's row exactly unchanged.
 - Rewritten: the three shape-table tests in `test_runtime_values.py` and the hotpath sparse test now assert label-correct values; the cooperative-capability test in `test_registered_object_output_boundaries.py` no longer needs a domain enum.
 - Deleted with their code: enum-member and strategy-registry assertions.
-- Parity: official30 (baseline 30/30).
+- Parity: official30 (baseline 30/30). `ExampleImagingFlowCytometryObjectsInGrid` has empty grid cells, so its native reference carries CellProfiler's positional AreaShape write: object 77 holds object 78's area, and so on. That reference is compared after `benchmark/equivalence/native_shape_rows.py` undoes the write. The undo is a permutation inside each image: objects with a finite `Location_Center_X` take the leading positions, and Feret and Zernike columns stay label-indexed. With it, all 55 AreaShape columns of that workflow equal OpenHCS's label-correct output exactly.
 
 ## New-case experiments
 

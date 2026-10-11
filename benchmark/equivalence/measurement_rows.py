@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from openhcs.core.equivalence.measurement_features import (
+    RuntimeMeasurementRowIdentity,
+)
+
 import math
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from functools import lru_cache
 from types import MappingProxyType
@@ -30,7 +34,7 @@ from openhcs.core.equivalence.keys import (
     RuntimeMeasurementSubjectKey,
     canonical_measurement_feature_name,
 )
-from openhcs.core.equivalence.measurement_facts import (
+from benchmark.equivalence.measurement_facts import (
     RuntimeDirectionalPairMeasurementDerivationContract,
     RuntimeMeasurementFact,
     RuntimeMeasurementFactProjectionContract,
@@ -42,11 +46,8 @@ from openhcs.core.equivalence.measurement_facts import (
     RuntimeRowProjectionValueT,
 )
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
-from openhcs.core.measurement_dialect import (
-    MeasurementDialect,
-    RuntimeMeasurementQualifierValueMode,
-    RuntimeMeasurementRowQualifier,
-)
+from openhcs.core.measurement_dialect import MeasurementDialect
+from openhcs.core.measurement_row_qualifiers import RuntimeMeasurementRowQualifier
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.measurement_row_materialization import (
     MeasurementRowDeclaredValue,
@@ -90,67 +91,6 @@ def measurement_identity_fields(
 
 
 RUNTIME_AXIS_ROW_IDENTITY_FIELD = "_runtime_axis"
-_MeasurementQualifierValueRenderer = Callable[[tuple[object, ...]], str | None]
-_MEASUREMENT_DIALECT_QUALIFIER_FIELD_NAMES_CACHE: dict[
-    int,
-    tuple[MeasurementDialect, frozenset[str]],
-] = {}
-
-
-def _measurement_qualifier_value_renderers(
-    renderers: Mapping[
-        RuntimeMeasurementQualifierValueMode,
-        _MeasurementQualifierValueRenderer,
-    ],
-) -> Mapping[
-    RuntimeMeasurementQualifierValueMode,
-    _MeasurementQualifierValueRenderer,
-]:
-    renderer_modes = set(renderers)
-    value_modes = set(RuntimeMeasurementQualifierValueMode)
-    if renderer_modes != value_modes:
-        missing = tuple(sorted(mode.value for mode in value_modes - renderer_modes))
-        extra = tuple(sorted(mode.value for mode in renderer_modes - value_modes))
-        raise ValueError(
-            "Measurement qualifier value renderers must cover "
-            f"RuntimeMeasurementQualifierValueMode exactly: "
-            f"missing={missing!r}, extra={extra!r}."
-        )
-    return MappingProxyType(dict(renderers))
-
-
-def _two_digit_integer_measurement_qualifier_value(
-    values: tuple[object, ...],
-) -> str | None:
-    return str(_measurement_qualifier_integer(values[0])).zfill(2)
-
-
-def _fraction_of_count_measurement_qualifier_value(
-    values: tuple[object, ...],
-) -> str | None:
-    if len(values) != 2:
-        return None
-    return (
-        f"{_measurement_qualifier_integer(values[0])}"
-        f"of{_measurement_qualifier_integer(values[1])}"
-    )
-
-
-def _identifier_measurement_qualifier_value(
-    values: tuple[object, ...],
-) -> str | None:
-    return "_".join(_measurement_qualifier_identifier(value) for value in values)
-
-
-_MEASUREMENT_QUALIFIER_VALUE_RENDERERS = _measurement_qualifier_value_renderers(
-    {
-        RuntimeMeasurementQualifierValueMode.IDENTIFIER: _identifier_measurement_qualifier_value,
-        RuntimeMeasurementQualifierValueMode.TWO_DIGIT_INTEGER: _two_digit_integer_measurement_qualifier_value,
-        RuntimeMeasurementQualifierValueMode.FRACTION_OF_COUNT: _fraction_of_count_measurement_qualifier_value,
-    }
-)
-
-
 def measurement_row_sample_identity_key(
     row: Mapping[str, object],
     dialect: MeasurementDialect,
@@ -319,33 +259,6 @@ class RuntimeSampleNumberOffset:
         return ObjectInstanceKey(object_id, slice_index=int(slice_index))
 
 
-def measurement_row_qualifiers(
-    row: Mapping[str, object],
-    dialect: MeasurementDialect,
-    field_name: str,
-) -> tuple[str, ...]:
-    return _measurement_row_qualifiers_for_field(
-        dialect,
-        field_name,
-        lambda qualifier: _render_measurement_row_qualifier(row, qualifier),
-    )
-
-
-def measurement_row_qualifiers_from_values(
-    row_values: Mapping[str, object],
-    dialect: MeasurementDialect,
-    field_name: str,
-) -> tuple[str, ...]:
-    return _measurement_row_qualifiers_for_field(
-        dialect,
-        field_name,
-        lambda qualifier: _render_measurement_row_qualifier_from_values(
-            row_values,
-            qualifier,
-        ),
-    )
-
-
 def measurement_qualifier_cache_value(value: object) -> object:
     """Return a cheap exact cache value for scalar row qualifiers."""
     if value is None:
@@ -380,159 +293,11 @@ def measurement_row_qualifiers_from_indexed_values_cached(
         )
         rendered = cache.get(cache_key)
         if cache_key not in cache:
-            rendered = _render_measurement_row_qualifier_value_tuple(
-                values,
-                qualifier,
-            )
+            rendered = qualifier.render_values(values)
             cache[cache_key] = rendered
         if rendered is not None:
             rendered_values.append(rendered)
     return tuple(rendered_values)
-
-
-def row_qualifier_columns(
-    normalized_fields: tuple[str, ...],
-    dialect: MeasurementDialect,
-) -> tuple[tuple[str, int], ...]:
-    qualifier_fields = measurement_qualifier_field_names(dialect)
-    return tuple(
-        (field_name, index)
-        for index, field_name in enumerate(normalized_fields)
-        if field_name in qualifier_fields
-    )
-
-
-def row_qualifier_values(
-    row: "RuntimeIndexedRowValues",
-    columns: tuple[tuple[str, int], ...],
-) -> Mapping[str, object]:
-    return MappingProxyType(
-        {field_name: row.at(index) for field_name, index in columns}
-    )
-
-
-def row_qualifier_applies_to_field(
-    qualifier: RuntimeMeasurementRowQualifier,
-    field_parts: tuple[str, ...],
-) -> bool:
-    if not qualifier.feature_prefixes:
-        return True
-    return any(
-        len(field_parts) >= len(prefix) and field_parts[: len(prefix)] == prefix
-        for prefix in qualifier.feature_prefixes
-    )
-
-
-def measurement_qualifier_field_names(
-    dialect: MeasurementDialect,
-) -> frozenset[str]:
-    cached = _MEASUREMENT_DIALECT_QUALIFIER_FIELD_NAMES_CACHE.get(id(dialect))
-    if cached is not None and cached[0] is dialect:
-        return cached[1]
-    field_names = frozenset(
-        field_name
-        for qualifier in dialect.row_qualifiers
-        for field_name in qualifier.field_names
-    )
-    _MEASUREMENT_DIALECT_QUALIFIER_FIELD_NAMES_CACHE[id(dialect)] = (
-        dialect,
-        field_names,
-    )
-    return field_names
-
-
-def _measurement_row_qualifiers_for_field(
-    dialect: MeasurementDialect,
-    field_name: str,
-    render: Callable[[RuntimeMeasurementRowQualifier], str | None],
-) -> tuple[str, ...]:
-    qualifiers: list[str] = []
-    field_parts = tuple(
-        part for part in normalize_runtime_identifier(field_name).split("_") if part
-    )
-    for qualifier in dialect.row_qualifiers:
-        if not row_qualifier_applies_to_field(qualifier, field_parts):
-            continue
-        rendered = render(qualifier)
-        if rendered is None:
-            continue
-        qualifiers.append(rendered)
-    return tuple(qualifiers)
-
-
-def _render_measurement_row_qualifier(
-    row: Mapping[str, object],
-    qualifier: RuntimeMeasurementRowQualifier,
-) -> str | None:
-    values = tuple(
-        _first_row_value(row, (field_name,)) for field_name in qualifier.field_names
-    )
-    return _render_measurement_row_qualifier_value_tuple(values, qualifier)
-
-
-def _render_measurement_row_qualifier_from_values(
-    row_values: Mapping[str, object],
-    qualifier: RuntimeMeasurementRowQualifier,
-) -> str | None:
-    values = tuple(row_values.get(field_name) for field_name in qualifier.field_names)
-    return _render_measurement_row_qualifier_value_tuple(values, qualifier)
-
-
-def _render_measurement_row_qualifier_value_tuple(
-    values: tuple[object, ...],
-    qualifier: RuntimeMeasurementRowQualifier,
-) -> str | None:
-    if any(_is_missing_measurement_qualifier_value(value) for value in values):
-        return None
-    return _MEASUREMENT_QUALIFIER_VALUE_RENDERERS[qualifier.value_mode](values)
-
-
-def _measurement_qualifier_identifier(value: object) -> str:
-    integer_value = _optional_measurement_qualifier_integer(value)
-    if integer_value is not None:
-        return str(integer_value)
-    return normalize_runtime_identifier(value)
-
-
-def _is_missing_measurement_qualifier_value(value: object) -> bool:
-    if value is None:
-        return True
-    text = str(value).strip()
-    if not text:
-        return True
-    try:
-        return math.isnan(float(text))
-    except (TypeError, ValueError):
-        return False
-
-
-def _measurement_qualifier_integer(value: object) -> int:
-    integer_value = _optional_measurement_qualifier_integer(value)
-    if integer_value is None:
-        raise ValueError(f"Measurement qualifier {value!r} is not integer-like.")
-    return integer_value
-
-
-def _optional_measurement_qualifier_integer(value: object) -> int | None:
-    try:
-        numeric = float(str(value).strip())
-    except (TypeError, ValueError):
-        return None
-    if not math.isfinite(numeric) or not numeric.is_integer():
-        return None
-    return int(numeric)
-
-
-def _first_row_value(
-    row: Mapping[str, object],
-    field_names: tuple[str, ...],
-) -> object | None:
-    normalized_fields = {normalize_runtime_identifier(field): field for field in row}
-    for field_name in field_names:
-        field = normalized_fields.get(field_name)
-        if field is not None:
-            return row[field]
-    return None
 
 
 _CACHE_MISS = object()
@@ -548,7 +313,6 @@ RuntimeMeasurementQualifierCacheKey = tuple[
     RuntimeMeasurementRowQualifier,
     tuple[object | None, ...],
 ]
-RuntimeMeasurementRowIdentity = tuple[tuple[str, object], ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -751,9 +515,8 @@ def runtime_measurement_row_schema_for_header(
         qualifiers = tuple(
             (qualifier, indexes)
             for qualifier, indexes in qualifier_indexes.items()
-            if row_qualifier_applies_to_field(
-                qualifier,
-                tuple(part for part in normalized_fields[index].split("_") if part),
+            if qualifier.applies_to(
+                tuple(part for part in normalized_fields[index].split("_") if part)
             )
         )
         cached = qualifier_tuple_cache.get(qualifiers)
@@ -1206,7 +969,7 @@ def normalized_runtime_measurement_identity_field_matches(
     """Return whether a normalized field is row identity, qualifier, or metadata."""
     if normalized in measurement_identity_fields(dialect.row_identity_contract):
         return True
-    if normalized in measurement_qualifier_field_names(dialect):
+    if normalized in dialect.row_qualifier_field_names():
         return True
     if normalized.startswith(dialect.non_measurement_field_prefixes):
         return True
@@ -2325,10 +2088,7 @@ class RuntimeMeasurementLongFormFactProjector:
         indexed_qualifiers = tuple(
             indexed_qualifier
             for indexed_qualifier in self.context.indexed_qualifiers
-            if row_qualifier_applies_to_field(
-                indexed_qualifier[0],
-                feature_parts,
-            )
+            if indexed_qualifier[0].applies_to(feature_parts)
         )
         qualifiers = measurement_row_qualifiers_from_indexed_values_cached(
             self.context.row_values,

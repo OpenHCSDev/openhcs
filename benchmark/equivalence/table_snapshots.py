@@ -38,11 +38,11 @@ from openhcs.core.runtime_tabular_values import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.equivalence.measurement_rows import RuntimeSampleNumberOffset
+    from benchmark.equivalence.measurement_rows import RuntimeSampleNumberOffset
 from collections import Counter
 from collections.abc import Iterable
 
-from openhcs.core.equivalence.measurement_rows import measurement_identity_fields
+from benchmark.equivalence.measurement_rows import measurement_identity_fields
 
 CSV_HEADER_CONTEXT_STOPWORDS = frozenset(
     {
@@ -183,7 +183,7 @@ class RuntimeTableSnapshot:
         Only schema-owned image references change to the admitted local domain.
         Long-form values can name references dynamically, so retain their offset.
         """
-        from openhcs.core.equivalence.measurement_rows import (
+        from benchmark.equivalence.measurement_rows import (
             runtime_measurement_row_schema_for_header,
         )
 

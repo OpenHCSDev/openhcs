@@ -9,7 +9,7 @@ from openhcs.core.equivalence.keys import (
     RuntimeMeasurementSourcePair,
     RuntimeMeasurementSubjectKey,
 )
-from openhcs.core.equivalence.measurement_facts import (
+from benchmark.equivalence.measurement_facts import (
     RuntimeDirectionalPairMeasurementDerivationContract,
     RuntimeRequiredMeasurementKeys,
 )
