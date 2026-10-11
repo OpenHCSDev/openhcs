@@ -530,23 +530,16 @@ class PlateResultFilePreviewReader:
             cls, record, max_lines=max_lines, max_bytes=max_bytes
         )
 
-    @classmethod
-    def _bounded_text_lines(
-        cls,
-        record: PlateResultFileRecord,
-        *,
-        max_lines: int,
-        max_bytes: int,
-    ) -> PlateResultFilePreview:
-        path = record.full_path_obj
+    @staticmethod
+    def _unreadable_preview(path: Path, max_bytes: int) -> PlateResultFilePreview | None:
+        """Return the preview that says why the file is not read, if it is not."""
         if not path.exists():
             return PlateResultFilePreview(omitted_reason="file does not exist")
         if path.stat().st_size > max_bytes:
             return PlateResultFilePreview(
                 omitted_reason=f"file exceeds max preview bytes ({max_bytes})"
             )
-        lines, truncated = cls._text_lines(path, max_lines=max_lines)
-        return PlateResultFilePreview(text_lines=lines, truncated=truncated)
+        return None
 
     @classmethod
     def text_preview(
@@ -556,7 +549,12 @@ class PlateResultFilePreviewReader:
         max_lines: int,
         max_bytes: int,
     ) -> PlateResultFilePreview:
-        return cls._bounded_text_lines(record, max_lines=max_lines, max_bytes=max_bytes)
+        path = record.full_path_obj
+        unreadable = cls._unreadable_preview(path, max_bytes)
+        if unreadable is not None:
+            return unreadable
+        lines, truncated = cls._text_lines(path, max_lines=max_lines)
+        return PlateResultFilePreview(text_lines=lines, truncated=truncated)
 
     @classmethod
     def csv_preview(
@@ -566,19 +564,17 @@ class PlateResultFilePreviewReader:
         max_lines: int,
         max_bytes: int,
     ) -> PlateResultFilePreview:
-        preview = cls._bounded_text_lines(
-            record, max_lines=max_lines, max_bytes=max_bytes
-        )
-        if preview.omitted_reason is not None:
-            return preview
-        columns, rows = cls._csv_table_from_path(
-            record.full_path_obj, max_rows=max_lines
-        )
+        path = record.full_path_obj
+        unreadable = cls._unreadable_preview(path, max_bytes)
+        if unreadable is not None:
+            return unreadable
+        lines, truncated = cls._text_lines(path, max_lines=max_lines)
+        columns, rows = cls._csv_table_from_path(path, max_rows=max_lines)
         return PlateResultFilePreview(
-            text_lines=preview.text_lines,
+            text_lines=lines,
             csv_columns=columns,
             csv_rows=rows,
-            truncated=preview.truncated,
+            truncated=truncated,
         )
 
     @classmethod
