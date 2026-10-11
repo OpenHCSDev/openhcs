@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
 from types import MappingProxyType
-from typing import Any
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -185,14 +184,7 @@ def runtime_cell_signature(
         numeric = float(text)
     except ValueError:
         return RuntimeCellSignature(RuntimeCellValueKind.TEXT, text)
-    if math.isnan(numeric):
-        canonical = "nan"
-    elif math.isinf(numeric):
-        canonical = "inf" if numeric > 0 else "-inf"
-    else:
-        rounded = round(numeric, policy.numeric_decimal_places)
-        canonical = repr(0.0 if rounded == 0 else rounded)
-    return RuntimeCellSignature(RuntimeCellValueKind.NUMBER, canonical)
+    return _runtime_numeric_cell_signature(numeric, policy.numeric_decimal_places)
 
 
 def measurement_table_cell_payload(value: object) -> object:
@@ -230,65 +222,6 @@ def measurement_table_cell_payload(value: object) -> object:
     if array_payload is not None:
         return array_payload
     return (type(value).__name__, repr(value))
-
-
-def update_measurement_table_cell_hash(digest: Any, value: object) -> None:
-    """Update an exact cell digest without materializing nested payload trees."""
-    value = canonical_scalar(value)
-    if value is None:
-        digest.update(pickle.dumps(("none",), protocol=pickle.HIGHEST_PROTOCOL))
-        return
-    if isinstance(value, str):
-        digest.update(pickle.dumps(("str", value), protocol=pickle.HIGHEST_PROTOCOL))
-        return
-    if isinstance(value, bool):
-        digest.update(pickle.dumps(("bool", value), protocol=pickle.HIGHEST_PROTOCOL))
-        return
-    if isinstance(value, int):
-        digest.update(pickle.dumps(("int", value), protocol=pickle.HIGHEST_PROTOCOL))
-        return
-    if isinstance(value, float) and math.isnan(value):
-        digest.update(pickle.dumps(("float", "nan"), protocol=pickle.HIGHEST_PROTOCOL))
-        return
-    if isinstance(value, float):
-        digest.update(
-            pickle.dumps(("float", repr(value)), protocol=pickle.HIGHEST_PROTOCOL)
-        )
-        return
-    array_payload = semantic_array_payload(value)
-    if array_payload is not None:
-        digest.update(pickle.dumps(array_payload, protocol=pickle.HIGHEST_PROTOCOL))
-        return
-    if isinstance(value, Mapping):
-        digest.update(
-            pickle.dumps(("mapping", len(value)), protocol=pickle.HIGHEST_PROTOCOL)
-        )
-        for key, nested_value in value.items():
-            update_measurement_table_cell_hash(digest, key)
-            update_measurement_table_cell_hash(digest, nested_value)
-        digest.update(pickle.dumps(("mapping_end",), protocol=pickle.HIGHEST_PROTOCOL))
-        return
-    if isinstance(value, tuple):
-        digest.update(
-            pickle.dumps(("tuple", len(value)), protocol=pickle.HIGHEST_PROTOCOL)
-        )
-        for item in value:
-            update_measurement_table_cell_hash(digest, item)
-        digest.update(pickle.dumps(("tuple_end",), protocol=pickle.HIGHEST_PROTOCOL))
-        return
-    if isinstance(value, list):
-        digest.update(
-            pickle.dumps(("list", len(value)), protocol=pickle.HIGHEST_PROTOCOL)
-        )
-        for item in value:
-            update_measurement_table_cell_hash(digest, item)
-        digest.update(pickle.dumps(("list_end",), protocol=pickle.HIGHEST_PROTOCOL))
-        return
-    digest.update(
-        pickle.dumps(
-            (type(value).__name__, repr(value)), protocol=pickle.HIGHEST_PROTOCOL
-        )
-    )
 
 
 @lru_cache(maxsize=256)
@@ -357,8 +290,13 @@ def runtime_measurement_cell_signature(
             f"array:{dtype}:{'x'.join(str(axis) for axis in shape)}:{digest}",
         )
     if runtime_value_is_mapping(value) or isinstance(value, (tuple, list)):
-        value_digest = hashlib.blake2b(digest_size=32)
-        update_measurement_table_cell_hash(value_digest, value)
+        value_digest = hashlib.blake2b(
+            pickle.dumps(
+                measurement_table_cell_payload(value),
+                protocol=pickle.HIGHEST_PROTOCOL,
+            ),
+            digest_size=32,
+        )
         return RuntimeCellSignature(
             RuntimeCellValueKind.TEXT,
             f"{type(value).__name__}:{value_digest.hexdigest()}",

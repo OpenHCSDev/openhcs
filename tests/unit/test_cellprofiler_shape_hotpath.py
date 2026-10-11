@@ -374,8 +374,9 @@ def test_prepared_3d_advanced_solidity_and_kernel_signatures_match_reference() -
     assert signatures == tuple(tuple(kernel.signatures) for kernel in kernels)
 
 
-def test_sparse_shape_vectors_preserve_native_compact_and_label_domains() -> None:
-    # Native CP analyze_objects: props/radii are compact; Feret uses label IDs.
+def test_sparse_shape_vectors_land_on_their_measured_labels() -> None:
+    # Each value stays on the label it was measured for. Radius and Feret are
+    # zero, not missing, for empty labels below the largest measured label.
     labels = np.zeros((17, 23), dtype=np.int32)
     labels[2:7, 3:9] = 1
     labels[10:15, 15:21] = 4
@@ -389,11 +390,11 @@ def test_sparse_shape_vectors_preserve_native_compact_and_label_domains() -> Non
         calculate_advanced=False, calculate_zernikes=False,
     )
     expected = {
-        "Center_X": (5.5, 17.5, np.nan, np.nan, np.nan, np.nan),
-        "Center_Y": (4.0, 12.0, np.nan, np.nan, np.nan, np.nan),
-        "MaximumRadius": (3.0, 3.0, 0.0, 0.0, np.nan, np.nan),
-        "MeanRadius": (44 / 30, 44 / 30, 0.0, 0.0, np.nan, np.nan),
-        "MedianRadius": (1.0, 1.0, 0.0, 0.0, np.nan, np.nan),
+        "Center_X": (5.5, np.nan, np.nan, 17.5, np.nan, np.nan),
+        "Center_Y": (4.0, np.nan, np.nan, 12.0, np.nan, np.nan),
+        "MaximumRadius": (3.0, 0.0, 0.0, 3.0, np.nan, np.nan),
+        "MeanRadius": (44 / 30, 0.0, 0.0, 44 / 30, np.nan, np.nan),
+        "MedianRadius": (1.0, 0.0, 0.0, 1.0, np.nan, np.nan),
         "MinFeretDiameter": (4.0, 0.0, 0.0, 4.0, np.nan, np.nan),
         "MaxFeretDiameter": (np.sqrt(41), 0.0, 0.0, np.sqrt(41), np.nan, np.nan),
     }

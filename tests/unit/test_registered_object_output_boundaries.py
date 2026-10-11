@@ -16,7 +16,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
     MeasurementTable,
-    ObjectFeatureArrayDomain,
     ObjectFeatureValueTable,
 )
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
@@ -108,15 +107,12 @@ class _StampSlice:
 
 
 class _IndependentFeatureTable(_AnnotateObjects, _StampSlice, ObjectFeatureValueTable):
-    feature_array_domains = {"OrdinalFeature": ObjectFeatureArrayDomain.ROW_ORDINAL}
+    pass
 
 
-def test_independent_declared_feature_and_cooperative_capabilities_need_no_consumer_edits():
+def test_cooperative_row_capabilities_and_values_land_on_their_measured_labels():
     table = _IndependentFeatureTable.from_feature_arrays(
-        {
-            "CompactFeature": np.asarray((44.0, 66.0)),
-            "OrdinalFeature": np.asarray((11.0, 22.0, 33.0)),
-        },
+        {"MeasuredFeature": np.asarray((44.0, 66.0)), "ScalarFeature": np.asarray(5.0)},
         measured_object_ids=(2, 7),
         object_domain=(1, 2, 7),
         slice_index=4,
@@ -124,9 +120,9 @@ def test_independent_declared_feature_and_cooperative_capabilities_need_no_consu
     rows = table.rows()
     assert [row["annotation"] for row in rows] == [10, 20, 70]
     assert [row["stamp"] for row in rows] == [4, 4, 4]
-    assert [row["OrdinalFeature"] for row in rows] == [11.0, 22.0, 33.0]
-    assert np.isnan(rows[0]["CompactFeature"])
-    assert [row["CompactFeature"] for row in rows[1:]] == [44.0, 66.0]
+    assert [row["ScalarFeature"] for row in rows] == [5.0, 5.0, 5.0]
+    assert np.isnan(rows[0]["MeasuredFeature"])
+    assert [row["MeasuredFeature"] for row in rows[1:]] == [44.0, 66.0]
 
 
 def _filter_contract(removed):
