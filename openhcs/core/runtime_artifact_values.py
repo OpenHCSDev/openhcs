@@ -101,7 +101,7 @@ class RuntimeValue:
         )
 
     @classmethod
-    def compose(cls, values: Sequence["RuntimeValue"]) -> Any:
+    def compose(cls, values: Sequence[RuntimeValue]) -> Any:
         """Compose records through their shared artifact-type owner."""
 
         runtime_values = cls._one_artifact_type(values)
@@ -110,7 +110,7 @@ class RuntimeValue:
     @classmethod
     def compose_groups(
         cls,
-        values: Sequence["RuntimeValue"],
+        values: Sequence[RuntimeValue],
         producer_scope: GroupedScope,
     ) -> Any:
         """Rebuild the producer's group axis from one record per producer group."""
@@ -133,8 +133,8 @@ class RuntimeValue:
 
     @staticmethod
     def _one_artifact_type(
-        values: Sequence["RuntimeValue"],
-    ) -> tuple["RuntimeValue", ...]:
+        values: Sequence[RuntimeValue],
+    ) -> tuple[RuntimeValue, ...]:
         runtime_values = tuple(values)
         if not runtime_values:
             raise ValueError("Cannot compose an empty runtime value group.")

@@ -5,6 +5,8 @@ This module defines typed execution results to replace dict-based results,
 following OpenHCS standards for explicit contracts and type safety.
 """
 
+from __future__ import annotations
+
 import copyreg
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
@@ -72,7 +74,7 @@ class RuntimeContextObservation:
         context_key: str,
         context: ProcessingContext,
         records: tuple[StoredRuntimeValue, ...],
-        runtime_observation_mode: type["RuntimeObservationMode"],
+        runtime_observation_mode: type[RuntimeObservationMode],
         outputs: StepExecutionObservation,
     ) -> "RuntimeContextObservation":
         """Retain requested records beside the completed output projections."""
@@ -116,13 +118,10 @@ class RuntimeExecutionObservation:
 class RuntimeObservationMode(ABC):
     """Which worker runtime records an execution returns to the parent."""
 
-    collects_records: ClassVar[bool] = True
-    returns_every_record: ClassVar[bool] = False
-
     @classmethod
     def for_compiled_bundle(
         cls, bundle: "CompiledExecutionBundle"
-    ) -> type["RuntimeObservationMode"]:
+    ) -> type[RuntimeObservationMode]:
         """Consolidation carries rendered tables; only dataset-scoped inputs need records."""
 
         if bundle.requires_parent_runtime_observation:
@@ -133,7 +132,7 @@ class RuntimeObservationMode(ABC):
     def including_parent_requirement(
         cls,
         required: bool,
-    ) -> type["RuntimeObservationMode"]:
+    ) -> type[RuntimeObservationMode]:
         """Return this mode strengthened by an additional retention requirement."""
 
         return MergeAllRuntimeRecords if required else cls
@@ -151,8 +150,6 @@ class RuntimeObservationMode(ABC):
 class OmitRuntimeRecords(RuntimeObservationMode):
     """Return no runtime records; the parent needs none."""
 
-    collects_records = False
-
     @classmethod
     def retain_records(cls, records, context):
         return ()
@@ -160,8 +157,6 @@ class OmitRuntimeRecords(RuntimeObservationMode):
 
 class MergeAllRuntimeRecords(RuntimeObservationMode):
     """Return every runtime record to the parent."""
-
-    returns_every_record = True
 
     @classmethod
     def retain_records(cls, records, context):

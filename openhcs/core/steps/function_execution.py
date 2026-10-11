@@ -593,7 +593,9 @@ class FunctionStepExecutor:
                 variable_components=ComponentSet.of(plan.variable_components),
             )
 
-        if not scope.has_compiled_keys:
+        if scope.has_compiled_keys:
+            component_keys = scope.runtime_keys(())
+        else:
             discovered_keys = []
             for group in pattern.groups:
                 for invocation in group.invocations:
@@ -611,8 +613,6 @@ class FunctionStepExecutor:
             if not any(key is not None for key in discovered_keys):
                 return None
             component_keys = scope.runtime_keys(discovered_keys)
-        else:
-            component_keys = scope.runtime_keys(())
 
         selected_groups = []
         for component_key in component_keys:

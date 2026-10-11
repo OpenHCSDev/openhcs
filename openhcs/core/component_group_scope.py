@@ -80,10 +80,10 @@ class ComponentGroupScope(ABC):
     @classmethod
     def one_per_component(
         cls,
-        scopes: Iterable["ComponentGroupScope"],
+        scopes: Iterable[ComponentGroupScope],
         *,
         owner: str,
-    ) -> tuple["GroupedScope", ...]:
+    ) -> tuple[GroupedScope, ...]:
         """Allow one consistent grouped scope per component."""
         by_component: dict[type[Axis], GroupedScope] = {}
         for scope in scopes:
@@ -99,7 +99,7 @@ class ComponentGroupScope(ABC):
 
     @staticmethod
     def union_compatible(
-        scopes: Sequence["ComponentGroupScope"],
+        scopes: Sequence[ComponentGroupScope],
     ) -> "ComponentGroupScope | None":
         """Union scopes of one component; None when their components differ."""
 
@@ -132,7 +132,7 @@ class ComponentGroupScope(ABC):
         )
 
     @abstractmethod
-    def as_grouped(self) -> tuple["GroupedScope", ...]:
+    def as_grouped(self) -> tuple[GroupedScope, ...]:
         """Return this scope when it groups by a component, else nothing."""
 
     def require_grouped(self, owner: str) -> "GroupedScope":
@@ -237,7 +237,7 @@ class UngroupedScope(ComponentGroupScope):
     component: ClassVar[None] = None
     keys: ClassVar[tuple[None]] = (None,)
 
-    def as_grouped(self) -> tuple["GroupedScope", ...]:
+    def as_grouped(self) -> tuple[GroupedScope, ...]:
         return ()
 
     def runtime_keys(self, discovered_keys):
@@ -269,7 +269,7 @@ class GroupedScope(ComponentGroupScope):
         if not is_axis(self.component):
             raise TypeError("ComponentGroupScope.component must be a declared axis.")
 
-    def as_grouped(self) -> tuple["GroupedScope", ...]:
+    def as_grouped(self) -> tuple[GroupedScope, ...]:
         return (self,)
 
     def require_grouped(self, owner: str) -> "GroupedScope":

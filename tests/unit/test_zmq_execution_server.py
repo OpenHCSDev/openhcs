@@ -263,7 +263,7 @@ def test_zmq_auxiliary_params_strengthen_compiled_observation_requirement(
         else None
     )
     execution_bundle = SimpleNamespace(
-        requires_parent_runtime_observation=compiled_mode.collects_records,
+        requires_parent_runtime_observation=compiled_mode is not OmitRuntimeRecords,
     )
 
     assert params.runtime_observation_mode_for(execution_bundle) is expected_mode
