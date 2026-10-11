@@ -158,7 +158,7 @@ class ComparisonManifestSnapshot:
         installed resource within ``PACKAGED_KNOWLEDGE_PATH_BUDGET``.
         """
         path = Path(str(case["cppipe_path"]))
-        name = str(case["name"])
+        name = str(case.get("name"))
         if path.is_absolute() or ".." in path.parts or path.suffix != ".cppipe":
             raise ValueError("Native knowledge source must be a relative .cppipe path.")
         if not _PORTABLE_CASE_NAME.fullmatch(name):
