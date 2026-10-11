@@ -33,7 +33,7 @@
   - `tests/conftest.py` stops the session with a build instruction when a native extension declared by its `_*_native.cpp` source is not built.
 - **Shared isolation lives in one place**, `tests/conftest.py`: `unix_socket_dir` (a short socket directory) and the autouse `visible_source_root` (a private visible-source root).
 
-## Production changes (`openhcs/`, −42 +195)
+## Production changes (`openhcs/`, −56 +209)
 
 The additions are new mechanisms that close a missing relation, not copies: catalog-declaration preparation, literal `get_function` admission in code documents, the `inspection_only` sidecar role, loose-input calibration, and missing parameter docs. Each change appears in the table with its cause.
 
@@ -62,9 +62,9 @@ Every file in the list passes in its own process, or each remaining failure has 
 
 **Final run on this branch:**
 
-- 85 of the 95 files pass.
-- The remaining 34 tests in 10 files are listed below, each with an owner.
-- 239 of the 273 known failures are fixed. Of those, 5 are now declared external skips: 4 need native OpenGL, and the torch NLM file is the fifth (its jax cases run).
+- 84 of the 95 files pass.
+- The remaining 35 tests in 11 files are listed below, each with an owner.
+- 238 of the 273 known failures are fixed. Of those, 5 are now declared external skips: 4 need native OpenGL, and the torch NLM file is the fifth (its jax cases run).
 
 ## Remaining failures (owned)
 
@@ -76,6 +76,7 @@ Every file in the list passes in its own process, or each remaining failure has 
 | test_registered_object_output_boundaries.py (2) | K3 | row-ordinal shape vectors misassign values when the declared ids include empty labels (7ce29a1d2) |
 | test_artifact_publication_journey.py (4) | K2 | empty-document reconciliation, then untyped object-label addresses |
 | test_bioformats_microscope_handler.py (1) | G4 | opening a results directory under projection-scoped metadata (a8ab61dc5) |
+| test_cellprofiler_identify_tertiary_output_abi.py (1) | K5 | one spec in two positional return slots (larger == smaller) cannot form a contract since cbf1857f7 |
 | test_neurite_outgrowth.py (1) | owner decision | since 4b4f6e611 the crossing core is unowned; the test expects it to be owned |
 
 ## Per-test receipt
@@ -135,7 +136,7 @@ Every file in the list passes in its own process, or each remaining failure has 
 | test_benchmark_visible_source.py (1), test_runner_cellprofiler_compatibility.py::test_native_reference_lookup_* (2) | isolation | aliases went to the shared `/tmp/openhcs_benchmark_visible_sources`. Autouse `visible_source_root` fixture (tests/conftest.py) gives each test a private visible root; tests create their dataset dir, since `resolve_visible_source_path` rejects a missing target | - |
 | test_cellprofiler_comparison.py (1) | stale test (benchmark) | processing contract `.value` -> `.key` after G5 | - |
 | test_official30_lab_meeting_demo.py (collection error) | stale benchmark | `benchmark/demos/official30_lab_meeting.py` used deleted `FunctionStepOutputProducerIdentityRequest`; now `CompiledStepPlan.ARTIFACT_OUTPUT_KIND` (74693f589) | - |
-| test_cellprofiler_identify_tertiary_output_abi.py (1) | production bug | cbf1857f7 made output refs unique, so the contract could not be built; a declaration may repeat one spec in positional return slots, and resolving returned values still rejects duplicates | - |
+| test_cellprofiler_identify_tertiary_output_abi.py::test_tertiary_same_object_probe_preserves_both_input_and_output_roles | production (owned, K5) | IdentifyTertiaryObjects with larger == smaller declares one relationship spec in two positional return slots; since cbf1857f7 the callable ABI rejects duplicate return refs at declaration, so the contract cannot be built. Moving the rejection to value resolution (tried in 976ab94f5) dropped the executor-time rejection that test_cellprofiler_module_execution_semantics protects and would still fail this module at run time, so it was reverted. Admitting repeated positional slots end to end is a callable-contract decision. Left failing | - |
 | test_cellprofiler_artifact_declarations.py (2) | stale test | bisected: #785 (per-object group scope is the object input) and 94a634bdc (Math domain is the first required object operand) | - |
 | test_settings_binder.py (1), test_colocalization_metric_setting_authority.py (1) | stale test | 497e553a7 (#536) keeps the full object-set roster on one invocation; tests assert that | - |
 | test_cellprofiler_display_manual_projection_declarations.py (1) | stale test | compares `ModuleSetting.value`, not the record | - |
