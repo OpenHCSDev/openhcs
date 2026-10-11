@@ -98,7 +98,7 @@ def test_progress_and_filter_kinds_are_families_not_enums():
     for family in (
         progress_types.ProgressPhase,
         progress_types.ProgressStatus,
-        progress_types.ProgressChannel,
+        progress_types.ProgressStream,
         config.PartitionFilterMode,
     ):
         assert not issubclass(family, Enum), family
@@ -175,4 +175,4 @@ def test_every_phase_and_status_round_trips_through_a_progress_event():
             )
             restored = ProgressEvent.from_dict(event.to_dict())
             assert restored == event
-            assert restored.channel is phase.channel
+            assert restored.stream is phase.stream

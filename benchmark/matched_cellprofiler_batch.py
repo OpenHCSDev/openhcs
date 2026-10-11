@@ -1084,7 +1084,7 @@ def _worker_axis_evidence(
         "axis_events": tuple(
             {
                 "axis_id": event.axis_id,
-                "phase": event.phase.value,
+                "phase": event.phase.name,
                 "timestamp": event.timestamp,
                 "pid": event.pid,
                 "worker_slot": event.worker_slot,

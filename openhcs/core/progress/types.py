@@ -21,36 +21,36 @@ from .exceptions import ProgressError
 # =============================================================================
 
 
-class ProgressChannel(ABC, metaclass=AutoRegisterMeta):
-    """A semantic progress stream; each channel is a subclass.
+class ProgressStream(ABC, metaclass=AutoRegisterMeta):
+    """A semantic progress stream; each stream is a subclass.
 
-    ``name`` is the channel's spelling at the wire and UI boundary.
+    ``name`` is the stream's spelling at the wire and UI boundary.
     """
 
     __registry_key__ = "name"
     __skip_if_no_key__ = True
-    __registry__: ClassVar[dict[str, type["ProgressChannel"]]] = {}
+    __registry__: ClassVar[dict[str, type["ProgressStream"]]] = {}
 
     name: ClassVar[str | None] = None
 
 
-class ExecutionProgressChannel(ProgressChannel):
-    """A channel carrying the execution tree (as opposed to setup and compile)."""
+class ExecutionProgressStream(ProgressStream):
+    """A stream carrying the execution tree (as opposed to setup and compile)."""
 
 
-class InitProgressChannel(ProgressChannel):
+class InitProgressStream(ProgressStream):
     name = "init"
 
 
-class CompileProgressChannel(ProgressChannel):
+class CompileProgressStream(ProgressStream):
     name = "compile"
 
 
-class PipelineProgressChannel(ExecutionProgressChannel):
+class PipelineProgressStream(ExecutionProgressStream):
     name = "pipeline"
 
 
-class StepProgressChannel(ExecutionProgressChannel):
+class StepProgressStream(ExecutionProgressStream):
     name = "step"
 
 
@@ -120,7 +120,7 @@ class QueuedProgressStatus(ProgressStatus):
 class ProgressPhase(ABC, metaclass=AutoRegisterMeta):
     """Which lifecycle point an event reports; each phase is a subclass.
 
-    A phase owns the channel it is carried on and whether it ends the
+    A phase owns the stream it is carried on and whether it ends the
     lifecycle; ``name`` is its wire spelling.
     """
 
@@ -129,7 +129,7 @@ class ProgressPhase(ABC, metaclass=AutoRegisterMeta):
     __registry__: ClassVar[dict[str, type["ProgressPhase"]]] = {}
 
     name: ClassVar[str | None] = None
-    channel: ClassVar[type[ProgressChannel]]
+    stream: ClassVar[type[ProgressStream]]
     is_terminal: ClassVar[bool] = False
     is_failure: ClassVar[bool] = False
     is_success_terminal: ClassVar[bool] = False
@@ -137,7 +137,7 @@ class ProgressPhase(ABC, metaclass=AutoRegisterMeta):
     @classmethod
     def is_execution(cls) -> bool:
         """Whether this phase belongs to the execution tree."""
-        return issubclass(cls.channel, ExecutionProgressChannel)
+        return issubclass(cls.stream, ExecutionProgressStream)
 
     @classmethod
     def ends_successfully_with(cls, status: type[ProgressStatus]) -> bool:
@@ -154,86 +154,86 @@ class StatusTerminatedProgressPhase:
         return status.is_success_terminal
 
 
-class InitChannelProgressPhase:
-    channel: ClassVar[type[ProgressChannel]] = InitProgressChannel
+class InitStreamProgressPhase:
+    stream: ClassVar[type[ProgressStream]] = InitProgressStream
 
 
-class CompileChannelProgressPhase:
-    channel: ClassVar[type[ProgressChannel]] = CompileProgressChannel
+class CompileStreamProgressPhase:
+    stream: ClassVar[type[ProgressStream]] = CompileProgressStream
 
 
-class PipelineChannelProgressPhase:
-    channel: ClassVar[type[ProgressChannel]] = PipelineProgressChannel
+class PipelineStreamProgressPhase:
+    stream: ClassVar[type[ProgressStream]] = PipelineProgressStream
 
 
-class StepChannelProgressPhase:
-    channel: ClassVar[type[ProgressChannel]] = StepProgressChannel
+class StepStreamProgressPhase:
+    stream: ClassVar[type[ProgressStream]] = StepProgressStream
 
 
-class InitProgressPhase(InitChannelProgressPhase, ProgressPhase):
+class InitProgressPhase(InitStreamProgressPhase, ProgressPhase):
     name = "init"
 
 
-class QueuedProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+class QueuedProgressPhase(PipelineStreamProgressPhase, ProgressPhase):
     name = "queued"
 
 
-class RunningProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+class RunningProgressPhase(PipelineStreamProgressPhase, ProgressPhase):
     name = "running"
 
 
 class SuccessProgressPhase(
-    SuccessTerminalProgressEvent, PipelineChannelProgressPhase, ProgressPhase
+    SuccessTerminalProgressEvent, PipelineStreamProgressPhase, ProgressPhase
 ):
     name = "success"
 
 
-class FailedProgressPhase(FailureProgressEvent, PipelineChannelProgressPhase, ProgressPhase):
+class FailedProgressPhase(FailureProgressEvent, PipelineStreamProgressPhase, ProgressPhase):
     name = "failed"
 
 
 class CancelledProgressPhase(
-    FailureProgressEvent, PipelineChannelProgressPhase, ProgressPhase
+    FailureProgressEvent, PipelineStreamProgressPhase, ProgressPhase
 ):
     name = "cancelled"
 
 
 class CompileProgressPhase(
-    StatusTerminatedProgressPhase, CompileChannelProgressPhase, ProgressPhase
+    StatusTerminatedProgressPhase, CompileStreamProgressPhase, ProgressPhase
 ):
     name = "compile"
 
 
-class AxisStartedProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+class AxisStartedProgressPhase(PipelineStreamProgressPhase, ProgressPhase):
     name = "axis_started"
 
 
-class StepStartedProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+class StepStartedProgressPhase(PipelineStreamProgressPhase, ProgressPhase):
     name = "step_started"
 
 
-class StepCompletedProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+class StepCompletedProgressPhase(PipelineStreamProgressPhase, ProgressPhase):
     name = "step_completed"
 
 
-class PatternGroupProgressPhase(StepChannelProgressPhase, ProgressPhase):
+class PatternGroupProgressPhase(StepStreamProgressPhase, ProgressPhase):
     name = "pattern_group"
 
 
 class AxisCompletedProgressPhase(
-    SuccessTerminalProgressEvent, PipelineChannelProgressPhase, ProgressPhase
+    SuccessTerminalProgressEvent, PipelineStreamProgressPhase, ProgressPhase
 ):
     name = "axis_completed"
 
 
-class ViewerSettlementProgressPhase(PipelineChannelProgressPhase, ProgressPhase):
+class ViewerSettlementProgressPhase(PipelineStreamProgressPhase, ProgressPhase):
     """Parent-observed progress while streamed viewer state is materialized."""
 
     name = "viewer_settlement"
 
 
 class AxisErrorProgressPhase(
-    FailureProgressEvent, PipelineChannelProgressPhase, ProgressPhase
+    FailureProgressEvent, PipelineStreamProgressPhase, ProgressPhase
 ):
     name = "axis_error"
 
@@ -295,8 +295,8 @@ class ProgressEvent(TaskProgress):
         )
 
     @property
-    def channel(self) -> type[ProgressChannel]:
-        return self.phase.channel
+    def stream(self) -> type[ProgressStream]:
+        return self.phase.stream
 
     def is_failure(self) -> bool:
         """Whether the phase or the status reports a failure."""

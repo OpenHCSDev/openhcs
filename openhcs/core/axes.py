@@ -20,7 +20,6 @@ from dataclasses import dataclass
 from typing import ClassVar, TypeGuard
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import registered_class_from_key
 
 
 class AxisDeclarationMeta(AutoRegisterMeta):
@@ -728,18 +727,6 @@ def _declared_roles(axes: tuple[type[Axis], ...]) -> tuple[type[AxisRole], ...]:
             ):
                 roles.append(base)
     return tuple(roles)
-
-
-@registered_class_from_key.register(AxisDeclarationMeta)
-def _declaration_from_boundary_name(family: AxisDeclarationMeta, key: object) -> type:
-    """Decode a grouping declaration through the active family.
-
-    Two families may declare the same name, so the registry cannot decode it.
-    """
-
-    if issubclass(family, GroupingDeclaration):
-        return AxisFamily.active().grouping_named(str(key))
-    return registered_class_from_key.dispatch(AutoRegisterMeta)(family, key)
 
 
 __all__ = [

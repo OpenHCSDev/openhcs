@@ -20,7 +20,7 @@ and a viewer listens on the registry::
 from .exceptions import ProgressError
 from .registry import registry
 from .types import (
-    ProgressChannel,
+    ProgressStream,
     ProgressContextPayload,
     ProgressEvent,
     ProgressExecutionContext,
@@ -33,7 +33,7 @@ from .types import (
 )
 
 __all__ = [
-    "ProgressChannel",
+    "ProgressStream",
     "ProgressContextPayload",
     "ProgressError",
     "ProgressEvent",

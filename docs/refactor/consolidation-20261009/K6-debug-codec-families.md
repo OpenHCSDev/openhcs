@@ -67,6 +67,10 @@ Library PRs: python-introspect #20 (0.2.6), ZMQRuntime #30 (0.6.1); the submodul
 
 Corrections to the plan above:
 
+- **Progress channels are streams.** The family is `ProgressStream` (`InitProgressStream`, …, `ExecutionProgressStream`) and a phase owns its `stream`: `channel` is the microscopy axis's spelling, and kernel progress may not name it (`test_kernel_modules_spell_no_microscopy_member`).
+- **The axis decoder lives in `axis_boundaries`**, not `axes`, so activating a family stays free of python-introspect (`test_desktop_deployment_import_does_not_load_agent_dto_graph`).
+- **Bundle results follow the compiled axis order**, not lane completion order (the ZMQ witness read `partition_values` in completion order and was flaky).
+
 - **Section and table kinds keep a string on the wire.** `DebugViewSection.kind` and `DebugViewTable.projection` hold the declaration's registry `name`, not the class: the view model is decoded by MCP clients that never import the runtime-heavy `debug_views`, whose classes fill the registry. The GUI looks a declaration up by that key. `DebugViewModel.from_debug_snapshot` and `from_runtime_value_store` moved to `debug_views` (`snapshot_view_model`, `RuntimeValuesDebugViewSection.view_model_for_store`), so the module that builds a view is the one that registers its sections.
 - **Family names.** `DebugEventType` became `DebugBoundary` (members `BeforeInvocationDebugBoundary`, …); `DebugCommandType` kept its name as the family base, merged with `DebugCommandDeclarationBase`, and each command owns `apply_to_worker` (the controller's `if`/`elif` over commands is deleted); `DebugPausedWorkerState` became `DebugWorkerState`; `DebugReplayMode` members own `retains_compile_artifact` and `keeps_worker_paused`.
 - **Deleted as dead, not converted.** `DebugBoundaryOutcome`, `DebugTimelineNodeState`, `DebugTimelineNode`, `DebugRuntimeProjection.timeline` and `node_state_for_cursor` had no production reader. The `DebugSessionRequest` registry (`request_kind`) was never read.

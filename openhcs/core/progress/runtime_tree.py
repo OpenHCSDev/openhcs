@@ -9,7 +9,7 @@ from typing import Callable, ClassVar, Dict, List, Mapping, Optional, Sequence
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.progress import ProgressChannel, ProgressEvent
+from openhcs.core.progress import ProgressStream, ProgressEvent
 from openhcs.core.progress.projection import (
     ExecutionRuntimeProjection,
     SubjectRuntimeIdentity,
@@ -28,10 +28,10 @@ from metaclass_registry.strategies import (
     MostDerivedContextStrategyMixin,
 )
 from openhcs.core.progress.types import (
-    CompileProgressChannel,
-    InitProgressChannel,
-    PipelineProgressChannel,
-    StepProgressChannel,
+    CompileProgressStream,
+    InitProgressStream,
+    PipelineProgressStream,
+    StepProgressStream,
 )
 
 
@@ -559,7 +559,7 @@ class RuntimeTreeExecutionModeContext:
     @property
     def has_compile_event(self) -> bool:
         return any(
-            event.channel is CompileProgressChannel
+            event.stream is CompileProgressStream
             for event in self.events
         )
 
@@ -894,21 +894,21 @@ class RuntimeTreeProjectionBuilder:
                 f"Missing worker assignments for execution subject '{subject_id}'"
             )
 
-        channels = self._partition_events_by_channel(events)
+        channels = self._partition_events_by_stream(events)
         pipeline_by_axis: Dict[str, ProgressEvent] = {
             event.axis_id: event
-            for event in channels[PipelineProgressChannel]
+            for event in channels[PipelineProgressStream]
             if event.axis_id
         }
         step_by_axis: Dict[str, ProgressEvent] = {
             event.axis_id: event
-            for event in channels[StepProgressChannel]
+            for event in channels[StepProgressStream]
             if event.axis_id
         }
 
         worker_nodes: List[RuntimeTreeNode] = []
         execution_started = any(
-            event.channel is InitProgressChannel for event in events
+            event.stream is InitProgressStream for event in events
         )
         for worker_slot, axis_ids in sorted(assignments.items()):
             partition_nodes = [
@@ -949,10 +949,10 @@ class RuntimeTreeProjectionBuilder:
         events: List[ProgressEvent],
         known_partition_values: Mapping[tuple[str, str], Sequence[str]],
     ) -> List[RuntimeTreeNode]:
-        channels = self._partition_events_by_channel(events)
+        channels = self._partition_events_by_stream(events)
         compile_by_axis: Dict[str, ProgressEvent] = {
             event.axis_id: event
-            for event in channels[CompileProgressChannel]
+            for event in channels[CompileProgressStream]
             if event.axis_id
         }
         known_axis_ids = list(known_partition_values.get((execution_id, subject_id), []))
@@ -994,14 +994,14 @@ class RuntimeTreeProjectionBuilder:
         return compilation_nodes
 
     @staticmethod
-    def _partition_events_by_channel(
+    def _partition_events_by_stream(
         events: Sequence[ProgressEvent],
-    ) -> Mapping[type[ProgressChannel], List[ProgressEvent]]:
-        partitioned: defaultdict[type[ProgressChannel], List[ProgressEvent]] = defaultdict(
+    ) -> Mapping[type[ProgressStream], List[ProgressEvent]]:
+        partitioned: defaultdict[type[ProgressStream], List[ProgressEvent]] = defaultdict(
             list
         )
         for event in events:
-            partitioned[event.channel].append(event)
+            partitioned[event.stream].append(event)
         return partitioned
 
     def _build_partition_node(

@@ -270,12 +270,19 @@ def execute_bundle_request(
                         request=request,
                         worker_assignment_plan=worker_assignment_plan,
                     )
+                    lane_results = executor_resources.run_worker_lanes(
+                        pipeline_definition=validated.pipeline_definition,
+                        worker_lane_execution_plan=worker_lane_execution_plan,
+                        parent_contexts=validated.compiled_contexts,
+                    )
+                    # Lanes finish in any order; results follow the compiled axis order.
                     execution_results = BundleExecutionResults(
-                        executor_resources.run_worker_lanes(
-                            pipeline_definition=validated.pipeline_definition,
-                            worker_lane_execution_plan=worker_lane_execution_plan,
-                            parent_contexts=validated.compiled_contexts,
-                        )
+                        {
+                            axis_id: lane_results[axis_id]
+                            for axis_id in sorted(
+                                lane_results, key=execution_bundle.axis_ids.index
+                            )
+                        }
                     )
                     if any(
                         result.is_cancelled() for result in execution_results.values()
